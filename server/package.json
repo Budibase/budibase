@@ -1,0 +1,19 @@
+{
+  "name": "budibase-server",
+  "version": "0.0.1",
+  "description": "budibase http api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-core": "cd ./node_modules/budibase-core && rollup --config rollup.config.js"
+  },
+  "keywords": [
+    "budibase"
+  ],
+  "author": "Michael Shanks",
+  "license": "ISC",
+  "dependencies": {
+    "budibase-core": "git+ssh://git@gitlab.com/budibase-dist/budibase-core.git",
+    "koa": "^2.7.0"
+  }
+}
