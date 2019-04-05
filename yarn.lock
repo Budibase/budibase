@@ -8,7 +8,7 @@
 
 "budibase-core@git+ssh://git@gitlab.com/budibase-dist/budibase-core.git":
   version "1.0.0"
-  resolved "git+ssh://git@gitlab.com/budibase-dist/budibase-core.git#99f1604b1314a3687312820b783256440c3a57f1"
+  resolved "git+ssh://git@gitlab.com/budibase-dist/budibase-core.git#7d0b44b6f7439b4b4f48b7b9c12e9eb3fa045203"
   dependencies:
     "@nx-js/compiler-util" "^2.0.0"
     date-fns "^1.29.0"

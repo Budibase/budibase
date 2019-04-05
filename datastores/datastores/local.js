@@ -1,7 +1,6 @@
-import {promisify} from 'es6-promisify'; 
-
-import fs from "fs";
-import {join} from "path";
+const {promisify} = require('util'); 
+const fs = require("fs");
+const {join} = require("path");
 
 const readFile = promisify(fs.readFile);
 const writeFile = (path, content) => 
@@ -41,7 +40,7 @@ const createFolder = root => async (path) =>
     await mkdir(
         join(root, path));
     
-export const deleteFile = root => async (path) => 
+module.exports.deleteFile = root => async (path) => 
     await unlink(
         join(root, path)
     );
@@ -72,16 +71,35 @@ const renameFile = root => async (oldPath, newPath) =>
         join(root, newPath)
     );
 
-const createEmptyDb = root = async (type, productSetId, productId, productInstanceId) => {
-    const folder = !productSetId ? type
-                   : !productInstanceId ? `${type}.${productSetId}`
-                   : `${type}.${productSetId}.${productId}.${productInstanceId}`;
-                   
-    await createFolder(root)(folder);
-    return folder;
-}
+const datastoreFolder = (type, productSetId, productId, productInstanceId) => 
+    !productSetId ? type
+    : !productInstanceId ? `${type}.${productSetId}`
+    : `${type}.${productSetId}.${productId}.${productInstanceId}`;
 
-export default rootFolderPath => ({
+const createEmptyDb = async (dbRootConfig, type, productSetId, productId, productInstanceId) => {
+    const folder = datastoreFolder(type, productSetId, productId, productInstanceId);
+    await createFolder(dbRootConfig)(folder);
+    return folder;
+};
+
+const getDatastoreConfig = (dbRootConfig, type, productSetId, productId, productInstanceId) => 
+    join(dbRootConfig, 
+         datastoreFolder(
+            type, productSetId, productId, productInstanceId
+         ));
+
+const getMasterDbRootConfig = () => "./data";
+const getProductSetDbRootConfig = async (productSetId) => "./data";
+const getProductInstanceDbRootConfig = 
+    async (productSetId, productId, productInstanceId) => "./data";
+
+module.exports.databaseManager = {
+    createEmptyDb, getDatastoreConfig,
+    getMasterDbRootConfig, getProductSetDbRootConfig,
+    getProductInstanceDbRootConfig
+};
+
+module.exports.getDatastore = rootFolderPath => ({
     createFile : createFile(rootFolderPath),
     updateFile : updateFile(rootFolderPath),
     loadFile : loadFile(rootFolderPath),
@@ -97,4 +115,3 @@ export default rootFolderPath => ({
     datastoreType : "local",
     datastoreDescription: rootFolderPath
 });
-
