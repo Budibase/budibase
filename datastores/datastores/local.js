@@ -40,10 +40,12 @@ const createFolder = root => async (path) =>
     await mkdir(
         join(root, path));
     
-module.exports.deleteFile = root => async (path) => 
+const deleteFile = root => async (path) => 
     await unlink(
         join(root, path)
     );
+
+module.exports.deleteFile = deleteFile;
 
 const deleteFolder = root => async (path) =>
     await rmdir(
@@ -71,33 +73,36 @@ const renameFile = root => async (oldPath, newPath) =>
         join(root, newPath)
     );
 
-const datastoreFolder = (type, productSetId, productId, productInstanceId) => 
-    !productSetId ? type
-    : !productInstanceId ? `${type}.${productSetId}`
-    : `${type}.${productSetId}.${productId}.${productInstanceId}`;
+const datastoreFolder = (applicationId, instanceId) => 
+    applicationId === "master" ? "master"
+    : `app.${applicationId}.${instanceId}`;
 
-const createEmptyDb = async (dbRootConfig, type, productSetId, productId, productInstanceId) => {
-    const folder = datastoreFolder(type, productSetId, productId, productInstanceId);
+const createEmptyDb = (rootConfig) => async (applicationId, instanceId) => {
+    const folder = datastoreFolder(applicationId, instanceId);
+    const dbRootConfig = getDbRootConfig(rootConfig, applicationId, instanceId);
     await createFolder(dbRootConfig)(folder);
     return folder;
 };
 
-const getDatastoreConfig = (dbRootConfig, type, productSetId, productId, productInstanceId) => 
-    join(dbRootConfig, 
+const getDatastoreConfig = (rootConfig) => (applicationId, instanceId) => 
+    join(rootConfig.rootPath, 
          datastoreFolder(
-            type, productSetId, productId, productInstanceId
+            applicationId, instanceId
          ));
 
-const getMasterDbRootConfig = () => "./data";
-const getProductSetDbRootConfig = async (productSetId) => "./data";
-const getProductInstanceDbRootConfig = 
-    async (productSetId, productId, productInstanceId) => "./data";
+const getMasterDbRootConfig = (rootConfig) => () => rootConfig.rootPath;
+const getInstanceDbRootConfig = (rootConfig) => async (applicationId, instanceId) => rootConfig.rootPath;
+const getDbRootConfig = (rootConfig, applicationId, instanceId) => 
+    applicationId === "master" 
+    ? getMasterDbRootConfig(rootConfig)() 
+    : getInstanceDbRootConfig(rootConfig)(applicationId, instanceId);
 
-module.exports.databaseManager = {
-    createEmptyDb, getDatastoreConfig,
-    getMasterDbRootConfig, getProductSetDbRootConfig,
-    getProductInstanceDbRootConfig
-};
+module.exports.databaseManager = rootConfig => ({
+    createEmptyDb:createEmptyDb(rootConfig), 
+    getDatastoreConfig:getDatastoreConfig(rootConfig),
+    getMasterDbRootConfig:getMasterDbRootConfig(rootConfig), 
+    getInstanceDbRootConfig:getInstanceDbRootConfig(rootConfig)
+});
 
 module.exports.getDatastore = rootFolderPath => ({
     createFile : createFile(rootFolderPath),
@@ -115,3 +120,7 @@ module.exports.getDatastore = rootFolderPath => ({
     datastoreType : "local",
     datastoreDescription: rootFolderPath
 });
+
+module.exports.configParameters = {
+    rootPath: "Root Data Folder"
+};

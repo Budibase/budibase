@@ -1,5 +1,5 @@
 const {hash, verify} = require("argon2");
 
-module.export = {
+module.exports = {
     hash, verify
 };

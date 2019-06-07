@@ -12,6 +12,9 @@
   "author": "Michael Shanks",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "budibase-core": "git+ssh://git@gitlab.com/budibase-dist/budibase-core.git"
+    "argon2": "^0.23.0",
+    "budibase-core": "git+ssh://git@github.com:Budibase/budibase-core-dist.git",
+    "rimraf": "^2.6.3",
+    "yargs": "^13.2.4"
   }
 }

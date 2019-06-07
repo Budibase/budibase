@@ -1,54 +1,41 @@
-const {initialiseData, 
+const {initialiseData, setupDatastore,
     getTemplateApi} = require("budibase-core");
-const {newField, getDatabaseManager,
+const {getApisForUser, getDatabaseManager,
     getApisWithFullAccess} = require("./helpers"); 
+const masterDbAppDefinition = require("../appPackages/master/appDefinition.json");
+const masterDbAccessLevels = require("../appPackages/master/access_levels.json");
 
-module.exports = async (datastoreModule, username, password) => {
-    
-    const databaseManager = getDatabaseManager(datastoreModule);
-    
-    const masterDbConfig = await databaseManager.createEmptyMasterDb();
-    const datastore = datastoreModule.getDatastore(masterDbConfig);
+module.exports = async (datastoreModule, rootConfig, username, password) => {
+    try {
+        const databaseManager = getDatabaseManager(datastoreModule, rootConfig);
+        
+        await databaseManager.createEmptyMasterDb();
+        const masterDbConfig = databaseManager.masterDatastoreConfig;
+        const datastore = setupDatastore(
+            datastoreModule.getDatastore(masterDbConfig)
+        );
 
-    const templateApi = getTemplateApi();
-    const root = templateApi.getNewRootLevel();
-    const productSets = templateApi.getNewCollectionTemplate(root);
-    productSets.name = "ProductSets";
+        const templateApi = getTemplateApi({datastore});
 
-    const productSet = templateApi.getNewRecordTemplate(productSets);
-    productSet.name = "ProductSet";
+        await initialiseData(datastore, {
+            heirarchy:templateApi.constructHeirarchy(masterDbAppDefinition.hierarchy), 
+            actions:masterDbAppDefinition.actions, 
+            triggers:masterDbAppDefinition.triggers
+        });
 
-    const newProductSetField = newField(templateApi, productSet);
-    newProductSetField("name", "string", true);
-    newProductSetField("dbRootConfig", "string");
-    
-    const products = templateApi.getNewCollectionTemplate(productSet);
-    products.name = "Products";
-
-    const product = templateApi.getNewRecordTemplate(products);
-    product.name = "product";
-
-    const newProductField = newField(templateApi, product);
-    newProductField("name", "string", true);
-    newProductField("domain", "string", true);
-    newProductField("datastoreConfig", "string", true);
-
-    
-    await initialiseData(datastore, {
-        heirarchy:root, actions:[], triggers:[]
-    });
-
-    const bb = await getApisWithFullAccess(datastore);
-    
-    const fullAccess = bb.authApi.getNewAccessLevel();
-    fullAccess.permissions = bb.authApi.generateFullPermissions();
-    fullAccess.name = "Full Access";
-    await bb.authApi.saveAccessLevels([fullAccess]);
-    const seedUser = bb.authApi.getNewUser();
-    seedUser.name = username;
-    seedUser.accessLevels = ["Full Access"];
-    await bb.authApi.createUser(seedUser, password);
-
-    return masterDbConfig; 
+        const bbMaster = await getApisWithFullAccess(datastore);
+        await bbMaster.authApi.saveAccessLevels(masterDbAccessLevels);
+        const user = bbMaster.authApi.getNewUser();
+        user.name = username;
+        user.accessLevels= ["owner"];
+        await bbMaster.authApi.createUser(user, password);
+        
+        return await getApisForUser(datastore, username, password);
+    } catch(e) {
+        throw e;
+    }
 };
+
+
+
 

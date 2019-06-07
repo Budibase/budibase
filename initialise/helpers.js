@@ -1,17 +1,5 @@
 const crypto = require("../server/nodeCrypto");
-const {
-    getDatabaseFactory} = require("budibase-core");
-
-module.exports.newField = (templateApi, recordNode) => (name, type, mandatory=false) => {
-    const field = templateApi.getNewField(type);
-    field.name = name;
-    templateApi.addField(recordNode, field);
-    if(mandatory) {
-        templateApi.addRecordValidationRule(recordNode)
-            (templateApi.commonValidationRules.fieldNotEmpty)
-    }
-    return field; 
-};
+const {getDatabaseManager, getAppApis} = require("budibase-core");
 
 module.exports.getApisWithFullAccess = async (datastore) => {
     const bb = await getAppApis(
@@ -20,10 +8,22 @@ module.exports.getApisWithFullAccess = async (datastore) => {
         crypto
     );
 
-    bb.asFullAccess();
+    bb.withFullAccess();
 
     return bb;
 };
 
-module.exports.getDatabaseManager = (datastoreModule) => 
-    getDatabaseFactory(datastoreModule.databaseManager);
+module.exports.getApisForUser = async (datastore, username, password) => {
+    const bb = await getAppApis(
+        datastore, 
+        null, null, null,
+        crypto
+    );
+
+    await bb.authenticateAs(username, password);
+
+    return bb;
+}
+
+module.exports.getDatabaseManager = (datastoreModule, datastoreConfig) => 
+    getDatabaseManager(datastoreModule.databaseManager(datastoreConfig));
