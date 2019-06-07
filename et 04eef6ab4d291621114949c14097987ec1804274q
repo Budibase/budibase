@@ -1,0 +1,35 @@
+[33mcommit 78a241d11c55ae717ba844c3d853e594d805e0a2[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: michael shanks <mike@budibase.com>
+Date:   Fri Jun 7 14:11:23 2019 +0100
+
+    mono-repo
+
+[33mcommit 04eef6ab4d291621114949c14097987ec1804274[m[33m ([m[1;31mbb/master[m[33m)[m
+Author: michael shanks <mike@budibase.com>
+Date:   Fri Jun 7 12:22:23 2019 +0100
+
+    license AGPL
+
+[33mcommit 5bcf5157e0010aea34be4bc338057a75ae0befec[m
+Author: michael shanks <mike@budibase.com>
+Date:   Fri Jun 7 12:09:06 2019 +0100
+
+    making OS friendly :)
+
+[33mcommit d5129fbda3c0fbb35e7275420aee0b2e8a4f6c2b[m
+Author: michael shanks <mike@budibase.com>
+Date:   Fri Jun 7 12:02:48 2019 +0100
+
+    initialise master database working
+
+[33mcommit 36f9e7c64faf9c1ce27a1586337b4bd168fe88ec[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Michael Shanks <mjashanks@hotmail.com>
+Date:   Fri Apr 5 16:30:29 2019 +0100
+
+    backup..
+
+[33mcommit a8aa18d01d0640db6fb0f7bcb20e713b38b5610b[m
+Author: Michael Shanks <mjashanks@hotmail.com>
+Date:   Tue Mar 19 21:45:21 2019 +0000
+
+    initial commit

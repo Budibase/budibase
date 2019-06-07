@@ -1,0 +1,20 @@
+{
+  "name": "budibase",
+  "version": "0.0.1",
+  "description": "budibase wrapper repo for development",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "budibase"
+  ],
+  "author": "Michael Shanks",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "argon2": "^0.23.0",
+    "budibase-core": "file:../budibase-core/dist",
+    "rimraf": "^2.6.3",
+    "yargs": "^13.2.4"
+  }
+}
