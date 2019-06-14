@@ -36,12 +36,13 @@ module.exports = () => {
         masterAuth: {
             username: masterOwnerName,
             password: masterOwnerPassword
-        }
+        },
+        destroy: () => server.destroy()
     })
 };
 
 const postRequest = (server, url, body) => 
-    request(app)
+    request(server)
     .post(url)
     .send(body)
     .set('Accept', 'application/json');

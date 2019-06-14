@@ -25,7 +25,7 @@ module.exports.getApisForUser = async (datastore, username, password) => {
     return bb;
 }
 
-module.exports.getApisForSession = async (session) => {
+module.exports.getApisForSession = async (datastore, session) => {
 
     const user = JSON.parse(session.user_json);
 

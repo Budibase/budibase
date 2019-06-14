@@ -9,16 +9,17 @@ const isMaster = appname => appname === "_master";
 
 module.exports = async (config) => {
 
-    const datastore = getDatastore(config);
+    const datastoreModule = getDatastore(config);
 
     const databaseManager = getDatabaseManager(
-        datastore,
+        datastoreModule,
         config.datastoreConfig);
 
 
-    const bb = await getApisWithFullAccess(
-        datastore.getDatastore(databaseManager.masterDatastoreConfig)
-    ); 
+    const masterDatastore = datastoreModule.getDatastore(
+        databaseManager.masterDatastoreConfig);
+
+    const bb = await getApisWithFullAccess(masterDatastore); 
 
     let applications;
     const loadApplications = async () => 
@@ -26,6 +27,9 @@ module.exports = async (config) => {
             keyBy("name")
         ]);
     await loadApplications();
+
+    const getInstanceDatastore = (instanceDatastoreConfig) => 
+        datastoreModule.getDatastore(instanceDatastoreConfig);
 
     const getCustomSessionId = (appname, sessionId) => 
         isMaster(appname)
@@ -38,9 +42,6 @@ module.exports = async (config) => {
             return applications[name];
 
         await loadApplications();
-
-        if(!applications[name])
-            throw new Error("Appliction " + name + " not found");
 
         return applications[name];
     };
@@ -93,7 +94,7 @@ module.exports = async (config) => {
             userInMaster.instance.key);
         
         const bbInstance = await getApisWithFullAccess(
-            datastore.getDatastore(instance.datastoreconfig));
+            datastoreModule.getDatastore(instance.datastoreconfig));
 
         const authUser = await bbInstance.authApi.authenticate(username, password);
 
@@ -111,15 +112,16 @@ module.exports = async (config) => {
 
     const getInstanceApiForSession = async (appname, sessionId) => {
         if(isMaster(appname)) {
-            const customId = bb.recordApi.customId("session", sessionId);
+            const customId = bb.recordApi.customId("mastersession", sessionId);
             const session = await bb.recordApi.load(`/sessions/${customId}`);
-            return await getApisForSession(session);
+            return await getApisForSession(masterDatastore, session);
         }
         else {
             const app = await getApplication(appname);
             const customId = bb.recordApi.customId("session", sessionId);
             const session = await bb.recordApi.load(`/applications/${app.id}/sessions/${customId}`);
-            return await getApisForSession(session);
+            const instanceDatastore = getInstanceDatastore(session.instanceDatastoreConfig)
+            return await getApisForSession(instanceDatastore, session);
         }
     }
 

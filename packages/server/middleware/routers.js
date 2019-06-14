@@ -3,13 +3,27 @@ const session = require("./session");
 const StatusCodes = require("../utilities/statusCodes");
 module.exports = (config, app) => {
 
-    var router = new Router();
-    router.prefix("/:appname/api");
+    const router = new Router();
 
     router
-    .post("/authenticate", async (ctx, next) => {
+    /*.use(async (ctx) => {
+        if(!await ctx.master.getApplication(ctx.params.appname)) {
+            ctx.throw(StatusCodes.NOT_FOUND, `could not find app named ${ctx.params.appname}`);
+        }
+    })*/
+    .use(session(config, app))
+    .use(async (ctx, next) => {
+        ctx.sessionId = ctx.session._sessCtx.externalKey;
+        ctx.session.accessed = true;
+        await next();
+    })
+    .get("/:appname", async (ctx) => {
+        ctx.response.status = StatusCodes.OK;
+        ctx.response.body = "UI Served Here";
+    })
+    .post("/:appname/api/authenticate", async (ctx, next) => {
         const user = await ctx.master.authenticate(
-            ctx.session._sessCtx.externalKey,
+            ctx.sessionId,
             ctx.params.appname,
             ctx.request.body.username,
             ctx.request.body.password
@@ -17,58 +31,76 @@ module.exports = (config, app) => {
         if(!user) {
             ctx.throw(StatusCodes.UNAUTHORIZED, "invalid username or password");
         } 
-        next();
+
+        ctx.response.status = StatusCodes.OK;
     })
-    .post("/setPasswordFromTemporaryCode", async (ctx) => {
+    .post("/:appname/api/setPasswordFromTemporaryCode", async (ctx) => {
 
     })
-    .post("/executeAction/:actionname", async (ctx) => {
+    .use(async (ctx, next) => {
+
+        const pathParts = ctx.path.split("/");
+
+        if(pathParts.length < 2) {
+            ctx.throw(StatusCodes.NOT_FOUND, "App Name not declared");
+        }
+
+        ctx.instance = await ctx.master.getInstanceApiForSession(
+            pathParts[1],
+            ctx.sessionId);
+
+        await next();
+    })
+    .post("/:appname/api/executeAction/:actionname", async (ctx) => {
 
     })
-    .post("/createUser", async (ctx) => {
+    .post("/:appname/api/createUser", async (ctx) => {
+        await ctx.instance.authApi.createUser(
+            ctx.request.body.user,
+            ctx.request.body.password
+        );
+
+        ctx.response.status = StatusCodes.OK;
+    })
+    .post("/:appname/api/enableUser", async (ctx) => {
 
     })
-    .post("/enableUser", async (ctx) => {
+    .post("/:appname/api/disableUser", async (ctx) => {
 
     })
-    .post("/disableUser", async (ctx) => {
+    .get("/:appname/api/users", async (ctx) => {
 
     })
-    .get("/users", async (ctx) => {
+    .get("/:appname/api/accessLevels", async (ctx) => {
 
     })
-    .get("/accessLevels", async (ctx) => {
+    .post("/:appname/api/changeMyPassword", async (ctx) => {
 
     })
-    .post("/changeMyPassword", async (ctx) => {
+    .post("/:appname/api/listRecords/:indexkey", async (ctx) => {
 
     })
-    .post("/listRecords/:indexkey", async (ctx) => {
+    .post("/:appname/api/aggregated/:indexkey", async (ctx) => {
 
     })
-    .post("/aggregated/:indexkey", async (ctx) => {
+    .post("/:appname/api/record/:recordkey", async (ctx) => {
 
     })
-    .post("/record/:recordkey", async (ctx) => {
+    .get("/:appname/api/record/:recordkey", async (ctx) => {
 
     })
-    .get("/record/:recordkey", async (ctx) => {
+    .del("/:appname/api/record/:recordkey", async (ctx) => {
 
     })
-    .del("/record/:recordkey", async (ctx) => {
+    .post("/:appname/api/appHeirarchy", async (ctx) => {
 
     })
-    .post("/appHeirarchy", async (ctx) => {
+    .post("/:appname/api/actionsAndTriggers", async (ctx) => {
 
     })
-    .post("/actionsAndTriggers", async (ctx) => {
-
-    })
-    .post("/appDefinition", async (ctx) => {
+    .post("/:appname/api/appDefinition", async (ctx) => {
 
     });
-
-    router.use(session(config, app));
 
     return router;
 }

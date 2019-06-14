@@ -8,8 +8,7 @@ module.exports = async (config) => {
 
     app.keys = config.keys;
     app.context.master = await getMasterAppInternal(config);
-
-    app.use(router(config, app).routes);
     app.use(bodyParser());
+    app.use(router(config, app).routes());
     return app.listen();
 };
