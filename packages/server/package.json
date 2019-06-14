@@ -13,8 +13,17 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "argon2": "^0.23.0",
-    "budibase-core": "file:../budibase-core/dist",
+    "budibase-core": "file:../core/dist",
+    "koa": "^2.7.0",
+    "koa-bodyparser": "^4.2.1",
+    "koa-router": "^7.4.0",
+    "koa-session": "^5.12.0",
     "rimraf": "^2.6.3",
     "yargs": "^13.2.4"
+  },
+  "devDependencies": {
+    "@jest/test-sequencer": "^24.8.0",
+    "server-destroy": "^1.0.1",
+    "supertest": "^4.0.2"
   }
 }

@@ -1,5 +1,5 @@
 const crypto = require("../nodeCrypto");
-const {getDatabaseManager, getAppApis} = require("budibase-core");
+const {getAppApis} = require("budibase-core");
 
 module.exports.getApisWithFullAccess = async (datastore) => {
     const bb = await getAppApis(
@@ -25,5 +25,17 @@ module.exports.getApisForUser = async (datastore, username, password) => {
     return bb;
 }
 
-module.exports.getDatabaseManager = (datastoreModule, datastoreConfig) => 
-    getDatabaseManager(datastoreModule.databaseManager(datastoreConfig));
+module.exports.getApisForSession = async (session) => {
+
+    const user = JSON.parse(session.user_json);
+
+    const bb = await getAppApis(
+        datastore, 
+        null, null, null,
+        crypto
+    );
+
+    bb.asUser(user);
+
+    return bb;
+}

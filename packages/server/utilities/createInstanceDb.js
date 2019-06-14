@@ -1,5 +1,5 @@
 const {common, getAppApis} = require("budibase-core");
-const {getDatabaseManager} = require("./helpers"); 
+const {getDatabaseManager} = require("./databaseManager"); 
 
 module.exports = async (productSetId, productId, versionId) => {
     const databaseManager = getDatabaseManager(datastoreModule);

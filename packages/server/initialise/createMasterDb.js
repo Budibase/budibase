@@ -1,7 +1,7 @@
 const {initialiseData, setupDatastore,
     getTemplateApi} = require("budibase-core");
-const {getApisForUser, getDatabaseManager,
-    getApisWithFullAccess} = require("./helpers"); 
+const getDatabaseManager = require("../utilities/databaseManager"); 
+const {getApisForUser, getApisWithFullAccess} = require("../utilities/budibaseApi");  
 const masterDbAppDefinition = require("../appPackages/master/appDefinition.json");
 const masterDbAccessLevels = require("../appPackages/master/access_levels.json");
 
