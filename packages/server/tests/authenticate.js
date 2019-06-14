@@ -2,15 +2,6 @@ const statusCodes = require("../utilities/statusCodes");
 
 module.exports = (app) => {
 
-    it("should return ok correct username and password supplied", async () => {
-
-        await app.post("/_master/api/authenticate", {
-            username: app.masterAuth.username,
-            password: app.masterAuth.password
-        })
-        .expect(statusCodes.OK);
-    });
-
     it("should return unauthorized if username is incorrect", async () => {
         await app.post("/_master/api/authenticate", {
             username: "unknownuser",
@@ -37,34 +28,55 @@ module.exports = (app) => {
 
     });
 
-    it("should be able to create new user with authenticated cookie", async () => {
+    let ownerCookie;
+    it("should return ok correct username and password supplied", async () => {
+
         const response = await app.post("/_master/api/authenticate", {
             username: app.masterAuth.username,
             password: app.masterAuth.password
-        });
-        
-        const cookie = response.header['set-cookie'];
-        
+        })
+        .expect(statusCodes.OK);
+
+        ownerCookie = response.header['set-cookie'];
+    });
+
+    const testUserName = "test_user";
+    const testPassword = "test_user_password";
+    it("should be able to create new user with authenticated cookie", async () => {
+                
         await app.post("/_master/api/createUser", {
             user: {
-                name: "test_user", 
+                name: testUserName, 
                 accessLevels:["owner"], 
                 enabled:true
             
             },
-            password: "test_password"
+            password: testPassword
         })
-        .set("cookie", cookie)
+        .set("cookie", ownerCookie)
         .expect(statusCodes.OK);
 
-        const responseNewUser = await app.post("/_master/api/authenticate", {
-            username: "test_user",
-            password: "test_password"
-        });
         
-        const newUserCookie = responseNewUser.header['set-cookie'];
+    });
+
+    let newUserCookie;
+    it("should be able to authenticate with new user", async () => {
+
+        const responseNewUser = await app.post("/_master/api/authenticate", {
+            username: testUserName,
+            password: testPassword
+        })
+        .expect(statusCodes.OK);
+        
+        newUserCookie = responseNewUser.header['set-cookie'];
 
         expect(newUserCookie).toBeDefined();
-        expect(newUserCookie).not.toEqual(cookie);
+        expect(newUserCookie).not.toEqual(ownerCookie);
+
+        app.get("/_master/api/users/")
+        .set("cookie", newUserCookie)
+        .expect(statusCodes.OK);
     });
+
+    
 };

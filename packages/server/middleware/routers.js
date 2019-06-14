@@ -69,7 +69,8 @@ module.exports = (config, app) => {
 
     })
     .get("/:appname/api/users", async (ctx) => {
-
+        ctx.body = await ctx.instance.authApi.getUsers();
+        ctx.response.status = StatusCodes.OK;
     })
     .get("/:appname/api/accessLevels", async (ctx) => {
 

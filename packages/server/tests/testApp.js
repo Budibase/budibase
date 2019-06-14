@@ -33,6 +33,7 @@ module.exports = () => {
         config,
         server:() => server,
         post: (url, body) => postRequest(server,url,body),
+        get: (url) => getRequest(server, url),
         masterAuth: {
             username: masterOwnerName,
             password: masterOwnerPassword
@@ -47,6 +48,10 @@ const postRequest = (server, url, body) =>
     .send(body)
     .set('Accept', 'application/json');
 
+const getRequest = (server, url) => 
+    request(server)
+    .get(url)
+    .set('Accept', 'application/json');
 
 const reInitialize = async () => {
     try {
