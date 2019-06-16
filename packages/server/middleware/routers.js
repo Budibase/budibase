@@ -35,10 +35,27 @@ module.exports = (config, app) => {
         ctx.response.status = StatusCodes.OK;
     })
     .post("/:appname/api/setPasswordFromTemporaryCode", async (ctx) => {
-        
+        const instanceApi = await ctx.master.getFullAccessInstanceApiForUsername(
+            ctx.params.appname,
+            ctx.request.body.username
+        );
+
+        await instanceApi.authApi.setPasswordFromTemporaryCode(
+            ctx.request.body.tempCode,
+            ctx.request.body.newpassword); 
+
+        ctx.response.status = StatusCodes.OK;
     })
     .post("/:appname/api/createTemporaryAccess", async (ctx) => {
+        const instanceApi = await ctx.master.getFullAccessInstanceApiForUsername(
+            ctx.params.appname,
+            ctx.request.body.username
+        );
+
+        await instanceApi.authApi.createTemporaryAccess(
+            ctx.request.body.username);
         
+        ctx.response.status = StatusCodes.OK;
     })
     .use(async (ctx, next) => {
 

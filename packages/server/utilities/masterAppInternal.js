@@ -123,14 +123,45 @@ module.exports = async (config) => {
             const instanceDatastore = getInstanceDatastore(session.instanceDatastoreConfig)
             return await getApisForSession(instanceDatastore, session);
         }
-    }
+    };
+
+    const getFullAccessInstanceApiForUsername = async (appname, username) => {
+
+        if(isMaster(appname)) {
+            const user = bb.authApi.getUsers()
+                                   .find(u => u.name === username);
+            if(!user) return;
+            if(!user.enabled) return;
+            return user;
+        }
+        else {
+            const app = await getApplication(appname);
+            const matches = bb.indexApi.listItems(
+                `/applications/${app.id}/user_name_lookup`,
+                {
+                    rangeStartParams:{name:username}, 
+                    rangeEndParams:{name:username}, 
+                    searchPhrase:`name:${username}`
+                }
+            );
+            if(matches.length !== 1) return;
+
+            const instanceDatastore = getInstanceDatastore(
+                matches[0].instanceDatastoreConfig);
+
+            return await getApisWithFullAccess(instanceDatastore);
+        }
+
+    };
 
     return ({
         getApplication,
         getSession,
         deleteSession, 
         authenticate,
-        getInstanceApiForSession
+        getInstanceApiForSession,
+        getFullAccessInstanceApiForUsername,
+        createTemporaryAccessCode
     });
 
 }
