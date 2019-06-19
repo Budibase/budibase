@@ -26,5 +26,8 @@
     "jest": "^24.8.0",
     "server-destroy": "^1.0.1",
     "supertest": "^4.0.2"
+  },
+  "jest" : {
+    "testEnvironment": "node"
   }
 }

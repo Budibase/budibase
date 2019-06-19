@@ -78,5 +78,39 @@ module.exports = (app) => {
         .expect(statusCodes.OK);
     });
 
-    
+    it("should not be able to perform requests when user is disabled", async () => {
+
+        await app.post("/_master/api/disableUser", {
+            username: testUserName
+        })
+        .set("cookie", ownerCookie)
+        .expect(statusCodes.OK);
+
+        await app.get("/_master/api/users/")
+            .set("cookie", newUserCookie)
+            .expect(statusCodes.FORBIDDEN);
+
+        await app.post("/_master/api/authenticate", {
+            username: testUserName,
+            password: testPassword
+        })
+        .expect(statusCodes.UNAUTHORIZED);
+
+    });
+
+    it("should not be able to re-authenticate when user is disabled", async () => {
+        await app.post("/_master/api/authenticate", {
+            username: testUserName,
+            password: testPassword
+        })
+        .expect(statusCodes.UNAUTHORIZED);
+    });
+
+    it("should be able with re-authenticate when user is enabled again", async () => {
+        await app.post("/_master/api/authenticate", {
+            username: testUserName,
+            password: testPassword
+        })
+        .expect(statusCodes.OK);
+    });
 };

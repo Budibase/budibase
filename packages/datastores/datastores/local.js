@@ -61,11 +61,11 @@ const writableFileStream = root => async path =>
         join(root, path), "utf8"
     );
 
-const getFolderContents = root => async path => {
+const getFolderContents = root => async path => 
     await readdir(
         join(root, path)
     );
-};
+
 
 const renameFile = root => async (oldPath, newPath) => 
     await rename(

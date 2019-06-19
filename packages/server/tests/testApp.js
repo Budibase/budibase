@@ -26,8 +26,12 @@ module.exports = () => {
 
     return ({
         start: async () => {
-            await reInitialize();
-            server = await app(config);
+            try {
+                await reInitialize();
+                server = await app(config);
+            } catch(e) {
+                console.log(e.message);
+            }
             enableDestroy(server);
         },
         config,

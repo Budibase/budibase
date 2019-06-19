@@ -79,6 +79,7 @@ module.exports = async (config) => {
             const session = bb.recordApi.getNew("/sessions", "mastersession");
             bb.recordApi.setCustomId(session, sessionId);
             session.user_json = JSON.stringify(authUser);
+            session.username = username;
             await bb.recordApi.save(session);   
             return session;
         }
@@ -106,6 +107,7 @@ module.exports = async (config) => {
         bb.recordApi.setCustomId(session, sessionId);
         session.user_json = JSON.stringify(authUser);
         session.instanceDatastoreConfig = instance.datastoreconfig;
+        session.username = username;
         await bb.recordApi.save(session);        
         return session;
     };
@@ -154,6 +156,38 @@ module.exports = async (config) => {
 
     };
 
+    const removeSessionsForUser = async (appname, username) => {
+        if(isMaster(appname)) {
+            const sessions = await bb.indexApi.listItems(
+                "/mastersessions_by_user",
+                {
+                    rangeStartParams:{name:username}, 
+                    rangeEndParams:{name:username}, 
+                    searchPhrase:`username:${username}`
+                }
+            );
+
+            for(let session of sessions) {
+                await bb.recordApi.delete(session.key);
+            }
+        }
+        else {
+            const app = await getApplication(appname);
+            const sessions = await bb.indexApi.listItems(
+                `/applications/${app.id}/sessions_by_user`,
+                {
+                    rangeStartParams:{name:username}, 
+                    rangeEndParams:{name:username}, 
+                    searchPhrase:`username:${username}`
+                }
+            );
+
+            for(let session of sessions) {
+                await bb.recordApi.delete(session.key);
+            }
+        }
+    }
+
     return ({
         getApplication,
         getSession,
@@ -161,7 +195,7 @@ module.exports = async (config) => {
         authenticate,
         getInstanceApiForSession,
         getFullAccessInstanceApiForUsername,
-        createTemporaryAccessCode
+        removeSessionsForUser
     });
 
 }
