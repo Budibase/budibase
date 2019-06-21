@@ -107,6 +107,13 @@ module.exports = (app) => {
     });
 
     it("should be able with re-authenticate when user is enabled again", async () => {
+
+        await app.post("/_master/api/enableUser", {
+            username: testUserName
+        })
+        .set("cookie", ownerCookie)
+        .expect(statusCodes.OK);
+
         await app.post("/_master/api/authenticate", {
             username: testUserName,
             password: testPassword

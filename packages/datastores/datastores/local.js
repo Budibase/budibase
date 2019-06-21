@@ -56,10 +56,14 @@ const readableFileStream = root => async path =>
         join(root, path), "utf8"
     );
 
-const writableFileStream = root => async path => 
-    fs.createWriteStream(
-        join(root, path), "utf8"
-    );
+const writableFileStream = root => path => 
+    new Promise((resolve, reject) => {
+        const stream = fs.createWriteStream(
+                        join(root, path), 
+                        "utf8");
+        stream.on("open", () => resolve(stream));
+        stream.on("error", reject);
+    });
 
 const getFolderContents = root => async path => 
     await readdir(

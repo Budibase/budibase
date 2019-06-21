@@ -161,9 +161,8 @@ module.exports = async (config) => {
             const sessions = await bb.indexApi.listItems(
                 "/mastersessions_by_user",
                 {
-                    rangeStartParams:{name:username}, 
-                    rangeEndParams:{name:username}, 
-                    searchPhrase:`username:${username}`
+                    rangeStartParams:{username}, 
+                    rangeEndParams:{username}
                 }
             );
 
