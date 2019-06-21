@@ -53,7 +53,7 @@ const deleteFolder = root => async (path) =>
 
 const readableFileStream = root => async path => 
     fs.createReadStream(
-        join(root, path), "utf8"
+        join(root, path)
     );
 
 const writableFileStream = root => path => 

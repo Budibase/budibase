@@ -115,15 +115,23 @@ module.exports = async (config) => {
     const getInstanceApiForSession = async (appname, sessionId) => {
         if(isMaster(appname)) {
             const customId = bb.recordApi.customId("mastersession", sessionId);
-            const session = await bb.recordApi.load(`/sessions/${customId}`);
-            return await getApisForSession(masterDatastore, session);
+            try {
+                const session = await bb.recordApi.load(`/sessions/${customId}`);
+                return await getApisForSession(masterDatastore, session);
+            } catch(_) {
+                return null;
+            }
         }
         else {
             const app = await getApplication(appname);
             const customId = bb.recordApi.customId("session", sessionId);
-            const session = await bb.recordApi.load(`/applications/${app.id}/sessions/${customId}`);
-            const instanceDatastore = getInstanceDatastore(session.instanceDatastoreConfig)
-            return await getApisForSession(instanceDatastore, session);
+            try {
+                const session = await bb.recordApi.load(`/applications/${app.id}/sessions/${customId}`);
+                const instanceDatastore = getInstanceDatastore(session.instanceDatastoreConfig)
+                return await getApisForSession(instanceDatastore, session);
+            } catch(_) {
+                return null;
+            }
         }
     };
 
@@ -162,7 +170,8 @@ module.exports = async (config) => {
                 "/mastersessions_by_user",
                 {
                     rangeStartParams:{username}, 
-                    rangeEndParams:{username}
+                    rangeEndParams:{username},
+                    searchPhrase:`username:${username}`
                 }
             );
 

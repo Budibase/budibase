@@ -69,7 +69,11 @@ module.exports = (config, app) => {
             pathParts[1],
             ctx.sessionId);
 
-        await next();
+        if(ctx.instance === null) {
+            ctx.response.status = StatusCodes.UNAUTHORIZED;
+        } else {
+            await next();
+        }
     })
     .post("/:appname/api/changeMyPassword", async (ctx) => {
         await ctx.instance.authApi.changeMyPassword(

@@ -88,7 +88,7 @@ module.exports = (app) => {
 
         await app.get("/_master/api/users/")
             .set("cookie", newUserCookie)
-            .expect(statusCodes.FORBIDDEN);
+            .expect(statusCodes.UNAUTHORIZED);
 
         await app.post("/_master/api/authenticate", {
             username: testUserName,
