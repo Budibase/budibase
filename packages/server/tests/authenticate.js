@@ -1,4 +1,7 @@
 const statusCodes = require("../utilities/statusCodes");
+const util = require("util");
+const fs = require("fs");
+const readFile = util.promisify(fs.readFile);
 
 module.exports = (app) => {
 
@@ -41,7 +44,7 @@ module.exports = (app) => {
     });
 
     const testUserName = "test_user";
-    const testPassword = "test_user_password";
+    let testPassword = "test_user_password";
     it("should be able to create new user with authenticated cookie", async () => {
                 
         await app.post("/_master/api/createUser", {
@@ -119,5 +122,31 @@ module.exports = (app) => {
             password: testPassword
         })
         .expect(statusCodes.OK);
+    });
+
+    it("should be able to reset password with temporary access", async () => {
+        // need to sort out behaviour sources for this...
+        await app.post("/_master/api/createTemporaryAccess", {
+            username: testUserName
+        })
+        .expect(statusCodes.OK);
+
+        testPassword = "test_user_new_password";
+
+        const tempCode = await readFile(`tempaccess${testUserName}`, "utf8");
+
+        await app.post("/_master/api/setPasswordFromTemporaryCode", {
+            username: testUserName,
+            tempCode,
+            newPassword:testPassword
+        })
+        .expect(statusCodes.OK);
+
+        await app.post("/_master/api/authenticate", {
+            username: testUserName,
+            password: testPassword
+        })
+        .expect(statusCodes.OK);
+
     });
 };

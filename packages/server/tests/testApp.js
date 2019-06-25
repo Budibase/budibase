@@ -10,13 +10,42 @@ const mkdir = promisify(fs.mkdir);
 const masterOwnerName = "test_master";
 const masterOwnerPassword = "test_master_pass";
 
+const masterPlugins = {
+    main: {
+        outputToFile : ({filename, content}) => {
+            fs.writeFile(`./tests/${filename}`, content, {encoding:"utf8"});
+        }
+    }
+}
+
+const customizeMaster = appDefinition => {
+
+    appDefinition.actions.outputToFile = {
+        name: 'outputToFile',
+        behaviourSource: 'main',
+        behaviourName: 'outputToFile',
+        initialOptions: {}
+    };
+
+    appDefinition.triggers.push({
+        actionName: 'outputToFile',
+        eventName: 'authApi:createTemporaryAccess:onComplete',
+        optionsCreator: 'return ({filename:"tempaccess" + context.userName, content:context.result})',
+        condition: ''
+    });
+
+    return appDefinition;
+}
+
 const config = {
     datastore: "local",
     datastoreConfig: {
         rootPath: "./tests/.data"
     },
     keys: ["secret1", "secret2"],
-    port: 4002
+    port: 4002,
+    masterPlugins,
+    customizeMaster
 }
 
 

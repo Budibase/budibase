@@ -15,6 +15,15 @@ module.exports = () => ({
     keys: ["secret1", "secret1"],
 
     // port for http server to listen on
-    port: 4001
+    port: 4001,
+
+    // path to where your appDefinition etc is stored (dev time)
+    latestAppsPath: "./appPackages",
+
+    // register plugins for master
+    masterPlugins: {},
+
+    // make modifications to master's appdefinition - e.g. add plugins
+    customizeMaster: appDefinition => appDefinition
 
 })

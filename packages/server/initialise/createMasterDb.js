@@ -4,6 +4,7 @@ const getDatabaseManager = require("../utilities/databaseManager");
 const {getApisForUser, getApisWithFullAccess} = require("../utilities/budibaseApi");  
 const masterDbAppDefinition = require("../appPackages/master/appDefinition.json");
 const masterDbAccessLevels = require("../appPackages/master/access_levels.json");
+const { masterAppPackage } = require("../utilities/createAppPackage");
 
 module.exports = async (datastoreModule, rootConfig, username, password) => {
     try {
@@ -18,19 +19,20 @@ module.exports = async (datastoreModule, rootConfig, username, password) => {
         const templateApi = getTemplateApi({datastore});
 
         await initialiseData(datastore, {
-            heirarchy:templateApi.constructHeirarchy(masterDbAppDefinition.hierarchy), 
+            hierarchy:templateApi.constructHierarchy(masterDbAppDefinition.hierarchy), 
             actions:masterDbAppDefinition.actions, 
             triggers:masterDbAppDefinition.triggers
         });
 
-        const bbMaster = await getApisWithFullAccess(datastore);
+        const bbMaster = await getApisWithFullAccess(
+            datastore, masterAppPackage());
         await bbMaster.authApi.saveAccessLevels(masterDbAccessLevels);
         const user = bbMaster.authApi.getNewUser();
         user.name = username;
         user.accessLevels= ["owner"];
         await bbMaster.authApi.createUser(user, password);
         
-        return await getApisForUser(datastore, username, password);
+        return await getApisForUser(datastore, masterAppPackage(), username, password);
     } catch(e) {
         throw e;
     }

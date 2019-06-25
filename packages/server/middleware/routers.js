@@ -166,14 +166,14 @@ module.exports = (config, app) => {
         );
         ctx.response.status = StatusCodes.OK;
     })
-    .post("/:appname/api/appHeirarchy", async (ctx) => {
-        ctx.body = await ctx.instance.templateApi.saveApplicationHeirarchy(
+    .post("/:appname/api/apphierarchy", async (ctx) => {
+        ctx.body = await ctx.instance.templateApi.saveApplicationHierarchy(
             ctx.body
         );
         ctx.response.status = StatusCodes.OK;
     })
     .post("/:appname/api/actionsAndTriggers", async (ctx) => {
-        ctx.body = await ctx.instance.templateApi.saveApplicationHeirarchy(
+        ctx.body = await ctx.instance.templateApi.saveApplicationHierarchy(
             ctx.body
         );
         ctx.response.status = StatusCodes.OK;

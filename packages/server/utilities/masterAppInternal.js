@@ -1,9 +1,10 @@
 const {getApisWithFullAccess, getApisForSession} = require("./budibaseApi");
 const getDatastore = require("./datastore");
 const getDatabaseManager = require("./databaseManager");
-const {$} = require("budibase-core").common;
-const {keyBy} = require("lodash/fp");
+const {$, splitKey} = require("budibase-core").common;
+const { keyBy, last } = require("lodash/fp");
 const {unauthorized} = require("./exceptions");
+const { masterAppPackage, applictionVersionPackage } = require("../utilities/createAppPackage");
 
 const isMaster = appname => appname === "_master";
 
@@ -19,7 +20,8 @@ module.exports = async (config) => {
     const masterDatastore = datastoreModule.getDatastore(
         databaseManager.masterDatastoreConfig);
 
-    const bb = await getApisWithFullAccess(masterDatastore); 
+    const bb = await getApisWithFullAccess(
+        masterDatastore, masterAppPackage(config)); 
 
     let applications;
     const loadApplications = async () => 
@@ -94,8 +96,15 @@ module.exports = async (config) => {
         const instance = await bb.recordApi.load(
             userInMaster.instance.key);
         
+        const versionId = $(instance.version.key, [
+            splitKey,
+            last
+        ]);
+
         const bbInstance = await getApisWithFullAccess(
-            datastoreModule.getDatastore(instance.datastoreconfig));
+            datastoreModule.getDatastore(instance.datastoreconfig),
+            applictionVersionPackage(appname, versionId)
+        );
 
         const authUser = await bbInstance.authApi.authenticate(username, password);
 
@@ -117,7 +126,11 @@ module.exports = async (config) => {
             const customId = bb.recordApi.customId("mastersession", sessionId);
             try {
                 const session = await bb.recordApi.load(`/sessions/${customId}`);
-                return await getApisForSession(masterDatastore, session);
+                return await getApisForSession(
+                    masterDatastore, 
+                    masterAppPackage(config), 
+                    session);
+
             } catch(_) {
                 return null;
             }
@@ -128,7 +141,10 @@ module.exports = async (config) => {
             try {
                 const session = await bb.recordApi.load(`/applications/${app.id}/sessions/${customId}`);
                 const instanceDatastore = getInstanceDatastore(session.instanceDatastoreConfig)
-                return await getApisForSession(instanceDatastore, session);
+                return await getApisForSession(
+                    instanceDatastore, 
+                    applictionVersionPackage(appname, session.instanceVersion), 
+                    session);
             } catch(_) {
                 return null;
             }
@@ -203,7 +219,8 @@ module.exports = async (config) => {
         authenticate,
         getInstanceApiForSession,
         getFullAccessInstanceApiForUsername,
-        removeSessionsForUser
+        removeSessionsForUser,
+        bbMaster:bb
     });
 
 }

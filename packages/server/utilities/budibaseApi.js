@@ -1,11 +1,25 @@
 const crypto = require("../nodeCrypto");
-const {getAppApis} = require("budibase-core");
+const {getAppApis, getTemplateApi} = require("budibase-core");
 
-module.exports.getApisWithFullAccess = async (datastore) => {
+const constructHierarchy = (datastore, appDefinition) => {
+    appDefinition.hierarchy = getTemplateApi({datastore})
+        .constructHierarchy(appDefinition.hierarchy);
+    return appDefinition;
+}
+
+module.exports.getApisWithFullAccess = async (datastore, appPackage) => {
+    
+    const appDefinition = constructHierarchy(
+        datastore, 
+        appPackage.appDefinition);
+
     const bb = await getAppApis(
         datastore, 
-        null, null, null,
-        crypto
+        appPackage.behaviourSources, 
+        null, //cleanupTransations
+        null, // getEpochTime
+        crypto,
+        appDefinition
     );
 
     bb.withFullAccess();
@@ -13,11 +27,16 @@ module.exports.getApisWithFullAccess = async (datastore) => {
     return bb;
 };
 
-module.exports.getApisForUser = async (datastore, username, password) => {
+module.exports.getApisForUser = async (datastore, appPackage, username, password) => {
     const bb = await getAppApis(
         datastore, 
-        null, null, null,
-        crypto
+        appPackage.behaviourSources, 
+        null, //cleanupTransations
+        null, // getEpochTime
+        crypto,
+        constructHierarchy(
+            datastore, 
+            appPackage.appDefinition)
     );
 
     await bb.authenticateAs(username, password);
@@ -25,14 +44,19 @@ module.exports.getApisForUser = async (datastore, username, password) => {
     return bb;
 }
 
-module.exports.getApisForSession = async (datastore, session) => {
+module.exports.getApisForSession = async (datastore, appPackage, session) => {
 
     const user = JSON.parse(session.user_json);
 
     const bb = await getAppApis(
         datastore, 
-        null, null, null,
-        crypto
+        appPackage.behaviourSources, 
+        null, //cleanupTransations
+        null, // getEpochTime
+        crypto,
+        constructHierarchy(
+            datastore, 
+            appPackage.appDefinition)
     );
 
     bb.asUser(user);
