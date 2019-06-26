@@ -133,7 +133,7 @@ module.exports = (app) => {
 
         testPassword = "test_user_new_password";
 
-        const tempCode = await readFile(`tempaccess${testUserName}`, "utf8");
+        const tempCode = await readFile(`./tests/.data/tempaccess${testUserName}`, "utf8");
 
         await app.post("/_master/api/setPasswordFromTemporaryCode", {
             username: testUserName,

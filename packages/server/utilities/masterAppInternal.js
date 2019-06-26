@@ -154,11 +154,7 @@ module.exports = async (config) => {
     const getFullAccessInstanceApiForUsername = async (appname, username) => {
 
         if(isMaster(appname)) {
-            const user = bb.authApi.getUsers()
-                                   .find(u => u.name === username);
-            if(!user) return;
-            if(!user.enabled) return;
-            return user;
+            return bb;
         }
         else {
             const app = await getApplication(appname);

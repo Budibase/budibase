@@ -42,7 +42,7 @@ module.exports = (config, app) => {
 
         await instanceApi.authApi.setPasswordFromTemporaryCode(
             ctx.request.body.tempCode,
-            ctx.request.body.newpassword); 
+            ctx.request.body.newPassword); 
 
         ctx.response.status = StatusCodes.OK;
     })

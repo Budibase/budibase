@@ -13,7 +13,7 @@ const masterOwnerPassword = "test_master_pass";
 const masterPlugins = {
     main: {
         outputToFile : ({filename, content}) => {
-            fs.writeFile(`./tests/${filename}`, content, {encoding:"utf8"});
+            fs.writeFile(`./tests/.data/${filename}`, content, {encoding:"utf8"});
         }
     }
 }
