@@ -1,16 +1,16 @@
 const app = require("../app");
-const { promisify } = require("util");
-const rimraf = promisify(require("rimraf"));
+const { rimraf, mkdir } = require("../utilities/fsawait");
 const createMasterDb = require("../initialise/createMasterDb");
 const request = require("supertest");
 const fs = require("fs");
+const { masterAppPackage } = require("../utilities/createAppPackage");
+
 var enableDestroy = require('server-destroy');
 
-const mkdir = promisify(fs.mkdir);
 const masterOwnerName = "test_master";
 const masterOwnerPassword = "test_master_pass";
 
-const masterPlugins = {
+const extraMasterPlugins = {
     main: {
         outputToFile : ({filename, content}) => {
             fs.writeFile(`./tests/.data/${filename}`, content, {encoding:"utf8"});
@@ -44,7 +44,8 @@ const config = {
     },
     keys: ["secret1", "secret2"],
     port: 4002,
-    masterPlugins,
+    latestAppsPath: "./appPackages",
+    extraMasterPlugins,
     customizeMaster
 }
 
@@ -69,11 +70,18 @@ module.exports = () => {
         get: (url) => getRequest(server, url),
         masterAuth: {
             username: masterOwnerName,
-            password: masterOwnerPassword
+            password: masterOwnerPassword,
+            cookie: ""
         },
-        destroy: () => server.destroy()
+        testAppInfo: {
+            name: "testApp"
+        },
+        destroy: () => server.destroy(),
+        masterAppPackage: masterAppPackage(config)
     })
 };
+
+
 
 const postRequest = (server, url, body) => 
     request(server)
@@ -98,7 +106,8 @@ const reInitialize = async () => {
         datastoreModule,
         config.datastoreConfig,
         masterOwnerName,
-        masterOwnerPassword 
+        masterOwnerPassword ,
+        config
     );
 }
 

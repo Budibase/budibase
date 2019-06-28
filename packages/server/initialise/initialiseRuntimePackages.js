@@ -1,21 +1,7 @@
-const util = require("util");
-const fs = require("fs");
-const { join } = require("path");
 const { ncp } = require('ncp');
 const { masterAppPackage } = require("../utilities/createAppPackage");
-const rimraf = util.promisify(require("rimraf"));
-const mkdir = util.promisify(fs.mkdir);
-
-const exists = root => async (path) => {
-    try {
-        await util.promisify(fs.access)(
-            join(root,path)
-        );       
-    } catch (e) {
-        return false;
-    }
-    return true;
-};
+const { mkdir, rimraf, exists } = require("../utilities/fsawait");
+const { runtimePackagesDirectory } = require("../utilities/runtimePackages");
 
 const copyfolder = (source, destination) =>
     new Promise((resolve, reject) => {
@@ -28,20 +14,20 @@ const copyfolder = (source, destination) =>
         });
     });
 
+
 module.exports = async (config, bbMaster, latestAppsFolder) => {
 
-    const appsRuntimeFolder = "./runtime_apps";
     // create runtime folder
     // copy master into /master/latest 
-    if(await exists(appsRuntimeFolder)) {
+    if(await exists(runtimePackagesDirectory)) {
         try {
-            await rimraf(appsRuntimeFolder);
+            await rimraf(runtimePackagesDirectory);
         } catch(err) {
             console.log(err);
         }
     }
     
-    await mkdir(appsRuntimeFolder);
+    await mkdir(runtimePackagesDirectory);
     
 
     /*

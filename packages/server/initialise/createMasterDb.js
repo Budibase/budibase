@@ -1,14 +1,14 @@
-const {initialiseData, setupDatastore,
-    getTemplateApi} = require("budibase-core");
+const {initialiseData, setupDatastore} = require("budibase-core");
+const constructHierarchy  = require("../utilities/constructHierarchy");
 const getDatabaseManager = require("../utilities/databaseManager"); 
 const {getApisForUser, getApisWithFullAccess} = require("../utilities/budibaseApi");  
 const masterDbAppDefinition = require("../appPackages/master/appDefinition.json");
 const masterDbAccessLevels = require("../appPackages/master/access_levels.json");
 const { masterAppPackage } = require("../utilities/createAppPackage");
 
-module.exports = async (datastoreModule, rootConfig, username, password) => {
+module.exports = async (datastoreModule, rootDatastoreConfig, username, password, budibaseConfig) => {
     try {
-        const databaseManager = getDatabaseManager(datastoreModule, rootConfig);
+        const databaseManager = getDatabaseManager(datastoreModule, rootDatastoreConfig);
         
         await databaseManager.createEmptyMasterDb();
         const masterDbConfig = databaseManager.masterDatastoreConfig;
@@ -16,23 +16,18 @@ module.exports = async (datastoreModule, rootConfig, username, password) => {
             datastoreModule.getDatastore(masterDbConfig)
         );
 
-        const templateApi = getTemplateApi({datastore});
-
-        await initialiseData(datastore, {
-            hierarchy:templateApi.constructHierarchy(masterDbAppDefinition.hierarchy), 
-            actions:masterDbAppDefinition.actions, 
-            triggers:masterDbAppDefinition.triggers
-        });
+        await initialiseData(datastore, 
+            constructHierarchy(masterDbAppDefinition));
 
         const bbMaster = await getApisWithFullAccess(
-            datastore, masterAppPackage());
+            datastore, masterAppPackage(budibaseConfig));
         await bbMaster.authApi.saveAccessLevels(masterDbAccessLevels);
         const user = bbMaster.authApi.getNewUser();
         user.name = username;
         user.accessLevels= ["owner"];
         await bbMaster.authApi.createUser(user, password);
         
-        return await getApisForUser(datastore, masterAppPackage(), username, password);
+        return await getApisForUser(datastore, masterAppPackage(budibaseConfig), username, password);
     } catch(e) {
         throw e;
     }

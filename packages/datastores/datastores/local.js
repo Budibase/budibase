@@ -11,6 +11,7 @@ const rmdir = promisify(fs.rmdir);
 const unlink = promisify(fs.unlink);
 const readdir = promisify(fs.readdir);
 const rename = promisify(fs.rename);
+const stat = promisify(fs.stat);
 
 const updateFile = root => async (path, file) => 
     await writeFile(
@@ -77,6 +78,11 @@ const renameFile = root => async (oldPath, newPath) =>
         join(root, newPath)
     );
 
+const getFileSize = root => async (path) => 
+    (await stat(
+        join(root,path)
+    )).size;
+
 const datastoreFolder = (applicationId, instanceId) => 
     applicationId === "master" ? "master"
     : `app.${applicationId}.${instanceId}`;
@@ -120,6 +126,7 @@ module.exports.getDatastore = rootFolderPath => ({
     writableFileStream: writableFileStream(rootFolderPath),
     renameFile: renameFile(rootFolderPath),
     getFolderContents: getFolderContents(rootFolderPath),
+    getFileSize: getFileSize(rootFolderPath),
     createEmptyDb: createEmptyDb(rootFolderPath),
     datastoreType : "local",
     datastoreDescription: rootFolderPath

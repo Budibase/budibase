@@ -1,6 +1,8 @@
-const Router = require("koa-router");
+const Router = require("@koa/router");
 const session = require("./session");
 const StatusCodes = require("../utilities/statusCodes");
+const fs = require("fs");
+
 module.exports = (config, app) => {
 
     const router = new Router();
@@ -148,21 +150,30 @@ module.exports = (config, app) => {
         );
         ctx.response.status = StatusCodes.OK;
     })
-    .post("/:appname/api/record/:recordkey", async (ctx) => {
+    .post("/:appname/api/files/*", async (ctx) => {
+        const file = ctx.request.files.file;
+        ctx.body = await ctx.instance.recordApi.uploadFile(
+            getRecordKey(ctx.params.appname, ctx.request.path),
+            fs.createReadStream(file.path),
+            file.name
+        );
+        ctx.response.status = StatusCodes.OK;
+    })
+    .post("/:appname/api/record/*", async (ctx) => {
         ctx.body = await ctx.instance.recordApi.save(
             ctx.request.body
         );
         ctx.response.status = StatusCodes.OK;
     })
-    .get("/:appname/api/record/:recordkey", async (ctx) => {
+    .get("/:appname/api/record/*", async (ctx) => {
         ctx.body = await ctx.instance.recordApi.load(
-            ctx.params.recordKey
+            getRecordKey(ctx.params.appname, ctx.request.path)
         );
         ctx.response.status = StatusCodes.OK;
     })
-    .del("/:appname/api/record/:recordkey", async (ctx) => {
+    .del("/:appname/api/record/*", async (ctx) => {
         await ctx.instance.recordApi.delete(
-            ctx.params.recordKey
+            getRecordKey(ctx.params.appname, ctx.request.path)
         );
         ctx.response.status = StatusCodes.OK;
     })
@@ -184,6 +195,11 @@ module.exports = (config, app) => {
         );
         ctx.response.status = StatusCodes.OK;
     });
+
+    const getRecordKey = (appname, wholePath) => 
+        wholePath
+        .replace(`/${appname}/api/record/`, "")
+        .replace(`/${appname}/api/files/`, "");
 
     return router;
 }

@@ -1,7 +1,6 @@
 const statusCodes = require("../utilities/statusCodes");
-const util = require("util");
-const fs = require("fs");
-const readFile = util.promisify(fs.readFile);
+const { readFile } = require("../utilities/fsawait");
+const { timeout } = require("./helpers");
 
 module.exports = (app) => {
 
@@ -31,7 +30,6 @@ module.exports = (app) => {
 
     });
 
-    let ownerCookie;
     it("should return ok correct username and password supplied", async () => {
 
         const response = await app.post("/_master/api/authenticate", {
@@ -40,7 +38,7 @@ module.exports = (app) => {
         })
         .expect(statusCodes.OK);
 
-        ownerCookie = response.header['set-cookie'];
+        app.masterAuth.cookie = response.header['set-cookie'];
     });
 
     const testUserName = "test_user";
@@ -56,7 +54,7 @@ module.exports = (app) => {
             },
             password: testPassword
         })
-        .set("cookie", ownerCookie)
+        .set("cookie", app.masterAuth.cookie)
         .expect(statusCodes.OK);
 
         
@@ -74,7 +72,7 @@ module.exports = (app) => {
         newUserCookie = responseNewUser.header['set-cookie'];
 
         expect(newUserCookie).toBeDefined();
-        expect(newUserCookie).not.toEqual(ownerCookie);
+        expect(newUserCookie).not.toEqual(app.masterAuth.cookie);
 
         app.get("/_master/api/users/")
         .set("cookie", newUserCookie)
@@ -86,7 +84,7 @@ module.exports = (app) => {
         await app.post("/_master/api/disableUser", {
             username: testUserName
         })
-        .set("cookie", ownerCookie)
+        .set("cookie", app.masterAuth.cookie)
         .expect(statusCodes.OK);
 
         await app.get("/_master/api/users/")
@@ -114,7 +112,7 @@ module.exports = (app) => {
         await app.post("/_master/api/enableUser", {
             username: testUserName
         })
-        .set("cookie", ownerCookie)
+        .set("cookie", app.masterAuth.cookie)
         .expect(statusCodes.OK);
 
         await app.post("/_master/api/authenticate", {
@@ -124,8 +122,9 @@ module.exports = (app) => {
         .expect(statusCodes.OK);
     });
 
+    let testUserTempCode;
     it("should be able to reset password with temporary access", async () => {
-        // need to sort out behaviour sources for this...
+
         await app.post("/_master/api/createTemporaryAccess", {
             username: testUserName
         })
@@ -133,14 +132,43 @@ module.exports = (app) => {
 
         testPassword = "test_user_new_password";
 
-        const tempCode = await readFile(`./tests/.data/tempaccess${testUserName}`, "utf8");
+        // the behaviour that creates the below file is async,
+        /// to this timeout is giving it a change to work its magic        
+        await timeout(10);
 
+        const testUserTempCode = await readFile(`./tests/.data/tempaccess${testUserName}`, "utf8");
+    
         await app.post("/_master/api/setPasswordFromTemporaryCode", {
             username: testUserName,
-            tempCode,
+            tempCode:testUserTempCode,
             newPassword:testPassword
         })
         .expect(statusCodes.OK);
+
+        await app.post("/_master/api/authenticate", {
+            username: testUserName,
+            password: testPassword
+        })
+        .expect(statusCodes.OK);
+
+        
+
+    });
+
+    it("should not be able to set password with used temp code", async () => {
+      
+        await app.post("/_master/api/setPasswordFromTemporaryCode", {
+            username: testUserName,
+            tempCode:testUserTempCode,
+            newPassword:"whatever"
+        })
+        .expect(statusCodes.OK);
+
+        await app.post("/_master/api/authenticate", {
+            username: testUserName,
+            password: "whatever"
+        })
+        .expect(statusCodes.UNAUTHORIZED);
 
         await app.post("/_master/api/authenticate", {
             username: testUserName,

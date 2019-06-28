@@ -1,12 +1,11 @@
 const create = require("./createMasterDb");
 const argv = require("yargs").argv
-
 const readline = require('readline');
 const { promisify } = require('util');
-const rimraf = promisify(require("rimraf"));
-const fs = require("fs")
+const { mkdir, rimraf } = require("../utilities/fsawait");
+const budibaseConfig = require("../config");
 
-const mkdir = promisify(fs.mkdir);
+
 
 readline.Interface.prototype.question[promisify.custom] = function(prompt) {
   return new Promise(resolve =>
@@ -72,5 +71,6 @@ const question = async (q) => {
         datastoreModule,
         rootconfig,
         username,
-        password)
+        password,
+        budibaseConfig)
 })()
