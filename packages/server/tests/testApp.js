@@ -11,7 +11,7 @@ const masterOwnerName = "test_master";
 const masterOwnerPassword = "test_master_pass";
 
 const extraMasterPlugins = {
-    main: {
+    test_plugins: {
         outputToFile : ({filename, content}) => {
             fs.writeFile(`./tests/.data/${filename}`, content, {encoding:"utf8"});
         }
@@ -22,7 +22,7 @@ const customizeMaster = appDefinition => {
 
     appDefinition.actions.outputToFile = {
         name: 'outputToFile',
-        behaviourSource: 'main',
+        behaviourSource: 'test_plugins',
         behaviourName: 'outputToFile',
         initialOptions: {}
     };

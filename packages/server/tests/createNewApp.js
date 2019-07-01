@@ -57,6 +57,7 @@ module.exports = (app) => {
 
     });
 
+    let instance1Key;
     it("should be able to create new instance of app", async () => {
         const master = await getmaster();
         const instance1 = master.recordApi
@@ -64,7 +65,11 @@ module.exports = (app) => {
         instance1.name = "instance 1";
         instance1.active = true;
         instance1.version = {key:version1Key, name:"v1"};
-        instance1.datastoreconfig;
+        instance1Key = instance1.key;
+        
+        await app.post(`/_master/api/record/${instance1.key}`, instance1)
+                    .set("cookie", app.masterAuth.cookie)
+                    .expect(statusCodes.OK);
 
 
     });

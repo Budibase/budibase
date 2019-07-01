@@ -2,24 +2,26 @@ const { tmpdir } = require("os");
 const { join } = require("path");
 const uuid = require("uuid/v1");
 const { take, takeRight } = require("lodash/fp");
-const { splitKey, $ } = require("budibase-core").common;
+const { splitKey, $, joinKey } = require("budibase-core").common;
 const { unzipTarGzPackageToRuntime } = require("../../utilities/targzAppPackage");
 const { getRuntimePackageDirectory } = require("../../utilities/runtimePackages");
 const { exists } = require("../../utilities/fsawait");
 const createInstanceDb = require("../../initialise/createInstanceDb"); 
+const { createWriteStream } = require("fs");
 
 module.exports = (config) => ({
     initialiseInstance : async ({ instance, apis }) => {
-    
         const appKey = $(instance.key, [
             splitKey,
-            take(2)
+            take(2),
+            joinKey
         ]);
         
         const application = await apis.recordApi.load(appKey);
 
+        const datastoreModule  = require(`../../../datastores/datastores/${config.datastore}`);
         const dbConfig = await createInstanceDb(
-            require(config.datastore),
+            datastoreModule,
             config.datastoreConfig,
             application.id,
             instance.id
@@ -27,7 +29,8 @@ module.exports = (config) => ({
 
         const versionId = $(instance.version.key, [
             splitKey,
-            takeRight(1)
+            takeRight(1),
+            joinKey
         ]);
         
         const runtimeDir = getRuntimePackageDirectory(
@@ -35,7 +38,7 @@ module.exports = (config) => ({
             versionId);
         
         if(!await exists(runtimeDir))
-            await downloadAppPackage(instance, application.name, versionId);
+            await downloadAppPackage(apis, instance, application.name, versionId);
         
         instance.datastoreconfig = JSON.stringify(dbConfig);
         instance.isNew = false;
@@ -43,12 +46,11 @@ module.exports = (config) => ({
     }
 });
 
-const downloadAppPackage = async (instance, appName, versionId) => {
-    const inputStream = apis.recordApi.downloadFile(instance.key, "package.tar.gz");
+const downloadAppPackage = async (apis, instance, appName, versionId) => {
+    const inputStream = await apis.recordApi.downloadFile(instance.version.key, "package.tar.gz");
 
     const tempFilePath = join(tmpdir(), `bbpackage_${uuid()}.tar.gz`);
-    const outputStream = await app.datastore.writableFileStream(
-        tempFilePath);
+    const outputStream = createWriteStream(tempFilePath);
     
     await new Promise((resolve,reject) => {
         inputStream.pipe(outputStream);

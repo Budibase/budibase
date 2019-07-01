@@ -6,7 +6,7 @@ const tar = require('tar-fs');
 const zlib = require("zlib");
 const { join, dirname, sep } = require("path");
 const { exists, mkdir, unlink, stat } = require("../utilities/fsawait");
-const { getRuntimePackageDirectory } = require("./runtimePackages");
+const { getRuntimePackageDirectory, getRuntimeAppsDirectory } = require("./runtimePackages");
 
 module.exports.createTarGzPackage = async (config, appName) => {
 
@@ -29,14 +29,19 @@ module.exports.createTarGzPackage = async (config, appName) => {
 
 module.exports.unzipTarGzPackageToRuntime = async (src, appName, versionId) => {
     const versionDir = getRuntimePackageDirectory(appName, versionId);
+    const appDir = getRuntimeAppsDirectory(appName);
 
-    if(await exists(versionDir)) {
-        await rimraf(versionDir);
+    if(await exists(appDir)) {
+        if(await exists(versionDir)) {
+            await rimraf(versionDir);
+        }
+    } else {
+        await mkdir(appDir);
     }
 
     await mkdir(versionDir);
 
-    decompress(src, versionDir);
+    await decompress(src, versionDir);
 }
 
 const compress = (src, dest) => new Promise((resolve, reject) => {
