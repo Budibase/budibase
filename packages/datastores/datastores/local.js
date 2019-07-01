@@ -101,7 +101,7 @@ const getDatastoreConfig = (rootConfig) => (applicationId, instanceId) =>
          ));
 
 const getMasterDbRootConfig = (rootConfig) => () => rootConfig.rootPath;
-const getInstanceDbRootConfig = (rootConfig) => async (applicationId, instanceId) => rootConfig.rootPath;
+const getInstanceDbRootConfig = (rootConfig) => (applicationId, instanceId) => rootConfig.rootPath;
 const getDbRootConfig = (rootConfig, applicationId, instanceId) => 
     applicationId === "master" 
     ? getMasterDbRootConfig(rootConfig)() 
