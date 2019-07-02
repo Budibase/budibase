@@ -8,8 +8,12 @@ const { getRuntimePackageDirectory } = require("../../utilities/runtimePackages"
 const { exists } = require("../../utilities/fsawait");
 const createInstanceDb = require("../../initialise/createInstanceDb"); 
 const { createWriteStream } = require("fs");
+const { applictionVersionPackage } = require("../../utilities/createAppPackage");
+const { getApisWithFullAccess } = require("../../utilities/budibaseApi");
 
-module.exports = (config) => ({
+module.exports = (config) => {
+    const datastoreModule  = require(`../../../datastores/datastores/${config.datastore}`);
+    return ({
     initialiseInstance : async ({ instance, apis }) => {
         const appKey = $(instance.key, [
             splitKey,
@@ -19,7 +23,6 @@ module.exports = (config) => ({
         
         const application = await apis.recordApi.load(appKey);
 
-        const datastoreModule  = require(`../../../datastores/datastores/${config.datastore}`);
         const dbConfig = await createInstanceDb(
             datastoreModule,
             config.datastoreConfig,
@@ -43,8 +46,42 @@ module.exports = (config) => ({
         instance.datastoreconfig = JSON.stringify(dbConfig);
         instance.isNew = false;
         await apis.recordApi.save(instance);
+    },
+
+    createNewUser: async ({user, apis}) => {
+        const instance = apis.recordApi.load(user.instance.key);
+
+        const appKey = $(instance.key, [
+            splitKey,
+            take(2),
+            joinKey
+        ]);
+        
+        const application = await apis.recordApi.load(appKey);
+
+        const versionId = $(instance.version.key, [
+            splitKey,
+            takeRight(1),
+            joinKey
+        ]);
+
+        const appPackage = applictionVersionPackage(
+            application.name,
+            versionId);
+
+        const instanceApis = getApisWithFullAccess(
+            datastoreModule.getDatastore(instance.datastoreconfig), 
+            appPackage);
+
+        const authUser = instanceApis.authApi.getNewUser();
+        authUser.name = user.name;
+        authUser.accessLevels = [instance.version.defaultAccessLevel];
+        await instanceApis.authApi.createUser(authUser);
+
     }
-});
+
+    });
+}
 
 const downloadAppPackage = async (apis, instance, appName, versionId) => {
     const inputStream = await apis.recordApi.downloadFile(instance.version.key, "package.tar.gz");

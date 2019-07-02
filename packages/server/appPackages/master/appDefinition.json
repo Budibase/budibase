@@ -186,6 +186,18 @@
                 "label": "Name",
                 "getInitialValue": "default",
                 "getUndefinedValue": "default"
+              },
+              {
+                "name": "defaultAccessLevel",
+                "type": "string",
+                "typeOptions": {
+                  "maxLength": 200,
+                  "values": null,
+                  "allowDeclaredValuesOnly": false
+                },
+                "label": "Default Access Level",
+                "getInitialValue": "default",
+                "getUndefinedValue": "default"
               }
             ],
             "children": [],
@@ -424,6 +436,12 @@
       "behaviourSource": "main",
       "behaviourName": "initialiseInstance",
       "initialOptions": {}
+    },
+    "create_user": {
+      "name": "create_user",
+      "behaviourSource": "main",
+      "behaviourName": "createNewUser",
+      "initialOptions": {}
     }
   },
   "triggers": [
@@ -431,7 +449,13 @@
       "actionName": "initialise_instance",
       "eventName": "recordApi:save:onRecordCreated",
       "optionsCreator": "return { instance:context.record, apis };",
-      "condition": "context.record.type === \"instance\""
+      "condition": "record.type === \"instance\""
+    },
+    {
+      "actionName": "create_user",
+      "eventName": "recordApi:save:onRecordCreated",
+      "optionsCreator": "return ({ user:context.record, apis });",
+      "condition": "context.record.type === \"user\""
     }
   ]
 }

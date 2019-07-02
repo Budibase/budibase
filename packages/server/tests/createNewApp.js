@@ -64,13 +64,18 @@ module.exports = (app) => {
                             .getNew(`${newAppKey}/instances`, "instance");
         instance1.name = "instance 1";
         instance1.active = true;
-        instance1.version = {key:version1Key, name:"v1"};
+        instance1.version = {key:version1Key, name:"v1", defaultAccessLevel:"owner"};
         instance1Key = instance1.key;
         
         await app.post(`/_master/api/record/${instance1.key}`, instance1)
                     .set("cookie", app.masterAuth.cookie)
                     .expect(statusCodes.OK);
 
+    });
+
+    it("should be able to create new user on instance", async () => {
+
+        
 
     });
 
