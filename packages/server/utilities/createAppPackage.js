@@ -1,14 +1,24 @@
 const { join } = require("path");
 const constructHierarchy = require("./constructHierarchy");
 const { common } = require("budibase-core");
-const createAppPackage = (appPath) => ({
-    appDefinition: require(join(appPath, "appDefinition.json")),
-    behaviourSources: require(join(appPath, "plugins.js")),
-    appPath
-});
+const { getRuntimePackageDirectory } = require("../utilities/runtimePackages");
+const createAppPackage = (config, appPath) => {
+
+    const appDefModule = require(
+        join(appPath, "appDefinition.json"));
+
+    const pluginsModule = require(
+        join(appPath, "plugins.js"));
+        
+    return ({
+        appDefinition: appDefModule,
+        behaviourSources: pluginsModule(config),
+        appPath
+    })
+}
 
 module.exports.masterAppPackage = (config) => {
-    const standardPackage = createAppPackage("../appPackages/master");
+    const standardPackage = createAppPackage(config, "../appPackages/master");
 
     const customizeMaster = config && config.customizeMaster 
                             ? config.customizeMaster
@@ -31,8 +41,11 @@ module.exports.masterAppPackage = (config) => {
     });
 }
     
-module.exports.applictionVersionPackage = (appname, versionId) => {
-    const pkg = createAppPackage(`../runtimePackages/${appname}/${versionId}`);
-    pkg.appDefinition = constructHierarchy(appDefinition);
+module.exports.applictionVersionPackage = (config, appname, versionId) => {
+    const pkg = createAppPackage(
+        config,
+        join("..", getRuntimePackageDirectory(appname, versionId))
+    );
+    pkg.appDefinition = constructHierarchy(pkg.appDefinition);
     return pkg;
 }

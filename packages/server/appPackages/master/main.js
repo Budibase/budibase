@@ -1,7 +1,7 @@
 const { tmpdir } = require("os");
 const { join } = require("path");
 const uuid = require("uuid/v1");
-const { take, takeRight } = require("lodash/fp");
+const { take, takeRight, last } = require("lodash/fp");
 const { splitKey, $, joinKey } = require("budibase-core").common;
 const { unzipTarGzPackageToRuntime } = require("../../utilities/targzAppPackage");
 const { getRuntimePackageDirectory } = require("../../utilities/runtimePackages");
@@ -32,24 +32,25 @@ module.exports = (config) => {
 
         const versionId = $(instance.version.key, [
             splitKey,
-            takeRight(1),
-            joinKey
+            last
         ]);
         
         const runtimeDir = getRuntimePackageDirectory(
             application.name,
             versionId);
-        
+
         if(!await exists(runtimeDir))
             await downloadAppPackage(apis, instance, application.name, versionId);
         
         instance.datastoreconfig = JSON.stringify(dbConfig);
         instance.isNew = false;
-        await apis.recordApi.save(instance);
+        instance.transactionId = "";
+
+        await apis.recordApi.save(instance);       
     },
 
     createNewUser: async ({user, apis}) => {
-        const instance = apis.recordApi.load(user.instance.key);
+        const instance = await apis.recordApi.load(user.instance.key);
 
         const appKey = $(instance.key, [
             splitKey,
@@ -61,16 +62,17 @@ module.exports = (config) => {
 
         const versionId = $(instance.version.key, [
             splitKey,
-            takeRight(1),
-            joinKey
+            last,
         ]);
 
         const appPackage = applictionVersionPackage(
+            config,
             application.name,
             versionId);
 
-        const instanceApis = getApisWithFullAccess(
-            datastoreModule.getDatastore(instance.datastoreconfig), 
+        const instanceApis = await getApisWithFullAccess(
+            datastoreModule.getDatastore(
+                JSON.parse(instance.datastoreconfig)), 
             appPackage);
 
         const authUser = instanceApis.authApi.getNewUser();

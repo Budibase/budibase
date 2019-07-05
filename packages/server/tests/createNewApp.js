@@ -6,6 +6,7 @@ const masterAppDefinition = constructHierarchy(
     require("../appPackages/master/appDefinition.json"));
 const {getApisWithFullAccess} = require("../utilities/budibaseApi");
 const { createTarGzPackage } = require("../utilities/targzAppPackage");
+const { timeout } = require("./helpers");
 
 module.exports = (app) => {
 
@@ -40,6 +41,7 @@ module.exports = (app) => {
         const version1 = master.recordApi
                             .getNew(`${newAppKey}/versions`, "version");
         version1.name = "v1";
+        version1.defaultAccessLevel = "owner";
         version1Key = version1.key;
 
         const { path, size } = await createTarGzPackage(app.config, "testApp");
@@ -57,26 +59,62 @@ module.exports = (app) => {
 
     });
 
-    let instance1Key;
+    let instance1;
     it("should be able to create new instance of app", async () => {
         const master = await getmaster();
-        const instance1 = master.recordApi
+        instance1 = master.recordApi
                             .getNew(`${newAppKey}/instances`, "instance");
         instance1.name = "instance 1";
         instance1.active = true;
         instance1.version = {key:version1Key, name:"v1", defaultAccessLevel:"owner"};
-        instance1Key = instance1.key;
         
         await app.post(`/_master/api/record/${instance1.key}`, instance1)
                     .set("cookie", app.masterAuth.cookie)
                     .expect(statusCodes.OK);
 
+        const loadInstanceResponse = await app.get(`/_master/api/record/${instance1.key}`)
+                    .set("cookie", app.masterAuth.cookie)
+                    .expect(statusCodes.OK);
+
+        instance1 = loadInstanceResponse.body;
+
     });
 
-    it("should be able to create new user on instance", async () => {
+    let user1_instance1;
+    it("should be able to create new user on instance, via master", async () => {
+        const master = await getmaster();
+        user1_instance1 = master.recordApi  
+                        .getNew(`${newAppKey}/users`, "user");
+        user1_instance1.name = "testAppUser1";
 
         
-
+        /*const lookupResponse = await app.get(`/_master/api/lookup_field/${user1_instance1.key}?fields=instance`)
+                .set("cookie", app.masterAuth.cookie)
+                .expect(statusCodes.OK);
+        */
+        user1_instance1.instance = instance1;
+        user1_instance1.active = true;
+        //await timeout(100);
+        await app.post(`/_master/api/record/${user1_instance1.key}`, user1_instance1)
+                    .set("cookie", app.masterAuth.cookie)
+                    .expect(statusCodes.OK);
     });
 
+    it("should be able to set password for new user using temporary code", async () => {
+        const testUserTempCode = await readFile(`./tests/.data/tempaccess${user1_instance1.name}`, "utf8");
+        user1_instance1.password = "user1_instance1_password";
+
+        await app.post("/testApp/api/setPasswordFromTemporaryCode", {
+            username: user1_instance1.name,
+            tempCode:testUserTempCode,
+            newPassword:user1_instance1.password
+        })
+        .expect(statusCodes.OK);
+
+        await app.post("/testApp/api/authenticate", {
+            username: user1_instance1.name,
+            password: user1_instance1.password
+        })
+        .expect(statusCodes.OK);
+    })
 }

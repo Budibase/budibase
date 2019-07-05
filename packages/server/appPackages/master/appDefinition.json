@@ -53,7 +53,7 @@
             "type": "record",
             "fields": [
               {
-                "name": "unique_name",
+                "name": "name",
                 "type": "string",
                 "typeOptions": {
                   "maxLength": 200,
@@ -329,7 +329,7 @@
           {
             "name": "user_name_lookup",
             "type": "index",
-            "map": "return {name:record.name, instanceDatastoreConfig:instance.datastoreconfig};",
+            "map": "return ({name:record.name, instanceKey:record.instance.key ? record.instance.key : '', instanceDatastoreConfig:record.instance.datastoreconfig ? record.instance.datastoreconfig : 'nothing'});",
             "filter": "",
             "indexType": "ancestor",
             "getShardName": "return record.name.substring(0,2)",
@@ -448,8 +448,8 @@
     {
       "actionName": "initialise_instance",
       "eventName": "recordApi:save:onRecordCreated",
-      "optionsCreator": "return { instance:context.record, apis };",
-      "condition": "record.type === \"instance\""
+      "optionsCreator": "return ({ instance:context.record, apis });",
+      "condition": "context.record.type === \"instance\""
     },
     {
       "actionName": "create_user",

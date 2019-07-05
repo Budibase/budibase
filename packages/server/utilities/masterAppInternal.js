@@ -88,22 +88,20 @@ module.exports = async (config) => {
 
         const app = await getApplication(appname);
         
-        const userInMaster = await bb.indexApi.listItems(
-            `/applications/${app.id}/users_by_name`,
-            {name:username}
-        ).find(u => u.name === username);
+        const userInMaster = await getUser(bb, app.id, username);
         
         const instance = await bb.recordApi.load(
-            userInMaster.instance.key);
+            userInMaster.instanceKey);
         
         const versionId = $(instance.version.key, [
             splitKey,
             last
         ]);
 
+        const dsConfig = JSON.parse(instance.datastoreconfig);
         const bbInstance = await getApisWithFullAccess(
-            datastoreModule.getDatastore(instance.datastoreconfig),
-            applictionVersionPackage(appname, versionId)
+            datastoreModule.getDatastore(dsConfig),
+            applictionVersionPackage(config, appname, versionId)
         );
 
         const authUser = await bbInstance.authApi.authenticate(username, password);
@@ -140,16 +138,30 @@ module.exports = async (config) => {
             const customId = bb.recordApi.customId("session", sessionId);
             try {
                 const session = await bb.recordApi.load(`/applications/${app.id}/sessions/${customId}`);
-                const instanceDatastore = getInstanceDatastore(session.instanceDatastoreConfig)
+                const dsConfig = JSON.parse(session.instanceDatastoreConfig);
+                const instanceDatastore = getInstanceDatastore(dsConfig)
                 return await getApisForSession(
                     instanceDatastore, 
-                    applictionVersionPackage(appname, session.instanceVersion), 
+                    applictionVersionPackage(config, appname, session.instanceVersion), 
                     session);
             } catch(_) {
                 return null;
             }
         }
     };
+
+    const getUser = async (bb, appId, username ) => {
+        const matches = await bb.indexApi.listItems(
+            `/applications/${appId}/user_name_lookup`,
+            {
+                rangeStartParams:{name:username}, 
+                rangeEndParams:{name:username}, 
+                searchPhrase:`name:${username}`
+            }
+        );
+        if(matches.length !== 1) return;
+        return matches[0];
+    }
 
     const getFullAccessInstanceApiForUsername = async (appname, username) => {
 
@@ -158,20 +170,21 @@ module.exports = async (config) => {
         }
         else {
             const app = await getApplication(appname);
-            const matches = bb.indexApi.listItems(
-                `/applications/${app.id}/user_name_lookup`,
-                {
-                    rangeStartParams:{name:username}, 
-                    rangeEndParams:{name:username}, 
-                    searchPhrase:`name:${username}`
-                }
-            );
-            if(matches.length !== 1) return;
+            const user = await getUser(bb, app.id, username);
 
+            const dsConfig = JSON.parse(user.instanceDatastoreConfig);
             const instanceDatastore = getInstanceDatastore(
-                matches[0].instanceDatastoreConfig);
+                dsConfig
+                );
 
-            return await getApisWithFullAccess(instanceDatastore);
+            const versionId = $((await bb.recordApi.load(user.instanceKey)).version.key, [
+                splitKey,
+                last
+            ]);
+            
+            return await getApisWithFullAccess(
+                instanceDatastore,
+                applictionVersionPackage(config, appname, versionId));
         }
 
     };

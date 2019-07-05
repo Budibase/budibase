@@ -165,6 +165,21 @@ module.exports = (config, app) => {
         );
         ctx.response.status = StatusCodes.OK;
     })
+    .get("/:appname/api/lookup_field/*", async (ctx) => {
+        const recordKey = getRecordKey(ctx.params.appname, ctx.request.path)
+        const fields = ctx.query.fields.split(",")
+        const recordContext = await ctx.instance.recordApi.getContext(
+            recordKey
+        );
+        const allContext = [];
+        for(let field of fields) {
+            allContext.push(
+                await recordContext.referenceOptions(field)
+            );
+        }
+        ctx.body = allContext;
+        ctx.response.status = StatusCodes.OK;
+    })
     .get("/:appname/api/record/*", async (ctx) => {
         ctx.body = await ctx.instance.recordApi.load(
             getRecordKey(ctx.params.appname, ctx.request.path)
@@ -198,8 +213,9 @@ module.exports = (config, app) => {
 
     const getRecordKey = (appname, wholePath) => 
         wholePath
-        .replace(`/${appname}/api/record/`, "")
-        .replace(`/${appname}/api/files/`, "");
+        .replace(`/${appname}/api/files/`, "")
+        .replace(`/${appname}/api/lookup_field/`, "")
+        .replace(`/${appname}/api/record/`, "");
 
     return router;
 }

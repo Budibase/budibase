@@ -3,8 +3,8 @@ const fs = require("fs");
 const {join} = require("path");
 
 const readFile = promisify(fs.readFile);
-const writeFile = (path, content) => 
-    promisify(fs.writeFile)(path, content, "utf8");
+const writeFile = (path, content, overwrite) => 
+    promisify(fs.writeFile)(path, content, {encoding:"utf8", flag: overwrite ? "w" : "wx"});
 const access = promisify(fs.access);
 const mkdir = promisify(fs.mkdir);
 const rmdir = promisify(fs.rmdir);
@@ -16,10 +16,16 @@ const stat = promisify(fs.stat);
 const updateFile = root => async (path, file) => 
     await writeFile(
             join(root,path), 
-            file
+            file,
+            true
         );
 
-const createFile = updateFile;
+const createFile = root => async (path, file) => 
+    await writeFile(
+        join(root,path), 
+        file,
+        false
+    );
 
 const loadFile = root => async (path) => 
         await readFile(
