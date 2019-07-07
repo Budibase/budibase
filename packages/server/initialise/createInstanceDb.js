@@ -1,28 +1,44 @@
 const {
     initialiseData, 
-    setupDatastore
+    setupDatastore,
+    common
 } = require("budibase-core");
 const constructHierarchy  = require("../utilities/constructHierarchy");
 const getDatabaseManager = require("../utilities/databaseManager");  
 const masterDbAppDefinition = require("../appPackages/master/appDefinition.json");
+const { applictionVersionPackage }  = require("../utilities/createAppPackage");
+const { last } = require("lodash/fp");
+const {$,splitKey} = common;
 
-module.exports = async (datastoreModule, rootDatastoreConfig, appId, instanceId) => {
+
+module.exports = async (config, datastoreModule, rootDatastoreConfig, app, instance) => {
     try {
 
         const databaseManager = getDatabaseManager(
             datastoreModule, rootDatastoreConfig);
         
         await databaseManager.createEmptyInstanceDb(
-            appId, instanceId);
+            app.id, instance.id);
 
         const dbConfig = databaseManager.getInstanceDatastoreConfig(
-            appId, instanceId);
+            app.id, instance.id);
 
         const datastore = setupDatastore(
-            datastoreModule.getDatastore(dbConfig));       
+            datastoreModule.getDatastore(dbConfig));  
+            
+        const versionId = $(instance.version.key, [
+            splitKey,
+            last
+        ]);
 
-        await initialiseData(datastore, 
-            constructHierarchy(masterDbAppDefinition));
+        const appPackage = applictionVersionPackage(
+            config, app.name, versionId
+        );
+
+        await initialiseData(
+            datastore, 
+            appPackage.appDefinition,
+            appPackage.accessLevels);
 
         return dbConfig;
 

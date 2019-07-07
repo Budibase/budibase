@@ -68,11 +68,19 @@ module.exports = () => {
         server:() => server,
         post: (url, body) => postRequest(server,url,body),
         get: (url) => getRequest(server, url),
-        masterAuth: {
-            username: masterOwnerName,
-            password: masterOwnerPassword,
-            cookie: ""
+        credentials: {
+            _master: {
+                username: masterOwnerName,
+                password: masterOwnerPassword,
+                cookie: ""
+            },
+            testApp: {
+                username: "testAppUser1",
+                password: "user1_instance1_password",
+                cookie: ""
+            }
         },
+        
         testAppInfo: {
             name: "testApp"
         },

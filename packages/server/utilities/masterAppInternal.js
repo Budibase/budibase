@@ -89,6 +89,7 @@ module.exports = async (config) => {
         const app = await getApplication(appname);
         
         const userInMaster = await getUser(bb, app.id, username);
+        if(!userInMaster) return null;
         
         const instance = await bb.recordApi.load(
             userInMaster.instanceKey);
@@ -115,6 +116,7 @@ module.exports = async (config) => {
         session.user_json = JSON.stringify(authUser);
         session.instanceDatastoreConfig = instance.datastoreconfig;
         session.username = username;
+        session.instanceVersion = instance.version.key;
         await bb.recordApi.save(session);        
         return session;
     };
@@ -140,9 +142,14 @@ module.exports = async (config) => {
                 const session = await bb.recordApi.load(`/applications/${app.id}/sessions/${customId}`);
                 const dsConfig = JSON.parse(session.instanceDatastoreConfig);
                 const instanceDatastore = getInstanceDatastore(dsConfig)
+                const versionId = $(session.instanceVersion,[
+                    splitKey,
+                    last
+                ]);
+
                 return await getApisForSession(
                     instanceDatastore, 
-                    applictionVersionPackage(config, appname, session.instanceVersion), 
+                    applictionVersionPackage(config, appname, versionId), 
                     session);
             } catch(_) {
                 return null;
@@ -171,6 +178,8 @@ module.exports = async (config) => {
         else {
             const app = await getApplication(appname);
             const user = await getUser(bb, app.id, username);
+
+            if(!user) return null;
 
             const dsConfig = JSON.parse(user.instanceDatastoreConfig);
             const instanceDatastore = getInstanceDatastore(

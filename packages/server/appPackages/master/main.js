@@ -23,13 +23,6 @@ module.exports = (config) => {
         
         const application = await apis.recordApi.load(appKey);
 
-        const dbConfig = await createInstanceDb(
-            datastoreModule,
-            config.datastoreConfig,
-            application.id,
-            instance.id
-        );
-
         const versionId = $(instance.version.key, [
             splitKey,
             last
@@ -41,6 +34,15 @@ module.exports = (config) => {
 
         if(!await exists(runtimeDir))
             await downloadAppPackage(apis, instance, application.name, versionId);
+            
+        const dbConfig = await createInstanceDb(
+            config,
+            datastoreModule,
+            config.datastoreConfig,
+            application,
+            instance
+        );
+
         
         instance.datastoreconfig = JSON.stringify(dbConfig);
         instance.isNew = false;

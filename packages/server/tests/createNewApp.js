@@ -25,11 +25,11 @@ module.exports = (app) => {
         newAppKey = newApp.key;
 
         await app.post(`/_master/api/record/${newApp.key}`, newApp)
-            .set("cookie", app.masterAuth.cookie)
+            .set("cookie", app.credentials._master.cookie)
             .expect(statusCodes.OK);
 
         const response = await app.get(`/_master/api/record/${newApp.key}`)
-            .set("cookie", app.masterAuth.cookie)
+            .set("cookie", app.credentials._master.cookie)
             .expect(statusCodes.OK);
 
         expect(response.body.name).toBe(newApp.name);
@@ -49,12 +49,12 @@ module.exports = (app) => {
         version1.package = { relativePath: "package.tar.gz", size};
 
         await app.post(`/_master/api/record/${version1.key}`, version1)
-                .set("cookie", app.masterAuth.cookie)
+                .set("cookie", app.credentials._master.cookie)
                 .expect(statusCodes.OK);
 
         await app.post(`/_master/api/files/${version1.key}`)
                 .attach("file", path, "package.tar.gz")
-                .set("cookie", app.masterAuth.cookie)
+                .set("cookie", app.credentials._master.cookie)
                 .expect(statusCodes.OK);
 
     });
@@ -69,11 +69,11 @@ module.exports = (app) => {
         instance1.version = {key:version1Key, name:"v1", defaultAccessLevel:"owner"};
         
         await app.post(`/_master/api/record/${instance1.key}`, instance1)
-                    .set("cookie", app.masterAuth.cookie)
+                    .set("cookie", app.credentials._master.cookie)
                     .expect(statusCodes.OK);
 
         const loadInstanceResponse = await app.get(`/_master/api/record/${instance1.key}`)
-                    .set("cookie", app.masterAuth.cookie)
+                    .set("cookie", app.credentials._master.cookie)
                     .expect(statusCodes.OK);
 
         instance1 = loadInstanceResponse.body;
@@ -85,36 +85,37 @@ module.exports = (app) => {
         const master = await getmaster();
         user1_instance1 = master.recordApi  
                         .getNew(`${newAppKey}/users`, "user");
-        user1_instance1.name = "testAppUser1";
+        user1_instance1.name = app.credentials.testApp.username;
 
         
         /*const lookupResponse = await app.get(`/_master/api/lookup_field/${user1_instance1.key}?fields=instance`)
-                .set("cookie", app.masterAuth.cookie)
+                .set("cookie", app.credentials._master.cookie)
                 .expect(statusCodes.OK);
         */
         user1_instance1.instance = instance1;
         user1_instance1.active = true;
         //await timeout(100);
         await app.post(`/_master/api/record/${user1_instance1.key}`, user1_instance1)
-                    .set("cookie", app.masterAuth.cookie)
+                    .set("cookie", app.credentials._master.cookie)
                     .expect(statusCodes.OK);
     });
 
     it("should be able to set password for new user using temporary code", async () => {
         const testUserTempCode = await readFile(`./tests/.data/tempaccess${user1_instance1.name}`, "utf8");
-        user1_instance1.password = "user1_instance1_password";
+        user1_instance1.password = app.credentials.testApp.password;
 
         await app.post("/testApp/api/setPasswordFromTemporaryCode", {
-            username: user1_instance1.name,
+            username: app.credentials.testApp.username,
             tempCode:testUserTempCode,
-            newPassword:user1_instance1.password
+            newPassword:app.credentials.testApp.password
         })
         .expect(statusCodes.OK);
 
         await app.post("/testApp/api/authenticate", {
-            username: user1_instance1.name,
-            password: user1_instance1.password
+            username: app.credentials.testApp.username,
+            password: app.credentials.testApp.password
         })
         .expect(statusCodes.OK);
+
     })
 }

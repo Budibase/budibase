@@ -9,11 +9,16 @@ const createAppPackage = (config, appPath) => {
 
     const pluginsModule = require(
         join(appPath, "plugins.js"));
+
+    const accessLevels = require(
+        join(appPath, "access_levels.json")
+    );
         
     return ({
         appDefinition: appDefModule,
         behaviourSources: pluginsModule(config),
-        appPath
+        appPath,
+        accessLevels
     })
 }
 

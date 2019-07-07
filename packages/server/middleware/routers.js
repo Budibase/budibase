@@ -42,6 +42,11 @@ module.exports = (config, app) => {
             ctx.request.body.username
         );
 
+        if(!instanceApi) {
+            ctx.request.status = StatusCodes.OK;
+            return;
+        }
+
         await instanceApi.authApi.setPasswordFromTemporaryCode(
             ctx.request.body.tempCode,
             ctx.request.body.newPassword); 
@@ -53,6 +58,11 @@ module.exports = (config, app) => {
             ctx.params.appname,
             ctx.request.body.username
         );
+
+        if(!instanceApi) {
+            ctx.request.status = StatusCodes.OK;
+            return;
+        }
 
         await instanceApi.authApi.createTemporaryAccess(
             ctx.request.body.username);

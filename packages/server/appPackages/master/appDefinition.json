@@ -274,6 +274,18 @@
                 "getUndefinedValue": "default"
               },
               {
+                "name": "instanceVersion",
+                "type": "string",
+                "typeOptions": {
+                  "maxLength": null,
+                  "values": null,
+                  "allowDeclaredValuesOnly": false
+                },
+                "label": "Instance Version",
+                "getInitialValue": "default",
+                "getUndefinedValue": "default"
+              },
+              {
                 "name": "username",
                 "type": "string",
                 "typeOptions": {
