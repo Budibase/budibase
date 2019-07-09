@@ -4,7 +4,7 @@ const readline = require('readline');
 const { promisify } = require('util');
 const { mkdir, rimraf } = require("../utilities/fsawait");
 const budibaseConfig = require("../config");
-
+const buildAppContext = require("../initialise/buildAppContext");
 
 
 readline.Interface.prototype.question[promisify.custom] = function(prompt) {
@@ -67,10 +67,10 @@ const question = async (q) => {
       await mkdir(rootconfig.rootPath);
     }
 
+    const appContext = await buildAppContext(budibaseConfig, false);
     await create(
-        datastoreModule,
-        rootconfig,
-        username,
-        password,
-        budibaseConfig)
+      appContext,
+      datastoreModule,
+      username,
+      password);
 })()

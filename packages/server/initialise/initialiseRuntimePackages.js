@@ -15,7 +15,7 @@ const copyfolder = (source, destination) =>
     });
 
 
-module.exports = async (config, bbMaster, latestAppsFolder) => {
+module.exports = async (context, bbMaster, latestAppsFolder) => {
 
     // create runtime folder
     // copy master into /master/latest 
@@ -42,7 +42,7 @@ module.exports = async (config, bbMaster, latestAppsFolder) => {
     
 
     const apps = {
-        "_master": masterAppPackage(config)
+        "_master": masterAppPackage(context)
     }
 
     return ((appName, versionId) => {

@@ -11,7 +11,8 @@ const { createWriteStream } = require("fs");
 const { applictionVersionPackage } = require("../../utilities/createAppPackage");
 const { getApisWithFullAccess } = require("../../utilities/budibaseApi");
 
-module.exports = (config) => {
+module.exports = (context) => {
+    const { config } = context;
     const datastoreModule  = require(`../../../datastores/datastores/${config.datastore}`);
     return ({
     initialiseInstance : async ({ instance, apis }) => {
@@ -36,9 +37,8 @@ module.exports = (config) => {
             await downloadAppPackage(apis, instance, application.name, versionId);
             
         const dbConfig = await createInstanceDb(
-            config,
+            context,
             datastoreModule,
-            config.datastoreConfig,
             application,
             instance
         );
@@ -67,10 +67,11 @@ module.exports = (config) => {
             last,
         ]);
 
-        const appPackage = applictionVersionPackage(
-            config,
+        const appPackage = await applictionVersionPackage(
+            context,
             application.name,
-            versionId);
+            versionId,
+            instance.key);
 
         const instanceApis = await getApisWithFullAccess(
             datastoreModule.getDatastore(

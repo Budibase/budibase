@@ -4,7 +4,7 @@ const createMasterDb = require("../initialise/createMasterDb");
 const request = require("supertest");
 const fs = require("fs");
 const { masterAppPackage } = require("../utilities/createAppPackage");
-
+const buildAppContext = require("../initialise/buildAppContext");
 var enableDestroy = require('server-destroy');
 
 const masterOwnerName = "test_master";
@@ -58,7 +58,8 @@ module.exports = () => {
         start: async () => {
             try {
                 await reInitialize();
-                server = await app(config);
+                const budibaseContext = await buildAppContext(config, true);
+                server = await app(budibaseContext);
             } catch(e) {
                 console.log(e.message);
             }
@@ -85,7 +86,7 @@ module.exports = () => {
             name: "testApp"
         },
         destroy: () => server.destroy(),
-        masterAppPackage: masterAppPackage(config)
+        masterAppPackage: masterAppPackage({ config })
     })
 };
 
@@ -110,12 +111,13 @@ const reInitialize = async () => {
     await mkdir(config.datastoreConfig.rootPath);
 
     const datastoreModule = require("../../datastores/datastores/" + config.datastore);
+    const budibaseContext = await buildAppContext(config, false);
     await createMasterDb(
+        budibaseContext,
         datastoreModule,
-        config.datastoreConfig,
         masterOwnerName,
-        masterOwnerPassword ,
-        config
+        masterOwnerPassword
     );
 }
+
 

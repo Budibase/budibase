@@ -86,7 +86,7 @@ module.exports = (app) => {
         user1_instance1 = master.recordApi  
                         .getNew(`${newAppKey}/users`, "user");
         user1_instance1.name = app.credentials.testApp.username;
-
+        user1_instance1.createdByMaster = true;
         
         /*const lookupResponse = await app.get(`/_master/api/lookup_field/${user1_instance1.key}?fields=instance`)
                 .set("cookie", app.credentials._master.cookie)

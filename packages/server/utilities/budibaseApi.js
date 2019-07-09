@@ -1,5 +1,9 @@
 const crypto = require("../nodeCrypto");
 const {getAppApis, getTemplateApi} = require("budibase-core");
+const getDatastore = require("./datastore");
+const { masterAppPackage } = require("../utilities/createAppPackage");
+const getDatabaseManager = require("../utilities/databaseManager");  
+
 
 const constructHierarchy = (datastore, appDefinition) => {
     appDefinition.hierarchy = getTemplateApi({datastore})
@@ -62,4 +66,20 @@ module.exports.getApisForSession = async (datastore, appPackage, session) => {
     bb.asUser(user);
 
     return bb;
+}
+
+module.exports.getMasterApisWithFullAccess = async (context) => {
+    const { config } = context;
+    const datastoreModule = getDatastore(config);
+
+    const databaseManager = getDatabaseManager(
+        datastoreModule,
+        config.datastoreConfig);
+
+
+    const masterDatastore = datastoreModule.getDatastore(
+        databaseManager.masterDatastoreConfig);
+
+    return await module.exports.getApisWithFullAccess(
+        masterDatastore, masterAppPackage(context));
 }

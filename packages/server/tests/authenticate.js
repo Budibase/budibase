@@ -52,7 +52,6 @@ module.exports = (app, appName) => {
                 name: testUserName, 
                 accessLevels:["owner"], 
                 enabled:true
-            
             },
             password: testPassword
         })

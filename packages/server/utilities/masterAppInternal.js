@@ -1,27 +1,29 @@
-const {getApisWithFullAccess, getApisForSession} = require("./budibaseApi");
+const {
+    getApisWithFullAccess, 
+    getApisForSession,
+    getMasterApisWithFullAccess
+} = require("./budibaseApi");
 const getDatastore = require("./datastore");
 const getDatabaseManager = require("./databaseManager");
 const {$, splitKey} = require("budibase-core").common;
 const { keyBy, last } = require("lodash/fp");
-const {unauthorized} = require("./exceptions");
 const { masterAppPackage, applictionVersionPackage } = require("../utilities/createAppPackage");
 
 const isMaster = appname => appname === "_master";
 
-module.exports = async (config) => {
+module.exports = async (context) => {
 
+    const { config } = context; 
     const datastoreModule = getDatastore(config);
 
     const databaseManager = getDatabaseManager(
         datastoreModule,
         config.datastoreConfig);
 
-
     const masterDatastore = datastoreModule.getDatastore(
         databaseManager.masterDatastoreConfig);
 
-    const bb = await getApisWithFullAccess(
-        masterDatastore, masterAppPackage(config)); 
+    const bb = await getMasterApisWithFullAccess(context); 
 
     let applications;
     const loadApplications = async () => 
@@ -100,9 +102,11 @@ module.exports = async (config) => {
         ]);
 
         const dsConfig = JSON.parse(instance.datastoreconfig);
+        const appPackage = await applictionVersionPackage(
+            context, appname, versionId, instance.key);
         const bbInstance = await getApisWithFullAccess(
             datastoreModule.getDatastore(dsConfig),
-            applictionVersionPackage(config, appname, versionId)
+            appPackage
         );
 
         const authUser = await bbInstance.authApi.authenticate(username, password);
@@ -115,6 +119,7 @@ module.exports = async (config) => {
         bb.recordApi.setCustomId(session, sessionId);
         session.user_json = JSON.stringify(authUser);
         session.instanceDatastoreConfig = instance.datastoreconfig;
+        session.instanceKey = instance.key;
         session.username = username;
         session.instanceVersion = instance.version.key;
         await bb.recordApi.save(session);        
@@ -128,7 +133,7 @@ module.exports = async (config) => {
                 const session = await bb.recordApi.load(`/sessions/${customId}`);
                 return await getApisForSession(
                     masterDatastore, 
-                    masterAppPackage(config), 
+                    masterAppPackage(context), 
                     session);
 
             } catch(_) {
@@ -147,9 +152,12 @@ module.exports = async (config) => {
                     last
                 ]);
 
+                const appPackage = await applictionVersionPackage(
+                    context, appname, versionId, session.instanceKey);
+
                 return await getApisForSession(
                     instanceDatastore, 
-                    applictionVersionPackage(config, appname, versionId), 
+                    appPackage, 
                     session);
             } catch(_) {
                 return null;
@@ -190,10 +198,13 @@ module.exports = async (config) => {
                 splitKey,
                 last
             ]);
+    
+            const appPackage = await applictionVersionPackage(
+                context, appname, versionId, user.instanceKey);
             
             return await getApisWithFullAccess(
                 instanceDatastore,
-                applictionVersionPackage(config, appname, versionId));
+                appPackage);
         }
 
     };
@@ -230,6 +241,19 @@ module.exports = async (config) => {
         }
     }
 
+    const disableUser = async (app, username) => {
+        await removeSessionsForUser(appName, username);
+        const userInMaster = await getUser(bb, app.id, username);    
+        userInMaster.active = false;
+        await bb.recordApi.save(userInMaster);
+    }
+
+    const enableUser = async (app, username) => {
+        const userInMaster = await getUser(bb, app.id, username);    
+        userInMaster.active = true;
+        await bb.recordApi.save(userInMaster);
+    }
+
     return ({
         getApplication,
         getSession,
@@ -238,6 +262,8 @@ module.exports = async (config) => {
         getInstanceApiForSession,
         getFullAccessInstanceApiForUsername,
         removeSessionsForUser,
+        disableUser,
+        enableUser,
         bbMaster:bb
     });
 

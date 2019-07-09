@@ -75,6 +75,16 @@
                 "getUndefinedValue": "default"
               },
               {
+                "name": "createdByMaster",
+                "type": "bool",
+                "typeOptions": {
+                  "allowNulls": false
+                },
+                "label": "Created by Master",
+                "getInitialValue": "default",
+                "getUndefinedValue": "default"
+              },
+              {
                 "name": "instance",
                 "type": "reference",
                 "typeOptions": {
@@ -274,6 +284,18 @@
                 "getUndefinedValue": "default"
               },
               {
+                "name": "instanceKey",
+                "type": "string",
+                "typeOptions": {
+                  "maxLength": null,
+                  "values": null,
+                  "allowDeclaredValuesOnly": false
+                },
+                "label": "Instance Key",
+                "getInitialValue": "default",
+                "getUndefinedValue": "default"
+              },
+              {
                 "name": "instanceVersion",
                 "type": "string",
                 "typeOptions": {
@@ -467,7 +489,7 @@
       "actionName": "create_user",
       "eventName": "recordApi:save:onRecordCreated",
       "optionsCreator": "return ({ user:context.record, apis });",
-      "condition": "context.record.type === \"user\""
+      "condition": "context.record.type === \"user\" && context.record.createdByMaster === true"
     }
   ]
 }
