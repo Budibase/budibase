@@ -2,7 +2,7 @@ const createUser = require("./createUser");
 const enableUser = require("./enableUser");
 const disableUser = require("./disableUser");
 
-module.exports = async (appPackage, masterAppInternal, instanceKey, appName) => {
+module.exports = async (appPackage, masterAppInternal, appName, instanceKey) => {
 
     const plugin = await constructPlugin(
         masterAppInternal, 
@@ -21,7 +21,7 @@ const createTriggers = (appPackage) => {
     appDef.triggers.push({
         actionName: 'createUser',
         eventName: 'authApi:createUser:onComplete',
-        optionsCreator: 'return {user:context.user};',
+        optionsCreator: 'return {user:context.result};',
         condition: ''
     });
     appDef.triggers.push({
@@ -46,13 +46,13 @@ const createActions = (appPackage) => {
         behaviourName: 'createUser',
         initialOptions: {}
     };
-    appDef.actions.createUser = {
+    appDef.actions.enableUser = {
         name: "enableUser",
         behaviourSource: '_injected',
         behaviourName: 'enableUser',
         initialOptions: {}
     };
-    appDef.actions.createUser = {
+    appDef.actions.disableUser = {
         name: "disableUser",
         behaviourSource: '_injected',
         behaviourName: 'disableUser',

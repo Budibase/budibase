@@ -52,6 +52,9 @@ module.exports = (context) => {
     },
 
     createNewUser: async ({user, apis}) => {
+        
+        if(!user.createdByMaster) return;
+
         const instance = await apis.recordApi.load(user.instance.key);
 
         const appKey = $(instance.key, [
@@ -81,8 +84,8 @@ module.exports = (context) => {
         const authUser = instanceApis.authApi.getNewUser();
         authUser.name = user.name;
         authUser.accessLevels = [instance.version.defaultAccessLevel];
+        
         await instanceApis.authApi.createUser(authUser);
-
     }
 
     });

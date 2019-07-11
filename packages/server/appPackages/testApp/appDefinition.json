@@ -73,6 +73,12 @@
       "eventName": "authApi:createUser:onComplete",
       "optionsCreator": "return { filename:'tempaccess' + context.user.name, content:context.result.tempCode };",
       "condition": "!context.password"
+    },
+    {
+      "actionName": "output_to_file",
+      "eventName": "authApi:createTemporaryAccess:onComplete",
+      "optionsCreator": "return { filename:'tempaccess' + context.userName, content:context.result };",
+      "condition": ""
     }
   ]
 }

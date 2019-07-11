@@ -41,13 +41,21 @@ module.exports = async (context) => {
         : bb.recordApi.customId("session", sessionId);
 
     
-    const getApplication = async (name) => {
-        if(applications[name]) 
-            return applications[name];
+    const getApplication = async (nameOrKey, isRetry=false) => {
+        if(applications[nameOrKey]) 
+            return applications[nameOrKey];
+
+        for(let name in applications) {
+            const a = applications[name];
+            if(a.key === nameOrKey) return a;
+            if(a.id === nameOrKey) return a;
+        }
+
+        if(isRetry) return;
 
         await loadApplications();
 
-        return applications[name];
+        return await getApplication(nameOrKey, true);
     };
 
     const getSession = async (sessionId, appname) => {
@@ -90,11 +98,11 @@ module.exports = async (context) => {
 
         const app = await getApplication(appname);
         
-        const userInMaster = await getUser(bb, app.id, username);
+        const userInMaster = await getUser(app.id, username);
         if(!userInMaster) return null;
         
         const instance = await bb.recordApi.load(
-            userInMaster.instanceKey);
+            userInMaster.instance.key);
         
         const versionId = $(instance.version.key, [
             splitKey,
@@ -165,17 +173,15 @@ module.exports = async (context) => {
         }
     };
 
-    const getUser = async (bb, appId, username ) => {
-        const matches = await bb.indexApi.listItems(
-            `/applications/${appId}/user_name_lookup`,
-            {
-                rangeStartParams:{name:username}, 
-                rangeEndParams:{name:username}, 
-                searchPhrase:`name:${username}`
-            }
-        );
-        if(matches.length !== 1) return;
-        return matches[0];
+    const getUser = async (appId, username ) => {
+        const userId = bb.recordApi.customId("user", username);
+        try {
+            return await bb.recordApi.load(
+                    `/applications/${appId}/users/${userId}`);
+        } catch(_) {
+            //empty
+            return;
+        }
     }
 
     const getFullAccessInstanceApiForUsername = async (appname, username) => {
@@ -185,22 +191,22 @@ module.exports = async (context) => {
         }
         else {
             const app = await getApplication(appname);
-            const user = await getUser(bb, app.id, username);
+            const user = await getUser(app.id, username);
 
             if(!user) return null;
 
-            const dsConfig = JSON.parse(user.instanceDatastoreConfig);
+            const dsConfig = JSON.parse(user.instance.datastoreconfig);
             const instanceDatastore = getInstanceDatastore(
                 dsConfig
                 );
 
-            const versionId = $((await bb.recordApi.load(user.instanceKey)).version.key, [
+            const versionId = $((await bb.recordApi.load(user.instance.key)).version.key, [
                 splitKey,
                 last
             ]);
     
             const appPackage = await applictionVersionPackage(
-                context, appname, versionId, user.instanceKey);
+                context, appname, versionId, user.instance.key);
             
             return await getApisWithFullAccess(
                 instanceDatastore,
@@ -229,8 +235,8 @@ module.exports = async (context) => {
             const sessions = await bb.indexApi.listItems(
                 `/applications/${app.id}/sessions_by_user`,
                 {
-                    rangeStartParams:{name:username}, 
-                    rangeEndParams:{name:username}, 
+                    rangeStartParams:{username}, 
+                    rangeEndParams:{username}, 
                     searchPhrase:`username:${username}`
                 }
             );
@@ -242,14 +248,14 @@ module.exports = async (context) => {
     }
 
     const disableUser = async (app, username) => {
-        await removeSessionsForUser(appName, username);
-        const userInMaster = await getUser(bb, app.id, username);    
+        await removeSessionsForUser(app.name, username);
+        const userInMaster = await getUser(app.id, username);    
         userInMaster.active = false;
         await bb.recordApi.save(userInMaster);
     }
 
     const enableUser = async (app, username) => {
-        const userInMaster = await getUser(bb, app.id, username);    
+        const userInMaster = await getUser(app.id, username);    
         userInMaster.active = true;
         await bb.recordApi.save(userInMaster);
     }
@@ -264,6 +270,7 @@ module.exports = async (context) => {
         removeSessionsForUser,
         disableUser,
         enableUser,
+        getUser,
         bbMaster:bb
     });
 
