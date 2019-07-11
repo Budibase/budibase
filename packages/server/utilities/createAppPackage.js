@@ -59,7 +59,6 @@ module.exports.applictionVersionPackage = async (context, appname, versionId, in
         pkg,
         context.master,
         appname,
-        instanceKey
-        );
+        instanceKey);
     return pkg;
 }

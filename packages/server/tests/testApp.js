@@ -3,7 +3,7 @@ const { rimraf, mkdir } = require("../utilities/fsawait");
 const createMasterDb = require("../initialise/createMasterDb");
 const request = require("supertest");
 const fs = require("fs");
-const { masterAppPackage } = require("../utilities/createAppPackage");
+const { masterAppPackage, applictionVersionPackage } = require("../utilities/createAppPackage");
 const buildAppContext = require("../initialise/buildAppContext");
 var enableDestroy = require('server-destroy');
 
@@ -70,23 +70,40 @@ module.exports = () => {
         post: (url, body) => postRequest(server,url,body),
         get: (url) => getRequest(server, url),
         credentials: {
-            _master: {
+            masterOwner: {
                 username: masterOwnerName,
                 password: masterOwnerPassword,
                 cookie: ""
             },
-            testApp: {
+            testAppUser1: {
                 username: "testAppUser1",
                 password: "user1_instance1_password",
                 cookie: ""
+            },
+            testAppUser2: {
+                username: "testAppUser2",
+                password: "user1_instance2_password",
+                cookie: ""
             }
         },
-        
+        apps: {
+            testApp1: {
+                key:null,
+                instance1:null,
+                instance2:null,
+                version1:null,
+            }
+        },        
         testAppInfo: {
             name: "testApp"
         },
         destroy: () => server.destroy(),
-        masterAppPackage: masterAppPackage({ config })
+        masterAppPackage: masterAppPackage({ config }),
+        testAppInstance1AppPackage: async (app) => applictionVersionPackage(
+            await buildAppContext(config, true), 
+            "testApp", 
+            app.apps.testApp1.instance1.version.id,
+            app.apps.testApp1.instance1.key)
     })
 };
 

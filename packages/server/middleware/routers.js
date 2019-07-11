@@ -191,10 +191,16 @@ module.exports = (config, app) => {
         ctx.response.status = StatusCodes.OK;
     })
     .get("/:appname/api/record/*", async (ctx) => {
-        ctx.body = await ctx.instance.recordApi.load(
-            getRecordKey(ctx.params.appname, ctx.request.path)
-        );
-        ctx.response.status = StatusCodes.OK;
+        try {
+            ctx.body = await ctx.instance.recordApi.load(
+                getRecordKey(ctx.params.appname, ctx.request.path)
+            );
+            ctx.response.status = StatusCodes.OK;
+        } catch(e) {
+            // need to be catching for 404s here
+            ctx.response.status = StatusCodes.INTERAL_ERROR;
+            ctx.response.body = e.message;
+        }
     })
     .del("/:appname/api/record/*", async (ctx) => {
         await ctx.instance.recordApi.delete(

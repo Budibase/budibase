@@ -2,9 +2,9 @@ const statusCodes = require("../utilities/statusCodes");
 const { readFile } = require("../utilities/fsawait");
 const { timeout } = require("./helpers");
 
-module.exports = (app, appName) => {
+module.exports = (app, appName, userName) => {
 
-    const credentials = app.credentials[appName];
+    const credentials = app.credentials[userName];
 
     it("should return unauthorized if username is incorrect", async () => {
         await app.post(`/${appName}/api/authenticate`, {
