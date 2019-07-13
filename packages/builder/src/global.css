@@ -1,0 +1,91 @@
+:root {
+    --primary100: #454CA0FF;
+    --primary75: #454CA0BF;
+    --primary25: #454CA040;
+    --primary10: #454CA01A;
+    --primarydark: #3F448A;
+    
+    --secondary100: #162B4DFF;
+    --secondary75: #162B4DBF;
+    --secondary25: #162B4D40;
+    --secondary10: #162B4D1A;
+    --secondarydark: #3F448A;
+
+    --tertiary: #F2F5F7;
+    
+    --success100: #49C39EFF;
+    --success75: #49C39EBF;
+    --success25: #49C39E40;
+    --success10: #49C39E1A;
+    --successdark: #44B492;
+    
+    --deletion100: #F2545BFF;
+    --deletion75: #F2545BBF;
+    --deletion25: #F2545B40;
+    --deletion10: #F2545B1A;
+    --deletiondark: #CF4046;
+
+    --white: #FFFFFF;
+    --darkslate: #5C6B82;
+    --slate: #8B95A6;
+
+    --borderradius: 2px;
+    --borderradiusall: 2px 2px 2px 2px;
+
+    --fontblack: "Lato Black";
+    --fontbold: "Lato Bold";
+    --fontsemibold: "Lato Semi Bold";
+    --fontnormal: "Lato";
+
+    --bodytext: var(--fontnormal) "regular" var(--secondary100) 16pt;
+    --bigbodytext: var(--fontnormal) "regular" var(--secondary100) 20pt;
+    --smallbodytext: var(--fontnormal) "regular" var(--secondary100) 12pt;
+    --lightbodytext: var(--fontnormal) "regular" var(--darkslate) 16pt;
+    --heavybodytext: var(--fontbold) "regular" var(--secondary100) 16pt;
+    --quotation: var(--fontnormal) "italics" var(--darkslate) 16pt;
+    --smallheavybodytext: var(--fontbold) "regular" var(--secondary100) 14pt;
+
+}
+
+html, body {
+    font-family: var(--fontnormal);
+    color: var(--secondary100);
+    padding: 0;
+    margin: 0;
+}
+
+h1 {
+    font-family: var(--fontblack);
+    font-size: 36pt;
+    color: var(--secondary100);
+}
+
+h2 {
+    font-family: var(--fontbold);
+    font-size: 30pt;
+    color: var(--secondary100);
+}
+
+h3 {
+    font-family: var(--fontbold);
+    font-size: 24pt;
+    color: var(--darkslate);
+}
+
+h4 {
+    font-family: var(--fontsemibold);
+    font-size: 18pt;
+    color: var(--secondary100);
+}
+
+h5 {
+    font-family: var(--fontblack);
+    font-size: 14pt;
+    color: var(--secondary100);
+}
+
+h5 {
+    font-family: var(--fontblack);
+    font-size: 12pt;
+    color: var(--darkslate);
+}

@@ -10,7 +10,7 @@ const { getRuntimePackageDirectory, getRuntimeAppsDirectory } = require("./runti
 
 module.exports.createTarGzPackage = async (config, appName) => {
 
-    const appPath = join(config.latestAppsPath, appName);
+    const appPath = join(config.latestPackagesFolder, appName);
     const distPath = join(appPath, "dist");
 
     if(!await exists(distPath)) {

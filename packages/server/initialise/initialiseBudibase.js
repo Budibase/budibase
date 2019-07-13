@@ -67,7 +67,7 @@ const question = async (q) => {
       await mkdir(rootconfig.rootPath);
     }
 
-    const appContext = await buildAppContext(budibaseConfig, false);
+    const appContext = await buildAppContext(budibaseConfig(), false);
     await create(
       appContext,
       datastoreModule,

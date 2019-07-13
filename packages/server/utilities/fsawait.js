@@ -2,6 +2,7 @@ const util = require("util");
 const fs = require("fs");
 
 module.exports.readFile = util.promisify(fs.readFile);
+module.exports.writeFile = util.promisify(fs.writeFile);
 module.exports.rimraf = util.promisify(require("rimraf"));
 module.exports.mkdir = util.promisify(fs.mkdir);
 module.exports.unlink = util.promisify(fs.unlink);

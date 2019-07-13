@@ -7,7 +7,8 @@ module.exports = () => ({
     },
     keys: ["secret1", "secret2"],
     port: 4001,
-    latestAppsPath: "./appPackages",
+    latestPackagesFolder: "appPackages",
     extraMasterPlugins: {},
+    dev:true,
     customizeMaster: appDefinition => appDefinition
 })

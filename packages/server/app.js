@@ -12,9 +12,9 @@ module.exports = async (budibaseContext) => {
     app.context.getAppPackage = await initialiseRuntimePackages(
         budibaseContext,
         app.context.master,
-        config.latestAppsPath
+        config.latestPackagesFolder
     );
     app.use(koaBody({ multipart : true }));
     app.use(router(config, app).routes());
-    return app.listen();
+    return app.listen(config.port);
 };

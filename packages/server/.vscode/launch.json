@@ -4,35 +4,32 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Jest All",
-            "program": "${workspaceFolder}/node_modules/.bin/jest",
-            "args": ["--runInBand"],
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen",
-            "disableOptimisticBPs": true,
-            "windows": {
-                "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
-            }
-          },
-          {
-            "type": "node",
-            "request": "launch",
-            "name": "Jest Current File",
-            "program": "${workspaceFolder}/node_modules/.bin/jest",
-            "args": [
-              "${fileBasenameNoExtension}",
-              "--config",
-              "jest.config.js"
-            ],
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen",
-            "disableOptimisticBPs": true,
-            "windows": {
-              "program": "${workspaceFolder}/node_modules/jest/bin/jest",
-            }
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Start Server",
+        "program": "${workspaceFolder}/index.js"
+      },
+      {
+          "type": "node",
+          "request": "launch",
+          "name": "Jest All",
+          "program": "${workspaceFolder}/node_modules/.bin/jest",
+          "args": ["--runInBand"],
+          "console": "integratedTerminal",
+          "internalConsoleOptions": "neverOpen",
+          "disableOptimisticBPs": true,
+          "windows": {
+              "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
           }
+        },
+        {
+          "type": "node",
+          "request": "launch",
+          "name": "Initialise Budibase",
+          "program": "${workspaceFolder}/initialise/initialiseBudibase.js",
+          "args": ["--datastore=local", "--username=test", "--password=test", "--rootPath=./.data", "--cleanDev"],
+          "console": "externalTerminal" 
+        }
     ]
 }

@@ -18,12 +18,15 @@ module.exports = () => ({
     port: 4001,
 
     // path to where your appDefinition etc is stored (dev time)
-    latestAppsPath: "./",
+    latestPackagesFolder: "./",
 
     // register plugins for master
     extraMasterPlugins: {},
 
     // make modifications to master's appdefinition - e.g. add plugins
-    customizeMaster: appDefinition => appDefinition
+    customizeMaster: appDefinition => appDefinition,
+
+    // false for production - serves builder if true
+    dev:false
 
 })

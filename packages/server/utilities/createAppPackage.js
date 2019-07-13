@@ -1,8 +1,9 @@
-const { join } = require("path");
+const { resolve, join } = require("path");
 const constructHierarchy = require("./constructHierarchy");
 const { common } = require("budibase-core");
 const { getRuntimePackageDirectory } = require("../utilities/runtimePackages");
 const injectPlugins = require("./injectedPlugins");
+const { cwd } = require("process"); 
 
 const createAppPackage = (context, appPath) => {
 
@@ -24,9 +25,15 @@ const createAppPackage = (context, appPath) => {
     })
 }
 
+const appPackageFolder = (config, appname) => 
+    resolve(cwd(), config.latestPackagesFolder, appname);
+
+module.exports.appPackageFolder = appPackageFolder;
+
 module.exports.masterAppPackage = (context) => {
     const { config } = context;
-    const standardPackage = createAppPackage(context, "../appPackages/master");
+    const standardPackage = createAppPackage(
+        context, "../appPackages/master");
 
     const customizeMaster = config && config.customizeMaster 
                             ? config.customizeMaster
@@ -37,8 +44,7 @@ module.exports.masterAppPackage = (context) => {
         constructHierarchy
     ]);
 
-    const plugins = require("../appPackages/master/plugins.js")
-                           (context);
+    const plugins = standardPackage.behaviourSources;
 
     return ({
         appDefinition,

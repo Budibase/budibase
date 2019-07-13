@@ -44,7 +44,7 @@ const config = {
     },
     keys: ["secret1", "secret2"],
     port: 4002,
-    latestAppsPath: "./appPackages",
+    latestPackagesFolder: "./appPackages",
     extraMasterPlugins,
     customizeMaster
 }
@@ -61,7 +61,7 @@ module.exports = () => {
                 const budibaseContext = await buildAppContext(config, true);
                 server = await app(budibaseContext);
             } catch(e) {
-                console.log(e.message);
+                console.log(e.stack);
             }
             enableDestroy(server);
         },

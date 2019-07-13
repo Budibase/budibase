@@ -2,6 +2,7 @@ const Router = require("@koa/router");
 const session = require("./session");
 const StatusCodes = require("../utilities/statusCodes");
 const fs = require("fs");
+const { getPackageForBuilder, savePackage } = require("../utilities/builder");
 
 module.exports = (config, app) => {
 
@@ -18,6 +19,10 @@ module.exports = (config, app) => {
         ctx.sessionId = ctx.session._sessCtx.externalKey;
         ctx.session.accessed = true;
         await next();
+    })
+    .get("/_builder", async (ctx) => {
+        ctx.response.status = StatusCodes.OK;
+        ctx.response.body = "Builder UI Served Here";
     })
     .get("/:appname", async (ctx) => {
         ctx.response.status = StatusCodes.OK;
@@ -68,6 +73,32 @@ module.exports = (config, app) => {
             ctx.request.body.username);
         
         ctx.response.status = StatusCodes.OK;
+    })
+    .get("/_builder/api/:appname/appPackage", async (ctx) => {
+        if(!config.dev) {
+            ctx.request.status = StatusCodes.FORBIDDEN;
+            ctx.request.body = "run in dev mode to access builder";
+            return;
+        }
+
+        ctx.body = await getPackageForBuilder(
+            config, 
+            ctx.params.appname);
+        ctx.response.status = StatusCodes.OK;
+
+    })
+    .post("/_builder/api/:appname/appPackage", async (ctx) => {
+        if(!config.dev) {
+            ctx.request.status = StatusCodes.FORBIDDEN;
+            ctx.body = "run in dev mode to access builder";
+            return;
+        }
+
+        ctx.body = await savePackage(
+            config, 
+            ctx.params.appname,
+            ctx.request.body);
+        ctx.reqponse.status = StatusCodes.OK;
     })
     .use(async (ctx, next) => {
 
