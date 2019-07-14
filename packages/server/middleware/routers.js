@@ -2,7 +2,8 @@ const Router = require("@koa/router");
 const session = require("./session");
 const StatusCodes = require("../utilities/statusCodes");
 const fs = require("fs");
-const { getPackageForBuilder, savePackage } = require("../utilities/builder");
+const { getPackageForBuilder, 
+    savePackage, getApps } = require("../utilities/builder");
 
 module.exports = (config, app) => {
 
@@ -74,6 +75,17 @@ module.exports = (config, app) => {
         
         ctx.response.status = StatusCodes.OK;
     })
+    .get("/_builder/api/apps", async (ctx) => {
+        if(!config.dev) {
+            ctx.request.status = StatusCodes.FORBIDDEN;
+            ctx.request.body = "run in dev mode to access builder";
+            return;
+        }
+
+        ctx.body = await getApps(config);
+        ctx.response.status = StatusCodes.OK;
+
+    })
     .get("/_builder/api/:appname/appPackage", async (ctx) => {
         if(!config.dev) {
             ctx.request.status = StatusCodes.FORBIDDEN;
@@ -98,7 +110,7 @@ module.exports = (config, app) => {
             config, 
             ctx.params.appname,
             ctx.request.body);
-        ctx.reqponse.status = StatusCodes.OK;
+        ctx.response.status = StatusCodes.OK;
     })
     .use(async (ctx, next) => {
 

@@ -1,5 +1,6 @@
-const { appPackageFolder } = require("./createAppPackage");
-const { writeFile, readFile } = require("./fsawait");
+const { appPackageFolder, appsFolder } = require("./createAppPackage");
+const { writeFile, readFile, readdir } = require("./fsawait");
+const { pipe : $ } = require("budibase-core").common; 
 
 module.exports.getPackageForBuilder = async (config, appname) => {
     const appPath = appPackageFolder(config, appname);
@@ -29,3 +30,9 @@ module.exports.savePackage = async (config, appname, pkg) => {
         "utf8");
 
 }
+
+module.exports.getApps = async (config) => 
+    await readdir(appsFolder(config));
+
+
+

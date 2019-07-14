@@ -1,6 +1,7 @@
 <script>
 
 import Button from "./common/Button.svelte"
+import { database } from "./builderStore";
 
 let errors = [];
 
@@ -12,15 +13,10 @@ let errors = [];
         <div>
             
             <div>
-                <h4 style="margin-bottom: 20px">What would you like not to do?</h4>
-                <Button color="primary"
-                        class="option">
-                    Create a New Package
-                </Button>
-                <Button color="primary-outline"
-                        class="option">
-                    Import a Package
-                </Button>
+                <h4 style="margin-bottom: 20px">Choose an Application</h4>
+                {#each $database.apps as app}
+                <a href={`#/${app}`} class="app-link">{app}</a>
+                {/each}
             </div>
         </div>
     </div>
@@ -50,6 +46,11 @@ let errors = [];
 
 .root :global(.option) {
     width:250px;
+}
+
+.app-link {
+    margin-top: 10px;
+    display: block;
 }
 
 </style>

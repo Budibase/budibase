@@ -15,16 +15,16 @@ export const getNode = (hierarchy, nodeId) =>
 
 export const constructHierarchy = node => {
     if(!node) return node;
-    return templateApi(node).constructHeirarchy(node);
+    return templateApi(node).constructHierarchy(node);
 }
 
-export const createNewHeirarchy = () => {
+export const createNewHierarchy = () => {
     return templateApi().getNewRootLevel();
 }
 
-export const templateApi = hierarchy => getTemplateApi({heirarchy:hierarchy})
+export const templateApi = hierarchy => getTemplateApi({hierarchy})
 export const authApi = (hierarchy, actions) => getAuthApi({
-    heirarchy:hierarchy, actions: keyBy("name")(actions), publish:()=>{}})
+    hierarchy, actions: keyBy("name")(actions), publish:()=>{}})
 
 export const allTypes = templateApi({}).allTypes;
 

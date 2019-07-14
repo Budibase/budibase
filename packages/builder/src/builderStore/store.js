@@ -1,28 +1,29 @@
 import {hierarchy as hierarchyFunctions, 
     common, getTemplateApi } from "budibase-core";
-import {filter, cloneDeep, sortBy, map,
+import {filter, cloneDeep, sortBy, map, last,
     find, isEmpty, groupBy, reduce} from "lodash/fp";
 import {chain, getNode, validate,
     constructHierarchy, templateApi} from "../common/core";
 import {writable} from "svelte/store";
 
-export const getStore = (appname) => {
+export const getStore = () => {
 
     const initial = {
+        apps:[],
+        appname:"",
         hierarchy: {},
         actions: [],
         triggers: [],
         currentNodeIsNew: false,
         errors: [],
         activeNav: "database",
-        hasAppPackage: (!!appname && appname.length > 0),
+        hasAppPackage: false,
         accessLevels: [],
         currentNode: null};
 
     const store = writable(initial);
 
-    store.appname = appname;
-    store.initialise = initialise(store, initial, appname);
+    store.initialise = initialise(store, initial);
     store.newChildRecord = newRecord(store, false);
     store.newRootRecord = newRecord(store, true);
     store.selectExistingNode = selectExistingNode(store);
@@ -47,9 +48,23 @@ export default getStore;
 
 const initialise = (store, initial) => async () => {
 
-    const pkg = await fetch(`/api/${store.appname}/appPackage`)
+    const appname = window.location.hash 
+                ? last(window.location.hash.substr(1).split("/"))
+                : "";
+
+    if(!appname) {
+        initial.apps = await fetch(`/api/apps`)
+                             .then(r => r.json());
+        initial.hasAppPackage = false;
+        store.set(initial);
+        return initial;
+    }
+
+    const pkg = await fetch(`/api/${appname}/appPackage`)
                      .then(r => r.json());
 
+    initial.appname = appname;
+    initial.hasAppPackage = true;
     initial.hierarchy = pkg.appDefinition.hierarchy;
     initial.accessLevels = pkg.accessLevels;
     initial.actions = reduce((arr, action) => {
@@ -320,11 +335,11 @@ const savePackage = (store, db) => {
         accessLevels:db.accessLevels
     }
 
-    fetch(`/api/${store.appname}/appPackage`, {
+    fetch(`/api/${db.appname}/appPackage`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data), // body data type must match "Content-Type" header
+        body: JSON.stringify(data), 
     });
 }

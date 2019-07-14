@@ -10,8 +10,9 @@ import copy from 'rollup-plugin-copy';
 import browsersync from "rollup-plugin-browsersync";
 import proxy from "http-proxy-middleware";
 
+const target = 'http://localhost:4001/_builder';
 const apiProxy =  proxy('/api', {
-  target: 'http://localhost:4001/_builder',
+  target,
   logLevel: "debug",
   changeOrigin: true,
   cookieDomainRewrite: true,
