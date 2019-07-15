@@ -53,14 +53,14 @@ const initialise = (store, initial) => async () => {
                 : "";
 
     if(!appname) {
-        initial.apps = await fetch(`/api/apps`)
+        initial.apps = await fetch(`/_builder/api/apps`)
                              .then(r => r.json());
         initial.hasAppPackage = false;
         store.set(initial);
         return initial;
     }
 
-    const pkg = await fetch(`/api/${appname}/appPackage`)
+    const pkg = await fetch(`/_builder/api/${appname}/appPackage`)
                      .then(r => r.json());
 
     initial.appname = appname;
@@ -335,7 +335,7 @@ const savePackage = (store, db) => {
         accessLevels:db.accessLevels
     }
 
-    fetch(`/api/${db.appname}/appPackage`, {
+    fetch(`/_builder/api/${db.appname}/appPackage`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -11,17 +11,22 @@ import browsersync from "rollup-plugin-browsersync";
 import proxy from "http-proxy-middleware";
 
 const target = 'http://localhost:4001/_builder';
-const apiProxy =  proxy('/api', {
-  target,
-  logLevel: "debug",
-  changeOrigin: true,
-  cookieDomainRewrite: true,
-  onProxyReq(proxyReq) {
-    if (proxyReq.getHeader("origin")) {
-	  proxyReq.setHeader("origin", target)
-    }
-  }
+const _builderProxy =  proxy('/_builder', {
+  target:"http://localhost:3000",
+  pathRewrite: {'^/_builder' : ''}
 });
+
+const apiProxy =  proxy('/_builder/api', {
+	target,
+	logLevel: "debug",
+	changeOrigin: true,
+	cookieDomainRewrite: true,
+	onProxyReq(proxyReq) {
+	  if (proxyReq.getHeader("origin")) {
+		proxyReq.setHeader("origin", target)
+	  }
+	}
+  });
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -34,7 +39,7 @@ const lodash_exports = ["toNumber", "flow", "isArray", "join", "replace", "trim"
 "constant", "tail", "includes", "startsWith", "findIndex", "isInteger", "isDate", "isString", "split", "clone", "keys", "isFunction", "merge", "has", "isBoolean", "isNumber", 
 "isObjectLike", "assign", "some", "each", "find", "orderBy", "union", "cloneDeep"];
 
-const writeoptions = {dest: "output/output.js"};
+const outputpath = "../server/builder";
 
 export default {
 	input: 'src/main.js',
@@ -42,13 +47,13 @@ export default {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		file: 'dist/bundle.js'
+		file: `${outputpath}/bundle.js`
 	},
 	plugins: [
 		copy({
 			targets: [
-				{ src: 'src/index.html', dest: 'dist' },
-				{ src: 'src/favicon.png', dest: 'dist' }
+				{ src: 'src/index.html', dest: outputpath },
+				{ src: 'src/favicon.png', dest: outputpath }
 			  ]
 		}),
 
@@ -59,7 +64,7 @@ export default {
 			// we'll extract any component CSS out into
 			// a separate file — better for performance
 			css: css => {
-				css.write('dist/bundle.css');
+				css.write(`${outputpath}/bundle.css`);
 			}
 		}),
 
@@ -98,10 +103,10 @@ export default {
 
 		// Watch the `dist` directory and refresh the
 		// browser on changes when not in production
-		!production && livereload('dist'),
+		!production && livereload(outputpath),
 		!production && browsersync({
-			server: 'dist',
-			middleware: [apiProxy]
+			server: outputpath,
+			middleware: [_builderProxy, apiProxy]
 		}),
 
 		// If we're building for production (npm run build

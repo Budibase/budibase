@@ -9,7 +9,7 @@ let errors = [];
 
 <div class="root">
     <div class="inner">
-        <img src="./assets/budibase-logo.png" class="logo" alt="budibase logo"/>
+        <img src="/_builder/assets/budibase-logo.png" class="logo" alt="budibase logo"/>
         <div>
             
             <div>

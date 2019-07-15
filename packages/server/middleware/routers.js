@@ -2,19 +2,23 @@ const Router = require("@koa/router");
 const session = require("./session");
 const StatusCodes = require("../utilities/statusCodes");
 const fs = require("fs");
+const { resolve } = require("path");
+const send = require('koa-send');
 const { getPackageForBuilder, 
     savePackage, getApps } = require("../utilities/builder");
+
+const builderPath = resolve(__dirname, "../builder");
 
 module.exports = (config, app) => {
 
     const router = new Router();
 
+    const prependSlash = path => 
+        path.startsWith("/")
+        ? path
+        : `/${path}`;
+
     router
-    /*.use(async (ctx) => {
-        if(!await ctx.master.getApplication(ctx.params.appname)) {
-            ctx.throw(StatusCodes.NOT_FOUND, `could not find app named ${ctx.params.appname}`);
-        }
-    })*/
     .use(session(config, app))
     .use(async (ctx, next) => {
         ctx.sessionId = ctx.session._sessCtx.externalKey;
@@ -22,8 +26,31 @@ module.exports = (config, app) => {
         await next();
     })
     .get("/_builder", async (ctx) => {
-        ctx.response.status = StatusCodes.OK;
-        ctx.response.body = "Builder UI Served Here";
+        if(!config.dev) {
+            ctx.request.status = StatusCodes.FORBIDDEN;
+            ctx.request.body = "run in dev mode to access builder";
+            return;
+        }
+
+        await send(ctx, "/index.html", { root: builderPath });
+
+    })
+    .get("/_builder/*", async (ctx, next) => {
+        if(!config.dev) {
+            ctx.request.status = StatusCodes.FORBIDDEN;
+            ctx.request.body = "run in dev mode to access builder";
+            return;
+        }
+
+        const path = ctx.path.replace("/_builder", "");
+
+        if(path.startsWith("/api/")) {
+            await next();
+            return;
+        }
+
+        await send(ctx, path, { root: builderPath });
+
     })
     .get("/:appname", async (ctx) => {
         ctx.response.status = StatusCodes.OK;

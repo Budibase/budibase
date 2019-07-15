@@ -27,6 +27,8 @@
   "devDependencies": {
     "@jest/test-sequencer": "^24.8.0",
     "jest": "^24.8.0",
+    "koa-send": "^5.0.0",
+    "koa-static": "^5.0.0",
     "server-destroy": "^1.0.1",
     "supertest": "^4.0.2"
   },
