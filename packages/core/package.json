@@ -1,0 +1,83 @@
+{
+  "name": "budibase-core",
+  "version": "0.0.1",
+  "description": "core javascript library for budibase",
+  "main": "/dist/budibase-core.umd.js",
+  "module": "dist/budibase-core.esm.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "rollup -c rollup.config.js"
+  },
+  "keywords": [
+    "budibase"
+  ],
+  "author": "Michael Shanks",
+  "license": "MPL-2.0",
+  "jest": {
+    "globals": {
+      "GLOBALS": {
+        "client": "web"
+      }
+    },
+    "testURL": "http://jest-breaks-if-this-does-not-exist",
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
+      "\\.(css|less|sass|scss)$": "identity-obj-proxy"
+    },
+    "moduleFileExtensions": [
+      "js"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "app/node_modules"
+    ],
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!svelte).+\\.js$"
+    ]
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "@babel/runtime": "^7.4.5",
+    "argon2": "^0.20.1",
+    "babel-eslint": "^10.0.2",
+    "babel-jest": "^23.6.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
+    "cross-env": "^5.1.4",
+    "eslint": "^5.3.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-react": "^7.11.0",
+    "jest": "^24.8.0",
+    "readable-stream": "^3.1.1",
+    "regenerator-runtime": "^0.11.1",
+    "rimraf": "^2.6.2",
+    "rollup": "^1.12.0",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-resolve": "^5.0.0"
+  },
+  "dependencies": {
+    "@nx-js/compiler-util": "^2.0.0",
+    "date-fns": "^1.29.0",
+    "lodash": "^4.17.11",
+    "lunr": "^2.3.5",
+    "safe-buffer": "^5.1.2",
+    "shortid": "^2.2.8"
+  },
+  "devEngines": {
+    "node": ">=7.x",
+    "npm": ">=4.x",
+    "yarn": ">=0.21.3"
+  }
+}
