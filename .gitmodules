@@ -1,3 +1,0 @@
-[submodule "budibase-core"]
-	path = packages/core
-	url = git@github.com:Budibase/budibase-core.git
