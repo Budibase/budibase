@@ -8,6 +8,9 @@ const { getPackageForBuilder,
     savePackage, getApps } = require("../utilities/builder");
 
 const builderPath = resolve(__dirname, "../builder");
+const appUiPath = appname => {
+
+}
 
 module.exports = (config, app) => {
 
@@ -23,6 +26,22 @@ module.exports = (config, app) => {
     .use(async (ctx, next) => {
         ctx.sessionId = ctx.session._sessCtx.externalKey;
         ctx.session.accessed = true;
+
+        const pathParts = ctx.path.split("/");
+
+        if(pathParts.length < 2) {
+            ctx.throw(StatusCodes.NOT_FOUND, "App Name not declared");
+        }
+
+        const instance = await ctx.master.getInstanceApiForSession(
+            pathParts[1],
+            ctx.sessionId);
+        
+
+        ctx.instance = instance.instance;
+        ctx.publicPath = instance.publicPath;
+        ctx.isAuthenticated = !!instance.instance;
+
         await next();
     })
     .get("/_builder", async (ctx) => {
@@ -46,11 +65,9 @@ module.exports = (config, app) => {
 
         if(path.startsWith("/api/")) {
             await next();
-            return;
+        } else {
+            await send(ctx, path, { root: builderPath });
         }
-
-        await send(ctx, path, { root: builderPath });
-
     })
     .get("/:appname", async (ctx) => {
         ctx.response.status = StatusCodes.OK;
@@ -139,22 +156,23 @@ module.exports = (config, app) => {
             ctx.request.body);
         ctx.response.status = StatusCodes.OK;
     })
-    .use(async (ctx, next) => {
+    .get("/:appname", async (ctx) => {
+        await send(ctx, "/index.html", { root: ctx.publicPath });
+    })
+    .get("/:appname/*", async (ctx, next) => {
+        const path = ctx.path.replace(`/${ctx.params.appname}`, "");
 
-        const pathParts = ctx.path.split("/");
-
-        if(pathParts.length < 2) {
-            ctx.throw(StatusCodes.NOT_FOUND, "App Name not declared");
-        }
-
-        ctx.instance = await ctx.master.getInstanceApiForSession(
-            pathParts[1],
-            ctx.sessionId);
-
-        if(ctx.instance === null) {
-            ctx.response.status = StatusCodes.UNAUTHORIZED;
-        } else {
+        if(path.startsWith("/api/")) {
             await next();
+        } else {
+            await send(ctx, path, { root: ctx.publicPath });
+        }
+    })
+    .use(async (ctx, next) => {
+        if(ctx.isAuthenticated) {
+            await next();
+        } else {
+            ctx.response.status = StatusCodes.UNAUTHORIZED;
         }
     })
     .post("/:appname/api/changeMyPassword", async (ctx) => {

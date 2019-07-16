@@ -45,6 +45,20 @@
             "label": "Resolve Application By",
             "getInitialValue": "default",
             "getUndefinedValue": "default"
+          },
+          {
+            "name": "defaultVersion",
+            "type": "reference",
+            "typeOptions": {
+              "indexNodeKey": "/applications/1-{id}/all_versions",
+              "reverseIndexNodeKeys": [
+                "/applications/1-{id}/versions/3-{id}/isdefault"
+              ],
+              "displayValue": "name"
+            },
+            "label": "Default Version",
+            "getInitialValue": "default",
+            "getUndefinedValue": "default"
           }
         ],
         "children": [
@@ -237,6 +251,18 @@
                 "aggregateGroups": [],
                 "allowedRecordNodeIds": [],
                 "nodeId": 10
+              },
+              {
+                "name": "isdefault",
+                "type": "index",
+                "map": "return {};",
+                "filter": "",
+                "indexType": "reference",
+                "getShardName": "",
+                "getSortKey": "record.id",
+                "aggregateGroups": [],
+                "allowedRecordNodeIds": [],
+                "nodeId": 28
               }
             ],
             "allidsShardFactor": 1,

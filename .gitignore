@@ -1,5 +1,6 @@
 .data/
 .temp/
+packages/server/runtime_apps/
 
 # Logs
 logs

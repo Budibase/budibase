@@ -7,7 +7,11 @@ const getDatastore = require("./datastore");
 const getDatabaseManager = require("./databaseManager");
 const {$, splitKey} = require("budibase-core").common;
 const { keyBy, last } = require("lodash/fp");
-const { masterAppPackage, applictionVersionPackage } = require("../utilities/createAppPackage");
+const { 
+    masterAppPackage, 
+    applictionVersionPackage,
+    applictionVersionPublicPaths
+ } = require("../utilities/createAppPackage");
 
 const isMaster = appname => appname === "_master";
 
@@ -137,15 +141,23 @@ module.exports = async (context) => {
     const getInstanceApiForSession = async (appname, sessionId) => {
         if(isMaster(appname)) {
             const customId = bb.recordApi.customId("mastersession", sessionId);
+            const masterPkg = masterAppPackage(context);
             try {
                 const session = await bb.recordApi.load(`/sessions/${customId}`);
-                return await getApisForSession(
-                    masterDatastore, 
-                    masterAppPackage(context), 
-                    session);
+                return ({
+                    instance: await getApisForSession(
+                                masterDatastore, 
+                                masterAppPackage(context), 
+                                session),
+                    publicPath: masterPkg.mainUiPath
+                });
+
 
             } catch(_) {
-                return null;
+                return ({
+                    instance: null,
+                    publicPath: masterPkg.unauthenticatedUiPath
+                });
             }
         }
         else {
@@ -163,12 +175,21 @@ module.exports = async (context) => {
                 const appPackage = await applictionVersionPackage(
                     context, appname, versionId, session.instanceKey);
 
-                return await getApisForSession(
-                    instanceDatastore, 
-                    appPackage, 
-                    session);
+                return ({
+                    instance: await getApisForSession(
+                                    instanceDatastore, 
+                                    appPackage, 
+                                    session),
+                    publicPath: appPackage.mainUiPath
+                });
+
             } catch(_) {
-                return null;
+                return ({
+                    instance:null,
+                    publicPath: applictionVersionPublicPaths(
+                        app.name,
+                        app.defaultVersion.id).unauthenticatedUiPath
+                });
             }
         }
     };

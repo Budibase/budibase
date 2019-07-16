@@ -21,8 +21,9 @@ const createAppPackage = (context, appPath) => {
         appDefinition: appDefModule,
         behaviourSources: pluginsModule(context),
         appPath,
-        accessLevels
-    })
+        accessLevels,
+        ...publicPaths(appPath)
+    });
 }
 
 const appPackageFolder = (config, appname) => 
@@ -53,15 +54,34 @@ module.exports.masterAppPackage = (context) => {
         behaviourSources: config && config.extraMasterPlugins
                           ? {...plugins, ...config.extraMasterPlugins}
                           : plugins,
-        appPath: standardPackage.appPath
+        appPath: standardPackage.appPath,
+        unauthenticatedUiPath: standardPackage.unauthenticatedUiPath,
+        mainUiPath: standardPackage.mainUiPath
     });
 }
-    
+
+const applictionVersionPath = (appname, versionId) =>
+    join("..", getRuntimePackageDirectory(appname, versionId))
+
+const publicPaths = (appPath) =>  ({
+        mainUiPath: join(
+            appPath, "ui", "main", "public"),
+        unauthenticatedUiPath: join(
+            appPath, "ui", "unauthenticated", "public")
+        
+    });
+
+module.exports.applictionVersionPublicPaths = (appname, versionId) => {
+    const appPath = applictionVersionPath(appname, versionId);
+    return publicPaths(appPath);
+}
+
 module.exports.applictionVersionPackage = async (context, appname, versionId, instanceKey) => {
     const pkg = createAppPackage(
         context,
-        join("..", getRuntimePackageDirectory(appname, versionId))
+        applictionVersionPath(appname, versionId)
     );
+
     pkg.appDefinition = constructHierarchy(pkg.appDefinition);
     await injectPlugins(
         pkg,

@@ -1,4 +1,5 @@
 {
+  "npmClient": "npm",
   "packages": [
     "packages/*"
   ],
