@@ -24,8 +24,24 @@ const hasStringValue = (ob, path) => has(ob, path)
 const isObjectWithKey = v => isObjectLike(v)
     && hasStringValue(v, 'key');
 
+const tryParseFromString = s => {
+
+  try {
+    const asObj = JSON.parse(s);
+    if(isObjectWithKey) {
+      return parsedSuccess(asObj);
+    }
+  }
+  catch(_) {
+    // EMPTY
+  }
+
+  return parsedFailed(s);
+}
+
 const referenceTryParse = v => switchCase(
   [isObjectWithKey, parsedSuccess],
+  [isString, tryParseFromString],
   [isNull, () => parsedSuccess(referenceNothing())],
   [defaultCase, parsedFailed],
 )(v);

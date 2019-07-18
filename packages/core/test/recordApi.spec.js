@@ -189,6 +189,32 @@ describe('recordApi > save then load', () => {
         const savedAgain = await recordApi.load(saved.key);
         expect(savedAgain.surname).toBe(saved.surname); 
     });
+
+    it("should maintain referential integrity", async () => {
+        const {recordApi} = 
+            await setupApphierarchy(basicAppHierarchyCreator_WithFields);
+
+        const referredByCustomer = recordApi.getNew("/customers", "customer");
+        referredByCustomer.surname = "Ledog";
+        referredByCustomer.age = 9;
+        referredByCustomer.isalive = true,
+        referredByCustomer.createdDate = new Date();
+        const savedReferredBy = await recordApi.save(referredByCustomer);
+
+        const referredCustomer = recordApi.getNew("/customers", "customer");
+        referredCustomer.surname = "Zeecat";
+        referredCustomer.age = 9;
+        referredCustomer.isalive = true,
+        referredCustomer.createdDate = new Date();
+        referredCustomer.referredBy = referredByCustomer;
+        await recordApi.save(referredCustomer);
+
+        savedReferredBy.surname = "Zeedog";
+        await recordApi.save(savedReferredBy);
+
+        const loadedReferredTo = await recordApi.load(referredCustomer.key);
+        expect(loadedReferredTo.referredBy.surname).toBe("Zeedog");
+    });
 });
 
 describe("save", () => {

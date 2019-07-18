@@ -3,6 +3,7 @@ import {
   flatten,
   map,
   filter,
+  isEqual
 } from 'lodash/fp';
 import { initialiseChildCollections } from '../collectionApi/initialise';
 import { validate } from './validate';
@@ -15,6 +16,7 @@ import {
   getExactNodeForPath,
   isRecord,
   getNode,
+  getLastPartInKey,
   fieldReversesReferenceToNode,
 } from '../templateApi/hierarchy';
 import { mapRecord } from '../indexing/evaluate';
@@ -79,7 +81,6 @@ export const _save = async (app, record, context, skipValidation = false) => {
       getRecordFileName(recordClone.key),
       recordClone,
     );
-
     await app.publish(events.recordApi.save.onRecordUpdated, {
       old: oldRecord,
       new: recordClone,
@@ -119,59 +120,6 @@ const initialiseReverseReferenceIndexes = async (app, record) => {
     await initialiseIndex(
       app.datastore, record.key, indexNode,
     );
-  }
-};
-
-const maintainReferentialIntegrity = async (app, indexingApi, oldRecord, newRecord) => {
-  /*
-        FOREACH Field that reference this object
-        - options Index node that for field
-        - has options index changed for referenced record?
-        - FOREACH reverse index of field
-          - FOREACH referencingRecord in reverse index
-            - Is field value still pointing to referencedRecord
-            - Update referencingRecord.fieldName to new value
-            - Save
-        */
-  const recordNode = getExactNodeForPath(app.hierarchy)(newRecord.key);
-  const referenceFields = fieldsThatReferenceThisRecord(
-    app, recordNode,
-  );
-
-  const updates = $(referenceFields, [
-    map(f => ({
-      node: getNode(
-        app.hierarchy, f.typeOptions.indexNodeKey,
-      ),
-      field: f,
-    })),
-    map(n => ({
-      old: mapRecord(oldRecord, n.node),
-      new: mapRecord(newRecord, n.node),
-      indexNode: n.node,
-      field: n.field,
-      reverseIndexKeys: $(n.field.typeOptions.reverseIndexNodeKeys, [
-        map(k => joinKey(
-          newRecord.key,
-          getLastPartInKey(k),
-        )),
-      ]),
-    })),
-    filter(diff => !isEqual(diff.old)(diff.new)),
-  ]);
-
-  for (const update of updates) {
-    for (const reverseIndexKey of update.reverseIndexKeys) {
-      const rows = await listItems(app)(reverseIndexKey);
-
-      for (const key of map(r => r.key)(rows)) {
-        const record = await _load(app, key);
-        if (record[update.field.name].key === newRecord.key) {
-          record[update.field.name] = update.new;
-          await _save(app, indexingApi, record, undefined, true);
-        }
-      }
-    }
   }
 };
 

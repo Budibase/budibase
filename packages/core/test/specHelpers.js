@@ -1,16 +1,15 @@
 import path from "path";
-import {getAppApis, getRecordApi, 
+import {getRecordApi, 
     getCollectionApi, getIndexApi, getActionsApi}  from "../src";
 import memory from "./memory";
 import {setupDatastore} from "../src/appInitialise";
 import {configFolder, fieldDefinitions, 
-    templateDefinitions, isNothing,
+    templateDefinitions,
     joinKey,
     isSomething} from "../src/common";
 import { getNewIndexTemplate } from "../src/templateApi/createNodes";
 import {indexTypes} from "../src/templateApi/indexes";
 import getTemplateApi from "../src/templateApi";
-import {getApplicationDefinition} from "../src/templateApi/getApplicationDefinition";
 import getAuthApi from "../src/authApi";
 import {createEventAggregator} from "../src/appInitialise/eventAggregator";
 import {filter, find} from "lodash/fp";
@@ -116,7 +115,7 @@ export const hierarchyFactory = (...additionalFeatures) => templateApi => {
 
     const customerRecord = templateApi.getNewRecordTemplate(root, "customer");
     customerRecord.collectionName = "customers";
-    findCollectionDefaultIndex(customerRecord).map = "return {surname:record.surname, isalive:record.isalive};";
+    findCollectionDefaultIndex(customerRecord).map = "return {surname:record.surname, isalive:record.isalive, partner:record.partner};";
     
     const partnerRecord = templateApi.getNewRecordTemplate(root, "partner");
     partnerRecord.collectionName = "partners";
@@ -157,7 +156,7 @@ export const withFields = (hierarchy, templateApi) => {
 
     const partnersReferenceIndex = templateApi.getNewIndexTemplate(root);
     partnersReferenceIndex.name = "partnersReference";
-    partnersReferenceIndex.map = "return {name:record.businessName};";
+    partnersReferenceIndex.map = "return {name:record.businessName, phone:record.phone};";
     partnersReferenceIndex.allowedRecordNodeIds = [partnerRecord.nodeId];
 
     const partnerCustomersReverseIndex = templateApi.getNewIndexTemplate(partnerRecord, indexTypes.reference);
@@ -172,7 +171,7 @@ export const withFields = (hierarchy, templateApi) => {
     newCustomerField("createddate", "datetime");
     newCustomerField("age", "number");
     newCustomerField("profilepic", "file");
-    const customerPartnerField = newCustomerField("partner", "reference", undefined, {
+    newCustomerField("partner", "reference", undefined, {
         indexNodeKey : "/partnersReference",
         displayValue : "name",
         reverseIndexNodeKeys : [joinKey(
@@ -205,6 +204,7 @@ export const withFields = (hierarchy, templateApi) => {
 
     const newPartnerField = getNewFieldAndAdd(templateApi, partnerRecord);
     newPartnerField("businessName", "string");
+    newPartnerField("phone", "string");
 
     const newPartnerInvoiceField = getNewFieldAndAdd(templateApi, partnerInvoiceRecord);
     const partnerInvoiceTotalIncVatVield = newPartnerInvoiceField("totalIncVat", "number");
@@ -215,7 +215,7 @@ export const withFields = (hierarchy, templateApi) => {
     const newChargeField = getNewFieldAndAdd(templateApi, chargeRecord);
     newChargeField("amount", "number");
     
-    const chargePartnerInvoiceField = newChargeField("partnerInvoice", "reference", undefined, {
+    newChargeField("partnerInvoice", "reference", undefined, {
         reverseIndexNodeKeys : [joinKey(
             partnerInvoiceRecord.nodeKey(), "partnerCharges"
         )],
@@ -236,7 +236,7 @@ export const withFields = (hierarchy, templateApi) => {
     customersReferenceIndex.filter = "record.isalive === true";
     customersReferenceIndex.allowedRecordNodeIds = [customerRecord.nodeId];
     
-    const invoiceCustomerField = newInvoiceField("customer", "reference", undefined, {
+    newInvoiceField("customer", "reference", undefined, {
         indexNodeKey : "/customersReference",
         reverseIndexNodeKeys : [findCollectionDefaultIndex(invoiceRecord).nodeKey()],
         displayValue : "name"
@@ -376,15 +376,11 @@ export const setupApphierarchy = async (creator, disableCleanupTransactions=fals
     return apis;
 };
 
-const disableCleanupTransactions = app => {
-
-}
-
 export const getNewFieldAndAdd = (templateApi, record) => (name, type, initial, typeOptions) => {
     const field = templateApi.getNewField(type);
     field.name = name;
     field.getInitialValue = !initial ? "default" : initial;
-    if(!!typeOptions) 
+    if(typeOptions) 
         field.typeOptions = typeOptions;
     templateApi.addField(record, field);
     return field;
@@ -397,8 +393,8 @@ export const stubEventHandler = () => {
             events.push({name, context});
         },
         events,
-        getEvents: n => filter(e => e.name === n)
-                              (events)
+        getEvents: n => filter(
+                            e => e.name === n)(events)
     };
 };
 

@@ -2,7 +2,7 @@ import {setupApphierarchy,
     basicAppHierarchyCreator_WithFields, 
     basicAppHierarchyCreator_WithFields_AndIndexes} from "./specHelpers";
 import {joinKey} from "../src/common";
-import {some, isArray} from "lodash";
+import {some, isArray, isObjectLike} from "lodash";
 
 describe("recordApi > create > reindex", () => {
 
@@ -105,6 +105,32 @@ describe("recordApi > create > reindex", () => {
         expect(isArray(customers)).toBeTruthy();
         expect(customers.length).toBe(1);
         expect(customers[0].name).toBe("Ledog");
+    });
+
+    it("should add reference field to index and reparse", async () => {
+        const {recordApi, indexApi} = 
+            await setupApphierarchy(basicAppHierarchyCreator_WithFields);
+
+        const partner = recordApi.getNew("/partners", "partner");
+        partner.businessName = "ACME";
+        partner.phone = "098766e6";
+        await recordApi.save(partner);
+
+        const customer = recordApi.getNew("/customers", "customer");
+        customer.surname = "Ledog";
+        customer.age = 9;
+        customer.isalive = true,
+        customer.createdDate = new Date();
+        customer.partner = partner;
+        await recordApi.save(customer);
+
+        const customers = await indexApi.listItems("/customer_index");
+
+        expect(customers.length).toBe(1);
+        expect(isObjectLike(customer.partner)).toBeTruthy();
+        expect(customers[0].partner.key).toBe(partner.key);
+        expect(customers[0].partner.name).toBe(partner.businessName);
+        expect(customers[0].partner.phone).toBe(partner.phone);
     });
 
     it("should add to reverse reference index, when required", async () => {
@@ -573,7 +599,7 @@ describe("referenced object changed", () => {
 
     it("should update the reference", async () => {
 
-        const {recordApi, indexApi} = 
+        const { recordApi } = 
         await setupApphierarchy(basicAppHierarchyCreator_WithFields);
 
         const partner1 = recordApi.getNew("/partners", "partner");
