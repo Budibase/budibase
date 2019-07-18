@@ -502,6 +502,12 @@
       "behaviourSource": "main",
       "behaviourName": "createNewUser",
       "initialOptions": {}
+    },
+    "set_default_version": {
+      "name": "set_default_version",
+      "behaviourSource": "main",
+      "behaviourName": "setDefaultVersion",
+      "initialOptions": {}
     }
   },
   "triggers": [

@@ -86,6 +86,22 @@ module.exports = (context) => {
         authUser.accessLevels = [instance.version.defaultAccessLevel];
         
         await instanceApis.authApi.createUser(authUser);
+    },
+
+    setDefaultVersion : async ({apis, version}) => {
+        const appKey = $(version.key, [
+            splitKey,
+            take(2),
+            joinKey
+        ]);
+        
+        const application = await apis.recordApi.load(appKey);
+
+        if(application.defaultVersion.key) return;
+
+        application.defaultVersion = version;
+
+        await apis.recordApi.save(application);
     }
 
     });

@@ -1,1 +1,86 @@
-{"hierarchy":{"name":"root","type":"root","children":[{"name":"customer","type":"record","fields":[{"name":"name","type":"string","typeOptions":{"maxLength":1000,"values":null,"allowDeclaredValuesOnly":false},"label":"name","getInitialValue":"default","getUndefinedValue":"default"}],"children":[{"name":"invoiceyooo","type":"record","fields":[{"name":"amount","type":"number","typeOptions":{"minValue":99999999999,"maxValue":99999999999,"decimalPlaces":2},"label":"amount","getInitialValue":"default","getUndefinedValue":"default"}],"children":[],"validationRules":[],"nodeId":2,"indexes":[],"allidsShardFactor":1,"collectionName":"invoices","isSingle":false}],"validationRules":[],"nodeId":1,"indexes":[],"allidsShardFactor":64,"collectionName":"customers","isSingle":false}],"pathMaps":[],"indexes":[],"nodeId":0},"triggers":[{"actionName":"output_to_file","eventName":"authApi:createUser:onComplete","optionsCreator":"return { filename:'tempaccess' + context.user.name, content:context.result.tempCode };","condition":"!context.password"},{"actionName":"output_to_file","eventName":"authApi:createTemporaryAccess:onComplete","optionsCreator":"return { filename:'tempaccess' + context.userName, content:context.result };","condition":""}],"actions":{"output_to_file":[{"name":"output_to_file","behaviourSource":"main","behaviourName":"outputToFile","initialOptions":{}}]}}
+{
+  "hierarchy": {
+    "name": "root",
+    "type": "root",
+    "children": [
+      {
+        "name": "customer",
+        "type": "record",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "typeOptions": {
+              "maxLength": 1000,
+              "values": null,
+              "allowDeclaredValuesOnly": false
+            },
+            "label": "name",
+            "getInitialValue": "default",
+            "getUndefinedValue": "default"
+          }
+        ],
+        "children": [
+          {
+            "name": "invoiceyooo",
+            "type": "record",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "number",
+                "typeOptions": {
+                  "minValue": 99999999999,
+                  "maxValue": 99999999999,
+                  "decimalPlaces": 2
+                },
+                "label": "amount",
+                "getInitialValue": "default",
+                "getUndefinedValue": "default"
+              }
+            ],
+            "children": [],
+            "validationRules": [],
+            "nodeId": 2,
+            "indexes": [],
+            "allidsShardFactor": 1,
+            "collectionName": "invoices",
+            "isSingle": false
+          }
+        ],
+        "validationRules": [],
+        "nodeId": 1,
+        "indexes": [],
+        "allidsShardFactor": 64,
+        "collectionName": "customers",
+        "isSingle": false
+      }
+    ],
+    "pathMaps": [],
+    "indexes": [],
+    "nodeId": 0
+  },
+  "triggers": [
+    {
+      "actionName": "output_to_file",
+      "eventName": "authApi:createUser:onComplete",
+      "optionsCreator": "return { filename:'tempaccess' + context.user.name, content:context.result.tempCode };",
+      "condition": "!context.password"
+    },
+    {
+      "actionName": "output_to_file",
+      "eventName": "authApi:createTemporaryAccess:onComplete",
+      "optionsCreator": "return { filename:'tempaccess' + context.userName, content:context.result };",
+      "condition": ""
+    }
+  ],
+  "actions": {
+    "output_to_file": 
+    {
+        "name": "output_to_file",
+        "behaviourSource": "main",
+        "behaviourName": "outputToFile",
+        "initialOptions": {}
+    }
+
+  }
+}

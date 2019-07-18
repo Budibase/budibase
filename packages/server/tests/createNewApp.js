@@ -1,7 +1,8 @@
 const statusCodes = require("../utilities/statusCodes");
 const constructHierarchy = require("../utilities/constructHierarchy");
 const { readFile } = require("../utilities/fsawait");
-const {getRecordApi, getAuthApi} = require("budibase-core");
+const { hierarchy } = require("budibase-core");
+const { take } = require("lodash/fp");
 const masterAppDefinition = constructHierarchy(
     require("../appPackages/master/appDefinition.json"));
 const {getApisWithFullAccess} = require("../utilities/budibaseApi");
@@ -54,6 +55,15 @@ module.exports = (app) => {
 
         await app.post(`/_master/api/files/${version1.key}`)
                 .attach("file", path, "package.tar.gz")
+                .set("cookie", app.credentials.masterOwner.cookie)
+                .expect(statusCodes.OK);
+
+        const savedAppResponse = await app.get(`/_master/api/record/${newAppKey}`)
+                            .set("cookie", app.credentials.masterOwner.cookie);
+
+        const savedApp = savedAppResponse.body;
+        savedApp.defaultVersion = version1
+        await app.post(`/_master/api/record/${newAppKey}`, savedApp)
                 .set("cookie", app.credentials.masterOwner.cookie)
                 .expect(statusCodes.OK);
 
