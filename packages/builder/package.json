@@ -6,6 +6,30 @@
     "build": "rollup -c",
     "start": "rollup -c -w"
   },
+  "jest": {
+    "globals": {
+      "GLOBALS": {
+        "client": "web"
+      }
+    },
+    "testURL": "http://jest-breaks-if-this-does-not-exist",
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
+      "\\.(css|less|sass|scss)$": "identity-obj-proxy"
+    },
+    "moduleFileExtensions": [
+      "js"
+    ],
+    "moduleDirectories": [
+      "node_modules"
+    ],
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!svelte).+\\.js$"
+    ]
+  },
   "dependencies": {
     "@nx-js/compiler-util": "^2.0.0",
     "budibase-core": "file:../core/dist",
@@ -20,8 +44,14 @@
     "uikit": "^3.1.5"
   },
   "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-transform-runtime": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/runtime": "^7.5.5",
+    "babel-jest": "^24.8.0",
     "browser-sync": "^2.26.7",
     "http-proxy-middleware": "^0.19.1",
+    "jest": "^24.8.0",
     "ncp": "^2.0.0",
     "npm-run-all": "^4.1.5",
     "rollup": "^1.12.0",
