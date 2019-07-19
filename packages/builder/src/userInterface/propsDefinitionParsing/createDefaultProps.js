@@ -1,11 +1,8 @@
 import {
     isString, 
-    isBoolean, 
-    isNumber,
-    isArray,
     isUndefined
 } from "lodash/fp";
-
+import { types } from "./types";
 import { assign } from "lodash";
 
 export const createDefaultProps = (propsDefinition, derivedFromProps) => {
@@ -31,7 +28,7 @@ export const createDefaultProps = (propsDefinition, derivedFromProps) => {
 }
 
 const parsePropDef = propDef => {
-    const error = message => ({error:message});
+    const error = message => ({error:message, propDef});
 
     if(isString(propDef)) {
         if(!types[propDef])
@@ -56,13 +53,9 @@ const parsePropDef = propDef => {
     return propDef.default;
 }
 
-const propType = (defaultValue, isOfType) => ({
-    isOfType, default:defaultValue
-});
-
-const types = {
-    string: propType(() => "", isString),
-    bool: propType(() => false, isBoolean),
-    number: propType(() => 0, isNumber),
-    array: propType(() => [], isArray)
-}
+/*
+Allowed propDefOptions
+- type: string, bool, number, array
+- default: default value, when undefined
+- required: field is required 
+*/
