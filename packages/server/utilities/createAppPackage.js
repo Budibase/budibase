@@ -64,10 +64,10 @@ const applictionVersionPath = (appname, versionId) =>
     join("..", getRuntimePackageDirectory(appname, versionId))
 
 const publicPaths = (appPath) =>  ({
-        mainUiPath: join(
-            appPath, "ui", "main", "public"),
-        unauthenticatedUiPath: join(
-            appPath, "ui", "unauthenticated", "public")
+        mainUiPath: resolve(join(
+            __dirname, appPath, "ui", "main", "public")),
+        unauthenticatedUiPath: resolve(join(
+            __dirname, appPath, "ui", "unauthenticated", "public"))
         
     });
 

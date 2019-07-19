@@ -69,10 +69,6 @@ module.exports = (config, app) => {
             await send(ctx, path, { root: builderPath });
         }
     })
-    .get("/:appname", async (ctx) => {
-        ctx.response.status = StatusCodes.OK;
-        ctx.response.body = "UI Served Here";
-    })
     .post("/:appname/api/authenticate", async (ctx, next) => {
         const user = await ctx.master.authenticate(
             ctx.sessionId,

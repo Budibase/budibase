@@ -2,6 +2,7 @@ const app = require("./testApp")();
 const  authenticateMaster = require("./authenticate");
 const  createNewApp = require("./createNewApp");
 const  multipleInstances = require("./multipleInstances");
+const serveui = require("./serveui");
 
 beforeAll(async () => await app.start())
 
@@ -11,5 +12,6 @@ describe("authenticateMaster", () => authenticateMaster(app, "_master", "masterO
 describe("createNewApp", () => createNewApp(app));
 describe("authenticateTestApp", () => authenticateMaster(app, "testApp", "testAppUser1"));
 describe("multipleInstances", () => multipleInstances(app));
+describe("serveUi", () => serveui(app));
 
 
