@@ -5,15 +5,24 @@ import {
 import { types } from "./types";
 import { assign } from "lodash";
 
-export const createDefaultProps = (propsDefinition, derivedFromProps) => {
+export const createProps = (componentName, propsDefinition, derivedFromProps) => {
 
-    const props = {};
+    const error = (propName, error) =>
+        errors.push({propName, error});
+
+    const props = {
+        _component: componentName
+    };
+
     const errors = [];
+
+    if(!componentName)
+        error("_component", "Component name not supplied");
 
     for(let propDef in propsDefinition) {
         const parsedPropDef = parsePropDef(propsDefinition[propDef]);
         if(parsedPropDef.error)
-            errors.push({propName:propDef, error:parsedPropDef.error});
+            error(propDef, parsedPropDef.error); 
         else 
             props[propDef] = parsedPropDef;
     }

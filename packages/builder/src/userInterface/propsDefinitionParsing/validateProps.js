@@ -1,5 +1,5 @@
 import { types } from "./types";
-import { createDefaultProps } from "./createDefaultProps";
+import { createProps } from "./createProps";
 import { isString } from "util";
 import { 
     includes,
@@ -17,11 +17,40 @@ const makeError = (errors, propName) => (message) =>
         propName, 
         error:message});
 
+export const recursivelyValidate = (rootProps, getComponentPropsDefinition, stack=[]) => {
+
+    const propsDef = getComponentPropsDefinition(
+        rootProps._component);
+
+    const errors = validateProps(
+        propsDef,
+        rootProps);
+
+    // adding name to object.... for ease
+    const childErrors = pipe(propsDef, [
+        keys,
+        map(k => ({...propsDef[k], name:k })),
+        filter(d => d.type === "component"),
+        map(d => ({
+            errs:recursivelyValidate(
+                rootProps[d.name], 
+                d.def, 
+                [...stack, propsDef]),
+            def:d
+        }))
+    ]);
+}
+
 export const validateProps = (propsDefinition, props, isFinal=true) => {
 
     const errors = [];
 
+    if(!props._component) 
+        makeError(errors, "_component")("Component is not set");
+
     for(let propDefName in propsDefinition) {
+        
+        if(propDefName === "_component") continue;
 
         let propDef = propsDefinition[propDefName];
 
@@ -46,7 +75,7 @@ export const validateProps = (propsDefinition, props, isFinal=true) => {
         if(propDef.type === "array") {
             for(let arrayItem of propValue) {
                 const arrayErrs = validateProps(
-                    propDef.itemPropsDefinition,
+                    propDef.elementDefinition,
                     arrayItem,
                     isFinal
                 )
@@ -61,31 +90,32 @@ export const validateProps = (propsDefinition, props, isFinal=true) => {
            && !includes(propValue)(propDef.options)) {
             error(`Property ${propDefName} is not one of allowed options. Acutal value is ${propValue}`);
         }
+
     }
 
     return errors;
 }
 
 export const validatePropsDefinition = (propsDefinition) => {
-    const { errors } = createDefaultProps(propsDefinition);
+    const { errors } = createProps("dummy_component_name", propsDefinition);
     
 
-    // arrar props without itemPropsDefinition
+    // arrar props without elementDefinition
     pipe(propsDefinition, [
         keys,
         map(k => ({
             propDef:propsDefinition[k],
             propName:k
         })),
-        filter(d => d.propDef.type === "array" && !d.propDef.itemPropsDefinition),
+        filter(d => d.propDef.type === "array" && !d.propDef.elementDefinition),
         each(d => makeError(errors, d.propName)(`${d.propName} does not have a definition for it's item props`))
     ]);
 
     const arrayPropValidationErrors = pipe(propsDefinition, [
         keys,
         map(k => propsDefinition[k]),
-        filter(d => d.type === "array" && d.itemPropsDefinition),
-        map(d => validatePropsDefinition(d.itemPropsDefinition)),
+        filter(d => d.type === "array" && d.elementDefinition),
+        map(d => validatePropsDefinition(d.elementDefinition)),
         flatten
     ]);
 

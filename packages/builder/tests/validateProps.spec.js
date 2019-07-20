@@ -2,10 +2,7 @@ import {
     validatePropsDefinition,
     validateProps 
 } from "../src/userInterface/propsDefinitionParsing/validateProps";
-import { createDefaultProps }  from "../src/userInterface/propsDefinitionParsing/createDefaultProps";
-import {
-    keys, some
-} from "lodash/fp";
+import { createProps }  from "../src/userInterface/propsDefinitionParsing/createProps";
 
 // not that allot of this functionality is covered
 // in createDefaultProps - as validate props uses that.
@@ -17,7 +14,7 @@ describe("validatePropsDefinition", () => {
         const propsDef = {
             columns : {
                 type: "array",
-                itemPropsDefinition: {
+                elementDefinition: {
                     width: "number",
                     units: {
                         type: "string",
@@ -38,7 +35,7 @@ describe("validatePropsDefinition", () => {
         const propsDef = {
             columns : {
                 type: "array",
-                itemPropsDefinition: {
+                elementDefinition: {
                     width: "invlid type",
                     units: {
                         type: "string",
@@ -97,7 +94,7 @@ const validPropDef = {
     rowCount : "number",
     columns : {
         type: "array",
-        itemPropsDefinition: {
+        elementDefinition: {
             width: "number",
             units: {
                 type: "string",
@@ -109,9 +106,9 @@ const validPropDef = {
 };
 
 const validProps = () => {
-    const { props } = createDefaultProps(validPropDef);
+    const { props } = createProps("some_component", validPropDef);
     props.columns.push(
-        createDefaultProps(validPropDef.columns.itemPropsDefinition).props);
+        createProps("childcomponent", validPropDef.columns.elementDefinition).props);
     return props;
 }
 
