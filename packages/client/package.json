@@ -4,7 +4,6 @@
   "description": "Client library for talking to budibase web server",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
   },
   "keywords": [
     "budibase"

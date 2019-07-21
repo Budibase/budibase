@@ -4,7 +4,8 @@
   "license": "AGPL-3.0",
   "scripts": {
     "build": "rollup -c",
-    "start": "rollup -c -w"
+    "start": "rollup -c -w",
+    "test": "jest"
   },
   "jest": {
     "globals": {
