@@ -7,59 +7,101 @@ import {
     map, 
     keys, 
     flatten,
-    each } from "lodash/fp";
+    flattenDeep,
+    each,
+    indexOf } from "lodash/fp";
 import { common } from "budibase-core";
 
 const pipe = common.$;
 
-const makeError = (errors, propName) => (message) =>
+const makeError = (errors, propName, stack) => (message) =>
     errors.push({
+        stack,
         propName, 
         error:message});
 
-export const recursivelyValidate = (rootProps, getComponentPropsDefinition, stack=[]) => {
+export const recursivelyValidate = (rootProps, getComponent, stack=[]) => {
+
+    const getComponentPropsDefinition = componentName => {
+        if(componentName.includes(":")) {
+            const [parentComponent, arrayProp] = componentName.split(":");
+            return getComponent(parentComponent)[arrayProp].elementDefinition;
+        }
+        return getComponent(componentName);
+    }
 
     const propsDef = getComponentPropsDefinition(
         rootProps._component);
 
+    const getPropsDefArray = (def) => pipe(def, [
+        keys,
+        map(k => def[k].name 
+                 ? expandPropDef(def[k])
+                 : ({
+                     ...expandPropDef(def[k]), 
+                     name:k }))
+    ]);
+
+    const propsDefArray = getPropsDefArray(propsDef);
+
     const errors = validateProps(
         propsDef,
-        rootProps);
+        rootProps,
+        stack,
+        true);
 
-    // adding name to object.... for ease
-    const childErrors = pipe(propsDef, [
-        keys,
-        map(k => ({...propsDef[k], name:k })),
+    const validateChildren = (_defArray, _props, _stack) => pipe(_defArray, [
         filter(d => d.type === "component"),
-        map(d => ({
-            errs:recursivelyValidate(
-                rootProps[d.name], 
-                d.def, 
-                [...stack, propsDef]),
-            def:d
-        }))
+        map(d => recursivelyValidate(
+                    _props[d.name], 
+                    getComponentPropsDefinition, 
+                    [..._stack, d.name])),
+        flatten
     ]);
+
+    const childErrors = validateChildren(
+        propsDefArray, rootProps, stack);
+
+    const childArrayErrors = pipe(propsDefArray, [
+        filter(d => d.type === "array"),
+        map(d => pipe(rootProps[d.name], [ 
+                    map(elementProps => pipe(elementProps._component, [
+                                            getComponentPropsDefinition,
+                                            getPropsDefArray,
+                                            arr => validateChildren(
+                                                        arr, 
+                                                        elementProps,
+                                                        [...stack, 
+                                                        `${d.name}[${indexOf(elementProps)(rootProps[d.name])}]`]) 
+                    ])) 
+                ]))
+    ]);
+
+    return flattenDeep([errors, ...childErrors, ...childArrayErrors]);
 }
 
-export const validateProps = (propsDefinition, props, isFinal=true) => {
+const expandPropDef = propDef =>
+    isString(propDef)
+    ? types[propDef].defaultDefinition()
+    : propDef;
+
+
+export const validateProps = (propsDefinition, props, stack=[], isFinal=true) => {
 
     const errors = [];
 
     if(!props._component) 
-        makeError(errors, "_component")("Component is not set");
+        makeError(errors, "_component", stack)("Component is not set");
 
     for(let propDefName in propsDefinition) {
         
         if(propDefName === "_component") continue;
 
-        let propDef = propsDefinition[propDefName];
-
-        if(isString(propDef))
-            propDef = types[propDef].defaultDefinition();
+        const propDef = expandPropDef(propsDefinition[propDefName]);
 
         const type = types[propDef.type];
 
-        const error = makeError(errors, propDefName);            
+        const error = makeError(errors, propDefName, stack);            
 
         const propValue = props[propDefName];
         if(isFinal && propDef.required && propValue) {
@@ -73,15 +115,19 @@ export const validateProps = (propsDefinition, props, isFinal=true) => {
         }
 
         if(propDef.type === "array") {
+            let index = 0;
             for(let arrayItem of propValue) {
+                arrayItem._component = `${props._component}:${propDefName}`
                 const arrayErrs = validateProps(
                     propDef.elementDefinition,
                     arrayItem,
+                    [...stack, `${propDefName}[${index}]`],
                     isFinal
                 )
                 for(let arrErr of arrayErrs) {
                     errors.push(arrErr);
                 }
+                index++;
             }    
         }
 
