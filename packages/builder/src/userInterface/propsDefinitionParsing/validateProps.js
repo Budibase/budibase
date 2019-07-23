@@ -30,6 +30,13 @@ export const recursivelyValidate = (rootProps, getComponent, stack=[]) => {
         return getComponent(componentName);
     }
 
+    if(!rootProps._component) {
+        const errs = [];
+        makeError(errs, "_component", stack)("Component is not set");
+        return errs;
+        // this would break everything else anyway
+    }
+
     const propsDef = getComponentPropsDefinition(
         rootProps._component);
 
@@ -80,18 +87,26 @@ export const recursivelyValidate = (rootProps, getComponent, stack=[]) => {
     return flattenDeep([errors, ...childErrors, ...childArrayErrors]);
 }
 
-const expandPropDef = propDef =>
-    isString(propDef)
-    ? types[propDef].defaultDefinition()
-    : propDef;
+const expandPropDef = propDef => {
+    const p = isString(propDef)
+              ? types[propDef].defaultDefinition()
+              : propDef;
+    if(p.type === "array" && isString(p.elementDefinition)) {
+        p.elementDefinition = types[p.elementDefinition].defaultDefinition()
+    }
+    return p;
+}
 
 
 export const validateProps = (propsDefinition, props, stack=[], isFinal=true) => {
 
     const errors = [];
 
-    if(!props._component) 
+    if(!props._component) {
         makeError(errors, "_component", stack)("Component is not set");
+        return errors;
+        // this would break everything else anyway
+    }
 
     for(let propDefName in propsDefinition) {
         
