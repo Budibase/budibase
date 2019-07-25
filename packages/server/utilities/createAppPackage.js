@@ -65,9 +65,9 @@ const applictionVersionPath = (appname, versionId) =>
 
 const publicPaths = (appPath) =>  ({
         mainUiPath: resolve(join(
-            __dirname, appPath, "ui", "main", "public")),
+            __dirname, appPath, "public", "main")),
         unauthenticatedUiPath: resolve(join(
-            __dirname, appPath, "ui", "unauthenticated", "public"))
+            __dirname, appPath, "public", "unauthenticated"))
         
     });
 

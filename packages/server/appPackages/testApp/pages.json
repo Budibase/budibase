@@ -1,0 +1,19 @@
+{
+    "main" : {
+        "index" : {
+
+        },
+        "appBody" : "./main.app.json"
+    },
+    "unauthenticated" : {
+        "index" : {
+            "_component": "budibase-components/indexHtml",
+            "title": "Test App 1 - Login",
+            "customScripts": [
+                "MyCustomComponents.js"
+            ]
+        },
+        "appBody" : "./unauthenticated.app.json"
+    },
+    "componentLibraries": ["./myComponents"]
+}

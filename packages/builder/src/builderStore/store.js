@@ -1,10 +1,14 @@
 import {hierarchy as hierarchyFunctions, 
     common, getTemplateApi } from "budibase-core";
-import {filter, cloneDeep, sortBy, map, last,
+import {filter, cloneDeep, sortBy, map, last, keys,
+    cloneDeep, keyBy,
     find, isEmpty, groupBy, reduce} from "lodash/fp";
 import {chain, getNode, validate,
     constructHierarchy, templateApi} from "../common/core";
 import {writable} from "svelte/store";
+import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
+
+const pipe = common.$;
 
 export const getStore = () => {
 
@@ -14,6 +18,11 @@ export const getStore = () => {
         hierarchy: {},
         actions: [],
         triggers: [],
+        pages:defaultPagesObject(),
+        mainUi:{},
+        unauthenticatedUi:{},
+        derivedComponents:[],
+        rootComponents:[],
         currentNodeIsNew: false,
         errors: [],
         activeNav: "database",
@@ -41,6 +50,9 @@ export const getStore = () => {
     store.saveLevel = saveLevel(store);
     store.deleteLevel = deleteLevel(store);
     store.setActiveNav = setActiveNav(store);
+    store.saveDerivedComponent = saveDerivedComponent(store);
+    store.refreshComponents = refreshComponents(store);
+    store.addComponentLibrary = addComponentLibrary(store);
     return store;
 } 
 
@@ -312,30 +324,107 @@ const deleteLevel = store => level => {
     });
 }
 
-const setActiveNav = databaseStore => navName => {
-    databaseStore.update(db => {
-        db.activeNav = navName;
-        return db;
+const setActiveNav = store => navName => {
+    store.update(s => {
+        s.activeNav = navName;
+        return s;
     });
 }
 
 const createShadowHierarchy = hierarchy => 
     constructHierarchy(JSON.parse(JSON.stringify(hierarchy)));
 
-const savePackage = (store, db) => {
+const saveDerivedComponent = store => (derivedComponent) => {
+
+    store.update(s => {
+
+        const derivedComponents = pipe(s.derivedComponents, [
+            filter(c => c._name !== derivedComponent._name)
+        ]);
+
+        s.derivedComponents = derivedComponents;
+
+        const forSave = pipe(derivedComponents, [
+            cloneDeep,
+            keyBy("_name")
+        ]);
+
+        for(let c of forSave) {
+            delete c._name;    
+        }
+
+        s.pages.derivedComponents = forSave;
+        savePackage(store, s);
+
+        return s;
+    })
+
+};
+
+const addComponentLibrary = store => async lib => {
+
+    const response = 
+        await fetch(`/_builder/api/${db.appname}/components?${encodeURI(lib)}`);
+
+    const success = response.status === 200;
+
+    const error = response.status === 404 
+                  ? `Could not find library ${lib}`
+                  : success
+                  ? ""
+                  : response.statusText;
+    
+    const components = success
+                       ? await response.json()
+                       : [];
+
+    store.update(s => {
+        s.componentsErrors.addComponent = error;
+        if(success) {
+            s.pages.componentLibraries.push(lib);
+            s.rootComponents = [...s.rootComponents, components];
+        }
+
+        return s;
+    })
+    
+
+}
+
+const refreshComponents = store => async () => {
+
+    const components = 
+        await fetch(`/_builder/api/${db.appname}/components`)
+         .then(r => jQuery.json());
+
+    const rootComponents = pipe(components, [
+        keys,
+        map(k => ({...components[k], _name:k}))
+    ]);
+
+    store.update(s => {
+        s.rootComponents = rootComponents;
+        return s;
+    });
+};
+
+const savePackage = (store, s) => {
 
     const appDefinition = {
-        hierarchy:db.hierarchy,
-        triggers:db.triggers,
-        actions: groupBy("name")(db.actions)
+        hierarchy:s.hierarchy,
+        triggers:s.triggers,
+        actions: groupBy("name")(s.actions),
+        pages:s.pages,
+        mainUi: s.mainUi,
+        unauthenticatedUi: s.unauthenticatedUi
     };
 
     const data = {
         appDefinition,
-        accessLevels:db.accessLevels
+        accessLevels:s.accessLevels
     }
 
-    fetch(`/_builder/api/${db.appname}/appPackage`, {
+    fetch(`/_builder/api/${s.appname}/appPackage`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

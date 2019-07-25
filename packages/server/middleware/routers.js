@@ -4,7 +4,7 @@ const StatusCodes = require("../utilities/statusCodes");
 const fs = require("fs");
 const { resolve } = require("path");
 const send = require('koa-send');
-const { getPackageForBuilder, 
+const { getPackageForBuilder, getComponents,
     savePackage, getApps } = require("../utilities/builder");
 
 const builderPath = resolve(__dirname, "../builder");
@@ -151,6 +151,27 @@ module.exports = (config, app) => {
             ctx.params.appname,
             ctx.request.body);
         ctx.response.status = StatusCodes.OK;
+    })
+    .get("/_builder/api/:appname/components", async (ctx) => {
+        if(!config.dev) {
+            ctx.request.status = StatusCodes.FORBIDDEN;
+            ctx.body = "run in dev mode to access builder";
+            return;
+        }
+
+        try {
+            ctx.body = getComponents(
+                config, 
+                ctx.params.appname,
+                ctx.query.lib);
+            ctx.response.status = StatusCodes.OK;
+        } catch(e) {
+            if(e.status) {
+                ctx.response.status = e.status;
+            } else {
+                throw e;
+            }
+        }
     })
     .get("/:appname", async (ctx) => {
         await send(ctx, "/index.html", { root: ctx.publicPath });

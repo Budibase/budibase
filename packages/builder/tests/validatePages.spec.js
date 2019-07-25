@@ -1,7 +1,7 @@
 import { 
     validatePages, 
     validatePage 
-} from "../src/userInterface/propsDefinitionParsing/validatePages";
+} from "../src/userInterface/pagesParsing/validatePages";
 
 const validPages = () => ({
     "main" : {
@@ -85,8 +85,37 @@ describe("validate pages", () => {
         expect(errors).toEqual([]);
     });
 
-    it("should return error when index is not set, or set incorrectly", () => {
+    it("should return error when component libraries not set", () => {
+        const pages = validPages();
+
+        delete pages.componentLibraries;
+        let errors = validatePages(pages, getComponent);
+        expect(errors.length).toBe(1);
+
+        pages.componentLibraries = [];
+        errors = validatePages(pages, getComponent);
+        expect(errors.length).toBe(1);
 
     });
 
+    it("should return error when no main or unauthenticated page", () => {
+
+        let pages = validPages();
+        delete pages.main;
+        let errors = validatePages(pages, getComponent);
+        expect(errors.length).toBe(1);
+
+        pages = validPages();
+        delete pages.unauthenticated;
+        errors = validatePages(pages, getComponent);
+        expect(errors.length).toBe(1);
+
+    });
+
+    it("should return error when page is invalid", () => {
+        const pages = validPages();
+        delete pages.main.index;
+        const errors = validatePages(pages, getComponent);
+        expect(errors.length).toBe(1);
+    });
 });

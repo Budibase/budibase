@@ -7,7 +7,7 @@ module.exports = (app) => {
         const response = await app.get("/testApp")
                             .expect(statusCodes.OK);
 
-        const expectedIndexHtml = await readFile("appPackages/testApp/ui/unauthenticated/public/index.html", "utf8");
+        const expectedIndexHtml = await readFile("appPackages/testApp/public/unauthenticated/index.html", "utf8");
 
         expect(response.text).toBe(expectedIndexHtml);
         
@@ -17,7 +17,7 @@ module.exports = (app) => {
         const response = await app.get("/testApp/app.js")
                             .expect(statusCodes.OK);
 
-        const expectedFile = await readFile("appPackages/testApp/ui/unauthenticated/public/app.js", "utf8");
+        const expectedFile = await readFile("appPackages/testApp/public/unauthenticated/app.js", "utf8");
 
         expect(response.text).toBe(expectedFile);
         
@@ -28,7 +28,7 @@ module.exports = (app) => {
                             .set("cookie", app.credentials.testAppUser1.cookie)
                             .expect(statusCodes.OK);
 
-        const expectedIndexHtml = await readFile("appPackages/testApp/ui/main/public/index.html", "utf8");
+        const expectedIndexHtml = await readFile("appPackages/testApp/public/main/index.html", "utf8");
 
         expect(response.text).toBe(expectedIndexHtml);
         
@@ -39,7 +39,7 @@ module.exports = (app) => {
                             .set("cookie", app.credentials.testAppUser1.cookie)
                             .expect(statusCodes.OK);
 
-        const expectedFile = await readFile("appPackages/testApp/ui/main/public/app.js", "utf8");
+        const expectedFile = await readFile("appPackages/testApp/public/main/app.js", "utf8");
 
         expect(response.text).toBe(expectedFile);
         
