@@ -15,5 +15,5 @@
         },
         "appBody" : "./unauthenticated.app.json"
     },
-    "componentLibraries": ["./myComponents"]
+    "componentLibraries": ["./customComponents", "./moreCustomComponents"]
 }

@@ -13,9 +13,22 @@
       {
           "type": "node",
           "request": "launch",
-          "name": "Jest All",
+          "name": "Jest App Server",
           "program": "${workspaceFolder}/node_modules/.bin/jest",
-          "args": ["--runInBand"],
+          "args": ["apps", "--runInBand"],
+          "console": "integratedTerminal",
+          "internalConsoleOptions": "neverOpen",
+          "disableOptimisticBPs": true,
+          "windows": {
+              "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
+          }
+        },
+        {
+          "type": "node",
+          "request": "launch",
+          "name": "Jest Builder",
+          "program": "${workspaceFolder}/node_modules/.bin/jest",
+          "args": ["builder", "--runInBand"],
           "console": "integratedTerminal",
           "internalConsoleOptions": "neverOpen",
           "disableOptimisticBPs": true,

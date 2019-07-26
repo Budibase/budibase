@@ -46,7 +46,8 @@ const config = {
     port: 4002,
     latestPackagesFolder: "./appPackages",
     extraMasterPlugins,
-    customizeMaster
+    customizeMaster,
+    dev:true
 }
 
 

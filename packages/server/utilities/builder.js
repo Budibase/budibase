@@ -6,20 +6,29 @@ const {
     writeFile, 
     readFile, 
     readdir,
-    exists 
+    exists,
+    stat 
 } = require("./fsawait");
-const { resolve } = require("path");
+const { 
+    resolve,
+    join
+} = require("path");
 const { $ } = require("budibase-core").common;
 const { 
     keys,
     reduce,
-    map,
-    flatten,
-    some 
+    some,
+    keyBy
 } = require("lodash/fp");
+const {merge} = require("lodash");
 
 module.exports.getPackageForBuilder = async (config, appname) => {
     const appPath = appPackageFolder(config, appname);
+
+    const pages = JSON.parse(await readFile(
+        `${appPath}/pages.json`,
+        "utf8"));
+
     return ({
         appDefinition: JSON.parse(await readFile(
             `${appPath}/appDefinition.json`, 
@@ -29,9 +38,12 @@ module.exports.getPackageForBuilder = async (config, appname) => {
             `${appPath}/access_levels.json`,
             "utf8")),
 
-        pages: JSON.parse(await readFile(
-            `${appPath}/pages.json`,
-            "utf8"))
+        pages,
+
+        rootComponents: await getRootComponents(appPath, pages),
+
+        derivedComponents: keyBy("_name")(
+            await fetchDerivedComponents(appPath))
     })
 
 }
@@ -50,7 +62,7 @@ module.exports.savePackage = async (config, appname, pkg) => {
 
     await writeFile(
         `${appPath}/pages.json`,
-        JSON.stringify(pkg.accessLevels),
+        JSON.stringify(pkg.pages),
         "utf8");
 }
 
@@ -58,9 +70,9 @@ module.exports.getApps = async (config) =>
     await readdir(appsFolder(config));
 
 
-module.exports.getComponents = async (config, appname, lib) => {
+const getRootComponents = async (appPath, pages ,lib) => {
 
-    const componentsInLibrary = (libname) => {
+    const componentsInLibrary = async (libname) => {
         const isRelative = some(c => c === libname.substring(0,1))
                                ("./~\\".split(""));
         
@@ -77,10 +89,10 @@ module.exports.getComponents = async (config, appname, lib) => {
         let components;
         try {
             components = JSON.parse(
-                readFile(componentsPath, "utf8"));
+                await readFile(componentsPath, "utf8"));
         } catch(e) {
-            const e = new Error(`could not parse JSON - ${componentsPath} `);
-            throw e;
+            const err = `could not parse JSON - ${componentsPath} : ${e.message}`;
+            throw new Error(err);
         }
 
         return $(components, [
@@ -94,9 +106,7 @@ module.exports.getComponents = async (config, appname, lib) => {
 
     let libs;
     if(!lib) {
-        const appPath = appPackageFolder(config, appname);
-
-        const pages = JSON.parse(await readFile(
+        pages = pages || JSON.parse(await readFile(
             `${appPath}/pages.json`,
             "utf8"));
 
@@ -107,9 +117,51 @@ module.exports.getComponents = async (config, appname, lib) => {
         libs = [lib];
     }
 
-    return $(libs, [
-        map(componentsInLibrary),
-        flatten
-    ]);
+    const components = {};
+    for(let l of libs) {
+        merge(components, await componentsInLibrary(l))
+    }
+
+    return components;
 }
 
+const fetchDerivedComponents = async (appPath, relativePath = "") => {
+    
+    const currentDir = join(appPath, "components", relativePath);
+
+    const contents = await readdir(currentDir);
+
+    const components = [];
+
+    for(let item of contents) {
+        const itemRelativePath = join(relativePath, item);
+        const itemFullPath = join(currentDir, item);
+        const stats = await stat(itemFullPath);
+
+        if(stats.isFile()) {
+            
+            if(!item.endsWith(".json")) continue;
+
+            const component = JSON.parse(
+                await readFile(itemFullPath, "utf8"));
+
+            component._name = itemRelativePath
+                                .substring(0, itemRelativePath.length - 5)
+                                .replace(/\\/g, "/");
+
+            components.push(component);
+        } else {
+            const childComponents = await fetchDerivedComponents(
+                appPath, join(relativePath, item)
+            );
+
+            for(let c of childComponents) {
+                components.push(c);
+            }
+        }
+    }
+
+    return components;
+}
+
+module.exports.getRootComponents = getRootComponents;

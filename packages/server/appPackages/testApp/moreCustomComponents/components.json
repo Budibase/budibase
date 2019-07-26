@@ -1,0 +1,11 @@
+{
+    "textbox" : {
+        "path": "./textbox",
+        "name": "Textbox",
+        "description": "A text input, with a label",
+        "props": {
+            "label": "string"
+        },
+        "tags": ["textboxt", "input", "text"]
+    }
+}

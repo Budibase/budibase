@@ -4,13 +4,10 @@ const StatusCodes = require("../utilities/statusCodes");
 const fs = require("fs");
 const { resolve } = require("path");
 const send = require('koa-send');
-const { getPackageForBuilder, getComponents,
+const { getPackageForBuilder, getRootComponents: getComponents,
     savePackage, getApps } = require("../utilities/builder");
 
 const builderPath = resolve(__dirname, "../builder");
-const appUiPath = appname => {
-
-}
 
 module.exports = (config, app) => {
 
@@ -33,21 +30,27 @@ module.exports = (config, app) => {
             ctx.throw(StatusCodes.NOT_FOUND, "App Name not declared");
         }
 
-        const instance = await ctx.master.getInstanceApiForSession(
-            pathParts[1],
-            ctx.sessionId);
-        
+        const appname = pathParts[1];
 
-        ctx.instance = instance.instance;
-        ctx.publicPath = instance.publicPath;
-        ctx.isAuthenticated = !!instance.instance;
-
-        await next();
+        if(appname === "_builder")  {
+            await next();
+        } else {
+            const instance = await ctx.master.getInstanceApiForSession(
+                appname,
+                ctx.sessionId);
+            
+    
+            ctx.instance = instance.instance;
+            ctx.publicPath = instance.publicPath;
+            ctx.isAuthenticated = !!instance.instance;
+    
+            await next();
+        }        
     })
     .get("/_builder", async (ctx) => {
         if(!config.dev) {
-            ctx.request.status = StatusCodes.FORBIDDEN;
-            ctx.request.body = "run in dev mode to access builder";
+            ctx.response.status = StatusCodes.FORBIDDEN;
+            ctx.body = "run in dev mode to access builder";
             return;
         }
 
@@ -56,8 +59,8 @@ module.exports = (config, app) => {
     })
     .get("/_builder/*", async (ctx, next) => {
         if(!config.dev) {
-            ctx.request.status = StatusCodes.FORBIDDEN;
-            ctx.request.body = "run in dev mode to access builder";
+            ctx.response.status = StatusCodes.FORBIDDEN;
+            ctx.body = "run in dev mode to access builder";
             return;
         }
 
@@ -117,8 +120,8 @@ module.exports = (config, app) => {
     })
     .get("/_builder/api/apps", async (ctx) => {
         if(!config.dev) {
-            ctx.request.status = StatusCodes.FORBIDDEN;
-            ctx.request.body = "run in dev mode to access builder";
+            ctx.response.status = StatusCodes.FORBIDDEN;
+            ctx.response.body = "run in dev mode to access builder";
             return;
         }
 
@@ -128,8 +131,8 @@ module.exports = (config, app) => {
     })
     .get("/_builder/api/:appname/appPackage", async (ctx) => {
         if(!config.dev) {
-            ctx.request.status = StatusCodes.FORBIDDEN;
-            ctx.request.body = "run in dev mode to access builder";
+            ctx.response.status = StatusCodes.FORBIDDEN;
+            ctx.body = "run in dev mode to access builder";
             return;
         }
 
@@ -141,7 +144,7 @@ module.exports = (config, app) => {
     })
     .post("/_builder/api/:appname/appPackage", async (ctx) => {
         if(!config.dev) {
-            ctx.request.status = StatusCodes.FORBIDDEN;
+            ctx.response.status = StatusCodes.FORBIDDEN;
             ctx.body = "run in dev mode to access builder";
             return;
         }
@@ -154,7 +157,7 @@ module.exports = (config, app) => {
     })
     .get("/_builder/api/:appname/components", async (ctx) => {
         if(!config.dev) {
-            ctx.request.status = StatusCodes.FORBIDDEN;
+            ctx.response.status = StatusCodes.FORBIDDEN;
             ctx.body = "run in dev mode to access builder";
             return;
         }
