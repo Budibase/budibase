@@ -7,6 +7,7 @@ const testMoreComponents = require("../appPackages/testApp/moreCustomComponents/
 const statusCodes = require("../utilities/statusCodes");
 const derivedComponent1 = require("../appPackages/testApp/components/myTextBox.json");
 const derivedComponent2 = require("../appPackages/testApp/components/subfolder/otherTextBox.json");
+const { readJSON, pathExists } = require("fs-extra");
 
 const app = require("./testApp")();
 
@@ -63,4 +64,49 @@ it("/apppackage should get derivedComponents", async () => {
     };
                 
     expect(body.derivedComponents).toEqual(expectedComponents);
+});
+
+it("should be able to create new derived component", async () => {
+    const newDerivedComponent = {
+        _name: "newTextBox",
+        _component: "./customComponents/textbox",
+        label: "something"
+    };
+
+    await app.post("/_builder/api/testApp/derivedcomponent", newDerivedComponent)
+             .expect(statusCodes.OK);
+    
+    const componentFile = "./appPackages/testApp/components/newTextBox.json";
+    expect(await pathExists(componentFile)).toBe(true);
+    expect(await readJSON(componentFile)).toEqual(newDerivedComponent);    
+
+});
+
+it("should be able to update derived component", async () => {
+    const updatedDerivedComponent = {
+        _name: "newTextBox",
+        _component: "./customComponents/textbox",
+        label: "something else"
+    };
+
+    await app.post("/_builder/api/testApp/derivedcomponent", updatedDerivedComponent)
+             .expect(statusCodes.OK);
+    
+    const componentFile = "./appPackages/testApp/components/newTextBox.json";
+    expect(await readJSON(componentFile)).toEqual(updatedDerivedComponent);    
+});
+
+it("should be able to rename derived component", async () => {
+    await app.post("/_builder/api/testApp/derivedcomponent", {
+        oldname: "newTextBox", newName: "anotherSubFolder/newTextBox"
+    }).expect(statusCodes.OK);
+    const oldcomponentFile = "./appPackages/testApp/components/newTextBox.json";
+    const newcomponentFile = "./appPackages/testApp/components/anotherSubFolder/newTextBox.json";
+    expect(await pathExists(oldcomponentFile)).toBe(false);
+    expect(await pathExists(newcomponentFile)).toBe(true);
+
+});
+
+it("should be able to delete derived component", async () => {
+
 });

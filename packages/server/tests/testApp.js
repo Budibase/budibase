@@ -1,5 +1,5 @@
 const app = require("../app");
-const { rimraf, mkdir } = require("../utilities/fsawait");
+const { remove, mkdir } = require("fs-extra");
 const createMasterDb = require("../initialise/createMasterDb");
 const request = require("supertest");
 const fs = require("fs");
@@ -123,7 +123,7 @@ const getRequest = (server, url) =>
 
 const reInitialize = async () => {
     try {
-        await rimraf(config.datastoreConfig.rootPath);
+        await remove(config.datastoreConfig.rootPath);
     } catch(_){}
     
     await mkdir(config.datastoreConfig.rootPath);

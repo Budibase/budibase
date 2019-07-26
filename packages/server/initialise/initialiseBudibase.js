@@ -2,7 +2,7 @@ const create = require("./createMasterDb");
 const argv = require("yargs").argv
 const readline = require('readline');
 const { promisify } = require('util');
-const { mkdir, rimraf } = require("../utilities/fsawait");
+const { mkdir, remove } = require("fs-extra");
 const budibaseConfig = require("../config");
 const buildAppContext = require("../initialise/buildAppContext");
 
@@ -61,7 +61,7 @@ const question = async (q) => {
 
     if(cleanDev) {
       try {
-        await rimraf(rootconfig.rootPath);
+        await remove(rootconfig.rootPath);
       }
       catch(_){}
       await mkdir(rootconfig.rootPath);

@@ -5,7 +5,7 @@ const { take, takeRight, last } = require("lodash/fp");
 const { splitKey, $, joinKey } = require("budibase-core").common;
 const { unzipTarGzPackageToRuntime } = require("../../utilities/targzAppPackage");
 const { getRuntimePackageDirectory } = require("../../utilities/runtimePackages");
-const { exists } = require("../../utilities/fsawait");
+const { pathExists } = require("fs-extra");
 const createInstanceDb = require("../../initialise/createInstanceDb"); 
 const { createWriteStream } = require("fs");
 const { applictionVersionPackage } = require("../../utilities/createAppPackage");
@@ -33,7 +33,7 @@ module.exports = (context) => {
             application.name,
             versionId);
 
-        if(!await exists(runtimeDir))
+        if(!await pathExists(runtimeDir))
             await downloadAppPackage(apis, instance, application.name, versionId);
             
         const dbConfig = await createInstanceDb(

@@ -5,7 +5,7 @@ const fs = require("fs");
 const tar = require('tar-fs');
 const zlib = require("zlib");
 const { join, dirname, sep } = require("path");
-const { exists, mkdir, unlink, stat } = require("../utilities/fsawait");
+const { exists, mkdir, unlink, stat } = require("fs-extra");
 const { getRuntimePackageDirectory, getRuntimeAppsDirectory } = require("./runtimePackages");
 
 module.exports.createTarGzPackage = async (config, appName) => {
@@ -33,7 +33,7 @@ module.exports.unzipTarGzPackageToRuntime = async (src, appName, versionId) => {
 
     if(await exists(appDir)) {
         if(await exists(versionDir)) {
-            await rimraf(versionDir);
+            await remove(versionDir);
         }
     } else {
         await mkdir(appDir);

@@ -4,8 +4,14 @@ const StatusCodes = require("../utilities/statusCodes");
 const fs = require("fs");
 const { resolve } = require("path");
 const send = require('koa-send');
-const { getPackageForBuilder, getRootComponents: getComponents,
-    savePackage, getApps } = require("../utilities/builder");
+const { 
+    getPackageForBuilder, 
+    getRootComponents,
+    savePackage, 
+    getApps,
+    saveDerivedComponent,
+    renameDerivedComponent
+} = require("../utilities/builder");
 
 const builderPath = resolve(__dirname, "../builder");
 
@@ -119,23 +125,11 @@ module.exports = (config, app) => {
         ctx.response.status = StatusCodes.OK;
     })
     .get("/_builder/api/apps", async (ctx) => {
-        if(!config.dev) {
-            ctx.response.status = StatusCodes.FORBIDDEN;
-            ctx.response.body = "run in dev mode to access builder";
-            return;
-        }
-
         ctx.body = await getApps(config);
         ctx.response.status = StatusCodes.OK;
 
     })
     .get("/_builder/api/:appname/appPackage", async (ctx) => {
-        if(!config.dev) {
-            ctx.response.status = StatusCodes.FORBIDDEN;
-            ctx.body = "run in dev mode to access builder";
-            return;
-        }
-
         ctx.body = await getPackageForBuilder(
             config, 
             ctx.params.appname);
@@ -143,27 +137,16 @@ module.exports = (config, app) => {
 
     })
     .post("/_builder/api/:appname/appPackage", async (ctx) => {
-        if(!config.dev) {
-            ctx.response.status = StatusCodes.FORBIDDEN;
-            ctx.body = "run in dev mode to access builder";
-            return;
-        }
-
+        
         ctx.body = await savePackage(
             config, 
             ctx.params.appname,
             ctx.request.body);
         ctx.response.status = StatusCodes.OK;
     })
-    .get("/_builder/api/:appname/components", async (ctx) => {
-        if(!config.dev) {
-            ctx.response.status = StatusCodes.FORBIDDEN;
-            ctx.body = "run in dev mode to access builder";
-            return;
-        }
-
+    .get("/_builder/api/:appname/rootcomponents", async (ctx) => {
         try {
-            ctx.body = getComponents(
+            ctx.body = getRootComponents(
                 config, 
                 ctx.params.appname,
                 ctx.query.lib);
@@ -175,6 +158,28 @@ module.exports = (config, app) => {
                 throw e;
             }
         }
+    })
+    .post("/_builder/api/:appname/derivedcomponent", async (ctx) => {
+        await saveDerivedComponent(
+            config,
+            ctx.params.appname,
+            ctx.request.body);
+        ctx.response.status = StatusCodes.OK;
+    })
+    .patch("/_builder/api/:appname/derivedcomponent", async (ctx) => {
+        await renameDerivedComponent(
+            config,
+            ctx.params.appname,
+            ctx.request.body.oldname,
+            ctx.request.body.newname);
+        ctx.response.status = StatusCodes.OK;
+    })
+    .delete("/_builder/api/:appname/derivedcomponent", async (ctx) => {
+        await deleteDerivedComponent(
+            config,
+            ctx.params.appname,
+            ctx.request.body.name);
+        ctx.response.status = StatusCodes.OK;
     })
     .get("/:appname", async (ctx) => {
         await send(ctx, "/index.html", { root: ctx.publicPath });

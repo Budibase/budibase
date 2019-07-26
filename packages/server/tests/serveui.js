@@ -1,5 +1,5 @@
 const statusCodes = require("../utilities/statusCodes");
-const { readFile } = require("../utilities/fsawait");
+const { readFile } = require("fs-extra");
 
 module.exports = (app) => {
 

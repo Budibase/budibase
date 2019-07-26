@@ -1,5 +1,5 @@
 const statusCodes = require("../utilities/statusCodes");
-const { readFile } = require("../utilities/fsawait");
+const { readFile } = require("fs-extra");
 const { timeout } = require("./helpers");
 
 module.exports = (app, appName, userName) => {

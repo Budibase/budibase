@@ -1,6 +1,6 @@
 const statusCodes = require("../utilities/statusCodes");
 const constructHierarchy = require("../utilities/constructHierarchy");
-const { readFile } = require("../utilities/fsawait");
+const { readFile } = require("fs-extra");
 const { hierarchy } = require("budibase-core");
 const { take } = require("lodash/fp");
 const masterAppDefinition = constructHierarchy(

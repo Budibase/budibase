@@ -344,17 +344,13 @@ const saveDerivedComponent = store => (derivedComponent) => {
 
         s.derivedComponents = derivedComponents;
 
-        const forSave = pipe(derivedComponents, [
-            cloneDeep,
-            keyBy("_name")
-        ]);
-
-        for(let c of forSave) {
-            delete c._name;    
-        }
-
-        s.pages.derivedComponents = forSave;
-        savePackage(store, s);
+        fetch(`/_builder/api/${s.appname}/derivedcomponent`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(derivedComponent), 
+        });
 
         return s;
     })

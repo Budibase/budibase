@@ -1,11 +1,10 @@
-const { ncp } = require('ncp');
 const { masterAppPackage } = require("../utilities/createAppPackage");
-const { mkdir, rimraf, exists } = require("../utilities/fsawait");
+const { mkdir, remove, pathExists, copy } = require("fs-extra");
 const { runtimePackagesDirectory } = require("../utilities/runtimePackages");
 
 const copyfolder = (source, destination) =>
     new Promise((resolve, reject) => {
-        ncp(source, destination, function (err) {
+        copy(source, destination, function (err) {
             if (err) {
                 reject(err);
             } else {
@@ -19,9 +18,9 @@ module.exports = async (context, bbMaster, latestAppsFolder) => {
 
     // create runtime folder
     // copy master into /master/latest 
-    if(await exists(runtimePackagesDirectory)) {
+    if(await pathExists(runtimePackagesDirectory)) {
         try {
-            await rimraf(runtimePackagesDirectory);
+            await remove(runtimePackagesDirectory);
         } catch(err) {
             console.log(err);
         }

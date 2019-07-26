@@ -11,6 +11,5 @@ export const defaultPagesObject = () => ({
         },
         appBody: "bbapp.unauthenticated.json"
     },
-    componentLibraries: ["./components"],
-    derivedComponents:[]
+    componentLibraries: ["./components"]
 });

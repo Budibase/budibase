@@ -3,15 +3,19 @@ const {
     appsFolder 
 } = require("./createAppPackage");
 const { 
-    writeFile, 
-    readFile, 
+    readJSON,
+    writeJSON,
     readdir,
     exists,
-    stat 
-} = require("./fsawait");
+    stat,
+    ensureDir,
+    rename,
+    unlink
+} = require("fs-extra");
 const { 
     resolve,
-    join
+    join,
+    dirname
 } = require("path");
 const { $ } = require("budibase-core").common;
 const { 
@@ -25,18 +29,12 @@ const {merge} = require("lodash");
 module.exports.getPackageForBuilder = async (config, appname) => {
     const appPath = appPackageFolder(config, appname);
 
-    const pages = JSON.parse(await readFile(
-        `${appPath}/pages.json`,
-        "utf8"));
+    const pages = await readJSON(`${appPath}/pages.json`);
 
     return ({
-        appDefinition: JSON.parse(await readFile(
-            `${appPath}/appDefinition.json`, 
-            "utf8")),
+        appDefinition: await readJSON(`${appPath}/appDefinition.json`),
 
-        accessLevels: JSON.parse(await readFile(
-            `${appPath}/access_levels.json`,
-            "utf8")),
+        accessLevels: await readJSON(`${appPath}/access_levels.json`),
 
         pages,
 
@@ -50,25 +48,54 @@ module.exports.getPackageForBuilder = async (config, appname) => {
 
 module.exports.savePackage = async (config, appname, pkg) => {
     const appPath = appPackageFolder(config, appname);
-    await writeFile(
+    await writeJSON(
         `${appPath}/appDefinition.json`, 
-        JSON.stringify(pkg.appDefinition),
-        "utf8");
+        pkg.appDefinition);
 
-    await writeFile(
+    await writeJSON(
         `${appPath}/access_levels.json`,
-        JSON.stringify(pkg.accessLevels),
-        "utf8");
+        pkg.accessLevels);
 
-    await writeFile(
+    await writeJSON(
         `${appPath}/pages.json`,
-        JSON.stringify(pkg.pages),
-        "utf8");
+        pkg.pages);
 }
 
 module.exports.getApps = async (config) => 
     await readdir(appsFolder(config));
 
+
+const componentPath = (appPath, name) =>
+    join(appPath, "components", name + ".json");
+
+module.exports.saveDerivedComponent = async (config, appname, component) => {
+    const appPath = appPackageFolder(config, appname);
+
+    await writeJSON(
+        componentPath(appPath, component._name), 
+        component,
+        {encoding:"utf8", flag:"w"});
+}
+
+module.exports.renameDerivedComponent = async (config, appname, oldName, newName) => {
+    const appPath = appPackageFolder(config, appname);
+
+    const oldComponentPath = componentPath(
+        appPath, oldName);
+
+    const newComponentPath = join(
+        appPath, newName);
+
+    await ensureDir(dirname(newComponentPath));
+    await rename(
+        oldComponentPath, 
+        newComponentPath);    
+}
+
+module.exports.deleteDerivedComponent = async (config, appname, name) => {
+    const appPath = appPackageFolder(config, appname);
+    await unlink(componentPath(appPath, name));
+}
 
 const getRootComponents = async (appPath, pages ,lib) => {
 
@@ -88,8 +115,7 @@ const getRootComponents = async (appPath, pages ,lib) => {
 
         let components;
         try {
-            components = JSON.parse(
-                await readFile(componentsPath, "utf8"));
+            components = await readJSON(componentsPath);
         } catch(e) {
             const err = `could not parse JSON - ${componentsPath} : ${e.message}`;
             throw new Error(err);
@@ -106,9 +132,8 @@ const getRootComponents = async (appPath, pages ,lib) => {
 
     let libs;
     if(!lib) {
-        pages = pages || JSON.parse(await readFile(
-            `${appPath}/pages.json`,
-            "utf8"));
+        pages = pages || await readJSON(
+            `${appPath}/pages.json`);
 
         if(!pages.componentLibraries) return [];
 
@@ -142,8 +167,8 @@ const fetchDerivedComponents = async (appPath, relativePath = "") => {
             
             if(!item.endsWith(".json")) continue;
 
-            const component = JSON.parse(
-                await readFile(itemFullPath, "utf8"));
+            const component = 
+                await readJSON(itemFullPath);
 
             component._name = itemRelativePath
                                 .substring(0, itemRelativePath.length - 5)
