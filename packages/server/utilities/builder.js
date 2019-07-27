@@ -10,7 +10,8 @@ const {
     stat,
     ensureDir,
     rename,
-    unlink
+    unlink,
+    rmdir
 } = require("fs-extra");
 const { 
     resolve,
@@ -94,7 +95,13 @@ module.exports.renameDerivedComponent = async (config, appname, oldName, newName
 
 module.exports.deleteDerivedComponent = async (config, appname, name) => {
     const appPath = appPackageFolder(config, appname);
-    await unlink(componentPath(appPath, name));
+    const componentFile = componentPath(appPath, name);
+    await unlink(componentFile);
+
+    const dir = dirname(componentFile);
+    if((await readdir(dir)).length === 0) {
+        await rmdir(dir);
+    }
 }
 
 const getRootComponents = async (appPath, pages ,lib) => {

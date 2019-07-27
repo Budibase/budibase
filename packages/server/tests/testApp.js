@@ -71,6 +71,7 @@ module.exports = () => {
         post: (url, body) => postRequest(server,url,body),
         patch: (url, body) => patchRequest(server,url,body),
         get: (url) => getRequest(server, url),
+        delete: (url) => deleteRequest(server, url),
         credentials: {
             masterOwner: {
                 username: masterOwnerName,
@@ -119,6 +120,12 @@ const postRequest = (server, url, body) =>
     request(server)
     .post(url)
     .send(body)
+    .set('Accept', 'application/json');
+
+
+const deleteRequest = (server, url) => 
+    request(server)
+    .delete(url)
     .set('Accept', 'application/json');
 
 const getRequest = (server, url) => 

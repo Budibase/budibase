@@ -10,7 +10,8 @@ const {
     savePackage, 
     getApps,
     saveDerivedComponent,
-    renameDerivedComponent
+    renameDerivedComponent,
+    deleteDerivedComponent
 } = require("../utilities/builder");
 
 const builderPath = resolve(__dirname, "../builder");
@@ -174,11 +175,14 @@ module.exports = (config, app) => {
             ctx.request.body.newname);
         ctx.response.status = StatusCodes.OK;
     })
-    .delete("/_builder/api/:appname/derivedcomponent", async (ctx) => {
+    .delete("/_builder/api/:appname/derivedcomponent/*", async (ctx) => {
+        const name = ctx.request.path.replace(
+            `/_builder/api/${ctx.params.appname}/derivedcomponent/`, "");
+
         await deleteDerivedComponent(
             config,
             ctx.params.appname,
-            ctx.request.body.name);
+            name);
         ctx.response.status = StatusCodes.OK;
     })
     .get("/:appname", async (ctx) => {

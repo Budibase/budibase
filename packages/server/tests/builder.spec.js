@@ -118,5 +118,11 @@ it("should be able to rename derived component", async () => {
 });
 
 it("should be able to delete derived component", async () => {
+    await app.delete("/_builder/api/testApp/derivedcomponent/anotherSubFolder/newTextBox")
+             .expect(statusCodes.OK);
 
+    const componentFile = "./appPackages/testApp/components/anotherSubFolder/newTextBox.json";
+    const componentDir = "./appPackages/testApp/components/anotherSubFolder";
+    expect(await pathExists(componentFile)).toBe(false);
+    expect(await pathExists(componentDir)).toBe(false);
 });
