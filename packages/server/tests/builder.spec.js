@@ -7,11 +7,20 @@ const testMoreComponents = require("../appPackages/testApp/moreCustomComponents/
 const statusCodes = require("../utilities/statusCodes");
 const derivedComponent1 = require("../appPackages/testApp/components/myTextBox.json");
 const derivedComponent2 = require("../appPackages/testApp/components/subfolder/otherTextBox.json");
-const { readJSON, pathExists } = require("fs-extra");
+const { readJSON, pathExists, unlink } = require("fs-extra");
 
 const app = require("./testApp")();
 
-beforeAll(async () => await app.start());
+beforeAll(async () => {
+
+    const testComponent = "./appPackages/testApp/components/newTextBox.json";
+    const testComponentAfterMove = "./appPackages/testApp/components/anotherSubFolder/newTextBox.json";
+
+    if(await pathExists(testComponent)) await unlink(testComponent);
+    if(await pathExists(testComponentAfterMove)) await unlink(testComponentAfterMove);
+
+    await app.start();
+});
 afterAll(async () => await app.destroy());
 
 
@@ -97,9 +106,10 @@ it("should be able to update derived component", async () => {
 });
 
 it("should be able to rename derived component", async () => {
-    await app.post("/_builder/api/testApp/derivedcomponent", {
-        oldname: "newTextBox", newName: "anotherSubFolder/newTextBox"
+    await app.patch("/_builder/api/testApp/derivedcomponent", {
+        oldname: "newTextBox", newname: "anotherSubFolder/newTextBox"
     }).expect(statusCodes.OK);
+    
     const oldcomponentFile = "./appPackages/testApp/components/newTextBox.json";
     const newcomponentFile = "./appPackages/testApp/components/anotherSubFolder/newTextBox.json";
     expect(await pathExists(oldcomponentFile)).toBe(false);

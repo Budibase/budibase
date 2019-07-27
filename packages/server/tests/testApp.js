@@ -69,6 +69,7 @@ module.exports = () => {
         config,
         server:() => server,
         post: (url, body) => postRequest(server,url,body),
+        patch: (url, body) => patchRequest(server,url,body),
         get: (url) => getRequest(server, url),
         credentials: {
             masterOwner: {
@@ -108,7 +109,11 @@ module.exports = () => {
     })
 };
 
-
+const patchRequest = (server, url, body) => 
+    request(server)
+    .patch(url)
+    .send(body)
+    .set('Accept', 'application/json');
 
 const postRequest = (server, url, body) => 
     request(server)

@@ -83,7 +83,7 @@ module.exports.renameDerivedComponent = async (config, appname, oldName, newName
     const oldComponentPath = componentPath(
         appPath, oldName);
 
-    const newComponentPath = join(
+    const newComponentPath = componentPath(
         appPath, newName);
 
     await ensureDir(dirname(newComponentPath));
