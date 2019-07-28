@@ -68,8 +68,8 @@ it("/apppackage should get derivedComponents", async () => {
                          .expect(statusCodes.OK);
 
     const expectedComponents = {
-        "myTextBox" : {...derivedComponent1, _name:"myTextBox"},
-        "subfolder/otherTextBox": {...derivedComponent2, _name:"subfolder/otherTextBox"}
+        "myTextBox" : {...derivedComponent1, name:"myTextBox"},
+        "subfolder/otherTextBox": {...derivedComponent2, name:"subfolder/otherTextBox"}
     };
                 
     expect(body.derivedComponents).toEqual(expectedComponents);
@@ -77,9 +77,11 @@ it("/apppackage should get derivedComponents", async () => {
 
 it("should be able to create new derived component", async () => {
     const newDerivedComponent = {
-        _name: "newTextBox",
-        _component: "./customComponents/textbox",
-        label: "something"
+        name: "newTextBox",
+        inherits: "./customComponents/textbox",
+        props: {
+            label: "something"
+        }
     };
 
     await app.post("/_builder/api/testApp/derivedcomponent", newDerivedComponent)
@@ -93,9 +95,11 @@ it("should be able to create new derived component", async () => {
 
 it("should be able to update derived component", async () => {
     const updatedDerivedComponent = {
-        _name: "newTextBox",
-        _component: "./customComponents/textbox",
-        label: "something else"
+        name: "newTextBox",
+        inherits: "./customComponents/textbox",
+        props: {
+            label: "something else"
+        }
     };
 
     await app.post("/_builder/api/testApp/derivedcomponent", updatedDerivedComponent)

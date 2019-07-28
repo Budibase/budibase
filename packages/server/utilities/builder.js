@@ -41,7 +41,7 @@ module.exports.getPackageForBuilder = async (config, appname) => {
 
         rootComponents: await getRootComponents(appPath, pages),
 
-        derivedComponents: keyBy("_name")(
+        derivedComponents: keyBy("name")(
             await fetchDerivedComponents(appPath))
     })
 
@@ -73,7 +73,7 @@ module.exports.saveDerivedComponent = async (config, appname, component) => {
     const appPath = appPackageFolder(config, appname);
 
     await writeJSON(
-        componentPath(appPath, component._name), 
+        componentPath(appPath, component.name), 
         component,
         {encoding:"utf8", flag:"w"});
 }
@@ -177,7 +177,7 @@ const fetchDerivedComponents = async (appPath, relativePath = "") => {
             const component = 
                 await readJSON(itemFullPath);
 
-            component._name = itemRelativePath
+            component.name = itemRelativePath
                                 .substring(0, itemRelativePath.length - 5)
                                 .replace(/\\/g, "/");
 

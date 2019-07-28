@@ -1,12 +1,31 @@
-import {hierarchy as hierarchyFunctions, 
-    common, getTemplateApi } from "budibase-core";
-import {filter, cloneDeep, sortBy, map, last, keys,
-    cloneDeep, keyBy,
-    find, isEmpty, groupBy, reduce} from "lodash/fp";
-import {chain, getNode, validate,
-    constructHierarchy, templateApi} from "../common/core";
+import {
+    hierarchy as hierarchyFunctions, 
+    common 
+} from "budibase-core";
+import {
+    filter, 
+    cloneDeep, 
+    sortBy, 
+    map, 
+    last, 
+    keys,
+    cloneDeep, 
+    concat,
+    find, 
+    isEmpty, 
+    groupBy, 
+    reduce
+} from "lodash/fp";
+import {
+    chain, 
+    getNode, 
+    validate,
+    constructHierarchy, 
+    templateApi
+} from "../common/core";
 import {writable} from "svelte/store";
 import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
+import api from "./api";
 
 const pipe = common.$;
 
@@ -53,6 +72,8 @@ export const getStore = () => {
     store.saveDerivedComponent = saveDerivedComponent(store);
     store.refreshComponents = refreshComponents(store);
     store.addComponentLibrary = addComponentLibrary(store);
+    store.renameDerivedComponent = renameDerivedComponent(store);
+    store.deleteDerivedComponent = deleteDerivedComponent(store);
     return store;
 } 
 
@@ -65,20 +86,20 @@ const initialise = (store, initial) => async () => {
                 : "";
 
     if(!appname) {
-        initial.apps = await fetch(`/_builder/api/apps`)
-                             .then(r => r.json());
+        initial.apps = await api.get(`/_builder/api/apps`);
         initial.hasAppPackage = false;
         store.set(initial);
         return initial;
     }
 
-    const pkg = await fetch(`/_builder/api/${appname}/appPackage`)
-                     .then(r => r.json());
+    const pkg = await api.get(`/_builder/api/${appname}/appPackage`);
 
     initial.appname = appname;
     initial.hasAppPackage = true;
     initial.hierarchy = pkg.appDefinition.hierarchy;
     initial.accessLevels = pkg.accessLevels;
+    initial.derivedComponents = pkg.derivedComponents;
+    initial.rootComponents = pkg.rootComponents;
     initial.actions = reduce((arr, action) => {
         arr.push(action);
         return arr;
@@ -344,23 +365,53 @@ const saveDerivedComponent = store => (derivedComponent) => {
 
         s.derivedComponents = derivedComponents;
 
-        fetch(`/_builder/api/${s.appname}/derivedcomponent`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(derivedComponent), 
-        });
+        api.post(`/_builder/api/${s.appname}/derivedcomponent`, derivedComponent);
 
         return s;
     })
-
 };
+
+const deleteDerivedComponent = store => name => {
+    store.update(s => {
+
+        const derivedComponents = pipe(s.derivedComponents, [
+            filter(c => c._name !== name)
+        ]);
+
+        s.derivedComponents = derivedComponents;
+
+        api.delete(`/_builder/api/${s.appname}/derivedcomponent/${name}`);
+
+        return s;
+    })
+}
+
+const renameDerivedComponent = store => (oldname, newname) => {
+    store.update(s => {
+
+        const component = pipe(s.derivedComponents, [
+            find(c => c._name === name)
+        ]);
+
+        component._name = newname;
+
+        const derivedComponents = pipe(s.derivedComponents, [
+            filter(c => c._name !== name),
+            concat(component)
+        ]);
+
+        s.derivedComponent = derivedComponents;
+
+        api.delete(`/_builder/api/${s.appname}/derivedcomponent/${name}`);
+
+        return s;
+    })
+}
 
 const addComponentLibrary = store => async lib => {
 
     const response = 
-        await fetch(`/_builder/api/${db.appname}/components?${encodeURI(lib)}`);
+        await api.get(`/_builder/api/${db.appname}/components?${encodeURI(lib)}`,undefined, true);
 
     const success = response.status === 200;
 
@@ -390,8 +441,7 @@ const addComponentLibrary = store => async lib => {
 const refreshComponents = store => async () => {
 
     const components = 
-        await fetch(`/_builder/api/${db.appname}/components`)
-         .then(r => jQuery.json());
+        await api.get(`/_builder/api/${db.appname}/components`);
 
     const rootComponents = pipe(components, [
         keys,
@@ -420,11 +470,5 @@ const savePackage = (store, s) => {
         accessLevels:s.accessLevels
     }
 
-    fetch(`/_builder/api/${s.appname}/appPackage`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data), 
-    });
+    api.post(`/_builder/api/${s.appname}/appPackage`, data);
 }
