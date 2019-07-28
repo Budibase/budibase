@@ -19,9 +19,10 @@ const isRootComponent = c => isUndefined(c.inherits);
 
 export const searchAllComponents = (derivedComponents, rootComponents, phrase) => {
 
-    const hasPhrase = (...vals) => pipe(vals, [
-        some(v => includes(phrase)(v))
-    ]);
+    const hasPhrase = (...vals) => 
+        pipe(vals, [
+            some(v => includes(normalString(phrase))(normalString(v)))
+        ]);
 
     const rootComponentMatches = c => 
         hasPhrase(c.name, ...(c.tags || []));
