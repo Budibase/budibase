@@ -2,8 +2,8 @@ import {
     validatePropsDefinition,
     validateProps,
     recursivelyValidate
-} from "../src/userInterface/propsDefinitionParsing/validateProps";
-import { createProps }  from "../src/userInterface/propsDefinitionParsing/createProps";
+} from "../src/userInterface/pagesParsing/validateProps";
+import { createProps }  from "../src/userInterface/pagesParsing/createProps";
 
 // not that allot of this functionality is covered
 // in createDefaultProps - as validate props uses that.

@@ -1,4 +1,4 @@
-import { createProps } from "../src/userInterface/propsDefinitionParsing/createProps";
+import { createProps } from "../src/userInterface/pagesParsing/createProps";
 import {
     keys, some
 } from "lodash/fp";
