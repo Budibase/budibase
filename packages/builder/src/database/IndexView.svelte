@@ -6,7 +6,7 @@ import Button from "../common/Button.svelte";
 import Dropdown from "../common/Dropdown.svelte";
 import {database} from "../builderStore";
 import {filter, some, map} from "lodash/fp";
-import {hierarchy as hierarchyFunctions, common} from "budibase-core";
+import {hierarchy as hierarchyFunctions, common} from "../../../core/src";
 
 const chain = common.$;
 

@@ -1,7 +1,7 @@
 import {
     hierarchy as hierarchyFunctions, 
     common 
-} from "budibase-core";
+} from "../../../core/src";
 import {
     filter, 
     cloneDeep, 

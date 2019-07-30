@@ -8,7 +8,7 @@ import Modal from "../common/Modal.svelte";
 import {map, join, filter, some, 
     find, keys, isDate} from "lodash/fp";
 import { database } from "../builderStore";
-import {common, hierarchy as h} from "budibase-core";
+import {common, hierarchy as h} from "../../../core/src";
 import {templateApi, chain, validate} from "../common/core";
 
 let record;

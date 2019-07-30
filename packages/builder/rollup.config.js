@@ -9,6 +9,7 @@ import nodeglobals from 'rollup-plugin-node-globals';
 import copy from 'rollup-plugin-copy';
 import browsersync from "rollup-plugin-browsersync";
 import proxy from "http-proxy-middleware";
+import corePackageJson from "../core/package.json";
 
 const target = 'http://localhost:4001/_builder';
 const _builderProxy =  proxy('/_builder', {
@@ -41,6 +42,12 @@ const lodash_exports = ["toNumber", "flow", "isArray", "join", "replace", "trim"
 
 const outputpath = "../server/builder";
 
+const coreExternal = [
+	"lodash", "lodash/fp", "date-fns",
+	"lunr", "safe-buffer", "shortid",
+	"@nx-js/compiler-util"
+];
+
 const globals = {
     "lodash/fp": "fp",
     lodash: "_",
@@ -56,14 +63,14 @@ export default {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		file: `${outputpath}/bundle.js`,
-		globals
+		file: `${outputpath}/bundle.js`
+		//globals
 	},
-	external: [
+	/*external: [
         "lodash", "lodash/fp", "date-fns",
         "lunr", "safe-buffer", "shortid",
         "@nx-js/compiler-util"
-    ],
+    ],*/
 	plugins: [
 		copy({
 			targets: [
@@ -85,7 +92,11 @@ export default {
 
 		resolve({
 			browser: true,
-			dedupe: importee => importee === 'svelte' || importee.startsWith('svelte/')
+			dedupe: importee => {
+				return importee === 'svelte' 
+					   || importee.startsWith('svelte/')
+					   || coreExternal.includes(importee);
+			}
 		
 		}),
 		commonjs({
@@ -93,8 +104,7 @@ export default {
 				"lodash/fp": lodash_fp_exports,
 				"lodash":lodash_exports,
 				"shortid": ["generate"]
-			},
-			include: /node_modules/
+			}
 		}),
 		url({
 			limit: 0, 

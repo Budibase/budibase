@@ -8,7 +8,7 @@ import {
 
 import {
     common
-} from "budibase-core";
+} from "../../../../core/src";
 
 
 const pipe = common.$;

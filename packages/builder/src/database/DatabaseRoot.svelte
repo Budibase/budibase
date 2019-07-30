@@ -7,7 +7,7 @@ import ActionsHeader from "./ActionsHeader.svelte";
 import {database} from "../builderStore";
 import getIcon from "../common/icon";
 import DropdownButton from "../common/DropdownButton.svelte";
-import {hierarchy as hierarchyFunctions} from "budibase-core";
+import {hierarchy as hierarchyFunctions} from "../../../core/src";
 
 const hierarchyWidth = "200px";
 

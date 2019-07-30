@@ -1,5 +1,5 @@
 import {hierarchy as hierarchyFunctions, 
-    common, getTemplateApi, getAuthApi } from "budibase-core"; 
+    common, getTemplateApi, getAuthApi } from "../../../core/src"; 
 import {find, filter, includes, keyBy, some,
     flatten, map} from "lodash/fp";
 
