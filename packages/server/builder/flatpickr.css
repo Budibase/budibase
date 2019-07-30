@@ -134,7 +134,7 @@
   background: transparent;
   color: rgba(0,0,0,0.9);
   fill: rgba(0,0,0,0.9);
-  height: 28px;
+  height: 34px;
   line-height: 1;
   text-align: center;
   position: relative;
@@ -153,9 +153,8 @@
   text-decoration: none;
   cursor: pointer;
   position: absolute;
-  top: 0px;
-  line-height: 16px;
-  height: 28px;
+  top: 0;
+  height: 34px;
   padding: 10px;
   z-index: 3;
   color: rgba(0,0,0,0.9);
@@ -303,9 +302,9 @@
   position: absolute;
   width: 75%;
   left: 12.5%;
-  padding: 6.16px 0 0 0;
+  padding: 7.48px 0 0 0;
   line-height: 1;
-  height: 28px;
+  height: 34px;
   display: inline-block;
   text-align: center;
   -webkit-transform: translate3d(0px, 0px, 0px);
@@ -375,7 +374,7 @@
   font-size: inherit;
   font-family: inherit;
   font-weight: 300;
-  height: 22px;
+  height: auto;
   line-height: inherit;
   margin: -1px 0 0 0;
   outline: none;

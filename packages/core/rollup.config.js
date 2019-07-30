@@ -21,28 +21,18 @@ const globals = {
     "@nx-js/compiler-util":"compiler_util"
 }
 
-module.exports = {
+export default {
     input: 'src/index.js',
     output: [
         {
             file: 'dist/budibase-core.cjs.js',
             format: 'cjs',
-            sourcemap: 'inline',
-            globals
+            sourcemap: 'inline'
         },
-        /*{
-            file: 'dist/budibase-core.iife.js',
-            format: 'iife',
-            sourcemap: 'inline',
-            globals: [
-
-            ]
-        }*/,
         {
             file: 'dist/budibase-core.esm.mjs',
             format: 'esm',
-            sourcemap: 'inline',
-            globals
+            sourcemap: 'inline'
         },
         {
             file: 'dist/budibase-core.umd.js',

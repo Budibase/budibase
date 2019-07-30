@@ -41,14 +41,29 @@ const lodash_exports = ["toNumber", "flow", "isArray", "join", "replace", "trim"
 
 const outputpath = "../server/builder";
 
+const globals = {
+    "lodash/fp": "fp",
+    lodash: "_",
+    lunr: "lunr",
+    "safe-buffer": "safe_buffer",
+    shortid:"shortid",
+    "@nx-js/compiler-util":"compiler_util"
+}
+
 export default {
 	input: 'src/main.js',
 	output: {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		file: `${outputpath}/bundle.js`
+		file: `${outputpath}/bundle.js`,
+		globals
 	},
+	external: [
+        "lodash", "lodash/fp", "date-fns",
+        "lunr", "safe-buffer", "shortid",
+        "@nx-js/compiler-util"
+    ],
 	plugins: [
 		copy({
 			targets: [
@@ -68,11 +83,6 @@ export default {
 			}
 		}),
 
-		// If you have external dependencies installed from
-		// npm, you'll most likely need these plugins. In
-		// some cases you'll need additional configuration —
-		// consult the documentation for details:
-		// https://github.com/rollup/rollup-plugin-commonjs
 		resolve({
 			browser: true,
 			dedupe: importee => importee === 'svelte' || importee.startsWith('svelte/')

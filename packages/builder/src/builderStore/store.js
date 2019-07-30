@@ -9,7 +9,6 @@ import {
     map, 
     last, 
     keys,
-    cloneDeep, 
     concat,
     find, 
     isEmpty, 
@@ -47,7 +46,8 @@ export const getStore = () => {
         activeNav: "database",
         hasAppPackage: false,
         accessLevels: [],
-        currentNode: null};
+        currentNode: null,
+    };
 
     const store = writable(initial);
 
@@ -402,7 +402,9 @@ const renameDerivedComponent = store => (oldname, newname) => {
 
         s.derivedComponent = derivedComponents;
 
-        api.delete(`/_builder/api/${s.appname}/derivedcomponent/${name}`);
+        api.patch(`/_builder/api/${s.appname}/derivedcomponent`, {
+            oldname, newname
+        });
 
         return s;
     })
