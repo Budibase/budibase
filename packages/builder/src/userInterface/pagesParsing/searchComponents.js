@@ -15,7 +15,7 @@ const pipe = common.$;
 
 const normalString = s => (s||"").trim().toLowerCase();
 
-const isRootComponent = c => isUndefined(c.inherits);
+export const isRootComponent = c => isUndefined(c.inherits);
 
 export const searchAllComponents = (derivedComponents, rootComponents, phrase) => {
 

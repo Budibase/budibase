@@ -11,7 +11,7 @@ import browsersync from "rollup-plugin-browsersync";
 import proxy from "http-proxy-middleware";
 import corePackageJson from "../core/package.json";
 
-const target = 'http://localhost:4001/_builder';
+const target = 'http://localhost:4001';
 const _builderProxy =  proxy('/_builder', {
   target:"http://localhost:3000",
   pathRewrite: {'^/_builder' : ''}
@@ -126,7 +126,7 @@ export default {
 		!production && livereload(outputpath),
 		!production && browsersync({
 			server: outputpath,
-			middleware: [_builderProxy, apiProxy]
+			middleware: [apiProxy,_builderProxy]
 		}),
 
 		// If we're building for production (npm run build

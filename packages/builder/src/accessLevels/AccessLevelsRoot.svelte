@@ -2,7 +2,7 @@
 
 import ButtonGroup from "../common/ButtonGroup.svelte";
 import Button from "../common/Button.svelte";
-import {database} from "../builderStore";
+import {store} from "../builderStore";
 import {generateFullPermissions, getNewAccessLevel} from "../common/core";
 import getIcon from "../common/icon";
 import AccessLevelView from "./AccessLevelView.svelte";
@@ -13,7 +13,7 @@ let editingLevelIsNew = false;
 $: isEditing = (editingLevel !== null); 
 
 let allPermissions = [];
-database.subscribe(db => {
+store.subscribe(db => {
     allPermissions = generateFullPermissions(db.hierarchy, db.actions);
 })
 
@@ -27,7 +27,7 @@ let onLevelCancel = () => {
 };
 
 let onLevelDelete = (level) => {
-    database.deleteLevel(level);
+    store.deleteLevel(level);
 };
 
 
@@ -38,7 +38,7 @@ let createNewLevel = () => {
 
 let onEditingFinished = (level) => {
     if(level) {
-        database.saveLevel(level, editingLevelIsNew, editingLevel);
+        store.saveLevel(level, editingLevelIsNew, editingLevel);
     }
     editingLevel = null;
 }
@@ -55,7 +55,7 @@ const getPermissionsString = perms => {
     <Button grouped color="secondary" on:click={createNewLevel}>Create New Access Level</Button>
 </ButtonGroup>
 
-{#if $database.accessLevels}
+{#if $store.accessLevels}
 <table class="fields-table uk-table uk-table-small">
     <thead>
         <tr>
@@ -65,7 +65,7 @@ const getPermissionsString = perms => {
         </tr>
     </thead>
     <tbody>
-        {#each $database.accessLevels as level}
+        {#each $store.accessLevels as level}
         <tr>
             <td >{level.name}</td>
             <td >{getPermissionsString(level.permissions)}</td>
@@ -88,9 +88,9 @@ const getPermissionsString = perms => {
                      allPermissions={allPermissions}
                      onFinished={onEditingFinished}
                      isNew={editingLevelIsNew}
-                     allLevels={$database.accessLevels}
-                     hierarchy={$database.hierarchy}
-                     actions={$database.actions} />
+                     allLevels={$store.accessLevels}
+                     hierarchy={$store.hierarchy}
+                     actions={$store.actions} />
     {/if}    
 </Modal>
 

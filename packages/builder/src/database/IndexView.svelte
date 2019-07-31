@@ -4,7 +4,7 @@ import Textbox from "../common/Textbox.svelte";
 import CodeArea from "../common/CodeArea.svelte";
 import Button from "../common/Button.svelte";
 import Dropdown from "../common/Dropdown.svelte";
-import {database} from "../builderStore";
+import {store} from "../builderStore";
 import {filter, some, map} from "lodash/fp";
 import {hierarchy as hierarchyFunctions, common} from "../../../core/src";
 
@@ -13,9 +13,9 @@ const chain = common.$;
 let index;
 let indexableRecords = [];
 
-database.subscribe($database => {
-    index = $database.currentNode;
-    indexableRecords = chain($database.hierarchy,[
+store.subscribe($store => {
+    index = $store.currentNode;
+    indexableRecords = chain($store.hierarchy,[
         hierarchyFunctions.getFlattenedHierarchy,
         filter(hierarchyFunctions.isDecendant(index.parent())),
         filter(hierarchyFunctions.isRecord),

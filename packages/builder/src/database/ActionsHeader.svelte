@@ -1,7 +1,7 @@
 <script>
 import Button from "../common/Button.svelte";
 import ButtonGroup from "../common/ButtonGroup.svelte";
-import {database} from "../builderStore";
+import {store} from "../builderStore";
 import Modal from "../common/Modal.svelte";
 import ErrorsBox from "../common/ErrorsBox.svelte";
 
@@ -13,7 +13,7 @@ const openConfirmDelete = () => {
 
 const deleteCurrentNode = () => {
     confirmDelete = false;
-    database.deleteCurrentNode();
+    store.deleteCurrentNode();
 }
 
 </script>
@@ -21,29 +21,29 @@ const deleteCurrentNode = () => {
 <div class="root" style="left: {left}">
 
     <ButtonGroup>
-        <Button color="secondary" grouped on:click={database.saveCurrentNode}>
-            {#if $database.currentNodeIsNew}
+        <Button color="secondary" grouped on:click={store.saveCurrentNode}>
+            {#if $store.currentNodeIsNew}
             Create
             {:else}
             Update
             {/if}
         </Button>
 
-        {#if !$database.currentNodeIsNew}
+        {#if !$store.currentNodeIsNew}
         <Button color="secondary" grouped on:click={openConfirmDelete}>
             Delete
         </Button>
         {/if}
     </ButtonGroup>
 
-    {#if !!$database.errors && $database.errors.length > 0}
+    {#if !!$store.errors && $store.errors.length > 0}
     <div style="width: 500px">
-        <ErrorsBox errors={$database.errors}/>
+        <ErrorsBox errors={$store.errors}/>
     </div>
     {/if}
     
     <Modal bind:isOpen={confirmDelete}>
-        <div style="margin: 10px 0px 20px 0px">Are you sure you want to delete {$database.currentNode.name} ?</div>
+        <div style="margin: 10px 0px 20px 0px">Are you sure you want to delete {$store.currentNode.name} ?</div>
         <div style="float:right">
             <Button color="primary"  on:click={deleteCurrentNode}>Yes</Button>
             <Button color="secondary" on:click={() => confirmDelete = false}>No</Button>

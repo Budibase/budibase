@@ -2,15 +2,15 @@ import {createPackage} from "./createPackage";
 import getStore from "./store";
 import { last } from "lodash/fp";
 
-export const database = getStore();
+export const store = getStore();
 
 export const createNewPackage = () =>
-    createPackage(packageInfo, database);
+    createPackage(packageInfo, store);
 
 export const initialise = async () => {
     try {
-        setupRouter(database);
-        await database.initialise();
+        setupRouter(store);
+        await store.initialise();
     } catch(err) {
         console.log(err);
     }

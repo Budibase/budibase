@@ -1,7 +1,7 @@
 <script>
 
 import getIcon from "../common/icon";
-import {database} from "../builderStore";
+import {store} from "../builderStore";
 import Button from "../common/Button.svelte";
 import ButtonGroup from "../common/ButtonGroup.svelte";
 import Actions from "./Actions.svelte";
@@ -31,7 +31,7 @@ let newAction = () => {
 }
 
 let onActionDelete = (action) => {
-    database.deleteAction(action);
+    store.deleteAction(action);
 }
 
 let deleteTrigger = () => {}
@@ -47,7 +47,7 @@ let newTrigger = () => {
 }
 
 let onActionSave = action => {
-    database.saveAction(
+    store.saveAction(
             action, 
             editingActionIsNew, 
             editingAction);
@@ -60,7 +60,7 @@ let onActionCancel = () => {
 }
 
 let onTriggerSave = trigger => {
-    database.saveTrigger(
+    store.saveTrigger(
             trigger, 
             editingTriggerIsNew, 
             editingTrigger);
@@ -79,7 +79,7 @@ let onTriggerEdit = (trigger) => {
 
 
 let onTriggerDelete = (trigger) => {
-    database.deleteTrigger(trigger);
+    store.deleteTrigger(trigger);
 }
 
 </script>

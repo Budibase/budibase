@@ -1,6 +1,6 @@
 <script>
 
-import {database} from "../builderStore";
+import {store} from "../builderStore";
 import getIcon from "../common/icon";
 
 export let name = "";
@@ -9,12 +9,12 @@ export let icon = "";
 
 let navActive = "";
 
-database.subscribe(db => {
+store.subscribe(db => {
     navActive = (db.activeNav === name ? "active" : "")
 });
 
 const setActive = () => 
-    database.setActiveNav(name);
+    store.setActiveNav(name);
 
 </script>
 

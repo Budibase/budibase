@@ -1,9 +1,9 @@
 import {createNewHierarchy} from "../common/core";
 
-export const createPackage = (packageInfo, database) => {
+export const createPackage = (packageInfo, store) => {
     packageInfo.createNewPackage("");
     const root = createNewHierarchy();
-    database.importAppDefinition({
+    store.importAppDefinition({
       hierarchy:root,
       actions:[],
       triggers:[],

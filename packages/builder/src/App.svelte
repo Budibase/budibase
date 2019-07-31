@@ -2,7 +2,7 @@
 	
 	import NoPackage from "./NoPackage.svelte";
 	import PackageRoot from "./PackageRoot.svelte";
-	import {database, initialise} from "./builderStore";
+	import {store, initialise} from "./builderStore";
 	import { onMount } from 'svelte';
 	
 	let init = initialise();
@@ -16,11 +16,11 @@
 		<h1>loading</h1>
 
 	{:then result}
-		{#if $database.hasAppPackage}
+		{#if $store.hasAppPackage}
 		<PackageRoot />
 		{/if}
 
-		{#if !$database.hasAppPackage}
+		{#if !$store.hasAppPackage}
 		<NoPackage />
 		{/if}
 

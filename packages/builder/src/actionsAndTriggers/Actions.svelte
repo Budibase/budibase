@@ -1,7 +1,7 @@
 <script>
 
 import getIcon from "../common/icon";
-import {database} from "../builderStore";
+import {store} from "../builderStore";
 import Button from "../common/Button.svelte";
 import ButtonGroup from "../common/ButtonGroup.svelte";
 import ActionView from "./ActionView.svelte";
@@ -39,7 +39,7 @@ let actionEditingFinished = (action) => {
 
 <h3>Actions</h3>
 
-{#if $database.actions}
+{#if $store.actions}
 <table class="fields-table uk-table uk-table-small">
     <thead>
         <tr>
@@ -51,7 +51,7 @@ let actionEditingFinished = (action) => {
         </tr>
     </thead>
     <tbody>
-        {#each $database.actions as action}
+        {#each $store.actions as action}
         <tr>
             <td >{action.name}</td>
             <td >{action.behaviourSource}</td>
@@ -73,7 +73,7 @@ let actionEditingFinished = (action) => {
 <Modal bind:isOpen={isEditing}>
     {#if isEditing}
     <ActionView action={editingAction}
-                allActions={$database.actions}
+                allActions={$store.actions}
                 onFinished={actionEditingFinished}
                 isNew={editingActionIsNew}/>
     {/if}    

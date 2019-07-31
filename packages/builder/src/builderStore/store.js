@@ -25,6 +25,7 @@ import {
 import {writable} from "svelte/store";
 import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
 import api from "./api";
+import { isRootComponent } from "../userInterface/pagesParsing/searchComponents";
 
 const pipe = common.$;
 
@@ -39,8 +40,7 @@ export const getStore = () => {
         pages:defaultPagesObject(),
         mainUi:{},
         unauthenticatedUi:{},
-        derivedComponents:[],
-        rootComponents:[],
+        allComponents:[],
         currentNodeIsNew: false,
         errors: [],
         activeNav: "database",
@@ -98,8 +98,8 @@ const initialise = (store, initial) => async () => {
     initial.hasAppPackage = true;
     initial.hierarchy = pkg.appDefinition.hierarchy;
     initial.accessLevels = pkg.accessLevels;
-    initial.derivedComponents = pkg.derivedComponents;
-    initial.rootComponents = pkg.rootComponents;
+    initial.allComponents = combineComponents(
+        pkg.derivedComponents, pkg.rootComponents);
     initial.actions = reduce((arr, action) => {
         arr.push(action);
         return arr;
@@ -116,6 +116,17 @@ const initialise = (store, initial) => async () => {
     }
     store.set(initial);
     return initial;
+}
+
+const combineComponents = (root, derived) => {
+    const all = []
+    for(let r in root) {
+        all.push(root[r]);
+    }
+    for(let d in derived) {
+        all.push(root[d]);
+    }
+    return all;
 }
 
 const newRecord = (store, useRoot) => () => {
@@ -359,11 +370,12 @@ const saveDerivedComponent = store => (derivedComponent) => {
 
     store.update(s => {
 
-        const derivedComponents = pipe(s.derivedComponents, [
-            filter(c => c._name !== derivedComponent._name)
+        const components = pipe(s.allComponents, [
+            filter(c => c._name !== derivedComponent._name),
+            concat([derivedComponent])
         ]);
 
-        s.derivedComponents = derivedComponents;
+        s.allComponents = components;
 
         api.post(`/_builder/api/${s.appname}/derivedcomponent`, derivedComponent);
 
@@ -374,11 +386,11 @@ const saveDerivedComponent = store => (derivedComponent) => {
 const deleteDerivedComponent = store => name => {
     store.update(s => {
 
-        const derivedComponents = pipe(s.derivedComponents, [
+        const allComponents = pipe(s.allComponents, [
             filter(c => c._name !== name)
         ]);
 
-        s.derivedComponents = derivedComponents;
+        s.allComponents = allComponents;
 
         api.delete(`/_builder/api/${s.appname}/derivedcomponent/${name}`);
 
@@ -389,18 +401,18 @@ const deleteDerivedComponent = store => name => {
 const renameDerivedComponent = store => (oldname, newname) => {
     store.update(s => {
 
-        const component = pipe(s.derivedComponents, [
+        const component = pipe(s.allComponents, [
             find(c => c._name === name)
         ]);
 
         component._name = newname;
 
-        const derivedComponents = pipe(s.derivedComponents, [
+        const allComponents = pipe(s.allComponents, [
             filter(c => c._name !== name),
-            concat(component)
+            concat([component])
         ]);
 
-        s.derivedComponent = derivedComponents;
+        s.allComponents = allComponents;
 
         api.patch(`/_builder/api/${s.appname}/derivedcomponent`, {
             oldname, newname
@@ -430,8 +442,13 @@ const addComponentLibrary = store => async lib => {
     store.update(s => {
         s.componentsErrors.addComponent = error;
         if(success) {
+            
+            s.allComponents = pipe(s.allComponents, [
+                filter(c => !isRootComponent(c)),
+                concat(components)
+            ]);
+
             s.pages.componentLibraries.push(lib);
-            s.rootComponents = [...s.rootComponents, components];
         }
 
         return s;
@@ -439,6 +456,8 @@ const addComponentLibrary = store => async lib => {
     
 
 }
+
+
 
 const refreshComponents = store => async () => {
 
@@ -451,7 +470,10 @@ const refreshComponents = store => async () => {
     ]);
 
     store.update(s => {
-        s.rootComponents = rootComponents;
+        s.allComponents = pipe(s.allComponents, [
+            filter(c => !isRootComponent(c)),
+            concat(rootComponents)
+        ]);
         return s;
     });
 };

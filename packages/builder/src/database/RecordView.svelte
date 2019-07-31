@@ -7,7 +7,7 @@ import FieldView from "./FieldView.svelte";
 import Modal from "../common/Modal.svelte";
 import {map, join, filter, some, 
     find, keys, isDate} from "lodash/fp";
-import { database } from "../builderStore";
+import { store } from "../builderStore";
 import {common, hierarchy as h} from "../../../core/src";
 import {templateApi, chain, validate} from "../common/core";
 
@@ -22,9 +22,9 @@ let deleteField;
 let onFinishedFieldEdit;
 let editIndex;
 
-database.subscribe($database => {
-    record = $database.currentNode;
-    const flattened = h.getFlattenedHierarchy($database.hierarchy);
+store.subscribe($store => {
+    record = $store.currentNode;
+    const flattened = h.getFlattenedHierarchy($store.hierarchy);
     getIndexAllowedRecords = index => 
         chain(index.allowedRecordNodeIds, [
             filter(id => some(n => n.nodeId === id)(flattened)),
@@ -35,13 +35,13 @@ database.subscribe($database => {
 
     newField = () => {
         isNewField = true;
-        fieldToEdit = templateApi($database.hierarchy).getNewField("string");
+        fieldToEdit = templateApi($store.hierarchy).getNewField("string");
         editingField = true;
     }
 
     onFinishedFieldEdit = (field) => {
         if(field) {
-            database.saveField(field);
+            store.saveField(field);
         }
         editingField = false;
     }
@@ -53,11 +53,11 @@ database.subscribe($database => {
     }
 
     deleteField = (field) => {
-        database.deleteField(field);
+        store.deleteField(field);
     }
 
     editIndex = index => {
-        database.selectExistingNode(index.nodeId);
+        store.selectExistingNode(index.nodeId);
     }
 
 })
@@ -131,7 +131,7 @@ let getTypeOptions = typeOptions =>
         <FieldView field={fieldToEdit} 
                    onFinished={onFinishedFieldEdit}
                    allFields={record.fields} 
-                   database={$database}/>
+                   store={$store}/>
     </Modal>
     {/if}
 

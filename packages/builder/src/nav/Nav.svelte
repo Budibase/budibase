@@ -13,7 +13,6 @@ export let width=50;
     <NavItem name="actions" label="Actions" icon="zap" />
     <NavItem name="access levels" label="Access Levels" icon="user" />
     <NavItem name="user interface" label="User Interface" icon="monitor"/>
-    <NavItem name="package" label="Package" icon="package"/>
 </nav>
 
 

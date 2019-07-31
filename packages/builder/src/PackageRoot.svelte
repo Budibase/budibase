@@ -7,7 +7,7 @@ import ActionsAndTriggers from "./actionsAndTriggers/ActionsAndTriggersRoot.svel
 import AccessLevels from "./accessLevels/AccessLevelsRoot.svelte" ;
 import ComingSoon from "./common/ComingSoon.svelte";
 
-import {database} from "./builderStore";
+import {store} from "./builderStore";
 
 export let navWidth = "50px";
 
@@ -18,13 +18,13 @@ export let navWidth = "50px";
   <Nav width={navWidth} />
   <div class="content" 
        style="width: calc(100% - {navWidth}); left: {navWidth}"> 
-    {#if $database.activeNav === "database"}
+    {#if $store.activeNav === "database"}
     <Database />
-    {:else if $database.activeNav === "actions"}
+    {:else if $store.activeNav === "actions"}
     <ActionsAndTriggers />
-    {:else if $database.activeNav === "access levels"}
+    {:else if $store.activeNav === "access levels"}
     <AccessLevels />
-    {:else if $database.activeNav === "user interface"}
+    {:else if $store.activeNav === "user interface"}
     <UserInterface />
     {/if}
   </div>

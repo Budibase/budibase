@@ -17,7 +17,7 @@ import {allTypes, validate, getPotentialReferenceIndexes,
 export let field;
 export let allFields;
 export let onFinished = () => {};
-export let database;
+export let store;
 
 let errors = [];
 let clonedField = cloneDeep(field);
@@ -25,19 +25,19 @@ let clonedField = cloneDeep(field);
 $: isNew = !!field && field.name.length === 0;
 
 $: possibleReferenceIndexes = getPotentialReferenceIndexes(
-    database.hierarchy, database.currentNode
+    store.hierarchy, store.currentNode
 );
 
 $: selectedReverseRefIndex = 
     !clonedField.typeOptions.indexNodeKey 
     ? ""
-    : getNode(database.hierarchy, clonedField.typeOptions.indexNodeKey);
+    : getNode(store.hierarchy, clonedField.typeOptions.indexNodeKey);
 
 $: possibleReverseReferenceIndexes = 
     !selectedReverseRefIndex 
     ? []
     : getPotentialReverseReferenceIndexes(
-        database.hierarchy, selectedReverseRefIndex);
+        store.hierarchy, selectedReverseRefIndex);
 
 const typeChanged = (ev) => 
     clonedField.typeOptions = getDefaultTypeOptions(ev.detail);

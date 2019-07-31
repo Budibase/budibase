@@ -1,6 +1,6 @@
 <script>
 
-import {database} from "../builderStore";
+import {store} from "../builderStore";
 import {cloneDeep} from "lodash";
 export let level = 0;
 export let node;
@@ -8,7 +8,7 @@ export let node;
 </script>
 
 <div class="root">
-    <div class="title" on:click={() => database.selectExistingNode(node.nodeId)} style="padding-left: {20 + (level * 20)}px">
+    <div class="title" on:click={() => store.selectExistingNode(node.nodeId)} style="padding-left: {20 + (level * 20)}px">
         {node.name}
     </div>
     {#if node.children}

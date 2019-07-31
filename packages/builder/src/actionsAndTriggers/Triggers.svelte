@@ -1,6 +1,6 @@
 <script>
 
-import {database} from "../builderStore";
+import {store} from "../builderStore";
 import getIcon from "../common/icon";
 import Button from "../common/Button.svelte";
 import Modal from "../common/Modal.svelte";
@@ -29,7 +29,7 @@ let triggerEditingFinished = (trigger) => {
 
 <h3>Triggers</h3>
 
-{#if $database.triggers}
+{#if $store.triggers}
 <table class="fields-table uk-table uk-table-small">
     <thead>
         <tr>
@@ -41,7 +41,7 @@ let triggerEditingFinished = (trigger) => {
         </tr>
     </thead>
     <tbody>
-        {#each $database.triggers as trigger}
+        {#each $store.triggers as trigger}
         <tr>
             <td >{trigger.eventName}</td>
             <td >{trigger.actionName}</td>
@@ -63,8 +63,8 @@ let triggerEditingFinished = (trigger) => {
 <Modal bind:isOpen={isEditing}>
     {#if isEditing}
     <TriggerView trigger={editingTrigger}
-                allActions={$database.actions}
-                allTriggers={$database.triggers}
+                allActions={$store.actions}
+                allTriggers={$store.triggers}
                 onFinished={triggerEditingFinished}
                 isNew={editingTriggerIsNew}/>
     {/if}    

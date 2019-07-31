@@ -4,7 +4,7 @@ import HierarchyRow from "./HierarchyRow.svelte";
 import RecordView from "./RecordView.svelte";
 import IndexView from "./IndexView.svelte";
 import ActionsHeader from "./ActionsHeader.svelte";
-import {database} from "../builderStore";
+import {store} from "../builderStore";
 import getIcon from "../common/icon";
 import DropdownButton from "../common/DropdownButton.svelte";
 import {hierarchy as hierarchyFunctions} from "../../../core/src";
@@ -13,18 +13,18 @@ const hierarchyWidth = "200px";
 
 const defaultNewIndexActions =  [{
     label:"New Root Index", 
-    onclick: database.newRootIndex
+    onclick: store.newRootIndex
 }];
 
 const defaultNewRecordActions = [{
     label:"New Root Record", 
-    onclick: database.newRootRecord
+    onclick: store.newRootRecord
 }];
 
 let newIndexActions = defaultNewIndexActions;
 let newRecordActions = defaultNewRecordActions;
 
-database.subscribe(db => {
+store.subscribe(db => {
     if(!db.currentNode || hierarchyFunctions.isIndex(db.currentNode)) {
         newRecordActions = defaultNewRecordActions;
         newIndexActions = defaultNewIndexActions;
@@ -32,13 +32,13 @@ database.subscribe(db => {
         newRecordActions = [
             ...defaultNewRecordActions,
             {label: `New Child Record of ${db.currentNode.name}`, 
-            onclick: database.newChildRecord}
+            onclick: store.newChildRecord}
         ];
 
         newIndexActions = [
             ...defaultNewIndexActions,
             {label: `New Index on ${db.currentNode.name}`, 
-            onclick: database.newChildIndex}
+            onclick: store.newChildIndex}
         ];
     }
 });
@@ -52,7 +52,7 @@ database.subscribe(db => {
             <div class="hierarchy-title">Records</div>
             <DropdownButton iconName="plus" actions={newRecordActions} />
         </div>
-        {#each $database.hierarchy.children as record}
+        {#each $store.hierarchy.children as record}
         <HierarchyRow node={record} />
         {/each}
 
@@ -60,20 +60,20 @@ database.subscribe(db => {
             <div class="hierarchy-title">Indexes</div>
             <DropdownButton iconName="plus" actions={newIndexActions} />
         </div>
-        {#each $database.hierarchy.indexes as index}
+        {#each $store.hierarchy.indexes as index}
         <HierarchyRow node={index} />
         {/each}
     </div>
     <div class="node-container">
         <div class="actions-header">
-            {#if $database.currentNode}
+            {#if $store.currentNode}
             <ActionsHeader left={hierarchyWidth}/>
             {/if}
         </div>
         <div class="node-view">
-            {#if !$database.currentNode}
+            {#if !$store.currentNode}
             <h1 style="margin-left: 100px">:)</h1>
-            {:else if $database.currentNode.type === "record"}
+            {:else if $store.currentNode.type === "record"}
             <RecordView />
             {:else}
             <IndexView />

@@ -1,7 +1,7 @@
 <script>
 
 import Button from "./common/Button.svelte"
-import { database } from "./builderStore";
+import { store } from "./builderStore";
 
 let errors = [];
 
@@ -14,7 +14,7 @@ let errors = [];
             
             <div>
                 <h4 style="margin-bottom: 20px">Choose an Application</h4>
-                {#each $database.apps as app}
+                {#each $store.apps as app}
                 <a href={`#/${app}`} class="app-link">{app}</a>
                 {/each}
             </div>
