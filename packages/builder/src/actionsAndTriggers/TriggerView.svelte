@@ -8,7 +8,7 @@ import CodeArea from "../common/CodeArea.svelte";
 import {cloneDeep, filter, keys, some,
 map, isUndefined} from "lodash/fp";
 import ErrorsBox from "../common/ErrorsBox.svelte";
-import {validateTriggers, chain, events} from "../common/core";
+import {validateTriggers, pipe, events} from "../common/core";
 import getIcon from "../common/icon";
 
 export let trigger;
@@ -24,7 +24,7 @@ $: actionNames = map(a => a.name)(allActions);
 let cancel = () => onFinished();
 let save = () => {
     const newTriggersList = [
-        ...chain(allTriggers ,[filter(t => t !== trigger)]),
+        ...pipe(allTriggers ,[filter(t => t !== trigger)]),
         clonedTrigger]
 
     errors = validateTriggers(newTriggersList,  allActions);

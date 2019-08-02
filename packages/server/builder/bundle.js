@@ -143,6 +143,9 @@
     function select_multiple_value(select) {
         return [].map.call(select.querySelectorAll(':checked'), option => option.__value);
     }
+    function toggle_class(element, name, toggle) {
+        element.classList[toggle ? 'add' : 'remove'](name);
+    }
 
     let current_component;
     function set_current_component(component) {
@@ -1752,6 +1755,9 @@
     var fp_49 = fp.max;
     var fp_50 = fp.sortBy;
     var fp_51 = fp.assign;
+    var fp_52 = fp.uniq;
+    var fp_53 = fp.trimChars;
+    var fp_54 = fp.trimCharsStart;
 
     // Found this seed-based random generator somewhere
     // Based on The Central Randomizer 1.3 (C) 1997 by Paul Houle (houle@msc.cornell.edu)
@@ -27629,12 +27635,12 @@
       setUserAccessLevels: setUserAccessLevels$1(app),
     });
 
-    const chain = common$1.$;
+    const pipe = common$1.$;
 
     const events$1 = common$1.eventsList;
 
     const getNode$1 = (hierarchy, nodeId) => 
-        chain(hierarchy, [
+        pipe(hierarchy, [
             hierarchyFunctions.getFlattenedHierarchy,
             fp_13(n => n.nodeId === nodeId || n.nodeKey() === nodeId)
         ]);
@@ -27657,7 +27663,7 @@
     };
 
     const getPotentialReverseReferenceIndexes = (hierarchy, refIndex) => {
-        const res = chain(hierarchy, [
+        const res = pipe(hierarchy, [
             hierarchyFunctions.getFlattenedHierarchy,
             fp_8(n => hierarchyFunctions.isAncestor(refIndex)(n)
                         || hierarchyFunctions.isAncestor(refIndex)(n.parent())),
@@ -27670,7 +27676,7 @@
     };
 
     const getPotentialReferenceIndexes = (hierarchy, record) =>
-        chain(hierarchy, [
+        pipe(hierarchy, [
             hierarchyFunctions.getFlattenedHierarchy,
             fp_8(hierarchyFunctions.isAncestorIndex),
             fp_8(i => hierarchyFunctions.isAncestor(record)(i.parent())
@@ -27782,7 +27788,7 @@
         post, get: get$2, patch, delete:del
     };
 
-    const pipe = common$1.$;
+    const isRootComponent = c => fp_3(c.inherits);
 
     const getStore = () => {
 
@@ -27795,8 +27801,8 @@
             pages:defaultPagesObject(),
             mainUi:{},
             unauthenticatedUi:{},
-            derivedComponents:[],
-            rootComponents:[],
+            allComponents:[],
+            currentFrontEndItem:null,
             currentNodeIsNew: false,
             errors: [],
             activeNav: "database",
@@ -27830,6 +27836,8 @@
         store.addComponentLibrary = addComponentLibrary(store);
         store.renameDerivedComponent = renameDerivedComponent(store);
         store.deleteDerivedComponent = deleteDerivedComponent(store);
+        store.setCurrentComponent = setCurrentComponent(store);
+        store.setCurrentPage = setCurrentPage(store);
         return store;
     }; 
 
@@ -27852,8 +27860,8 @@
         initial.hasAppPackage = true;
         initial.hierarchy = pkg.appDefinition.hierarchy;
         initial.accessLevels = pkg.accessLevels;
-        initial.derivedComponents = pkg.derivedComponents;
-        initial.rootComponents = pkg.rootComponents;
+        initial.allComponents = combineComponents(
+            pkg.derivedComponents, pkg.rootComponents);
         initial.actions = fp_2((arr, action) => {
             arr.push(action);
             return arr;
@@ -27870,6 +27878,17 @@
         }
         store.set(initial);
         return initial;
+    };
+
+    const combineComponents = (root, derived) => {
+        const all = [];
+        for(let r in root) {
+            all.push(root[r]);
+        }
+        for(let d in derived) {
+            all.push(derived[d]);
+        }
+        return all;
     };
 
     const newRecord = (store, useRoot) => () => {
@@ -27935,7 +27954,7 @@
             if(!!existingNode) {
                 // remove existing
                 index = existingNode.parent().children.indexOf(existingNode);
-                existingNode.parent().children = chain(existingNode.parent().children, [
+                existingNode.parent().children = pipe(existingNode.parent().children, [
                     fp_8(c => c.nodeId !== existingNode.nodeId)
                 ]);
             }
@@ -27953,7 +27972,7 @@
                 return currentIndex >= index ? currentIndex + 1 : currentIndex;
             };
 
-            parentNode.children = chain(parentNode.children, [
+            parentNode.children = pipe(parentNode.children, [
                 fp_50(newIndexOfchild)
             ]);
 
@@ -28027,7 +28046,7 @@
                                    : fp_13(a => a.name === oldAction.name)(s.actions);
                 
             if(existingAction) {
-                s.actions = chain(s.actions, [
+                s.actions = pipe(s.actions, [
                     fp_7(a => a === existingAction ? newAction : a)
                 ]);
             } else {
@@ -28054,7 +28073,7 @@
                                    : fp_13(a => a.name === oldTrigger.name)(s.triggers);
                 
             if(existingTrigger) {
-                s.triggers = chain(s.triggers, [
+                s.triggers = pipe(s.triggers, [
                     fp_7(a => a === existingTrigger ? newTrigger : a)
                 ]);
             } else {
@@ -28080,7 +28099,7 @@
                                    : fp_13(a => a.name === oldLevel.name)(s.accessLevels);
                 
             if(existingLevel) {
-                s.accessLevels = chain(s.accessLevels, [
+                s.accessLevels = pipe(s.accessLevels, [
                     fp_7(a => a === existingLevel ? newLevel : a)
                 ]);
             } else {
@@ -28113,11 +28132,12 @@
 
         store.update(s => {
 
-            const derivedComponents = pipe(s.derivedComponents, [
-                fp_8(c => c._name !== derivedComponent._name)
+            const components = pipe(s.allComponents, [
+                fp_8(c => c.name !== derivedComponent.name),
+                fp_32([derivedComponent])
             ]);
 
-            s.derivedComponents = derivedComponents;
+            s.allComponents = components;
 
             api$1.post(`/_builder/api/${s.appname}/derivedcomponent`, derivedComponent);
 
@@ -28128,11 +28148,11 @@
     const deleteDerivedComponent = store => name => {
         store.update(s => {
 
-            const derivedComponents = pipe(s.derivedComponents, [
-                fp_8(c => c._name !== name)
+            const allComponents = pipe(s.allComponents, [
+                fp_8(c => c.name !== name)
             ]);
 
-            s.derivedComponents = derivedComponents;
+            s.allComponents = allComponents;
 
             api$1.delete(`/_builder/api/${s.appname}/derivedcomponent/${name}`);
 
@@ -28143,18 +28163,18 @@
     const renameDerivedComponent = store => (oldname, newname) => {
         store.update(s => {
 
-            const component = pipe(s.derivedComponents, [
-                fp_13(c => c._name === name)
+            const component = pipe(s.allComponents, [
+                fp_13(c => c.name === name)
             ]);
 
-            component._name = newname;
+            component.name = newname;
 
-            const derivedComponents = pipe(s.derivedComponents, [
-                fp_8(c => c._name !== name),
-                fp_32(component)
+            const allComponents = pipe(s.allComponents, [
+                fp_8(c => c.name !== name),
+                fp_32([component])
             ]);
 
-            s.derivedComponent = derivedComponents;
+            s.allComponents = allComponents;
 
             api$1.patch(`/_builder/api/${s.appname}/derivedcomponent`, {
                 oldname, newname
@@ -28184,8 +28204,13 @@
         store.update(s => {
             s.componentsErrors.addComponent = error;
             if(success) {
+                
+                s.allComponents = pipe(s.allComponents, [
+                    fp_8(c => !isRootComponent(c)),
+                    fp_32(components)
+                ]);
+
                 s.pages.componentLibraries.push(lib);
-                s.rootComponents = [...s.rootComponents, components];
             }
 
             return s;
@@ -28194,6 +28219,8 @@
 
     };
 
+
+
     const refreshComponents = store => async () => {
 
         const components = 
@@ -28201,11 +28228,14 @@
 
         const rootComponents = pipe(components, [
             fp_30,
-            fp_7(k => ({...components[k], _name:k}))
+            fp_7(k => ({...components[k], name:k}))
         ]);
 
         store.update(s => {
-            s.rootComponents = rootComponents;
+            s.allComponents = pipe(s.allComponents, [
+                fp_8(c => !isRootComponent(c)),
+                fp_32(rootComponents)
+            ]);
             return s;
         });
     };
@@ -28229,12 +28259,29 @@
         api$1.post(`/_builder/api/${s.appname}/appPackage`, data);
     };
 
-    const database = getStore();
+    const setCurrentComponent = store => component => {
+        store.update(s => {
+            s.currentFrontEndItem = component;
+            s.currentFrontEndIsComponent = true;
+            return s;
+        });
+    };
+
+    const setCurrentPage = store => pageName => {
+        store.update(s => {
+            const props = s.pages[pageName];
+            s.currentFrontEndItem = {props, name:pageName};
+            s.currentFrontEndIsComponent = false;
+            return s;
+        });
+    };
+
+    const store = getStore();
 
     const initialise$1 = async () => {
         try {
-            setupRouter(database);
-            await database.initialise();
+            setupRouter(store);
+            await store.initialise();
         } catch(err) {
             console.log(err);
         }
@@ -28263,7 +28310,7 @@
     	return child_ctx;
     }
 
-    // (17:16) {#each $database.apps as app}
+    // (17:16) {#each $store.apps as app}
     function create_each_block(ctx) {
     	var a, t_value = ctx.app, t, a_href_value;
 
@@ -28273,7 +28320,7 @@
     			t = text(t_value);
     			attr(a, "href", a_href_value = `#/${ctx.app}`);
     			attr(a, "class", "app-link svelte-jymnqv");
-    			add_location(a, file$2, 17, 16, 458);
+    			add_location(a, file$2, 17, 16, 452);
     		},
 
     		m: function mount(target, anchor) {
@@ -28282,11 +28329,11 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if ((changed.$database) && t_value !== (t_value = ctx.app)) {
+    			if ((changed.$store) && t_value !== (t_value = ctx.app)) {
     				set_data(t, t_value);
     			}
 
-    			if ((changed.$database) && a_href_value !== (a_href_value = `#/${ctx.app}`)) {
+    			if ((changed.$store) && a_href_value !== (a_href_value = `#/${ctx.app}`)) {
     				attr(a, "href", a_href_value);
     			}
     		},
@@ -28302,7 +28349,7 @@
     function create_fragment$1(ctx) {
     	var div3, div2, img, t0, div1, div0, h4, t2;
 
-    	var each_value = ctx.$database.apps;
+    	var each_value = ctx.$store.apps;
 
     	var each_blocks = [];
 
@@ -28328,15 +28375,15 @@
     			attr(img, "src", "/_builder/assets/budibase-logo.png");
     			attr(img, "class", "logo svelte-jymnqv");
     			attr(img, "alt", "budibase logo");
-    			add_location(img, file$2, 11, 8, 189);
+    			add_location(img, file$2, 11, 8, 186);
     			set_style(h4, "margin-bottom", "20px");
-    			add_location(h4, file$2, 15, 16, 335);
-    			add_location(div0, file$2, 14, 12, 312);
-    			add_location(div1, file$2, 12, 8, 279);
+    			add_location(h4, file$2, 15, 16, 332);
+    			add_location(div0, file$2, 14, 12, 309);
+    			add_location(div1, file$2, 12, 8, 276);
     			attr(div2, "class", "inner svelte-jymnqv");
-    			add_location(div2, file$2, 10, 4, 160);
+    			add_location(div2, file$2, 10, 4, 157);
     			attr(div3, "class", "root svelte-jymnqv");
-    			add_location(div3, file$2, 9, 0, 136);
+    			add_location(div3, file$2, 9, 0, 133);
     		},
 
     		l: function claim(nodes) {
@@ -28359,8 +28406,8 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.$database) {
-    				each_value = ctx.$database.apps;
+    			if (changed.$store) {
+    				each_value = ctx.$store.apps;
 
     				for (var i = 0; i < each_value.length; i += 1) {
     					const child_ctx = get_each_context(ctx, each_value, i);
@@ -28395,12 +28442,12 @@
     }
 
     function instance$1($$self, $$props, $$invalidate) {
-    	let $database;
+    	let $store;
 
-    	validate_store(database, 'database');
-    	subscribe($$self, database, $$value => { $database = $$value; $$invalidate('$database', $database); });
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
-    	return { $database };
+    	return { $store };
     }
 
     class NoPackage extends SvelteComponentDev {
@@ -30790,12 +30837,12 @@
 
     /******/ });
     });
-
+    //# sourceMappingURL=feather.js.map
     });
 
     var feather$1 = unwrapExports(feather);
 
-    var getIcon = icon => feather$1.toSvg(icon);
+    const getIcon = (icon, size) => feather$1.icons[icon].toSvg({height:size||"24", width:size||"24"});
 
     /* src\nav\NavItem.svelte generated by Svelte v3.6.9 */
 
@@ -30811,13 +30858,13 @@
     			div1 = element("div");
     			div0 = element("div");
     			attr(div0, "class", "icon svelte-td9xyr");
-    			add_location(div0, file$3, 24, 12, 485);
+    			add_location(div0, file$3, 24, 12, 476);
     			attr(div1, "class", "inner svelte-td9xyr");
-    			add_location(div1, file$3, 23, 8, 452);
+    			add_location(div1, file$3, 23, 8, 443);
     			attr(div2, "class", "nav-item svelte-td9xyr");
-    			add_location(div2, file$3, 21, 4, 389);
+    			add_location(div2, file$3, 21, 4, 380);
     			attr(div3, "class", "" + ctx.navActive + " svelte-td9xyr");
-    			add_location(div3, file$3, 20, 0, 358);
+    			add_location(div3, file$3, 20, 0, 349);
     			dispose = listen(div2, "click", ctx.setActive);
     		},
 
@@ -30863,12 +30910,12 @@
 
     let navActive = "";
 
-    database.subscribe(db => {
+    store.subscribe(db => {
         $$invalidate('navActive', navActive = (db.activeNav === name ? "active" : ""));
     });
 
     const setActive = () => 
-        database.setActiveNav(name);
+        store.setActiveNav(name);
 
     	const writable_props = ['name', 'label', 'icon'];
     	Object.keys($$props).forEach(key => {
@@ -30920,7 +30967,7 @@
     const file$4 = "src\\nav\\Nav.svelte";
 
     function create_fragment$3(ctx) {
-    	var nav, img, t0, t1, t2, t3, t4, current;
+    	var nav, img, t0, t1, t2, t3, current;
 
     	var navitem0 = new NavItem({
     		props: {
@@ -30958,15 +31005,6 @@
     		$$inline: true
     	});
 
-    	var navitem4 = new NavItem({
-    		props: {
-    		name: "package",
-    		label: "Package",
-    		icon: "package"
-    	},
-    		$$inline: true
-    	});
-
     	return {
     		c: function create() {
     			nav = element("nav");
@@ -30979,8 +31017,6 @@
     			navitem2.$$.fragment.c();
     			t3 = space();
     			navitem3.$$.fragment.c();
-    			t4 = space();
-    			navitem4.$$.fragment.c();
     			attr(img, "src", "/_builder/assets/budibase-logo-only.png");
     			attr(img, "class", "logo svelte-n1ql72");
     			attr(img, "alt", "budibase logo");
@@ -31005,8 +31041,6 @@
     			mount_component(navitem2, nav, null);
     			append(nav, t3);
     			mount_component(navitem3, nav, null);
-    			append(nav, t4);
-    			mount_component(navitem4, nav, null);
     			current = true;
     		},
 
@@ -31026,8 +31060,6 @@
 
     			transition_in(navitem3.$$.fragment, local);
 
-    			transition_in(navitem4.$$.fragment, local);
-
     			current = true;
     		},
 
@@ -31036,7 +31068,6 @@
     			transition_out(navitem1.$$.fragment, local);
     			transition_out(navitem2.$$.fragment, local);
     			transition_out(navitem3.$$.fragment, local);
-    			transition_out(navitem4.$$.fragment, local);
     			current = false;
     		},
 
@@ -31052,8 +31083,6 @@
     			destroy_component(navitem2);
 
     			destroy_component(navitem3);
-
-    			destroy_component(navitem4);
     		}
     	};
     }
@@ -31238,9 +31267,9 @@
     			if (if_block) if_block.c();
     			attr(div0, "class", "title svelte-1rctf7f");
     			set_style(div0, "padding-left", "" + (20 + (ctx.level * 20)) + "px");
-    			add_location(div0, file$5, 10, 4, 170);
+    			add_location(div0, file$5, 10, 4, 167);
     			attr(div1, "class", "root svelte-1rctf7f");
-    			add_location(div1, file$5, 9, 0, 146);
+    			add_location(div1, file$5, 9, 0, 143);
     			dispose = listen(div0, "click", ctx.click_handler);
     		},
 
@@ -31317,7 +31346,7 @@
     	});
 
     	function click_handler() {
-    		return database.selectExistingNode(node.nodeId);
+    		return store.selectExistingNode(node.nodeId);
     	}
 
     	$$self.$set = $$props => {
@@ -35275,7 +35304,7 @@
     			div = element("div");
     			t = text(t_value);
     			set_style(div, "font-weight", "bold");
-    			add_location(div, file$e, 66, 4, 2026);
+    			add_location(div, file$e, 66, 4, 2011);
     		},
 
     		m: function mount(target, anchor) {
@@ -36175,7 +36204,7 @@
     			t4 = space();
     			buttongroup.$$.fragment.c();
     			attr(div, "class", "root");
-    			add_location(div, file$e, 57, 0, 1753);
+    			add_location(div, file$e, 57, 0, 1738);
     		},
 
     		l: function claim(nodes) {
@@ -36334,7 +36363,7 @@
     	
 
     let { field, allFields, onFinished = () => {} } = $$props;
-    let { database } = $$props;
+    let { store } = $$props;
 
     let errors = [];
     let clonedField = fp_4(field);
@@ -36353,7 +36382,7 @@
         );
     };
 
-    	const writable_props = ['field', 'allFields', 'onFinished', 'database'];
+    	const writable_props = ['field', 'allFields', 'onFinished', 'store'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<FieldView> was created with unknown prop '${key}'`);
     	});
@@ -36451,32 +36480,32 @@
     		if ('field' in $$props) $$invalidate('field', field = $$props.field);
     		if ('allFields' in $$props) $$invalidate('allFields', allFields = $$props.allFields);
     		if ('onFinished' in $$props) $$invalidate('onFinished', onFinished = $$props.onFinished);
-    		if ('database' in $$props) $$invalidate('database', database = $$props.database);
+    		if ('store' in $$props) $$invalidate('store', store = $$props.store);
     	};
 
     	let isNew, possibleReferenceIndexes, selectedReverseRefIndex, possibleReverseReferenceIndexes;
 
-    	$$self.$$.update = ($$dirty = { field: 1, database: 1, clonedField: 1, selectedReverseRefIndex: 1 }) => {
+    	$$self.$$.update = ($$dirty = { field: 1, store: 1, clonedField: 1, selectedReverseRefIndex: 1 }) => {
     		if ($$dirty.field) { $$invalidate('isNew', isNew = !!field && field.name.length === 0); }
-    		if ($$dirty.database) { $$invalidate('possibleReferenceIndexes', possibleReferenceIndexes = getPotentialReferenceIndexes(
-                database.hierarchy, database.currentNode
+    		if ($$dirty.store) { $$invalidate('possibleReferenceIndexes', possibleReferenceIndexes = getPotentialReferenceIndexes(
+                store.hierarchy, store.currentNode
             )); }
-    		if ($$dirty.clonedField || $$dirty.database) { $$invalidate('selectedReverseRefIndex', selectedReverseRefIndex = 
+    		if ($$dirty.clonedField || $$dirty.store) { $$invalidate('selectedReverseRefIndex', selectedReverseRefIndex = 
                 !clonedField.typeOptions.indexNodeKey 
                 ? ""
-                : getNode$1(database.hierarchy, clonedField.typeOptions.indexNodeKey)); }
-    		if ($$dirty.selectedReverseRefIndex || $$dirty.database) { $$invalidate('possibleReverseReferenceIndexes', possibleReverseReferenceIndexes = 
+                : getNode$1(store.hierarchy, clonedField.typeOptions.indexNodeKey)); }
+    		if ($$dirty.selectedReverseRefIndex || $$dirty.store) { $$invalidate('possibleReverseReferenceIndexes', possibleReverseReferenceIndexes = 
                 !selectedReverseRefIndex 
                 ? []
                 : getPotentialReverseReferenceIndexes(
-                    database.hierarchy, selectedReverseRefIndex)); }
+                    store.hierarchy, selectedReverseRefIndex)); }
     	};
 
     	return {
     		field,
     		allFields,
     		onFinished,
-    		database,
+    		store,
     		errors,
     		clonedField,
     		typeChanged,
@@ -36508,7 +36537,7 @@
     class FieldView extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$d, create_fragment$d, safe_not_equal, ["field", "allFields", "onFinished", "database"]);
+    		init(this, options, instance$d, create_fragment$d, safe_not_equal, ["field", "allFields", "onFinished", "store"]);
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
@@ -36518,8 +36547,8 @@
     		if (ctx.allFields === undefined && !('allFields' in props)) {
     			console.warn("<FieldView> was created without expected prop 'allFields'");
     		}
-    		if (ctx.database === undefined && !('database' in props)) {
-    			console.warn("<FieldView> was created without expected prop 'database'");
+    		if (ctx.store === undefined && !('store' in props)) {
+    			console.warn("<FieldView> was created without expected prop 'store'");
     		}
     	}
 
@@ -36547,11 +36576,11 @@
     		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get database() {
+    	get store() {
     		throw new Error("<FieldView>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set database(value) {
+    	set store(value) {
     		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -49034,21 +49063,21 @@
     				each_blocks[i].c();
     			}
     			attr(th0, "class", "svelte-gq7l8x");
-    			add_location(th0, file$g, 101, 16, 2907);
+    			add_location(th0, file$g, 101, 16, 2877);
     			attr(th1, "class", "svelte-gq7l8x");
-    			add_location(th1, file$g, 102, 16, 2938);
+    			add_location(th1, file$g, 102, 16, 2908);
     			attr(th2, "class", "svelte-gq7l8x");
-    			add_location(th2, file$g, 103, 16, 2969);
+    			add_location(th2, file$g, 103, 16, 2939);
     			attr(th3, "class", "svelte-gq7l8x");
-    			add_location(th3, file$g, 104, 16, 3003);
+    			add_location(th3, file$g, 104, 16, 2973);
     			attr(tr, "class", "svelte-gq7l8x");
-    			add_location(tr, file$g, 100, 12, 2885);
+    			add_location(tr, file$g, 100, 12, 2855);
     			attr(thead, "class", "svelte-gq7l8x");
-    			add_location(thead, file$g, 99, 8, 2864);
+    			add_location(thead, file$g, 99, 8, 2834);
     			attr(tbody, "class", "svelte-gq7l8x");
-    			add_location(tbody, file$g, 107, 8, 3059);
+    			add_location(tbody, file$g, 107, 8, 3029);
     			attr(table, "class", "fields-table uk-table svelte-gq7l8x");
-    			add_location(table, file$g, 98, 4, 2817);
+    			add_location(table, file$g, 98, 4, 2787);
     		},
 
     		m: function mount(target, anchor) {
@@ -49135,24 +49164,24 @@
     			t7 = space();
     			span1 = element("span");
     			t8 = space();
-    			add_location(div0, file$g, 111, 20, 3173);
+    			add_location(div0, file$g, 111, 20, 3143);
     			set_style(div1, "font-size", "0.7em");
     			set_style(div1, "color", "var(--slate)");
-    			add_location(div1, file$g, 112, 20, 3219);
+    			add_location(div1, file$g, 112, 20, 3189);
     			attr(td0, "class", "svelte-gq7l8x");
-    			add_location(td0, file$g, 110, 16, 3146);
+    			add_location(td0, file$g, 110, 16, 3116);
     			attr(td1, "class", "svelte-gq7l8x");
-    			add_location(td1, file$g, 114, 16, 3329);
+    			add_location(td1, file$g, 114, 16, 3299);
     			attr(td2, "class", "svelte-gq7l8x");
-    			add_location(td2, file$g, 115, 16, 3369);
+    			add_location(td2, file$g, 115, 16, 3339);
     			attr(span0, "class", "edit-button svelte-gq7l8x");
-    			add_location(span0, file$g, 117, 20, 3464);
+    			add_location(span0, file$g, 117, 20, 3434);
     			attr(span1, "class", "edit-button svelte-gq7l8x");
-    			add_location(span1, file$g, 118, 20, 3576);
+    			add_location(span1, file$g, 118, 20, 3546);
     			attr(td3, "class", "svelte-gq7l8x");
-    			add_location(td3, file$g, 116, 16, 3438);
+    			add_location(td3, file$g, 116, 16, 3408);
     			attr(tr, "class", "svelte-gq7l8x");
-    			add_location(tr, file$g, 109, 12, 3124);
+    			add_location(tr, file$g, 109, 12, 3094);
 
     			dispose = [
     				listen(span0, "click", click_handler),
@@ -49246,7 +49275,7 @@
 
     		p: function update(changed, ctx) {
     			var modal_changes = {};
-    			if (changed.$$scope || changed.fieldToEdit || changed.onFinishedFieldEdit || changed.record || changed.$database) modal_changes.$$scope = { changed, ctx };
+    			if (changed.$$scope || changed.fieldToEdit || changed.onFinishedFieldEdit || changed.record || changed.$store) modal_changes.$$scope = { changed, ctx };
     			if (!updating_isOpen && changed.editingField) {
     				modal_changes.isOpen = ctx.editingField;
     			}
@@ -49280,7 +49309,7 @@
     		field: ctx.fieldToEdit,
     		onFinished: ctx.onFinishedFieldEdit,
     		allFields: ctx.record.fields,
-    		database: ctx.$database
+    		store: ctx.$store
     	},
     		$$inline: true
     	});
@@ -49300,7 +49329,7 @@
     			if (changed.fieldToEdit) fieldview_changes.field = ctx.fieldToEdit;
     			if (changed.onFinishedFieldEdit) fieldview_changes.onFinished = ctx.onFinishedFieldEdit;
     			if (changed.record) fieldview_changes.allFields = ctx.record.fields;
-    			if (changed.$database) fieldview_changes.database = ctx.$database;
+    			if (changed.$store) fieldview_changes.store = ctx.$store;
     			fieldview.$set(fieldview_changes);
     		},
 
@@ -49356,11 +49385,11 @@
     			code = element("code");
     			t2 = text(t2_value);
     			attr(span, "class", "index-label svelte-gq7l8x");
-    			add_location(span, file$g, 159, 12, 4936);
+    			add_location(span, file$g, 159, 12, 4900);
     			attr(code, "class", "index-mapfilter svelte-gq7l8x");
-    			add_location(code, file$g, 160, 12, 4990);
+    			add_location(code, file$g, 160, 12, 4954);
     			attr(div, "class", "index-field-row svelte-gq7l8x");
-    			add_location(div, file$g, 158, 8, 4893);
+    			add_location(div, file$g, 158, 8, 4857);
     		},
 
     		m: function mount(target, anchor) {
@@ -49426,26 +49455,26 @@
     			if (if_block) if_block.c();
     			t15 = space();
     			set_style(span0, "margin-left", "7px");
-    			add_location(span0, file$g, 145, 12, 4275);
+    			add_location(span0, file$g, 145, 12, 4239);
     			attr(div0, "class", "index-name svelte-gq7l8x");
-    			add_location(div0, file$g, 143, 8, 4211);
+    			add_location(div0, file$g, 143, 8, 4175);
     			attr(span1, "class", "index-label svelte-gq7l8x");
-    			add_location(span1, file$g, 148, 12, 4439);
-    			add_location(span2, file$g, 149, 12, 4504);
+    			add_location(span1, file$g, 148, 12, 4403);
+    			add_location(span2, file$g, 149, 12, 4468);
     			attr(span3, "class", "index-label svelte-gq7l8x");
     			set_style(span3, "margin-left", "15px");
-    			add_location(span3, file$g, 150, 12, 4562);
-    			add_location(span4, file$g, 151, 12, 4641);
+    			add_location(span3, file$g, 150, 12, 4526);
+    			add_location(span4, file$g, 151, 12, 4605);
     			attr(div1, "class", "index-field-row svelte-gq7l8x");
-    			add_location(div1, file$g, 147, 8, 4396);
+    			add_location(div1, file$g, 147, 8, 4360);
     			attr(span5, "class", "index-label svelte-gq7l8x");
-    			add_location(span5, file$g, 154, 12, 4740);
+    			add_location(span5, file$g, 154, 12, 4704);
     			attr(code, "class", "index-mapfilter svelte-gq7l8x");
-    			add_location(code, file$g, 155, 12, 4791);
+    			add_location(code, file$g, 155, 12, 4755);
     			attr(div2, "class", "index-field-row svelte-gq7l8x");
-    			add_location(div2, file$g, 153, 8, 4697);
+    			add_location(div2, file$g, 153, 8, 4661);
     			attr(div3, "class", "index-container svelte-gq7l8x");
-    			add_location(div3, file$g, 142, 4, 4172);
+    			add_location(div3, file$g, 142, 4, 4136);
     			dispose = listen(span0, "click", click_handler_2);
     		},
 
@@ -49590,13 +49619,13 @@
     			for (var i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			add_location(div0, file$g, 87, 4, 2434);
+    			add_location(div0, file$g, 87, 4, 2404);
     			attr(span, "class", "add-field-button svelte-gq7l8x");
-    			add_location(span, file$g, 94, 15, 2681);
-    			add_location(h40, file$g, 93, 4, 2660);
-    			add_location(h41, file$g, 137, 4, 4094);
+    			add_location(span, file$g, 94, 15, 2651);
+    			add_location(h40, file$g, 93, 4, 2630);
+    			add_location(h41, file$g, 137, 4, 4058);
     			attr(div1, "class", "root svelte-gq7l8x");
-    			add_location(div1, file$g, 84, 0, 2354);
+    			add_location(div1, file$g, 84, 0, 2324);
     			dispose = listen(span, "click", ctx.newField);
     		},
 
@@ -49764,10 +49793,10 @@
     }
 
     function instance$f($$self, $$props, $$invalidate) {
-    	let $database;
+    	let $store;
 
-    	validate_store(database, 'database');
-    	subscribe($$self, database, $$value => { $database = $$value; $$invalidate('$database', $database); });
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -49781,11 +49810,11 @@
     let onFinishedFieldEdit;
     let editIndex;
 
-    database.subscribe($database => {
-        $$invalidate('record', record = $database.currentNode);
-        const flattened = hierarchyFunctions.getFlattenedHierarchy($database.hierarchy);
+    store.subscribe($store => {
+        $$invalidate('record', record = $store.currentNode);
+        const flattened = hierarchyFunctions.getFlattenedHierarchy($store.hierarchy);
         $$invalidate('getIndexAllowedRecords', getIndexAllowedRecords = index => 
-            chain(index.allowedRecordNodeIds, [
+            pipe(index.allowedRecordNodeIds, [
                 fp_8(id => fp_6(n => n.nodeId === id)(flattened)),
                 fp_7(id => fp_13(n => n.nodeId === id)
                               (flattened).name),
@@ -49793,13 +49822,13 @@
             ]));
 
         $$invalidate('newField', newField = () => {
-            $$invalidate('fieldToEdit', fieldToEdit = templateApi($database.hierarchy).getNewField("string"));
+            $$invalidate('fieldToEdit', fieldToEdit = templateApi($store.hierarchy).getNewField("string"));
             $$invalidate('editingField', editingField = true);
         });
 
         $$invalidate('onFinishedFieldEdit', onFinishedFieldEdit = (field) => {
             if(field) {
-                database.saveField(field);
+                store.saveField(field);
             }
             $$invalidate('editingField', editingField = false);
         });
@@ -49810,11 +49839,11 @@
         });
 
         $$invalidate('deleteField', deleteField = (field) => {
-            database.deleteField(field);
+            store.deleteField(field);
         });
 
         $$invalidate('editIndex', editIndex = index => {
-            database.selectExistingNode(index.nodeId);
+            store.selectExistingNode(index.nodeId);
         });
 
     });
@@ -49830,7 +49859,7 @@
     };
 
     let getTypeOptions = typeOptions => 
-        chain(typeOptions, [
+        pipe(typeOptions, [
             fp_30,
             fp_7(k => `<span style="color:var(--slate)">${k}: </span>${getTypeOptionsValueText(typeOptions[k])}`),
             fp_39("<br>")
@@ -49879,7 +49908,7 @@
     		onFinishedFieldEdit,
     		editIndex,
     		getTypeOptions,
-    		$database,
+    		$store,
     		textbox_text_binding,
     		textbox0_text_binding,
     		textbox1_text_binding,
@@ -50023,9 +50052,9 @@
     			t1 = text(t1_value);
     			attr(input, "type", "checkbox");
     			input.checked = input_checked_value = ctx.rec.isallowed;
-    			add_location(input, file$i, 45, 8, 1404);
+    			add_location(input, file$i, 45, 8, 1387);
     			attr(span, "class", "svelte-1fkfoam");
-    			add_location(span, file$i, 46, 8, 1505);
+    			add_location(span, file$i, 46, 8, 1488);
     			dispose = listen(input, "change", change_handler);
     		},
 
@@ -50167,11 +50196,11 @@
     			codearea1.$$.fragment.c();
     			t6 = space();
     			codearea2.$$.fragment.c();
-    			add_location(div0, file$i, 43, 8, 1326);
+    			add_location(div0, file$i, 43, 8, 1309);
     			attr(div1, "class", "allowed-records svelte-1fkfoam");
-    			add_location(div1, file$i, 42, 4, 1287);
+    			add_location(div1, file$i, 42, 4, 1270);
     			attr(div2, "class", "root svelte-1fkfoam");
-    			add_location(div2, file$i, 39, 0, 1205);
+    			add_location(div2, file$i, 39, 0, 1188);
     		},
 
     		l: function claim(nodes) {
@@ -50301,14 +50330,14 @@
     function instance$h($$self, $$props, $$invalidate) {
     	
 
-    const chain = common$1.$;
+    const pipe = common$1.$;
 
     let index;
     let indexableRecords = [];
 
-    database.subscribe($database => {
-        $$invalidate('index', index = $database.currentNode);
-        $$invalidate('indexableRecords', indexableRecords = chain($database.hierarchy,[
+    store.subscribe($store => {
+        $$invalidate('index', index = $store.currentNode);
+        $$invalidate('indexableRecords', indexableRecords = pipe($store.hierarchy,[
             hierarchyFunctions.getFlattenedHierarchy,
             fp_8(hierarchyFunctions.isDecendant(index.parent())),
             fp_8(hierarchyFunctions.isRecord),
@@ -50402,7 +50431,7 @@
     	};
     }
 
-    // (25:12) {#if $database.currentNodeIsNew}
+    // (25:12) {#if $store.currentNodeIsNew}
     function create_if_block_2$2(ctx) {
     	var t;
 
@@ -50423,12 +50452,12 @@
     	};
     }
 
-    // (24:8) <Button color="secondary" grouped on:click={database.saveCurrentNode}>
+    // (24:8) <Button color="secondary" grouped on:click={store.saveCurrentNode}>
     function create_default_slot_5(ctx) {
     	var if_block_anchor;
 
     	function select_block_type(ctx) {
-    		if (ctx.$database.currentNodeIsNew) return create_if_block_2$2;
+    		if (ctx.$store.currentNodeIsNew) return create_if_block_2$2;
     		return create_else_block$3;
     	}
 
@@ -50467,7 +50496,7 @@
     	};
     }
 
-    // (32:8) {#if !$database.currentNodeIsNew}
+    // (32:8) {#if !$store.currentNodeIsNew}
     function create_if_block_1$2(ctx) {
     	var current;
 
@@ -50544,9 +50573,9 @@
     	},
     		$$inline: true
     	});
-    	button.$on("click", database.saveCurrentNode);
+    	button.$on("click", store.saveCurrentNode);
 
-    	var if_block = (!ctx.$database.currentNodeIsNew) && create_if_block_1$2(ctx);
+    	var if_block = (!ctx.$store.currentNodeIsNew) && create_if_block_1$2(ctx);
 
     	return {
     		c: function create() {
@@ -50566,10 +50595,10 @@
 
     		p: function update(changed, ctx) {
     			var button_changes = {};
-    			if (changed.$$scope || changed.$database) button_changes.$$scope = { changed, ctx };
+    			if (changed.$$scope || changed.$store) button_changes.$$scope = { changed, ctx };
     			button.$set(button_changes);
 
-    			if (!ctx.$database.currentNodeIsNew) {
+    			if (!ctx.$store.currentNodeIsNew) {
     				if (!if_block) {
     					if_block = create_if_block_1$2(ctx);
     					if_block.c();
@@ -50617,12 +50646,12 @@
     	};
     }
 
-    // (39:4) {#if !!$database.errors && $database.errors.length > 0}
+    // (39:4) {#if !!$store.errors && $store.errors.length > 0}
     function create_if_block$5(ctx) {
     	var div, current;
 
     	var errorsbox = new ErrorsBox({
-    		props: { errors: ctx.$database.errors },
+    		props: { errors: ctx.$store.errors },
     		$$inline: true
     	});
 
@@ -50631,7 +50660,7 @@
     			div = element("div");
     			errorsbox.$$.fragment.c();
     			set_style(div, "width", "500px");
-    			add_location(div, file$j, 39, 4, 1032);
+    			add_location(div, file$j, 39, 4, 1011);
     		},
 
     		m: function mount(target, anchor) {
@@ -50642,7 +50671,7 @@
 
     		p: function update(changed, ctx) {
     			var errorsbox_changes = {};
-    			if (changed.$database) errorsbox_changes.errors = ctx.$database.errors;
+    			if (changed.$store) errorsbox_changes.errors = ctx.$store.errors;
     			errorsbox.$set(errorsbox_changes);
     		},
 
@@ -50712,7 +50741,7 @@
 
     // (45:4) <Modal bind:isOpen={confirmDelete}>
     function create_default_slot$2(ctx) {
-    	var div0, t0, t1_value = ctx.$database.currentNode.name, t1, t2, t3, div1, t4, current;
+    	var div0, t0, t1_value = ctx.$store.currentNode.name, t1, t2, t3, div1, t4, current;
 
     	var button0 = new Button({
     		props: {
@@ -50746,9 +50775,9 @@
     			t4 = space();
     			button1.$$.fragment.c();
     			set_style(div0, "margin", "10px 0px 20px 0px");
-    			add_location(div0, file$j, 45, 8, 1186);
+    			add_location(div0, file$j, 45, 8, 1162);
     			set_style(div1, "float", "right");
-    			add_location(div1, file$j, 46, 8, 1303);
+    			add_location(div1, file$j, 46, 8, 1276);
     		},
 
     		m: function mount(target, anchor) {
@@ -50765,7 +50794,7 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if ((!current || changed.$database) && t1_value !== (t1_value = ctx.$database.currentNode.name)) {
+    			if ((!current || changed.$store) && t1_value !== (t1_value = ctx.$store.currentNode.name)) {
     				set_data(t1, t1_value);
     			}
 
@@ -50818,7 +50847,7 @@
     		$$inline: true
     	});
 
-    	var if_block = (!!ctx.$database.errors && ctx.$database.errors.length > 0) && create_if_block$5(ctx);
+    	var if_block = (!!ctx.$store.errors && ctx.$store.errors.length > 0) && create_if_block$5(ctx);
 
     	function modal_isOpen_binding(value) {
     		ctx.modal_isOpen_binding.call(null, value);
@@ -50847,7 +50876,7 @@
     			modal.$$.fragment.c();
     			attr(div, "class", "root svelte-160njkp");
     			set_style(div, "left", ctx.left);
-    			add_location(div, file$j, 20, 0, 486);
+    			add_location(div, file$j, 20, 0, 480);
     		},
 
     		l: function claim(nodes) {
@@ -50866,10 +50895,10 @@
 
     		p: function update(changed, ctx) {
     			var buttongroup_changes = {};
-    			if (changed.$$scope || changed.$database) buttongroup_changes.$$scope = { changed, ctx };
+    			if (changed.$$scope || changed.$store) buttongroup_changes.$$scope = { changed, ctx };
     			buttongroup.$set(buttongroup_changes);
 
-    			if (!!ctx.$database.errors && ctx.$database.errors.length > 0) {
+    			if (!!ctx.$store.errors && ctx.$store.errors.length > 0) {
     				if (if_block) {
     					if_block.p(changed, ctx);
     					transition_in(if_block, 1);
@@ -50888,7 +50917,7 @@
     			}
 
     			var modal_changes = {};
-    			if (changed.$$scope || changed.$database) modal_changes.$$scope = { changed, ctx };
+    			if (changed.$$scope || changed.$store) modal_changes.$$scope = { changed, ctx };
     			if (!updating_isOpen && changed.confirmDelete) {
     				modal_changes.isOpen = ctx.confirmDelete;
     			}
@@ -50932,10 +50961,10 @@
     }
 
     function instance$i($$self, $$props, $$invalidate) {
-    	let $database;
+    	let $store;
 
-    	validate_store(database, 'database');
-    	subscribe($$self, database, $$value => { $database = $$value; $$invalidate('$database', $database); });
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -50947,7 +50976,7 @@
 
     const deleteCurrentNode = () => {
         $$invalidate('confirmDelete', confirmDelete = false);
-        database.deleteCurrentNode();
+        store.deleteCurrentNode();
     };
 
     	const writable_props = ['left'];
@@ -50975,7 +51004,7 @@
     		confirmDelete,
     		openConfirmDelete,
     		deleteCurrentNode,
-    		$database,
+    		$store,
     		click_handler,
     		modal_isOpen_binding
     	};
@@ -51236,7 +51265,7 @@
     	return child_ctx;
     }
 
-    // (55:8) {#each $database.hierarchy.children as record}
+    // (55:8) {#each $store.hierarchy.children as record}
     function create_each_block_1$2(ctx) {
     	var current;
 
@@ -51257,7 +51286,7 @@
 
     		p: function update(changed, ctx) {
     			var hierarchyrow_changes = {};
-    			if (changed.$database) hierarchyrow_changes.node = ctx.record;
+    			if (changed.$store) hierarchyrow_changes.node = ctx.record;
     			hierarchyrow.$set(hierarchyrow_changes);
     		},
 
@@ -51279,7 +51308,7 @@
     	};
     }
 
-    // (63:8) {#each $database.hierarchy.indexes as index}
+    // (63:8) {#each $store.hierarchy.indexes as index}
     function create_each_block$7(ctx) {
     	var current;
 
@@ -51300,7 +51329,7 @@
 
     		p: function update(changed, ctx) {
     			var hierarchyrow_changes = {};
-    			if (changed.$database) hierarchyrow_changes.node = ctx.index;
+    			if (changed.$store) hierarchyrow_changes.node = ctx.index;
     			hierarchyrow.$set(hierarchyrow_changes);
     		},
 
@@ -51322,7 +51351,7 @@
     	};
     }
 
-    // (69:12) {#if $database.currentNode}
+    // (69:12) {#if $store.currentNode}
     function create_if_block_2$3(ctx) {
     	var current;
 
@@ -51399,7 +51428,7 @@
     	};
     }
 
-    // (76:62) 
+    // (76:59) 
     function create_if_block_1$3(ctx) {
     	var current;
 
@@ -51433,7 +51462,7 @@
     	};
     }
 
-    // (74:12) {#if !$database.currentNode}
+    // (74:12) {#if !$store.currentNode}
     function create_if_block$6(ctx) {
     	var h1;
 
@@ -51442,7 +51471,7 @@
     			h1 = element("h1");
     			h1.textContent = ":)";
     			set_style(h1, "margin-left", "100px");
-    			add_location(h1, file$l, 74, 12, 2421);
+    			add_location(h1, file$l, 74, 12, 2391);
     		},
 
     		m: function mount(target, anchor) {
@@ -51468,7 +51497,7 @@
     		$$inline: true
     	});
 
-    	var each_value_1 = ctx.$database.hierarchy.children;
+    	var each_value_1 = ctx.$store.hierarchy.children;
 
     	var each_blocks_1 = [];
 
@@ -51485,7 +51514,7 @@
     		$$inline: true
     	});
 
-    	var each_value = ctx.$database.hierarchy.indexes;
+    	var each_value = ctx.$store.hierarchy.indexes;
 
     	var each_blocks = [];
 
@@ -51497,7 +51526,7 @@
     		each_blocks[i] = null;
     	});
 
-    	var if_block0 = (ctx.$database.currentNode) && create_if_block_2$3();
+    	var if_block0 = (ctx.$store.currentNode) && create_if_block_2$3();
 
     	var if_block_creators = [
     		create_if_block$6,
@@ -51508,8 +51537,8 @@
     	var if_blocks = [];
 
     	function select_block_type(ctx) {
-    		if (!ctx.$database.currentNode) return 0;
-    		if (ctx.$database.currentNode.type === "record") return 1;
+    		if (!ctx.$store.currentNode) return 0;
+    		if (ctx.$store.currentNode.type === "record") return 1;
     		return 2;
     	}
 
@@ -51551,25 +51580,25 @@
     			div6 = element("div");
     			if_block1.c();
     			attr(div0, "class", "hierarchy-title svelte-z7gm0t");
-    			add_location(div0, file$l, 51, 12, 1548);
+    			add_location(div0, file$l, 51, 12, 1530);
     			attr(div1, "class", "hierarchy-title-row svelte-z7gm0t");
-    			add_location(div1, file$l, 50, 8, 1501);
+    			add_location(div1, file$l, 50, 8, 1483);
     			attr(div2, "class", "hierarchy-title svelte-z7gm0t");
-    			add_location(div2, file$l, 59, 12, 1878);
+    			add_location(div2, file$l, 59, 12, 1857);
     			attr(div3, "class", "hierarchy-title-row svelte-z7gm0t");
     			set_style(div3, "margin-top", "20px");
-    			add_location(div3, file$l, 58, 8, 1806);
+    			add_location(div3, file$l, 58, 8, 1785);
     			attr(div4, "class", "hierarchy svelte-z7gm0t");
     			set_style(div4, "width", hierarchyWidth);
-    			add_location(div4, file$l, 49, 4, 1436);
+    			add_location(div4, file$l, 49, 4, 1418);
     			attr(div5, "class", "actions-header svelte-z7gm0t");
-    			add_location(div5, file$l, 67, 8, 2176);
+    			add_location(div5, file$l, 67, 8, 2152);
     			attr(div6, "class", "node-view svelte-z7gm0t");
-    			add_location(div6, file$l, 72, 8, 2342);
+    			add_location(div6, file$l, 72, 8, 2315);
     			attr(div7, "class", "node-container svelte-z7gm0t");
-    			add_location(div7, file$l, 66, 4, 2138);
+    			add_location(div7, file$l, 66, 4, 2114);
     			attr(div8, "class", "root svelte-z7gm0t");
-    			add_location(div8, file$l, 48, 0, 1412);
+    			add_location(div8, file$l, 48, 0, 1394);
     		},
 
     		l: function claim(nodes) {
@@ -51615,8 +51644,8 @@
     			if (changed.newRecordActions) dropdownbutton0_changes.actions = ctx.newRecordActions;
     			dropdownbutton0.$set(dropdownbutton0_changes);
 
-    			if (changed.$database) {
-    				each_value_1 = ctx.$database.hierarchy.children;
+    			if (changed.$store) {
+    				each_value_1 = ctx.$store.hierarchy.children;
 
     				for (var i = 0; i < each_value_1.length; i += 1) {
     					const child_ctx = get_each_context_1$2(ctx, each_value_1, i);
@@ -51641,8 +51670,8 @@
     			if (changed.newIndexActions) dropdownbutton1_changes.actions = ctx.newIndexActions;
     			dropdownbutton1.$set(dropdownbutton1_changes);
 
-    			if (changed.$database) {
-    				each_value = ctx.$database.hierarchy.indexes;
+    			if (changed.$store) {
+    				each_value = ctx.$store.hierarchy.indexes;
 
     				for (var i = 0; i < each_value.length; i += 1) {
     					const child_ctx = get_each_context$7(ctx, each_value, i);
@@ -51667,7 +51696,7 @@
     				set_style(div4, "width", hierarchyWidth);
     			}
 
-    			if (ctx.$database.currentNode) {
+    			if (ctx.$store.currentNode) {
     				if (if_block0) {
     					if_block0.p(changed, ctx);
     					transition_in(if_block0, 1);
@@ -51757,27 +51786,27 @@
     const hierarchyWidth = "200px";
 
     function instance$k($$self, $$props, $$invalidate) {
-    	let $database;
+    	let $store;
 
-    	validate_store(database, 'database');
-    	subscribe($$self, database, $$value => { $database = $$value; $$invalidate('$database', $database); });
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
     const defaultNewIndexActions =  [{
         label:"New Root Index", 
-        onclick: database.newRootIndex
+        onclick: store.newRootIndex
     }];
 
     const defaultNewRecordActions = [{
         label:"New Root Record", 
-        onclick: database.newRootRecord
+        onclick: store.newRootRecord
     }];
 
     let newIndexActions = defaultNewIndexActions;
     let newRecordActions = defaultNewRecordActions;
 
-    database.subscribe(db => {
+    store.subscribe(db => {
         if(!db.currentNode || hierarchyFunctions.isIndex(db.currentNode)) {
             $$invalidate('newRecordActions', newRecordActions = defaultNewRecordActions);
             $$invalidate('newIndexActions', newIndexActions = defaultNewIndexActions);
@@ -51785,13 +51814,13 @@
             $$invalidate('newRecordActions', newRecordActions = [
                 ...defaultNewRecordActions,
                 {label: `New Child Record of ${db.currentNode.name}`, 
-                onclick: database.newChildRecord}
+                onclick: store.newChildRecord}
             ]);
 
             $$invalidate('newIndexActions', newIndexActions = [
                 ...defaultNewIndexActions,
                 {label: `New Index on ${db.currentNode.name}`, 
-                onclick: database.newChildIndex}
+                onclick: store.newChildIndex}
             ]);
         }
     });
@@ -51799,7 +51828,7 @@
     	return {
     		newIndexActions,
     		newRecordActions,
-    		$database
+    		$store
     	};
     }
 
@@ -51810,25 +51839,529 @@
     	}
     }
 
-    /* src\userInterface\UserInterfaceRoot.svelte generated by Svelte v3.6.9 */
+    /* src\userInterface\ComponentsHierarchy.svelte generated by Svelte v3.6.9 */
 
-    const file$m = "src\\userInterface\\UserInterfaceRoot.svelte";
+    const file$m = "src\\userInterface\\ComponentsHierarchy.svelte";
+
+    function get_each_context$8(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.component = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_1$3(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.folder = list[i];
+    	return child_ctx;
+    }
+
+    // (111:8) {#if folder.isExpanded}
+    function create_if_block$7(ctx) {
+    	var current;
+
+    	var componentshierarchy = new ComponentsHierarchy({
+    		props: {
+    		components: ctx.subComponents(ctx.folder.name),
+    		thisLevel: ctx.folder.path
+    	},
+    		$$inline: true
+    	});
+
+    	return {
+    		c: function create() {
+    			componentshierarchy.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(componentshierarchy, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var componentshierarchy_changes = {};
+    			if (changed.subComponents || changed.subfolders) componentshierarchy_changes.components = ctx.subComponents(ctx.folder.name);
+    			if (changed.subfolders) componentshierarchy_changes.thisLevel = ctx.folder.path;
+    			componentshierarchy.$set(componentshierarchy_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(componentshierarchy.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(componentshierarchy.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(componentshierarchy, detaching);
+    		}
+    	};
+    }
+
+    // (106:4) {#each subfolders as folder}
+    function create_each_block_1$3(ctx) {
+    	var div, span0, raw_value = getIcon(ctx.folder.isExpanded ? "chevron-down" : "chevron-right", "16"), t0, span1, t1_value = ctx.folder.name, t1, t2, current, dispose;
+
+    	var if_block = (ctx.folder.isExpanded) && create_if_block$7(ctx);
+
+    	function click_handler() {
+    		return ctx.click_handler(ctx);
+    	}
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			span0 = element("span");
+    			t0 = space();
+    			span1 = element("span");
+    			t1 = text(t1_value);
+    			t2 = space();
+    			if (if_block) if_block.c();
+    			add_location(span0, file$m, 108, 8, 2787);
+    			attr(span1, "class", "title svelte-1sgefwa");
+    			toggle_class(span1, "currentfolder", ctx.$store.currentFrontEndItem && ctx.isInSubfolder(ctx.folder.name, ctx.$store.currentFrontEndItem));
+    			add_location(span1, file$m, 109, 8, 2885);
+    			attr(div, "class", "hierarchy-item folder svelte-1sgefwa");
+    			add_location(div, file$m, 106, 4, 2678);
+    			dispose = listen(div, "click", stop_propagation(click_handler));
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, span0);
+    			span0.innerHTML = raw_value;
+    			append(div, t0);
+    			append(div, span1);
+    			append(span1, t1);
+    			append(div, t2);
+    			if (if_block) if_block.m(div, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((!current || changed.subfolders) && raw_value !== (raw_value = getIcon(ctx.folder.isExpanded ? "chevron-down" : "chevron-right", "16"))) {
+    				span0.innerHTML = raw_value;
+    			}
+
+    			if ((!current || changed.subfolders) && t1_value !== (t1_value = ctx.folder.name)) {
+    				set_data(t1, t1_value);
+    			}
+
+    			if ((changed.$store || changed.isInSubfolder || changed.subfolders)) {
+    				toggle_class(span1, "currentfolder", ctx.$store.currentFrontEndItem && ctx.isInSubfolder(ctx.folder.name, ctx.$store.currentFrontEndItem));
+    			}
+
+    			if (ctx.folder.isExpanded) {
+    				if (if_block) {
+    					if_block.p(changed, ctx);
+    					transition_in(if_block, 1);
+    				} else {
+    					if_block = create_if_block$7(ctx);
+    					if_block.c();
+    					transition_in(if_block, 1);
+    					if_block.m(div, null);
+    				}
+    			} else if (if_block) {
+    				group_outros();
+    				transition_out(if_block, 1, 1, () => {
+    					if_block = null;
+    				});
+    				check_outros();
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			if (if_block) if_block.d();
+    			dispose();
+    		}
+    	};
+    }
+
+    // (118:4) {#each componentsThisLevel as component}
+    function create_each_block$8(ctx) {
+    	var div, span0, raw_value = getIcon("circle", "7"), t0, span1, t1_value = ctx.component.title, t1, t2, dispose;
+
+    	function click_handler_1() {
+    		return ctx.click_handler_1(ctx);
+    	}
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			span0 = element("span");
+    			t0 = space();
+    			span1 = element("span");
+    			t1 = text(t1_value);
+    			t2 = space();
+    			add_location(span0, file$m, 120, 8, 3495);
+    			attr(span1, "class", "title svelte-1sgefwa");
+    			add_location(span1, file$m, 121, 8, 3548);
+    			attr(div, "class", "hierarchy-item component svelte-1sgefwa");
+    			toggle_class(div, "selected", ctx.isComponentSelected(ctx.$store.currentFrontEndItem, ctx.component.component));
+    			add_location(div, file$m, 118, 4, 3271);
+    			dispose = listen(div, "click", stop_propagation(click_handler_1));
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, span0);
+    			span0.innerHTML = raw_value;
+    			append(div, t0);
+    			append(div, span1);
+    			append(span1, t1);
+    			append(div, t2);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((changed.isComponentSelected || changed.$store || changed.componentsThisLevel)) {
+    				toggle_class(div, "selected", ctx.isComponentSelected(ctx.$store.currentFrontEndItem, ctx.component.component));
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
 
     function create_fragment$l(ctx) {
-    	var div2, div0, t, div1;
+    	var div, t, div_style_value, current;
+
+    	var each_value_1 = ctx.subfolders;
+
+    	var each_blocks_1 = [];
+
+    	for (var i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks_1[i] = create_each_block_1$3(get_each_context_1$3(ctx, each_value_1, i));
+    	}
+
+    	const out = i => transition_out(each_blocks_1[i], 1, 1, () => {
+    		each_blocks_1[i] = null;
+    	});
+
+    	var each_value = ctx.componentsThisLevel;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
+    	}
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+
+    			for (var i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].c();
+    			}
+
+    			t = space();
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+    			attr(div, "class", "root svelte-1sgefwa");
+    			attr(div, "style", div_style_value = `padding-left: calc(10px * ${ctx.pathPartsThisLevel})`);
+    			add_location(div, file$m, 103, 0, 2558);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+
+    			for (var i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].m(div, null);
+    			}
+
+    			append(div, t);
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div, null);
+    			}
+
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.subfolders || changed.subComponents || changed.$store || changed.isInSubfolder || changed.getIcon) {
+    				each_value_1 = ctx.subfolders;
+
+    				for (var i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1$3(ctx, each_value_1, i);
+
+    					if (each_blocks_1[i]) {
+    						each_blocks_1[i].p(changed, child_ctx);
+    						transition_in(each_blocks_1[i], 1);
+    					} else {
+    						each_blocks_1[i] = create_each_block_1$3(child_ctx);
+    						each_blocks_1[i].c();
+    						transition_in(each_blocks_1[i], 1);
+    						each_blocks_1[i].m(div, t);
+    					}
+    				}
+
+    				group_outros();
+    				for (i = each_value_1.length; i < each_blocks_1.length; i += 1) out(i);
+    				check_outros();
+    			}
+
+    			if (changed.isComponentSelected || changed.$store || changed.componentsThisLevel || changed.getIcon) {
+    				each_value = ctx.componentsThisLevel;
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$8(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$8(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			for (var i = 0; i < each_value_1.length; i += 1) transition_in(each_blocks_1[i]);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			each_blocks_1 = each_blocks_1.filter(Boolean);
+    			for (let i = 0; i < each_blocks_1.length; i += 1) transition_out(each_blocks_1[i]);
+
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			destroy_each(each_blocks_1, detaching);
+
+    			destroy_each(each_blocks, detaching);
+    		}
+    	};
+    }
+
+    function instance$l($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
+    	
+
+    let { components = [], thisLevel = "" } = $$props;
+
+    const joinPath = fp_39("/");
+
+    const normalizedName = name => pipe(name, [
+            fp_54("./"),
+            fp_54("~/"),
+            fp_54("../"),
+            fp_53(" ")
+        ]);
+
+
+    const isOnThisLevel = (c) => 
+        normalizedName(c.name).split("/").length === pathPartsThisLevel
+        &&
+        (!thisLevel || normalizedName(c.name).startsWith(normalizedName(thisLevel)));
+
+    const notOnThisLevel = (c) => !isOnThisLevel(c);
+
+    const isInSubfolder = (subfolder, c) => 
+        normalizedName(c.name).startsWith(
+            fp_54("/")(
+                joinPath([thisLevel, subfolder])));
+
+    const lastPartOfName = (c) => 
+        fp_12(c.name.split("/"));
+
+    const subFolder = (c) => {
+        const cname = normalizedName(c.name);
+        const folderName = cname.substring(thisLevel.length, cname.length).split("/")[0];
+
+        return ({
+            name: folderName,
+            isExpanded: false,
+            path: thisLevel + "/" + folderName
+        });
+    };
+
+    let pathPartsThisLevel = !thisLevel 
+                            ? 1
+                            : normalizedName(thisLevel).split("/").length + 1;
+
+    let componentsThisLevel = 
+        pipe(components, [
+            fp_8(isOnThisLevel),
+            fp_7(c => ({component:c, title:lastPartOfName(c)})),
+            fp_50("title")
+        ]);
+
+    let subfolders = 
+        pipe(components, [
+            fp_8(notOnThisLevel),
+            fp_50("name"),
+            fp_7(subFolder),
+            fp_43((f1,f2) => f1.path === f2.path)
+        ]);
+
+    const subComponents = (subfolder) => pipe(components, [
+            fp_8(c => isInSubfolder(subfolder, c))
+        ]);
+
+    const expandFolder = folder => {
+        const expandedFolder = {...folder};
+        expandedFolder.isExpanded = !expandedFolder.isExpanded;
+        const newFolders = [...subfolders];
+        newFolders.splice(
+            newFolders.indexOf(folder),
+            1,
+            expandedFolder);
+        $$invalidate('subfolders', subfolders = newFolders);
+    };
+
+    const isComponentSelected = (current,c) =>
+        current 
+        && current.name === c.name;
+
+    	const writable_props = ['components', 'thisLevel'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ComponentsHierarchy> was created with unknown prop '${key}'`);
+    	});
+
+    	function click_handler({ folder }) {
+    		return expandFolder(folder);
+    	}
+
+    	function click_handler_1({ component }) {
+    		return store.setCurrentComponent(component.component);
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('components' in $$props) $$invalidate('components', components = $$props.components);
+    		if ('thisLevel' in $$props) $$invalidate('thisLevel', thisLevel = $$props.thisLevel);
+    	};
+
+    	return {
+    		components,
+    		thisLevel,
+    		isInSubfolder,
+    		pathPartsThisLevel,
+    		componentsThisLevel,
+    		subfolders,
+    		subComponents,
+    		expandFolder,
+    		isComponentSelected,
+    		$store,
+    		click_handler,
+    		click_handler_1
+    	};
+    }
+
+    class ComponentsHierarchy extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$l, create_fragment$l, safe_not_equal, ["components", "thisLevel"]);
+    	}
+
+    	get components() {
+    		throw new Error("<ComponentsHierarchy>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set components(value) {
+    		throw new Error("<ComponentsHierarchy>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get thisLevel() {
+    		throw new Error("<ComponentsHierarchy>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set thisLevel(value) {
+    		throw new Error("<ComponentsHierarchy>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\userInterface\PagesList.svelte generated by Svelte v3.6.9 */
+
+    const file$n = "src\\userInterface\\PagesList.svelte";
+
+    function create_fragment$m(ctx) {
+    	var div2, div0, span0, raw0_value = getIcon("circle", "7"), t0, span1, t2, div1, span2, raw1_value = getIcon("circle", "7"), t3, span3, dispose;
 
     	return {
     		c: function create() {
     			div2 = element("div");
     			div0 = element("div");
-    			t = space();
+    			span0 = element("span");
+    			t0 = space();
+    			span1 = element("span");
+    			span1.textContent = "Main";
+    			t2 = space();
     			div1 = element("div");
-    			attr(div0, "class", "ui-nav svelte-1bhe8g7");
-    			add_location(div0, file$m, 8, 4, 112);
-    			attr(div1, "class", "component-preview svelte-1bhe8g7");
-    			add_location(div1, file$m, 12, 4, 158);
-    			attr(div2, "class", "root svelte-1bhe8g7");
-    			add_location(div2, file$m, 6, 0, 82);
+    			span2 = element("span");
+    			t3 = space();
+    			span3 = element("span");
+    			span3.textContent = "Login";
+    			add_location(span0, file$n, 14, 8, 443);
+    			attr(span1, "class", "title svelte-6ej2ac");
+    			add_location(span1, file$n, 15, 8, 496);
+    			attr(div0, "class", "hierarchy-item component svelte-6ej2ac");
+    			toggle_class(div0, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "main");
+    			add_location(div0, file$n, 12, 4, 230);
+    			add_location(span2, file$n, 20, 8, 782);
+    			attr(span3, "class", "title svelte-6ej2ac");
+    			add_location(span3, file$n, 21, 8, 835);
+    			attr(div1, "class", "hierarchy-item component svelte-6ej2ac");
+    			toggle_class(div1, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "unauthenticated");
+    			add_location(div1, file$n, 18, 4, 547);
+    			attr(div2, "class", "root svelte-6ej2ac");
+    			add_location(div2, file$n, 11, 0, 206);
+
+    			dispose = [
+    				listen(div0, "click", stop_propagation(ctx.click_handler)),
+    				listen(div1, "click", stop_propagation(ctx.click_handler_1))
+    			];
     		},
 
     		l: function claim(nodes) {
@@ -51838,11 +52371,25 @@
     		m: function mount(target, anchor) {
     			insert(target, div2, anchor);
     			append(div2, div0);
-    			append(div2, t);
+    			append(div0, span0);
+    			span0.innerHTML = raw0_value;
+    			append(div0, t0);
+    			append(div0, span1);
+    			append(div2, t2);
     			append(div2, div1);
+    			append(div1, span2);
+    			span2.innerHTML = raw1_value;
+    			append(div1, t3);
+    			append(div1, span3);
     		},
 
-    		p: noop,
+    		p: function update(changed, ctx) {
+    			if (changed.$store) {
+    				toggle_class(div0, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "main");
+    				toggle_class(div1, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "unauthenticated");
+    			}
+    		},
+
     		i: noop,
     		o: noop,
 
@@ -51850,22 +52397,211 @@
     			if (detaching) {
     				detach(div2);
     			}
+
+    			run_all(dispose);
     		}
     	};
+    }
+
+    function instance$m($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
+    	function click_handler() {
+    		return store.setCurrentPage("main");
+    	}
+
+    	function click_handler_1() {
+    		return store.setCurrentPage("unauthenticated");
+    	}
+
+    	return { $store, click_handler, click_handler_1 };
+    }
+
+    class PagesList extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$m, create_fragment$m, safe_not_equal, []);
+    	}
+    }
+
+    /* src\userInterface\UserInterfaceRoot.svelte generated by Svelte v3.6.9 */
+
+    const file$o = "src\\userInterface\\UserInterfaceRoot.svelte";
+
+    // (26:8) {#if $store.currentFrontEndItem}
+    function create_if_block$8(ctx) {
+    	var div, h1, t_value = ctx.$store.currentFrontEndItem.name, t;
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			h1 = element("h1");
+    			t = text(t_value);
+    			add_location(h1, file$o, 27, 12, 667);
+    			attr(div, "class", "component-container svelte-153wzef");
+    			add_location(div, file$o, 26, 8, 620);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, h1);
+    			append(h1, t);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((changed.$store) && t_value !== (t_value = ctx.$store.currentFrontEndItem.name)) {
+    				set_data(t, t_value);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+    		}
+    	};
+    }
+
+    function create_fragment$n(ctx) {
+    	var div4, div2, div0, h30, t1, t2, div1, h31, t4, t5, div3, current;
+
+    	var componentshierarchy = new ComponentsHierarchy({
+    		props: { components: ctx.$store.allComponents },
+    		$$inline: true
+    	});
+
+    	var pageslist = new PagesList({ $$inline: true });
+
+    	var if_block = (ctx.$store.currentFrontEndItem) && create_if_block$8(ctx);
+
+    	return {
+    		c: function create() {
+    			div4 = element("div");
+    			div2 = element("div");
+    			div0 = element("div");
+    			h30 = element("h3");
+    			h30.textContent = "Components";
+    			t1 = space();
+    			componentshierarchy.$$.fragment.c();
+    			t2 = space();
+    			div1 = element("div");
+    			h31 = element("h3");
+    			h31.textContent = "Pages";
+    			t4 = space();
+    			pageslist.$$.fragment.c();
+    			t5 = space();
+    			div3 = element("div");
+    			if (if_block) if_block.c();
+    			attr(h30, "class", "svelte-153wzef");
+    			add_location(h30, file$o, 13, 12, 293);
+    			attr(div0, "class", "components-list-container svelte-153wzef");
+    			add_location(div0, file$o, 12, 8, 240);
+    			attr(h31, "class", "svelte-153wzef");
+    			add_location(h31, file$o, 18, 12, 458);
+    			attr(div1, "class", "pages-list-container svelte-153wzef");
+    			add_location(div1, file$o, 17, 8, 410);
+    			attr(div2, "class", "ui-nav svelte-153wzef");
+    			add_location(div2, file$o, 10, 4, 208);
+    			attr(div3, "class", "component-preview svelte-153wzef");
+    			add_location(div3, file$o, 24, 4, 537);
+    			attr(div4, "class", "root svelte-153wzef");
+    			add_location(div4, file$o, 8, 0, 178);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div4, anchor);
+    			append(div4, div2);
+    			append(div2, div0);
+    			append(div0, h30);
+    			append(div0, t1);
+    			mount_component(componentshierarchy, div0, null);
+    			append(div2, t2);
+    			append(div2, div1);
+    			append(div1, h31);
+    			append(div1, t4);
+    			mount_component(pageslist, div1, null);
+    			append(div4, t5);
+    			append(div4, div3);
+    			if (if_block) if_block.m(div3, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var componentshierarchy_changes = {};
+    			if (changed.$store) componentshierarchy_changes.components = ctx.$store.allComponents;
+    			componentshierarchy.$set(componentshierarchy_changes);
+
+    			if (ctx.$store.currentFrontEndItem) {
+    				if (if_block) {
+    					if_block.p(changed, ctx);
+    				} else {
+    					if_block = create_if_block$8(ctx);
+    					if_block.c();
+    					if_block.m(div3, null);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(componentshierarchy.$$.fragment, local);
+
+    			transition_in(pageslist.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(componentshierarchy.$$.fragment, local);
+    			transition_out(pageslist.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div4);
+    			}
+
+    			destroy_component(componentshierarchy);
+
+    			destroy_component(pageslist);
+
+    			if (if_block) if_block.d();
+    		}
+    	};
+    }
+
+    function instance$n($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
+    	return { $store };
     }
 
     class UserInterfaceRoot extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, null, create_fragment$l, safe_not_equal, []);
+    		init(this, options, instance$n, create_fragment$n, safe_not_equal, []);
     	}
     }
 
     /* src\actionsAndTriggers\ActionView.svelte generated by Svelte v3.6.9 */
 
-    const file$n = "src\\actionsAndTriggers\\ActionView.svelte";
+    const file$p = "src\\actionsAndTriggers\\ActionView.svelte";
 
-    function get_each_context$8(ctx, list, i) {
+    function get_each_context$9(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.option = list[i];
     	return child_ctx;
@@ -51893,7 +52629,7 @@
     }
 
     // (86:12) {#each initialOptions as option}
-    function create_each_block$8(ctx) {
+    function create_each_block$9(ctx) {
     	var span1, t0_value = ctx.option.key, t0, t1, t2_value = ctx.option.value, t2, t3, span0, raw_value = getIcon("trash-2"), dispose;
 
     	function click_handler() {
@@ -51910,9 +52646,9 @@
     			span0 = element("span");
     			set_style(span0, "font-size", "10pt");
     			set_style(span0, "cursor", "pointer");
-    			add_location(span0, file$n, 86, 73, 2561);
+    			add_location(span0, file$p, 86, 73, 2556);
     			attr(span1, "class", "option-container svelte-emcy8y");
-    			add_location(span1, file$n, 86, 12, 2500);
+    			add_location(span1, file$p, 86, 12, 2495);
     			dispose = listen(span0, "click", click_handler);
     		},
 
@@ -52066,7 +52802,7 @@
     	};
     }
 
-    function create_fragment$m(ctx) {
+    function create_fragment$o(ctx) {
     	var div3, t0, updating_text, t1, updating_text_1, t2, updating_text_2, t3, div2, label, t5, div0, input0, t6, input1, t7, t8, div1, t9, current, dispose;
 
     	var errorsbox = new ErrorsBox({
@@ -52131,7 +52867,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
     	}
 
     	var buttongroup = new ButtonGroup({
@@ -52173,23 +52909,23 @@
     			t9 = space();
     			buttongroup.$$.fragment.c();
     			attr(label, "class", "uk-form-label");
-    			add_location(label, file$n, 78, 8, 1992);
+    			add_location(label, file$p, 78, 8, 1987);
     			attr(input0, "class", "uk-input uk-width-1-4");
     			attr(input0, "placeholder", "key");
-    			add_location(input0, file$n, 80, 12, 2103);
+    			add_location(input0, file$p, 80, 12, 2098);
     			attr(input1, "class", "uk-input uk-width-1-4");
     			attr(input1, "placeholder", "value");
-    			add_location(input1, file$n, 81, 12, 2201);
+    			add_location(input1, file$p, 81, 12, 2196);
     			attr(div0, "class", "uk-grid-small");
     			attr(div0, "uk-grid", "");
-    			add_location(div0, file$n, 79, 8, 2054);
+    			add_location(div0, file$p, 79, 8, 2049);
     			set_style(div1, "margin-top", "10px");
-    			add_location(div1, file$n, 84, 8, 2410);
+    			add_location(div1, file$p, 84, 8, 2405);
     			attr(div2, "class", " uk-form-stacked");
     			set_style(div2, "margin-bottom", "20px");
-    			add_location(div2, file$n, 77, 4, 1924);
+    			add_location(div2, file$p, 77, 4, 1919);
     			attr(div3, "class", "root svelte-emcy8y");
-    			add_location(div3, file$n, 68, 0, 1647);
+    			add_location(div3, file$p, 68, 0, 1642);
 
     			dispose = [
     				listen(input0, "input", ctx.input0_input_handler),
@@ -52272,12 +53008,12 @@
     				each_value = ctx.initialOptions;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$8(ctx, each_value, i);
+    					const child_ctx = get_each_context$9(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$8(child_ctx);
+    						each_blocks[i] = create_each_block$9(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(div1, null);
     					}
@@ -52345,7 +53081,7 @@
     	};
     }
 
-    function instance$l($$self, $$props, $$invalidate) {
+    function instance$o($$self, $$props, $$invalidate) {
     	
 
     let { action, onFinished = (action) => {} } = $$props;
@@ -52355,7 +53091,7 @@
     let optValue = "";
 
     let clonedAction = fp_4(action); 
-    let initialOptions = chain(action.initialOptions, [
+    let initialOptions = pipe(action.initialOptions, [
         fp_30,
         fp_7(k => ({key:k, value:action.initialOptions[k]}))
     ]);
@@ -52376,7 +53112,7 @@
     const removeOption = (opt) => {
         if(opt) {
             delete clonedAction.initialOptions[opt.key];
-            $$invalidate('initialOptions', initialOptions = chain(initialOptions, [
+            $$invalidate('initialOptions', initialOptions = pipe(initialOptions, [
                 fp_8(o => o.key !== opt.key)
             ]));
         }
@@ -52385,10 +53121,10 @@
     const save = () => {
 
         const newActionsList = [
-            ...chain(allActions ,[fp_8(a => a !== action)]),
+            ...pipe(allActions ,[fp_8(a => a !== action)]),
             clonedAction];
 
-        $$invalidate('errors', errors = chain(newActionsList ,[
+        $$invalidate('errors', errors = pipe(newActionsList ,[
             validateActions$1,
             fp_7(e => e.error)
         ]));
@@ -52468,7 +53204,7 @@
     class ActionView extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$l, create_fragment$m, safe_not_equal, ["action", "onFinished", "allActions", "isNew"]);
+    		init(this, options, instance$o, create_fragment$o, safe_not_equal, ["action", "onFinished", "allActions", "isNew"]);
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
@@ -52515,9 +53251,9 @@
 
     /* src\actionsAndTriggers\Actions.svelte generated by Svelte v3.6.9 */
 
-    const file$o = "src\\actionsAndTriggers\\Actions.svelte";
+    const file$q = "src\\actionsAndTriggers\\Actions.svelte";
 
-    function get_each_context$9(ctx, list, i) {
+    function get_each_context$a(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.action = list[i];
     	return child_ctx;
@@ -52546,16 +53282,16 @@
     	};
     }
 
-    // (42:0) {#if $database.actions}
+    // (42:0) {#if $store.actions}
     function create_if_block_1$4(ctx) {
     	var table, thead, tr, th0, t1, th1, t3, th2, t5, th3, t7, th4, t8, tbody;
 
-    	var each_value = ctx.$database.actions;
+    	var each_value = ctx.$store.actions;
 
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$a(get_each_context$a(ctx, each_value, i));
     	}
 
     	return {
@@ -52582,16 +53318,16 @@
     			for (var i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			add_location(th0, file$o, 45, 12, 1199);
-    			add_location(th1, file$o, 46, 12, 1233);
-    			add_location(th2, file$o, 47, 12, 1272);
-    			add_location(th3, file$o, 48, 12, 1309);
-    			add_location(th4, file$o, 49, 12, 1347);
-    			add_location(tr, file$o, 44, 8, 1181);
-    			add_location(thead, file$o, 43, 4, 1164);
-    			add_location(tbody, file$o, 52, 4, 1391);
+    			add_location(th0, file$q, 45, 12, 1191);
+    			add_location(th1, file$q, 46, 12, 1225);
+    			add_location(th2, file$q, 47, 12, 1264);
+    			add_location(th3, file$q, 48, 12, 1301);
+    			add_location(th4, file$q, 49, 12, 1339);
+    			add_location(tr, file$q, 44, 8, 1173);
+    			add_location(thead, file$q, 43, 4, 1156);
+    			add_location(tbody, file$q, 52, 4, 1383);
     			attr(table, "class", "fields-table uk-table uk-table-small");
-    			add_location(table, file$o, 42, 0, 1106);
+    			add_location(table, file$q, 42, 0, 1098);
     		},
 
     		m: function mount(target, anchor) {
@@ -52616,16 +53352,16 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.getIcon || changed.getDefaultOptionsHtml || changed.$database) {
-    				each_value = ctx.$database.actions;
+    			if (changed.getIcon || changed.getDefaultOptionsHtml || changed.$store) {
+    				each_value = ctx.$store.actions;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$9(ctx, each_value, i);
+    					const child_ctx = get_each_context$a(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$9(child_ctx);
+    						each_blocks[i] = create_each_block$a(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(tbody, null);
     					}
@@ -52648,8 +53384,8 @@
     	};
     }
 
-    // (54:8) {#each $database.actions as action}
-    function create_each_block$9(ctx) {
+    // (54:8) {#each $store.actions as action}
+    function create_each_block$a(ctx) {
     	var tr, td0, t0_value = ctx.action.name, t0, t1, td1, t2_value = ctx.action.behaviourSource, t2, t3, td2, t4_value = ctx.action.behaviourName, t4, t5, td3, raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions), t6, td4, span0, raw1_value = getIcon("edit"), t7, span1, raw2_value = getIcon("trash"), t8, dispose;
 
     	function click_handler() {
@@ -52679,16 +53415,16 @@
     			t7 = space();
     			span1 = element("span");
     			t8 = space();
-    			add_location(td0, file$o, 55, 12, 1471);
-    			add_location(td1, file$o, 56, 12, 1508);
-    			add_location(td2, file$o, 57, 12, 1556);
-    			add_location(td3, file$o, 58, 12, 1602);
-    			add_location(span0, file$o, 60, 16, 1720);
-    			add_location(span1, file$o, 61, 16, 1812);
+    			add_location(td0, file$q, 55, 12, 1460);
+    			add_location(td1, file$q, 56, 12, 1497);
+    			add_location(td2, file$q, 57, 12, 1545);
+    			add_location(td3, file$q, 58, 12, 1591);
+    			add_location(span0, file$q, 60, 16, 1709);
+    			add_location(span1, file$q, 61, 16, 1801);
     			attr(td4, "class", "edit-button svelte-12jzg4k");
-    			add_location(td4, file$o, 59, 12, 1678);
+    			add_location(td4, file$q, 59, 12, 1667);
     			attr(tr, "class", "svelte-12jzg4k");
-    			add_location(tr, file$o, 54, 8, 1453);
+    			add_location(tr, file$q, 54, 8, 1442);
 
     			dispose = [
     				listen(span0, "click", click_handler),
@@ -52721,19 +53457,19 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((changed.$database) && t0_value !== (t0_value = ctx.action.name)) {
+    			if ((changed.$store) && t0_value !== (t0_value = ctx.action.name)) {
     				set_data(t0, t0_value);
     			}
 
-    			if ((changed.$database) && t2_value !== (t2_value = ctx.action.behaviourSource)) {
+    			if ((changed.$store) && t2_value !== (t2_value = ctx.action.behaviourSource)) {
     				set_data(t2, t2_value);
     			}
 
-    			if ((changed.$database) && t4_value !== (t4_value = ctx.action.behaviourName)) {
+    			if ((changed.$store) && t4_value !== (t4_value = ctx.action.behaviourName)) {
     				set_data(t4, t4_value);
     			}
 
-    			if ((changed.$database) && raw0_value !== (raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions))) {
+    			if ((changed.$store) && raw0_value !== (raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions))) {
     				td3.innerHTML = raw0_value;
     			}
     		},
@@ -52749,13 +53485,13 @@
     }
 
     // (74:4) {#if isEditing}
-    function create_if_block$7(ctx) {
+    function create_if_block$9(ctx) {
     	var current;
 
     	var actionview = new ActionView({
     		props: {
     		action: ctx.editingAction,
-    		allActions: ctx.$database.actions,
+    		allActions: ctx.$store.actions,
     		onFinished: ctx.actionEditingFinished,
     		isNew: ctx.editingActionIsNew
     	},
@@ -52775,7 +53511,7 @@
     		p: function update(changed, ctx) {
     			var actionview_changes = {};
     			if (changed.editingAction) actionview_changes.action = ctx.editingAction;
-    			if (changed.$database) actionview_changes.allActions = ctx.$database.actions;
+    			if (changed.$store) actionview_changes.allActions = ctx.$store.actions;
     			if (changed.actionEditingFinished) actionview_changes.onFinished = ctx.actionEditingFinished;
     			if (changed.editingActionIsNew) actionview_changes.isNew = ctx.editingActionIsNew;
     			actionview.$set(actionview_changes);
@@ -52803,7 +53539,7 @@
     function create_default_slot$4(ctx) {
     	var if_block_anchor, current;
 
-    	var if_block = (ctx.isEditing) && create_if_block$7(ctx);
+    	var if_block = (ctx.isEditing) && create_if_block$9(ctx);
 
     	return {
     		c: function create() {
@@ -52823,7 +53559,7 @@
     					if_block.p(changed, ctx);
     					transition_in(if_block, 1);
     				} else {
-    					if_block = create_if_block$7(ctx);
+    					if_block = create_if_block$9(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
     					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -52858,11 +53594,11 @@
     	};
     }
 
-    function create_fragment$n(ctx) {
+    function create_fragment$p(ctx) {
     	var h3, t1, t2, updating_isOpen, current;
 
     	function select_block_type(ctx) {
-    		if (ctx.$database.actions) return create_if_block_1$4;
+    		if (ctx.$store.actions) return create_if_block_1$4;
     		return create_else_block$5;
     	}
 
@@ -52894,7 +53630,7 @@
     			if_block.c();
     			t2 = space();
     			modal.$$.fragment.c();
-    			add_location(h3, file$o, 39, 0, 1061);
+    			add_location(h3, file$q, 39, 0, 1056);
     		},
 
     		l: function claim(nodes) {
@@ -52923,7 +53659,7 @@
     			}
 
     			var modal_changes = {};
-    			if (changed.$$scope || changed.isEditing || changed.editingAction || changed.$database || changed.editingActionIsNew) modal_changes.$$scope = { changed, ctx };
+    			if (changed.$$scope || changed.isEditing || changed.editingAction || changed.$store || changed.editingActionIsNew) modal_changes.$$scope = { changed, ctx };
     			if (!updating_isOpen && changed.isEditing) {
     				modal_changes.isOpen = ctx.isEditing;
     			}
@@ -52959,11 +53695,11 @@
     	};
     }
 
-    function instance$m($$self, $$props, $$invalidate) {
-    	let $database;
+    function instance$p($$self, $$props, $$invalidate) {
+    	let $store;
 
-    	validate_store(database, 'database');
-    	subscribe($$self, database, $$value => { $database = $$value; $$invalidate('$database', $database); });
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -52973,7 +53709,7 @@
     let { onActionCancel = () => {} } = $$props; 
 
     let getDefaultOptionsHtml = defaultOptions => 
-        chain(defaultOptions, [
+        pipe(defaultOptions, [
             fp_30,
             fp_7(k => `<span style="color:var(--slate)">${k}: </span>${JSON.stringify(defaultOptions[k])}`),
             fp_39("<br>")
@@ -53032,7 +53768,7 @@
     		getDefaultOptionsHtml,
     		actionEditingFinished,
     		isEditing,
-    		$database,
+    		$store,
     		click_handler,
     		click_handler_1,
     		modal_isOpen_binding
@@ -53042,7 +53778,7 @@
     class Actions extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$m, create_fragment$n, safe_not_equal, ["editingActionIsNew", "editingAction", "onActionEdit", "onActionDelete", "onActionSave", "onActionCancel"]);
+    		init(this, options, instance$p, create_fragment$p, safe_not_equal, ["editingActionIsNew", "editingAction", "onActionEdit", "onActionDelete", "onActionSave", "onActionCancel"]);
     	}
 
     	get editingActionIsNew() {
@@ -53096,7 +53832,7 @@
 
     /* src\actionsAndTriggers\TriggerView.svelte generated by Svelte v3.6.9 */
 
-    const file$p = "src\\actionsAndTriggers\\TriggerView.svelte";
+    const file$r = "src\\actionsAndTriggers\\TriggerView.svelte";
 
     // (56:8) <Button grouped on:click={save}>
     function create_default_slot_2$3(ctx) {
@@ -53215,7 +53951,7 @@
     	};
     }
 
-    function create_fragment$o(ctx) {
+    function create_fragment$q(ctx) {
     	var div, t0, updating_selected, t1, updating_selected_1, t2, updating_text, t3, updating_text_1, t4, current;
 
     	var errorsbox = new ErrorsBox({
@@ -53306,7 +54042,7 @@
     			codearea1.$$.fragment.c();
     			t4 = space();
     			buttongroup.$$.fragment.c();
-    			add_location(div, file$p, 39, 0, 1184);
+    			add_location(div, file$r, 39, 0, 1182);
     		},
 
     		l: function claim(nodes) {
@@ -53412,7 +54148,7 @@
     	};
     }
 
-    function instance$n($$self, $$props, $$invalidate) {
+    function instance$q($$self, $$props, $$invalidate) {
     	
 
     let { trigger, onFinished = (action) => {} } = $$props;
@@ -53424,7 +54160,7 @@
     let cancel = () => onFinished();
     let save = () => {
         const newTriggersList = [
-            ...chain(allTriggers ,[fp_8(t => t !== trigger)]),
+            ...pipe(allTriggers ,[fp_8(t => t !== trigger)]),
             clonedTrigger];
 
         $$invalidate('errors', errors = validateTriggers$1(newTriggersList,  allActions));
@@ -53495,7 +54231,7 @@
     class TriggerView extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$n, create_fragment$o, safe_not_equal, ["trigger", "onFinished", "allTriggers", "allActions", "isNew"]);
+    		init(this, options, instance$q, create_fragment$q, safe_not_equal, ["trigger", "onFinished", "allTriggers", "allActions", "isNew"]);
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
@@ -53553,9 +54289,9 @@
 
     /* src\actionsAndTriggers\Triggers.svelte generated by Svelte v3.6.9 */
 
-    const file$q = "src\\actionsAndTriggers\\Triggers.svelte";
+    const file$s = "src\\actionsAndTriggers\\Triggers.svelte";
 
-    function get_each_context$a(ctx, list, i) {
+    function get_each_context$b(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.trigger = list[i];
     	return child_ctx;
@@ -53584,16 +54320,16 @@
     	};
     }
 
-    // (32:0) {#if $database.triggers}
+    // (32:0) {#if $store.triggers}
     function create_if_block_1$5(ctx) {
     	var table, thead, tr, th0, t1, th1, t3, th2, t5, th3, t7, th4, t8, tbody;
 
-    	var each_value = ctx.$database.triggers;
+    	var each_value = ctx.$store.triggers;
 
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$a(get_each_context$a(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$b(get_each_context$b(ctx, each_value, i));
     	}
 
     	return {
@@ -53620,16 +54356,16 @@
     			for (var i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			add_location(th0, file$q, 35, 12, 848);
-    			add_location(th1, file$q, 36, 12, 876);
-    			add_location(th2, file$q, 37, 12, 905);
-    			add_location(th3, file$q, 38, 12, 937);
-    			add_location(th4, file$q, 39, 12, 974);
-    			add_location(tr, file$q, 34, 8, 830);
-    			add_location(thead, file$q, 33, 4, 813);
-    			add_location(tbody, file$q, 42, 4, 1018);
+    			add_location(th0, file$s, 35, 12, 842);
+    			add_location(th1, file$s, 36, 12, 870);
+    			add_location(th2, file$s, 37, 12, 899);
+    			add_location(th3, file$s, 38, 12, 931);
+    			add_location(th4, file$s, 39, 12, 968);
+    			add_location(tr, file$s, 34, 8, 824);
+    			add_location(thead, file$s, 33, 4, 807);
+    			add_location(tbody, file$s, 42, 4, 1012);
     			attr(table, "class", "fields-table uk-table uk-table-small");
-    			add_location(table, file$q, 32, 0, 755);
+    			add_location(table, file$s, 32, 0, 749);
     		},
 
     		m: function mount(target, anchor) {
@@ -53654,16 +54390,16 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.getIcon || changed.$database) {
-    				each_value = ctx.$database.triggers;
+    			if (changed.getIcon || changed.$store) {
+    				each_value = ctx.$store.triggers;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$a(ctx, each_value, i);
+    					const child_ctx = get_each_context$b(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$a(child_ctx);
+    						each_blocks[i] = create_each_block$b(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(tbody, null);
     					}
@@ -53686,8 +54422,8 @@
     	};
     }
 
-    // (44:8) {#each $database.triggers as trigger}
-    function create_each_block$a(ctx) {
+    // (44:8) {#each $store.triggers as trigger}
+    function create_each_block$b(ctx) {
     	var tr, td0, t0_value = ctx.trigger.eventName, t0, t1, td1, t2_value = ctx.trigger.actionName, t2, t3, td2, t4_value = ctx.trigger.condition, t4, t5, td3, t6_value = ctx.trigger.optionsCreator, t6, t7, td4, span0, raw0_value = getIcon("edit"), t8, span1, raw1_value = getIcon("trash"), t9, dispose;
 
     	function click_handler() {
@@ -53718,16 +54454,16 @@
     			t8 = space();
     			span1 = element("span");
     			t9 = space();
-    			add_location(td0, file$q, 45, 12, 1100);
-    			add_location(td1, file$q, 46, 12, 1143);
-    			add_location(td2, file$q, 47, 12, 1187);
-    			add_location(td3, file$q, 48, 12, 1230);
-    			add_location(span0, file$q, 50, 16, 1320);
-    			add_location(span1, file$q, 51, 16, 1414);
+    			add_location(td0, file$s, 45, 12, 1091);
+    			add_location(td1, file$s, 46, 12, 1134);
+    			add_location(td2, file$s, 47, 12, 1178);
+    			add_location(td3, file$s, 48, 12, 1221);
+    			add_location(span0, file$s, 50, 16, 1311);
+    			add_location(span1, file$s, 51, 16, 1405);
     			attr(td4, "class", "edit-button svelte-1le5bpl");
-    			add_location(td4, file$q, 49, 12, 1278);
+    			add_location(td4, file$s, 49, 12, 1269);
     			attr(tr, "class", "svelte-1le5bpl");
-    			add_location(tr, file$q, 44, 8, 1082);
+    			add_location(tr, file$s, 44, 8, 1073);
 
     			dispose = [
     				listen(span0, "click", click_handler),
@@ -53760,19 +54496,19 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((changed.$database) && t0_value !== (t0_value = ctx.trigger.eventName)) {
+    			if ((changed.$store) && t0_value !== (t0_value = ctx.trigger.eventName)) {
     				set_data(t0, t0_value);
     			}
 
-    			if ((changed.$database) && t2_value !== (t2_value = ctx.trigger.actionName)) {
+    			if ((changed.$store) && t2_value !== (t2_value = ctx.trigger.actionName)) {
     				set_data(t2, t2_value);
     			}
 
-    			if ((changed.$database) && t4_value !== (t4_value = ctx.trigger.condition)) {
+    			if ((changed.$store) && t4_value !== (t4_value = ctx.trigger.condition)) {
     				set_data(t4, t4_value);
     			}
 
-    			if ((changed.$database) && t6_value !== (t6_value = ctx.trigger.optionsCreator)) {
+    			if ((changed.$store) && t6_value !== (t6_value = ctx.trigger.optionsCreator)) {
     				set_data(t6, t6_value);
     			}
     		},
@@ -53788,14 +54524,14 @@
     }
 
     // (64:4) {#if isEditing}
-    function create_if_block$8(ctx) {
+    function create_if_block$a(ctx) {
     	var current;
 
     	var triggerview = new TriggerView({
     		props: {
     		trigger: ctx.editingTrigger,
-    		allActions: ctx.$database.actions,
-    		allTriggers: ctx.$database.triggers,
+    		allActions: ctx.$store.actions,
+    		allTriggers: ctx.$store.triggers,
     		onFinished: ctx.triggerEditingFinished,
     		isNew: ctx.editingTriggerIsNew
     	},
@@ -53815,8 +54551,8 @@
     		p: function update(changed, ctx) {
     			var triggerview_changes = {};
     			if (changed.editingTrigger) triggerview_changes.trigger = ctx.editingTrigger;
-    			if (changed.$database) triggerview_changes.allActions = ctx.$database.actions;
-    			if (changed.$database) triggerview_changes.allTriggers = ctx.$database.triggers;
+    			if (changed.$store) triggerview_changes.allActions = ctx.$store.actions;
+    			if (changed.$store) triggerview_changes.allTriggers = ctx.$store.triggers;
     			if (changed.triggerEditingFinished) triggerview_changes.onFinished = ctx.triggerEditingFinished;
     			if (changed.editingTriggerIsNew) triggerview_changes.isNew = ctx.editingTriggerIsNew;
     			triggerview.$set(triggerview_changes);
@@ -53844,7 +54580,7 @@
     function create_default_slot$6(ctx) {
     	var if_block_anchor, current;
 
-    	var if_block = (ctx.isEditing) && create_if_block$8(ctx);
+    	var if_block = (ctx.isEditing) && create_if_block$a(ctx);
 
     	return {
     		c: function create() {
@@ -53864,7 +54600,7 @@
     					if_block.p(changed, ctx);
     					transition_in(if_block, 1);
     				} else {
-    					if_block = create_if_block$8(ctx);
+    					if_block = create_if_block$a(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
     					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -53899,11 +54635,11 @@
     	};
     }
 
-    function create_fragment$p(ctx) {
+    function create_fragment$r(ctx) {
     	var h3, t1, t2, updating_isOpen, current;
 
     	function select_block_type(ctx) {
-    		if (ctx.$database.triggers) return create_if_block_1$5;
+    		if (ctx.$store.triggers) return create_if_block_1$5;
     		return create_else_block$6;
     	}
 
@@ -53935,7 +54671,7 @@
     			if_block.c();
     			t2 = space();
     			modal.$$.fragment.c();
-    			add_location(h3, file$q, 29, 0, 708);
+    			add_location(h3, file$s, 29, 0, 705);
     		},
 
     		l: function claim(nodes) {
@@ -53964,7 +54700,7 @@
     			}
 
     			var modal_changes = {};
-    			if (changed.$$scope || changed.isEditing || changed.editingTrigger || changed.$database || changed.editingTriggerIsNew) modal_changes.$$scope = { changed, ctx };
+    			if (changed.$$scope || changed.isEditing || changed.editingTrigger || changed.$store || changed.editingTriggerIsNew) modal_changes.$$scope = { changed, ctx };
     			if (!updating_isOpen && changed.isEditing) {
     				modal_changes.isOpen = ctx.isEditing;
     			}
@@ -54000,11 +54736,11 @@
     	};
     }
 
-    function instance$o($$self, $$props, $$invalidate) {
-    	let $database;
+    function instance$r($$self, $$props, $$invalidate) {
+    	let $store;
 
-    	validate_store(database, 'database');
-    	subscribe($$self, database, $$value => { $database = $$value; $$invalidate('$database', $database); });
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -54065,7 +54801,7 @@
     		onTriggerCancel,
     		triggerEditingFinished,
     		isEditing,
-    		$database,
+    		$store,
     		click_handler,
     		click_handler_1,
     		modal_isOpen_binding
@@ -54075,7 +54811,7 @@
     class Triggers extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$o, create_fragment$p, safe_not_equal, ["editingTrigger", "editingTriggerIsNew", "onTriggerEdit", "onTriggerDelete", "onTriggerSave", "onTriggerCancel"]);
+    		init(this, options, instance$r, create_fragment$r, safe_not_equal, ["editingTrigger", "editingTriggerIsNew", "onTriggerEdit", "onTriggerDelete", "onTriggerSave", "onTriggerCancel"]);
     	}
 
     	get editingTrigger() {
@@ -54129,7 +54865,7 @@
 
     /* src\actionsAndTriggers\ActionsAndTriggersRoot.svelte generated by Svelte v3.6.9 */
 
-    const file$r = "src\\actionsAndTriggers\\ActionsAndTriggersRoot.svelte";
+    const file$t = "src\\actionsAndTriggers\\ActionsAndTriggersRoot.svelte";
 
     // (90:4) <Button color="secondary"               grouped              on:click={newAction}>
     function create_default_slot_2$4(ctx) {
@@ -54250,7 +54986,7 @@
     	};
     }
 
-    function create_fragment$q(ctx) {
+    function create_fragment$s(ctx) {
     	var div, t0, t1, current;
 
     	var buttongroup = new ButtonGroup({
@@ -54294,7 +55030,7 @@
     			t1 = space();
     			triggers.$$.fragment.c();
     			attr(div, "class", "root svelte-1y6dy5x");
-    			add_location(div, file$r, 86, 0, 1895);
+    			add_location(div, file$t, 86, 0, 1879);
     		},
 
     		l: function claim(nodes) {
@@ -54367,7 +55103,7 @@
     	};
     }
 
-    function instance$p($$self, $$props, $$invalidate) {
+    function instance$s($$self, $$props, $$invalidate) {
     	
 
     let editingAction = null;
@@ -54386,7 +55122,7 @@
     };
 
     let onActionDelete = (action) => {
-        database.deleteAction(action);
+        store.deleteAction(action);
     };
 
     let newTrigger = () => {
@@ -54395,7 +55131,7 @@
     };
 
     let onActionSave = action => {
-        database.saveAction(
+        store.saveAction(
                 action, 
                 editingActionIsNew, 
                 editingAction);
@@ -54408,7 +55144,7 @@
     };
 
     let onTriggerSave = trigger => {
-        database.saveTrigger(
+        store.saveTrigger(
                 trigger, 
                 editingTriggerIsNew, 
                 editingTrigger);
@@ -54427,7 +55163,7 @@
 
 
     let onTriggerDelete = (trigger) => {
-        database.deleteTrigger(trigger);
+        store.deleteTrigger(trigger);
     };
 
     	return {
@@ -54451,22 +55187,22 @@
     class ActionsAndTriggersRoot extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$p, create_fragment$q, safe_not_equal, []);
+    		init(this, options, instance$s, create_fragment$s, safe_not_equal, []);
     	}
     }
 
     /* src\accessLevels\AccessLevelView.svelte generated by Svelte v3.6.9 */
 
-    const file$s = "src\\accessLevels\\AccessLevelView.svelte";
+    const file$u = "src\\accessLevels\\AccessLevelView.svelte";
 
-    function get_each_context$b(ctx, list, i) {
+    function get_each_context$c(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.permission = list[i];
     	return child_ctx;
     }
 
     // (77:4) {#each permissionMatrix as permission}
-    function create_each_block$b(ctx) {
+    function create_each_block$c(ctx) {
     	var div, current;
 
     	var checkbox = new Checkbox({
@@ -54482,7 +55218,7 @@
     		c: function create() {
     			div = element("div");
     			checkbox.$$.fragment.c();
-    			add_location(div, file$s, 77, 4, 1870);
+    			add_location(div, file$u, 77, 4, 1870);
     		},
 
     		m: function mount(target, anchor) {
@@ -54639,7 +55375,7 @@
     	};
     }
 
-    function create_fragment$r(ctx) {
+    function create_fragment$t(ctx) {
     	var div, t0, updating_text, t1, t2, current;
 
     	var errorsbox = new ErrorsBox({
@@ -54666,7 +55402,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$b(get_each_context$b(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$c(get_each_context$c(ctx, each_value, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -54696,7 +55432,7 @@
 
     			t2 = space();
     			buttongroup.$$.fragment.c();
-    			add_location(div, file$s, 70, 0, 1722);
+    			add_location(div, file$u, 70, 0, 1722);
     		},
 
     		l: function claim(nodes) {
@@ -54734,13 +55470,13 @@
     				each_value = ctx.permissionMatrix;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$b(ctx, each_value, i);
+    					const child_ctx = get_each_context$c(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block$b(child_ctx);
+    						each_blocks[i] = create_each_block$c(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(div, t2);
@@ -54797,7 +55533,7 @@
     	};
     }
 
-    function instance$q($$self, $$props, $$invalidate) {
+    function instance$t($$self, $$props, $$invalidate) {
     	
 
     let { level, allPermissions, onFinished, isNew, allLevels, hierarchy, actions } = $$props;
@@ -54902,7 +55638,7 @@
     class AccessLevelView extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$q, create_fragment$r, safe_not_equal, ["level", "allPermissions", "onFinished", "isNew", "allLevels", "hierarchy", "actions"]);
+    		init(this, options, instance$t, create_fragment$t, safe_not_equal, ["level", "allPermissions", "onFinished", "isNew", "allLevels", "hierarchy", "actions"]);
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
@@ -54988,9 +55724,9 @@
 
     /* src\accessLevels\AccessLevelsRoot.svelte generated by Svelte v3.6.9 */
 
-    const file$t = "src\\accessLevels\\AccessLevelsRoot.svelte";
+    const file$v = "src\\accessLevels\\AccessLevelsRoot.svelte";
 
-    function get_each_context$c(ctx, list, i) {
+    function get_each_context$d(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.level = list[i];
     	return child_ctx;
@@ -55089,16 +55825,16 @@
     	};
     }
 
-    // (58:0) {#if $database.accessLevels}
+    // (58:0) {#if $store.accessLevels}
     function create_if_block_1$6(ctx) {
     	var table, thead, tr, th0, t1, th1, t3, th2, t4, tbody;
 
-    	var each_value = ctx.$database.accessLevels;
+    	var each_value = ctx.$store.accessLevels;
 
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$c(get_each_context$c(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$d(get_each_context$d(ctx, each_value, i));
     	}
 
     	return {
@@ -55119,14 +55855,14 @@
     			for (var i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			add_location(th0, file$t, 61, 12, 1510);
-    			add_location(th1, file$t, 62, 12, 1537);
-    			add_location(th2, file$t, 63, 12, 1571);
-    			add_location(tr, file$t, 60, 8, 1492);
-    			add_location(thead, file$t, 59, 4, 1475);
-    			add_location(tbody, file$t, 66, 4, 1615);
+    			add_location(th0, file$v, 61, 12, 1495);
+    			add_location(th1, file$v, 62, 12, 1522);
+    			add_location(th2, file$v, 63, 12, 1556);
+    			add_location(tr, file$v, 60, 8, 1477);
+    			add_location(thead, file$v, 59, 4, 1460);
+    			add_location(tbody, file$v, 66, 4, 1600);
     			attr(table, "class", "fields-table uk-table uk-table-small");
-    			add_location(table, file$t, 58, 0, 1417);
+    			add_location(table, file$v, 58, 0, 1402);
     		},
 
     		m: function mount(target, anchor) {
@@ -55147,16 +55883,16 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.getIcon || changed.getPermissionsString || changed.$database) {
-    				each_value = ctx.$database.accessLevels;
+    			if (changed.getIcon || changed.getPermissionsString || changed.$store) {
+    				each_value = ctx.$store.accessLevels;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$c(ctx, each_value, i);
+    					const child_ctx = get_each_context$d(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$c(child_ctx);
+    						each_blocks[i] = create_each_block$d(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(tbody, null);
     					}
@@ -55179,8 +55915,8 @@
     	};
     }
 
-    // (68:8) {#each $database.accessLevels as level}
-    function create_each_block$c(ctx) {
+    // (68:8) {#each $store.accessLevels as level}
+    function create_each_block$d(ctx) {
     	var tr, td0, t0_value = ctx.level.name, t0, t1, td1, t2_value = ctx.getPermissionsString(ctx.level.permissions), t2, t3, td2, span0, raw0_value = getIcon("edit"), t4, span1, raw1_value = getIcon("trash"), t5, dispose;
 
     	function click_handler() {
@@ -55205,14 +55941,14 @@
     			t4 = space();
     			span1 = element("span");
     			t5 = space();
-    			add_location(td0, file$t, 69, 12, 1699);
-    			add_location(td1, file$t, 70, 12, 1735);
-    			add_location(span0, file$t, 72, 16, 1842);
-    			add_location(span1, file$t, 73, 16, 1932);
+    			add_location(td0, file$v, 69, 12, 1681);
+    			add_location(td1, file$v, 70, 12, 1717);
+    			add_location(span0, file$v, 72, 16, 1824);
+    			add_location(span1, file$v, 73, 16, 1914);
     			attr(td2, "class", "edit-button svelte-1be865r");
-    			add_location(td2, file$t, 71, 12, 1800);
+    			add_location(td2, file$v, 71, 12, 1782);
     			attr(tr, "class", "svelte-1be865r");
-    			add_location(tr, file$t, 68, 8, 1681);
+    			add_location(tr, file$v, 68, 8, 1663);
 
     			dispose = [
     				listen(span0, "click", click_handler),
@@ -55239,11 +55975,11 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((changed.$database) && t0_value !== (t0_value = ctx.level.name)) {
+    			if ((changed.$store) && t0_value !== (t0_value = ctx.level.name)) {
     				set_data(t0, t0_value);
     			}
 
-    			if ((changed.$database) && t2_value !== (t2_value = ctx.getPermissionsString(ctx.level.permissions))) {
+    			if ((changed.$store) && t2_value !== (t2_value = ctx.getPermissionsString(ctx.level.permissions))) {
     				set_data(t2, t2_value);
     			}
     		},
@@ -55259,7 +55995,7 @@
     }
 
     // (86:4) {#if isEditing}
-    function create_if_block$9(ctx) {
+    function create_if_block$b(ctx) {
     	var current;
 
     	var accesslevelview = new AccessLevelView({
@@ -55268,9 +56004,9 @@
     		allPermissions: ctx.allPermissions,
     		onFinished: ctx.onEditingFinished,
     		isNew: ctx.editingLevelIsNew,
-    		allLevels: ctx.$database.accessLevels,
-    		hierarchy: ctx.$database.hierarchy,
-    		actions: ctx.$database.actions
+    		allLevels: ctx.$store.accessLevels,
+    		hierarchy: ctx.$store.hierarchy,
+    		actions: ctx.$store.actions
     	},
     		$$inline: true
     	});
@@ -55291,9 +56027,9 @@
     			if (changed.allPermissions) accesslevelview_changes.allPermissions = ctx.allPermissions;
     			if (changed.onEditingFinished) accesslevelview_changes.onFinished = ctx.onEditingFinished;
     			if (changed.editingLevelIsNew) accesslevelview_changes.isNew = ctx.editingLevelIsNew;
-    			if (changed.$database) accesslevelview_changes.allLevels = ctx.$database.accessLevels;
-    			if (changed.$database) accesslevelview_changes.hierarchy = ctx.$database.hierarchy;
-    			if (changed.$database) accesslevelview_changes.actions = ctx.$database.actions;
+    			if (changed.$store) accesslevelview_changes.allLevels = ctx.$store.accessLevels;
+    			if (changed.$store) accesslevelview_changes.hierarchy = ctx.$store.hierarchy;
+    			if (changed.$store) accesslevelview_changes.actions = ctx.$store.actions;
     			accesslevelview.$set(accesslevelview_changes);
     		},
 
@@ -55319,7 +56055,7 @@
     function create_default_slot$9(ctx) {
     	var if_block_anchor, current;
 
-    	var if_block = (ctx.isEditing) && create_if_block$9(ctx);
+    	var if_block = (ctx.isEditing) && create_if_block$b(ctx);
 
     	return {
     		c: function create() {
@@ -55339,7 +56075,7 @@
     					if_block.p(changed, ctx);
     					transition_in(if_block, 1);
     				} else {
-    					if_block = create_if_block$9(ctx);
+    					if_block = create_if_block$b(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
     					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -55374,7 +56110,7 @@
     	};
     }
 
-    function create_fragment$s(ctx) {
+    function create_fragment$u(ctx) {
     	var div, t0, t1, updating_isOpen, current;
 
     	var buttongroup = new ButtonGroup({
@@ -55386,7 +56122,7 @@
     	});
 
     	function select_block_type(ctx) {
-    		if (ctx.$database.accessLevels) return create_if_block_1$6;
+    		if (ctx.$store.accessLevels) return create_if_block_1$6;
     		return create_else_block$7;
     	}
 
@@ -55419,7 +56155,7 @@
     			t1 = space();
     			modal.$$.fragment.c();
     			attr(div, "class", "root svelte-1be865r");
-    			add_location(div, file$t, 51, 0, 1234);
+    			add_location(div, file$v, 51, 0, 1222);
     		},
 
     		l: function claim(nodes) {
@@ -55453,7 +56189,7 @@
     			}
 
     			var modal_changes = {};
-    			if (changed.$$scope || changed.isEditing || changed.editingLevel || changed.allPermissions || changed.editingLevelIsNew || changed.$database) modal_changes.$$scope = { changed, ctx };
+    			if (changed.$$scope || changed.isEditing || changed.editingLevel || changed.allPermissions || changed.editingLevelIsNew || changed.$store) modal_changes.$$scope = { changed, ctx };
     			if (!updating_isOpen && changed.isEditing) {
     				modal_changes.isOpen = ctx.isEditing;
     			}
@@ -55489,11 +56225,11 @@
     	};
     }
 
-    function instance$r($$self, $$props, $$invalidate) {
-    	let $database;
+    function instance$u($$self, $$props, $$invalidate) {
+    	let $store;
 
-    	validate_store(database, 'database');
-    	subscribe($$self, database, $$value => { $database = $$value; $$invalidate('$database', $database); });
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -55501,7 +56237,7 @@
     let editingLevelIsNew = false; 
 
     let allPermissions = [];
-    database.subscribe(db => {
+    store.subscribe(db => {
         $$invalidate('allPermissions', allPermissions = generateFullPermissions$1(db.hierarchy, db.actions));
     });
 
@@ -55511,7 +56247,7 @@
     };
 
     let onLevelDelete = (level) => {
-        database.deleteLevel(level);
+        store.deleteLevel(level);
     };
 
 
@@ -55522,7 +56258,7 @@
 
     let onEditingFinished = (level) => {
         if(level) {
-            database.saveLevel(level, editingLevelIsNew, editingLevel);
+            store.saveLevel(level, editingLevelIsNew, editingLevel);
         }
         $$invalidate('editingLevel', editingLevel = null);
     };
@@ -55560,7 +56296,7 @@
     		onEditingFinished,
     		getPermissionsString,
     		isEditing,
-    		$database,
+    		$store,
     		click_handler,
     		click_handler_1,
     		modal_isOpen_binding
@@ -55570,15 +56306,15 @@
     class AccessLevelsRoot extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$r, create_fragment$s, safe_not_equal, []);
+    		init(this, options, instance$u, create_fragment$u, safe_not_equal, []);
     	}
     }
 
     /* src\PackageRoot.svelte generated by Svelte v3.6.9 */
 
-    const file$u = "src\\PackageRoot.svelte";
+    const file$w = "src\\PackageRoot.svelte";
 
-    // (27:55) 
+    // (27:52) 
     function create_if_block_3$2(ctx) {
     	var current;
 
@@ -55612,7 +56348,7 @@
     	};
     }
 
-    // (25:54) 
+    // (25:51) 
     function create_if_block_2$4(ctx) {
     	var current;
 
@@ -55646,7 +56382,7 @@
     	};
     }
 
-    // (23:48) 
+    // (23:45) 
     function create_if_block_1$7(ctx) {
     	var current;
 
@@ -55680,41 +56416,41 @@
     	};
     }
 
-    // (21:4) {#if $database.activeNav === "database"}
-    function create_if_block$a(ctx) {
+    // (21:4) {#if $store.activeNav === "database"}
+    function create_if_block$c(ctx) {
     	var current;
 
-    	var database_1 = new DatabaseRoot({ $$inline: true });
+    	var database = new DatabaseRoot({ $$inline: true });
 
     	return {
     		c: function create() {
-    			database_1.$$.fragment.c();
+    			database.$$.fragment.c();
     		},
 
     		m: function mount(target, anchor) {
-    			mount_component(database_1, target, anchor);
+    			mount_component(database, target, anchor);
     			current = true;
     		},
 
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(database_1.$$.fragment, local);
+    			transition_in(database.$$.fragment, local);
 
     			current = true;
     		},
 
     		o: function outro(local) {
-    			transition_out(database_1.$$.fragment, local);
+    			transition_out(database.$$.fragment, local);
     			current = false;
     		},
 
     		d: function destroy(detaching) {
-    			destroy_component(database_1, detaching);
+    			destroy_component(database, detaching);
     		}
     	};
     }
 
-    function create_fragment$t(ctx) {
+    function create_fragment$v(ctx) {
     	var div1, t, div0, current_block_type_index, if_block, current;
 
     	var nav = new Nav({
@@ -55723,7 +56459,7 @@
     	});
 
     	var if_block_creators = [
-    		create_if_block$a,
+    		create_if_block$c,
     		create_if_block_1$7,
     		create_if_block_2$4,
     		create_if_block_3$2
@@ -55732,10 +56468,10 @@
     	var if_blocks = [];
 
     	function select_block_type(ctx) {
-    		if (ctx.$database.activeNav === "database") return 0;
-    		if (ctx.$database.activeNav === "actions") return 1;
-    		if (ctx.$database.activeNav === "access levels") return 2;
-    		if (ctx.$database.activeNav === "user interface") return 3;
+    		if (ctx.$store.activeNav === "database") return 0;
+    		if (ctx.$store.activeNav === "actions") return 1;
+    		if (ctx.$store.activeNav === "access levels") return 2;
+    		if (ctx.$store.activeNav === "user interface") return 3;
     		return -1;
     	}
 
@@ -55753,9 +56489,9 @@
     			attr(div0, "class", "content svelte-1rxbdcd");
     			set_style(div0, "width", "calc(100% - " + ctx.navWidth + ")");
     			set_style(div0, "left", ctx.navWidth);
-    			add_location(div0, file$u, 18, 2, 532);
+    			add_location(div0, file$w, 18, 2, 529);
     			attr(div1, "class", "root svelte-1rxbdcd");
-    			add_location(div1, file$u, 16, 0, 482);
+    			add_location(div1, file$w, 16, 0, 479);
     		},
 
     		l: function claim(nodes) {
@@ -55832,11 +56568,11 @@
     	};
     }
 
-    function instance$s($$self, $$props, $$invalidate) {
-    	let $database;
+    function instance$v($$self, $$props, $$invalidate) {
+    	let $store;
 
-    	validate_store(database, 'database');
-    	subscribe($$self, database, $$value => { $database = $$value; $$invalidate('$database', $database); });
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -55851,13 +56587,13 @@
     		if ('navWidth' in $$props) $$invalidate('navWidth', navWidth = $$props.navWidth);
     	};
 
-    	return { navWidth, $database };
+    	return { navWidth, $store };
     }
 
     class PackageRoot extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$s, create_fragment$t, safe_not_equal, ["navWidth"]);
+    		init(this, options, instance$v, create_fragment$v, safe_not_equal, ["navWidth"]);
     	}
 
     	get navWidth() {
@@ -55871,7 +56607,7 @@
 
     /* src\App.svelte generated by Svelte v3.6.9 */
 
-    const file$v = "src\\App.svelte";
+    const file$x = "src\\App.svelte";
 
     // (27:1) {:catch err}
     function create_catch_block(ctx) {
@@ -55882,7 +56618,7 @@
     			h1 = element("h1");
     			t = text(t_value);
     			set_style(h1, "color", "red");
-    			add_location(h1, file$v, 27, 2, 428);
+    			add_location(h1, file$x, 27, 2, 419);
     		},
 
     		m: function mount(target, anchor) {
@@ -55906,9 +56642,9 @@
     function create_then_block(ctx) {
     	var t, if_block1_anchor, current;
 
-    	var if_block0 = (ctx.$database.hasAppPackage) && create_if_block_1$8();
+    	var if_block0 = (ctx.$store.hasAppPackage) && create_if_block_1$8();
 
-    	var if_block1 = (!ctx.$database.hasAppPackage) && create_if_block$b();
+    	var if_block1 = (!ctx.$store.hasAppPackage) && create_if_block$d();
 
     	return {
     		c: function create() {
@@ -55927,7 +56663,7 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if (ctx.$database.hasAppPackage) {
+    			if (ctx.$store.hasAppPackage) {
     				if (!if_block0) {
     					if_block0 = create_if_block_1$8();
     					if_block0.c();
@@ -55944,9 +56680,9 @@
     				check_outros();
     			}
 
-    			if (!ctx.$database.hasAppPackage) {
+    			if (!ctx.$store.hasAppPackage) {
     				if (!if_block1) {
-    					if_block1 = create_if_block$b();
+    					if_block1 = create_if_block$d();
     					if_block1.c();
     					transition_in(if_block1, 1);
     					if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
@@ -55991,7 +56727,7 @@
     	};
     }
 
-    // (19:2) {#if $database.hasAppPackage}
+    // (19:2) {#if $store.hasAppPackage}
     function create_if_block_1$8(ctx) {
     	var current;
 
@@ -56025,8 +56761,8 @@
     	};
     }
 
-    // (23:2) {#if !$database.hasAppPackage}
-    function create_if_block$b(ctx) {
+    // (23:2) {#if !$store.hasAppPackage}
+    function create_if_block$d(ctx) {
     	var current;
 
     	var nopackage = new NoPackage({ $$inline: true });
@@ -56067,7 +56803,7 @@
     		c: function create() {
     			h1 = element("h1");
     			h1.textContent = "loading";
-    			add_location(h1, file$v, 15, 2, 261);
+    			add_location(h1, file$x, 15, 2, 258);
     		},
 
     		m: function mount(target, anchor) {
@@ -56086,7 +56822,7 @@
     	};
     }
 
-    function create_fragment$u(ctx) {
+    function create_fragment$w(ctx) {
     	var main, promise, current;
 
     	let info = {
@@ -56109,7 +56845,7 @@
 
     			info.block.c();
     			attr(main, "class", "svelte-j8mzr7");
-    			add_location(main, file$v, 11, 0, 234);
+    			add_location(main, file$x, 11, 0, 231);
     		},
 
     		l: function claim(nodes) {
@@ -56162,23 +56898,23 @@
     	};
     }
 
-    function instance$t($$self, $$props, $$invalidate) {
-    	let $database;
+    function instance$w($$self, $$props, $$invalidate) {
+    	let $store;
 
-    	validate_store(database, 'database');
-    	subscribe($$self, database, $$value => { $database = $$value; $$invalidate('$database', $database); });
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
     	
     	let init = initialise$1();
 
-    	return { init, $database };
+    	return { init, $store };
     }
 
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$t, create_fragment$u, safe_not_equal, []);
+    		init(this, options, instance$w, create_fragment$w, safe_not_equal, []);
     	}
     }
 

@@ -8,14 +8,14 @@ import {store} from "../builderStore";
 import {filter, some, map} from "lodash/fp";
 import {hierarchy as hierarchyFunctions, common} from "../../../core/src";
 
-const chain = common.$;
+const pipe = common.$;
 
 let index;
 let indexableRecords = [];
 
 store.subscribe($store => {
     index = $store.currentNode;
-    indexableRecords = chain($store.hierarchy,[
+    indexableRecords = pipe($store.hierarchy,[
         hierarchyFunctions.getFlattenedHierarchy,
         filter(hierarchyFunctions.isDecendant(index.parent())),
         filter(hierarchyFunctions.isRecord),

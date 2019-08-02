@@ -6,7 +6,7 @@ import ButtonGroup from "../common/ButtonGroup.svelte";
 import {cloneDeep, filter, keys,
 map, isUndefined} from "lodash/fp";
 import ErrorsBox from "../common/ErrorsBox.svelte";
-import {validateActions, chain} from "../common/core";
+import {validateActions, pipe} from "../common/core";
 import getIcon from "../common/icon";
 
 export let action;
@@ -18,7 +18,7 @@ let optKey = "";
 let optValue = "";
 
 let clonedAction = cloneDeep(action); 
-let initialOptions = chain(action.initialOptions, [
+let initialOptions = pipe(action.initialOptions, [
     keys,
     map(k => ({key:k, value:action.initialOptions[k]}))
 ]);
@@ -39,7 +39,7 @@ const addNewOption = () => {
 const removeOption = (opt) => {
     if(opt) {
         delete clonedAction.initialOptions[opt.key]
-        initialOptions = chain(initialOptions, [
+        initialOptions = pipe(initialOptions, [
             filter(o => o.key !== opt.key)
         ]);
     }
@@ -48,10 +48,10 @@ const removeOption = (opt) => {
 const save = () => {
 
     const newActionsList = [
-        ...chain(allActions ,[filter(a => a !== action)]),
+        ...pipe(allActions ,[filter(a => a !== action)]),
         clonedAction]
 
-    errors = chain(newActionsList ,[
+    errors = pipe(newActionsList ,[
         validateActions,
         map(e => e.error)
     ]);

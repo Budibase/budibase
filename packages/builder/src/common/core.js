@@ -3,12 +3,12 @@ import {hierarchy as hierarchyFunctions,
 import {find, filter, includes, keyBy, some,
     flatten, map} from "lodash/fp";
 
-export const chain = common.$;
+export const pipe = common.$;
 
 export const events = common.eventsList;
 
 export const getNode = (hierarchy, nodeId) => 
-    chain(hierarchy, [
+    pipe(hierarchy, [
         hierarchyFunctions.getFlattenedHierarchy,
         find(n => n.nodeId === nodeId || n.nodeKey() === nodeId)
     ]);
@@ -35,7 +35,7 @@ export const validate = {
 };
 
 export const getPotentialReverseReferenceIndexes = (hierarchy, refIndex) => {
-    const res = chain(hierarchy, [
+    const res = pipe(hierarchy, [
         hierarchyFunctions.getFlattenedHierarchy,
         filter(n => hierarchyFunctions.isAncestor(refIndex)(n)
                     || hierarchyFunctions.isAncestor(refIndex)(n.parent())),
@@ -48,7 +48,7 @@ export const getPotentialReverseReferenceIndexes = (hierarchy, refIndex) => {
 }
 
 export const getPotentialReferenceIndexes = (hierarchy, record) =>
-    chain(hierarchy, [
+    pipe(hierarchy, [
         hierarchyFunctions.getFlattenedHierarchy,
         filter(hierarchyFunctions.isAncestorIndex),
         filter(i => hierarchyFunctions.isAncestor(record)(i.parent())

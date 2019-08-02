@@ -16,7 +16,7 @@ import {
     reduce
 } from "lodash/fp";
 import {
-    chain, 
+    pipe, 
     getNode, 
     validate,
     constructHierarchy, 
@@ -26,8 +26,6 @@ import {writable} from "svelte/store";
 import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
 import api from "./api";
 import { isRootComponent } from "../userInterface/pagesParsing/searchComponents";
-
-const pipe = common.$;
 
 export const getStore = () => {
 
@@ -41,6 +39,7 @@ export const getStore = () => {
         mainUi:{},
         unauthenticatedUi:{},
         allComponents:[],
+        currentFrontEndItem:null,
         currentNodeIsNew: false,
         errors: [],
         activeNav: "database",
@@ -74,6 +73,8 @@ export const getStore = () => {
     store.addComponentLibrary = addComponentLibrary(store);
     store.renameDerivedComponent = renameDerivedComponent(store);
     store.deleteDerivedComponent = deleteDerivedComponent(store);
+    store.setCurrentComponent = setCurrentComponent(store);
+    store.setCurrentPage = setCurrentPage(store);
     return store;
 } 
 
@@ -124,7 +125,7 @@ const combineComponents = (root, derived) => {
         all.push(root[r]);
     }
     for(let d in derived) {
-        all.push(root[d]);
+        all.push(derived[d]);
     }
     return all;
 }
@@ -192,7 +193,7 @@ const saveCurrentNode = (store) => () => {
         if(!!existingNode) {
             // remove existing
             index = existingNode.parent().children.indexOf(existingNode);
-            existingNode.parent().children = chain(existingNode.parent().children, [
+            existingNode.parent().children = pipe(existingNode.parent().children, [
                 filter(c => c.nodeId !== existingNode.nodeId)
             ]);
         }
@@ -210,7 +211,7 @@ const saveCurrentNode = (store) => () => {
             return currentIndex >= index ? currentIndex + 1 : currentIndex;
         }
 
-        parentNode.children = chain(parentNode.children, [
+        parentNode.children = pipe(parentNode.children, [
             sortBy(newIndexOfchild)
         ]);
 
@@ -284,7 +285,7 @@ const saveAction = store => (newAction, isNew, oldAction=null) => {
                                : find(a => a.name === oldAction.name)(s.actions);
             
         if(existingAction) {
-            s.actions = chain(s.actions, [
+            s.actions = pipe(s.actions, [
                 map(a => a === existingAction ? newAction : a)
             ]);
         } else {
@@ -311,7 +312,7 @@ const saveTrigger = store => (newTrigger, isNew, oldTrigger=null) => {
                                : find(a => a.name === oldTrigger.name)(s.triggers);
             
         if(existingTrigger) {
-            s.triggers = chain(s.triggers, [
+            s.triggers = pipe(s.triggers, [
                 map(a => a === existingTrigger ? newTrigger : a)
             ]);
         } else {
@@ -337,7 +338,7 @@ const saveLevel = store => (newLevel, isNew, oldLevel=null) => {
                                : find(a => a.name === oldLevel.name)(s.accessLevels);
             
         if(existingLevel) {
-            s.accessLevels = chain(s.accessLevels, [
+            s.accessLevels = pipe(s.accessLevels, [
                 map(a => a === existingLevel ? newLevel : a)
             ]);
         } else {
@@ -371,7 +372,7 @@ const saveDerivedComponent = store => (derivedComponent) => {
     store.update(s => {
 
         const components = pipe(s.allComponents, [
-            filter(c => c._name !== derivedComponent._name),
+            filter(c => c.name !== derivedComponent.name),
             concat([derivedComponent])
         ]);
 
@@ -387,7 +388,7 @@ const deleteDerivedComponent = store => name => {
     store.update(s => {
 
         const allComponents = pipe(s.allComponents, [
-            filter(c => c._name !== name)
+            filter(c => c.name !== name)
         ]);
 
         s.allComponents = allComponents;
@@ -402,13 +403,13 @@ const renameDerivedComponent = store => (oldname, newname) => {
     store.update(s => {
 
         const component = pipe(s.allComponents, [
-            find(c => c._name === name)
+            find(c => c.name === name)
         ]);
 
-        component._name = newname;
+        component.name = newname;
 
         const allComponents = pipe(s.allComponents, [
-            filter(c => c._name !== name),
+            filter(c => c.name !== name),
             concat([component])
         ]);
 
@@ -466,7 +467,7 @@ const refreshComponents = store => async () => {
 
     const rootComponents = pipe(components, [
         keys,
-        map(k => ({...components[k], _name:k}))
+        map(k => ({...components[k], name:k}))
     ]);
 
     store.update(s => {
@@ -495,4 +496,21 @@ const savePackage = (store, s) => {
     }
 
     api.post(`/_builder/api/${s.appname}/appPackage`, data);
+}
+
+const setCurrentComponent = store => component => {
+    store.update(s => {
+        s.currentFrontEndItem = component;
+        s.currentFrontEndIsComponent = true;
+        return s;
+    })
+}
+
+const setCurrentPage = store => pageName => {
+    store.update(s => {
+        const props = s.pages[pageName];
+        s.currentFrontEndItem = {props, name:pageName};
+        s.currentFrontEndIsComponent = false;
+        return s;
+    })
 }

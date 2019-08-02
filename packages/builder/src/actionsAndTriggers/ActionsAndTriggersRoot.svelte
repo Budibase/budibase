@@ -14,7 +14,7 @@ let editingTrigger = null;
 let editingTriggerIsNew = true;
 
 let getDefaultOptionsHtml = defaultOptions => 
-    chain(defaultOptions, [
+    pipe(defaultOptions, [
         keys,
         map(k => `<span style="color:var(--slate)">${k}: </span>${JSON.parse(typeOptions[k])}`),
         join("<br>")

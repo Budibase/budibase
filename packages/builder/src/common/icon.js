@@ -1,2 +1,3 @@
 import feather from "feather-icons";
-export default icon => feather.toSvg(icon);
+const getIcon = (icon, size) => feather.icons[icon].toSvg({height:size||"24", width:size||"24"});
+export default getIcon;

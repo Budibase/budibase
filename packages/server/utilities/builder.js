@@ -131,7 +131,9 @@ const getRootComponents = async (appPath, pages ,lib) => {
         return $(components, [
             keys,
             reduce((obj, k) => {
-                obj[`${libname}/${k}`] = components[k]
+                const component = components[k];
+                component.name = `${libname}/${k}`;
+                obj[component.name] = component;
                 return obj;
             }, {})
         ])

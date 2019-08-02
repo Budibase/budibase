@@ -6,7 +6,7 @@ import Button from "../common/Button.svelte";
 import ButtonGroup from "../common/ButtonGroup.svelte";
 import ActionView from "./ActionView.svelte";
 import Modal from "../common/Modal.svelte";
-import {chain} from "../common/core";
+import {pipe} from "../common/core";
 import {keys, map, join} from "lodash/fp";
 
 export let editingActionIsNew = false;
@@ -19,7 +19,7 @@ export let onActionCancel = () => {};
 $: isEditing = (editingAction !== null); 
 
 let getDefaultOptionsHtml = defaultOptions => 
-    chain(defaultOptions, [
+    pipe(defaultOptions, [
         keys,
         map(k => `<span style="color:var(--slate)">${k}: </span>${JSON.stringify(defaultOptions[k])}`),
         join("<br>")

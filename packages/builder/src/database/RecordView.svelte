@@ -9,7 +9,7 @@ import {map, join, filter, some,
     find, keys, isDate} from "lodash/fp";
 import { store } from "../builderStore";
 import {common, hierarchy as h} from "../../../core/src";
-import {templateApi, chain, validate} from "../common/core";
+import {templateApi, pipe, validate} from "../common/core";
 
 let record;
 let getIndexAllowedRecords;
@@ -26,7 +26,7 @@ store.subscribe($store => {
     record = $store.currentNode;
     const flattened = h.getFlattenedHierarchy($store.hierarchy);
     getIndexAllowedRecords = index => 
-        chain(index.allowedRecordNodeIds, [
+        pipe(index.allowedRecordNodeIds, [
             filter(id => some(n => n.nodeId === id)(flattened)),
             map(id => find(n => n.nodeId === id)
                           (flattened).name),
@@ -73,7 +73,7 @@ let getTypeOptionsValueText = value => {
 }
 
 let getTypeOptions = typeOptions => 
-    chain(typeOptions, [
+    pipe(typeOptions, [
         keys,
         map(k => `<span style="color:var(--slate)">${k}: </span>${getTypeOptionsValueText(typeOptions[k])}`),
         join("<br>")
