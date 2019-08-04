@@ -51922,10 +51922,10 @@
     			t2 = space();
     			if (if_block) if_block.c();
     			add_location(span0, file$m, 108, 8, 2787);
-    			attr(span1, "class", "title svelte-1sgefwa");
+    			attr(span1, "class", "title svelte-1ba51k0");
     			toggle_class(span1, "currentfolder", ctx.$store.currentFrontEndItem && ctx.isInSubfolder(ctx.folder.name, ctx.$store.currentFrontEndItem));
     			add_location(span1, file$m, 109, 8, 2885);
-    			attr(div, "class", "hierarchy-item folder svelte-1sgefwa");
+    			attr(div, "class", "hierarchy-item folder svelte-1ba51k0");
     			add_location(div, file$m, 106, 4, 2678);
     			dispose = listen(div, "click", stop_propagation(click_handler));
     		},
@@ -52014,9 +52014,9 @@
     			t1 = text(t1_value);
     			t2 = space();
     			add_location(span0, file$m, 120, 8, 3495);
-    			attr(span1, "class", "title svelte-1sgefwa");
+    			attr(span1, "class", "title svelte-1ba51k0");
     			add_location(span1, file$m, 121, 8, 3548);
-    			attr(div, "class", "hierarchy-item component svelte-1sgefwa");
+    			attr(div, "class", "hierarchy-item component svelte-1ba51k0");
     			toggle_class(div, "selected", ctx.isComponentSelected(ctx.$store.currentFrontEndItem, ctx.component.component));
     			add_location(div, file$m, 118, 4, 3271);
     			dispose = listen(div, "click", stop_propagation(click_handler_1));
@@ -52085,7 +52085,7 @@
     			for (var i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			attr(div, "class", "root svelte-1sgefwa");
+    			attr(div, "class", "root svelte-1ba51k0");
     			attr(div, "style", div_style_value = `padding-left: calc(10px * ${ctx.pathPartsThisLevel})`);
     			add_location(div, file$m, 103, 0, 2558);
     		},
@@ -52431,7 +52431,7 @@
 
     const file$o = "src\\userInterface\\UserInterfaceRoot.svelte";
 
-    // (26:8) {#if $store.currentFrontEndItem}
+    // (33:8) {#if $store.currentFrontEndItem}
     function create_if_block$8(ctx) {
     	var div, h1, t_value = ctx.$store.currentFrontEndItem.name, t;
 
@@ -52440,9 +52440,9 @@
     			div = element("div");
     			h1 = element("h1");
     			t = text(t_value);
-    			add_location(h1, file$o, 27, 12, 667);
-    			attr(div, "class", "component-container svelte-153wzef");
-    			add_location(div, file$o, 26, 8, 620);
+    			add_location(h1, file$o, 34, 12, 939);
+    			attr(div, "class", "component-container svelte-5zgcq9");
+    			add_location(div, file$o, 33, 8, 892);
     		},
 
     		m: function mount(target, anchor) {
@@ -52466,7 +52466,7 @@
     }
 
     function create_fragment$n(ctx) {
-    	var div4, div2, div0, h30, t1, t2, div1, h31, t4, t5, div3, current;
+    	var div4, div2, div0, h50, raw0_value = getIcon("sidebar","18"), raw0_after, t0, span0, t2, t3, div1, h51, raw1_value = getIcon("grid","18"), raw1_after, t4, span1, t6, t7, div3, current;
 
     	var componentshierarchy = new ComponentsHierarchy({
     		props: { components: ctx.$store.allComponents },
@@ -52482,33 +52482,43 @@
     			div4 = element("div");
     			div2 = element("div");
     			div0 = element("div");
-    			h30 = element("h3");
-    			h30.textContent = "Components";
-    			t1 = space();
-    			componentshierarchy.$$.fragment.c();
+    			h50 = element("h5");
+    			raw0_after = element('noscript');
+    			t0 = space();
+    			span0 = element("span");
+    			span0.textContent = "COMPONENTS";
     			t2 = space();
+    			componentshierarchy.$$.fragment.c();
+    			t3 = space();
     			div1 = element("div");
-    			h31 = element("h3");
-    			h31.textContent = "Pages";
+    			h51 = element("h5");
+    			raw1_after = element('noscript');
     			t4 = space();
+    			span1 = element("span");
+    			span1.textContent = "PAGES";
+    			t6 = space();
     			pageslist.$$.fragment.c();
-    			t5 = space();
+    			t7 = space();
     			div3 = element("div");
     			if (if_block) if_block.c();
-    			attr(h30, "class", "svelte-153wzef");
-    			add_location(h30, file$o, 13, 12, 293);
-    			attr(div0, "class", "components-list-container svelte-153wzef");
-    			add_location(div0, file$o, 12, 8, 240);
-    			attr(h31, "class", "svelte-153wzef");
-    			add_location(h31, file$o, 18, 12, 458);
-    			attr(div1, "class", "pages-list-container svelte-153wzef");
-    			add_location(div1, file$o, 17, 8, 410);
-    			attr(div2, "class", "ui-nav svelte-153wzef");
-    			add_location(div2, file$o, 10, 4, 208);
-    			attr(div3, "class", "component-preview svelte-153wzef");
-    			add_location(div3, file$o, 24, 4, 537);
-    			attr(div4, "class", "root svelte-153wzef");
-    			add_location(div4, file$o, 8, 0, 178);
+    			attr(span0, "class", "nav-title-inner svelte-5zgcq9");
+    			add_location(span0, file$o, 16, 16, 403);
+    			attr(h50, "class", "svelte-5zgcq9");
+    			add_location(h50, file$o, 14, 12, 332);
+    			attr(div0, "class", "components-list-container");
+    			add_location(div0, file$o, 13, 8, 279);
+    			attr(span1, "class", "nav-title-inner svelte-5zgcq9");
+    			add_location(span1, file$o, 24, 16, 683);
+    			attr(h51, "class", "svelte-5zgcq9");
+    			add_location(h51, file$o, 22, 12, 615);
+    			attr(div1, "class", "pages-list-container svelte-5zgcq9");
+    			add_location(div1, file$o, 21, 8, 567);
+    			attr(div2, "class", "ui-nav svelte-5zgcq9");
+    			add_location(div2, file$o, 11, 4, 247);
+    			attr(div3, "class", "component-preview svelte-5zgcq9");
+    			add_location(div3, file$o, 31, 4, 809);
+    			attr(div4, "class", "root svelte-5zgcq9");
+    			add_location(div4, file$o, 9, 0, 217);
     		},
 
     		l: function claim(nodes) {
@@ -52519,15 +52529,23 @@
     			insert(target, div4, anchor);
     			append(div4, div2);
     			append(div2, div0);
-    			append(div0, h30);
-    			append(div0, t1);
+    			append(div0, h50);
+    			append(h50, raw0_after);
+    			raw0_after.insertAdjacentHTML("beforebegin", raw0_value);
+    			append(h50, t0);
+    			append(h50, span0);
+    			append(div0, t2);
     			mount_component(componentshierarchy, div0, null);
-    			append(div2, t2);
+    			append(div2, t3);
     			append(div2, div1);
-    			append(div1, h31);
-    			append(div1, t4);
+    			append(div1, h51);
+    			append(h51, raw1_after);
+    			raw1_after.insertAdjacentHTML("beforebegin", raw1_value);
+    			append(h51, t4);
+    			append(h51, span1);
+    			append(div1, t6);
     			mount_component(pageslist, div1, null);
-    			append(div4, t5);
+    			append(div4, t7);
     			append(div4, div3);
     			if (if_block) if_block.m(div3, null);
     			current = true;

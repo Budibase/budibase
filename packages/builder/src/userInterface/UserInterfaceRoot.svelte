@@ -3,6 +3,7 @@
 import ComponentsHierarchy from "./ComponentsHierarchy.svelte";
 import PagesList from "./PagesList.svelte"
 import { store } from "../builderStore";
+import getIcon from "../common/icon";
 
 </script>
 
@@ -11,12 +12,18 @@ import { store } from "../builderStore";
     <div class="ui-nav">
 
         <div class="components-list-container">
-            <h3>Components</h3>
+            <h5>
+                {@html getIcon("sidebar","18")}
+                <span class="nav-title-inner">COMPONENTS</span>
+            </h5>
             <ComponentsHierarchy components={$store.allComponents}/>
         </div>
 
         <div class="pages-list-container">
-            <h3>Pages</h3>
+            <h5>
+                {@html getIcon("grid","18")}
+                <span class="nav-title-inner">PAGES</span>
+            </h5>
             <PagesList />
         </div>
 
@@ -44,8 +51,7 @@ import { store } from "../builderStore";
 .ui-nav {
     grid-column-start: uiNav;
     background-color: var(--primary10);
-    display: grid;
-    grid-template-rows: [components] 1fr [pages] auto;
+    height: 100%;
 }
 
 .component-preview {
@@ -60,16 +66,19 @@ import { store } from "../builderStore";
     grid-column-start: middle;
 }
 
-.pages-list-container { 
-    grid-row-start: pages;
+.pages-list-container {
+    padding-top: 20px;
 }
 
-.components-list-container {
-    grid-row-start: components;
+
+
+h5 {
+    font-size: 10pt;
+    padding-left: 10px;
 }
 
-h3 {
-    padding: 10px;
+.nav-title-inner {
+    margin-left:5px;
+    vertical-align: bottom;
 }
-
 </style>

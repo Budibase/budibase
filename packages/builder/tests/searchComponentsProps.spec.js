@@ -10,8 +10,7 @@ describe("searchAllComponents", () => {
     it("should match derived component by name", () => {
 
         const results = searchAllComponents(
-            derivedComponents(),
-            rootComponents(),
+            components(),
             "password"
         );
 
@@ -23,8 +22,7 @@ describe("searchAllComponents", () => {
     it("should match derived component by tag", () => {
 
         const results = searchAllComponents(
-            derivedComponents(),
-            rootComponents(),
+            components(),
             "mask"
         );
 
@@ -36,8 +34,7 @@ describe("searchAllComponents", () => {
     it("should match component if ancestor matches", () => {
 
         const results = searchAllComponents(
-            derivedComponents(),
-            rootComponents(),
+            components(),
             "smalltext"
         );
 
@@ -50,8 +47,7 @@ describe("searchAllComponents", () => {
 describe("getExactComponent", () => {
     it("should get component by name", () => {
         const result = getExactComponent(
-            derivedComponents(),
-            rootComponents(),
+            components(),
             "common/SmallTextbox"
         )
 
@@ -61,8 +57,7 @@ describe("getExactComponent", () => {
 
     it("should return nothing when no result (should not fail)", () => {
         const result = getExactComponent(
-            derivedComponents(),
-            rootComponents(),
+            components(),
             "bla/bla/bla"
         )
 
@@ -76,39 +71,55 @@ describe("getAncestorProps", () => {
     it("should return props of root component", () => {
 
         const result = getAncestorProps(
-            derivedComponents(),
-            rootComponents(),
+            components(),
             "budibase-components/TextBox"   
         );
 
         expect(result).toEqual([
-            rootComponents()[0].props
+            components()[0].props
         ]);
 
     });
 
     it("should return props of all ancestors and current component, in order", () => {
 
-        const derived = derivedComponents();
-        const root = rootComponents();
+        const components = components();
 
         const result = getAncestorProps(
-            derived,
-            root,
+            components,
             "common/PasswordBox"   
         );
 
         expect(result).toEqual([
             root[0].props,
-            {_component: "budibase-components/TextBox", ...derived[0].props},
-            {_component: "common/SmallTextbox", ...derived[1].props}
+            {_component: "budibase-components/TextBox", ...components[2].props},
+            {_component: "common/SmallTextbox", ...components[3].props}
         ]);
 
     });
 
 })
 
-const derivedComponents = () => ([
+const components = () => ([
+{
+    name: "budibase-components/TextBox",
+    tags: ["Text", "input"],
+    props: {
+        size: {type:"options", options:["small", "medium", "large"]},
+        isPassword: "boolean",
+        placeholder: "string",
+        label:"string"
+    } 
+},
+{
+    name: "budibase-components/Button",
+    tags: ["input"],
+    props: {
+        size: {type:"options", options:["small", "medium", "large"]},
+        css: "string",
+        content: "component"
+    } 
+},
 {
     inherits:"budibase-components/TextBox",
     name: "common/SmallTextbox",
@@ -131,26 +142,4 @@ const derivedComponents = () => ([
         css:"btn-primary"
     }
 }
-])
-
-const rootComponents = () => ([
-    {
-        name: "budibase-components/TextBox",
-        tags: ["Text", "input"],
-        props: {
-            size: {type:"options", options:["small", "medium", "large"]},
-            isPassword: "boolean",
-            placeholder: "string",
-            label:"string"
-        } 
-    },
-    {
-        name: "budibase-components/Button",
-        tags: ["input"],
-        props: {
-            size: {type:"options", options:["small", "medium", "large"]},
-            css: "string",
-            content: "component"
-        } 
-    }
 ])

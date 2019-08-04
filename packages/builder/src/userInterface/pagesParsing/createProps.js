@@ -1,9 +1,40 @@
 import {
     isString, 
-    isUndefined
+    isUndefined,
+    find,
+    keys,
+    uniq,
+    some,
+    keyBy
 } from "lodash/fp";
 import { types } from "./types";
 import { assign } from "lodash";
+import { pipe } from "../../common/core";
+import { isRootComponent } from "./searchComponents";
+
+export const createPropDefinitionForDerived = (allComponents, componentName) => {
+    const traverseForProps = (cname, derivedProps=[]) => {
+        const component = find(c => c.name === cname)(allComponents);
+        if(isRootComponent(component)) return ({propDef:component.props, derivedProps});
+        return traverseForProps(component.inherits, [component.props, ...derivedProps]);
+    }
+
+    const {propDef, derivedProps} = traverseForProps(componentName);
+
+    const hasDerivedProp = k => pipe(derivedProps, [
+        keys,
+        uniq,
+        some(key => key === k)
+    ]);
+
+    return pipe(propDef, [
+        keys,
+        filter(k => !hasDerivedProp(k)),
+        reduce((obj, k) => {
+            obj[k] = propDef[k]
+        }, {})
+    ])
+}
 
 export const createProps = (componentName, propsDefinition, derivedFromProps) => {
 

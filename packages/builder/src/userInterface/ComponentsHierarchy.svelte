@@ -133,6 +133,7 @@ const isFolderSelected = (current, folder) =>
 
 .hierarchy-item {
     cursor: pointer;
+    padding: 5px 0px;
 }
 
 .hierarchy-item:hover {

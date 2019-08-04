@@ -1,3 +1,5 @@
+import {pipe}  from "../../common/core";
+
 import {
     find,
     isUndefined,
@@ -6,76 +8,51 @@ import {
     includes
 } from "lodash/fp";
 
-import {
-    common
-} from "../../../../core/src";
-
-
-const pipe = common.$;
-
 const normalString = s => (s||"").trim().toLowerCase();
 
 export const isRootComponent = c => isUndefined(c.inherits);
 
-export const searchAllComponents = (derivedComponents, rootComponents, phrase) => {
+export const searchAllComponents = (allComponents, phrase) => {
 
     const hasPhrase = (...vals) => 
         pipe(vals, [
             some(v => includes(normalString(phrase))(normalString(v)))
         ]);
 
-    const rootComponentMatches = c => 
-        hasPhrase(c.name, ...(c.tags || []));
-
-    const derivedComponentMatches = c => {
+    const componentMatches = c => {
         if(hasPhrase(c.name, ...(c.tags || []))) return true;
+
+        if(isRootComponent(c)) return false;
         
         const parent = getExactComponent(
-            derivedComponents,
-            rootComponents,
+            allComponents,
             c.inherits);
 
-        if(isRootComponent(parent)) 
-            return rootComponentMatches(parent);
-
-        return derivedComponentMatches(parent);
+        return componentMatches(parent);
     }
 
-    return ([
-        ...filter(derivedComponentMatches)(derivedComponents),
-        ...filter(rootComponentMatches)(rootComponents)
-    ]);
-    
+    return filter(componentMatches)(allComponents);
 } 
 
-export const getExactComponent = (derivedComponents, rootComponents, name) => {
+export const getExactComponent = (allComponents, name) => {
     
     const stringEquals = (s1, s2) => 
         normalString(s1) === normalString(s2);
     
-    const derived = pipe(derivedComponents,[
+    return pipe(allComponents,[
         find(c => stringEquals(c.name, name))
     ]);
-
-    if(derived) return derived;
-
-    const root = pipe(rootComponents,[
-        find(c => stringEquals(c.name, name))
-    ]);
-
-    return root;
 }
 
-export const getAncestorProps = (derivedComponents, rootComponents, name, found=[]) => {
+export const getAncestorProps = (allComponents, name, found=[]) => {
     const thisComponent = getExactComponent(
-        derivedComponents, rootComponents, name);
+        allComponents, name);
 
     if(isRootComponent(thisComponent)) 
         return [thisComponent.props, ...found];
 
     return getAncestorProps(
-        derivedComponents, 
-        rootComponents, 
+        allComponents, 
         thisComponent.inherits,
         [{_component:thisComponent.inherits, ...thisComponent.props}, 
         ...found]);
