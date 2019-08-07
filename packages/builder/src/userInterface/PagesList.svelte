@@ -27,13 +27,15 @@ const getPage = (s, name) => {
 <style>
 
 .root {
-    padding-left: 20px;
-    padding-bottom: 20px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    font-size: 16px;
     color: var(--secondary50);
 }
 
 .hierarchy-item {
     cursor: pointer;
+    padding: 5px 0px;
 }
 
 .hierarchy-item:hover {

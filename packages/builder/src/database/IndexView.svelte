@@ -37,7 +37,7 @@ const toggleAllowedRecord = record => {
 
 </script>
 
-<div class="root">
+<form class="uk-form-horizontal root">
     <Textbox bind:text={index.name} label="Name"/>
     
     <div class="allowed-records">
@@ -56,7 +56,7 @@ const toggleAllowedRecord = record => {
     <CodeArea bind:text={index.getShardName} label="Shard Name (javascript expression)"/>
 
     
-</div>
+</form>
 
 <style>
 

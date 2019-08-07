@@ -4,8 +4,20 @@
         "name": "Textbox",
         "description": "A text input, with a label",
         "props": {
-            "label": "string"
+            "label": "string",
+			"content": "component"
         },
-        "tags": ["textboxt", "input", "text"]
-    }
+        "tags": ["textbox", "input", "text"]
+    },
+	"button" : {
+		"path": "./button",
+		"name": "Button",
+		"description": "a button",
+		"props": {
+			"contentText": "string",
+			"contentComponent": "component",
+			"class": "string"
+		},
+		"tags": ["button"]
+	}
 }

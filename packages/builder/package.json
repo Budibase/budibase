@@ -25,7 +25,7 @@
       "node_modules"
     ],
     "transform": {
-      "^.+\\.js$": "babel-jest"
+      "^.+js$": "babel-jest"
     },
     "transformIgnorePatterns": [
       "/node_modules/(?!svelte).+\\.js$"
@@ -41,7 +41,7 @@
     "safe-buffer": "^5.1.2",
     "shortid": "^2.2.8",
     "string_decoder": "^1.2.0",
-    "uikit": "^3.1.5"
+    "uikit": "^3.1.7"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",

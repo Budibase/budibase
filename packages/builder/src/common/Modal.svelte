@@ -3,6 +3,7 @@ import UIkit from "uikit";
 
 export let isOpen = false;
 export let onClosed = () => {};
+export let id = "";
 
 let ukModal;
 let listenerAdded = false;
@@ -24,7 +25,7 @@ $: {
 
 </script>
 
-<div bind:this={ukModal} uk-modal >
+<div bind:this={ukModal} uk-modal {id}>
     <div class="uk-modal-dialog uk-modal-body" uk-overflow-auto>
         <slot />
     </div>

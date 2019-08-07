@@ -32,6 +32,7 @@
     --white: #FFFFFF;
     --darkslate: #5C6B82;
     --slate: #8B95A6;
+    --lightslate: rgb(203, 212, 228);
 
     --borderradius: 2px;
     --borderradiusall: 2px 2px 2px 2px;
@@ -44,11 +45,10 @@
     --bodytext: var(--fontnormal) "regular" var(--secondary100) 16pt;
     --bigbodytext: var(--fontnormal) "regular" var(--secondary100) 20pt;
     --smallbodytext: var(--fontnormal) "regular" var(--secondary100) 12pt;
-    --lightbodytext: var(--fontnormal) "regular" var(--darkslate) 16pt;
+    --lightbodytext: "regular" "normal" 16pt  var(--fontnormal);
     --heavybodytext: var(--fontbold) "regular" var(--secondary100) 16pt;
     --quotation: var(--fontnormal) "italics" var(--darkslate) 16pt;
     --smallheavybodytext: var(--fontbold) "regular" var(--secondary100) 14pt;
-
 }
 
 html, body {

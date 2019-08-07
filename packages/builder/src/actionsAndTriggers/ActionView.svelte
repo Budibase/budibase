@@ -70,10 +70,13 @@ const cancel = () => {
 
     <ErrorsBox {errors} />
 
-    <Textbox label="Name" bind:text={clonedAction.name} />
-    <Textbox label="Behaviour Source" bind:text={clonedAction.behaviourSource} />
-    <Textbox label="Behaviour" bind:text={clonedAction.behaviourName} />
+    <form class="uk-form-horizontal">
 
+        <Textbox label="Name" bind:text={clonedAction.name} />
+        <Textbox label="Behaviour Source" bind:text={clonedAction.behaviourSource} />
+        <Textbox label="Behaviour" bind:text={clonedAction.behaviourName} />
+
+    </form>
 
     <div class=" uk-form-stacked" style="margin-bottom: 20px">
         <label class="uk-form-label">Default Options</label>

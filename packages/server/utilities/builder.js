@@ -183,6 +183,9 @@ const fetchDerivedComponents = async (appPath, relativePath = "") => {
                                 .substring(0, itemRelativePath.length - 5)
                                 .replace(/\\/g, "/");
 
+            component.props = component.props || {};
+            component.props._component = component.name;
+
             components.push(component);
         } else {
             const childComponents = await fetchDerivedComponents(

@@ -5,7 +5,8 @@ import {
     keys,
     uniq,
     some,
-    keyBy
+    filter,
+    reduce
 } from "lodash/fp";
 import { types } from "./types";
 import { assign } from "lodash";
@@ -31,7 +32,8 @@ export const createPropDefinitionForDerived = (allComponents, componentName) => 
         keys,
         filter(k => !hasDerivedProp(k)),
         reduce((obj, k) => {
-            obj[k] = propDef[k]
+            obj[k] = propDef[k];
+            return obj;
         }, {})
     ])
 }

@@ -72,16 +72,19 @@ const permissionChanged = perm => ev => {
 
     <ErrorsBox {errors} />
 
-    <Textbox label="Name" bind:text={clonedLevel.name} />
+    <form class="uk-form-horizontal">
 
-    {#each permissionMatrix as permission}
-    <div>
-        <Checkbox label={getPermissionName(permission.permission)} 
-                  checked={permission.hasPermission} 
-                  on:change={permissionChanged(permission.permission)} />
-    </div>
-    {/each}
+        <Textbox label="Name" bind:text={clonedLevel.name} />
 
+        {#each permissionMatrix as permission}
+        <div>
+            <Checkbox label={getPermissionName(permission.permission)} 
+                    checked={permission.hasPermission} 
+                    on:change={permissionChanged(permission.permission)} />
+        </div>
+        {/each}
+
+    </form>
 
     <ButtonGroup style="margin-top: 10px">
         <Button color="primary" grouped on:click={save}>Save</Button>

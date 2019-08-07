@@ -17,27 +17,15 @@ $: valuesText = join("\n")(values);
 
 </script>
 
-<div class="container">
-    <div class="label">{label}</div>
-    <textarea class="control" value={valuesText} on:change={inputChanged} ></textarea>
+
+<div class="uk-margin">
+    <label class="uk-form-label">{label}</label>
+    <div class="uk-form-controls">
+        <textarea value={valuesText} on:change={inputChanged} ></textarea>
+    </div>
 </div>
 
 <style>
-
-.container {
-    display: grid;
-    grid-template-columns: [label] 100px [control] auto;
-    margin: 20px 0px;
-}
-.label {
-    grid-column-start: label;
-    align-self: center;
-}
-.control {
-    grid-column-start: control;
-    align-self: center;
-    margin: 0;
-}
 
 textarea {
     width:300px;

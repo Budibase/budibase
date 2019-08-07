@@ -13,8 +13,9 @@ import {
 import {
     getExactComponent
 } from "./pagesParsing/searchComponents";
-import Checkbox from "../common/Checkbox";
-import Textbox from "../common/Textbox";
+import Checkbox from "../common/Checkbox.svelte";
+import Textbox from "../common/Textbox.svelte";
+import Dropdown from "../common/Dropdown.svelte";
 
 export let props;
 export let allComponents;
@@ -28,19 +29,33 @@ let fields = pipe(propsDefinition,[
 
 let component = getExactComponent(allComponents, props._component);
 
+let setProp = (name) => (ev) => 
+    props[name] = ev.target.checked !== undefined 
+                  ? ev.target.checked
+                  : ev.target.value;
+
 </script>
 
 <div class="root">
 
-    <div>{props.name}</div>
+    <div class="title">{component.name}</div>
+    <div class="component-description">{component.description || ""}</div>
     {#each propsDefinition as propDef}
+    <form class="uk-form-horizontal prop-row ">
         {#if propDef.type === "bool"}
-            <Checkbox label={propDef.name} />
-        {:else if true}
-            <!-- else if content here -->
+        <Checkbox label={propDef.name} 
+                    checked={props[propDef.name]} 
+                    on:change={setProp(propDef.name)} />
+        {:else if propDef.type === "options"}
+        <Dropdown label={propDef.name}
+                    selected={props[propDef.name]} 
+                    options={propDef.options}
+                    on:change={setProp(propDef.name)}/>
         {:else}
-            <!-- else content here -->
+        <Textbox label={propDef.name}
+                    bind:text={props[propDef.name]} />
         {/if} 
+    </form>
     {/each}
     
 
@@ -51,6 +66,19 @@ let component = getExactComponent(allComponents, props._component);
 
 .root {
     padding: 10px;
+    font-size:10pt;
+}
+
+.title {
+    font: var(--smallheavybodytext);
+}
+
+.prop-row {
+    padding: 7px 3px;
+}
+
+.component-description {
+    font: var(--lightbodytext);    
 }
 
 </style>

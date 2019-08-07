@@ -5,7 +5,7 @@ export let label = "";
 </script>
 
 <div>{label}</div>
-<textarea  bind:value={text}></textarea>
+<textarea class="uk-textarea" bind:value={text}></textarea>
 
 <style>
 

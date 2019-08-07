@@ -40,17 +40,21 @@ let save = () => {
 <div>
 
     <ErrorsBox {errors} style="margin-bottom:20px"/>
+
+    <form class="uk-form-horizontal">
     
-    <Dropdown label="Event" 
-              options={["",...events]}
-              bind:selected={clonedTrigger.eventName} />
-    <Dropdown label="Action" 
-              options={["",...actionNames]}
-              bind:selected={clonedTrigger.actionName} />
-    <CodeArea label="Condition (javascript)"
-              bind:text={clonedTrigger.condition} />
-    <CodeArea label="Action Options Creator (javascript)"
-              bind:text={clonedTrigger.optionsCreator} />
+        <Dropdown label="Event" 
+                options={["",...events]}
+                bind:selected={clonedTrigger.eventName} />
+        <Dropdown label="Action" 
+                options={["",...actionNames]}
+                bind:selected={clonedTrigger.actionName} />
+        <CodeArea label="Condition (javascript)"
+                bind:text={clonedTrigger.condition} />
+        <CodeArea label="Action Options Creator (javascript)"
+                bind:text={clonedTrigger.optionsCreator} />
+
+    </form>
 
     <ButtonGroup>
         <Button grouped on:click={save}>Save</Button>

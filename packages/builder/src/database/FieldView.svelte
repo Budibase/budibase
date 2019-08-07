@@ -59,49 +59,53 @@ const save = () => {
 
     <ErrorsBox errors={errors} />
 
-    <Dropdown label="Type" bind:selected={clonedField.type} options={keys(allTypes)} on:change={typeChanged} />
+    <form class="uk-form-horizontal">
 
-    {#if isNew}
-    <Textbox label="Field Name" bind:text={clonedField.name} />
-    {:else}
-    <div style="font-weight: bold">{clonedField.name}</div>
-    {/if}
+        <Dropdown label="Type" bind:selected={clonedField.type} options={keys(allTypes)} on:change={typeChanged} />
 
-    <Textbox label="Label" bind:text={clonedField.label} />
-    
-    {#if clonedField.type === "string"}
-    <NumberBox label="Max Length" bind:value={clonedField.typeOptions.maxLength} />
-    <ValuesList label="Values (options)" bind:values={clonedField.typeOptions.values} />
-    <Checkbox label="Declared Values Only" bind:checked={clonedField.typeOptions.allowDeclaredValuesOnly} />
-    {:else if clonedField.type === "bool"}
-    <Checkbox label="Allow Null" bind:checked={clonedField.typeOptions.allowNulls} />
-    {:else if clonedField.type === "datetime"}
-    <DatePicker label="Min Value" bind:value={clonedField.typeOptions.minValue} />
-    <DatePicker label="Max Value" bind:value={clonedField.typeOptions.maxValue} />
-    {:else if clonedField.type === "number"}
-    <NumberBox label="Min Value" bind:value={clonedField.typeOptions.minValue} />
-    <NumberBox label="Max Value" bind:value={clonedField.typeOptions.maxValue} />
-    <NumberBox label="Decimal Places" bind:value={clonedField.typeOptions.decimalPlaces} />
-    {:else if clonedField.type === "reference"}
-    <Dropdown label="Lookup Index" 
-              options={possibleReferenceIndexes} 
-              valueMember={n => n.nodeKey()}
-              textMember={n => n.name}
-              bind:selected={clonedField.typeOptions.indexNodeKey} />
+        {#if isNew}
+        <Textbox label="Field Name" bind:text={clonedField.name} />
+        {:else}
+        <div style="font-weight: bold">{clonedField.name}</div>
+        {/if}
 
-    <Dropdown label="Reverse Reference Index" 
-              options={possibleReverseReferenceIndexes} 
-              multiple=true
-              valueMember={n => n.nodeKey()}
-              textMember={n => n.name}
-              bind:selected={clonedField.typeOptions.reverseIndexNodeKeys} />
+        <Textbox label="Label" bind:text={clonedField.label} />
+        
+        {#if clonedField.type === "string"}
+        <NumberBox label="Max Length" bind:value={clonedField.typeOptions.maxLength} />
+        <ValuesList label="Values (options)" bind:values={clonedField.typeOptions.values} />
+        <Checkbox label="Declared Values Only" bind:checked={clonedField.typeOptions.allowDeclaredValuesOnly} />
+        {:else if clonedField.type === "bool"}
+        <Checkbox label="Allow Null" bind:checked={clonedField.typeOptions.allowNulls} />
+        {:else if clonedField.type === "datetime"}
+        <DatePicker label="Min Value" bind:value={clonedField.typeOptions.minValue} />
+        <DatePicker label="Max Value" bind:value={clonedField.typeOptions.maxValue} />
+        {:else if clonedField.type === "number"}
+        <NumberBox label="Min Value" bind:value={clonedField.typeOptions.minValue} />
+        <NumberBox label="Max Value" bind:value={clonedField.typeOptions.maxValue} />
+        <NumberBox label="Decimal Places" bind:value={clonedField.typeOptions.decimalPlaces} />
+        {:else if clonedField.type === "reference"}
+        <Dropdown label="Lookup Index" 
+                options={possibleReferenceIndexes} 
+                valueMember={n => n.nodeKey()}
+                textMember={n => n.name}
+                bind:selected={clonedField.typeOptions.indexNodeKey} />
 
-    <Textbox label="Display Value" bind:text={clonedField.typeOptions.displayValue} />
+        <Dropdown label="Reverse Reference Index" 
+                options={possibleReverseReferenceIndexes} 
+                multiple=true
+                valueMember={n => n.nodeKey()}
+                textMember={n => n.name}
+                bind:selected={clonedField.typeOptions.reverseIndexNodeKeys} />
 
-    {:else if clonedField.type.startsWith("array")}
-    <NumberBox label="Min Length" bind:value={clonedField.typeOptions.minLength} />
-    <NumberBox label="Max Length" bind:value={clonedField.typeOptions.maxLength} />
-    {/if}
+        <Textbox label="Display Value" bind:text={clonedField.typeOptions.displayValue} />
+
+        {:else if clonedField.type.startsWith("array")}
+        <NumberBox label="Min Length" bind:value={clonedField.typeOptions.minLength} />
+        <NumberBox label="Max Length" bind:value={clonedField.typeOptions.maxLength} />
+        {/if}
+
+    </form>
 
     <ButtonGroup style="float: right;">
         <Button color="primary" grouped on:click={save}>Save</Button>

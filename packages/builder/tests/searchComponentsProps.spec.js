@@ -83,17 +83,17 @@ describe("getAncestorProps", () => {
 
     it("should return props of all ancestors and current component, in order", () => {
 
-        const components = components();
+        const allComponents = components();
 
         const result = getAncestorProps(
-            components,
+            allComponents,
             "common/PasswordBox"   
         );
 
         expect(result).toEqual([
-            root[0].props,
-            {_component: "budibase-components/TextBox", ...components[2].props},
-            {_component: "common/SmallTextbox", ...components[3].props}
+            allComponents[0].props,
+            {_component: "budibase-components/TextBox", ...allComponents[2].props},
+            {_component: "common/SmallTextbox", ...allComponents[3].props}
         ]);
 
     });

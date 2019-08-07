@@ -84,13 +84,16 @@ let getTypeOptions = typeOptions =>
 
 <div class="root">
 
-    <Textbox label="Name" bind:text={record.name} />
-    <div>{record.nodeKey()}</div>
-    {#if !record.isSingle}
-    <Textbox label="Collection Name" bind:text={record.collectionName} />
-    <Textbox label="Shard Factor" bind:text={record.allidsShardFactor} />
-    {/if}
+    <form class="uk-form-horizontal">
+    
+        <Textbox label="Name" bind:text={record.name} />
+        <div>{record.nodeKey()}</div>
+        {#if !record.isSingle}
+        <Textbox label="Collection Name" bind:text={record.collectionName} />
+        <Textbox label="Shard Factor" bind:text={record.allidsShardFactor} />
+        {/if}
 
+    </form>
     <h4>
         Fields <span class="add-field-button" on:click={newField}>{@html getIcon("plus")}</span>
     </h4>
