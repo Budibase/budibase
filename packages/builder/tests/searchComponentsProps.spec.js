@@ -3,14 +3,14 @@ import {
     getExactComponent,
     getAncestorProps
 } from "../src/userInterface/pagesParsing/searchComponents";
-
+import { allComponents } from "./testData";
 
 describe("searchAllComponents", () => {
 
     it("should match derived component by name", () => {
 
         const results = searchAllComponents(
-            components(),
+            allComponents(),
             "password"
         );
 
@@ -22,7 +22,7 @@ describe("searchAllComponents", () => {
     it("should match derived component by tag", () => {
 
         const results = searchAllComponents(
-            components(),
+            allComponents(),
             "mask"
         );
 
@@ -34,7 +34,7 @@ describe("searchAllComponents", () => {
     it("should match component if ancestor matches", () => {
 
         const results = searchAllComponents(
-            components(),
+            allComponents(),
             "smalltext"
         );
 
@@ -47,7 +47,7 @@ describe("searchAllComponents", () => {
 describe("getExactComponent", () => {
     it("should get component by name", () => {
         const result = getExactComponent(
-            components(),
+            allComponents(),
             "common/SmallTextbox"
         )
 
@@ -57,7 +57,7 @@ describe("getExactComponent", () => {
 
     it("should return nothing when no result (should not fail)", () => {
         const result = getExactComponent(
-            components(),
+            allComponents(),
             "bla/bla/bla"
         )
 
@@ -71,75 +71,33 @@ describe("getAncestorProps", () => {
     it("should return props of root component", () => {
 
         const result = getAncestorProps(
-            components(),
+            allComponents(),
             "budibase-components/TextBox"   
         );
 
         expect(result).toEqual([
-            components()[0].props
+            allComponents()[0].props
         ]);
 
     });
 
     it("should return props of all ancestors and current component, in order", () => {
 
-        const allComponents = components();
+        const components = allComponents();
 
         const result = getAncestorProps(
-            allComponents,
+            components,
             "common/PasswordBox"   
         );
 
         expect(result).toEqual([
-            allComponents[0].props,
-            {_component: "budibase-components/TextBox", ...allComponents[2].props},
-            {_component: "common/SmallTextbox", ...allComponents[3].props}
+            components[0].props,
+            {_component: "budibase-components/TextBox", ...components[2].props},
+            {_component: "common/SmallTextbox", ...components[3].props}
         ]);
 
     });
 
 })
 
-const components = () => ([
-{
-    name: "budibase-components/TextBox",
-    tags: ["Text", "input"],
-    props: {
-        size: {type:"options", options:["small", "medium", "large"]},
-        isPassword: "boolean",
-        placeholder: "string",
-        label:"string"
-    } 
-},
-{
-    name: "budibase-components/Button",
-    tags: ["input"],
-    props: {
-        size: {type:"options", options:["small", "medium", "large"]},
-        css: "string",
-        content: "component"
-    } 
-},
-{
-    inherits:"budibase-components/TextBox",
-    name: "common/SmallTextbox",
-    props: {
-        size: "small"
-    }
-},
-{
-    inherits:"common/SmallTextbox",
-    name: "common/PasswordBox",
-    tags: ["mask"],
-    props: {
-        isPassword: true
-    }
-},
-{
-    inherits:"budibase-components/Button",
-    name:"PrimaryButton",
-    props: {
-        css:"btn-primary"
-    }
-}
-])
+

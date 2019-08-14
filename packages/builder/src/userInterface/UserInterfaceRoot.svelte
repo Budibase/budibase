@@ -27,7 +27,8 @@ const newComponent = () => {
                 <span>COMPONENTS</span>
                 <div>
                     <IconButton icon="plus" 
-                                on:click={newComponent} />
+                                on:click={newComponent}
+                                attributes={{"uk-toggle" : "target: #new-component-modal" }}/>
                 </div>
             </div>
             <div class="nav-items-container">
@@ -58,14 +59,14 @@ const newComponent = () => {
     <div class="properties-pane">
         {#if $store.currentFrontEndItem && !isRootComponent($store.currentFrontEndItem)}
         <PropsView allComponents={$store.allComponents}
-                   props={$store.currentFrontEndItem.props}/>
+                   component={$store.currentFrontEndItem}/>
         {/if}
     </div>
 
 </div>
 
 
-<NewComponent {isCreatingNewComponent}/>
+<NewComponent bind:isCreatingNewComponent={isCreatingNewComponent}/>
 
 
 <style>
@@ -99,6 +100,7 @@ const newComponent = () => {
     grid-column-start: properties;
     background-color: var(--primary10);
     height: 100%;
+    padding: 10px;
 }
 
 .pages-list-container {

@@ -14,7 +14,7 @@ $: borderClass = grouped
 
 <button class="{color} {className} {borderClass} {grouped ? "grouped" : ""}" 
         style="{style}"
-        on:click>
+        on:click >
     <slot/>
 </button>
 

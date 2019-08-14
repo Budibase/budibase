@@ -6,15 +6,43 @@ export let icon = "";
 export let style = "";
 export let color = "";
 export let hoverColor = "";
+export let attributes = {};
 
 $: borderClass = grouped 
                  ? ""
                  : "border-normal";
 
+let currentAttributes = [];
+const addAttributes = (node, attributes) => {
+
+    const add = (_attributes) => {
+        const attrs = [];
+        for(let attr in _attributes) {
+            node.setAttribute(attr, _attributes[attr]);
+            attrs.push("uk-toggle")
+        }
+        currentAttributes = attrs;
+    }
+
+    add(attributes);
+
+    return {
+        // should implement update method
+        update(attributes) {
+            for(let attr of currentAttributes) {
+                node.removeAttribute(attr)
+            }
+            add(attributes);
+        },
+        destroy() {}
+    }
+}
+
 </script>
 
 <button style="{style} color:{color}"
-        on:click>
+        on:click
+        use:addAttributes={attributes}>
     {@html getIcon(icon, size)}
 </button>
 

@@ -16,7 +16,14 @@ $: filteredComponents =
 
 <div class="root">
 
-    <input class="uk-input" bind:value={phrase}>
+    <form class="uk-search uk-search-large">
+        <span uk-search-icon></span>
+        <input class="uk-search-input" 
+               type="search" 
+               placeholder="Based on component..." 
+               bind:value={phrase}>
+    </form>
+
     <div>
         {#each filteredComponents as component}
         <div class="component" on:click={() => onComponentChosen(component)}>

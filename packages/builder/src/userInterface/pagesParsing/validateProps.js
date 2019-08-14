@@ -9,7 +9,8 @@ import {
     flatten,
     flattenDeep,
     each,
-    indexOf } from "lodash/fp";
+    indexOf 
+} from "lodash/fp";
 import { common } from "../../../../core/src";
 
 const pipe = common.$;

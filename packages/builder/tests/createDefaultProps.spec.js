@@ -1,7 +1,11 @@
-import { createProps } from "../src/userInterface/pagesParsing/createProps";
+import { 
+    createProps,
+    createPropsAndDefinition 
+} from "../src/userInterface/pagesParsing/createProps";
 import {
     keys, some
 } from "lodash/fp";
+import { allComponents } from "./testData";
 
 describe("createDefaultProps", () => {
 
@@ -162,42 +166,11 @@ describe("createDefaultProps", () => {
             fieldName: "surname"
         };
 
-        const { props, errors } = createProps("some_component",propDef, [derivedFrom]);
+        const { props, errors } = createProps("some_component",propDef, derivedFrom);
 
         expect(errors.length).toBe(0);
         expect(props.fieldName).toBe("surname");
         expect(props.fieldLength).toBe(500);
-
-    });
-
-    it("should merge in derived props, last in list taking priority", () => {
-        const propDef = {
-            fieldName: "string",
-            fieldLength: { type: "number", default: 500},
-            header: "component",
-            content: { 
-                type: "component", 
-                default: { _component: "childcomponent", wdith: 500 }
-            }
-        };
-
-        const derivedFrom1 = {
-            _component:"root",
-            fieldName: "surname",
-            fieldLength: 200
-        };
-
-        const derivedFrom2 = {
-            _component:"child",
-            fieldName: "forename"
-        };
-
-        const { props, errors } = createProps("some_component",propDef, [derivedFrom1, derivedFrom2]);
-
-        expect(errors.length).toBe(0);
-        expect(props.fieldName).toBe("forename");
-        expect(props.fieldLength).toBe(200);
-        expect(props._component).toBe("child");
 
     });
 
