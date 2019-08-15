@@ -9,7 +9,8 @@ import {
     flatten,
     flattenDeep,
     each,
-    indexOf 
+    indexOf,
+    isUndefined
 } from "lodash/fp";
 import { common } from "../../../../core/src";
 
@@ -103,7 +104,7 @@ export const validateProps = (propsDefinition, props, stack=[], isFinal=true) =>
 
     const errors = [];
 
-    if(!props._component) {
+    if(isFinal && !props._component) {
         makeError(errors, "_component", stack)("Component is not set");
         return errors;
         // this would break everything else anyway
@@ -120,6 +121,10 @@ export const validateProps = (propsDefinition, props, stack=[], isFinal=true) =>
         const error = makeError(errors, propDefName, stack);            
 
         const propValue = props[propDefName];
+
+        // component declarations dont need to define al props.
+        if(!isFinal && isUndefined(propValue)) continue;
+
         if(isFinal && propDef.required && propValue) {
             error(`Property ${propDefName} is required`);
             continue;

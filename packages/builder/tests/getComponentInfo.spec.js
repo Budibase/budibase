@@ -18,7 +18,6 @@ describe("getComponentInfo", () => {
 
         expect(result.errors).toEqual([]);
         expect(result.fullProps).toEqual({
-            _component: "budibase-components/TextBox",
             size: "",
             isPassword: false,
             placeholder: "",
@@ -43,7 +42,6 @@ describe("getComponentInfo", () => {
             {size:"small"});
 
         expect(result).toEqual({
-            _component: "budibase-components/TextBox",
             size: "small",
             isPassword: false,
             placeholder: "",
@@ -59,7 +57,6 @@ describe("getComponentInfo", () => {
 
         expect(result.errors).toEqual([]);
         expect(result.fullProps).toEqual({
-            _component: "common/SmallTextbox",
             size: "small",
             isPassword: false,
             placeholder: "",
@@ -74,7 +71,6 @@ describe("getComponentInfo", () => {
 
         expect(result.errors).toEqual([]);
         expect(result.fullProps).toEqual({
-            _component: "common/PasswordBox",
             size: "small",
             isPassword: true,
             placeholder: "",

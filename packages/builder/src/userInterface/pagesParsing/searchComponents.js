@@ -54,7 +54,7 @@ export const getAncestorProps = (allComponents, name, found=[]) => {
     return getAncestorProps(
         allComponents, 
         thisComponent.inherits,
-        [{_component:thisComponent.inherits, ...thisComponent.props}, 
+        [{...thisComponent.props}, 
         ...found]);
 
 }

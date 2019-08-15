@@ -9,7 +9,8 @@ import {
     isEqual,
     trimCharsStart,
     trimChars,
-    join
+    join,
+    includes
 } from "lodash/fp";
 
 import { pipe } from "../common/core";
@@ -18,6 +19,12 @@ import { store } from "../builderStore";
 
 export let components = []
 export let thisLevel = "";
+
+let pathPartsThisLevel;
+let componentsThisLevel;
+let subfolders;
+
+let expandedFolders = [];
 
 const joinPath = join("/");
 
@@ -53,29 +60,10 @@ const subFolder = (c) => {
 
     return ({
         name: folderName,
-        isExpanded: false,
+        isExpanded: includes(folderName)(expandedFolders),
         path: thisLevel + "/" + folderName
     });
 }
-
-let pathPartsThisLevel = !thisLevel 
-                        ? 1
-                        : normalizedName(thisLevel).split("/").length + 1;
-
-let componentsThisLevel = 
-    pipe(components, [
-        filter(isOnThisLevel),
-        map(c => ({component:c, title:lastPartOfName(c)})),
-        sortBy("title")
-    ]);
-
-let subfolders = 
-    pipe(components, [
-        filter(notOnThisLevel),
-        sortBy("name"),
-        map(subFolder),
-        uniqWith((f1,f2) => f1.path === f2.path)
-    ]);
 
 const subComponents = (subfolder) => pipe(components, [
         filter(c => isInSubfolder(subfolder, c))
@@ -83,13 +71,20 @@ const subComponents = (subfolder) => pipe(components, [
 
 const expandFolder = folder => {
     const expandedFolder = {...folder};
-    expandedFolder.isExpanded = !expandedFolder.isExpanded;
+    if(expandedFolder.isExpanded) {
+        expandedFolder.isExpanded = false;
+        expandedFolders = filter(f => f.name !== folder.name)(expandedFolders);
+    } else {
+        expandedFolder.isExpanded = true;
+        expandedFolders.push(folder.name);
+    }
     const newFolders = [...subfolders];
     newFolders.splice(
         newFolders.indexOf(folder),
         1,
         expandedFolder);
     subfolders = newFolders;
+     
 }
 
 const isComponentSelected = (current,c) =>
@@ -98,6 +93,29 @@ const isComponentSelected = (current,c) =>
 
 const isFolderSelected = (current, folder) => 
     isInSubfolder(current, folder)
+
+
+
+$: {
+    pathPartsThisLevel = !thisLevel 
+                            ? 1
+                            : normalizedName(thisLevel).split("/").length + 1;
+
+    componentsThisLevel = 
+        pipe(components, [
+            filter(isOnThisLevel),
+            map(c => ({component:c, title:lastPartOfName(c)})),
+            sortBy("title")
+        ]);
+
+    subfolders = 
+        pipe(components, [
+            filter(notOnThisLevel),
+            sortBy("name"),
+            map(subFolder),
+            uniqWith((f1,f2) => f1.path === f2.path)
+        ]);
+}
 
 </script>
 

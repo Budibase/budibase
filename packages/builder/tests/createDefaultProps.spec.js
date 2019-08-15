@@ -162,7 +162,6 @@ describe("createDefaultProps", () => {
         };
 
         const derivedFrom = {
-            _component:"root",
             fieldName: "surname"
         };
 

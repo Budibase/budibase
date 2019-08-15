@@ -48,7 +48,6 @@ const createComponent = () => {
 
     if(!validate()) return;
 
-    component.props._component = name;
     component.name = name;
     component.description = description;
     component.tags = pipe(tagsString, [
@@ -71,7 +70,7 @@ const onPropsValidate = result => {
 }
 
 const onPropsChanged = props => {
-    assign(component.props, [props]);
+    assign(component.props, props);
 }
 
 const validate = () => {

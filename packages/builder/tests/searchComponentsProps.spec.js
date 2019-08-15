@@ -92,8 +92,8 @@ describe("getAncestorProps", () => {
 
         expect(result).toEqual([
             components[0].props,
-            {_component: "budibase-components/TextBox", ...components[2].props},
-            {_component: "common/SmallTextbox", ...components[3].props}
+            {...components[2].props},
+            {...components[3].props}
         ]);
 
     });

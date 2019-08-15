@@ -59,7 +59,7 @@ let setProp = (name) => (ev, targetValue="value") => {
     newProps[name] = ev.target[targetValue];
     
 
-    const finalProps = {_component:props._component};
+    const finalProps = {};
 
     for(let p of componentInfo.unsetProps) {
         if(!isEqual(newProps[p])(componentInfo.rootDefaultProps[p])) {

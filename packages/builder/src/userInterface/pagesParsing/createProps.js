@@ -55,7 +55,7 @@ export const getNewComponentInfo = (allComponents, inherits) => {
         name:"", 
         description:"", 
         inherits, 
-        props:{_component:inherits}, 
+        props:{}, 
         tags:parentcomponent.tags
     };
     return getComponentInfo(
@@ -74,9 +74,7 @@ export const getComponentInfo = (allComponents, cname, stack=[], subComponentPro
         const inheritedProps = [];
         if(stack.length > 0) {
             const targetComponent = stack[0];
-            p.props._component = targetComponent.name;
             for(let prop in subComponentProps) {
-                if(prop === "_component") continue;
                 const hasProp = pipe(targetComponent.props, [
                                         keys,
                                         includes(prop)]);
@@ -87,7 +85,7 @@ export const getComponentInfo = (allComponents, cname, stack=[], subComponentPro
         }
         const unsetProps = pipe(p.props, [
             keys,
-            filter(k => k !== "_component" && !includes(k)(keys(subComponentProps)))
+            filter(k => !includes(k)(keys(subComponentProps)))
         ]);
 
         return ({
