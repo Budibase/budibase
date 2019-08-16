@@ -26,6 +26,10 @@ import {writable} from "svelte/store";
 import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
 import api from "./api";
 import { isRootComponent } from "../userInterface/pagesParsing/searchComponents";
+import { 
+    getComponentInfo, 
+    getNewComponentInfo 
+} from "../userInterface/pagesParsing/createProps";
 
 export const getStore = () => {
 
@@ -40,6 +44,8 @@ export const getStore = () => {
         unauthenticatedUi:{},
         allComponents:[],
         currentFrontEndItem:null,
+        currentComponentInfo:null,
+        currentComponentIsNew:false,
         currentNodeIsNew: false,
         errors: [],
         activeNav: "database",
@@ -75,6 +81,7 @@ export const getStore = () => {
     store.deleteDerivedComponent = deleteDerivedComponent(store);
     store.setCurrentComponent = setCurrentComponent(store);
     store.setCurrentPage = setCurrentPage(store);
+    store.createDerivedComponent = createDerivedComponent(store);
     return store;
 } 
 
@@ -384,6 +391,18 @@ const saveDerivedComponent = store => (derivedComponent) => {
     })
 };
 
+const createDerivedComponent = store => (componentName) => {
+    store.update(s => {
+        const newComponentInfo = getNewComponentInfo(
+            s.allComponents, componentName);
+
+        s.currentFrontEndItem = newComponentInfo.component;
+        s.currentComponentInfo = newComponentInfo;
+        s.currentComponentIsNew = true;
+        return s;
+    });
+}
+
 const deleteDerivedComponent = store => name => {
     store.update(s => {
 
@@ -392,6 +411,9 @@ const deleteDerivedComponent = store => name => {
         ]);
 
         s.allComponents = allComponents;
+        if(s.currentFrontEndItem.name === name) {
+            s.currentFrontEndItem = null;
+        }
 
         api.delete(`/_builder/api/${s.appname}/derivedcomponent/${name}`);
 
@@ -502,6 +524,8 @@ const setCurrentComponent = store => component => {
     store.update(s => {
         s.currentFrontEndItem = component;
         s.currentFrontEndIsComponent = true;
+        s.currentComponentIsNew = false;
+        s.currentComponentInfo = getComponentInfo(s.allComponents, component.name);
         return s;
     })
 }

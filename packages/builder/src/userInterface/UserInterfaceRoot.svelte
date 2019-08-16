@@ -2,7 +2,7 @@
 
 import ComponentsHierarchy from "./ComponentsHierarchy.svelte";
 import PagesList from "./PagesList.svelte"
-import PropsView from "./PropsView.svelte";
+import EditComponent from "./EditComponent.svelte";
 import { store } from "../builderStore";
 import getIcon from "../common/icon";
 import { isRootComponent } from "./pagesParsing/searchComponents";
@@ -10,9 +10,9 @@ import IconButton from "../common/IconButton.svelte";
 import Modal from "../common/Modal.svelte";
 import NewComponent from "./NewComponent.svelte";
 
-let isCreatingNewComponent = false;
+let newComponentPicker;  
 const newComponent = () => {
-    isCreatingNewComponent = true;
+    newComponentPicker.show();
 }
 
 </script>
@@ -27,8 +27,7 @@ const newComponent = () => {
                 <span>COMPONENTS</span>
                 <div>
                     <IconButton icon="plus" 
-                                on:click={newComponent}
-                                attributes={{"uk-toggle" : "target: #new-component-modal" }}/>
+                                on:click={newComponent}/>
                 </div>
             </div>
             <div class="nav-items-container">
@@ -58,15 +57,14 @@ const newComponent = () => {
 
     <div class="properties-pane">
         {#if $store.currentFrontEndItem && !isRootComponent($store.currentFrontEndItem)}
-        <PropsView allComponents={$store.allComponents}
-                   component={$store.currentFrontEndItem}/>
+        <EditComponent />
         {/if}
     </div>
 
 </div>
 
 
-<NewComponent bind:isCreatingNewComponent={isCreatingNewComponent}/>
+<NewComponent bind:this={newComponentPicker}/>
 
 
 <style>
@@ -100,7 +98,6 @@ const newComponent = () => {
     grid-column-start: properties;
     background-color: var(--primary10);
     height: 100%;
-    padding: 10px;
 }
 
 .pages-list-container {

@@ -40,7 +40,7 @@ const addAttributes = (node, attributes) => {
 
 </script>
 
-<button style="{style} color:{color}"
+<button style="{style} color:{color} --hovercolor:{hoverColor}"
         on:click
         use:addAttributes={attributes}>
     {@html getIcon(icon, size)}
@@ -53,6 +53,15 @@ button {
     border-style: none;
     background-color: rgba(0,0,0,0);
     cursor: pointer;
+    outline:none;
+}
+
+button:hover {
+    color: var(--hovercolor);
+}
+
+button:active {
+    outline:none;
 }
 
 </style>

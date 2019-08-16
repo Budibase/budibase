@@ -39,7 +39,7 @@ export const createPropDefinitionForDerived = (allComponents, componentName) => 
 
 export const traverseForProps = getComponentInfo;
 
-export const getFinalProps = (componentInfo, props) => {
+export const getInstanceProps = (componentInfo, props) => {
     const finalProps = cloneDeep(componentInfo.fullProps);
 
     for(let p in props) {
@@ -89,7 +89,7 @@ export const getComponentInfo = (allComponents, cname, stack=[], subComponentPro
         ]);
 
         return ({
-            propsDefinition:component.props, 
+            propsDefinition:expandPropsDefinition(component.props), 
             inheritedProps,
             rootDefaultProps: p.props,
             unsetProps,

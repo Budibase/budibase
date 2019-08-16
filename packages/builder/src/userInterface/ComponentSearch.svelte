@@ -1,11 +1,16 @@
 <script>
 
 import { searchAllComponents } from "./pagesParsing/searchComponents";
+import { store } from "../builderStore";
 
-export let allComponents = [];
 export let onComponentChosen = () => {};
 
+let allComponents = [];
 let phrase = "";
+
+store.subscribe(s => {
+    allComponents = s.allComponents;
+});
 
 $: filteredComponents = 
     !phrase 

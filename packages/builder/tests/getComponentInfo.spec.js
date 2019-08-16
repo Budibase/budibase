@@ -1,5 +1,5 @@
 import { 
-    getFinalProps,
+    getInstanceProps,
     getComponentInfo 
 } from "../src/userInterface/pagesParsing/createProps";
 import {
@@ -34,8 +34,8 @@ describe("getComponentInfo", () => {
         
     });
 
-    it("getFinalProps should set supplied props on top of default props", () => {
-        const result = getFinalProps(
+    it("getInstanceProps should set supplied props on top of default props", () => {
+        const result = getInstanceProps(
             getComponentInfo(
                 allComponents(), 
                 "budibase-components/TextBox"),
