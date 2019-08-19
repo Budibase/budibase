@@ -8,7 +8,8 @@ import {
     cloneDeep,
     isEqual,
     sortBy,
-    filter
+    filter,
+    difference
 } from "lodash/fp";
 import { pipe } from "../common/core";
 import { 
@@ -29,12 +30,14 @@ export let onValidate = () => {};
 export let componentInfo;
 export let instanceProps = null;
 export let onPropsChanged = () => {};
+export let onEditComponentProp = () => {};
 
 let errors = [];
 let props = {};
 let propsDefinitions = [];
 let inheritedPropsDefinitions = [];
 let inheritedExpanded = false;
+let isInstance = false;
 
 const isPropInherited = name => 
     includes(name)(componentInfo.inheritedProps);
@@ -42,7 +45,8 @@ const isPropInherited = name =>
 $: {
     if(componentInfo)
     {
-        props = instanceProps 
+        isInstance = !!instanceProps;
+        props = isInstance 
                 ? getInstanceProps(componentInfo, instanceProps)
                 : cloneDeep(componentInfo.fullProps);
 
@@ -65,16 +69,22 @@ $: {
 
 let setProp = (name, value) => {
     const newProps = cloneDeep(props);
-    newProps[name] = value;
 
-    const finalProps = {};
+    let finalProps = isInstance ? newProps : cloneDeep(componentInfo.component.props);
 
-    for(let p of componentInfo.unsetProps) {
-        if(!isEqual(newProps[p])(componentInfo.rootDefaultProps[p])) {
-            finalProps[p] = newProps[p];
+    if(!isInstance) {
+        const nowSet = [];
+        for(let p of componentInfo.unsetProps) {
+            if(!isEqual(newProps[p])(componentInfo.rootDefaultProps[p])) {
+                finalProps[p] = newProps[p];
+                nowSet.push(p);
+            }
         }
+        componentInfo.unsetProps = difference(nowSet)(componentInfo.unsetProps);
     }
 
+    newProps[name] = value;
+    finalProps[name] = value;
     props = newProps;
     if(validate(finalProps))
         onPropsChanged(finalProps);
@@ -90,25 +100,30 @@ const validate = (finalProps) => {
 const fieldHasError = (propName) => 
     some(e => e.propName === propName)(errors);
 
+const onEditComponent = (propName) => () => {
+    onEditComponentProp(propName);
+}
 
 </script>
 
 <div class="root">
 
     <form class="uk-form-stacked">
-        {#each propsDefinitions as propDef}
+        {#each propsDefinitions as propDef, index}
         
         <PropControl {errors}
                         {setProp}
                         {fieldHasError}
                         {propDef}
                         {props}
+                        {index}
+                        onEditComponent={onEditComponent(propDef.____name)}
                         disabled={false} />
             
         {/each}
 
         {#if inheritedPropsDefinitions.length > 0}
-        <div class="inherited-title">
+        <div class="inherited-title padding">
             <div>Inherited</div>
             <div>
                 <IconButton icon={inheritedExpanded ? "chevron-down" : "chevron-right"}
@@ -118,13 +133,14 @@ const fieldHasError = (propName) =>
         {/if}
 
         {#if inheritedExpanded}
-            {#each inheritedPropsDefinitions as propDef}
+            {#each inheritedPropsDefinitions as propDef, index}
             
             <PropControl {errors}
                             {setProp}
                             {fieldHasError}
                             {propDef}
                             {props}
+                            {index}
                             disabled={true} />
                 
             {/each}
@@ -141,6 +157,10 @@ const fieldHasError = (propName) =>
 
 .root {
     font-size:10pt;
+}
+
+.padding {
+    padding: 0 10px;
 }
 
 .inherited-title {

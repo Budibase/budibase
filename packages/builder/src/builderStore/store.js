@@ -384,7 +384,11 @@ const saveDerivedComponent = store => (derivedComponent) => {
         ]);
 
         s.allComponents = components;
-
+        s.currentFrontEndItem = derivedComponent;
+        s.currentComponentInfo = getNewComponentInfo(
+            s.allComponents, componentName);
+        s.currentComponentIsNew = false;
+        
         api.post(`/_builder/api/${s.appname}/derivedcomponent`, derivedComponent);
 
         return s;

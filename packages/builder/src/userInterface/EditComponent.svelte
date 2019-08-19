@@ -12,6 +12,7 @@ import {
 } from "./pagesParsing/createProps";
 import Button from "../common/Button.svelte";
 import ButtonGroup from "../common/ButtonGroup.svelte";
+import ComponentInstanceEditor from "./ComponentInstanceEditor.svelte";
 
 import { 
     cloneDeep, 
@@ -33,6 +34,10 @@ let componentDetailsExpanded = false;
 let componentInfo;
 let modalElement
 let propsValidationErrors = [];
+let editingComponentInstance;
+let editingComponentInstancePropName="";
+let allComponents;
+
 $: shortName = last(name.split("/"));
 
 store.subscribe(s => {
@@ -43,6 +48,7 @@ store.subscribe(s => {
     tagsString = join(", ")(component.tags);
     componentInfo = s.currentComponentInfo;
     componentDetailsExpanded = s.currentComponentIsNew;
+    allComponents = s.allComponents;
 });
 
 const save = () => {
@@ -72,8 +78,17 @@ const onPropsValidate = result => {
     propsValidationErrors = result;
 }
 
-const onPropsChanged = props => {
-    assign(component.props, props);
+const updateComponent = doChange => {
+    const newComponent = cloneDeep(component);
+    doChange(newComponent);
+    component = newComponent;
+    componentInfo = getComponentInfo(allComponents, newComponent);
+}
+
+const onPropsChanged = newProps => {
+    updateComponent(newComponent => 
+        assign(newComponent.props, newProps));
+    
 }
 
 const validate = () => {
@@ -96,6 +111,21 @@ const showDialog = () => {
     UIkit.modal(modalElement).show();
 }
 
+const onEditComponentProp = (propName) => {
+    editingComponentInstance = component.props[propName];
+    editingComponentInstancePropName = propName;
+}
+
+const componentInstanceCancelEdit = () => {
+    editingComponentInstance = null;
+    editingComponentInstancePropName = "";
+}
+
+const componentInstancePropsChanged = (instanceProps) => {
+    updateComponent(newComponent => 
+        newComponent.props[editingComponentInstancePropName] = instanceProps);
+}
+
 </script>
 
 <div class="root">
@@ -114,15 +144,21 @@ const showDialog = () => {
         </div>
     </div>
 
-    <div class="body">
+    {#if editingComponentInstance}
+    <ComponentInstanceEditor onGoBack={componentInstanceCancelEdit}
+                             propertyName={editingComponentInstancePropName}
+                             instanceProps={editingComponentInstance}
+                             onPropsChanged={componentInstancePropsChanged}/>
+    {:else}
+    <div>
 
-        <div class="section-header" on:click={() => componentDetailsExpanded = !componentDetailsExpanded}>
+        <div class="section-header padding" on:click={() => componentDetailsExpanded = !componentDetailsExpanded}>
             <span style="margin-right: 7px">Component Details</span>
             <IconButton icon={componentDetailsExpanded ? "chevron-down" : "chevron-right"}/>
         </div>
 
         {#if componentDetailsExpanded}
-        <div>
+        <div class="padding">
             <Textbox label="Name" 
                     infoText="use forward slash to store in subfolders"
                     bind:text={name}
@@ -137,15 +173,19 @@ const showDialog = () => {
         </div>
         {/if}
 
-        <p class="section-header"><span>Properties</span></p>
+        <div class="section-header padding">
+            <span>Properties</span>
+        </div>
 
        
         <PropsView onValidate={onPropsValidate}
                 {componentInfo}
-                {onPropsChanged}/>
+                {onPropsChanged}
+                {onEditComponentProp}/>
         
 
     </div>
+    {/if}
 
 </div>
 
@@ -188,8 +228,8 @@ const showDialog = () => {
     border-width: 0px 0px 0px 1px;
 }
 
-.body {
-    padding: 10px;
+.padding {
+    padding: 0px 5px 0px 10px;
 }
 
 .title {
@@ -218,6 +258,7 @@ const showDialog = () => {
 
 .section-header {
     vertical-align: middle;
+    margin-top: 20px;
 }
 
 </style>

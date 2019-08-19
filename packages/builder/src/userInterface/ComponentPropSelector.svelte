@@ -16,6 +16,8 @@ const emptyProps = () => ({_component:""})
 
 export let props = emptyProps();
 export let onValueChanged = () => {};
+export let onComponentChosen = () => {};
+export let onEdit = () => {};
 export let label = ""
 export let disabled = false;
 
@@ -43,10 +45,11 @@ const clearComponent = () => {
     showDialog();
 }
 
-const onComponentChosen = (component) => {
+const componentChosen = (component) => {
     const componentInfo = getComponentInfo(allComponents, component.name);
     props = componentInfo.fullProps;
     onValueChanged(props);
+    onComponentChosen();
     hideDialog();
 }
 
@@ -74,7 +77,8 @@ const confirmClearComponent = () => {
     </div>
     <div>
         {#if !disabled && componentSelected}
-        <IconButton icon="edit" />
+        <IconButton icon="edit" 
+                    on:click={onEdit}/>
 
         <IconButton icon="trash" 
                     on:click={clearComponent} />
@@ -91,7 +95,7 @@ const confirmClearComponent = () => {
 
         {#if modalAction === CHOOSE_COMPONENT}
         <div class="uk-modal-body">
-            <ComponentSearch {onComponentChosen} />
+            <ComponentSearch onComponentChosen={componentChosen} />
         </div>
         {:else if modalAction === CLEAR_COMPONENT}
         <div class="uk-modal-body">

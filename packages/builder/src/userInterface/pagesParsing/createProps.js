@@ -66,8 +66,11 @@ export const getNewComponentInfo = (allComponents, inherits) => {
 }
 
 
-export const getComponentInfo = (allComponents, cname, stack=[], subComponentProps=null) => {
-    const component = find(c => c.name === cname)(allComponents);
+export const getComponentInfo = (allComponents, comp, stack=[], subComponentProps=null) => {
+    const component = isString(comp) 
+                      ? find(c => c.name === comp)(allComponents)
+                      : comp;
+    const cname = isString(comp) ? comp : comp.name;
     if(isRootComponent(component)) {
         subComponentProps = subComponentProps||{};
         const p = createProps(cname, component.props, subComponentProps);

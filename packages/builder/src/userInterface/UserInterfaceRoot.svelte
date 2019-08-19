@@ -71,7 +71,7 @@ const newComponent = () => {
 
 .root {
     display: grid;
-    grid-template-columns: [uiNav] 250px [preview] auto [properties] 250px;
+    grid-template-columns: [uiNav] 250px [preview] auto [properties] 300px;
     height: 100%;
     width: 100%;
 }

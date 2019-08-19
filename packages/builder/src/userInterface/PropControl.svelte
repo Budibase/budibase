@@ -11,11 +11,19 @@ export let fieldHasError =() => {};
 export let propDef = {};
 export let props = {};
 export let disabled;
+export let index;
+export let onEditComponent = () => {};
+
+$: isOdd = (index % 2 !== 0);
+
+const setComponentProp = (props) => {
+    setProp(propDef.____name, props);
+}
 
 </script>
 
 
-<div class="root">
+<div class="root" >
 
 
     {#if propDef.type === "bool"}
@@ -33,7 +41,9 @@ export let disabled;
     <ComponentPropSelector label={propDef.____name}
                             props={props[propDef.____name]}
                             {disabled}
-                            onValueChanged={props => setProp(propDef.____name, props)}/>
+                            onEdit={onEditComponent}
+                            onComponentChosen={onEditComponent}
+                            onValueChanged={setComponentProp}/>
     {:else}
     <Textbox label={propDef.____name}
                 text={props[propDef.____name]}
@@ -48,7 +58,10 @@ export let disabled;
 <style>
 
 .root {
-    margin-top: 7px;
+    padding: 3px 5px 7px 10px;
+    border-style: dotted;
+    border-width: 0 0 1px 0;
+    border-color: var(--primary25);
 }
 
 </style>
