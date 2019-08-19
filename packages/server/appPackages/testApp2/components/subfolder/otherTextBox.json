@@ -1,9 +1,0 @@
-{
-    "inherits": "./moreCustomComponents/textbox",
-    "name":"subfolder/otherTextBox.json",
-    "tags": [],
-    "description": "A text input, with a label",
-    "props" : {
-        "label": "hello"
-    }
-}

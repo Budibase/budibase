@@ -30,6 +30,7 @@ import {
     getComponentInfo, 
     getNewComponentInfo 
 } from "../userInterface/pagesParsing/createProps";
+import { loadLibs } from "./loadComponentLibraries";
 
 export const getStore = () => {
 
@@ -52,6 +53,7 @@ export const getStore = () => {
         hasAppPackage: false,
         accessLevels: [],
         currentNode: null,
+        libraries:null,
     };
 
     const store = writable(initial);
@@ -82,6 +84,9 @@ export const getStore = () => {
     store.setCurrentComponent = setCurrentComponent(store);
     store.setCurrentPage = setCurrentPage(store);
     store.createDerivedComponent = createDerivedComponent(store);
+    store.removeComponentLibrary =removeComponentLibrary(store);
+    store.addStylesheet = addStylesheet(store);
+    store.removeStylesheet = removeStylesheet(store);
     return store;
 } 
 
@@ -102,7 +107,9 @@ const initialise = (store, initial) => async () => {
 
     const pkg = await api.get(`/_builder/api/${appname}/appPackage`);
 
+    initial.libraries = await loadLibs(appname, pkg);
     initial.appname = appname;
+    initial.pages = pkg.pages;
     initial.hasAppPackage = true;
     initial.hierarchy = pkg.appDefinition.hierarchy;
     initial.accessLevels = pkg.accessLevels;
@@ -386,7 +393,7 @@ const saveDerivedComponent = store => (derivedComponent) => {
         s.allComponents = components;
         s.currentFrontEndItem = derivedComponent;
         s.currentComponentInfo = getNewComponentInfo(
-            s.allComponents, componentName);
+            s.allComponents, derivedComponent.name);
         s.currentComponentIsNew = false;
         
         api.post(`/_builder/api/${s.appname}/derivedcomponent`, derivedComponent);
@@ -452,7 +459,7 @@ const renameDerivedComponent = store => (oldname, newname) => {
 const addComponentLibrary = store => async lib => {
 
     const response = 
-        await api.get(`/_builder/api/${db.appname}/components?${encodeURI(lib)}`,undefined, true);
+        await api.get(`/_builder/api/${db.appname}/components?${encodeURI(lib)}`,undefined, false);
 
     const success = response.status === 200;
 
@@ -476,6 +483,7 @@ const addComponentLibrary = store => async lib => {
             ]);
 
             s.pages.componentLibraries.push(lib);
+            savePackage(store, s);
         }
 
         return s;
@@ -484,7 +492,42 @@ const addComponentLibrary = store => async lib => {
 
 }
 
+const removeComponentLibrary = store => lib => {
+    store.update(s => {
+        
+        
+        s.pages.componentLibraries = filter(l => l !== lib)(
+                                        s.pages.componentLibraries);
+        savePackage(store, s);
+        
 
+        return s;
+    })
+}
+
+const addStylesheet = store => stylesheet => {
+    store.update(s => {
+        s.pages.stylesheets.push(stylesheet);
+
+        const styles = document.createElement('link');
+        styles.rel = 'stylesheet';
+        styles.type = 'text/css';
+        styles.media = 'screen';
+        styles.href = stylesheet;
+        document.getElementsByTagName('head')[0].appendChild(styles);
+
+        savePackage(store, s);
+        return s;
+    })
+}
+
+const removeStylesheet = store => stylesheet => {
+    store.update(s => {
+        s.pages.stylesheets = filter(s => s !== stylesheet)(s.pages.stylesheets);
+        savePackage(store, s);
+        return s;
+    });
+}
 
 const refreshComponents = store => async () => {
 

@@ -11,7 +11,8 @@ const {
     getApps,
     saveDerivedComponent,
     renameDerivedComponent,
-    deleteDerivedComponent
+    deleteDerivedComponent,
+    getComponentLibraryPath
 } = require("../utilities/builder");
 
 const builderPath = resolve(__dirname, "../builder");
@@ -159,6 +160,13 @@ module.exports = (config, app) => {
                 throw e;
             }
         }
+    })
+    .get("/_builder/api/:appname/componentlibrary", async (ctx) => {
+        const {appPath, libPath} = await getComponentLibraryPath(
+            config,
+            ctx.params.appname,
+            ctx.query.lib);
+        await send(ctx, libPath, { root: appPath });
     })
     .post("/_builder/api/:appname/derivedcomponent", async (ctx) => {
         await saveDerivedComponent(

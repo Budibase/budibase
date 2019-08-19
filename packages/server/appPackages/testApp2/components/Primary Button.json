@@ -1,0 +1,13 @@
+{
+  "name": "Primary Button",
+  "description": "",
+  "inherits": "./standard-components/button",
+  "props": {
+    "className": "btn btn-secondary",
+    "_component": "Primary Button",
+    "disabled": false
+  },
+  "tags": [
+    "button"
+  ]
+}

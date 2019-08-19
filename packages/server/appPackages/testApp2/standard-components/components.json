@@ -1,0 +1,17 @@
+{
+	"_lib": {
+		"path":"./dist/index.js"
+	},
+	"button" : {
+		"importPath": "button",
+		"name": "Button",
+		"description": "an html <button />",
+		"props": {
+			"contentText": { "type": "string", "default": "Button" },
+			"contentComponent": "component",
+			"className": "string",
+			"disabled": "bool"
+		},
+		"tags": ["button"]
+	}
+}

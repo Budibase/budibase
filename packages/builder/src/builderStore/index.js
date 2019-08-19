@@ -1,6 +1,5 @@
 import {createPackage} from "./createPackage";
 import getStore from "./store";
-import { last } from "lodash/fp";
 
 export const store = getStore();
 

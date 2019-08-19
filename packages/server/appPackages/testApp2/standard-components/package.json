@@ -1,0 +1,23 @@
+{
+  "name": "budibase-standard-components",
+  "svelte": "src/index.svelte",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "rollup": "^1.11.0",
+    "rollup-plugin-node-resolve": "^4.0.0",
+    "rollup-plugin-svelte": "^5.0.0",
+    "svelte": "^3.0.0"
+  },
+  "keywords": [
+    "svelte"
+  ],
+  "files": [
+    "dist"
+  ],
+  "version": "1.0.0",
+  "license": "MIT"
+}

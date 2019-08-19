@@ -23,7 +23,8 @@ const {
     keys,
     reduce,
     some,
-    keyBy
+    keyBy,
+    filter
 } = require("lodash/fp");
 const {merge} = require("lodash");
 
@@ -51,15 +52,18 @@ module.exports.savePackage = async (config, appname, pkg) => {
     const appPath = appPackageFolder(config, appname);
     await writeJSON(
         `${appPath}/appDefinition.json`, 
-        pkg.appDefinition);
+        pkg.appDefinition,
+        {spaces:2});
 
     await writeJSON(
         `${appPath}/access_levels.json`,
-        pkg.accessLevels);
+        pkg.accessLevels,
+        {spaces:2});
 
     await writeJSON(
         `${appPath}/pages.json`,
-        pkg.pages);
+        pkg.pages,
+        {spaces:2});
 }
 
 module.exports.getApps = async (config) => 
@@ -75,7 +79,7 @@ module.exports.saveDerivedComponent = async (config, appname, component) => {
     await writeJSON(
         componentPath(appPath, component.name), 
         component,
-        {encoding:"utf8", flag:"w"});
+        {encoding:"utf8", flag:"w", spaces:2});
 }
 
 module.exports.renameDerivedComponent = async (config, appname, oldName, newName) => {
@@ -104,32 +108,46 @@ module.exports.deleteDerivedComponent = async (config, appname, name) => {
     }
 }
 
+module.exports.getComponentLibraryPath = async (config, appname, libname) => {
+    const appPath = appPackageFolder(config, appname);
+    const components = await getComponentsFile(appPath, libname);
+    return ({
+        appPath, 
+        libPath:join(libname, components._lib.path)
+    });
+}
+
+const getComponentsFile = async (appPath, libname) => {
+    const isRelative = some(c => c === libname.substring(0,1))
+                               ("./~\\".split(""));
+        
+    const componentsPath = isRelative
+                        ? resolve(appPath, libname, "components.json")
+                        : resolve(libname, "components.json");
+    
+    if(!await exists(componentsPath)) {
+        const e = new Error(`could not find components definition file at ${componentsPath}`);
+        e.statusCode = 404;
+        throw e;
+    }
+
+    try {
+        return await readJSON(componentsPath);
+    } catch(e) {
+        const err = `could not parse JSON - ${componentsPath} : ${e.message}`;
+        throw new Error(err);
+    }
+}
+
 const getRootComponents = async (appPath, pages ,lib) => {
 
     const componentsInLibrary = async (libname) => {
-        const isRelative = some(c => c === libname.substring(0,1))
-                               ("./~\\".split(""));
         
-        const componentsPath = isRelative
-                           ? resolve(appPath, libname, "components.json")
-                           : resolve(libname, "components.json");
-        
-        if(!await exists(componentsPath)) {
-            const e = new Error(`could not find components definition file at ${componentsPath}`);
-            e.statusCode = 404;
-            throw e;
-        }
-
-        let components;
-        try {
-            components = await readJSON(componentsPath);
-        } catch(e) {
-            const err = `could not parse JSON - ${componentsPath} : ${e.message}`;
-            throw new Error(err);
-        }
+        const components = await getComponentsFile(appPath, libname);
 
         return $(components, [
             keys,
+            filter(k => k !== "_lib"),
             reduce((obj, k) => {
                 const component = components[k];
                 component.name = `${libname}/${k}`;

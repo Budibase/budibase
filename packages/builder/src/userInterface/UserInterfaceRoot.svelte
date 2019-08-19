@@ -9,10 +9,17 @@ import { isRootComponent } from "./pagesParsing/searchComponents";
 import IconButton from "../common/IconButton.svelte";
 import Modal from "../common/Modal.svelte";
 import NewComponent from "./NewComponent.svelte";
+import CurrentItemPreview from "./CurrentItemPreview.svelte";
+import SettingsView from "./SettingsView.svelte";
 
 let newComponentPicker;  
 const newComponent = () => {
     newComponentPicker.show();
+}
+
+let settingsView;
+const settings = () => {
+    settingsView.show();
 }
 
 </script>
@@ -26,6 +33,9 @@ const newComponent = () => {
                 <div>{@html getIcon("sidebar","18")}</div>
                 <span>COMPONENTS</span>
                 <div>
+                    <IconButton icon="settings" 
+                                size="14"
+                                on:click={settings}/>
                     <IconButton icon="plus" 
                                 on:click={newComponent}/>
                 </div>
@@ -47,11 +57,9 @@ const newComponent = () => {
 
     </div>
 
-    <div class="component-preview">
+    <div>
         {#if $store.currentFrontEndItem}
-        <div class="component-container">
-            <h1>{$store.currentFrontEndItem.name}</h1>
-        </div>
+        <CurrentItemPreview />
         {/if} 
     </div>
 
@@ -65,6 +73,7 @@ const newComponent = () => {
 
 
 <NewComponent bind:this={newComponentPicker}/>
+<SettingsView bind:this={settingsView} />
 
 
 <style>
@@ -80,18 +89,6 @@ const newComponent = () => {
     grid-column-start: uiNav;
     background-color: var(--primary10);
     height: 100%;
-}
-
-.component-preview {
-    display: grid;
-    grid-template-rows: [top] 1fr [middle] auto [bottom] 1fr;
-    grid-template-columns: [left] 1fr [middle] auto [right] 1fr;
-    grid-column-start: preview;
-}
-
-.component-container {
-    grid-row-start: middle;
-    grid-column-start: middle;
 }
 
 .properties-pane {

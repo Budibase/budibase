@@ -98,7 +98,8 @@ export const getComponentInfo = (allComponents, comp, stack=[], subComponentProp
             unsetProps,
             fullProps: p.props,
             errors: p.errors,
-            component: stack.length > 0 ? stack[0] : component
+            component: stack.length > 0 ? stack[0] : component,
+            rootComponent: component
         });
     }
     return getComponentInfo(
