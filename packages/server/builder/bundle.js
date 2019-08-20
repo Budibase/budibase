@@ -256,6 +256,9 @@
     function onMount(fn) {
         get_current_component().$$.on_mount.push(fn);
     }
+    function afterUpdate(fn) {
+        get_current_component().$$.after_update.push(fn);
+    }
     // TODO figure out if we still want to support
     // shorthand events, or if we want to implement
     // a real bubbling mechanism
@@ -28770,14 +28773,6 @@
     const addStylesheet = store => stylesheet => {
         store.update(s => {
             s.pages.stylesheets.push(stylesheet);
-
-            const styles = document.createElement('link');
-            styles.rel = 'stylesheet';
-            styles.type = 'text/css';
-            styles.media = 'screen';
-            styles.href = stylesheet;
-            document.getElementsByTagName('head')[0].appendChild(styles);
-
             savePackage(store, s);
             return s;
         });
@@ -28816,14 +28811,14 @@
             hierarchy:s.hierarchy,
             triggers:s.triggers,
             actions: fp_45("name")(s.actions),
-            pages:s.pages,
             mainUi: s.mainUi,
             unauthenticatedUi: s.unauthenticatedUi
         };
 
         const data = {
             appDefinition,
-            accessLevels:s.accessLevels
+            accessLevels:s.accessLevels,
+            pages:s.pages,
         };
 
         api$1.post(`/_builder/api/${s.appname}/appPackage`, data);
@@ -56900,52 +56895,8 @@
 
     const file$w = "src\\userInterface\\CurrentItemPreview.svelte";
 
-    function get_each_context$b(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.stylesheet = list[i];
-    	return child_ctx;
-    }
-
-    // (26:20) {#each $store.pages.stylesheets as stylesheet}
-    function create_each_block$b(ctx) {
-    	var link, link_href_value;
-
-    	return {
-    		c: function create() {
-    			link = element("link");
-    			attr(link, "rel", "stylesheet");
-    			attr(link, "href", link_href_value = ctx.stylesheet);
-    			add_location(link, file$w, 26, 20, 665);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, link, anchor);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((changed.$store) && link_href_value !== (link_href_value = ctx.stylesheet)) {
-    				attr(link, "href", link_href_value);
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(link);
-    			}
-    		}
-    	};
-    }
-
     function create_fragment$v(ctx) {
-    	var div1, div0, iframe, head, t, body, current;
-
-    	var each_value = ctx.$store.pages.stylesheets;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$b(get_each_context$b(ctx, each_value, i));
-    	}
+    	var div1, div0, iframe, iframe_srcdoc_value, t, div2, current;
 
     	var switch_instance_spread_levels = [
     		ctx.$store.currentComponentInfo.fullProps
@@ -56973,23 +56924,27 @@
     			div1 = element("div");
     			div0 = element("div");
     			iframe = element("iframe");
-    			head = element("head");
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
     			t = space();
-    			body = element("body");
+    			div2 = element("div");
     			if (switch_instance) switch_instance.$$.fragment.c();
-    			add_location(head, file$w, 24, 16, 569);
-    			add_location(body, file$w, 29, 16, 781);
     			attr(iframe, "title", "componentPreview");
-    			add_location(iframe, file$w, 22, 8, 515);
-    			attr(div0, "class", "component-container svelte-1rf8xuh");
-    			add_location(div0, file$w, 21, 4, 472);
-    			attr(div1, "class", "component-preview svelte-1rf8xuh");
-    			add_location(div1, file$w, 20, 0, 434);
+    			attr(iframe, "srcdoc", iframe_srcdoc_value = `<html>
+    
+                <head>
+                    ${ctx.stylesheetLinks}
+                </head>
+                <body>
+                    ${ctx.componentHtml}
+                </body>
+            </html>`);
+    			add_location(iframe, file$w, 38, 8, 881);
+    			attr(div0, "class", "component-container svelte-1d56h9p");
+    			add_location(div0, file$w, 37, 4, 838);
+    			attr(div1, "class", "component-preview svelte-1d56h9p");
+    			add_location(div1, file$w, 36, 0, 800);
+    			attr(div2, "id", "comonent-container-mock");
+    			attr(div2, "class", "svelte-1d56h9p");
+    			add_location(div2, file$w, 52, 0, 1195);
     		},
 
     		l: function claim(nodes) {
@@ -57000,42 +56955,27 @@
     			insert(target, div1, anchor);
     			append(div1, div0);
     			append(div0, iframe);
-    			append(iframe, head);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(head, null);
-    			}
-
-    			append(iframe, t);
-    			append(iframe, body);
+    			insert(target, t, anchor);
+    			insert(target, div2, anchor);
 
     			if (switch_instance) {
-    				mount_component(switch_instance, body, null);
+    				mount_component(switch_instance, div2, null);
     			}
 
     			current = true;
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.$store) {
-    				each_value = ctx.$store.pages.stylesheets;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$b(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block$b(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(head, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value.length;
+    			if ((!current || changed.stylesheetLinks || changed.componentHtml) && iframe_srcdoc_value !== (iframe_srcdoc_value = `<html>
+    
+                <head>
+                    ${ctx.stylesheetLinks}
+                </head>
+                <body>
+                    ${ctx.componentHtml}
+                </body>
+            </html>`)) {
+    				attr(iframe, "srcdoc", iframe_srcdoc_value);
     			}
 
     			var switch_instance_changes = changed.$store ? get_spread_update(switch_instance_spread_levels, [
@@ -57057,7 +56997,7 @@
 
     					switch_instance.$$.fragment.c();
     					transition_in(switch_instance.$$.fragment, 1);
-    					mount_component(switch_instance, body, null);
+    					mount_component(switch_instance, div2, null);
     				} else {
     					switch_instance = null;
     				}
@@ -57083,9 +57023,9 @@
     		d: function destroy(detaching) {
     			if (detaching) {
     				detach(div1);
+    				detach(t);
+    				detach(div2);
     			}
-
-    			destroy_each(each_blocks, detaching);
 
     			if (switch_instance) destroy_component(switch_instance);
     		}
@@ -57101,15 +57041,32 @@
     	
 
     let component;
+    let stylesheetLinks = "";
+    let componentHtml = "";
 
     store.subscribe(s => {
         const {componentName, libName} = splitName(
             s.currentComponentInfo.rootComponent.name);
 
         $$invalidate('component', component = s.libraries[libName][componentName]);
+        $$invalidate('stylesheetLinks', stylesheetLinks = pipe(s.pages.stylesheets, [
+            fp_7(s => `<link rel="stylesheet" href="${s}"/>`),
+            fp_39("\n")
+        ]));
     });
 
-    	return { component, $store };
+
+
+    afterUpdate(() => {
+        $$invalidate('componentHtml', componentHtml = document.getElementById("comonent-container-mock").innerHTML);
+    });
+
+    	return {
+    		component,
+    		stylesheetLinks,
+    		componentHtml,
+    		$store
+    	};
     }
 
     class CurrentItemPreview extends SvelteComponentDev {
@@ -57141,7 +57098,7 @@
 
     const file$x = "src\\userInterface\\SettingsView.svelte";
 
-    function get_each_context$c(ctx, list, i) {
+    function get_each_context$b(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.stylesheet = list[i];
     	return child_ctx;
@@ -57259,7 +57216,7 @@
     }
 
     // (91:16) {#each $store.pages.stylesheets as stylesheet}
-    function create_each_block$c(ctx) {
+    function create_each_block$b(ctx) {
     	var div, span, t0_value = ctx.stylesheet, t0, t1, t2, current;
 
     	function click_handler_1() {
@@ -57364,7 +57321,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$c(get_each_context$c(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$b(get_each_context$b(ctx, each_value, i));
     	}
 
     	const out_1 = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -57536,13 +57493,13 @@
     				each_value = ctx.$store.pages.stylesheets;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$c(ctx, each_value, i);
+    					const child_ctx = get_each_context$b(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block$c(child_ctx);
+    						each_blocks[i] = create_each_block$b(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(div4, null);
@@ -58108,7 +58065,7 @@
 
     const file$z = "src\\actionsAndTriggers\\ActionView.svelte";
 
-    function get_each_context$d(ctx, list, i) {
+    function get_each_context$c(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.option = list[i];
     	return child_ctx;
@@ -58136,7 +58093,7 @@
     }
 
     // (89:12) {#each initialOptions as option}
-    function create_each_block$d(ctx) {
+    function create_each_block$c(ctx) {
     	var span1, t0_value = ctx.option.key, t0, t1, t2_value = ctx.option.value, t2, t3, span0, raw_value = getIcon("trash-2"), dispose;
 
     	function click_handler() {
@@ -58374,7 +58331,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$d(get_each_context$d(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$c(get_each_context$c(ctx, each_value, i));
     	}
 
     	var buttongroup = new ButtonGroup({
@@ -58519,12 +58476,12 @@
     				each_value = ctx.initialOptions;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$d(ctx, each_value, i);
+    					const child_ctx = get_each_context$c(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$d(child_ctx);
+    						each_blocks[i] = create_each_block$c(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(div1, null);
     					}
@@ -58764,7 +58721,7 @@
 
     const file$A = "src\\actionsAndTriggers\\Actions.svelte";
 
-    function get_each_context$e(ctx, list, i) {
+    function get_each_context$d(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.action = list[i];
     	return child_ctx;
@@ -58802,7 +58759,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$e(get_each_context$e(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$d(get_each_context$d(ctx, each_value, i));
     	}
 
     	return {
@@ -58867,12 +58824,12 @@
     				each_value = ctx.$store.actions;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$e(ctx, each_value, i);
+    					const child_ctx = get_each_context$d(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$e(child_ctx);
+    						each_blocks[i] = create_each_block$d(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(tbody, null);
     					}
@@ -58896,7 +58853,7 @@
     }
 
     // (54:8) {#each $store.actions as action}
-    function create_each_block$e(ctx) {
+    function create_each_block$d(ctx) {
     	var tr, td0, t0_value = ctx.action.name, t0, t1, td1, t2_value = ctx.action.behaviourSource, t2, t3, td2, t4_value = ctx.action.behaviourName, t4, t5, td3, raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions), t6, td4, span0, raw1_value = getIcon("edit"), t7, span1, raw2_value = getIcon("trash"), t8, dispose;
 
     	function click_handler() {
@@ -59806,7 +59763,7 @@
 
     const file$C = "src\\actionsAndTriggers\\Triggers.svelte";
 
-    function get_each_context$f(ctx, list, i) {
+    function get_each_context$e(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.trigger = list[i];
     	return child_ctx;
@@ -59844,7 +59801,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$f(get_each_context$f(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$e(get_each_context$e(ctx, each_value, i));
     	}
 
     	return {
@@ -59909,12 +59866,12 @@
     				each_value = ctx.$store.triggers;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$f(ctx, each_value, i);
+    					const child_ctx = get_each_context$e(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$f(child_ctx);
+    						each_blocks[i] = create_each_block$e(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(tbody, null);
     					}
@@ -59938,7 +59895,7 @@
     }
 
     // (44:8) {#each $store.triggers as trigger}
-    function create_each_block$f(ctx) {
+    function create_each_block$e(ctx) {
     	var tr, td0, t0_value = ctx.trigger.eventName, t0, t1, td1, t2_value = ctx.trigger.actionName, t2, t3, td2, t4_value = ctx.trigger.condition, t4, t5, td3, t6_value = ctx.trigger.optionsCreator, t6, t7, td4, span0, raw0_value = getIcon("edit"), t8, span1, raw1_value = getIcon("trash"), t9, dispose;
 
     	function click_handler() {
@@ -60710,14 +60667,14 @@
 
     const file$E = "src\\accessLevels\\AccessLevelView.svelte";
 
-    function get_each_context$g(ctx, list, i) {
+    function get_each_context$f(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.permission = list[i];
     	return child_ctx;
     }
 
     // (79:8) {#each permissionMatrix as permission}
-    function create_each_block$g(ctx) {
+    function create_each_block$f(ctx) {
     	var div, t, current;
 
     	var checkbox = new Checkbox({
@@ -60919,7 +60876,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$g(get_each_context$g(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$f(get_each_context$f(ctx, each_value, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -60991,13 +60948,13 @@
     				each_value = ctx.permissionMatrix;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$g(ctx, each_value, i);
+    					const child_ctx = get_each_context$f(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block$g(child_ctx);
+    						each_blocks[i] = create_each_block$f(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(form, null);
@@ -61247,7 +61204,7 @@
 
     const file$F = "src\\accessLevels\\AccessLevelsRoot.svelte";
 
-    function get_each_context$h(ctx, list, i) {
+    function get_each_context$g(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.level = list[i];
     	return child_ctx;
@@ -61355,7 +61312,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$h(get_each_context$h(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$g(get_each_context$g(ctx, each_value, i));
     	}
 
     	return {
@@ -61408,12 +61365,12 @@
     				each_value = ctx.$store.accessLevels;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$h(ctx, each_value, i);
+    					const child_ctx = get_each_context$g(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$h(child_ctx);
+    						each_blocks[i] = create_each_block$g(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(tbody, null);
     					}
@@ -61437,7 +61394,7 @@
     }
 
     // (68:8) {#each $store.accessLevels as level}
-    function create_each_block$h(ctx) {
+    function create_each_block$g(ctx) {
     	var tr, td0, t0_value = ctx.level.name, t0, t1, td1, t2_value = ctx.getPermissionsString(ctx.level.permissions), t2, t3, td2, span0, raw0_value = getIcon("edit"), t4, span1, raw1_value = getIcon("trash"), t5, dispose;
 
     	function click_handler() {
