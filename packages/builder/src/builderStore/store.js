@@ -50,6 +50,7 @@ export const getStore = () => {
         currentNodeIsNew: false,
         errors: [],
         activeNav: "database",
+        isBackend:true,
         hasAppPackage: false,
         accessLevels: [],
         currentNode: null,
@@ -87,6 +88,8 @@ export const getStore = () => {
     store.removeComponentLibrary =removeComponentLibrary(store);
     store.addStylesheet = addStylesheet(store);
     store.removeStylesheet = removeStylesheet(store);
+    store.showFrontend = showFrontend(store);
+    store.showBackend = showBackend(store);
     return store;
 } 
 
@@ -131,6 +134,20 @@ const initialise = (store, initial) => async () => {
     }
     store.set(initial);
     return initial;
+}
+
+const showBackend = store => () => {
+    store.update(s => {
+        s.isBackend = true;
+        return s;
+    })
+}
+
+const showFrontend = store => () => {
+    store.update(s => {
+        s.isBackend = false;
+        return s;
+    })
 }
 
 const combineComponents = (root, derived) => {

@@ -12,7 +12,6 @@ export let width=50;
     <NavItem name="database" label="Database" icon="database" />
     <NavItem name="actions" label="Actions" icon="zap" />
     <NavItem name="access levels" label="Access Levels" icon="user" />
-    <NavItem name="user interface" label="User Interface" icon="monitor"/>
 </nav>
 
 

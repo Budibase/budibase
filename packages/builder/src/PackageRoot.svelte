@@ -1,49 +1,83 @@
 <script>
 
-import Nav from "./nav/Nav.svelte";
-import Database from "./database/DatabaseRoot.svelte" ;
-import UserInterface from "./userInterface/UserInterfaceRoot.svelte" ;
-import ActionsAndTriggers from "./actionsAndTriggers/ActionsAndTriggersRoot.svelte" ;
-import AccessLevels from "./accessLevels/AccessLevelsRoot.svelte" ;
-import ComingSoon from "./common/ComingSoon.svelte";
-
-import {store} from "./builderStore";
-
-export let navWidth = "50px";
-
+import IconButton from "./common/IconButton.svelte";
+import { store } from "./builderStore";
+import UserInterfaceRoot from "./userInterface/UserInterfaceRoot.svelte";
+import BackendRoot from "./BackendRoot.svelte";
+import { fade } from "svelte/transition";
 
 </script>
 
 <div class="root">
-  <Nav width={navWidth} />
-  <div class="content" 
-       style="width: calc(100% - {navWidth}); left: {navWidth}"> 
-    {#if $store.activeNav === "database"}
-    <Database />
-    {:else if $store.activeNav === "actions"}
-    <ActionsAndTriggers />
-    {:else if $store.activeNav === "access levels"}
-    <AccessLevels />
-    {:else if $store.activeNav === "user interface"}
-    <UserInterface />
-    {/if}
-  </div>
+
+    <div class="top-nav">
+        <IconButton icon="home"/>
+        <span class:active={$store.isBackend}
+              on:click={store.showBackend}>
+              Backend
+        </span>
+        <span class:active={!$store.isBackend}
+              on:click={store.showFrontend}>
+              Frontend
+        </span>
+    </div>
+
+    <div class="content">
+        {#if $store.isBackend}
+        <div in:fade out:fade>
+            <BackendRoot />
+        </div>
+        {:else}
+        <div in:fade out:fade>
+            <UserInterfaceRoot />
+        </div>
+        {/if}
+    </div>
+
 </div>
 
-
-
 <style>
-	.root {
-    height: 100%;
-	}
-  
 
-  .content {
-    position: fixed;
-    height: 100%;
-    background-color: var(--white);
-    margin:0;
-  }
+.root {
+    height:100%;
+    width:100%;
+}
 
+.top-nav {
+    position:fixed;
+    height:40px;
+    margin: 0px;
+    background: white;
+    border-style:solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: var(--lightslate);
+    padding: 5px;
+}
+
+.content {
+    position:fixed;
+    height:calc(100% - 40px);
+    top:40px;
+    margin: 0px;
+}
+
+.content > div {
+    height:100%;
+    width:100%;
+}
+
+.active {
+    color: var(--secondary100);
+}
+
+.top-nav > span {
+    cursor: pointer;
+    color: var(--slate);
+    padding: 0px 15px;
+}
+
+.top-nav > span:hover {
+    color: var(--secondary75);
+}
 
 </style>
