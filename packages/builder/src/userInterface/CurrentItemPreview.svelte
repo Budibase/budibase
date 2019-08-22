@@ -13,11 +13,13 @@ import { afterUpdate } from 'svelte';
 let component;
 let stylesheetLinks = "";
 let componentHtml = "";
+let props;
 
 store.subscribe(s => {
     const {componentName, libName} = splitName(
         s.currentComponentInfo.rootComponent.name);
 
+    props = s.currentComponentInfo.fullProps;
     component = s.libraries[libName][componentName];
     stylesheetLinks = pipe(s.pages.stylesheets, [
         map(s => `<link rel="stylesheet" href="${s}"/>`),
@@ -28,7 +30,9 @@ store.subscribe(s => {
 
 
 afterUpdate(() => {
-    componentHtml = document.getElementById("comonent-container-mock").innerHTML
+    setTimeout(() => {
+        componentHtml = document.getElementById("comonent-container-mock").innerHTML
+    }, 1);
 });
 
 
@@ -51,7 +55,7 @@ afterUpdate(() => {
 </div>
 
 <div id="comonent-container-mock">
-    <svelte:component this={component} {...$store.currentComponentInfo.fullProps}/>
+    <svelte:component this={component} {...props}/>
 </div>
 
 <style>
