@@ -41,7 +41,7 @@ const settings = () => {
                 </div>
             </div>
             <div class="nav-items-container">
-                <ComponentsHierarchy components={$store.allComponents}/>
+                <ComponentsHierarchy components={$store.derivedComponents}/>
             </div>
         </div>
 

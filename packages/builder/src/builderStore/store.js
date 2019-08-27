@@ -47,6 +47,7 @@ export const getStore = () => {
         currentFrontEndItem:null,
         currentComponentInfo:null,
         currentComponentIsNew:false,
+        currentPageName: "",
         currentNodeIsNew: false,
         errors: [],
         activeNav: "database",
@@ -87,6 +88,7 @@ export const getStore = () => {
     store.removeComponentLibrary =removeComponentLibrary(store);
     store.addStylesheet = addStylesheet(store);
     store.removeStylesheet = removeStylesheet(store);
+    store.savePage = savePage(store);
     return store;
 } 
 
@@ -113,6 +115,7 @@ const initialise = (store, initial) => async () => {
     initial.hasAppPackage = true;
     initial.hierarchy = pkg.appDefinition.hierarchy;
     initial.accessLevels = pkg.accessLevels;
+    initial.derivedComponents = pkg.derivedComponents;
     initial.allComponents = combineComponents(
         pkg.derivedComponents, pkg.rootComponents);
     initial.actions = reduce((arr, action) => {
@@ -456,6 +459,18 @@ const renameDerivedComponent = store => (oldname, newname) => {
     })
 }
 
+const savePage = store => async page => {
+    store.update(s => {
+        if(s.currentFrontEndIsComponent || !s.currentFrontEndItem) {
+            return;
+        }
+
+        s.pages[currentPageName] = page;
+        savePackage();
+
+    });
+}
+
 const addComponentLibrary = store => async lib => {
 
     const response = 
@@ -571,9 +586,9 @@ const setCurrentComponent = store => component => {
 
 const setCurrentPage = store => pageName => {
     store.update(s => {
-        const props = s.pages[pageName];
-        s.currentFrontEndItem = {props, name:pageName};
+        s.currentFrontEndItem = s.pages[pageName];
         s.currentFrontEndIsComponent = false;
+        s.currentPageName = pageName;
         return s;
     })
 }

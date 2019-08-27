@@ -9,9 +9,62 @@
 		"props": {
 			"contentText": { "type": "string", "default": "Button" },
 			"contentComponent": "component",
-			"className": "string",
+			"className": {"type": "string", "default": "default"},
 			"disabled": "bool"
 		},
 		"tags": ["button"]
+	}, 
+	"login" : {
+		"importPath": "login",
+		"name": "Login Control",
+		"desciption": "A control that accepts username, password an also handles password resets",
+		"props" : {
+			"logo": "asset",
+			"loginRedirect": "string",
+			"usernameLabel": {"type":"string", "default": "Username"},
+			"passwordLabel": {"type":"string", "default": "Password"},
+			"loginButtonLabel": {"type":"string", "default": "Login"}
+		},
+		"tags": ["login", "credentials", "password", "logon"]
+	},
+	"formControl" : {
+		"importPath": "formControl",
+		"name": "Form Control",
+		"desciption": "A wrapper for a control, used inside a form. Allows a label, and properly alligns the control inside the parent form",
+		"props" : {
+			"containerClass": "string",
+			"labelContainerClass": "string",
+			"controlContainerClass": "string",
+			"label": "string",
+			"control": "component",
+			"fullWidth": "bool"
+		},
+		"tags": ["login"]
+	},
+	"form" : {
+		"importPath": "form",
+		"name": "Form",
+		"desciption": "A form - you should usually add FormControls as children to get nice allignment",
+		"props" : {
+			"containerClass": "string",
+			"formControls": {
+				"type":"array",
+				"elementDefinition": {
+					"control":"component"
+				}
+			}
+		},
+		"tags": ["form"]
+	},
+	"textbox" : {
+		"importPath": "textbox",
+		"name": "Textbox",
+		"desciption": "An input type=text or password",
+		"props" : {
+			"value": "string",
+			"hideValue": "boolean",
+			"className": {"type": "string", "default": "default"}
+		},
+		"tags": ["form"]
 	}
 }

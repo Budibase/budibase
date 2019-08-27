@@ -1,5 +1,6 @@
 <script>
 import { store } from "../builderStore";
+import { makeLibraryUrl } from "../builderStore/loadComponentLibraries";
 import {
     last,
     split,
@@ -14,48 +15,67 @@ let component;
 let stylesheetLinks = "";
 let componentHtml = "";
 let props;
+let componentLibraryUrl = "";
+let rootComponentName = "";
+let iframe;
 
 store.subscribe(s => {
     const {componentName, libName} = splitName(
         s.currentComponentInfo.rootComponent.name);
 
+    rootComponentName = componentName;
     props = s.currentComponentInfo.fullProps;
     component = s.libraries[libName][componentName];
     stylesheetLinks = pipe(s.pages.stylesheets, [
         map(s => `<link rel="stylesheet" href="${s}"/>`),
         join("\n")
-    ])
+    ]);
+    componentLibraryUrl = makeLibraryUrl(s.appname, libName);
 });
 
-
-
+/*
 afterUpdate(() => {
-    setTimeout(() => {
-        componentHtml = document.getElementById("comonent-container-mock").innerHTML
-    }, 1);
+    if(iframe) iframeLoaded();
 });
+*/
 
+const iframeLoaded = () => {
+    setTimeout(() => {
+        iframe.style.height = (iframe.contentWindow.document.body.scrollHeight + 1).toString() + "px";
+        iframe.style.width = (iframe.contentWindow.document.body.scrollWidth + 1).toString() + "px";
+    }, 100);
+}
 
 </script>
 
 <div class="component-preview" >
     <div class="component-container">
-        <iframe title="componentPreview"
-                srcdoc={`<html>
+        <iframe bind:this={iframe}
+                on:load={iframeLoaded}
+                title="componentPreview"
+                srcdoc={
+`<html>
     
-                <head>
-                    ${stylesheetLinks}
-                </head>
-                <body>
-                    ${componentHtml}
-                </body>
-            </html>`}>
+<head>
+    ${stylesheetLinks}
+    <script>
+    
+        import('${componentLibraryUrl}')
+        .then(module => {
+            const componentClass = module['${rootComponentName}'];
+            const instance = new componentClass({
+                target: document.body,
+                props: JSON.parse('${JSON.stringify(props)}')
+            }) ;
+        })
+        
+    </script>
+</head>
+<body>
+</body>
+</html>`}>
         </iframe>
     </div>
-</div>
-
-<div id="comonent-container-mock">
-    <svelte:component this={component} {...props}/>
 </div>
 
 <style>

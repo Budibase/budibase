@@ -256,9 +256,6 @@
     function onMount(fn) {
         get_current_component().$$.on_mount.push(fn);
     }
-    function afterUpdate(fn) {
-        get_current_component().$$.after_update.push(fn);
-    }
     // TODO figure out if we still want to support
     // shorthand events, or if we want to implement
     // a real bubbling mechanism
@@ -547,40 +544,6 @@
             }
             info.resolved = { [info.value]: promise };
         }
-    }
-
-    function get_spread_update(levels, updates) {
-        const update = {};
-        const to_null_out = {};
-        const accounted_for = { $$scope: 1 };
-        let i = levels.length;
-        while (i--) {
-            const o = levels[i];
-            const n = updates[i];
-            if (n) {
-                for (const key in o) {
-                    if (!(key in n))
-                        to_null_out[key] = 1;
-                }
-                for (const key in n) {
-                    if (!accounted_for[key]) {
-                        update[key] = n[key];
-                        accounted_for[key] = 1;
-                    }
-                }
-                levels[i] = n;
-            }
-            else {
-                for (const key in o) {
-                    accounted_for[key] = 1;
-                }
-            }
-        }
-        for (const key in to_null_out) {
-            if (!(key in update))
-                update[key] = undefined;
-        }
-        return update;
     }
 
     function bind(component, name, callback) {
@@ -28186,9 +28149,13 @@
         if(isRootComponent(component)) {
             subComponentProps = subComponentProps||{};
             const p = createProps(cname, component.props, subComponentProps);
+            const rootProps = createProps(cname, component.props);
             const inheritedProps = [];
+            const targetComponent = stack.length > 0
+                                    ? fp_12(stack)
+                                    : component;
             if(stack.length > 0) {
-                const targetComponent = stack[0];
+                
                 for(let prop in subComponentProps) {
                     const hasProp = pipe(targetComponent.props, [
                                             fp_30,
@@ -28200,24 +28167,27 @@
             }
             const unsetProps = pipe(p.props, [
                 fp_30,
-                fp_8(k => !fp_11(k)(fp_30(subComponentProps)))
+                fp_8(k => !fp_11(k)(fp_30(subComponentProps)) && k !== "_component")
             ]);
+
+            const fullProps = fp_4(p.props);
+            fullProps._component = targetComponent.name;
 
             return ({
                 propsDefinition:expandPropsDefinition(component.props), 
                 inheritedProps,
-                rootDefaultProps: p.props,
+                rootDefaultProps: rootProps.props,
                 unsetProps,
-                fullProps: p.props,
+                fullProps: fullProps,
                 errors: p.errors,
-                component: stack.length > 0 ? stack[0] : component,
+                component: targetComponent,
                 rootComponent: component
             });
         }
         return getComponentInfo(
             allComponents, 
             component.inherits, 
-            [...stack, component],
+            [component, ...stack],
             {...component.props, ...subComponentProps});
     };
 
@@ -28287,17 +28257,17 @@
 
     const loadLibs = async (appName, appPackage) => {
 
-        const makeUrl = l => 
-            `/_builder/api/${appName}/componentlibrary?lib=${encodeURI(l)}`;
-
         const allLibraries = {};
         for(let lib of appPackage.pages.componentLibraries) {
-            const libModule = await import(makeUrl(lib));
+            const libModule = await import(makeLibraryUrl(appName, lib));
             allLibraries[lib] = libModule;
         }
 
         return allLibraries;
     };
+
+    const makeLibraryUrl = (appName, lib) => 
+        `/_builder/api/${appName}/componentlibrary?lib=${encodeURI(lib)}`;
 
     const getStore = () => {
 
@@ -28314,6 +28284,7 @@
             currentFrontEndItem:null,
             currentComponentInfo:null,
             currentComponentIsNew:false,
+            currentPageName: "",
             currentNodeIsNew: false,
             errors: [],
             activeNav: "database",
@@ -28354,6 +28325,7 @@
         store.removeComponentLibrary =removeComponentLibrary(store);
         store.addStylesheet = addStylesheet(store);
         store.removeStylesheet = removeStylesheet(store);
+        store.savePage = savePage(store);
         return store;
     }; 
 
@@ -28378,6 +28350,7 @@
         initial.hasAppPackage = true;
         initial.hierarchy = pkg.appDefinition.hierarchy;
         initial.accessLevels = pkg.accessLevels;
+        initial.derivedComponents = pkg.derivedComponents;
         initial.allComponents = combineComponents(
             pkg.derivedComponents, pkg.rootComponents);
         initial.actions = fp_2((arr, action) => {
@@ -28721,6 +28694,18 @@
         });
     };
 
+    const savePage = store => async page => {
+        store.update(s => {
+            if(s.currentFrontEndIsComponent || !s.currentFrontEndItem) {
+                return;
+            }
+
+            s.pages[currentPageName] = page;
+            savePackage();
+
+        });
+    };
+
     const addComponentLibrary = store => async lib => {
 
         const response = 
@@ -28836,9 +28821,9 @@
 
     const setCurrentPage = store => pageName => {
         store.update(s => {
-            const props = s.pages[pageName];
-            s.currentFrontEndItem = {props, name:pageName};
+            s.currentFrontEndItem = s.pages[pageName];
             s.currentFrontEndIsComponent = false;
+            s.currentPageName = pageName;
             return s;
         });
     };
@@ -31404,7 +31389,7 @@
 
     /******/ });
     });
-    //# sourceMappingURL=feather.js.map
+
     });
 
     var feather$1 = unwrapExports(feather);
@@ -55974,9 +55959,9 @@
     			add_location(span0, file$u, 155, 12, 4277);
     			attr(div0, "class", "section-header padding svelte-xai2hc");
     			add_location(div0, file$u, 154, 8, 4157);
-    			add_location(span1, file$u, 176, 12, 5092);
+    			add_location(span1, file$u, 177, 12, 5154);
     			attr(div1, "class", "section-header padding svelte-xai2hc");
-    			add_location(div1, file$u, 175, 8, 5042);
+    			add_location(div1, file$u, 176, 8, 5104);
     			add_location(div2, file$u, 152, 4, 4140);
     			dispose = listen(div0, "click", ctx.click_handler);
     		},
@@ -56126,6 +56111,7 @@
     	let textbox0_props = {
     		label: "Name",
     		infoText: "use forward slash to store in subfolders",
+    		disabled: !ctx.$store.currentComponentIsNew,
     		hasError: !!ctx.nameInvalid
     	};
     	if (ctx.name !== void 0) {
@@ -56177,7 +56163,7 @@
     			t2 = space();
     			textbox2.$$.fragment.c();
     			attr(div0, "class", "info-text");
-    			add_location(div0, file$u, 165, 12, 4725);
+    			add_location(div0, file$u, 166, 12, 4787);
     			attr(div1, "class", "padding svelte-xai2hc");
     			add_location(div1, file$u, 160, 8, 4495);
     		},
@@ -56196,6 +56182,7 @@
 
     		p: function update(changed, ctx) {
     			var textbox0_changes = {};
+    			if (changed.$store) textbox0_changes.disabled = !ctx.$store.currentComponentIsNew;
     			if (changed.nameInvalid) textbox0_changes.hasError = !!ctx.nameInvalid;
     			if (!updating_text && changed.name) {
     				textbox0_changes.text = ctx.name;
@@ -56247,7 +56234,7 @@
     	};
     }
 
-    // (206:16) <Button grouped                           on:click={confirmDeleteComponent}>
+    // (207:16) <Button grouped                           on:click={confirmDeleteComponent}>
     function create_default_slot_2$3(ctx) {
     	var t;
 
@@ -56268,7 +56255,7 @@
     	};
     }
 
-    // (210:16) <Button grouped                           on:click={hideDialog}                           color="secondary" >
+    // (211:16) <Button grouped                           on:click={hideDialog}                           color="secondary" >
     function create_default_slot_1$3(ctx) {
     	var t;
 
@@ -56289,7 +56276,7 @@
     	};
     }
 
-    // (205:12) <ButtonGroup>
+    // (206:12) <ButtonGroup>
     function create_default_slot$4(ctx) {
     	var t, current;
 
@@ -56446,16 +56433,16 @@
     			attr(div3, "class", "root svelte-xai2hc");
     			add_location(div3, file$u, 130, 0, 3304);
     			attr(div4, "class", "uk-modal-header");
-    			add_location(div4, file$u, 195, 8, 5436);
+    			add_location(div4, file$u, 196, 8, 5498);
     			attr(div5, "class", "uk-modal-body");
-    			add_location(div5, file$u, 199, 8, 5533);
+    			add_location(div5, file$u, 200, 8, 5595);
     			attr(div6, "class", "uk-modal-footer");
-    			add_location(div6, file$u, 203, 8, 5650);
+    			add_location(div6, file$u, 204, 8, 5712);
     			attr(div7, "class", "uk-modal-dialog");
-    			add_location(div7, file$u, 193, 4, 5395);
+    			add_location(div7, file$u, 194, 4, 5457);
     			attr(div8, "uk-modal", "");
     			attr(div8, "class", "svelte-xai2hc");
-    			add_location(div8, file$u, 192, 0, 5350);
+    			add_location(div8, file$u, 193, 0, 5412);
     		},
 
     		l: function claim(nodes) {
@@ -56569,6 +56556,11 @@
     }
 
     function instance$t($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
     	
 
     let component;
@@ -56720,6 +56712,7 @@
     		componentInstanceCancelEdit,
     		componentInstancePropsChanged,
     		shortName,
+    		$store,
     		click_handler,
     		textbox0_text_binding,
     		textbox1_text_binding,
@@ -56896,55 +56889,40 @@
     const file$w = "src\\userInterface\\CurrentItemPreview.svelte";
 
     function create_fragment$v(ctx) {
-    	var div1, div0, iframe, iframe_srcdoc_value, t, div2, current;
-
-    	var switch_instance_spread_levels = [
-    		ctx.$store.currentComponentInfo.fullProps
-    	];
-
-    	var switch_value = ctx.component;
-
-    	function switch_props(ctx) {
-    		let switch_instance_props = {};
-    		for (var i = 0; i < switch_instance_spread_levels.length; i += 1) {
-    			switch_instance_props = assign(switch_instance_props, switch_instance_spread_levels[i]);
-    		}
-    		return {
-    			props: switch_instance_props,
-    			$$inline: true
-    		};
-    	}
-
-    	if (switch_value) {
-    		var switch_instance = new switch_value(switch_props());
-    	}
+    	var div1, div0, iframe_1, iframe_1_srcdoc_value, dispose;
 
     	return {
     		c: function create() {
     			div1 = element("div");
     			div0 = element("div");
-    			iframe = element("iframe");
-    			t = space();
-    			div2 = element("div");
-    			if (switch_instance) switch_instance.$$.fragment.c();
-    			attr(iframe, "title", "componentPreview");
-    			attr(iframe, "srcdoc", iframe_srcdoc_value = `<html>
+    			iframe_1 = element("iframe");
+    			attr(iframe_1, "title", "componentPreview");
+    			attr(iframe_1, "srcdoc", iframe_1_srcdoc_value = `<html>
     
-                <head>
-                    ${ctx.stylesheetLinks}
-                </head>
-                <body>
-                    ${ctx.componentHtml}
-                </body>
-            </html>`);
-    			add_location(iframe, file$w, 38, 8, 881);
+<head>
+    ${ctx.stylesheetLinks}
+    <script>
+    
+        import('${ctx.componentLibraryUrl}')
+        .then(module => {
+            const componentClass = module['${ctx.rootComponentName}'];
+            const instance = new componentClass({
+                target: document.body,
+                props: JSON.parse('${JSON.stringify(ctx.props)}')
+            }) ;
+        })
+        
+    </script>
+</head>
+<body>
+</body>
+</html>`);
+    			add_location(iframe_1, file$w, 52, 8, 1422);
     			attr(div0, "class", "component-container svelte-1d56h9p");
-    			add_location(div0, file$w, 37, 4, 838);
+    			add_location(div0, file$w, 51, 4, 1379);
     			attr(div1, "class", "component-preview svelte-1d56h9p");
-    			add_location(div1, file$w, 36, 0, 800);
-    			attr(div2, "id", "comonent-container-mock");
-    			attr(div2, "class", "svelte-1d56h9p");
-    			add_location(div2, file$w, 52, 0, 1195);
+    			add_location(div1, file$w, 50, 0, 1341);
+    			dispose = listen(iframe_1, "load", ctx.iframeLoaded);
     		},
 
     		l: function claim(nodes) {
@@ -56954,118 +56932,100 @@
     		m: function mount(target, anchor) {
     			insert(target, div1, anchor);
     			append(div1, div0);
-    			append(div0, iframe);
-    			insert(target, t, anchor);
-    			insert(target, div2, anchor);
-
-    			if (switch_instance) {
-    				mount_component(switch_instance, div2, null);
-    			}
-
-    			current = true;
+    			append(div0, iframe_1);
+    			ctx.iframe_1_binding(iframe_1);
     		},
 
     		p: function update(changed, ctx) {
-    			if ((!current || changed.stylesheetLinks || changed.componentHtml) && iframe_srcdoc_value !== (iframe_srcdoc_value = `<html>
+    			if ((changed.stylesheetLinks || changed.componentLibraryUrl || changed.rootComponentName || changed.props) && iframe_1_srcdoc_value !== (iframe_1_srcdoc_value = `<html>
     
-                <head>
-                    ${ctx.stylesheetLinks}
-                </head>
-                <body>
-                    ${ctx.componentHtml}
-                </body>
-            </html>`)) {
-    				attr(iframe, "srcdoc", iframe_srcdoc_value);
-    			}
-
-    			var switch_instance_changes = changed.$store ? get_spread_update(switch_instance_spread_levels, [
-    				ctx.$store.currentComponentInfo.fullProps
-    			]) : {};
-
-    			if (switch_value !== (switch_value = ctx.component)) {
-    				if (switch_instance) {
-    					group_outros();
-    					const old_component = switch_instance;
-    					transition_out(old_component.$$.fragment, 1, 0, () => {
-    						destroy_component(old_component, 1);
-    					});
-    					check_outros();
-    				}
-
-    				if (switch_value) {
-    					switch_instance = new switch_value(switch_props());
-
-    					switch_instance.$$.fragment.c();
-    					transition_in(switch_instance.$$.fragment, 1);
-    					mount_component(switch_instance, div2, null);
-    				} else {
-    					switch_instance = null;
-    				}
-    			}
-
-    			else if (switch_value) {
-    				switch_instance.$set(switch_instance_changes);
+<head>
+    ${ctx.stylesheetLinks}
+    <script>
+    
+        import('${ctx.componentLibraryUrl}')
+        .then(module => {
+            const componentClass = module['${ctx.rootComponentName}'];
+            const instance = new componentClass({
+                target: document.body,
+                props: JSON.parse('${JSON.stringify(ctx.props)}')
+            }) ;
+        })
+        
+    </script>
+</head>
+<body>
+</body>
+</html>`)) {
+    				attr(iframe_1, "srcdoc", iframe_1_srcdoc_value);
     			}
     		},
 
-    		i: function intro(local) {
-    			if (current) return;
-    			if (switch_instance) transition_in(switch_instance.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			if (switch_instance) transition_out(switch_instance.$$.fragment, local);
-    			current = false;
-    		},
+    		i: noop,
+    		o: noop,
 
     		d: function destroy(detaching) {
     			if (detaching) {
     				detach(div1);
-    				detach(t);
-    				detach(div2);
     			}
 
-    			if (switch_instance) destroy_component(switch_instance);
+    			ctx.iframe_1_binding(null);
+    			dispose();
     		}
     	};
     }
 
     function instance$v($$self, $$props, $$invalidate) {
-    	let $store;
-
-    	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
-
     	
 
     let component;
     let stylesheetLinks = "";
-    let componentHtml = "";
+    let props;
+    let componentLibraryUrl = "";
+    let rootComponentName = "";
+    let iframe;
 
     store.subscribe(s => {
         const {componentName, libName} = splitName(
             s.currentComponentInfo.rootComponent.name);
 
-        $$invalidate('component', component = s.libraries[libName][componentName]);
+        $$invalidate('rootComponentName', rootComponentName = componentName);
+        $$invalidate('props', props = s.currentComponentInfo.fullProps);
+        component = s.libraries[libName][componentName];
         $$invalidate('stylesheetLinks', stylesheetLinks = pipe(s.pages.stylesheets, [
             fp_7(s => `<link rel="stylesheet" href="${s}"/>`),
             fp_39("\n")
         ]));
+        $$invalidate('componentLibraryUrl', componentLibraryUrl = makeLibraryUrl(s.appname, libName));
     });
 
-
-
+    /*
     afterUpdate(() => {
-        $$invalidate('componentHtml', componentHtml = document.getElementById("comonent-container-mock").innerHTML);
+        if(iframe) iframeLoaded();
     });
+    */
+
+    const iframeLoaded = () => {
+        setTimeout(() => {
+            iframe.style.height = (iframe.contentWindow.document.body.scrollHeight + 1).toString() + "px"; $$invalidate('iframe', iframe);
+            iframe.style.width = (iframe.contentWindow.document.body.scrollWidth + 1).toString() + "px"; $$invalidate('iframe', iframe);
+        }, 100);
+    };
+
+    	function iframe_1_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			$$invalidate('iframe', iframe = $$value);
+    		});
+    	}
 
     	return {
-    		component,
     		stylesheetLinks,
-    		componentHtml,
-    		$store
+    		props,
+    		componentLibraryUrl,
+    		rootComponentName,
+    		iframe,
+    		iframeLoaded,
+    		iframe_1_binding
     	};
     }
 
@@ -57761,7 +57721,7 @@
     	iconbutton1.$on("click", ctx.newComponent);
 
     	var componentshierarchy = new ComponentsHierarchy({
-    		props: { components: ctx.$store.allComponents },
+    		props: { components: ctx.$store.derivedComponents },
     		$$inline: true
     	});
 
@@ -57838,20 +57798,20 @@
     			attr(div4, "class", "components-list-container");
     			add_location(div4, file$y, 30, 8, 805);
     			attr(div5, "class", "svelte-1dih19s");
-    			add_location(div5, file$y, 49, 16, 1555);
+    			add_location(div5, file$y, 49, 16, 1559);
     			attr(span1, "class", "svelte-1dih19s");
-    			add_location(span1, file$y, 50, 16, 1611);
+    			add_location(span1, file$y, 50, 16, 1615);
     			attr(div6, "class", "nav-group-header svelte-1dih19s");
-    			add_location(div6, file$y, 48, 12, 1508);
+    			add_location(div6, file$y, 48, 12, 1512);
     			attr(div7, "class", "nav-items-container svelte-1dih19s");
-    			add_location(div7, file$y, 52, 12, 1661);
+    			add_location(div7, file$y, 52, 12, 1665);
     			attr(div8, "class", "pages-list-container svelte-1dih19s");
-    			add_location(div8, file$y, 47, 8, 1461);
+    			add_location(div8, file$y, 47, 8, 1465);
     			attr(div9, "class", "ui-nav svelte-1dih19s");
     			add_location(div9, file$y, 28, 4, 775);
-    			add_location(div10, file$y, 59, 4, 1776);
+    			add_location(div10, file$y, 59, 4, 1780);
     			attr(div11, "class", "properties-pane svelte-1dih19s");
-    			add_location(div11, file$y, 65, 4, 1885);
+    			add_location(div11, file$y, 65, 4, 1889);
     			attr(div12, "class", "root svelte-1dih19s");
     			add_location(div12, file$y, 26, 0, 747);
     		},
@@ -57902,7 +57862,7 @@
 
     		p: function update(changed, ctx) {
     			var componentshierarchy_changes = {};
-    			if (changed.$store) componentshierarchy_changes.components = ctx.$store.allComponents;
+    			if (changed.$store) componentshierarchy_changes.components = ctx.$store.derivedComponents;
     			componentshierarchy.$set(componentshierarchy_changes);
 
     			if (ctx.$store.currentFrontEndItem) {
