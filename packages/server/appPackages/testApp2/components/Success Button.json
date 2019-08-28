@@ -1,0 +1,12 @@
+{
+  "name": "Success Button",
+  "description": "",
+  "inherits": "./standard-components/button",
+  "props": {
+    "className": "btn btn-success",
+    "_component": "Success Button"
+  },
+  "tags": [
+    "button"
+  ]
+}

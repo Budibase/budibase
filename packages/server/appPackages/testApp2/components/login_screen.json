@@ -1,0 +1,15 @@
+{
+  "name": "login_screen",
+  "description": "",
+  "inherits": "./standard-components/login",
+  "props": {
+    "usernameLabel": "User",
+    "_component": "login_screen"
+  },
+  "tags": [
+    "login",
+    "credentials",
+    "password",
+    "logon"
+  ]
+}

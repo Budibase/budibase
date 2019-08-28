@@ -47,6 +47,7 @@ export const getStore = () => {
         currentFrontEndItem:null,
         currentComponentInfo:null,
         currentComponentIsNew:false,
+        currentPageName: "",
         currentNodeIsNew: false,
         errors: [],
         activeNav: "database",
@@ -88,6 +89,7 @@ export const getStore = () => {
     store.removeComponentLibrary =removeComponentLibrary(store);
     store.addStylesheet = addStylesheet(store);
     store.removeStylesheet = removeStylesheet(store);
+    store.savePage = savePage(store);
     store.showFrontend = showFrontend(store);
     store.showBackend = showBackend(store);
     return store;
@@ -116,6 +118,7 @@ const initialise = (store, initial) => async () => {
     initial.hasAppPackage = true;
     initial.hierarchy = pkg.appDefinition.hierarchy;
     initial.accessLevels = pkg.accessLevels;
+    initial.derivedComponents = pkg.derivedComponents;
     initial.allComponents = combineComponents(
         pkg.derivedComponents, pkg.rootComponents);
     initial.actions = reduce((arr, action) => {
@@ -473,6 +476,18 @@ const renameDerivedComponent = store => (oldname, newname) => {
     })
 }
 
+const savePage = store => async page => {
+    store.update(s => {
+        if(s.currentFrontEndIsComponent || !s.currentFrontEndItem) {
+            return;
+        }
+
+        s.pages[currentPageName] = page;
+        savePackage();
+
+    });
+}
+
 const addComponentLibrary = store => async lib => {
 
     const response = 
@@ -525,14 +540,6 @@ const removeComponentLibrary = store => lib => {
 const addStylesheet = store => stylesheet => {
     store.update(s => {
         s.pages.stylesheets.push(stylesheet);
-
-        const styles = document.createElement('link');
-        styles.rel = 'stylesheet';
-        styles.type = 'text/css';
-        styles.media = 'screen';
-        styles.href = stylesheet;
-        document.getElementsByTagName('head')[0].appendChild(styles);
-
         savePackage(store, s);
         return s;
     })
@@ -571,14 +578,14 @@ const savePackage = (store, s) => {
         hierarchy:s.hierarchy,
         triggers:s.triggers,
         actions: groupBy("name")(s.actions),
-        pages:s.pages,
         mainUi: s.mainUi,
         unauthenticatedUi: s.unauthenticatedUi
     };
 
     const data = {
         appDefinition,
-        accessLevels:s.accessLevels
+        accessLevels:s.accessLevels,
+        pages:s.pages,
     }
 
     api.post(`/_builder/api/${s.appname}/appPackage`, data);
@@ -596,9 +603,9 @@ const setCurrentComponent = store => component => {
 
 const setCurrentPage = store => pageName => {
     store.update(s => {
-        const props = s.pages[pageName];
-        s.currentFrontEndItem = {props, name:pageName};
+        s.currentFrontEndItem = s.pages[pageName];
         s.currentFrontEndIsComponent = false;
+        s.currentPageName = pageName;
         return s;
     })
 }

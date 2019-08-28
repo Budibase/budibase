@@ -39,11 +39,12 @@
             throw new Error(`'${name}' is not a store with a 'subscribe' method`);
         }
     }
-    function subscribe(component, store, callback) {
+    function subscribe(store, callback) {
         const unsub = store.subscribe(callback);
-        component.$$.on_destroy.push(unsub.unsubscribe
-            ? () => unsub.unsubscribe()
-            : unsub);
+        return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
+    }
+    function component_subscribe(component, store, callback) {
+        component.$$.on_destroy.push(subscribe(store, callback));
     }
     function create_slot(definition, ctx, fn) {
         if (definition) {
@@ -61,12 +62,15 @@
             ? assign({}, assign(ctx.$$scope.changed || {}, definition[1](fn ? fn(changed) : {})))
             : ctx.$$scope.changed || {};
     }
+    function null_to_empty(value) {
+        return value == null ? '' : value;
+    }
 
     const is_client = typeof window !== 'undefined';
     let now = is_client
         ? () => window.performance.now()
         : () => Date.now();
-    let raf = cb => requestAnimationFrame(cb);
+    let raf = is_client ? cb => requestAnimationFrame(cb) : noop;
 
     const tasks = new Set();
     let running = false;
@@ -105,11 +109,6 @@
     }
     function detach(node) {
         node.parentNode.removeChild(node);
-    }
-    function detach_before(after) {
-        while (after.previousSibling) {
-            after.parentNode.removeChild(after.previousSibling);
-        }
     }
     function destroy_each(iterations, detaching) {
         for (let i = 0; i < iterations.length; i += 1) {
@@ -154,8 +153,13 @@
         if (text.data !== data)
             text.data = data;
     }
-    function set_style(node, key, value) {
-        node.style.setProperty(key, value);
+    function set_input_value(input, value) {
+        if (value != null || input.value) {
+            input.value = value;
+        }
+    }
+    function set_style(node, key, value, important) {
+        node.style.setProperty(key, value, important ? 'important' : '');
     }
     function select_option(select, value) {
         for (let i = 0; i < select.options.length; i += 1) {
@@ -186,6 +190,31 @@
         const e = document.createEvent('CustomEvent');
         e.initCustomEvent(type, false, false, detail);
         return e;
+    }
+    class HtmlTag {
+        constructor(html, anchor = null) {
+            this.e = element('div');
+            this.a = anchor;
+            this.u(html);
+        }
+        m(target, anchor = null) {
+            for (let i = 0; i < this.n.length; i += 1) {
+                insert(target, this.n[i], anchor);
+            }
+            this.t = target;
+        }
+        u(html) {
+            this.e.innerHTML = html;
+            this.n = Array.from(this.e.childNodes);
+        }
+        p(html) {
+            this.d();
+            this.u(html);
+            this.m(this.t, this.a);
+        }
+        d() {
+            this.n.forEach(detach);
+        }
     }
 
     let stylesheet;
@@ -374,6 +403,7 @@
             block.o(local);
         }
     }
+    const null_transition = { duration: 0 };
     function create_in_transition(node, fn, params) {
         let config = fn(node, params);
         let running = false;
@@ -385,7 +415,7 @@
                 delete_rule(node, animation_name);
         }
         function go() {
-            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config;
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
             if (css)
                 animation_name = create_rule(node, 0, 1, duration, delay, easing, css, uid++);
             tick(0, 1);
@@ -443,7 +473,7 @@
         const group = outros;
         group.r += 1;
         function go() {
-            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config;
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
             if (css)
                 animation_name = create_rule(node, 1, 0, duration, delay, easing, css);
             const start_time = now() + delay;
@@ -526,10 +556,15 @@
                 info.blocks[index] = block;
         }
         if (is_promise(promise)) {
+            const current_component = get_current_component();
             promise.then(value => {
+                set_current_component(current_component);
                 update(info.then, 1, info.value, value);
+                set_current_component(null);
             }, error => {
+                set_current_component(current_component);
                 update(info.catch, 2, info.error, error);
+                set_current_component(null);
             });
             // if we previously had a then/catch block, destroy it
             if (info.current !== info.pending) {
@@ -544,40 +579,6 @@
             }
             info.resolved = { [info.value]: promise };
         }
-    }
-
-    function get_spread_update(levels, updates) {
-        const update = {};
-        const to_null_out = {};
-        const accounted_for = { $$scope: 1 };
-        let i = levels.length;
-        while (i--) {
-            const o = levels[i];
-            const n = updates[i];
-            if (n) {
-                for (const key in o) {
-                    if (!(key in n))
-                        to_null_out[key] = 1;
-                }
-                for (const key in n) {
-                    if (!accounted_for[key]) {
-                        update[key] = n[key];
-                        accounted_for[key] = 1;
-                    }
-                }
-                levels[i] = n;
-            }
-            else {
-                for (const key in o) {
-                    accounted_for[key] = 1;
-                }
-            }
-        }
-        for (const key in to_null_out) {
-            if (!(key in update))
-                update[key] = undefined;
-        }
-        return update;
     }
 
     function bind(component, name, callback) {
@@ -708,15 +709,15 @@
         }
     }
 
-    /* src\common\Button.svelte generated by Svelte v3.6.9 */
+    /* src\common\Button.svelte generated by Svelte v3.9.1 */
 
     const file = "src\\common\\Button.svelte";
 
     function create_fragment(ctx) {
     	var button, button_class_value, current, dispose;
 
-    	const default_slot_1 = ctx.$$slots.default;
-    	const default_slot = create_slot(default_slot_1, ctx, null);
+    	const default_slot_template = ctx.$$slots.default;
+    	const default_slot = create_slot(default_slot_template, ctx, null);
 
     	return {
     		c: function create() {
@@ -747,7 +748,10 @@
 
     		p: function update(changed, ctx) {
     			if (default_slot && default_slot.p && changed.$$scope) {
-    				default_slot.p(get_slot_changes(default_slot_1, ctx, changed, null), get_slot_context(default_slot_1, ctx, null));
+    				default_slot.p(
+    					get_slot_changes(default_slot_template, ctx, changed, null),
+    					get_slot_context(default_slot_template, ctx, null)
+    				);
     			}
 
     			if ((!current || changed.color || changed.className || changed.borderClass || changed.grouped) && button_class_value !== (button_class_value = "" + ctx.color + " " + ctx.className + " " + ctx.borderClass + " " + (ctx.grouped ? "grouped" : "") + " svelte-7rfkdx")) {
@@ -28183,9 +28187,13 @@
         if(isRootComponent(component)) {
             subComponentProps = subComponentProps||{};
             const p = createProps(cname, component.props, subComponentProps);
+            const rootProps = createProps(cname, component.props);
             const inheritedProps = [];
+            const targetComponent = stack.length > 0
+                                    ? fp_12(stack)
+                                    : component;
             if(stack.length > 0) {
-                const targetComponent = stack[0];
+                
                 for(let prop in subComponentProps) {
                     const hasProp = pipe(targetComponent.props, [
                                             fp_30,
@@ -28197,24 +28205,27 @@
             }
             const unsetProps = pipe(p.props, [
                 fp_30,
-                fp_8(k => !fp_11(k)(fp_30(subComponentProps)))
+                fp_8(k => !fp_11(k)(fp_30(subComponentProps)) && k !== "_component")
             ]);
+
+            const fullProps = fp_4(p.props);
+            fullProps._component = targetComponent.name;
 
             return ({
                 propsDefinition:expandPropsDefinition(component.props), 
                 inheritedProps,
-                rootDefaultProps: p.props,
+                rootDefaultProps: rootProps.props,
                 unsetProps,
-                fullProps: p.props,
+                fullProps: fullProps,
                 errors: p.errors,
-                component: stack.length > 0 ? stack[0] : component,
+                component: targetComponent,
                 rootComponent: component
             });
         }
         return getComponentInfo(
             allComponents, 
             component.inherits, 
-            [...stack, component],
+            [component, ...stack],
             {...component.props, ...subComponentProps});
     };
 
@@ -28284,17 +28295,17 @@
 
     const loadLibs = async (appName, appPackage) => {
 
-        const makeUrl = l => 
-            `/_builder/api/${appName}/componentlibrary?lib=${encodeURI(l)}`;
-
         const allLibraries = {};
         for(let lib of appPackage.pages.componentLibraries) {
-            const libModule = await import(makeUrl(lib));
+            const libModule = await import(makeLibraryUrl(appName, lib));
             allLibraries[lib] = libModule;
         }
 
         return allLibraries;
     };
+
+    const makeLibraryUrl = (appName, lib) => 
+        `/_builder/api/${appName}/componentlibrary?lib=${encodeURI(lib)}`;
 
     const getStore = () => {
 
@@ -28311,10 +28322,10 @@
             currentFrontEndItem:null,
             currentComponentInfo:null,
             currentComponentIsNew:false,
+            currentPageName: "",
             currentNodeIsNew: false,
             errors: [],
             activeNav: "database",
-            isBackend:true,
             hasAppPackage: false,
             accessLevels: [],
             currentNode: null,
@@ -28352,8 +28363,7 @@
         store.removeComponentLibrary =removeComponentLibrary(store);
         store.addStylesheet = addStylesheet(store);
         store.removeStylesheet = removeStylesheet(store);
-        store.showFrontend = showFrontend(store);
-        store.showBackend = showBackend(store);
+        store.savePage = savePage(store);
         return store;
     }; 
 
@@ -28378,6 +28388,7 @@
         initial.hasAppPackage = true;
         initial.hierarchy = pkg.appDefinition.hierarchy;
         initial.accessLevels = pkg.accessLevels;
+        initial.derivedComponents = pkg.derivedComponents;
         initial.allComponents = combineComponents(
             pkg.derivedComponents, pkg.rootComponents);
         initial.actions = fp_2((arr, action) => {
@@ -28396,20 +28407,6 @@
         }
         store.set(initial);
         return initial;
-    };
-
-    const showBackend = store => () => {
-        store.update(s => {
-            s.isBackend = true;
-            return s;
-        });
-    };
-
-    const showFrontend = store => () => {
-        store.update(s => {
-            s.isBackend = false;
-            return s;
-        });
     };
 
     const combineComponents = (root, derived) => {
@@ -28735,6 +28732,18 @@
         });
     };
 
+    const savePage = store => async page => {
+        store.update(s => {
+            if(s.currentFrontEndIsComponent || !s.currentFrontEndItem) {
+                return;
+            }
+
+            s.pages[currentPageName] = page;
+            savePackage();
+
+        });
+    };
+
     const addComponentLibrary = store => async lib => {
 
         const response = 
@@ -28787,14 +28796,6 @@
     const addStylesheet = store => stylesheet => {
         store.update(s => {
             s.pages.stylesheets.push(stylesheet);
-
-            const styles = document.createElement('link');
-            styles.rel = 'stylesheet';
-            styles.type = 'text/css';
-            styles.media = 'screen';
-            styles.href = stylesheet;
-            document.getElementsByTagName('head')[0].appendChild(styles);
-
             savePackage(store, s);
             return s;
         });
@@ -28833,14 +28834,14 @@
             hierarchy:s.hierarchy,
             triggers:s.triggers,
             actions: fp_45("name")(s.actions),
-            pages:s.pages,
             mainUi: s.mainUi,
             unauthenticatedUi: s.unauthenticatedUi
         };
 
         const data = {
             appDefinition,
-            accessLevels:s.accessLevels
+            accessLevels:s.accessLevels,
+            pages:s.pages,
         };
 
         api$1.post(`/_builder/api/${s.appname}/appPackage`, data);
@@ -28858,9 +28859,9 @@
 
     const setCurrentPage = store => pageName => {
         store.update(s => {
-            const props = s.pages[pageName];
-            s.currentFrontEndItem = {props, name:pageName};
+            s.currentFrontEndItem = s.pages[pageName];
             s.currentFrontEndIsComponent = false;
+            s.currentPageName = pageName;
             return s;
         });
     };
@@ -28889,7 +28890,7 @@
         });
     };
 
-    /* src\NoPackage.svelte generated by Svelte v3.6.9 */
+    /* src\NoPackage.svelte generated by Svelte v3.9.1 */
 
     const file$2 = "src\\NoPackage.svelte";
 
@@ -28901,7 +28902,7 @@
 
     // (17:16) {#each $store.apps as app}
     function create_each_block(ctx) {
-    	var a, t_value = ctx.app, t, a_href_value;
+    	var a, t_value = ctx.app + "", t, a_href_value;
 
     	return {
     		c: function create() {
@@ -28918,7 +28919,7 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if ((changed.$store) && t_value !== (t_value = ctx.app)) {
+    			if ((changed.$store) && t_value !== (t_value = ctx.app + "")) {
     				set_data(t, t_value);
     			}
 
@@ -29034,7 +29035,7 @@
     	let $store;
 
     	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	return { $store };
     }
@@ -29127,10 +29128,10 @@
     /*!*************************!*\
       !*** ./dist/icons.json ***!
       \*************************/
-    /*! exports provided: activity, airplay, alert-circle, alert-octagon, alert-triangle, align-center, align-justify, align-left, align-right, anchor, aperture, archive, arrow-down-circle, arrow-down-left, arrow-down-right, arrow-down, arrow-left-circle, arrow-left, arrow-right-circle, arrow-right, arrow-up-circle, arrow-up-left, arrow-up-right, arrow-up, at-sign, award, bar-chart-2, bar-chart, battery-charging, battery, bell-off, bell, bluetooth, bold, book-open, book, bookmark, box, briefcase, calendar, camera-off, camera, cast, check-circle, check-square, check, chevron-down, chevron-left, chevron-right, chevron-up, chevrons-down, chevrons-left, chevrons-right, chevrons-up, chrome, circle, clipboard, clock, cloud-drizzle, cloud-lightning, cloud-off, cloud-rain, cloud-snow, cloud, code, codepen, codesandbox, coffee, columns, command, compass, copy, corner-down-left, corner-down-right, corner-left-down, corner-left-up, corner-right-down, corner-right-up, corner-up-left, corner-up-right, cpu, credit-card, crop, crosshair, database, delete, disc, dollar-sign, download-cloud, download, droplet, edit-2, edit-3, edit, external-link, eye-off, eye, facebook, fast-forward, feather, figma, file-minus, file-plus, file-text, file, film, filter, flag, folder-minus, folder-plus, folder, framer, frown, gift, git-branch, git-commit, git-merge, git-pull-request, github, gitlab, globe, grid, hard-drive, hash, headphones, heart, help-circle, hexagon, home, image, inbox, info, instagram, italic, key, layers, layout, life-buoy, link-2, link, linkedin, list, loader, lock, log-in, log-out, mail, map-pin, map, maximize-2, maximize, meh, menu, message-circle, message-square, mic-off, mic, minimize-2, minimize, minus-circle, minus-square, minus, monitor, moon, more-horizontal, more-vertical, mouse-pointer, move, music, navigation-2, navigation, octagon, package, paperclip, pause-circle, pause, pen-tool, percent, phone-call, phone-forwarded, phone-incoming, phone-missed, phone-off, phone-outgoing, phone, pie-chart, play-circle, play, plus-circle, plus-square, plus, pocket, power, printer, radio, refresh-ccw, refresh-cw, repeat, rewind, rotate-ccw, rotate-cw, rss, save, scissors, search, send, server, settings, share-2, share, shield-off, shield, shopping-bag, shopping-cart, shuffle, sidebar, skip-back, skip-forward, slack, slash, sliders, smartphone, smile, speaker, square, star, stop-circle, sun, sunrise, sunset, tablet, tag, target, terminal, thermometer, thumbs-down, thumbs-up, toggle-left, toggle-right, trash-2, trash, trello, trending-down, trending-up, triangle, truck, tv, twitter, type, umbrella, underline, unlock, upload-cloud, upload, user-check, user-minus, user-plus, user-x, user, users, video-off, video, voicemail, volume-1, volume-2, volume-x, volume, watch, wifi-off, wifi, wind, x-circle, x-octagon, x-square, x, youtube, zap-off, zap, zoom-in, zoom-out, default */
+    /*! exports provided: activity, airplay, alert-circle, alert-octagon, alert-triangle, align-center, align-justify, align-left, align-right, anchor, aperture, archive, arrow-down-circle, arrow-down-left, arrow-down-right, arrow-down, arrow-left-circle, arrow-left, arrow-right-circle, arrow-right, arrow-up-circle, arrow-up-left, arrow-up-right, arrow-up, at-sign, award, bar-chart-2, bar-chart, battery-charging, battery, bell-off, bell, bluetooth, bold, book-open, book, bookmark, box, briefcase, calendar, camera-off, camera, cast, check-circle, check-square, check, chevron-down, chevron-left, chevron-right, chevron-up, chevrons-down, chevrons-left, chevrons-right, chevrons-up, chrome, circle, clipboard, clock, cloud-drizzle, cloud-lightning, cloud-off, cloud-rain, cloud-snow, cloud, code, codepen, codesandbox, coffee, columns, command, compass, copy, corner-down-left, corner-down-right, corner-left-down, corner-left-up, corner-right-down, corner-right-up, corner-up-left, corner-up-right, cpu, credit-card, crop, crosshair, database, delete, disc, dollar-sign, download-cloud, download, droplet, edit-2, edit-3, edit, external-link, eye-off, eye, facebook, fast-forward, feather, figma, file-minus, file-plus, file-text, file, film, filter, flag, folder-minus, folder-plus, folder, framer, frown, gift, git-branch, git-commit, git-merge, git-pull-request, github, gitlab, globe, grid, hard-drive, hash, headphones, heart, help-circle, hexagon, home, image, inbox, info, instagram, italic, key, layers, layout, life-buoy, link-2, link, linkedin, list, loader, lock, log-in, log-out, mail, map-pin, map, maximize-2, maximize, meh, menu, message-circle, message-square, mic-off, mic, minimize-2, minimize, minus-circle, minus-square, minus, monitor, moon, more-horizontal, more-vertical, mouse-pointer, move, music, navigation-2, navigation, octagon, package, paperclip, pause-circle, pause, pen-tool, percent, phone-call, phone-forwarded, phone-incoming, phone-missed, phone-off, phone-outgoing, phone, pie-chart, play-circle, play, plus-circle, plus-square, plus, pocket, power, printer, radio, refresh-ccw, refresh-cw, repeat, rewind, rotate-ccw, rotate-cw, rss, save, scissors, search, send, server, settings, share-2, share, shield-off, shield, shopping-bag, shopping-cart, shuffle, sidebar, skip-back, skip-forward, slack, slash, sliders, smartphone, smile, speaker, square, star, stop-circle, sun, sunrise, sunset, tablet, tag, target, terminal, thermometer, thumbs-down, thumbs-up, toggle-left, toggle-right, tool, trash-2, trash, trello, trending-down, trending-up, triangle, truck, tv, twitch, twitter, type, umbrella, underline, unlock, upload-cloud, upload, user-check, user-minus, user-plus, user-x, user, users, video-off, video, voicemail, volume-1, volume-2, volume-x, volume, watch, wifi-off, wifi, wind, x-circle, x-octagon, x-square, x, youtube, zap-off, zap, zoom-in, zoom-out, default */
     /***/ (function(module) {
 
-    module.exports = {"activity":"<polyline points=\"22 12 18 12 15 21 9 3 6 12 2 12\"></polyline>","airplay":"<path d=\"M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1\"></path><polygon points=\"12 15 17 21 7 21 12 15\"></polygon>","alert-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"16\"></line>","alert-octagon":"<polygon points=\"7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2\"></polygon><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"16\"></line>","alert-triangle":"<path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"></path><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"></line><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"17\"></line>","align-center":"<line x1=\"18\" y1=\"10\" x2=\"6\" y2=\"10\"></line><line x1=\"21\" y1=\"6\" x2=\"3\" y2=\"6\"></line><line x1=\"21\" y1=\"14\" x2=\"3\" y2=\"14\"></line><line x1=\"18\" y1=\"18\" x2=\"6\" y2=\"18\"></line>","align-justify":"<line x1=\"21\" y1=\"10\" x2=\"3\" y2=\"10\"></line><line x1=\"21\" y1=\"6\" x2=\"3\" y2=\"6\"></line><line x1=\"21\" y1=\"14\" x2=\"3\" y2=\"14\"></line><line x1=\"21\" y1=\"18\" x2=\"3\" y2=\"18\"></line>","align-left":"<line x1=\"17\" y1=\"10\" x2=\"3\" y2=\"10\"></line><line x1=\"21\" y1=\"6\" x2=\"3\" y2=\"6\"></line><line x1=\"21\" y1=\"14\" x2=\"3\" y2=\"14\"></line><line x1=\"17\" y1=\"18\" x2=\"3\" y2=\"18\"></line>","align-right":"<line x1=\"21\" y1=\"10\" x2=\"7\" y2=\"10\"></line><line x1=\"21\" y1=\"6\" x2=\"3\" y2=\"6\"></line><line x1=\"21\" y1=\"14\" x2=\"3\" y2=\"14\"></line><line x1=\"21\" y1=\"18\" x2=\"7\" y2=\"18\"></line>","anchor":"<circle cx=\"12\" cy=\"5\" r=\"3\"></circle><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"8\"></line><path d=\"M5 12H2a10 10 0 0 0 20 0h-3\"></path>","aperture":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"14.31\" y1=\"8\" x2=\"20.05\" y2=\"17.94\"></line><line x1=\"9.69\" y1=\"8\" x2=\"21.17\" y2=\"8\"></line><line x1=\"7.38\" y1=\"12\" x2=\"13.12\" y2=\"2.06\"></line><line x1=\"9.69\" y1=\"16\" x2=\"3.95\" y2=\"6.06\"></line><line x1=\"14.31\" y1=\"16\" x2=\"2.83\" y2=\"16\"></line><line x1=\"16.62\" y1=\"12\" x2=\"10.88\" y2=\"21.94\"></line>","archive":"<polyline points=\"21 8 21 21 3 21 3 8\"></polyline><rect x=\"1\" y=\"3\" width=\"22\" height=\"5\"></rect><line x1=\"10\" y1=\"12\" x2=\"14\" y2=\"12\"></line>","arrow-down-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"8 12 12 16 16 12\"></polyline><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"></line>","arrow-down-left":"<line x1=\"17\" y1=\"7\" x2=\"7\" y2=\"17\"></line><polyline points=\"17 17 7 17 7 7\"></polyline>","arrow-down-right":"<line x1=\"7\" y1=\"7\" x2=\"17\" y2=\"17\"></line><polyline points=\"17 7 17 17 7 17\"></polyline>","arrow-down":"<line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"></line><polyline points=\"19 12 12 19 5 12\"></polyline>","arrow-left-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 8 8 12 12 16\"></polyline><line x1=\"16\" y1=\"12\" x2=\"8\" y2=\"12\"></line>","arrow-left":"<line x1=\"19\" y1=\"12\" x2=\"5\" y2=\"12\"></line><polyline points=\"12 19 5 12 12 5\"></polyline>","arrow-right-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 16 16 12 12 8\"></polyline><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","arrow-right":"<line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line><polyline points=\"12 5 19 12 12 19\"></polyline>","arrow-up-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"16 12 12 8 8 12\"></polyline><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"8\"></line>","arrow-up-left":"<line x1=\"17\" y1=\"17\" x2=\"7\" y2=\"7\"></line><polyline points=\"7 17 7 7 17 7\"></polyline>","arrow-up-right":"<line x1=\"7\" y1=\"17\" x2=\"17\" y2=\"7\"></line><polyline points=\"7 7 17 7 17 17\"></polyline>","arrow-up":"<line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"5\"></line><polyline points=\"5 12 12 5 19 12\"></polyline>","at-sign":"<circle cx=\"12\" cy=\"12\" r=\"4\"></circle><path d=\"M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94\"></path>","award":"<circle cx=\"12\" cy=\"8\" r=\"7\"></circle><polyline points=\"8.21 13.89 7 23 12 20 17 23 15.79 13.88\"></polyline>","bar-chart-2":"<line x1=\"18\" y1=\"20\" x2=\"18\" y2=\"10\"></line><line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"4\"></line><line x1=\"6\" y1=\"20\" x2=\"6\" y2=\"14\"></line>","bar-chart":"<line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"10\"></line><line x1=\"18\" y1=\"20\" x2=\"18\" y2=\"4\"></line><line x1=\"6\" y1=\"20\" x2=\"6\" y2=\"16\"></line>","battery-charging":"<path d=\"M5 18H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.19M15 6h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3.19\"></path><line x1=\"23\" y1=\"13\" x2=\"23\" y2=\"11\"></line><polyline points=\"11 6 7 12 13 12 9 18\"></polyline>","battery":"<rect x=\"1\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\" ry=\"2\"></rect><line x1=\"23\" y1=\"13\" x2=\"23\" y2=\"11\"></line>","bell-off":"<path d=\"M13.73 21a2 2 0 0 1-3.46 0\"></path><path d=\"M18.63 13A17.89 17.89 0 0 1 18 8\"></path><path d=\"M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14\"></path><path d=\"M18 8a6 6 0 0 0-9.33-5\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","bell":"<path d=\"M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9\"></path><path d=\"M13.73 21a2 2 0 0 1-3.46 0\"></path>","bluetooth":"<polyline points=\"6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5\"></polyline>","bold":"<path d=\"M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z\"></path><path d=\"M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z\"></path>","book-open":"<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"></path><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"></path>","book":"<path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"></path><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"></path>","bookmark":"<path d=\"M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z\"></path>","box":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"></path><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"></polyline><line x1=\"12\" y1=\"22.08\" x2=\"12\" y2=\"12\"></line>","briefcase":"<rect x=\"2\" y=\"7\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"></rect><path d=\"M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"></path>","calendar":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"></line><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"></line><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"></line>","camera-off":"<line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line><path d=\"M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56\"></path>","camera":"<path d=\"M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z\"></path><circle cx=\"12\" cy=\"13\" r=\"4\"></circle>","cast":"<path d=\"M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6\"></path><line x1=\"2\" y1=\"20\" x2=\"2\" y2=\"20\"></line>","check-circle":"<path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"></path><polyline points=\"22 4 12 14.01 9 11.01\"></polyline>","check-square":"<polyline points=\"9 11 12 14 22 4\"></polyline><path d=\"M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11\"></path>","check":"<polyline points=\"20 6 9 17 4 12\"></polyline>","chevron-down":"<polyline points=\"6 9 12 15 18 9\"></polyline>","chevron-left":"<polyline points=\"15 18 9 12 15 6\"></polyline>","chevron-right":"<polyline points=\"9 18 15 12 9 6\"></polyline>","chevron-up":"<polyline points=\"18 15 12 9 6 15\"></polyline>","chevrons-down":"<polyline points=\"7 13 12 18 17 13\"></polyline><polyline points=\"7 6 12 11 17 6\"></polyline>","chevrons-left":"<polyline points=\"11 17 6 12 11 7\"></polyline><polyline points=\"18 17 13 12 18 7\"></polyline>","chevrons-right":"<polyline points=\"13 17 18 12 13 7\"></polyline><polyline points=\"6 17 11 12 6 7\"></polyline>","chevrons-up":"<polyline points=\"17 11 12 6 7 11\"></polyline><polyline points=\"17 18 12 13 7 18\"></polyline>","chrome":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><circle cx=\"12\" cy=\"12\" r=\"4\"></circle><line x1=\"21.17\" y1=\"8\" x2=\"12\" y2=\"8\"></line><line x1=\"3.95\" y1=\"6.06\" x2=\"8.54\" y2=\"14\"></line><line x1=\"10.88\" y1=\"21.94\" x2=\"15.46\" y2=\"14\"></line>","circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle>","clipboard":"<path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"></path><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" ry=\"1\"></rect>","clock":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 6 12 12 16 14\"></polyline>","cloud-drizzle":"<line x1=\"8\" y1=\"19\" x2=\"8\" y2=\"21\"></line><line x1=\"8\" y1=\"13\" x2=\"8\" y2=\"15\"></line><line x1=\"16\" y1=\"19\" x2=\"16\" y2=\"21\"></line><line x1=\"16\" y1=\"13\" x2=\"16\" y2=\"15\"></line><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"></line><line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"17\"></line><path d=\"M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25\"></path>","cloud-lightning":"<path d=\"M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9\"></path><polyline points=\"13 11 9 17 15 17 11 23\"></polyline>","cloud-off":"<path d=\"M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","cloud-rain":"<line x1=\"16\" y1=\"13\" x2=\"16\" y2=\"21\"></line><line x1=\"8\" y1=\"13\" x2=\"8\" y2=\"21\"></line><line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"23\"></line><path d=\"M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25\"></path>","cloud-snow":"<path d=\"M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25\"></path><line x1=\"8\" y1=\"16\" x2=\"8\" y2=\"16\"></line><line x1=\"8\" y1=\"20\" x2=\"8\" y2=\"20\"></line><line x1=\"12\" y1=\"18\" x2=\"12\" y2=\"18\"></line><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"22\"></line><line x1=\"16\" y1=\"16\" x2=\"16\" y2=\"16\"></line><line x1=\"16\" y1=\"20\" x2=\"16\" y2=\"20\"></line>","cloud":"<path d=\"M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z\"></path>","code":"<polyline points=\"16 18 22 12 16 6\"></polyline><polyline points=\"8 6 2 12 8 18\"></polyline>","codepen":"<polygon points=\"12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2\"></polygon><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"15.5\"></line><polyline points=\"22 8.5 12 15.5 2 8.5\"></polyline><polyline points=\"2 15.5 12 8.5 22 15.5\"></polyline><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"8.5\"></line>","codesandbox":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"></path><polyline points=\"7.5 4.21 12 6.81 16.5 4.21\"></polyline><polyline points=\"7.5 19.79 7.5 14.6 3 12\"></polyline><polyline points=\"21 12 16.5 14.6 16.5 19.79\"></polyline><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"></polyline><line x1=\"12\" y1=\"22.08\" x2=\"12\" y2=\"12\"></line>","coffee":"<path d=\"M18 8h1a4 4 0 0 1 0 8h-1\"></path><path d=\"M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z\"></path><line x1=\"6\" y1=\"1\" x2=\"6\" y2=\"4\"></line><line x1=\"10\" y1=\"1\" x2=\"10\" y2=\"4\"></line><line x1=\"14\" y1=\"1\" x2=\"14\" y2=\"4\"></line>","columns":"<path d=\"M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18\"></path>","command":"<path d=\"M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z\"></path>","compass":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polygon points=\"16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76\"></polygon>","copy":"<rect x=\"9\" y=\"9\" width=\"13\" height=\"13\" rx=\"2\" ry=\"2\"></rect><path d=\"M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\"></path>","corner-down-left":"<polyline points=\"9 10 4 15 9 20\"></polyline><path d=\"M20 4v7a4 4 0 0 1-4 4H4\"></path>","corner-down-right":"<polyline points=\"15 10 20 15 15 20\"></polyline><path d=\"M4 4v7a4 4 0 0 0 4 4h12\"></path>","corner-left-down":"<polyline points=\"14 15 9 20 4 15\"></polyline><path d=\"M20 4h-7a4 4 0 0 0-4 4v12\"></path>","corner-left-up":"<polyline points=\"14 9 9 4 4 9\"></polyline><path d=\"M20 20h-7a4 4 0 0 1-4-4V4\"></path>","corner-right-down":"<polyline points=\"10 15 15 20 20 15\"></polyline><path d=\"M4 4h7a4 4 0 0 1 4 4v12\"></path>","corner-right-up":"<polyline points=\"10 9 15 4 20 9\"></polyline><path d=\"M4 20h7a4 4 0 0 0 4-4V4\"></path>","corner-up-left":"<polyline points=\"9 14 4 9 9 4\"></polyline><path d=\"M20 20v-7a4 4 0 0 0-4-4H4\"></path>","corner-up-right":"<polyline points=\"15 14 20 9 15 4\"></polyline><path d=\"M4 20v-7a4 4 0 0 1 4-4h12\"></path>","cpu":"<rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"2\" ry=\"2\"></rect><rect x=\"9\" y=\"9\" width=\"6\" height=\"6\"></rect><line x1=\"9\" y1=\"1\" x2=\"9\" y2=\"4\"></line><line x1=\"15\" y1=\"1\" x2=\"15\" y2=\"4\"></line><line x1=\"9\" y1=\"20\" x2=\"9\" y2=\"23\"></line><line x1=\"15\" y1=\"20\" x2=\"15\" y2=\"23\"></line><line x1=\"20\" y1=\"9\" x2=\"23\" y2=\"9\"></line><line x1=\"20\" y1=\"14\" x2=\"23\" y2=\"14\"></line><line x1=\"1\" y1=\"9\" x2=\"4\" y2=\"9\"></line><line x1=\"1\" y1=\"14\" x2=\"4\" y2=\"14\"></line>","credit-card":"<rect x=\"1\" y=\"4\" width=\"22\" height=\"16\" rx=\"2\" ry=\"2\"></rect><line x1=\"1\" y1=\"10\" x2=\"23\" y2=\"10\"></line>","crop":"<path d=\"M6.13 1L6 16a2 2 0 0 0 2 2h15\"></path><path d=\"M1 6.13L16 6a2 2 0 0 1 2 2v15\"></path>","crosshair":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"22\" y1=\"12\" x2=\"18\" y2=\"12\"></line><line x1=\"6\" y1=\"12\" x2=\"2\" y2=\"12\"></line><line x1=\"12\" y1=\"6\" x2=\"12\" y2=\"2\"></line><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"18\"></line>","database":"<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"></ellipse><path d=\"M21 12c0 1.66-4 3-9 3s-9-1.34-9-3\"></path><path d=\"M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5\"></path>","delete":"<path d=\"M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z\"></path><line x1=\"18\" y1=\"9\" x2=\"12\" y2=\"15\"></line><line x1=\"12\" y1=\"9\" x2=\"18\" y2=\"15\"></line>","disc":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><circle cx=\"12\" cy=\"12\" r=\"3\"></circle>","dollar-sign":"<line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"23\"></line><path d=\"M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"></path>","download-cloud":"<polyline points=\"8 17 12 21 16 17\"></polyline><line x1=\"12\" y1=\"12\" x2=\"12\" y2=\"21\"></line><path d=\"M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29\"></path>","download":"<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"></path><polyline points=\"7 10 12 15 17 10\"></polyline><line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"3\"></line>","droplet":"<path d=\"M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z\"></path>","edit-2":"<path d=\"M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z\"></path>","edit-3":"<path d=\"M12 20h9\"></path><path d=\"M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z\"></path>","edit":"<path d=\"M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7\"></path><path d=\"M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z\"></path>","external-link":"<path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"></path><polyline points=\"15 3 21 3 21 9\"></polyline><line x1=\"10\" y1=\"14\" x2=\"21\" y2=\"3\"></line>","eye-off":"<path d=\"M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","eye":"<path d=\"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle>","facebook":"<path d=\"M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z\"></path>","fast-forward":"<polygon points=\"13 19 22 12 13 5 13 19\"></polygon><polygon points=\"2 19 11 12 2 5 2 19\"></polygon>","feather":"<path d=\"M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z\"></path><line x1=\"16\" y1=\"8\" x2=\"2\" y2=\"22\"></line><line x1=\"17.5\" y1=\"15\" x2=\"9\" y2=\"15\"></line>","figma":"<path d=\"M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z\"></path><path d=\"M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z\"></path><path d=\"M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z\"></path><path d=\"M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z\"></path><path d=\"M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z\"></path>","file-minus":"<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path><polyline points=\"14 2 14 8 20 8\"></polyline><line x1=\"9\" y1=\"15\" x2=\"15\" y2=\"15\"></line>","file-plus":"<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path><polyline points=\"14 2 14 8 20 8\"></polyline><line x1=\"12\" y1=\"18\" x2=\"12\" y2=\"12\"></line><line x1=\"9\" y1=\"15\" x2=\"15\" y2=\"15\"></line>","file-text":"<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path><polyline points=\"14 2 14 8 20 8\"></polyline><line x1=\"16\" y1=\"13\" x2=\"8\" y2=\"13\"></line><line x1=\"16\" y1=\"17\" x2=\"8\" y2=\"17\"></line><polyline points=\"10 9 9 9 8 9\"></polyline>","file":"<path d=\"M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"></path><polyline points=\"13 2 13 9 20 9\"></polyline>","film":"<rect x=\"2\" y=\"2\" width=\"20\" height=\"20\" rx=\"2.18\" ry=\"2.18\"></rect><line x1=\"7\" y1=\"2\" x2=\"7\" y2=\"22\"></line><line x1=\"17\" y1=\"2\" x2=\"17\" y2=\"22\"></line><line x1=\"2\" y1=\"12\" x2=\"22\" y2=\"12\"></line><line x1=\"2\" y1=\"7\" x2=\"7\" y2=\"7\"></line><line x1=\"2\" y1=\"17\" x2=\"7\" y2=\"17\"></line><line x1=\"17\" y1=\"17\" x2=\"22\" y2=\"17\"></line><line x1=\"17\" y1=\"7\" x2=\"22\" y2=\"7\"></line>","filter":"<polygon points=\"22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3\"></polygon>","flag":"<path d=\"M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z\"></path><line x1=\"4\" y1=\"22\" x2=\"4\" y2=\"15\"></line>","folder-minus":"<path d=\"M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z\"></path><line x1=\"9\" y1=\"14\" x2=\"15\" y2=\"14\"></line>","folder-plus":"<path d=\"M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z\"></path><line x1=\"12\" y1=\"11\" x2=\"12\" y2=\"17\"></line><line x1=\"9\" y1=\"14\" x2=\"15\" y2=\"14\"></line>","folder":"<path d=\"M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z\"></path>","framer":"<path d=\"M5 16V9h14V2H5l14 14h-7m-7 0l7 7v-7m-7 0h7\"></path>","frown":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><path d=\"M16 16s-1.5-2-4-2-4 2-4 2\"></path><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"></line><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"></line>","gift":"<polyline points=\"20 12 20 22 4 22 4 12\"></polyline><rect x=\"2\" y=\"7\" width=\"20\" height=\"5\"></rect><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"7\"></line><path d=\"M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z\"></path><path d=\"M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z\"></path>","git-branch":"<line x1=\"6\" y1=\"3\" x2=\"6\" y2=\"15\"></line><circle cx=\"18\" cy=\"6\" r=\"3\"></circle><circle cx=\"6\" cy=\"18\" r=\"3\"></circle><path d=\"M18 9a9 9 0 0 1-9 9\"></path>","git-commit":"<circle cx=\"12\" cy=\"12\" r=\"4\"></circle><line x1=\"1.05\" y1=\"12\" x2=\"7\" y2=\"12\"></line><line x1=\"17.01\" y1=\"12\" x2=\"22.96\" y2=\"12\"></line>","git-merge":"<circle cx=\"18\" cy=\"18\" r=\"3\"></circle><circle cx=\"6\" cy=\"6\" r=\"3\"></circle><path d=\"M6 21V9a9 9 0 0 0 9 9\"></path>","git-pull-request":"<circle cx=\"18\" cy=\"18\" r=\"3\"></circle><circle cx=\"6\" cy=\"6\" r=\"3\"></circle><path d=\"M13 6h3a2 2 0 0 1 2 2v7\"></path><line x1=\"6\" y1=\"9\" x2=\"6\" y2=\"21\"></line>","github":"<path d=\"M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22\"></path>","gitlab":"<path d=\"M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z\"></path>","globe":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"2\" y1=\"12\" x2=\"22\" y2=\"12\"></line><path d=\"M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z\"></path>","grid":"<rect x=\"3\" y=\"3\" width=\"7\" height=\"7\"></rect><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\"></rect><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\"></rect><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\"></rect>","hard-drive":"<line x1=\"22\" y1=\"12\" x2=\"2\" y2=\"12\"></line><path d=\"M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"></path><line x1=\"6\" y1=\"16\" x2=\"6\" y2=\"16\"></line><line x1=\"10\" y1=\"16\" x2=\"10\" y2=\"16\"></line>","hash":"<line x1=\"4\" y1=\"9\" x2=\"20\" y2=\"9\"></line><line x1=\"4\" y1=\"15\" x2=\"20\" y2=\"15\"></line><line x1=\"10\" y1=\"3\" x2=\"8\" y2=\"21\"></line><line x1=\"16\" y1=\"3\" x2=\"14\" y2=\"21\"></line>","headphones":"<path d=\"M3 18v-6a9 9 0 0 1 18 0v6\"></path><path d=\"M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z\"></path>","heart":"<path d=\"M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z\"></path>","help-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><path d=\"M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3\"></path><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"17\"></line>","hexagon":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"></path>","home":"<path d=\"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path><polyline points=\"9 22 9 12 15 12 15 22\"></polyline>","image":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><circle cx=\"8.5\" cy=\"8.5\" r=\"1.5\"></circle><polyline points=\"21 15 16 10 5 21\"></polyline>","inbox":"<polyline points=\"22 12 16 12 14 15 10 15 8 12 2 12\"></polyline><path d=\"M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"></path>","info":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"8\"></line>","instagram":"<rect x=\"2\" y=\"2\" width=\"20\" height=\"20\" rx=\"5\" ry=\"5\"></rect><path d=\"M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z\"></path><line x1=\"17.5\" y1=\"6.5\" x2=\"17.5\" y2=\"6.5\"></line>","italic":"<line x1=\"19\" y1=\"4\" x2=\"10\" y2=\"4\"></line><line x1=\"14\" y1=\"20\" x2=\"5\" y2=\"20\"></line><line x1=\"15\" y1=\"4\" x2=\"9\" y2=\"20\"></line>","key":"<path d=\"M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4\"></path>","layers":"<polygon points=\"12 2 2 7 12 12 22 7 12 2\"></polygon><polyline points=\"2 17 12 22 22 17\"></polyline><polyline points=\"2 12 12 17 22 12\"></polyline>","layout":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"3\" y1=\"9\" x2=\"21\" y2=\"9\"></line><line x1=\"9\" y1=\"21\" x2=\"9\" y2=\"9\"></line>","life-buoy":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><circle cx=\"12\" cy=\"12\" r=\"4\"></circle><line x1=\"4.93\" y1=\"4.93\" x2=\"9.17\" y2=\"9.17\"></line><line x1=\"14.83\" y1=\"14.83\" x2=\"19.07\" y2=\"19.07\"></line><line x1=\"14.83\" y1=\"9.17\" x2=\"19.07\" y2=\"4.93\"></line><line x1=\"14.83\" y1=\"9.17\" x2=\"18.36\" y2=\"5.64\"></line><line x1=\"4.93\" y1=\"19.07\" x2=\"9.17\" y2=\"14.83\"></line>","link-2":"<path d=\"M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3\"></path><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","link":"<path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"></path><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"></path>","linkedin":"<path d=\"M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z\"></path><rect x=\"2\" y=\"9\" width=\"4\" height=\"12\"></rect><circle cx=\"4\" cy=\"4\" r=\"2\"></circle>","list":"<line x1=\"8\" y1=\"6\" x2=\"21\" y2=\"6\"></line><line x1=\"8\" y1=\"12\" x2=\"21\" y2=\"12\"></line><line x1=\"8\" y1=\"18\" x2=\"21\" y2=\"18\"></line><line x1=\"3\" y1=\"6\" x2=\"3\" y2=\"6\"></line><line x1=\"3\" y1=\"12\" x2=\"3\" y2=\"12\"></line><line x1=\"3\" y1=\"18\" x2=\"3\" y2=\"18\"></line>","loader":"<line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"6\"></line><line x1=\"12\" y1=\"18\" x2=\"12\" y2=\"22\"></line><line x1=\"4.93\" y1=\"4.93\" x2=\"7.76\" y2=\"7.76\"></line><line x1=\"16.24\" y1=\"16.24\" x2=\"19.07\" y2=\"19.07\"></line><line x1=\"2\" y1=\"12\" x2=\"6\" y2=\"12\"></line><line x1=\"18\" y1=\"12\" x2=\"22\" y2=\"12\"></line><line x1=\"4.93\" y1=\"19.07\" x2=\"7.76\" y2=\"16.24\"></line><line x1=\"16.24\" y1=\"7.76\" x2=\"19.07\" y2=\"4.93\"></line>","lock":"<rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"></rect><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"></path>","log-in":"<path d=\"M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4\"></path><polyline points=\"10 17 15 12 10 7\"></polyline><line x1=\"15\" y1=\"12\" x2=\"3\" y2=\"12\"></line>","log-out":"<path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"></path><polyline points=\"16 17 21 12 16 7\"></polyline><line x1=\"21\" y1=\"12\" x2=\"9\" y2=\"12\"></line>","mail":"<path d=\"M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z\"></path><polyline points=\"22,6 12,13 2,6\"></polyline>","map-pin":"<path d=\"M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z\"></path><circle cx=\"12\" cy=\"10\" r=\"3\"></circle>","map":"<polygon points=\"1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6\"></polygon><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"18\"></line><line x1=\"16\" y1=\"6\" x2=\"16\" y2=\"22\"></line>","maximize-2":"<polyline points=\"15 3 21 3 21 9\"></polyline><polyline points=\"9 21 3 21 3 15\"></polyline><line x1=\"21\" y1=\"3\" x2=\"14\" y2=\"10\"></line><line x1=\"3\" y1=\"21\" x2=\"10\" y2=\"14\"></line>","maximize":"<path d=\"M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3\"></path>","meh":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"8\" y1=\"15\" x2=\"16\" y2=\"15\"></line><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"></line><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"></line>","menu":"<line x1=\"3\" y1=\"12\" x2=\"21\" y2=\"12\"></line><line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line><line x1=\"3\" y1=\"18\" x2=\"21\" y2=\"18\"></line>","message-circle":"<path d=\"M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z\"></path>","message-square":"<path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\"></path>","mic-off":"<line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line><path d=\"M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6\"></path><path d=\"M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23\"></path><line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"23\"></line><line x1=\"8\" y1=\"23\" x2=\"16\" y2=\"23\"></line>","mic":"<path d=\"M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z\"></path><path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"></path><line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"23\"></line><line x1=\"8\" y1=\"23\" x2=\"16\" y2=\"23\"></line>","minimize-2":"<polyline points=\"4 14 10 14 10 20\"></polyline><polyline points=\"20 10 14 10 14 4\"></polyline><line x1=\"14\" y1=\"10\" x2=\"21\" y2=\"3\"></line><line x1=\"3\" y1=\"21\" x2=\"10\" y2=\"14\"></line>","minimize":"<path d=\"M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3\"></path>","minus-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","minus-square":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","minus":"<line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line>","monitor":"<rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"></rect><line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"></line><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"></line>","moon":"<path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"></path>","more-horizontal":"<circle cx=\"12\" cy=\"12\" r=\"1\"></circle><circle cx=\"19\" cy=\"12\" r=\"1\"></circle><circle cx=\"5\" cy=\"12\" r=\"1\"></circle>","more-vertical":"<circle cx=\"12\" cy=\"12\" r=\"1\"></circle><circle cx=\"12\" cy=\"5\" r=\"1\"></circle><circle cx=\"12\" cy=\"19\" r=\"1\"></circle>","mouse-pointer":"<path d=\"M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z\"></path><path d=\"M13 13l6 6\"></path>","move":"<polyline points=\"5 9 2 12 5 15\"></polyline><polyline points=\"9 5 12 2 15 5\"></polyline><polyline points=\"15 19 12 22 9 19\"></polyline><polyline points=\"19 9 22 12 19 15\"></polyline><line x1=\"2\" y1=\"12\" x2=\"22\" y2=\"12\"></line><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"22\"></line>","music":"<path d=\"M9 18V5l12-2v13\"></path><circle cx=\"6\" cy=\"18\" r=\"3\"></circle><circle cx=\"18\" cy=\"16\" r=\"3\"></circle>","navigation-2":"<polygon points=\"12 2 19 21 12 17 5 21 12 2\"></polygon>","navigation":"<polygon points=\"3 11 22 2 13 21 11 13 3 11\"></polygon>","octagon":"<polygon points=\"7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2\"></polygon>","package":"<line x1=\"16.5\" y1=\"9.4\" x2=\"7.5\" y2=\"4.21\"></line><path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"></path><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"></polyline><line x1=\"12\" y1=\"22.08\" x2=\"12\" y2=\"12\"></line>","paperclip":"<path d=\"M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48\"></path>","pause-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"10\" y1=\"15\" x2=\"10\" y2=\"9\"></line><line x1=\"14\" y1=\"15\" x2=\"14\" y2=\"9\"></line>","pause":"<rect x=\"6\" y=\"4\" width=\"4\" height=\"16\"></rect><rect x=\"14\" y=\"4\" width=\"4\" height=\"16\"></rect>","pen-tool":"<path d=\"M12 19l7-7 3 3-7 7-3-3z\"></path><path d=\"M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z\"></path><path d=\"M2 2l7.586 7.586\"></path><circle cx=\"11\" cy=\"11\" r=\"2\"></circle>","percent":"<line x1=\"19\" y1=\"5\" x2=\"5\" y2=\"19\"></line><circle cx=\"6.5\" cy=\"6.5\" r=\"2.5\"></circle><circle cx=\"17.5\" cy=\"17.5\" r=\"2.5\"></circle>","phone-call":"<path d=\"M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94m-1 7.98v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone-forwarded":"<polyline points=\"19 1 23 5 19 9\"></polyline><line x1=\"15\" y1=\"5\" x2=\"23\" y2=\"5\"></line><path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone-incoming":"<polyline points=\"16 2 16 8 22 8\"></polyline><line x1=\"23\" y1=\"1\" x2=\"16\" y2=\"8\"></line><path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone-missed":"<line x1=\"23\" y1=\"1\" x2=\"17\" y2=\"7\"></line><line x1=\"17\" y1=\"1\" x2=\"23\" y2=\"7\"></line><path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone-off":"<path d=\"M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91\"></path><line x1=\"23\" y1=\"1\" x2=\"1\" y2=\"23\"></line>","phone-outgoing":"<polyline points=\"23 7 23 1 17 1\"></polyline><line x1=\"16\" y1=\"8\" x2=\"23\" y2=\"1\"></line><path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone":"<path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","pie-chart":"<path d=\"M21.21 15.89A10 10 0 1 1 8 2.83\"></path><path d=\"M22 12A10 10 0 0 0 12 2v10z\"></path>","play-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polygon points=\"10 8 16 12 10 16 10 8\"></polygon>","play":"<polygon points=\"5 3 19 12 5 21 5 3\"></polygon>","plus-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"></line><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","plus-square":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"></line><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","plus":"<line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"></line><line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line>","pocket":"<path d=\"M4 3h16a2 2 0 0 1 2 2v6a10 10 0 0 1-10 10A10 10 0 0 1 2 11V5a2 2 0 0 1 2-2z\"></path><polyline points=\"8 10 12 14 16 10\"></polyline>","power":"<path d=\"M18.36 6.64a9 9 0 1 1-12.73 0\"></path><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"12\"></line>","printer":"<polyline points=\"6 9 6 2 18 2 18 9\"></polyline><path d=\"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2\"></path><rect x=\"6\" y=\"14\" width=\"12\" height=\"8\"></rect>","radio":"<circle cx=\"12\" cy=\"12\" r=\"2\"></circle><path d=\"M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14\"></path>","refresh-ccw":"<polyline points=\"1 4 1 10 7 10\"></polyline><polyline points=\"23 20 23 14 17 14\"></polyline><path d=\"M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15\"></path>","refresh-cw":"<polyline points=\"23 4 23 10 17 10\"></polyline><polyline points=\"1 20 1 14 7 14\"></polyline><path d=\"M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15\"></path>","repeat":"<polyline points=\"17 1 21 5 17 9\"></polyline><path d=\"M3 11V9a4 4 0 0 1 4-4h14\"></path><polyline points=\"7 23 3 19 7 15\"></polyline><path d=\"M21 13v2a4 4 0 0 1-4 4H3\"></path>","rewind":"<polygon points=\"11 19 2 12 11 5 11 19\"></polygon><polygon points=\"22 19 13 12 22 5 22 19\"></polygon>","rotate-ccw":"<polyline points=\"1 4 1 10 7 10\"></polyline><path d=\"M3.51 15a9 9 0 1 0 2.13-9.36L1 10\"></path>","rotate-cw":"<polyline points=\"23 4 23 10 17 10\"></polyline><path d=\"M20.49 15a9 9 0 1 1-2.12-9.36L23 10\"></path>","rss":"<path d=\"M4 11a9 9 0 0 1 9 9\"></path><path d=\"M4 4a16 16 0 0 1 16 16\"></path><circle cx=\"5\" cy=\"19\" r=\"1\"></circle>","save":"<path d=\"M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z\"></path><polyline points=\"17 21 17 13 7 13 7 21\"></polyline><polyline points=\"7 3 7 8 15 8\"></polyline>","scissors":"<circle cx=\"6\" cy=\"6\" r=\"3\"></circle><circle cx=\"6\" cy=\"18\" r=\"3\"></circle><line x1=\"20\" y1=\"4\" x2=\"8.12\" y2=\"15.88\"></line><line x1=\"14.47\" y1=\"14.48\" x2=\"20\" y2=\"20\"></line><line x1=\"8.12\" y1=\"8.12\" x2=\"12\" y2=\"12\"></line>","search":"<circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line>","send":"<line x1=\"22\" y1=\"2\" x2=\"11\" y2=\"13\"></line><polygon points=\"22 2 15 22 11 13 2 9 22 2\"></polygon>","server":"<rect x=\"2\" y=\"2\" width=\"20\" height=\"8\" rx=\"2\" ry=\"2\"></rect><rect x=\"2\" y=\"14\" width=\"20\" height=\"8\" rx=\"2\" ry=\"2\"></rect><line x1=\"6\" y1=\"6\" x2=\"6\" y2=\"6\"></line><line x1=\"6\" y1=\"18\" x2=\"6\" y2=\"18\"></line>","settings":"<circle cx=\"12\" cy=\"12\" r=\"3\"></circle><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z\"></path>","share-2":"<circle cx=\"18\" cy=\"5\" r=\"3\"></circle><circle cx=\"6\" cy=\"12\" r=\"3\"></circle><circle cx=\"18\" cy=\"19\" r=\"3\"></circle><line x1=\"8.59\" y1=\"13.51\" x2=\"15.42\" y2=\"17.49\"></line><line x1=\"15.41\" y1=\"6.51\" x2=\"8.59\" y2=\"10.49\"></line>","share":"<path d=\"M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8\"></path><polyline points=\"16 6 12 2 8 6\"></polyline><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"15\"></line>","shield-off":"<path d=\"M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18\"></path><path d=\"M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","shield":"<path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"></path>","shopping-bag":"<path d=\"M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z\"></path><line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line><path d=\"M16 10a4 4 0 0 1-8 0\"></path>","shopping-cart":"<circle cx=\"9\" cy=\"21\" r=\"1\"></circle><circle cx=\"20\" cy=\"21\" r=\"1\"></circle><path d=\"M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6\"></path>","shuffle":"<polyline points=\"16 3 21 3 21 8\"></polyline><line x1=\"4\" y1=\"20\" x2=\"21\" y2=\"3\"></line><polyline points=\"21 16 21 21 16 21\"></polyline><line x1=\"15\" y1=\"15\" x2=\"21\" y2=\"21\"></line><line x1=\"4\" y1=\"4\" x2=\"9\" y2=\"9\"></line>","sidebar":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"9\" y1=\"3\" x2=\"9\" y2=\"21\"></line>","skip-back":"<polygon points=\"19 20 9 12 19 4 19 20\"></polygon><line x1=\"5\" y1=\"19\" x2=\"5\" y2=\"5\"></line>","skip-forward":"<polygon points=\"5 4 15 12 5 20 5 4\"></polygon><line x1=\"19\" y1=\"5\" x2=\"19\" y2=\"19\"></line>","slack":"<path d=\"M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z\"></path><path d=\"M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z\"></path><path d=\"M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z\"></path><path d=\"M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z\"></path><path d=\"M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z\"></path><path d=\"M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z\"></path><path d=\"M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z\"></path><path d=\"M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z\"></path>","slash":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"4.93\" y1=\"4.93\" x2=\"19.07\" y2=\"19.07\"></line>","sliders":"<line x1=\"4\" y1=\"21\" x2=\"4\" y2=\"14\"></line><line x1=\"4\" y1=\"10\" x2=\"4\" y2=\"3\"></line><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"3\"></line><line x1=\"20\" y1=\"21\" x2=\"20\" y2=\"16\"></line><line x1=\"20\" y1=\"12\" x2=\"20\" y2=\"3\"></line><line x1=\"1\" y1=\"14\" x2=\"7\" y2=\"14\"></line><line x1=\"9\" y1=\"8\" x2=\"15\" y2=\"8\"></line><line x1=\"17\" y1=\"16\" x2=\"23\" y2=\"16\"></line>","smartphone":"<rect x=\"5\" y=\"2\" width=\"14\" height=\"20\" rx=\"2\" ry=\"2\"></rect><line x1=\"12\" y1=\"18\" x2=\"12\" y2=\"18\"></line>","smile":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><path d=\"M8 14s1.5 2 4 2 4-2 4-2\"></path><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"></line><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"></line>","speaker":"<rect x=\"4\" y=\"2\" width=\"16\" height=\"20\" rx=\"2\" ry=\"2\"></rect><circle cx=\"12\" cy=\"14\" r=\"4\"></circle><line x1=\"12\" y1=\"6\" x2=\"12\" y2=\"6\"></line>","square":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect>","star":"<polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"></polygon>","stop-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><rect x=\"9\" y=\"9\" width=\"6\" height=\"6\"></rect>","sun":"<circle cx=\"12\" cy=\"12\" r=\"5\"></circle><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"></line><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"></line><line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"></line><line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"></line><line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"></line><line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"></line><line x1=\"4.22\" y1=\"19.78\" x2=\"5.64\" y2=\"18.36\"></line><line x1=\"18.36\" y1=\"5.64\" x2=\"19.78\" y2=\"4.22\"></line>","sunrise":"<path d=\"M17 18a5 5 0 0 0-10 0\"></path><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"9\"></line><line x1=\"4.22\" y1=\"10.22\" x2=\"5.64\" y2=\"11.64\"></line><line x1=\"1\" y1=\"18\" x2=\"3\" y2=\"18\"></line><line x1=\"21\" y1=\"18\" x2=\"23\" y2=\"18\"></line><line x1=\"18.36\" y1=\"11.64\" x2=\"19.78\" y2=\"10.22\"></line><line x1=\"23\" y1=\"22\" x2=\"1\" y2=\"22\"></line><polyline points=\"8 6 12 2 16 6\"></polyline>","sunset":"<path d=\"M17 18a5 5 0 0 0-10 0\"></path><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"2\"></line><line x1=\"4.22\" y1=\"10.22\" x2=\"5.64\" y2=\"11.64\"></line><line x1=\"1\" y1=\"18\" x2=\"3\" y2=\"18\"></line><line x1=\"21\" y1=\"18\" x2=\"23\" y2=\"18\"></line><line x1=\"18.36\" y1=\"11.64\" x2=\"19.78\" y2=\"10.22\"></line><line x1=\"23\" y1=\"22\" x2=\"1\" y2=\"22\"></line><polyline points=\"16 5 12 9 8 5\"></polyline>","tablet":"<rect x=\"4\" y=\"2\" width=\"16\" height=\"20\" rx=\"2\" ry=\"2\" transform=\"rotate(180 12 12)\"></rect><line x1=\"12\" y1=\"18\" x2=\"12\" y2=\"18\"></line>","tag":"<path d=\"M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z\"></path><line x1=\"7\" y1=\"7\" x2=\"7\" y2=\"7\"></line>","target":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><circle cx=\"12\" cy=\"12\" r=\"6\"></circle><circle cx=\"12\" cy=\"12\" r=\"2\"></circle>","terminal":"<polyline points=\"4 17 10 11 4 5\"></polyline><line x1=\"12\" y1=\"19\" x2=\"20\" y2=\"19\"></line>","thermometer":"<path d=\"M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z\"></path>","thumbs-down":"<path d=\"M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17\"></path>","thumbs-up":"<path d=\"M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3\"></path>","toggle-left":"<rect x=\"1\" y=\"5\" width=\"22\" height=\"14\" rx=\"7\" ry=\"7\"></rect><circle cx=\"8\" cy=\"12\" r=\"3\"></circle>","toggle-right":"<rect x=\"1\" y=\"5\" width=\"22\" height=\"14\" rx=\"7\" ry=\"7\"></rect><circle cx=\"16\" cy=\"12\" r=\"3\"></circle>","trash-2":"<polyline points=\"3 6 5 6 21 6\"></polyline><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"></path><line x1=\"10\" y1=\"11\" x2=\"10\" y2=\"17\"></line><line x1=\"14\" y1=\"11\" x2=\"14\" y2=\"17\"></line>","trash":"<polyline points=\"3 6 5 6 21 6\"></polyline><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"></path>","trello":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><rect x=\"7\" y=\"7\" width=\"3\" height=\"9\"></rect><rect x=\"14\" y=\"7\" width=\"3\" height=\"5\"></rect>","trending-down":"<polyline points=\"23 18 13.5 8.5 8.5 13.5 1 6\"></polyline><polyline points=\"17 18 23 18 23 12\"></polyline>","trending-up":"<polyline points=\"23 6 13.5 15.5 8.5 10.5 1 18\"></polyline><polyline points=\"17 6 23 6 23 12\"></polyline>","triangle":"<path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"></path>","truck":"<rect x=\"1\" y=\"3\" width=\"15\" height=\"13\"></rect><polygon points=\"16 8 20 8 23 11 23 16 16 16 16 8\"></polygon><circle cx=\"5.5\" cy=\"18.5\" r=\"2.5\"></circle><circle cx=\"18.5\" cy=\"18.5\" r=\"2.5\"></circle>","tv":"<rect x=\"2\" y=\"7\" width=\"20\" height=\"15\" rx=\"2\" ry=\"2\"></rect><polyline points=\"17 2 12 7 7 2\"></polyline>","twitter":"<path d=\"M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z\"></path>","type":"<polyline points=\"4 7 4 4 20 4 20 7\"></polyline><line x1=\"9\" y1=\"20\" x2=\"15\" y2=\"20\"></line><line x1=\"12\" y1=\"4\" x2=\"12\" y2=\"20\"></line>","umbrella":"<path d=\"M23 12a11.05 11.05 0 0 0-22 0zm-5 7a3 3 0 0 1-6 0v-7\"></path>","underline":"<path d=\"M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3\"></path><line x1=\"4\" y1=\"21\" x2=\"20\" y2=\"21\"></line>","unlock":"<rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"></rect><path d=\"M7 11V7a5 5 0 0 1 9.9-1\"></path>","upload-cloud":"<polyline points=\"16 16 12 12 8 16\"></polyline><line x1=\"12\" y1=\"12\" x2=\"12\" y2=\"21\"></line><path d=\"M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3\"></path><polyline points=\"16 16 12 12 8 16\"></polyline>","upload":"<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"></path><polyline points=\"17 8 12 3 7 8\"></polyline><line x1=\"12\" y1=\"3\" x2=\"12\" y2=\"15\"></line>","user-check":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"8.5\" cy=\"7\" r=\"4\"></circle><polyline points=\"17 11 19 13 23 9\"></polyline>","user-minus":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"8.5\" cy=\"7\" r=\"4\"></circle><line x1=\"23\" y1=\"11\" x2=\"17\" y2=\"11\"></line>","user-plus":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"8.5\" cy=\"7\" r=\"4\"></circle><line x1=\"20\" y1=\"8\" x2=\"20\" y2=\"14\"></line><line x1=\"23\" y1=\"11\" x2=\"17\" y2=\"11\"></line>","user-x":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"8.5\" cy=\"7\" r=\"4\"></circle><line x1=\"18\" y1=\"8\" x2=\"23\" y2=\"13\"></line><line x1=\"23\" y1=\"8\" x2=\"18\" y2=\"13\"></line>","user":"<path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"></path><circle cx=\"12\" cy=\"7\" r=\"4\"></circle>","users":"<path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"9\" cy=\"7\" r=\"4\"></circle><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"></path><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"></path>","video-off":"<path d=\"M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","video":"<polygon points=\"23 7 16 12 23 17 23 7\"></polygon><rect x=\"1\" y=\"5\" width=\"15\" height=\"14\" rx=\"2\" ry=\"2\"></rect>","voicemail":"<circle cx=\"5.5\" cy=\"11.5\" r=\"4.5\"></circle><circle cx=\"18.5\" cy=\"11.5\" r=\"4.5\"></circle><line x1=\"5.5\" y1=\"16\" x2=\"18.5\" y2=\"16\"></line>","volume-1":"<polygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"></polygon><path d=\"M15.54 8.46a5 5 0 0 1 0 7.07\"></path>","volume-2":"<polygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"></polygon><path d=\"M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07\"></path>","volume-x":"<polygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"></polygon><line x1=\"23\" y1=\"9\" x2=\"17\" y2=\"15\"></line><line x1=\"17\" y1=\"9\" x2=\"23\" y2=\"15\"></line>","volume":"<polygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"></polygon>","watch":"<circle cx=\"12\" cy=\"12\" r=\"7\"></circle><polyline points=\"12 9 12 12 13.5 13.5\"></polyline><path d=\"M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83\"></path>","wifi-off":"<line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line><path d=\"M16.72 11.06A10.94 10.94 0 0 1 19 12.55\"></path><path d=\"M5 12.55a10.94 10.94 0 0 1 5.17-2.39\"></path><path d=\"M10.71 5.05A16 16 0 0 1 22.58 9\"></path><path d=\"M1.42 9a15.91 15.91 0 0 1 4.7-2.88\"></path><path d=\"M8.53 16.11a6 6 0 0 1 6.95 0\"></path><line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"20\"></line>","wifi":"<path d=\"M5 12.55a11 11 0 0 1 14.08 0\"></path><path d=\"M1.42 9a16 16 0 0 1 21.16 0\"></path><path d=\"M8.53 16.11a6 6 0 0 1 6.95 0\"></path><line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"20\"></line>","wind":"<path d=\"M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2\"></path>","x-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"></line><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"></line>","x-octagon":"<polygon points=\"7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2\"></polygon><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"></line><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"></line>","x-square":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"></line><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"></line>","x":"<line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"></line><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"></line>","youtube":"<path d=\"M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z\"></path><polygon points=\"9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02\"></polygon>","zap-off":"<polyline points=\"12.41 6.75 13 2 10.57 4.92\"></polyline><polyline points=\"18.57 12.91 21 10 15.66 10\"></polyline><polyline points=\"8 8 3 14 12 14 11 22 16 16\"></polyline><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","zap":"<polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"></polygon>","zoom-in":"<circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line>","zoom-out":"<circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line>"};
+    module.exports = {"activity":"<polyline points=\"22 12 18 12 15 21 9 3 6 12 2 12\"></polyline>","airplay":"<path d=\"M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1\"></path><polygon points=\"12 15 17 21 7 21 12 15\"></polygon>","alert-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line>","alert-octagon":"<polygon points=\"7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2\"></polygon><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line>","alert-triangle":"<path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"></path><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"></line><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"></line>","align-center":"<line x1=\"18\" y1=\"10\" x2=\"6\" y2=\"10\"></line><line x1=\"21\" y1=\"6\" x2=\"3\" y2=\"6\"></line><line x1=\"21\" y1=\"14\" x2=\"3\" y2=\"14\"></line><line x1=\"18\" y1=\"18\" x2=\"6\" y2=\"18\"></line>","align-justify":"<line x1=\"21\" y1=\"10\" x2=\"3\" y2=\"10\"></line><line x1=\"21\" y1=\"6\" x2=\"3\" y2=\"6\"></line><line x1=\"21\" y1=\"14\" x2=\"3\" y2=\"14\"></line><line x1=\"21\" y1=\"18\" x2=\"3\" y2=\"18\"></line>","align-left":"<line x1=\"17\" y1=\"10\" x2=\"3\" y2=\"10\"></line><line x1=\"21\" y1=\"6\" x2=\"3\" y2=\"6\"></line><line x1=\"21\" y1=\"14\" x2=\"3\" y2=\"14\"></line><line x1=\"17\" y1=\"18\" x2=\"3\" y2=\"18\"></line>","align-right":"<line x1=\"21\" y1=\"10\" x2=\"7\" y2=\"10\"></line><line x1=\"21\" y1=\"6\" x2=\"3\" y2=\"6\"></line><line x1=\"21\" y1=\"14\" x2=\"3\" y2=\"14\"></line><line x1=\"21\" y1=\"18\" x2=\"7\" y2=\"18\"></line>","anchor":"<circle cx=\"12\" cy=\"5\" r=\"3\"></circle><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"8\"></line><path d=\"M5 12H2a10 10 0 0 0 20 0h-3\"></path>","aperture":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"14.31\" y1=\"8\" x2=\"20.05\" y2=\"17.94\"></line><line x1=\"9.69\" y1=\"8\" x2=\"21.17\" y2=\"8\"></line><line x1=\"7.38\" y1=\"12\" x2=\"13.12\" y2=\"2.06\"></line><line x1=\"9.69\" y1=\"16\" x2=\"3.95\" y2=\"6.06\"></line><line x1=\"14.31\" y1=\"16\" x2=\"2.83\" y2=\"16\"></line><line x1=\"16.62\" y1=\"12\" x2=\"10.88\" y2=\"21.94\"></line>","archive":"<polyline points=\"21 8 21 21 3 21 3 8\"></polyline><rect x=\"1\" y=\"3\" width=\"22\" height=\"5\"></rect><line x1=\"10\" y1=\"12\" x2=\"14\" y2=\"12\"></line>","arrow-down-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"8 12 12 16 16 12\"></polyline><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"></line>","arrow-down-left":"<line x1=\"17\" y1=\"7\" x2=\"7\" y2=\"17\"></line><polyline points=\"17 17 7 17 7 7\"></polyline>","arrow-down-right":"<line x1=\"7\" y1=\"7\" x2=\"17\" y2=\"17\"></line><polyline points=\"17 7 17 17 7 17\"></polyline>","arrow-down":"<line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"></line><polyline points=\"19 12 12 19 5 12\"></polyline>","arrow-left-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 8 8 12 12 16\"></polyline><line x1=\"16\" y1=\"12\" x2=\"8\" y2=\"12\"></line>","arrow-left":"<line x1=\"19\" y1=\"12\" x2=\"5\" y2=\"12\"></line><polyline points=\"12 19 5 12 12 5\"></polyline>","arrow-right-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 16 16 12 12 8\"></polyline><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","arrow-right":"<line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line><polyline points=\"12 5 19 12 12 19\"></polyline>","arrow-up-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"16 12 12 8 8 12\"></polyline><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"8\"></line>","arrow-up-left":"<line x1=\"17\" y1=\"17\" x2=\"7\" y2=\"7\"></line><polyline points=\"7 17 7 7 17 7\"></polyline>","arrow-up-right":"<line x1=\"7\" y1=\"17\" x2=\"17\" y2=\"7\"></line><polyline points=\"7 7 17 7 17 17\"></polyline>","arrow-up":"<line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"5\"></line><polyline points=\"5 12 12 5 19 12\"></polyline>","at-sign":"<circle cx=\"12\" cy=\"12\" r=\"4\"></circle><path d=\"M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94\"></path>","award":"<circle cx=\"12\" cy=\"8\" r=\"7\"></circle><polyline points=\"8.21 13.89 7 23 12 20 17 23 15.79 13.88\"></polyline>","bar-chart-2":"<line x1=\"18\" y1=\"20\" x2=\"18\" y2=\"10\"></line><line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"4\"></line><line x1=\"6\" y1=\"20\" x2=\"6\" y2=\"14\"></line>","bar-chart":"<line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"10\"></line><line x1=\"18\" y1=\"20\" x2=\"18\" y2=\"4\"></line><line x1=\"6\" y1=\"20\" x2=\"6\" y2=\"16\"></line>","battery-charging":"<path d=\"M5 18H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.19M15 6h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3.19\"></path><line x1=\"23\" y1=\"13\" x2=\"23\" y2=\"11\"></line><polyline points=\"11 6 7 12 13 12 9 18\"></polyline>","battery":"<rect x=\"1\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\" ry=\"2\"></rect><line x1=\"23\" y1=\"13\" x2=\"23\" y2=\"11\"></line>","bell-off":"<path d=\"M13.73 21a2 2 0 0 1-3.46 0\"></path><path d=\"M18.63 13A17.89 17.89 0 0 1 18 8\"></path><path d=\"M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14\"></path><path d=\"M18 8a6 6 0 0 0-9.33-5\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","bell":"<path d=\"M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9\"></path><path d=\"M13.73 21a2 2 0 0 1-3.46 0\"></path>","bluetooth":"<polyline points=\"6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5\"></polyline>","bold":"<path d=\"M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z\"></path><path d=\"M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z\"></path>","book-open":"<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"></path><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"></path>","book":"<path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"></path><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"></path>","bookmark":"<path d=\"M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z\"></path>","box":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"></path><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"></polyline><line x1=\"12\" y1=\"22.08\" x2=\"12\" y2=\"12\"></line>","briefcase":"<rect x=\"2\" y=\"7\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"></rect><path d=\"M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"></path>","calendar":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"></line><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"></line><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"></line>","camera-off":"<line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line><path d=\"M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56\"></path>","camera":"<path d=\"M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z\"></path><circle cx=\"12\" cy=\"13\" r=\"4\"></circle>","cast":"<path d=\"M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6\"></path><line x1=\"2\" y1=\"20\" x2=\"2.01\" y2=\"20\"></line>","check-circle":"<path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"></path><polyline points=\"22 4 12 14.01 9 11.01\"></polyline>","check-square":"<polyline points=\"9 11 12 14 22 4\"></polyline><path d=\"M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11\"></path>","check":"<polyline points=\"20 6 9 17 4 12\"></polyline>","chevron-down":"<polyline points=\"6 9 12 15 18 9\"></polyline>","chevron-left":"<polyline points=\"15 18 9 12 15 6\"></polyline>","chevron-right":"<polyline points=\"9 18 15 12 9 6\"></polyline>","chevron-up":"<polyline points=\"18 15 12 9 6 15\"></polyline>","chevrons-down":"<polyline points=\"7 13 12 18 17 13\"></polyline><polyline points=\"7 6 12 11 17 6\"></polyline>","chevrons-left":"<polyline points=\"11 17 6 12 11 7\"></polyline><polyline points=\"18 17 13 12 18 7\"></polyline>","chevrons-right":"<polyline points=\"13 17 18 12 13 7\"></polyline><polyline points=\"6 17 11 12 6 7\"></polyline>","chevrons-up":"<polyline points=\"17 11 12 6 7 11\"></polyline><polyline points=\"17 18 12 13 7 18\"></polyline>","chrome":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><circle cx=\"12\" cy=\"12\" r=\"4\"></circle><line x1=\"21.17\" y1=\"8\" x2=\"12\" y2=\"8\"></line><line x1=\"3.95\" y1=\"6.06\" x2=\"8.54\" y2=\"14\"></line><line x1=\"10.88\" y1=\"21.94\" x2=\"15.46\" y2=\"14\"></line>","circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle>","clipboard":"<path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"></path><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" ry=\"1\"></rect>","clock":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 6 12 12 16 14\"></polyline>","cloud-drizzle":"<line x1=\"8\" y1=\"19\" x2=\"8\" y2=\"21\"></line><line x1=\"8\" y1=\"13\" x2=\"8\" y2=\"15\"></line><line x1=\"16\" y1=\"19\" x2=\"16\" y2=\"21\"></line><line x1=\"16\" y1=\"13\" x2=\"16\" y2=\"15\"></line><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"></line><line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"17\"></line><path d=\"M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25\"></path>","cloud-lightning":"<path d=\"M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9\"></path><polyline points=\"13 11 9 17 15 17 11 23\"></polyline>","cloud-off":"<path d=\"M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","cloud-rain":"<line x1=\"16\" y1=\"13\" x2=\"16\" y2=\"21\"></line><line x1=\"8\" y1=\"13\" x2=\"8\" y2=\"21\"></line><line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"23\"></line><path d=\"M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25\"></path>","cloud-snow":"<path d=\"M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25\"></path><line x1=\"8\" y1=\"16\" x2=\"8.01\" y2=\"16\"></line><line x1=\"8\" y1=\"20\" x2=\"8.01\" y2=\"20\"></line><line x1=\"12\" y1=\"18\" x2=\"12.01\" y2=\"18\"></line><line x1=\"12\" y1=\"22\" x2=\"12.01\" y2=\"22\"></line><line x1=\"16\" y1=\"16\" x2=\"16.01\" y2=\"16\"></line><line x1=\"16\" y1=\"20\" x2=\"16.01\" y2=\"20\"></line>","cloud":"<path d=\"M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z\"></path>","code":"<polyline points=\"16 18 22 12 16 6\"></polyline><polyline points=\"8 6 2 12 8 18\"></polyline>","codepen":"<polygon points=\"12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2\"></polygon><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"15.5\"></line><polyline points=\"22 8.5 12 15.5 2 8.5\"></polyline><polyline points=\"2 15.5 12 8.5 22 15.5\"></polyline><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"8.5\"></line>","codesandbox":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"></path><polyline points=\"7.5 4.21 12 6.81 16.5 4.21\"></polyline><polyline points=\"7.5 19.79 7.5 14.6 3 12\"></polyline><polyline points=\"21 12 16.5 14.6 16.5 19.79\"></polyline><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"></polyline><line x1=\"12\" y1=\"22.08\" x2=\"12\" y2=\"12\"></line>","coffee":"<path d=\"M18 8h1a4 4 0 0 1 0 8h-1\"></path><path d=\"M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z\"></path><line x1=\"6\" y1=\"1\" x2=\"6\" y2=\"4\"></line><line x1=\"10\" y1=\"1\" x2=\"10\" y2=\"4\"></line><line x1=\"14\" y1=\"1\" x2=\"14\" y2=\"4\"></line>","columns":"<path d=\"M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18\"></path>","command":"<path d=\"M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z\"></path>","compass":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polygon points=\"16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76\"></polygon>","copy":"<rect x=\"9\" y=\"9\" width=\"13\" height=\"13\" rx=\"2\" ry=\"2\"></rect><path d=\"M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\"></path>","corner-down-left":"<polyline points=\"9 10 4 15 9 20\"></polyline><path d=\"M20 4v7a4 4 0 0 1-4 4H4\"></path>","corner-down-right":"<polyline points=\"15 10 20 15 15 20\"></polyline><path d=\"M4 4v7a4 4 0 0 0 4 4h12\"></path>","corner-left-down":"<polyline points=\"14 15 9 20 4 15\"></polyline><path d=\"M20 4h-7a4 4 0 0 0-4 4v12\"></path>","corner-left-up":"<polyline points=\"14 9 9 4 4 9\"></polyline><path d=\"M20 20h-7a4 4 0 0 1-4-4V4\"></path>","corner-right-down":"<polyline points=\"10 15 15 20 20 15\"></polyline><path d=\"M4 4h7a4 4 0 0 1 4 4v12\"></path>","corner-right-up":"<polyline points=\"10 9 15 4 20 9\"></polyline><path d=\"M4 20h7a4 4 0 0 0 4-4V4\"></path>","corner-up-left":"<polyline points=\"9 14 4 9 9 4\"></polyline><path d=\"M20 20v-7a4 4 0 0 0-4-4H4\"></path>","corner-up-right":"<polyline points=\"15 14 20 9 15 4\"></polyline><path d=\"M4 20v-7a4 4 0 0 1 4-4h12\"></path>","cpu":"<rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"2\" ry=\"2\"></rect><rect x=\"9\" y=\"9\" width=\"6\" height=\"6\"></rect><line x1=\"9\" y1=\"1\" x2=\"9\" y2=\"4\"></line><line x1=\"15\" y1=\"1\" x2=\"15\" y2=\"4\"></line><line x1=\"9\" y1=\"20\" x2=\"9\" y2=\"23\"></line><line x1=\"15\" y1=\"20\" x2=\"15\" y2=\"23\"></line><line x1=\"20\" y1=\"9\" x2=\"23\" y2=\"9\"></line><line x1=\"20\" y1=\"14\" x2=\"23\" y2=\"14\"></line><line x1=\"1\" y1=\"9\" x2=\"4\" y2=\"9\"></line><line x1=\"1\" y1=\"14\" x2=\"4\" y2=\"14\"></line>","credit-card":"<rect x=\"1\" y=\"4\" width=\"22\" height=\"16\" rx=\"2\" ry=\"2\"></rect><line x1=\"1\" y1=\"10\" x2=\"23\" y2=\"10\"></line>","crop":"<path d=\"M6.13 1L6 16a2 2 0 0 0 2 2h15\"></path><path d=\"M1 6.13L16 6a2 2 0 0 1 2 2v15\"></path>","crosshair":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"22\" y1=\"12\" x2=\"18\" y2=\"12\"></line><line x1=\"6\" y1=\"12\" x2=\"2\" y2=\"12\"></line><line x1=\"12\" y1=\"6\" x2=\"12\" y2=\"2\"></line><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"18\"></line>","database":"<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"></ellipse><path d=\"M21 12c0 1.66-4 3-9 3s-9-1.34-9-3\"></path><path d=\"M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5\"></path>","delete":"<path d=\"M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z\"></path><line x1=\"18\" y1=\"9\" x2=\"12\" y2=\"15\"></line><line x1=\"12\" y1=\"9\" x2=\"18\" y2=\"15\"></line>","disc":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><circle cx=\"12\" cy=\"12\" r=\"3\"></circle>","dollar-sign":"<line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"23\"></line><path d=\"M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"></path>","download-cloud":"<polyline points=\"8 17 12 21 16 17\"></polyline><line x1=\"12\" y1=\"12\" x2=\"12\" y2=\"21\"></line><path d=\"M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29\"></path>","download":"<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"></path><polyline points=\"7 10 12 15 17 10\"></polyline><line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"3\"></line>","droplet":"<path d=\"M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z\"></path>","edit-2":"<path d=\"M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z\"></path>","edit-3":"<path d=\"M12 20h9\"></path><path d=\"M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z\"></path>","edit":"<path d=\"M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7\"></path><path d=\"M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z\"></path>","external-link":"<path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"></path><polyline points=\"15 3 21 3 21 9\"></polyline><line x1=\"10\" y1=\"14\" x2=\"21\" y2=\"3\"></line>","eye-off":"<path d=\"M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","eye":"<path d=\"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle>","facebook":"<path d=\"M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z\"></path>","fast-forward":"<polygon points=\"13 19 22 12 13 5 13 19\"></polygon><polygon points=\"2 19 11 12 2 5 2 19\"></polygon>","feather":"<path d=\"M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z\"></path><line x1=\"16\" y1=\"8\" x2=\"2\" y2=\"22\"></line><line x1=\"17.5\" y1=\"15\" x2=\"9\" y2=\"15\"></line>","figma":"<path d=\"M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z\"></path><path d=\"M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z\"></path><path d=\"M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z\"></path><path d=\"M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z\"></path><path d=\"M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z\"></path>","file-minus":"<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path><polyline points=\"14 2 14 8 20 8\"></polyline><line x1=\"9\" y1=\"15\" x2=\"15\" y2=\"15\"></line>","file-plus":"<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path><polyline points=\"14 2 14 8 20 8\"></polyline><line x1=\"12\" y1=\"18\" x2=\"12\" y2=\"12\"></line><line x1=\"9\" y1=\"15\" x2=\"15\" y2=\"15\"></line>","file-text":"<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path><polyline points=\"14 2 14 8 20 8\"></polyline><line x1=\"16\" y1=\"13\" x2=\"8\" y2=\"13\"></line><line x1=\"16\" y1=\"17\" x2=\"8\" y2=\"17\"></line><polyline points=\"10 9 9 9 8 9\"></polyline>","file":"<path d=\"M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"></path><polyline points=\"13 2 13 9 20 9\"></polyline>","film":"<rect x=\"2\" y=\"2\" width=\"20\" height=\"20\" rx=\"2.18\" ry=\"2.18\"></rect><line x1=\"7\" y1=\"2\" x2=\"7\" y2=\"22\"></line><line x1=\"17\" y1=\"2\" x2=\"17\" y2=\"22\"></line><line x1=\"2\" y1=\"12\" x2=\"22\" y2=\"12\"></line><line x1=\"2\" y1=\"7\" x2=\"7\" y2=\"7\"></line><line x1=\"2\" y1=\"17\" x2=\"7\" y2=\"17\"></line><line x1=\"17\" y1=\"17\" x2=\"22\" y2=\"17\"></line><line x1=\"17\" y1=\"7\" x2=\"22\" y2=\"7\"></line>","filter":"<polygon points=\"22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3\"></polygon>","flag":"<path d=\"M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z\"></path><line x1=\"4\" y1=\"22\" x2=\"4\" y2=\"15\"></line>","folder-minus":"<path d=\"M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z\"></path><line x1=\"9\" y1=\"14\" x2=\"15\" y2=\"14\"></line>","folder-plus":"<path d=\"M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z\"></path><line x1=\"12\" y1=\"11\" x2=\"12\" y2=\"17\"></line><line x1=\"9\" y1=\"14\" x2=\"15\" y2=\"14\"></line>","folder":"<path d=\"M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z\"></path>","framer":"<path d=\"M5 16V9h14V2H5l14 14h-7m-7 0l7 7v-7m-7 0h7\"></path>","frown":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><path d=\"M16 16s-1.5-2-4-2-4 2-4 2\"></path><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"></line><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"></line>","gift":"<polyline points=\"20 12 20 22 4 22 4 12\"></polyline><rect x=\"2\" y=\"7\" width=\"20\" height=\"5\"></rect><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"7\"></line><path d=\"M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z\"></path><path d=\"M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z\"></path>","git-branch":"<line x1=\"6\" y1=\"3\" x2=\"6\" y2=\"15\"></line><circle cx=\"18\" cy=\"6\" r=\"3\"></circle><circle cx=\"6\" cy=\"18\" r=\"3\"></circle><path d=\"M18 9a9 9 0 0 1-9 9\"></path>","git-commit":"<circle cx=\"12\" cy=\"12\" r=\"4\"></circle><line x1=\"1.05\" y1=\"12\" x2=\"7\" y2=\"12\"></line><line x1=\"17.01\" y1=\"12\" x2=\"22.96\" y2=\"12\"></line>","git-merge":"<circle cx=\"18\" cy=\"18\" r=\"3\"></circle><circle cx=\"6\" cy=\"6\" r=\"3\"></circle><path d=\"M6 21V9a9 9 0 0 0 9 9\"></path>","git-pull-request":"<circle cx=\"18\" cy=\"18\" r=\"3\"></circle><circle cx=\"6\" cy=\"6\" r=\"3\"></circle><path d=\"M13 6h3a2 2 0 0 1 2 2v7\"></path><line x1=\"6\" y1=\"9\" x2=\"6\" y2=\"21\"></line>","github":"<path d=\"M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22\"></path>","gitlab":"<path d=\"M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z\"></path>","globe":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"2\" y1=\"12\" x2=\"22\" y2=\"12\"></line><path d=\"M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z\"></path>","grid":"<rect x=\"3\" y=\"3\" width=\"7\" height=\"7\"></rect><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\"></rect><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\"></rect><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\"></rect>","hard-drive":"<line x1=\"22\" y1=\"12\" x2=\"2\" y2=\"12\"></line><path d=\"M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"></path><line x1=\"6\" y1=\"16\" x2=\"6.01\" y2=\"16\"></line><line x1=\"10\" y1=\"16\" x2=\"10.01\" y2=\"16\"></line>","hash":"<line x1=\"4\" y1=\"9\" x2=\"20\" y2=\"9\"></line><line x1=\"4\" y1=\"15\" x2=\"20\" y2=\"15\"></line><line x1=\"10\" y1=\"3\" x2=\"8\" y2=\"21\"></line><line x1=\"16\" y1=\"3\" x2=\"14\" y2=\"21\"></line>","headphones":"<path d=\"M3 18v-6a9 9 0 0 1 18 0v6\"></path><path d=\"M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z\"></path>","heart":"<path d=\"M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z\"></path>","help-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><path d=\"M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3\"></path><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"></line>","hexagon":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"></path>","home":"<path d=\"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path><polyline points=\"9 22 9 12 15 12 15 22\"></polyline>","image":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><circle cx=\"8.5\" cy=\"8.5\" r=\"1.5\"></circle><polyline points=\"21 15 16 10 5 21\"></polyline>","inbox":"<polyline points=\"22 12 16 12 14 15 10 15 8 12 2 12\"></polyline><path d=\"M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"></path>","info":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"></line>","instagram":"<rect x=\"2\" y=\"2\" width=\"20\" height=\"20\" rx=\"5\" ry=\"5\"></rect><path d=\"M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z\"></path><line x1=\"17.5\" y1=\"6.5\" x2=\"17.51\" y2=\"6.5\"></line>","italic":"<line x1=\"19\" y1=\"4\" x2=\"10\" y2=\"4\"></line><line x1=\"14\" y1=\"20\" x2=\"5\" y2=\"20\"></line><line x1=\"15\" y1=\"4\" x2=\"9\" y2=\"20\"></line>","key":"<path d=\"M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4\"></path>","layers":"<polygon points=\"12 2 2 7 12 12 22 7 12 2\"></polygon><polyline points=\"2 17 12 22 22 17\"></polyline><polyline points=\"2 12 12 17 22 12\"></polyline>","layout":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"3\" y1=\"9\" x2=\"21\" y2=\"9\"></line><line x1=\"9\" y1=\"21\" x2=\"9\" y2=\"9\"></line>","life-buoy":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><circle cx=\"12\" cy=\"12\" r=\"4\"></circle><line x1=\"4.93\" y1=\"4.93\" x2=\"9.17\" y2=\"9.17\"></line><line x1=\"14.83\" y1=\"14.83\" x2=\"19.07\" y2=\"19.07\"></line><line x1=\"14.83\" y1=\"9.17\" x2=\"19.07\" y2=\"4.93\"></line><line x1=\"14.83\" y1=\"9.17\" x2=\"18.36\" y2=\"5.64\"></line><line x1=\"4.93\" y1=\"19.07\" x2=\"9.17\" y2=\"14.83\"></line>","link-2":"<path d=\"M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3\"></path><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","link":"<path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"></path><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"></path>","linkedin":"<path d=\"M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z\"></path><rect x=\"2\" y=\"9\" width=\"4\" height=\"12\"></rect><circle cx=\"4\" cy=\"4\" r=\"2\"></circle>","list":"<line x1=\"8\" y1=\"6\" x2=\"21\" y2=\"6\"></line><line x1=\"8\" y1=\"12\" x2=\"21\" y2=\"12\"></line><line x1=\"8\" y1=\"18\" x2=\"21\" y2=\"18\"></line><line x1=\"3\" y1=\"6\" x2=\"3.01\" y2=\"6\"></line><line x1=\"3\" y1=\"12\" x2=\"3.01\" y2=\"12\"></line><line x1=\"3\" y1=\"18\" x2=\"3.01\" y2=\"18\"></line>","loader":"<line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"6\"></line><line x1=\"12\" y1=\"18\" x2=\"12\" y2=\"22\"></line><line x1=\"4.93\" y1=\"4.93\" x2=\"7.76\" y2=\"7.76\"></line><line x1=\"16.24\" y1=\"16.24\" x2=\"19.07\" y2=\"19.07\"></line><line x1=\"2\" y1=\"12\" x2=\"6\" y2=\"12\"></line><line x1=\"18\" y1=\"12\" x2=\"22\" y2=\"12\"></line><line x1=\"4.93\" y1=\"19.07\" x2=\"7.76\" y2=\"16.24\"></line><line x1=\"16.24\" y1=\"7.76\" x2=\"19.07\" y2=\"4.93\"></line>","lock":"<rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"></rect><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"></path>","log-in":"<path d=\"M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4\"></path><polyline points=\"10 17 15 12 10 7\"></polyline><line x1=\"15\" y1=\"12\" x2=\"3\" y2=\"12\"></line>","log-out":"<path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"></path><polyline points=\"16 17 21 12 16 7\"></polyline><line x1=\"21\" y1=\"12\" x2=\"9\" y2=\"12\"></line>","mail":"<path d=\"M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z\"></path><polyline points=\"22,6 12,13 2,6\"></polyline>","map-pin":"<path d=\"M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z\"></path><circle cx=\"12\" cy=\"10\" r=\"3\"></circle>","map":"<polygon points=\"1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6\"></polygon><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"18\"></line><line x1=\"16\" y1=\"6\" x2=\"16\" y2=\"22\"></line>","maximize-2":"<polyline points=\"15 3 21 3 21 9\"></polyline><polyline points=\"9 21 3 21 3 15\"></polyline><line x1=\"21\" y1=\"3\" x2=\"14\" y2=\"10\"></line><line x1=\"3\" y1=\"21\" x2=\"10\" y2=\"14\"></line>","maximize":"<path d=\"M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3\"></path>","meh":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"8\" y1=\"15\" x2=\"16\" y2=\"15\"></line><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"></line><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"></line>","menu":"<line x1=\"3\" y1=\"12\" x2=\"21\" y2=\"12\"></line><line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line><line x1=\"3\" y1=\"18\" x2=\"21\" y2=\"18\"></line>","message-circle":"<path d=\"M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z\"></path>","message-square":"<path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\"></path>","mic-off":"<line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line><path d=\"M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6\"></path><path d=\"M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23\"></path><line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"23\"></line><line x1=\"8\" y1=\"23\" x2=\"16\" y2=\"23\"></line>","mic":"<path d=\"M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z\"></path><path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"></path><line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"23\"></line><line x1=\"8\" y1=\"23\" x2=\"16\" y2=\"23\"></line>","minimize-2":"<polyline points=\"4 14 10 14 10 20\"></polyline><polyline points=\"20 10 14 10 14 4\"></polyline><line x1=\"14\" y1=\"10\" x2=\"21\" y2=\"3\"></line><line x1=\"3\" y1=\"21\" x2=\"10\" y2=\"14\"></line>","minimize":"<path d=\"M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3\"></path>","minus-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","minus-square":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","minus":"<line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line>","monitor":"<rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"></rect><line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"></line><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"></line>","moon":"<path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"></path>","more-horizontal":"<circle cx=\"12\" cy=\"12\" r=\"1\"></circle><circle cx=\"19\" cy=\"12\" r=\"1\"></circle><circle cx=\"5\" cy=\"12\" r=\"1\"></circle>","more-vertical":"<circle cx=\"12\" cy=\"12\" r=\"1\"></circle><circle cx=\"12\" cy=\"5\" r=\"1\"></circle><circle cx=\"12\" cy=\"19\" r=\"1\"></circle>","mouse-pointer":"<path d=\"M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z\"></path><path d=\"M13 13l6 6\"></path>","move":"<polyline points=\"5 9 2 12 5 15\"></polyline><polyline points=\"9 5 12 2 15 5\"></polyline><polyline points=\"15 19 12 22 9 19\"></polyline><polyline points=\"19 9 22 12 19 15\"></polyline><line x1=\"2\" y1=\"12\" x2=\"22\" y2=\"12\"></line><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"22\"></line>","music":"<path d=\"M9 18V5l12-2v13\"></path><circle cx=\"6\" cy=\"18\" r=\"3\"></circle><circle cx=\"18\" cy=\"16\" r=\"3\"></circle>","navigation-2":"<polygon points=\"12 2 19 21 12 17 5 21 12 2\"></polygon>","navigation":"<polygon points=\"3 11 22 2 13 21 11 13 3 11\"></polygon>","octagon":"<polygon points=\"7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2\"></polygon>","package":"<line x1=\"16.5\" y1=\"9.4\" x2=\"7.5\" y2=\"4.21\"></line><path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"></path><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"></polyline><line x1=\"12\" y1=\"22.08\" x2=\"12\" y2=\"12\"></line>","paperclip":"<path d=\"M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48\"></path>","pause-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"10\" y1=\"15\" x2=\"10\" y2=\"9\"></line><line x1=\"14\" y1=\"15\" x2=\"14\" y2=\"9\"></line>","pause":"<rect x=\"6\" y=\"4\" width=\"4\" height=\"16\"></rect><rect x=\"14\" y=\"4\" width=\"4\" height=\"16\"></rect>","pen-tool":"<path d=\"M12 19l7-7 3 3-7 7-3-3z\"></path><path d=\"M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z\"></path><path d=\"M2 2l7.586 7.586\"></path><circle cx=\"11\" cy=\"11\" r=\"2\"></circle>","percent":"<line x1=\"19\" y1=\"5\" x2=\"5\" y2=\"19\"></line><circle cx=\"6.5\" cy=\"6.5\" r=\"2.5\"></circle><circle cx=\"17.5\" cy=\"17.5\" r=\"2.5\"></circle>","phone-call":"<path d=\"M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94m-1 7.98v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone-forwarded":"<polyline points=\"19 1 23 5 19 9\"></polyline><line x1=\"15\" y1=\"5\" x2=\"23\" y2=\"5\"></line><path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone-incoming":"<polyline points=\"16 2 16 8 22 8\"></polyline><line x1=\"23\" y1=\"1\" x2=\"16\" y2=\"8\"></line><path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone-missed":"<line x1=\"23\" y1=\"1\" x2=\"17\" y2=\"7\"></line><line x1=\"17\" y1=\"1\" x2=\"23\" y2=\"7\"></line><path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone-off":"<path d=\"M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91\"></path><line x1=\"23\" y1=\"1\" x2=\"1\" y2=\"23\"></line>","phone-outgoing":"<polyline points=\"23 7 23 1 17 1\"></polyline><line x1=\"16\" y1=\"8\" x2=\"23\" y2=\"1\"></line><path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","phone":"<path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"></path>","pie-chart":"<path d=\"M21.21 15.89A10 10 0 1 1 8 2.83\"></path><path d=\"M22 12A10 10 0 0 0 12 2v10z\"></path>","play-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polygon points=\"10 8 16 12 10 16 10 8\"></polygon>","play":"<polygon points=\"5 3 19 12 5 21 5 3\"></polygon>","plus-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"></line><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","plus-square":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"></line><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"></line>","plus":"<line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"></line><line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line>","pocket":"<path d=\"M4 3h16a2 2 0 0 1 2 2v6a10 10 0 0 1-10 10A10 10 0 0 1 2 11V5a2 2 0 0 1 2-2z\"></path><polyline points=\"8 10 12 14 16 10\"></polyline>","power":"<path d=\"M18.36 6.64a9 9 0 1 1-12.73 0\"></path><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"12\"></line>","printer":"<polyline points=\"6 9 6 2 18 2 18 9\"></polyline><path d=\"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2\"></path><rect x=\"6\" y=\"14\" width=\"12\" height=\"8\"></rect>","radio":"<circle cx=\"12\" cy=\"12\" r=\"2\"></circle><path d=\"M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14\"></path>","refresh-ccw":"<polyline points=\"1 4 1 10 7 10\"></polyline><polyline points=\"23 20 23 14 17 14\"></polyline><path d=\"M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15\"></path>","refresh-cw":"<polyline points=\"23 4 23 10 17 10\"></polyline><polyline points=\"1 20 1 14 7 14\"></polyline><path d=\"M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15\"></path>","repeat":"<polyline points=\"17 1 21 5 17 9\"></polyline><path d=\"M3 11V9a4 4 0 0 1 4-4h14\"></path><polyline points=\"7 23 3 19 7 15\"></polyline><path d=\"M21 13v2a4 4 0 0 1-4 4H3\"></path>","rewind":"<polygon points=\"11 19 2 12 11 5 11 19\"></polygon><polygon points=\"22 19 13 12 22 5 22 19\"></polygon>","rotate-ccw":"<polyline points=\"1 4 1 10 7 10\"></polyline><path d=\"M3.51 15a9 9 0 1 0 2.13-9.36L1 10\"></path>","rotate-cw":"<polyline points=\"23 4 23 10 17 10\"></polyline><path d=\"M20.49 15a9 9 0 1 1-2.12-9.36L23 10\"></path>","rss":"<path d=\"M4 11a9 9 0 0 1 9 9\"></path><path d=\"M4 4a16 16 0 0 1 16 16\"></path><circle cx=\"5\" cy=\"19\" r=\"1\"></circle>","save":"<path d=\"M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z\"></path><polyline points=\"17 21 17 13 7 13 7 21\"></polyline><polyline points=\"7 3 7 8 15 8\"></polyline>","scissors":"<circle cx=\"6\" cy=\"6\" r=\"3\"></circle><circle cx=\"6\" cy=\"18\" r=\"3\"></circle><line x1=\"20\" y1=\"4\" x2=\"8.12\" y2=\"15.88\"></line><line x1=\"14.47\" y1=\"14.48\" x2=\"20\" y2=\"20\"></line><line x1=\"8.12\" y1=\"8.12\" x2=\"12\" y2=\"12\"></line>","search":"<circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line>","send":"<line x1=\"22\" y1=\"2\" x2=\"11\" y2=\"13\"></line><polygon points=\"22 2 15 22 11 13 2 9 22 2\"></polygon>","server":"<rect x=\"2\" y=\"2\" width=\"20\" height=\"8\" rx=\"2\" ry=\"2\"></rect><rect x=\"2\" y=\"14\" width=\"20\" height=\"8\" rx=\"2\" ry=\"2\"></rect><line x1=\"6\" y1=\"6\" x2=\"6.01\" y2=\"6\"></line><line x1=\"6\" y1=\"18\" x2=\"6.01\" y2=\"18\"></line>","settings":"<circle cx=\"12\" cy=\"12\" r=\"3\"></circle><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z\"></path>","share-2":"<circle cx=\"18\" cy=\"5\" r=\"3\"></circle><circle cx=\"6\" cy=\"12\" r=\"3\"></circle><circle cx=\"18\" cy=\"19\" r=\"3\"></circle><line x1=\"8.59\" y1=\"13.51\" x2=\"15.42\" y2=\"17.49\"></line><line x1=\"15.41\" y1=\"6.51\" x2=\"8.59\" y2=\"10.49\"></line>","share":"<path d=\"M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8\"></path><polyline points=\"16 6 12 2 8 6\"></polyline><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"15\"></line>","shield-off":"<path d=\"M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18\"></path><path d=\"M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","shield":"<path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"></path>","shopping-bag":"<path d=\"M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z\"></path><line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line><path d=\"M16 10a4 4 0 0 1-8 0\"></path>","shopping-cart":"<circle cx=\"9\" cy=\"21\" r=\"1\"></circle><circle cx=\"20\" cy=\"21\" r=\"1\"></circle><path d=\"M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6\"></path>","shuffle":"<polyline points=\"16 3 21 3 21 8\"></polyline><line x1=\"4\" y1=\"20\" x2=\"21\" y2=\"3\"></line><polyline points=\"21 16 21 21 16 21\"></polyline><line x1=\"15\" y1=\"15\" x2=\"21\" y2=\"21\"></line><line x1=\"4\" y1=\"4\" x2=\"9\" y2=\"9\"></line>","sidebar":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"9\" y1=\"3\" x2=\"9\" y2=\"21\"></line>","skip-back":"<polygon points=\"19 20 9 12 19 4 19 20\"></polygon><line x1=\"5\" y1=\"19\" x2=\"5\" y2=\"5\"></line>","skip-forward":"<polygon points=\"5 4 15 12 5 20 5 4\"></polygon><line x1=\"19\" y1=\"5\" x2=\"19\" y2=\"19\"></line>","slack":"<path d=\"M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z\"></path><path d=\"M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z\"></path><path d=\"M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z\"></path><path d=\"M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z\"></path><path d=\"M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z\"></path><path d=\"M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z\"></path><path d=\"M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z\"></path><path d=\"M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z\"></path>","slash":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"4.93\" y1=\"4.93\" x2=\"19.07\" y2=\"19.07\"></line>","sliders":"<line x1=\"4\" y1=\"21\" x2=\"4\" y2=\"14\"></line><line x1=\"4\" y1=\"10\" x2=\"4\" y2=\"3\"></line><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"3\"></line><line x1=\"20\" y1=\"21\" x2=\"20\" y2=\"16\"></line><line x1=\"20\" y1=\"12\" x2=\"20\" y2=\"3\"></line><line x1=\"1\" y1=\"14\" x2=\"7\" y2=\"14\"></line><line x1=\"9\" y1=\"8\" x2=\"15\" y2=\"8\"></line><line x1=\"17\" y1=\"16\" x2=\"23\" y2=\"16\"></line>","smartphone":"<rect x=\"5\" y=\"2\" width=\"14\" height=\"20\" rx=\"2\" ry=\"2\"></rect><line x1=\"12\" y1=\"18\" x2=\"12.01\" y2=\"18\"></line>","smile":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><path d=\"M8 14s1.5 2 4 2 4-2 4-2\"></path><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"></line><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"></line>","speaker":"<rect x=\"4\" y=\"2\" width=\"16\" height=\"20\" rx=\"2\" ry=\"2\"></rect><circle cx=\"12\" cy=\"14\" r=\"4\"></circle><line x1=\"12\" y1=\"6\" x2=\"12.01\" y2=\"6\"></line>","square":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect>","star":"<polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"></polygon>","stop-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><rect x=\"9\" y=\"9\" width=\"6\" height=\"6\"></rect>","sun":"<circle cx=\"12\" cy=\"12\" r=\"5\"></circle><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"></line><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"></line><line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"></line><line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"></line><line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"></line><line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"></line><line x1=\"4.22\" y1=\"19.78\" x2=\"5.64\" y2=\"18.36\"></line><line x1=\"18.36\" y1=\"5.64\" x2=\"19.78\" y2=\"4.22\"></line>","sunrise":"<path d=\"M17 18a5 5 0 0 0-10 0\"></path><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"9\"></line><line x1=\"4.22\" y1=\"10.22\" x2=\"5.64\" y2=\"11.64\"></line><line x1=\"1\" y1=\"18\" x2=\"3\" y2=\"18\"></line><line x1=\"21\" y1=\"18\" x2=\"23\" y2=\"18\"></line><line x1=\"18.36\" y1=\"11.64\" x2=\"19.78\" y2=\"10.22\"></line><line x1=\"23\" y1=\"22\" x2=\"1\" y2=\"22\"></line><polyline points=\"8 6 12 2 16 6\"></polyline>","sunset":"<path d=\"M17 18a5 5 0 0 0-10 0\"></path><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"2\"></line><line x1=\"4.22\" y1=\"10.22\" x2=\"5.64\" y2=\"11.64\"></line><line x1=\"1\" y1=\"18\" x2=\"3\" y2=\"18\"></line><line x1=\"21\" y1=\"18\" x2=\"23\" y2=\"18\"></line><line x1=\"18.36\" y1=\"11.64\" x2=\"19.78\" y2=\"10.22\"></line><line x1=\"23\" y1=\"22\" x2=\"1\" y2=\"22\"></line><polyline points=\"16 5 12 9 8 5\"></polyline>","tablet":"<rect x=\"4\" y=\"2\" width=\"16\" height=\"20\" rx=\"2\" ry=\"2\"></rect><line x1=\"12\" y1=\"18\" x2=\"12.01\" y2=\"18\"></line>","tag":"<path d=\"M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z\"></path><line x1=\"7\" y1=\"7\" x2=\"7.01\" y2=\"7\"></line>","target":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><circle cx=\"12\" cy=\"12\" r=\"6\"></circle><circle cx=\"12\" cy=\"12\" r=\"2\"></circle>","terminal":"<polyline points=\"4 17 10 11 4 5\"></polyline><line x1=\"12\" y1=\"19\" x2=\"20\" y2=\"19\"></line>","thermometer":"<path d=\"M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z\"></path>","thumbs-down":"<path d=\"M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17\"></path>","thumbs-up":"<path d=\"M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3\"></path>","toggle-left":"<rect x=\"1\" y=\"5\" width=\"22\" height=\"14\" rx=\"7\" ry=\"7\"></rect><circle cx=\"8\" cy=\"12\" r=\"3\"></circle>","toggle-right":"<rect x=\"1\" y=\"5\" width=\"22\" height=\"14\" rx=\"7\" ry=\"7\"></rect><circle cx=\"16\" cy=\"12\" r=\"3\"></circle>","tool":"<path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z\"></path>","trash-2":"<polyline points=\"3 6 5 6 21 6\"></polyline><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"></path><line x1=\"10\" y1=\"11\" x2=\"10\" y2=\"17\"></line><line x1=\"14\" y1=\"11\" x2=\"14\" y2=\"17\"></line>","trash":"<polyline points=\"3 6 5 6 21 6\"></polyline><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"></path>","trello":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><rect x=\"7\" y=\"7\" width=\"3\" height=\"9\"></rect><rect x=\"14\" y=\"7\" width=\"3\" height=\"5\"></rect>","trending-down":"<polyline points=\"23 18 13.5 8.5 8.5 13.5 1 6\"></polyline><polyline points=\"17 18 23 18 23 12\"></polyline>","trending-up":"<polyline points=\"23 6 13.5 15.5 8.5 10.5 1 18\"></polyline><polyline points=\"17 6 23 6 23 12\"></polyline>","triangle":"<path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"></path>","truck":"<rect x=\"1\" y=\"3\" width=\"15\" height=\"13\"></rect><polygon points=\"16 8 20 8 23 11 23 16 16 16 16 8\"></polygon><circle cx=\"5.5\" cy=\"18.5\" r=\"2.5\"></circle><circle cx=\"18.5\" cy=\"18.5\" r=\"2.5\"></circle>","tv":"<rect x=\"2\" y=\"7\" width=\"20\" height=\"15\" rx=\"2\" ry=\"2\"></rect><polyline points=\"17 2 12 7 7 2\"></polyline>","twitch":"<path d=\"M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7\"></path>","twitter":"<path d=\"M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z\"></path>","type":"<polyline points=\"4 7 4 4 20 4 20 7\"></polyline><line x1=\"9\" y1=\"20\" x2=\"15\" y2=\"20\"></line><line x1=\"12\" y1=\"4\" x2=\"12\" y2=\"20\"></line>","umbrella":"<path d=\"M23 12a11.05 11.05 0 0 0-22 0zm-5 7a3 3 0 0 1-6 0v-7\"></path>","underline":"<path d=\"M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3\"></path><line x1=\"4\" y1=\"21\" x2=\"20\" y2=\"21\"></line>","unlock":"<rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"></rect><path d=\"M7 11V7a5 5 0 0 1 9.9-1\"></path>","upload-cloud":"<polyline points=\"16 16 12 12 8 16\"></polyline><line x1=\"12\" y1=\"12\" x2=\"12\" y2=\"21\"></line><path d=\"M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3\"></path><polyline points=\"16 16 12 12 8 16\"></polyline>","upload":"<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"></path><polyline points=\"17 8 12 3 7 8\"></polyline><line x1=\"12\" y1=\"3\" x2=\"12\" y2=\"15\"></line>","user-check":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"8.5\" cy=\"7\" r=\"4\"></circle><polyline points=\"17 11 19 13 23 9\"></polyline>","user-minus":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"8.5\" cy=\"7\" r=\"4\"></circle><line x1=\"23\" y1=\"11\" x2=\"17\" y2=\"11\"></line>","user-plus":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"8.5\" cy=\"7\" r=\"4\"></circle><line x1=\"20\" y1=\"8\" x2=\"20\" y2=\"14\"></line><line x1=\"23\" y1=\"11\" x2=\"17\" y2=\"11\"></line>","user-x":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"8.5\" cy=\"7\" r=\"4\"></circle><line x1=\"18\" y1=\"8\" x2=\"23\" y2=\"13\"></line><line x1=\"23\" y1=\"8\" x2=\"18\" y2=\"13\"></line>","user":"<path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"></path><circle cx=\"12\" cy=\"7\" r=\"4\"></circle>","users":"<path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"9\" cy=\"7\" r=\"4\"></circle><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"></path><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"></path>","video-off":"<path d=\"M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10\"></path><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","video":"<polygon points=\"23 7 16 12 23 17 23 7\"></polygon><rect x=\"1\" y=\"5\" width=\"15\" height=\"14\" rx=\"2\" ry=\"2\"></rect>","voicemail":"<circle cx=\"5.5\" cy=\"11.5\" r=\"4.5\"></circle><circle cx=\"18.5\" cy=\"11.5\" r=\"4.5\"></circle><line x1=\"5.5\" y1=\"16\" x2=\"18.5\" y2=\"16\"></line>","volume-1":"<polygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"></polygon><path d=\"M15.54 8.46a5 5 0 0 1 0 7.07\"></path>","volume-2":"<polygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"></polygon><path d=\"M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07\"></path>","volume-x":"<polygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"></polygon><line x1=\"23\" y1=\"9\" x2=\"17\" y2=\"15\"></line><line x1=\"17\" y1=\"9\" x2=\"23\" y2=\"15\"></line>","volume":"<polygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"></polygon>","watch":"<circle cx=\"12\" cy=\"12\" r=\"7\"></circle><polyline points=\"12 9 12 12 13.5 13.5\"></polyline><path d=\"M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83\"></path>","wifi-off":"<line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line><path d=\"M16.72 11.06A10.94 10.94 0 0 1 19 12.55\"></path><path d=\"M5 12.55a10.94 10.94 0 0 1 5.17-2.39\"></path><path d=\"M10.71 5.05A16 16 0 0 1 22.58 9\"></path><path d=\"M1.42 9a15.91 15.91 0 0 1 4.7-2.88\"></path><path d=\"M8.53 16.11a6 6 0 0 1 6.95 0\"></path><line x1=\"12\" y1=\"20\" x2=\"12.01\" y2=\"20\"></line>","wifi":"<path d=\"M5 12.55a11 11 0 0 1 14.08 0\"></path><path d=\"M1.42 9a16 16 0 0 1 21.16 0\"></path><path d=\"M8.53 16.11a6 6 0 0 1 6.95 0\"></path><line x1=\"12\" y1=\"20\" x2=\"12.01\" y2=\"20\"></line>","wind":"<path d=\"M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2\"></path>","x-circle":"<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"></line><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"></line>","x-octagon":"<polygon points=\"7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2\"></polygon><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"></line><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"></line>","x-square":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"></line><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"></line>","x":"<line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"></line><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"></line>","youtube":"<path d=\"M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z\"></path><polygon points=\"9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02\"></polygon>","zap-off":"<polyline points=\"12.41 6.75 13 2 10.57 4.92\"></polyline><polyline points=\"18.57 12.91 21 10 15.66 10\"></polyline><polyline points=\"8 8 3 14 12 14 11 22 16 16\"></polyline><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"></line>","zap":"<polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"></polygon>","zoom-in":"<circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line>","zoom-out":"<circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line>"};
 
     /***/ }),
 
@@ -31426,27 +31427,35 @@
 
     /******/ });
     });
-    //# sourceMappingURL=feather.js.map
+
     });
 
     var feather$1 = unwrapExports(feather);
 
     const getIcon = (icon, size) => feather$1.icons[icon].toSvg({height:size||"24", width:size||"24"});
 
-    /* src\common\IconButton.svelte generated by Svelte v3.6.9 */
+    /* src\nav\NavItem.svelte generated by Svelte v3.9.1 */
 
-    const file$3 = "src\\common\\IconButton.svelte";
+    const file$3 = "src\\nav\\NavItem.svelte";
 
     function create_fragment$2(ctx) {
-    	var button, raw_value = getIcon(ctx.icon, ctx.size), button_style_value, addAttributes_action, dispose;
+    	var div3, div2, div1, div0, raw_value = getIcon(ctx.icon) + "", dispose;
 
     	return {
     		c: function create() {
-    			button = element("button");
-    			attr(button, "style", button_style_value = "" + ctx.style + " color:" + ctx.color + " --hovercolor:" + ctx.hoverColor);
-    			attr(button, "class", "svelte-4po3k2");
-    			add_location(button, file$3, 42, 0, 926);
-    			dispose = listen(button, "click", ctx.click_handler);
+    			div3 = element("div");
+    			div2 = element("div");
+    			div1 = element("div");
+    			div0 = element("div");
+    			attr(div0, "class", "icon svelte-5cf6ht");
+    			add_location(div0, file$3, 24, 12, 452);
+    			attr(div1, "class", "inner svelte-5cf6ht");
+    			add_location(div1, file$3, 23, 8, 420);
+    			attr(div2, "class", "nav-item svelte-5cf6ht");
+    			add_location(div2, file$3, 21, 4, 359);
+    			attr(div3, "class", "" + null_to_empty(ctx.navActive) + " svelte-5cf6ht");
+    			add_location(div3, file$3, 20, 0, 329);
+    			dispose = listen(div2, "click", ctx.setActive);
     		},
 
     		l: function claim(nodes) {
@@ -31454,22 +31463,20 @@
     		},
 
     		m: function mount(target, anchor) {
-    			insert(target, button, anchor);
-    			button.innerHTML = raw_value;
-    			addAttributes_action = ctx.addAttributes.call(null, button, ctx.attributes) || {};
+    			insert(target, div3, anchor);
+    			append(div3, div2);
+    			append(div2, div1);
+    			append(div1, div0);
+    			div0.innerHTML = raw_value;
     		},
 
     		p: function update(changed, ctx) {
-    			if ((changed.icon || changed.size) && raw_value !== (raw_value = getIcon(ctx.icon, ctx.size))) {
-    				button.innerHTML = raw_value;
+    			if ((changed.icon) && raw_value !== (raw_value = getIcon(ctx.icon) + "")) {
+    				div0.innerHTML = raw_value;
     			}
 
-    			if ((changed.style || changed.color || changed.hoverColor) && button_style_value !== (button_style_value = "" + ctx.style + " color:" + ctx.color + " --hovercolor:" + ctx.hoverColor)) {
-    				attr(button, "style", button_style_value);
-    			}
-
-    			if (typeof addAttributes_action.update === 'function' && changed.attributes) {
-    				addAttributes_action.update.call(null, ctx.attributes);
+    			if (changed.navActive) {
+    				attr(div3, "class", "" + null_to_empty(ctx.navActive) + " svelte-5cf6ht");
     			}
     		},
 
@@ -31478,247 +31485,407 @@
 
     		d: function destroy(detaching) {
     			if (detaching) {
-    				detach(button);
+    				detach(div3);
     			}
 
-    			if (addAttributes_action && typeof addAttributes_action.destroy === 'function') addAttributes_action.destroy();
     			dispose();
     		}
     	};
     }
 
     function instance$2($$self, $$props, $$invalidate) {
-    	let { size = 18, icon = "", style = "", color = "", hoverColor = "", attributes = {} } = $$props;
+    	
 
-    let currentAttributes = [];
-    const addAttributes = (node, attributes) => {
+    let { name = "", label = "", icon = "" } = $$props;
 
-        const add = (_attributes) => {
-            const attrs = [];
-            for(let attr in _attributes) {
-                node.setAttribute(attr, _attributes[attr]);
-                attrs.push("uk-toggle");
-            }
-            currentAttributes = attrs;
-        };
+    let navActive = "";
 
-        add(attributes);
+    store.subscribe(db => {
+        $$invalidate('navActive', navActive = (db.activeNav === name ? "active" : ""));
+    });
 
-        return {
-            // should implement update method
-            update(attributes) {
-                for(let attr of currentAttributes) {
-                    node.removeAttribute(attr);
-                }
-                add(attributes);
-            },
-            destroy() {}
-        }
-    };
+    const setActive = () => 
+        store.setActiveNav(name);
 
-    	const writable_props = ['size', 'icon', 'style', 'color', 'hoverColor', 'attributes'];
+    	const writable_props = ['name', 'label', 'icon'];
     	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<IconButton> was created with unknown prop '${key}'`);
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<NavItem> was created with unknown prop '${key}'`);
     	});
 
-    	function click_handler(event) {
-    		bubble($$self, event);
-    	}
-
     	$$self.$set = $$props => {
-    		if ('size' in $$props) $$invalidate('size', size = $$props.size);
+    		if ('name' in $$props) $$invalidate('name', name = $$props.name);
+    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
     		if ('icon' in $$props) $$invalidate('icon', icon = $$props.icon);
-    		if ('style' in $$props) $$invalidate('style', style = $$props.style);
-    		if ('color' in $$props) $$invalidate('color', color = $$props.color);
-    		if ('hoverColor' in $$props) $$invalidate('hoverColor', hoverColor = $$props.hoverColor);
-    		if ('attributes' in $$props) $$invalidate('attributes', attributes = $$props.attributes);
     	};
 
-    	return {
-    		size,
-    		icon,
-    		style,
-    		color,
-    		hoverColor,
-    		attributes,
-    		addAttributes,
-    		click_handler
-    	};
+    	return { name, label, icon, navActive, setActive };
     }
 
-    class IconButton extends SvelteComponentDev {
+    class NavItem extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, ["size", "icon", "style", "color", "hoverColor", "attributes"]);
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, ["name", "label", "icon"]);
     	}
 
-    	get size() {
-    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	get name() {
+    		throw new Error("<NavItem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set size(value) {
-    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	set name(value) {
+    		throw new Error("<NavItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get label() {
+    		throw new Error("<NavItem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set label(value) {
+    		throw new Error("<NavItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
     	get icon() {
-    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    		throw new Error("<NavItem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
     	set icon(value) {
-    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get style() {
-    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set style(value) {
-    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get color() {
-    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set color(value) {
-    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get hoverColor() {
-    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set hoverColor(value) {
-    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get attributes() {
-    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set attributes(value) {
-    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    		throw new Error("<NavItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
-    /* src\userInterface\ComponentsHierarchy.svelte generated by Svelte v3.6.9 */
+    /* src\nav\Nav.svelte generated by Svelte v3.9.1 */
 
-    const file$4 = "src\\userInterface\\ComponentsHierarchy.svelte";
+    const file$4 = "src\\nav\\Nav.svelte";
 
-    function get_each_context$1(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.component = list[i];
-    	return child_ctx;
-    }
+    function create_fragment$3(ctx) {
+    	var nav, img, t0, t1, t2, t3, current;
 
-    function get_each_context_1(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.folder = list[i];
-    	return child_ctx;
-    }
-
-    // (129:8) {#if folder.isExpanded}
-    function create_if_block(ctx) {
-    	var current;
-
-    	var componentshierarchy = new ComponentsHierarchy({
+    	var navitem0 = new NavItem({
     		props: {
-    		components: ctx.subComponents(ctx.folder.name),
-    		thisLevel: ctx.folder.path
+    		name: "database",
+    		label: "Database",
+    		icon: "database"
+    	},
+    		$$inline: true
+    	});
+
+    	var navitem1 = new NavItem({
+    		props: {
+    		name: "actions",
+    		label: "Actions",
+    		icon: "zap"
+    	},
+    		$$inline: true
+    	});
+
+    	var navitem2 = new NavItem({
+    		props: {
+    		name: "access levels",
+    		label: "Access Levels",
+    		icon: "user"
+    	},
+    		$$inline: true
+    	});
+
+    	var navitem3 = new NavItem({
+    		props: {
+    		name: "user interface",
+    		label: "User Interface",
+    		icon: "monitor"
     	},
     		$$inline: true
     	});
 
     	return {
     		c: function create() {
-    			componentshierarchy.$$.fragment.c();
+    			nav = element("nav");
+    			img = element("img");
+    			t0 = space();
+    			navitem0.$$.fragment.c();
+    			t1 = space();
+    			navitem1.$$.fragment.c();
+    			t2 = space();
+    			navitem2.$$.fragment.c();
+    			t3 = space();
+    			navitem3.$$.fragment.c();
+    			attr(img, "src", "/_builder/assets/budibase-logo-only.png");
+    			attr(img, "class", "logo svelte-lgepe1");
+    			attr(img, "alt", "budibase logo");
+    			add_location(img, file$4, 10, 4, 135);
+    			attr(nav, "class", "nav svelte-lgepe1");
+    			set_style(nav, "width", ctx.width);
+    			add_location(nav, file$4, 8, 0, 84);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
 
     		m: function mount(target, anchor) {
-    			mount_component(componentshierarchy, target, anchor);
+    			insert(target, nav, anchor);
+    			append(nav, img);
+    			append(nav, t0);
+    			mount_component(navitem0, nav, null);
+    			append(nav, t1);
+    			mount_component(navitem1, nav, null);
+    			append(nav, t2);
+    			mount_component(navitem2, nav, null);
+    			append(nav, t3);
+    			mount_component(navitem3, nav, null);
     			current = true;
     		},
 
     		p: function update(changed, ctx) {
-    			var componentshierarchy_changes = {};
-    			if (changed.subComponents || changed.subfolders) componentshierarchy_changes.components = ctx.subComponents(ctx.folder.name);
-    			if (changed.subfolders) componentshierarchy_changes.thisLevel = ctx.folder.path;
-    			componentshierarchy.$set(componentshierarchy_changes);
+    			if (!current || changed.width) {
+    				set_style(nav, "width", ctx.width);
+    			}
     		},
 
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(componentshierarchy.$$.fragment, local);
+    			transition_in(navitem0.$$.fragment, local);
+
+    			transition_in(navitem1.$$.fragment, local);
+
+    			transition_in(navitem2.$$.fragment, local);
+
+    			transition_in(navitem3.$$.fragment, local);
 
     			current = true;
     		},
 
     		o: function outro(local) {
-    			transition_out(componentshierarchy.$$.fragment, local);
+    			transition_out(navitem0.$$.fragment, local);
+    			transition_out(navitem1.$$.fragment, local);
+    			transition_out(navitem2.$$.fragment, local);
+    			transition_out(navitem3.$$.fragment, local);
     			current = false;
     		},
 
     		d: function destroy(detaching) {
-    			destroy_component(componentshierarchy, detaching);
+    			if (detaching) {
+    				detach(nav);
+    			}
+
+    			destroy_component(navitem0);
+
+    			destroy_component(navitem1);
+
+    			destroy_component(navitem2);
+
+    			destroy_component(navitem3);
     		}
     	};
     }
 
-    // (124:4) {#each subfolders as folder}
-    function create_each_block_1(ctx) {
-    	var div, span0, raw_value = getIcon(ctx.folder.isExpanded ? "chevron-down" : "chevron-right", "16"), t0, span1, t1_value = ctx.folder.name, t1, t2, current, dispose;
+    function instance$3($$self, $$props, $$invalidate) {
+    	let { width=50 } = $$props;
 
-    	var if_block = (ctx.folder.isExpanded) && create_if_block(ctx);
+    	const writable_props = ['width'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Nav> was created with unknown prop '${key}'`);
+    	});
 
-    	function click_handler() {
-    		return ctx.click_handler(ctx);
+    	$$self.$set = $$props => {
+    		if ('width' in $$props) $$invalidate('width', width = $$props.width);
+    	};
+
+    	return { width };
+    }
+
+    class Nav extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$3, create_fragment$3, safe_not_equal, ["width"]);
     	}
+
+    	get width() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set width(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\database\HierarchyRow.svelte generated by Svelte v3.9.1 */
+
+    const file$5 = "src\\database\\HierarchyRow.svelte";
+
+    function get_each_context$1(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.child = list[i];
+    	return child_ctx;
+    }
+
+    // (14:4) {#if node.children}
+    function create_if_block(ctx) {
+    	var each_1_anchor, current;
+
+    	var each_value = ctx.node.children;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
 
     	return {
     		c: function create() {
-    			div = element("div");
-    			span0 = element("span");
-    			t0 = space();
-    			span1 = element("span");
-    			t1 = text(t1_value);
-    			t2 = space();
-    			if (if_block) if_block.c();
-    			add_location(span0, file$4, 126, 8, 3088);
-    			attr(span1, "class", "title svelte-1cnqtw");
-    			toggle_class(span1, "currentfolder", ctx.$store.currentFrontEndItem && ctx.isInSubfolder(ctx.folder.name, ctx.$store.currentFrontEndItem));
-    			add_location(span1, file$4, 127, 8, 3185);
-    			attr(div, "class", "hierarchy-item folder svelte-1cnqtw");
-    			add_location(div, file$4, 124, 4, 2981);
-    			dispose = listen(div, "click", stop_propagation(click_handler));
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			each_1_anchor = empty();
     		},
 
     		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, span0);
-    			span0.innerHTML = raw_value;
-    			append(div, t0);
-    			append(div, span1);
-    			append(span1, t1);
-    			append(div, t2);
-    			if (if_block) if_block.m(div, null);
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(target, anchor);
+    			}
+
+    			insert(target, each_1_anchor, anchor);
     			current = true;
     		},
 
-    		p: function update(changed, new_ctx) {
-    			ctx = new_ctx;
-    			if ((!current || changed.subfolders) && raw_value !== (raw_value = getIcon(ctx.folder.isExpanded ? "chevron-down" : "chevron-right", "16"))) {
-    				span0.innerHTML = raw_value;
+    		p: function update(changed, ctx) {
+    			if (changed.node || changed.level) {
+    				each_value = ctx.node.children;
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$1(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block$1(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+    					}
+    				}
+
+    				group_outros();
+    				for (i = each_value.length; i < each_blocks.length; i += 1) out(i);
+    				check_outros();
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			for (var i = 0; i < each_value.length; i += 1) transition_in(each_blocks[i]);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			each_blocks = each_blocks.filter(Boolean);
+    			for (let i = 0; i < each_blocks.length; i += 1) transition_out(each_blocks[i]);
+
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_each(each_blocks, detaching);
+
+    			if (detaching) {
+    				detach(each_1_anchor);
+    			}
+    		}
+    	};
+    }
+
+    // (15:4) {#each node.children as child}
+    function create_each_block$1(ctx) {
+    	var current;
+
+    	var hierarchyrow = new HierarchyRow({
+    		props: { node: ctx.child, level: ctx.level+1 },
+    		$$inline: true
+    	});
+
+    	return {
+    		c: function create() {
+    			hierarchyrow.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(hierarchyrow, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var hierarchyrow_changes = {};
+    			if (changed.node) hierarchyrow_changes.node = ctx.child;
+    			if (changed.level) hierarchyrow_changes.level = ctx.level+1;
+    			hierarchyrow.$set(hierarchyrow_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(hierarchyrow.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(hierarchyrow.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(hierarchyrow, detaching);
+    		}
+    	};
+    }
+
+    function create_fragment$4(ctx) {
+    	var div1, div0, t0_value = ctx.node.name + "", t0, t1, current, dispose;
+
+    	var if_block = (ctx.node.children) && create_if_block(ctx);
+
+    	return {
+    		c: function create() {
+    			div1 = element("div");
+    			div0 = element("div");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			if (if_block) if_block.c();
+    			attr(div0, "class", "title svelte-1q40nqm");
+    			set_style(div0, "padding-left", "" + (20 + (ctx.level * 20)) + "px");
+    			add_location(div0, file$5, 10, 4, 157);
+    			attr(div1, "class", "root svelte-1q40nqm");
+    			add_location(div1, file$5, 9, 0, 134);
+    			dispose = listen(div0, "click", ctx.click_handler);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div1, anchor);
+    			append(div1, div0);
+    			append(div0, t0);
+    			append(div1, t1);
+    			if (if_block) if_block.m(div1, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((!current || changed.node) && t0_value !== (t0_value = ctx.node.name + "")) {
+    				set_data(t0, t0_value);
     			}
 
-    			if ((!current || changed.subfolders) && t1_value !== (t1_value = ctx.folder.name)) {
-    				set_data(t1, t1_value);
+    			if (!current || changed.level) {
+    				set_style(div0, "padding-left", "" + (20 + (ctx.level * 20)) + "px");
     			}
 
-    			if ((changed.$store || changed.isInSubfolder || changed.subfolders)) {
-    				toggle_class(span1, "currentfolder", ctx.$store.currentFrontEndItem && ctx.isInSubfolder(ctx.folder.name, ctx.$store.currentFrontEndItem));
-    			}
-
-    			if (ctx.folder.isExpanded) {
+    			if (ctx.node.children) {
     				if (if_block) {
     					if_block.p(changed, ctx);
     					transition_in(if_block, 1);
@@ -31726,7 +31893,7 @@
     					if_block = create_if_block(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
-    					if_block.m(div, null);
+    					if_block.m(div1, null);
     				}
     			} else if (if_block) {
     				group_outros();
@@ -31750,7 +31917,7 @@
 
     		d: function destroy(detaching) {
     			if (detaching) {
-    				detach(div);
+    				detach(div1);
     			}
 
     			if (if_block) if_block.d();
@@ -31759,572 +31926,59 @@
     	};
     }
 
-    // (136:4) {#each componentsThisLevel as component}
-    function create_each_block$1(ctx) {
-    	var div, span0, raw_value = getIcon("circle", "7"), t0, span1, t1_value = ctx.component.title, t1, t2, dispose;
-
-    	function click_handler_1() {
-    		return ctx.click_handler_1(ctx);
-    	}
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			span0 = element("span");
-    			t0 = space();
-    			span1 = element("span");
-    			t1 = text(t1_value);
-    			t2 = space();
-    			add_location(span0, file$4, 138, 8, 3784);
-    			attr(span1, "class", "title svelte-1cnqtw");
-    			add_location(span1, file$4, 139, 8, 3836);
-    			attr(div, "class", "hierarchy-item component svelte-1cnqtw");
-    			toggle_class(div, "selected", ctx.isComponentSelected(ctx.$store.currentFrontEndItem, ctx.component.component));
-    			add_location(div, file$4, 136, 4, 3562);
-    			dispose = listen(div, "click", stop_propagation(click_handler_1));
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, span0);
-    			span0.innerHTML = raw_value;
-    			append(div, t0);
-    			append(div, span1);
-    			append(span1, t1);
-    			append(div, t2);
-    		},
-
-    		p: function update(changed, new_ctx) {
-    			ctx = new_ctx;
-    			if ((changed.componentsThisLevel) && t1_value !== (t1_value = ctx.component.title)) {
-    				set_data(t1, t1_value);
-    			}
-
-    			if ((changed.isComponentSelected || changed.$store || changed.componentsThisLevel)) {
-    				toggle_class(div, "selected", ctx.isComponentSelected(ctx.$store.currentFrontEndItem, ctx.component.component));
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function create_fragment$3(ctx) {
-    	var div, t, div_style_value, current;
-
-    	var each_value_1 = ctx.subfolders;
-
-    	var each_blocks_1 = [];
-
-    	for (var i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
-    	}
-
-    	const out = i => transition_out(each_blocks_1[i], 1, 1, () => {
-    		each_blocks_1[i] = null;
-    	});
-
-    	var each_value = ctx.componentsThisLevel;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
-    	}
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-
-    			for (var i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].c();
-    			}
-
-    			t = space();
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-    			attr(div, "class", "root svelte-1cnqtw");
-    			attr(div, "style", div_style_value = `padding-left: calc(10px * ${ctx.pathPartsThisLevel})`);
-    			add_location(div, file$4, 121, 0, 2864);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-
-    			for (var i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].m(div, null);
-    			}
-
-    			append(div, t);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div, null);
-    			}
-
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.subfolders || changed.subComponents || changed.$store || changed.isInSubfolder || changed.getIcon) {
-    				each_value_1 = ctx.subfolders;
-
-    				for (var i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
-
-    					if (each_blocks_1[i]) {
-    						each_blocks_1[i].p(changed, child_ctx);
-    						transition_in(each_blocks_1[i], 1);
-    					} else {
-    						each_blocks_1[i] = create_each_block_1(child_ctx);
-    						each_blocks_1[i].c();
-    						transition_in(each_blocks_1[i], 1);
-    						each_blocks_1[i].m(div, t);
-    					}
-    				}
-
-    				group_outros();
-    				for (i = each_value_1.length; i < each_blocks_1.length; i += 1) out(i);
-    				check_outros();
-    			}
-
-    			if (changed.isComponentSelected || changed.$store || changed.componentsThisLevel || changed.getIcon) {
-    				each_value = ctx.componentsThisLevel;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$1(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block$1(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(div, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value.length;
-    			}
-
-    			if ((!current || changed.pathPartsThisLevel) && div_style_value !== (div_style_value = `padding-left: calc(10px * ${ctx.pathPartsThisLevel})`)) {
-    				attr(div, "style", div_style_value);
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			for (var i = 0; i < each_value_1.length; i += 1) transition_in(each_blocks_1[i]);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			each_blocks_1 = each_blocks_1.filter(Boolean);
-    			for (let i = 0; i < each_blocks_1.length; i += 1) transition_out(each_blocks_1[i]);
-
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			destroy_each(each_blocks_1, detaching);
-
-    			destroy_each(each_blocks, detaching);
-    		}
-    	};
-    }
-
-    function instance$3($$self, $$props, $$invalidate) {
-    	let $store;
-
-    	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
-
-    	
-
-    let { components = [], thisLevel = "" } = $$props;
-
-    let pathPartsThisLevel;
-    let componentsThisLevel;
-    let subfolders;
-
-    let expandedFolders = [];
-
-    const joinPath = fp_39("/");
-
-    const normalizedName = name => pipe(name, [
-            fp_54("./"),
-            fp_54("~/"),
-            fp_54("../"),
-            fp_53(" ")
-        ]);
-
-
-    const isOnThisLevel = (c) => 
-        normalizedName(c.name).split("/").length === pathPartsThisLevel
-        &&
-        (!thisLevel || normalizedName(c.name).startsWith(normalizedName(thisLevel)));
-
-    const notOnThisLevel = (c) => !isOnThisLevel(c);
-
-    const isInSubfolder = (subfolder, c) => 
-        normalizedName(c.name).startsWith(
-            fp_54("/")(
-                joinPath([thisLevel, subfolder])));
-
-    const lastPartOfName = (c) => 
-        fp_12(c.name.split("/"));
-
-    const subFolder = (c) => {
-        const cname = normalizedName(c.name);
-        const folderName = cname.substring(thisLevel.length, cname.length).split("/")[0];
-
-        return ({
-            name: folderName,
-            isExpanded: fp_11(folderName)(expandedFolders),
-            path: thisLevel + "/" + folderName
-        });
-    };
-
-    const subComponents = (subfolder) => pipe(components, [
-            fp_8(c => isInSubfolder(subfolder, c))
-        ]);
-
-    const expandFolder = folder => {
-        const expandedFolder = {...folder};
-        if(expandedFolder.isExpanded) {
-            expandedFolder.isExpanded = false;
-            expandedFolders = fp_8(f => f.name !== folder.name)(expandedFolders);
-        } else {
-            expandedFolder.isExpanded = true;
-            expandedFolders.push(folder.name);
-        }
-        const newFolders = [...subfolders];
-        newFolders.splice(
-            newFolders.indexOf(folder),
-            1,
-            expandedFolder);
-        $$invalidate('subfolders', subfolders = newFolders);
-         
-    };
-
-    const isComponentSelected = (current,c) =>
-        current 
-        && current.name === c.name;
-
-    	const writable_props = ['components', 'thisLevel'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ComponentsHierarchy> was created with unknown prop '${key}'`);
-    	});
-
-    	function click_handler({ folder }) {
-    		return expandFolder(folder);
-    	}
-
-    	function click_handler_1({ component }) {
-    		return store.setCurrentComponent(component.component);
-    	}
-
-    	$$self.$set = $$props => {
-    		if ('components' in $$props) $$invalidate('components', components = $$props.components);
-    		if ('thisLevel' in $$props) $$invalidate('thisLevel', thisLevel = $$props.thisLevel);
-    	};
-
-    	$$self.$$.update = ($$dirty = { thisLevel: 1, components: 1 }) => {
-    		if ($$dirty.thisLevel || $$dirty.components) { {
-                $$invalidate('pathPartsThisLevel', pathPartsThisLevel = !thisLevel 
-                                        ? 1
-                                        : normalizedName(thisLevel).split("/").length + 1);
-            
-                $$invalidate('componentsThisLevel', componentsThisLevel = 
-                    pipe(components, [
-                        fp_8(isOnThisLevel),
-                        fp_7(c => ({component:c, title:lastPartOfName(c)})),
-                        fp_50("title")
-                    ]));
-            
-                $$invalidate('subfolders', subfolders = 
-                    pipe(components, [
-                        fp_8(notOnThisLevel),
-                        fp_50("name"),
-                        fp_7(subFolder),
-                        fp_43((f1,f2) => f1.path === f2.path)
-                    ]));
-            } }
-    	};
-
-    	return {
-    		components,
-    		thisLevel,
-    		pathPartsThisLevel,
-    		componentsThisLevel,
-    		subfolders,
-    		isInSubfolder,
-    		subComponents,
-    		expandFolder,
-    		isComponentSelected,
-    		$store,
-    		click_handler,
-    		click_handler_1
-    	};
-    }
-
-    class ComponentsHierarchy extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$3, create_fragment$3, safe_not_equal, ["components", "thisLevel"]);
-    	}
-
-    	get components() {
-    		throw new Error("<ComponentsHierarchy>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set components(value) {
-    		throw new Error("<ComponentsHierarchy>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get thisLevel() {
-    		throw new Error("<ComponentsHierarchy>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set thisLevel(value) {
-    		throw new Error("<ComponentsHierarchy>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\userInterface\PagesList.svelte generated by Svelte v3.6.9 */
-
-    const file$5 = "src\\userInterface\\PagesList.svelte";
-
-    function create_fragment$4(ctx) {
-    	var div2, div0, span0, raw0_value = getIcon("circle", "7"), t0, span1, t2, div1, span2, raw1_value = getIcon("circle", "7"), t3, span3, dispose;
-
-    	return {
-    		c: function create() {
-    			div2 = element("div");
-    			div0 = element("div");
-    			span0 = element("span");
-    			t0 = space();
-    			span1 = element("span");
-    			span1.textContent = "Main";
-    			t2 = space();
-    			div1 = element("div");
-    			span2 = element("span");
-    			t3 = space();
-    			span3 = element("span");
-    			span3.textContent = "Login";
-    			add_location(span0, file$5, 14, 8, 429);
-    			attr(span1, "class", "title svelte-ffb307");
-    			add_location(span1, file$5, 15, 8, 481);
-    			attr(div0, "class", "hierarchy-item component svelte-ffb307");
-    			toggle_class(div0, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "main");
-    			add_location(div0, file$5, 12, 4, 218);
-    			add_location(span2, file$5, 20, 8, 762);
-    			attr(span3, "class", "title svelte-ffb307");
-    			add_location(span3, file$5, 21, 8, 814);
-    			attr(div1, "class", "hierarchy-item component svelte-ffb307");
-    			toggle_class(div1, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "unauthenticated");
-    			add_location(div1, file$5, 18, 4, 529);
-    			attr(div2, "class", "root svelte-ffb307");
-    			add_location(div2, file$5, 11, 0, 195);
-
-    			dispose = [
-    				listen(div0, "click", stop_propagation(ctx.click_handler)),
-    				listen(div1, "click", stop_propagation(ctx.click_handler_1))
-    			];
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div2, anchor);
-    			append(div2, div0);
-    			append(div0, span0);
-    			span0.innerHTML = raw0_value;
-    			append(div0, t0);
-    			append(div0, span1);
-    			append(div2, t2);
-    			append(div2, div1);
-    			append(div1, span2);
-    			span2.innerHTML = raw1_value;
-    			append(div1, t3);
-    			append(div1, span3);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.$store) {
-    				toggle_class(div0, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "main");
-    				toggle_class(div1, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "unauthenticated");
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div2);
-    			}
-
-    			run_all(dispose);
-    		}
-    	};
-    }
-
     function instance$4($$self, $$props, $$invalidate) {
-    	let $store;
+    	
+    let { level = 0, node } = $$props;
 
-    	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+    	const writable_props = ['level', 'node'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<HierarchyRow> was created with unknown prop '${key}'`);
+    	});
 
     	function click_handler() {
-    		return store.setCurrentPage("main");
-    	}
-
-    	function click_handler_1() {
-    		return store.setCurrentPage("unauthenticated");
-    	}
-
-    	return { $store, click_handler, click_handler_1 };
-    }
-
-    class PagesList extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, []);
-    	}
-    }
-
-    /* src\common\Checkbox.svelte generated by Svelte v3.6.9 */
-
-    const file$6 = "src\\common\\Checkbox.svelte";
-
-    function create_fragment$5(ctx) {
-    	var input, t, dispose;
-
-    	return {
-    		c: function create() {
-    			input = element("input");
-    			t = text(ctx.label);
-    			attr(input, "class", "uk-checkbox svelte-66516k");
-    			attr(input, "type", "checkbox");
-    			add_location(input, file$6, 7, 0, 76);
-
-    			dispose = [
-    				listen(input, "change", ctx.input_change_handler),
-    				listen(input, "change", ctx.change_handler)
-    			];
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, input, anchor);
-
-    			input.checked = ctx.checked;
-
-    			insert(target, t, anchor);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.checked) input.checked = ctx.checked;
-
-    			if (changed.label) {
-    				set_data(t, ctx.label);
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(input);
-    				detach(t);
-    			}
-
-    			run_all(dispose);
-    		}
-    	};
-    }
-
-    function instance$5($$self, $$props, $$invalidate) {
-    	let { checked=false, label="" } = $$props;
-
-    	const writable_props = ['checked', 'label'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Checkbox> was created with unknown prop '${key}'`);
-    	});
-
-    	function change_handler(event) {
-    		bubble($$self, event);
-    	}
-
-    	function input_change_handler() {
-    		checked = this.checked;
-    		$$invalidate('checked', checked);
+    		return store.selectExistingNode(node.nodeId);
     	}
 
     	$$self.$set = $$props => {
-    		if ('checked' in $$props) $$invalidate('checked', checked = $$props.checked);
-    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
+    		if ('level' in $$props) $$invalidate('level', level = $$props.level);
+    		if ('node' in $$props) $$invalidate('node', node = $$props.node);
     	};
 
-    	return {
-    		checked,
-    		label,
-    		change_handler,
-    		input_change_handler
-    	};
+    	return { level, node, click_handler };
     }
 
-    class Checkbox extends SvelteComponentDev {
+    class HierarchyRow extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$5, create_fragment$5, safe_not_equal, ["checked", "label"]);
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, ["level", "node"]);
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx.node === undefined && !('node' in props)) {
+    			console.warn("<HierarchyRow> was created without expected prop 'node'");
+    		}
     	}
 
-    	get checked() {
-    		throw new Error("<Checkbox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	get level() {
+    		throw new Error("<HierarchyRow>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set checked(value) {
-    		throw new Error("<Checkbox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	set level(value) {
+    		throw new Error("<HierarchyRow>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get label() {
-    		throw new Error("<Checkbox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	get node() {
+    		throw new Error("<HierarchyRow>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set label(value) {
-    		throw new Error("<Checkbox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	set node(value) {
+    		throw new Error("<HierarchyRow>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
-    /* src\common\Textbox.svelte generated by Svelte v3.6.9 */
+    /* src\common\Textbox.svelte generated by Svelte v3.9.1 */
 
-    const file$7 = "src\\common\\Textbox.svelte";
+    const file$6 = "src\\common\\Textbox.svelte";
 
     // (21:4) {#if infoText}
     function create_if_block$1(ctx) {
@@ -32335,7 +31989,7 @@
     			div = element("div");
     			t = text(ctx.infoText);
     			attr(div, "class", "info-text svelte-um9cf7");
-    			add_location(div, file$7, 21, 4, 603);
+    			add_location(div, file$6, 21, 4, 603);
     		},
 
     		m: function mount(target, anchor) {
@@ -32357,7 +32011,7 @@
     	};
     }
 
-    function create_fragment$6(ctx) {
+    function create_fragment$5(ctx) {
     	var div1, label_1, t0, t1, div0, input, input_class_value, t2, dispose;
 
     	var if_block = (ctx.infoText) && create_if_block$1(ctx);
@@ -32373,15 +32027,15 @@
     			t2 = space();
     			if (if_block) if_block.c();
     			attr(label_1, "class", "uk-form-label");
-    			add_location(label_1, file$7, 12, 4, 278);
+    			add_location(label_1, file$6, 12, 4, 278);
     			attr(input, "class", input_class_value = "uk-input uk-form-width-" + ctx.width + " uk-form-" + ctx.size + " svelte-um9cf7");
     			input.disabled = ctx.disabled;
     			toggle_class(input, "uk-form-danger", ctx.hasError);
-    			add_location(input, file$7, 14, 8, 368);
+    			add_location(input, file$6, 14, 8, 368);
     			attr(div0, "class", "uk-form-controls");
-    			add_location(div0, file$7, 13, 4, 328);
+    			add_location(div0, file$6, 13, 4, 328);
     			toggle_class(div1, "uk-margin", ctx.margin);
-    			add_location(div1, file$7, 11, 0, 242);
+    			add_location(div1, file$6, 11, 0, 242);
 
     			dispose = [
     				listen(input, "input", ctx.input_input_handler),
@@ -32401,7 +32055,7 @@
     			append(div1, div0);
     			append(div0, input);
 
-    			input.value = ctx.text;
+    			set_input_value(input, ctx.text);
 
     			append(div1, t2);
     			if (if_block) if_block.m(div1, null);
@@ -32412,7 +32066,7 @@
     				set_data(t0, ctx.label);
     			}
 
-    			if (changed.text && (input.value !== ctx.text)) input.value = ctx.text;
+    			if (changed.text && (input.value !== ctx.text)) set_input_value(input, ctx.text);
 
     			if ((changed.width || changed.size) && input_class_value !== (input_class_value = "uk-input uk-form-width-" + ctx.width + " uk-form-" + ctx.size + " svelte-um9cf7")) {
     				attr(input, "class", input_class_value);
@@ -32458,7 +32112,7 @@
     	};
     }
 
-    function instance$6($$self, $$props, $$invalidate) {
+    function instance$5($$self, $$props, $$invalidate) {
     	let { text = "", label = "", width = "medium", size = "small", margin = true, infoText = "", hasError = false, disabled = false } = $$props;
 
     	const writable_props = ['text', 'label', 'width', 'size', 'margin', 'infoText', 'hasError', 'disabled'];
@@ -32503,7 +32157,7 @@
     class Textbox extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$6, create_fragment$6, safe_not_equal, ["text", "label", "width", "size", "margin", "infoText", "hasError", "disabled"]);
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, ["text", "label", "width", "size", "margin", "infoText", "hasError", "disabled"]);
     	}
 
     	get text() {
@@ -32571,11 +32225,11 @@
     	}
     }
 
-    /* src\common\Dropdown.svelte generated by Svelte v3.6.9 */
+    /* src\common\Dropdown.svelte generated by Svelte v3.9.1 */
 
-    const file$8 = "src\\common\\Dropdown.svelte";
+    const file$7 = "src\\common\\Dropdown.svelte";
 
-    function get_each_context_1$1(ctx, list, i) {
+    function get_each_context_1(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.option = list[i];
     	return child_ctx;
@@ -32596,7 +32250,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
+    		each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
     	}
 
     	return {
@@ -32608,7 +32262,7 @@
     			}
     			if (ctx.selected === void 0) add_render_callback(() => ctx.select_change_handler_1.call(select));
     			attr(select, "class", select_class_value = "uk-select uk-form-width-" + ctx.width + " uk-form-" + ctx.size);
-    			add_location(select, file$8, 31, 8, 812);
+    			add_location(select, file$7, 31, 8, 812);
 
     			dispose = [
     				listen(select, "change", ctx.select_change_handler_1),
@@ -32631,12 +32285,12 @@
     				each_value_1 = ctx.options;
 
     				for (var i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1$1(ctx, each_value_1, i);
+    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block_1$1(child_ctx);
+    						each_blocks[i] = create_each_block_1(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(select, null);
     					}
@@ -32689,7 +32343,7 @@
     			if (ctx.selected === void 0) add_render_callback(() => ctx.select_change_handler.call(select));
     			attr(select, "class", select_class_value = "uk-select uk-form-width-" + ctx.width + " uk-form-" + ctx.size);
     			select.multiple = true;
-    			add_location(select, file$8, 23, 8, 472);
+    			add_location(select, file$7, 23, 8, 472);
 
     			dispose = [
     				listen(select, "change", ctx.select_change_handler),
@@ -32749,8 +32403,8 @@
     }
 
     // (33:12) {#each options as option}
-    function create_each_block_1$1(ctx) {
-    	var option, t_value = !ctx.textMember ? ctx.option : ctx.textMember(ctx.option), t, option_value_value;
+    function create_each_block_1(ctx) {
+    	var option, t_value = !ctx.textMember ? ctx.option : ctx.textMember(ctx.option) + "", t, option_value_value;
 
     	return {
     		c: function create() {
@@ -32758,7 +32412,7 @@
     			t = text(t_value);
     			option.__value = option_value_value = !ctx.valueMember ? ctx.option : ctx.valueMember(ctx.option);
     			option.value = option.__value;
-    			add_location(option, file$8, 33, 12, 960);
+    			add_location(option, file$7, 33, 12, 960);
     		},
 
     		m: function mount(target, anchor) {
@@ -32767,7 +32421,7 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if ((changed.textMember || changed.options) && t_value !== (t_value = !ctx.textMember ? ctx.option : ctx.textMember(ctx.option))) {
+    			if ((changed.textMember || changed.options) && t_value !== (t_value = !ctx.textMember ? ctx.option : ctx.textMember(ctx.option) + "")) {
     				set_data(t, t_value);
     			}
 
@@ -32788,7 +32442,7 @@
 
     // (25:12) {#each options as option}
     function create_each_block$2(ctx) {
-    	var option, t_value = !ctx.textMember ? ctx.option : ctx.textMember(ctx.option), t, option_value_value;
+    	var option, t_value = !ctx.textMember ? ctx.option : ctx.textMember(ctx.option) + "", t, option_value_value;
 
     	return {
     		c: function create() {
@@ -32796,7 +32450,7 @@
     			t = text(t_value);
     			option.__value = option_value_value = !ctx.valueMember ? ctx.option : ctx.valueMember(ctx.option);
     			option.value = option.__value;
-    			add_location(option, file$8, 25, 12, 629);
+    			add_location(option, file$7, 25, 12, 629);
     		},
 
     		m: function mount(target, anchor) {
@@ -32805,7 +32459,7 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if ((changed.textMember || changed.options) && t_value !== (t_value = !ctx.textMember ? ctx.option : ctx.textMember(ctx.option))) {
+    			if ((changed.textMember || changed.options) && t_value !== (t_value = !ctx.textMember ? ctx.option : ctx.textMember(ctx.option) + "")) {
     				set_data(t, t_value);
     			}
 
@@ -32824,15 +32478,15 @@
     	};
     }
 
-    function create_fragment$7(ctx) {
+    function create_fragment$6(ctx) {
     	var div1, label_1, t0, t1, div0;
 
-    	function select_block_type(ctx) {
+    	function select_block_type(changed, ctx) {
     		if (ctx.multiple) return create_if_block$2;
     		return create_else_block;
     	}
 
-    	var current_block_type = select_block_type(ctx);
+    	var current_block_type = select_block_type(null, ctx);
     	var if_block = current_block_type(ctx);
 
     	return {
@@ -32844,11 +32498,11 @@
     			div0 = element("div");
     			if_block.c();
     			attr(label_1, "class", "uk-form-label");
-    			add_location(label_1, file$8, 19, 4, 348);
+    			add_location(label_1, file$7, 19, 4, 348);
     			attr(div0, "class", "uk-form-controls");
-    			add_location(div0, file$8, 20, 4, 398);
+    			add_location(div0, file$7, 20, 4, 398);
     			attr(div1, "class", "uk-margin");
-    			add_location(div1, file$8, 18, 0, 319);
+    			add_location(div1, file$7, 18, 0, 319);
     		},
 
     		l: function claim(nodes) {
@@ -32869,7 +32523,7 @@
     				set_data(t0, ctx.label);
     			}
 
-    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+    			if (current_block_type === (current_block_type = select_block_type(changed, ctx)) && if_block) {
     				if_block.p(changed, ctx);
     			} else {
     				if_block.d(1);
@@ -32894,7 +32548,7 @@
     	};
     }
 
-    function instance$7($$self, $$props, $$invalidate) {
+    function instance$6($$self, $$props, $$invalidate) {
     	let { selected, label, options, valueMember, textMember, multiple=false, width = "medium", size = "small" } = $$props;
 
     	const writable_props = ['selected', 'label', 'options', 'valueMember', 'textMember', 'multiple', 'width', 'size'];
@@ -32954,7 +32608,7 @@
     class Dropdown extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$7, create_fragment$7, safe_not_equal, ["selected", "label", "options", "valueMember", "textMember", "multiple", "width", "size"]);
+    		init(this, options, instance$6, create_fragment$6, safe_not_equal, ["selected", "label", "options", "valueMember", "textMember", "multiple", "width", "size"]);
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
@@ -33040,341 +32694,15 @@
     	}
     }
 
-    if (typeof global$1.setTimeout === 'function') ;
-    if (typeof global$1.clearTimeout === 'function') ;
+    /* src\common\ButtonGroup.svelte generated by Svelte v3.9.1 */
 
-    // from https://github.com/kumavis/browser-process-hrtime/blob/master/index.js
-    var performance$1 = global$1.performance || {};
-    var performanceNow =
-      performance$1.now        ||
-      performance$1.mozNow     ||
-      performance$1.msNow      ||
-      performance$1.oNow       ||
-      performance$1.webkitNow  ||
-      function(){ return (new Date()).getTime() };
+    const file$8 = "src\\common\\ButtonGroup.svelte";
 
-    function isString(arg) {
-      return typeof arg === 'string';
-    }
-
-    const makeError = (errors, propName, stack) => (message) =>
-        errors.push({
-            stack,
-            propName, 
-            error:message});
-
-    const expandPropDef = propDef => {
-        const p = isString(propDef)
-                  ? types[propDef].defaultDefinition()
-                  : propDef;
-        if(p.type === "array" && isString(p.elementDefinition)) {
-            p.elementDefinition = types[p.elementDefinition].defaultDefinition();
-        }
-        return p;
-    };
-
-
-    const validateProps = (propsDefinition, props, stack=[], isFinal=true) => {
-
-        const errors = [];
-
-        if(isFinal && !props._component) {
-            makeError(errors, "_component", stack)("Component is not set");
-            return errors;
-            // this would break everything else anyway
-        }
-
-        for(let propDefName in propsDefinition) {
-            
-            if(propDefName === "_component") continue;
-
-            const propDef = expandPropDef(propsDefinition[propDefName]);
-
-            const type = types[propDef.type];
-
-            const error = makeError(errors, propDefName, stack);            
-
-            const propValue = props[propDefName];
-
-            // component declarations dont need to define al props.
-            if(!isFinal && fp_3(propValue)) continue;
-
-            if(isFinal && propDef.required && propValue) {
-                error(`Property ${propDefName} is required`);
-                continue;
-            } 
-
-            if(!type.isOfType(propValue)) {
-                error(`Property ${propDefName} is not of type ${propDef.type}. Actual value ${propValue}`);
-                continue;
-            }
-
-            if(propDef.type === "array") {
-                let index = 0;
-                for(let arrayItem of propValue) {
-                    arrayItem._component = `${props._component}:${propDefName}`;
-                    const arrayErrs = validateProps(
-                        propDef.elementDefinition,
-                        arrayItem,
-                        [...stack, `${propDefName}[${index}]`],
-                        isFinal
-                    );
-                    for(let arrErr of arrayErrs) {
-                        errors.push(arrErr);
-                    }
-                    index++;
-                }    
-            }
-
-            if(propDef.type === "options" 
-               && propValue
-               && !fp_11(propValue)(propDef.options)) {
-                error(`Property ${propDefName} is not one of allowed options. Acutal value is ${propValue}`);
-            }
-
-        }
-
-        return errors;
-    };
-
-    /* src\userInterface\ComponentSearch.svelte generated by Svelte v3.6.9 */
-
-    const file$9 = "src\\userInterface\\ComponentSearch.svelte";
-
-    function get_each_context$3(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.component = list[i];
-    	return child_ctx;
-    }
-
-    // (33:8) {#each filteredComponents as component}
-    function create_each_block$3(ctx) {
-    	var div2, div0, t0_value = ctx.component.name, t0, t1, div1, t2_value = ctx.component.description, t2, t3, dispose;
-
-    	function click_handler() {
-    		return ctx.click_handler(ctx);
-    	}
-
-    	return {
-    		c: function create() {
-    			div2 = element("div");
-    			div0 = element("div");
-    			t0 = text(t0_value);
-    			t1 = space();
-    			div1 = element("div");
-    			t2 = text(t2_value);
-    			t3 = space();
-    			attr(div0, "class", "title svelte-13tuzj8");
-    			add_location(div0, file$9, 34, 12, 837);
-    			attr(div1, "class", "description svelte-13tuzj8");
-    			add_location(div1, file$9, 35, 12, 892);
-    			attr(div2, "class", "component svelte-13tuzj8");
-    			add_location(div2, file$9, 33, 8, 754);
-    			dispose = listen(div2, "click", click_handler);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div2, anchor);
-    			append(div2, div0);
-    			append(div0, t0);
-    			append(div2, t1);
-    			append(div2, div1);
-    			append(div1, t2);
-    			append(div2, t3);
-    		},
-
-    		p: function update(changed, new_ctx) {
-    			ctx = new_ctx;
-    			if ((changed.filteredComponents) && t0_value !== (t0_value = ctx.component.name)) {
-    				set_data(t0, t0_value);
-    			}
-
-    			if ((changed.filteredComponents) && t2_value !== (t2_value = ctx.component.description)) {
-    				set_data(t2, t2_value);
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div2);
-    			}
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function create_fragment$8(ctx) {
-    	var div1, form, span, t0, input, t1, div0, dispose;
-
-    	var each_value = ctx.filteredComponents;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
-    	}
-
-    	return {
-    		c: function create() {
-    			div1 = element("div");
-    			form = element("form");
-    			span = element("span");
-    			t0 = space();
-    			input = element("input");
-    			t1 = space();
-    			div0 = element("div");
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-    			attr(span, "uk-search-icon", "");
-    			add_location(span, file$9, 24, 8, 479);
-    			attr(input, "class", "uk-search-input");
-    			attr(input, "type", "search");
-    			attr(input, "placeholder", "Based on component...");
-    			add_location(input, file$9, 25, 8, 517);
-    			attr(form, "class", "uk-search uk-search-large");
-    			add_location(form, file$9, 23, 4, 429);
-    			add_location(div0, file$9, 31, 4, 690);
-    			attr(div1, "class", "root");
-    			add_location(div1, file$9, 21, 0, 403);
-    			dispose = listen(input, "input", ctx.input_input_handler);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, form);
-    			append(form, span);
-    			append(form, t0);
-    			append(form, input);
-
-    			input.value = ctx.phrase;
-
-    			append(div1, t1);
-    			append(div1, div0);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div0, null);
-    			}
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.phrase) input.value = ctx.phrase;
-
-    			if (changed.filteredComponents) {
-    				each_value = ctx.filteredComponents;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$3(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block$3(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(div0, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value.length;
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			destroy_each(each_blocks, detaching);
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function instance$8($$self, $$props, $$invalidate) {
-    	
-
-    let { onComponentChosen = () => {} } = $$props;
-
-    let allComponents = [];
-    let phrase = "";
-
-    store.subscribe(s => {
-        $$invalidate('allComponents', allComponents = s.allComponents);
-    });
-
-    	const writable_props = ['onComponentChosen'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ComponentSearch> was created with unknown prop '${key}'`);
-    	});
-
-    	function input_input_handler() {
-    		phrase = this.value;
-    		$$invalidate('phrase', phrase);
-    	}
-
-    	function click_handler({ component }) {
-    		return onComponentChosen(component);
-    	}
-
-    	$$self.$set = $$props => {
-    		if ('onComponentChosen' in $$props) $$invalidate('onComponentChosen', onComponentChosen = $$props.onComponentChosen);
-    	};
-
-    	let filteredComponents;
-
-    	$$self.$$.update = ($$dirty = { phrase: 1, allComponents: 1 }) => {
-    		if ($$dirty.phrase || $$dirty.allComponents) { $$invalidate('filteredComponents', filteredComponents = 
-                !phrase 
-                ? [] 
-                : searchAllComponents(allComponents, phrase)); }
-    	};
-
-    	return {
-    		onComponentChosen,
-    		phrase,
-    		filteredComponents,
-    		input_input_handler,
-    		click_handler
-    	};
-    }
-
-    class ComponentSearch extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$8, create_fragment$8, safe_not_equal, ["onComponentChosen"]);
-    	}
-
-    	get onComponentChosen() {
-    		throw new Error("<ComponentSearch>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set onComponentChosen(value) {
-    		throw new Error("<ComponentSearch>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\common\ButtonGroup.svelte generated by Svelte v3.6.9 */
-
-    const file$a = "src\\common\\ButtonGroup.svelte";
-
-    function create_fragment$9(ctx) {
+    function create_fragment$7(ctx) {
     	var div, current;
 
-    	const default_slot_1 = ctx.$$slots.default;
-    	const default_slot = create_slot(default_slot_1, ctx, null);
+    	const default_slot_template = ctx.$$slots.default;
+    	const default_slot = create_slot(default_slot_template, ctx, null);
 
     	return {
     		c: function create() {
@@ -33384,7 +32712,7 @@
 
     			attr(div, "class", "root svelte-d6wwkb");
     			attr(div, "style", ctx.style);
-    			add_location(div, file$a, 4, 0, 45);
+    			add_location(div, file$8, 4, 0, 45);
     		},
 
     		l: function claim(nodes) {
@@ -33404,7 +32732,10 @@
 
     		p: function update(changed, ctx) {
     			if (default_slot && default_slot.p && changed.$$scope) {
-    				default_slot.p(get_slot_changes(default_slot_1, ctx, changed, null), get_slot_context(default_slot_1, ctx, null));
+    				default_slot.p(
+    					get_slot_changes(default_slot_template, ctx, changed, null),
+    					get_slot_context(default_slot_template, ctx, null)
+    				);
     			}
 
     			if (!current || changed.style) {
@@ -33433,7 +32764,7 @@
     	};
     }
 
-    function instance$9($$self, $$props, $$invalidate) {
+    function instance$7($$self, $$props, $$invalidate) {
     	let { style="" } = $$props;
 
     	const writable_props = ['style'];
@@ -33454,7 +32785,7 @@
     class ButtonGroup extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$9, create_fragment$9, safe_not_equal, ["style"]);
+    		init(this, options, instance$7, create_fragment$7, safe_not_equal, ["style"]);
     	}
 
     	get style() {
@@ -33463,6 +32794,4612 @@
 
     	set style(value) {
     		throw new Error("<ButtonGroup>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\common\NumberBox.svelte generated by Svelte v3.9.1 */
+
+    const file$9 = "src\\common\\NumberBox.svelte";
+
+    function create_fragment$8(ctx) {
+    	var div1, label_1, t0, t1, div0, input, dispose;
+
+    	return {
+    		c: function create() {
+    			div1 = element("div");
+    			label_1 = element("label");
+    			t0 = text(ctx.label);
+    			t1 = space();
+    			div0 = element("div");
+    			input = element("input");
+    			attr(label_1, "class", "uk-form-label");
+    			add_location(label_1, file$9, 20, 4, 333);
+    			attr(input, "class", "uk-input");
+    			input.value = ctx.value;
+    			add_location(input, file$9, 22, 8, 423);
+    			attr(div0, "class", "uk-form-controls");
+    			add_location(div0, file$9, 21, 4, 383);
+    			attr(div1, "class", "uk-margin");
+    			add_location(div1, file$9, 19, 0, 304);
+    			dispose = listen(input, "change", ctx.inputChanged);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div1, anchor);
+    			append(div1, label_1);
+    			append(label_1, t0);
+    			append(div1, t1);
+    			append(div1, div0);
+    			append(div0, input);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.label) {
+    				set_data(t0, ctx.label);
+    			}
+
+    			if (changed.value) {
+    				input.value = ctx.value;
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div1);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
+
+    function instance$8($$self, $$props, $$invalidate) {
+    	let { value, label } = $$props;
+
+    const inputChanged = ev => {
+        try {
+            $$invalidate('value', value = Number(ev.target.value));
+        } catch(_) {
+            $$invalidate('value', value = null);
+        }
+    };
+
+    let numberText = value === null || value === undefined
+                     ? "" : value.toString();
+
+    	const writable_props = ['value', 'label'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<NumberBox> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$set = $$props => {
+    		if ('value' in $$props) $$invalidate('value', value = $$props.value);
+    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
+    	};
+
+    	return { value, label, inputChanged };
+    }
+
+    class NumberBox extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$8, create_fragment$8, safe_not_equal, ["value", "label"]);
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx.value === undefined && !('value' in props)) {
+    			console.warn("<NumberBox> was created without expected prop 'value'");
+    		}
+    		if (ctx.label === undefined && !('label' in props)) {
+    			console.warn("<NumberBox> was created without expected prop 'label'");
+    		}
+    	}
+
+    	get value() {
+    		throw new Error("<NumberBox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set value(value) {
+    		throw new Error("<NumberBox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get label() {
+    		throw new Error("<NumberBox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set label(value) {
+    		throw new Error("<NumberBox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\common\ValuesList.svelte generated by Svelte v3.9.1 */
+
+    const file$a = "src\\common\\ValuesList.svelte";
+
+    function create_fragment$9(ctx) {
+    	var div1, label_1, t0, t1, div0, textarea, dispose;
+
+    	return {
+    		c: function create() {
+    			div1 = element("div");
+    			label_1 = element("label");
+    			t0 = text(ctx.label);
+    			t1 = space();
+    			div0 = element("div");
+    			textarea = element("textarea");
+    			attr(label_1, "class", "uk-form-label");
+    			add_location(label_1, file$a, 21, 4, 311);
+    			textarea.value = ctx.valuesText;
+    			attr(textarea, "class", "svelte-1wfv4cc");
+    			add_location(textarea, file$a, 23, 8, 401);
+    			attr(div0, "class", "uk-form-controls");
+    			add_location(div0, file$a, 22, 4, 361);
+    			attr(div1, "class", "uk-margin");
+    			add_location(div1, file$a, 20, 0, 282);
+    			dispose = listen(textarea, "change", ctx.inputChanged);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div1, anchor);
+    			append(div1, label_1);
+    			append(label_1, t0);
+    			append(div1, t1);
+    			append(div1, div0);
+    			append(div0, textarea);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.label) {
+    				set_data(t0, ctx.label);
+    			}
+
+    			if (changed.valuesText) {
+    				textarea.value = ctx.valuesText;
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div1);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
+
+    function instance$9($$self, $$props, $$invalidate) {
+    	let { values, label } = $$props;
+
+    const inputChanged = ev => {
+        try {
+            $$invalidate('values', values = ev.target.value.split("\n"));
+        } catch(_) {
+            $$invalidate('values', values = []);
+        }
+    };
+
+    	const writable_props = ['values', 'label'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ValuesList> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$set = $$props => {
+    		if ('values' in $$props) $$invalidate('values', values = $$props.values);
+    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
+    	};
+
+    	let valuesText;
+
+    	$$self.$$.update = ($$dirty = { values: 1 }) => {
+    		if ($$dirty.values) { $$invalidate('valuesText', valuesText = fp_39("\n")(values)); }
+    	};
+
+    	return { values, label, inputChanged, valuesText };
+    }
+
+    class ValuesList extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$9, create_fragment$9, safe_not_equal, ["values", "label"]);
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx.values === undefined && !('values' in props)) {
+    			console.warn("<ValuesList> was created without expected prop 'values'");
+    		}
+    		if (ctx.label === undefined && !('label' in props)) {
+    			console.warn("<ValuesList> was created without expected prop 'label'");
+    		}
+    	}
+
+    	get values() {
+    		throw new Error("<ValuesList>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set values(value) {
+    		throw new Error("<ValuesList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get label() {
+    		throw new Error("<ValuesList>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set label(value) {
+    		throw new Error("<ValuesList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\common\ErrorsBox.svelte generated by Svelte v3.9.1 */
+
+    const file$b = "src\\common\\ErrorsBox.svelte";
+
+    function get_each_context$3(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.error = list[i];
+    	return child_ctx;
+    }
+
+    // (7:0) {#if hasErrors}
+    function create_if_block$3(ctx) {
+    	var div;
+
+    	var each_value = ctx.errors;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
+    	}
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+    			attr(div, "class", "error-container svelte-jwy920");
+    			add_location(div, file$b, 7, 0, 101);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div, null);
+    			}
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.errors) {
+    				each_value = ctx.errors;
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$3(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$3(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			destroy_each(each_blocks, detaching);
+    		}
+    	};
+    }
+
+    // (9:4) {#each errors as error}
+    function create_each_block$3(ctx) {
+    	var div, t0_value = ctx.error.field ? `${ctx.error.field}: ` : "" + "", t0, t1_value = ctx.error.error + "", t1;
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			t0 = text(t0_value);
+    			t1 = text(t1_value);
+    			attr(div, "class", "error-row svelte-jwy920");
+    			add_location(div, file$b, 9, 4, 165);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, t0);
+    			append(div, t1);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((changed.errors) && t0_value !== (t0_value = ctx.error.field ? `${ctx.error.field}: ` : "" + "")) {
+    				set_data(t0, t0_value);
+    			}
+
+    			if ((changed.errors) && t1_value !== (t1_value = ctx.error.error + "")) {
+    				set_data(t1, t1_value);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+    		}
+    	};
+    }
+
+    function create_fragment$a(ctx) {
+    	var if_block_anchor;
+
+    	var if_block = (ctx.hasErrors) && create_if_block$3(ctx);
+
+    	return {
+    		c: function create() {
+    			if (if_block) if_block.c();
+    			if_block_anchor = empty();
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			if (if_block) if_block.m(target, anchor);
+    			insert(target, if_block_anchor, anchor);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (ctx.hasErrors) {
+    				if (if_block) {
+    					if_block.p(changed, ctx);
+    				} else {
+    					if_block = create_if_block$3(ctx);
+    					if_block.c();
+    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (if_block) if_block.d(detaching);
+
+    			if (detaching) {
+    				detach(if_block_anchor);
+    			}
+    		}
+    	};
+    }
+
+    function instance$a($$self, $$props, $$invalidate) {
+    	let { errors = [] } = $$props;
+
+    	const writable_props = ['errors'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ErrorsBox> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$set = $$props => {
+    		if ('errors' in $$props) $$invalidate('errors', errors = $$props.errors);
+    	};
+
+    	let hasErrors;
+
+    	$$self.$$.update = ($$dirty = { errors: 1 }) => {
+    		if ($$dirty.errors) { $$invalidate('hasErrors', hasErrors = errors.length > 0); }
+    	};
+
+    	return { errors, hasErrors };
+    }
+
+    class ErrorsBox extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$a, create_fragment$a, safe_not_equal, ["errors"]);
+    	}
+
+    	get errors() {
+    		throw new Error("<ErrorsBox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set errors(value) {
+    		throw new Error("<ErrorsBox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\common\Checkbox.svelte generated by Svelte v3.9.1 */
+
+    const file$c = "src\\common\\Checkbox.svelte";
+
+    function create_fragment$b(ctx) {
+    	var input, t, dispose;
+
+    	return {
+    		c: function create() {
+    			input = element("input");
+    			t = text(ctx.label);
+    			attr(input, "class", "uk-checkbox svelte-66516k");
+    			attr(input, "type", "checkbox");
+    			add_location(input, file$c, 7, 0, 76);
+
+    			dispose = [
+    				listen(input, "change", ctx.input_change_handler),
+    				listen(input, "change", ctx.change_handler)
+    			];
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, input, anchor);
+
+    			input.checked = ctx.checked;
+
+    			insert(target, t, anchor);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.checked) input.checked = ctx.checked;
+
+    			if (changed.label) {
+    				set_data(t, ctx.label);
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(input);
+    				detach(t);
+    			}
+
+    			run_all(dispose);
+    		}
+    	};
+    }
+
+    function instance$b($$self, $$props, $$invalidate) {
+    	let { checked=false, label="" } = $$props;
+
+    	const writable_props = ['checked', 'label'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Checkbox> was created with unknown prop '${key}'`);
+    	});
+
+    	function change_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	function input_change_handler() {
+    		checked = this.checked;
+    		$$invalidate('checked', checked);
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('checked' in $$props) $$invalidate('checked', checked = $$props.checked);
+    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
+    	};
+
+    	return {
+    		checked,
+    		label,
+    		change_handler,
+    		input_change_handler
+    	};
+    }
+
+    class Checkbox extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$b, create_fragment$b, safe_not_equal, ["checked", "label"]);
+    	}
+
+    	get checked() {
+    		throw new Error("<Checkbox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set checked(value) {
+    		throw new Error("<Checkbox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get label() {
+    		throw new Error("<Checkbox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set label(value) {
+    		throw new Error("<Checkbox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    var flatpickr = createCommonjsModule(function (module, exports) {
+    /* flatpickr v4.6.2, @license MIT */
+    (function (global, factory) {
+         module.exports = factory() ;
+    }(commonjsGlobal, function () {
+        /*! *****************************************************************************
+        Copyright (c) Microsoft Corporation. All rights reserved.
+        Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+        this file except in compliance with the License. You may obtain a copy of the
+        License at http://www.apache.org/licenses/LICENSE-2.0
+
+        THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+        WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+        MERCHANTABLITY OR NON-INFRINGEMENT.
+
+        See the Apache Version 2.0 License for specific language governing permissions
+        and limitations under the License.
+        ***************************************************************************** */
+
+        var __assign = function() {
+            __assign = Object.assign || function __assign(t) {
+                for (var s, i = 1, n = arguments.length; i < n; i++) {
+                    s = arguments[i];
+                    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+                }
+                return t;
+            };
+            return __assign.apply(this, arguments);
+        };
+
+        var HOOKS = [
+            "onChange",
+            "onClose",
+            "onDayCreate",
+            "onDestroy",
+            "onKeyDown",
+            "onMonthChange",
+            "onOpen",
+            "onParseConfig",
+            "onReady",
+            "onValueUpdate",
+            "onYearChange",
+            "onPreCalendarPosition",
+        ];
+        var defaults = {
+            _disable: [],
+            _enable: [],
+            allowInput: false,
+            altFormat: "F j, Y",
+            altInput: false,
+            altInputClass: "form-control input",
+            animate: typeof window === "object" &&
+                window.navigator.userAgent.indexOf("MSIE") === -1,
+            ariaDateFormat: "F j, Y",
+            clickOpens: true,
+            closeOnSelect: true,
+            conjunction: ", ",
+            dateFormat: "Y-m-d",
+            defaultHour: 12,
+            defaultMinute: 0,
+            defaultSeconds: 0,
+            disable: [],
+            disableMobile: false,
+            enable: [],
+            enableSeconds: false,
+            enableTime: false,
+            errorHandler: function (err) {
+                return typeof console !== "undefined" && console.warn(err);
+            },
+            getWeek: function (givenDate) {
+                var date = new Date(givenDate.getTime());
+                date.setHours(0, 0, 0, 0);
+                // Thursday in current week decides the year.
+                date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+                // January 4 is always in week 1.
+                var week1 = new Date(date.getFullYear(), 0, 4);
+                // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+                return (1 +
+                    Math.round(((date.getTime() - week1.getTime()) / 86400000 -
+                        3 +
+                        ((week1.getDay() + 6) % 7)) /
+                        7));
+            },
+            hourIncrement: 1,
+            ignoredFocusElements: [],
+            inline: false,
+            locale: "default",
+            minuteIncrement: 5,
+            mode: "single",
+            monthSelectorType: "dropdown",
+            nextArrow: "<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 17 17'><g></g><path d='M13.207 8.472l-7.854 7.854-0.707-0.707 7.146-7.146-7.146-7.148 0.707-0.707 7.854 7.854z' /></svg>",
+            noCalendar: false,
+            now: new Date(),
+            onChange: [],
+            onClose: [],
+            onDayCreate: [],
+            onDestroy: [],
+            onKeyDown: [],
+            onMonthChange: [],
+            onOpen: [],
+            onParseConfig: [],
+            onReady: [],
+            onValueUpdate: [],
+            onYearChange: [],
+            onPreCalendarPosition: [],
+            plugins: [],
+            position: "auto",
+            positionElement: undefined,
+            prevArrow: "<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 17 17'><g></g><path d='M5.207 8.471l7.146 7.147-0.707 0.707-7.853-7.854 7.854-7.853 0.707 0.707-7.147 7.146z' /></svg>",
+            shorthandCurrentMonth: false,
+            showMonths: 1,
+            static: false,
+            time_24hr: false,
+            weekNumbers: false,
+            wrap: false
+        };
+
+        var english = {
+            weekdays: {
+                shorthand: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+                longhand: [
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                ]
+            },
+            months: {
+                shorthand: [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                ],
+                longhand: [
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                ]
+            },
+            daysInMonth: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+            firstDayOfWeek: 0,
+            ordinal: function (nth) {
+                var s = nth % 100;
+                if (s > 3 && s < 21)
+                    return "th";
+                switch (s % 10) {
+                    case 1:
+                        return "st";
+                    case 2:
+                        return "nd";
+                    case 3:
+                        return "rd";
+                    default:
+                        return "th";
+                }
+            },
+            rangeSeparator: " to ",
+            weekAbbreviation: "Wk",
+            scrollTitle: "Scroll to increment",
+            toggleTitle: "Click to toggle",
+            amPM: ["AM", "PM"],
+            yearAriaLabel: "Year",
+            hourAriaLabel: "Hour",
+            minuteAriaLabel: "Minute",
+            time_24hr: false
+        };
+
+        var pad = function (number) { return ("0" + number).slice(-2); };
+        var int = function (bool) { return (bool === true ? 1 : 0); };
+        /* istanbul ignore next */
+        function debounce(func, wait, immediate) {
+            if (immediate === void 0) { immediate = false; }
+            var timeout;
+            return function () {
+                var context = this, args = arguments;
+                timeout !== null && clearTimeout(timeout);
+                timeout = window.setTimeout(function () {
+                    timeout = null;
+                    if (!immediate)
+                        func.apply(context, args);
+                }, wait);
+                if (immediate && !timeout)
+                    func.apply(context, args);
+            };
+        }
+        var arrayify = function (obj) {
+            return obj instanceof Array ? obj : [obj];
+        };
+
+        function toggleClass(elem, className, bool) {
+            if (bool === true)
+                return elem.classList.add(className);
+            elem.classList.remove(className);
+        }
+        function createElement(tag, className, content) {
+            var e = window.document.createElement(tag);
+            className = className || "";
+            content = content || "";
+            e.className = className;
+            if (content !== undefined)
+                e.textContent = content;
+            return e;
+        }
+        function clearNode(node) {
+            while (node.firstChild)
+                node.removeChild(node.firstChild);
+        }
+        function findParent(node, condition) {
+            if (condition(node))
+                return node;
+            else if (node.parentNode)
+                return findParent(node.parentNode, condition);
+            return undefined; // nothing found
+        }
+        function createNumberInput(inputClassName, opts) {
+            var wrapper = createElement("div", "numInputWrapper"), numInput = createElement("input", "numInput " + inputClassName), arrowUp = createElement("span", "arrowUp"), arrowDown = createElement("span", "arrowDown");
+            if (navigator.userAgent.indexOf("MSIE 9.0") === -1) {
+                numInput.type = "number";
+            }
+            else {
+                numInput.type = "text";
+                numInput.pattern = "\\d*";
+            }
+            if (opts !== undefined)
+                for (var key in opts)
+                    numInput.setAttribute(key, opts[key]);
+            wrapper.appendChild(numInput);
+            wrapper.appendChild(arrowUp);
+            wrapper.appendChild(arrowDown);
+            return wrapper;
+        }
+        function getEventTarget(event) {
+            if (typeof event.composedPath === "function") {
+                var path = event.composedPath();
+                return path[0];
+            }
+            return event.target;
+        }
+
+        var doNothing = function () { return undefined; };
+        var monthToStr = function (monthNumber, shorthand, locale) { return locale.months[shorthand ? "shorthand" : "longhand"][monthNumber]; };
+        var revFormat = {
+            D: doNothing,
+            F: function (dateObj, monthName, locale) {
+                dateObj.setMonth(locale.months.longhand.indexOf(monthName));
+            },
+            G: function (dateObj, hour) {
+                dateObj.setHours(parseFloat(hour));
+            },
+            H: function (dateObj, hour) {
+                dateObj.setHours(parseFloat(hour));
+            },
+            J: function (dateObj, day) {
+                dateObj.setDate(parseFloat(day));
+            },
+            K: function (dateObj, amPM, locale) {
+                dateObj.setHours((dateObj.getHours() % 12) +
+                    12 * int(new RegExp(locale.amPM[1], "i").test(amPM)));
+            },
+            M: function (dateObj, shortMonth, locale) {
+                dateObj.setMonth(locale.months.shorthand.indexOf(shortMonth));
+            },
+            S: function (dateObj, seconds) {
+                dateObj.setSeconds(parseFloat(seconds));
+            },
+            U: function (_, unixSeconds) { return new Date(parseFloat(unixSeconds) * 1000); },
+            W: function (dateObj, weekNum, locale) {
+                var weekNumber = parseInt(weekNum);
+                var date = new Date(dateObj.getFullYear(), 0, 2 + (weekNumber - 1) * 7, 0, 0, 0, 0);
+                date.setDate(date.getDate() - date.getDay() + locale.firstDayOfWeek);
+                return date;
+            },
+            Y: function (dateObj, year) {
+                dateObj.setFullYear(parseFloat(year));
+            },
+            Z: function (_, ISODate) { return new Date(ISODate); },
+            d: function (dateObj, day) {
+                dateObj.setDate(parseFloat(day));
+            },
+            h: function (dateObj, hour) {
+                dateObj.setHours(parseFloat(hour));
+            },
+            i: function (dateObj, minutes) {
+                dateObj.setMinutes(parseFloat(minutes));
+            },
+            j: function (dateObj, day) {
+                dateObj.setDate(parseFloat(day));
+            },
+            l: doNothing,
+            m: function (dateObj, month) {
+                dateObj.setMonth(parseFloat(month) - 1);
+            },
+            n: function (dateObj, month) {
+                dateObj.setMonth(parseFloat(month) - 1);
+            },
+            s: function (dateObj, seconds) {
+                dateObj.setSeconds(parseFloat(seconds));
+            },
+            u: function (_, unixMillSeconds) {
+                return new Date(parseFloat(unixMillSeconds));
+            },
+            w: doNothing,
+            y: function (dateObj, year) {
+                dateObj.setFullYear(2000 + parseFloat(year));
+            }
+        };
+        var tokenRegex = {
+            D: "(\\w+)",
+            F: "(\\w+)",
+            G: "(\\d\\d|\\d)",
+            H: "(\\d\\d|\\d)",
+            J: "(\\d\\d|\\d)\\w+",
+            K: "",
+            M: "(\\w+)",
+            S: "(\\d\\d|\\d)",
+            U: "(.+)",
+            W: "(\\d\\d|\\d)",
+            Y: "(\\d{4})",
+            Z: "(.+)",
+            d: "(\\d\\d|\\d)",
+            h: "(\\d\\d|\\d)",
+            i: "(\\d\\d|\\d)",
+            j: "(\\d\\d|\\d)",
+            l: "(\\w+)",
+            m: "(\\d\\d|\\d)",
+            n: "(\\d\\d|\\d)",
+            s: "(\\d\\d|\\d)",
+            u: "(.+)",
+            w: "(\\d\\d|\\d)",
+            y: "(\\d{2})"
+        };
+        var formats = {
+            // get the date in UTC
+            Z: function (date) { return date.toISOString(); },
+            // weekday name, short, e.g. Thu
+            D: function (date, locale, options) {
+                return locale.weekdays.shorthand[formats.w(date, locale, options)];
+            },
+            // full month name e.g. January
+            F: function (date, locale, options) {
+                return monthToStr(formats.n(date, locale, options) - 1, false, locale);
+            },
+            // padded hour 1-12
+            G: function (date, locale, options) {
+                return pad(formats.h(date, locale, options));
+            },
+            // hours with leading zero e.g. 03
+            H: function (date) { return pad(date.getHours()); },
+            // day (1-30) with ordinal suffix e.g. 1st, 2nd
+            J: function (date, locale) {
+                return locale.ordinal !== undefined
+                    ? date.getDate() + locale.ordinal(date.getDate())
+                    : date.getDate();
+            },
+            // AM/PM
+            K: function (date, locale) { return locale.amPM[int(date.getHours() > 11)]; },
+            // shorthand month e.g. Jan, Sep, Oct, etc
+            M: function (date, locale) {
+                return monthToStr(date.getMonth(), true, locale);
+            },
+            // seconds 00-59
+            S: function (date) { return pad(date.getSeconds()); },
+            // unix timestamp
+            U: function (date) { return date.getTime() / 1000; },
+            W: function (date, _, options) {
+                return options.getWeek(date);
+            },
+            // full year e.g. 2016
+            Y: function (date) { return date.getFullYear(); },
+            // day in month, padded (01-30)
+            d: function (date) { return pad(date.getDate()); },
+            // hour from 1-12 (am/pm)
+            h: function (date) { return (date.getHours() % 12 ? date.getHours() % 12 : 12); },
+            // minutes, padded with leading zero e.g. 09
+            i: function (date) { return pad(date.getMinutes()); },
+            // day in month (1-30)
+            j: function (date) { return date.getDate(); },
+            // weekday name, full, e.g. Thursday
+            l: function (date, locale) {
+                return locale.weekdays.longhand[date.getDay()];
+            },
+            // padded month number (01-12)
+            m: function (date) { return pad(date.getMonth() + 1); },
+            // the month number (1-12)
+            n: function (date) { return date.getMonth() + 1; },
+            // seconds 0-59
+            s: function (date) { return date.getSeconds(); },
+            // Unix Milliseconds
+            u: function (date) { return date.getTime(); },
+            // number of the day of the week
+            w: function (date) { return date.getDay(); },
+            // last two digits of year e.g. 16 for 2016
+            y: function (date) { return String(date.getFullYear()).substring(2); }
+        };
+
+        var createDateFormatter = function (_a) {
+            var _b = _a.config, config = _b === void 0 ? defaults : _b, _c = _a.l10n, l10n = _c === void 0 ? english : _c;
+            return function (dateObj, frmt, overrideLocale) {
+                var locale = overrideLocale || l10n;
+                if (config.formatDate !== undefined) {
+                    return config.formatDate(dateObj, frmt, locale);
+                }
+                return frmt
+                    .split("")
+                    .map(function (c, i, arr) {
+                    return formats[c] && arr[i - 1] !== "\\"
+                        ? formats[c](dateObj, locale, config)
+                        : c !== "\\"
+                            ? c
+                            : "";
+                })
+                    .join("");
+            };
+        };
+        var createDateParser = function (_a) {
+            var _b = _a.config, config = _b === void 0 ? defaults : _b, _c = _a.l10n, l10n = _c === void 0 ? english : _c;
+            return function (date, givenFormat, timeless, customLocale) {
+                if (date !== 0 && !date)
+                    return undefined;
+                var locale = customLocale || l10n;
+                var parsedDate;
+                var dateOrig = date;
+                if (date instanceof Date)
+                    parsedDate = new Date(date.getTime());
+                else if (typeof date !== "string" &&
+                    date.toFixed !== undefined // timestamp
+                )
+                    // create a copy
+                    parsedDate = new Date(date);
+                else if (typeof date === "string") {
+                    // date string
+                    var format = givenFormat || (config || defaults).dateFormat;
+                    var datestr = String(date).trim();
+                    if (datestr === "today") {
+                        parsedDate = new Date();
+                        timeless = true;
+                    }
+                    else if (/Z$/.test(datestr) ||
+                        /GMT$/.test(datestr) // datestrings w/ timezone
+                    )
+                        parsedDate = new Date(date);
+                    else if (config && config.parseDate)
+                        parsedDate = config.parseDate(date, format);
+                    else {
+                        parsedDate =
+                            !config || !config.noCalendar
+                                ? new Date(new Date().getFullYear(), 0, 1, 0, 0, 0, 0)
+                                : new Date(new Date().setHours(0, 0, 0, 0));
+                        var matched = void 0, ops = [];
+                        for (var i = 0, matchIndex = 0, regexStr = ""; i < format.length; i++) {
+                            var token_1 = format[i];
+                            var isBackSlash = token_1 === "\\";
+                            var escaped = format[i - 1] === "\\" || isBackSlash;
+                            if (tokenRegex[token_1] && !escaped) {
+                                regexStr += tokenRegex[token_1];
+                                var match = new RegExp(regexStr).exec(date);
+                                if (match && (matched = true)) {
+                                    ops[token_1 !== "Y" ? "push" : "unshift"]({
+                                        fn: revFormat[token_1],
+                                        val: match[++matchIndex]
+                                    });
+                                }
+                            }
+                            else if (!isBackSlash)
+                                regexStr += "."; // don't really care
+                            ops.forEach(function (_a) {
+                                var fn = _a.fn, val = _a.val;
+                                return (parsedDate = fn(parsedDate, val, locale) || parsedDate);
+                            });
+                        }
+                        parsedDate = matched ? parsedDate : undefined;
+                    }
+                }
+                /* istanbul ignore next */
+                if (!(parsedDate instanceof Date && !isNaN(parsedDate.getTime()))) {
+                    config.errorHandler(new Error("Invalid date provided: " + dateOrig));
+                    return undefined;
+                }
+                if (timeless === true)
+                    parsedDate.setHours(0, 0, 0, 0);
+                return parsedDate;
+            };
+        };
+        /**
+         * Compute the difference in dates, measured in ms
+         */
+        function compareDates(date1, date2, timeless) {
+            if (timeless === void 0) { timeless = true; }
+            if (timeless !== false) {
+                return (new Date(date1.getTime()).setHours(0, 0, 0, 0) -
+                    new Date(date2.getTime()).setHours(0, 0, 0, 0));
+            }
+            return date1.getTime() - date2.getTime();
+        }
+        var isBetween = function (ts, ts1, ts2) {
+            return ts > Math.min(ts1, ts2) && ts < Math.max(ts1, ts2);
+        };
+        var duration = {
+            DAY: 86400000
+        };
+
+        if (typeof Object.assign !== "function") {
+            Object.assign = function (target) {
+                var args = [];
+                for (var _i = 1; _i < arguments.length; _i++) {
+                    args[_i - 1] = arguments[_i];
+                }
+                if (!target) {
+                    throw TypeError("Cannot convert undefined or null to object");
+                }
+                var _loop_1 = function (source) {
+                    if (source) {
+                        Object.keys(source).forEach(function (key) { return (target[key] = source[key]); });
+                    }
+                };
+                for (var _a = 0, args_1 = args; _a < args_1.length; _a++) {
+                    var source = args_1[_a];
+                    _loop_1(source);
+                }
+                return target;
+            };
+        }
+
+        var DEBOUNCED_CHANGE_MS = 300;
+        function FlatpickrInstance(element, instanceConfig) {
+            var self = {
+                config: __assign({}, defaults, flatpickr.defaultConfig),
+                l10n: english
+            };
+            self.parseDate = createDateParser({ config: self.config, l10n: self.l10n });
+            self._handlers = [];
+            self.pluginElements = [];
+            self.loadedPlugins = [];
+            self._bind = bind;
+            self._setHoursFromDate = setHoursFromDate;
+            self._positionCalendar = positionCalendar;
+            self.changeMonth = changeMonth;
+            self.changeYear = changeYear;
+            self.clear = clear;
+            self.close = close;
+            self._createElement = createElement;
+            self.destroy = destroy;
+            self.isEnabled = isEnabled;
+            self.jumpToDate = jumpToDate;
+            self.open = open;
+            self.redraw = redraw;
+            self.set = set;
+            self.setDate = setDate;
+            self.toggle = toggle;
+            function setupHelperFunctions() {
+                self.utils = {
+                    getDaysInMonth: function (month, yr) {
+                        if (month === void 0) { month = self.currentMonth; }
+                        if (yr === void 0) { yr = self.currentYear; }
+                        if (month === 1 && ((yr % 4 === 0 && yr % 100 !== 0) || yr % 400 === 0))
+                            return 29;
+                        return self.l10n.daysInMonth[month];
+                    }
+                };
+            }
+            function init() {
+                self.element = self.input = element;
+                self.isOpen = false;
+                parseConfig();
+                setupLocale();
+                setupInputs();
+                setupDates();
+                setupHelperFunctions();
+                if (!self.isMobile)
+                    build();
+                bindEvents();
+                if (self.selectedDates.length || self.config.noCalendar) {
+                    if (self.config.enableTime) {
+                        setHoursFromDate(self.config.noCalendar
+                            ? self.latestSelectedDateObj || self.config.minDate
+                            : undefined);
+                    }
+                    updateValue(false);
+                }
+                setCalendarWidth();
+                self.showTimeInput =
+                    self.selectedDates.length > 0 || self.config.noCalendar;
+                var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+                /* TODO: investigate this further
+            
+                  Currently, there is weird positioning behavior in safari causing pages
+                  to scroll up. https://github.com/chmln/flatpickr/issues/563
+            
+                  However, most browsers are not Safari and positioning is expensive when used
+                  in scale. https://github.com/chmln/flatpickr/issues/1096
+                */
+                if (!self.isMobile && isSafari) {
+                    positionCalendar();
+                }
+                triggerEvent("onReady");
+            }
+            function bindToInstance(fn) {
+                return fn.bind(self);
+            }
+            function setCalendarWidth() {
+                var config = self.config;
+                if (config.weekNumbers === false && config.showMonths === 1)
+                    return;
+                else if (config.noCalendar !== true) {
+                    window.requestAnimationFrame(function () {
+                        if (self.calendarContainer !== undefined) {
+                            self.calendarContainer.style.visibility = "hidden";
+                            self.calendarContainer.style.display = "block";
+                        }
+                        if (self.daysContainer !== undefined) {
+                            var daysWidth = (self.days.offsetWidth + 1) * config.showMonths;
+                            self.daysContainer.style.width = daysWidth + "px";
+                            self.calendarContainer.style.width =
+                                daysWidth +
+                                    (self.weekWrapper !== undefined
+                                        ? self.weekWrapper.offsetWidth
+                                        : 0) +
+                                    "px";
+                            self.calendarContainer.style.removeProperty("visibility");
+                            self.calendarContainer.style.removeProperty("display");
+                        }
+                    });
+                }
+            }
+            /**
+             * The handler for all events targeting the time inputs
+             */
+            function updateTime(e) {
+                if (self.selectedDates.length === 0) {
+                    setDefaultTime();
+                }
+                if (e !== undefined && e.type !== "blur") {
+                    timeWrapper(e);
+                }
+                var prevValue = self._input.value;
+                setHoursFromInputs();
+                updateValue();
+                if (self._input.value !== prevValue) {
+                    self._debouncedChange();
+                }
+            }
+            function ampm2military(hour, amPM) {
+                return (hour % 12) + 12 * int(amPM === self.l10n.amPM[1]);
+            }
+            function military2ampm(hour) {
+                switch (hour % 24) {
+                    case 0:
+                    case 12:
+                        return 12;
+                    default:
+                        return hour % 12;
+                }
+            }
+            /**
+             * Syncs the selected date object time with user's time input
+             */
+            function setHoursFromInputs() {
+                if (self.hourElement === undefined || self.minuteElement === undefined)
+                    return;
+                var hours = (parseInt(self.hourElement.value.slice(-2), 10) || 0) % 24, minutes = (parseInt(self.minuteElement.value, 10) || 0) % 60, seconds = self.secondElement !== undefined
+                    ? (parseInt(self.secondElement.value, 10) || 0) % 60
+                    : 0;
+                if (self.amPM !== undefined) {
+                    hours = ampm2military(hours, self.amPM.textContent);
+                }
+                var limitMinHours = self.config.minTime !== undefined ||
+                    (self.config.minDate &&
+                        self.minDateHasTime &&
+                        self.latestSelectedDateObj &&
+                        compareDates(self.latestSelectedDateObj, self.config.minDate, true) ===
+                            0);
+                var limitMaxHours = self.config.maxTime !== undefined ||
+                    (self.config.maxDate &&
+                        self.maxDateHasTime &&
+                        self.latestSelectedDateObj &&
+                        compareDates(self.latestSelectedDateObj, self.config.maxDate, true) ===
+                            0);
+                if (limitMaxHours) {
+                    var maxTime = self.config.maxTime !== undefined
+                        ? self.config.maxTime
+                        : self.config.maxDate;
+                    hours = Math.min(hours, maxTime.getHours());
+                    if (hours === maxTime.getHours())
+                        minutes = Math.min(minutes, maxTime.getMinutes());
+                    if (minutes === maxTime.getMinutes())
+                        seconds = Math.min(seconds, maxTime.getSeconds());
+                }
+                if (limitMinHours) {
+                    var minTime = self.config.minTime !== undefined
+                        ? self.config.minTime
+                        : self.config.minDate;
+                    hours = Math.max(hours, minTime.getHours());
+                    if (hours === minTime.getHours())
+                        minutes = Math.max(minutes, minTime.getMinutes());
+                    if (minutes === minTime.getMinutes())
+                        seconds = Math.max(seconds, minTime.getSeconds());
+                }
+                setHours(hours, minutes, seconds);
+            }
+            /**
+             * Syncs time input values with a date
+             */
+            function setHoursFromDate(dateObj) {
+                var date = dateObj || self.latestSelectedDateObj;
+                if (date)
+                    setHours(date.getHours(), date.getMinutes(), date.getSeconds());
+            }
+            function setDefaultHours() {
+                var hours = self.config.defaultHour;
+                var minutes = self.config.defaultMinute;
+                var seconds = self.config.defaultSeconds;
+                if (self.config.minDate !== undefined) {
+                    var minHr = self.config.minDate.getHours();
+                    var minMinutes = self.config.minDate.getMinutes();
+                    hours = Math.max(hours, minHr);
+                    if (hours === minHr)
+                        minutes = Math.max(minMinutes, minutes);
+                    if (hours === minHr && minutes === minMinutes)
+                        seconds = self.config.minDate.getSeconds();
+                }
+                if (self.config.maxDate !== undefined) {
+                    var maxHr = self.config.maxDate.getHours();
+                    var maxMinutes = self.config.maxDate.getMinutes();
+                    hours = Math.min(hours, maxHr);
+                    if (hours === maxHr)
+                        minutes = Math.min(maxMinutes, minutes);
+                    if (hours === maxHr && minutes === maxMinutes)
+                        seconds = self.config.maxDate.getSeconds();
+                }
+                setHours(hours, minutes, seconds);
+            }
+            /**
+             * Sets the hours, minutes, and optionally seconds
+             * of the latest selected date object and the
+             * corresponding time inputs
+             * @param {Number} hours the hour. whether its military
+             *                 or am-pm gets inferred from config
+             * @param {Number} minutes the minutes
+             * @param {Number} seconds the seconds (optional)
+             */
+            function setHours(hours, minutes, seconds) {
+                if (self.latestSelectedDateObj !== undefined) {
+                    self.latestSelectedDateObj.setHours(hours % 24, minutes, seconds || 0, 0);
+                }
+                if (!self.hourElement || !self.minuteElement || self.isMobile)
+                    return;
+                self.hourElement.value = pad(!self.config.time_24hr
+                    ? ((12 + hours) % 12) + 12 * int(hours % 12 === 0)
+                    : hours);
+                self.minuteElement.value = pad(minutes);
+                if (self.amPM !== undefined)
+                    self.amPM.textContent = self.l10n.amPM[int(hours >= 12)];
+                if (self.secondElement !== undefined)
+                    self.secondElement.value = pad(seconds);
+            }
+            /**
+             * Handles the year input and incrementing events
+             * @param {Event} event the keyup or increment event
+             */
+            function onYearInput(event) {
+                var year = parseInt(event.target.value) + (event.delta || 0);
+                if (year / 1000 > 1 ||
+                    (event.key === "Enter" && !/[^\d]/.test(year.toString()))) {
+                    changeYear(year);
+                }
+            }
+            /**
+             * Essentially addEventListener + tracking
+             * @param {Element} element the element to addEventListener to
+             * @param {String} event the event name
+             * @param {Function} handler the event handler
+             */
+            function bind(element, event, handler, options) {
+                if (event instanceof Array)
+                    return event.forEach(function (ev) { return bind(element, ev, handler, options); });
+                if (element instanceof Array)
+                    return element.forEach(function (el) { return bind(el, event, handler, options); });
+                element.addEventListener(event, handler, options);
+                self._handlers.push({
+                    element: element,
+                    event: event,
+                    handler: handler,
+                    options: options
+                });
+            }
+            /**
+             * A mousedown handler which mimics click.
+             * Minimizes latency, since we don't need to wait for mouseup in most cases.
+             * Also, avoids handling right clicks.
+             *
+             * @param {Function} handler the event handler
+             */
+            function onClick(handler) {
+                return function (evt) {
+                    evt.which === 1 && handler(evt);
+                };
+            }
+            function triggerChange() {
+                triggerEvent("onChange");
+            }
+            /**
+             * Adds all the necessary event listeners
+             */
+            function bindEvents() {
+                if (self.config.wrap) {
+                    ["open", "close", "toggle", "clear"].forEach(function (evt) {
+                        Array.prototype.forEach.call(self.element.querySelectorAll("[data-" + evt + "]"), function (el) {
+                            return bind(el, "click", self[evt]);
+                        });
+                    });
+                }
+                if (self.isMobile) {
+                    setupMobile();
+                    return;
+                }
+                var debouncedResize = debounce(onResize, 50);
+                self._debouncedChange = debounce(triggerChange, DEBOUNCED_CHANGE_MS);
+                if (self.daysContainer && !/iPhone|iPad|iPod/i.test(navigator.userAgent))
+                    bind(self.daysContainer, "mouseover", function (e) {
+                        if (self.config.mode === "range")
+                            onMouseOver(e.target);
+                    });
+                bind(window.document.body, "keydown", onKeyDown);
+                if (!self.config.inline && !self.config.static)
+                    bind(window, "resize", debouncedResize);
+                if (window.ontouchstart !== undefined)
+                    bind(window.document, "touchstart", documentClick);
+                else
+                    bind(window.document, "mousedown", onClick(documentClick));
+                bind(window.document, "focus", documentClick, { capture: true });
+                if (self.config.clickOpens === true) {
+                    bind(self._input, "focus", self.open);
+                    bind(self._input, "mousedown", onClick(self.open));
+                }
+                if (self.daysContainer !== undefined) {
+                    bind(self.monthNav, "mousedown", onClick(onMonthNavClick));
+                    bind(self.monthNav, ["keyup", "increment"], onYearInput);
+                    bind(self.daysContainer, "mousedown", onClick(selectDate));
+                }
+                if (self.timeContainer !== undefined &&
+                    self.minuteElement !== undefined &&
+                    self.hourElement !== undefined) {
+                    var selText = function (e) {
+                        return e.target.select();
+                    };
+                    bind(self.timeContainer, ["increment"], updateTime);
+                    bind(self.timeContainer, "blur", updateTime, { capture: true });
+                    bind(self.timeContainer, "mousedown", onClick(timeIncrement));
+                    bind([self.hourElement, self.minuteElement], ["focus", "click"], selText);
+                    if (self.secondElement !== undefined)
+                        bind(self.secondElement, "focus", function () { return self.secondElement && self.secondElement.select(); });
+                    if (self.amPM !== undefined) {
+                        bind(self.amPM, "mousedown", onClick(function (e) {
+                            updateTime(e);
+                            triggerChange();
+                        }));
+                    }
+                }
+            }
+            /**
+             * Set the calendar view to a particular date.
+             * @param {Date} jumpDate the date to set the view to
+             * @param {boolean} triggerChange if change events should be triggered
+             */
+            function jumpToDate(jumpDate, triggerChange) {
+                var jumpTo = jumpDate !== undefined
+                    ? self.parseDate(jumpDate)
+                    : self.latestSelectedDateObj ||
+                        (self.config.minDate && self.config.minDate > self.now
+                            ? self.config.minDate
+                            : self.config.maxDate && self.config.maxDate < self.now
+                                ? self.config.maxDate
+                                : self.now);
+                var oldYear = self.currentYear;
+                var oldMonth = self.currentMonth;
+                try {
+                    if (jumpTo !== undefined) {
+                        self.currentYear = jumpTo.getFullYear();
+                        self.currentMonth = jumpTo.getMonth();
+                    }
+                }
+                catch (e) {
+                    /* istanbul ignore next */
+                    e.message = "Invalid date supplied: " + jumpTo;
+                    self.config.errorHandler(e);
+                }
+                if (triggerChange && self.currentYear !== oldYear) {
+                    triggerEvent("onYearChange");
+                    buildMonthSwitch();
+                }
+                if (triggerChange &&
+                    (self.currentYear !== oldYear || self.currentMonth !== oldMonth)) {
+                    triggerEvent("onMonthChange");
+                }
+                self.redraw();
+            }
+            /**
+             * The up/down arrow handler for time inputs
+             * @param {Event} e the click event
+             */
+            function timeIncrement(e) {
+                if (~e.target.className.indexOf("arrow"))
+                    incrementNumInput(e, e.target.classList.contains("arrowUp") ? 1 : -1);
+            }
+            /**
+             * Increments/decrements the value of input associ-
+             * ated with the up/down arrow by dispatching an
+             * "increment" event on the input.
+             *
+             * @param {Event} e the click event
+             * @param {Number} delta the diff (usually 1 or -1)
+             * @param {Element} inputElem the input element
+             */
+            function incrementNumInput(e, delta, inputElem) {
+                var target = e && e.target;
+                var input = inputElem ||
+                    (target && target.parentNode && target.parentNode.firstChild);
+                var event = createEvent("increment");
+                event.delta = delta;
+                input && input.dispatchEvent(event);
+            }
+            function build() {
+                var fragment = window.document.createDocumentFragment();
+                self.calendarContainer = createElement("div", "flatpickr-calendar");
+                self.calendarContainer.tabIndex = -1;
+                if (!self.config.noCalendar) {
+                    fragment.appendChild(buildMonthNav());
+                    self.innerContainer = createElement("div", "flatpickr-innerContainer");
+                    if (self.config.weekNumbers) {
+                        var _a = buildWeeks(), weekWrapper = _a.weekWrapper, weekNumbers = _a.weekNumbers;
+                        self.innerContainer.appendChild(weekWrapper);
+                        self.weekNumbers = weekNumbers;
+                        self.weekWrapper = weekWrapper;
+                    }
+                    self.rContainer = createElement("div", "flatpickr-rContainer");
+                    self.rContainer.appendChild(buildWeekdays());
+                    if (!self.daysContainer) {
+                        self.daysContainer = createElement("div", "flatpickr-days");
+                        self.daysContainer.tabIndex = -1;
+                    }
+                    buildDays();
+                    self.rContainer.appendChild(self.daysContainer);
+                    self.innerContainer.appendChild(self.rContainer);
+                    fragment.appendChild(self.innerContainer);
+                }
+                if (self.config.enableTime) {
+                    fragment.appendChild(buildTime());
+                }
+                toggleClass(self.calendarContainer, "rangeMode", self.config.mode === "range");
+                toggleClass(self.calendarContainer, "animate", self.config.animate === true);
+                toggleClass(self.calendarContainer, "multiMonth", self.config.showMonths > 1);
+                self.calendarContainer.appendChild(fragment);
+                var customAppend = self.config.appendTo !== undefined &&
+                    self.config.appendTo.nodeType !== undefined;
+                if (self.config.inline || self.config.static) {
+                    self.calendarContainer.classList.add(self.config.inline ? "inline" : "static");
+                    if (self.config.inline) {
+                        if (!customAppend && self.element.parentNode)
+                            self.element.parentNode.insertBefore(self.calendarContainer, self._input.nextSibling);
+                        else if (self.config.appendTo !== undefined)
+                            self.config.appendTo.appendChild(self.calendarContainer);
+                    }
+                    if (self.config.static) {
+                        var wrapper = createElement("div", "flatpickr-wrapper");
+                        if (self.element.parentNode)
+                            self.element.parentNode.insertBefore(wrapper, self.element);
+                        wrapper.appendChild(self.element);
+                        if (self.altInput)
+                            wrapper.appendChild(self.altInput);
+                        wrapper.appendChild(self.calendarContainer);
+                    }
+                }
+                if (!self.config.static && !self.config.inline)
+                    (self.config.appendTo !== undefined
+                        ? self.config.appendTo
+                        : window.document.body).appendChild(self.calendarContainer);
+            }
+            function createDay(className, date, dayNumber, i) {
+                var dateIsEnabled = isEnabled(date, true), dayElement = createElement("span", "flatpickr-day " + className, date.getDate().toString());
+                dayElement.dateObj = date;
+                dayElement.$i = i;
+                dayElement.setAttribute("aria-label", self.formatDate(date, self.config.ariaDateFormat));
+                if (className.indexOf("hidden") === -1 &&
+                    compareDates(date, self.now) === 0) {
+                    self.todayDateElem = dayElement;
+                    dayElement.classList.add("today");
+                    dayElement.setAttribute("aria-current", "date");
+                }
+                if (dateIsEnabled) {
+                    dayElement.tabIndex = -1;
+                    if (isDateSelected(date)) {
+                        dayElement.classList.add("selected");
+                        self.selectedDateElem = dayElement;
+                        if (self.config.mode === "range") {
+                            toggleClass(dayElement, "startRange", self.selectedDates[0] &&
+                                compareDates(date, self.selectedDates[0], true) === 0);
+                            toggleClass(dayElement, "endRange", self.selectedDates[1] &&
+                                compareDates(date, self.selectedDates[1], true) === 0);
+                            if (className === "nextMonthDay")
+                                dayElement.classList.add("inRange");
+                        }
+                    }
+                }
+                else {
+                    dayElement.classList.add("flatpickr-disabled");
+                }
+                if (self.config.mode === "range") {
+                    if (isDateInRange(date) && !isDateSelected(date))
+                        dayElement.classList.add("inRange");
+                }
+                if (self.weekNumbers &&
+                    self.config.showMonths === 1 &&
+                    className !== "prevMonthDay" &&
+                    dayNumber % 7 === 1) {
+                    self.weekNumbers.insertAdjacentHTML("beforeend", "<span class='flatpickr-day'>" + self.config.getWeek(date) + "</span>");
+                }
+                triggerEvent("onDayCreate", dayElement);
+                return dayElement;
+            }
+            function focusOnDayElem(targetNode) {
+                targetNode.focus();
+                if (self.config.mode === "range")
+                    onMouseOver(targetNode);
+            }
+            function getFirstAvailableDay(delta) {
+                var startMonth = delta > 0 ? 0 : self.config.showMonths - 1;
+                var endMonth = delta > 0 ? self.config.showMonths : -1;
+                for (var m = startMonth; m != endMonth; m += delta) {
+                    var month = self.daysContainer.children[m];
+                    var startIndex = delta > 0 ? 0 : month.children.length - 1;
+                    var endIndex = delta > 0 ? month.children.length : -1;
+                    for (var i = startIndex; i != endIndex; i += delta) {
+                        var c = month.children[i];
+                        if (c.className.indexOf("hidden") === -1 && isEnabled(c.dateObj))
+                            return c;
+                    }
+                }
+                return undefined;
+            }
+            function getNextAvailableDay(current, delta) {
+                var givenMonth = current.className.indexOf("Month") === -1
+                    ? current.dateObj.getMonth()
+                    : self.currentMonth;
+                var endMonth = delta > 0 ? self.config.showMonths : -1;
+                var loopDelta = delta > 0 ? 1 : -1;
+                for (var m = givenMonth - self.currentMonth; m != endMonth; m += loopDelta) {
+                    var month = self.daysContainer.children[m];
+                    var startIndex = givenMonth - self.currentMonth === m
+                        ? current.$i + delta
+                        : delta < 0
+                            ? month.children.length - 1
+                            : 0;
+                    var numMonthDays = month.children.length;
+                    for (var i = startIndex; i >= 0 && i < numMonthDays && i != (delta > 0 ? numMonthDays : -1); i += loopDelta) {
+                        var c = month.children[i];
+                        if (c.className.indexOf("hidden") === -1 &&
+                            isEnabled(c.dateObj) &&
+                            Math.abs(current.$i - i) >= Math.abs(delta))
+                            return focusOnDayElem(c);
+                    }
+                }
+                self.changeMonth(loopDelta);
+                focusOnDay(getFirstAvailableDay(loopDelta), 0);
+                return undefined;
+            }
+            function focusOnDay(current, offset) {
+                var dayFocused = isInView(document.activeElement || document.body);
+                var startElem = current !== undefined
+                    ? current
+                    : dayFocused
+                        ? document.activeElement
+                        : self.selectedDateElem !== undefined && isInView(self.selectedDateElem)
+                            ? self.selectedDateElem
+                            : self.todayDateElem !== undefined && isInView(self.todayDateElem)
+                                ? self.todayDateElem
+                                : getFirstAvailableDay(offset > 0 ? 1 : -1);
+                if (startElem === undefined)
+                    return self._input.focus();
+                if (!dayFocused)
+                    return focusOnDayElem(startElem);
+                getNextAvailableDay(startElem, offset);
+            }
+            function buildMonthDays(year, month) {
+                var firstOfMonth = (new Date(year, month, 1).getDay() - self.l10n.firstDayOfWeek + 7) % 7;
+                var prevMonthDays = self.utils.getDaysInMonth((month - 1 + 12) % 12);
+                var daysInMonth = self.utils.getDaysInMonth(month), days = window.document.createDocumentFragment(), isMultiMonth = self.config.showMonths > 1, prevMonthDayClass = isMultiMonth ? "prevMonthDay hidden" : "prevMonthDay", nextMonthDayClass = isMultiMonth ? "nextMonthDay hidden" : "nextMonthDay";
+                var dayNumber = prevMonthDays + 1 - firstOfMonth, dayIndex = 0;
+                // prepend days from the ending of previous month
+                for (; dayNumber <= prevMonthDays; dayNumber++, dayIndex++) {
+                    days.appendChild(createDay(prevMonthDayClass, new Date(year, month - 1, dayNumber), dayNumber, dayIndex));
+                }
+                // Start at 1 since there is no 0th day
+                for (dayNumber = 1; dayNumber <= daysInMonth; dayNumber++, dayIndex++) {
+                    days.appendChild(createDay("", new Date(year, month, dayNumber), dayNumber, dayIndex));
+                }
+                // append days from the next month
+                for (var dayNum = daysInMonth + 1; dayNum <= 42 - firstOfMonth &&
+                    (self.config.showMonths === 1 || dayIndex % 7 !== 0); dayNum++, dayIndex++) {
+                    days.appendChild(createDay(nextMonthDayClass, new Date(year, month + 1, dayNum % daysInMonth), dayNum, dayIndex));
+                }
+                //updateNavigationCurrentMonth();
+                var dayContainer = createElement("div", "dayContainer");
+                dayContainer.appendChild(days);
+                return dayContainer;
+            }
+            function buildDays() {
+                if (self.daysContainer === undefined) {
+                    return;
+                }
+                clearNode(self.daysContainer);
+                // TODO: week numbers for each month
+                if (self.weekNumbers)
+                    clearNode(self.weekNumbers);
+                var frag = document.createDocumentFragment();
+                for (var i = 0; i < self.config.showMonths; i++) {
+                    var d = new Date(self.currentYear, self.currentMonth, 1);
+                    d.setMonth(self.currentMonth + i);
+                    frag.appendChild(buildMonthDays(d.getFullYear(), d.getMonth()));
+                }
+                self.daysContainer.appendChild(frag);
+                self.days = self.daysContainer.firstChild;
+                if (self.config.mode === "range" && self.selectedDates.length === 1) {
+                    onMouseOver();
+                }
+            }
+            function buildMonthSwitch() {
+                if (self.config.showMonths > 1 ||
+                    self.config.monthSelectorType !== "dropdown")
+                    return;
+                var shouldBuildMonth = function (month) {
+                    if (self.config.minDate !== undefined &&
+                        self.currentYear === self.config.minDate.getFullYear() &&
+                        month < self.config.minDate.getMonth()) {
+                        return false;
+                    }
+                    return !(self.config.maxDate !== undefined &&
+                        self.currentYear === self.config.maxDate.getFullYear() &&
+                        month > self.config.maxDate.getMonth());
+                };
+                self.monthsDropdownContainer.tabIndex = -1;
+                self.monthsDropdownContainer.innerHTML = "";
+                for (var i = 0; i < 12; i++) {
+                    if (!shouldBuildMonth(i))
+                        continue;
+                    var month = createElement("option", "flatpickr-monthDropdown-month");
+                    month.value = new Date(self.currentYear, i).getMonth().toString();
+                    month.textContent = monthToStr(i, self.config.shorthandCurrentMonth, self.l10n);
+                    month.tabIndex = -1;
+                    if (self.currentMonth === i) {
+                        month.selected = true;
+                    }
+                    self.monthsDropdownContainer.appendChild(month);
+                }
+            }
+            function buildMonth() {
+                var container = createElement("div", "flatpickr-month");
+                var monthNavFragment = window.document.createDocumentFragment();
+                var monthElement;
+                if (self.config.showMonths > 1 ||
+                    self.config.monthSelectorType === "static") {
+                    monthElement = createElement("span", "cur-month");
+                }
+                else {
+                    self.monthsDropdownContainer = createElement("select", "flatpickr-monthDropdown-months");
+                    bind(self.monthsDropdownContainer, "change", function (e) {
+                        var target = e.target;
+                        var selectedMonth = parseInt(target.value, 10);
+                        self.changeMonth(selectedMonth - self.currentMonth);
+                        triggerEvent("onMonthChange");
+                    });
+                    buildMonthSwitch();
+                    monthElement = self.monthsDropdownContainer;
+                }
+                var yearInput = createNumberInput("cur-year", { tabindex: "-1" });
+                var yearElement = yearInput.getElementsByTagName("input")[0];
+                yearElement.setAttribute("aria-label", self.l10n.yearAriaLabel);
+                if (self.config.minDate) {
+                    yearElement.setAttribute("min", self.config.minDate.getFullYear().toString());
+                }
+                if (self.config.maxDate) {
+                    yearElement.setAttribute("max", self.config.maxDate.getFullYear().toString());
+                    yearElement.disabled =
+                        !!self.config.minDate &&
+                            self.config.minDate.getFullYear() === self.config.maxDate.getFullYear();
+                }
+                var currentMonth = createElement("div", "flatpickr-current-month");
+                currentMonth.appendChild(monthElement);
+                currentMonth.appendChild(yearInput);
+                monthNavFragment.appendChild(currentMonth);
+                container.appendChild(monthNavFragment);
+                return {
+                    container: container,
+                    yearElement: yearElement,
+                    monthElement: monthElement
+                };
+            }
+            function buildMonths() {
+                clearNode(self.monthNav);
+                self.monthNav.appendChild(self.prevMonthNav);
+                if (self.config.showMonths) {
+                    self.yearElements = [];
+                    self.monthElements = [];
+                }
+                for (var m = self.config.showMonths; m--;) {
+                    var month = buildMonth();
+                    self.yearElements.push(month.yearElement);
+                    self.monthElements.push(month.monthElement);
+                    self.monthNav.appendChild(month.container);
+                }
+                self.monthNav.appendChild(self.nextMonthNav);
+            }
+            function buildMonthNav() {
+                self.monthNav = createElement("div", "flatpickr-months");
+                self.yearElements = [];
+                self.monthElements = [];
+                self.prevMonthNav = createElement("span", "flatpickr-prev-month");
+                self.prevMonthNav.innerHTML = self.config.prevArrow;
+                self.nextMonthNav = createElement("span", "flatpickr-next-month");
+                self.nextMonthNav.innerHTML = self.config.nextArrow;
+                buildMonths();
+                Object.defineProperty(self, "_hidePrevMonthArrow", {
+                    get: function () { return self.__hidePrevMonthArrow; },
+                    set: function (bool) {
+                        if (self.__hidePrevMonthArrow !== bool) {
+                            toggleClass(self.prevMonthNav, "flatpickr-disabled", bool);
+                            self.__hidePrevMonthArrow = bool;
+                        }
+                    }
+                });
+                Object.defineProperty(self, "_hideNextMonthArrow", {
+                    get: function () { return self.__hideNextMonthArrow; },
+                    set: function (bool) {
+                        if (self.__hideNextMonthArrow !== bool) {
+                            toggleClass(self.nextMonthNav, "flatpickr-disabled", bool);
+                            self.__hideNextMonthArrow = bool;
+                        }
+                    }
+                });
+                self.currentYearElement = self.yearElements[0];
+                updateNavigationCurrentMonth();
+                return self.monthNav;
+            }
+            function buildTime() {
+                self.calendarContainer.classList.add("hasTime");
+                if (self.config.noCalendar)
+                    self.calendarContainer.classList.add("noCalendar");
+                self.timeContainer = createElement("div", "flatpickr-time");
+                self.timeContainer.tabIndex = -1;
+                var separator = createElement("span", "flatpickr-time-separator", ":");
+                var hourInput = createNumberInput("flatpickr-hour", {
+                    "aria-label": self.l10n.hourAriaLabel
+                });
+                self.hourElement = hourInput.getElementsByTagName("input")[0];
+                var minuteInput = createNumberInput("flatpickr-minute", {
+                    "aria-label": self.l10n.minuteAriaLabel
+                });
+                self.minuteElement = minuteInput.getElementsByTagName("input")[0];
+                self.hourElement.tabIndex = self.minuteElement.tabIndex = -1;
+                self.hourElement.value = pad(self.latestSelectedDateObj
+                    ? self.latestSelectedDateObj.getHours()
+                    : self.config.time_24hr
+                        ? self.config.defaultHour
+                        : military2ampm(self.config.defaultHour));
+                self.minuteElement.value = pad(self.latestSelectedDateObj
+                    ? self.latestSelectedDateObj.getMinutes()
+                    : self.config.defaultMinute);
+                self.hourElement.setAttribute("step", self.config.hourIncrement.toString());
+                self.minuteElement.setAttribute("step", self.config.minuteIncrement.toString());
+                self.hourElement.setAttribute("min", self.config.time_24hr ? "0" : "1");
+                self.hourElement.setAttribute("max", self.config.time_24hr ? "23" : "12");
+                self.minuteElement.setAttribute("min", "0");
+                self.minuteElement.setAttribute("max", "59");
+                self.timeContainer.appendChild(hourInput);
+                self.timeContainer.appendChild(separator);
+                self.timeContainer.appendChild(minuteInput);
+                if (self.config.time_24hr)
+                    self.timeContainer.classList.add("time24hr");
+                if (self.config.enableSeconds) {
+                    self.timeContainer.classList.add("hasSeconds");
+                    var secondInput = createNumberInput("flatpickr-second");
+                    self.secondElement = secondInput.getElementsByTagName("input")[0];
+                    self.secondElement.value = pad(self.latestSelectedDateObj
+                        ? self.latestSelectedDateObj.getSeconds()
+                        : self.config.defaultSeconds);
+                    self.secondElement.setAttribute("step", self.minuteElement.getAttribute("step"));
+                    self.secondElement.setAttribute("min", "0");
+                    self.secondElement.setAttribute("max", "59");
+                    self.timeContainer.appendChild(createElement("span", "flatpickr-time-separator", ":"));
+                    self.timeContainer.appendChild(secondInput);
+                }
+                if (!self.config.time_24hr) {
+                    // add self.amPM if appropriate
+                    self.amPM = createElement("span", "flatpickr-am-pm", self.l10n.amPM[int((self.latestSelectedDateObj
+                        ? self.hourElement.value
+                        : self.config.defaultHour) > 11)]);
+                    self.amPM.title = self.l10n.toggleTitle;
+                    self.amPM.tabIndex = -1;
+                    self.timeContainer.appendChild(self.amPM);
+                }
+                return self.timeContainer;
+            }
+            function buildWeekdays() {
+                if (!self.weekdayContainer)
+                    self.weekdayContainer = createElement("div", "flatpickr-weekdays");
+                else
+                    clearNode(self.weekdayContainer);
+                for (var i = self.config.showMonths; i--;) {
+                    var container = createElement("div", "flatpickr-weekdaycontainer");
+                    self.weekdayContainer.appendChild(container);
+                }
+                updateWeekdays();
+                return self.weekdayContainer;
+            }
+            function updateWeekdays() {
+                var firstDayOfWeek = self.l10n.firstDayOfWeek;
+                var weekdays = self.l10n.weekdays.shorthand.slice();
+                if (firstDayOfWeek > 0 && firstDayOfWeek < weekdays.length) {
+                    weekdays = weekdays.splice(firstDayOfWeek, weekdays.length).concat(weekdays.splice(0, firstDayOfWeek));
+                }
+                for (var i = self.config.showMonths; i--;) {
+                    self.weekdayContainer.children[i].innerHTML = "\n      <span class='flatpickr-weekday'>\n        " + weekdays.join("</span><span class='flatpickr-weekday'>") + "\n      </span>\n      ";
+                }
+            }
+            /* istanbul ignore next */
+            function buildWeeks() {
+                self.calendarContainer.classList.add("hasWeeks");
+                var weekWrapper = createElement("div", "flatpickr-weekwrapper");
+                weekWrapper.appendChild(createElement("span", "flatpickr-weekday", self.l10n.weekAbbreviation));
+                var weekNumbers = createElement("div", "flatpickr-weeks");
+                weekWrapper.appendChild(weekNumbers);
+                return {
+                    weekWrapper: weekWrapper,
+                    weekNumbers: weekNumbers
+                };
+            }
+            function changeMonth(value, isOffset) {
+                if (isOffset === void 0) { isOffset = true; }
+                var delta = isOffset ? value : value - self.currentMonth;
+                if ((delta < 0 && self._hidePrevMonthArrow === true) ||
+                    (delta > 0 && self._hideNextMonthArrow === true))
+                    return;
+                self.currentMonth += delta;
+                if (self.currentMonth < 0 || self.currentMonth > 11) {
+                    self.currentYear += self.currentMonth > 11 ? 1 : -1;
+                    self.currentMonth = (self.currentMonth + 12) % 12;
+                    triggerEvent("onYearChange");
+                    buildMonthSwitch();
+                }
+                buildDays();
+                triggerEvent("onMonthChange");
+                updateNavigationCurrentMonth();
+            }
+            function clear(triggerChangeEvent, toInitial) {
+                if (triggerChangeEvent === void 0) { triggerChangeEvent = true; }
+                if (toInitial === void 0) { toInitial = true; }
+                self.input.value = "";
+                if (self.altInput !== undefined)
+                    self.altInput.value = "";
+                if (self.mobileInput !== undefined)
+                    self.mobileInput.value = "";
+                self.selectedDates = [];
+                self.latestSelectedDateObj = undefined;
+                if (toInitial === true) {
+                    self.currentYear = self._initialDate.getFullYear();
+                    self.currentMonth = self._initialDate.getMonth();
+                }
+                self.showTimeInput = false;
+                if (self.config.enableTime === true) {
+                    setDefaultHours();
+                }
+                self.redraw();
+                if (triggerChangeEvent)
+                    // triggerChangeEvent is true (default) or an Event
+                    triggerEvent("onChange");
+            }
+            function close() {
+                self.isOpen = false;
+                if (!self.isMobile) {
+                    if (self.calendarContainer !== undefined) {
+                        self.calendarContainer.classList.remove("open");
+                    }
+                    if (self._input !== undefined) {
+                        self._input.classList.remove("active");
+                    }
+                }
+                triggerEvent("onClose");
+            }
+            function destroy() {
+                if (self.config !== undefined)
+                    triggerEvent("onDestroy");
+                for (var i = self._handlers.length; i--;) {
+                    var h = self._handlers[i];
+                    h.element.removeEventListener(h.event, h.handler, h.options);
+                }
+                self._handlers = [];
+                if (self.mobileInput) {
+                    if (self.mobileInput.parentNode)
+                        self.mobileInput.parentNode.removeChild(self.mobileInput);
+                    self.mobileInput = undefined;
+                }
+                else if (self.calendarContainer && self.calendarContainer.parentNode) {
+                    if (self.config.static && self.calendarContainer.parentNode) {
+                        var wrapper = self.calendarContainer.parentNode;
+                        wrapper.lastChild && wrapper.removeChild(wrapper.lastChild);
+                        if (wrapper.parentNode) {
+                            while (wrapper.firstChild)
+                                wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
+                            wrapper.parentNode.removeChild(wrapper);
+                        }
+                    }
+                    else
+                        self.calendarContainer.parentNode.removeChild(self.calendarContainer);
+                }
+                if (self.altInput) {
+                    self.input.type = "text";
+                    if (self.altInput.parentNode)
+                        self.altInput.parentNode.removeChild(self.altInput);
+                    delete self.altInput;
+                }
+                if (self.input) {
+                    self.input.type = self.input._type;
+                    self.input.classList.remove("flatpickr-input");
+                    self.input.removeAttribute("readonly");
+                    self.input.value = "";
+                }
+                [
+                    "_showTimeInput",
+                    "latestSelectedDateObj",
+                    "_hideNextMonthArrow",
+                    "_hidePrevMonthArrow",
+                    "__hideNextMonthArrow",
+                    "__hidePrevMonthArrow",
+                    "isMobile",
+                    "isOpen",
+                    "selectedDateElem",
+                    "minDateHasTime",
+                    "maxDateHasTime",
+                    "days",
+                    "daysContainer",
+                    "_input",
+                    "_positionElement",
+                    "innerContainer",
+                    "rContainer",
+                    "monthNav",
+                    "todayDateElem",
+                    "calendarContainer",
+                    "weekdayContainer",
+                    "prevMonthNav",
+                    "nextMonthNav",
+                    "monthsDropdownContainer",
+                    "currentMonthElement",
+                    "currentYearElement",
+                    "navigationCurrentMonth",
+                    "selectedDateElem",
+                    "config",
+                ].forEach(function (k) {
+                    try {
+                        delete self[k];
+                    }
+                    catch (_) { }
+                });
+            }
+            function isCalendarElem(elem) {
+                if (self.config.appendTo && self.config.appendTo.contains(elem))
+                    return true;
+                return self.calendarContainer.contains(elem);
+            }
+            function documentClick(e) {
+                if (self.isOpen && !self.config.inline) {
+                    var eventTarget_1 = getEventTarget(e);
+                    var isCalendarElement = isCalendarElem(eventTarget_1);
+                    var isInput = eventTarget_1 === self.input ||
+                        eventTarget_1 === self.altInput ||
+                        self.element.contains(eventTarget_1) ||
+                        // web components
+                        // e.path is not present in all browsers. circumventing typechecks
+                        (e.path &&
+                            e.path.indexOf &&
+                            (~e.path.indexOf(self.input) ||
+                                ~e.path.indexOf(self.altInput)));
+                    var lostFocus = e.type === "blur"
+                        ? isInput &&
+                            e.relatedTarget &&
+                            !isCalendarElem(e.relatedTarget)
+                        : !isInput &&
+                            !isCalendarElement &&
+                            !isCalendarElem(e.relatedTarget);
+                    var isIgnored = !self.config.ignoredFocusElements.some(function (elem) {
+                        return elem.contains(eventTarget_1);
+                    });
+                    if (lostFocus && isIgnored) {
+                        self.close();
+                        if (self.config.mode === "range" && self.selectedDates.length === 1) {
+                            self.clear(false);
+                            self.redraw();
+                        }
+                    }
+                }
+            }
+            function changeYear(newYear) {
+                if (!newYear ||
+                    (self.config.minDate && newYear < self.config.minDate.getFullYear()) ||
+                    (self.config.maxDate && newYear > self.config.maxDate.getFullYear()))
+                    return;
+                var newYearNum = newYear, isNewYear = self.currentYear !== newYearNum;
+                self.currentYear = newYearNum || self.currentYear;
+                if (self.config.maxDate &&
+                    self.currentYear === self.config.maxDate.getFullYear()) {
+                    self.currentMonth = Math.min(self.config.maxDate.getMonth(), self.currentMonth);
+                }
+                else if (self.config.minDate &&
+                    self.currentYear === self.config.minDate.getFullYear()) {
+                    self.currentMonth = Math.max(self.config.minDate.getMonth(), self.currentMonth);
+                }
+                if (isNewYear) {
+                    self.redraw();
+                    triggerEvent("onYearChange");
+                    buildMonthSwitch();
+                }
+            }
+            function isEnabled(date, timeless) {
+                if (timeless === void 0) { timeless = true; }
+                var dateToCheck = self.parseDate(date, undefined, timeless); // timeless
+                if ((self.config.minDate &&
+                    dateToCheck &&
+                    compareDates(dateToCheck, self.config.minDate, timeless !== undefined ? timeless : !self.minDateHasTime) < 0) ||
+                    (self.config.maxDate &&
+                        dateToCheck &&
+                        compareDates(dateToCheck, self.config.maxDate, timeless !== undefined ? timeless : !self.maxDateHasTime) > 0))
+                    return false;
+                if (self.config.enable.length === 0 && self.config.disable.length === 0)
+                    return true;
+                if (dateToCheck === undefined)
+                    return false;
+                var bool = self.config.enable.length > 0, array = bool ? self.config.enable : self.config.disable;
+                for (var i = 0, d = void 0; i < array.length; i++) {
+                    d = array[i];
+                    if (typeof d === "function" &&
+                        d(dateToCheck) // disabled by function
+                    )
+                        return bool;
+                    else if (d instanceof Date &&
+                        dateToCheck !== undefined &&
+                        d.getTime() === dateToCheck.getTime())
+                        // disabled by date
+                        return bool;
+                    else if (typeof d === "string" && dateToCheck !== undefined) {
+                        // disabled by date string
+                        var parsed = self.parseDate(d, undefined, true);
+                        return parsed && parsed.getTime() === dateToCheck.getTime()
+                            ? bool
+                            : !bool;
+                    }
+                    else if (
+                    // disabled by range
+                    typeof d === "object" &&
+                        dateToCheck !== undefined &&
+                        d.from &&
+                        d.to &&
+                        dateToCheck.getTime() >= d.from.getTime() &&
+                        dateToCheck.getTime() <= d.to.getTime())
+                        return bool;
+                }
+                return !bool;
+            }
+            function isInView(elem) {
+                if (self.daysContainer !== undefined)
+                    return (elem.className.indexOf("hidden") === -1 &&
+                        self.daysContainer.contains(elem));
+                return false;
+            }
+            function onKeyDown(e) {
+                // e.key                      e.keyCode
+                // "Backspace"                        8
+                // "Tab"                              9
+                // "Enter"                           13
+                // "Escape"     (IE "Esc")           27
+                // "ArrowLeft"  (IE "Left")          37
+                // "ArrowUp"    (IE "Up")            38
+                // "ArrowRight" (IE "Right")         39
+                // "ArrowDown"  (IE "Down")          40
+                // "Delete"     (IE "Del")           46
+                var isInput = e.target === self._input;
+                var allowInput = self.config.allowInput;
+                var allowKeydown = self.isOpen && (!allowInput || !isInput);
+                var allowInlineKeydown = self.config.inline && isInput && !allowInput;
+                if (e.keyCode === 13 && isInput) {
+                    if (allowInput) {
+                        self.setDate(self._input.value, true, e.target === self.altInput
+                            ? self.config.altFormat
+                            : self.config.dateFormat);
+                        return e.target.blur();
+                    }
+                    else {
+                        self.open();
+                    }
+                }
+                else if (isCalendarElem(e.target) ||
+                    allowKeydown ||
+                    allowInlineKeydown) {
+                    var isTimeObj = !!self.timeContainer &&
+                        self.timeContainer.contains(e.target);
+                    switch (e.keyCode) {
+                        case 13:
+                            if (isTimeObj) {
+                                e.preventDefault();
+                                updateTime();
+                                focusAndClose();
+                            }
+                            else
+                                selectDate(e);
+                            break;
+                        case 27: // escape
+                            e.preventDefault();
+                            focusAndClose();
+                            break;
+                        case 8:
+                        case 46:
+                            if (isInput && !self.config.allowInput) {
+                                e.preventDefault();
+                                self.clear();
+                            }
+                            break;
+                        case 37:
+                        case 39:
+                            if (!isTimeObj && !isInput) {
+                                e.preventDefault();
+                                if (self.daysContainer !== undefined &&
+                                    (allowInput === false ||
+                                        (document.activeElement && isInView(document.activeElement)))) {
+                                    var delta_1 = e.keyCode === 39 ? 1 : -1;
+                                    if (!e.ctrlKey)
+                                        focusOnDay(undefined, delta_1);
+                                    else {
+                                        e.stopPropagation();
+                                        changeMonth(delta_1);
+                                        focusOnDay(getFirstAvailableDay(1), 0);
+                                    }
+                                }
+                            }
+                            else if (self.hourElement)
+                                self.hourElement.focus();
+                            break;
+                        case 38:
+                        case 40:
+                            e.preventDefault();
+                            var delta = e.keyCode === 40 ? 1 : -1;
+                            if ((self.daysContainer && e.target.$i !== undefined) ||
+                                e.target === self.input) {
+                                if (e.ctrlKey) {
+                                    e.stopPropagation();
+                                    changeYear(self.currentYear - delta);
+                                    focusOnDay(getFirstAvailableDay(1), 0);
+                                }
+                                else if (!isTimeObj)
+                                    focusOnDay(undefined, delta * 7);
+                            }
+                            else if (e.target === self.currentYearElement) {
+                                changeYear(self.currentYear - delta);
+                            }
+                            else if (self.config.enableTime) {
+                                if (!isTimeObj && self.hourElement)
+                                    self.hourElement.focus();
+                                updateTime(e);
+                                self._debouncedChange();
+                            }
+                            break;
+                        case 9:
+                            if (isTimeObj) {
+                                var elems = [
+                                    self.hourElement,
+                                    self.minuteElement,
+                                    self.secondElement,
+                                    self.amPM,
+                                ]
+                                    .concat(self.pluginElements)
+                                    .filter(function (x) { return x; });
+                                var i = elems.indexOf(e.target);
+                                if (i !== -1) {
+                                    var target = elems[i + (e.shiftKey ? -1 : 1)];
+                                    e.preventDefault();
+                                    (target || self._input).focus();
+                                }
+                            }
+                            else if (!self.config.noCalendar &&
+                                self.daysContainer &&
+                                self.daysContainer.contains(e.target) &&
+                                e.shiftKey) {
+                                e.preventDefault();
+                                self._input.focus();
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                if (self.amPM !== undefined && e.target === self.amPM) {
+                    switch (e.key) {
+                        case self.l10n.amPM[0].charAt(0):
+                        case self.l10n.amPM[0].charAt(0).toLowerCase():
+                            self.amPM.textContent = self.l10n.amPM[0];
+                            setHoursFromInputs();
+                            updateValue();
+                            break;
+                        case self.l10n.amPM[1].charAt(0):
+                        case self.l10n.amPM[1].charAt(0).toLowerCase():
+                            self.amPM.textContent = self.l10n.amPM[1];
+                            setHoursFromInputs();
+                            updateValue();
+                            break;
+                    }
+                }
+                if (isInput || isCalendarElem(e.target)) {
+                    triggerEvent("onKeyDown", e);
+                }
+            }
+            function onMouseOver(elem) {
+                if (self.selectedDates.length !== 1 ||
+                    (elem &&
+                        (!elem.classList.contains("flatpickr-day") ||
+                            elem.classList.contains("flatpickr-disabled"))))
+                    return;
+                var hoverDate = elem
+                    ? elem.dateObj.getTime()
+                    : self.days.firstElementChild.dateObj.getTime(), initialDate = self.parseDate(self.selectedDates[0], undefined, true).getTime(), rangeStartDate = Math.min(hoverDate, self.selectedDates[0].getTime()), rangeEndDate = Math.max(hoverDate, self.selectedDates[0].getTime());
+                var containsDisabled = false;
+                var minRange = 0, maxRange = 0;
+                for (var t = rangeStartDate; t < rangeEndDate; t += duration.DAY) {
+                    if (!isEnabled(new Date(t), true)) {
+                        containsDisabled =
+                            containsDisabled || (t > rangeStartDate && t < rangeEndDate);
+                        if (t < initialDate && (!minRange || t > minRange))
+                            minRange = t;
+                        else if (t > initialDate && (!maxRange || t < maxRange))
+                            maxRange = t;
+                    }
+                }
+                for (var m = 0; m < self.config.showMonths; m++) {
+                    var month = self.daysContainer.children[m];
+                    var _loop_1 = function (i, l) {
+                        var dayElem = month.children[i], date = dayElem.dateObj;
+                        var timestamp = date.getTime();
+                        var outOfRange = (minRange > 0 && timestamp < minRange) ||
+                            (maxRange > 0 && timestamp > maxRange);
+                        if (outOfRange) {
+                            dayElem.classList.add("notAllowed");
+                            ["inRange", "startRange", "endRange"].forEach(function (c) {
+                                dayElem.classList.remove(c);
+                            });
+                            return "continue";
+                        }
+                        else if (containsDisabled && !outOfRange)
+                            return "continue";
+                        ["startRange", "inRange", "endRange", "notAllowed"].forEach(function (c) {
+                            dayElem.classList.remove(c);
+                        });
+                        if (elem !== undefined) {
+                            elem.classList.add(hoverDate <= self.selectedDates[0].getTime()
+                                ? "startRange"
+                                : "endRange");
+                            if (initialDate < hoverDate && timestamp === initialDate)
+                                dayElem.classList.add("startRange");
+                            else if (initialDate > hoverDate && timestamp === initialDate)
+                                dayElem.classList.add("endRange");
+                            if (timestamp >= minRange &&
+                                (maxRange === 0 || timestamp <= maxRange) &&
+                                isBetween(timestamp, initialDate, hoverDate))
+                                dayElem.classList.add("inRange");
+                        }
+                    };
+                    for (var i = 0, l = month.children.length; i < l; i++) {
+                        _loop_1(i, l);
+                    }
+                }
+            }
+            function onResize() {
+                if (self.isOpen && !self.config.static && !self.config.inline)
+                    positionCalendar();
+            }
+            function setDefaultTime() {
+                self.setDate(self.config.minDate !== undefined
+                    ? new Date(self.config.minDate.getTime())
+                    : new Date(), true);
+                setDefaultHours();
+                updateValue();
+            }
+            function open(e, positionElement) {
+                if (positionElement === void 0) { positionElement = self._positionElement; }
+                if (self.isMobile === true) {
+                    if (e) {
+                        e.preventDefault();
+                        e.target && e.target.blur();
+                    }
+                    if (self.mobileInput !== undefined) {
+                        self.mobileInput.focus();
+                        self.mobileInput.click();
+                    }
+                    triggerEvent("onOpen");
+                    return;
+                }
+                if (self._input.disabled || self.config.inline)
+                    return;
+                var wasOpen = self.isOpen;
+                self.isOpen = true;
+                if (!wasOpen) {
+                    self.calendarContainer.classList.add("open");
+                    self._input.classList.add("active");
+                    triggerEvent("onOpen");
+                    positionCalendar(positionElement);
+                }
+                if (self.config.enableTime === true && self.config.noCalendar === true) {
+                    if (self.selectedDates.length === 0) {
+                        setDefaultTime();
+                    }
+                    if (self.config.allowInput === false &&
+                        (e === undefined ||
+                            !self.timeContainer.contains(e.relatedTarget))) {
+                        setTimeout(function () { return self.hourElement.select(); }, 50);
+                    }
+                }
+            }
+            function minMaxDateSetter(type) {
+                return function (date) {
+                    var dateObj = (self.config["_" + type + "Date"] = self.parseDate(date, self.config.dateFormat));
+                    var inverseDateObj = self.config["_" + (type === "min" ? "max" : "min") + "Date"];
+                    if (dateObj !== undefined) {
+                        self[type === "min" ? "minDateHasTime" : "maxDateHasTime"] =
+                            dateObj.getHours() > 0 ||
+                                dateObj.getMinutes() > 0 ||
+                                dateObj.getSeconds() > 0;
+                    }
+                    if (self.selectedDates) {
+                        self.selectedDates = self.selectedDates.filter(function (d) { return isEnabled(d); });
+                        if (!self.selectedDates.length && type === "min")
+                            setHoursFromDate(dateObj);
+                        updateValue();
+                    }
+                    if (self.daysContainer) {
+                        redraw();
+                        if (dateObj !== undefined)
+                            self.currentYearElement[type] = dateObj.getFullYear().toString();
+                        else
+                            self.currentYearElement.removeAttribute(type);
+                        self.currentYearElement.disabled =
+                            !!inverseDateObj &&
+                                dateObj !== undefined &&
+                                inverseDateObj.getFullYear() === dateObj.getFullYear();
+                    }
+                };
+            }
+            function parseConfig() {
+                var boolOpts = [
+                    "wrap",
+                    "weekNumbers",
+                    "allowInput",
+                    "clickOpens",
+                    "time_24hr",
+                    "enableTime",
+                    "noCalendar",
+                    "altInput",
+                    "shorthandCurrentMonth",
+                    "inline",
+                    "static",
+                    "enableSeconds",
+                    "disableMobile",
+                ];
+                var userConfig = __assign({}, instanceConfig, JSON.parse(JSON.stringify(element.dataset || {})));
+                var formats = {};
+                self.config.parseDate = userConfig.parseDate;
+                self.config.formatDate = userConfig.formatDate;
+                Object.defineProperty(self.config, "enable", {
+                    get: function () { return self.config._enable; },
+                    set: function (dates) {
+                        self.config._enable = parseDateRules(dates);
+                    }
+                });
+                Object.defineProperty(self.config, "disable", {
+                    get: function () { return self.config._disable; },
+                    set: function (dates) {
+                        self.config._disable = parseDateRules(dates);
+                    }
+                });
+                var timeMode = userConfig.mode === "time";
+                if (!userConfig.dateFormat && (userConfig.enableTime || timeMode)) {
+                    var defaultDateFormat = flatpickr.defaultConfig.dateFormat || defaults.dateFormat;
+                    formats.dateFormat =
+                        userConfig.noCalendar || timeMode
+                            ? "H:i" + (userConfig.enableSeconds ? ":S" : "")
+                            : defaultDateFormat + " H:i" + (userConfig.enableSeconds ? ":S" : "");
+                }
+                if (userConfig.altInput &&
+                    (userConfig.enableTime || timeMode) &&
+                    !userConfig.altFormat) {
+                    var defaultAltFormat = flatpickr.defaultConfig.altFormat || defaults.altFormat;
+                    formats.altFormat =
+                        userConfig.noCalendar || timeMode
+                            ? "h:i" + (userConfig.enableSeconds ? ":S K" : " K")
+                            : defaultAltFormat + (" h:i" + (userConfig.enableSeconds ? ":S" : "") + " K");
+                }
+                if (!userConfig.altInputClass) {
+                    self.config.altInputClass =
+                        self.input.className + " " + self.config.altInputClass;
+                }
+                Object.defineProperty(self.config, "minDate", {
+                    get: function () { return self.config._minDate; },
+                    set: minMaxDateSetter("min")
+                });
+                Object.defineProperty(self.config, "maxDate", {
+                    get: function () { return self.config._maxDate; },
+                    set: minMaxDateSetter("max")
+                });
+                var minMaxTimeSetter = function (type) { return function (val) {
+                    self.config[type === "min" ? "_minTime" : "_maxTime"] = self.parseDate(val, "H:i");
+                }; };
+                Object.defineProperty(self.config, "minTime", {
+                    get: function () { return self.config._minTime; },
+                    set: minMaxTimeSetter("min")
+                });
+                Object.defineProperty(self.config, "maxTime", {
+                    get: function () { return self.config._maxTime; },
+                    set: minMaxTimeSetter("max")
+                });
+                if (userConfig.mode === "time") {
+                    self.config.noCalendar = true;
+                    self.config.enableTime = true;
+                }
+                Object.assign(self.config, formats, userConfig);
+                for (var i = 0; i < boolOpts.length; i++)
+                    self.config[boolOpts[i]] =
+                        self.config[boolOpts[i]] === true ||
+                            self.config[boolOpts[i]] === "true";
+                HOOKS.filter(function (hook) { return self.config[hook] !== undefined; }).forEach(function (hook) {
+                    self.config[hook] = arrayify(self.config[hook] || []).map(bindToInstance);
+                });
+                self.isMobile =
+                    !self.config.disableMobile &&
+                        !self.config.inline &&
+                        self.config.mode === "single" &&
+                        !self.config.disable.length &&
+                        !self.config.enable.length &&
+                        !self.config.weekNumbers &&
+                        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                for (var i = 0; i < self.config.plugins.length; i++) {
+                    var pluginConf = self.config.plugins[i](self) || {};
+                    for (var key in pluginConf) {
+                        if (HOOKS.indexOf(key) > -1) {
+                            self.config[key] = arrayify(pluginConf[key])
+                                .map(bindToInstance)
+                                .concat(self.config[key]);
+                        }
+                        else if (typeof userConfig[key] === "undefined")
+                            self.config[key] = pluginConf[key];
+                    }
+                }
+                triggerEvent("onParseConfig");
+            }
+            function setupLocale() {
+                if (typeof self.config.locale !== "object" &&
+                    typeof flatpickr.l10ns[self.config.locale] === "undefined")
+                    self.config.errorHandler(new Error("flatpickr: invalid locale " + self.config.locale));
+                self.l10n = __assign({}, flatpickr.l10ns["default"], (typeof self.config.locale === "object"
+                    ? self.config.locale
+                    : self.config.locale !== "default"
+                        ? flatpickr.l10ns[self.config.locale]
+                        : undefined));
+                tokenRegex.K = "(" + self.l10n.amPM[0] + "|" + self.l10n.amPM[1] + "|" + self.l10n.amPM[0].toLowerCase() + "|" + self.l10n.amPM[1].toLowerCase() + ")";
+                var userConfig = __assign({}, instanceConfig, JSON.parse(JSON.stringify(element.dataset || {})));
+                if (userConfig.time_24hr === undefined &&
+                    flatpickr.defaultConfig.time_24hr === undefined) {
+                    self.config.time_24hr = self.l10n.time_24hr;
+                }
+                self.formatDate = createDateFormatter(self);
+                self.parseDate = createDateParser({ config: self.config, l10n: self.l10n });
+            }
+            function positionCalendar(customPositionElement) {
+                if (self.calendarContainer === undefined)
+                    return;
+                triggerEvent("onPreCalendarPosition");
+                var positionElement = customPositionElement || self._positionElement;
+                var calendarHeight = Array.prototype.reduce.call(self.calendarContainer.children, (function (acc, child) { return acc + child.offsetHeight; }), 0), calendarWidth = self.calendarContainer.offsetWidth, configPos = self.config.position.split(" "), configPosVertical = configPos[0], configPosHorizontal = configPos.length > 1 ? configPos[1] : null, inputBounds = positionElement.getBoundingClientRect(), distanceFromBottom = window.innerHeight - inputBounds.bottom, showOnTop = configPosVertical === "above" ||
+                    (configPosVertical !== "below" &&
+                        distanceFromBottom < calendarHeight &&
+                        inputBounds.top > calendarHeight);
+                var top = window.pageYOffset +
+                    inputBounds.top +
+                    (!showOnTop ? positionElement.offsetHeight + 2 : -calendarHeight - 2);
+                toggleClass(self.calendarContainer, "arrowTop", !showOnTop);
+                toggleClass(self.calendarContainer, "arrowBottom", showOnTop);
+                if (self.config.inline)
+                    return;
+                var left = window.pageXOffset +
+                    inputBounds.left -
+                    (configPosHorizontal != null && configPosHorizontal === "center"
+                        ? (calendarWidth - inputBounds.width) / 2
+                        : 0);
+                var right = window.document.body.offsetWidth - inputBounds.right;
+                var rightMost = left + calendarWidth > window.document.body.offsetWidth;
+                var centerMost = right + calendarWidth > window.document.body.offsetWidth;
+                toggleClass(self.calendarContainer, "rightMost", rightMost);
+                if (self.config.static)
+                    return;
+                self.calendarContainer.style.top = top + "px";
+                if (!rightMost) {
+                    self.calendarContainer.style.left = left + "px";
+                    self.calendarContainer.style.right = "auto";
+                }
+                else if (!centerMost) {
+                    self.calendarContainer.style.left = "auto";
+                    self.calendarContainer.style.right = right + "px";
+                }
+                else {
+                    var doc = document.styleSheets[0];
+                    // some testing environments don't have css support
+                    if (doc === undefined)
+                        return;
+                    var bodyWidth = window.document.body.offsetWidth;
+                    var centerLeft = Math.max(0, bodyWidth / 2 - calendarWidth / 2);
+                    var centerBefore = ".flatpickr-calendar.centerMost:before";
+                    var centerAfter = ".flatpickr-calendar.centerMost:after";
+                    var centerIndex = doc.cssRules.length;
+                    var centerStyle = "{left:" + inputBounds.left + "px;right:auto;}";
+                    toggleClass(self.calendarContainer, "rightMost", false);
+                    toggleClass(self.calendarContainer, "centerMost", true);
+                    doc.insertRule(centerBefore + "," + centerAfter + centerStyle, centerIndex);
+                    self.calendarContainer.style.left = centerLeft + "px";
+                    self.calendarContainer.style.right = "auto";
+                }
+            }
+            function redraw() {
+                if (self.config.noCalendar || self.isMobile)
+                    return;
+                updateNavigationCurrentMonth();
+                buildDays();
+            }
+            function focusAndClose() {
+                self._input.focus();
+                if (window.navigator.userAgent.indexOf("MSIE") !== -1 ||
+                    navigator.msMaxTouchPoints !== undefined) {
+                    // hack - bugs in the way IE handles focus keeps the calendar open
+                    setTimeout(self.close, 0);
+                }
+                else {
+                    self.close();
+                }
+            }
+            function selectDate(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var isSelectable = function (day) {
+                    return day.classList &&
+                        day.classList.contains("flatpickr-day") &&
+                        !day.classList.contains("flatpickr-disabled") &&
+                        !day.classList.contains("notAllowed");
+                };
+                var t = findParent(e.target, isSelectable);
+                if (t === undefined)
+                    return;
+                var target = t;
+                var selectedDate = (self.latestSelectedDateObj = new Date(target.dateObj.getTime()));
+                var shouldChangeMonth = (selectedDate.getMonth() < self.currentMonth ||
+                    selectedDate.getMonth() >
+                        self.currentMonth + self.config.showMonths - 1) &&
+                    self.config.mode !== "range";
+                self.selectedDateElem = target;
+                if (self.config.mode === "single")
+                    self.selectedDates = [selectedDate];
+                else if (self.config.mode === "multiple") {
+                    var selectedIndex = isDateSelected(selectedDate);
+                    if (selectedIndex)
+                        self.selectedDates.splice(parseInt(selectedIndex), 1);
+                    else
+                        self.selectedDates.push(selectedDate);
+                }
+                else if (self.config.mode === "range") {
+                    if (self.selectedDates.length === 2) {
+                        self.clear(false, false);
+                    }
+                    self.latestSelectedDateObj = selectedDate;
+                    self.selectedDates.push(selectedDate);
+                    // unless selecting same date twice, sort ascendingly
+                    if (compareDates(selectedDate, self.selectedDates[0], true) !== 0)
+                        self.selectedDates.sort(function (a, b) { return a.getTime() - b.getTime(); });
+                }
+                setHoursFromInputs();
+                if (shouldChangeMonth) {
+                    var isNewYear = self.currentYear !== selectedDate.getFullYear();
+                    self.currentYear = selectedDate.getFullYear();
+                    self.currentMonth = selectedDate.getMonth();
+                    if (isNewYear) {
+                        triggerEvent("onYearChange");
+                        buildMonthSwitch();
+                    }
+                    triggerEvent("onMonthChange");
+                }
+                updateNavigationCurrentMonth();
+                buildDays();
+                updateValue();
+                if (self.config.enableTime)
+                    setTimeout(function () { return (self.showTimeInput = true); }, 50);
+                // maintain focus
+                if (!shouldChangeMonth &&
+                    self.config.mode !== "range" &&
+                    self.config.showMonths === 1)
+                    focusOnDayElem(target);
+                else if (self.selectedDateElem !== undefined &&
+                    self.hourElement === undefined) {
+                    self.selectedDateElem && self.selectedDateElem.focus();
+                }
+                if (self.hourElement !== undefined)
+                    self.hourElement !== undefined && self.hourElement.focus();
+                if (self.config.closeOnSelect) {
+                    var single = self.config.mode === "single" && !self.config.enableTime;
+                    var range = self.config.mode === "range" &&
+                        self.selectedDates.length === 2 &&
+                        !self.config.enableTime;
+                    if (single || range) {
+                        focusAndClose();
+                    }
+                }
+                triggerChange();
+            }
+            var CALLBACKS = {
+                locale: [setupLocale, updateWeekdays],
+                showMonths: [buildMonths, setCalendarWidth, buildWeekdays],
+                minDate: [jumpToDate],
+                maxDate: [jumpToDate]
+            };
+            function set(option, value) {
+                if (option !== null && typeof option === "object") {
+                    Object.assign(self.config, option);
+                    for (var key in option) {
+                        if (CALLBACKS[key] !== undefined)
+                            CALLBACKS[key].forEach(function (x) { return x(); });
+                    }
+                }
+                else {
+                    self.config[option] = value;
+                    if (CALLBACKS[option] !== undefined)
+                        CALLBACKS[option].forEach(function (x) { return x(); });
+                    else if (HOOKS.indexOf(option) > -1)
+                        self.config[option] = arrayify(value);
+                }
+                self.redraw();
+                updateValue(false);
+            }
+            function setSelectedDate(inputDate, format) {
+                var dates = [];
+                if (inputDate instanceof Array)
+                    dates = inputDate.map(function (d) { return self.parseDate(d, format); });
+                else if (inputDate instanceof Date || typeof inputDate === "number")
+                    dates = [self.parseDate(inputDate, format)];
+                else if (typeof inputDate === "string") {
+                    switch (self.config.mode) {
+                        case "single":
+                        case "time":
+                            dates = [self.parseDate(inputDate, format)];
+                            break;
+                        case "multiple":
+                            dates = inputDate
+                                .split(self.config.conjunction)
+                                .map(function (date) { return self.parseDate(date, format); });
+                            break;
+                        case "range":
+                            dates = inputDate
+                                .split(self.l10n.rangeSeparator)
+                                .map(function (date) { return self.parseDate(date, format); });
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                else
+                    self.config.errorHandler(new Error("Invalid date supplied: " + JSON.stringify(inputDate)));
+                self.selectedDates = dates.filter(function (d) { return d instanceof Date && isEnabled(d, false); });
+                if (self.config.mode === "range")
+                    self.selectedDates.sort(function (a, b) { return a.getTime() - b.getTime(); });
+            }
+            function setDate(date, triggerChange, format) {
+                if (triggerChange === void 0) { triggerChange = false; }
+                if (format === void 0) { format = self.config.dateFormat; }
+                if ((date !== 0 && !date) || (date instanceof Array && date.length === 0))
+                    return self.clear(triggerChange);
+                setSelectedDate(date, format);
+                self.showTimeInput = self.selectedDates.length > 0;
+                self.latestSelectedDateObj =
+                    self.selectedDates[self.selectedDates.length - 1];
+                self.redraw();
+                jumpToDate();
+                setHoursFromDate();
+                if (self.selectedDates.length === 0) {
+                    self.clear(false);
+                }
+                updateValue(triggerChange);
+                if (triggerChange)
+                    triggerEvent("onChange");
+            }
+            function parseDateRules(arr) {
+                return arr
+                    .slice()
+                    .map(function (rule) {
+                    if (typeof rule === "string" ||
+                        typeof rule === "number" ||
+                        rule instanceof Date) {
+                        return self.parseDate(rule, undefined, true);
+                    }
+                    else if (rule &&
+                        typeof rule === "object" &&
+                        rule.from &&
+                        rule.to)
+                        return {
+                            from: self.parseDate(rule.from, undefined),
+                            to: self.parseDate(rule.to, undefined)
+                        };
+                    return rule;
+                })
+                    .filter(function (x) { return x; }); // remove falsy values
+            }
+            function setupDates() {
+                self.selectedDates = [];
+                self.now = self.parseDate(self.config.now) || new Date();
+                // Workaround IE11 setting placeholder as the input's value
+                var preloadedDate = self.config.defaultDate ||
+                    ((self.input.nodeName === "INPUT" ||
+                        self.input.nodeName === "TEXTAREA") &&
+                        self.input.placeholder &&
+                        self.input.value === self.input.placeholder
+                        ? null
+                        : self.input.value);
+                if (preloadedDate)
+                    setSelectedDate(preloadedDate, self.config.dateFormat);
+                self._initialDate =
+                    self.selectedDates.length > 0
+                        ? self.selectedDates[0]
+                        : self.config.minDate &&
+                            self.config.minDate.getTime() > self.now.getTime()
+                            ? self.config.minDate
+                            : self.config.maxDate &&
+                                self.config.maxDate.getTime() < self.now.getTime()
+                                ? self.config.maxDate
+                                : self.now;
+                self.currentYear = self._initialDate.getFullYear();
+                self.currentMonth = self._initialDate.getMonth();
+                if (self.selectedDates.length > 0)
+                    self.latestSelectedDateObj = self.selectedDates[0];
+                if (self.config.minTime !== undefined)
+                    self.config.minTime = self.parseDate(self.config.minTime, "H:i");
+                if (self.config.maxTime !== undefined)
+                    self.config.maxTime = self.parseDate(self.config.maxTime, "H:i");
+                self.minDateHasTime =
+                    !!self.config.minDate &&
+                        (self.config.minDate.getHours() > 0 ||
+                            self.config.minDate.getMinutes() > 0 ||
+                            self.config.minDate.getSeconds() > 0);
+                self.maxDateHasTime =
+                    !!self.config.maxDate &&
+                        (self.config.maxDate.getHours() > 0 ||
+                            self.config.maxDate.getMinutes() > 0 ||
+                            self.config.maxDate.getSeconds() > 0);
+                Object.defineProperty(self, "showTimeInput", {
+                    get: function () { return self._showTimeInput; },
+                    set: function (bool) {
+                        self._showTimeInput = bool;
+                        if (self.calendarContainer)
+                            toggleClass(self.calendarContainer, "showTimeInput", bool);
+                        self.isOpen && positionCalendar();
+                    }
+                });
+            }
+            function setupInputs() {
+                self.input = self.config.wrap
+                    ? element.querySelector("[data-input]")
+                    : element;
+                /* istanbul ignore next */
+                if (!self.input) {
+                    self.config.errorHandler(new Error("Invalid input element specified"));
+                    return;
+                }
+                // hack: store previous type to restore it after destroy()
+                self.input._type = self.input.type;
+                self.input.type = "text";
+                self.input.classList.add("flatpickr-input");
+                self._input = self.input;
+                if (self.config.altInput) {
+                    // replicate self.element
+                    self.altInput = createElement(self.input.nodeName, self.config.altInputClass);
+                    self._input = self.altInput;
+                    self.altInput.placeholder = self.input.placeholder;
+                    self.altInput.disabled = self.input.disabled;
+                    self.altInput.required = self.input.required;
+                    self.altInput.tabIndex = self.input.tabIndex;
+                    self.altInput.type = "text";
+                    self.input.setAttribute("type", "hidden");
+                    if (!self.config.static && self.input.parentNode)
+                        self.input.parentNode.insertBefore(self.altInput, self.input.nextSibling);
+                }
+                if (!self.config.allowInput)
+                    self._input.setAttribute("readonly", "readonly");
+                self._positionElement = self.config.positionElement || self._input;
+            }
+            function setupMobile() {
+                var inputType = self.config.enableTime
+                    ? self.config.noCalendar
+                        ? "time"
+                        : "datetime-local"
+                    : "date";
+                self.mobileInput = createElement("input", self.input.className + " flatpickr-mobile");
+                self.mobileInput.step = self.input.getAttribute("step") || "any";
+                self.mobileInput.tabIndex = 1;
+                self.mobileInput.type = inputType;
+                self.mobileInput.disabled = self.input.disabled;
+                self.mobileInput.required = self.input.required;
+                self.mobileInput.placeholder = self.input.placeholder;
+                self.mobileFormatStr =
+                    inputType === "datetime-local"
+                        ? "Y-m-d\\TH:i:S"
+                        : inputType === "date"
+                            ? "Y-m-d"
+                            : "H:i:S";
+                if (self.selectedDates.length > 0) {
+                    self.mobileInput.defaultValue = self.mobileInput.value = self.formatDate(self.selectedDates[0], self.mobileFormatStr);
+                }
+                if (self.config.minDate)
+                    self.mobileInput.min = self.formatDate(self.config.minDate, "Y-m-d");
+                if (self.config.maxDate)
+                    self.mobileInput.max = self.formatDate(self.config.maxDate, "Y-m-d");
+                self.input.type = "hidden";
+                if (self.altInput !== undefined)
+                    self.altInput.type = "hidden";
+                try {
+                    if (self.input.parentNode)
+                        self.input.parentNode.insertBefore(self.mobileInput, self.input.nextSibling);
+                }
+                catch (_a) { }
+                bind(self.mobileInput, "change", function (e) {
+                    self.setDate(e.target.value, false, self.mobileFormatStr);
+                    triggerEvent("onChange");
+                    triggerEvent("onClose");
+                });
+            }
+            function toggle(e) {
+                if (self.isOpen === true)
+                    return self.close();
+                self.open(e);
+            }
+            function triggerEvent(event, data) {
+                // If the instance has been destroyed already, all hooks have been removed
+                if (self.config === undefined)
+                    return;
+                var hooks = self.config[event];
+                if (hooks !== undefined && hooks.length > 0) {
+                    for (var i = 0; hooks[i] && i < hooks.length; i++)
+                        hooks[i](self.selectedDates, self.input.value, self, data);
+                }
+                if (event === "onChange") {
+                    self.input.dispatchEvent(createEvent("change"));
+                    // many front-end frameworks bind to the input event
+                    self.input.dispatchEvent(createEvent("input"));
+                }
+            }
+            function createEvent(name) {
+                var e = document.createEvent("Event");
+                e.initEvent(name, true, true);
+                return e;
+            }
+            function isDateSelected(date) {
+                for (var i = 0; i < self.selectedDates.length; i++) {
+                    if (compareDates(self.selectedDates[i], date) === 0)
+                        return "" + i;
+                }
+                return false;
+            }
+            function isDateInRange(date) {
+                if (self.config.mode !== "range" || self.selectedDates.length < 2)
+                    return false;
+                return (compareDates(date, self.selectedDates[0]) >= 0 &&
+                    compareDates(date, self.selectedDates[1]) <= 0);
+            }
+            function updateNavigationCurrentMonth() {
+                if (self.config.noCalendar || self.isMobile || !self.monthNav)
+                    return;
+                self.yearElements.forEach(function (yearElement, i) {
+                    var d = new Date(self.currentYear, self.currentMonth, 1);
+                    d.setMonth(self.currentMonth + i);
+                    if (self.config.showMonths > 1 ||
+                        self.config.monthSelectorType === "static") {
+                        self.monthElements[i].textContent =
+                            monthToStr(d.getMonth(), self.config.shorthandCurrentMonth, self.l10n) + " ";
+                    }
+                    else {
+                        self.monthsDropdownContainer.value = d.getMonth().toString();
+                    }
+                    yearElement.value = d.getFullYear().toString();
+                });
+                self._hidePrevMonthArrow =
+                    self.config.minDate !== undefined &&
+                        (self.currentYear === self.config.minDate.getFullYear()
+                            ? self.currentMonth <= self.config.minDate.getMonth()
+                            : self.currentYear < self.config.minDate.getFullYear());
+                self._hideNextMonthArrow =
+                    self.config.maxDate !== undefined &&
+                        (self.currentYear === self.config.maxDate.getFullYear()
+                            ? self.currentMonth + 1 > self.config.maxDate.getMonth()
+                            : self.currentYear > self.config.maxDate.getFullYear());
+            }
+            function getDateStr(format) {
+                return self.selectedDates
+                    .map(function (dObj) { return self.formatDate(dObj, format); })
+                    .filter(function (d, i, arr) {
+                    return self.config.mode !== "range" ||
+                        self.config.enableTime ||
+                        arr.indexOf(d) === i;
+                })
+                    .join(self.config.mode !== "range"
+                    ? self.config.conjunction
+                    : self.l10n.rangeSeparator);
+            }
+            /**
+             * Updates the values of inputs associated with the calendar
+             */
+            function updateValue(triggerChange) {
+                if (triggerChange === void 0) { triggerChange = true; }
+                if (self.mobileInput !== undefined && self.mobileFormatStr) {
+                    self.mobileInput.value =
+                        self.latestSelectedDateObj !== undefined
+                            ? self.formatDate(self.latestSelectedDateObj, self.mobileFormatStr)
+                            : "";
+                }
+                self.input.value = getDateStr(self.config.dateFormat);
+                if (self.altInput !== undefined) {
+                    self.altInput.value = getDateStr(self.config.altFormat);
+                }
+                if (triggerChange !== false)
+                    triggerEvent("onValueUpdate");
+            }
+            function onMonthNavClick(e) {
+                var isPrevMonth = self.prevMonthNav.contains(e.target);
+                var isNextMonth = self.nextMonthNav.contains(e.target);
+                if (isPrevMonth || isNextMonth) {
+                    changeMonth(isPrevMonth ? -1 : 1);
+                }
+                else if (self.yearElements.indexOf(e.target) >= 0) {
+                    e.target.select();
+                }
+                else if (e.target.classList.contains("arrowUp")) {
+                    self.changeYear(self.currentYear + 1);
+                }
+                else if (e.target.classList.contains("arrowDown")) {
+                    self.changeYear(self.currentYear - 1);
+                }
+            }
+            function timeWrapper(e) {
+                e.preventDefault();
+                var isKeyDown = e.type === "keydown", input = e.target;
+                if (self.amPM !== undefined && e.target === self.amPM) {
+                    self.amPM.textContent =
+                        self.l10n.amPM[int(self.amPM.textContent === self.l10n.amPM[0])];
+                }
+                var min = parseFloat(input.getAttribute("min")), max = parseFloat(input.getAttribute("max")), step = parseFloat(input.getAttribute("step")), curValue = parseInt(input.value, 10), delta = e.delta ||
+                    (isKeyDown ? (e.which === 38 ? 1 : -1) : 0);
+                var newValue = curValue + step * delta;
+                if (typeof input.value !== "undefined" && input.value.length === 2) {
+                    var isHourElem = input === self.hourElement, isMinuteElem = input === self.minuteElement;
+                    if (newValue < min) {
+                        newValue =
+                            max +
+                                newValue +
+                                int(!isHourElem) +
+                                (int(isHourElem) && int(!self.amPM));
+                        if (isMinuteElem)
+                            incrementNumInput(undefined, -1, self.hourElement);
+                    }
+                    else if (newValue > max) {
+                        newValue =
+                            input === self.hourElement ? newValue - max - int(!self.amPM) : min;
+                        if (isMinuteElem)
+                            incrementNumInput(undefined, 1, self.hourElement);
+                    }
+                    if (self.amPM &&
+                        isHourElem &&
+                        (step === 1
+                            ? newValue + curValue === 23
+                            : Math.abs(newValue - curValue) > step)) {
+                        self.amPM.textContent =
+                            self.l10n.amPM[int(self.amPM.textContent === self.l10n.amPM[0])];
+                    }
+                    input.value = pad(newValue);
+                }
+            }
+            init();
+            return self;
+        }
+        /* istanbul ignore next */
+        function _flatpickr(nodeList, config) {
+            // static list
+            var nodes = Array.prototype.slice
+                .call(nodeList)
+                .filter(function (x) { return x instanceof HTMLElement; });
+            var instances = [];
+            for (var i = 0; i < nodes.length; i++) {
+                var node = nodes[i];
+                try {
+                    if (node.getAttribute("data-fp-omit") !== null)
+                        continue;
+                    if (node._flatpickr !== undefined) {
+                        node._flatpickr.destroy();
+                        node._flatpickr = undefined;
+                    }
+                    node._flatpickr = FlatpickrInstance(node, config || {});
+                    instances.push(node._flatpickr);
+                }
+                catch (e) {
+                    console.error(e);
+                }
+            }
+            return instances.length === 1 ? instances[0] : instances;
+        }
+        /* istanbul ignore next */
+        if (typeof HTMLElement !== "undefined" &&
+            typeof HTMLCollection !== "undefined" &&
+            typeof NodeList !== "undefined") {
+            // browser env
+            HTMLCollection.prototype.flatpickr = NodeList.prototype.flatpickr = function (config) {
+                return _flatpickr(this, config);
+            };
+            HTMLElement.prototype.flatpickr = function (config) {
+                return _flatpickr([this], config);
+            };
+        }
+        /* istanbul ignore next */
+        var flatpickr = function (selector, config) {
+            if (typeof selector === "string") {
+                return _flatpickr(window.document.querySelectorAll(selector), config);
+            }
+            else if (selector instanceof Node) {
+                return _flatpickr([selector], config);
+            }
+            else {
+                return _flatpickr(selector, config);
+            }
+        };
+        /* istanbul ignore next */
+        flatpickr.defaultConfig = {};
+        flatpickr.l10ns = {
+            en: __assign({}, english),
+            "default": __assign({}, english)
+        };
+        flatpickr.localize = function (l10n) {
+            flatpickr.l10ns["default"] = __assign({}, flatpickr.l10ns["default"], l10n);
+        };
+        flatpickr.setDefaults = function (config) {
+            flatpickr.defaultConfig = __assign({}, flatpickr.defaultConfig, config);
+        };
+        flatpickr.parseDate = createDateParser({});
+        flatpickr.formatDate = createDateFormatter({});
+        flatpickr.compareDates = compareDates;
+        /* istanbul ignore next */
+        if (typeof jQuery !== "undefined" && typeof jQuery.fn !== "undefined") {
+            jQuery.fn.flatpickr = function (config) {
+                return _flatpickr(this, config);
+            };
+        }
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        Date.prototype.fp_incr = function (days) {
+            return new Date(this.getFullYear(), this.getMonth(), this.getDate() + (typeof days === "string" ? parseInt(days, 10) : days));
+        };
+        if (typeof window !== "undefined") {
+            window.flatpickr = flatpickr;
+        }
+
+        return flatpickr;
+
+    }));
+    });
+
+    /* src\common\DatePicker.svelte generated by Svelte v3.9.1 */
+
+    const file$d = "src\\common\\DatePicker.svelte";
+
+    function create_fragment$c(ctx) {
+    	var div1, label_1, t0, t1, div0, input_1, input_1_class_value;
+
+    	return {
+    		c: function create() {
+    			div1 = element("div");
+    			label_1 = element("label");
+    			t0 = text(ctx.label);
+    			t1 = space();
+    			div0 = element("div");
+    			input_1 = element("input");
+    			attr(label_1, "class", "uk-form-label");
+    			add_location(label_1, file$d, 30, 4, 589);
+    			attr(input_1, "class", input_1_class_value = "uk-input uk-form-width-" + ctx.width + " uk-form-" + ctx.size);
+    			add_location(input_1, file$d, 32, 8, 679);
+    			attr(div0, "class", "uk-form-controls");
+    			add_location(div0, file$d, 31, 4, 639);
+    			attr(div1, "class", "uk-margin");
+    			add_location(div1, file$d, 29, 0, 560);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div1, anchor);
+    			append(div1, label_1);
+    			append(label_1, t0);
+    			append(div1, t1);
+    			append(div1, div0);
+    			append(div0, input_1);
+    			ctx.input_1_binding(input_1);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.label) {
+    				set_data(t0, ctx.label);
+    			}
+
+    			if ((changed.width || changed.size) && input_1_class_value !== (input_1_class_value = "uk-input uk-form-width-" + ctx.width + " uk-form-" + ctx.size)) {
+    				attr(input_1, "class", input_1_class_value);
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div1);
+    			}
+
+    			ctx.input_1_binding(null);
+    		}
+    	};
+    }
+
+    function instance$c($$self, $$props, $$invalidate) {
+    	
+
+    let { value, label, width = "medium", size = "small" } = $$props;
+
+    let input;
+    let fpInstance;
+
+    onMount(() => {
+        $$invalidate('fpInstance', fpInstance =  flatpickr(input, {}));
+
+        fpInstance.config.onChange.push(selectedDates => {
+            if(selectedDates.length > 0)
+                $$invalidate('value', value = new Date(selectedDates[0]));
+        });
+
+        return fpInstance;
+    });
+
+    	const writable_props = ['value', 'label', 'width', 'size'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<DatePicker> was created with unknown prop '${key}'`);
+    	});
+
+    	function input_1_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			$$invalidate('input', input = $$value);
+    		});
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('value' in $$props) $$invalidate('value', value = $$props.value);
+    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
+    		if ('width' in $$props) $$invalidate('width', width = $$props.width);
+    		if ('size' in $$props) $$invalidate('size', size = $$props.size);
+    	};
+
+    	$$self.$$.update = ($$dirty = { fpInstance: 1, value: 1 }) => {
+    		if ($$dirty.fpInstance || $$dirty.value) { if (fpInstance) fpInstance.setDate(value); }
+    	};
+
+    	return {
+    		value,
+    		label,
+    		width,
+    		size,
+    		input,
+    		input_1_binding
+    	};
+    }
+
+    class DatePicker extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$c, create_fragment$c, safe_not_equal, ["value", "label", "width", "size"]);
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx.value === undefined && !('value' in props)) {
+    			console.warn("<DatePicker> was created without expected prop 'value'");
+    		}
+    		if (ctx.label === undefined && !('label' in props)) {
+    			console.warn("<DatePicker> was created without expected prop 'label'");
+    		}
+    	}
+
+    	get value() {
+    		throw new Error("<DatePicker>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set value(value) {
+    		throw new Error("<DatePicker>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get label() {
+    		throw new Error("<DatePicker>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set label(value) {
+    		throw new Error("<DatePicker>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get width() {
+    		throw new Error("<DatePicker>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set width(value) {
+    		throw new Error("<DatePicker>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get size() {
+    		throw new Error("<DatePicker>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set size(value) {
+    		throw new Error("<DatePicker>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\database\FieldView.svelte generated by Svelte v3.9.1 */
+
+    const file$e = "src\\database\\FieldView.svelte";
+
+    // (68:8) {:else}
+    function create_else_block$1(ctx) {
+    	var div, t_value = ctx.clonedField.name + "", t;
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			t = text(t_value);
+    			set_style(div, "font-weight", "bold");
+    			add_location(div, file$e, 68, 8, 2004);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, t);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((changed.clonedField) && t_value !== (t_value = ctx.clonedField.name + "")) {
+    				set_data(t, t_value);
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+    		}
+    	};
+    }
+
+    // (66:8) {#if isNew}
+    function create_if_block_6(ctx) {
+    	var updating_text, current;
+
+    	function textbox_text_binding(value) {
+    		ctx.textbox_text_binding.call(null, value);
+    		updating_text = true;
+    		add_flush_callback(() => updating_text = false);
+    	}
+
+    	let textbox_props = { label: "Field Name" };
+    	if (ctx.clonedField.name !== void 0) {
+    		textbox_props.text = ctx.clonedField.name;
+    	}
+    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding));
+
+    	return {
+    		c: function create() {
+    			textbox.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(textbox, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var textbox_changes = {};
+    			if (!updating_text && changed.clonedField) {
+    				textbox_changes.text = ctx.clonedField.name;
+    			}
+    			textbox.$set(textbox_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(textbox.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(textbox.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(textbox, detaching);
+    		}
+    	};
+    }
+
+    // (103:55) 
+    function create_if_block_5(ctx) {
+    	var updating_value, t, updating_value_1, current;
+
+    	function numberbox0_value_binding_1(value) {
+    		ctx.numberbox0_value_binding_1.call(null, value);
+    		updating_value = true;
+    		add_flush_callback(() => updating_value = false);
+    	}
+
+    	let numberbox0_props = { label: "Min Length" };
+    	if (ctx.clonedField.typeOptions.minLength !== void 0) {
+    		numberbox0_props.value = ctx.clonedField.typeOptions.minLength;
+    	}
+    	var numberbox0 = new NumberBox({ props: numberbox0_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(numberbox0, 'value', numberbox0_value_binding_1));
+
+    	function numberbox1_value_binding_1(value_1) {
+    		ctx.numberbox1_value_binding_1.call(null, value_1);
+    		updating_value_1 = true;
+    		add_flush_callback(() => updating_value_1 = false);
+    	}
+
+    	let numberbox1_props = { label: "Max Length" };
+    	if (ctx.clonedField.typeOptions.maxLength !== void 0) {
+    		numberbox1_props.value = ctx.clonedField.typeOptions.maxLength;
+    	}
+    	var numberbox1 = new NumberBox({ props: numberbox1_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(numberbox1, 'value', numberbox1_value_binding_1));
+
+    	return {
+    		c: function create() {
+    			numberbox0.$$.fragment.c();
+    			t = space();
+    			numberbox1.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(numberbox0, target, anchor);
+    			insert(target, t, anchor);
+    			mount_component(numberbox1, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var numberbox0_changes = {};
+    			if (!updating_value && changed.clonedField) {
+    				numberbox0_changes.value = ctx.clonedField.typeOptions.minLength;
+    			}
+    			numberbox0.$set(numberbox0_changes);
+
+    			var numberbox1_changes = {};
+    			if (!updating_value_1 && changed.clonedField) {
+    				numberbox1_changes.value = ctx.clonedField.typeOptions.maxLength;
+    			}
+    			numberbox1.$set(numberbox1_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(numberbox0.$$.fragment, local);
+
+    			transition_in(numberbox1.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(numberbox0.$$.fragment, local);
+    			transition_out(numberbox1.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(numberbox0, detaching);
+
+    			if (detaching) {
+    				detach(t);
+    			}
+
+    			destroy_component(numberbox1, detaching);
+    		}
+    	};
+    }
+
+    // (87:51) 
+    function create_if_block_4(ctx) {
+    	var updating_selected, t0, updating_selected_1, t1, updating_text, current;
+
+    	function dropdown0_selected_binding(value) {
+    		ctx.dropdown0_selected_binding.call(null, value);
+    		updating_selected = true;
+    		add_flush_callback(() => updating_selected = false);
+    	}
+
+    	let dropdown0_props = {
+    		label: "Lookup Index",
+    		options: ctx.possibleReferenceIndexes,
+    		valueMember: func,
+    		textMember: func_1
+    	};
+    	if (ctx.clonedField.typeOptions.indexNodeKey !== void 0) {
+    		dropdown0_props.selected = ctx.clonedField.typeOptions.indexNodeKey;
+    	}
+    	var dropdown0 = new Dropdown({ props: dropdown0_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(dropdown0, 'selected', dropdown0_selected_binding));
+
+    	function dropdown1_selected_binding(value_1) {
+    		ctx.dropdown1_selected_binding.call(null, value_1);
+    		updating_selected_1 = true;
+    		add_flush_callback(() => updating_selected_1 = false);
+    	}
+
+    	let dropdown1_props = {
+    		label: "Reverse Reference Index",
+    		options: ctx.possibleReverseReferenceIndexes,
+    		multiple: "true",
+    		valueMember: func_2,
+    		textMember: func_3
+    	};
+    	if (ctx.clonedField.typeOptions.reverseIndexNodeKeys !== void 0) {
+    		dropdown1_props.selected = ctx.clonedField.typeOptions.reverseIndexNodeKeys;
+    	}
+    	var dropdown1 = new Dropdown({ props: dropdown1_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(dropdown1, 'selected', dropdown1_selected_binding));
+
+    	function textbox_text_binding_2(value_2) {
+    		ctx.textbox_text_binding_2.call(null, value_2);
+    		updating_text = true;
+    		add_flush_callback(() => updating_text = false);
+    	}
+
+    	let textbox_props = { label: "Display Value" };
+    	if (ctx.clonedField.typeOptions.displayValue !== void 0) {
+    		textbox_props.text = ctx.clonedField.typeOptions.displayValue;
+    	}
+    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding_2));
+
+    	return {
+    		c: function create() {
+    			dropdown0.$$.fragment.c();
+    			t0 = space();
+    			dropdown1.$$.fragment.c();
+    			t1 = space();
+    			textbox.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(dropdown0, target, anchor);
+    			insert(target, t0, anchor);
+    			mount_component(dropdown1, target, anchor);
+    			insert(target, t1, anchor);
+    			mount_component(textbox, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var dropdown0_changes = {};
+    			if (changed.possibleReferenceIndexes) dropdown0_changes.options = ctx.possibleReferenceIndexes;
+    			if (!updating_selected && changed.clonedField) {
+    				dropdown0_changes.selected = ctx.clonedField.typeOptions.indexNodeKey;
+    			}
+    			dropdown0.$set(dropdown0_changes);
+
+    			var dropdown1_changes = {};
+    			if (changed.possibleReverseReferenceIndexes) dropdown1_changes.options = ctx.possibleReverseReferenceIndexes;
+    			if (!updating_selected_1 && changed.clonedField) {
+    				dropdown1_changes.selected = ctx.clonedField.typeOptions.reverseIndexNodeKeys;
+    			}
+    			dropdown1.$set(dropdown1_changes);
+
+    			var textbox_changes = {};
+    			if (!updating_text && changed.clonedField) {
+    				textbox_changes.text = ctx.clonedField.typeOptions.displayValue;
+    			}
+    			textbox.$set(textbox_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(dropdown0.$$.fragment, local);
+
+    			transition_in(dropdown1.$$.fragment, local);
+
+    			transition_in(textbox.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(dropdown0.$$.fragment, local);
+    			transition_out(dropdown1.$$.fragment, local);
+    			transition_out(textbox.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(dropdown0, detaching);
+
+    			if (detaching) {
+    				detach(t0);
+    			}
+
+    			destroy_component(dropdown1, detaching);
+
+    			if (detaching) {
+    				detach(t1);
+    			}
+
+    			destroy_component(textbox, detaching);
+    		}
+    	};
+    }
+
+    // (83:48) 
+    function create_if_block_3(ctx) {
+    	var updating_value, t0, updating_value_1, t1, updating_value_2, current;
+
+    	function numberbox0_value_binding(value) {
+    		ctx.numberbox0_value_binding.call(null, value);
+    		updating_value = true;
+    		add_flush_callback(() => updating_value = false);
+    	}
+
+    	let numberbox0_props = { label: "Min Value" };
+    	if (ctx.clonedField.typeOptions.minValue !== void 0) {
+    		numberbox0_props.value = ctx.clonedField.typeOptions.minValue;
+    	}
+    	var numberbox0 = new NumberBox({ props: numberbox0_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(numberbox0, 'value', numberbox0_value_binding));
+
+    	function numberbox1_value_binding(value_1) {
+    		ctx.numberbox1_value_binding.call(null, value_1);
+    		updating_value_1 = true;
+    		add_flush_callback(() => updating_value_1 = false);
+    	}
+
+    	let numberbox1_props = { label: "Max Value" };
+    	if (ctx.clonedField.typeOptions.maxValue !== void 0) {
+    		numberbox1_props.value = ctx.clonedField.typeOptions.maxValue;
+    	}
+    	var numberbox1 = new NumberBox({ props: numberbox1_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(numberbox1, 'value', numberbox1_value_binding));
+
+    	function numberbox2_value_binding(value_2) {
+    		ctx.numberbox2_value_binding.call(null, value_2);
+    		updating_value_2 = true;
+    		add_flush_callback(() => updating_value_2 = false);
+    	}
+
+    	let numberbox2_props = { label: "Decimal Places" };
+    	if (ctx.clonedField.typeOptions.decimalPlaces !== void 0) {
+    		numberbox2_props.value = ctx.clonedField.typeOptions.decimalPlaces;
+    	}
+    	var numberbox2 = new NumberBox({ props: numberbox2_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(numberbox2, 'value', numberbox2_value_binding));
+
+    	return {
+    		c: function create() {
+    			numberbox0.$$.fragment.c();
+    			t0 = space();
+    			numberbox1.$$.fragment.c();
+    			t1 = space();
+    			numberbox2.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(numberbox0, target, anchor);
+    			insert(target, t0, anchor);
+    			mount_component(numberbox1, target, anchor);
+    			insert(target, t1, anchor);
+    			mount_component(numberbox2, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var numberbox0_changes = {};
+    			if (!updating_value && changed.clonedField) {
+    				numberbox0_changes.value = ctx.clonedField.typeOptions.minValue;
+    			}
+    			numberbox0.$set(numberbox0_changes);
+
+    			var numberbox1_changes = {};
+    			if (!updating_value_1 && changed.clonedField) {
+    				numberbox1_changes.value = ctx.clonedField.typeOptions.maxValue;
+    			}
+    			numberbox1.$set(numberbox1_changes);
+
+    			var numberbox2_changes = {};
+    			if (!updating_value_2 && changed.clonedField) {
+    				numberbox2_changes.value = ctx.clonedField.typeOptions.decimalPlaces;
+    			}
+    			numberbox2.$set(numberbox2_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(numberbox0.$$.fragment, local);
+
+    			transition_in(numberbox1.$$.fragment, local);
+
+    			transition_in(numberbox2.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(numberbox0.$$.fragment, local);
+    			transition_out(numberbox1.$$.fragment, local);
+    			transition_out(numberbox2.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(numberbox0, detaching);
+
+    			if (detaching) {
+    				detach(t0);
+    			}
+
+    			destroy_component(numberbox1, detaching);
+
+    			if (detaching) {
+    				detach(t1);
+    			}
+
+    			destroy_component(numberbox2, detaching);
+    		}
+    	};
+    }
+
+    // (80:50) 
+    function create_if_block_2(ctx) {
+    	var updating_value, t, updating_value_1, current;
+
+    	function datepicker0_value_binding(value) {
+    		ctx.datepicker0_value_binding.call(null, value);
+    		updating_value = true;
+    		add_flush_callback(() => updating_value = false);
+    	}
+
+    	let datepicker0_props = { label: "Min Value" };
+    	if (ctx.clonedField.typeOptions.minValue !== void 0) {
+    		datepicker0_props.value = ctx.clonedField.typeOptions.minValue;
+    	}
+    	var datepicker0 = new DatePicker({ props: datepicker0_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(datepicker0, 'value', datepicker0_value_binding));
+
+    	function datepicker1_value_binding(value_1) {
+    		ctx.datepicker1_value_binding.call(null, value_1);
+    		updating_value_1 = true;
+    		add_flush_callback(() => updating_value_1 = false);
+    	}
+
+    	let datepicker1_props = { label: "Max Value" };
+    	if (ctx.clonedField.typeOptions.maxValue !== void 0) {
+    		datepicker1_props.value = ctx.clonedField.typeOptions.maxValue;
+    	}
+    	var datepicker1 = new DatePicker({ props: datepicker1_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(datepicker1, 'value', datepicker1_value_binding));
+
+    	return {
+    		c: function create() {
+    			datepicker0.$$.fragment.c();
+    			t = space();
+    			datepicker1.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(datepicker0, target, anchor);
+    			insert(target, t, anchor);
+    			mount_component(datepicker1, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var datepicker0_changes = {};
+    			if (!updating_value && changed.clonedField) {
+    				datepicker0_changes.value = ctx.clonedField.typeOptions.minValue;
+    			}
+    			datepicker0.$set(datepicker0_changes);
+
+    			var datepicker1_changes = {};
+    			if (!updating_value_1 && changed.clonedField) {
+    				datepicker1_changes.value = ctx.clonedField.typeOptions.maxValue;
+    			}
+    			datepicker1.$set(datepicker1_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(datepicker0.$$.fragment, local);
+
+    			transition_in(datepicker1.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(datepicker0.$$.fragment, local);
+    			transition_out(datepicker1.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(datepicker0, detaching);
+
+    			if (detaching) {
+    				detach(t);
+    			}
+
+    			destroy_component(datepicker1, detaching);
+    		}
+    	};
+    }
+
+    // (78:46) 
+    function create_if_block_1(ctx) {
+    	var updating_checked, current;
+
+    	function checkbox_checked_binding_1(value) {
+    		ctx.checkbox_checked_binding_1.call(null, value);
+    		updating_checked = true;
+    		add_flush_callback(() => updating_checked = false);
+    	}
+
+    	let checkbox_props = { label: "Allow Null" };
+    	if (ctx.clonedField.typeOptions.allowNulls !== void 0) {
+    		checkbox_props.checked = ctx.clonedField.typeOptions.allowNulls;
+    	}
+    	var checkbox = new Checkbox({ props: checkbox_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(checkbox, 'checked', checkbox_checked_binding_1));
+
+    	return {
+    		c: function create() {
+    			checkbox.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(checkbox, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var checkbox_changes = {};
+    			if (!updating_checked && changed.clonedField) {
+    				checkbox_changes.checked = ctx.clonedField.typeOptions.allowNulls;
+    			}
+    			checkbox.$set(checkbox_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(checkbox.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(checkbox.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(checkbox, detaching);
+    		}
+    	};
+    }
+
+    // (74:8) {#if clonedField.type === "string"}
+    function create_if_block$4(ctx) {
+    	var updating_value, t0, updating_values, t1, updating_checked, current;
+
+    	function numberbox_value_binding(value) {
+    		ctx.numberbox_value_binding.call(null, value);
+    		updating_value = true;
+    		add_flush_callback(() => updating_value = false);
+    	}
+
+    	let numberbox_props = { label: "Max Length" };
+    	if (ctx.clonedField.typeOptions.maxLength !== void 0) {
+    		numberbox_props.value = ctx.clonedField.typeOptions.maxLength;
+    	}
+    	var numberbox = new NumberBox({ props: numberbox_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(numberbox, 'value', numberbox_value_binding));
+
+    	function valueslist_values_binding(value_1) {
+    		ctx.valueslist_values_binding.call(null, value_1);
+    		updating_values = true;
+    		add_flush_callback(() => updating_values = false);
+    	}
+
+    	let valueslist_props = { label: "Values (options)" };
+    	if (ctx.clonedField.typeOptions.values !== void 0) {
+    		valueslist_props.values = ctx.clonedField.typeOptions.values;
+    	}
+    	var valueslist = new ValuesList({ props: valueslist_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(valueslist, 'values', valueslist_values_binding));
+
+    	function checkbox_checked_binding(value_2) {
+    		ctx.checkbox_checked_binding.call(null, value_2);
+    		updating_checked = true;
+    		add_flush_callback(() => updating_checked = false);
+    	}
+
+    	let checkbox_props = { label: "Declared Values Only" };
+    	if (ctx.clonedField.typeOptions.allowDeclaredValuesOnly !== void 0) {
+    		checkbox_props.checked = ctx.clonedField.typeOptions.allowDeclaredValuesOnly;
+    	}
+    	var checkbox = new Checkbox({ props: checkbox_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(checkbox, 'checked', checkbox_checked_binding));
+
+    	return {
+    		c: function create() {
+    			numberbox.$$.fragment.c();
+    			t0 = space();
+    			valueslist.$$.fragment.c();
+    			t1 = space();
+    			checkbox.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(numberbox, target, anchor);
+    			insert(target, t0, anchor);
+    			mount_component(valueslist, target, anchor);
+    			insert(target, t1, anchor);
+    			mount_component(checkbox, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var numberbox_changes = {};
+    			if (!updating_value && changed.clonedField) {
+    				numberbox_changes.value = ctx.clonedField.typeOptions.maxLength;
+    			}
+    			numberbox.$set(numberbox_changes);
+
+    			var valueslist_changes = {};
+    			if (!updating_values && changed.clonedField) {
+    				valueslist_changes.values = ctx.clonedField.typeOptions.values;
+    			}
+    			valueslist.$set(valueslist_changes);
+
+    			var checkbox_changes = {};
+    			if (!updating_checked && changed.clonedField) {
+    				checkbox_changes.checked = ctx.clonedField.typeOptions.allowDeclaredValuesOnly;
+    			}
+    			checkbox.$set(checkbox_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(numberbox.$$.fragment, local);
+
+    			transition_in(valueslist.$$.fragment, local);
+
+    			transition_in(checkbox.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(numberbox.$$.fragment, local);
+    			transition_out(valueslist.$$.fragment, local);
+    			transition_out(checkbox.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(numberbox, detaching);
+
+    			if (detaching) {
+    				detach(t0);
+    			}
+
+    			destroy_component(valueslist, detaching);
+
+    			if (detaching) {
+    				detach(t1);
+    			}
+
+    			destroy_component(checkbox, detaching);
+    		}
+    	};
+    }
+
+    // (111:8) <Button color="primary" grouped on:click={save}>
+    function create_default_slot_2(ctx) {
+    	var t;
+
+    	return {
+    		c: function create() {
+    			t = text("Save");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, t, anchor);
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(t);
+    			}
+    		}
+    	};
+    }
+
+    // (112:8) <Button color="secondary" grouped on:click={() => onFinished(false)}>
+    function create_default_slot_1(ctx) {
+    	var t;
+
+    	return {
+    		c: function create() {
+    			t = text("Cancel");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, t, anchor);
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(t);
+    			}
+    		}
+    	};
+    }
+
+    // (110:4) <ButtonGroup style="float: right;">
+    function create_default_slot(ctx) {
+    	var t, current;
+
+    	var button0 = new Button({
+    		props: {
+    		color: "primary",
+    		grouped: true,
+    		$$slots: { default: [create_default_slot_2] },
+    		$$scope: { ctx }
+    	},
+    		$$inline: true
+    	});
+    	button0.$on("click", ctx.save);
+
+    	var button1 = new Button({
+    		props: {
+    		color: "secondary",
+    		grouped: true,
+    		$$slots: { default: [create_default_slot_1] },
+    		$$scope: { ctx }
+    	},
+    		$$inline: true
+    	});
+    	button1.$on("click", ctx.click_handler);
+
+    	return {
+    		c: function create() {
+    			button0.$$.fragment.c();
+    			t = space();
+    			button1.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(button0, target, anchor);
+    			insert(target, t, anchor);
+    			mount_component(button1, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var button0_changes = {};
+    			if (changed.$$scope) button0_changes.$$scope = { changed, ctx };
+    			button0.$set(button0_changes);
+
+    			var button1_changes = {};
+    			if (changed.$$scope) button1_changes.$$scope = { changed, ctx };
+    			button1.$set(button1_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(button0.$$.fragment, local);
+
+    			transition_in(button1.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(button0.$$.fragment, local);
+    			transition_out(button1.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(button0, detaching);
+
+    			if (detaching) {
+    				detach(t);
+    			}
+
+    			destroy_component(button1, detaching);
+    		}
+    	};
+    }
+
+    function create_fragment$d(ctx) {
+    	var div, t0, form, updating_selected, t1, current_block_type_index, if_block0, t2, updating_text, t3, show_if, current_block_type_index_1, if_block1, t4, current;
+
+    	var errorsbox = new ErrorsBox({
+    		props: { errors: ctx.errors },
+    		$$inline: true
+    	});
+
+    	function dropdown_selected_binding(value) {
+    		ctx.dropdown_selected_binding.call(null, value);
+    		updating_selected = true;
+    		add_flush_callback(() => updating_selected = false);
+    	}
+
+    	let dropdown_props = { label: "Type", options: fp_30(allTypes$1) };
+    	if (ctx.clonedField.type !== void 0) {
+    		dropdown_props.selected = ctx.clonedField.type;
+    	}
+    	var dropdown = new Dropdown({ props: dropdown_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(dropdown, 'selected', dropdown_selected_binding));
+    	dropdown.$on("change", ctx.typeChanged);
+
+    	var if_block_creators = [
+    		create_if_block_6,
+    		create_else_block$1
+    	];
+
+    	var if_blocks = [];
+
+    	function select_block_type(changed, ctx) {
+    		if (ctx.isNew) return 0;
+    		return 1;
+    	}
+
+    	current_block_type_index = select_block_type(null, ctx);
+    	if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+    	function textbox_text_binding_1(value_1) {
+    		ctx.textbox_text_binding_1.call(null, value_1);
+    		updating_text = true;
+    		add_flush_callback(() => updating_text = false);
+    	}
+
+    	let textbox_props = { label: "Label" };
+    	if (ctx.clonedField.label !== void 0) {
+    		textbox_props.text = ctx.clonedField.label;
+    	}
+    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding_1));
+
+    	var if_block_creators_1 = [
+    		create_if_block$4,
+    		create_if_block_1,
+    		create_if_block_2,
+    		create_if_block_3,
+    		create_if_block_4,
+    		create_if_block_5
+    	];
+
+    	var if_blocks_1 = [];
+
+    	function select_block_type_1(changed, ctx) {
+    		if (ctx.clonedField.type === "string") return 0;
+    		if (ctx.clonedField.type === "bool") return 1;
+    		if (ctx.clonedField.type === "datetime") return 2;
+    		if (ctx.clonedField.type === "number") return 3;
+    		if (ctx.clonedField.type === "reference") return 4;
+    		if ((show_if == null) || changed.clonedField) show_if = !!(ctx.clonedField.type.startsWith("array"));
+    		if (show_if) return 5;
+    		return -1;
+    	}
+
+    	if (~(current_block_type_index_1 = select_block_type_1(null, ctx))) {
+    		if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
+    	}
+
+    	var buttongroup = new ButtonGroup({
+    		props: {
+    		style: "float: right;",
+    		$$slots: { default: [create_default_slot] },
+    		$$scope: { ctx }
+    	},
+    		$$inline: true
+    	});
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			errorsbox.$$.fragment.c();
+    			t0 = space();
+    			form = element("form");
+    			dropdown.$$.fragment.c();
+    			t1 = space();
+    			if_block0.c();
+    			t2 = space();
+    			textbox.$$.fragment.c();
+    			t3 = space();
+    			if (if_block1) if_block1.c();
+    			t4 = space();
+    			buttongroup.$$.fragment.c();
+    			attr(form, "class", "uk-form-horizontal");
+    			add_location(form, file$e, 61, 4, 1740);
+    			attr(div, "class", "root");
+    			add_location(div, file$e, 57, 0, 1681);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			mount_component(errorsbox, div, null);
+    			append(div, t0);
+    			append(div, form);
+    			mount_component(dropdown, form, null);
+    			append(form, t1);
+    			if_blocks[current_block_type_index].m(form, null);
+    			append(form, t2);
+    			mount_component(textbox, form, null);
+    			append(form, t3);
+    			if (~current_block_type_index_1) if_blocks_1[current_block_type_index_1].m(form, null);
+    			append(div, t4);
+    			mount_component(buttongroup, div, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var errorsbox_changes = {};
+    			if (changed.errors) errorsbox_changes.errors = ctx.errors;
+    			errorsbox.$set(errorsbox_changes);
+
+    			var dropdown_changes = {};
+    			if (changed.keys || changed.allTypes) dropdown_changes.options = fp_30(allTypes$1);
+    			if (!updating_selected && changed.clonedField) {
+    				dropdown_changes.selected = ctx.clonedField.type;
+    			}
+    			dropdown.$set(dropdown_changes);
+
+    			var previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type(changed, ctx);
+    			if (current_block_type_index === previous_block_index) {
+    				if_blocks[current_block_type_index].p(changed, ctx);
+    			} else {
+    				group_outros();
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
+    				check_outros();
+
+    				if_block0 = if_blocks[current_block_type_index];
+    				if (!if_block0) {
+    					if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block0.c();
+    				}
+    				transition_in(if_block0, 1);
+    				if_block0.m(form, t2);
+    			}
+
+    			var textbox_changes = {};
+    			if (!updating_text && changed.clonedField) {
+    				textbox_changes.text = ctx.clonedField.label;
+    			}
+    			textbox.$set(textbox_changes);
+
+    			var previous_block_index_1 = current_block_type_index_1;
+    			current_block_type_index_1 = select_block_type_1(changed, ctx);
+    			if (current_block_type_index_1 === previous_block_index_1) {
+    				if (~current_block_type_index_1) if_blocks_1[current_block_type_index_1].p(changed, ctx);
+    			} else {
+    				if (if_block1) {
+    					group_outros();
+    					transition_out(if_blocks_1[previous_block_index_1], 1, 1, () => {
+    						if_blocks_1[previous_block_index_1] = null;
+    					});
+    					check_outros();
+    				}
+
+    				if (~current_block_type_index_1) {
+    					if_block1 = if_blocks_1[current_block_type_index_1];
+    					if (!if_block1) {
+    						if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
+    						if_block1.c();
+    					}
+    					transition_in(if_block1, 1);
+    					if_block1.m(form, null);
+    				} else {
+    					if_block1 = null;
+    				}
+    			}
+
+    			var buttongroup_changes = {};
+    			if (changed.$$scope) buttongroup_changes.$$scope = { changed, ctx };
+    			buttongroup.$set(buttongroup_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(errorsbox.$$.fragment, local);
+
+    			transition_in(dropdown.$$.fragment, local);
+
+    			transition_in(if_block0);
+
+    			transition_in(textbox.$$.fragment, local);
+
+    			transition_in(if_block1);
+
+    			transition_in(buttongroup.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(errorsbox.$$.fragment, local);
+    			transition_out(dropdown.$$.fragment, local);
+    			transition_out(if_block0);
+    			transition_out(textbox.$$.fragment, local);
+    			transition_out(if_block1);
+    			transition_out(buttongroup.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			destroy_component(errorsbox);
+
+    			destroy_component(dropdown);
+
+    			if_blocks[current_block_type_index].d();
+
+    			destroy_component(textbox);
+
+    			if (~current_block_type_index_1) if_blocks_1[current_block_type_index_1].d();
+
+    			destroy_component(buttongroup);
+    		}
+    	};
+    }
+
+    function func(n) {
+    	return n.nodeKey();
+    }
+
+    function func_1(n) {
+    	return n.name;
+    }
+
+    function func_2(n) {
+    	return n.nodeKey();
+    }
+
+    function func_3(n) {
+    	return n.name;
+    }
+
+    function instance$d($$self, $$props, $$invalidate) {
+    	
+
+    let { field, allFields, onFinished = () => {} } = $$props;
+    let { store } = $$props;
+
+    let errors = [];
+    let clonedField = fp_4(field);
+
+    const typeChanged = (ev) => 
+        { const $$result = clonedField.typeOptions = getDefaultTypeOptions(ev.detail); $$invalidate('clonedField', clonedField); return $$result; };
+
+
+    const save = () => {
+
+        $$invalidate('errors', errors = validate$1.field(allFields)(clonedField));
+        if(errors.length > 0) return;
+        field.typeOptions = fp_4(clonedField.typeOptions); $$invalidate('field', field);
+        onFinished(
+            fp_51(field)(clonedField)
+        );
+    };
+
+    	const writable_props = ['field', 'allFields', 'onFinished', 'store'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<FieldView> was created with unknown prop '${key}'`);
+    	});
+
+    	function dropdown_selected_binding(value) {
+    		clonedField.type = value;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function textbox_text_binding(value) {
+    		clonedField.name = value;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function textbox_text_binding_1(value_1) {
+    		clonedField.label = value_1;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function numberbox_value_binding(value) {
+    		clonedField.typeOptions.maxLength = value;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function valueslist_values_binding(value_1) {
+    		clonedField.typeOptions.values = value_1;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function checkbox_checked_binding(value_2) {
+    		clonedField.typeOptions.allowDeclaredValuesOnly = value_2;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function checkbox_checked_binding_1(value) {
+    		clonedField.typeOptions.allowNulls = value;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function datepicker0_value_binding(value) {
+    		clonedField.typeOptions.minValue = value;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function datepicker1_value_binding(value_1) {
+    		clonedField.typeOptions.maxValue = value_1;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function numberbox0_value_binding(value) {
+    		clonedField.typeOptions.minValue = value;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function numberbox1_value_binding(value_1) {
+    		clonedField.typeOptions.maxValue = value_1;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function numberbox2_value_binding(value_2) {
+    		clonedField.typeOptions.decimalPlaces = value_2;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function dropdown0_selected_binding(value) {
+    		clonedField.typeOptions.indexNodeKey = value;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function dropdown1_selected_binding(value_1) {
+    		clonedField.typeOptions.reverseIndexNodeKeys = value_1;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function textbox_text_binding_2(value_2) {
+    		clonedField.typeOptions.displayValue = value_2;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function numberbox0_value_binding_1(value) {
+    		clonedField.typeOptions.minLength = value;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function numberbox1_value_binding_1(value_1) {
+    		clonedField.typeOptions.maxLength = value_1;
+    		$$invalidate('clonedField', clonedField);
+    	}
+
+    	function click_handler() {
+    		return onFinished(false);
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('field' in $$props) $$invalidate('field', field = $$props.field);
+    		if ('allFields' in $$props) $$invalidate('allFields', allFields = $$props.allFields);
+    		if ('onFinished' in $$props) $$invalidate('onFinished', onFinished = $$props.onFinished);
+    		if ('store' in $$props) $$invalidate('store', store = $$props.store);
+    	};
+
+    	let isNew, possibleReferenceIndexes, selectedReverseRefIndex, possibleReverseReferenceIndexes;
+
+    	$$self.$$.update = ($$dirty = { field: 1, store: 1, clonedField: 1, selectedReverseRefIndex: 1 }) => {
+    		if ($$dirty.field) { $$invalidate('isNew', isNew = !!field && field.name.length === 0); }
+    		if ($$dirty.store) { $$invalidate('possibleReferenceIndexes', possibleReferenceIndexes = getPotentialReferenceIndexes(
+                store.hierarchy, store.currentNode
+            )); }
+    		if ($$dirty.clonedField || $$dirty.store) { $$invalidate('selectedReverseRefIndex', selectedReverseRefIndex = 
+                !clonedField.typeOptions.indexNodeKey 
+                ? ""
+                : getNode$1(store.hierarchy, clonedField.typeOptions.indexNodeKey)); }
+    		if ($$dirty.selectedReverseRefIndex || $$dirty.store) { $$invalidate('possibleReverseReferenceIndexes', possibleReverseReferenceIndexes = 
+                !selectedReverseRefIndex 
+                ? []
+                : getPotentialReverseReferenceIndexes(
+                    store.hierarchy, selectedReverseRefIndex)); }
+    	};
+
+    	return {
+    		field,
+    		allFields,
+    		onFinished,
+    		store,
+    		errors,
+    		clonedField,
+    		typeChanged,
+    		save,
+    		isNew,
+    		possibleReferenceIndexes,
+    		possibleReverseReferenceIndexes,
+    		dropdown_selected_binding,
+    		textbox_text_binding,
+    		textbox_text_binding_1,
+    		numberbox_value_binding,
+    		valueslist_values_binding,
+    		checkbox_checked_binding,
+    		checkbox_checked_binding_1,
+    		datepicker0_value_binding,
+    		datepicker1_value_binding,
+    		numberbox0_value_binding,
+    		numberbox1_value_binding,
+    		numberbox2_value_binding,
+    		dropdown0_selected_binding,
+    		dropdown1_selected_binding,
+    		textbox_text_binding_2,
+    		numberbox0_value_binding_1,
+    		numberbox1_value_binding_1,
+    		click_handler
+    	};
+    }
+
+    class FieldView extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$d, create_fragment$d, safe_not_equal, ["field", "allFields", "onFinished", "store"]);
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx.field === undefined && !('field' in props)) {
+    			console.warn("<FieldView> was created without expected prop 'field'");
+    		}
+    		if (ctx.allFields === undefined && !('allFields' in props)) {
+    			console.warn("<FieldView> was created without expected prop 'allFields'");
+    		}
+    		if (ctx.store === undefined && !('store' in props)) {
+    			console.warn("<FieldView> was created without expected prop 'store'");
+    		}
+    	}
+
+    	get field() {
+    		throw new Error("<FieldView>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set field(value) {
+    		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get allFields() {
+    		throw new Error("<FieldView>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set allFields(value) {
+    		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get onFinished() {
+    		throw new Error("<FieldView>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set onFinished(value) {
+    		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get store() {
+    		throw new Error("<FieldView>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set store(value) {
+    		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
@@ -45721,12 +49658,4215 @@
     }));
     });
 
-    /* src\userInterface\ComponentPropSelector.svelte generated by Svelte v3.6.9 */
+    /* src\common\Modal.svelte generated by Svelte v3.9.1 */
 
-    const file$b = "src\\userInterface\\ComponentPropSelector.svelte";
+    const file$f = "src\\common\\Modal.svelte";
+
+    function create_fragment$e(ctx) {
+    	var div1, div0, current;
+
+    	const default_slot_template = ctx.$$slots.default;
+    	const default_slot = create_slot(default_slot_template, ctx, null);
+
+    	return {
+    		c: function create() {
+    			div1 = element("div");
+    			div0 = element("div");
+
+    			if (default_slot) default_slot.c();
+
+    			attr(div0, "class", "uk-modal-dialog uk-modal-body");
+    			attr(div0, "uk-overflow-auto", "");
+    			add_location(div0, file$f, 28, 4, 515);
+    			attr(div1, "uk-modal", "");
+    			attr(div1, "id", ctx.id);
+    			add_location(div1, file$f, 27, 0, 470);
+    		},
+
+    		l: function claim(nodes) {
+    			if (default_slot) default_slot.l(div0_nodes);
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div1, anchor);
+    			append(div1, div0);
+
+    			if (default_slot) {
+    				default_slot.m(div0, null);
+    			}
+
+    			ctx.div1_binding(div1);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (default_slot && default_slot.p && changed.$$scope) {
+    				default_slot.p(
+    					get_slot_changes(default_slot_template, ctx, changed, null),
+    					get_slot_context(default_slot_template, ctx, null)
+    				);
+    			}
+
+    			if (!current || changed.id) {
+    				attr(div1, "id", ctx.id);
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(default_slot, local);
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(default_slot, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div1);
+    			}
+
+    			if (default_slot) default_slot.d(detaching);
+    			ctx.div1_binding(null);
+    		}
+    	};
+    }
+
+    function instance$e($$self, $$props, $$invalidate) {
+    	let { isOpen = false, onClosed = () => {} } = $$props;
+    let { id = "" } = $$props;
+
+    let ukModal;
+    let listenerAdded = false;
+
+    	const writable_props = ['isOpen', 'onClosed', 'id'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Modal> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+
+    	function div1_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			$$invalidate('ukModal', ukModal = $$value);
+    		});
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('isOpen' in $$props) $$invalidate('isOpen', isOpen = $$props.isOpen);
+    		if ('onClosed' in $$props) $$invalidate('onClosed', onClosed = $$props.onClosed);
+    		if ('id' in $$props) $$invalidate('id', id = $$props.id);
+    		if ('$$scope' in $$props) $$invalidate('$$scope', $$scope = $$props.$$scope);
+    	};
+
+    	$$self.$$.update = ($$dirty = { ukModal: 1, listenerAdded: 1, onClosed: 1, isOpen: 1 }) => {
+    		if ($$dirty.ukModal || $$dirty.listenerAdded || $$dirty.onClosed) { if(ukModal && !listenerAdded) {
+                $$invalidate('listenerAdded', listenerAdded = true);
+                ukModal.addEventListener("hide", onClosed);
+            } }
+    		if ($$dirty.ukModal || $$dirty.isOpen) { {
+                if(ukModal) {
+                    if(isOpen) {
+                        uikit.modal(ukModal).show();
+                    } else {
+                        uikit.modal(ukModal).hide();
+                    }
+                }
+            } }
+    	};
+
+    	return {
+    		isOpen,
+    		onClosed,
+    		id,
+    		ukModal,
+    		div1_binding,
+    		$$slots,
+    		$$scope
+    	};
+    }
+
+    class Modal extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$e, create_fragment$e, safe_not_equal, ["isOpen", "onClosed", "id"]);
+    	}
+
+    	get isOpen() {
+    		throw new Error("<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set isOpen(value) {
+    		throw new Error("<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get onClosed() {
+    		throw new Error("<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set onClosed(value) {
+    		throw new Error("<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get id() {
+    		throw new Error("<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set id(value) {
+    		throw new Error("<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\database\RecordView.svelte generated by Svelte v3.9.1 */
+
+    const file$g = "src\\database\\RecordView.svelte";
+
+    function get_each_context$4(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.index = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_1$1(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.field = list[i];
+    	return child_ctx;
+    }
+
+    // (91:8) {#if !record.isSingle}
+    function create_if_block_3$1(ctx) {
+    	var updating_text, t, updating_text_1, current;
+
+    	function textbox0_text_binding(value) {
+    		ctx.textbox0_text_binding.call(null, value);
+    		updating_text = true;
+    		add_flush_callback(() => updating_text = false);
+    	}
+
+    	let textbox0_props = { label: "Collection Name" };
+    	if (ctx.record.collectionName !== void 0) {
+    		textbox0_props.text = ctx.record.collectionName;
+    	}
+    	var textbox0 = new Textbox({ props: textbox0_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(textbox0, 'text', textbox0_text_binding));
+
+    	function textbox1_text_binding(value_1) {
+    		ctx.textbox1_text_binding.call(null, value_1);
+    		updating_text_1 = true;
+    		add_flush_callback(() => updating_text_1 = false);
+    	}
+
+    	let textbox1_props = { label: "Shard Factor" };
+    	if (ctx.record.allidsShardFactor !== void 0) {
+    		textbox1_props.text = ctx.record.allidsShardFactor;
+    	}
+    	var textbox1 = new Textbox({ props: textbox1_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(textbox1, 'text', textbox1_text_binding));
+
+    	return {
+    		c: function create() {
+    			textbox0.$$.fragment.c();
+    			t = space();
+    			textbox1.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(textbox0, target, anchor);
+    			insert(target, t, anchor);
+    			mount_component(textbox1, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var textbox0_changes = {};
+    			if (!updating_text && changed.record) {
+    				textbox0_changes.text = ctx.record.collectionName;
+    			}
+    			textbox0.$set(textbox0_changes);
+
+    			var textbox1_changes = {};
+    			if (!updating_text_1 && changed.record) {
+    				textbox1_changes.text = ctx.record.allidsShardFactor;
+    			}
+    			textbox1.$set(textbox1_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(textbox0.$$.fragment, local);
+
+    			transition_in(textbox1.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(textbox0.$$.fragment, local);
+    			transition_out(textbox1.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(textbox0, detaching);
+
+    			if (detaching) {
+    				detach(t);
+    			}
+
+    			destroy_component(textbox1, detaching);
+    		}
+    	};
+    }
+
+    // (128:4) {:else}
+    function create_else_block_1(ctx) {
+    	var t;
+
+    	return {
+    		c: function create() {
+    			t = text("(no fields added)");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, t, anchor);
+    		},
+
+    		p: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(t);
+    			}
+    		}
+    	};
+    }
+
+    // (101:4) {#if record.fields.length > 0}
+    function create_if_block_2$1(ctx) {
+    	var table, thead, tr, th0, t1, th1, t3, th2, t5, th3, t6, tbody;
+
+    	var each_value_1 = ctx.record.fields;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
+    	}
+
+    	return {
+    		c: function create() {
+    			table = element("table");
+    			thead = element("thead");
+    			tr = element("tr");
+    			th0 = element("th");
+    			th0.textContent = "Name";
+    			t1 = space();
+    			th1 = element("th");
+    			th1.textContent = "Type";
+    			t3 = space();
+    			th2 = element("th");
+    			th2.textContent = "Options";
+    			t5 = space();
+    			th3 = element("th");
+    			t6 = space();
+    			tbody = element("tbody");
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+    			attr(th0, "class", "svelte-kswv5p");
+    			add_location(th0, file$g, 104, 16, 2855);
+    			attr(th1, "class", "svelte-kswv5p");
+    			add_location(th1, file$g, 105, 16, 2885);
+    			attr(th2, "class", "svelte-kswv5p");
+    			add_location(th2, file$g, 106, 16, 2915);
+    			attr(th3, "class", "svelte-kswv5p");
+    			add_location(th3, file$g, 107, 16, 2948);
+    			attr(tr, "class", "svelte-kswv5p");
+    			add_location(tr, file$g, 103, 12, 2834);
+    			attr(thead, "class", "svelte-kswv5p");
+    			add_location(thead, file$g, 102, 8, 2814);
+    			attr(tbody, "class", "svelte-kswv5p");
+    			add_location(tbody, file$g, 110, 8, 3001);
+    			attr(table, "class", "fields-table uk-table svelte-kswv5p");
+    			add_location(table, file$g, 101, 4, 2768);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, table, anchor);
+    			append(table, thead);
+    			append(thead, tr);
+    			append(tr, th0);
+    			append(tr, t1);
+    			append(tr, th1);
+    			append(tr, t3);
+    			append(tr, th2);
+    			append(tr, t5);
+    			append(tr, th3);
+    			append(table, t6);
+    			append(table, tbody);
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(tbody, null);
+    			}
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.getIcon || changed.getTypeOptions || changed.record) {
+    				each_value_1 = ctx.record.fields;
+
+    				for (var i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1$1(ctx, each_value_1, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block_1$1(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(tbody, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value_1.length;
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(table);
+    			}
+
+    			destroy_each(each_blocks, detaching);
+    		}
+    	};
+    }
+
+    // (112:12) {#each record.fields as field}
+    function create_each_block_1$1(ctx) {
+    	var tr, td0, div0, t0_value = ctx.field.label + "", t0, t1, div1, t2_value = ctx.field.name + "", t2, t3, td1, t4_value = ctx.field.type + "", t4, t5, td2, raw0_value = ctx.getTypeOptions(ctx.field.typeOptions) + "", t6, td3, span0, raw1_value = getIcon("edit") + "", t7, span1, raw2_value = getIcon("trash") + "", t8, dispose;
+
+    	function click_handler() {
+    		return ctx.click_handler(ctx);
+    	}
+
+    	function click_handler_1() {
+    		return ctx.click_handler_1(ctx);
+    	}
+
+    	return {
+    		c: function create() {
+    			tr = element("tr");
+    			td0 = element("td");
+    			div0 = element("div");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			div1 = element("div");
+    			t2 = text(t2_value);
+    			t3 = space();
+    			td1 = element("td");
+    			t4 = text(t4_value);
+    			t5 = space();
+    			td2 = element("td");
+    			t6 = space();
+    			td3 = element("td");
+    			span0 = element("span");
+    			t7 = space();
+    			span1 = element("span");
+    			t8 = space();
+    			add_location(div0, file$g, 114, 20, 3111);
+    			set_style(div1, "font-size", "0.7em");
+    			set_style(div1, "color", "var(--slate)");
+    			add_location(div1, file$g, 115, 20, 3156);
+    			attr(td0, "class", "svelte-kswv5p");
+    			add_location(td0, file$g, 113, 16, 3085);
+    			attr(td1, "class", "svelte-kswv5p");
+    			add_location(td1, file$g, 117, 16, 3264);
+    			attr(td2, "class", "svelte-kswv5p");
+    			add_location(td2, file$g, 118, 16, 3303);
+    			attr(span0, "class", "edit-button svelte-kswv5p");
+    			add_location(span0, file$g, 120, 20, 3396);
+    			attr(span1, "class", "edit-button svelte-kswv5p");
+    			add_location(span1, file$g, 121, 20, 3507);
+    			attr(td3, "class", "svelte-kswv5p");
+    			add_location(td3, file$g, 119, 16, 3371);
+    			attr(tr, "class", "svelte-kswv5p");
+    			add_location(tr, file$g, 112, 12, 3064);
+
+    			dispose = [
+    				listen(span0, "click", click_handler),
+    				listen(span1, "click", click_handler_1)
+    			];
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, tr, anchor);
+    			append(tr, td0);
+    			append(td0, div0);
+    			append(div0, t0);
+    			append(td0, t1);
+    			append(td0, div1);
+    			append(div1, t2);
+    			append(tr, t3);
+    			append(tr, td1);
+    			append(td1, t4);
+    			append(tr, t5);
+    			append(tr, td2);
+    			td2.innerHTML = raw0_value;
+    			append(tr, t6);
+    			append(tr, td3);
+    			append(td3, span0);
+    			span0.innerHTML = raw1_value;
+    			append(td3, t7);
+    			append(td3, span1);
+    			span1.innerHTML = raw2_value;
+    			append(tr, t8);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((changed.record) && t0_value !== (t0_value = ctx.field.label + "")) {
+    				set_data(t0, t0_value);
+    			}
+
+    			if ((changed.record) && t2_value !== (t2_value = ctx.field.name + "")) {
+    				set_data(t2, t2_value);
+    			}
+
+    			if ((changed.record) && t4_value !== (t4_value = ctx.field.type + "")) {
+    				set_data(t4, t4_value);
+    			}
+
+    			if ((changed.record) && raw0_value !== (raw0_value = ctx.getTypeOptions(ctx.field.typeOptions) + "")) {
+    				td2.innerHTML = raw0_value;
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(tr);
+    			}
+
+    			run_all(dispose);
+    		}
+    	};
+    }
+
+    // (132:4) {#if editingField}
+    function create_if_block_1$1(ctx) {
+    	var updating_isOpen, current;
+
+    	function modal_isOpen_binding(value) {
+    		ctx.modal_isOpen_binding.call(null, value);
+    		updating_isOpen = true;
+    		add_flush_callback(() => updating_isOpen = false);
+    	}
+
+    	let modal_props = {
+    		$$slots: { default: [create_default_slot$1] },
+    		$$scope: { ctx }
+    	};
+    	if (ctx.editingField !== void 0) {
+    		modal_props.isOpen = ctx.editingField;
+    	}
+    	var modal = new Modal({ props: modal_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(modal, 'isOpen', modal_isOpen_binding));
+
+    	return {
+    		c: function create() {
+    			modal.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(modal, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var modal_changes = {};
+    			if (changed.$$scope || changed.fieldToEdit || changed.onFinishedFieldEdit || changed.record || changed.$store) modal_changes.$$scope = { changed, ctx };
+    			if (!updating_isOpen && changed.editingField) {
+    				modal_changes.isOpen = ctx.editingField;
+    			}
+    			modal.$set(modal_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(modal.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(modal.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(modal, detaching);
+    		}
+    	};
+    }
+
+    // (133:4) <Modal bind:isOpen={editingField}>
+    function create_default_slot$1(ctx) {
+    	var current;
+
+    	var fieldview = new FieldView({
+    		props: {
+    		field: ctx.fieldToEdit,
+    		onFinished: ctx.onFinishedFieldEdit,
+    		allFields: ctx.record.fields,
+    		store: ctx.$store
+    	},
+    		$$inline: true
+    	});
+
+    	return {
+    		c: function create() {
+    			fieldview.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(fieldview, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var fieldview_changes = {};
+    			if (changed.fieldToEdit) fieldview_changes.field = ctx.fieldToEdit;
+    			if (changed.onFinishedFieldEdit) fieldview_changes.onFinished = ctx.onFinishedFieldEdit;
+    			if (changed.record) fieldview_changes.allFields = ctx.record.fields;
+    			if (changed.$store) fieldview_changes.store = ctx.$store;
+    			fieldview.$set(fieldview_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(fieldview.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(fieldview.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(fieldview, detaching);
+    		}
+    	};
+    }
+
+    // (168:4) {:else}
+    function create_else_block$2(ctx) {
+    	var t;
+
+    	return {
+    		c: function create() {
+    			t = text("(no indexes added)");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, t, anchor);
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(t);
+    			}
+    		}
+    	};
+    }
+
+    // (161:8) {#if index.filter}
+    function create_if_block$5(ctx) {
+    	var div, span, t1, code, t2_value = ctx.index.filter + "", t2;
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			span = element("span");
+    			span.textContent = "filter:";
+    			t1 = space();
+    			code = element("code");
+    			t2 = text(t2_value);
+    			attr(span, "class", "index-label svelte-kswv5p");
+    			add_location(span, file$g, 162, 12, 4820);
+    			attr(code, "class", "index-mapfilter svelte-kswv5p");
+    			add_location(code, file$g, 163, 12, 4873);
+    			attr(div, "class", "index-field-row svelte-kswv5p");
+    			add_location(div, file$g, 161, 8, 4778);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, span);
+    			append(div, t1);
+    			append(div, code);
+    			append(code, t2);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((changed.record) && t2_value !== (t2_value = ctx.index.filter + "")) {
+    				set_data(t2, t2_value);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+    		}
+    	};
+    }
+
+    // (145:4) {#each record.indexes as index}
+    function create_each_block$4(ctx) {
+    	var div3, div0, t0_value = ctx.index.name + "", t0, t1, span0, raw_value = getIcon("edit") + "", t2, div1, span1, t4, span2, t5_value = ctx.getIndexAllowedRecords(ctx.index) + "", t5, t6, span3, t8, span4, t9_value = ctx.index.indexType + "", t9, t10, div2, span5, t12, code, t13_value = ctx.index.map + "", t13, t14, t15, dispose;
+
+    	function click_handler_2() {
+    		return ctx.click_handler_2(ctx);
+    	}
+
+    	var if_block = (ctx.index.filter) && create_if_block$5(ctx);
+
+    	return {
+    		c: function create() {
+    			div3 = element("div");
+    			div0 = element("div");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			span0 = element("span");
+    			t2 = space();
+    			div1 = element("div");
+    			span1 = element("span");
+    			span1.textContent = "records indexed:";
+    			t4 = space();
+    			span2 = element("span");
+    			t5 = text(t5_value);
+    			t6 = space();
+    			span3 = element("span");
+    			span3.textContent = "type:";
+    			t8 = space();
+    			span4 = element("span");
+    			t9 = text(t9_value);
+    			t10 = space();
+    			div2 = element("div");
+    			span5 = element("span");
+    			span5.textContent = "map:";
+    			t12 = space();
+    			code = element("code");
+    			t13 = text(t13_value);
+    			t14 = space();
+    			if (if_block) if_block.c();
+    			t15 = space();
+    			set_style(span0, "margin-left", "7px");
+    			add_location(span0, file$g, 148, 12, 4173);
+    			attr(div0, "class", "index-name svelte-kswv5p");
+    			add_location(div0, file$g, 146, 8, 4111);
+    			attr(span1, "class", "index-label svelte-kswv5p");
+    			add_location(span1, file$g, 151, 12, 4334);
+    			add_location(span2, file$g, 152, 12, 4398);
+    			attr(span3, "class", "index-label svelte-kswv5p");
+    			set_style(span3, "margin-left", "15px");
+    			add_location(span3, file$g, 153, 12, 4455);
+    			add_location(span4, file$g, 154, 12, 4533);
+    			attr(div1, "class", "index-field-row svelte-kswv5p");
+    			add_location(div1, file$g, 150, 8, 4292);
+    			attr(span5, "class", "index-label svelte-kswv5p");
+    			add_location(span5, file$g, 157, 12, 4629);
+    			attr(code, "class", "index-mapfilter svelte-kswv5p");
+    			add_location(code, file$g, 158, 12, 4679);
+    			attr(div2, "class", "index-field-row svelte-kswv5p");
+    			add_location(div2, file$g, 156, 8, 4587);
+    			attr(div3, "class", "index-container svelte-kswv5p");
+    			add_location(div3, file$g, 145, 4, 4073);
+    			dispose = listen(span0, "click", click_handler_2);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div3, anchor);
+    			append(div3, div0);
+    			append(div0, t0);
+    			append(div0, t1);
+    			append(div0, span0);
+    			span0.innerHTML = raw_value;
+    			append(div3, t2);
+    			append(div3, div1);
+    			append(div1, span1);
+    			append(div1, t4);
+    			append(div1, span2);
+    			append(span2, t5);
+    			append(div1, t6);
+    			append(div1, span3);
+    			append(div1, t8);
+    			append(div1, span4);
+    			append(span4, t9);
+    			append(div3, t10);
+    			append(div3, div2);
+    			append(div2, span5);
+    			append(div2, t12);
+    			append(div2, code);
+    			append(code, t13);
+    			append(div3, t14);
+    			if (if_block) if_block.m(div3, null);
+    			append(div3, t15);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((changed.record) && t0_value !== (t0_value = ctx.index.name + "")) {
+    				set_data(t0, t0_value);
+    			}
+
+    			if ((changed.getIndexAllowedRecords || changed.record) && t5_value !== (t5_value = ctx.getIndexAllowedRecords(ctx.index) + "")) {
+    				set_data(t5, t5_value);
+    			}
+
+    			if ((changed.record) && t9_value !== (t9_value = ctx.index.indexType + "")) {
+    				set_data(t9, t9_value);
+    			}
+
+    			if ((changed.record) && t13_value !== (t13_value = ctx.index.map + "")) {
+    				set_data(t13, t13_value);
+    			}
+
+    			if (ctx.index.filter) {
+    				if (if_block) {
+    					if_block.p(changed, ctx);
+    				} else {
+    					if_block = create_if_block$5(ctx);
+    					if_block.c();
+    					if_block.m(div3, t15);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div3);
+    			}
+
+    			if (if_block) if_block.d();
+    			dispose();
+    		}
+    	};
+    }
+
+    function create_fragment$f(ctx) {
+    	var div1, form, updating_text, t0, div0, t1_value = ctx.record.nodeKey() + "", t1, t2, t3, h40, t4, span, raw_value = getIcon("plus") + "", t5, t6, t7, h41, t9, current, dispose;
+
+    	function textbox_text_binding(value) {
+    		ctx.textbox_text_binding.call(null, value);
+    		updating_text = true;
+    		add_flush_callback(() => updating_text = false);
+    	}
+
+    	let textbox_props = { label: "Name" };
+    	if (ctx.record.name !== void 0) {
+    		textbox_props.text = ctx.record.name;
+    	}
+    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding));
+
+    	var if_block0 = (!ctx.record.isSingle) && create_if_block_3$1(ctx);
+
+    	function select_block_type(changed, ctx) {
+    		if (ctx.record.fields.length > 0) return create_if_block_2$1;
+    		return create_else_block_1;
+    	}
+
+    	var current_block_type = select_block_type(null, ctx);
+    	var if_block1 = current_block_type(ctx);
+
+    	var if_block2 = (ctx.editingField) && create_if_block_1$1(ctx);
+
+    	var each_value = ctx.record.indexes;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
+    	}
+
+    	var each_1_else = null;
+
+    	if (!each_value.length) {
+    		each_1_else = create_else_block$2();
+    		each_1_else.c();
+    	}
+
+    	return {
+    		c: function create() {
+    			div1 = element("div");
+    			form = element("form");
+    			textbox.$$.fragment.c();
+    			t0 = space();
+    			div0 = element("div");
+    			t1 = text(t1_value);
+    			t2 = space();
+    			if (if_block0) if_block0.c();
+    			t3 = space();
+    			h40 = element("h4");
+    			t4 = text("Fields ");
+    			span = element("span");
+    			t5 = space();
+    			if_block1.c();
+    			t6 = space();
+    			if (if_block2) if_block2.c();
+    			t7 = space();
+    			h41 = element("h4");
+    			h41.textContent = "Indexes";
+    			t9 = space();
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+    			add_location(div0, file$g, 89, 8, 2368);
+    			attr(form, "class", "uk-form-horizontal");
+    			add_location(form, file$g, 86, 4, 2264);
+    			attr(span, "class", "add-field-button svelte-kswv5p");
+    			add_location(span, file$g, 97, 15, 2636);
+    			add_location(h40, file$g, 96, 4, 2616);
+    			add_location(h41, file$g, 140, 4, 4000);
+    			attr(div1, "class", "root svelte-kswv5p");
+    			add_location(div1, file$g, 84, 0, 2240);
+    			dispose = listen(span, "click", ctx.newField);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div1, anchor);
+    			append(div1, form);
+    			mount_component(textbox, form, null);
+    			append(form, t0);
+    			append(form, div0);
+    			append(div0, t1);
+    			append(form, t2);
+    			if (if_block0) if_block0.m(form, null);
+    			append(div1, t3);
+    			append(div1, h40);
+    			append(h40, t4);
+    			append(h40, span);
+    			span.innerHTML = raw_value;
+    			append(div1, t5);
+    			if_block1.m(div1, null);
+    			append(div1, t6);
+    			if (if_block2) if_block2.m(div1, null);
+    			append(div1, t7);
+    			append(div1, h41);
+    			append(div1, t9);
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div1, null);
+    			}
+
+    			if (each_1_else) {
+    				each_1_else.m(div1, null);
+    			}
+
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var textbox_changes = {};
+    			if (!updating_text && changed.record) {
+    				textbox_changes.text = ctx.record.name;
+    			}
+    			textbox.$set(textbox_changes);
+
+    			if ((!current || changed.record) && t1_value !== (t1_value = ctx.record.nodeKey() + "")) {
+    				set_data(t1, t1_value);
+    			}
+
+    			if (!ctx.record.isSingle) {
+    				if (if_block0) {
+    					if_block0.p(changed, ctx);
+    					transition_in(if_block0, 1);
+    				} else {
+    					if_block0 = create_if_block_3$1(ctx);
+    					if_block0.c();
+    					transition_in(if_block0, 1);
+    					if_block0.m(form, null);
+    				}
+    			} else if (if_block0) {
+    				group_outros();
+    				transition_out(if_block0, 1, 1, () => {
+    					if_block0 = null;
+    				});
+    				check_outros();
+    			}
+
+    			if (current_block_type === (current_block_type = select_block_type(changed, ctx)) && if_block1) {
+    				if_block1.p(changed, ctx);
+    			} else {
+    				if_block1.d(1);
+    				if_block1 = current_block_type(ctx);
+    				if (if_block1) {
+    					if_block1.c();
+    					if_block1.m(div1, t6);
+    				}
+    			}
+
+    			if (ctx.editingField) {
+    				if (if_block2) {
+    					if_block2.p(changed, ctx);
+    					transition_in(if_block2, 1);
+    				} else {
+    					if_block2 = create_if_block_1$1(ctx);
+    					if_block2.c();
+    					transition_in(if_block2, 1);
+    					if_block2.m(div1, t7);
+    				}
+    			} else if (if_block2) {
+    				group_outros();
+    				transition_out(if_block2, 1, 1, () => {
+    					if_block2 = null;
+    				});
+    				check_outros();
+    			}
+
+    			if (changed.record || changed.getIndexAllowedRecords || changed.getIcon) {
+    				each_value = ctx.record.indexes;
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$4(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$4(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div1, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+
+    			if (each_value.length) {
+    				if (each_1_else) {
+    					each_1_else.d(1);
+    					each_1_else = null;
+    				}
+    			} else if (!each_1_else) {
+    				each_1_else = create_else_block$2();
+    				each_1_else.c();
+    				each_1_else.m(div1, null);
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(textbox.$$.fragment, local);
+
+    			transition_in(if_block0);
+    			transition_in(if_block2);
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(textbox.$$.fragment, local);
+    			transition_out(if_block0);
+    			transition_out(if_block2);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div1);
+    			}
+
+    			destroy_component(textbox);
+
+    			if (if_block0) if_block0.d();
+    			if_block1.d();
+    			if (if_block2) if_block2.d();
+
+    			destroy_each(each_blocks, detaching);
+
+    			if (each_1_else) each_1_else.d();
+
+    			dispose();
+    		}
+    	};
+    }
+
+    function instance$f($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
+    	
+
+    let record;
+    let getIndexAllowedRecords;
+    let editingField = false;
+    let fieldToEdit;
+    let newField;
+    let editField;
+    let deleteField;
+    let onFinishedFieldEdit;
+    let editIndex;
+
+    store.subscribe($store => {
+        $$invalidate('record', record = $store.currentNode);
+        const flattened = hierarchyFunctions.getFlattenedHierarchy($store.hierarchy);
+        $$invalidate('getIndexAllowedRecords', getIndexAllowedRecords = index => 
+            pipe(index.allowedRecordNodeIds, [
+                fp_8(id => fp_6(n => n.nodeId === id)(flattened)),
+                fp_7(id => fp_13(n => n.nodeId === id)
+                              (flattened).name),
+                fp_39(", ")
+            ]));
+
+        $$invalidate('newField', newField = () => {
+            $$invalidate('fieldToEdit', fieldToEdit = templateApi($store.hierarchy).getNewField("string"));
+            $$invalidate('editingField', editingField = true);
+        });
+
+        $$invalidate('onFinishedFieldEdit', onFinishedFieldEdit = (field) => {
+            if(field) {
+                store.saveField(field);
+            }
+            $$invalidate('editingField', editingField = false);
+        });
+
+        $$invalidate('editField', editField = (field) => {
+            $$invalidate('fieldToEdit', fieldToEdit = field);
+            $$invalidate('editingField', editingField = true);
+        });
+
+        $$invalidate('deleteField', deleteField = (field) => {
+            store.deleteField(field);
+        });
+
+        $$invalidate('editIndex', editIndex = index => {
+            store.selectExistingNode(index.nodeId);
+        });
+
+    });
+
+    let getTypeOptionsValueText = value => {
+        if(value === Number.MAX_SAFE_INTEGER
+           || value === Number.MIN_SAFE_INTEGER
+           || new Date(value).getTime() === new Date(8640000000000000).getTime()
+           || new Date(value).getTime() === new Date(-8640000000000000).getTime()) return "(any)";
+        
+        if(value === null) return "(not set)";
+        return value;
+    };
+
+    let getTypeOptions = typeOptions => 
+        pipe(typeOptions, [
+            fp_30,
+            fp_7(k => `<span style="color:var(--slate)">${k}: </span>${getTypeOptionsValueText(typeOptions[k])}`),
+            fp_39("<br>")
+        ]);
+
+    	function textbox_text_binding(value) {
+    		record.name = value;
+    		$$invalidate('record', record);
+    	}
+
+    	function textbox0_text_binding(value) {
+    		record.collectionName = value;
+    		$$invalidate('record', record);
+    	}
+
+    	function textbox1_text_binding(value_1) {
+    		record.allidsShardFactor = value_1;
+    		$$invalidate('record', record);
+    	}
+
+    	function click_handler({ field }) {
+    		return editField(field);
+    	}
+
+    	function click_handler_1({ field }) {
+    		return deleteField(field);
+    	}
+
+    	function modal_isOpen_binding(value) {
+    		editingField = value;
+    		$$invalidate('editingField', editingField);
+    	}
+
+    	function click_handler_2({ index }) {
+    		return editIndex(index);
+    	}
+
+    	return {
+    		record,
+    		getIndexAllowedRecords,
+    		editingField,
+    		fieldToEdit,
+    		newField,
+    		editField,
+    		deleteField,
+    		onFinishedFieldEdit,
+    		editIndex,
+    		getTypeOptions,
+    		$store,
+    		textbox_text_binding,
+    		textbox0_text_binding,
+    		textbox1_text_binding,
+    		click_handler,
+    		click_handler_1,
+    		modal_isOpen_binding,
+    		click_handler_2
+    	};
+    }
+
+    class RecordView extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$f, create_fragment$f, safe_not_equal, []);
+    	}
+    }
+
+    /* src\common\CodeArea.svelte generated by Svelte v3.9.1 */
+
+    const file$h = "src\\common\\CodeArea.svelte";
+
+    function create_fragment$g(ctx) {
+    	var div, t0, t1, textarea, dispose;
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			t0 = text(ctx.label);
+    			t1 = space();
+    			textarea = element("textarea");
+    			add_location(div, file$h, 6, 0, 102);
+    			attr(textarea, "class", "uk-textarea svelte-1ooq0hh");
+    			add_location(textarea, file$h, 7, 0, 122);
+    			dispose = listen(textarea, "input", ctx.textarea_input_handler);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, t0);
+    			insert(target, t1, anchor);
+    			insert(target, textarea, anchor);
+
+    			set_input_value(textarea, ctx.text);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.label) {
+    				set_data(t0, ctx.label);
+    			}
+
+    			if (changed.text) set_input_value(textarea, ctx.text);
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    				detach(t1);
+    				detach(textarea);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
+
+    function instance$g($$self, $$props, $$invalidate) {
+    	// todo: use https://ace.c9.io
+    let { text = "", label = "" } = $$props;
+
+    	const writable_props = ['text', 'label'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<CodeArea> was created with unknown prop '${key}'`);
+    	});
+
+    	function textarea_input_handler() {
+    		text = this.value;
+    		$$invalidate('text', text);
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('text' in $$props) $$invalidate('text', text = $$props.text);
+    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
+    	};
+
+    	return { text, label, textarea_input_handler };
+    }
+
+    class CodeArea extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$g, create_fragment$g, safe_not_equal, ["text", "label"]);
+    	}
+
+    	get text() {
+    		throw new Error("<CodeArea>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set text(value) {
+    		throw new Error("<CodeArea>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get label() {
+    		throw new Error("<CodeArea>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set label(value) {
+    		throw new Error("<CodeArea>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\database\IndexView.svelte generated by Svelte v3.9.1 */
+
+    const file$i = "src\\database\\IndexView.svelte";
+
+    function get_each_context$5(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.rec = list[i];
+    	return child_ctx;
+    }
+
+    // (45:8) {#each indexableRecords as rec}
+    function create_each_block$5(ctx) {
+    	var input, input_checked_value, t0, span, t1_value = ctx.rec.node.name + "", t1, dispose;
+
+    	function change_handler() {
+    		return ctx.change_handler(ctx);
+    	}
+
+    	return {
+    		c: function create() {
+    			input = element("input");
+    			t0 = space();
+    			span = element("span");
+    			t1 = text(t1_value);
+    			attr(input, "type", "checkbox");
+    			input.checked = input_checked_value = ctx.rec.isallowed;
+    			add_location(input, file$i, 45, 8, 1362);
+    			attr(span, "class", "svelte-pq2tmv");
+    			add_location(span, file$i, 46, 8, 1462);
+    			dispose = listen(input, "change", change_handler);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, input, anchor);
+    			insert(target, t0, anchor);
+    			insert(target, span, anchor);
+    			append(span, t1);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((changed.indexableRecords) && input_checked_value !== (input_checked_value = ctx.rec.isallowed)) {
+    				input.checked = input_checked_value;
+    			}
+
+    			if ((changed.indexableRecords) && t1_value !== (t1_value = ctx.rec.node.name + "")) {
+    				set_data(t1, t1_value);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(input);
+    				detach(t0);
+    				detach(span);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
+
+    function create_fragment$h(ctx) {
+    	var form, updating_text, t0, div1, div0, t2, t3, updating_selected, t4, updating_text_1, t5, updating_text_2, t6, updating_text_3, current;
+
+    	function textbox_text_binding(value) {
+    		ctx.textbox_text_binding.call(null, value);
+    		updating_text = true;
+    		add_flush_callback(() => updating_text = false);
+    	}
+
+    	let textbox_props = { label: "Name" };
+    	if (ctx.index.name !== void 0) {
+    		textbox_props.text = ctx.index.name;
+    	}
+    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding));
+
+    	var each_value = ctx.indexableRecords;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$5(get_each_context$5(ctx, each_value, i));
+    	}
+
+    	function dropdown_selected_binding(value_1) {
+    		ctx.dropdown_selected_binding.call(null, value_1);
+    		updating_selected = true;
+    		add_flush_callback(() => updating_selected = false);
+    	}
+
+    	let dropdown_props = {
+    		label: "Index Type",
+    		options: ["ancestor", "reference"]
+    	};
+    	if (ctx.index.indexType !== void 0) {
+    		dropdown_props.selected = ctx.index.indexType;
+    	}
+    	var dropdown = new Dropdown({ props: dropdown_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(dropdown, 'selected', dropdown_selected_binding));
+
+    	function codearea0_text_binding(value_2) {
+    		ctx.codearea0_text_binding.call(null, value_2);
+    		updating_text_1 = true;
+    		add_flush_callback(() => updating_text_1 = false);
+    	}
+
+    	let codearea0_props = { label: "Map (javascript)" };
+    	if (ctx.index.map !== void 0) {
+    		codearea0_props.text = ctx.index.map;
+    	}
+    	var codearea0 = new CodeArea({ props: codearea0_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(codearea0, 'text', codearea0_text_binding));
+
+    	function codearea1_text_binding(value_3) {
+    		ctx.codearea1_text_binding.call(null, value_3);
+    		updating_text_2 = true;
+    		add_flush_callback(() => updating_text_2 = false);
+    	}
+
+    	let codearea1_props = { label: "Filter (javascript expression)" };
+    	if (ctx.index.filter !== void 0) {
+    		codearea1_props.text = ctx.index.filter;
+    	}
+    	var codearea1 = new CodeArea({ props: codearea1_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(codearea1, 'text', codearea1_text_binding));
+
+    	function codearea2_text_binding(value_4) {
+    		ctx.codearea2_text_binding.call(null, value_4);
+    		updating_text_3 = true;
+    		add_flush_callback(() => updating_text_3 = false);
+    	}
+
+    	let codearea2_props = {
+    		label: "Shard Name (javascript expression)"
+    	};
+    	if (ctx.index.getShardName !== void 0) {
+    		codearea2_props.text = ctx.index.getShardName;
+    	}
+    	var codearea2 = new CodeArea({ props: codearea2_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(codearea2, 'text', codearea2_text_binding));
+
+    	return {
+    		c: function create() {
+    			form = element("form");
+    			textbox.$$.fragment.c();
+    			t0 = space();
+    			div1 = element("div");
+    			div0 = element("div");
+    			div0.textContent = "Records to Index";
+    			t2 = space();
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			t3 = space();
+    			dropdown.$$.fragment.c();
+    			t4 = space();
+    			codearea0.$$.fragment.c();
+    			t5 = space();
+    			codearea1.$$.fragment.c();
+    			t6 = space();
+    			codearea2.$$.fragment.c();
+    			add_location(div0, file$i, 43, 8, 1286);
+    			attr(div1, "class", "allowed-records svelte-pq2tmv");
+    			add_location(div1, file$i, 42, 4, 1248);
+    			attr(form, "class", "uk-form-horizontal root svelte-pq2tmv");
+    			add_location(form, file$i, 39, 0, 1149);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, form, anchor);
+    			mount_component(textbox, form, null);
+    			append(form, t0);
+    			append(form, div1);
+    			append(div1, div0);
+    			append(div1, t2);
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div1, null);
+    			}
+
+    			append(form, t3);
+    			mount_component(dropdown, form, null);
+    			append(form, t4);
+    			mount_component(codearea0, form, null);
+    			append(form, t5);
+    			mount_component(codearea1, form, null);
+    			append(form, t6);
+    			mount_component(codearea2, form, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var textbox_changes = {};
+    			if (!updating_text && changed.index) {
+    				textbox_changes.text = ctx.index.name;
+    			}
+    			textbox.$set(textbox_changes);
+
+    			if (changed.indexableRecords) {
+    				each_value = ctx.indexableRecords;
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$5(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$5(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div1, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+
+    			var dropdown_changes = {};
+    			if (!updating_selected && changed.index) {
+    				dropdown_changes.selected = ctx.index.indexType;
+    			}
+    			dropdown.$set(dropdown_changes);
+
+    			var codearea0_changes = {};
+    			if (!updating_text_1 && changed.index) {
+    				codearea0_changes.text = ctx.index.map;
+    			}
+    			codearea0.$set(codearea0_changes);
+
+    			var codearea1_changes = {};
+    			if (!updating_text_2 && changed.index) {
+    				codearea1_changes.text = ctx.index.filter;
+    			}
+    			codearea1.$set(codearea1_changes);
+
+    			var codearea2_changes = {};
+    			if (!updating_text_3 && changed.index) {
+    				codearea2_changes.text = ctx.index.getShardName;
+    			}
+    			codearea2.$set(codearea2_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(textbox.$$.fragment, local);
+
+    			transition_in(dropdown.$$.fragment, local);
+
+    			transition_in(codearea0.$$.fragment, local);
+
+    			transition_in(codearea1.$$.fragment, local);
+
+    			transition_in(codearea2.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(textbox.$$.fragment, local);
+    			transition_out(dropdown.$$.fragment, local);
+    			transition_out(codearea0.$$.fragment, local);
+    			transition_out(codearea1.$$.fragment, local);
+    			transition_out(codearea2.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(form);
+    			}
+
+    			destroy_component(textbox);
+
+    			destroy_each(each_blocks, detaching);
+
+    			destroy_component(dropdown);
+
+    			destroy_component(codearea0);
+
+    			destroy_component(codearea1);
+
+    			destroy_component(codearea2);
+    		}
+    	};
+    }
+
+    function instance$h($$self, $$props, $$invalidate) {
+    	
+
+    const pipe = common$1.$;
+
+    let index;
+    let indexableRecords = [];
+
+    store.subscribe($store => {
+        $$invalidate('index', index = $store.currentNode);
+        $$invalidate('indexableRecords', indexableRecords = pipe($store.hierarchy,[
+            hierarchyFunctions.getFlattenedHierarchy,
+            fp_8(hierarchyFunctions.isDecendant(index.parent())),
+            fp_8(hierarchyFunctions.isRecord),
+            fp_7(n => ({
+                node:n,
+                isallowed: fp_6(id => n.nodeId === id)(index.allowedRecordNodeIds)
+            }))
+        ]));
+    });
+
+    const toggleAllowedRecord = record => {
+        if(record.isallowed) {
+            index.allowedRecordNodeIds = fp_8(id => id !== record.node.nodeId)
+                                               (index.allowedRecordNodeIds); $$invalidate('index', index);
+        } else {
+            index.allowedRecordNodeIds.push(record.node.nodeId);
+        }
+    };
+
+    	function textbox_text_binding(value) {
+    		index.name = value;
+    		$$invalidate('index', index);
+    	}
+
+    	function change_handler({ rec }) {
+    		return toggleAllowedRecord(rec);
+    	}
+
+    	function dropdown_selected_binding(value_1) {
+    		index.indexType = value_1;
+    		$$invalidate('index', index);
+    	}
+
+    	function codearea0_text_binding(value_2) {
+    		index.map = value_2;
+    		$$invalidate('index', index);
+    	}
+
+    	function codearea1_text_binding(value_3) {
+    		index.filter = value_3;
+    		$$invalidate('index', index);
+    	}
+
+    	function codearea2_text_binding(value_4) {
+    		index.getShardName = value_4;
+    		$$invalidate('index', index);
+    	}
+
+    	return {
+    		index,
+    		indexableRecords,
+    		toggleAllowedRecord,
+    		textbox_text_binding,
+    		change_handler,
+    		dropdown_selected_binding,
+    		codearea0_text_binding,
+    		codearea1_text_binding,
+    		codearea2_text_binding
+    	};
+    }
+
+    class IndexView extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$h, create_fragment$h, safe_not_equal, []);
+    	}
+    }
+
+    /* src\database\ActionsHeader.svelte generated by Svelte v3.9.1 */
+
+    const file$j = "src\\database\\ActionsHeader.svelte";
+
+    // (27:12) {:else}
+    function create_else_block$3(ctx) {
+    	var t;
+
+    	return {
+    		c: function create() {
+    			t = text("Update");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, t, anchor);
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(t);
+    			}
+    		}
+    	};
+    }
+
+    // (25:12) {#if $store.currentNodeIsNew}
+    function create_if_block_2$2(ctx) {
+    	var t;
+
+    	return {
+    		c: function create() {
+    			t = text("Create");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, t, anchor);
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(t);
+    			}
+    		}
+    	};
+    }
+
+    // (24:8) <Button color="secondary" grouped on:click={store.saveCurrentNode}>
+    function create_default_slot_5(ctx) {
+    	var if_block_anchor;
+
+    	function select_block_type(changed, ctx) {
+    		if (ctx.$store.currentNodeIsNew) return create_if_block_2$2;
+    		return create_else_block$3;
+    	}
+
+    	var current_block_type = select_block_type(null, ctx);
+    	var if_block = current_block_type(ctx);
+
+    	return {
+    		c: function create() {
+    			if_block.c();
+    			if_block_anchor = empty();
+    		},
+
+    		m: function mount(target, anchor) {
+    			if_block.m(target, anchor);
+    			insert(target, if_block_anchor, anchor);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (current_block_type !== (current_block_type = select_block_type(changed, ctx))) {
+    				if_block.d(1);
+    				if_block = current_block_type(ctx);
+    				if (if_block) {
+    					if_block.c();
+    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    				}
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if_block.d(detaching);
+
+    			if (detaching) {
+    				detach(if_block_anchor);
+    			}
+    		}
+    	};
+    }
+
+    // (32:8) {#if !$store.currentNodeIsNew}
+    function create_if_block_1$2(ctx) {
+    	var current;
+
+    	var button = new Button({
+    		props: {
+    		color: "secondary",
+    		grouped: true,
+    		$$slots: { default: [create_default_slot_4] },
+    		$$scope: { ctx }
+    	},
+    		$$inline: true
+    	});
+    	button.$on("click", ctx.openConfirmDelete);
+
+    	return {
+    		c: function create() {
+    			button.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(button, target, anchor);
+    			current = true;
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(button.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(button.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(button, detaching);
+    		}
+    	};
+    }
+
+    // (33:8) <Button color="secondary" grouped on:click={openConfirmDelete}>
+    function create_default_slot_4(ctx) {
+    	var t;
+
+    	return {
+    		c: function create() {
+    			t = text("Delete");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, t, anchor);
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(t);
+    			}
+    		}
+    	};
+    }
+
+    // (23:4) <ButtonGroup>
+    function create_default_slot_3(ctx) {
+    	var t, if_block_anchor, current;
+
+    	var button = new Button({
+    		props: {
+    		color: "secondary",
+    		grouped: true,
+    		$$slots: { default: [create_default_slot_5] },
+    		$$scope: { ctx }
+    	},
+    		$$inline: true
+    	});
+    	button.$on("click", store.saveCurrentNode);
+
+    	var if_block = (!ctx.$store.currentNodeIsNew) && create_if_block_1$2(ctx);
+
+    	return {
+    		c: function create() {
+    			button.$$.fragment.c();
+    			t = space();
+    			if (if_block) if_block.c();
+    			if_block_anchor = empty();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(button, target, anchor);
+    			insert(target, t, anchor);
+    			if (if_block) if_block.m(target, anchor);
+    			insert(target, if_block_anchor, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var button_changes = {};
+    			if (changed.$$scope || changed.$store) button_changes.$$scope = { changed, ctx };
+    			button.$set(button_changes);
+
+    			if (!ctx.$store.currentNodeIsNew) {
+    				if (!if_block) {
+    					if_block = create_if_block_1$2(ctx);
+    					if_block.c();
+    					transition_in(if_block, 1);
+    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    				} else {
+    									transition_in(if_block, 1);
+    				}
+    			} else if (if_block) {
+    				group_outros();
+    				transition_out(if_block, 1, 1, () => {
+    					if_block = null;
+    				});
+    				check_outros();
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(button.$$.fragment, local);
+
+    			transition_in(if_block);
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(button.$$.fragment, local);
+    			transition_out(if_block);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(button, detaching);
+
+    			if (detaching) {
+    				detach(t);
+    			}
+
+    			if (if_block) if_block.d(detaching);
+
+    			if (detaching) {
+    				detach(if_block_anchor);
+    			}
+    		}
+    	};
+    }
+
+    // (39:4) {#if !!$store.errors && $store.errors.length > 0}
+    function create_if_block$6(ctx) {
+    	var div, current;
+
+    	var errorsbox = new ErrorsBox({
+    		props: { errors: ctx.$store.errors },
+    		$$inline: true
+    	});
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			errorsbox.$$.fragment.c();
+    			set_style(div, "width", "500px");
+    			add_location(div, file$j, 39, 4, 972);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			mount_component(errorsbox, div, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var errorsbox_changes = {};
+    			if (changed.$store) errorsbox_changes.errors = ctx.$store.errors;
+    			errorsbox.$set(errorsbox_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(errorsbox.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(errorsbox.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			destroy_component(errorsbox);
+    		}
+    	};
+    }
+
+    // (48:12) <Button color="primary"  on:click={deleteCurrentNode}>
+    function create_default_slot_2$1(ctx) {
+    	var t;
+
+    	return {
+    		c: function create() {
+    			t = text("Yes");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, t, anchor);
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(t);
+    			}
+    		}
+    	};
+    }
+
+    // (49:12) <Button color="secondary" on:click={() => confirmDelete = false}>
+    function create_default_slot_1$1(ctx) {
+    	var t;
+
+    	return {
+    		c: function create() {
+    			t = text("No");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, t, anchor);
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(t);
+    			}
+    		}
+    	};
+    }
+
+    // (45:4) <Modal bind:isOpen={confirmDelete}>
+    function create_default_slot$2(ctx) {
+    	var div0, t0, t1_value = ctx.$store.currentNode.name + "", t1, t2, t3, div1, t4, current;
+
+    	var button0 = new Button({
+    		props: {
+    		color: "primary",
+    		$$slots: { default: [create_default_slot_2$1] },
+    		$$scope: { ctx }
+    	},
+    		$$inline: true
+    	});
+    	button0.$on("click", ctx.deleteCurrentNode);
+
+    	var button1 = new Button({
+    		props: {
+    		color: "secondary",
+    		$$slots: { default: [create_default_slot_1$1] },
+    		$$scope: { ctx }
+    	},
+    		$$inline: true
+    	});
+    	button1.$on("click", ctx.click_handler);
+
+    	return {
+    		c: function create() {
+    			div0 = element("div");
+    			t0 = text("Are you sure you want to delete ");
+    			t1 = text(t1_value);
+    			t2 = text(" ?");
+    			t3 = space();
+    			div1 = element("div");
+    			button0.$$.fragment.c();
+    			t4 = space();
+    			button1.$$.fragment.c();
+    			set_style(div0, "margin", "10px 0px 20px 0px");
+    			add_location(div0, file$j, 45, 8, 1117);
+    			set_style(div1, "float", "right");
+    			add_location(div1, file$j, 46, 8, 1230);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div0, anchor);
+    			append(div0, t0);
+    			append(div0, t1);
+    			append(div0, t2);
+    			insert(target, t3, anchor);
+    			insert(target, div1, anchor);
+    			mount_component(button0, div1, null);
+    			append(div1, t4);
+    			mount_component(button1, div1, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((!current || changed.$store) && t1_value !== (t1_value = ctx.$store.currentNode.name + "")) {
+    				set_data(t1, t1_value);
+    			}
+
+    			var button0_changes = {};
+    			if (changed.$$scope) button0_changes.$$scope = { changed, ctx };
+    			button0.$set(button0_changes);
+
+    			var button1_changes = {};
+    			if (changed.$$scope) button1_changes.$$scope = { changed, ctx };
+    			button1.$set(button1_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(button0.$$.fragment, local);
+
+    			transition_in(button1.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(button0.$$.fragment, local);
+    			transition_out(button1.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div0);
+    				detach(t3);
+    				detach(div1);
+    			}
+
+    			destroy_component(button0);
+
+    			destroy_component(button1);
+    		}
+    	};
+    }
+
+    function create_fragment$i(ctx) {
+    	var div, t0, t1, updating_isOpen, current;
+
+    	var buttongroup = new ButtonGroup({
+    		props: {
+    		$$slots: { default: [create_default_slot_3] },
+    		$$scope: { ctx }
+    	},
+    		$$inline: true
+    	});
+
+    	var if_block = (!!ctx.$store.errors && ctx.$store.errors.length > 0) && create_if_block$6(ctx);
+
+    	function modal_isOpen_binding(value) {
+    		ctx.modal_isOpen_binding.call(null, value);
+    		updating_isOpen = true;
+    		add_flush_callback(() => updating_isOpen = false);
+    	}
+
+    	let modal_props = {
+    		$$slots: { default: [create_default_slot$2] },
+    		$$scope: { ctx }
+    	};
+    	if (ctx.confirmDelete !== void 0) {
+    		modal_props.isOpen = ctx.confirmDelete;
+    	}
+    	var modal = new Modal({ props: modal_props, $$inline: true });
+
+    	binding_callbacks.push(() => bind(modal, 'isOpen', modal_isOpen_binding));
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			buttongroup.$$.fragment.c();
+    			t0 = space();
+    			if (if_block) if_block.c();
+    			t1 = space();
+    			modal.$$.fragment.c();
+    			attr(div, "class", "root svelte-1tilbnf");
+    			set_style(div, "left", ctx.left);
+    			add_location(div, file$j, 20, 0, 460);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			mount_component(buttongroup, div, null);
+    			append(div, t0);
+    			if (if_block) if_block.m(div, null);
+    			append(div, t1);
+    			mount_component(modal, div, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var buttongroup_changes = {};
+    			if (changed.$$scope || changed.$store) buttongroup_changes.$$scope = { changed, ctx };
+    			buttongroup.$set(buttongroup_changes);
+
+    			if (!!ctx.$store.errors && ctx.$store.errors.length > 0) {
+    				if (if_block) {
+    					if_block.p(changed, ctx);
+    					transition_in(if_block, 1);
+    				} else {
+    					if_block = create_if_block$6(ctx);
+    					if_block.c();
+    					transition_in(if_block, 1);
+    					if_block.m(div, t1);
+    				}
+    			} else if (if_block) {
+    				group_outros();
+    				transition_out(if_block, 1, 1, () => {
+    					if_block = null;
+    				});
+    				check_outros();
+    			}
+
+    			var modal_changes = {};
+    			if (changed.$$scope || changed.$store) modal_changes.$$scope = { changed, ctx };
+    			if (!updating_isOpen && changed.confirmDelete) {
+    				modal_changes.isOpen = ctx.confirmDelete;
+    			}
+    			modal.$set(modal_changes);
+
+    			if (!current || changed.left) {
+    				set_style(div, "left", ctx.left);
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(buttongroup.$$.fragment, local);
+
+    			transition_in(if_block);
+
+    			transition_in(modal.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(buttongroup.$$.fragment, local);
+    			transition_out(if_block);
+    			transition_out(modal.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			destroy_component(buttongroup);
+
+    			if (if_block) if_block.d();
+
+    			destroy_component(modal);
+    		}
+    	};
+    }
+
+    function instance$i($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
+    	
+
+    let { left } = $$props;
+    let confirmDelete = false;
+    const openConfirmDelete = () => {
+        $$invalidate('confirmDelete', confirmDelete = true);
+    };
+
+    const deleteCurrentNode = () => {
+        $$invalidate('confirmDelete', confirmDelete = false);
+        store.deleteCurrentNode();
+    };
+
+    	const writable_props = ['left'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ActionsHeader> was created with unknown prop '${key}'`);
+    	});
+
+    	function click_handler() {
+    		const $$result = confirmDelete = false;
+    		$$invalidate('confirmDelete', confirmDelete);
+    		return $$result;
+    	}
+
+    	function modal_isOpen_binding(value) {
+    		confirmDelete = value;
+    		$$invalidate('confirmDelete', confirmDelete);
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('left' in $$props) $$invalidate('left', left = $$props.left);
+    	};
+
+    	return {
+    		left,
+    		confirmDelete,
+    		openConfirmDelete,
+    		deleteCurrentNode,
+    		$store,
+    		click_handler,
+    		modal_isOpen_binding
+    	};
+    }
+
+    class ActionsHeader extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$i, create_fragment$i, safe_not_equal, ["left"]);
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx.left === undefined && !('left' in props)) {
+    			console.warn("<ActionsHeader> was created without expected prop 'left'");
+    		}
+    	}
+
+    	get left() {
+    		throw new Error("<ActionsHeader>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set left(value) {
+    		throw new Error("<ActionsHeader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\common\DropdownButton.svelte generated by Svelte v3.9.1 */
+
+    const file$k = "src\\common\\DropdownButton.svelte";
+
+    function get_each_context$6(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.action = list[i];
+    	return child_ctx;
+    }
+
+    // (17:8) {#each actions as action}
+    function create_each_block$6(ctx) {
+    	var div, t0_value = ctx.action.label + "", t0, t1, dispose;
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			attr(div, "class", "action-row svelte-179p8ge");
+    			add_location(div, file$k, 17, 8, 586);
+    			dispose = listen(div, "click", ctx.action.onclick);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, t0);
+    			append(div, t1);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((changed.actions) && t0_value !== (t0_value = ctx.action.label + "")) {
+    				set_data(t0, t0_value);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
+
+    function create_fragment$j(ctx) {
+    	var div2, html_tag, raw_value = getIcon(ctx.iconName) + "", t0, div0, t1, div1, dispose;
+
+    	var each_value = ctx.actions;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$6(get_each_context$6(ctx, each_value, i));
+    	}
+
+    	return {
+    		c: function create() {
+    			div2 = element("div");
+    			t0 = space();
+    			div0 = element("div");
+    			t1 = space();
+    			div1 = element("div");
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+    			html_tag = new HtmlTag(raw_value, t0);
+    			attr(div0, "class", "dropdown-background svelte-179p8ge");
+    			set_style(div0, "display", (ctx.isDroppedDown ? 'block' : 'none'));
+    			add_location(div0, file$k, 13, 4, 298);
+    			attr(div1, "class", "dropdown-content svelte-179p8ge");
+    			set_style(div1, "display", (ctx.isDroppedDown ? 'inline-block' : 'none'));
+    			add_location(div1, file$k, 15, 4, 452);
+    			attr(div2, "class", "root svelte-179p8ge");
+    			add_location(div2, file$k, 10, 0, 189);
+
+    			dispose = [
+    				listen(div0, "click", stop_propagation(ctx.click_handler)),
+    				listen(div2, "click", ctx.click_handler_1)
+    			];
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div2, anchor);
+    			html_tag.m(div2);
+    			append(div2, t0);
+    			append(div2, div0);
+    			append(div2, t1);
+    			append(div2, div1);
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div1, null);
+    			}
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((changed.iconName) && raw_value !== (raw_value = getIcon(ctx.iconName) + "")) {
+    				html_tag.p(raw_value);
+    			}
+
+    			if (changed.isDroppedDown) {
+    				set_style(div0, "display", (ctx.isDroppedDown ? 'block' : 'none'));
+    			}
+
+    			if (changed.actions) {
+    				each_value = ctx.actions;
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$6(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$6(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div1, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+
+    			if (changed.isDroppedDown) {
+    				set_style(div1, "display", (ctx.isDroppedDown ? 'inline-block' : 'none'));
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div2);
+    			}
+
+    			destroy_each(each_blocks, detaching);
+
+    			run_all(dispose);
+    		}
+    	};
+    }
+
+    function instance$j($$self, $$props, $$invalidate) {
+    	let { iconName, actions = [] } = $$props; // [ {label: "Action Name", onclick: () => {...} } ]
+    let isDroppedDown = false;
+
+    	const writable_props = ['iconName', 'actions'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<DropdownButton> was created with unknown prop '${key}'`);
+    	});
+
+    	function click_handler() {
+    		const $$result = isDroppedDown = false;
+    		$$invalidate('isDroppedDown', isDroppedDown);
+    		return $$result;
+    	}
+
+    	function click_handler_1() {
+    		const $$result = isDroppedDown = !isDroppedDown;
+    		$$invalidate('isDroppedDown', isDroppedDown);
+    		return $$result;
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('iconName' in $$props) $$invalidate('iconName', iconName = $$props.iconName);
+    		if ('actions' in $$props) $$invalidate('actions', actions = $$props.actions);
+    	};
+
+    	return {
+    		iconName,
+    		actions,
+    		isDroppedDown,
+    		click_handler,
+    		click_handler_1
+    	};
+    }
+
+    class DropdownButton extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$j, create_fragment$j, safe_not_equal, ["iconName", "actions"]);
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx.iconName === undefined && !('iconName' in props)) {
+    			console.warn("<DropdownButton> was created without expected prop 'iconName'");
+    		}
+    	}
+
+    	get iconName() {
+    		throw new Error("<DropdownButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set iconName(value) {
+    		throw new Error("<DropdownButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get actions() {
+    		throw new Error("<DropdownButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set actions(value) {
+    		throw new Error("<DropdownButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\database\DatabaseRoot.svelte generated by Svelte v3.9.1 */
+
+    const file$l = "src\\database\\DatabaseRoot.svelte";
+
+    function get_each_context$7(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.index = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_1$2(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.record = list[i];
+    	return child_ctx;
+    }
+
+    // (55:8) {#each $store.hierarchy.children as record}
+    function create_each_block_1$2(ctx) {
+    	var current;
+
+    	var hierarchyrow = new HierarchyRow({
+    		props: { node: ctx.record },
+    		$$inline: true
+    	});
+
+    	return {
+    		c: function create() {
+    			hierarchyrow.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(hierarchyrow, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var hierarchyrow_changes = {};
+    			if (changed.$store) hierarchyrow_changes.node = ctx.record;
+    			hierarchyrow.$set(hierarchyrow_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(hierarchyrow.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(hierarchyrow.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(hierarchyrow, detaching);
+    		}
+    	};
+    }
+
+    // (63:8) {#each $store.hierarchy.indexes as index}
+    function create_each_block$7(ctx) {
+    	var current;
+
+    	var hierarchyrow = new HierarchyRow({
+    		props: { node: ctx.index },
+    		$$inline: true
+    	});
+
+    	return {
+    		c: function create() {
+    			hierarchyrow.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(hierarchyrow, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var hierarchyrow_changes = {};
+    			if (changed.$store) hierarchyrow_changes.node = ctx.index;
+    			hierarchyrow.$set(hierarchyrow_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(hierarchyrow.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(hierarchyrow.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(hierarchyrow, detaching);
+    		}
+    	};
+    }
+
+    // (69:12) {#if $store.currentNode}
+    function create_if_block_2$3(ctx) {
+    	var current;
+
+    	var actionsheader = new ActionsHeader({
+    		props: { left: hierarchyWidth },
+    		$$inline: true
+    	});
+
+    	return {
+    		c: function create() {
+    			actionsheader.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(actionsheader, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var actionsheader_changes = {};
+    			if (changed.hierarchyWidth) actionsheader_changes.left = hierarchyWidth;
+    			actionsheader.$set(actionsheader_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(actionsheader.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(actionsheader.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(actionsheader, detaching);
+    		}
+    	};
+    }
+
+    // (78:12) {:else}
+    function create_else_block$4(ctx) {
+    	var current;
+
+    	var indexview = new IndexView({ $$inline: true });
+
+    	return {
+    		c: function create() {
+    			indexview.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(indexview, target, anchor);
+    			current = true;
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(indexview.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(indexview.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(indexview, detaching);
+    		}
+    	};
+    }
+
+    // (76:59) 
+    function create_if_block_1$3(ctx) {
+    	var current;
+
+    	var recordview = new RecordView({ $$inline: true });
+
+    	return {
+    		c: function create() {
+    			recordview.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(recordview, target, anchor);
+    			current = true;
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(recordview.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(recordview.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(recordview, detaching);
+    		}
+    	};
+    }
+
+    // (74:12) {#if !$store.currentNode}
+    function create_if_block$7(ctx) {
+    	var h1;
+
+    	return {
+    		c: function create() {
+    			h1 = element("h1");
+    			h1.textContent = ":)";
+    			set_style(h1, "margin-left", "100px");
+    			add_location(h1, file$l, 74, 12, 2317);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, h1, anchor);
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(h1);
+    			}
+    		}
+    	};
+    }
+
+    function create_fragment$k(ctx) {
+    	var div8, div4, div1, div0, t1, t2, t3, div3, div2, t5, t6, t7, div7, div5, t8, div6, current_block_type_index, if_block1, current;
+
+    	var dropdownbutton0 = new DropdownButton({
+    		props: { iconName: "plus", actions: ctx.newRecordActions },
+    		$$inline: true
+    	});
+
+    	var each_value_1 = ctx.$store.hierarchy.children;
+
+    	var each_blocks_1 = [];
+
+    	for (var i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks_1[i] = create_each_block_1$2(get_each_context_1$2(ctx, each_value_1, i));
+    	}
+
+    	const out = i => transition_out(each_blocks_1[i], 1, 1, () => {
+    		each_blocks_1[i] = null;
+    	});
+
+    	var dropdownbutton1 = new DropdownButton({
+    		props: { iconName: "plus", actions: ctx.newIndexActions },
+    		$$inline: true
+    	});
+
+    	var each_value = ctx.$store.hierarchy.indexes;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$7(get_each_context$7(ctx, each_value, i));
+    	}
+
+    	const out_1 = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	var if_block0 = (ctx.$store.currentNode) && create_if_block_2$3();
+
+    	var if_block_creators = [
+    		create_if_block$7,
+    		create_if_block_1$3,
+    		create_else_block$4
+    	];
+
+    	var if_blocks = [];
+
+    	function select_block_type(changed, ctx) {
+    		if (!ctx.$store.currentNode) return 0;
+    		if (ctx.$store.currentNode.type === "record") return 1;
+    		return 2;
+    	}
+
+    	current_block_type_index = select_block_type(null, ctx);
+    	if_block1 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+    	return {
+    		c: function create() {
+    			div8 = element("div");
+    			div4 = element("div");
+    			div1 = element("div");
+    			div0 = element("div");
+    			div0.textContent = "Records";
+    			t1 = space();
+    			dropdownbutton0.$$.fragment.c();
+    			t2 = space();
+
+    			for (var i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].c();
+    			}
+
+    			t3 = space();
+    			div3 = element("div");
+    			div2 = element("div");
+    			div2.textContent = "Indexes";
+    			t5 = space();
+    			dropdownbutton1.$$.fragment.c();
+    			t6 = space();
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			t7 = space();
+    			div7 = element("div");
+    			div5 = element("div");
+    			if (if_block0) if_block0.c();
+    			t8 = space();
+    			div6 = element("div");
+    			if_block1.c();
+    			attr(div0, "class", "hierarchy-title svelte-ui57a");
+    			add_location(div0, file$l, 51, 12, 1479);
+    			attr(div1, "class", "hierarchy-title-row svelte-ui57a");
+    			add_location(div1, file$l, 50, 8, 1433);
+    			attr(div2, "class", "hierarchy-title svelte-ui57a");
+    			add_location(div2, file$l, 59, 12, 1798);
+    			attr(div3, "class", "hierarchy-title-row svelte-ui57a");
+    			set_style(div3, "margin-top", "20px");
+    			add_location(div3, file$l, 58, 8, 1727);
+    			attr(div4, "class", "hierarchy svelte-ui57a");
+    			set_style(div4, "width", hierarchyWidth);
+    			add_location(div4, file$l, 49, 4, 1369);
+    			attr(div5, "class", "actions-header svelte-ui57a");
+    			add_location(div5, file$l, 67, 8, 2085);
+    			attr(div6, "class", "node-view svelte-ui57a");
+    			add_location(div6, file$l, 72, 8, 2243);
+    			attr(div7, "class", "node-container svelte-ui57a");
+    			add_location(div7, file$l, 66, 4, 2048);
+    			attr(div8, "class", "root svelte-ui57a");
+    			add_location(div8, file$l, 48, 0, 1346);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div8, anchor);
+    			append(div8, div4);
+    			append(div4, div1);
+    			append(div1, div0);
+    			append(div1, t1);
+    			mount_component(dropdownbutton0, div1, null);
+    			append(div4, t2);
+
+    			for (var i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].m(div4, null);
+    			}
+
+    			append(div4, t3);
+    			append(div4, div3);
+    			append(div3, div2);
+    			append(div3, t5);
+    			mount_component(dropdownbutton1, div3, null);
+    			append(div4, t6);
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div4, null);
+    			}
+
+    			append(div8, t7);
+    			append(div8, div7);
+    			append(div7, div5);
+    			if (if_block0) if_block0.m(div5, null);
+    			append(div7, t8);
+    			append(div7, div6);
+    			if_blocks[current_block_type_index].m(div6, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var dropdownbutton0_changes = {};
+    			if (changed.newRecordActions) dropdownbutton0_changes.actions = ctx.newRecordActions;
+    			dropdownbutton0.$set(dropdownbutton0_changes);
+
+    			if (changed.$store) {
+    				each_value_1 = ctx.$store.hierarchy.children;
+
+    				for (var i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1$2(ctx, each_value_1, i);
+
+    					if (each_blocks_1[i]) {
+    						each_blocks_1[i].p(changed, child_ctx);
+    						transition_in(each_blocks_1[i], 1);
+    					} else {
+    						each_blocks_1[i] = create_each_block_1$2(child_ctx);
+    						each_blocks_1[i].c();
+    						transition_in(each_blocks_1[i], 1);
+    						each_blocks_1[i].m(div4, t3);
+    					}
+    				}
+
+    				group_outros();
+    				for (i = each_value_1.length; i < each_blocks_1.length; i += 1) out(i);
+    				check_outros();
+    			}
+
+    			var dropdownbutton1_changes = {};
+    			if (changed.newIndexActions) dropdownbutton1_changes.actions = ctx.newIndexActions;
+    			dropdownbutton1.$set(dropdownbutton1_changes);
+
+    			if (changed.$store) {
+    				each_value = ctx.$store.hierarchy.indexes;
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$7(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block$7(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(div4, null);
+    					}
+    				}
+
+    				group_outros();
+    				for (i = each_value.length; i < each_blocks.length; i += 1) out_1(i);
+    				check_outros();
+    			}
+
+    			if (ctx.$store.currentNode) {
+    				if (if_block0) {
+    					if_block0.p(changed, ctx);
+    					transition_in(if_block0, 1);
+    				} else {
+    					if_block0 = create_if_block_2$3();
+    					if_block0.c();
+    					transition_in(if_block0, 1);
+    					if_block0.m(div5, null);
+    				}
+    			} else if (if_block0) {
+    				group_outros();
+    				transition_out(if_block0, 1, 1, () => {
+    					if_block0 = null;
+    				});
+    				check_outros();
+    			}
+
+    			var previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type(changed, ctx);
+    			if (current_block_type_index !== previous_block_index) {
+    				group_outros();
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
+    				check_outros();
+
+    				if_block1 = if_blocks[current_block_type_index];
+    				if (!if_block1) {
+    					if_block1 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block1.c();
+    				}
+    				transition_in(if_block1, 1);
+    				if_block1.m(div6, null);
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(dropdownbutton0.$$.fragment, local);
+
+    			for (var i = 0; i < each_value_1.length; i += 1) transition_in(each_blocks_1[i]);
+
+    			transition_in(dropdownbutton1.$$.fragment, local);
+
+    			for (var i = 0; i < each_value.length; i += 1) transition_in(each_blocks[i]);
+
+    			transition_in(if_block0);
+    			transition_in(if_block1);
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(dropdownbutton0.$$.fragment, local);
+
+    			each_blocks_1 = each_blocks_1.filter(Boolean);
+    			for (let i = 0; i < each_blocks_1.length; i += 1) transition_out(each_blocks_1[i]);
+
+    			transition_out(dropdownbutton1.$$.fragment, local);
+
+    			each_blocks = each_blocks.filter(Boolean);
+    			for (let i = 0; i < each_blocks.length; i += 1) transition_out(each_blocks[i]);
+
+    			transition_out(if_block0);
+    			transition_out(if_block1);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div8);
+    			}
+
+    			destroy_component(dropdownbutton0);
+
+    			destroy_each(each_blocks_1, detaching);
+
+    			destroy_component(dropdownbutton1);
+
+    			destroy_each(each_blocks, detaching);
+
+    			if (if_block0) if_block0.d();
+    			if_blocks[current_block_type_index].d();
+    		}
+    	};
+    }
+
+    const hierarchyWidth = "200px";
+
+    function instance$k($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
+    	
+
+    const defaultNewIndexActions =  [{
+        label:"New Root Index", 
+        onclick: store.newRootIndex
+    }];
+
+    const defaultNewRecordActions = [{
+        label:"New Root Record", 
+        onclick: store.newRootRecord
+    }];
+
+    let newIndexActions = defaultNewIndexActions;
+    let newRecordActions = defaultNewRecordActions;
+
+    store.subscribe(db => {
+        if(!db.currentNode || hierarchyFunctions.isIndex(db.currentNode)) {
+            $$invalidate('newRecordActions', newRecordActions = defaultNewRecordActions);
+            $$invalidate('newIndexActions', newIndexActions = defaultNewIndexActions);
+        } else {
+            $$invalidate('newRecordActions', newRecordActions = [
+                ...defaultNewRecordActions,
+                {label: `New Child Record of ${db.currentNode.name}`, 
+                onclick: store.newChildRecord}
+            ]);
+
+            $$invalidate('newIndexActions', newIndexActions = [
+                ...defaultNewIndexActions,
+                {label: `New Index on ${db.currentNode.name}`, 
+                onclick: store.newChildIndex}
+            ]);
+        }
+    });
+
+    	return {
+    		newIndexActions,
+    		newRecordActions,
+    		$store
+    	};
+    }
+
+    class DatabaseRoot extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$k, create_fragment$k, safe_not_equal, []);
+    	}
+    }
+
+    /* src\userInterface\ComponentsHierarchy.svelte generated by Svelte v3.9.1 */
+
+    const file$m = "src\\userInterface\\ComponentsHierarchy.svelte";
+
+    function get_each_context$8(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.component = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_1$3(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.folder = list[i];
+    	return child_ctx;
+    }
+
+    // (129:8) {#if folder.isExpanded}
+    function create_if_block$8(ctx) {
+    	var current;
+
+    	var componentshierarchy = new ComponentsHierarchy({
+    		props: {
+    		components: ctx.subComponents(ctx.folder.name),
+    		thisLevel: ctx.folder.path
+    	},
+    		$$inline: true
+    	});
+
+    	return {
+    		c: function create() {
+    			componentshierarchy.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(componentshierarchy, target, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var componentshierarchy_changes = {};
+    			if (changed.subComponents || changed.subfolders) componentshierarchy_changes.components = ctx.subComponents(ctx.folder.name);
+    			if (changed.subfolders) componentshierarchy_changes.thisLevel = ctx.folder.path;
+    			componentshierarchy.$set(componentshierarchy_changes);
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(componentshierarchy.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(componentshierarchy.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(componentshierarchy, detaching);
+    		}
+    	};
+    }
+
+    // (124:4) {#each subfolders as folder}
+    function create_each_block_1$3(ctx) {
+    	var div, span0, raw_value = getIcon(ctx.folder.isExpanded ? "chevron-down" : "chevron-right", "16") + "", t0, span1, t1_value = ctx.folder.name + "", t1, t2, current, dispose;
+
+    	var if_block = (ctx.folder.isExpanded) && create_if_block$8(ctx);
+
+    	function click_handler() {
+    		return ctx.click_handler(ctx);
+    	}
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			span0 = element("span");
+    			t0 = space();
+    			span1 = element("span");
+    			t1 = text(t1_value);
+    			t2 = space();
+    			if (if_block) if_block.c();
+    			add_location(span0, file$m, 126, 8, 3088);
+    			attr(span1, "class", "title svelte-1cnqtw");
+    			toggle_class(span1, "currentfolder", ctx.$store.currentFrontEndItem && ctx.isInSubfolder(ctx.folder.name, ctx.$store.currentFrontEndItem));
+    			add_location(span1, file$m, 127, 8, 3185);
+    			attr(div, "class", "hierarchy-item folder svelte-1cnqtw");
+    			add_location(div, file$m, 124, 4, 2981);
+    			dispose = listen(div, "click", stop_propagation(click_handler));
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, span0);
+    			span0.innerHTML = raw_value;
+    			append(div, t0);
+    			append(div, span1);
+    			append(span1, t1);
+    			append(div, t2);
+    			if (if_block) if_block.m(div, null);
+    			current = true;
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((!current || changed.subfolders) && raw_value !== (raw_value = getIcon(ctx.folder.isExpanded ? "chevron-down" : "chevron-right", "16") + "")) {
+    				span0.innerHTML = raw_value;
+    			}
+
+    			if ((!current || changed.subfolders) && t1_value !== (t1_value = ctx.folder.name + "")) {
+    				set_data(t1, t1_value);
+    			}
+
+    			if ((changed.$store || changed.isInSubfolder || changed.subfolders)) {
+    				toggle_class(span1, "currentfolder", ctx.$store.currentFrontEndItem && ctx.isInSubfolder(ctx.folder.name, ctx.$store.currentFrontEndItem));
+    			}
+
+    			if (ctx.folder.isExpanded) {
+    				if (if_block) {
+    					if_block.p(changed, ctx);
+    					transition_in(if_block, 1);
+    				} else {
+    					if_block = create_if_block$8(ctx);
+    					if_block.c();
+    					transition_in(if_block, 1);
+    					if_block.m(div, null);
+    				}
+    			} else if (if_block) {
+    				group_outros();
+    				transition_out(if_block, 1, 1, () => {
+    					if_block = null;
+    				});
+    				check_outros();
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			if (if_block) if_block.d();
+    			dispose();
+    		}
+    	};
+    }
+
+    // (136:4) {#each componentsThisLevel as component}
+    function create_each_block$8(ctx) {
+    	var div, span0, raw_value = getIcon("circle", "7") + "", t0, span1, t1_value = ctx.component.title + "", t1, t2, dispose;
+
+    	function click_handler_1() {
+    		return ctx.click_handler_1(ctx);
+    	}
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			span0 = element("span");
+    			t0 = space();
+    			span1 = element("span");
+    			t1 = text(t1_value);
+    			t2 = space();
+    			add_location(span0, file$m, 138, 8, 3784);
+    			attr(span1, "class", "title svelte-1cnqtw");
+    			add_location(span1, file$m, 139, 8, 3836);
+    			attr(div, "class", "hierarchy-item component svelte-1cnqtw");
+    			toggle_class(div, "selected", ctx.isComponentSelected(ctx.$store.currentFrontEndItem, ctx.component.component));
+    			add_location(div, file$m, 136, 4, 3562);
+    			dispose = listen(div, "click", stop_propagation(click_handler_1));
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, span0);
+    			span0.innerHTML = raw_value;
+    			append(div, t0);
+    			append(div, span1);
+    			append(span1, t1);
+    			append(div, t2);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((changed.componentsThisLevel) && t1_value !== (t1_value = ctx.component.title + "")) {
+    				set_data(t1, t1_value);
+    			}
+
+    			if ((changed.isComponentSelected || changed.$store || changed.componentsThisLevel)) {
+    				toggle_class(div, "selected", ctx.isComponentSelected(ctx.$store.currentFrontEndItem, ctx.component.component));
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
+
+    function create_fragment$l(ctx) {
+    	var div, t, div_style_value, current;
+
+    	var each_value_1 = ctx.subfolders;
+
+    	var each_blocks_1 = [];
+
+    	for (var i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks_1[i] = create_each_block_1$3(get_each_context_1$3(ctx, each_value_1, i));
+    	}
+
+    	const out = i => transition_out(each_blocks_1[i], 1, 1, () => {
+    		each_blocks_1[i] = null;
+    	});
+
+    	var each_value = ctx.componentsThisLevel;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
+    	}
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+
+    			for (var i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].c();
+    			}
+
+    			t = space();
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+    			attr(div, "class", "root svelte-1cnqtw");
+    			attr(div, "style", div_style_value = `padding-left: calc(10px * ${ctx.pathPartsThisLevel})`);
+    			add_location(div, file$m, 121, 0, 2864);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+
+    			for (var i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].m(div, null);
+    			}
+
+    			append(div, t);
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div, null);
+    			}
+
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.subfolders || changed.subComponents || changed.$store || changed.isInSubfolder || changed.getIcon) {
+    				each_value_1 = ctx.subfolders;
+
+    				for (var i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1$3(ctx, each_value_1, i);
+
+    					if (each_blocks_1[i]) {
+    						each_blocks_1[i].p(changed, child_ctx);
+    						transition_in(each_blocks_1[i], 1);
+    					} else {
+    						each_blocks_1[i] = create_each_block_1$3(child_ctx);
+    						each_blocks_1[i].c();
+    						transition_in(each_blocks_1[i], 1);
+    						each_blocks_1[i].m(div, t);
+    					}
+    				}
+
+    				group_outros();
+    				for (i = each_value_1.length; i < each_blocks_1.length; i += 1) out(i);
+    				check_outros();
+    			}
+
+    			if (changed.isComponentSelected || changed.$store || changed.componentsThisLevel || changed.getIcon) {
+    				each_value = ctx.componentsThisLevel;
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$8(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$8(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+
+    			if ((!current || changed.pathPartsThisLevel) && div_style_value !== (div_style_value = `padding-left: calc(10px * ${ctx.pathPartsThisLevel})`)) {
+    				attr(div, "style", div_style_value);
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			for (var i = 0; i < each_value_1.length; i += 1) transition_in(each_blocks_1[i]);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			each_blocks_1 = each_blocks_1.filter(Boolean);
+    			for (let i = 0; i < each_blocks_1.length; i += 1) transition_out(each_blocks_1[i]);
+
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			destroy_each(each_blocks_1, detaching);
+
+    			destroy_each(each_blocks, detaching);
+    		}
+    	};
+    }
+
+    function instance$l($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
+    	
+
+    let { components = [], thisLevel = "" } = $$props;
+
+    let pathPartsThisLevel;
+    let componentsThisLevel;
+    let subfolders;
+
+    let expandedFolders = [];
+
+    const joinPath = fp_39("/");
+
+    const normalizedName = name => pipe(name, [
+            fp_54("./"),
+            fp_54("~/"),
+            fp_54("../"),
+            fp_53(" ")
+        ]);
+
+
+    const isOnThisLevel = (c) => 
+        normalizedName(c.name).split("/").length === pathPartsThisLevel
+        &&
+        (!thisLevel || normalizedName(c.name).startsWith(normalizedName(thisLevel)));
+
+    const notOnThisLevel = (c) => !isOnThisLevel(c);
+
+    const isInSubfolder = (subfolder, c) => 
+        normalizedName(c.name).startsWith(
+            fp_54("/")(
+                joinPath([thisLevel, subfolder])));
+
+    const lastPartOfName = (c) => 
+        fp_12(c.name.split("/"));
+
+    const subFolder = (c) => {
+        const cname = normalizedName(c.name);
+        const folderName = cname.substring(thisLevel.length, cname.length).split("/")[0];
+
+        return ({
+            name: folderName,
+            isExpanded: fp_11(folderName)(expandedFolders),
+            path: thisLevel + "/" + folderName
+        });
+    };
+
+    const subComponents = (subfolder) => pipe(components, [
+            fp_8(c => isInSubfolder(subfolder, c))
+        ]);
+
+    const expandFolder = folder => {
+        const expandedFolder = {...folder};
+        if(expandedFolder.isExpanded) {
+            expandedFolder.isExpanded = false;
+            expandedFolders = fp_8(f => f.name !== folder.name)(expandedFolders);
+        } else {
+            expandedFolder.isExpanded = true;
+            expandedFolders.push(folder.name);
+        }
+        const newFolders = [...subfolders];
+        newFolders.splice(
+            newFolders.indexOf(folder),
+            1,
+            expandedFolder);
+        $$invalidate('subfolders', subfolders = newFolders);
+         
+    };
+
+    const isComponentSelected = (current,c) =>
+        current 
+        && current.name === c.name;
+
+    	const writable_props = ['components', 'thisLevel'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ComponentsHierarchy> was created with unknown prop '${key}'`);
+    	});
+
+    	function click_handler({ folder }) {
+    		return expandFolder(folder);
+    	}
+
+    	function click_handler_1({ component }) {
+    		return store.setCurrentComponent(component.component);
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('components' in $$props) $$invalidate('components', components = $$props.components);
+    		if ('thisLevel' in $$props) $$invalidate('thisLevel', thisLevel = $$props.thisLevel);
+    	};
+
+    	$$self.$$.update = ($$dirty = { thisLevel: 1, components: 1 }) => {
+    		if ($$dirty.thisLevel || $$dirty.components) { {
+                $$invalidate('pathPartsThisLevel', pathPartsThisLevel = !thisLevel 
+                                        ? 1
+                                        : normalizedName(thisLevel).split("/").length + 1);
+            
+                $$invalidate('componentsThisLevel', componentsThisLevel = 
+                    pipe(components, [
+                        fp_8(isOnThisLevel),
+                        fp_7(c => ({component:c, title:lastPartOfName(c)})),
+                        fp_50("title")
+                    ]));
+            
+                $$invalidate('subfolders', subfolders = 
+                    pipe(components, [
+                        fp_8(notOnThisLevel),
+                        fp_50("name"),
+                        fp_7(subFolder),
+                        fp_43((f1,f2) => f1.path === f2.path)
+                    ]));
+            } }
+    	};
+
+    	return {
+    		components,
+    		thisLevel,
+    		pathPartsThisLevel,
+    		componentsThisLevel,
+    		subfolders,
+    		isInSubfolder,
+    		subComponents,
+    		expandFolder,
+    		isComponentSelected,
+    		$store,
+    		click_handler,
+    		click_handler_1
+    	};
+    }
+
+    class ComponentsHierarchy extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$l, create_fragment$l, safe_not_equal, ["components", "thisLevel"]);
+    	}
+
+    	get components() {
+    		throw new Error("<ComponentsHierarchy>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set components(value) {
+    		throw new Error("<ComponentsHierarchy>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get thisLevel() {
+    		throw new Error("<ComponentsHierarchy>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set thisLevel(value) {
+    		throw new Error("<ComponentsHierarchy>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\userInterface\PagesList.svelte generated by Svelte v3.9.1 */
+
+    const file$n = "src\\userInterface\\PagesList.svelte";
+
+    function create_fragment$m(ctx) {
+    	var div2, div0, span0, raw0_value = getIcon("circle", "7") + "", t0, span1, t2, div1, span2, raw1_value = getIcon("circle", "7") + "", t3, span3, dispose;
+
+    	return {
+    		c: function create() {
+    			div2 = element("div");
+    			div0 = element("div");
+    			span0 = element("span");
+    			t0 = space();
+    			span1 = element("span");
+    			span1.textContent = "Main";
+    			t2 = space();
+    			div1 = element("div");
+    			span2 = element("span");
+    			t3 = space();
+    			span3 = element("span");
+    			span3.textContent = "Login";
+    			add_location(span0, file$n, 14, 8, 429);
+    			attr(span1, "class", "title svelte-ffb307");
+    			add_location(span1, file$n, 15, 8, 481);
+    			attr(div0, "class", "hierarchy-item component svelte-ffb307");
+    			toggle_class(div0, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "main");
+    			add_location(div0, file$n, 12, 4, 218);
+    			add_location(span2, file$n, 20, 8, 762);
+    			attr(span3, "class", "title svelte-ffb307");
+    			add_location(span3, file$n, 21, 8, 814);
+    			attr(div1, "class", "hierarchy-item component svelte-ffb307");
+    			toggle_class(div1, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "unauthenticated");
+    			add_location(div1, file$n, 18, 4, 529);
+    			attr(div2, "class", "root svelte-ffb307");
+    			add_location(div2, file$n, 11, 0, 195);
+
+    			dispose = [
+    				listen(div0, "click", stop_propagation(ctx.click_handler)),
+    				listen(div1, "click", stop_propagation(ctx.click_handler_1))
+    			];
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div2, anchor);
+    			append(div2, div0);
+    			append(div0, span0);
+    			span0.innerHTML = raw0_value;
+    			append(div0, t0);
+    			append(div0, span1);
+    			append(div2, t2);
+    			append(div2, div1);
+    			append(div1, span2);
+    			span2.innerHTML = raw1_value;
+    			append(div1, t3);
+    			append(div1, span3);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.$store) {
+    				toggle_class(div0, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "main");
+    				toggle_class(div1, "selected", ctx.$store.currentFrontEndItem && ctx.$store.currentFrontEndItem.name === "unauthenticated");
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div2);
+    			}
+
+    			run_all(dispose);
+    		}
+    	};
+    }
+
+    function instance$m($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
+    	function click_handler() {
+    		return store.setCurrentPage("main");
+    	}
+
+    	function click_handler_1() {
+    		return store.setCurrentPage("unauthenticated");
+    	}
+
+    	return { $store, click_handler, click_handler_1 };
+    }
+
+    class PagesList extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$m, create_fragment$m, safe_not_equal, []);
+    	}
+    }
+
+    if (typeof global$1.setTimeout === 'function') ;
+    if (typeof global$1.clearTimeout === 'function') ;
+
+    // from https://github.com/kumavis/browser-process-hrtime/blob/master/index.js
+    var performance$1 = global$1.performance || {};
+    var performanceNow =
+      performance$1.now        ||
+      performance$1.mozNow     ||
+      performance$1.msNow      ||
+      performance$1.oNow       ||
+      performance$1.webkitNow  ||
+      function(){ return (new Date()).getTime() };
+
+    function isString(arg) {
+      return typeof arg === 'string';
+    }
+
+    const makeError = (errors, propName, stack) => (message) =>
+        errors.push({
+            stack,
+            propName, 
+            error:message});
+
+    const expandPropDef = propDef => {
+        const p = isString(propDef)
+                  ? types[propDef].defaultDefinition()
+                  : propDef;
+        if(p.type === "array" && isString(p.elementDefinition)) {
+            p.elementDefinition = types[p.elementDefinition].defaultDefinition();
+        }
+        return p;
+    };
+
+
+    const validateProps = (propsDefinition, props, stack=[], isFinal=true) => {
+
+        const errors = [];
+
+        if(isFinal && !props._component) {
+            makeError(errors, "_component", stack)("Component is not set");
+            return errors;
+            // this would break everything else anyway
+        }
+
+        for(let propDefName in propsDefinition) {
+            
+            if(propDefName === "_component") continue;
+
+            const propDef = expandPropDef(propsDefinition[propDefName]);
+
+            const type = types[propDef.type];
+
+            const error = makeError(errors, propDefName, stack);            
+
+            const propValue = props[propDefName];
+
+            // component declarations dont need to define al props.
+            if(!isFinal && fp_3(propValue)) continue;
+
+            if(isFinal && propDef.required && propValue) {
+                error(`Property ${propDefName} is required`);
+                continue;
+            } 
+
+            if(!type.isOfType(propValue)) {
+                error(`Property ${propDefName} is not of type ${propDef.type}. Actual value ${propValue}`);
+                continue;
+            }
+
+            if(propDef.type === "array") {
+                let index = 0;
+                for(let arrayItem of propValue) {
+                    arrayItem._component = `${props._component}:${propDefName}`;
+                    const arrayErrs = validateProps(
+                        propDef.elementDefinition,
+                        arrayItem,
+                        [...stack, `${propDefName}[${index}]`],
+                        isFinal
+                    );
+                    for(let arrErr of arrayErrs) {
+                        errors.push(arrErr);
+                    }
+                    index++;
+                }    
+            }
+
+            if(propDef.type === "options" 
+               && propValue
+               && !fp_11(propValue)(propDef.options)) {
+                error(`Property ${propDefName} is not one of allowed options. Acutal value is ${propValue}`);
+            }
+
+        }
+
+        return errors;
+    };
+
+    /* src\common\IconButton.svelte generated by Svelte v3.9.1 */
+
+    const file$o = "src\\common\\IconButton.svelte";
+
+    function create_fragment$n(ctx) {
+    	var button, raw_value = getIcon(ctx.icon, ctx.size) + "", button_style_value, addAttributes_action, dispose;
+
+    	return {
+    		c: function create() {
+    			button = element("button");
+    			attr(button, "style", button_style_value = "" + ctx.style + " color:" + ctx.color + " --hovercolor:" + ctx.hoverColor);
+    			attr(button, "class", "svelte-4po3k2");
+    			add_location(button, file$o, 42, 0, 926);
+    			dispose = listen(button, "click", ctx.click_handler);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, button, anchor);
+    			button.innerHTML = raw_value;
+    			addAttributes_action = ctx.addAttributes.call(null, button, ctx.attributes) || {};
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((changed.icon || changed.size) && raw_value !== (raw_value = getIcon(ctx.icon, ctx.size) + "")) {
+    				button.innerHTML = raw_value;
+    			}
+
+    			if ((changed.style || changed.color || changed.hoverColor) && button_style_value !== (button_style_value = "" + ctx.style + " color:" + ctx.color + " --hovercolor:" + ctx.hoverColor)) {
+    				attr(button, "style", button_style_value);
+    			}
+
+    			if (typeof addAttributes_action.update === 'function' && changed.attributes) {
+    				addAttributes_action.update.call(null, ctx.attributes);
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(button);
+    			}
+
+    			if (addAttributes_action && typeof addAttributes_action.destroy === 'function') addAttributes_action.destroy();
+    			dispose();
+    		}
+    	};
+    }
+
+    function instance$n($$self, $$props, $$invalidate) {
+    	let { size = 18, icon = "", style = "", color = "", hoverColor = "", attributes = {} } = $$props;
+
+    let currentAttributes = [];
+    const addAttributes = (node, attributes) => {
+
+        const add = (_attributes) => {
+            const attrs = [];
+            for(let attr in _attributes) {
+                node.setAttribute(attr, _attributes[attr]);
+                attrs.push("uk-toggle");
+            }
+            currentAttributes = attrs;
+        };
+
+        add(attributes);
+
+        return {
+            // should implement update method
+            update(attributes) {
+                for(let attr of currentAttributes) {
+                    node.removeAttribute(attr);
+                }
+                add(attributes);
+            },
+            destroy() {}
+        }
+    };
+
+    	const writable_props = ['size', 'icon', 'style', 'color', 'hoverColor', 'attributes'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<IconButton> was created with unknown prop '${key}'`);
+    	});
+
+    	function click_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('size' in $$props) $$invalidate('size', size = $$props.size);
+    		if ('icon' in $$props) $$invalidate('icon', icon = $$props.icon);
+    		if ('style' in $$props) $$invalidate('style', style = $$props.style);
+    		if ('color' in $$props) $$invalidate('color', color = $$props.color);
+    		if ('hoverColor' in $$props) $$invalidate('hoverColor', hoverColor = $$props.hoverColor);
+    		if ('attributes' in $$props) $$invalidate('attributes', attributes = $$props.attributes);
+    	};
+
+    	return {
+    		size,
+    		icon,
+    		style,
+    		color,
+    		hoverColor,
+    		attributes,
+    		addAttributes,
+    		click_handler
+    	};
+    }
+
+    class IconButton extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$n, create_fragment$n, safe_not_equal, ["size", "icon", "style", "color", "hoverColor", "attributes"]);
+    	}
+
+    	get size() {
+    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set size(value) {
+    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get icon() {
+    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set icon(value) {
+    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get style() {
+    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set style(value) {
+    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get color() {
+    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set color(value) {
+    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get hoverColor() {
+    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set hoverColor(value) {
+    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get attributes() {
+    		throw new Error("<IconButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set attributes(value) {
+    		throw new Error("<IconButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\userInterface\ComponentSearch.svelte generated by Svelte v3.9.1 */
+
+    const file$p = "src\\userInterface\\ComponentSearch.svelte";
+
+    function get_each_context$9(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.component = list[i];
+    	return child_ctx;
+    }
+
+    // (33:8) {#each filteredComponents as component}
+    function create_each_block$9(ctx) {
+    	var div2, div0, t0_value = ctx.component.name + "", t0, t1, div1, t2_value = ctx.component.description + "", t2, t3, dispose;
+
+    	function click_handler() {
+    		return ctx.click_handler(ctx);
+    	}
+
+    	return {
+    		c: function create() {
+    			div2 = element("div");
+    			div0 = element("div");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			div1 = element("div");
+    			t2 = text(t2_value);
+    			t3 = space();
+    			attr(div0, "class", "title svelte-13tuzj8");
+    			add_location(div0, file$p, 34, 12, 837);
+    			attr(div1, "class", "description svelte-13tuzj8");
+    			add_location(div1, file$p, 35, 12, 892);
+    			attr(div2, "class", "component svelte-13tuzj8");
+    			add_location(div2, file$p, 33, 8, 754);
+    			dispose = listen(div2, "click", click_handler);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div2, anchor);
+    			append(div2, div0);
+    			append(div0, t0);
+    			append(div2, t1);
+    			append(div2, div1);
+    			append(div1, t2);
+    			append(div2, t3);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((changed.filteredComponents) && t0_value !== (t0_value = ctx.component.name + "")) {
+    				set_data(t0, t0_value);
+    			}
+
+    			if ((changed.filteredComponents) && t2_value !== (t2_value = ctx.component.description + "")) {
+    				set_data(t2, t2_value);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div2);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
+
+    function create_fragment$o(ctx) {
+    	var div1, form, span, t0, input, t1, div0, dispose;
+
+    	var each_value = ctx.filteredComponents;
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
+    	}
+
+    	return {
+    		c: function create() {
+    			div1 = element("div");
+    			form = element("form");
+    			span = element("span");
+    			t0 = space();
+    			input = element("input");
+    			t1 = space();
+    			div0 = element("div");
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+    			attr(span, "uk-search-icon", "");
+    			add_location(span, file$p, 24, 8, 479);
+    			attr(input, "class", "uk-search-input");
+    			attr(input, "type", "search");
+    			attr(input, "placeholder", "Based on component...");
+    			add_location(input, file$p, 25, 8, 517);
+    			attr(form, "class", "uk-search uk-search-large");
+    			add_location(form, file$p, 23, 4, 429);
+    			add_location(div0, file$p, 31, 4, 690);
+    			attr(div1, "class", "root");
+    			add_location(div1, file$p, 21, 0, 403);
+    			dispose = listen(input, "input", ctx.input_input_handler);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div1, anchor);
+    			append(div1, form);
+    			append(form, span);
+    			append(form, t0);
+    			append(form, input);
+
+    			set_input_value(input, ctx.phrase);
+
+    			append(div1, t1);
+    			append(div1, div0);
+
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div0, null);
+    			}
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.phrase) set_input_value(input, ctx.phrase);
+
+    			if (changed.filteredComponents) {
+    				each_value = ctx.filteredComponents;
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$9(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$9(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div0, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div1);
+    			}
+
+    			destroy_each(each_blocks, detaching);
+
+    			dispose();
+    		}
+    	};
+    }
+
+    function instance$o($$self, $$props, $$invalidate) {
+    	
+
+    let { onComponentChosen = () => {} } = $$props;
+
+    let allComponents = [];
+    let phrase = "";
+
+    store.subscribe(s => {
+        $$invalidate('allComponents', allComponents = s.allComponents);
+    });
+
+    	const writable_props = ['onComponentChosen'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ComponentSearch> was created with unknown prop '${key}'`);
+    	});
+
+    	function input_input_handler() {
+    		phrase = this.value;
+    		$$invalidate('phrase', phrase);
+    	}
+
+    	function click_handler({ component }) {
+    		return onComponentChosen(component);
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('onComponentChosen' in $$props) $$invalidate('onComponentChosen', onComponentChosen = $$props.onComponentChosen);
+    	};
+
+    	let filteredComponents;
+
+    	$$self.$$.update = ($$dirty = { phrase: 1, allComponents: 1 }) => {
+    		if ($$dirty.phrase || $$dirty.allComponents) { $$invalidate('filteredComponents', filteredComponents = 
+                !phrase 
+                ? [] 
+                : searchAllComponents(allComponents, phrase)); }
+    	};
+
+    	return {
+    		onComponentChosen,
+    		phrase,
+    		filteredComponents,
+    		input_input_handler,
+    		click_handler
+    	};
+    }
+
+    class ComponentSearch extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$o, create_fragment$o, safe_not_equal, ["onComponentChosen"]);
+    	}
+
+    	get onComponentChosen() {
+    		throw new Error("<ComponentSearch>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set onComponentChosen(value) {
+    		throw new Error("<ComponentSearch>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\userInterface\ComponentPropSelector.svelte generated by Svelte v3.9.1 */
+
+    const file$q = "src\\userInterface\\ComponentPropSelector.svelte";
 
     // (85:50) 
-    function create_if_block_3(ctx) {
+    function create_if_block_3$2(ctx) {
     	var current;
 
     	var iconbutton = new IconButton({ props: { icon: "plus" }, $$inline: true });
@@ -45761,7 +53901,7 @@
     }
 
     // (79:8) {#if !disabled && componentSelected}
-    function create_if_block_2(ctx) {
+    function create_if_block_2$4(ctx) {
     	var t, current;
 
     	var iconbutton0 = new IconButton({ props: { icon: "edit" }, $$inline: true });
@@ -45812,12 +53952,12 @@
     }
 
     // (100:50) 
-    function create_if_block_1(ctx) {
+    function create_if_block_1$4(ctx) {
     	var div0, t_1, div1, current;
 
     	var buttongroup = new ButtonGroup({
     		props: {
-    		$$slots: { default: [create_default_slot] },
+    		$$slots: { default: [create_default_slot$3] },
     		$$scope: { ctx }
     	},
     		$$inline: true
@@ -45831,9 +53971,9 @@
     			div1 = element("div");
     			buttongroup.$$.fragment.c();
     			attr(div0, "class", "uk-modal-body");
-    			add_location(div0, file$b, 100, 8, 2595);
+    			add_location(div0, file$q, 100, 8, 2595);
     			attr(div1, "class", "uk-modal-footer");
-    			add_location(div1, file$b, 103, 8, 2684);
+    			add_location(div1, file$q, 103, 8, 2684);
     		},
 
     		m: function mount(target, anchor) {
@@ -45875,7 +54015,7 @@
     }
 
     // (96:8) {#if modalAction === CHOOSE_COMPONENT}
-    function create_if_block$3(ctx) {
+    function create_if_block$9(ctx) {
     	var div, current;
 
     	var componentsearch = new ComponentSearch({
@@ -45888,7 +54028,7 @@
     			div = element("div");
     			componentsearch.$$.fragment.c();
     			attr(div, "class", "uk-modal-body");
-    			add_location(div, file$b, 96, 8, 2421);
+    			add_location(div, file$q, 96, 8, 2421);
     		},
 
     		m: function mount(target, anchor) {
@@ -45926,7 +54066,7 @@
     }
 
     // (106:16) <Button grouped                           on:click={hideDialog}                           color="secondary" >
-    function create_default_slot_2(ctx) {
+    function create_default_slot_2$2(ctx) {
     	var t;
 
     	return {
@@ -45947,7 +54087,7 @@
     }
 
     // (109:16) <Button grouped                           on:click={confirmClearComponent}>
-    function create_default_slot_1(ctx) {
+    function create_default_slot_1$2(ctx) {
     	var t;
 
     	return {
@@ -45968,14 +54108,14 @@
     }
 
     // (105:12) <ButtonGroup>
-    function create_default_slot(ctx) {
+    function create_default_slot$3(ctx) {
     	var t, current;
 
     	var button0 = new Button({
     		props: {
     		grouped: true,
     		color: "secondary",
-    		$$slots: { default: [create_default_slot_2] },
+    		$$slots: { default: [create_default_slot_2$2] },
     		$$scope: { ctx }
     	},
     		$$inline: true
@@ -45985,7 +54125,7 @@
     	var button1 = new Button({
     		props: {
     		grouped: true,
-    		$$slots: { default: [create_default_slot_1] },
+    		$$slots: { default: [create_default_slot_1$2] },
     		$$scope: { ctx }
     	},
     		$$inline: true
@@ -46043,40 +54183,40 @@
     	};
     }
 
-    function create_fragment$a(ctx) {
-    	var label_1, t0, t1, div2, div0, t2_value = ctx.componentSelected ?  ctx.shortName : "(none)", t2, t3, div1, current_block_type_index, if_block0, t4, div4, div3, current_block_type_index_1, if_block1, current;
+    function create_fragment$p(ctx) {
+    	var label_1, t0, t1, div2, div0, t2_value = ctx.componentSelected ?  ctx.shortName : "(none)" + "", t2, t3, div1, current_block_type_index, if_block0, t4, div4, div3, current_block_type_index_1, if_block1, current;
 
     	var if_block_creators = [
-    		create_if_block_2,
-    		create_if_block_3
+    		create_if_block_2$4,
+    		create_if_block_3$2
     	];
 
     	var if_blocks = [];
 
-    	function select_block_type(ctx) {
+    	function select_block_type(changed, ctx) {
     		if (!ctx.disabled && ctx.componentSelected) return 0;
     		if (!ctx.disabled && !ctx.componentSelected) return 1;
     		return -1;
     	}
 
-    	if (~(current_block_type_index = select_block_type(ctx))) {
+    	if (~(current_block_type_index = select_block_type(null, ctx))) {
     		if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
     	}
 
     	var if_block_creators_1 = [
-    		create_if_block$3,
-    		create_if_block_1
+    		create_if_block$9,
+    		create_if_block_1$4
     	];
 
     	var if_blocks_1 = [];
 
-    	function select_block_type_1(ctx) {
+    	function select_block_type_1(changed, ctx) {
     		if (ctx.modalAction === CHOOSE_COMPONENT) return 0;
     		if (ctx.modalAction === CLEAR_COMPONENT) return 1;
     		return -1;
     	}
 
-    	if (~(current_block_type_index_1 = select_block_type_1(ctx))) {
+    	if (~(current_block_type_index_1 = select_block_type_1(null, ctx))) {
     		if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
     	}
 
@@ -46096,19 +54236,19 @@
     			div3 = element("div");
     			if (if_block1) if_block1.c();
     			attr(label_1, "class", "uk-form-label");
-    			add_location(label_1, file$b, 72, 0, 1686);
+    			add_location(label_1, file$q, 72, 0, 1686);
     			attr(div0, "class", "svelte-woqcuf");
     			toggle_class(div0, "selectedname", ctx.componentSelected);
-    			add_location(div0, file$b, 74, 4, 1773);
+    			add_location(div0, file$q, 74, 4, 1773);
     			attr(div1, "class", "svelte-woqcuf");
-    			add_location(div1, file$b, 77, 4, 1888);
+    			add_location(div1, file$q, 77, 4, 1888);
     			attr(div2, "class", "root uk-form-controls svelte-woqcuf");
-    			add_location(div2, file$b, 73, 0, 1732);
+    			add_location(div2, file$q, 73, 0, 1732);
     			attr(div3, "class", "uk-modal-dialog");
-    			add_location(div3, file$b, 93, 4, 2332);
+    			add_location(div3, file$q, 93, 4, 2332);
     			attr(div4, "uk-modal", "");
     			attr(div4, "class", "svelte-woqcuf");
-    			add_location(div4, file$b, 92, 0, 2287);
+    			add_location(div4, file$q, 92, 0, 2287);
     		},
 
     		l: function claim(nodes) {
@@ -46138,7 +54278,7 @@
     				set_data(t0, ctx.label);
     			}
 
-    			if ((!current || changed.componentSelected || changed.shortName) && t2_value !== (t2_value = ctx.componentSelected ?  ctx.shortName : "(none)")) {
+    			if ((!current || changed.componentSelected || changed.shortName) && t2_value !== (t2_value = ctx.componentSelected ?  ctx.shortName : "(none)" + "")) {
     				set_data(t2, t2_value);
     			}
 
@@ -46147,7 +54287,7 @@
     			}
 
     			var previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
+    			current_block_type_index = select_block_type(changed, ctx);
     			if (current_block_type_index !== previous_block_index) {
     				if (if_block0) {
     					group_outros();
@@ -46171,7 +54311,7 @@
     			}
 
     			var previous_block_index_1 = current_block_type_index_1;
-    			current_block_type_index_1 = select_block_type_1(ctx);
+    			current_block_type_index_1 = select_block_type_1(changed, ctx);
     			if (current_block_type_index_1 === previous_block_index_1) {
     				if (~current_block_type_index_1) if_blocks_1[current_block_type_index_1].p(changed, ctx);
     			} else {
@@ -46234,7 +54374,7 @@
 
     const CLEAR_COMPONENT = "clear_component";
 
-    function instance$a($$self, $$props, $$invalidate) {
+    function instance$p($$self, $$props, $$invalidate) {
     	
 
     const emptyProps = () => ({_component:""});
@@ -46334,7 +54474,7 @@
     class ComponentPropSelector extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$a, create_fragment$a, safe_not_equal, ["props", "onValueChanged", "onComponentChosen", "onEdit", "label", "disabled"]);
+    		init(this, options, instance$p, create_fragment$p, safe_not_equal, ["props", "onValueChanged", "onComponentChosen", "onEdit", "label", "disabled"]);
     	}
 
     	get props() {
@@ -46386,12 +54526,12 @@
     	}
     }
 
-    /* src\userInterface\PropControl.svelte generated by Svelte v3.6.9 */
+    /* src\userInterface\PropControl.svelte generated by Svelte v3.9.1 */
 
-    const file$c = "src\\userInterface\\PropControl.svelte";
+    const file$r = "src\\userInterface\\PropControl.svelte";
 
     // (47:4) {:else}
-    function create_else_block$1(ctx) {
+    function create_else_block$5(ctx) {
     	var current;
 
     	var textbox = new Textbox({
@@ -46444,7 +54584,7 @@
     }
 
     // (40:43) 
-    function create_if_block_2$1(ctx) {
+    function create_if_block_2$5(ctx) {
     	var current;
 
     	var componentpropselector = new ComponentPropSelector({
@@ -46499,7 +54639,7 @@
     }
 
     // (34:41) 
-    function create_if_block_1$1(ctx) {
+    function create_if_block_1$5(ctx) {
     	var current;
 
     	var dropdown = new Dropdown({
@@ -46551,7 +54691,7 @@
     }
 
     // (29:4) {#if propDef.type === "bool"}
-    function create_if_block$4(ctx) {
+    function create_if_block$a(ctx) {
     	var current;
 
     	var checkbox = new Checkbox({
@@ -46600,26 +54740,26 @@
     	};
     }
 
-    function create_fragment$b(ctx) {
+    function create_fragment$q(ctx) {
     	var div, current_block_type_index, if_block, current;
 
     	var if_block_creators = [
-    		create_if_block$4,
-    		create_if_block_1$1,
-    		create_if_block_2$1,
-    		create_else_block$1
+    		create_if_block$a,
+    		create_if_block_1$5,
+    		create_if_block_2$5,
+    		create_else_block$5
     	];
 
     	var if_blocks = [];
 
-    	function select_block_type(ctx) {
+    	function select_block_type(changed, ctx) {
     		if (ctx.propDef.type === "bool") return 0;
     		if (ctx.propDef.type === "options") return 1;
     		if (ctx.propDef.type === "component") return 2;
     		return 3;
     	}
 
-    	current_block_type_index = select_block_type(ctx);
+    	current_block_type_index = select_block_type(null, ctx);
     	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
     	return {
@@ -46627,7 +54767,7 @@
     			div = element("div");
     			if_block.c();
     			attr(div, "class", "root svelte-w5on8s");
-    			add_location(div, file$c, 25, 0, 592);
+    			add_location(div, file$r, 25, 0, 592);
     		},
 
     		l: function claim(nodes) {
@@ -46642,7 +54782,7 @@
 
     		p: function update(changed, ctx) {
     			var previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
+    			current_block_type_index = select_block_type(changed, ctx);
     			if (current_block_type_index === previous_block_index) {
     				if_blocks[current_block_type_index].p(changed, ctx);
     			} else {
@@ -46683,7 +54823,7 @@
     	};
     }
 
-    function instance$b($$self, $$props, $$invalidate) {
+    function instance$q($$self, $$props, $$invalidate) {
     	
 
     let { errors = [], setProp = () => {} } = $$props;
@@ -46745,7 +54885,7 @@
     class PropControl extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$b, create_fragment$b, safe_not_equal, ["errors", "setProp", "fieldHasError", "propDef", "props", "disabled", "index", "onEditComponent"]);
+    		init(this, options, instance$q, create_fragment$q, safe_not_equal, ["errors", "setProp", "fieldHasError", "propDef", "props", "disabled", "index", "onEditComponent"]);
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
@@ -46822,18 +54962,18 @@
     	}
     }
 
-    /* src\userInterface\PropsView.svelte generated by Svelte v3.6.9 */
+    /* src\userInterface\PropsView.svelte generated by Svelte v3.9.1 */
 
-    const file$d = "src\\userInterface\\PropsView.svelte";
+    const file$s = "src\\userInterface\\PropsView.svelte";
 
-    function get_each_context$4(ctx, list, i) {
+    function get_each_context$a(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.propDef = list[i];
     	child_ctx.index = i;
     	return child_ctx;
     }
 
-    function get_each_context_1$2(ctx, list, i) {
+    function get_each_context_1$4(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.propDef = list[i];
     	child_ctx.index = i;
@@ -46841,7 +54981,7 @@
     }
 
     // (112:8) {#each propsDefinitions as propDef, index}
-    function create_each_block_1$2(ctx) {
+    function create_each_block_1$4(ctx) {
     	var current;
 
     	var propcontrol = new PropControl({
@@ -46898,7 +55038,7 @@
     }
 
     // (125:8) {#if inheritedPropsDefinitions.length > 0}
-    function create_if_block_1$2(ctx) {
+    function create_if_block_1$6(ctx) {
     	var div2, div0, t_1, div1, current;
 
     	var iconbutton = new IconButton({
@@ -46916,11 +55056,11 @@
     			div1 = element("div");
     			iconbutton.$$.fragment.c();
     			attr(div0, "class", "svelte-1sxai5n");
-    			add_location(div0, file$d, 126, 12, 3573);
+    			add_location(div0, file$s, 126, 12, 3573);
     			attr(div1, "class", "svelte-1sxai5n");
-    			add_location(div1, file$d, 127, 12, 3606);
+    			add_location(div1, file$s, 127, 12, 3606);
     			attr(div2, "class", "inherited-title padding svelte-1sxai5n");
-    			add_location(div2, file$d, 125, 8, 3523);
+    			add_location(div2, file$s, 125, 8, 3523);
     		},
 
     		m: function mount(target, anchor) {
@@ -46961,7 +55101,7 @@
     }
 
     // (135:8) {#if inheritedExpanded}
-    function create_if_block$5(ctx) {
+    function create_if_block$b(ctx) {
     	var each_1_anchor, current;
 
     	var each_value = ctx.inheritedPropsDefinitions;
@@ -46969,7 +55109,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$a(get_each_context$a(ctx, each_value, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -46999,13 +55139,13 @@
     				each_value = ctx.inheritedPropsDefinitions;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$4(ctx, each_value, i);
+    					const child_ctx = get_each_context$a(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block$4(child_ctx);
+    						each_blocks[i] = create_each_block$a(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
@@ -47043,7 +55183,7 @@
     }
 
     // (136:12) {#each inheritedPropsDefinitions as propDef, index}
-    function create_each_block$4(ctx) {
+    function create_each_block$a(ctx) {
     	var current;
 
     	var propcontrol = new PropControl({
@@ -47097,7 +55237,7 @@
     	};
     }
 
-    function create_fragment$c(ctx) {
+    function create_fragment$r(ctx) {
     	var div, form, t0, t1, current;
 
     	var each_value_1 = ctx.propsDefinitions;
@@ -47105,16 +55245,16 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks[i] = create_each_block_1$2(get_each_context_1$2(ctx, each_value_1, i));
+    		each_blocks[i] = create_each_block_1$4(get_each_context_1$4(ctx, each_value_1, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
     		each_blocks[i] = null;
     	});
 
-    	var if_block0 = (ctx.inheritedPropsDefinitions.length > 0) && create_if_block_1$2(ctx);
+    	var if_block0 = (ctx.inheritedPropsDefinitions.length > 0) && create_if_block_1$6(ctx);
 
-    	var if_block1 = (ctx.inheritedExpanded) && create_if_block$5(ctx);
+    	var if_block1 = (ctx.inheritedExpanded) && create_if_block$b(ctx);
 
     	return {
     		c: function create() {
@@ -47130,9 +55270,9 @@
     			t1 = space();
     			if (if_block1) if_block1.c();
     			attr(form, "class", "uk-form-stacked");
-    			add_location(form, file$d, 110, 4, 3021);
+    			add_location(form, file$s, 110, 4, 3021);
     			attr(div, "class", "root svelte-1sxai5n");
-    			add_location(div, file$d, 108, 0, 2997);
+    			add_location(div, file$s, 108, 0, 2997);
     		},
 
     		l: function claim(nodes) {
@@ -47159,13 +55299,13 @@
     				each_value_1 = ctx.propsDefinitions;
 
     				for (var i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1$2(ctx, each_value_1, i);
+    					const child_ctx = get_each_context_1$4(ctx, each_value_1, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block_1$2(child_ctx);
+    						each_blocks[i] = create_each_block_1$4(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(form, t0);
@@ -47182,7 +55322,7 @@
     					if_block0.p(changed, ctx);
     					transition_in(if_block0, 1);
     				} else {
-    					if_block0 = create_if_block_1$2(ctx);
+    					if_block0 = create_if_block_1$6(ctx);
     					if_block0.c();
     					transition_in(if_block0, 1);
     					if_block0.m(form, t1);
@@ -47200,7 +55340,7 @@
     					if_block1.p(changed, ctx);
     					transition_in(if_block1, 1);
     				} else {
-    					if_block1 = create_if_block$5(ctx);
+    					if_block1 = create_if_block$b(ctx);
     					if_block1.c();
     					transition_in(if_block1, 1);
     					if_block1.m(form, null);
@@ -47245,7 +55385,7 @@
     	};
     }
 
-    function instance$c($$self, $$props, $$invalidate) {
+    function instance$r($$self, $$props, $$invalidate) {
     	
 
     let { shouldValidate = true, onValidate = () => {} } = $$props;
@@ -47368,7 +55508,7 @@
     class PropsView extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$c, create_fragment$c, safe_not_equal, ["shouldValidate", "onValidate", "componentInfo", "instanceProps", "onPropsChanged", "onEditComponentProp"]);
+    		init(this, options, instance$r, create_fragment$r, safe_not_equal, ["shouldValidate", "onValidate", "componentInfo", "instanceProps", "onPropsChanged", "onEditComponentProp"]);
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
@@ -47465,12 +55605,12 @@
         };
     }
 
-    /* src\userInterface\ComponentInstanceEditor.svelte generated by Svelte v3.6.9 */
+    /* src\userInterface\ComponentInstanceEditor.svelte generated by Svelte v3.9.1 */
 
-    const file$e = "src\\userInterface\\ComponentInstanceEditor.svelte";
+    const file$t = "src\\userInterface\\ComponentInstanceEditor.svelte";
 
     // (69:4) {:else}
-    function create_else_block$2(ctx) {
+    function create_else_block$6(ctx) {
     	var current;
 
     	var propsview = new PropsView({
@@ -47521,7 +55661,7 @@
     }
 
     // (61:4) {#if editingSubComponentName}
-    function create_if_block$6(ctx) {
+    function create_if_block$c(ctx) {
     	var div, div_intro, div_outro, current;
 
     	var componentinstanceeditor = new ComponentInstanceEditor({
@@ -47538,7 +55678,7 @@
     		c: function create() {
     			div = element("div");
     			componentinstanceeditor.$$.fragment.c();
-    			add_location(div, file$e, 61, 4, 1500);
+    			add_location(div, file$t, 61, 4, 1500);
     		},
 
     		m: function mount(target, anchor) {
@@ -47592,7 +55732,7 @@
     	};
     }
 
-    function create_fragment$d(ctx) {
+    function create_fragment$s(ctx) {
     	var div1, div0, t0, span, t1, t2, current_block_type_index, if_block, current;
 
     	var iconbutton = new IconButton({
@@ -47602,18 +55742,18 @@
     	iconbutton.$on("click", ctx.onGoBack);
 
     	var if_block_creators = [
-    		create_if_block$6,
-    		create_else_block$2
+    		create_if_block$c,
+    		create_else_block$6
     	];
 
     	var if_blocks = [];
 
-    	function select_block_type(ctx) {
+    	function select_block_type(changed, ctx) {
     		if (ctx.editingSubComponentName) return 0;
     		return 1;
     	}
 
-    	current_block_type_index = select_block_type(ctx);
+    	current_block_type_index = select_block_type(null, ctx);
     	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
     	return {
@@ -47627,10 +55767,10 @@
     			t2 = space();
     			if_block.c();
     			attr(span, "class", "svelte-1pp53c5");
-    			add_location(span, file$e, 57, 8, 1418);
+    			add_location(span, file$t, 57, 8, 1418);
     			attr(div0, "class", "title svelte-1pp53c5");
-    			add_location(div0, file$e, 54, 4, 1305);
-    			add_location(div1, file$e, 52, 0, 1292);
+    			add_location(div0, file$t, 54, 4, 1305);
+    			add_location(div1, file$t, 52, 0, 1292);
     		},
 
     		l: function claim(nodes) {
@@ -47655,7 +55795,7 @@
     			}
 
     			var previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
+    			current_block_type_index = select_block_type(changed, ctx);
     			if (current_block_type_index === previous_block_index) {
     				if_blocks[current_block_type_index].p(changed, ctx);
     			} else {
@@ -47701,7 +55841,7 @@
     	};
     }
 
-    function instance$d($$self, $$props, $$invalidate) {
+    function instance$s($$self, $$props, $$invalidate) {
     	
 
     let { propertyName = "", onGoBack = () => {} } = $$props;
@@ -47777,7 +55917,7 @@
     class ComponentInstanceEditor extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$d, create_fragment$d, safe_not_equal, ["propertyName", "onGoBack", "instanceProps", "onPropsChanged"]);
+    		init(this, options, instance$s, create_fragment$s, safe_not_equal, ["propertyName", "onGoBack", "instanceProps", "onPropsChanged"]);
     	}
 
     	get propertyName() {
@@ -47813,12 +55953,12 @@
     	}
     }
 
-    /* src\userInterface\EditComponent.svelte generated by Svelte v3.6.9 */
+    /* src\userInterface\EditComponent.svelte generated by Svelte v3.9.1 */
 
-    const file$f = "src\\userInterface\\EditComponent.svelte";
+    const file$u = "src\\userInterface\\EditComponent.svelte";
 
     // (152:4) {:else}
-    function create_else_block$3(ctx) {
+    function create_else_block$7(ctx) {
     	var div2, div0, span0, t1, t2, t3, div1, span1, t5, current, dispose;
 
     	var iconbutton = new IconButton({
@@ -47826,7 +55966,7 @@
     		$$inline: true
     	});
 
-    	var if_block = (ctx.componentDetailsExpanded) && create_if_block_1$3(ctx);
+    	var if_block = (ctx.componentDetailsExpanded) && create_if_block_1$7(ctx);
 
     	var propsview = new PropsView({
     		props: {
@@ -47855,13 +55995,13 @@
     			t5 = space();
     			propsview.$$.fragment.c();
     			set_style(span0, "margin-right", "7px");
-    			add_location(span0, file$f, 155, 12, 4277);
+    			add_location(span0, file$u, 155, 12, 4277);
     			attr(div0, "class", "section-header padding svelte-xai2hc");
-    			add_location(div0, file$f, 154, 8, 4157);
-    			add_location(span1, file$f, 176, 12, 5092);
+    			add_location(div0, file$u, 154, 8, 4157);
+    			add_location(span1, file$u, 177, 12, 5154);
     			attr(div1, "class", "section-header padding svelte-xai2hc");
-    			add_location(div1, file$f, 175, 8, 5042);
-    			add_location(div2, file$f, 152, 4, 4140);
+    			add_location(div1, file$u, 176, 8, 5104);
+    			add_location(div2, file$u, 152, 4, 4140);
     			dispose = listen(div0, "click", ctx.click_handler);
     		},
 
@@ -47891,7 +56031,7 @@
     					if_block.p(changed, ctx);
     					transition_in(if_block, 1);
     				} else {
-    					if_block = create_if_block_1$3(ctx);
+    					if_block = create_if_block_1$7(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
     					if_block.m(div2, t3);
@@ -47947,7 +56087,7 @@
     }
 
     // (147:4) {#if editingComponentInstance}
-    function create_if_block$7(ctx) {
+    function create_if_block$d(ctx) {
     	var current;
 
     	var componentinstanceeditor = new ComponentInstanceEditor({
@@ -47998,7 +56138,7 @@
     }
 
     // (160:8) {#if componentDetailsExpanded}
-    function create_if_block_1$3(ctx) {
+    function create_if_block_1$7(ctx) {
     	var div1, updating_text, t0, div0, t1, updating_text_1, t2, updating_text_2, current;
 
     	function textbox0_text_binding(value) {
@@ -48010,6 +56150,7 @@
     	let textbox0_props = {
     		label: "Name",
     		infoText: "use forward slash to store in subfolders",
+    		disabled: !ctx.$store.currentComponentIsNew,
     		hasError: !!ctx.nameInvalid
     	};
     	if (ctx.name !== void 0) {
@@ -48061,9 +56202,9 @@
     			t2 = space();
     			textbox2.$$.fragment.c();
     			attr(div0, "class", "info-text");
-    			add_location(div0, file$f, 165, 12, 4725);
+    			add_location(div0, file$u, 166, 12, 4787);
     			attr(div1, "class", "padding svelte-xai2hc");
-    			add_location(div1, file$f, 160, 8, 4495);
+    			add_location(div1, file$u, 160, 8, 4495);
     		},
 
     		m: function mount(target, anchor) {
@@ -48080,6 +56221,7 @@
 
     		p: function update(changed, ctx) {
     			var textbox0_changes = {};
+    			if (changed.$store) textbox0_changes.disabled = !ctx.$store.currentComponentIsNew;
     			if (changed.nameInvalid) textbox0_changes.hasError = !!ctx.nameInvalid;
     			if (!updating_text && changed.name) {
     				textbox0_changes.text = ctx.name;
@@ -48131,8 +56273,8 @@
     	};
     }
 
-    // (206:16) <Button grouped                           on:click={confirmDeleteComponent}>
-    function create_default_slot_2$1(ctx) {
+    // (207:16) <Button grouped                           on:click={confirmDeleteComponent}>
+    function create_default_slot_2$3(ctx) {
     	var t;
 
     	return {
@@ -48152,8 +56294,8 @@
     	};
     }
 
-    // (210:16) <Button grouped                           on:click={hideDialog}                           color="secondary" >
-    function create_default_slot_1$1(ctx) {
+    // (211:16) <Button grouped                           on:click={hideDialog}                           color="secondary" >
+    function create_default_slot_1$3(ctx) {
     	var t;
 
     	return {
@@ -48173,14 +56315,14 @@
     	};
     }
 
-    // (205:12) <ButtonGroup>
-    function create_default_slot$1(ctx) {
+    // (206:12) <ButtonGroup>
+    function create_default_slot$4(ctx) {
     	var t, current;
 
     	var button0 = new Button({
     		props: {
     		grouped: true,
-    		$$slots: { default: [create_default_slot_2$1] },
+    		$$slots: { default: [create_default_slot_2$3] },
     		$$scope: { ctx }
     	},
     		$$inline: true
@@ -48191,7 +56333,7 @@
     		props: {
     		grouped: true,
     		color: "secondary",
-    		$$slots: { default: [create_default_slot_1$1] },
+    		$$slots: { default: [create_default_slot_1$3] },
     		$$scope: { ctx }
     	},
     		$$inline: true
@@ -48249,8 +56391,8 @@
     	};
     }
 
-    function create_fragment$e(ctx) {
-    	var div3, div2, div0, t0, t1, div1, t2, t3, current_block_type_index, if_block, t4, div8, div7, div4, t5, t6_value = ctx.component.name, t6, t7, t8, div5, t10, div6, current;
+    function create_fragment$t(ctx) {
+    	var div3, div2, div0, t0, t1, div1, t2, t3, current_block_type_index, if_block, t4, div8, div7, div4, t5, t6_value = ctx.component.name + "", t6, t7, t8, div5, t10, div6, current;
 
     	var iconbutton0 = new IconButton({
     		props: {
@@ -48273,23 +56415,23 @@
     	iconbutton1.$on("click", ctx.deleteComponent);
 
     	var if_block_creators = [
-    		create_if_block$7,
-    		create_else_block$3
+    		create_if_block$d,
+    		create_else_block$7
     	];
 
     	var if_blocks = [];
 
-    	function select_block_type(ctx) {
+    	function select_block_type(changed, ctx) {
     		if (ctx.editingComponentInstance) return 0;
     		return 1;
     	}
 
-    	current_block_type_index = select_block_type(ctx);
+    	current_block_type_index = select_block_type(null, ctx);
     	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
     	var buttongroup = new ButtonGroup({
     		props: {
-    		$$slots: { default: [create_default_slot$1] },
+    		$$slots: { default: [create_default_slot$4] },
     		$$scope: { ctx }
     	},
     		$$inline: true
@@ -48322,24 +56464,24 @@
     			div6 = element("div");
     			buttongroup.$$.fragment.c();
     			attr(div0, "class", "svelte-xai2hc");
-    			add_location(div0, file$f, 133, 8, 3359);
+    			add_location(div0, file$u, 133, 8, 3359);
     			attr(div1, "class", "svelte-xai2hc");
-    			add_location(div1, file$f, 134, 8, 3391);
+    			add_location(div1, file$u, 134, 8, 3391);
     			attr(div2, "class", "title svelte-xai2hc");
-    			add_location(div2, file$f, 132, 4, 3330);
+    			add_location(div2, file$u, 132, 4, 3330);
     			attr(div3, "class", "root svelte-xai2hc");
-    			add_location(div3, file$f, 130, 0, 3304);
+    			add_location(div3, file$u, 130, 0, 3304);
     			attr(div4, "class", "uk-modal-header");
-    			add_location(div4, file$f, 195, 8, 5436);
+    			add_location(div4, file$u, 196, 8, 5498);
     			attr(div5, "class", "uk-modal-body");
-    			add_location(div5, file$f, 199, 8, 5533);
+    			add_location(div5, file$u, 200, 8, 5595);
     			attr(div6, "class", "uk-modal-footer");
-    			add_location(div6, file$f, 203, 8, 5650);
+    			add_location(div6, file$u, 204, 8, 5712);
     			attr(div7, "class", "uk-modal-dialog");
-    			add_location(div7, file$f, 193, 4, 5395);
+    			add_location(div7, file$u, 194, 4, 5457);
     			attr(div8, "uk-modal", "");
     			attr(div8, "class", "svelte-xai2hc");
-    			add_location(div8, file$f, 192, 0, 5350);
+    			add_location(div8, file$u, 193, 0, 5412);
     		},
 
     		l: function claim(nodes) {
@@ -48380,7 +56522,7 @@
     			}
 
     			var previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
+    			current_block_type_index = select_block_type(changed, ctx);
     			if (current_block_type_index === previous_block_index) {
     				if_blocks[current_block_type_index].p(changed, ctx);
     			} else {
@@ -48399,7 +56541,7 @@
     				if_block.m(div3, null);
     			}
 
-    			if ((!current || changed.component) && t6_value !== (t6_value = ctx.component.name)) {
+    			if ((!current || changed.component) && t6_value !== (t6_value = ctx.component.name + "")) {
     				set_data(t6, t6_value);
     			}
 
@@ -48452,7 +56594,12 @@
     	};
     }
 
-    function instance$e($$self, $$props, $$invalidate) {
+    function instance$t($$self, $$props, $$invalidate) {
+    	let $store;
+
+    	validate_store(store, 'store');
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+
     	
 
     let component;
@@ -48604,6 +56751,7 @@
     		componentInstanceCancelEdit,
     		componentInstancePropsChanged,
     		shortName,
+    		$store,
     		click_handler,
     		textbox0_text_binding,
     		textbox1_text_binding,
@@ -48615,174 +56763,15 @@
     class EditComponent extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$e, create_fragment$e, safe_not_equal, []);
+    		init(this, options, instance$t, create_fragment$t, safe_not_equal, []);
     	}
     }
 
-    /* src\common\Modal.svelte generated by Svelte v3.6.9 */
+    /* src\userInterface\NewComponent.svelte generated by Svelte v3.9.1 */
 
-    const file$g = "src\\common\\Modal.svelte";
+    const file$v = "src\\userInterface\\NewComponent.svelte";
 
-    function create_fragment$f(ctx) {
-    	var div1, div0, current;
-
-    	const default_slot_1 = ctx.$$slots.default;
-    	const default_slot = create_slot(default_slot_1, ctx, null);
-
-    	return {
-    		c: function create() {
-    			div1 = element("div");
-    			div0 = element("div");
-
-    			if (default_slot) default_slot.c();
-
-    			attr(div0, "class", "uk-modal-dialog uk-modal-body");
-    			attr(div0, "uk-overflow-auto", "");
-    			add_location(div0, file$g, 28, 4, 515);
-    			attr(div1, "uk-modal", "");
-    			attr(div1, "id", ctx.id);
-    			add_location(div1, file$g, 27, 0, 470);
-    		},
-
-    		l: function claim(nodes) {
-    			if (default_slot) default_slot.l(div0_nodes);
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, div0);
-
-    			if (default_slot) {
-    				default_slot.m(div0, null);
-    			}
-
-    			ctx.div1_binding(div1);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (default_slot && default_slot.p && changed.$$scope) {
-    				default_slot.p(get_slot_changes(default_slot_1, ctx, changed, null), get_slot_context(default_slot_1, ctx, null));
-    			}
-
-    			if (!current || changed.id) {
-    				attr(div1, "id", ctx.id);
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(default_slot, local);
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(default_slot, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			if (default_slot) default_slot.d(detaching);
-    			ctx.div1_binding(null);
-    		}
-    	};
-    }
-
-    function instance$f($$self, $$props, $$invalidate) {
-    	let { isOpen = false, onClosed = () => {} } = $$props;
-    let { id = "" } = $$props;
-
-    let ukModal;
-    let listenerAdded = false;
-
-    	const writable_props = ['isOpen', 'onClosed', 'id'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Modal> was created with unknown prop '${key}'`);
-    	});
-
-    	let { $$slots = {}, $$scope } = $$props;
-
-    	function div1_binding($$value) {
-    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
-    			$$invalidate('ukModal', ukModal = $$value);
-    		});
-    	}
-
-    	$$self.$set = $$props => {
-    		if ('isOpen' in $$props) $$invalidate('isOpen', isOpen = $$props.isOpen);
-    		if ('onClosed' in $$props) $$invalidate('onClosed', onClosed = $$props.onClosed);
-    		if ('id' in $$props) $$invalidate('id', id = $$props.id);
-    		if ('$$scope' in $$props) $$invalidate('$$scope', $$scope = $$props.$$scope);
-    	};
-
-    	$$self.$$.update = ($$dirty = { ukModal: 1, listenerAdded: 1, onClosed: 1, isOpen: 1 }) => {
-    		if ($$dirty.ukModal || $$dirty.listenerAdded || $$dirty.onClosed) { if(ukModal && !listenerAdded) {
-                $$invalidate('listenerAdded', listenerAdded = true);
-                ukModal.addEventListener("hide", onClosed);
-            } }
-    		if ($$dirty.ukModal || $$dirty.isOpen) { {
-                if(ukModal) {
-                    if(isOpen) {
-                        uikit.modal(ukModal).show();
-                    } else {
-                        uikit.modal(ukModal).hide();
-                    }
-                }
-            } }
-    	};
-
-    	return {
-    		isOpen,
-    		onClosed,
-    		id,
-    		ukModal,
-    		div1_binding,
-    		$$slots,
-    		$$scope
-    	};
-    }
-
-    class Modal extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$f, create_fragment$f, safe_not_equal, ["isOpen", "onClosed", "id"]);
-    	}
-
-    	get isOpen() {
-    		throw new Error("<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set isOpen(value) {
-    		throw new Error("<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get onClosed() {
-    		throw new Error("<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set onClosed(value) {
-    		throw new Error("<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get id() {
-    		throw new Error("<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set id(value) {
-    		throw new Error("<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\userInterface\NewComponent.svelte generated by Svelte v3.6.9 */
-
-    const file$h = "src\\userInterface\\NewComponent.svelte";
-
-    function create_fragment$g(ctx) {
+    function create_fragment$u(ctx) {
     	var div3, div2, div0, h1, t_1, div1, current;
 
     	var componentsearch = new ComponentSearch({
@@ -48801,16 +56790,16 @@
     			div1 = element("div");
     			componentsearch.$$.fragment.c();
     			attr(h1, "class", "svelte-2ukyrk");
-    			add_location(h1, file$h, 53, 12, 1191);
+    			add_location(h1, file$v, 53, 12, 1191);
     			attr(div0, "class", "uk-modal-header");
-    			add_location(div0, file$h, 52, 8, 1148);
+    			add_location(div0, file$v, 52, 8, 1148);
     			attr(div1, "class", "uk-modal-body");
-    			add_location(div1, file$h, 56, 8, 1241);
+    			add_location(div1, file$v, 56, 8, 1241);
     			attr(div2, "class", "uk-modal-dialog");
-    			add_location(div2, file$h, 50, 4, 1107);
+    			add_location(div2, file$v, 50, 4, 1107);
     			attr(div3, "id", "new-component-modal");
     			attr(div3, "uk-modal", "");
-    			add_location(div3, file$h, 49, 0, 1037);
+    			add_location(div3, file$v, 49, 0, 1037);
     		},
 
     		l: function claim(nodes) {
@@ -48859,7 +56848,7 @@
     	};
     }
 
-    function instance$g($$self, $$props, $$invalidate) {
+    function instance$u($$self, $$props, $$invalidate) {
     	
 
 
@@ -48902,7 +56891,7 @@
     class NewComponent extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$g, create_fragment$g, safe_not_equal, ["close", "show"]);
+    		init(this, options, instance$u, create_fragment$u, safe_not_equal, ["close", "show"]);
     	}
 
     	get close() {
@@ -48934,100 +56923,45 @@
         return {libName, componentName}; 
     };
 
-    /* src\userInterface\CurrentItemPreview.svelte generated by Svelte v3.6.9 */
+    /* src\userInterface\CurrentItemPreview.svelte generated by Svelte v3.9.1 */
 
-    const file$i = "src\\userInterface\\CurrentItemPreview.svelte";
+    const file$w = "src\\userInterface\\CurrentItemPreview.svelte";
 
-    function get_each_context$5(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.stylesheet = list[i];
-    	return child_ctx;
-    }
-
-    // (26:20) {#each $store.pages.stylesheets as stylesheet}
-    function create_each_block$5(ctx) {
-    	var link, link_href_value;
-
-    	return {
-    		c: function create() {
-    			link = element("link");
-    			attr(link, "rel", "stylesheet");
-    			attr(link, "href", link_href_value = ctx.stylesheet);
-    			add_location(link, file$i, 26, 20, 665);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, link, anchor);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((changed.$store) && link_href_value !== (link_href_value = ctx.stylesheet)) {
-    				attr(link, "href", link_href_value);
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(link);
-    			}
-    		}
-    	};
-    }
-
-    function create_fragment$h(ctx) {
-    	var div1, div0, iframe, head, t, body, current;
-
-    	var each_value = ctx.$store.pages.stylesheets;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$5(get_each_context$5(ctx, each_value, i));
-    	}
-
-    	var switch_instance_spread_levels = [
-    		ctx.$store.currentComponentInfo.fullProps
-    	];
-
-    	var switch_value = ctx.component;
-
-    	function switch_props(ctx) {
-    		let switch_instance_props = {};
-    		for (var i = 0; i < switch_instance_spread_levels.length; i += 1) {
-    			switch_instance_props = assign(switch_instance_props, switch_instance_spread_levels[i]);
-    		}
-    		return {
-    			props: switch_instance_props,
-    			$$inline: true
-    		};
-    	}
-
-    	if (switch_value) {
-    		var switch_instance = new switch_value(switch_props());
-    	}
+    function create_fragment$v(ctx) {
+    	var div1, div0, iframe_1, iframe_1_srcdoc_value, dispose;
 
     	return {
     		c: function create() {
     			div1 = element("div");
     			div0 = element("div");
-    			iframe = element("iframe");
-    			head = element("head");
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			t = space();
-    			body = element("body");
-    			if (switch_instance) switch_instance.$$.fragment.c();
-    			add_location(head, file$i, 24, 16, 569);
-    			add_location(body, file$i, 29, 16, 781);
-    			attr(iframe, "title", "componentPreview");
-    			add_location(iframe, file$i, 22, 8, 515);
-    			attr(div0, "class", "component-container svelte-1rf8xuh");
-    			add_location(div0, file$i, 21, 4, 472);
-    			attr(div1, "class", "component-preview svelte-1rf8xuh");
-    			add_location(div1, file$i, 20, 0, 434);
+    			iframe_1 = element("iframe");
+    			attr(iframe_1, "title", "componentPreview");
+    			attr(iframe_1, "srcdoc", iframe_1_srcdoc_value = `<html>
+    
+<head>
+    ${ctx.stylesheetLinks}
+    <script>
+    
+        import('${ctx.componentLibraryUrl}')
+        .then(module => {
+            const componentClass = module['${ctx.rootComponentName}'];
+            const instance = new componentClass({
+                target: document.body,
+                props: JSON.parse('${JSON.stringify(ctx.props)}')
+            }) ;
+        })
+        
+    </script>
+</head>
+<body>
+</body>
+</html>`);
+    			add_location(iframe_1, file$w, 52, 8, 1422);
+    			attr(div0, "class", "component-container svelte-1d56h9p");
+    			add_location(div0, file$w, 51, 4, 1379);
+    			attr(div1, "class", "component-preview svelte-1d56h9p");
+    			add_location(div1, file$w, 50, 0, 1341);
+    			dispose = listen(iframe_1, "load", ctx.iframeLoaded);
     		},
 
     		l: function claim(nodes) {
@@ -49037,123 +56971,107 @@
     		m: function mount(target, anchor) {
     			insert(target, div1, anchor);
     			append(div1, div0);
-    			append(div0, iframe);
-    			append(iframe, head);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(head, null);
-    			}
-
-    			append(iframe, t);
-    			append(iframe, body);
-
-    			if (switch_instance) {
-    				mount_component(switch_instance, body, null);
-    			}
-
-    			current = true;
+    			append(div0, iframe_1);
+    			ctx.iframe_1_binding(iframe_1);
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.$store) {
-    				each_value = ctx.$store.pages.stylesheets;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$5(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block$5(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(head, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value.length;
-    			}
-
-    			var switch_instance_changes = changed.$store ? get_spread_update(switch_instance_spread_levels, [
-    				ctx.$store.currentComponentInfo.fullProps
-    			]) : {};
-
-    			if (switch_value !== (switch_value = ctx.component)) {
-    				if (switch_instance) {
-    					group_outros();
-    					const old_component = switch_instance;
-    					transition_out(old_component.$$.fragment, 1, 0, () => {
-    						destroy_component(old_component, 1);
-    					});
-    					check_outros();
-    				}
-
-    				if (switch_value) {
-    					switch_instance = new switch_value(switch_props());
-
-    					switch_instance.$$.fragment.c();
-    					transition_in(switch_instance.$$.fragment, 1);
-    					mount_component(switch_instance, body, null);
-    				} else {
-    					switch_instance = null;
-    				}
-    			}
-
-    			else if (switch_value) {
-    				switch_instance.$set(switch_instance_changes);
+    			if ((changed.stylesheetLinks || changed.componentLibraryUrl || changed.rootComponentName || changed.props) && iframe_1_srcdoc_value !== (iframe_1_srcdoc_value = `<html>
+    
+<head>
+    ${ctx.stylesheetLinks}
+    <script>
+    
+        import('${ctx.componentLibraryUrl}')
+        .then(module => {
+            const componentClass = module['${ctx.rootComponentName}'];
+            const instance = new componentClass({
+                target: document.body,
+                props: JSON.parse('${JSON.stringify(ctx.props)}')
+            }) ;
+        })
+        
+    </script>
+</head>
+<body>
+</body>
+</html>`)) {
+    				attr(iframe_1, "srcdoc", iframe_1_srcdoc_value);
     			}
     		},
 
-    		i: function intro(local) {
-    			if (current) return;
-    			if (switch_instance) transition_in(switch_instance.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			if (switch_instance) transition_out(switch_instance.$$.fragment, local);
-    			current = false;
-    		},
+    		i: noop,
+    		o: noop,
 
     		d: function destroy(detaching) {
     			if (detaching) {
     				detach(div1);
     			}
 
-    			destroy_each(each_blocks, detaching);
-
-    			if (switch_instance) destroy_component(switch_instance);
+    			ctx.iframe_1_binding(null);
+    			dispose();
     		}
     	};
     }
 
-    function instance$h($$self, $$props, $$invalidate) {
-    	let $store;
-
-    	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
-
+    function instance$v($$self, $$props, $$invalidate) {
     	
 
     let component;
+    let stylesheetLinks = "";
+    let props;
+    let componentLibraryUrl = "";
+    let rootComponentName = "";
+    let iframe;
 
     store.subscribe(s => {
         const {componentName, libName} = splitName(
             s.currentComponentInfo.rootComponent.name);
 
-        $$invalidate('component', component = s.libraries[libName][componentName]);
+        $$invalidate('rootComponentName', rootComponentName = componentName);
+        $$invalidate('props', props = s.currentComponentInfo.fullProps);
+        component = s.libraries[libName][componentName];
+        $$invalidate('stylesheetLinks', stylesheetLinks = pipe(s.pages.stylesheets, [
+            fp_7(s => `<link rel="stylesheet" href="${s}"/>`),
+            fp_39("\n")
+        ]));
+        $$invalidate('componentLibraryUrl', componentLibraryUrl = makeLibraryUrl(s.appname, libName));
     });
 
-    	return { component, $store };
+    /*
+    afterUpdate(() => {
+        if(iframe) iframeLoaded();
+    });
+    */
+
+    const iframeLoaded = () => {
+        setTimeout(() => {
+            iframe.style.height = (iframe.contentWindow.document.body.scrollHeight + 1).toString() + "px"; $$invalidate('iframe', iframe);
+            iframe.style.width = (iframe.contentWindow.document.body.scrollWidth + 1).toString() + "px"; $$invalidate('iframe', iframe);
+        }, 100);
+    };
+
+    	function iframe_1_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			$$invalidate('iframe', iframe = $$value);
+    		});
+    	}
+
+    	return {
+    		stylesheetLinks,
+    		props,
+    		componentLibraryUrl,
+    		rootComponentName,
+    		iframe,
+    		iframeLoaded,
+    		iframe_1_binding
+    	};
     }
 
     class CurrentItemPreview extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$h, create_fragment$h, safe_not_equal, []);
+    		init(this, options, instance$v, create_fragment$v, safe_not_equal, []);
     	}
     }
 
@@ -49175,24 +57093,24 @@
         );
     };
 
-    /* src\userInterface\SettingsView.svelte generated by Svelte v3.6.9 */
+    /* src\userInterface\SettingsView.svelte generated by Svelte v3.9.1 */
 
-    const file$j = "src\\userInterface\\SettingsView.svelte";
+    const file$x = "src\\userInterface\\SettingsView.svelte";
 
-    function get_each_context$6(ctx, list, i) {
+    function get_each_context$b(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.stylesheet = list[i];
     	return child_ctx;
     }
 
-    function get_each_context_1$3(ctx, list, i) {
+    function get_each_context_1$5(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.lib = list[i];
     	return child_ctx;
     }
 
     // (69:24) <Button color="primary-outline"                                  on:click={addLib}>
-    function create_default_slot_1$2(ctx) {
+    function create_default_slot_1$4(ctx) {
     	var t;
 
     	return {
@@ -49213,8 +57131,8 @@
     }
 
     // (73:16) {#each $store.pages.componentLibraries as lib}
-    function create_each_block_1$3(ctx) {
-    	var div, span, t0_value = ctx.lib, t0, t1, t2, current;
+    function create_each_block_1$5(ctx) {
+    	var div, span, t0_value = ctx.lib + "", t0, t1, t2, current;
 
     	function click_handler() {
     		return ctx.click_handler(ctx);
@@ -49232,8 +57150,8 @@
     			iconbutton.$$.fragment.c();
     			t2 = space();
     			attr(span, "class", "row-text svelte-1t0x31f");
-    			add_location(span, file$j, 74, 20, 1997);
-    			add_location(div, file$j, 73, 16, 1970);
+    			add_location(span, file$x, 74, 20, 1997);
+    			add_location(div, file$x, 73, 16, 1970);
     		},
 
     		m: function mount(target, anchor) {
@@ -49248,7 +57166,7 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((!current || changed.$store) && t0_value !== (t0_value = ctx.lib)) {
+    			if ((!current || changed.$store) && t0_value !== (t0_value = ctx.lib + "")) {
     				set_data(t0, t0_value);
     			}
     		},
@@ -49276,7 +57194,7 @@
     }
 
     // (87:24) <Button color="primary-outline"                                      on:click={addStylesheet} >
-    function create_default_slot$2(ctx) {
+    function create_default_slot$5(ctx) {
     	var t;
 
     	return {
@@ -49297,8 +57215,8 @@
     }
 
     // (91:16) {#each $store.pages.stylesheets as stylesheet}
-    function create_each_block$6(ctx) {
-    	var div, span, t0_value = ctx.stylesheet, t0, t1, t2, current;
+    function create_each_block$b(ctx) {
+    	var div, span, t0_value = ctx.stylesheet + "", t0, t1, t2, current;
 
     	function click_handler_1() {
     		return ctx.click_handler_1(ctx);
@@ -49316,8 +57234,8 @@
     			iconbutton.$$.fragment.c();
     			t2 = space();
     			attr(span, "class", "row-text svelte-1t0x31f");
-    			add_location(span, file$j, 92, 20, 2695);
-    			add_location(div, file$j, 91, 16, 2668);
+    			add_location(span, file$x, 92, 20, 2695);
+    			add_location(div, file$x, 91, 16, 2668);
     		},
 
     		m: function mount(target, anchor) {
@@ -49332,7 +57250,7 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((!current || changed.$store) && t0_value !== (t0_value = ctx.stylesheet)) {
+    			if ((!current || changed.$store) && t0_value !== (t0_value = ctx.stylesheet + "")) {
     				set_data(t0, t0_value);
     			}
     		},
@@ -49359,7 +57277,7 @@
     	};
     }
 
-    function create_fragment$i(ctx) {
+    function create_fragment$w(ctx) {
     	var div7, div6, div2, div0, t1, div1, t2, div5, div3, p0, t3, span0, input0, t4, t5, t6, div4, p1, t7, span1, input1, t8, t9, current, dispose;
 
     	var iconbutton = new IconButton({ props: { icon: "x" }, $$inline: true });
@@ -49368,7 +57286,7 @@
     	var button0 = new Button({
     		props: {
     		color: "primary-outline",
-    		$$slots: { default: [create_default_slot_1$2] },
+    		$$slots: { default: [create_default_slot_1$4] },
     		$$scope: { ctx }
     	},
     		$$inline: true
@@ -49380,7 +57298,7 @@
     	var each_blocks_1 = [];
 
     	for (var i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks_1[i] = create_each_block_1$3(get_each_context_1$3(ctx, each_value_1, i));
+    		each_blocks_1[i] = create_each_block_1$5(get_each_context_1$5(ctx, each_value_1, i));
     	}
 
     	const out = i => transition_out(each_blocks_1[i], 1, 1, () => {
@@ -49390,7 +57308,7 @@
     	var button1 = new Button({
     		props: {
     		color: "primary-outline",
-    		$$slots: { default: [create_default_slot$2] },
+    		$$slots: { default: [create_default_slot$5] },
     		$$scope: { ctx }
     	},
     		$$inline: true
@@ -49402,7 +57320,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$6(get_each_context$6(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$b(get_each_context$b(ctx, each_value, i));
     	}
 
     	const out_1 = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -49448,35 +57366,35 @@
     				each_blocks[i].c();
     			}
     			attr(div0, "class", "svelte-1t0x31f");
-    			add_location(div0, file$j, 55, 12, 1324);
+    			add_location(div0, file$x, 55, 12, 1324);
     			attr(div1, "class", "svelte-1t0x31f");
-    			add_location(div1, file$j, 56, 12, 1357);
+    			add_location(div1, file$x, 56, 12, 1357);
     			attr(div2, "class", "uk-modal-header header svelte-1t0x31f");
-    			add_location(div2, file$j, 54, 8, 1274);
+    			add_location(div2, file$x, 54, 8, 1274);
     			attr(input0, "class", "svelte-1t0x31f");
-    			add_location(input0, file$j, 67, 24, 1683);
+    			add_location(input0, file$x, 67, 24, 1683);
     			attr(span0, "class", "svelte-1t0x31f");
-    			add_location(span0, file$j, 66, 20, 1651);
+    			add_location(span0, file$x, 66, 20, 1651);
     			attr(p0, "class", "svelte-1t0x31f");
-    			add_location(p0, file$j, 65, 16, 1607);
+    			add_location(p0, file$x, 65, 16, 1607);
     			attr(div3, "class", "section-container svelte-1t0x31f");
-    			add_location(div3, file$j, 64, 12, 1558);
+    			add_location(div3, file$x, 64, 12, 1558);
     			attr(input1, "class", "svelte-1t0x31f");
-    			add_location(input1, file$j, 85, 24, 2362);
+    			add_location(input1, file$x, 85, 24, 2362);
     			attr(span1, "class", "svelte-1t0x31f");
-    			add_location(span1, file$j, 84, 20, 2330);
+    			add_location(span1, file$x, 84, 20, 2330);
     			attr(p1, "class", "svelte-1t0x31f");
-    			add_location(p1, file$j, 83, 16, 2294);
+    			add_location(p1, file$x, 83, 16, 2294);
     			attr(div4, "class", "section-container svelte-1t0x31f");
-    			add_location(div4, file$j, 82, 12, 2245);
+    			add_location(div4, file$x, 82, 12, 2245);
     			attr(div5, "class", "uk-modal-body uk-form-horizontal");
-    			add_location(div5, file$j, 62, 8, 1496);
+    			add_location(div5, file$x, 62, 8, 1496);
     			attr(div6, "class", "uk-modal-dialog");
-    			add_location(div6, file$j, 52, 4, 1233);
+    			add_location(div6, file$x, 52, 4, 1233);
     			attr(div7, "id", "new-component-modal");
     			attr(div7, "uk-modal", "");
     			attr(div7, "class", "svelte-1t0x31f");
-    			add_location(div7, file$j, 51, 0, 1163);
+    			add_location(div7, file$x, 51, 0, 1163);
 
     			dispose = [
     				listen(input0, "input", ctx.input0_input_handler),
@@ -49504,7 +57422,7 @@
     			append(p0, span0);
     			append(span0, input0);
 
-    			input0.value = ctx.addNewLib;
+    			set_input_value(input0, ctx.addNewLib);
 
     			append(span0, t4);
     			mount_component(button0, span0, null);
@@ -49521,7 +57439,7 @@
     			append(p1, span1);
     			append(span1, input1);
 
-    			input1.value = ctx.addNewStylesheet;
+    			set_input_value(input1, ctx.addNewStylesheet);
 
     			append(span1, t8);
     			mount_component(button1, span1, null);
@@ -49536,7 +57454,7 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.addNewLib && (input0.value !== ctx.addNewLib)) input0.value = ctx.addNewLib;
+    			if (changed.addNewLib && (input0.value !== ctx.addNewLib)) set_input_value(input0, ctx.addNewLib);
 
     			var button0_changes = {};
     			if (changed.$$scope) button0_changes.$$scope = { changed, ctx };
@@ -49546,13 +57464,13 @@
     				each_value_1 = ctx.$store.pages.componentLibraries;
 
     				for (var i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1$3(ctx, each_value_1, i);
+    					const child_ctx = get_each_context_1$5(ctx, each_value_1, i);
 
     					if (each_blocks_1[i]) {
     						each_blocks_1[i].p(changed, child_ctx);
     						transition_in(each_blocks_1[i], 1);
     					} else {
-    						each_blocks_1[i] = create_each_block_1$3(child_ctx);
+    						each_blocks_1[i] = create_each_block_1$5(child_ctx);
     						each_blocks_1[i].c();
     						transition_in(each_blocks_1[i], 1);
     						each_blocks_1[i].m(div3, null);
@@ -49564,7 +57482,7 @@
     				check_outros();
     			}
 
-    			if (changed.addNewStylesheet && (input1.value !== ctx.addNewStylesheet)) input1.value = ctx.addNewStylesheet;
+    			if (changed.addNewStylesheet && (input1.value !== ctx.addNewStylesheet)) set_input_value(input1, ctx.addNewStylesheet);
 
     			var button1_changes = {};
     			if (changed.$$scope) button1_changes.$$scope = { changed, ctx };
@@ -49574,13 +57492,13 @@
     				each_value = ctx.$store.pages.stylesheets;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$6(ctx, each_value, i);
+    					const child_ctx = get_each_context$b(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block$6(child_ctx);
+    						each_blocks[i] = create_each_block$b(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(div4, null);
@@ -49644,11 +57562,11 @@
     	};
     }
 
-    function instance$i($$self, $$props, $$invalidate) {
+    function instance$w($$self, $$props, $$invalidate) {
     	let $store;
 
     	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -49737,7 +57655,7 @@
     class SettingsView extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$i, create_fragment$i, safe_not_equal, ["close", "show"]);
+    		init(this, options, instance$w, create_fragment$w, safe_not_equal, ["close", "show"]);
     	}
 
     	get close() {
@@ -49757,12 +57675,12 @@
     	}
     }
 
-    /* src\userInterface\UserInterfaceRoot.svelte generated by Svelte v3.6.9 */
+    /* src\userInterface\UserInterfaceRoot.svelte generated by Svelte v3.9.1 */
 
-    const file$k = "src\\userInterface\\UserInterfaceRoot.svelte";
+    const file$y = "src\\userInterface\\UserInterfaceRoot.svelte";
 
     // (61:8) {#if $store.currentFrontEndItem}
-    function create_if_block_1$4(ctx) {
+    function create_if_block_1$8(ctx) {
     	var current;
 
     	var currentitempreview = new CurrentItemPreview({ $$inline: true });
@@ -49796,7 +57714,7 @@
     }
 
     // (67:8) {#if $store.currentFrontEndItem && !isRootComponent($store.currentFrontEndItem)}
-    function create_if_block$8(ctx) {
+    function create_if_block$e(ctx) {
     	var current;
 
     	var editcomponent = new EditComponent({ $$inline: true });
@@ -49829,8 +57747,8 @@
     	};
     }
 
-    function create_fragment$j(ctx) {
-    	var div12, div9, div4, div2, div0, raw0_value = getIcon("sidebar","18"), t0, span0, t2, div1, t3, t4, div3, t5, div8, div6, div5, raw1_value = getIcon("grid","18"), t6, span1, t8, div7, t9, div10, t10, div11, t11, t12, current;
+    function create_fragment$x(ctx) {
+    	var div12, div9, div4, div2, div0, raw0_value = getIcon("sidebar","18") + "", t0, span0, t2, div1, t3, t4, div3, t5, div8, div6, div5, raw1_value = getIcon("grid","18") + "", t6, span1, t8, div7, t9, div10, t10, div11, show_if = ctx.$store.currentFrontEndItem && !isRootComponent(ctx.$store.currentFrontEndItem), t11, t12, current;
 
     	var iconbutton0 = new IconButton({
     		props: { icon: "settings", size: "14" },
@@ -49842,15 +57760,15 @@
     	iconbutton1.$on("click", ctx.newComponent);
 
     	var componentshierarchy = new ComponentsHierarchy({
-    		props: { components: ctx.$store.allComponents },
+    		props: { components: ctx.$store.derivedComponents },
     		$$inline: true
     	});
 
     	var pageslist = new PagesList({ $$inline: true });
 
-    	var if_block0 = (ctx.$store.currentFrontEndItem) && create_if_block_1$4();
+    	var if_block0 = (ctx.$store.currentFrontEndItem) && create_if_block_1$8();
 
-    	var if_block1 = (ctx.$store.currentFrontEndItem && !isRootComponent(ctx.$store.currentFrontEndItem)) && create_if_block$8();
+    	var if_block1 = (show_if) && create_if_block$e();
 
     	let newcomponent_props = {};
     	var newcomponent = new NewComponent({
@@ -49907,34 +57825,34 @@
     			t12 = space();
     			settingsview.$$.fragment.c();
     			attr(div0, "class", "svelte-1dih19s");
-    			add_location(div0, file$k, 32, 16, 904);
+    			add_location(div0, file$y, 32, 16, 904);
     			attr(span0, "class", "svelte-1dih19s");
-    			add_location(span0, file$k, 33, 16, 963);
+    			add_location(span0, file$y, 33, 16, 963);
     			attr(div1, "class", "svelte-1dih19s");
-    			add_location(div1, file$k, 34, 16, 1003);
+    			add_location(div1, file$y, 34, 16, 1003);
     			attr(div2, "class", "nav-group-header svelte-1dih19s");
-    			add_location(div2, file$k, 31, 12, 857);
+    			add_location(div2, file$y, 31, 12, 857);
     			attr(div3, "class", "nav-items-container svelte-1dih19s");
-    			add_location(div3, file$k, 42, 12, 1311);
+    			add_location(div3, file$y, 42, 12, 1311);
     			attr(div4, "class", "components-list-container");
-    			add_location(div4, file$k, 30, 8, 805);
+    			add_location(div4, file$y, 30, 8, 805);
     			attr(div5, "class", "svelte-1dih19s");
-    			add_location(div5, file$k, 49, 16, 1555);
+    			add_location(div5, file$y, 49, 16, 1559);
     			attr(span1, "class", "svelte-1dih19s");
-    			add_location(span1, file$k, 50, 16, 1611);
+    			add_location(span1, file$y, 50, 16, 1615);
     			attr(div6, "class", "nav-group-header svelte-1dih19s");
-    			add_location(div6, file$k, 48, 12, 1508);
+    			add_location(div6, file$y, 48, 12, 1512);
     			attr(div7, "class", "nav-items-container svelte-1dih19s");
-    			add_location(div7, file$k, 52, 12, 1661);
+    			add_location(div7, file$y, 52, 12, 1665);
     			attr(div8, "class", "pages-list-container svelte-1dih19s");
-    			add_location(div8, file$k, 47, 8, 1461);
+    			add_location(div8, file$y, 47, 8, 1465);
     			attr(div9, "class", "ui-nav svelte-1dih19s");
-    			add_location(div9, file$k, 28, 4, 775);
-    			add_location(div10, file$k, 59, 4, 1776);
+    			add_location(div9, file$y, 28, 4, 775);
+    			add_location(div10, file$y, 59, 4, 1780);
     			attr(div11, "class", "properties-pane svelte-1dih19s");
-    			add_location(div11, file$k, 65, 4, 1885);
+    			add_location(div11, file$y, 65, 4, 1889);
     			attr(div12, "class", "root svelte-1dih19s");
-    			add_location(div12, file$k, 26, 0, 747);
+    			add_location(div12, file$y, 26, 0, 747);
     		},
 
     		l: function claim(nodes) {
@@ -49983,12 +57901,12 @@
 
     		p: function update(changed, ctx) {
     			var componentshierarchy_changes = {};
-    			if (changed.$store) componentshierarchy_changes.components = ctx.$store.allComponents;
+    			if (changed.$store) componentshierarchy_changes.components = ctx.$store.derivedComponents;
     			componentshierarchy.$set(componentshierarchy_changes);
 
     			if (ctx.$store.currentFrontEndItem) {
     				if (!if_block0) {
-    					if_block0 = create_if_block_1$4();
+    					if_block0 = create_if_block_1$8();
     					if_block0.c();
     					transition_in(if_block0, 1);
     					if_block0.m(div10, null);
@@ -50003,9 +57921,11 @@
     				check_outros();
     			}
 
-    			if (ctx.$store.currentFrontEndItem && !isRootComponent(ctx.$store.currentFrontEndItem)) {
+    			if (changed.$store) show_if = ctx.$store.currentFrontEndItem && !isRootComponent(ctx.$store.currentFrontEndItem);
+
+    			if (show_if) {
     				if (!if_block1) {
-    					if_block1 = create_if_block$8();
+    					if_block1 = create_if_block$e();
     					if_block1.c();
     					transition_in(if_block1, 1);
     					if_block1.m(div11, null);
@@ -50094,11 +58014,11 @@
     	};
     }
 
-    function instance$j($$self, $$props, $$invalidate) {
+    function instance$x($$self, $$props, $$invalidate) {
     	let $store;
 
     	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -50138,7976 +58058,15 @@
     class UserInterfaceRoot extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$j, create_fragment$j, safe_not_equal, []);
-    	}
-    }
-
-    /* src\nav\NavItem.svelte generated by Svelte v3.6.9 */
-
-    const file$l = "src\\nav\\NavItem.svelte";
-
-    function create_fragment$k(ctx) {
-    	var div3, div2, div1, div0, raw_value = getIcon(ctx.icon), dispose;
-
-    	return {
-    		c: function create() {
-    			div3 = element("div");
-    			div2 = element("div");
-    			div1 = element("div");
-    			div0 = element("div");
-    			attr(div0, "class", "icon svelte-5cf6ht");
-    			add_location(div0, file$l, 24, 12, 452);
-    			attr(div1, "class", "inner svelte-5cf6ht");
-    			add_location(div1, file$l, 23, 8, 420);
-    			attr(div2, "class", "nav-item svelte-5cf6ht");
-    			add_location(div2, file$l, 21, 4, 359);
-    			attr(div3, "class", "" + ctx.navActive + " svelte-5cf6ht");
-    			add_location(div3, file$l, 20, 0, 329);
-    			dispose = listen(div2, "click", ctx.setActive);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div3, anchor);
-    			append(div3, div2);
-    			append(div2, div1);
-    			append(div1, div0);
-    			div0.innerHTML = raw_value;
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((changed.icon) && raw_value !== (raw_value = getIcon(ctx.icon))) {
-    				div0.innerHTML = raw_value;
-    			}
-
-    			if (changed.navActive) {
-    				attr(div3, "class", "" + ctx.navActive + " svelte-5cf6ht");
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div3);
-    			}
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function instance$k($$self, $$props, $$invalidate) {
-    	
-
-    let { name = "", label = "", icon = "" } = $$props;
-
-    let navActive = "";
-
-    store.subscribe(db => {
-        $$invalidate('navActive', navActive = (db.activeNav === name ? "active" : ""));
-    });
-
-    const setActive = () => 
-        store.setActiveNav(name);
-
-    	const writable_props = ['name', 'label', 'icon'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<NavItem> was created with unknown prop '${key}'`);
-    	});
-
-    	$$self.$set = $$props => {
-    		if ('name' in $$props) $$invalidate('name', name = $$props.name);
-    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
-    		if ('icon' in $$props) $$invalidate('icon', icon = $$props.icon);
-    	};
-
-    	return { name, label, icon, navActive, setActive };
-    }
-
-    class NavItem extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$k, create_fragment$k, safe_not_equal, ["name", "label", "icon"]);
-    	}
-
-    	get name() {
-    		throw new Error("<NavItem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set name(value) {
-    		throw new Error("<NavItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get label() {
-    		throw new Error("<NavItem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set label(value) {
-    		throw new Error("<NavItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get icon() {
-    		throw new Error("<NavItem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set icon(value) {
-    		throw new Error("<NavItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\nav\Nav.svelte generated by Svelte v3.6.9 */
-
-    const file$m = "src\\nav\\Nav.svelte";
-
-    function create_fragment$l(ctx) {
-    	var nav, img, t0, t1, t2, current;
-
-    	var navitem0 = new NavItem({
-    		props: {
-    		name: "database",
-    		label: "Database",
-    		icon: "database"
-    	},
-    		$$inline: true
-    	});
-
-    	var navitem1 = new NavItem({
-    		props: {
-    		name: "actions",
-    		label: "Actions",
-    		icon: "zap"
-    	},
-    		$$inline: true
-    	});
-
-    	var navitem2 = new NavItem({
-    		props: {
-    		name: "access levels",
-    		label: "Access Levels",
-    		icon: "user"
-    	},
-    		$$inline: true
-    	});
-
-    	return {
-    		c: function create() {
-    			nav = element("nav");
-    			img = element("img");
-    			t0 = space();
-    			navitem0.$$.fragment.c();
-    			t1 = space();
-    			navitem1.$$.fragment.c();
-    			t2 = space();
-    			navitem2.$$.fragment.c();
-    			attr(img, "src", "/_builder/assets/budibase-logo-only.png");
-    			attr(img, "class", "logo svelte-lgepe1");
-    			attr(img, "alt", "budibase logo");
-    			add_location(img, file$m, 10, 4, 135);
-    			attr(nav, "class", "nav svelte-lgepe1");
-    			set_style(nav, "width", ctx.width);
-    			add_location(nav, file$m, 8, 0, 84);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, nav, anchor);
-    			append(nav, img);
-    			append(nav, t0);
-    			mount_component(navitem0, nav, null);
-    			append(nav, t1);
-    			mount_component(navitem1, nav, null);
-    			append(nav, t2);
-    			mount_component(navitem2, nav, null);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (!current || changed.width) {
-    				set_style(nav, "width", ctx.width);
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(navitem0.$$.fragment, local);
-
-    			transition_in(navitem1.$$.fragment, local);
-
-    			transition_in(navitem2.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(navitem0.$$.fragment, local);
-    			transition_out(navitem1.$$.fragment, local);
-    			transition_out(navitem2.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(nav);
-    			}
-
-    			destroy_component(navitem0);
-
-    			destroy_component(navitem1);
-
-    			destroy_component(navitem2);
-    		}
-    	};
-    }
-
-    function instance$l($$self, $$props, $$invalidate) {
-    	let { width=50 } = $$props;
-
-    	const writable_props = ['width'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Nav> was created with unknown prop '${key}'`);
-    	});
-
-    	$$self.$set = $$props => {
-    		if ('width' in $$props) $$invalidate('width', width = $$props.width);
-    	};
-
-    	return { width };
-    }
-
-    class Nav extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$l, create_fragment$l, safe_not_equal, ["width"]);
-    	}
-
-    	get width() {
-    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set width(value) {
-    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\database\HierarchyRow.svelte generated by Svelte v3.6.9 */
-
-    const file$n = "src\\database\\HierarchyRow.svelte";
-
-    function get_each_context$7(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.child = list[i];
-    	return child_ctx;
-    }
-
-    // (14:4) {#if node.children}
-    function create_if_block$9(ctx) {
-    	var each_1_anchor, current;
-
-    	var each_value = ctx.node.children;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$7(get_each_context$7(ctx, each_value, i));
-    	}
-
-    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
-    		each_blocks[i] = null;
-    	});
-
-    	return {
-    		c: function create() {
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			each_1_anchor = empty();
-    		},
-
-    		m: function mount(target, anchor) {
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(target, anchor);
-    			}
-
-    			insert(target, each_1_anchor, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.node || changed.level) {
-    				each_value = ctx.node.children;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$7(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    						transition_in(each_blocks[i], 1);
-    					} else {
-    						each_blocks[i] = create_each_block$7(child_ctx);
-    						each_blocks[i].c();
-    						transition_in(each_blocks[i], 1);
-    						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
-    					}
-    				}
-
-    				group_outros();
-    				for (i = each_value.length; i < each_blocks.length; i += 1) out(i);
-    				check_outros();
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			for (var i = 0; i < each_value.length; i += 1) transition_in(each_blocks[i]);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			each_blocks = each_blocks.filter(Boolean);
-    			for (let i = 0; i < each_blocks.length; i += 1) transition_out(each_blocks[i]);
-
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_each(each_blocks, detaching);
-
-    			if (detaching) {
-    				detach(each_1_anchor);
-    			}
-    		}
-    	};
-    }
-
-    // (15:4) {#each node.children as child}
-    function create_each_block$7(ctx) {
-    	var current;
-
-    	var hierarchyrow = new HierarchyRow({
-    		props: { node: ctx.child, level: ctx.level+1 },
-    		$$inline: true
-    	});
-
-    	return {
-    		c: function create() {
-    			hierarchyrow.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(hierarchyrow, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var hierarchyrow_changes = {};
-    			if (changed.node) hierarchyrow_changes.node = ctx.child;
-    			if (changed.level) hierarchyrow_changes.level = ctx.level+1;
-    			hierarchyrow.$set(hierarchyrow_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(hierarchyrow.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(hierarchyrow.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(hierarchyrow, detaching);
-    		}
-    	};
-    }
-
-    function create_fragment$m(ctx) {
-    	var div1, div0, t0_value = ctx.node.name, t0, t1, current, dispose;
-
-    	var if_block = (ctx.node.children) && create_if_block$9(ctx);
-
-    	return {
-    		c: function create() {
-    			div1 = element("div");
-    			div0 = element("div");
-    			t0 = text(t0_value);
-    			t1 = space();
-    			if (if_block) if_block.c();
-    			attr(div0, "class", "title svelte-1q40nqm");
-    			set_style(div0, "padding-left", "" + (20 + (ctx.level * 20)) + "px");
-    			add_location(div0, file$n, 10, 4, 157);
-    			attr(div1, "class", "root svelte-1q40nqm");
-    			add_location(div1, file$n, 9, 0, 134);
-    			dispose = listen(div0, "click", ctx.click_handler);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, div0);
-    			append(div0, t0);
-    			append(div1, t1);
-    			if (if_block) if_block.m(div1, null);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((!current || changed.node) && t0_value !== (t0_value = ctx.node.name)) {
-    				set_data(t0, t0_value);
-    			}
-
-    			if (!current || changed.level) {
-    				set_style(div0, "padding-left", "" + (20 + (ctx.level * 20)) + "px");
-    			}
-
-    			if (ctx.node.children) {
-    				if (if_block) {
-    					if_block.p(changed, ctx);
-    					transition_in(if_block, 1);
-    				} else {
-    					if_block = create_if_block$9(ctx);
-    					if_block.c();
-    					transition_in(if_block, 1);
-    					if_block.m(div1, null);
-    				}
-    			} else if (if_block) {
-    				group_outros();
-    				transition_out(if_block, 1, 1, () => {
-    					if_block = null;
-    				});
-    				check_outros();
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			if (if_block) if_block.d();
-    			dispose();
-    		}
-    	};
-    }
-
-    function instance$m($$self, $$props, $$invalidate) {
-    	
-    let { level = 0, node } = $$props;
-
-    	const writable_props = ['level', 'node'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<HierarchyRow> was created with unknown prop '${key}'`);
-    	});
-
-    	function click_handler() {
-    		return store.selectExistingNode(node.nodeId);
-    	}
-
-    	$$self.$set = $$props => {
-    		if ('level' in $$props) $$invalidate('level', level = $$props.level);
-    		if ('node' in $$props) $$invalidate('node', node = $$props.node);
-    	};
-
-    	return { level, node, click_handler };
-    }
-
-    class HierarchyRow extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$m, create_fragment$m, safe_not_equal, ["level", "node"]);
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-    		if (ctx.node === undefined && !('node' in props)) {
-    			console.warn("<HierarchyRow> was created without expected prop 'node'");
-    		}
-    	}
-
-    	get level() {
-    		throw new Error("<HierarchyRow>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set level(value) {
-    		throw new Error("<HierarchyRow>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get node() {
-    		throw new Error("<HierarchyRow>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set node(value) {
-    		throw new Error("<HierarchyRow>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\common\NumberBox.svelte generated by Svelte v3.6.9 */
-
-    const file$o = "src\\common\\NumberBox.svelte";
-
-    function create_fragment$n(ctx) {
-    	var div1, label_1, t0, t1, div0, input, dispose;
-
-    	return {
-    		c: function create() {
-    			div1 = element("div");
-    			label_1 = element("label");
-    			t0 = text(ctx.label);
-    			t1 = space();
-    			div0 = element("div");
-    			input = element("input");
-    			attr(label_1, "class", "uk-form-label");
-    			add_location(label_1, file$o, 20, 4, 333);
-    			attr(input, "class", "uk-input");
-    			input.value = ctx.value;
-    			add_location(input, file$o, 22, 8, 423);
-    			attr(div0, "class", "uk-form-controls");
-    			add_location(div0, file$o, 21, 4, 383);
-    			attr(div1, "class", "uk-margin");
-    			add_location(div1, file$o, 19, 0, 304);
-    			dispose = listen(input, "change", ctx.inputChanged);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, label_1);
-    			append(label_1, t0);
-    			append(div1, t1);
-    			append(div1, div0);
-    			append(div0, input);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.label) {
-    				set_data(t0, ctx.label);
-    			}
-
-    			if (changed.value) {
-    				input.value = ctx.value;
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function instance$n($$self, $$props, $$invalidate) {
-    	let { value, label } = $$props;
-
-    const inputChanged = ev => {
-        try {
-            $$invalidate('value', value = Number(ev.target.value));
-        } catch(_) {
-            $$invalidate('value', value = null);
-        }
-    };
-
-    let numberText = value === null || value === undefined
-                     ? "" : value.toString();
-
-    	const writable_props = ['value', 'label'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<NumberBox> was created with unknown prop '${key}'`);
-    	});
-
-    	$$self.$set = $$props => {
-    		if ('value' in $$props) $$invalidate('value', value = $$props.value);
-    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
-    	};
-
-    	return { value, label, inputChanged };
-    }
-
-    class NumberBox extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$n, create_fragment$n, safe_not_equal, ["value", "label"]);
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-    		if (ctx.value === undefined && !('value' in props)) {
-    			console.warn("<NumberBox> was created without expected prop 'value'");
-    		}
-    		if (ctx.label === undefined && !('label' in props)) {
-    			console.warn("<NumberBox> was created without expected prop 'label'");
-    		}
-    	}
-
-    	get value() {
-    		throw new Error("<NumberBox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set value(value) {
-    		throw new Error("<NumberBox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get label() {
-    		throw new Error("<NumberBox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set label(value) {
-    		throw new Error("<NumberBox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\common\ValuesList.svelte generated by Svelte v3.6.9 */
-
-    const file$p = "src\\common\\ValuesList.svelte";
-
-    function create_fragment$o(ctx) {
-    	var div1, label_1, t0, t1, div0, textarea, dispose;
-
-    	return {
-    		c: function create() {
-    			div1 = element("div");
-    			label_1 = element("label");
-    			t0 = text(ctx.label);
-    			t1 = space();
-    			div0 = element("div");
-    			textarea = element("textarea");
-    			attr(label_1, "class", "uk-form-label");
-    			add_location(label_1, file$p, 21, 4, 311);
-    			textarea.value = ctx.valuesText;
-    			attr(textarea, "class", "svelte-1wfv4cc");
-    			add_location(textarea, file$p, 23, 8, 401);
-    			attr(div0, "class", "uk-form-controls");
-    			add_location(div0, file$p, 22, 4, 361);
-    			attr(div1, "class", "uk-margin");
-    			add_location(div1, file$p, 20, 0, 282);
-    			dispose = listen(textarea, "change", ctx.inputChanged);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, label_1);
-    			append(label_1, t0);
-    			append(div1, t1);
-    			append(div1, div0);
-    			append(div0, textarea);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.label) {
-    				set_data(t0, ctx.label);
-    			}
-
-    			if (changed.valuesText) {
-    				textarea.value = ctx.valuesText;
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function instance$o($$self, $$props, $$invalidate) {
-    	let { values, label } = $$props;
-
-    const inputChanged = ev => {
-        try {
-            $$invalidate('values', values = ev.target.value.split("\n"));
-        } catch(_) {
-            $$invalidate('values', values = []);
-        }
-    };
-
-    	const writable_props = ['values', 'label'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ValuesList> was created with unknown prop '${key}'`);
-    	});
-
-    	$$self.$set = $$props => {
-    		if ('values' in $$props) $$invalidate('values', values = $$props.values);
-    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
-    	};
-
-    	let valuesText;
-
-    	$$self.$$.update = ($$dirty = { values: 1 }) => {
-    		if ($$dirty.values) { $$invalidate('valuesText', valuesText = fp_39("\n")(values)); }
-    	};
-
-    	return { values, label, inputChanged, valuesText };
-    }
-
-    class ValuesList extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$o, create_fragment$o, safe_not_equal, ["values", "label"]);
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-    		if (ctx.values === undefined && !('values' in props)) {
-    			console.warn("<ValuesList> was created without expected prop 'values'");
-    		}
-    		if (ctx.label === undefined && !('label' in props)) {
-    			console.warn("<ValuesList> was created without expected prop 'label'");
-    		}
-    	}
-
-    	get values() {
-    		throw new Error("<ValuesList>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set values(value) {
-    		throw new Error("<ValuesList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get label() {
-    		throw new Error("<ValuesList>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set label(value) {
-    		throw new Error("<ValuesList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\common\ErrorsBox.svelte generated by Svelte v3.6.9 */
-
-    const file$q = "src\\common\\ErrorsBox.svelte";
-
-    function get_each_context$8(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.error = list[i];
-    	return child_ctx;
-    }
-
-    // (7:0) {#if hasErrors}
-    function create_if_block$a(ctx) {
-    	var div;
-
-    	var each_value = ctx.errors;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
-    	}
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-    			attr(div, "class", "error-container svelte-jwy920");
-    			add_location(div, file$q, 7, 0, 101);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div, null);
-    			}
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.errors) {
-    				each_value = ctx.errors;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$8(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block$8(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(div, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value.length;
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			destroy_each(each_blocks, detaching);
-    		}
-    	};
-    }
-
-    // (9:4) {#each errors as error}
-    function create_each_block$8(ctx) {
-    	var div, t0_value = ctx.error.field ? `${ctx.error.field}: ` : "", t0, t1_value = ctx.error.error, t1;
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			t0 = text(t0_value);
-    			t1 = text(t1_value);
-    			attr(div, "class", "error-row svelte-jwy920");
-    			add_location(div, file$q, 9, 4, 165);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, t0);
-    			append(div, t1);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((changed.errors) && t0_value !== (t0_value = ctx.error.field ? `${ctx.error.field}: ` : "")) {
-    				set_data(t0, t0_value);
-    			}
-
-    			if ((changed.errors) && t1_value !== (t1_value = ctx.error.error)) {
-    				set_data(t1, t1_value);
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-    		}
-    	};
-    }
-
-    function create_fragment$p(ctx) {
-    	var if_block_anchor;
-
-    	var if_block = (ctx.hasErrors) && create_if_block$a(ctx);
-
-    	return {
-    		c: function create() {
-    			if (if_block) if_block.c();
-    			if_block_anchor = empty();
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			if (if_block) if_block.m(target, anchor);
-    			insert(target, if_block_anchor, anchor);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (ctx.hasErrors) {
-    				if (if_block) {
-    					if_block.p(changed, ctx);
-    				} else {
-    					if_block = create_if_block$a(ctx);
-    					if_block.c();
-    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
-    				}
-    			} else if (if_block) {
-    				if_block.d(1);
-    				if_block = null;
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (if_block) if_block.d(detaching);
-
-    			if (detaching) {
-    				detach(if_block_anchor);
-    			}
-    		}
-    	};
-    }
-
-    function instance$p($$self, $$props, $$invalidate) {
-    	let { errors = [] } = $$props;
-
-    	const writable_props = ['errors'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ErrorsBox> was created with unknown prop '${key}'`);
-    	});
-
-    	$$self.$set = $$props => {
-    		if ('errors' in $$props) $$invalidate('errors', errors = $$props.errors);
-    	};
-
-    	let hasErrors;
-
-    	$$self.$$.update = ($$dirty = { errors: 1 }) => {
-    		if ($$dirty.errors) { $$invalidate('hasErrors', hasErrors = errors.length > 0); }
-    	};
-
-    	return { errors, hasErrors };
-    }
-
-    class ErrorsBox extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$p, create_fragment$p, safe_not_equal, ["errors"]);
-    	}
-
-    	get errors() {
-    		throw new Error("<ErrorsBox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set errors(value) {
-    		throw new Error("<ErrorsBox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    var flatpickr = createCommonjsModule(function (module, exports) {
-    /* flatpickr v4.6.2, @license MIT */
-    (function (global, factory) {
-         module.exports = factory() ;
-    }(commonjsGlobal, function () {
-        /*! *****************************************************************************
-        Copyright (c) Microsoft Corporation. All rights reserved.
-        Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-        this file except in compliance with the License. You may obtain a copy of the
-        License at http://www.apache.org/licenses/LICENSE-2.0
-
-        THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-        KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-        WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-        MERCHANTABLITY OR NON-INFRINGEMENT.
-
-        See the Apache Version 2.0 License for specific language governing permissions
-        and limitations under the License.
-        ***************************************************************************** */
-
-        var __assign = function() {
-            __assign = Object.assign || function __assign(t) {
-                for (var s, i = 1, n = arguments.length; i < n; i++) {
-                    s = arguments[i];
-                    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
-                }
-                return t;
-            };
-            return __assign.apply(this, arguments);
-        };
-
-        var HOOKS = [
-            "onChange",
-            "onClose",
-            "onDayCreate",
-            "onDestroy",
-            "onKeyDown",
-            "onMonthChange",
-            "onOpen",
-            "onParseConfig",
-            "onReady",
-            "onValueUpdate",
-            "onYearChange",
-            "onPreCalendarPosition",
-        ];
-        var defaults = {
-            _disable: [],
-            _enable: [],
-            allowInput: false,
-            altFormat: "F j, Y",
-            altInput: false,
-            altInputClass: "form-control input",
-            animate: typeof window === "object" &&
-                window.navigator.userAgent.indexOf("MSIE") === -1,
-            ariaDateFormat: "F j, Y",
-            clickOpens: true,
-            closeOnSelect: true,
-            conjunction: ", ",
-            dateFormat: "Y-m-d",
-            defaultHour: 12,
-            defaultMinute: 0,
-            defaultSeconds: 0,
-            disable: [],
-            disableMobile: false,
-            enable: [],
-            enableSeconds: false,
-            enableTime: false,
-            errorHandler: function (err) {
-                return typeof console !== "undefined" && console.warn(err);
-            },
-            getWeek: function (givenDate) {
-                var date = new Date(givenDate.getTime());
-                date.setHours(0, 0, 0, 0);
-                // Thursday in current week decides the year.
-                date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
-                // January 4 is always in week 1.
-                var week1 = new Date(date.getFullYear(), 0, 4);
-                // Adjust to Thursday in week 1 and count number of weeks from date to week1.
-                return (1 +
-                    Math.round(((date.getTime() - week1.getTime()) / 86400000 -
-                        3 +
-                        ((week1.getDay() + 6) % 7)) /
-                        7));
-            },
-            hourIncrement: 1,
-            ignoredFocusElements: [],
-            inline: false,
-            locale: "default",
-            minuteIncrement: 5,
-            mode: "single",
-            monthSelectorType: "dropdown",
-            nextArrow: "<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 17 17'><g></g><path d='M13.207 8.472l-7.854 7.854-0.707-0.707 7.146-7.146-7.146-7.148 0.707-0.707 7.854 7.854z' /></svg>",
-            noCalendar: false,
-            now: new Date(),
-            onChange: [],
-            onClose: [],
-            onDayCreate: [],
-            onDestroy: [],
-            onKeyDown: [],
-            onMonthChange: [],
-            onOpen: [],
-            onParseConfig: [],
-            onReady: [],
-            onValueUpdate: [],
-            onYearChange: [],
-            onPreCalendarPosition: [],
-            plugins: [],
-            position: "auto",
-            positionElement: undefined,
-            prevArrow: "<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 17 17'><g></g><path d='M5.207 8.471l7.146 7.147-0.707 0.707-7.853-7.854 7.854-7.853 0.707 0.707-7.147 7.146z' /></svg>",
-            shorthandCurrentMonth: false,
-            showMonths: 1,
-            static: false,
-            time_24hr: false,
-            weekNumbers: false,
-            wrap: false
-        };
-
-        var english = {
-            weekdays: {
-                shorthand: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-                longhand: [
-                    "Sunday",
-                    "Monday",
-                    "Tuesday",
-                    "Wednesday",
-                    "Thursday",
-                    "Friday",
-                    "Saturday",
-                ]
-            },
-            months: {
-                shorthand: [
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dec",
-                ],
-                longhand: [
-                    "January",
-                    "February",
-                    "March",
-                    "April",
-                    "May",
-                    "June",
-                    "July",
-                    "August",
-                    "September",
-                    "October",
-                    "November",
-                    "December",
-                ]
-            },
-            daysInMonth: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-            firstDayOfWeek: 0,
-            ordinal: function (nth) {
-                var s = nth % 100;
-                if (s > 3 && s < 21)
-                    return "th";
-                switch (s % 10) {
-                    case 1:
-                        return "st";
-                    case 2:
-                        return "nd";
-                    case 3:
-                        return "rd";
-                    default:
-                        return "th";
-                }
-            },
-            rangeSeparator: " to ",
-            weekAbbreviation: "Wk",
-            scrollTitle: "Scroll to increment",
-            toggleTitle: "Click to toggle",
-            amPM: ["AM", "PM"],
-            yearAriaLabel: "Year",
-            hourAriaLabel: "Hour",
-            minuteAriaLabel: "Minute",
-            time_24hr: false
-        };
-
-        var pad = function (number) { return ("0" + number).slice(-2); };
-        var int = function (bool) { return (bool === true ? 1 : 0); };
-        /* istanbul ignore next */
-        function debounce(func, wait, immediate) {
-            if (immediate === void 0) { immediate = false; }
-            var timeout;
-            return function () {
-                var context = this, args = arguments;
-                timeout !== null && clearTimeout(timeout);
-                timeout = window.setTimeout(function () {
-                    timeout = null;
-                    if (!immediate)
-                        func.apply(context, args);
-                }, wait);
-                if (immediate && !timeout)
-                    func.apply(context, args);
-            };
-        }
-        var arrayify = function (obj) {
-            return obj instanceof Array ? obj : [obj];
-        };
-
-        function toggleClass(elem, className, bool) {
-            if (bool === true)
-                return elem.classList.add(className);
-            elem.classList.remove(className);
-        }
-        function createElement(tag, className, content) {
-            var e = window.document.createElement(tag);
-            className = className || "";
-            content = content || "";
-            e.className = className;
-            if (content !== undefined)
-                e.textContent = content;
-            return e;
-        }
-        function clearNode(node) {
-            while (node.firstChild)
-                node.removeChild(node.firstChild);
-        }
-        function findParent(node, condition) {
-            if (condition(node))
-                return node;
-            else if (node.parentNode)
-                return findParent(node.parentNode, condition);
-            return undefined; // nothing found
-        }
-        function createNumberInput(inputClassName, opts) {
-            var wrapper = createElement("div", "numInputWrapper"), numInput = createElement("input", "numInput " + inputClassName), arrowUp = createElement("span", "arrowUp"), arrowDown = createElement("span", "arrowDown");
-            if (navigator.userAgent.indexOf("MSIE 9.0") === -1) {
-                numInput.type = "number";
-            }
-            else {
-                numInput.type = "text";
-                numInput.pattern = "\\d*";
-            }
-            if (opts !== undefined)
-                for (var key in opts)
-                    numInput.setAttribute(key, opts[key]);
-            wrapper.appendChild(numInput);
-            wrapper.appendChild(arrowUp);
-            wrapper.appendChild(arrowDown);
-            return wrapper;
-        }
-        function getEventTarget(event) {
-            if (typeof event.composedPath === "function") {
-                var path = event.composedPath();
-                return path[0];
-            }
-            return event.target;
-        }
-
-        var doNothing = function () { return undefined; };
-        var monthToStr = function (monthNumber, shorthand, locale) { return locale.months[shorthand ? "shorthand" : "longhand"][monthNumber]; };
-        var revFormat = {
-            D: doNothing,
-            F: function (dateObj, monthName, locale) {
-                dateObj.setMonth(locale.months.longhand.indexOf(monthName));
-            },
-            G: function (dateObj, hour) {
-                dateObj.setHours(parseFloat(hour));
-            },
-            H: function (dateObj, hour) {
-                dateObj.setHours(parseFloat(hour));
-            },
-            J: function (dateObj, day) {
-                dateObj.setDate(parseFloat(day));
-            },
-            K: function (dateObj, amPM, locale) {
-                dateObj.setHours((dateObj.getHours() % 12) +
-                    12 * int(new RegExp(locale.amPM[1], "i").test(amPM)));
-            },
-            M: function (dateObj, shortMonth, locale) {
-                dateObj.setMonth(locale.months.shorthand.indexOf(shortMonth));
-            },
-            S: function (dateObj, seconds) {
-                dateObj.setSeconds(parseFloat(seconds));
-            },
-            U: function (_, unixSeconds) { return new Date(parseFloat(unixSeconds) * 1000); },
-            W: function (dateObj, weekNum, locale) {
-                var weekNumber = parseInt(weekNum);
-                var date = new Date(dateObj.getFullYear(), 0, 2 + (weekNumber - 1) * 7, 0, 0, 0, 0);
-                date.setDate(date.getDate() - date.getDay() + locale.firstDayOfWeek);
-                return date;
-            },
-            Y: function (dateObj, year) {
-                dateObj.setFullYear(parseFloat(year));
-            },
-            Z: function (_, ISODate) { return new Date(ISODate); },
-            d: function (dateObj, day) {
-                dateObj.setDate(parseFloat(day));
-            },
-            h: function (dateObj, hour) {
-                dateObj.setHours(parseFloat(hour));
-            },
-            i: function (dateObj, minutes) {
-                dateObj.setMinutes(parseFloat(minutes));
-            },
-            j: function (dateObj, day) {
-                dateObj.setDate(parseFloat(day));
-            },
-            l: doNothing,
-            m: function (dateObj, month) {
-                dateObj.setMonth(parseFloat(month) - 1);
-            },
-            n: function (dateObj, month) {
-                dateObj.setMonth(parseFloat(month) - 1);
-            },
-            s: function (dateObj, seconds) {
-                dateObj.setSeconds(parseFloat(seconds));
-            },
-            u: function (_, unixMillSeconds) {
-                return new Date(parseFloat(unixMillSeconds));
-            },
-            w: doNothing,
-            y: function (dateObj, year) {
-                dateObj.setFullYear(2000 + parseFloat(year));
-            }
-        };
-        var tokenRegex = {
-            D: "(\\w+)",
-            F: "(\\w+)",
-            G: "(\\d\\d|\\d)",
-            H: "(\\d\\d|\\d)",
-            J: "(\\d\\d|\\d)\\w+",
-            K: "",
-            M: "(\\w+)",
-            S: "(\\d\\d|\\d)",
-            U: "(.+)",
-            W: "(\\d\\d|\\d)",
-            Y: "(\\d{4})",
-            Z: "(.+)",
-            d: "(\\d\\d|\\d)",
-            h: "(\\d\\d|\\d)",
-            i: "(\\d\\d|\\d)",
-            j: "(\\d\\d|\\d)",
-            l: "(\\w+)",
-            m: "(\\d\\d|\\d)",
-            n: "(\\d\\d|\\d)",
-            s: "(\\d\\d|\\d)",
-            u: "(.+)",
-            w: "(\\d\\d|\\d)",
-            y: "(\\d{2})"
-        };
-        var formats = {
-            // get the date in UTC
-            Z: function (date) { return date.toISOString(); },
-            // weekday name, short, e.g. Thu
-            D: function (date, locale, options) {
-                return locale.weekdays.shorthand[formats.w(date, locale, options)];
-            },
-            // full month name e.g. January
-            F: function (date, locale, options) {
-                return monthToStr(formats.n(date, locale, options) - 1, false, locale);
-            },
-            // padded hour 1-12
-            G: function (date, locale, options) {
-                return pad(formats.h(date, locale, options));
-            },
-            // hours with leading zero e.g. 03
-            H: function (date) { return pad(date.getHours()); },
-            // day (1-30) with ordinal suffix e.g. 1st, 2nd
-            J: function (date, locale) {
-                return locale.ordinal !== undefined
-                    ? date.getDate() + locale.ordinal(date.getDate())
-                    : date.getDate();
-            },
-            // AM/PM
-            K: function (date, locale) { return locale.amPM[int(date.getHours() > 11)]; },
-            // shorthand month e.g. Jan, Sep, Oct, etc
-            M: function (date, locale) {
-                return monthToStr(date.getMonth(), true, locale);
-            },
-            // seconds 00-59
-            S: function (date) { return pad(date.getSeconds()); },
-            // unix timestamp
-            U: function (date) { return date.getTime() / 1000; },
-            W: function (date, _, options) {
-                return options.getWeek(date);
-            },
-            // full year e.g. 2016
-            Y: function (date) { return date.getFullYear(); },
-            // day in month, padded (01-30)
-            d: function (date) { return pad(date.getDate()); },
-            // hour from 1-12 (am/pm)
-            h: function (date) { return (date.getHours() % 12 ? date.getHours() % 12 : 12); },
-            // minutes, padded with leading zero e.g. 09
-            i: function (date) { return pad(date.getMinutes()); },
-            // day in month (1-30)
-            j: function (date) { return date.getDate(); },
-            // weekday name, full, e.g. Thursday
-            l: function (date, locale) {
-                return locale.weekdays.longhand[date.getDay()];
-            },
-            // padded month number (01-12)
-            m: function (date) { return pad(date.getMonth() + 1); },
-            // the month number (1-12)
-            n: function (date) { return date.getMonth() + 1; },
-            // seconds 0-59
-            s: function (date) { return date.getSeconds(); },
-            // Unix Milliseconds
-            u: function (date) { return date.getTime(); },
-            // number of the day of the week
-            w: function (date) { return date.getDay(); },
-            // last two digits of year e.g. 16 for 2016
-            y: function (date) { return String(date.getFullYear()).substring(2); }
-        };
-
-        var createDateFormatter = function (_a) {
-            var _b = _a.config, config = _b === void 0 ? defaults : _b, _c = _a.l10n, l10n = _c === void 0 ? english : _c;
-            return function (dateObj, frmt, overrideLocale) {
-                var locale = overrideLocale || l10n;
-                if (config.formatDate !== undefined) {
-                    return config.formatDate(dateObj, frmt, locale);
-                }
-                return frmt
-                    .split("")
-                    .map(function (c, i, arr) {
-                    return formats[c] && arr[i - 1] !== "\\"
-                        ? formats[c](dateObj, locale, config)
-                        : c !== "\\"
-                            ? c
-                            : "";
-                })
-                    .join("");
-            };
-        };
-        var createDateParser = function (_a) {
-            var _b = _a.config, config = _b === void 0 ? defaults : _b, _c = _a.l10n, l10n = _c === void 0 ? english : _c;
-            return function (date, givenFormat, timeless, customLocale) {
-                if (date !== 0 && !date)
-                    return undefined;
-                var locale = customLocale || l10n;
-                var parsedDate;
-                var dateOrig = date;
-                if (date instanceof Date)
-                    parsedDate = new Date(date.getTime());
-                else if (typeof date !== "string" &&
-                    date.toFixed !== undefined // timestamp
-                )
-                    // create a copy
-                    parsedDate = new Date(date);
-                else if (typeof date === "string") {
-                    // date string
-                    var format = givenFormat || (config || defaults).dateFormat;
-                    var datestr = String(date).trim();
-                    if (datestr === "today") {
-                        parsedDate = new Date();
-                        timeless = true;
-                    }
-                    else if (/Z$/.test(datestr) ||
-                        /GMT$/.test(datestr) // datestrings w/ timezone
-                    )
-                        parsedDate = new Date(date);
-                    else if (config && config.parseDate)
-                        parsedDate = config.parseDate(date, format);
-                    else {
-                        parsedDate =
-                            !config || !config.noCalendar
-                                ? new Date(new Date().getFullYear(), 0, 1, 0, 0, 0, 0)
-                                : new Date(new Date().setHours(0, 0, 0, 0));
-                        var matched = void 0, ops = [];
-                        for (var i = 0, matchIndex = 0, regexStr = ""; i < format.length; i++) {
-                            var token_1 = format[i];
-                            var isBackSlash = token_1 === "\\";
-                            var escaped = format[i - 1] === "\\" || isBackSlash;
-                            if (tokenRegex[token_1] && !escaped) {
-                                regexStr += tokenRegex[token_1];
-                                var match = new RegExp(regexStr).exec(date);
-                                if (match && (matched = true)) {
-                                    ops[token_1 !== "Y" ? "push" : "unshift"]({
-                                        fn: revFormat[token_1],
-                                        val: match[++matchIndex]
-                                    });
-                                }
-                            }
-                            else if (!isBackSlash)
-                                regexStr += "."; // don't really care
-                            ops.forEach(function (_a) {
-                                var fn = _a.fn, val = _a.val;
-                                return (parsedDate = fn(parsedDate, val, locale) || parsedDate);
-                            });
-                        }
-                        parsedDate = matched ? parsedDate : undefined;
-                    }
-                }
-                /* istanbul ignore next */
-                if (!(parsedDate instanceof Date && !isNaN(parsedDate.getTime()))) {
-                    config.errorHandler(new Error("Invalid date provided: " + dateOrig));
-                    return undefined;
-                }
-                if (timeless === true)
-                    parsedDate.setHours(0, 0, 0, 0);
-                return parsedDate;
-            };
-        };
-        /**
-         * Compute the difference in dates, measured in ms
-         */
-        function compareDates(date1, date2, timeless) {
-            if (timeless === void 0) { timeless = true; }
-            if (timeless !== false) {
-                return (new Date(date1.getTime()).setHours(0, 0, 0, 0) -
-                    new Date(date2.getTime()).setHours(0, 0, 0, 0));
-            }
-            return date1.getTime() - date2.getTime();
-        }
-        var isBetween = function (ts, ts1, ts2) {
-            return ts > Math.min(ts1, ts2) && ts < Math.max(ts1, ts2);
-        };
-        var duration = {
-            DAY: 86400000
-        };
-
-        if (typeof Object.assign !== "function") {
-            Object.assign = function (target) {
-                var args = [];
-                for (var _i = 1; _i < arguments.length; _i++) {
-                    args[_i - 1] = arguments[_i];
-                }
-                if (!target) {
-                    throw TypeError("Cannot convert undefined or null to object");
-                }
-                var _loop_1 = function (source) {
-                    if (source) {
-                        Object.keys(source).forEach(function (key) { return (target[key] = source[key]); });
-                    }
-                };
-                for (var _a = 0, args_1 = args; _a < args_1.length; _a++) {
-                    var source = args_1[_a];
-                    _loop_1(source);
-                }
-                return target;
-            };
-        }
-
-        var DEBOUNCED_CHANGE_MS = 300;
-        function FlatpickrInstance(element, instanceConfig) {
-            var self = {
-                config: __assign({}, defaults, flatpickr.defaultConfig),
-                l10n: english
-            };
-            self.parseDate = createDateParser({ config: self.config, l10n: self.l10n });
-            self._handlers = [];
-            self.pluginElements = [];
-            self.loadedPlugins = [];
-            self._bind = bind;
-            self._setHoursFromDate = setHoursFromDate;
-            self._positionCalendar = positionCalendar;
-            self.changeMonth = changeMonth;
-            self.changeYear = changeYear;
-            self.clear = clear;
-            self.close = close;
-            self._createElement = createElement;
-            self.destroy = destroy;
-            self.isEnabled = isEnabled;
-            self.jumpToDate = jumpToDate;
-            self.open = open;
-            self.redraw = redraw;
-            self.set = set;
-            self.setDate = setDate;
-            self.toggle = toggle;
-            function setupHelperFunctions() {
-                self.utils = {
-                    getDaysInMonth: function (month, yr) {
-                        if (month === void 0) { month = self.currentMonth; }
-                        if (yr === void 0) { yr = self.currentYear; }
-                        if (month === 1 && ((yr % 4 === 0 && yr % 100 !== 0) || yr % 400 === 0))
-                            return 29;
-                        return self.l10n.daysInMonth[month];
-                    }
-                };
-            }
-            function init() {
-                self.element = self.input = element;
-                self.isOpen = false;
-                parseConfig();
-                setupLocale();
-                setupInputs();
-                setupDates();
-                setupHelperFunctions();
-                if (!self.isMobile)
-                    build();
-                bindEvents();
-                if (self.selectedDates.length || self.config.noCalendar) {
-                    if (self.config.enableTime) {
-                        setHoursFromDate(self.config.noCalendar
-                            ? self.latestSelectedDateObj || self.config.minDate
-                            : undefined);
-                    }
-                    updateValue(false);
-                }
-                setCalendarWidth();
-                self.showTimeInput =
-                    self.selectedDates.length > 0 || self.config.noCalendar;
-                var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-                /* TODO: investigate this further
-            
-                  Currently, there is weird positioning behavior in safari causing pages
-                  to scroll up. https://github.com/chmln/flatpickr/issues/563
-            
-                  However, most browsers are not Safari and positioning is expensive when used
-                  in scale. https://github.com/chmln/flatpickr/issues/1096
-                */
-                if (!self.isMobile && isSafari) {
-                    positionCalendar();
-                }
-                triggerEvent("onReady");
-            }
-            function bindToInstance(fn) {
-                return fn.bind(self);
-            }
-            function setCalendarWidth() {
-                var config = self.config;
-                if (config.weekNumbers === false && config.showMonths === 1)
-                    return;
-                else if (config.noCalendar !== true) {
-                    window.requestAnimationFrame(function () {
-                        if (self.calendarContainer !== undefined) {
-                            self.calendarContainer.style.visibility = "hidden";
-                            self.calendarContainer.style.display = "block";
-                        }
-                        if (self.daysContainer !== undefined) {
-                            var daysWidth = (self.days.offsetWidth + 1) * config.showMonths;
-                            self.daysContainer.style.width = daysWidth + "px";
-                            self.calendarContainer.style.width =
-                                daysWidth +
-                                    (self.weekWrapper !== undefined
-                                        ? self.weekWrapper.offsetWidth
-                                        : 0) +
-                                    "px";
-                            self.calendarContainer.style.removeProperty("visibility");
-                            self.calendarContainer.style.removeProperty("display");
-                        }
-                    });
-                }
-            }
-            /**
-             * The handler for all events targeting the time inputs
-             */
-            function updateTime(e) {
-                if (self.selectedDates.length === 0) {
-                    setDefaultTime();
-                }
-                if (e !== undefined && e.type !== "blur") {
-                    timeWrapper(e);
-                }
-                var prevValue = self._input.value;
-                setHoursFromInputs();
-                updateValue();
-                if (self._input.value !== prevValue) {
-                    self._debouncedChange();
-                }
-            }
-            function ampm2military(hour, amPM) {
-                return (hour % 12) + 12 * int(amPM === self.l10n.amPM[1]);
-            }
-            function military2ampm(hour) {
-                switch (hour % 24) {
-                    case 0:
-                    case 12:
-                        return 12;
-                    default:
-                        return hour % 12;
-                }
-            }
-            /**
-             * Syncs the selected date object time with user's time input
-             */
-            function setHoursFromInputs() {
-                if (self.hourElement === undefined || self.minuteElement === undefined)
-                    return;
-                var hours = (parseInt(self.hourElement.value.slice(-2), 10) || 0) % 24, minutes = (parseInt(self.minuteElement.value, 10) || 0) % 60, seconds = self.secondElement !== undefined
-                    ? (parseInt(self.secondElement.value, 10) || 0) % 60
-                    : 0;
-                if (self.amPM !== undefined) {
-                    hours = ampm2military(hours, self.amPM.textContent);
-                }
-                var limitMinHours = self.config.minTime !== undefined ||
-                    (self.config.minDate &&
-                        self.minDateHasTime &&
-                        self.latestSelectedDateObj &&
-                        compareDates(self.latestSelectedDateObj, self.config.minDate, true) ===
-                            0);
-                var limitMaxHours = self.config.maxTime !== undefined ||
-                    (self.config.maxDate &&
-                        self.maxDateHasTime &&
-                        self.latestSelectedDateObj &&
-                        compareDates(self.latestSelectedDateObj, self.config.maxDate, true) ===
-                            0);
-                if (limitMaxHours) {
-                    var maxTime = self.config.maxTime !== undefined
-                        ? self.config.maxTime
-                        : self.config.maxDate;
-                    hours = Math.min(hours, maxTime.getHours());
-                    if (hours === maxTime.getHours())
-                        minutes = Math.min(minutes, maxTime.getMinutes());
-                    if (minutes === maxTime.getMinutes())
-                        seconds = Math.min(seconds, maxTime.getSeconds());
-                }
-                if (limitMinHours) {
-                    var minTime = self.config.minTime !== undefined
-                        ? self.config.minTime
-                        : self.config.minDate;
-                    hours = Math.max(hours, minTime.getHours());
-                    if (hours === minTime.getHours())
-                        minutes = Math.max(minutes, minTime.getMinutes());
-                    if (minutes === minTime.getMinutes())
-                        seconds = Math.max(seconds, minTime.getSeconds());
-                }
-                setHours(hours, minutes, seconds);
-            }
-            /**
-             * Syncs time input values with a date
-             */
-            function setHoursFromDate(dateObj) {
-                var date = dateObj || self.latestSelectedDateObj;
-                if (date)
-                    setHours(date.getHours(), date.getMinutes(), date.getSeconds());
-            }
-            function setDefaultHours() {
-                var hours = self.config.defaultHour;
-                var minutes = self.config.defaultMinute;
-                var seconds = self.config.defaultSeconds;
-                if (self.config.minDate !== undefined) {
-                    var minHr = self.config.minDate.getHours();
-                    var minMinutes = self.config.minDate.getMinutes();
-                    hours = Math.max(hours, minHr);
-                    if (hours === minHr)
-                        minutes = Math.max(minMinutes, minutes);
-                    if (hours === minHr && minutes === minMinutes)
-                        seconds = self.config.minDate.getSeconds();
-                }
-                if (self.config.maxDate !== undefined) {
-                    var maxHr = self.config.maxDate.getHours();
-                    var maxMinutes = self.config.maxDate.getMinutes();
-                    hours = Math.min(hours, maxHr);
-                    if (hours === maxHr)
-                        minutes = Math.min(maxMinutes, minutes);
-                    if (hours === maxHr && minutes === maxMinutes)
-                        seconds = self.config.maxDate.getSeconds();
-                }
-                setHours(hours, minutes, seconds);
-            }
-            /**
-             * Sets the hours, minutes, and optionally seconds
-             * of the latest selected date object and the
-             * corresponding time inputs
-             * @param {Number} hours the hour. whether its military
-             *                 or am-pm gets inferred from config
-             * @param {Number} minutes the minutes
-             * @param {Number} seconds the seconds (optional)
-             */
-            function setHours(hours, minutes, seconds) {
-                if (self.latestSelectedDateObj !== undefined) {
-                    self.latestSelectedDateObj.setHours(hours % 24, minutes, seconds || 0, 0);
-                }
-                if (!self.hourElement || !self.minuteElement || self.isMobile)
-                    return;
-                self.hourElement.value = pad(!self.config.time_24hr
-                    ? ((12 + hours) % 12) + 12 * int(hours % 12 === 0)
-                    : hours);
-                self.minuteElement.value = pad(minutes);
-                if (self.amPM !== undefined)
-                    self.amPM.textContent = self.l10n.amPM[int(hours >= 12)];
-                if (self.secondElement !== undefined)
-                    self.secondElement.value = pad(seconds);
-            }
-            /**
-             * Handles the year input and incrementing events
-             * @param {Event} event the keyup or increment event
-             */
-            function onYearInput(event) {
-                var year = parseInt(event.target.value) + (event.delta || 0);
-                if (year / 1000 > 1 ||
-                    (event.key === "Enter" && !/[^\d]/.test(year.toString()))) {
-                    changeYear(year);
-                }
-            }
-            /**
-             * Essentially addEventListener + tracking
-             * @param {Element} element the element to addEventListener to
-             * @param {String} event the event name
-             * @param {Function} handler the event handler
-             */
-            function bind(element, event, handler, options) {
-                if (event instanceof Array)
-                    return event.forEach(function (ev) { return bind(element, ev, handler, options); });
-                if (element instanceof Array)
-                    return element.forEach(function (el) { return bind(el, event, handler, options); });
-                element.addEventListener(event, handler, options);
-                self._handlers.push({
-                    element: element,
-                    event: event,
-                    handler: handler,
-                    options: options
-                });
-            }
-            /**
-             * A mousedown handler which mimics click.
-             * Minimizes latency, since we don't need to wait for mouseup in most cases.
-             * Also, avoids handling right clicks.
-             *
-             * @param {Function} handler the event handler
-             */
-            function onClick(handler) {
-                return function (evt) {
-                    evt.which === 1 && handler(evt);
-                };
-            }
-            function triggerChange() {
-                triggerEvent("onChange");
-            }
-            /**
-             * Adds all the necessary event listeners
-             */
-            function bindEvents() {
-                if (self.config.wrap) {
-                    ["open", "close", "toggle", "clear"].forEach(function (evt) {
-                        Array.prototype.forEach.call(self.element.querySelectorAll("[data-" + evt + "]"), function (el) {
-                            return bind(el, "click", self[evt]);
-                        });
-                    });
-                }
-                if (self.isMobile) {
-                    setupMobile();
-                    return;
-                }
-                var debouncedResize = debounce(onResize, 50);
-                self._debouncedChange = debounce(triggerChange, DEBOUNCED_CHANGE_MS);
-                if (self.daysContainer && !/iPhone|iPad|iPod/i.test(navigator.userAgent))
-                    bind(self.daysContainer, "mouseover", function (e) {
-                        if (self.config.mode === "range")
-                            onMouseOver(e.target);
-                    });
-                bind(window.document.body, "keydown", onKeyDown);
-                if (!self.config.inline && !self.config.static)
-                    bind(window, "resize", debouncedResize);
-                if (window.ontouchstart !== undefined)
-                    bind(window.document, "touchstart", documentClick);
-                else
-                    bind(window.document, "mousedown", onClick(documentClick));
-                bind(window.document, "focus", documentClick, { capture: true });
-                if (self.config.clickOpens === true) {
-                    bind(self._input, "focus", self.open);
-                    bind(self._input, "mousedown", onClick(self.open));
-                }
-                if (self.daysContainer !== undefined) {
-                    bind(self.monthNav, "mousedown", onClick(onMonthNavClick));
-                    bind(self.monthNav, ["keyup", "increment"], onYearInput);
-                    bind(self.daysContainer, "mousedown", onClick(selectDate));
-                }
-                if (self.timeContainer !== undefined &&
-                    self.minuteElement !== undefined &&
-                    self.hourElement !== undefined) {
-                    var selText = function (e) {
-                        return e.target.select();
-                    };
-                    bind(self.timeContainer, ["increment"], updateTime);
-                    bind(self.timeContainer, "blur", updateTime, { capture: true });
-                    bind(self.timeContainer, "mousedown", onClick(timeIncrement));
-                    bind([self.hourElement, self.minuteElement], ["focus", "click"], selText);
-                    if (self.secondElement !== undefined)
-                        bind(self.secondElement, "focus", function () { return self.secondElement && self.secondElement.select(); });
-                    if (self.amPM !== undefined) {
-                        bind(self.amPM, "mousedown", onClick(function (e) {
-                            updateTime(e);
-                            triggerChange();
-                        }));
-                    }
-                }
-            }
-            /**
-             * Set the calendar view to a particular date.
-             * @param {Date} jumpDate the date to set the view to
-             * @param {boolean} triggerChange if change events should be triggered
-             */
-            function jumpToDate(jumpDate, triggerChange) {
-                var jumpTo = jumpDate !== undefined
-                    ? self.parseDate(jumpDate)
-                    : self.latestSelectedDateObj ||
-                        (self.config.minDate && self.config.minDate > self.now
-                            ? self.config.minDate
-                            : self.config.maxDate && self.config.maxDate < self.now
-                                ? self.config.maxDate
-                                : self.now);
-                var oldYear = self.currentYear;
-                var oldMonth = self.currentMonth;
-                try {
-                    if (jumpTo !== undefined) {
-                        self.currentYear = jumpTo.getFullYear();
-                        self.currentMonth = jumpTo.getMonth();
-                    }
-                }
-                catch (e) {
-                    /* istanbul ignore next */
-                    e.message = "Invalid date supplied: " + jumpTo;
-                    self.config.errorHandler(e);
-                }
-                if (triggerChange && self.currentYear !== oldYear) {
-                    triggerEvent("onYearChange");
-                    buildMonthSwitch();
-                }
-                if (triggerChange &&
-                    (self.currentYear !== oldYear || self.currentMonth !== oldMonth)) {
-                    triggerEvent("onMonthChange");
-                }
-                self.redraw();
-            }
-            /**
-             * The up/down arrow handler for time inputs
-             * @param {Event} e the click event
-             */
-            function timeIncrement(e) {
-                if (~e.target.className.indexOf("arrow"))
-                    incrementNumInput(e, e.target.classList.contains("arrowUp") ? 1 : -1);
-            }
-            /**
-             * Increments/decrements the value of input associ-
-             * ated with the up/down arrow by dispatching an
-             * "increment" event on the input.
-             *
-             * @param {Event} e the click event
-             * @param {Number} delta the diff (usually 1 or -1)
-             * @param {Element} inputElem the input element
-             */
-            function incrementNumInput(e, delta, inputElem) {
-                var target = e && e.target;
-                var input = inputElem ||
-                    (target && target.parentNode && target.parentNode.firstChild);
-                var event = createEvent("increment");
-                event.delta = delta;
-                input && input.dispatchEvent(event);
-            }
-            function build() {
-                var fragment = window.document.createDocumentFragment();
-                self.calendarContainer = createElement("div", "flatpickr-calendar");
-                self.calendarContainer.tabIndex = -1;
-                if (!self.config.noCalendar) {
-                    fragment.appendChild(buildMonthNav());
-                    self.innerContainer = createElement("div", "flatpickr-innerContainer");
-                    if (self.config.weekNumbers) {
-                        var _a = buildWeeks(), weekWrapper = _a.weekWrapper, weekNumbers = _a.weekNumbers;
-                        self.innerContainer.appendChild(weekWrapper);
-                        self.weekNumbers = weekNumbers;
-                        self.weekWrapper = weekWrapper;
-                    }
-                    self.rContainer = createElement("div", "flatpickr-rContainer");
-                    self.rContainer.appendChild(buildWeekdays());
-                    if (!self.daysContainer) {
-                        self.daysContainer = createElement("div", "flatpickr-days");
-                        self.daysContainer.tabIndex = -1;
-                    }
-                    buildDays();
-                    self.rContainer.appendChild(self.daysContainer);
-                    self.innerContainer.appendChild(self.rContainer);
-                    fragment.appendChild(self.innerContainer);
-                }
-                if (self.config.enableTime) {
-                    fragment.appendChild(buildTime());
-                }
-                toggleClass(self.calendarContainer, "rangeMode", self.config.mode === "range");
-                toggleClass(self.calendarContainer, "animate", self.config.animate === true);
-                toggleClass(self.calendarContainer, "multiMonth", self.config.showMonths > 1);
-                self.calendarContainer.appendChild(fragment);
-                var customAppend = self.config.appendTo !== undefined &&
-                    self.config.appendTo.nodeType !== undefined;
-                if (self.config.inline || self.config.static) {
-                    self.calendarContainer.classList.add(self.config.inline ? "inline" : "static");
-                    if (self.config.inline) {
-                        if (!customAppend && self.element.parentNode)
-                            self.element.parentNode.insertBefore(self.calendarContainer, self._input.nextSibling);
-                        else if (self.config.appendTo !== undefined)
-                            self.config.appendTo.appendChild(self.calendarContainer);
-                    }
-                    if (self.config.static) {
-                        var wrapper = createElement("div", "flatpickr-wrapper");
-                        if (self.element.parentNode)
-                            self.element.parentNode.insertBefore(wrapper, self.element);
-                        wrapper.appendChild(self.element);
-                        if (self.altInput)
-                            wrapper.appendChild(self.altInput);
-                        wrapper.appendChild(self.calendarContainer);
-                    }
-                }
-                if (!self.config.static && !self.config.inline)
-                    (self.config.appendTo !== undefined
-                        ? self.config.appendTo
-                        : window.document.body).appendChild(self.calendarContainer);
-            }
-            function createDay(className, date, dayNumber, i) {
-                var dateIsEnabled = isEnabled(date, true), dayElement = createElement("span", "flatpickr-day " + className, date.getDate().toString());
-                dayElement.dateObj = date;
-                dayElement.$i = i;
-                dayElement.setAttribute("aria-label", self.formatDate(date, self.config.ariaDateFormat));
-                if (className.indexOf("hidden") === -1 &&
-                    compareDates(date, self.now) === 0) {
-                    self.todayDateElem = dayElement;
-                    dayElement.classList.add("today");
-                    dayElement.setAttribute("aria-current", "date");
-                }
-                if (dateIsEnabled) {
-                    dayElement.tabIndex = -1;
-                    if (isDateSelected(date)) {
-                        dayElement.classList.add("selected");
-                        self.selectedDateElem = dayElement;
-                        if (self.config.mode === "range") {
-                            toggleClass(dayElement, "startRange", self.selectedDates[0] &&
-                                compareDates(date, self.selectedDates[0], true) === 0);
-                            toggleClass(dayElement, "endRange", self.selectedDates[1] &&
-                                compareDates(date, self.selectedDates[1], true) === 0);
-                            if (className === "nextMonthDay")
-                                dayElement.classList.add("inRange");
-                        }
-                    }
-                }
-                else {
-                    dayElement.classList.add("flatpickr-disabled");
-                }
-                if (self.config.mode === "range") {
-                    if (isDateInRange(date) && !isDateSelected(date))
-                        dayElement.classList.add("inRange");
-                }
-                if (self.weekNumbers &&
-                    self.config.showMonths === 1 &&
-                    className !== "prevMonthDay" &&
-                    dayNumber % 7 === 1) {
-                    self.weekNumbers.insertAdjacentHTML("beforeend", "<span class='flatpickr-day'>" + self.config.getWeek(date) + "</span>");
-                }
-                triggerEvent("onDayCreate", dayElement);
-                return dayElement;
-            }
-            function focusOnDayElem(targetNode) {
-                targetNode.focus();
-                if (self.config.mode === "range")
-                    onMouseOver(targetNode);
-            }
-            function getFirstAvailableDay(delta) {
-                var startMonth = delta > 0 ? 0 : self.config.showMonths - 1;
-                var endMonth = delta > 0 ? self.config.showMonths : -1;
-                for (var m = startMonth; m != endMonth; m += delta) {
-                    var month = self.daysContainer.children[m];
-                    var startIndex = delta > 0 ? 0 : month.children.length - 1;
-                    var endIndex = delta > 0 ? month.children.length : -1;
-                    for (var i = startIndex; i != endIndex; i += delta) {
-                        var c = month.children[i];
-                        if (c.className.indexOf("hidden") === -1 && isEnabled(c.dateObj))
-                            return c;
-                    }
-                }
-                return undefined;
-            }
-            function getNextAvailableDay(current, delta) {
-                var givenMonth = current.className.indexOf("Month") === -1
-                    ? current.dateObj.getMonth()
-                    : self.currentMonth;
-                var endMonth = delta > 0 ? self.config.showMonths : -1;
-                var loopDelta = delta > 0 ? 1 : -1;
-                for (var m = givenMonth - self.currentMonth; m != endMonth; m += loopDelta) {
-                    var month = self.daysContainer.children[m];
-                    var startIndex = givenMonth - self.currentMonth === m
-                        ? current.$i + delta
-                        : delta < 0
-                            ? month.children.length - 1
-                            : 0;
-                    var numMonthDays = month.children.length;
-                    for (var i = startIndex; i >= 0 && i < numMonthDays && i != (delta > 0 ? numMonthDays : -1); i += loopDelta) {
-                        var c = month.children[i];
-                        if (c.className.indexOf("hidden") === -1 &&
-                            isEnabled(c.dateObj) &&
-                            Math.abs(current.$i - i) >= Math.abs(delta))
-                            return focusOnDayElem(c);
-                    }
-                }
-                self.changeMonth(loopDelta);
-                focusOnDay(getFirstAvailableDay(loopDelta), 0);
-                return undefined;
-            }
-            function focusOnDay(current, offset) {
-                var dayFocused = isInView(document.activeElement || document.body);
-                var startElem = current !== undefined
-                    ? current
-                    : dayFocused
-                        ? document.activeElement
-                        : self.selectedDateElem !== undefined && isInView(self.selectedDateElem)
-                            ? self.selectedDateElem
-                            : self.todayDateElem !== undefined && isInView(self.todayDateElem)
-                                ? self.todayDateElem
-                                : getFirstAvailableDay(offset > 0 ? 1 : -1);
-                if (startElem === undefined)
-                    return self._input.focus();
-                if (!dayFocused)
-                    return focusOnDayElem(startElem);
-                getNextAvailableDay(startElem, offset);
-            }
-            function buildMonthDays(year, month) {
-                var firstOfMonth = (new Date(year, month, 1).getDay() - self.l10n.firstDayOfWeek + 7) % 7;
-                var prevMonthDays = self.utils.getDaysInMonth((month - 1 + 12) % 12);
-                var daysInMonth = self.utils.getDaysInMonth(month), days = window.document.createDocumentFragment(), isMultiMonth = self.config.showMonths > 1, prevMonthDayClass = isMultiMonth ? "prevMonthDay hidden" : "prevMonthDay", nextMonthDayClass = isMultiMonth ? "nextMonthDay hidden" : "nextMonthDay";
-                var dayNumber = prevMonthDays + 1 - firstOfMonth, dayIndex = 0;
-                // prepend days from the ending of previous month
-                for (; dayNumber <= prevMonthDays; dayNumber++, dayIndex++) {
-                    days.appendChild(createDay(prevMonthDayClass, new Date(year, month - 1, dayNumber), dayNumber, dayIndex));
-                }
-                // Start at 1 since there is no 0th day
-                for (dayNumber = 1; dayNumber <= daysInMonth; dayNumber++, dayIndex++) {
-                    days.appendChild(createDay("", new Date(year, month, dayNumber), dayNumber, dayIndex));
-                }
-                // append days from the next month
-                for (var dayNum = daysInMonth + 1; dayNum <= 42 - firstOfMonth &&
-                    (self.config.showMonths === 1 || dayIndex % 7 !== 0); dayNum++, dayIndex++) {
-                    days.appendChild(createDay(nextMonthDayClass, new Date(year, month + 1, dayNum % daysInMonth), dayNum, dayIndex));
-                }
-                //updateNavigationCurrentMonth();
-                var dayContainer = createElement("div", "dayContainer");
-                dayContainer.appendChild(days);
-                return dayContainer;
-            }
-            function buildDays() {
-                if (self.daysContainer === undefined) {
-                    return;
-                }
-                clearNode(self.daysContainer);
-                // TODO: week numbers for each month
-                if (self.weekNumbers)
-                    clearNode(self.weekNumbers);
-                var frag = document.createDocumentFragment();
-                for (var i = 0; i < self.config.showMonths; i++) {
-                    var d = new Date(self.currentYear, self.currentMonth, 1);
-                    d.setMonth(self.currentMonth + i);
-                    frag.appendChild(buildMonthDays(d.getFullYear(), d.getMonth()));
-                }
-                self.daysContainer.appendChild(frag);
-                self.days = self.daysContainer.firstChild;
-                if (self.config.mode === "range" && self.selectedDates.length === 1) {
-                    onMouseOver();
-                }
-            }
-            function buildMonthSwitch() {
-                if (self.config.showMonths > 1 ||
-                    self.config.monthSelectorType !== "dropdown")
-                    return;
-                var shouldBuildMonth = function (month) {
-                    if (self.config.minDate !== undefined &&
-                        self.currentYear === self.config.minDate.getFullYear() &&
-                        month < self.config.minDate.getMonth()) {
-                        return false;
-                    }
-                    return !(self.config.maxDate !== undefined &&
-                        self.currentYear === self.config.maxDate.getFullYear() &&
-                        month > self.config.maxDate.getMonth());
-                };
-                self.monthsDropdownContainer.tabIndex = -1;
-                self.monthsDropdownContainer.innerHTML = "";
-                for (var i = 0; i < 12; i++) {
-                    if (!shouldBuildMonth(i))
-                        continue;
-                    var month = createElement("option", "flatpickr-monthDropdown-month");
-                    month.value = new Date(self.currentYear, i).getMonth().toString();
-                    month.textContent = monthToStr(i, self.config.shorthandCurrentMonth, self.l10n);
-                    month.tabIndex = -1;
-                    if (self.currentMonth === i) {
-                        month.selected = true;
-                    }
-                    self.monthsDropdownContainer.appendChild(month);
-                }
-            }
-            function buildMonth() {
-                var container = createElement("div", "flatpickr-month");
-                var monthNavFragment = window.document.createDocumentFragment();
-                var monthElement;
-                if (self.config.showMonths > 1 ||
-                    self.config.monthSelectorType === "static") {
-                    monthElement = createElement("span", "cur-month");
-                }
-                else {
-                    self.monthsDropdownContainer = createElement("select", "flatpickr-monthDropdown-months");
-                    bind(self.monthsDropdownContainer, "change", function (e) {
-                        var target = e.target;
-                        var selectedMonth = parseInt(target.value, 10);
-                        self.changeMonth(selectedMonth - self.currentMonth);
-                        triggerEvent("onMonthChange");
-                    });
-                    buildMonthSwitch();
-                    monthElement = self.monthsDropdownContainer;
-                }
-                var yearInput = createNumberInput("cur-year", { tabindex: "-1" });
-                var yearElement = yearInput.getElementsByTagName("input")[0];
-                yearElement.setAttribute("aria-label", self.l10n.yearAriaLabel);
-                if (self.config.minDate) {
-                    yearElement.setAttribute("min", self.config.minDate.getFullYear().toString());
-                }
-                if (self.config.maxDate) {
-                    yearElement.setAttribute("max", self.config.maxDate.getFullYear().toString());
-                    yearElement.disabled =
-                        !!self.config.minDate &&
-                            self.config.minDate.getFullYear() === self.config.maxDate.getFullYear();
-                }
-                var currentMonth = createElement("div", "flatpickr-current-month");
-                currentMonth.appendChild(monthElement);
-                currentMonth.appendChild(yearInput);
-                monthNavFragment.appendChild(currentMonth);
-                container.appendChild(monthNavFragment);
-                return {
-                    container: container,
-                    yearElement: yearElement,
-                    monthElement: monthElement
-                };
-            }
-            function buildMonths() {
-                clearNode(self.monthNav);
-                self.monthNav.appendChild(self.prevMonthNav);
-                if (self.config.showMonths) {
-                    self.yearElements = [];
-                    self.monthElements = [];
-                }
-                for (var m = self.config.showMonths; m--;) {
-                    var month = buildMonth();
-                    self.yearElements.push(month.yearElement);
-                    self.monthElements.push(month.monthElement);
-                    self.monthNav.appendChild(month.container);
-                }
-                self.monthNav.appendChild(self.nextMonthNav);
-            }
-            function buildMonthNav() {
-                self.monthNav = createElement("div", "flatpickr-months");
-                self.yearElements = [];
-                self.monthElements = [];
-                self.prevMonthNav = createElement("span", "flatpickr-prev-month");
-                self.prevMonthNav.innerHTML = self.config.prevArrow;
-                self.nextMonthNav = createElement("span", "flatpickr-next-month");
-                self.nextMonthNav.innerHTML = self.config.nextArrow;
-                buildMonths();
-                Object.defineProperty(self, "_hidePrevMonthArrow", {
-                    get: function () { return self.__hidePrevMonthArrow; },
-                    set: function (bool) {
-                        if (self.__hidePrevMonthArrow !== bool) {
-                            toggleClass(self.prevMonthNav, "flatpickr-disabled", bool);
-                            self.__hidePrevMonthArrow = bool;
-                        }
-                    }
-                });
-                Object.defineProperty(self, "_hideNextMonthArrow", {
-                    get: function () { return self.__hideNextMonthArrow; },
-                    set: function (bool) {
-                        if (self.__hideNextMonthArrow !== bool) {
-                            toggleClass(self.nextMonthNav, "flatpickr-disabled", bool);
-                            self.__hideNextMonthArrow = bool;
-                        }
-                    }
-                });
-                self.currentYearElement = self.yearElements[0];
-                updateNavigationCurrentMonth();
-                return self.monthNav;
-            }
-            function buildTime() {
-                self.calendarContainer.classList.add("hasTime");
-                if (self.config.noCalendar)
-                    self.calendarContainer.classList.add("noCalendar");
-                self.timeContainer = createElement("div", "flatpickr-time");
-                self.timeContainer.tabIndex = -1;
-                var separator = createElement("span", "flatpickr-time-separator", ":");
-                var hourInput = createNumberInput("flatpickr-hour", {
-                    "aria-label": self.l10n.hourAriaLabel
-                });
-                self.hourElement = hourInput.getElementsByTagName("input")[0];
-                var minuteInput = createNumberInput("flatpickr-minute", {
-                    "aria-label": self.l10n.minuteAriaLabel
-                });
-                self.minuteElement = minuteInput.getElementsByTagName("input")[0];
-                self.hourElement.tabIndex = self.minuteElement.tabIndex = -1;
-                self.hourElement.value = pad(self.latestSelectedDateObj
-                    ? self.latestSelectedDateObj.getHours()
-                    : self.config.time_24hr
-                        ? self.config.defaultHour
-                        : military2ampm(self.config.defaultHour));
-                self.minuteElement.value = pad(self.latestSelectedDateObj
-                    ? self.latestSelectedDateObj.getMinutes()
-                    : self.config.defaultMinute);
-                self.hourElement.setAttribute("step", self.config.hourIncrement.toString());
-                self.minuteElement.setAttribute("step", self.config.minuteIncrement.toString());
-                self.hourElement.setAttribute("min", self.config.time_24hr ? "0" : "1");
-                self.hourElement.setAttribute("max", self.config.time_24hr ? "23" : "12");
-                self.minuteElement.setAttribute("min", "0");
-                self.minuteElement.setAttribute("max", "59");
-                self.timeContainer.appendChild(hourInput);
-                self.timeContainer.appendChild(separator);
-                self.timeContainer.appendChild(minuteInput);
-                if (self.config.time_24hr)
-                    self.timeContainer.classList.add("time24hr");
-                if (self.config.enableSeconds) {
-                    self.timeContainer.classList.add("hasSeconds");
-                    var secondInput = createNumberInput("flatpickr-second");
-                    self.secondElement = secondInput.getElementsByTagName("input")[0];
-                    self.secondElement.value = pad(self.latestSelectedDateObj
-                        ? self.latestSelectedDateObj.getSeconds()
-                        : self.config.defaultSeconds);
-                    self.secondElement.setAttribute("step", self.minuteElement.getAttribute("step"));
-                    self.secondElement.setAttribute("min", "0");
-                    self.secondElement.setAttribute("max", "59");
-                    self.timeContainer.appendChild(createElement("span", "flatpickr-time-separator", ":"));
-                    self.timeContainer.appendChild(secondInput);
-                }
-                if (!self.config.time_24hr) {
-                    // add self.amPM if appropriate
-                    self.amPM = createElement("span", "flatpickr-am-pm", self.l10n.amPM[int((self.latestSelectedDateObj
-                        ? self.hourElement.value
-                        : self.config.defaultHour) > 11)]);
-                    self.amPM.title = self.l10n.toggleTitle;
-                    self.amPM.tabIndex = -1;
-                    self.timeContainer.appendChild(self.amPM);
-                }
-                return self.timeContainer;
-            }
-            function buildWeekdays() {
-                if (!self.weekdayContainer)
-                    self.weekdayContainer = createElement("div", "flatpickr-weekdays");
-                else
-                    clearNode(self.weekdayContainer);
-                for (var i = self.config.showMonths; i--;) {
-                    var container = createElement("div", "flatpickr-weekdaycontainer");
-                    self.weekdayContainer.appendChild(container);
-                }
-                updateWeekdays();
-                return self.weekdayContainer;
-            }
-            function updateWeekdays() {
-                var firstDayOfWeek = self.l10n.firstDayOfWeek;
-                var weekdays = self.l10n.weekdays.shorthand.slice();
-                if (firstDayOfWeek > 0 && firstDayOfWeek < weekdays.length) {
-                    weekdays = weekdays.splice(firstDayOfWeek, weekdays.length).concat(weekdays.splice(0, firstDayOfWeek));
-                }
-                for (var i = self.config.showMonths; i--;) {
-                    self.weekdayContainer.children[i].innerHTML = "\n      <span class='flatpickr-weekday'>\n        " + weekdays.join("</span><span class='flatpickr-weekday'>") + "\n      </span>\n      ";
-                }
-            }
-            /* istanbul ignore next */
-            function buildWeeks() {
-                self.calendarContainer.classList.add("hasWeeks");
-                var weekWrapper = createElement("div", "flatpickr-weekwrapper");
-                weekWrapper.appendChild(createElement("span", "flatpickr-weekday", self.l10n.weekAbbreviation));
-                var weekNumbers = createElement("div", "flatpickr-weeks");
-                weekWrapper.appendChild(weekNumbers);
-                return {
-                    weekWrapper: weekWrapper,
-                    weekNumbers: weekNumbers
-                };
-            }
-            function changeMonth(value, isOffset) {
-                if (isOffset === void 0) { isOffset = true; }
-                var delta = isOffset ? value : value - self.currentMonth;
-                if ((delta < 0 && self._hidePrevMonthArrow === true) ||
-                    (delta > 0 && self._hideNextMonthArrow === true))
-                    return;
-                self.currentMonth += delta;
-                if (self.currentMonth < 0 || self.currentMonth > 11) {
-                    self.currentYear += self.currentMonth > 11 ? 1 : -1;
-                    self.currentMonth = (self.currentMonth + 12) % 12;
-                    triggerEvent("onYearChange");
-                    buildMonthSwitch();
-                }
-                buildDays();
-                triggerEvent("onMonthChange");
-                updateNavigationCurrentMonth();
-            }
-            function clear(triggerChangeEvent, toInitial) {
-                if (triggerChangeEvent === void 0) { triggerChangeEvent = true; }
-                if (toInitial === void 0) { toInitial = true; }
-                self.input.value = "";
-                if (self.altInput !== undefined)
-                    self.altInput.value = "";
-                if (self.mobileInput !== undefined)
-                    self.mobileInput.value = "";
-                self.selectedDates = [];
-                self.latestSelectedDateObj = undefined;
-                if (toInitial === true) {
-                    self.currentYear = self._initialDate.getFullYear();
-                    self.currentMonth = self._initialDate.getMonth();
-                }
-                self.showTimeInput = false;
-                if (self.config.enableTime === true) {
-                    setDefaultHours();
-                }
-                self.redraw();
-                if (triggerChangeEvent)
-                    // triggerChangeEvent is true (default) or an Event
-                    triggerEvent("onChange");
-            }
-            function close() {
-                self.isOpen = false;
-                if (!self.isMobile) {
-                    if (self.calendarContainer !== undefined) {
-                        self.calendarContainer.classList.remove("open");
-                    }
-                    if (self._input !== undefined) {
-                        self._input.classList.remove("active");
-                    }
-                }
-                triggerEvent("onClose");
-            }
-            function destroy() {
-                if (self.config !== undefined)
-                    triggerEvent("onDestroy");
-                for (var i = self._handlers.length; i--;) {
-                    var h = self._handlers[i];
-                    h.element.removeEventListener(h.event, h.handler, h.options);
-                }
-                self._handlers = [];
-                if (self.mobileInput) {
-                    if (self.mobileInput.parentNode)
-                        self.mobileInput.parentNode.removeChild(self.mobileInput);
-                    self.mobileInput = undefined;
-                }
-                else if (self.calendarContainer && self.calendarContainer.parentNode) {
-                    if (self.config.static && self.calendarContainer.parentNode) {
-                        var wrapper = self.calendarContainer.parentNode;
-                        wrapper.lastChild && wrapper.removeChild(wrapper.lastChild);
-                        if (wrapper.parentNode) {
-                            while (wrapper.firstChild)
-                                wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
-                            wrapper.parentNode.removeChild(wrapper);
-                        }
-                    }
-                    else
-                        self.calendarContainer.parentNode.removeChild(self.calendarContainer);
-                }
-                if (self.altInput) {
-                    self.input.type = "text";
-                    if (self.altInput.parentNode)
-                        self.altInput.parentNode.removeChild(self.altInput);
-                    delete self.altInput;
-                }
-                if (self.input) {
-                    self.input.type = self.input._type;
-                    self.input.classList.remove("flatpickr-input");
-                    self.input.removeAttribute("readonly");
-                    self.input.value = "";
-                }
-                [
-                    "_showTimeInput",
-                    "latestSelectedDateObj",
-                    "_hideNextMonthArrow",
-                    "_hidePrevMonthArrow",
-                    "__hideNextMonthArrow",
-                    "__hidePrevMonthArrow",
-                    "isMobile",
-                    "isOpen",
-                    "selectedDateElem",
-                    "minDateHasTime",
-                    "maxDateHasTime",
-                    "days",
-                    "daysContainer",
-                    "_input",
-                    "_positionElement",
-                    "innerContainer",
-                    "rContainer",
-                    "monthNav",
-                    "todayDateElem",
-                    "calendarContainer",
-                    "weekdayContainer",
-                    "prevMonthNav",
-                    "nextMonthNav",
-                    "monthsDropdownContainer",
-                    "currentMonthElement",
-                    "currentYearElement",
-                    "navigationCurrentMonth",
-                    "selectedDateElem",
-                    "config",
-                ].forEach(function (k) {
-                    try {
-                        delete self[k];
-                    }
-                    catch (_) { }
-                });
-            }
-            function isCalendarElem(elem) {
-                if (self.config.appendTo && self.config.appendTo.contains(elem))
-                    return true;
-                return self.calendarContainer.contains(elem);
-            }
-            function documentClick(e) {
-                if (self.isOpen && !self.config.inline) {
-                    var eventTarget_1 = getEventTarget(e);
-                    var isCalendarElement = isCalendarElem(eventTarget_1);
-                    var isInput = eventTarget_1 === self.input ||
-                        eventTarget_1 === self.altInput ||
-                        self.element.contains(eventTarget_1) ||
-                        // web components
-                        // e.path is not present in all browsers. circumventing typechecks
-                        (e.path &&
-                            e.path.indexOf &&
-                            (~e.path.indexOf(self.input) ||
-                                ~e.path.indexOf(self.altInput)));
-                    var lostFocus = e.type === "blur"
-                        ? isInput &&
-                            e.relatedTarget &&
-                            !isCalendarElem(e.relatedTarget)
-                        : !isInput &&
-                            !isCalendarElement &&
-                            !isCalendarElem(e.relatedTarget);
-                    var isIgnored = !self.config.ignoredFocusElements.some(function (elem) {
-                        return elem.contains(eventTarget_1);
-                    });
-                    if (lostFocus && isIgnored) {
-                        self.close();
-                        if (self.config.mode === "range" && self.selectedDates.length === 1) {
-                            self.clear(false);
-                            self.redraw();
-                        }
-                    }
-                }
-            }
-            function changeYear(newYear) {
-                if (!newYear ||
-                    (self.config.minDate && newYear < self.config.minDate.getFullYear()) ||
-                    (self.config.maxDate && newYear > self.config.maxDate.getFullYear()))
-                    return;
-                var newYearNum = newYear, isNewYear = self.currentYear !== newYearNum;
-                self.currentYear = newYearNum || self.currentYear;
-                if (self.config.maxDate &&
-                    self.currentYear === self.config.maxDate.getFullYear()) {
-                    self.currentMonth = Math.min(self.config.maxDate.getMonth(), self.currentMonth);
-                }
-                else if (self.config.minDate &&
-                    self.currentYear === self.config.minDate.getFullYear()) {
-                    self.currentMonth = Math.max(self.config.minDate.getMonth(), self.currentMonth);
-                }
-                if (isNewYear) {
-                    self.redraw();
-                    triggerEvent("onYearChange");
-                    buildMonthSwitch();
-                }
-            }
-            function isEnabled(date, timeless) {
-                if (timeless === void 0) { timeless = true; }
-                var dateToCheck = self.parseDate(date, undefined, timeless); // timeless
-                if ((self.config.minDate &&
-                    dateToCheck &&
-                    compareDates(dateToCheck, self.config.minDate, timeless !== undefined ? timeless : !self.minDateHasTime) < 0) ||
-                    (self.config.maxDate &&
-                        dateToCheck &&
-                        compareDates(dateToCheck, self.config.maxDate, timeless !== undefined ? timeless : !self.maxDateHasTime) > 0))
-                    return false;
-                if (self.config.enable.length === 0 && self.config.disable.length === 0)
-                    return true;
-                if (dateToCheck === undefined)
-                    return false;
-                var bool = self.config.enable.length > 0, array = bool ? self.config.enable : self.config.disable;
-                for (var i = 0, d = void 0; i < array.length; i++) {
-                    d = array[i];
-                    if (typeof d === "function" &&
-                        d(dateToCheck) // disabled by function
-                    )
-                        return bool;
-                    else if (d instanceof Date &&
-                        dateToCheck !== undefined &&
-                        d.getTime() === dateToCheck.getTime())
-                        // disabled by date
-                        return bool;
-                    else if (typeof d === "string" && dateToCheck !== undefined) {
-                        // disabled by date string
-                        var parsed = self.parseDate(d, undefined, true);
-                        return parsed && parsed.getTime() === dateToCheck.getTime()
-                            ? bool
-                            : !bool;
-                    }
-                    else if (
-                    // disabled by range
-                    typeof d === "object" &&
-                        dateToCheck !== undefined &&
-                        d.from &&
-                        d.to &&
-                        dateToCheck.getTime() >= d.from.getTime() &&
-                        dateToCheck.getTime() <= d.to.getTime())
-                        return bool;
-                }
-                return !bool;
-            }
-            function isInView(elem) {
-                if (self.daysContainer !== undefined)
-                    return (elem.className.indexOf("hidden") === -1 &&
-                        self.daysContainer.contains(elem));
-                return false;
-            }
-            function onKeyDown(e) {
-                // e.key                      e.keyCode
-                // "Backspace"                        8
-                // "Tab"                              9
-                // "Enter"                           13
-                // "Escape"     (IE "Esc")           27
-                // "ArrowLeft"  (IE "Left")          37
-                // "ArrowUp"    (IE "Up")            38
-                // "ArrowRight" (IE "Right")         39
-                // "ArrowDown"  (IE "Down")          40
-                // "Delete"     (IE "Del")           46
-                var isInput = e.target === self._input;
-                var allowInput = self.config.allowInput;
-                var allowKeydown = self.isOpen && (!allowInput || !isInput);
-                var allowInlineKeydown = self.config.inline && isInput && !allowInput;
-                if (e.keyCode === 13 && isInput) {
-                    if (allowInput) {
-                        self.setDate(self._input.value, true, e.target === self.altInput
-                            ? self.config.altFormat
-                            : self.config.dateFormat);
-                        return e.target.blur();
-                    }
-                    else {
-                        self.open();
-                    }
-                }
-                else if (isCalendarElem(e.target) ||
-                    allowKeydown ||
-                    allowInlineKeydown) {
-                    var isTimeObj = !!self.timeContainer &&
-                        self.timeContainer.contains(e.target);
-                    switch (e.keyCode) {
-                        case 13:
-                            if (isTimeObj) {
-                                e.preventDefault();
-                                updateTime();
-                                focusAndClose();
-                            }
-                            else
-                                selectDate(e);
-                            break;
-                        case 27: // escape
-                            e.preventDefault();
-                            focusAndClose();
-                            break;
-                        case 8:
-                        case 46:
-                            if (isInput && !self.config.allowInput) {
-                                e.preventDefault();
-                                self.clear();
-                            }
-                            break;
-                        case 37:
-                        case 39:
-                            if (!isTimeObj && !isInput) {
-                                e.preventDefault();
-                                if (self.daysContainer !== undefined &&
-                                    (allowInput === false ||
-                                        (document.activeElement && isInView(document.activeElement)))) {
-                                    var delta_1 = e.keyCode === 39 ? 1 : -1;
-                                    if (!e.ctrlKey)
-                                        focusOnDay(undefined, delta_1);
-                                    else {
-                                        e.stopPropagation();
-                                        changeMonth(delta_1);
-                                        focusOnDay(getFirstAvailableDay(1), 0);
-                                    }
-                                }
-                            }
-                            else if (self.hourElement)
-                                self.hourElement.focus();
-                            break;
-                        case 38:
-                        case 40:
-                            e.preventDefault();
-                            var delta = e.keyCode === 40 ? 1 : -1;
-                            if ((self.daysContainer && e.target.$i !== undefined) ||
-                                e.target === self.input) {
-                                if (e.ctrlKey) {
-                                    e.stopPropagation();
-                                    changeYear(self.currentYear - delta);
-                                    focusOnDay(getFirstAvailableDay(1), 0);
-                                }
-                                else if (!isTimeObj)
-                                    focusOnDay(undefined, delta * 7);
-                            }
-                            else if (e.target === self.currentYearElement) {
-                                changeYear(self.currentYear - delta);
-                            }
-                            else if (self.config.enableTime) {
-                                if (!isTimeObj && self.hourElement)
-                                    self.hourElement.focus();
-                                updateTime(e);
-                                self._debouncedChange();
-                            }
-                            break;
-                        case 9:
-                            if (isTimeObj) {
-                                var elems = [
-                                    self.hourElement,
-                                    self.minuteElement,
-                                    self.secondElement,
-                                    self.amPM,
-                                ]
-                                    .concat(self.pluginElements)
-                                    .filter(function (x) { return x; });
-                                var i = elems.indexOf(e.target);
-                                if (i !== -1) {
-                                    var target = elems[i + (e.shiftKey ? -1 : 1)];
-                                    e.preventDefault();
-                                    (target || self._input).focus();
-                                }
-                            }
-                            else if (!self.config.noCalendar &&
-                                self.daysContainer &&
-                                self.daysContainer.contains(e.target) &&
-                                e.shiftKey) {
-                                e.preventDefault();
-                                self._input.focus();
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                if (self.amPM !== undefined && e.target === self.amPM) {
-                    switch (e.key) {
-                        case self.l10n.amPM[0].charAt(0):
-                        case self.l10n.amPM[0].charAt(0).toLowerCase():
-                            self.amPM.textContent = self.l10n.amPM[0];
-                            setHoursFromInputs();
-                            updateValue();
-                            break;
-                        case self.l10n.amPM[1].charAt(0):
-                        case self.l10n.amPM[1].charAt(0).toLowerCase():
-                            self.amPM.textContent = self.l10n.amPM[1];
-                            setHoursFromInputs();
-                            updateValue();
-                            break;
-                    }
-                }
-                if (isInput || isCalendarElem(e.target)) {
-                    triggerEvent("onKeyDown", e);
-                }
-            }
-            function onMouseOver(elem) {
-                if (self.selectedDates.length !== 1 ||
-                    (elem &&
-                        (!elem.classList.contains("flatpickr-day") ||
-                            elem.classList.contains("flatpickr-disabled"))))
-                    return;
-                var hoverDate = elem
-                    ? elem.dateObj.getTime()
-                    : self.days.firstElementChild.dateObj.getTime(), initialDate = self.parseDate(self.selectedDates[0], undefined, true).getTime(), rangeStartDate = Math.min(hoverDate, self.selectedDates[0].getTime()), rangeEndDate = Math.max(hoverDate, self.selectedDates[0].getTime());
-                var containsDisabled = false;
-                var minRange = 0, maxRange = 0;
-                for (var t = rangeStartDate; t < rangeEndDate; t += duration.DAY) {
-                    if (!isEnabled(new Date(t), true)) {
-                        containsDisabled =
-                            containsDisabled || (t > rangeStartDate && t < rangeEndDate);
-                        if (t < initialDate && (!minRange || t > minRange))
-                            minRange = t;
-                        else if (t > initialDate && (!maxRange || t < maxRange))
-                            maxRange = t;
-                    }
-                }
-                for (var m = 0; m < self.config.showMonths; m++) {
-                    var month = self.daysContainer.children[m];
-                    var _loop_1 = function (i, l) {
-                        var dayElem = month.children[i], date = dayElem.dateObj;
-                        var timestamp = date.getTime();
-                        var outOfRange = (minRange > 0 && timestamp < minRange) ||
-                            (maxRange > 0 && timestamp > maxRange);
-                        if (outOfRange) {
-                            dayElem.classList.add("notAllowed");
-                            ["inRange", "startRange", "endRange"].forEach(function (c) {
-                                dayElem.classList.remove(c);
-                            });
-                            return "continue";
-                        }
-                        else if (containsDisabled && !outOfRange)
-                            return "continue";
-                        ["startRange", "inRange", "endRange", "notAllowed"].forEach(function (c) {
-                            dayElem.classList.remove(c);
-                        });
-                        if (elem !== undefined) {
-                            elem.classList.add(hoverDate <= self.selectedDates[0].getTime()
-                                ? "startRange"
-                                : "endRange");
-                            if (initialDate < hoverDate && timestamp === initialDate)
-                                dayElem.classList.add("startRange");
-                            else if (initialDate > hoverDate && timestamp === initialDate)
-                                dayElem.classList.add("endRange");
-                            if (timestamp >= minRange &&
-                                (maxRange === 0 || timestamp <= maxRange) &&
-                                isBetween(timestamp, initialDate, hoverDate))
-                                dayElem.classList.add("inRange");
-                        }
-                    };
-                    for (var i = 0, l = month.children.length; i < l; i++) {
-                        _loop_1(i, l);
-                    }
-                }
-            }
-            function onResize() {
-                if (self.isOpen && !self.config.static && !self.config.inline)
-                    positionCalendar();
-            }
-            function setDefaultTime() {
-                self.setDate(self.config.minDate !== undefined
-                    ? new Date(self.config.minDate.getTime())
-                    : new Date(), true);
-                setDefaultHours();
-                updateValue();
-            }
-            function open(e, positionElement) {
-                if (positionElement === void 0) { positionElement = self._positionElement; }
-                if (self.isMobile === true) {
-                    if (e) {
-                        e.preventDefault();
-                        e.target && e.target.blur();
-                    }
-                    if (self.mobileInput !== undefined) {
-                        self.mobileInput.focus();
-                        self.mobileInput.click();
-                    }
-                    triggerEvent("onOpen");
-                    return;
-                }
-                if (self._input.disabled || self.config.inline)
-                    return;
-                var wasOpen = self.isOpen;
-                self.isOpen = true;
-                if (!wasOpen) {
-                    self.calendarContainer.classList.add("open");
-                    self._input.classList.add("active");
-                    triggerEvent("onOpen");
-                    positionCalendar(positionElement);
-                }
-                if (self.config.enableTime === true && self.config.noCalendar === true) {
-                    if (self.selectedDates.length === 0) {
-                        setDefaultTime();
-                    }
-                    if (self.config.allowInput === false &&
-                        (e === undefined ||
-                            !self.timeContainer.contains(e.relatedTarget))) {
-                        setTimeout(function () { return self.hourElement.select(); }, 50);
-                    }
-                }
-            }
-            function minMaxDateSetter(type) {
-                return function (date) {
-                    var dateObj = (self.config["_" + type + "Date"] = self.parseDate(date, self.config.dateFormat));
-                    var inverseDateObj = self.config["_" + (type === "min" ? "max" : "min") + "Date"];
-                    if (dateObj !== undefined) {
-                        self[type === "min" ? "minDateHasTime" : "maxDateHasTime"] =
-                            dateObj.getHours() > 0 ||
-                                dateObj.getMinutes() > 0 ||
-                                dateObj.getSeconds() > 0;
-                    }
-                    if (self.selectedDates) {
-                        self.selectedDates = self.selectedDates.filter(function (d) { return isEnabled(d); });
-                        if (!self.selectedDates.length && type === "min")
-                            setHoursFromDate(dateObj);
-                        updateValue();
-                    }
-                    if (self.daysContainer) {
-                        redraw();
-                        if (dateObj !== undefined)
-                            self.currentYearElement[type] = dateObj.getFullYear().toString();
-                        else
-                            self.currentYearElement.removeAttribute(type);
-                        self.currentYearElement.disabled =
-                            !!inverseDateObj &&
-                                dateObj !== undefined &&
-                                inverseDateObj.getFullYear() === dateObj.getFullYear();
-                    }
-                };
-            }
-            function parseConfig() {
-                var boolOpts = [
-                    "wrap",
-                    "weekNumbers",
-                    "allowInput",
-                    "clickOpens",
-                    "time_24hr",
-                    "enableTime",
-                    "noCalendar",
-                    "altInput",
-                    "shorthandCurrentMonth",
-                    "inline",
-                    "static",
-                    "enableSeconds",
-                    "disableMobile",
-                ];
-                var userConfig = __assign({}, instanceConfig, JSON.parse(JSON.stringify(element.dataset || {})));
-                var formats = {};
-                self.config.parseDate = userConfig.parseDate;
-                self.config.formatDate = userConfig.formatDate;
-                Object.defineProperty(self.config, "enable", {
-                    get: function () { return self.config._enable; },
-                    set: function (dates) {
-                        self.config._enable = parseDateRules(dates);
-                    }
-                });
-                Object.defineProperty(self.config, "disable", {
-                    get: function () { return self.config._disable; },
-                    set: function (dates) {
-                        self.config._disable = parseDateRules(dates);
-                    }
-                });
-                var timeMode = userConfig.mode === "time";
-                if (!userConfig.dateFormat && (userConfig.enableTime || timeMode)) {
-                    var defaultDateFormat = flatpickr.defaultConfig.dateFormat || defaults.dateFormat;
-                    formats.dateFormat =
-                        userConfig.noCalendar || timeMode
-                            ? "H:i" + (userConfig.enableSeconds ? ":S" : "")
-                            : defaultDateFormat + " H:i" + (userConfig.enableSeconds ? ":S" : "");
-                }
-                if (userConfig.altInput &&
-                    (userConfig.enableTime || timeMode) &&
-                    !userConfig.altFormat) {
-                    var defaultAltFormat = flatpickr.defaultConfig.altFormat || defaults.altFormat;
-                    formats.altFormat =
-                        userConfig.noCalendar || timeMode
-                            ? "h:i" + (userConfig.enableSeconds ? ":S K" : " K")
-                            : defaultAltFormat + (" h:i" + (userConfig.enableSeconds ? ":S" : "") + " K");
-                }
-                if (!userConfig.altInputClass) {
-                    self.config.altInputClass =
-                        self.input.className + " " + self.config.altInputClass;
-                }
-                Object.defineProperty(self.config, "minDate", {
-                    get: function () { return self.config._minDate; },
-                    set: minMaxDateSetter("min")
-                });
-                Object.defineProperty(self.config, "maxDate", {
-                    get: function () { return self.config._maxDate; },
-                    set: minMaxDateSetter("max")
-                });
-                var minMaxTimeSetter = function (type) { return function (val) {
-                    self.config[type === "min" ? "_minTime" : "_maxTime"] = self.parseDate(val, "H:i");
-                }; };
-                Object.defineProperty(self.config, "minTime", {
-                    get: function () { return self.config._minTime; },
-                    set: minMaxTimeSetter("min")
-                });
-                Object.defineProperty(self.config, "maxTime", {
-                    get: function () { return self.config._maxTime; },
-                    set: minMaxTimeSetter("max")
-                });
-                if (userConfig.mode === "time") {
-                    self.config.noCalendar = true;
-                    self.config.enableTime = true;
-                }
-                Object.assign(self.config, formats, userConfig);
-                for (var i = 0; i < boolOpts.length; i++)
-                    self.config[boolOpts[i]] =
-                        self.config[boolOpts[i]] === true ||
-                            self.config[boolOpts[i]] === "true";
-                HOOKS.filter(function (hook) { return self.config[hook] !== undefined; }).forEach(function (hook) {
-                    self.config[hook] = arrayify(self.config[hook] || []).map(bindToInstance);
-                });
-                self.isMobile =
-                    !self.config.disableMobile &&
-                        !self.config.inline &&
-                        self.config.mode === "single" &&
-                        !self.config.disable.length &&
-                        !self.config.enable.length &&
-                        !self.config.weekNumbers &&
-                        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                for (var i = 0; i < self.config.plugins.length; i++) {
-                    var pluginConf = self.config.plugins[i](self) || {};
-                    for (var key in pluginConf) {
-                        if (HOOKS.indexOf(key) > -1) {
-                            self.config[key] = arrayify(pluginConf[key])
-                                .map(bindToInstance)
-                                .concat(self.config[key]);
-                        }
-                        else if (typeof userConfig[key] === "undefined")
-                            self.config[key] = pluginConf[key];
-                    }
-                }
-                triggerEvent("onParseConfig");
-            }
-            function setupLocale() {
-                if (typeof self.config.locale !== "object" &&
-                    typeof flatpickr.l10ns[self.config.locale] === "undefined")
-                    self.config.errorHandler(new Error("flatpickr: invalid locale " + self.config.locale));
-                self.l10n = __assign({}, flatpickr.l10ns["default"], (typeof self.config.locale === "object"
-                    ? self.config.locale
-                    : self.config.locale !== "default"
-                        ? flatpickr.l10ns[self.config.locale]
-                        : undefined));
-                tokenRegex.K = "(" + self.l10n.amPM[0] + "|" + self.l10n.amPM[1] + "|" + self.l10n.amPM[0].toLowerCase() + "|" + self.l10n.amPM[1].toLowerCase() + ")";
-                var userConfig = __assign({}, instanceConfig, JSON.parse(JSON.stringify(element.dataset || {})));
-                if (userConfig.time_24hr === undefined &&
-                    flatpickr.defaultConfig.time_24hr === undefined) {
-                    self.config.time_24hr = self.l10n.time_24hr;
-                }
-                self.formatDate = createDateFormatter(self);
-                self.parseDate = createDateParser({ config: self.config, l10n: self.l10n });
-            }
-            function positionCalendar(customPositionElement) {
-                if (self.calendarContainer === undefined)
-                    return;
-                triggerEvent("onPreCalendarPosition");
-                var positionElement = customPositionElement || self._positionElement;
-                var calendarHeight = Array.prototype.reduce.call(self.calendarContainer.children, (function (acc, child) { return acc + child.offsetHeight; }), 0), calendarWidth = self.calendarContainer.offsetWidth, configPos = self.config.position.split(" "), configPosVertical = configPos[0], configPosHorizontal = configPos.length > 1 ? configPos[1] : null, inputBounds = positionElement.getBoundingClientRect(), distanceFromBottom = window.innerHeight - inputBounds.bottom, showOnTop = configPosVertical === "above" ||
-                    (configPosVertical !== "below" &&
-                        distanceFromBottom < calendarHeight &&
-                        inputBounds.top > calendarHeight);
-                var top = window.pageYOffset +
-                    inputBounds.top +
-                    (!showOnTop ? positionElement.offsetHeight + 2 : -calendarHeight - 2);
-                toggleClass(self.calendarContainer, "arrowTop", !showOnTop);
-                toggleClass(self.calendarContainer, "arrowBottom", showOnTop);
-                if (self.config.inline)
-                    return;
-                var left = window.pageXOffset +
-                    inputBounds.left -
-                    (configPosHorizontal != null && configPosHorizontal === "center"
-                        ? (calendarWidth - inputBounds.width) / 2
-                        : 0);
-                var right = window.document.body.offsetWidth - inputBounds.right;
-                var rightMost = left + calendarWidth > window.document.body.offsetWidth;
-                var centerMost = right + calendarWidth > window.document.body.offsetWidth;
-                toggleClass(self.calendarContainer, "rightMost", rightMost);
-                if (self.config.static)
-                    return;
-                self.calendarContainer.style.top = top + "px";
-                if (!rightMost) {
-                    self.calendarContainer.style.left = left + "px";
-                    self.calendarContainer.style.right = "auto";
-                }
-                else if (!centerMost) {
-                    self.calendarContainer.style.left = "auto";
-                    self.calendarContainer.style.right = right + "px";
-                }
-                else {
-                    var doc = document.styleSheets[0];
-                    // some testing environments don't have css support
-                    if (doc === undefined)
-                        return;
-                    var bodyWidth = window.document.body.offsetWidth;
-                    var centerLeft = Math.max(0, bodyWidth / 2 - calendarWidth / 2);
-                    var centerBefore = ".flatpickr-calendar.centerMost:before";
-                    var centerAfter = ".flatpickr-calendar.centerMost:after";
-                    var centerIndex = doc.cssRules.length;
-                    var centerStyle = "{left:" + inputBounds.left + "px;right:auto;}";
-                    toggleClass(self.calendarContainer, "rightMost", false);
-                    toggleClass(self.calendarContainer, "centerMost", true);
-                    doc.insertRule(centerBefore + "," + centerAfter + centerStyle, centerIndex);
-                    self.calendarContainer.style.left = centerLeft + "px";
-                    self.calendarContainer.style.right = "auto";
-                }
-            }
-            function redraw() {
-                if (self.config.noCalendar || self.isMobile)
-                    return;
-                updateNavigationCurrentMonth();
-                buildDays();
-            }
-            function focusAndClose() {
-                self._input.focus();
-                if (window.navigator.userAgent.indexOf("MSIE") !== -1 ||
-                    navigator.msMaxTouchPoints !== undefined) {
-                    // hack - bugs in the way IE handles focus keeps the calendar open
-                    setTimeout(self.close, 0);
-                }
-                else {
-                    self.close();
-                }
-            }
-            function selectDate(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var isSelectable = function (day) {
-                    return day.classList &&
-                        day.classList.contains("flatpickr-day") &&
-                        !day.classList.contains("flatpickr-disabled") &&
-                        !day.classList.contains("notAllowed");
-                };
-                var t = findParent(e.target, isSelectable);
-                if (t === undefined)
-                    return;
-                var target = t;
-                var selectedDate = (self.latestSelectedDateObj = new Date(target.dateObj.getTime()));
-                var shouldChangeMonth = (selectedDate.getMonth() < self.currentMonth ||
-                    selectedDate.getMonth() >
-                        self.currentMonth + self.config.showMonths - 1) &&
-                    self.config.mode !== "range";
-                self.selectedDateElem = target;
-                if (self.config.mode === "single")
-                    self.selectedDates = [selectedDate];
-                else if (self.config.mode === "multiple") {
-                    var selectedIndex = isDateSelected(selectedDate);
-                    if (selectedIndex)
-                        self.selectedDates.splice(parseInt(selectedIndex), 1);
-                    else
-                        self.selectedDates.push(selectedDate);
-                }
-                else if (self.config.mode === "range") {
-                    if (self.selectedDates.length === 2) {
-                        self.clear(false, false);
-                    }
-                    self.latestSelectedDateObj = selectedDate;
-                    self.selectedDates.push(selectedDate);
-                    // unless selecting same date twice, sort ascendingly
-                    if (compareDates(selectedDate, self.selectedDates[0], true) !== 0)
-                        self.selectedDates.sort(function (a, b) { return a.getTime() - b.getTime(); });
-                }
-                setHoursFromInputs();
-                if (shouldChangeMonth) {
-                    var isNewYear = self.currentYear !== selectedDate.getFullYear();
-                    self.currentYear = selectedDate.getFullYear();
-                    self.currentMonth = selectedDate.getMonth();
-                    if (isNewYear) {
-                        triggerEvent("onYearChange");
-                        buildMonthSwitch();
-                    }
-                    triggerEvent("onMonthChange");
-                }
-                updateNavigationCurrentMonth();
-                buildDays();
-                updateValue();
-                if (self.config.enableTime)
-                    setTimeout(function () { return (self.showTimeInput = true); }, 50);
-                // maintain focus
-                if (!shouldChangeMonth &&
-                    self.config.mode !== "range" &&
-                    self.config.showMonths === 1)
-                    focusOnDayElem(target);
-                else if (self.selectedDateElem !== undefined &&
-                    self.hourElement === undefined) {
-                    self.selectedDateElem && self.selectedDateElem.focus();
-                }
-                if (self.hourElement !== undefined)
-                    self.hourElement !== undefined && self.hourElement.focus();
-                if (self.config.closeOnSelect) {
-                    var single = self.config.mode === "single" && !self.config.enableTime;
-                    var range = self.config.mode === "range" &&
-                        self.selectedDates.length === 2 &&
-                        !self.config.enableTime;
-                    if (single || range) {
-                        focusAndClose();
-                    }
-                }
-                triggerChange();
-            }
-            var CALLBACKS = {
-                locale: [setupLocale, updateWeekdays],
-                showMonths: [buildMonths, setCalendarWidth, buildWeekdays],
-                minDate: [jumpToDate],
-                maxDate: [jumpToDate]
-            };
-            function set(option, value) {
-                if (option !== null && typeof option === "object") {
-                    Object.assign(self.config, option);
-                    for (var key in option) {
-                        if (CALLBACKS[key] !== undefined)
-                            CALLBACKS[key].forEach(function (x) { return x(); });
-                    }
-                }
-                else {
-                    self.config[option] = value;
-                    if (CALLBACKS[option] !== undefined)
-                        CALLBACKS[option].forEach(function (x) { return x(); });
-                    else if (HOOKS.indexOf(option) > -1)
-                        self.config[option] = arrayify(value);
-                }
-                self.redraw();
-                updateValue(false);
-            }
-            function setSelectedDate(inputDate, format) {
-                var dates = [];
-                if (inputDate instanceof Array)
-                    dates = inputDate.map(function (d) { return self.parseDate(d, format); });
-                else if (inputDate instanceof Date || typeof inputDate === "number")
-                    dates = [self.parseDate(inputDate, format)];
-                else if (typeof inputDate === "string") {
-                    switch (self.config.mode) {
-                        case "single":
-                        case "time":
-                            dates = [self.parseDate(inputDate, format)];
-                            break;
-                        case "multiple":
-                            dates = inputDate
-                                .split(self.config.conjunction)
-                                .map(function (date) { return self.parseDate(date, format); });
-                            break;
-                        case "range":
-                            dates = inputDate
-                                .split(self.l10n.rangeSeparator)
-                                .map(function (date) { return self.parseDate(date, format); });
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                else
-                    self.config.errorHandler(new Error("Invalid date supplied: " + JSON.stringify(inputDate)));
-                self.selectedDates = dates.filter(function (d) { return d instanceof Date && isEnabled(d, false); });
-                if (self.config.mode === "range")
-                    self.selectedDates.sort(function (a, b) { return a.getTime() - b.getTime(); });
-            }
-            function setDate(date, triggerChange, format) {
-                if (triggerChange === void 0) { triggerChange = false; }
-                if (format === void 0) { format = self.config.dateFormat; }
-                if ((date !== 0 && !date) || (date instanceof Array && date.length === 0))
-                    return self.clear(triggerChange);
-                setSelectedDate(date, format);
-                self.showTimeInput = self.selectedDates.length > 0;
-                self.latestSelectedDateObj =
-                    self.selectedDates[self.selectedDates.length - 1];
-                self.redraw();
-                jumpToDate();
-                setHoursFromDate();
-                if (self.selectedDates.length === 0) {
-                    self.clear(false);
-                }
-                updateValue(triggerChange);
-                if (triggerChange)
-                    triggerEvent("onChange");
-            }
-            function parseDateRules(arr) {
-                return arr
-                    .slice()
-                    .map(function (rule) {
-                    if (typeof rule === "string" ||
-                        typeof rule === "number" ||
-                        rule instanceof Date) {
-                        return self.parseDate(rule, undefined, true);
-                    }
-                    else if (rule &&
-                        typeof rule === "object" &&
-                        rule.from &&
-                        rule.to)
-                        return {
-                            from: self.parseDate(rule.from, undefined),
-                            to: self.parseDate(rule.to, undefined)
-                        };
-                    return rule;
-                })
-                    .filter(function (x) { return x; }); // remove falsy values
-            }
-            function setupDates() {
-                self.selectedDates = [];
-                self.now = self.parseDate(self.config.now) || new Date();
-                // Workaround IE11 setting placeholder as the input's value
-                var preloadedDate = self.config.defaultDate ||
-                    ((self.input.nodeName === "INPUT" ||
-                        self.input.nodeName === "TEXTAREA") &&
-                        self.input.placeholder &&
-                        self.input.value === self.input.placeholder
-                        ? null
-                        : self.input.value);
-                if (preloadedDate)
-                    setSelectedDate(preloadedDate, self.config.dateFormat);
-                self._initialDate =
-                    self.selectedDates.length > 0
-                        ? self.selectedDates[0]
-                        : self.config.minDate &&
-                            self.config.minDate.getTime() > self.now.getTime()
-                            ? self.config.minDate
-                            : self.config.maxDate &&
-                                self.config.maxDate.getTime() < self.now.getTime()
-                                ? self.config.maxDate
-                                : self.now;
-                self.currentYear = self._initialDate.getFullYear();
-                self.currentMonth = self._initialDate.getMonth();
-                if (self.selectedDates.length > 0)
-                    self.latestSelectedDateObj = self.selectedDates[0];
-                if (self.config.minTime !== undefined)
-                    self.config.minTime = self.parseDate(self.config.minTime, "H:i");
-                if (self.config.maxTime !== undefined)
-                    self.config.maxTime = self.parseDate(self.config.maxTime, "H:i");
-                self.minDateHasTime =
-                    !!self.config.minDate &&
-                        (self.config.minDate.getHours() > 0 ||
-                            self.config.minDate.getMinutes() > 0 ||
-                            self.config.minDate.getSeconds() > 0);
-                self.maxDateHasTime =
-                    !!self.config.maxDate &&
-                        (self.config.maxDate.getHours() > 0 ||
-                            self.config.maxDate.getMinutes() > 0 ||
-                            self.config.maxDate.getSeconds() > 0);
-                Object.defineProperty(self, "showTimeInput", {
-                    get: function () { return self._showTimeInput; },
-                    set: function (bool) {
-                        self._showTimeInput = bool;
-                        if (self.calendarContainer)
-                            toggleClass(self.calendarContainer, "showTimeInput", bool);
-                        self.isOpen && positionCalendar();
-                    }
-                });
-            }
-            function setupInputs() {
-                self.input = self.config.wrap
-                    ? element.querySelector("[data-input]")
-                    : element;
-                /* istanbul ignore next */
-                if (!self.input) {
-                    self.config.errorHandler(new Error("Invalid input element specified"));
-                    return;
-                }
-                // hack: store previous type to restore it after destroy()
-                self.input._type = self.input.type;
-                self.input.type = "text";
-                self.input.classList.add("flatpickr-input");
-                self._input = self.input;
-                if (self.config.altInput) {
-                    // replicate self.element
-                    self.altInput = createElement(self.input.nodeName, self.config.altInputClass);
-                    self._input = self.altInput;
-                    self.altInput.placeholder = self.input.placeholder;
-                    self.altInput.disabled = self.input.disabled;
-                    self.altInput.required = self.input.required;
-                    self.altInput.tabIndex = self.input.tabIndex;
-                    self.altInput.type = "text";
-                    self.input.setAttribute("type", "hidden");
-                    if (!self.config.static && self.input.parentNode)
-                        self.input.parentNode.insertBefore(self.altInput, self.input.nextSibling);
-                }
-                if (!self.config.allowInput)
-                    self._input.setAttribute("readonly", "readonly");
-                self._positionElement = self.config.positionElement || self._input;
-            }
-            function setupMobile() {
-                var inputType = self.config.enableTime
-                    ? self.config.noCalendar
-                        ? "time"
-                        : "datetime-local"
-                    : "date";
-                self.mobileInput = createElement("input", self.input.className + " flatpickr-mobile");
-                self.mobileInput.step = self.input.getAttribute("step") || "any";
-                self.mobileInput.tabIndex = 1;
-                self.mobileInput.type = inputType;
-                self.mobileInput.disabled = self.input.disabled;
-                self.mobileInput.required = self.input.required;
-                self.mobileInput.placeholder = self.input.placeholder;
-                self.mobileFormatStr =
-                    inputType === "datetime-local"
-                        ? "Y-m-d\\TH:i:S"
-                        : inputType === "date"
-                            ? "Y-m-d"
-                            : "H:i:S";
-                if (self.selectedDates.length > 0) {
-                    self.mobileInput.defaultValue = self.mobileInput.value = self.formatDate(self.selectedDates[0], self.mobileFormatStr);
-                }
-                if (self.config.minDate)
-                    self.mobileInput.min = self.formatDate(self.config.minDate, "Y-m-d");
-                if (self.config.maxDate)
-                    self.mobileInput.max = self.formatDate(self.config.maxDate, "Y-m-d");
-                self.input.type = "hidden";
-                if (self.altInput !== undefined)
-                    self.altInput.type = "hidden";
-                try {
-                    if (self.input.parentNode)
-                        self.input.parentNode.insertBefore(self.mobileInput, self.input.nextSibling);
-                }
-                catch (_a) { }
-                bind(self.mobileInput, "change", function (e) {
-                    self.setDate(e.target.value, false, self.mobileFormatStr);
-                    triggerEvent("onChange");
-                    triggerEvent("onClose");
-                });
-            }
-            function toggle(e) {
-                if (self.isOpen === true)
-                    return self.close();
-                self.open(e);
-            }
-            function triggerEvent(event, data) {
-                // If the instance has been destroyed already, all hooks have been removed
-                if (self.config === undefined)
-                    return;
-                var hooks = self.config[event];
-                if (hooks !== undefined && hooks.length > 0) {
-                    for (var i = 0; hooks[i] && i < hooks.length; i++)
-                        hooks[i](self.selectedDates, self.input.value, self, data);
-                }
-                if (event === "onChange") {
-                    self.input.dispatchEvent(createEvent("change"));
-                    // many front-end frameworks bind to the input event
-                    self.input.dispatchEvent(createEvent("input"));
-                }
-            }
-            function createEvent(name) {
-                var e = document.createEvent("Event");
-                e.initEvent(name, true, true);
-                return e;
-            }
-            function isDateSelected(date) {
-                for (var i = 0; i < self.selectedDates.length; i++) {
-                    if (compareDates(self.selectedDates[i], date) === 0)
-                        return "" + i;
-                }
-                return false;
-            }
-            function isDateInRange(date) {
-                if (self.config.mode !== "range" || self.selectedDates.length < 2)
-                    return false;
-                return (compareDates(date, self.selectedDates[0]) >= 0 &&
-                    compareDates(date, self.selectedDates[1]) <= 0);
-            }
-            function updateNavigationCurrentMonth() {
-                if (self.config.noCalendar || self.isMobile || !self.monthNav)
-                    return;
-                self.yearElements.forEach(function (yearElement, i) {
-                    var d = new Date(self.currentYear, self.currentMonth, 1);
-                    d.setMonth(self.currentMonth + i);
-                    if (self.config.showMonths > 1 ||
-                        self.config.monthSelectorType === "static") {
-                        self.monthElements[i].textContent =
-                            monthToStr(d.getMonth(), self.config.shorthandCurrentMonth, self.l10n) + " ";
-                    }
-                    else {
-                        self.monthsDropdownContainer.value = d.getMonth().toString();
-                    }
-                    yearElement.value = d.getFullYear().toString();
-                });
-                self._hidePrevMonthArrow =
-                    self.config.minDate !== undefined &&
-                        (self.currentYear === self.config.minDate.getFullYear()
-                            ? self.currentMonth <= self.config.minDate.getMonth()
-                            : self.currentYear < self.config.minDate.getFullYear());
-                self._hideNextMonthArrow =
-                    self.config.maxDate !== undefined &&
-                        (self.currentYear === self.config.maxDate.getFullYear()
-                            ? self.currentMonth + 1 > self.config.maxDate.getMonth()
-                            : self.currentYear > self.config.maxDate.getFullYear());
-            }
-            function getDateStr(format) {
-                return self.selectedDates
-                    .map(function (dObj) { return self.formatDate(dObj, format); })
-                    .filter(function (d, i, arr) {
-                    return self.config.mode !== "range" ||
-                        self.config.enableTime ||
-                        arr.indexOf(d) === i;
-                })
-                    .join(self.config.mode !== "range"
-                    ? self.config.conjunction
-                    : self.l10n.rangeSeparator);
-            }
-            /**
-             * Updates the values of inputs associated with the calendar
-             */
-            function updateValue(triggerChange) {
-                if (triggerChange === void 0) { triggerChange = true; }
-                if (self.mobileInput !== undefined && self.mobileFormatStr) {
-                    self.mobileInput.value =
-                        self.latestSelectedDateObj !== undefined
-                            ? self.formatDate(self.latestSelectedDateObj, self.mobileFormatStr)
-                            : "";
-                }
-                self.input.value = getDateStr(self.config.dateFormat);
-                if (self.altInput !== undefined) {
-                    self.altInput.value = getDateStr(self.config.altFormat);
-                }
-                if (triggerChange !== false)
-                    triggerEvent("onValueUpdate");
-            }
-            function onMonthNavClick(e) {
-                var isPrevMonth = self.prevMonthNav.contains(e.target);
-                var isNextMonth = self.nextMonthNav.contains(e.target);
-                if (isPrevMonth || isNextMonth) {
-                    changeMonth(isPrevMonth ? -1 : 1);
-                }
-                else if (self.yearElements.indexOf(e.target) >= 0) {
-                    e.target.select();
-                }
-                else if (e.target.classList.contains("arrowUp")) {
-                    self.changeYear(self.currentYear + 1);
-                }
-                else if (e.target.classList.contains("arrowDown")) {
-                    self.changeYear(self.currentYear - 1);
-                }
-            }
-            function timeWrapper(e) {
-                e.preventDefault();
-                var isKeyDown = e.type === "keydown", input = e.target;
-                if (self.amPM !== undefined && e.target === self.amPM) {
-                    self.amPM.textContent =
-                        self.l10n.amPM[int(self.amPM.textContent === self.l10n.amPM[0])];
-                }
-                var min = parseFloat(input.getAttribute("min")), max = parseFloat(input.getAttribute("max")), step = parseFloat(input.getAttribute("step")), curValue = parseInt(input.value, 10), delta = e.delta ||
-                    (isKeyDown ? (e.which === 38 ? 1 : -1) : 0);
-                var newValue = curValue + step * delta;
-                if (typeof input.value !== "undefined" && input.value.length === 2) {
-                    var isHourElem = input === self.hourElement, isMinuteElem = input === self.minuteElement;
-                    if (newValue < min) {
-                        newValue =
-                            max +
-                                newValue +
-                                int(!isHourElem) +
-                                (int(isHourElem) && int(!self.amPM));
-                        if (isMinuteElem)
-                            incrementNumInput(undefined, -1, self.hourElement);
-                    }
-                    else if (newValue > max) {
-                        newValue =
-                            input === self.hourElement ? newValue - max - int(!self.amPM) : min;
-                        if (isMinuteElem)
-                            incrementNumInput(undefined, 1, self.hourElement);
-                    }
-                    if (self.amPM &&
-                        isHourElem &&
-                        (step === 1
-                            ? newValue + curValue === 23
-                            : Math.abs(newValue - curValue) > step)) {
-                        self.amPM.textContent =
-                            self.l10n.amPM[int(self.amPM.textContent === self.l10n.amPM[0])];
-                    }
-                    input.value = pad(newValue);
-                }
-            }
-            init();
-            return self;
-        }
-        /* istanbul ignore next */
-        function _flatpickr(nodeList, config) {
-            // static list
-            var nodes = Array.prototype.slice
-                .call(nodeList)
-                .filter(function (x) { return x instanceof HTMLElement; });
-            var instances = [];
-            for (var i = 0; i < nodes.length; i++) {
-                var node = nodes[i];
-                try {
-                    if (node.getAttribute("data-fp-omit") !== null)
-                        continue;
-                    if (node._flatpickr !== undefined) {
-                        node._flatpickr.destroy();
-                        node._flatpickr = undefined;
-                    }
-                    node._flatpickr = FlatpickrInstance(node, config || {});
-                    instances.push(node._flatpickr);
-                }
-                catch (e) {
-                    console.error(e);
-                }
-            }
-            return instances.length === 1 ? instances[0] : instances;
-        }
-        /* istanbul ignore next */
-        if (typeof HTMLElement !== "undefined" &&
-            typeof HTMLCollection !== "undefined" &&
-            typeof NodeList !== "undefined") {
-            // browser env
-            HTMLCollection.prototype.flatpickr = NodeList.prototype.flatpickr = function (config) {
-                return _flatpickr(this, config);
-            };
-            HTMLElement.prototype.flatpickr = function (config) {
-                return _flatpickr([this], config);
-            };
-        }
-        /* istanbul ignore next */
-        var flatpickr = function (selector, config) {
-            if (typeof selector === "string") {
-                return _flatpickr(window.document.querySelectorAll(selector), config);
-            }
-            else if (selector instanceof Node) {
-                return _flatpickr([selector], config);
-            }
-            else {
-                return _flatpickr(selector, config);
-            }
-        };
-        /* istanbul ignore next */
-        flatpickr.defaultConfig = {};
-        flatpickr.l10ns = {
-            en: __assign({}, english),
-            "default": __assign({}, english)
-        };
-        flatpickr.localize = function (l10n) {
-            flatpickr.l10ns["default"] = __assign({}, flatpickr.l10ns["default"], l10n);
-        };
-        flatpickr.setDefaults = function (config) {
-            flatpickr.defaultConfig = __assign({}, flatpickr.defaultConfig, config);
-        };
-        flatpickr.parseDate = createDateParser({});
-        flatpickr.formatDate = createDateFormatter({});
-        flatpickr.compareDates = compareDates;
-        /* istanbul ignore next */
-        if (typeof jQuery !== "undefined" && typeof jQuery.fn !== "undefined") {
-            jQuery.fn.flatpickr = function (config) {
-                return _flatpickr(this, config);
-            };
-        }
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        Date.prototype.fp_incr = function (days) {
-            return new Date(this.getFullYear(), this.getMonth(), this.getDate() + (typeof days === "string" ? parseInt(days, 10) : days));
-        };
-        if (typeof window !== "undefined") {
-            window.flatpickr = flatpickr;
-        }
-
-        return flatpickr;
-
-    }));
-    });
-
-    /* src\common\DatePicker.svelte generated by Svelte v3.6.9 */
-
-    const file$r = "src\\common\\DatePicker.svelte";
-
-    function create_fragment$q(ctx) {
-    	var div1, label_1, t0, t1, div0, input_1, input_1_class_value;
-
-    	return {
-    		c: function create() {
-    			div1 = element("div");
-    			label_1 = element("label");
-    			t0 = text(ctx.label);
-    			t1 = space();
-    			div0 = element("div");
-    			input_1 = element("input");
-    			attr(label_1, "class", "uk-form-label");
-    			add_location(label_1, file$r, 30, 4, 589);
-    			attr(input_1, "class", input_1_class_value = "uk-input uk-form-width-" + ctx.width + " uk-form-" + ctx.size);
-    			add_location(input_1, file$r, 32, 8, 679);
-    			attr(div0, "class", "uk-form-controls");
-    			add_location(div0, file$r, 31, 4, 639);
-    			attr(div1, "class", "uk-margin");
-    			add_location(div1, file$r, 29, 0, 560);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, label_1);
-    			append(label_1, t0);
-    			append(div1, t1);
-    			append(div1, div0);
-    			append(div0, input_1);
-    			ctx.input_1_binding(input_1);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.label) {
-    				set_data(t0, ctx.label);
-    			}
-
-    			if ((changed.width || changed.size) && input_1_class_value !== (input_1_class_value = "uk-input uk-form-width-" + ctx.width + " uk-form-" + ctx.size)) {
-    				attr(input_1, "class", input_1_class_value);
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			ctx.input_1_binding(null);
-    		}
-    	};
-    }
-
-    function instance$q($$self, $$props, $$invalidate) {
-    	
-
-    let { value, label, width = "medium", size = "small" } = $$props;
-
-    let input;
-    let fpInstance;
-
-    onMount(() => {
-        $$invalidate('fpInstance', fpInstance =  flatpickr(input, {}));
-
-        fpInstance.config.onChange.push(selectedDates => {
-            if(selectedDates.length > 0)
-                $$invalidate('value', value = new Date(selectedDates[0]));
-        });
-
-        return fpInstance;
-    });
-
-    	const writable_props = ['value', 'label', 'width', 'size'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<DatePicker> was created with unknown prop '${key}'`);
-    	});
-
-    	function input_1_binding($$value) {
-    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
-    			$$invalidate('input', input = $$value);
-    		});
-    	}
-
-    	$$self.$set = $$props => {
-    		if ('value' in $$props) $$invalidate('value', value = $$props.value);
-    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
-    		if ('width' in $$props) $$invalidate('width', width = $$props.width);
-    		if ('size' in $$props) $$invalidate('size', size = $$props.size);
-    	};
-
-    	$$self.$$.update = ($$dirty = { fpInstance: 1, value: 1 }) => {
-    		if ($$dirty.fpInstance || $$dirty.value) { if (fpInstance) fpInstance.setDate(value); }
-    	};
-
-    	return {
-    		value,
-    		label,
-    		width,
-    		size,
-    		input,
-    		input_1_binding
-    	};
-    }
-
-    class DatePicker extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$q, create_fragment$q, safe_not_equal, ["value", "label", "width", "size"]);
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-    		if (ctx.value === undefined && !('value' in props)) {
-    			console.warn("<DatePicker> was created without expected prop 'value'");
-    		}
-    		if (ctx.label === undefined && !('label' in props)) {
-    			console.warn("<DatePicker> was created without expected prop 'label'");
-    		}
-    	}
-
-    	get value() {
-    		throw new Error("<DatePicker>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set value(value) {
-    		throw new Error("<DatePicker>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get label() {
-    		throw new Error("<DatePicker>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set label(value) {
-    		throw new Error("<DatePicker>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get width() {
-    		throw new Error("<DatePicker>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set width(value) {
-    		throw new Error("<DatePicker>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get size() {
-    		throw new Error("<DatePicker>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set size(value) {
-    		throw new Error("<DatePicker>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\database\FieldView.svelte generated by Svelte v3.6.9 */
-
-    const file$s = "src\\database\\FieldView.svelte";
-
-    // (68:8) {:else}
-    function create_else_block$4(ctx) {
-    	var div, t_value = ctx.clonedField.name, t;
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			t = text(t_value);
-    			set_style(div, "font-weight", "bold");
-    			add_location(div, file$s, 68, 8, 2004);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, t);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((changed.clonedField) && t_value !== (t_value = ctx.clonedField.name)) {
-    				set_data(t, t_value);
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-    		}
-    	};
-    }
-
-    // (66:8) {#if isNew}
-    function create_if_block_6(ctx) {
-    	var updating_text, current;
-
-    	function textbox_text_binding(value) {
-    		ctx.textbox_text_binding.call(null, value);
-    		updating_text = true;
-    		add_flush_callback(() => updating_text = false);
-    	}
-
-    	let textbox_props = { label: "Field Name" };
-    	if (ctx.clonedField.name !== void 0) {
-    		textbox_props.text = ctx.clonedField.name;
-    	}
-    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding));
-
-    	return {
-    		c: function create() {
-    			textbox.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(textbox, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var textbox_changes = {};
-    			if (!updating_text && changed.clonedField) {
-    				textbox_changes.text = ctx.clonedField.name;
-    			}
-    			textbox.$set(textbox_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(textbox.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(textbox.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(textbox, detaching);
-    		}
-    	};
-    }
-
-    // (103:55) 
-    function create_if_block_5(ctx) {
-    	var updating_value, t, updating_value_1, current;
-
-    	function numberbox0_value_binding_1(value) {
-    		ctx.numberbox0_value_binding_1.call(null, value);
-    		updating_value = true;
-    		add_flush_callback(() => updating_value = false);
-    	}
-
-    	let numberbox0_props = { label: "Min Length" };
-    	if (ctx.clonedField.typeOptions.minLength !== void 0) {
-    		numberbox0_props.value = ctx.clonedField.typeOptions.minLength;
-    	}
-    	var numberbox0 = new NumberBox({ props: numberbox0_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(numberbox0, 'value', numberbox0_value_binding_1));
-
-    	function numberbox1_value_binding_1(value_1) {
-    		ctx.numberbox1_value_binding_1.call(null, value_1);
-    		updating_value_1 = true;
-    		add_flush_callback(() => updating_value_1 = false);
-    	}
-
-    	let numberbox1_props = { label: "Max Length" };
-    	if (ctx.clonedField.typeOptions.maxLength !== void 0) {
-    		numberbox1_props.value = ctx.clonedField.typeOptions.maxLength;
-    	}
-    	var numberbox1 = new NumberBox({ props: numberbox1_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(numberbox1, 'value', numberbox1_value_binding_1));
-
-    	return {
-    		c: function create() {
-    			numberbox0.$$.fragment.c();
-    			t = space();
-    			numberbox1.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(numberbox0, target, anchor);
-    			insert(target, t, anchor);
-    			mount_component(numberbox1, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var numberbox0_changes = {};
-    			if (!updating_value && changed.clonedField) {
-    				numberbox0_changes.value = ctx.clonedField.typeOptions.minLength;
-    			}
-    			numberbox0.$set(numberbox0_changes);
-
-    			var numberbox1_changes = {};
-    			if (!updating_value_1 && changed.clonedField) {
-    				numberbox1_changes.value = ctx.clonedField.typeOptions.maxLength;
-    			}
-    			numberbox1.$set(numberbox1_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(numberbox0.$$.fragment, local);
-
-    			transition_in(numberbox1.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(numberbox0.$$.fragment, local);
-    			transition_out(numberbox1.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(numberbox0, detaching);
-
-    			if (detaching) {
-    				detach(t);
-    			}
-
-    			destroy_component(numberbox1, detaching);
-    		}
-    	};
-    }
-
-    // (87:51) 
-    function create_if_block_4(ctx) {
-    	var updating_selected, t0, updating_selected_1, t1, updating_text, current;
-
-    	function dropdown0_selected_binding(value) {
-    		ctx.dropdown0_selected_binding.call(null, value);
-    		updating_selected = true;
-    		add_flush_callback(() => updating_selected = false);
-    	}
-
-    	let dropdown0_props = {
-    		label: "Lookup Index",
-    		options: ctx.possibleReferenceIndexes,
-    		valueMember: func,
-    		textMember: func_1
-    	};
-    	if (ctx.clonedField.typeOptions.indexNodeKey !== void 0) {
-    		dropdown0_props.selected = ctx.clonedField.typeOptions.indexNodeKey;
-    	}
-    	var dropdown0 = new Dropdown({ props: dropdown0_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(dropdown0, 'selected', dropdown0_selected_binding));
-
-    	function dropdown1_selected_binding(value_1) {
-    		ctx.dropdown1_selected_binding.call(null, value_1);
-    		updating_selected_1 = true;
-    		add_flush_callback(() => updating_selected_1 = false);
-    	}
-
-    	let dropdown1_props = {
-    		label: "Reverse Reference Index",
-    		options: ctx.possibleReverseReferenceIndexes,
-    		multiple: "true",
-    		valueMember: func_2,
-    		textMember: func_3
-    	};
-    	if (ctx.clonedField.typeOptions.reverseIndexNodeKeys !== void 0) {
-    		dropdown1_props.selected = ctx.clonedField.typeOptions.reverseIndexNodeKeys;
-    	}
-    	var dropdown1 = new Dropdown({ props: dropdown1_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(dropdown1, 'selected', dropdown1_selected_binding));
-
-    	function textbox_text_binding_2(value_2) {
-    		ctx.textbox_text_binding_2.call(null, value_2);
-    		updating_text = true;
-    		add_flush_callback(() => updating_text = false);
-    	}
-
-    	let textbox_props = { label: "Display Value" };
-    	if (ctx.clonedField.typeOptions.displayValue !== void 0) {
-    		textbox_props.text = ctx.clonedField.typeOptions.displayValue;
-    	}
-    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding_2));
-
-    	return {
-    		c: function create() {
-    			dropdown0.$$.fragment.c();
-    			t0 = space();
-    			dropdown1.$$.fragment.c();
-    			t1 = space();
-    			textbox.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(dropdown0, target, anchor);
-    			insert(target, t0, anchor);
-    			mount_component(dropdown1, target, anchor);
-    			insert(target, t1, anchor);
-    			mount_component(textbox, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var dropdown0_changes = {};
-    			if (changed.possibleReferenceIndexes) dropdown0_changes.options = ctx.possibleReferenceIndexes;
-    			if (!updating_selected && changed.clonedField) {
-    				dropdown0_changes.selected = ctx.clonedField.typeOptions.indexNodeKey;
-    			}
-    			dropdown0.$set(dropdown0_changes);
-
-    			var dropdown1_changes = {};
-    			if (changed.possibleReverseReferenceIndexes) dropdown1_changes.options = ctx.possibleReverseReferenceIndexes;
-    			if (!updating_selected_1 && changed.clonedField) {
-    				dropdown1_changes.selected = ctx.clonedField.typeOptions.reverseIndexNodeKeys;
-    			}
-    			dropdown1.$set(dropdown1_changes);
-
-    			var textbox_changes = {};
-    			if (!updating_text && changed.clonedField) {
-    				textbox_changes.text = ctx.clonedField.typeOptions.displayValue;
-    			}
-    			textbox.$set(textbox_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(dropdown0.$$.fragment, local);
-
-    			transition_in(dropdown1.$$.fragment, local);
-
-    			transition_in(textbox.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(dropdown0.$$.fragment, local);
-    			transition_out(dropdown1.$$.fragment, local);
-    			transition_out(textbox.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(dropdown0, detaching);
-
-    			if (detaching) {
-    				detach(t0);
-    			}
-
-    			destroy_component(dropdown1, detaching);
-
-    			if (detaching) {
-    				detach(t1);
-    			}
-
-    			destroy_component(textbox, detaching);
-    		}
-    	};
-    }
-
-    // (83:48) 
-    function create_if_block_3$1(ctx) {
-    	var updating_value, t0, updating_value_1, t1, updating_value_2, current;
-
-    	function numberbox0_value_binding(value) {
-    		ctx.numberbox0_value_binding.call(null, value);
-    		updating_value = true;
-    		add_flush_callback(() => updating_value = false);
-    	}
-
-    	let numberbox0_props = { label: "Min Value" };
-    	if (ctx.clonedField.typeOptions.minValue !== void 0) {
-    		numberbox0_props.value = ctx.clonedField.typeOptions.minValue;
-    	}
-    	var numberbox0 = new NumberBox({ props: numberbox0_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(numberbox0, 'value', numberbox0_value_binding));
-
-    	function numberbox1_value_binding(value_1) {
-    		ctx.numberbox1_value_binding.call(null, value_1);
-    		updating_value_1 = true;
-    		add_flush_callback(() => updating_value_1 = false);
-    	}
-
-    	let numberbox1_props = { label: "Max Value" };
-    	if (ctx.clonedField.typeOptions.maxValue !== void 0) {
-    		numberbox1_props.value = ctx.clonedField.typeOptions.maxValue;
-    	}
-    	var numberbox1 = new NumberBox({ props: numberbox1_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(numberbox1, 'value', numberbox1_value_binding));
-
-    	function numberbox2_value_binding(value_2) {
-    		ctx.numberbox2_value_binding.call(null, value_2);
-    		updating_value_2 = true;
-    		add_flush_callback(() => updating_value_2 = false);
-    	}
-
-    	let numberbox2_props = { label: "Decimal Places" };
-    	if (ctx.clonedField.typeOptions.decimalPlaces !== void 0) {
-    		numberbox2_props.value = ctx.clonedField.typeOptions.decimalPlaces;
-    	}
-    	var numberbox2 = new NumberBox({ props: numberbox2_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(numberbox2, 'value', numberbox2_value_binding));
-
-    	return {
-    		c: function create() {
-    			numberbox0.$$.fragment.c();
-    			t0 = space();
-    			numberbox1.$$.fragment.c();
-    			t1 = space();
-    			numberbox2.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(numberbox0, target, anchor);
-    			insert(target, t0, anchor);
-    			mount_component(numberbox1, target, anchor);
-    			insert(target, t1, anchor);
-    			mount_component(numberbox2, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var numberbox0_changes = {};
-    			if (!updating_value && changed.clonedField) {
-    				numberbox0_changes.value = ctx.clonedField.typeOptions.minValue;
-    			}
-    			numberbox0.$set(numberbox0_changes);
-
-    			var numberbox1_changes = {};
-    			if (!updating_value_1 && changed.clonedField) {
-    				numberbox1_changes.value = ctx.clonedField.typeOptions.maxValue;
-    			}
-    			numberbox1.$set(numberbox1_changes);
-
-    			var numberbox2_changes = {};
-    			if (!updating_value_2 && changed.clonedField) {
-    				numberbox2_changes.value = ctx.clonedField.typeOptions.decimalPlaces;
-    			}
-    			numberbox2.$set(numberbox2_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(numberbox0.$$.fragment, local);
-
-    			transition_in(numberbox1.$$.fragment, local);
-
-    			transition_in(numberbox2.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(numberbox0.$$.fragment, local);
-    			transition_out(numberbox1.$$.fragment, local);
-    			transition_out(numberbox2.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(numberbox0, detaching);
-
-    			if (detaching) {
-    				detach(t0);
-    			}
-
-    			destroy_component(numberbox1, detaching);
-
-    			if (detaching) {
-    				detach(t1);
-    			}
-
-    			destroy_component(numberbox2, detaching);
-    		}
-    	};
-    }
-
-    // (80:50) 
-    function create_if_block_2$2(ctx) {
-    	var updating_value, t, updating_value_1, current;
-
-    	function datepicker0_value_binding(value) {
-    		ctx.datepicker0_value_binding.call(null, value);
-    		updating_value = true;
-    		add_flush_callback(() => updating_value = false);
-    	}
-
-    	let datepicker0_props = { label: "Min Value" };
-    	if (ctx.clonedField.typeOptions.minValue !== void 0) {
-    		datepicker0_props.value = ctx.clonedField.typeOptions.minValue;
-    	}
-    	var datepicker0 = new DatePicker({ props: datepicker0_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(datepicker0, 'value', datepicker0_value_binding));
-
-    	function datepicker1_value_binding(value_1) {
-    		ctx.datepicker1_value_binding.call(null, value_1);
-    		updating_value_1 = true;
-    		add_flush_callback(() => updating_value_1 = false);
-    	}
-
-    	let datepicker1_props = { label: "Max Value" };
-    	if (ctx.clonedField.typeOptions.maxValue !== void 0) {
-    		datepicker1_props.value = ctx.clonedField.typeOptions.maxValue;
-    	}
-    	var datepicker1 = new DatePicker({ props: datepicker1_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(datepicker1, 'value', datepicker1_value_binding));
-
-    	return {
-    		c: function create() {
-    			datepicker0.$$.fragment.c();
-    			t = space();
-    			datepicker1.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(datepicker0, target, anchor);
-    			insert(target, t, anchor);
-    			mount_component(datepicker1, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var datepicker0_changes = {};
-    			if (!updating_value && changed.clonedField) {
-    				datepicker0_changes.value = ctx.clonedField.typeOptions.minValue;
-    			}
-    			datepicker0.$set(datepicker0_changes);
-
-    			var datepicker1_changes = {};
-    			if (!updating_value_1 && changed.clonedField) {
-    				datepicker1_changes.value = ctx.clonedField.typeOptions.maxValue;
-    			}
-    			datepicker1.$set(datepicker1_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(datepicker0.$$.fragment, local);
-
-    			transition_in(datepicker1.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(datepicker0.$$.fragment, local);
-    			transition_out(datepicker1.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(datepicker0, detaching);
-
-    			if (detaching) {
-    				detach(t);
-    			}
-
-    			destroy_component(datepicker1, detaching);
-    		}
-    	};
-    }
-
-    // (78:46) 
-    function create_if_block_1$5(ctx) {
-    	var updating_checked, current;
-
-    	function checkbox_checked_binding_1(value) {
-    		ctx.checkbox_checked_binding_1.call(null, value);
-    		updating_checked = true;
-    		add_flush_callback(() => updating_checked = false);
-    	}
-
-    	let checkbox_props = { label: "Allow Null" };
-    	if (ctx.clonedField.typeOptions.allowNulls !== void 0) {
-    		checkbox_props.checked = ctx.clonedField.typeOptions.allowNulls;
-    	}
-    	var checkbox = new Checkbox({ props: checkbox_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(checkbox, 'checked', checkbox_checked_binding_1));
-
-    	return {
-    		c: function create() {
-    			checkbox.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(checkbox, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var checkbox_changes = {};
-    			if (!updating_checked && changed.clonedField) {
-    				checkbox_changes.checked = ctx.clonedField.typeOptions.allowNulls;
-    			}
-    			checkbox.$set(checkbox_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(checkbox.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(checkbox.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(checkbox, detaching);
-    		}
-    	};
-    }
-
-    // (74:8) {#if clonedField.type === "string"}
-    function create_if_block$b(ctx) {
-    	var updating_value, t0, updating_values, t1, updating_checked, current;
-
-    	function numberbox_value_binding(value) {
-    		ctx.numberbox_value_binding.call(null, value);
-    		updating_value = true;
-    		add_flush_callback(() => updating_value = false);
-    	}
-
-    	let numberbox_props = { label: "Max Length" };
-    	if (ctx.clonedField.typeOptions.maxLength !== void 0) {
-    		numberbox_props.value = ctx.clonedField.typeOptions.maxLength;
-    	}
-    	var numberbox = new NumberBox({ props: numberbox_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(numberbox, 'value', numberbox_value_binding));
-
-    	function valueslist_values_binding(value_1) {
-    		ctx.valueslist_values_binding.call(null, value_1);
-    		updating_values = true;
-    		add_flush_callback(() => updating_values = false);
-    	}
-
-    	let valueslist_props = { label: "Values (options)" };
-    	if (ctx.clonedField.typeOptions.values !== void 0) {
-    		valueslist_props.values = ctx.clonedField.typeOptions.values;
-    	}
-    	var valueslist = new ValuesList({ props: valueslist_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(valueslist, 'values', valueslist_values_binding));
-
-    	function checkbox_checked_binding(value_2) {
-    		ctx.checkbox_checked_binding.call(null, value_2);
-    		updating_checked = true;
-    		add_flush_callback(() => updating_checked = false);
-    	}
-
-    	let checkbox_props = { label: "Declared Values Only" };
-    	if (ctx.clonedField.typeOptions.allowDeclaredValuesOnly !== void 0) {
-    		checkbox_props.checked = ctx.clonedField.typeOptions.allowDeclaredValuesOnly;
-    	}
-    	var checkbox = new Checkbox({ props: checkbox_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(checkbox, 'checked', checkbox_checked_binding));
-
-    	return {
-    		c: function create() {
-    			numberbox.$$.fragment.c();
-    			t0 = space();
-    			valueslist.$$.fragment.c();
-    			t1 = space();
-    			checkbox.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(numberbox, target, anchor);
-    			insert(target, t0, anchor);
-    			mount_component(valueslist, target, anchor);
-    			insert(target, t1, anchor);
-    			mount_component(checkbox, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var numberbox_changes = {};
-    			if (!updating_value && changed.clonedField) {
-    				numberbox_changes.value = ctx.clonedField.typeOptions.maxLength;
-    			}
-    			numberbox.$set(numberbox_changes);
-
-    			var valueslist_changes = {};
-    			if (!updating_values && changed.clonedField) {
-    				valueslist_changes.values = ctx.clonedField.typeOptions.values;
-    			}
-    			valueslist.$set(valueslist_changes);
-
-    			var checkbox_changes = {};
-    			if (!updating_checked && changed.clonedField) {
-    				checkbox_changes.checked = ctx.clonedField.typeOptions.allowDeclaredValuesOnly;
-    			}
-    			checkbox.$set(checkbox_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(numberbox.$$.fragment, local);
-
-    			transition_in(valueslist.$$.fragment, local);
-
-    			transition_in(checkbox.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(numberbox.$$.fragment, local);
-    			transition_out(valueslist.$$.fragment, local);
-    			transition_out(checkbox.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(numberbox, detaching);
-
-    			if (detaching) {
-    				detach(t0);
-    			}
-
-    			destroy_component(valueslist, detaching);
-
-    			if (detaching) {
-    				detach(t1);
-    			}
-
-    			destroy_component(checkbox, detaching);
-    		}
-    	};
-    }
-
-    // (111:8) <Button color="primary" grouped on:click={save}>
-    function create_default_slot_2$2(ctx) {
-    	var t;
-
-    	return {
-    		c: function create() {
-    			t = text("Save");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
-    		}
-    	};
-    }
-
-    // (112:8) <Button color="secondary" grouped on:click={() => onFinished(false)}>
-    function create_default_slot_1$3(ctx) {
-    	var t;
-
-    	return {
-    		c: function create() {
-    			t = text("Cancel");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
-    		}
-    	};
-    }
-
-    // (110:4) <ButtonGroup style="float: right;">
-    function create_default_slot$3(ctx) {
-    	var t, current;
-
-    	var button0 = new Button({
-    		props: {
-    		color: "primary",
-    		grouped: true,
-    		$$slots: { default: [create_default_slot_2$2] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button0.$on("click", ctx.save);
-
-    	var button1 = new Button({
-    		props: {
-    		color: "secondary",
-    		grouped: true,
-    		$$slots: { default: [create_default_slot_1$3] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button1.$on("click", ctx.click_handler);
-
-    	return {
-    		c: function create() {
-    			button0.$$.fragment.c();
-    			t = space();
-    			button1.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(button0, target, anchor);
-    			insert(target, t, anchor);
-    			mount_component(button1, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var button0_changes = {};
-    			if (changed.$$scope) button0_changes.$$scope = { changed, ctx };
-    			button0.$set(button0_changes);
-
-    			var button1_changes = {};
-    			if (changed.$$scope) button1_changes.$$scope = { changed, ctx };
-    			button1.$set(button1_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(button0.$$.fragment, local);
-
-    			transition_in(button1.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(button0.$$.fragment, local);
-    			transition_out(button1.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(button0, detaching);
-
-    			if (detaching) {
-    				detach(t);
-    			}
-
-    			destroy_component(button1, detaching);
-    		}
-    	};
-    }
-
-    function create_fragment$r(ctx) {
-    	var div, t0, form, updating_selected, t1, current_block_type_index, if_block0, t2, updating_text, t3, current_block_type_index_1, if_block1, t4, current;
-
-    	var errorsbox = new ErrorsBox({
-    		props: { errors: ctx.errors },
-    		$$inline: true
-    	});
-
-    	function dropdown_selected_binding(value) {
-    		ctx.dropdown_selected_binding.call(null, value);
-    		updating_selected = true;
-    		add_flush_callback(() => updating_selected = false);
-    	}
-
-    	let dropdown_props = { label: "Type", options: fp_30(allTypes$1) };
-    	if (ctx.clonedField.type !== void 0) {
-    		dropdown_props.selected = ctx.clonedField.type;
-    	}
-    	var dropdown = new Dropdown({ props: dropdown_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(dropdown, 'selected', dropdown_selected_binding));
-    	dropdown.$on("change", ctx.typeChanged);
-
-    	var if_block_creators = [
-    		create_if_block_6,
-    		create_else_block$4
-    	];
-
-    	var if_blocks = [];
-
-    	function select_block_type(ctx) {
-    		if (ctx.isNew) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type(ctx);
-    	if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	function textbox_text_binding_1(value_1) {
-    		ctx.textbox_text_binding_1.call(null, value_1);
-    		updating_text = true;
-    		add_flush_callback(() => updating_text = false);
-    	}
-
-    	let textbox_props = { label: "Label" };
-    	if (ctx.clonedField.label !== void 0) {
-    		textbox_props.text = ctx.clonedField.label;
-    	}
-    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding_1));
-
-    	var if_block_creators_1 = [
-    		create_if_block$b,
-    		create_if_block_1$5,
-    		create_if_block_2$2,
-    		create_if_block_3$1,
-    		create_if_block_4,
-    		create_if_block_5
-    	];
-
-    	var if_blocks_1 = [];
-
-    	function select_block_type_1(ctx) {
-    		if (ctx.clonedField.type === "string") return 0;
-    		if (ctx.clonedField.type === "bool") return 1;
-    		if (ctx.clonedField.type === "datetime") return 2;
-    		if (ctx.clonedField.type === "number") return 3;
-    		if (ctx.clonedField.type === "reference") return 4;
-    		if (ctx.clonedField.type.startsWith("array")) return 5;
-    		return -1;
-    	}
-
-    	if (~(current_block_type_index_1 = select_block_type_1(ctx))) {
-    		if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
-    	}
-
-    	var buttongroup = new ButtonGroup({
-    		props: {
-    		style: "float: right;",
-    		$$slots: { default: [create_default_slot$3] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			errorsbox.$$.fragment.c();
-    			t0 = space();
-    			form = element("form");
-    			dropdown.$$.fragment.c();
-    			t1 = space();
-    			if_block0.c();
-    			t2 = space();
-    			textbox.$$.fragment.c();
-    			t3 = space();
-    			if (if_block1) if_block1.c();
-    			t4 = space();
-    			buttongroup.$$.fragment.c();
-    			attr(form, "class", "uk-form-horizontal");
-    			add_location(form, file$s, 61, 4, 1740);
-    			attr(div, "class", "root");
-    			add_location(div, file$s, 57, 0, 1681);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			mount_component(errorsbox, div, null);
-    			append(div, t0);
-    			append(div, form);
-    			mount_component(dropdown, form, null);
-    			append(form, t1);
-    			if_blocks[current_block_type_index].m(form, null);
-    			append(form, t2);
-    			mount_component(textbox, form, null);
-    			append(form, t3);
-    			if (~current_block_type_index_1) if_blocks_1[current_block_type_index_1].m(form, null);
-    			append(div, t4);
-    			mount_component(buttongroup, div, null);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var errorsbox_changes = {};
-    			if (changed.errors) errorsbox_changes.errors = ctx.errors;
-    			errorsbox.$set(errorsbox_changes);
-
-    			var dropdown_changes = {};
-    			if (changed.keys || changed.allTypes) dropdown_changes.options = fp_30(allTypes$1);
-    			if (!updating_selected && changed.clonedField) {
-    				dropdown_changes.selected = ctx.clonedField.type;
-    			}
-    			dropdown.$set(dropdown_changes);
-
-    			var previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(changed, ctx);
-    			} else {
-    				group_outros();
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-    				check_outros();
-
-    				if_block0 = if_blocks[current_block_type_index];
-    				if (!if_block0) {
-    					if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block0.c();
-    				}
-    				transition_in(if_block0, 1);
-    				if_block0.m(form, t2);
-    			}
-
-    			var textbox_changes = {};
-    			if (!updating_text && changed.clonedField) {
-    				textbox_changes.text = ctx.clonedField.label;
-    			}
-    			textbox.$set(textbox_changes);
-
-    			var previous_block_index_1 = current_block_type_index_1;
-    			current_block_type_index_1 = select_block_type_1(ctx);
-    			if (current_block_type_index_1 === previous_block_index_1) {
-    				if (~current_block_type_index_1) if_blocks_1[current_block_type_index_1].p(changed, ctx);
-    			} else {
-    				if (if_block1) {
-    					group_outros();
-    					transition_out(if_blocks_1[previous_block_index_1], 1, 1, () => {
-    						if_blocks_1[previous_block_index_1] = null;
-    					});
-    					check_outros();
-    				}
-
-    				if (~current_block_type_index_1) {
-    					if_block1 = if_blocks_1[current_block_type_index_1];
-    					if (!if_block1) {
-    						if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
-    						if_block1.c();
-    					}
-    					transition_in(if_block1, 1);
-    					if_block1.m(form, null);
-    				} else {
-    					if_block1 = null;
-    				}
-    			}
-
-    			var buttongroup_changes = {};
-    			if (changed.$$scope) buttongroup_changes.$$scope = { changed, ctx };
-    			buttongroup.$set(buttongroup_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(errorsbox.$$.fragment, local);
-
-    			transition_in(dropdown.$$.fragment, local);
-
-    			transition_in(if_block0);
-
-    			transition_in(textbox.$$.fragment, local);
-
-    			transition_in(if_block1);
-
-    			transition_in(buttongroup.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(errorsbox.$$.fragment, local);
-    			transition_out(dropdown.$$.fragment, local);
-    			transition_out(if_block0);
-    			transition_out(textbox.$$.fragment, local);
-    			transition_out(if_block1);
-    			transition_out(buttongroup.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			destroy_component(errorsbox);
-
-    			destroy_component(dropdown);
-
-    			if_blocks[current_block_type_index].d();
-
-    			destroy_component(textbox);
-
-    			if (~current_block_type_index_1) if_blocks_1[current_block_type_index_1].d();
-
-    			destroy_component(buttongroup);
-    		}
-    	};
-    }
-
-    function func(n) {
-    	return n.nodeKey();
-    }
-
-    function func_1(n) {
-    	return n.name;
-    }
-
-    function func_2(n) {
-    	return n.nodeKey();
-    }
-
-    function func_3(n) {
-    	return n.name;
-    }
-
-    function instance$r($$self, $$props, $$invalidate) {
-    	
-
-    let { field, allFields, onFinished = () => {} } = $$props;
-    let { store } = $$props;
-
-    let errors = [];
-    let clonedField = fp_4(field);
-
-    const typeChanged = (ev) => 
-        { const $$result = clonedField.typeOptions = getDefaultTypeOptions(ev.detail); $$invalidate('clonedField', clonedField); return $$result; };
-
-
-    const save = () => {
-
-        $$invalidate('errors', errors = validate$1.field(allFields)(clonedField));
-        if(errors.length > 0) return;
-        field.typeOptions = fp_4(clonedField.typeOptions); $$invalidate('field', field);
-        onFinished(
-            fp_51(field)(clonedField)
-        );
-    };
-
-    	const writable_props = ['field', 'allFields', 'onFinished', 'store'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<FieldView> was created with unknown prop '${key}'`);
-    	});
-
-    	function dropdown_selected_binding(value) {
-    		clonedField.type = value;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function textbox_text_binding(value) {
-    		clonedField.name = value;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function textbox_text_binding_1(value_1) {
-    		clonedField.label = value_1;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function numberbox_value_binding(value) {
-    		clonedField.typeOptions.maxLength = value;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function valueslist_values_binding(value_1) {
-    		clonedField.typeOptions.values = value_1;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function checkbox_checked_binding(value_2) {
-    		clonedField.typeOptions.allowDeclaredValuesOnly = value_2;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function checkbox_checked_binding_1(value) {
-    		clonedField.typeOptions.allowNulls = value;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function datepicker0_value_binding(value) {
-    		clonedField.typeOptions.minValue = value;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function datepicker1_value_binding(value_1) {
-    		clonedField.typeOptions.maxValue = value_1;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function numberbox0_value_binding(value) {
-    		clonedField.typeOptions.minValue = value;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function numberbox1_value_binding(value_1) {
-    		clonedField.typeOptions.maxValue = value_1;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function numberbox2_value_binding(value_2) {
-    		clonedField.typeOptions.decimalPlaces = value_2;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function dropdown0_selected_binding(value) {
-    		clonedField.typeOptions.indexNodeKey = value;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function dropdown1_selected_binding(value_1) {
-    		clonedField.typeOptions.reverseIndexNodeKeys = value_1;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function textbox_text_binding_2(value_2) {
-    		clonedField.typeOptions.displayValue = value_2;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function numberbox0_value_binding_1(value) {
-    		clonedField.typeOptions.minLength = value;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function numberbox1_value_binding_1(value_1) {
-    		clonedField.typeOptions.maxLength = value_1;
-    		$$invalidate('clonedField', clonedField);
-    	}
-
-    	function click_handler() {
-    		return onFinished(false);
-    	}
-
-    	$$self.$set = $$props => {
-    		if ('field' in $$props) $$invalidate('field', field = $$props.field);
-    		if ('allFields' in $$props) $$invalidate('allFields', allFields = $$props.allFields);
-    		if ('onFinished' in $$props) $$invalidate('onFinished', onFinished = $$props.onFinished);
-    		if ('store' in $$props) $$invalidate('store', store = $$props.store);
-    	};
-
-    	let isNew, possibleReferenceIndexes, selectedReverseRefIndex, possibleReverseReferenceIndexes;
-
-    	$$self.$$.update = ($$dirty = { field: 1, store: 1, clonedField: 1, selectedReverseRefIndex: 1 }) => {
-    		if ($$dirty.field) { $$invalidate('isNew', isNew = !!field && field.name.length === 0); }
-    		if ($$dirty.store) { $$invalidate('possibleReferenceIndexes', possibleReferenceIndexes = getPotentialReferenceIndexes(
-                store.hierarchy, store.currentNode
-            )); }
-    		if ($$dirty.clonedField || $$dirty.store) { $$invalidate('selectedReverseRefIndex', selectedReverseRefIndex = 
-                !clonedField.typeOptions.indexNodeKey 
-                ? ""
-                : getNode$1(store.hierarchy, clonedField.typeOptions.indexNodeKey)); }
-    		if ($$dirty.selectedReverseRefIndex || $$dirty.store) { $$invalidate('possibleReverseReferenceIndexes', possibleReverseReferenceIndexes = 
-                !selectedReverseRefIndex 
-                ? []
-                : getPotentialReverseReferenceIndexes(
-                    store.hierarchy, selectedReverseRefIndex)); }
-    	};
-
-    	return {
-    		field,
-    		allFields,
-    		onFinished,
-    		store,
-    		errors,
-    		clonedField,
-    		typeChanged,
-    		save,
-    		isNew,
-    		possibleReferenceIndexes,
-    		possibleReverseReferenceIndexes,
-    		dropdown_selected_binding,
-    		textbox_text_binding,
-    		textbox_text_binding_1,
-    		numberbox_value_binding,
-    		valueslist_values_binding,
-    		checkbox_checked_binding,
-    		checkbox_checked_binding_1,
-    		datepicker0_value_binding,
-    		datepicker1_value_binding,
-    		numberbox0_value_binding,
-    		numberbox1_value_binding,
-    		numberbox2_value_binding,
-    		dropdown0_selected_binding,
-    		dropdown1_selected_binding,
-    		textbox_text_binding_2,
-    		numberbox0_value_binding_1,
-    		numberbox1_value_binding_1,
-    		click_handler
-    	};
-    }
-
-    class FieldView extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$r, create_fragment$r, safe_not_equal, ["field", "allFields", "onFinished", "store"]);
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-    		if (ctx.field === undefined && !('field' in props)) {
-    			console.warn("<FieldView> was created without expected prop 'field'");
-    		}
-    		if (ctx.allFields === undefined && !('allFields' in props)) {
-    			console.warn("<FieldView> was created without expected prop 'allFields'");
-    		}
-    		if (ctx.store === undefined && !('store' in props)) {
-    			console.warn("<FieldView> was created without expected prop 'store'");
-    		}
-    	}
-
-    	get field() {
-    		throw new Error("<FieldView>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set field(value) {
-    		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get allFields() {
-    		throw new Error("<FieldView>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set allFields(value) {
-    		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get onFinished() {
-    		throw new Error("<FieldView>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set onFinished(value) {
-    		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get store() {
-    		throw new Error("<FieldView>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set store(value) {
-    		throw new Error("<FieldView>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\database\RecordView.svelte generated by Svelte v3.6.9 */
-
-    const file$t = "src\\database\\RecordView.svelte";
-
-    function get_each_context$9(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.index = list[i];
-    	return child_ctx;
-    }
-
-    function get_each_context_1$4(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.field = list[i];
-    	return child_ctx;
-    }
-
-    // (91:8) {#if !record.isSingle}
-    function create_if_block_3$2(ctx) {
-    	var updating_text, t, updating_text_1, current;
-
-    	function textbox0_text_binding(value) {
-    		ctx.textbox0_text_binding.call(null, value);
-    		updating_text = true;
-    		add_flush_callback(() => updating_text = false);
-    	}
-
-    	let textbox0_props = { label: "Collection Name" };
-    	if (ctx.record.collectionName !== void 0) {
-    		textbox0_props.text = ctx.record.collectionName;
-    	}
-    	var textbox0 = new Textbox({ props: textbox0_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(textbox0, 'text', textbox0_text_binding));
-
-    	function textbox1_text_binding(value_1) {
-    		ctx.textbox1_text_binding.call(null, value_1);
-    		updating_text_1 = true;
-    		add_flush_callback(() => updating_text_1 = false);
-    	}
-
-    	let textbox1_props = { label: "Shard Factor" };
-    	if (ctx.record.allidsShardFactor !== void 0) {
-    		textbox1_props.text = ctx.record.allidsShardFactor;
-    	}
-    	var textbox1 = new Textbox({ props: textbox1_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(textbox1, 'text', textbox1_text_binding));
-
-    	return {
-    		c: function create() {
-    			textbox0.$$.fragment.c();
-    			t = space();
-    			textbox1.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(textbox0, target, anchor);
-    			insert(target, t, anchor);
-    			mount_component(textbox1, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var textbox0_changes = {};
-    			if (!updating_text && changed.record) {
-    				textbox0_changes.text = ctx.record.collectionName;
-    			}
-    			textbox0.$set(textbox0_changes);
-
-    			var textbox1_changes = {};
-    			if (!updating_text_1 && changed.record) {
-    				textbox1_changes.text = ctx.record.allidsShardFactor;
-    			}
-    			textbox1.$set(textbox1_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(textbox0.$$.fragment, local);
-
-    			transition_in(textbox1.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(textbox0.$$.fragment, local);
-    			transition_out(textbox1.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(textbox0, detaching);
-
-    			if (detaching) {
-    				detach(t);
-    			}
-
-    			destroy_component(textbox1, detaching);
-    		}
-    	};
-    }
-
-    // (128:4) {:else}
-    function create_else_block_1(ctx) {
-    	var t;
-
-    	return {
-    		c: function create() {
-    			t = text("(no fields added)");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
-
-    		p: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
-    		}
-    	};
-    }
-
-    // (101:4) {#if record.fields.length > 0}
-    function create_if_block_2$3(ctx) {
-    	var table, thead, tr, th0, t1, th1, t3, th2, t5, th3, t6, tbody;
-
-    	var each_value_1 = ctx.record.fields;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks[i] = create_each_block_1$4(get_each_context_1$4(ctx, each_value_1, i));
-    	}
-
-    	return {
-    		c: function create() {
-    			table = element("table");
-    			thead = element("thead");
-    			tr = element("tr");
-    			th0 = element("th");
-    			th0.textContent = "Name";
-    			t1 = space();
-    			th1 = element("th");
-    			th1.textContent = "Type";
-    			t3 = space();
-    			th2 = element("th");
-    			th2.textContent = "Options";
-    			t5 = space();
-    			th3 = element("th");
-    			t6 = space();
-    			tbody = element("tbody");
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-    			attr(th0, "class", "svelte-kswv5p");
-    			add_location(th0, file$t, 104, 16, 2855);
-    			attr(th1, "class", "svelte-kswv5p");
-    			add_location(th1, file$t, 105, 16, 2885);
-    			attr(th2, "class", "svelte-kswv5p");
-    			add_location(th2, file$t, 106, 16, 2915);
-    			attr(th3, "class", "svelte-kswv5p");
-    			add_location(th3, file$t, 107, 16, 2948);
-    			attr(tr, "class", "svelte-kswv5p");
-    			add_location(tr, file$t, 103, 12, 2834);
-    			attr(thead, "class", "svelte-kswv5p");
-    			add_location(thead, file$t, 102, 8, 2814);
-    			attr(tbody, "class", "svelte-kswv5p");
-    			add_location(tbody, file$t, 110, 8, 3001);
-    			attr(table, "class", "fields-table uk-table svelte-kswv5p");
-    			add_location(table, file$t, 101, 4, 2768);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, table, anchor);
-    			append(table, thead);
-    			append(thead, tr);
-    			append(tr, th0);
-    			append(tr, t1);
-    			append(tr, th1);
-    			append(tr, t3);
-    			append(tr, th2);
-    			append(tr, t5);
-    			append(tr, th3);
-    			append(table, t6);
-    			append(table, tbody);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(tbody, null);
-    			}
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.getIcon || changed.getTypeOptions || changed.record) {
-    				each_value_1 = ctx.record.fields;
-
-    				for (var i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1$4(ctx, each_value_1, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block_1$4(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(tbody, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value_1.length;
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(table);
-    			}
-
-    			destroy_each(each_blocks, detaching);
-    		}
-    	};
-    }
-
-    // (112:12) {#each record.fields as field}
-    function create_each_block_1$4(ctx) {
-    	var tr, td0, div0, t0_value = ctx.field.label, t0, t1, div1, t2_value = ctx.field.name, t2, t3, td1, t4_value = ctx.field.type, t4, t5, td2, raw0_value = ctx.getTypeOptions(ctx.field.typeOptions), t6, td3, span0, raw1_value = getIcon("edit"), t7, span1, raw2_value = getIcon("trash"), t8, dispose;
-
-    	function click_handler() {
-    		return ctx.click_handler(ctx);
-    	}
-
-    	function click_handler_1() {
-    		return ctx.click_handler_1(ctx);
-    	}
-
-    	return {
-    		c: function create() {
-    			tr = element("tr");
-    			td0 = element("td");
-    			div0 = element("div");
-    			t0 = text(t0_value);
-    			t1 = space();
-    			div1 = element("div");
-    			t2 = text(t2_value);
-    			t3 = space();
-    			td1 = element("td");
-    			t4 = text(t4_value);
-    			t5 = space();
-    			td2 = element("td");
-    			t6 = space();
-    			td3 = element("td");
-    			span0 = element("span");
-    			t7 = space();
-    			span1 = element("span");
-    			t8 = space();
-    			add_location(div0, file$t, 114, 20, 3111);
-    			set_style(div1, "font-size", "0.7em");
-    			set_style(div1, "color", "var(--slate)");
-    			add_location(div1, file$t, 115, 20, 3156);
-    			attr(td0, "class", "svelte-kswv5p");
-    			add_location(td0, file$t, 113, 16, 3085);
-    			attr(td1, "class", "svelte-kswv5p");
-    			add_location(td1, file$t, 117, 16, 3264);
-    			attr(td2, "class", "svelte-kswv5p");
-    			add_location(td2, file$t, 118, 16, 3303);
-    			attr(span0, "class", "edit-button svelte-kswv5p");
-    			add_location(span0, file$t, 120, 20, 3396);
-    			attr(span1, "class", "edit-button svelte-kswv5p");
-    			add_location(span1, file$t, 121, 20, 3507);
-    			attr(td3, "class", "svelte-kswv5p");
-    			add_location(td3, file$t, 119, 16, 3371);
-    			attr(tr, "class", "svelte-kswv5p");
-    			add_location(tr, file$t, 112, 12, 3064);
-
-    			dispose = [
-    				listen(span0, "click", click_handler),
-    				listen(span1, "click", click_handler_1)
-    			];
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, tr, anchor);
-    			append(tr, td0);
-    			append(td0, div0);
-    			append(div0, t0);
-    			append(td0, t1);
-    			append(td0, div1);
-    			append(div1, t2);
-    			append(tr, t3);
-    			append(tr, td1);
-    			append(td1, t4);
-    			append(tr, t5);
-    			append(tr, td2);
-    			td2.innerHTML = raw0_value;
-    			append(tr, t6);
-    			append(tr, td3);
-    			append(td3, span0);
-    			span0.innerHTML = raw1_value;
-    			append(td3, t7);
-    			append(td3, span1);
-    			span1.innerHTML = raw2_value;
-    			append(tr, t8);
-    		},
-
-    		p: function update(changed, new_ctx) {
-    			ctx = new_ctx;
-    			if ((changed.record) && t0_value !== (t0_value = ctx.field.label)) {
-    				set_data(t0, t0_value);
-    			}
-
-    			if ((changed.record) && t2_value !== (t2_value = ctx.field.name)) {
-    				set_data(t2, t2_value);
-    			}
-
-    			if ((changed.record) && t4_value !== (t4_value = ctx.field.type)) {
-    				set_data(t4, t4_value);
-    			}
-
-    			if ((changed.record) && raw0_value !== (raw0_value = ctx.getTypeOptions(ctx.field.typeOptions))) {
-    				td2.innerHTML = raw0_value;
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(tr);
-    			}
-
-    			run_all(dispose);
-    		}
-    	};
-    }
-
-    // (132:4) {#if editingField}
-    function create_if_block_1$6(ctx) {
-    	var updating_isOpen, current;
-
-    	function modal_isOpen_binding(value) {
-    		ctx.modal_isOpen_binding.call(null, value);
-    		updating_isOpen = true;
-    		add_flush_callback(() => updating_isOpen = false);
-    	}
-
-    	let modal_props = {
-    		$$slots: { default: [create_default_slot$4] },
-    		$$scope: { ctx }
-    	};
-    	if (ctx.editingField !== void 0) {
-    		modal_props.isOpen = ctx.editingField;
-    	}
-    	var modal = new Modal({ props: modal_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(modal, 'isOpen', modal_isOpen_binding));
-
-    	return {
-    		c: function create() {
-    			modal.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(modal, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var modal_changes = {};
-    			if (changed.$$scope || changed.fieldToEdit || changed.onFinishedFieldEdit || changed.record || changed.$store) modal_changes.$$scope = { changed, ctx };
-    			if (!updating_isOpen && changed.editingField) {
-    				modal_changes.isOpen = ctx.editingField;
-    			}
-    			modal.$set(modal_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(modal.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(modal.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(modal, detaching);
-    		}
-    	};
-    }
-
-    // (133:4) <Modal bind:isOpen={editingField}>
-    function create_default_slot$4(ctx) {
-    	var current;
-
-    	var fieldview = new FieldView({
-    		props: {
-    		field: ctx.fieldToEdit,
-    		onFinished: ctx.onFinishedFieldEdit,
-    		allFields: ctx.record.fields,
-    		store: ctx.$store
-    	},
-    		$$inline: true
-    	});
-
-    	return {
-    		c: function create() {
-    			fieldview.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(fieldview, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var fieldview_changes = {};
-    			if (changed.fieldToEdit) fieldview_changes.field = ctx.fieldToEdit;
-    			if (changed.onFinishedFieldEdit) fieldview_changes.onFinished = ctx.onFinishedFieldEdit;
-    			if (changed.record) fieldview_changes.allFields = ctx.record.fields;
-    			if (changed.$store) fieldview_changes.store = ctx.$store;
-    			fieldview.$set(fieldview_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(fieldview.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(fieldview.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(fieldview, detaching);
-    		}
-    	};
-    }
-
-    // (168:4) {:else}
-    function create_else_block$5(ctx) {
-    	var t;
-
-    	return {
-    		c: function create() {
-    			t = text("(no indexes added)");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
-    		}
-    	};
-    }
-
-    // (161:8) {#if index.filter}
-    function create_if_block$c(ctx) {
-    	var div, span, t1, code, t2_value = ctx.index.filter, t2;
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			span = element("span");
-    			span.textContent = "filter:";
-    			t1 = space();
-    			code = element("code");
-    			t2 = text(t2_value);
-    			attr(span, "class", "index-label svelte-kswv5p");
-    			add_location(span, file$t, 162, 12, 4820);
-    			attr(code, "class", "index-mapfilter svelte-kswv5p");
-    			add_location(code, file$t, 163, 12, 4873);
-    			attr(div, "class", "index-field-row svelte-kswv5p");
-    			add_location(div, file$t, 161, 8, 4778);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, span);
-    			append(div, t1);
-    			append(div, code);
-    			append(code, t2);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((changed.record) && t2_value !== (t2_value = ctx.index.filter)) {
-    				set_data(t2, t2_value);
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-    		}
-    	};
-    }
-
-    // (145:4) {#each record.indexes as index}
-    function create_each_block$9(ctx) {
-    	var div3, div0, t0_value = ctx.index.name, t0, t1, span0, raw_value = getIcon("edit"), t2, div1, span1, t4, span2, t5_value = ctx.getIndexAllowedRecords(ctx.index), t5, t6, span3, t8, span4, t9_value = ctx.index.indexType, t9, t10, div2, span5, t12, code, t13_value = ctx.index.map, t13, t14, t15, dispose;
-
-    	function click_handler_2() {
-    		return ctx.click_handler_2(ctx);
-    	}
-
-    	var if_block = (ctx.index.filter) && create_if_block$c(ctx);
-
-    	return {
-    		c: function create() {
-    			div3 = element("div");
-    			div0 = element("div");
-    			t0 = text(t0_value);
-    			t1 = space();
-    			span0 = element("span");
-    			t2 = space();
-    			div1 = element("div");
-    			span1 = element("span");
-    			span1.textContent = "records indexed:";
-    			t4 = space();
-    			span2 = element("span");
-    			t5 = text(t5_value);
-    			t6 = space();
-    			span3 = element("span");
-    			span3.textContent = "type:";
-    			t8 = space();
-    			span4 = element("span");
-    			t9 = text(t9_value);
-    			t10 = space();
-    			div2 = element("div");
-    			span5 = element("span");
-    			span5.textContent = "map:";
-    			t12 = space();
-    			code = element("code");
-    			t13 = text(t13_value);
-    			t14 = space();
-    			if (if_block) if_block.c();
-    			t15 = space();
-    			set_style(span0, "margin-left", "7px");
-    			add_location(span0, file$t, 148, 12, 4173);
-    			attr(div0, "class", "index-name svelte-kswv5p");
-    			add_location(div0, file$t, 146, 8, 4111);
-    			attr(span1, "class", "index-label svelte-kswv5p");
-    			add_location(span1, file$t, 151, 12, 4334);
-    			add_location(span2, file$t, 152, 12, 4398);
-    			attr(span3, "class", "index-label svelte-kswv5p");
-    			set_style(span3, "margin-left", "15px");
-    			add_location(span3, file$t, 153, 12, 4455);
-    			add_location(span4, file$t, 154, 12, 4533);
-    			attr(div1, "class", "index-field-row svelte-kswv5p");
-    			add_location(div1, file$t, 150, 8, 4292);
-    			attr(span5, "class", "index-label svelte-kswv5p");
-    			add_location(span5, file$t, 157, 12, 4629);
-    			attr(code, "class", "index-mapfilter svelte-kswv5p");
-    			add_location(code, file$t, 158, 12, 4679);
-    			attr(div2, "class", "index-field-row svelte-kswv5p");
-    			add_location(div2, file$t, 156, 8, 4587);
-    			attr(div3, "class", "index-container svelte-kswv5p");
-    			add_location(div3, file$t, 145, 4, 4073);
-    			dispose = listen(span0, "click", click_handler_2);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div3, anchor);
-    			append(div3, div0);
-    			append(div0, t0);
-    			append(div0, t1);
-    			append(div0, span0);
-    			span0.innerHTML = raw_value;
-    			append(div3, t2);
-    			append(div3, div1);
-    			append(div1, span1);
-    			append(div1, t4);
-    			append(div1, span2);
-    			append(span2, t5);
-    			append(div1, t6);
-    			append(div1, span3);
-    			append(div1, t8);
-    			append(div1, span4);
-    			append(span4, t9);
-    			append(div3, t10);
-    			append(div3, div2);
-    			append(div2, span5);
-    			append(div2, t12);
-    			append(div2, code);
-    			append(code, t13);
-    			append(div3, t14);
-    			if (if_block) if_block.m(div3, null);
-    			append(div3, t15);
-    		},
-
-    		p: function update(changed, new_ctx) {
-    			ctx = new_ctx;
-    			if ((changed.record) && t0_value !== (t0_value = ctx.index.name)) {
-    				set_data(t0, t0_value);
-    			}
-
-    			if ((changed.getIndexAllowedRecords || changed.record) && t5_value !== (t5_value = ctx.getIndexAllowedRecords(ctx.index))) {
-    				set_data(t5, t5_value);
-    			}
-
-    			if ((changed.record) && t9_value !== (t9_value = ctx.index.indexType)) {
-    				set_data(t9, t9_value);
-    			}
-
-    			if ((changed.record) && t13_value !== (t13_value = ctx.index.map)) {
-    				set_data(t13, t13_value);
-    			}
-
-    			if (ctx.index.filter) {
-    				if (if_block) {
-    					if_block.p(changed, ctx);
-    				} else {
-    					if_block = create_if_block$c(ctx);
-    					if_block.c();
-    					if_block.m(div3, t15);
-    				}
-    			} else if (if_block) {
-    				if_block.d(1);
-    				if_block = null;
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div3);
-    			}
-
-    			if (if_block) if_block.d();
-    			dispose();
-    		}
-    	};
-    }
-
-    function create_fragment$s(ctx) {
-    	var div1, form, updating_text, t0, div0, t1_value = ctx.record.nodeKey(), t1, t2, t3, h40, t4, span, raw_value = getIcon("plus"), t5, t6, t7, h41, t9, current, dispose;
-
-    	function textbox_text_binding(value) {
-    		ctx.textbox_text_binding.call(null, value);
-    		updating_text = true;
-    		add_flush_callback(() => updating_text = false);
-    	}
-
-    	let textbox_props = { label: "Name" };
-    	if (ctx.record.name !== void 0) {
-    		textbox_props.text = ctx.record.name;
-    	}
-    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding));
-
-    	var if_block0 = (!ctx.record.isSingle) && create_if_block_3$2(ctx);
-
-    	function select_block_type(ctx) {
-    		if (ctx.record.fields.length > 0) return create_if_block_2$3;
-    		return create_else_block_1;
-    	}
-
-    	var current_block_type = select_block_type(ctx);
-    	var if_block1 = current_block_type(ctx);
-
-    	var if_block2 = (ctx.editingField) && create_if_block_1$6(ctx);
-
-    	var each_value = ctx.record.indexes;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
-    	}
-
-    	var each_1_else = null;
-
-    	if (!each_value.length) {
-    		each_1_else = create_else_block$5();
-    		each_1_else.c();
-    	}
-
-    	return {
-    		c: function create() {
-    			div1 = element("div");
-    			form = element("form");
-    			textbox.$$.fragment.c();
-    			t0 = space();
-    			div0 = element("div");
-    			t1 = text(t1_value);
-    			t2 = space();
-    			if (if_block0) if_block0.c();
-    			t3 = space();
-    			h40 = element("h4");
-    			t4 = text("Fields ");
-    			span = element("span");
-    			t5 = space();
-    			if_block1.c();
-    			t6 = space();
-    			if (if_block2) if_block2.c();
-    			t7 = space();
-    			h41 = element("h4");
-    			h41.textContent = "Indexes";
-    			t9 = space();
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-    			add_location(div0, file$t, 89, 8, 2368);
-    			attr(form, "class", "uk-form-horizontal");
-    			add_location(form, file$t, 86, 4, 2264);
-    			attr(span, "class", "add-field-button svelte-kswv5p");
-    			add_location(span, file$t, 97, 15, 2636);
-    			add_location(h40, file$t, 96, 4, 2616);
-    			add_location(h41, file$t, 140, 4, 4000);
-    			attr(div1, "class", "root svelte-kswv5p");
-    			add_location(div1, file$t, 84, 0, 2240);
-    			dispose = listen(span, "click", ctx.newField);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div1, anchor);
-    			append(div1, form);
-    			mount_component(textbox, form, null);
-    			append(form, t0);
-    			append(form, div0);
-    			append(div0, t1);
-    			append(form, t2);
-    			if (if_block0) if_block0.m(form, null);
-    			append(div1, t3);
-    			append(div1, h40);
-    			append(h40, t4);
-    			append(h40, span);
-    			span.innerHTML = raw_value;
-    			append(div1, t5);
-    			if_block1.m(div1, null);
-    			append(div1, t6);
-    			if (if_block2) if_block2.m(div1, null);
-    			append(div1, t7);
-    			append(div1, h41);
-    			append(div1, t9);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div1, null);
-    			}
-
-    			if (each_1_else) {
-    				each_1_else.m(div1, null);
-    			}
-
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var textbox_changes = {};
-    			if (!updating_text && changed.record) {
-    				textbox_changes.text = ctx.record.name;
-    			}
-    			textbox.$set(textbox_changes);
-
-    			if ((!current || changed.record) && t1_value !== (t1_value = ctx.record.nodeKey())) {
-    				set_data(t1, t1_value);
-    			}
-
-    			if (!ctx.record.isSingle) {
-    				if (if_block0) {
-    					if_block0.p(changed, ctx);
-    					transition_in(if_block0, 1);
-    				} else {
-    					if_block0 = create_if_block_3$2(ctx);
-    					if_block0.c();
-    					transition_in(if_block0, 1);
-    					if_block0.m(form, null);
-    				}
-    			} else if (if_block0) {
-    				group_outros();
-    				transition_out(if_block0, 1, 1, () => {
-    					if_block0 = null;
-    				});
-    				check_outros();
-    			}
-
-    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block1) {
-    				if_block1.p(changed, ctx);
-    			} else {
-    				if_block1.d(1);
-    				if_block1 = current_block_type(ctx);
-    				if (if_block1) {
-    					if_block1.c();
-    					if_block1.m(div1, t6);
-    				}
-    			}
-
-    			if (ctx.editingField) {
-    				if (if_block2) {
-    					if_block2.p(changed, ctx);
-    					transition_in(if_block2, 1);
-    				} else {
-    					if_block2 = create_if_block_1$6(ctx);
-    					if_block2.c();
-    					transition_in(if_block2, 1);
-    					if_block2.m(div1, t7);
-    				}
-    			} else if (if_block2) {
-    				group_outros();
-    				transition_out(if_block2, 1, 1, () => {
-    					if_block2 = null;
-    				});
-    				check_outros();
-    			}
-
-    			if (changed.record || changed.getIndexAllowedRecords || changed.getIcon) {
-    				each_value = ctx.record.indexes;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$9(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block$9(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(div1, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value.length;
-    			}
-
-    			if (each_value.length) {
-    				if (each_1_else) {
-    					each_1_else.d(1);
-    					each_1_else = null;
-    				}
-    			} else if (!each_1_else) {
-    				each_1_else = create_else_block$5();
-    				each_1_else.c();
-    				each_1_else.m(div1, null);
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(textbox.$$.fragment, local);
-
-    			transition_in(if_block0);
-    			transition_in(if_block2);
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(textbox.$$.fragment, local);
-    			transition_out(if_block0);
-    			transition_out(if_block2);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div1);
-    			}
-
-    			destroy_component(textbox);
-
-    			if (if_block0) if_block0.d();
-    			if_block1.d();
-    			if (if_block2) if_block2.d();
-
-    			destroy_each(each_blocks, detaching);
-
-    			if (each_1_else) each_1_else.d();
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function instance$s($$self, $$props, $$invalidate) {
-    	let $store;
-
-    	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
-
-    	
-
-    let record;
-    let getIndexAllowedRecords;
-    let editingField = false;
-    let fieldToEdit;
-    let newField;
-    let editField;
-    let deleteField;
-    let onFinishedFieldEdit;
-    let editIndex;
-
-    store.subscribe($store => {
-        $$invalidate('record', record = $store.currentNode);
-        const flattened = hierarchyFunctions.getFlattenedHierarchy($store.hierarchy);
-        $$invalidate('getIndexAllowedRecords', getIndexAllowedRecords = index => 
-            pipe(index.allowedRecordNodeIds, [
-                fp_8(id => fp_6(n => n.nodeId === id)(flattened)),
-                fp_7(id => fp_13(n => n.nodeId === id)
-                              (flattened).name),
-                fp_39(", ")
-            ]));
-
-        $$invalidate('newField', newField = () => {
-            $$invalidate('fieldToEdit', fieldToEdit = templateApi($store.hierarchy).getNewField("string"));
-            $$invalidate('editingField', editingField = true);
-        });
-
-        $$invalidate('onFinishedFieldEdit', onFinishedFieldEdit = (field) => {
-            if(field) {
-                store.saveField(field);
-            }
-            $$invalidate('editingField', editingField = false);
-        });
-
-        $$invalidate('editField', editField = (field) => {
-            $$invalidate('fieldToEdit', fieldToEdit = field);
-            $$invalidate('editingField', editingField = true);
-        });
-
-        $$invalidate('deleteField', deleteField = (field) => {
-            store.deleteField(field);
-        });
-
-        $$invalidate('editIndex', editIndex = index => {
-            store.selectExistingNode(index.nodeId);
-        });
-
-    });
-
-    let getTypeOptionsValueText = value => {
-        if(value === Number.MAX_SAFE_INTEGER
-           || value === Number.MIN_SAFE_INTEGER
-           || new Date(value).getTime() === new Date(8640000000000000).getTime()
-           || new Date(value).getTime() === new Date(-8640000000000000).getTime()) return "(any)";
-        
-        if(value === null) return "(not set)";
-        return value;
-    };
-
-    let getTypeOptions = typeOptions => 
-        pipe(typeOptions, [
-            fp_30,
-            fp_7(k => `<span style="color:var(--slate)">${k}: </span>${getTypeOptionsValueText(typeOptions[k])}`),
-            fp_39("<br>")
-        ]);
-
-    	function textbox_text_binding(value) {
-    		record.name = value;
-    		$$invalidate('record', record);
-    	}
-
-    	function textbox0_text_binding(value) {
-    		record.collectionName = value;
-    		$$invalidate('record', record);
-    	}
-
-    	function textbox1_text_binding(value_1) {
-    		record.allidsShardFactor = value_1;
-    		$$invalidate('record', record);
-    	}
-
-    	function click_handler({ field }) {
-    		return editField(field);
-    	}
-
-    	function click_handler_1({ field }) {
-    		return deleteField(field);
-    	}
-
-    	function modal_isOpen_binding(value) {
-    		editingField = value;
-    		$$invalidate('editingField', editingField);
-    	}
-
-    	function click_handler_2({ index }) {
-    		return editIndex(index);
-    	}
-
-    	return {
-    		record,
-    		getIndexAllowedRecords,
-    		editingField,
-    		fieldToEdit,
-    		newField,
-    		editField,
-    		deleteField,
-    		onFinishedFieldEdit,
-    		editIndex,
-    		getTypeOptions,
-    		$store,
-    		textbox_text_binding,
-    		textbox0_text_binding,
-    		textbox1_text_binding,
-    		click_handler,
-    		click_handler_1,
-    		modal_isOpen_binding,
-    		click_handler_2
-    	};
-    }
-
-    class RecordView extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$s, create_fragment$s, safe_not_equal, []);
-    	}
-    }
-
-    /* src\common\CodeArea.svelte generated by Svelte v3.6.9 */
-
-    const file$u = "src\\common\\CodeArea.svelte";
-
-    function create_fragment$t(ctx) {
-    	var div, t0, t1, textarea, dispose;
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			t0 = text(ctx.label);
-    			t1 = space();
-    			textarea = element("textarea");
-    			add_location(div, file$u, 6, 0, 102);
-    			attr(textarea, "class", "uk-textarea svelte-1ooq0hh");
-    			add_location(textarea, file$u, 7, 0, 122);
-    			dispose = listen(textarea, "input", ctx.textarea_input_handler);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, t0);
-    			insert(target, t1, anchor);
-    			insert(target, textarea, anchor);
-
-    			textarea.value = ctx.text;
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.label) {
-    				set_data(t0, ctx.label);
-    			}
-
-    			if (changed.text) textarea.value = ctx.text;
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    				detach(t1);
-    				detach(textarea);
-    			}
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function instance$t($$self, $$props, $$invalidate) {
-    	// todo: use https://ace.c9.io
-    let { text = "", label = "" } = $$props;
-
-    	const writable_props = ['text', 'label'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<CodeArea> was created with unknown prop '${key}'`);
-    	});
-
-    	function textarea_input_handler() {
-    		text = this.value;
-    		$$invalidate('text', text);
-    	}
-
-    	$$self.$set = $$props => {
-    		if ('text' in $$props) $$invalidate('text', text = $$props.text);
-    		if ('label' in $$props) $$invalidate('label', label = $$props.label);
-    	};
-
-    	return { text, label, textarea_input_handler };
-    }
-
-    class CodeArea extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$t, create_fragment$t, safe_not_equal, ["text", "label"]);
-    	}
-
-    	get text() {
-    		throw new Error("<CodeArea>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set text(value) {
-    		throw new Error("<CodeArea>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get label() {
-    		throw new Error("<CodeArea>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set label(value) {
-    		throw new Error("<CodeArea>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\database\IndexView.svelte generated by Svelte v3.6.9 */
-
-    const file$v = "src\\database\\IndexView.svelte";
-
-    function get_each_context$a(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.rec = list[i];
-    	return child_ctx;
-    }
-
-    // (45:8) {#each indexableRecords as rec}
-    function create_each_block$a(ctx) {
-    	var input, input_checked_value, t0, span, t1_value = ctx.rec.node.name, t1, dispose;
-
-    	function change_handler() {
-    		return ctx.change_handler(ctx);
-    	}
-
-    	return {
-    		c: function create() {
-    			input = element("input");
-    			t0 = space();
-    			span = element("span");
-    			t1 = text(t1_value);
-    			attr(input, "type", "checkbox");
-    			input.checked = input_checked_value = ctx.rec.isallowed;
-    			add_location(input, file$v, 45, 8, 1362);
-    			attr(span, "class", "svelte-pq2tmv");
-    			add_location(span, file$v, 46, 8, 1462);
-    			dispose = listen(input, "change", change_handler);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, input, anchor);
-    			insert(target, t0, anchor);
-    			insert(target, span, anchor);
-    			append(span, t1);
-    		},
-
-    		p: function update(changed, new_ctx) {
-    			ctx = new_ctx;
-    			if ((changed.indexableRecords) && input_checked_value !== (input_checked_value = ctx.rec.isallowed)) {
-    				input.checked = input_checked_value;
-    			}
-
-    			if ((changed.indexableRecords) && t1_value !== (t1_value = ctx.rec.node.name)) {
-    				set_data(t1, t1_value);
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(input);
-    				detach(t0);
-    				detach(span);
-    			}
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function create_fragment$u(ctx) {
-    	var form, updating_text, t0, div1, div0, t2, t3, updating_selected, t4, updating_text_1, t5, updating_text_2, t6, updating_text_3, current;
-
-    	function textbox_text_binding(value) {
-    		ctx.textbox_text_binding.call(null, value);
-    		updating_text = true;
-    		add_flush_callback(() => updating_text = false);
-    	}
-
-    	let textbox_props = { label: "Name" };
-    	if (ctx.index.name !== void 0) {
-    		textbox_props.text = ctx.index.name;
-    	}
-    	var textbox = new Textbox({ props: textbox_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(textbox, 'text', textbox_text_binding));
-
-    	var each_value = ctx.indexableRecords;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$a(get_each_context$a(ctx, each_value, i));
-    	}
-
-    	function dropdown_selected_binding(value_1) {
-    		ctx.dropdown_selected_binding.call(null, value_1);
-    		updating_selected = true;
-    		add_flush_callback(() => updating_selected = false);
-    	}
-
-    	let dropdown_props = {
-    		label: "Index Type",
-    		options: ["ancestor", "reference"]
-    	};
-    	if (ctx.index.indexType !== void 0) {
-    		dropdown_props.selected = ctx.index.indexType;
-    	}
-    	var dropdown = new Dropdown({ props: dropdown_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(dropdown, 'selected', dropdown_selected_binding));
-
-    	function codearea0_text_binding(value_2) {
-    		ctx.codearea0_text_binding.call(null, value_2);
-    		updating_text_1 = true;
-    		add_flush_callback(() => updating_text_1 = false);
-    	}
-
-    	let codearea0_props = { label: "Map (javascript)" };
-    	if (ctx.index.map !== void 0) {
-    		codearea0_props.text = ctx.index.map;
-    	}
-    	var codearea0 = new CodeArea({ props: codearea0_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(codearea0, 'text', codearea0_text_binding));
-
-    	function codearea1_text_binding(value_3) {
-    		ctx.codearea1_text_binding.call(null, value_3);
-    		updating_text_2 = true;
-    		add_flush_callback(() => updating_text_2 = false);
-    	}
-
-    	let codearea1_props = { label: "Filter (javascript expression)" };
-    	if (ctx.index.filter !== void 0) {
-    		codearea1_props.text = ctx.index.filter;
-    	}
-    	var codearea1 = new CodeArea({ props: codearea1_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(codearea1, 'text', codearea1_text_binding));
-
-    	function codearea2_text_binding(value_4) {
-    		ctx.codearea2_text_binding.call(null, value_4);
-    		updating_text_3 = true;
-    		add_flush_callback(() => updating_text_3 = false);
-    	}
-
-    	let codearea2_props = {
-    		label: "Shard Name (javascript expression)"
-    	};
-    	if (ctx.index.getShardName !== void 0) {
-    		codearea2_props.text = ctx.index.getShardName;
-    	}
-    	var codearea2 = new CodeArea({ props: codearea2_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(codearea2, 'text', codearea2_text_binding));
-
-    	return {
-    		c: function create() {
-    			form = element("form");
-    			textbox.$$.fragment.c();
-    			t0 = space();
-    			div1 = element("div");
-    			div0 = element("div");
-    			div0.textContent = "Records to Index";
-    			t2 = space();
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			t3 = space();
-    			dropdown.$$.fragment.c();
-    			t4 = space();
-    			codearea0.$$.fragment.c();
-    			t5 = space();
-    			codearea1.$$.fragment.c();
-    			t6 = space();
-    			codearea2.$$.fragment.c();
-    			add_location(div0, file$v, 43, 8, 1286);
-    			attr(div1, "class", "allowed-records svelte-pq2tmv");
-    			add_location(div1, file$v, 42, 4, 1248);
-    			attr(form, "class", "uk-form-horizontal root svelte-pq2tmv");
-    			add_location(form, file$v, 39, 0, 1149);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, form, anchor);
-    			mount_component(textbox, form, null);
-    			append(form, t0);
-    			append(form, div1);
-    			append(div1, div0);
-    			append(div1, t2);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div1, null);
-    			}
-
-    			append(form, t3);
-    			mount_component(dropdown, form, null);
-    			append(form, t4);
-    			mount_component(codearea0, form, null);
-    			append(form, t5);
-    			mount_component(codearea1, form, null);
-    			append(form, t6);
-    			mount_component(codearea2, form, null);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var textbox_changes = {};
-    			if (!updating_text && changed.index) {
-    				textbox_changes.text = ctx.index.name;
-    			}
-    			textbox.$set(textbox_changes);
-
-    			if (changed.indexableRecords) {
-    				each_value = ctx.indexableRecords;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$a(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block$a(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(div1, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value.length;
-    			}
-
-    			var dropdown_changes = {};
-    			if (!updating_selected && changed.index) {
-    				dropdown_changes.selected = ctx.index.indexType;
-    			}
-    			dropdown.$set(dropdown_changes);
-
-    			var codearea0_changes = {};
-    			if (!updating_text_1 && changed.index) {
-    				codearea0_changes.text = ctx.index.map;
-    			}
-    			codearea0.$set(codearea0_changes);
-
-    			var codearea1_changes = {};
-    			if (!updating_text_2 && changed.index) {
-    				codearea1_changes.text = ctx.index.filter;
-    			}
-    			codearea1.$set(codearea1_changes);
-
-    			var codearea2_changes = {};
-    			if (!updating_text_3 && changed.index) {
-    				codearea2_changes.text = ctx.index.getShardName;
-    			}
-    			codearea2.$set(codearea2_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(textbox.$$.fragment, local);
-
-    			transition_in(dropdown.$$.fragment, local);
-
-    			transition_in(codearea0.$$.fragment, local);
-
-    			transition_in(codearea1.$$.fragment, local);
-
-    			transition_in(codearea2.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(textbox.$$.fragment, local);
-    			transition_out(dropdown.$$.fragment, local);
-    			transition_out(codearea0.$$.fragment, local);
-    			transition_out(codearea1.$$.fragment, local);
-    			transition_out(codearea2.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(form);
-    			}
-
-    			destroy_component(textbox);
-
-    			destroy_each(each_blocks, detaching);
-
-    			destroy_component(dropdown);
-
-    			destroy_component(codearea0);
-
-    			destroy_component(codearea1);
-
-    			destroy_component(codearea2);
-    		}
-    	};
-    }
-
-    function instance$u($$self, $$props, $$invalidate) {
-    	
-
-    const pipe = common$1.$;
-
-    let index;
-    let indexableRecords = [];
-
-    store.subscribe($store => {
-        $$invalidate('index', index = $store.currentNode);
-        $$invalidate('indexableRecords', indexableRecords = pipe($store.hierarchy,[
-            hierarchyFunctions.getFlattenedHierarchy,
-            fp_8(hierarchyFunctions.isDecendant(index.parent())),
-            fp_8(hierarchyFunctions.isRecord),
-            fp_7(n => ({
-                node:n,
-                isallowed: fp_6(id => n.nodeId === id)(index.allowedRecordNodeIds)
-            }))
-        ]));
-    });
-
-    const toggleAllowedRecord = record => {
-        if(record.isallowed) {
-            index.allowedRecordNodeIds = fp_8(id => id !== record.node.nodeId)
-                                               (index.allowedRecordNodeIds); $$invalidate('index', index);
-        } else {
-            index.allowedRecordNodeIds.push(record.node.nodeId);
-        }
-    };
-
-    	function textbox_text_binding(value) {
-    		index.name = value;
-    		$$invalidate('index', index);
-    	}
-
-    	function change_handler({ rec }) {
-    		return toggleAllowedRecord(rec);
-    	}
-
-    	function dropdown_selected_binding(value_1) {
-    		index.indexType = value_1;
-    		$$invalidate('index', index);
-    	}
-
-    	function codearea0_text_binding(value_2) {
-    		index.map = value_2;
-    		$$invalidate('index', index);
-    	}
-
-    	function codearea1_text_binding(value_3) {
-    		index.filter = value_3;
-    		$$invalidate('index', index);
-    	}
-
-    	function codearea2_text_binding(value_4) {
-    		index.getShardName = value_4;
-    		$$invalidate('index', index);
-    	}
-
-    	return {
-    		index,
-    		indexableRecords,
-    		toggleAllowedRecord,
-    		textbox_text_binding,
-    		change_handler,
-    		dropdown_selected_binding,
-    		codearea0_text_binding,
-    		codearea1_text_binding,
-    		codearea2_text_binding
-    	};
-    }
-
-    class IndexView extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$u, create_fragment$u, safe_not_equal, []);
-    	}
-    }
-
-    /* src\database\ActionsHeader.svelte generated by Svelte v3.6.9 */
-
-    const file$w = "src\\database\\ActionsHeader.svelte";
-
-    // (27:12) {:else}
-    function create_else_block$6(ctx) {
-    	var t;
-
-    	return {
-    		c: function create() {
-    			t = text("Update");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
-    		}
-    	};
-    }
-
-    // (25:12) {#if $store.currentNodeIsNew}
-    function create_if_block_2$4(ctx) {
-    	var t;
-
-    	return {
-    		c: function create() {
-    			t = text("Create");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
-    		}
-    	};
-    }
-
-    // (24:8) <Button color="secondary" grouped on:click={store.saveCurrentNode}>
-    function create_default_slot_5(ctx) {
-    	var if_block_anchor;
-
-    	function select_block_type(ctx) {
-    		if (ctx.$store.currentNodeIsNew) return create_if_block_2$4;
-    		return create_else_block$6;
-    	}
-
-    	var current_block_type = select_block_type(ctx);
-    	var if_block = current_block_type(ctx);
-
-    	return {
-    		c: function create() {
-    			if_block.c();
-    			if_block_anchor = empty();
-    		},
-
-    		m: function mount(target, anchor) {
-    			if_block.m(target, anchor);
-    			insert(target, if_block_anchor, anchor);
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (current_block_type !== (current_block_type = select_block_type(ctx))) {
-    				if_block.d(1);
-    				if_block = current_block_type(ctx);
-    				if (if_block) {
-    					if_block.c();
-    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
-    				}
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if_block.d(detaching);
-
-    			if (detaching) {
-    				detach(if_block_anchor);
-    			}
-    		}
-    	};
-    }
-
-    // (32:8) {#if !$store.currentNodeIsNew}
-    function create_if_block_1$7(ctx) {
-    	var current;
-
-    	var button = new Button({
-    		props: {
-    		color: "secondary",
-    		grouped: true,
-    		$$slots: { default: [create_default_slot_4] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button.$on("click", ctx.openConfirmDelete);
-
-    	return {
-    		c: function create() {
-    			button.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(button, target, anchor);
-    			current = true;
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(button.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(button.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(button, detaching);
-    		}
-    	};
-    }
-
-    // (33:8) <Button color="secondary" grouped on:click={openConfirmDelete}>
-    function create_default_slot_4(ctx) {
-    	var t;
-
-    	return {
-    		c: function create() {
-    			t = text("Delete");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
-    		}
-    	};
-    }
-
-    // (23:4) <ButtonGroup>
-    function create_default_slot_3(ctx) {
-    	var t, if_block_anchor, current;
-
-    	var button = new Button({
-    		props: {
-    		color: "secondary",
-    		grouped: true,
-    		$$slots: { default: [create_default_slot_5] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button.$on("click", store.saveCurrentNode);
-
-    	var if_block = (!ctx.$store.currentNodeIsNew) && create_if_block_1$7(ctx);
-
-    	return {
-    		c: function create() {
-    			button.$$.fragment.c();
-    			t = space();
-    			if (if_block) if_block.c();
-    			if_block_anchor = empty();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(button, target, anchor);
-    			insert(target, t, anchor);
-    			if (if_block) if_block.m(target, anchor);
-    			insert(target, if_block_anchor, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var button_changes = {};
-    			if (changed.$$scope || changed.$store) button_changes.$$scope = { changed, ctx };
-    			button.$set(button_changes);
-
-    			if (!ctx.$store.currentNodeIsNew) {
-    				if (!if_block) {
-    					if_block = create_if_block_1$7(ctx);
-    					if_block.c();
-    					transition_in(if_block, 1);
-    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
-    				} else {
-    									transition_in(if_block, 1);
-    				}
-    			} else if (if_block) {
-    				group_outros();
-    				transition_out(if_block, 1, 1, () => {
-    					if_block = null;
-    				});
-    				check_outros();
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(button.$$.fragment, local);
-
-    			transition_in(if_block);
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(button.$$.fragment, local);
-    			transition_out(if_block);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(button, detaching);
-
-    			if (detaching) {
-    				detach(t);
-    			}
-
-    			if (if_block) if_block.d(detaching);
-
-    			if (detaching) {
-    				detach(if_block_anchor);
-    			}
-    		}
-    	};
-    }
-
-    // (39:4) {#if !!$store.errors && $store.errors.length > 0}
-    function create_if_block$d(ctx) {
-    	var div, current;
-
-    	var errorsbox = new ErrorsBox({
-    		props: { errors: ctx.$store.errors },
-    		$$inline: true
-    	});
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			errorsbox.$$.fragment.c();
-    			set_style(div, "width", "500px");
-    			add_location(div, file$w, 39, 4, 972);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			mount_component(errorsbox, div, null);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var errorsbox_changes = {};
-    			if (changed.$store) errorsbox_changes.errors = ctx.$store.errors;
-    			errorsbox.$set(errorsbox_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(errorsbox.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(errorsbox.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			destroy_component(errorsbox);
-    		}
-    	};
-    }
-
-    // (48:12) <Button color="primary"  on:click={deleteCurrentNode}>
-    function create_default_slot_2$3(ctx) {
-    	var t;
-
-    	return {
-    		c: function create() {
-    			t = text("Yes");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
-    		}
-    	};
-    }
-
-    // (49:12) <Button color="secondary" on:click={() => confirmDelete = false}>
-    function create_default_slot_1$4(ctx) {
-    	var t;
-
-    	return {
-    		c: function create() {
-    			t = text("No");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(t);
-    			}
-    		}
-    	};
-    }
-
-    // (45:4) <Modal bind:isOpen={confirmDelete}>
-    function create_default_slot$5(ctx) {
-    	var div0, t0, t1_value = ctx.$store.currentNode.name, t1, t2, t3, div1, t4, current;
-
-    	var button0 = new Button({
-    		props: {
-    		color: "primary",
-    		$$slots: { default: [create_default_slot_2$3] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button0.$on("click", ctx.deleteCurrentNode);
-
-    	var button1 = new Button({
-    		props: {
-    		color: "secondary",
-    		$$slots: { default: [create_default_slot_1$4] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-    	button1.$on("click", ctx.click_handler);
-
-    	return {
-    		c: function create() {
-    			div0 = element("div");
-    			t0 = text("Are you sure you want to delete ");
-    			t1 = text(t1_value);
-    			t2 = text(" ?");
-    			t3 = space();
-    			div1 = element("div");
-    			button0.$$.fragment.c();
-    			t4 = space();
-    			button1.$$.fragment.c();
-    			set_style(div0, "margin", "10px 0px 20px 0px");
-    			add_location(div0, file$w, 45, 8, 1117);
-    			set_style(div1, "float", "right");
-    			add_location(div1, file$w, 46, 8, 1230);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div0, anchor);
-    			append(div0, t0);
-    			append(div0, t1);
-    			append(div0, t2);
-    			insert(target, t3, anchor);
-    			insert(target, div1, anchor);
-    			mount_component(button0, div1, null);
-    			append(div1, t4);
-    			mount_component(button1, div1, null);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((!current || changed.$store) && t1_value !== (t1_value = ctx.$store.currentNode.name)) {
-    				set_data(t1, t1_value);
-    			}
-
-    			var button0_changes = {};
-    			if (changed.$$scope) button0_changes.$$scope = { changed, ctx };
-    			button0.$set(button0_changes);
-
-    			var button1_changes = {};
-    			if (changed.$$scope) button1_changes.$$scope = { changed, ctx };
-    			button1.$set(button1_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(button0.$$.fragment, local);
-
-    			transition_in(button1.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(button0.$$.fragment, local);
-    			transition_out(button1.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div0);
-    				detach(t3);
-    				detach(div1);
-    			}
-
-    			destroy_component(button0);
-
-    			destroy_component(button1);
-    		}
-    	};
-    }
-
-    function create_fragment$v(ctx) {
-    	var div, t0, t1, updating_isOpen, current;
-
-    	var buttongroup = new ButtonGroup({
-    		props: {
-    		$$slots: { default: [create_default_slot_3] },
-    		$$scope: { ctx }
-    	},
-    		$$inline: true
-    	});
-
-    	var if_block = (!!ctx.$store.errors && ctx.$store.errors.length > 0) && create_if_block$d(ctx);
-
-    	function modal_isOpen_binding(value) {
-    		ctx.modal_isOpen_binding.call(null, value);
-    		updating_isOpen = true;
-    		add_flush_callback(() => updating_isOpen = false);
-    	}
-
-    	let modal_props = {
-    		$$slots: { default: [create_default_slot$5] },
-    		$$scope: { ctx }
-    	};
-    	if (ctx.confirmDelete !== void 0) {
-    		modal_props.isOpen = ctx.confirmDelete;
-    	}
-    	var modal = new Modal({ props: modal_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(modal, 'isOpen', modal_isOpen_binding));
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			buttongroup.$$.fragment.c();
-    			t0 = space();
-    			if (if_block) if_block.c();
-    			t1 = space();
-    			modal.$$.fragment.c();
-    			attr(div, "class", "root svelte-1tilbnf");
-    			set_style(div, "left", ctx.left);
-    			add_location(div, file$w, 20, 0, 460);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			mount_component(buttongroup, div, null);
-    			append(div, t0);
-    			if (if_block) if_block.m(div, null);
-    			append(div, t1);
-    			mount_component(modal, div, null);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var buttongroup_changes = {};
-    			if (changed.$$scope || changed.$store) buttongroup_changes.$$scope = { changed, ctx };
-    			buttongroup.$set(buttongroup_changes);
-
-    			if (!!ctx.$store.errors && ctx.$store.errors.length > 0) {
-    				if (if_block) {
-    					if_block.p(changed, ctx);
-    					transition_in(if_block, 1);
-    				} else {
-    					if_block = create_if_block$d(ctx);
-    					if_block.c();
-    					transition_in(if_block, 1);
-    					if_block.m(div, t1);
-    				}
-    			} else if (if_block) {
-    				group_outros();
-    				transition_out(if_block, 1, 1, () => {
-    					if_block = null;
-    				});
-    				check_outros();
-    			}
-
-    			var modal_changes = {};
-    			if (changed.$$scope || changed.$store) modal_changes.$$scope = { changed, ctx };
-    			if (!updating_isOpen && changed.confirmDelete) {
-    				modal_changes.isOpen = ctx.confirmDelete;
-    			}
-    			modal.$set(modal_changes);
-
-    			if (!current || changed.left) {
-    				set_style(div, "left", ctx.left);
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(buttongroup.$$.fragment, local);
-
-    			transition_in(if_block);
-
-    			transition_in(modal.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(buttongroup.$$.fragment, local);
-    			transition_out(if_block);
-    			transition_out(modal.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			destroy_component(buttongroup);
-
-    			if (if_block) if_block.d();
-
-    			destroy_component(modal);
-    		}
-    	};
-    }
-
-    function instance$v($$self, $$props, $$invalidate) {
-    	let $store;
-
-    	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
-
-    	
-
-    let { left } = $$props;
-    let confirmDelete = false;
-    const openConfirmDelete = () => {
-        $$invalidate('confirmDelete', confirmDelete = true);
-    };
-
-    const deleteCurrentNode = () => {
-        $$invalidate('confirmDelete', confirmDelete = false);
-        store.deleteCurrentNode();
-    };
-
-    	const writable_props = ['left'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ActionsHeader> was created with unknown prop '${key}'`);
-    	});
-
-    	function click_handler() {
-    		const $$result = confirmDelete = false;
-    		$$invalidate('confirmDelete', confirmDelete);
-    		return $$result;
-    	}
-
-    	function modal_isOpen_binding(value) {
-    		confirmDelete = value;
-    		$$invalidate('confirmDelete', confirmDelete);
-    	}
-
-    	$$self.$set = $$props => {
-    		if ('left' in $$props) $$invalidate('left', left = $$props.left);
-    	};
-
-    	return {
-    		left,
-    		confirmDelete,
-    		openConfirmDelete,
-    		deleteCurrentNode,
-    		$store,
-    		click_handler,
-    		modal_isOpen_binding
-    	};
-    }
-
-    class ActionsHeader extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$v, create_fragment$v, safe_not_equal, ["left"]);
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-    		if (ctx.left === undefined && !('left' in props)) {
-    			console.warn("<ActionsHeader> was created without expected prop 'left'");
-    		}
-    	}
-
-    	get left() {
-    		throw new Error("<ActionsHeader>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set left(value) {
-    		throw new Error("<ActionsHeader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\common\DropdownButton.svelte generated by Svelte v3.6.9 */
-
-    const file$x = "src\\common\\DropdownButton.svelte";
-
-    function get_each_context$b(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.action = list[i];
-    	return child_ctx;
-    }
-
-    // (17:8) {#each actions as action}
-    function create_each_block$b(ctx) {
-    	var div, t0_value = ctx.action.label, t0, t1, dispose;
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			t0 = text(t0_value);
-    			t1 = space();
-    			attr(div, "class", "action-row svelte-179p8ge");
-    			add_location(div, file$x, 17, 8, 586);
-    			dispose = listen(div, "click", ctx.action.onclick);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, t0);
-    			append(div, t1);
-    		},
-
-    		p: function update(changed, new_ctx) {
-    			ctx = new_ctx;
-    			if ((changed.actions) && t0_value !== (t0_value = ctx.action.label)) {
-    				set_data(t0, t0_value);
-    			}
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			dispose();
-    		}
-    	};
-    }
-
-    function create_fragment$w(ctx) {
-    	var div2, raw_value = getIcon(ctx.iconName), raw_after, t0, div0, t1, div1, dispose;
-
-    	var each_value = ctx.actions;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$b(get_each_context$b(ctx, each_value, i));
-    	}
-
-    	return {
-    		c: function create() {
-    			div2 = element("div");
-    			raw_after = element('noscript');
-    			t0 = space();
-    			div0 = element("div");
-    			t1 = space();
-    			div1 = element("div");
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-    			attr(div0, "class", "dropdown-background svelte-179p8ge");
-    			set_style(div0, "display", (ctx.isDroppedDown ? 'block' : 'none'));
-    			add_location(div0, file$x, 13, 4, 298);
-    			attr(div1, "class", "dropdown-content svelte-179p8ge");
-    			set_style(div1, "display", (ctx.isDroppedDown ? 'inline-block' : 'none'));
-    			add_location(div1, file$x, 15, 4, 452);
-    			attr(div2, "class", "root svelte-179p8ge");
-    			add_location(div2, file$x, 10, 0, 189);
-
-    			dispose = [
-    				listen(div0, "click", stop_propagation(ctx.click_handler)),
-    				listen(div2, "click", ctx.click_handler_1)
-    			];
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div2, anchor);
-    			append(div2, raw_after);
-    			raw_after.insertAdjacentHTML("beforebegin", raw_value);
-    			append(div2, t0);
-    			append(div2, div0);
-    			append(div2, t1);
-    			append(div2, div1);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div1, null);
-    			}
-    		},
-
-    		p: function update(changed, ctx) {
-    			if ((changed.iconName) && raw_value !== (raw_value = getIcon(ctx.iconName))) {
-    				detach_before(raw_after);
-    				raw_after.insertAdjacentHTML("beforebegin", raw_value);
-    			}
-
-    			if (changed.isDroppedDown) {
-    				set_style(div0, "display", (ctx.isDroppedDown ? 'block' : 'none'));
-    			}
-
-    			if (changed.actions) {
-    				each_value = ctx.actions;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$b(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block$b(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(div1, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value.length;
-    			}
-
-    			if (changed.isDroppedDown) {
-    				set_style(div1, "display", (ctx.isDroppedDown ? 'inline-block' : 'none'));
-    			}
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div2);
-    			}
-
-    			destroy_each(each_blocks, detaching);
-
-    			run_all(dispose);
-    		}
-    	};
-    }
-
-    function instance$w($$self, $$props, $$invalidate) {
-    	let { iconName, actions = [] } = $$props; // [ {label: "Action Name", onclick: () => {...} } ]
-    let isDroppedDown = false;
-
-    	const writable_props = ['iconName', 'actions'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<DropdownButton> was created with unknown prop '${key}'`);
-    	});
-
-    	function click_handler() {
-    		const $$result = isDroppedDown = false;
-    		$$invalidate('isDroppedDown', isDroppedDown);
-    		return $$result;
-    	}
-
-    	function click_handler_1() {
-    		const $$result = isDroppedDown = !isDroppedDown;
-    		$$invalidate('isDroppedDown', isDroppedDown);
-    		return $$result;
-    	}
-
-    	$$self.$set = $$props => {
-    		if ('iconName' in $$props) $$invalidate('iconName', iconName = $$props.iconName);
-    		if ('actions' in $$props) $$invalidate('actions', actions = $$props.actions);
-    	};
-
-    	return {
-    		iconName,
-    		actions,
-    		isDroppedDown,
-    		click_handler,
-    		click_handler_1
-    	};
-    }
-
-    class DropdownButton extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$w, create_fragment$w, safe_not_equal, ["iconName", "actions"]);
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-    		if (ctx.iconName === undefined && !('iconName' in props)) {
-    			console.warn("<DropdownButton> was created without expected prop 'iconName'");
-    		}
-    	}
-
-    	get iconName() {
-    		throw new Error("<DropdownButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set iconName(value) {
-    		throw new Error("<DropdownButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get actions() {
-    		throw new Error("<DropdownButton>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set actions(value) {
-    		throw new Error("<DropdownButton>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\database\DatabaseRoot.svelte generated by Svelte v3.6.9 */
-
-    const file$y = "src\\database\\DatabaseRoot.svelte";
-
-    function get_each_context$c(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.index = list[i];
-    	return child_ctx;
-    }
-
-    function get_each_context_1$5(ctx, list, i) {
-    	const child_ctx = Object.create(ctx);
-    	child_ctx.record = list[i];
-    	return child_ctx;
-    }
-
-    // (55:8) {#each $store.hierarchy.children as record}
-    function create_each_block_1$5(ctx) {
-    	var current;
-
-    	var hierarchyrow = new HierarchyRow({
-    		props: { node: ctx.record },
-    		$$inline: true
-    	});
-
-    	return {
-    		c: function create() {
-    			hierarchyrow.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(hierarchyrow, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var hierarchyrow_changes = {};
-    			if (changed.$store) hierarchyrow_changes.node = ctx.record;
-    			hierarchyrow.$set(hierarchyrow_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(hierarchyrow.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(hierarchyrow.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(hierarchyrow, detaching);
-    		}
-    	};
-    }
-
-    // (63:8) {#each $store.hierarchy.indexes as index}
-    function create_each_block$c(ctx) {
-    	var current;
-
-    	var hierarchyrow = new HierarchyRow({
-    		props: { node: ctx.index },
-    		$$inline: true
-    	});
-
-    	return {
-    		c: function create() {
-    			hierarchyrow.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(hierarchyrow, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var hierarchyrow_changes = {};
-    			if (changed.$store) hierarchyrow_changes.node = ctx.index;
-    			hierarchyrow.$set(hierarchyrow_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(hierarchyrow.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(hierarchyrow.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(hierarchyrow, detaching);
-    		}
-    	};
-    }
-
-    // (69:12) {#if $store.currentNode}
-    function create_if_block_2$5(ctx) {
-    	var current;
-
-    	var actionsheader = new ActionsHeader({
-    		props: { left: hierarchyWidth },
-    		$$inline: true
-    	});
-
-    	return {
-    		c: function create() {
-    			actionsheader.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(actionsheader, target, anchor);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var actionsheader_changes = {};
-    			if (changed.hierarchyWidth) actionsheader_changes.left = hierarchyWidth;
-    			actionsheader.$set(actionsheader_changes);
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(actionsheader.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(actionsheader.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(actionsheader, detaching);
-    		}
-    	};
-    }
-
-    // (78:12) {:else}
-    function create_else_block$7(ctx) {
-    	var current;
-
-    	var indexview = new IndexView({ $$inline: true });
-
-    	return {
-    		c: function create() {
-    			indexview.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(indexview, target, anchor);
-    			current = true;
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(indexview.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(indexview.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(indexview, detaching);
-    		}
-    	};
-    }
-
-    // (76:59) 
-    function create_if_block_1$8(ctx) {
-    	var current;
-
-    	var recordview = new RecordView({ $$inline: true });
-
-    	return {
-    		c: function create() {
-    			recordview.$$.fragment.c();
-    		},
-
-    		m: function mount(target, anchor) {
-    			mount_component(recordview, target, anchor);
-    			current = true;
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(recordview.$$.fragment, local);
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(recordview.$$.fragment, local);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			destroy_component(recordview, detaching);
-    		}
-    	};
-    }
-
-    // (74:12) {#if !$store.currentNode}
-    function create_if_block$e(ctx) {
-    	var h1;
-
-    	return {
-    		c: function create() {
-    			h1 = element("h1");
-    			h1.textContent = ":)";
-    			set_style(h1, "margin-left", "100px");
-    			add_location(h1, file$y, 74, 12, 2317);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, h1, anchor);
-    		},
-
-    		i: noop,
-    		o: noop,
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(h1);
-    			}
-    		}
-    	};
-    }
-
-    function create_fragment$x(ctx) {
-    	var div8, div4, div1, div0, t1, t2, t3, div3, div2, t5, t6, t7, div7, div5, t8, div6, current_block_type_index, if_block1, current;
-
-    	var dropdownbutton0 = new DropdownButton({
-    		props: { iconName: "plus", actions: ctx.newRecordActions },
-    		$$inline: true
-    	});
-
-    	var each_value_1 = ctx.$store.hierarchy.children;
-
-    	var each_blocks_1 = [];
-
-    	for (var i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks_1[i] = create_each_block_1$5(get_each_context_1$5(ctx, each_value_1, i));
-    	}
-
-    	const out = i => transition_out(each_blocks_1[i], 1, 1, () => {
-    		each_blocks_1[i] = null;
-    	});
-
-    	var dropdownbutton1 = new DropdownButton({
-    		props: { iconName: "plus", actions: ctx.newIndexActions },
-    		$$inline: true
-    	});
-
-    	var each_value = ctx.$store.hierarchy.indexes;
-
-    	var each_blocks = [];
-
-    	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$c(get_each_context$c(ctx, each_value, i));
-    	}
-
-    	const out_1 = i => transition_out(each_blocks[i], 1, 1, () => {
-    		each_blocks[i] = null;
-    	});
-
-    	var if_block0 = (ctx.$store.currentNode) && create_if_block_2$5();
-
-    	var if_block_creators = [
-    		create_if_block$e,
-    		create_if_block_1$8,
-    		create_else_block$7
-    	];
-
-    	var if_blocks = [];
-
-    	function select_block_type(ctx) {
-    		if (!ctx.$store.currentNode) return 0;
-    		if (ctx.$store.currentNode.type === "record") return 1;
-    		return 2;
-    	}
-
-    	current_block_type_index = select_block_type(ctx);
-    	if_block1 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	return {
-    		c: function create() {
-    			div8 = element("div");
-    			div4 = element("div");
-    			div1 = element("div");
-    			div0 = element("div");
-    			div0.textContent = "Records";
-    			t1 = space();
-    			dropdownbutton0.$$.fragment.c();
-    			t2 = space();
-
-    			for (var i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].c();
-    			}
-
-    			t3 = space();
-    			div3 = element("div");
-    			div2 = element("div");
-    			div2.textContent = "Indexes";
-    			t5 = space();
-    			dropdownbutton1.$$.fragment.c();
-    			t6 = space();
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			t7 = space();
-    			div7 = element("div");
-    			div5 = element("div");
-    			if (if_block0) if_block0.c();
-    			t8 = space();
-    			div6 = element("div");
-    			if_block1.c();
-    			attr(div0, "class", "hierarchy-title svelte-ui57a");
-    			add_location(div0, file$y, 51, 12, 1479);
-    			attr(div1, "class", "hierarchy-title-row svelte-ui57a");
-    			add_location(div1, file$y, 50, 8, 1433);
-    			attr(div2, "class", "hierarchy-title svelte-ui57a");
-    			add_location(div2, file$y, 59, 12, 1798);
-    			attr(div3, "class", "hierarchy-title-row svelte-ui57a");
-    			set_style(div3, "margin-top", "20px");
-    			add_location(div3, file$y, 58, 8, 1727);
-    			attr(div4, "class", "hierarchy svelte-ui57a");
-    			set_style(div4, "width", hierarchyWidth);
-    			add_location(div4, file$y, 49, 4, 1369);
-    			attr(div5, "class", "actions-header svelte-ui57a");
-    			add_location(div5, file$y, 67, 8, 2085);
-    			attr(div6, "class", "node-view svelte-ui57a");
-    			add_location(div6, file$y, 72, 8, 2243);
-    			attr(div7, "class", "node-container svelte-ui57a");
-    			add_location(div7, file$y, 66, 4, 2048);
-    			attr(div8, "class", "root svelte-ui57a");
-    			add_location(div8, file$y, 48, 0, 1346);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div8, anchor);
-    			append(div8, div4);
-    			append(div4, div1);
-    			append(div1, div0);
-    			append(div1, t1);
-    			mount_component(dropdownbutton0, div1, null);
-    			append(div4, t2);
-
-    			for (var i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].m(div4, null);
-    			}
-
-    			append(div4, t3);
-    			append(div4, div3);
-    			append(div3, div2);
-    			append(div3, t5);
-    			mount_component(dropdownbutton1, div3, null);
-    			append(div4, t6);
-
-    			for (var i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div4, null);
-    			}
-
-    			append(div8, t7);
-    			append(div8, div7);
-    			append(div7, div5);
-    			if (if_block0) if_block0.m(div5, null);
-    			append(div7, t8);
-    			append(div7, div6);
-    			if_blocks[current_block_type_index].m(div6, null);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			var dropdownbutton0_changes = {};
-    			if (changed.newRecordActions) dropdownbutton0_changes.actions = ctx.newRecordActions;
-    			dropdownbutton0.$set(dropdownbutton0_changes);
-
-    			if (changed.$store) {
-    				each_value_1 = ctx.$store.hierarchy.children;
-
-    				for (var i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1$5(ctx, each_value_1, i);
-
-    					if (each_blocks_1[i]) {
-    						each_blocks_1[i].p(changed, child_ctx);
-    						transition_in(each_blocks_1[i], 1);
-    					} else {
-    						each_blocks_1[i] = create_each_block_1$5(child_ctx);
-    						each_blocks_1[i].c();
-    						transition_in(each_blocks_1[i], 1);
-    						each_blocks_1[i].m(div4, t3);
-    					}
-    				}
-
-    				group_outros();
-    				for (i = each_value_1.length; i < each_blocks_1.length; i += 1) out(i);
-    				check_outros();
-    			}
-
-    			var dropdownbutton1_changes = {};
-    			if (changed.newIndexActions) dropdownbutton1_changes.actions = ctx.newIndexActions;
-    			dropdownbutton1.$set(dropdownbutton1_changes);
-
-    			if (changed.$store) {
-    				each_value = ctx.$store.hierarchy.indexes;
-
-    				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$c(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    						transition_in(each_blocks[i], 1);
-    					} else {
-    						each_blocks[i] = create_each_block$c(child_ctx);
-    						each_blocks[i].c();
-    						transition_in(each_blocks[i], 1);
-    						each_blocks[i].m(div4, null);
-    					}
-    				}
-
-    				group_outros();
-    				for (i = each_value.length; i < each_blocks.length; i += 1) out_1(i);
-    				check_outros();
-    			}
-
-    			if (!current || changed.hierarchyWidth) {
-    				set_style(div4, "width", hierarchyWidth);
-    			}
-
-    			if (ctx.$store.currentNode) {
-    				if (if_block0) {
-    					if_block0.p(changed, ctx);
-    					transition_in(if_block0, 1);
-    				} else {
-    					if_block0 = create_if_block_2$5();
-    					if_block0.c();
-    					transition_in(if_block0, 1);
-    					if_block0.m(div5, null);
-    				}
-    			} else if (if_block0) {
-    				group_outros();
-    				transition_out(if_block0, 1, 1, () => {
-    					if_block0 = null;
-    				});
-    				check_outros();
-    			}
-
-    			var previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
-    			if (current_block_type_index !== previous_block_index) {
-    				group_outros();
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-    				check_outros();
-
-    				if_block1 = if_blocks[current_block_type_index];
-    				if (!if_block1) {
-    					if_block1 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block1.c();
-    				}
-    				transition_in(if_block1, 1);
-    				if_block1.m(div6, null);
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(dropdownbutton0.$$.fragment, local);
-
-    			for (var i = 0; i < each_value_1.length; i += 1) transition_in(each_blocks_1[i]);
-
-    			transition_in(dropdownbutton1.$$.fragment, local);
-
-    			for (var i = 0; i < each_value.length; i += 1) transition_in(each_blocks[i]);
-
-    			transition_in(if_block0);
-    			transition_in(if_block1);
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(dropdownbutton0.$$.fragment, local);
-
-    			each_blocks_1 = each_blocks_1.filter(Boolean);
-    			for (let i = 0; i < each_blocks_1.length; i += 1) transition_out(each_blocks_1[i]);
-
-    			transition_out(dropdownbutton1.$$.fragment, local);
-
-    			each_blocks = each_blocks.filter(Boolean);
-    			for (let i = 0; i < each_blocks.length; i += 1) transition_out(each_blocks[i]);
-
-    			transition_out(if_block0);
-    			transition_out(if_block1);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div8);
-    			}
-
-    			destroy_component(dropdownbutton0);
-
-    			destroy_each(each_blocks_1, detaching);
-
-    			destroy_component(dropdownbutton1);
-
-    			destroy_each(each_blocks, detaching);
-
-    			if (if_block0) if_block0.d();
-    			if_blocks[current_block_type_index].d();
-    		}
-    	};
-    }
-
-    const hierarchyWidth = "200px";
-
-    function instance$x($$self, $$props, $$invalidate) {
-    	let $store;
-
-    	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
-
-    	
-
-    const defaultNewIndexActions =  [{
-        label:"New Root Index", 
-        onclick: store.newRootIndex
-    }];
-
-    const defaultNewRecordActions = [{
-        label:"New Root Record", 
-        onclick: store.newRootRecord
-    }];
-
-    let newIndexActions = defaultNewIndexActions;
-    let newRecordActions = defaultNewRecordActions;
-
-    store.subscribe(db => {
-        if(!db.currentNode || hierarchyFunctions.isIndex(db.currentNode)) {
-            $$invalidate('newRecordActions', newRecordActions = defaultNewRecordActions);
-            $$invalidate('newIndexActions', newIndexActions = defaultNewIndexActions);
-        } else {
-            $$invalidate('newRecordActions', newRecordActions = [
-                ...defaultNewRecordActions,
-                {label: `New Child Record of ${db.currentNode.name}`, 
-                onclick: store.newChildRecord}
-            ]);
-
-            $$invalidate('newIndexActions', newIndexActions = [
-                ...defaultNewIndexActions,
-                {label: `New Index on ${db.currentNode.name}`, 
-                onclick: store.newChildIndex}
-            ]);
-        }
-    });
-
-    	return {
-    		newIndexActions,
-    		newRecordActions,
-    		$store
-    	};
-    }
-
-    class DatabaseRoot extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
     		init(this, options, instance$x, create_fragment$x, safe_not_equal, []);
     	}
     }
 
-    /* src\actionsAndTriggers\ActionView.svelte generated by Svelte v3.6.9 */
+    /* src\actionsAndTriggers\ActionView.svelte generated by Svelte v3.9.1 */
 
     const file$z = "src\\actionsAndTriggers\\ActionView.svelte";
 
-    function get_each_context$d(ctx, list, i) {
+    function get_each_context$c(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.option = list[i];
     	return child_ctx;
@@ -58135,8 +58094,8 @@
     }
 
     // (89:12) {#each initialOptions as option}
-    function create_each_block$d(ctx) {
-    	var span1, t0_value = ctx.option.key, t0, t1, t2_value = ctx.option.value, t2, t3, span0, raw_value = getIcon("trash-2"), dispose;
+    function create_each_block$c(ctx) {
+    	var span1, t0_value = ctx.option.key + "", t0, t1, t2_value = ctx.option.value + "", t2, t3, span0, raw_value = getIcon("trash-2") + "", dispose;
 
     	function click_handler() {
     		return ctx.click_handler(ctx);
@@ -58170,11 +58129,11 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((changed.initialOptions) && t0_value !== (t0_value = ctx.option.key)) {
+    			if ((changed.initialOptions) && t0_value !== (t0_value = ctx.option.key + "")) {
     				set_data(t0, t0_value);
     			}
 
-    			if ((changed.initialOptions) && t2_value !== (t2_value = ctx.option.value)) {
+    			if ((changed.initialOptions) && t2_value !== (t2_value = ctx.option.value + "")) {
     				set_data(t2, t2_value);
     			}
     		},
@@ -58373,7 +58332,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$d(get_each_context$d(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$c(get_each_context$c(ctx, each_value, i));
     	}
 
     	var buttongroup = new ButtonGroup({
@@ -58463,12 +58422,12 @@
     			append(div2, div0);
     			append(div0, input0);
 
-    			input0.value = ctx.optKey;
+    			set_input_value(input0, ctx.optKey);
 
     			append(div0, t6);
     			append(div0, input1);
 
-    			input1.value = ctx.optValue;
+    			set_input_value(input1, ctx.optValue);
 
     			append(div0, t7);
     			mount_component(button, div0, null);
@@ -58507,8 +58466,8 @@
     			}
     			textbox2.$set(textbox2_changes);
 
-    			if (changed.optKey && (input0.value !== ctx.optKey)) input0.value = ctx.optKey;
-    			if (changed.optValue && (input1.value !== ctx.optValue)) input1.value = ctx.optValue;
+    			if (changed.optKey && (input0.value !== ctx.optKey)) set_input_value(input0, ctx.optKey);
+    			if (changed.optValue && (input1.value !== ctx.optValue)) set_input_value(input1, ctx.optValue);
 
     			var button_changes = {};
     			if (changed.$$scope) button_changes.$$scope = { changed, ctx };
@@ -58518,12 +58477,12 @@
     				each_value = ctx.initialOptions;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$d(ctx, each_value, i);
+    					const child_ctx = get_each_context$c(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$d(child_ctx);
+    						each_blocks[i] = create_each_block$c(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(div1, null);
     					}
@@ -58759,11 +58718,11 @@
     	}
     }
 
-    /* src\actionsAndTriggers\Actions.svelte generated by Svelte v3.6.9 */
+    /* src\actionsAndTriggers\Actions.svelte generated by Svelte v3.9.1 */
 
     const file$A = "src\\actionsAndTriggers\\Actions.svelte";
 
-    function get_each_context$e(ctx, list, i) {
+    function get_each_context$d(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.action = list[i];
     	return child_ctx;
@@ -58801,7 +58760,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$e(get_each_context$e(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$d(get_each_context$d(ctx, each_value, i));
     	}
 
     	return {
@@ -58866,12 +58825,12 @@
     				each_value = ctx.$store.actions;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$e(ctx, each_value, i);
+    					const child_ctx = get_each_context$d(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$e(child_ctx);
+    						each_blocks[i] = create_each_block$d(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(tbody, null);
     					}
@@ -58895,8 +58854,8 @@
     }
 
     // (54:8) {#each $store.actions as action}
-    function create_each_block$e(ctx) {
-    	var tr, td0, t0_value = ctx.action.name, t0, t1, td1, t2_value = ctx.action.behaviourSource, t2, t3, td2, t4_value = ctx.action.behaviourName, t4, t5, td3, raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions), t6, td4, span0, raw1_value = getIcon("edit"), t7, span1, raw2_value = getIcon("trash"), t8, dispose;
+    function create_each_block$d(ctx) {
+    	var tr, td0, t0_value = ctx.action.name + "", t0, t1, td1, t2_value = ctx.action.behaviourSource + "", t2, t3, td2, t4_value = ctx.action.behaviourName + "", t4, t5, td3, raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions) + "", t6, td4, span0, raw1_value = getIcon("edit") + "", t7, span1, raw2_value = getIcon("trash") + "", t8, dispose;
 
     	function click_handler() {
     		return ctx.click_handler(ctx);
@@ -58967,19 +58926,19 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((changed.$store) && t0_value !== (t0_value = ctx.action.name)) {
+    			if ((changed.$store) && t0_value !== (t0_value = ctx.action.name + "")) {
     				set_data(t0, t0_value);
     			}
 
-    			if ((changed.$store) && t2_value !== (t2_value = ctx.action.behaviourSource)) {
+    			if ((changed.$store) && t2_value !== (t2_value = ctx.action.behaviourSource + "")) {
     				set_data(t2, t2_value);
     			}
 
-    			if ((changed.$store) && t4_value !== (t4_value = ctx.action.behaviourName)) {
+    			if ((changed.$store) && t4_value !== (t4_value = ctx.action.behaviourName + "")) {
     				set_data(t4, t4_value);
     			}
 
-    			if ((changed.$store) && raw0_value !== (raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions))) {
+    			if ((changed.$store) && raw0_value !== (raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions) + "")) {
     				td3.innerHTML = raw0_value;
     			}
     		},
@@ -59107,12 +59066,12 @@
     function create_fragment$z(ctx) {
     	var h3, t1, t2, updating_isOpen, current;
 
-    	function select_block_type(ctx) {
+    	function select_block_type(changed, ctx) {
     		if (ctx.$store.actions) return create_if_block_1$9;
     		return create_else_block$8;
     	}
 
-    	var current_block_type = select_block_type(ctx);
+    	var current_block_type = select_block_type(null, ctx);
     	var if_block = current_block_type(ctx);
 
     	function modal_isOpen_binding(value) {
@@ -59157,7 +59116,7 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+    			if (current_block_type === (current_block_type = select_block_type(changed, ctx)) && if_block) {
     				if_block.p(changed, ctx);
     			} else {
     				if_block.d(1);
@@ -59209,7 +59168,7 @@
     	let $store;
 
     	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -59340,7 +59299,7 @@
     	}
     }
 
-    /* src\actionsAndTriggers\TriggerView.svelte generated by Svelte v3.6.9 */
+    /* src\actionsAndTriggers\TriggerView.svelte generated by Svelte v3.9.1 */
 
     const file$B = "src\\actionsAndTriggers\\TriggerView.svelte";
 
@@ -59801,11 +59760,11 @@
     	}
     }
 
-    /* src\actionsAndTriggers\Triggers.svelte generated by Svelte v3.6.9 */
+    /* src\actionsAndTriggers\Triggers.svelte generated by Svelte v3.9.1 */
 
     const file$C = "src\\actionsAndTriggers\\Triggers.svelte";
 
-    function get_each_context$f(ctx, list, i) {
+    function get_each_context$e(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.trigger = list[i];
     	return child_ctx;
@@ -59843,7 +59802,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$f(get_each_context$f(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$e(get_each_context$e(ctx, each_value, i));
     	}
 
     	return {
@@ -59908,12 +59867,12 @@
     				each_value = ctx.$store.triggers;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$f(ctx, each_value, i);
+    					const child_ctx = get_each_context$e(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$f(child_ctx);
+    						each_blocks[i] = create_each_block$e(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(tbody, null);
     					}
@@ -59937,8 +59896,8 @@
     }
 
     // (44:8) {#each $store.triggers as trigger}
-    function create_each_block$f(ctx) {
-    	var tr, td0, t0_value = ctx.trigger.eventName, t0, t1, td1, t2_value = ctx.trigger.actionName, t2, t3, td2, t4_value = ctx.trigger.condition, t4, t5, td3, t6_value = ctx.trigger.optionsCreator, t6, t7, td4, span0, raw0_value = getIcon("edit"), t8, span1, raw1_value = getIcon("trash"), t9, dispose;
+    function create_each_block$e(ctx) {
+    	var tr, td0, t0_value = ctx.trigger.eventName + "", t0, t1, td1, t2_value = ctx.trigger.actionName + "", t2, t3, td2, t4_value = ctx.trigger.condition + "", t4, t5, td3, t6_value = ctx.trigger.optionsCreator + "", t6, t7, td4, span0, raw0_value = getIcon("edit") + "", t8, span1, raw1_value = getIcon("trash") + "", t9, dispose;
 
     	function click_handler() {
     		return ctx.click_handler(ctx);
@@ -60010,19 +59969,19 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((changed.$store) && t0_value !== (t0_value = ctx.trigger.eventName)) {
+    			if ((changed.$store) && t0_value !== (t0_value = ctx.trigger.eventName + "")) {
     				set_data(t0, t0_value);
     			}
 
-    			if ((changed.$store) && t2_value !== (t2_value = ctx.trigger.actionName)) {
+    			if ((changed.$store) && t2_value !== (t2_value = ctx.trigger.actionName + "")) {
     				set_data(t2, t2_value);
     			}
 
-    			if ((changed.$store) && t4_value !== (t4_value = ctx.trigger.condition)) {
+    			if ((changed.$store) && t4_value !== (t4_value = ctx.trigger.condition + "")) {
     				set_data(t4, t4_value);
     			}
 
-    			if ((changed.$store) && t6_value !== (t6_value = ctx.trigger.optionsCreator)) {
+    			if ((changed.$store) && t6_value !== (t6_value = ctx.trigger.optionsCreator + "")) {
     				set_data(t6, t6_value);
     			}
     		},
@@ -60152,12 +60111,12 @@
     function create_fragment$B(ctx) {
     	var h3, t1, t2, updating_isOpen, current;
 
-    	function select_block_type(ctx) {
+    	function select_block_type(changed, ctx) {
     		if (ctx.$store.triggers) return create_if_block_1$a;
     		return create_else_block$9;
     	}
 
-    	var current_block_type = select_block_type(ctx);
+    	var current_block_type = select_block_type(null, ctx);
     	var if_block = current_block_type(ctx);
 
     	function modal_isOpen_binding(value) {
@@ -60202,7 +60161,7 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+    			if (current_block_type === (current_block_type = select_block_type(changed, ctx)) && if_block) {
     				if_block.p(changed, ctx);
     			} else {
     				if_block.d(1);
@@ -60254,7 +60213,7 @@
     	let $store;
 
     	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -60377,7 +60336,7 @@
     	}
     }
 
-    /* src\actionsAndTriggers\ActionsAndTriggersRoot.svelte generated by Svelte v3.6.9 */
+    /* src\actionsAndTriggers\ActionsAndTriggersRoot.svelte generated by Svelte v3.9.1 */
 
     const file$D = "src\\actionsAndTriggers\\ActionsAndTriggersRoot.svelte";
 
@@ -60705,18 +60664,18 @@
     	}
     }
 
-    /* src\accessLevels\AccessLevelView.svelte generated by Svelte v3.6.9 */
+    /* src\accessLevels\AccessLevelView.svelte generated by Svelte v3.9.1 */
 
     const file$E = "src\\accessLevels\\AccessLevelView.svelte";
 
-    function get_each_context$g(ctx, list, i) {
+    function get_each_context$f(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.permission = list[i];
     	return child_ctx;
     }
 
     // (79:8) {#each permissionMatrix as permission}
-    function create_each_block$g(ctx) {
+    function create_each_block$f(ctx) {
     	var div, t, current;
 
     	var checkbox = new Checkbox({
@@ -60918,7 +60877,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$g(get_each_context$g(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$f(get_each_context$f(ctx, each_value, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -60990,13 +60949,13 @@
     				each_value = ctx.permissionMatrix;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$g(ctx, each_value, i);
+    					const child_ctx = get_each_context$f(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block$g(child_ctx);
+    						each_blocks[i] = create_each_block$f(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(form, null);
@@ -61242,11 +61201,11 @@
     	}
     }
 
-    /* src\accessLevels\AccessLevelsRoot.svelte generated by Svelte v3.6.9 */
+    /* src\accessLevels\AccessLevelsRoot.svelte generated by Svelte v3.9.1 */
 
     const file$F = "src\\accessLevels\\AccessLevelsRoot.svelte";
 
-    function get_each_context$h(ctx, list, i) {
+    function get_each_context$g(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.level = list[i];
     	return child_ctx;
@@ -61354,7 +61313,7 @@
     	var each_blocks = [];
 
     	for (var i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$h(get_each_context$h(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$g(get_each_context$g(ctx, each_value, i));
     	}
 
     	return {
@@ -61407,12 +61366,12 @@
     				each_value = ctx.$store.accessLevels;
 
     				for (var i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$h(ctx, each_value, i);
+    					const child_ctx = get_each_context$g(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks[i] = create_each_block$h(child_ctx);
+    						each_blocks[i] = create_each_block$g(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(tbody, null);
     					}
@@ -61436,8 +61395,8 @@
     }
 
     // (68:8) {#each $store.accessLevels as level}
-    function create_each_block$h(ctx) {
-    	var tr, td0, t0_value = ctx.level.name, t0, t1, td1, t2_value = ctx.getPermissionsString(ctx.level.permissions), t2, t3, td2, span0, raw0_value = getIcon("edit"), t4, span1, raw1_value = getIcon("trash"), t5, dispose;
+    function create_each_block$g(ctx) {
+    	var tr, td0, t0_value = ctx.level.name + "", t0, t1, td1, t2_value = ctx.getPermissionsString(ctx.level.permissions) + "", t2, t3, td2, span0, raw0_value = getIcon("edit") + "", t4, span1, raw1_value = getIcon("trash") + "", t5, dispose;
 
     	function click_handler() {
     		return ctx.click_handler(ctx);
@@ -61495,11 +61454,11 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((changed.$store) && t0_value !== (t0_value = ctx.level.name)) {
+    			if ((changed.$store) && t0_value !== (t0_value = ctx.level.name + "")) {
     				set_data(t0, t0_value);
     			}
 
-    			if ((changed.$store) && t2_value !== (t2_value = ctx.getPermissionsString(ctx.level.permissions))) {
+    			if ((changed.$store) && t2_value !== (t2_value = ctx.getPermissionsString(ctx.level.permissions) + "")) {
     				set_data(t2, t2_value);
     			}
     		},
@@ -61641,12 +61600,12 @@
     		$$inline: true
     	});
 
-    	function select_block_type(ctx) {
+    	function select_block_type(changed, ctx) {
     		if (ctx.$store.accessLevels) return create_if_block_1$b;
     		return create_else_block$a;
     	}
 
-    	var current_block_type = select_block_type(ctx);
+    	var current_block_type = select_block_type(null, ctx);
     	var if_block = current_block_type(ctx);
 
     	function modal_isOpen_binding(value) {
@@ -61697,7 +61656,7 @@
     			if (changed.$$scope) buttongroup_changes.$$scope = { changed, ctx };
     			buttongroup.$set(buttongroup_changes);
 
-    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+    			if (current_block_type === (current_block_type = select_block_type(changed, ctx)) && if_block) {
     				if_block.p(changed, ctx);
     			} else {
     				if_block.d(1);
@@ -61749,7 +61708,7 @@
     	let $store;
 
     	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -61830,9 +61789,43 @@
     	}
     }
 
-    /* src\BackendRoot.svelte generated by Svelte v3.6.9 */
+    /* src\PackageRoot.svelte generated by Svelte v3.9.1 */
 
-    const file$G = "src\\BackendRoot.svelte";
+    const file$G = "src\\PackageRoot.svelte";
+
+    // (27:52) 
+    function create_if_block_3$3(ctx) {
+    	var current;
+
+    	var userinterface = new UserInterfaceRoot({ $$inline: true });
+
+    	return {
+    		c: function create() {
+    			userinterface.$$.fragment.c();
+    		},
+
+    		m: function mount(target, anchor) {
+    			mount_component(userinterface, target, anchor);
+    			current = true;
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(userinterface.$$.fragment, local);
+
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(userinterface.$$.fragment, local);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_component(userinterface, detaching);
+    		}
+    	};
+    }
 
     // (25:51) 
     function create_if_block_2$6(ctx) {
@@ -61947,19 +61940,21 @@
     	var if_block_creators = [
     		create_if_block$i,
     		create_if_block_1$c,
-    		create_if_block_2$6
+    		create_if_block_2$6,
+    		create_if_block_3$3
     	];
 
     	var if_blocks = [];
 
-    	function select_block_type(ctx) {
+    	function select_block_type(changed, ctx) {
     		if (ctx.$store.activeNav === "database") return 0;
     		if (ctx.$store.activeNav === "actions") return 1;
     		if (ctx.$store.activeNav === "access levels") return 2;
+    		if (ctx.$store.activeNav === "user interface") return 3;
     		return -1;
     	}
 
-    	if (~(current_block_type_index = select_block_type(ctx))) {
+    	if (~(current_block_type_index = select_block_type(null, ctx))) {
     		if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
     	}
 
@@ -61997,7 +61992,7 @@
     			nav.$set(nav_changes);
 
     			var previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
+    			current_block_type_index = select_block_type(changed, ctx);
     			if (current_block_type_index !== previous_block_index) {
     				if (if_block) {
     					group_outros();
@@ -62056,7 +62051,7 @@
     	let $store;
 
     	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
 
@@ -62064,7 +62059,7 @@
 
     	const writable_props = ['navWidth'];
     	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<BackendRoot> was created with unknown prop '${key}'`);
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<PackageRoot> was created with unknown prop '${key}'`);
     	});
 
     	$$self.$set = $$props => {
@@ -62074,290 +62069,35 @@
     	return { navWidth, $store };
     }
 
-    class BackendRoot extends SvelteComponentDev {
+    class PackageRoot extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
     		init(this, options, instance$F, create_fragment$F, safe_not_equal, ["navWidth"]);
     	}
 
     	get navWidth() {
-    		throw new Error("<BackendRoot>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    		throw new Error("<PackageRoot>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
     	set navWidth(value) {
-    		throw new Error("<BackendRoot>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    		throw new Error("<PackageRoot>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
-    /* src\PackageRoot.svelte generated by Svelte v3.6.9 */
+    /* src\App.svelte generated by Svelte v3.9.1 */
 
-    const file$H = "src\\PackageRoot.svelte";
-
-    // (30:8) {:else}
-    function create_else_block$b(ctx) {
-    	var div, div_intro, div_outro, current;
-
-    	var userinterfaceroot = new UserInterfaceRoot({ $$inline: true });
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			userinterfaceroot.$$.fragment.c();
-    			attr(div, "class", "svelte-12wtmtk");
-    			add_location(div, file$H, 30, 8, 815);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			mount_component(userinterfaceroot, div, null);
-    			current = true;
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(userinterfaceroot.$$.fragment, local);
-
-    			add_render_callback(() => {
-    				if (div_outro) div_outro.end(1);
-    				if (!div_intro) div_intro = create_in_transition(div, fade, {});
-    				div_intro.start();
-    			});
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(userinterfaceroot.$$.fragment, local);
-    			if (div_intro) div_intro.invalidate();
-
-    			div_outro = create_out_transition(div, fade, {});
-
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			destroy_component(userinterfaceroot);
-
-    			if (detaching) {
-    				if (div_outro) div_outro.end();
-    			}
-    		}
-    	};
-    }
-
-    // (26:8) {#if $store.isBackend}
-    function create_if_block$j(ctx) {
-    	var div, div_intro, div_outro, current;
-
-    	var backendroot = new BackendRoot({ $$inline: true });
-
-    	return {
-    		c: function create() {
-    			div = element("div");
-    			backendroot.$$.fragment.c();
-    			attr(div, "class", "svelte-12wtmtk");
-    			add_location(div, file$H, 26, 8, 721);
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			mount_component(backendroot, div, null);
-    			current = true;
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(backendroot.$$.fragment, local);
-
-    			add_render_callback(() => {
-    				if (div_outro) div_outro.end(1);
-    				if (!div_intro) div_intro = create_in_transition(div, fade, {});
-    				div_intro.start();
-    			});
-
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(backendroot.$$.fragment, local);
-    			if (div_intro) div_intro.invalidate();
-
-    			div_outro = create_out_transition(div, fade, {});
-
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div);
-    			}
-
-    			destroy_component(backendroot);
-
-    			if (detaching) {
-    				if (div_outro) div_outro.end();
-    			}
-    		}
-    	};
-    }
-
-    function create_fragment$G(ctx) {
-    	var div2, div0, t0, span0, t2, span1, t4, div1, current_block_type_index, if_block, current, dispose;
-
-    	var iconbutton = new IconButton({ props: { icon: "home" }, $$inline: true });
-
-    	var if_block_creators = [
-    		create_if_block$j,
-    		create_else_block$b
-    	];
-
-    	var if_blocks = [];
-
-    	function select_block_type(ctx) {
-    		if (ctx.$store.isBackend) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	return {
-    		c: function create() {
-    			div2 = element("div");
-    			div0 = element("div");
-    			iconbutton.$$.fragment.c();
-    			t0 = space();
-    			span0 = element("span");
-    			span0.textContent = "Backend";
-    			t2 = space();
-    			span1 = element("span");
-    			span1.textContent = "Frontend";
-    			t4 = space();
-    			div1 = element("div");
-    			if_block.c();
-    			attr(span0, "class", "svelte-12wtmtk");
-    			toggle_class(span0, "active", ctx.$store.isBackend);
-    			add_location(span0, file$H, 14, 8, 381);
-    			attr(span1, "class", "svelte-12wtmtk");
-    			toggle_class(span1, "active", !ctx.$store.isBackend);
-    			add_location(span1, file$H, 18, 8, 513);
-    			attr(div0, "class", "top-nav svelte-12wtmtk");
-    			add_location(div0, file$H, 12, 4, 315);
-    			attr(div1, "class", "content svelte-12wtmtk");
-    			add_location(div1, file$H, 24, 4, 658);
-    			attr(div2, "class", "root svelte-12wtmtk");
-    			add_location(div2, file$H, 10, 0, 289);
-
-    			dispose = [
-    				listen(span0, "click", store.showBackend),
-    				listen(span1, "click", store.showFrontend)
-    			];
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-
-    		m: function mount(target, anchor) {
-    			insert(target, div2, anchor);
-    			append(div2, div0);
-    			mount_component(iconbutton, div0, null);
-    			append(div0, t0);
-    			append(div0, span0);
-    			append(div0, t2);
-    			append(div0, span1);
-    			append(div2, t4);
-    			append(div2, div1);
-    			if_blocks[current_block_type_index].m(div1, null);
-    			current = true;
-    		},
-
-    		p: function update(changed, ctx) {
-    			if (changed.$store) {
-    				toggle_class(span0, "active", ctx.$store.isBackend);
-    				toggle_class(span1, "active", !ctx.$store.isBackend);
-    			}
-
-    			var previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
-    			if (current_block_type_index !== previous_block_index) {
-    				group_outros();
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-    				check_outros();
-
-    				if_block = if_blocks[current_block_type_index];
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				}
-    				transition_in(if_block, 1);
-    				if_block.m(div1, null);
-    			}
-    		},
-
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(iconbutton.$$.fragment, local);
-
-    			transition_in(if_block);
-    			current = true;
-    		},
-
-    		o: function outro(local) {
-    			transition_out(iconbutton.$$.fragment, local);
-    			transition_out(if_block);
-    			current = false;
-    		},
-
-    		d: function destroy(detaching) {
-    			if (detaching) {
-    				detach(div2);
-    			}
-
-    			destroy_component(iconbutton);
-
-    			if_blocks[current_block_type_index].d();
-    			run_all(dispose);
-    		}
-    	};
-    }
-
-    function instance$G($$self, $$props, $$invalidate) {
-    	let $store;
-
-    	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
-
-    	return { $store };
-    }
-
-    class PackageRoot extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$G, create_fragment$G, safe_not_equal, []);
-    	}
-    }
-
-    /* src\App.svelte generated by Svelte v3.6.9 */
-
-    const file$I = "src\\App.svelte";
+    const file$H = "src\\App.svelte";
 
     // (27:1) {:catch err}
     function create_catch_block(ctx) {
-    	var h1, t_value = ctx.err, t;
+    	var h1, t_value = ctx.err + "", t;
 
     	return {
     		c: function create() {
     			h1 = element("h1");
     			t = text(t_value);
     			set_style(h1, "color", "red");
-    			add_location(h1, file$I, 27, 2, 419);
+    			add_location(h1, file$H, 27, 2, 419);
     		},
 
     		m: function mount(target, anchor) {
@@ -62383,7 +62123,7 @@
 
     	var if_block0 = (ctx.$store.hasAppPackage) && create_if_block_1$d();
 
-    	var if_block1 = (!ctx.$store.hasAppPackage) && create_if_block$k();
+    	var if_block1 = (!ctx.$store.hasAppPackage) && create_if_block$j();
 
     	return {
     		c: function create() {
@@ -62421,7 +62161,7 @@
 
     			if (!ctx.$store.hasAppPackage) {
     				if (!if_block1) {
-    					if_block1 = create_if_block$k();
+    					if_block1 = create_if_block$j();
     					if_block1.c();
     					transition_in(if_block1, 1);
     					if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
@@ -62501,7 +62241,7 @@
     }
 
     // (23:2) {#if !$store.hasAppPackage}
-    function create_if_block$k(ctx) {
+    function create_if_block$j(ctx) {
     	var current;
 
     	var nopackage = new NoPackage({ $$inline: true });
@@ -62542,7 +62282,7 @@
     		c: function create() {
     			h1 = element("h1");
     			h1.textContent = "loading";
-    			add_location(h1, file$I, 15, 2, 258);
+    			add_location(h1, file$H, 15, 2, 258);
     		},
 
     		m: function mount(target, anchor) {
@@ -62561,7 +62301,7 @@
     	};
     }
 
-    function create_fragment$H(ctx) {
+    function create_fragment$G(ctx) {
     	var main, promise, current;
 
     	let info = {
@@ -62584,7 +62324,7 @@
 
     			info.block.c();
     			attr(main, "class", "svelte-j8mzr7");
-    			add_location(main, file$I, 11, 0, 231);
+    			add_location(main, file$H, 11, 0, 231);
     		},
 
     		l: function claim(nodes) {
@@ -62603,11 +62343,7 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			info.ctx = ctx;
-
-    			if (promise !== (promise = ctx.init) && handle_promise(promise, info)) ; else {
-    				info.block.p(changed, assign(assign({}, ctx), info.resolved));
-    			}
+    			info.block.p(changed, assign(assign({}, ctx), info.resolved));
     		},
 
     		i: function intro(local) {
@@ -62637,11 +62373,11 @@
     	};
     }
 
-    function instance$H($$self, $$props, $$invalidate) {
+    function instance$G($$self, $$props, $$invalidate) {
     	let $store;
 
     	validate_store(store, 'store');
-    	subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
+    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
 
     	
     	
@@ -62653,7 +62389,7 @@
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$H, create_fragment$H, safe_not_equal, []);
+    		init(this, options, instance$G, create_fragment$G, safe_not_equal, []);
     	}
     }
 

@@ -1,20 +1,22 @@
 {
-    "main" : {
-        "index" : {
-
-        },
-        "appBody" : "./main.app.json"
+  "main": {
+    "index": {},
+    "appBody": "./main.app.json"
+  },
+  "unauthenticated": {
+    "index": {
+      "_component": "budibase-components/indexHtml",
+      "title": "Test App 1 - Login",
+      "customScripts": [
+        "MyCustomComponents.js"
+      ]
     },
-    "unauthenticated" : {
-        "index" : {
-            "_component": "budibase-components/indexHtml",
-            "title": "Test App 1 - Login",
-            "customScripts": [
-                "MyCustomComponents.js"
-            ]
-        },
-        "appBody" : "./unauthenticated.app.json"
-    },
-    "componentLibraries": ["./standard-components"],
-	"stylesheets": []
+    "appBody": "./unauthenticated.app.json"
+  },
+  "componentLibraries": [
+    "./standard-components"
+  ],
+  "stylesheets": [
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+  ]
 }
