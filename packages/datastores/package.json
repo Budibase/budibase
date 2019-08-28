@@ -29,7 +29,7 @@
     "@babel/preset-env": "^7.1.0",
     "budibase-core": "git+ssh://git@gitlab.com/budibase-dist/budibase-core.git",
     "es6-promisify": "^6.0.1",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "p-limit": "^2.0.0",
     "papaparse": "^4.6.1",
     "rimraf": "^2.6.2"
