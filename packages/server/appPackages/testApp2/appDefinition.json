@@ -41,7 +41,20 @@
             "children": [],
             "validationRules": [],
             "nodeId": 2,
-            "indexes": [],
+            "indexes": [
+              {
+                "name": "Some index",
+                "type": "index",
+                "map": "return {...record};",
+                "filter": "",
+                "indexType": "ancestor",
+                "getShardName": "",
+                "getSortKey": "record.id",
+                "aggregateGroups": [],
+                "allowedRecordNodeIds": [],
+                "nodeId": 3
+              }
+            ],
             "allidsShardFactor": 1,
             "collectionName": "invoices",
             "isSingle": false
@@ -56,7 +69,22 @@
       }
     ],
     "pathMaps": [],
-    "indexes": [],
+    "indexes": [
+      {
+        "name": "Yeo index",
+        "type": "index",
+        "map": "return {...record};",
+        "filter": "",
+        "indexType": "ancestor",
+        "getShardName": "",
+        "getSortKey": "record.id",
+        "aggregateGroups": [],
+        "allowedRecordNodeIds": [
+          1
+        ],
+        "nodeId": 4
+      }
+    ],
     "nodeId": 0
   },
   "triggers": [
@@ -78,12 +106,14 @@
       [
         [
           [
-            {
-              "name": "output_to_file",
-              "behaviourSource": "main",
-              "behaviourName": "outputToFile",
-              "initialOptions": {}
-            }
+            [
+              {
+                "name": "output_to_file",
+                "behaviourSource": "main",
+                "behaviourName": "outputToFile",
+                "initialOptions": {}
+              }
+            ]
           ]
         ]
       ]

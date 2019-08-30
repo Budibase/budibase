@@ -11,12 +11,16 @@ import { fade } from "svelte/transition";
 <div class="root">
 
     <div class="top-nav">
-        <IconButton icon="home"/>
+        <IconButton icon="home" 
+                    color="var(--slate)"
+                    hoverColor="var(--secondary75)"/>
         <span class:active={$store.isBackend}
+              class="topnavitem"
               on:click={store.showBackend}>
               Backend
         </span>
         <span class:active={!$store.isBackend}
+              class="topnavitem"
               on:click={store.showFrontend}>
               Frontend
         </span>
@@ -41,24 +45,25 @@ import { fade } from "svelte/transition";
 .root {
     height:100%;
     width:100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .top-nav {
-    position:fixed;
-    height:40px;
-    margin: 0px;
+    flex: 0 0 auto;
+    height:25px;
     background: white;
     border-style:solid;
     border-width: 0px 0px 1px 0px;
     border-color: var(--lightslate);
     padding: 5px;
+    width: 100%;
 }
 
 .content {
-    position:fixed;
-    height:calc(100% - 40px);
-    top:40px;
-    margin: 0px;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100px;
 }
 
 .content > div {
@@ -66,18 +71,19 @@ import { fade } from "svelte/transition";
     width:100%;
 }
 
-.active {
-    color: var(--secondary100);
-}
-
-.top-nav > span {
+.topnavitem {
     cursor: pointer;
     color: var(--slate);
     padding: 0px 15px;
 }
 
-.top-nav > span:hover {
+.topnavitem:hover {
     color: var(--secondary75);
 }
+
+.active {
+    color: var(--secondary100);
+}
+
 
 </style>

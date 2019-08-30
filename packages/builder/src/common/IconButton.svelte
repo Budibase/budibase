@@ -4,8 +4,8 @@ import getIcon from "./icon";
 export let size = 18;
 export let icon = "";
 export let style = "";
-export let color = "";
-export let hoverColor = "";
+export let color = "var(--secondary100)";
+export let hoverColor = "var(--secondary75)";
 export let attributes = {};
 
 $: borderClass = grouped 
@@ -40,7 +40,7 @@ const addAttributes = (node, attributes) => {
 
 </script>
 
-<button style="{style} color:{color} --hovercolor:{hoverColor}"
+<button style="{style}{style ? ";" : ""} color:{color}; --hovercolor:{hoverColor}"
         on:click
         use:addAttributes={attributes}>
     {@html getIcon(icon, size)}

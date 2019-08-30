@@ -1,6 +1,6 @@
 <script>
 
-import Nav from "./nav/Nav.svelte";
+import BackendNav from "./nav/BackendNav.svelte";
 import Database from "./database/DatabaseRoot.svelte" ;
 import UserInterface from "./userInterface/UserInterfaceRoot.svelte" ;
 import ActionsAndTriggers from "./actionsAndTriggers/ActionsAndTriggersRoot.svelte" ;
@@ -15,7 +15,9 @@ export let navWidth = "50px";
 </script>
 
 <div class="root">
-  <Nav width={navWidth} />
+  <div class="nav">
+    <BackendNav />
+  </div>
   <div class="content" 
        style="width: calc(100% - {navWidth}); left: {navWidth}"> 
     {#if $store.activeNav === "database"}
@@ -33,15 +35,21 @@ export let navWidth = "50px";
 <style>
 	.root {
     height: 100%;
+    display: flex;
 	}
   
 
   .content {
-    position: fixed;
+    flex: 1 1 auto;
     height: 100%;
     background-color: var(--white);
     margin:0;
   }
 
+  .nav {
+    flex: 0 1 auto;
+    width: 300px;
+    height: 100%;
+  }
 
 </style>

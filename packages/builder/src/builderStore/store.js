@@ -188,6 +188,7 @@ const selectExistingNode = (store) => (nodeId) => {
         );
         s.currentNodeIsNew = false;
         s.errors = [];
+        s.activeNav = "database";
         return s;
     })
 }
