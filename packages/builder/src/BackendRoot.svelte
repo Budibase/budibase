@@ -33,23 +33,24 @@ export let navWidth = "50px";
 
 
 <style>
-	.root {
-    height: 100%;
-    display: flex;
-	}
-  
 
-  .content {
-    flex: 1 1 auto;
-    height: 100%;
-    background-color: var(--white);
-    margin:0;
-  }
+.root {
+  height: 100%;
+  display: flex;
+}
 
-  .nav {
-    flex: 0 1 auto;
-    width: 300px;
-    height: 100%;
-  }
+
+.content {
+  flex: 1 1 auto;
+  height: 100%;
+  background-color: var(--white);
+  margin:0;
+}
+
+.nav {
+  flex: 0 1 auto;
+  width: 300px;
+  height: 100%;
+}
 
 </style>

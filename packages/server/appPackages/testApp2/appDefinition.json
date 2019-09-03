@@ -41,20 +41,7 @@
             "children": [],
             "validationRules": [],
             "nodeId": 2,
-            "indexes": [
-              {
-                "name": "Some index",
-                "type": "index",
-                "map": "return {...record};",
-                "filter": "",
-                "indexType": "ancestor",
-                "getShardName": "",
-                "getSortKey": "record.id",
-                "aggregateGroups": [],
-                "allowedRecordNodeIds": [],
-                "nodeId": 3
-              }
-            ],
+            "indexes": [],
             "allidsShardFactor": 1,
             "collectionName": "invoices",
             "isSingle": false
@@ -62,7 +49,22 @@
         ],
         "validationRules": [],
         "nodeId": 1,
-        "indexes": [],
+        "indexes": [
+          {
+            "name": "customer_invoices",
+            "type": "index",
+            "map": "return {...record};",
+            "filter": "",
+            "indexType": "ancestor",
+            "getShardName": "",
+            "getSortKey": "record.id",
+            "aggregateGroups": [],
+            "allowedRecordNodeIds": [
+              2
+            ],
+            "nodeId": 5
+          }
+        ],
         "allidsShardFactor": 64,
         "collectionName": "customers",
         "isSingle": false
@@ -83,6 +85,20 @@
           1
         ],
         "nodeId": 4
+      },
+      {
+        "name": "everyones_invoices",
+        "type": "index",
+        "map": "return {...record};",
+        "filter": "",
+        "indexType": "ancestor",
+        "getShardName": "",
+        "getSortKey": "record.id",
+        "aggregateGroups": [],
+        "allowedRecordNodeIds": [
+          2
+        ],
+        "nodeId": 6
       }
     ],
     "nodeId": 0
@@ -107,12 +123,20 @@
         [
           [
             [
-              {
-                "name": "output_to_file",
-                "behaviourSource": "main",
-                "behaviourName": "outputToFile",
-                "initialOptions": {}
-              }
+              [
+                [
+                  [
+                    [
+                      {
+                        "name": "output_to_file",
+                        "behaviourSource": "main",
+                        "behaviourName": "outputToFile",
+                        "initialOptions": {}
+                      }
+                    ]
+                  ]
+                ]
+              ]
             ]
           ]
         ]

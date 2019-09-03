@@ -4,7 +4,8 @@
   "inherits": "./standard-components/login",
   "props": {
     "usernameLabel": "User",
-    "_component": "login_screen"
+    "_component": "login_screen",
+    "passwordLabel": "Secret"
   },
   "tags": [
     "login",

@@ -18,7 +18,7 @@ export let props = emptyProps();
 export let onValueChanged = () => {};
 export let onComponentChosen = () => {};
 export let onEdit = () => {};
-export let label = ""
+export let label = "";
 export let disabled = false;
 
 const CHOOSE_COMPONENT = "choose_component";

@@ -1,0 +1,46 @@
+{
+  "name": "Mikes Panel",
+  "description": "",
+  "inherits": "./standard-components/stackpanel",
+  "props": {
+    "children": [
+      {
+        "_component": "Mikes Panel:children",
+        "control": {
+          "_component": "Primary Button",
+          "contentText": "Button",
+          "contentComponent": {
+            "_component": ""
+          },
+          "className": "btn btn-primary",
+          "disabled": false
+        }
+      },
+      {
+        "_component": "Mikes Panel:children",
+        "control": {
+          "_component": ""
+        }
+      }
+    ],
+    "_component": "Mikes Panel",
+    "children[0].control": {
+      "_component": "Primary Button",
+      "contentText": "yeo",
+      "contentComponent": {
+        "_component": ""
+      },
+      "className": "btn btn-primary",
+      "disabled": false
+    },
+    "direction": "vertical",
+    "height": "200px",
+    "width": "200px"
+  },
+  "tags": [
+    "div",
+    "container",
+    "layout",
+    "panel"
+  ]
+}

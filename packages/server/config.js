@@ -12,3 +12,4 @@ module.exports = () => ({
     dev:true,
     customizeMaster: appDefinition => appDefinition
 })
+

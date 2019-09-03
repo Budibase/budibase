@@ -4,12 +4,21 @@ export let disabled = false;
 export let contentText;
 export let contentComponent;
 
+export let _app;
+let contentComponentContainer;
+
+$:{
+	if(_app && contentComponentContainer)
+		_app.initialiseComponent(contentComponent, contentComponentContainer);
+}
+
 </script>
 
 
 <button class={className} {disabled} on:click>
     {#if contentComponent && contentComponent._component}
-    {contentComponent}
+	<div bind:this={contentComponentContainer}>
+	</div>
     {:else if contentText}
     {contentText}
     {:else}

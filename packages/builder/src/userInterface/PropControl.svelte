@@ -4,6 +4,7 @@ import Checkbox from "../common/Checkbox.svelte";
 import Textbox from "../common/Textbox.svelte";
 import Dropdown from "../common/Dropdown.svelte";
 import ComponentPropSelector from "./ComponentPropSelector.svelte";
+import PropArraySelector from "./PropArraySelector.svelte";
 
 export let errors = [];
 export let setProp = () => {};
@@ -44,6 +45,11 @@ const setComponentProp = (props) => {
                             onEdit={onEditComponent}
                             onComponentChosen={onEditComponent}
                             onValueChanged={setComponentProp}/>
+    {:else if propDef.type === "array"}
+    <PropArraySelector parentProps={props}
+                       {propDef}
+                       onValueChanged={setComponentProp}
+                       onEditComponentProp={onEditComponent}/>
     {:else}
     <Textbox label={propDef.____name}
                 text={props[propDef.____name]}

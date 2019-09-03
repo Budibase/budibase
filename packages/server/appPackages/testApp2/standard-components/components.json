@@ -66,5 +66,28 @@
 			"className": {"type": "string", "default": "default"}
 		},
 		"tags": ["form"]
+	},
+	"stackpanel": {
+		"importPath": "stackpanel",
+		"name": "StackPanel",
+		"desciption": "Layout elements in a stack, either horizontally or vertically",
+		"props" : {
+			"direction": {
+				"type": "options", 
+				"options": ["horizontal", "vertical"],
+				"default":"horizontal"
+			},
+			"children": {
+				"type":"array",
+				"elementDefinition": {
+					"control":"component"
+				}
+			},
+			"width": {"type":"string","default":"auto"},
+			"height": {"type":"string","default":"auto"},
+			"containerClass":"string",
+			"itemContainerClass":"string"
+		},
+		"tags": ["div", "container", "layout", "panel"]
 	}
 }

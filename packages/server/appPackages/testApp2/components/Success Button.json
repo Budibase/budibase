@@ -3,7 +3,7 @@
   "description": "",
   "inherits": "./standard-components/button",
   "props": {
-    "className": "btn btn-success",
+    "className": "btn btn-primary",
     "_component": "Success Button"
   },
   "tags": [

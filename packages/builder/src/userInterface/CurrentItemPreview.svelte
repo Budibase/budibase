@@ -10,6 +10,24 @@ import {
 import { pipe } from "../common/core";
 import { splitName } from "./pagesParsing/splitRootComponentName"
 import { afterUpdate } from 'svelte';
+import { getRootComponent } from "./pagesParsing/getRootComponent";
+
+if(!window.budibaseIframeConnector) {
+    window.budibaseIframeConnector = {
+        initialiseComponent(props, htmlElement) {
+             const rootComponent = getRootComponent(
+                 props._component, allComponents);
+
+             const {componentName, libName} = splitName(
+                rootComponent.name);
+
+            new (libraries[libName][componentName])({
+                target: htmlElement,
+                props: {...props, _app: window.budibaseIframeConnector}
+            });
+        }
+    }
+}
 
 let component;
 let stylesheetLinks = "";
@@ -18,6 +36,9 @@ let props;
 let componentLibraryUrl = "";
 let rootComponentName = "";
 let iframe;
+let libraries;
+let allComponents;
+
 
 store.subscribe(s => {
     const {componentName, libName} = splitName(
@@ -31,6 +52,8 @@ store.subscribe(s => {
         join("\n")
     ]);
     componentLibraryUrl = makeLibraryUrl(s.appname, libName);
+    libraries = s.libraries;
+    allComponents = s.allComponents;
 });
 
 /*
@@ -65,7 +88,7 @@ const iframeLoaded = () => {
             const componentClass = module['${rootComponentName}'];
             const instance = new componentClass({
                 target: document.body,
-                props: JSON.parse('${JSON.stringify(props)}')
+                props: {...${JSON.stringify(props)}, _app: window.parent.budibaseIframeConnector}
             }) ;
         })
         
@@ -90,11 +113,6 @@ const iframeLoaded = () => {
 .component-container {
     grid-row-start: middle;
     grid-column-start: middle;
-}
-
-#comonent-container-mock {
-    position:fixed;
-    left: -2000px
 }
 
 </style>

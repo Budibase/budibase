@@ -148,6 +148,11 @@ export const createProps = (componentName, propsDefinition, derivedFromProps) =>
     });
 }
 
+export const createArrayElementProps = (arrayPropName, elementDefinition) => 
+    createProps(
+        `#element#${arrayPropName}`,
+        elementDefinition);
+
 const parsePropDef = propDef => {
     const error = message => ({error:message, propDef});
 
@@ -173,6 +178,9 @@ const parsePropDef = propDef => {
 
     return propDef.default;
 }
+
+export const arrayElementComponentName = (parentComponentName, arrayPropName) => 
+    `${parentComponentName}:${arrayPropName}`;
 
 /*
 Allowed propDefOptions

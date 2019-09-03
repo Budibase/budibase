@@ -100,8 +100,8 @@ const validate = (finalProps) => {
 const fieldHasError = (propName) => 
     some(e => e.propName === propName)(errors);
 
-const onEditComponent = (propName) => () => {
-    onEditComponentProp(propName);
+const onEditComponent = (propName) => (arrayIndex, arrayPropName) => {
+    onEditComponentProp(propName, arrayIndex, arrayPropName);
 }
 
 </script>
@@ -111,14 +111,13 @@ const onEditComponent = (propName) => () => {
     <form class="uk-form-stacked">
         {#each propsDefinitions as propDef, index}
         
-        <PropControl {errors}
-                        {setProp}
-                        {fieldHasError}
-                        {propDef}
-                        {props}
-                        {index}
-                        onEditComponent={onEditComponent(propDef.____name)}
-                        disabled={false} />
+        <PropControl {setProp}
+                     {fieldHasError}
+                     {propDef}
+                     {props}
+                     {index}
+                     onEditComponent={onEditComponent(propDef.____name)}
+                     disabled={false} />
             
         {/each}
 
@@ -135,13 +134,12 @@ const onEditComponent = (propName) => () => {
         {#if inheritedExpanded}
             {#each inheritedPropsDefinitions as propDef, index}
             
-            <PropControl {errors}
-                            {setProp}
-                            {fieldHasError}
-                            {propDef}
-                            {props}
-                            {index}
-                            disabled={true} />
+            <PropControl {setProp}
+                         {fieldHasError}
+                         {propDef}
+                         {props}
+                         {index}
+                         disabled={true} />
                 
             {/each}
         {/if}

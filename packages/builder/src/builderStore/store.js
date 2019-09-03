@@ -55,7 +55,7 @@ export const getStore = () => {
         hasAppPackage: false,
         accessLevels: [],
         currentNode: null,
-        libraries:null,
+        libraries:null
     };
 
     const store = writable(initial);

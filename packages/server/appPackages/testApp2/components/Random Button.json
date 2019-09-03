@@ -1,0 +1,19 @@
+{
+  "name": "Random Button",
+  "description": "",
+  "inherits": "./standard-components/button",
+  "props": {
+    "contentComponent": {
+      "_component": "./standard-components/button",
+      "contentText": "Inner Button",
+      "contentComponent": {
+        "_component": ""
+      },
+      "className": "default",
+      "disabled": false
+    }
+  },
+  "tags": [
+    "button"
+  ]
+}

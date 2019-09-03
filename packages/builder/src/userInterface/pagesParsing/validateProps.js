@@ -1,5 +1,8 @@
 import { types } from "./types";
-import { createProps } from "./createProps";
+import { 
+    createProps, 
+    arrayElementComponentName 
+} from "./createProps";
 import { isString } from "util";
 import { 
     includes,
@@ -138,7 +141,7 @@ export const validateProps = (propsDefinition, props, stack=[], isFinal=true) =>
         if(propDef.type === "array") {
             let index = 0;
             for(let arrayItem of propValue) {
-                arrayItem._component = `${props._component}:${propDefName}`
+                arrayItem._component = arrayElementComponentName(props._component, propDefName);
                 const arrayErrs = validateProps(
                     propDef.elementDefinition,
                     arrayItem,

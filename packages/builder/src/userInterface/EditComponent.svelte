@@ -111,9 +111,14 @@ const showDialog = () => {
     UIkit.modal(modalElement).show();
 }
 
-const onEditComponentProp = (propName) => {
-    editingComponentInstance = component.props[propName];
-    editingComponentInstancePropName = propName;
+const onEditComponentProp = (propName, arrayIndex, arrayPropName) => {
+
+    editingComponentInstance = isUndefined(arrayIndex) 
+                               ? component.props[propName]
+                               : component.props[propName][arrayIndex][arrayPropName];
+    editingComponentInstancePropName = isUndefined(arrayIndex)
+                                       ? propName
+                                       : `${propName}[${arrayIndex}].${arrayPropName}`;
 }
 
 const componentInstanceCancelEdit = () => {

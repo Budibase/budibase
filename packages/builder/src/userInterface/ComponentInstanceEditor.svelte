@@ -4,7 +4,10 @@ import PropsView from "./PropsView.svelte";
 import IconButton from "../common/IconButton.svelte";
 import { getComponentInfo } from "./pagesParsing/createProps";
 import { store } from "../builderStore";
-import { cloneDeep } from "lodash/fp";
+import { 
+    cloneDeep,
+    isUndefined
+} from "lodash/fp";
 import { fade, slide } from 'svelte/transition';
 
 export let propertyName = "";
@@ -29,9 +32,13 @@ const onSubComponentGoBack = () => {
     editingSubComponentProps = null;
 }
 
-const onEditComponentProp = (propName) => {
-    editingSubComponentName = propName;
-    editingSubComponentProps = instanceProps[propName];
+const onEditComponentProp = (propName, arrayIndex, arrayPropName) => {
+    editingSubComponentName = isUndefined(arrayIndex)
+                              ? propName
+                              : `${propName}[${arrayIndex}].${arrayPropName}`;
+    editingSubComponentProps = isUndefined(arrayIndex)
+                               ? instanceProps[propName]
+                               : instanceProps[propName][arrayIndex][arrayPropName];
 };
 
 

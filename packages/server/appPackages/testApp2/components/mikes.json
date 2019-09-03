@@ -1,0 +1,28 @@
+{
+  "name": "mikes",
+  "description": "",
+  "inherits": "./standard-components/stackpanel",
+  "props": {
+    "children": [
+      {
+        "_component": "undefined:children",
+        "control": {
+          "_component": "Primary Button",
+          "contentText": "Button",
+          "contentComponent": {
+            "_component": ""
+          },
+          "className": "btn btn-primary",
+          "disabled": false
+        }
+      }
+    ],
+    "_component": "mikes"
+  },
+  "tags": [
+    "div",
+    "container",
+    "layout",
+    "panel"
+  ]
+}
