@@ -483,9 +483,9 @@ const savePage = store => async page => {
             return;
         }
 
-        s.pages[currentPageName] = page;
-        savePackage();
-
+        s.pages[s.currentPageName] = page;
+        savePackage(store, s);
+        return s;
     });
 }
 

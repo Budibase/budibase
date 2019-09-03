@@ -5,12 +5,18 @@ import {
     isUndefined,
     filter,
     some,
-    includes
+    includes,
+    has
 } from "lodash/fp";
 
 const normalString = s => (s||"").trim().toLowerCase();
 
-export const isRootComponent = c => isUndefined(c.inherits);
+export const isRootComponent = c => isComponent(c) && isUndefined(c.inherits);
+
+export const isComponent = c => {
+    const hasProp = (n) => !isUndefined(c[n]);
+    return hasProp("name") && hasProp("props");
+}
 
 export const searchAllComponents = (allComponents, phrase) => {
 

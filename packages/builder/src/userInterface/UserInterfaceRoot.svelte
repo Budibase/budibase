@@ -5,12 +5,13 @@ import PagesList from "./PagesList.svelte"
 import EditComponent from "./EditComponent.svelte";
 import { store } from "../builderStore";
 import getIcon from "../common/icon";
-import { isRootComponent } from "./pagesParsing/searchComponents";
+import { isComponent } from "./pagesParsing/searchComponents";
 import IconButton from "../common/IconButton.svelte";
 import Modal from "../common/Modal.svelte";
 import NewComponent from "./NewComponent.svelte";
 import CurrentItemPreview from "./CurrentItemPreview.svelte";
 import SettingsView from "./SettingsView.svelte";
+import PageView from "./PageView.svelte";
 
 let newComponentPicker;  
 const newComponent = () => {
@@ -59,15 +60,19 @@ const settings = () => {
 
     <div>
         {#if $store.currentFrontEndItem}
-        <CurrentItemPreview />
+            {#if isComponent($store.currentFrontEndItem)}
+            <CurrentItemPreview />
+            {:else}
+            <PageView />
+            {/if}
         {/if} 
     </div>
 
+    {#if $store.currentFrontEndItem && isComponent($store.currentFrontEndItem)}
     <div class="properties-pane">
-        {#if $store.currentFrontEndItem && !isRootComponent($store.currentFrontEndItem)}
         <EditComponent />
-        {/if}
     </div>
+    {/if}
 
 </div>
 
