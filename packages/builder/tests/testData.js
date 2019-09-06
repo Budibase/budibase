@@ -16,8 +16,23 @@ export const allComponents = () => ([
         props: {
             size: {type:"options", options:["small", "medium", "large"]},
             css: "string",
-            content: "component"
+            content: "component",
+            contentText: "string"
         } 
+    },
+    {
+        name: "budibase-components/div",
+        tags: ["input"],
+        props: {
+            width: "number",
+            header : "component",
+            children: {
+                type:"array",
+                elementDefinition: {
+                    control: "component"
+                }
+            } 
+        }
     },
     {
         inherits:"budibase-components/TextBox",
@@ -40,5 +55,31 @@ export const allComponents = () => ([
         props: {
             css:"btn-primary"
         }
+    },
+    {
+        inherits:"budibase-components/div",
+        name:"ButtonGroup",
+        props: {
+
+            width: 100,
+            header: {
+                _component: "PrimaryButton"
+            },
+            children: [
+                {
+                    control: {
+                        _component: "PrimaryButton",
+                        contentText: "Button 1"
+                    }
+                },
+                {
+                    control: {
+                        _component: "PrimaryButton",
+                        contentText: "Button 2"
+                    }
+                }
+            ]
+        }
     }
+
     ])

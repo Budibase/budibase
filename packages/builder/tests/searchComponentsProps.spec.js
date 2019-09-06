@@ -92,8 +92,8 @@ describe("getAncestorProps", () => {
 
         expect(result).toEqual([
             components[0].props,
-            {...components[2].props},
-            {...components[3].props}
+            {...components[3].props},
+            {...components[4].props}
         ]);
 
     });
