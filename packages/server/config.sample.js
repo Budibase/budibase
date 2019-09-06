@@ -27,6 +27,13 @@ module.exports = () => ({
     customizeMaster: appDefinition => appDefinition,
 
     // false for production - serves builder if true
-    dev:false
+    dev:false,
+
+    // flags whethers your apps should make server requests to '/<your app name>/<the route>'
+    // should only be set to true if you are routed via a domain, and are rewriting
+    // the "your.domain.com" to "/<your app name>"
+    useAppRootPath: false
+
+
 
 })

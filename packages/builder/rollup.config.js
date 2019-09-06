@@ -9,7 +9,6 @@ import nodeglobals from 'rollup-plugin-node-globals';
 import copy from 'rollup-plugin-copy';
 import browsersync from "rollup-plugin-browsersync";
 import proxy from "http-proxy-middleware";
-import corePackageJson from "../core/package.json";
 
 const target = 'http://localhost:4001';
 const _builderProxy =  proxy('/_builder', {
@@ -48,15 +47,6 @@ const coreExternal = [
 	"@nx-js/compiler-util"
 ];
 
-const globals = {
-    "lodash/fp": "fp",
-    lodash: "_",
-    lunr: "lunr",
-    "safe-buffer": "safe_buffer",
-    shortid:"shortid",
-    "@nx-js/compiler-util":"compiler_util"
-}
-
 export default {
 	input: 'src/main.js',
 	output: {
@@ -64,13 +54,7 @@ export default {
 		format: 'iife',
 		name: 'app',
 		file: `${outputpath}/bundle.js`
-		//globals
 	},
-	/*external: [
-        "lodash", "lodash/fp", "date-fns",
-        "lunr", "safe-buffer", "shortid",
-        "@nx-js/compiler-util"
-    ],*/
 	plugins: [
 		copy({
 			targets: [

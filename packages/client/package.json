@@ -1,28 +1,55 @@
 {
-  "name": "budibase-client-library",
+  "name": "budibase-builder",
   "version": "0.0.1",
-  "description": "Client library for talking to budibase web server",
-  "main": "index.js",
+  "license": "AGPL-3.0",
   "scripts": {
+    "build": "rollup -c",
+    "test": "jest"
   },
-  "keywords": [
-    "budibase"
-  ],
-  "author": "Michael Shanks",
-  "license": "MPL-2.0",
+  "jest": {
+    "globals": {
+      "GLOBALS": {
+        "client": "web"
+      }
+    },
+    "testURL": "http://jest-breaks-if-this-does-not-exist",
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
+      "\\.(css|less|sass|scss)$": "identity-obj-proxy"
+    },
+    "moduleFileExtensions": [
+      "js"
+    ],
+    "moduleDirectories": [
+      "node_modules"
+    ],
+    "transform": {
+      "^.+js$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!svelte).+\\.js$"
+    ]
+  },
+  "dependencies": {
+    "@nx-js/compiler-util": "^2.0.0",
+    "date-fns": "^1.29.0",
+    "lodash": "^4.17.15",
+    "lunr": "^2.3.5",
+    "shortid": "^2.2.8",
+    "svelte": "^3.9.2"
+  },
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-transform-runtime": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
-    "babel-jest": "^23.6.0",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
-    "cross-env": "^5.1.4",
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-transform-runtime": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/runtime": "^7.5.5",
+    "babel-jest": "^24.8.0",
     "jest": "^24.8.0",
-    "regenerator-runtime": "^0.11.1",
     "rollup": "^1.12.0",
     "rollup-plugin-commonjs": "^10.0.0",
-    "rollup-plugin-local-resolve": "^1.0.7",
-    "rollup-plugin-node-resolve": "^5.0.0"
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^4.0.4"
   }
 }

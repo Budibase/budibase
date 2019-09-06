@@ -12,7 +12,7 @@ const {
     saveDerivedComponent,
     renameDerivedComponent,
     deleteDerivedComponent,
-    getComponentLibraryPath
+    componentLibraryInfo
 } = require("../utilities/builder");
 
 const builderPath = resolve(__dirname, "../builder");
@@ -161,12 +161,12 @@ module.exports = (config, app) => {
             }
         }
     })
-    .get("/_builder/api/:appname/componentlibrary", async (ctx) => {
-        const {appPath, libPath} = await getComponentLibraryPath(
+    .get("/:appname/componentlibrary", async (ctx) => {
+        const info = await componentLibraryInfo(
             config,
             ctx.params.appname,
             ctx.query.lib);
-        await send(ctx, libPath, { root: appPath });
+        await send(ctx, info.libDir, { root: info.components._lib });
     })
     .post("/_builder/api/:appname/derivedcomponent", async (ctx) => {
         await saveDerivedComponent(

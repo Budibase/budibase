@@ -31455,7 +31455,7 @@
 
     /******/ });
     });
-    //# sourceMappingURL=feather.js.map
+
     });
 
     var feather$1 = unwrapExports(feather);

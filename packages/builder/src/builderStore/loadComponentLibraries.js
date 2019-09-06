@@ -17,4 +17,4 @@ export const loadLib = async (appName, lib, allLibs) => {
 }
 
 export const makeLibraryUrl = (appName, lib) => 
-    `/_builder/api/${appName}/componentlibrary?lib=${encodeURI(lib)}`
+    `/${appName}/componentlibrary?lib=${encodeURI(lib)}`

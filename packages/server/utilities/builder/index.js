@@ -1,12 +1,11 @@
 const { 
     appPackageFolder, 
     appsFolder 
-} = require("./createAppPackage");
+} = require("../createAppPackage");
 const { 
     readJSON,
     writeJSON,
     readdir,
-    exists,
     stat,
     ensureDir,
     rename,
@@ -14,7 +13,6 @@ const {
     rmdir
 } = require("fs-extra");
 const { 
-    resolve,
     join,
     dirname
 } = require("path");
@@ -22,11 +20,12 @@ const { $ } = require("budibase-core").common;
 const { 
     keys,
     reduce,
-    some,
     keyBy,
     filter
 } = require("lodash/fp");
 const {merge} = require("lodash");
+
+const { componentLibraryInfo } = require("./componentLibraryInfo");
 
 module.exports.getPackageForBuilder = async (config, appname) => {
     const appPath = appPackageFolder(config, appname);
@@ -108,42 +107,14 @@ module.exports.deleteDerivedComponent = async (config, appname, name) => {
     }
 }
 
-module.exports.getComponentLibraryPath = async (config, appname, libname) => {
-    const appPath = appPackageFolder(config, appname);
-    const components = await getComponentsFile(appPath, libname);
-    return ({
-        appPath, 
-        libPath:join(libname, components._lib.path)
-    });
-}
+module.exports.componentLibraryInfo = componentLibraryInfo;
 
-const getComponentsFile = async (appPath, libname) => {
-    const isRelative = some(c => c === libname.substring(0,1))
-                               ("./~\\".split(""));
-        
-    const componentsPath = isRelative
-                        ? resolve(appPath, libname, "components.json")
-                        : resolve(libname, "components.json");
-    
-    if(!await exists(componentsPath)) {
-        const e = new Error(`could not find components definition file at ${componentsPath}`);
-        e.statusCode = 404;
-        throw e;
-    }
-
-    try {
-        return await readJSON(componentsPath);
-    } catch(e) {
-        const err = `could not parse JSON - ${componentsPath} : ${e.message}`;
-        throw new Error(err);
-    }
-}
 
 const getRootComponents = async (appPath, pages ,lib) => {
 
     const componentsInLibrary = async (libname) => {
         
-        const components = await getComponentsFile(appPath, libname);
+        const { components } = await componentLibraryInfo(appPath, libname);
 
         return $(components, [
             keys,

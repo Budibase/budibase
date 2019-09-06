@@ -10,6 +10,7 @@ module.exports = () => ({
     latestPackagesFolder: "appPackages",
     extraMasterPlugins: {},
     dev:true,
-    customizeMaster: appDefinition => appDefinition
+    customizeMaster: appDefinition => appDefinition,
+    useAppRootPath: true
 })
 

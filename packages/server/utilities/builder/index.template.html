@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset='utf8'>
+	<meta name='viewport' content='width=device-width'>
+
+	<title>{{ title }}</title>
+    <link rel='icon' type='image/png' href='{{ favicon }}'>
+    
+    {{ each(stylesheets) }}
+    <link rel='stylesheet' href='{{ @this }}'>
+    {{ /each }}
+
+    <script src='{{ appRootPath }}/budibase-client.js'></script>
+
+    
+</head>
+
+<body id="app">
+	<script src='{{ appRootPath }}/clientAppDefinition.js'></script>
+</body>
+</html>

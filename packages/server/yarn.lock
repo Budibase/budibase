@@ -3572,6 +3572,11 @@ split-string@^3.0.1, split-string@^3.0.2:
   dependencies:
     extend-shallow "^3.0.0"
 
+squirrelly@^7.5.0:
+  version "7.5.0"
+  resolved "https://registry.yarnpkg.com/squirrelly/-/squirrelly-7.5.0.tgz#76b42e2771639433bff3e60fd66aa6b04f25e8d0"
+  integrity sha512-7GtawPwwkVPnG9hqfQRjrziHxWLHAoJ3tlYvhmSayDNoovIufIQXRF0G/QA8sUTCSPzzSBkPSN0CuTlcvE7Dow==
+
 sshpk@^1.7.0:
   version "1.16.1"
   resolved "https://registry.yarnpkg.com/sshpk/-/sshpk-1.16.1.tgz#fb661c0bef29b39db40769ee39fa70093d6f6877"
