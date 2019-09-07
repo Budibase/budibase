@@ -1,3 +1,5 @@
 import { initialise } from "./initialise";
 
-initialise();
+const appDefinition = window["##BUDIBASE_APPDEFINITION##"];
+
+initialise(appDefinition);

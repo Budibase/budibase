@@ -1,0 +1,11 @@
+{
+  "name": "Joes Button",
+  "description": "",
+  "inherits": "./standard-components/button",
+  "props": {
+    "className": "btn btn-danger"
+  },
+  "tags": [
+    "button"
+  ]
+}

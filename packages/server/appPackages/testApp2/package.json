@@ -1,0 +1,15 @@
+{
+  "name": "testapp2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "plugins.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "budibase-client": "file:../../../client/dist",
+    "budibase-standard-components": "file:../../../standard-components/dist"
+  }
+}

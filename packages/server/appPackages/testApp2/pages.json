@@ -1,20 +1,12 @@
 {
   "main": {
-    "index": {
-      "title": "yyyaaa"
-    },
-    "appBody": "Random Button"
+    "index": {},
+    "appBody": ""
   },
   "unauthenticated": {
-    "index": {
-      "title": "Test App 1 - Login"
-    },
-    "appBody": "login_screen"
+    "index": {},
+    "appBody": ""
   },
-  "componentLibraries": [
-    "./standard-components"
-  ],
-  "stylesheets": [
-    "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-  ]
+  "componentLibraries": [],
+  "stylesheets": []
 }

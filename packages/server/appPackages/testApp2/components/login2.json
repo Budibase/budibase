@@ -1,0 +1,14 @@
+{
+  "name": "login2",
+  "description": "",
+  "inherits": "./standard-components/login",
+  "props": {
+    "usernameLabel": "User"
+  },
+  "tags": [
+    "login",
+    "credentials",
+    "password",
+    "logon"
+  ]
+}

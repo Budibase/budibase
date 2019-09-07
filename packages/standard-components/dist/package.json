@@ -1,0 +1,14 @@
+{
+  "name": "budibase-standard-components",
+  "svelte": "src/index.svelte",
+  "main": "index.js",
+  "devDependencies": {},
+  "keywords": [
+    "budibase"
+  ],
+  "files": [
+    "dist"
+  ],
+  "version": "1.0.0",
+  "license": "MPL-2.0"
+}

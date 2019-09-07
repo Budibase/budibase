@@ -24,6 +24,7 @@ import {
 } from "../common/core";
 import {writable} from "svelte/store";
 import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
+import { buildPropsHierarchy } from "../userInterface/pagesParsing/buildPropsHierarchy"
 import api from "./api";
 import { isRootComponent } from "../userInterface/pagesParsing/searchComponents";
 import { 
@@ -579,8 +580,10 @@ const savePackage = (store, s) => {
         hierarchy:s.hierarchy,
         triggers:s.triggers,
         actions: groupBy("name")(s.actions),
-        mainUi: s.mainUi,
-        unauthenticatedUi: s.unauthenticatedUi
+        props: {
+            main: buildPropsHierarchy(s.allComponents, s.pages.main.appBody),
+            unauthenticated:  buildPropsHierarchy(s.allComponents, s.pages.unauthenticated.appBody)
+        }
     };
 
     const data = {

@@ -9,8 +9,9 @@ import { $ } from "./core/common";
 
 export const initialiseComponent = (allComponents, componentLibraries, store) => (props, htmlElement) => {
 
-    const rootComponent = getRootComponent(
-        props._component, allComponents);
+    const component = getComponent(
+        props._component, 
+        allComponents);
 
     const _app = {
         initialiseComponent: initialiseComponent(allComponents, componentLibraries, store), 
@@ -18,7 +19,7 @@ export const initialiseComponent = (allComponents, componentLibraries, store) =>
     };
 
     const {componentName, libName} = splitName(
-       rootComponent.name);
+       component.name);
 
     new (componentLibraries[libName][componentName])({
         target: htmlElement,
@@ -27,13 +28,8 @@ export const initialiseComponent = (allComponents, componentLibraries, store) =>
 
 }
 
-const getRootComponent = (componentName, allComponents) => {
-    const component = find(c => c.name === componentName)(allComponents);
-
-    if(isRootComponent(component)) return component;
-
-    return getRootComponent(component.inherits, allComponents);
-}
+const getComponent = (componentName, allComponents) => 
+    find(c => c.name === componentName)(allComponents);
 
 const isRootComponent = c => isUndefined(c.inherits);
 

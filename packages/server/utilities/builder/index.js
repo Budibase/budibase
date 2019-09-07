@@ -26,6 +26,9 @@ const {
 const {merge} = require("lodash");
 
 const { componentLibraryInfo } = require("./componentLibraryInfo");
+const savePackage = require("./savePackage");
+
+module.exports.savePackage = savePackage;
 
 module.exports.getPackageForBuilder = async (config, appname) => {
     const appPath = appPackageFolder(config, appname);
@@ -47,23 +50,7 @@ module.exports.getPackageForBuilder = async (config, appname) => {
 
 }
 
-module.exports.savePackage = async (config, appname, pkg) => {
-    const appPath = appPackageFolder(config, appname);
-    await writeJSON(
-        `${appPath}/appDefinition.json`, 
-        pkg.appDefinition,
-        {spaces:2});
 
-    await writeJSON(
-        `${appPath}/access_levels.json`,
-        pkg.accessLevels,
-        {spaces:2});
-
-    await writeJSON(
-        `${appPath}/pages.json`,
-        pkg.pages,
-        {spaces:2});
-}
 
 module.exports.getApps = async (config) => 
     await readdir(appsFolder(config));
@@ -173,7 +160,6 @@ const fetchDerivedComponents = async (appPath, relativePath = "") => {
                                 .replace(/\\/g, "/");
 
             component.props = component.props || {};
-            component.props._component = component.name;
 
             components.push(component);
         } else {

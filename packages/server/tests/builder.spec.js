@@ -10,6 +10,8 @@ const derivedComponent2 = require("../appPackages/testApp/components/subfolder/o
 const { readJSON, pathExists, unlink } = require("fs-extra");
 
 const app = require("./testApp")();
+testComponents.textbox.name = `./customComponents/textbox`;
+testMoreComponents.textbox.name = `./moreCustomComponents/textbox`;
 
 beforeAll(async () => {
 

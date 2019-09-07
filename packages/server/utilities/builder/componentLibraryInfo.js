@@ -1,11 +1,20 @@
 const { 
-    readJSON, exists 
+    readJSON, exists
 } = require("fs-extra");
-const { resolve } = require("path");
+const { 
+    resolve, join , dirname 
+} = require("path");
 
-const getLibDir = (appPath, libname) => require.resolve(libname, {
-    basedir: appPath
-});
+const getLibDir = (appPath, libname) => {
+    try {
+        const componentsFile = require.resolve(
+            join(libname, "components.json"),
+            { paths: [appPath]});
+        return dirname(componentsFile);
+    } catch(e) {
+        console.log(e);
+    }
+}
 
 const getComponentsFilepath = libPath => 
     resolve(libPath, "components.json");
