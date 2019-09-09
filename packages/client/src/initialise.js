@@ -17,5 +17,5 @@ export const initialise = async (document, appDefinition) => {
         document.body);
 }
 const componentLibraryUrl = (lib, appRootPath) =>
-    `${appRootPath}/componentlibrary?lib=${encodeURI(lib)}`
+    `/${appRootPath}/${lib}`;
 
