@@ -1,9 +1,9 @@
 {
-  "name": "login2",
+  "name": "login",
   "description": "",
-  "inherits": "./standard-components/login",
+  "inherits": "budibase-standard-components/login",
   "props": {
-    "usernameLabel": "User"
+    "logo": "/assets/budibase-logo.png"
   },
   "tags": [
     "login",

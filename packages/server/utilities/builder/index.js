@@ -18,10 +18,7 @@ const {
 } = require("path");
 const { $ } = require("budibase-core").common;
 const { 
-    keys,
-    reduce,
-    keyBy,
-    filter
+    keyBy
 } = require("lodash/fp");
 const {merge} = require("lodash");
 
@@ -61,9 +58,10 @@ const componentPath = (appPath, name) =>
 
 module.exports.saveDerivedComponent = async (config, appname, component) => {
     const appPath = appPackageFolder(config, appname);
-
+    const compPath = componentPath(appPath, component.name);
+    await ensureDir(dirname(compPath));
     await writeJSON(
-        componentPath(appPath, component.name), 
+        compPath, 
         component,
         {encoding:"utf8", flag:"w", spaces:2});
 }
@@ -94,26 +92,13 @@ module.exports.deleteDerivedComponent = async (config, appname, name) => {
     }
 }
 
-module.exports.componentLibraryInfo = componentLibraryInfo;
+module.exports.componentLibraryInfo = async (config, appname, lib) => {
+    const appPath = appPackageFolder(config, appname);
+    return await componentLibraryInfo(appPath, lib);
+};
 
 
 const getRootComponents = async (appPath, pages ,lib) => {
-
-    const componentsInLibrary = async (libname) => {
-        
-        const { components } = await componentLibraryInfo(appPath, libname);
-
-        return $(components, [
-            keys,
-            filter(k => k !== "_lib"),
-            reduce((obj, k) => {
-                const component = components[k];
-                component.name = `${libname}/${k}`;
-                obj[component.name] = component;
-                return obj;
-            }, {})
-        ])
-    }     
 
     let libs;
     if(!lib) {
@@ -129,7 +114,8 @@ const getRootComponents = async (appPath, pages ,lib) => {
 
     const components = {};
     for(let l of libs) {
-        merge(components, await componentsInLibrary(l))
+        const info = await componentLibraryInfo(appPath, l);
+        merge(components, info.components);
     }
 
     return components;

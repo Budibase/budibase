@@ -132,3 +132,35 @@ it("should be able to delete derived component", async () => {
     expect(await pathExists(componentFile)).toBe(false);
     expect(await pathExists(componentDir)).toBe(false);
 });
+
+it("/savePackage should prepare all necessary client files", async () => {
+
+    await app.post("/_builder/api/testApp/appPackage", {
+        appDefinition: testAppDef,
+        accessLevels: testAccessLevels,
+        pages: testPages
+    })
+    .expect(statusCodes.OK);
+
+    const publicFolderMain = relative => "./appPackages/testApp/public/main" + relative;
+    const publicFolderUnauth = relative => "./appPackages/testApp/public/unauthenticated" + relative;
+
+    expect(await pathExists(publicFolderMain("/index.html"))).toBe(true);
+    expect(await pathExists(publicFolderUnauth("/index.html"))).toBe(true);
+
+    expect(await pathExists(publicFolderMain("/lib/customComponents/index.js"))).toBe(true);
+    expect(await pathExists(publicFolderUnauth("/lib/customComponents/index.js"))).toBe(true);
+    
+    expect(await pathExists(publicFolderMain("/lib/moreCustomComponents/index.js"))).toBe(true);
+    expect(await pathExists(publicFolderUnauth("/lib/moreCustomComponents/index.js"))).toBe(true);
+    
+    expect(await pathExists(publicFolderMain("/lib/node_modules/budibase-standard-components/index.js"))).toBe(true);
+    expect(await pathExists(publicFolderUnauth("/lib/node_modules/budibase-standard-components/index.js"))).toBe(true);
+    
+    expect(await pathExists(publicFolderUnauth("/budibase-client.js"))).toBe(true);
+    expect(await pathExists(publicFolderUnauth("/clientAppDefinition.js"))).toBe(true);
+    
+    
+    
+
+})

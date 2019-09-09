@@ -7,7 +7,7 @@ const {
     constants, copyFile, writeFile,
     readFile
 } = require("fs-extra");
-const { join } = require("path");
+const { join, resolve } = require("path");
 const sqrl = require('squirrelly');
 
 module.exports = async (config, appname, pages, appdefinition) => {
@@ -16,12 +16,12 @@ module.exports = async (config, appname, pages, appdefinition) => {
 
     await buildClientAppDefinition(
         config, appname,
-        appdefinition, componentLibraries, 
+        appdefinition, 
         appPath, pages, "main");
 
     await buildClientAppDefinition(
         config, appname,
-        appdefinition, componentLibraries, 
+        appdefinition, 
         appPath, pages, "unauthenticated")
 
     await buildIndexHtml(
@@ -37,7 +37,7 @@ module.exports = async (config, appname, pages, appdefinition) => {
 
 }
 
-const publicPath = async (appPath, pageName) => join(appPath, "public", pageName);
+const publicPath = (appPath, pageName) => join(appPath, "public", pageName);
 const rootPath = (config, appname) => config.useAppRootPath ? `/${appname}` : "";
 
 const copyClientLib = async (appPath, pageName) => {
@@ -64,19 +64,22 @@ const buildIndexHtml = async (config, appname, appPath, pages, pageName) => {
     const templateObj = {
         title: pages[pageName].index.title || "Budibase App",
         favicon: `${appRootPath}/${pages[pageName].index.favicon || "/assets/favicon.png"}`,
-        stylesheets: pages.stylesheets.map(stylesheetUrl),
+        stylesheets: (pages.stylesheets || []).map(stylesheetUrl),
         appRootPath
     }
 
     const indexHtmlTemplate = await readFile(
-        resolve(__dirname, "index.template.html"));
+        resolve(__dirname, "index.template.html"), "utf8");
 
     const indexHtmlPath = join(appPublicPath, "index.html");
 
+    const indexHtml = sqrl.Render(indexHtmlTemplate, templateObj)
+
     await writeFile(
         indexHtmlPath, 
-        sqrl.Render(indexHtmlTemplate, templateObj),
+        indexHtml,
         {flag:"w+"});
+    
 }
 
 
@@ -91,11 +94,17 @@ const buildClientAppDefinition = async (config, appname, appdefinition, appPath,
 
     for(let lib of pages.componentLibraries) {
         const info = await componentLibraryInfo(appPath, lib);
-        const source = join(info.libDir, info.components._lib);
+        const libFile = info.components._lib || "index.js";
+        let source;
+        try {
+        source = join(info.libDir, libFile);
+        } catch(e) {
+            console.log(e);
+        }
         const destDir = join(appPublicPath, "lib", info.libDir.replace(appPath, ""));
         await ensureDir(destDir);
 
-        const destPath = join(destDir, info.components._lib);        
+        const destPath = join(destDir, libFile);        
         componentLibraries.push(destPath);
 
         let shouldCopy = !(await pathExists(destPath));

@@ -1,1 +1,75 @@
-{"levels":[{"name":"owner","permissions":[{"type":"create record","nodeKey":"/customers/1-{id}"},{"type":"delete record","nodeKey":"/customers/1-{id}"},{"type":"update record","nodeKey":"/customers/1-{id}"},{"type":"read record","nodeKey":"/customers/1-{id}"},{"type":"create record","nodeKey":"/customers/1-{id}/invoices/2-{id}"},{"type":"update record","nodeKey":"/customers/1-{id}/invoices/2-{id}"},{"type":"delete record","nodeKey":"/customers/1-{id}/invoices/2-{id}"},{"type":"read record","nodeKey":"/customers/1-{id}/invoices/2-{id}"},{"type":"write templates"},{"type":"create user"},{"type":"set password"},{"type":"create temporary access"},{"type":"enable or disable user"},{"type":"write access levels"},{"type":"list users"},{"type":"list access levels"},{"type":"manage index"},{"type":"set user access levels"},{"type":"manage collection"}]}],"version":0}
+{
+  "levels": [
+    {
+      "name": "owner",
+      "permissions": [
+        {
+          "type": "create record",
+          "nodeKey": "/customers/1-{id}"
+        },
+        {
+          "type": "delete record",
+          "nodeKey": "/customers/1-{id}"
+        },
+        {
+          "type": "update record",
+          "nodeKey": "/customers/1-{id}"
+        },
+        {
+          "type": "read record",
+          "nodeKey": "/customers/1-{id}"
+        },
+        {
+          "type": "create record",
+          "nodeKey": "/customers/1-{id}/invoices/2-{id}"
+        },
+        {
+          "type": "update record",
+          "nodeKey": "/customers/1-{id}/invoices/2-{id}"
+        },
+        {
+          "type": "delete record",
+          "nodeKey": "/customers/1-{id}/invoices/2-{id}"
+        },
+        {
+          "type": "read record",
+          "nodeKey": "/customers/1-{id}/invoices/2-{id}"
+        },
+        {
+          "type": "write templates"
+        },
+        {
+          "type": "create user"
+        },
+        {
+          "type": "set password"
+        },
+        {
+          "type": "create temporary access"
+        },
+        {
+          "type": "enable or disable user"
+        },
+        {
+          "type": "write access levels"
+        },
+        {
+          "type": "list users"
+        },
+        {
+          "type": "list access levels"
+        },
+        {
+          "type": "manage index"
+        },
+        {
+          "type": "set user access levels"
+        },
+        {
+          "type": "manage collection"
+        }
+      ]
+    }
+  ],
+  "version": 0
+}

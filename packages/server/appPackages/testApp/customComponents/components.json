@@ -1,4 +1,5 @@
 {
+    "_lib": "index.js",
     "textbox" : {
         "path": "./textbox",
         "name": "Textbox",

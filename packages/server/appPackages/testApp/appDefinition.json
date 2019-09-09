@@ -74,13 +74,19 @@
     }
   ],
   "actions": {
-    "output_to_file": 
-    {
-        "name": "output_to_file",
-        "behaviourSource": "main",
-        "behaviourName": "outputToFile",
-        "initialOptions": {}
+    "output_to_file": {
+      "name": "output_to_file",
+      "behaviourSource": "main",
+      "behaviourName": "outputToFile",
+      "initialOptions": {}
     }
-
+  },
+  "props": {
+    "main": {
+      "_component": "some_component"
+    },
+    "unauthenticated": {
+      "_component": "some_other_component"
+    }
   }
 }

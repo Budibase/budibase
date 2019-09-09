@@ -131,12 +131,14 @@
                         [
                           [
                             [
-                              {
-                                "name": "output_to_file",
-                                "behaviourSource": "main",
-                                "behaviourName": "outputToFile",
-                                "initialOptions": {}
-                              }
+                              [
+                                {
+                                  "name": "output_to_file",
+                                  "behaviourSource": "main",
+                                  "behaviourName": "outputToFile",
+                                  "initialOptions": {}
+                                }
+                              ]
                             ]
                           ]
                         ]
@@ -151,6 +153,8 @@
       ]
     ]
   },
-  "mainUi": {},
-  "unauthenticatedUi": {}
+  "props": {
+    "main": {},
+    "unauthenticated": {}
+  }
 }

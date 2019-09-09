@@ -65,6 +65,13 @@ module.exports = (config, app) => {
         await send(ctx, "/index.html", { root: builderPath });
 
     })
+    .get("/_builder/:appname/componentlibrary", async (ctx) => {
+        const info = await componentLibraryInfo(
+            config,
+            ctx.params.appname,
+            ctx.query.lib);
+        await send(ctx, info.components._lib || "index.js", { root: info.libDir});
+    })
     .get("/_builder/*", async (ctx, next) => {
         if(!config.dev) {
             ctx.response.status = StatusCodes.FORBIDDEN;
@@ -161,12 +168,14 @@ module.exports = (config, app) => {
             }
         }
     })
-    .get("/:appname/componentlibrary", async (ctx) => {
+    
+    .get("/_builder/api/:appname/componentlibrary", async (ctx) => {
         const info = await componentLibraryInfo(
             config,
             ctx.params.appname,
-            ctx.query.lib);
-        await send(ctx, info.libDir, { root: info.components._lib });
+            ctx.query.lib ? decodeURI(ctx.query.lib) : "");
+        ctx.body = info.components;
+        ctx.response.status = StatusCodes.OK;
     })
     .post("/_builder/api/:appname/derivedcomponent", async (ctx) => {
         await saveDerivedComponent(
@@ -190,7 +199,7 @@ module.exports = (config, app) => {
         await deleteDerivedComponent(
             config,
             ctx.params.appname,
-            name);
+            decodeURI(name));
         ctx.response.status = StatusCodes.OK;
     })
     .get("/:appname", async (ctx) => {

@@ -28039,69 +28039,6 @@
 
     });
 
-    const apiCall = (method, returnJson) => (url, body, returnJsonOverride) => 
-        fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: body && JSON.stringify(body), 
-        }).then(r => {
-            if(!fp_3(returnJsonOverride)) 
-                returnJson = returnJsonOverride;
-            return returnJson ? r.json() : r
-        });
-
-    const post = apiCall("POST", true);
-    const get$2 = apiCall("GET", true);
-    const patch = apiCall("PATCH", true);
-    const del = apiCall("DELETE", false);
-
-    var api$1 = {
-        post, get: get$2, patch, delete:del
-    };
-
-    const normalString = s => (s||"").trim().toLowerCase();
-
-    const isRootComponent = c => isComponent(c) && fp_3(c.inherits);
-
-    const isComponent = c => {
-        const hasProp = (n) => !fp_3(c[n]);
-        return hasProp("name") && hasProp("props");
-    };
-
-    const searchAllComponents = (allComponents, phrase) => {
-
-        const hasPhrase = (...vals) => 
-            pipe(vals, [
-                fp_6(v => fp_11(normalString(phrase))(normalString(v)))
-            ]);
-
-        const componentMatches = c => {
-            if(hasPhrase(c.name, ...(c.tags || []))) return true;
-
-            if(isRootComponent(c)) return false;
-            
-            const parent = getExactComponent(
-                allComponents,
-                c.inherits);
-
-            return componentMatches(parent);
-        };
-
-        return fp_8(componentMatches)(allComponents);
-    }; 
-
-    const getExactComponent = (allComponents, name) => {
-        
-        const stringEquals = (s1, s2) => 
-            normalString(s1) === normalString(s2);
-        
-        return pipe(allComponents,[
-            fp_13(c => stringEquals(c.name, name))
-        ]);
-    };
-
     const defaultDef = typeName => () => ({
         type: typeName,
         required:false,
@@ -28142,7 +28079,7 @@
         return expandedProps;
     };
 
-    const isComponent$1 = fp_55;
+    const isComponent = fp_55;
 
     const types = {
         string: propType(() => "", fp_22, defaultDef("string")),
@@ -28150,8 +28087,49 @@
         number: propType(() => 0, fp_21, defaultDef("number")),
         array: propType(() => [], fp_25, defaultDef("array")),
         options: propType(() => "", fp_22, defaultDef("options")),
-        component: propType(() => ({_component:""}), isComponent$1, defaultDef("component")),
+        component: propType(() => ({_component:""}), isComponent, defaultDef("component")),
         asset: propType(() => "", fp_22, defaultDef("asset")),
+    };
+
+    const normalString = s => (s||"").trim().toLowerCase();
+
+    const isRootComponent = c => isComponent$1(c) && fp_3(c.inherits);
+
+    const isComponent$1 = c => {
+        const hasProp = (n) => !fp_3(c[n]);
+        return hasProp("name") && hasProp("props");
+    };
+
+    const searchAllComponents = (allComponents, phrase) => {
+
+        const hasPhrase = (...vals) => 
+            pipe(vals, [
+                fp_6(v => fp_11(normalString(phrase))(normalString(v)))
+            ]);
+
+        const componentMatches = c => {
+            if(hasPhrase(c.name, ...(c.tags || []))) return true;
+
+            if(isRootComponent(c)) return false;
+            
+            const parent = getExactComponent(
+                allComponents,
+                c.inherits);
+
+            return componentMatches(parent);
+        };
+
+        return fp_8(componentMatches)(allComponents);
+    }; 
+
+    const getExactComponent = (allComponents, name) => {
+        
+        const stringEquals = (s1, s2) => 
+            normalString(s1) === normalString(s2);
+        
+        return pipe(allComponents,[
+            fp_13(c => stringEquals(c.name, name))
+        ]);
     };
 
     const getInstanceProps = (componentInfo, props) => {
@@ -28303,6 +28281,85 @@
     - required: field is required 
     */
 
+    const buildPropsHierarchy = (allComponents, baseComponent) => {
+
+        const buildProps = (componentName, propsDefinition, derivedFromProps) => {
+
+            const {props} = createProps(componentName, propsDefinition, derivedFromProps);
+            props._component = componentName;
+            for(let propName in props) {
+                if(propName === "_component") continue;
+
+                const propDef = propsDefinition[propName];
+                if(propDef.type === "component") {
+
+                    const subComponentProps = props[propName];
+                    
+                    if(!subComponentProps._component) continue;
+
+                    const propComponentInfo = getComponentInfo(
+                        allComponents, subComponentProps._component);
+
+                    const subComponentInstanceProps = getInstanceProps(
+                        propComponentInfo,
+                        subComponentProps
+                    );
+
+                    props[propName] = buildProps(
+                        propComponentInfo.rootComponent.name,
+                        propComponentInfo.propsDefinition,
+                        subComponentInstanceProps);
+
+                } else if(propDef.type === "array") {
+                    const propsArray = props[propName];
+                    const newPropsArray = [];
+                    let index = 0;
+                    for(let element of propsArray) {
+                        newPropsArray.push(
+                            buildProps(
+                                `${propName}[${index}]`,
+                                propDef.elementDefinition,
+                                element));
+                        index++;
+                    }
+
+                    props[propName] = newPropsArray;
+                }
+            }
+
+            return props;
+
+        };
+
+        if(!baseComponent) return {};
+
+        const baseComponentInfo  = getComponentInfo(allComponents, baseComponent);
+
+        return buildProps(
+            baseComponentInfo.rootComponent.name,
+            baseComponentInfo.propsDefinition,
+            baseComponentInfo.fullProps);
+
+    };
+
+    const apiCall = (method) => (url, body) => 
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: body && JSON.stringify(body), 
+        });
+
+    const post = apiCall("POST");
+    const get$2 = apiCall("GET");
+    const patch = apiCall("PATCH");
+    const del = apiCall("DELETE");
+
+    var api$1 = {
+        post, get: get$2, patch, delete:del
+    };
+
     const loadLibs = async (appName, appPackage) => {
 
         const allLibraries = {};
@@ -28315,7 +28372,9 @@
     };
 
     const makeLibraryUrl = (appName, lib) => 
-        `/_builder/api/${appName}/componentlibrary?lib=${encodeURI(lib)}`;
+        `/_builder/${appName}/componentlibrary?lib=${encodeURI(lib)}`;
+
+    let appname = "";
 
     const getStore = () => {
 
@@ -28382,18 +28441,19 @@
 
     const initialise = (store, initial) => async () => {
 
-        const appname = window.location.hash 
-                    ? fp_12(window.location.hash.substr(1).split("/"))
-                    : "";
+        appname = window.location.hash 
+                  ? fp_12(window.location.hash.substr(1).split("/"))
+                  : "";
 
         if(!appname) {
-            initial.apps = await api$1.get(`/_builder/api/apps`);
+            initial.apps = await api$1.get(`/_builder/api/apps`).then(r => r.json());
             initial.hasAppPackage = false;
             store.set(initial);
             return initial;
         }
 
-        const pkg = await api$1.get(`/_builder/api/${appname}/appPackage`);
+        const pkg = await api$1.get(`/_builder/api/${appname}/appPackage`)
+                             .then(r => r.json());
 
         initial.libraries = await loadLibs(appname, pkg);
         initial.appname = appname;
@@ -28694,7 +28754,13 @@
                 fp_32([derivedComponent])
             ]);
 
+            const derivedComponents = pipe(s.derivedComponents, [
+                fp_8(c => c.name !== derivedComponent.name),
+                fp_32([derivedComponent])
+            ]);
+
             s.allComponents = components;
+            s.derivedComponents = derivedComponents;
             s.currentFrontEndItem = derivedComponent;
             s.currentComponentInfo = getNewComponentInfo(
                 s.allComponents, derivedComponent.name);
@@ -28725,7 +28791,12 @@
                 fp_8(c => c.name !== name)
             ]);
 
+            const derivedComponents = pipe(s.derivedComponents, [
+                fp_8(c => c.name !== name)
+            ]);
+
             s.allComponents = allComponents;
+            s.derivedComponents = derivedComponents;
             if(s.currentFrontEndItem.name === name) {
                 s.currentFrontEndItem = null;
             }
@@ -28775,7 +28846,7 @@
     const addComponentLibrary = store => async lib => {
 
         const response = 
-            await api$1.get(`/_builder/api/${db.appname}/components?${encodeURI(lib)}`,undefined, false);
+            await api$1.get(`/_builder/api/${appname}/componentlibrary?lib=${encodeURI(lib)}`,undefined, false);
 
         const success = response.status === 200;
 
@@ -28790,12 +28861,16 @@
                            : [];
 
         store.update(s => {
-            s.componentsErrors.addComponent = error;
             if(success) {
                 
+                const componentsArray = [];
+                for(let c in components) {
+                    componentsArray.push(components[c]);
+                }
+
                 s.allComponents = pipe(s.allComponents, [
-                    fp_8(c => !isRootComponent(c)),
-                    fp_32(components)
+                    fp_8(c => !c.name.startsWith(`${lib}/`)),
+                    fp_32(componentsArray)
                 ]);
 
                 s.pages.componentLibraries.push(lib);
@@ -28840,7 +28915,7 @@
     const refreshComponents = store => async () => {
 
         const components = 
-            await api$1.get(`/_builder/api/${db.appname}/components`);
+            await api$1.get(`/_builder/api/${db.appname}/components`).then(r => r.json());
 
         const rootComponents = pipe(components, [
             fp_30,
@@ -28862,8 +28937,10 @@
             hierarchy:s.hierarchy,
             triggers:s.triggers,
             actions: fp_45("name")(s.actions),
-            mainUi: s.mainUi,
-            unauthenticatedUi: s.unauthenticatedUi
+            props: {
+                main: buildPropsHierarchy(s.allComponents, s.pages.main.appBody),
+                unauthenticated:  buildPropsHierarchy(s.allComponents, s.pages.unauthenticated.appBody)
+            }
         };
 
         const data = {
@@ -31455,7 +31532,7 @@
 
     /******/ });
     });
-
+    //# sourceMappingURL=feather.js.map
     });
 
     var feather$1 = unwrapExports(feather);
@@ -50504,7 +50581,7 @@
     	var if_blocks = [];
 
     	function select_block_type(changed, ctx) {
-    		if ((show_if == null) || changed.$store) show_if = !!(isComponent(ctx.$store.currentFrontEndItem));
+    		if ((show_if == null) || changed.$store) show_if = !!(isComponent$1(ctx.$store.currentFrontEndItem));
     		if (show_if) return 0;
     		return 1;
     	}
@@ -50676,7 +50753,7 @@
     }
 
     function create_fragment$l(ctx) {
-    	var div11, div9, div4, div2, div0, raw0_value = getIcon("sidebar","18") + "", t0, span0, t2, div1, t3, t4, div3, t5, div8, div6, div5, raw1_value = getIcon("grid","18") + "", t6, span1, t8, div7, t9, div10, t10, show_if = ctx.$store.currentFrontEndItem && isComponent(ctx.$store.currentFrontEndItem), t11, t12, current;
+    	var div11, div9, div4, div2, div0, raw0_value = getIcon("sidebar","18") + "", t0, span0, t2, div1, t3, t4, div3, t5, div8, div6, div5, raw1_value = getIcon("grid","18") + "", t6, span1, t8, div7, t9, div10, t10, show_if = ctx.$store.currentFrontEndItem && isComponent$1(ctx.$store.currentFrontEndItem), t11, t12, current;
 
     	var iconbutton0 = new IconButton({
     		props: { icon: "settings", size: "14" },
@@ -50846,7 +50923,7 @@
     				check_outros();
     			}
 
-    			if (changed.$store) show_if = ctx.$store.currentFrontEndItem && isComponent(ctx.$store.currentFrontEndItem);
+    			if (changed.$store) show_if = ctx.$store.currentFrontEndItem && isComponent$1(ctx.$store.currentFrontEndItem);
 
     			if (show_if) {
     				if (!if_block1) {

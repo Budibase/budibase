@@ -1,10 +1,8 @@
 {
-  "name": "Primary Button",
+  "name": "subfolder/path/buttony",
   "description": "",
   "inherits": "budibase-standard-components/button",
-  "props": {
-    "className": "btn btn-pimary"
-  },
+  "props": {},
   "tags": [
     "button"
   ]
