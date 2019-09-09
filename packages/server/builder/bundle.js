@@ -28936,7 +28936,7 @@
         const appDefinition = {
             hierarchy:s.hierarchy,
             triggers:s.triggers,
-            actions: fp_45("name")(s.actions),
+            actions: s.actions,
             props: {
                 main: buildPropsHierarchy(s.allComponents, s.pages.main.appBody),
                 unauthenticated:  buildPropsHierarchy(s.allComponents, s.pages.unauthenticated.appBody)
@@ -59838,7 +59838,7 @@
     	return child_ctx;
     }
 
-    // (68:0) {:else}
+    // (76:0) {:else}
     function create_else_block$9(ctx) {
     	var t;
 
@@ -59861,11 +59861,11 @@
     	};
     }
 
-    // (42:0) {#if $store.actions}
+    // (50:0) {#if actionsArray}
     function create_if_block_1$a(ctx) {
     	var table, thead, tr, th0, t1, th1, t3, th2, t5, th3, t7, th4, t8, tbody;
 
-    	var each_value = ctx.$store.actions;
+    	var each_value = ctx.actionsArray;
 
     	var each_blocks = [];
 
@@ -59897,16 +59897,16 @@
     			for (var i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			add_location(th0, file$C, 45, 12, 1146);
-    			add_location(th1, file$C, 46, 12, 1179);
-    			add_location(th2, file$C, 47, 12, 1217);
-    			add_location(th3, file$C, 48, 12, 1253);
-    			add_location(th4, file$C, 49, 12, 1290);
-    			add_location(tr, file$C, 44, 8, 1129);
-    			add_location(thead, file$C, 43, 4, 1113);
-    			add_location(tbody, file$C, 52, 4, 1331);
+    			add_location(th0, file$C, 53, 12, 1285);
+    			add_location(th1, file$C, 54, 12, 1318);
+    			add_location(th2, file$C, 55, 12, 1356);
+    			add_location(th3, file$C, 56, 12, 1392);
+    			add_location(th4, file$C, 57, 12, 1429);
+    			add_location(tr, file$C, 52, 8, 1268);
+    			add_location(thead, file$C, 51, 4, 1252);
+    			add_location(tbody, file$C, 60, 4, 1470);
     			attr(table, "class", "fields-table uk-table uk-table-small");
-    			add_location(table, file$C, 42, 0, 1056);
+    			add_location(table, file$C, 50, 0, 1195);
     		},
 
     		m: function mount(target, anchor) {
@@ -59931,8 +59931,8 @@
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.getIcon || changed.getDefaultOptionsHtml || changed.$store) {
-    				each_value = ctx.$store.actions;
+    			if (changed.getIcon || changed.getDefaultOptionsHtml || changed.actionsArray) {
+    				each_value = ctx.actionsArray;
 
     				for (var i = 0; i < each_value.length; i += 1) {
     					const child_ctx = get_each_context$e(ctx, each_value, i);
@@ -59963,7 +59963,7 @@
     	};
     }
 
-    // (54:8) {#each $store.actions as action}
+    // (62:8) {#each actionsArray as action}
     function create_each_block$e(ctx) {
     	var tr, td0, t0_value = ctx.action.name + "", t0, t1, td1, t2_value = ctx.action.behaviourSource + "", t2, t3, td2, t4_value = ctx.action.behaviourName + "", t4, t5, td3, raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions) + "", t6, td4, span0, raw1_value = getIcon("edit") + "", t7, span1, raw2_value = getIcon("trash") + "", t8, dispose;
 
@@ -59994,16 +59994,16 @@
     			t7 = space();
     			span1 = element("span");
     			t8 = space();
-    			add_location(td0, file$C, 55, 12, 1405);
-    			add_location(td1, file$C, 56, 12, 1441);
-    			add_location(td2, file$C, 57, 12, 1488);
-    			add_location(td3, file$C, 58, 12, 1533);
-    			add_location(span0, file$C, 60, 16, 1649);
-    			add_location(span1, file$C, 61, 16, 1740);
+    			add_location(td0, file$C, 63, 12, 1542);
+    			add_location(td1, file$C, 64, 12, 1578);
+    			add_location(td2, file$C, 65, 12, 1625);
+    			add_location(td3, file$C, 66, 12, 1670);
+    			add_location(span0, file$C, 68, 16, 1786);
+    			add_location(span1, file$C, 69, 16, 1877);
     			attr(td4, "class", "edit-button svelte-neetem");
-    			add_location(td4, file$C, 59, 12, 1608);
+    			add_location(td4, file$C, 67, 12, 1745);
     			attr(tr, "class", "svelte-neetem");
-    			add_location(tr, file$C, 54, 8, 1388);
+    			add_location(tr, file$C, 62, 8, 1525);
 
     			dispose = [
     				listen(span0, "click", click_handler),
@@ -60036,19 +60036,19 @@
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((changed.$store) && t0_value !== (t0_value = ctx.action.name + "")) {
+    			if ((changed.actionsArray) && t0_value !== (t0_value = ctx.action.name + "")) {
     				set_data(t0, t0_value);
     			}
 
-    			if ((changed.$store) && t2_value !== (t2_value = ctx.action.behaviourSource + "")) {
+    			if ((changed.actionsArray) && t2_value !== (t2_value = ctx.action.behaviourSource + "")) {
     				set_data(t2, t2_value);
     			}
 
-    			if ((changed.$store) && t4_value !== (t4_value = ctx.action.behaviourName + "")) {
+    			if ((changed.actionsArray) && t4_value !== (t4_value = ctx.action.behaviourName + "")) {
     				set_data(t4, t4_value);
     			}
 
-    			if ((changed.$store) && raw0_value !== (raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions) + "")) {
+    			if ((changed.actionsArray) && raw0_value !== (raw0_value = ctx.getDefaultOptionsHtml(ctx.action.initialOptions) + "")) {
     				td3.innerHTML = raw0_value;
     			}
     		},
@@ -60063,7 +60063,7 @@
     	};
     }
 
-    // (74:4) {#if isEditing}
+    // (82:4) {#if isEditing}
     function create_if_block$f(ctx) {
     	var current;
 
@@ -60114,7 +60114,7 @@
     	};
     }
 
-    // (73:0) <Modal bind:isOpen={isEditing}>
+    // (81:0) <Modal bind:isOpen={isEditing}>
     function create_default_slot$8(ctx) {
     	var if_block_anchor, current;
 
@@ -60177,7 +60177,7 @@
     	var h3, t1, t2, updating_isOpen, current;
 
     	function select_block_type(changed, ctx) {
-    		if (ctx.$store.actions) return create_if_block_1$a;
+    		if (ctx.actionsArray) return create_if_block_1$a;
     		return create_else_block$9;
     	}
 
@@ -60209,7 +60209,7 @@
     			if_block.c();
     			t2 = space();
     			modal.$$.fragment.c();
-    			add_location(h3, file$C, 39, 0, 1017);
+    			add_location(h3, file$C, 47, 0, 1158);
     		},
 
     		l: function claim(nodes) {
@@ -60287,6 +60287,14 @@
     let { onActionSave = (action) => {} } = $$props;
     let { onActionCancel = () => {} } = $$props; 
 
+    let actionsArray = [];
+    store.subscribe(s => {
+        $$invalidate('actionsArray', actionsArray = pipe(s.actions, [
+            fp_30,
+            fp_7(k => s.actions[k])
+        ]));
+    });
+
     let getDefaultOptionsHtml = defaultOptions => 
         pipe(defaultOptions, [
             fp_30,
@@ -60344,6 +60352,7 @@
     		onActionDelete,
     		onActionSave,
     		onActionCancel,
+    		actionsArray,
     		getDefaultOptionsHtml,
     		actionEditingFinished,
     		isEditing,

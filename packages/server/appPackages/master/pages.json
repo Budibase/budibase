@@ -7,7 +7,7 @@
     "index": {
       "title": "Test App Two"
     },
-    "appBody": "login"
+    "appBody": "login_screen"
   },
   "componentLibraries": [
     "budibase-standard-components"

@@ -132,12 +132,14 @@
                           [
                             [
                               [
-                                {
-                                  "name": "output_to_file",
-                                  "behaviourSource": "main",
-                                  "behaviourName": "outputToFile",
-                                  "initialOptions": {}
-                                }
+                                [
+                                  {
+                                    "name": "output_to_file",
+                                    "behaviourSource": "main",
+                                    "behaviourName": "outputToFile",
+                                    "initialOptions": {}
+                                  }
+                                ]
                               ]
                             ]
                           ]
@@ -155,6 +157,13 @@
   },
   "props": {
     "main": {},
-    "unauthenticated": {}
+    "unauthenticated": {
+      "_component": "budibase-standard-components/login",
+      "logo": "/assets/budibase-logo.png",
+      "loginRedirect": "",
+      "usernameLabel": "Username",
+      "passwordLabel": "Password",
+      "loginButtonLabel": "Login"
+    }
   }
 }

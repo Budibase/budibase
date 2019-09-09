@@ -490,26 +490,6 @@
     ],
     "nodeId": 0
   },
-  "actions": {
-    "initialise_instance": {
-      "name": "initialise_instance",
-      "behaviourSource": "main",
-      "behaviourName": "initialiseInstance",
-      "initialOptions": {}
-    },
-    "create_user": {
-      "name": "create_user",
-      "behaviourSource": "main",
-      "behaviourName": "createNewUser",
-      "initialOptions": {}
-    },
-    "set_default_version": {
-      "name": "set_default_version",
-      "behaviourSource": "main",
-      "behaviourName": "setDefaultVersion",
-      "initialOptions": {}
-    }
-  },
   "triggers": [
     {
       "actionName": "initialise_instance",
@@ -523,5 +503,42 @@
       "optionsCreator": "return ({ user:context.record, apis });",
       "condition": "context.record.type === \"user\" && context.record.createdByMaster === true"
     }
-  ]
+  ],
+  "actions": {
+    "initialise_instance": 
+  {
+	"name": "initialise_instance",
+	"behaviourSource": "main",
+	"behaviourName": "initialiseInstance",
+	"initialOptions": {}
+  }
+    ,
+    "create_user": 
+      {
+        "name": "create_user",
+        "behaviourSource": "main",
+        "behaviourName": "createNewUser",
+        "initialOptions": {}
+      }
+    ,
+    "set_default_version": 
+      {
+        "name": "set_default_version",
+        "behaviourSource": "main",
+        "behaviourName": "setDefaultVersion",
+        "initialOptions": {}
+      }
+    
+  },
+  "props": {
+    "main": {},
+    "unauthenticated": {
+      "_component": "budibase-standard-components/login",
+      "logo": "/assets/budibase-logo.png",
+      "loginRedirect": "",
+      "usernameLabel": "Username",
+      "passwordLabel": "Password",
+      "loginButtonLabel": "Login"
+    }
+  }
 }

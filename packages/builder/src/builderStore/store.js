@@ -597,7 +597,7 @@ const savePackage = (store, s) => {
     const appDefinition = {
         hierarchy:s.hierarchy,
         triggers:s.triggers,
-        actions: groupBy("name")(s.actions),
+        actions: s.actions,
         props: {
             main: buildPropsHierarchy(s.allComponents, s.pages.main.appBody),
             unauthenticated:  buildPropsHierarchy(s.allComponents, s.pages.unauthenticated.appBody)

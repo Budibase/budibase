@@ -1,0 +1,14 @@
+{
+  "name": "login_screen",
+  "description": "",
+  "inherits": "budibase-standard-components/login",
+  "props": {
+    "logo": "/assets/budibase-logo.png"
+  },
+  "tags": [
+    "login",
+    "credentials",
+    "password",
+    "logon"
+  ]
+}

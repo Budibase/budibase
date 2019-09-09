@@ -18,6 +18,14 @@ export let onActionCancel = () => {};
 
 $: isEditing = (editingAction !== null); 
 
+let actionsArray = [];
+store.subscribe(s => {
+    actionsArray = pipe(s.actions, [
+        keys,
+        map(k => s.actions[k])
+    ]);
+});
+
 let getDefaultOptionsHtml = defaultOptions => 
     pipe(defaultOptions, [
         keys,
@@ -39,7 +47,7 @@ let actionEditingFinished = (action) => {
 
 <h3>Actions</h3>
 
-{#if $store.actions}
+{#if actionsArray}
 <table class="fields-table uk-table uk-table-small">
     <thead>
         <tr>
@@ -51,7 +59,7 @@ let actionEditingFinished = (action) => {
         </tr>
     </thead>
     <tbody>
-        {#each $store.actions as action}
+        {#each actionsArray as action}
         <tr>
             <td >{action.name}</td>
             <td >{action.behaviourSource}</td>
