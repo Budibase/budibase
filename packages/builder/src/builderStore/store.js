@@ -33,6 +33,8 @@ import {
 } from "../userInterface/pagesParsing/createProps";
 import { loadLibs } from "./loadComponentLibraries";
 
+let appname = "";
+
 export const getStore = () => {
 
     const initial = {
@@ -100,18 +102,19 @@ export default getStore;
 
 const initialise = (store, initial) => async () => {
 
-    const appname = window.location.hash 
-                ? last(window.location.hash.substr(1).split("/"))
-                : "";
+    appname = window.location.hash 
+              ? last(window.location.hash.substr(1).split("/"))
+              : "";
 
     if(!appname) {
-        initial.apps = await api.get(`/_builder/api/apps`);
+        initial.apps = await api.get(`/_builder/api/apps`).then(r => r.json());
         initial.hasAppPackage = false;
         store.set(initial);
         return initial;
     }
 
-    const pkg = await api.get(`/_builder/api/${appname}/appPackage`);
+    const pkg = await api.get(`/_builder/api/${appname}/appPackage`)
+                         .then(r => r.json());
 
     initial.libraries = await loadLibs(appname, pkg);
     initial.appname = appname;
@@ -412,7 +415,13 @@ const saveDerivedComponent = store => (derivedComponent) => {
             concat([derivedComponent])
         ]);
 
+        const derivedComponents = pipe(s.derivedComponents, [
+            filter(c => c.name !== derivedComponent.name),
+            concat([derivedComponent])
+        ]);
+
         s.allComponents = components;
+        s.derivedComponents = derivedComponents;
         s.currentFrontEndItem = derivedComponent;
         s.currentComponentInfo = getNewComponentInfo(
             s.allComponents, derivedComponent.name);
@@ -443,7 +452,12 @@ const deleteDerivedComponent = store => name => {
             filter(c => c.name !== name)
         ]);
 
+        const derivedComponents = pipe(s.derivedComponents, [
+            filter(c => c.name !== name)
+        ]);
+
         s.allComponents = allComponents;
+        s.derivedComponents = derivedComponents;
         if(s.currentFrontEndItem.name === name) {
             s.currentFrontEndItem = null;
         }
@@ -493,7 +507,7 @@ const savePage = store => async page => {
 const addComponentLibrary = store => async lib => {
 
     const response = 
-        await api.get(`/_builder/api/${db.appname}/components?${encodeURI(lib)}`,undefined, false);
+        await api.get(`/_builder/api/${appname}/componentlibrary?lib=${encodeURI(lib)}`,undefined, false);
 
     const success = response.status === 200;
 
@@ -508,12 +522,16 @@ const addComponentLibrary = store => async lib => {
                        : [];
 
     store.update(s => {
-        s.componentsErrors.addComponent = error;
         if(success) {
             
+            const componentsArray = [];
+            for(let c in components) {
+                componentsArray.push(components[c]);
+            }
+
             s.allComponents = pipe(s.allComponents, [
-                filter(c => !isRootComponent(c)),
-                concat(components)
+                filter(c => !c.name.startsWith(`${lib}/`)),
+                concat(componentsArray)
             ]);
 
             s.pages.componentLibraries.push(lib);
@@ -558,7 +576,7 @@ const removeStylesheet = store => stylesheet => {
 const refreshComponents = store => async () => {
 
     const components = 
-        await api.get(`/_builder/api/${db.appname}/components`);
+        await api.get(`/_builder/api/${db.appname}/components`).then(r => r.json());
 
     const rootComponents = pipe(components, [
         keys,

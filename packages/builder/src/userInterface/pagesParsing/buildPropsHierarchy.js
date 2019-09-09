@@ -53,6 +53,8 @@ export const buildPropsHierarchy = (allComponents, baseComponent) => {
 
     }
 
+    if(!baseComponent) return {};
+
     const baseComponentInfo  = getComponentInfo(allComponents, baseComponent);
 
     return buildProps(

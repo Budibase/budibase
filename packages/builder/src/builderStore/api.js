@@ -1,22 +1,18 @@
 import { isUndefined } from "lodash/fp";
 
-const apiCall = (method, returnJson) => (url, body, returnJsonOverride) => 
+const apiCall = (method) => (url, body) => 
     fetch(url, {
         method: method,
         headers: {
             'Content-Type': 'application/json',
         },
         body: body && JSON.stringify(body), 
-    }).then(r => {
-        if(!isUndefined(returnJsonOverride)) 
-            returnJson = returnJsonOverride;
-        return returnJson ? r.json() : r
     });
 
-const post = apiCall("POST", true);
-const get = apiCall("GET", true);
-const patch = apiCall("PATCH", true);
-const del = apiCall("DELETE", false);
+const post = apiCall("POST");
+const get = apiCall("GET");
+const patch = apiCall("PATCH");
+const del = apiCall("DELETE");
 
 export default {
     post, get, patch, delete:del
