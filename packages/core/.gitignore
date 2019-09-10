@@ -1,3 +1,6 @@
+dist/*js
+dist/*js.map
+
 # Logs
 logs
 *.log
@@ -28,7 +31,6 @@ build/Release
 node_modules
 node_modules_ubuntu
 node_modules_windows
-app/node_modules
 
 # OSX
 .DS_Store
@@ -37,19 +39,6 @@ app/node_modules
 flow-typed/npm/*
 !flow-typed/npm/module_vx.x.x.js
 
-# App packaged
-release
-app/main.prod.js
-app/main.prod.js.map
-app/renderer.prod.js
-app/renderer.prod.js.map
-app/style.css
-app/style.css.map
-dist
-dist-test
-dll
-main.js
-main.js.map
 
 .idea
 npm-debug.log.*

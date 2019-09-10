@@ -1,0 +1,23 @@
+{
+  "name": "budibase-core",
+  "version": "1.0.0",
+  "description": "",
+  "main": "budibase-core.umd.js",
+  "module": "budibase-core.esm.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "budibase"
+  ],
+  "author": "Michael Shanks",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "@nx-js/compiler-util": "^2.0.0",
+    "date-fns": "^1.29.0",
+    "lodash": "^4.17.13",
+    "lunr": "^2.3.5",
+    "safe-buffer": "^5.1.2",
+    "shortid": "^2.2.8"
+  }
+}
