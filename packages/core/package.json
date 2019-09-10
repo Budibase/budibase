@@ -1,5 +1,5 @@
 {
-  "name": "@budibase/budibase-core",
+  "name": "@budibase/core",
   "version": "0.0.1",
   "description": "core javascript library for budibase",
   "main": "/dist/budibase-core.umd.js",
