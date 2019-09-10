@@ -1,10 +1,12 @@
 {
-  "name": "budibase",
+  "name": "@budibase/server",
   "version": "0.0.1",
   "description": "Budibase Web Server",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "cd appPackages/master && yarn && cd ../testApp && yarn && cd ../testApp2 && yarn",
+    "initialise":"mkdir .data && node initialise/initialiseBudibase --datastore local --username admin --password admin --rootPath .data"
   },
   "keywords": [
     "budibase"
@@ -14,7 +16,7 @@
   "dependencies": {
     "@koa/router": "^8.0.0",
     "argon2": "^0.23.0",
-    "budibase-core": "file:../core/dist",
+    "@budibase/core": "^0.0.1",
     "fs-extra": "^8.1.0",
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",

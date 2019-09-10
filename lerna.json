@@ -1,7 +1,18 @@
 {
-  "npmClient": "npm",
+  "version": "0.0.1",
+  "npmClient": "yarn",
   "packages": [
     "packages/*"
   ],
-  "version": "0.0.0"
+  "command": {
+    "publish" :{
+      "ignoreChanges": [
+        "*.md",
+        "*.txt",
+        "test/**",
+        "# We ignore every JSON file, except for built-in-modules, built-ins and plugins defined in babel-preset-env/data.",
+        "@(!(built-in-modules|built-ins|plugins|package)).json"
+      ]
+    }
+  }
 }
