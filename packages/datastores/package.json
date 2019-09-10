@@ -1,6 +1,6 @@
 {
   "name": "@budibase/datastores",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "implementations of all the datastores... azureblob, local etc",
   "main": "index.js",
   "scripts": {
