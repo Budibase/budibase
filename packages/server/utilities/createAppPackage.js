@@ -1,6 +1,6 @@
 const { resolve, join } = require("path");
 const constructHierarchy = require("./constructHierarchy");
-const { common } = require("budibase-core");
+const { common } = require("@budibase/core");
 const { getRuntimePackageDirectory } = require("../utilities/runtimePackages");
 const injectPlugins = require("./injectedPlugins");
 const { cwd } = require("process"); 

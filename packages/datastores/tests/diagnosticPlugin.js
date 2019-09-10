@@ -1,4 +1,4 @@
-import {eventsList} from "budibase-core";
+import {eventsList} from "@budibase/core";
 import {filter,union,has,map} from "lodash/fp";
 import records from "./records";
 

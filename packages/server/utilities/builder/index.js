@@ -16,7 +16,7 @@ const {
     join,
     dirname
 } = require("path");
-const { $ } = require("budibase-core").common;
+const { $ } = require("@budibase/core").common;
 const { 
     keyBy
 } = require("lodash/fp");

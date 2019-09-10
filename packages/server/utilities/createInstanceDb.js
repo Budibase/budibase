@@ -1,4 +1,4 @@
-const {common, getAppApis} = require("budibase-core");
+const {common, getAppApis} = require("@budibase/core");
 const {getDatabaseManager} = require("./databaseManager"); 
 
 module.exports = async (productSetId, productId, versionId) => {

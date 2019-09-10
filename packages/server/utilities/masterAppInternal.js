@@ -5,7 +5,7 @@ const {
 } = require("./budibaseApi");
 const getDatastore = require("./datastore");
 const getDatabaseManager = require("./databaseManager");
-const {$, splitKey} = require("budibase-core").common;
+const {$, splitKey} = require("@budibase/core").common;
 const { keyBy, last, filter } = require("lodash/fp");
 const { 
     masterAppPackage, 

@@ -37,7 +37,7 @@ export default {
         {
             file: 'dist/budibase-core.umd.js',
             format: 'umd',
-            name: "budibase-core",
+            name: "@budibase/core",
             sourcemap: 'inline',
             globals
         }

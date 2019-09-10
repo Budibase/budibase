@@ -2,7 +2,7 @@ const {
     initialiseData, 
     setupDatastore,
     common
-} = require("budibase-core");
+} = require("@budibase/core");
 const getDatabaseManager = require("../utilities/databaseManager");  
 const { applictionVersionPackage }  = require("../utilities/createAppPackage");
 const { last } = require("lodash/fp");

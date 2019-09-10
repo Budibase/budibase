@@ -1,4 +1,4 @@
-const {initialiseData, setupDatastore} = require("budibase-core");
+const {initialiseData, setupDatastore} = require("@budibase/core");
 const constructHierarchy  = require("../utilities/constructHierarchy");
 const getDatabaseManager = require("../utilities/databaseManager"); 
 const {getApisForUser, getApisWithFullAccess} = require("../utilities/budibaseApi");  
