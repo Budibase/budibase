@@ -10,7 +10,7 @@
     "appBody": "login_screen"
   },
   "componentLibraries": [
-    "budibase-standard-components"
+    "@budibase/standard-components"
   ],
   "stylesheets": []
 }
