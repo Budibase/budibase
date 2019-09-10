@@ -5,7 +5,9 @@
   "scripts": {
     "build": "rollup -c",
     "start": "rollup -c -w",
-    "test": "jest"
+    "test": "jest",
+    "dev:builder" :"rollup -c -w"
+
   },
   "jest": {
     "globals": {

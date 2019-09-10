@@ -8,10 +8,6 @@ export let color = "var(--secondary100)";
 export let hoverColor = "var(--secondary75)";
 export let attributes = {};
 
-$: borderClass = grouped 
-                 ? ""
-                 : "border-normal";
-
 let currentAttributes = [];
 const addAttributes = (node, attributes) => {
 
