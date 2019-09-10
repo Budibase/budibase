@@ -16,7 +16,7 @@
   "componentLibraries": [
     "./customComponents",
     "./moreCustomComponents",
-    "budibase-standard-components"
+    "@budibase/standard-components"
   ],
   "stylesheets": [
     "https://css-r-us.com/myawesomestyles.css",
