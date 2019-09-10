@@ -1,13 +1,13 @@
 {
   "name": "@budibase/server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Budibase Web Server",
   "main": "index.js",
   "scripts": {
     "test": "jest",
     "build": "cd appPackages/master && yarn && cd ../testApp && yarn && cd ../testApp2 && yarn",
-    "initialise":"node initialise/initialiseBudibase --datastore local --username admin --password admin --rootPath .data --cleanDev",
-    "dev:builder" :"node index"
+    "initialise": "node initialise/initialiseBudibase --datastore local --username admin --password admin --rootPath .data --cleanDev",
+    "dev:builder": "node index"
   },
   "keywords": [
     "budibase"
@@ -15,9 +15,9 @@
   "author": "Michael Shanks",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@budibase/core": "^0.0.2",
     "@koa/router": "^8.0.0",
     "argon2": "^0.23.0",
-    "@budibase/core": "^0.0.1",
     "fs-extra": "^8.1.0",
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",
