@@ -22,7 +22,11 @@ module.exports.createTarGzPackage = async (config, appName) => {
         await unlink(packagePath);
     }
 
-    await compress(appPath, packagePath);
+    try {
+        await compress(appPath, packagePath);
+    }catch(e){
+        console.log(e);
+    }
     const size = (await stat(packagePath)).size;
     return {size, path:packagePath};
 }
@@ -48,7 +52,7 @@ const compress = (src, dest) => new Promise((resolve, reject) => {
 
     // ensure opts
     opts = {src, dest};
-    opts.tar = {ignore: name => dirname(name).split(sep).pop() === "dist"};
+    opts.tar = {ignore: name => dirname(name).split(sep).pop() === "dist"  || dirname(name).split(sep).pop() === "node_modules"};
     opts.gz = opts.gz || {};
 
     // default gzip config

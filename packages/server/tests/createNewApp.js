@@ -38,6 +38,7 @@ module.exports = (app) => {
 
     let version1Key = "";
     it("should be able to upload new version including package files", async () => {
+        jest.setTimeout(30000);
         const master = await getmaster();
         const version1 = master.recordApi
                             .getNew(`${newAppKey}/versions`, "version");

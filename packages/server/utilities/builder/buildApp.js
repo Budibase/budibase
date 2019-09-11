@@ -7,7 +7,7 @@ const {
     constants, copyFile, writeFile,
     readFile
 } = require("fs-extra");
-const { join, resolve } = require("path");
+const { join, resolve, dirname } = require("path");
 const sqrl = require('squirrelly');
 
 module.exports = async (config, appname, pages, appdefinition) => {
@@ -41,7 +41,7 @@ const publicPath = (appPath, pageName) => join(appPath, "public", pageName);
 const rootPath = (config, appname) => config.useAppRootPath ? `/${appname}` : "";
 
 const copyClientLib = async (appPath, pageName) => {
-    var sourcepath = require.resolve("budibase-client",{
+    var sourcepath = require.resolve("@budibase/client",{
         paths: [appPath]
     });
     var destPath = join(publicPath(appPath, pageName), "budibase-client.js");
@@ -95,16 +95,12 @@ const buildClientAppDefinition = async (config, appname, appdefinition, appPath,
     for(let lib of pages.componentLibraries) {
         const info = await componentLibraryInfo(appPath, lib);
         const libFile = info.components._lib || "index.js";
-        let source;
-        try {
-        source = join(info.libDir, libFile);
-        } catch(e) {
-            console.log(e);
-        }
-        const destDir = join(appPublicPath, "lib", info.libDir.replace(appPath, ""));
-        await ensureDir(destDir);
+        const source = join(info.libDir, libFile); 
+        const moduleDir = join(appPublicPath, "lib", info.libDir.replace(appPath, ""));
+        const destPath = join(moduleDir, libFile);   
 
-        const destPath = join(destDir, libFile);        
+        await ensureDir(dirname(destPath));
+             
         componentLibraries.push(destPath);
 
         let shouldCopy = !(await pathExists(destPath));

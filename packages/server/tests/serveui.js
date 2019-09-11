@@ -35,11 +35,11 @@ module.exports = (app) => {
     });
 
     it("should serve specified files when authenticated", async () => {
-        const response = await app.get("/testApp/app.js")
+        const response = await app.get("/testApp/budibase-client.js")
                             .set("cookie", app.credentials.testAppUser1.cookie)
                             .expect(statusCodes.OK);
 
-        const expectedFile = await readFile("appPackages/testApp/public/main/app.js", "utf8");
+        const expectedFile = await readFile("appPackages/testApp/public/main/budibase-client.js", "utf8");
 
         expect(response.text).toBe(expectedFile);
         

@@ -43,7 +43,7 @@ module.exports.getPackageForBuilder = async (config, appname) => {
 
         derivedComponents: keyBy("name")(
             await fetchDerivedComponents(appPath))
-    })
+    });
 
 }
 

@@ -154,8 +154,8 @@ it("/savePackage should prepare all necessary client files", async () => {
     expect(await pathExists(publicFolderMain("/lib/moreCustomComponents/index.js"))).toBe(true);
     expect(await pathExists(publicFolderUnauth("/lib/moreCustomComponents/index.js"))).toBe(true);
     
-    expect(await pathExists(publicFolderMain("/lib/node_modules/budibase-standard-components/index.js"))).toBe(true);
-    expect(await pathExists(publicFolderUnauth("/lib/node_modules/budibase-standard-components/index.js"))).toBe(true);
+    expect(await pathExists(publicFolderMain("/lib/node_modules/@budibase/standard-components/dist/index.js"))).toBe(true);
+    expect(await pathExists(publicFolderUnauth("/lib/node_modules/@budibase/standard-components/dist/index.js"))).toBe(true);
     
     expect(await pathExists(publicFolderUnauth("/budibase-client.js"))).toBe(true);
     expect(await pathExists(publicFolderUnauth("/clientAppDefinition.js"))).toBe(true);
