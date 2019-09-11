@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "budibase-client": "file:../../../client/dist",
-    "budibase-standard-components": "file:../../../standard-components/dist"
+    "@budibase/client": "file:../../../client",
+    "@budibase/standard-components": "file:../../../standard-components"
   }
 }

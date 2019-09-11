@@ -1,7 +1,8 @@
 {
   "name": "@budibase/standard-components",
   "svelte": "src/index.svelte",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
   "scripts": {
     "build": "rollup -c",
     "prepublishOnly": "npm run build",
@@ -24,8 +25,8 @@
     "svelte"
   ],
   "files": [
-    "dist"
+    "dist/**"
   ],
-  "version": "0.0.3",
+  "version": "0.0.5",
   "license": "MIT"
 }

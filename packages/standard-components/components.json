@@ -1,5 +1,5 @@
 {
-	"_lib": "./index.js",
+	"_lib": "./dist/index.js",
 	"button" : {
 		"importPath": "button",
 		"name": "Button",

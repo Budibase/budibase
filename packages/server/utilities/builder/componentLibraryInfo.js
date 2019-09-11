@@ -35,7 +35,7 @@ module.exports.componentLibraryInfo = async (appPath, libname) => {
 
     try {
         const components = await readJSON(componentsPath);
-        const namespacedComponents = {}
+        const namespacedComponents = {_lib:components._lib};
         for(let cname in components) {
             if(cname === "_lib") continue;
             const namespacedName = `${libname}/${cname}`;
