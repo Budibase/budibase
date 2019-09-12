@@ -47,6 +47,7 @@ const copyClientLib = async (appPath, pageName) => {
     var destPath = join(publicPath(appPath, pageName), "budibase-client.js");
 
     await copyFile(sourcepath, destPath, constants.COPYFILE_FICLONE);
+    await copyFile(sourcepath + ".map", destPath + ".map", constants.COPYFILE_FICLONE);
 
 }
 
@@ -101,7 +102,11 @@ const buildClientAppDefinition = async (config, appname, appdefinition, appPath,
 
         await ensureDir(dirname(destPath));
              
-        componentLibraries.push(destPath);
+        componentLibraries.push({
+            importPath: destPath.replace(appPublicPath, "")
+                                .replace(/\\/g, "/"),
+            libName: lib
+        });
 
         let shouldCopy = !(await pathExists(destPath));
         if(!shouldCopy) {
@@ -120,7 +125,7 @@ const buildClientAppDefinition = async (config, appname, appdefinition, appPath,
 
     const clientAppDefObj = {
         hierarchy: appdefinition.hierarchy,
-        componentLibraries: pages.componentLibraries,
+        componentLibraries: componentLibraries,
         appRootPath: appRootPath,
         props: appdefinition.props[pageName]
     }

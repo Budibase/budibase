@@ -2,4 +2,4 @@ import { initialise } from "./initialise";
 
 const appDefinition = window["##BUDIBASE_APPDEFINITION##"];
 
-initialise(appDefinition);
+initialise(window.document, appDefinition);

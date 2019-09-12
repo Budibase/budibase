@@ -1,7 +1,7 @@
 {
-  "name": "login_screen",
+  "name": "Login Screen",
   "description": "",
-  "inherits": "budibase-standard-components/login",
+  "inherits": "@budibase/standard-components/login",
   "props": {
     "logo": "/assets/budibase-logo.png"
   },

@@ -28933,6 +28933,7 @@
             }
 
             s.pages[s.currentPageName] = page;
+            s.currentFrontEndItem = page;
             savePackage(store, s);
             return s;
         });
@@ -31646,7 +31647,7 @@
 
     /******/ });
     });
-
+    //# sourceMappingURL=feather.js.map
     });
 
     var feather$1 = unwrapExports(feather);
@@ -50767,7 +50768,7 @@
 
     const file$l = "src\\userInterface\\PageView.svelte";
 
-    // (49:8) <Button on:click={save}>
+    // (56:8) <Button on:click={save}>
     function create_default_slot$3(ctx) {
     	var t;
 
@@ -50786,7 +50787,7 @@
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot$3.name, type: "slot", source: "(49:8) <Button on:click={save}>", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot$3.name, type: "slot", source: "(56:8) <Button on:click={save}>", ctx });
     	return block;
     }
 
@@ -50799,7 +50800,7 @@
     		add_flush_callback(() => updating_text = false);
     	}
 
-    	let textbox_props = { label: "Title" };
+    	let textbox_props = { label: "Title", hasError: !ctx.title };
     	if (ctx.title !== void 0) {
     		textbox_props.text = ctx.title;
     	}
@@ -50854,17 +50855,17 @@
     			div2 = element("div");
     			t8 = space();
     			button.$$.fragment.c();
-    			add_location(h3, file$l, 36, 4, 794);
+    			add_location(h3, file$l, 43, 4, 1099);
     			attr_dev(div0, "class", "help-text svelte-1ersoxu");
-    			add_location(div0, file$l, 40, 8, 927);
+    			add_location(div0, file$l, 47, 8, 1249);
     			attr_dev(div1, "class", "help-text svelte-1ersoxu");
-    			add_location(div1, file$l, 46, 8, 1193);
+    			add_location(div1, file$l, 53, 8, 1515);
     			set_style(div2, "margin-top", "20px");
-    			add_location(div2, file$l, 47, 8, 1290);
+    			add_location(div2, file$l, 54, 8, 1612);
     			attr_dev(form, "class", "uk-form-horizontal");
-    			add_location(form, file$l, 38, 4, 833);
+    			add_location(form, file$l, 45, 4, 1138);
     			attr_dev(div3, "class", "root svelte-1ersoxu");
-    			add_location(div3, file$l, 34, 0, 770);
+    			add_location(div3, file$l, 41, 0, 1075);
     		},
 
     		l: function claim(nodes) {
@@ -50897,6 +50898,7 @@
     			}
 
     			var textbox_changes = {};
+    			if (changed.title) textbox_changes.hasError = !ctx.title;
     			if (!updating_text && changed.title) {
     				textbox_changes.text = ctx.title;
     			}
@@ -50962,13 +50964,20 @@
     let title = "";
     let components = [];
 
+    const notSeletedComponent = {name:"(none selected)"};
+
     store.subscribe(s => {
         $$invalidate('title', title = s.currentFrontEndItem.index.title);
-        $$invalidate('components', components = fp_8(s => !isRootComponent(s))(s.allComponents));
+        $$invalidate('components', components = pipe$1(s.allComponents, [
+            fp_8(s => !isRootComponent(s)),
+            fp_32([notSeletedComponent])
+        ]));
         $$invalidate('entryComponent', entryComponent = fp_13(c => c.name === s.currentFrontEndItem.appBody)(components));
+        if(!entryComponent) $$invalidate('entryComponent', entryComponent = notSeletedComponent);
     });
 
     const save = () => {
+        if(!title || !entryComponent || entryComponent === notSeletedComponent) return;
         const page = {
             index: {
                 title

@@ -1,9 +1,0 @@
-{
-  "name": "subfolder/path/buttony",
-  "description": "",
-  "inherits": "budibase-standard-components/button",
-  "props": {},
-  "tags": [
-    "button"
-  ]
-}

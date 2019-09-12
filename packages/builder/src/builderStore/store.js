@@ -499,6 +499,7 @@ const savePage = store => async page => {
         }
 
         s.pages[s.currentPageName] = page;
+        s.currentFrontEndItem = page;
         savePackage(store, s);
         return s;
     });

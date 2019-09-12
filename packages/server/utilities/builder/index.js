@@ -118,6 +118,8 @@ const getRootComponents = async (appPath, pages ,lib) => {
         merge(components, info.components);
     }
 
+    if(components._lib) delete components._lib;
+    
     return components;
 }
 

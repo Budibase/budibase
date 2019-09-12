@@ -36,7 +36,7 @@ module.exports.appsFolder = (config) => appPackageFolder(config, "");
 module.exports.masterAppPackage = (context) => {
     const { config } = context;
     const standardPackage = createAppPackage(
-        context, "../appPackages/master");
+        context, "../appPackages/_master");
 
     const customizeMaster = config && config.customizeMaster 
                             ? config.customizeMaster

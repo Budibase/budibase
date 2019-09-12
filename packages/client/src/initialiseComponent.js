@@ -7,19 +7,14 @@ import {
 
 import { $ } from "./core/common";
 
-export const initialiseComponent = (allComponents, componentLibraries, store) => (props, htmlElement) => {
-
-    const component = getComponent(
-        props._component, 
-        allComponents);
+export const initialiseComponent = (componentLibraries, store) => (props, htmlElement) => {
 
     const _app = {
-        initialiseComponent: initialiseComponent(allComponents, componentLibraries, store), 
+        initialiseComponent: initialiseComponent(componentLibraries, store), 
         store
     };
 
-    const {componentName, libName} = splitName(
-       component.name);
+    const {componentName, libName} = splitName(props._component);
 
     new (componentLibraries[libName][componentName])({
         target: htmlElement,
@@ -27,12 +22,6 @@ export const initialiseComponent = (allComponents, componentLibraries, store) =>
     });
 
 }
-
-const getComponent = (componentName, allComponents) => 
-    find(c => c.name === componentName)(allComponents);
-
-const isRootComponent = c => isUndefined(c.inherits);
-
 
 const splitName = fullname => {
     const componentName = $(fullname, [

@@ -505,35 +505,36 @@
     }
   ],
   "actions": {
-    "initialise_instance": 
-  {
-	"name": "initialise_instance",
-	"behaviourSource": "main",
-	"behaviourName": "initialiseInstance",
-	"initialOptions": {}
-  }
-    ,
-    "create_user": 
-      {
-        "name": "create_user",
-        "behaviourSource": "main",
-        "behaviourName": "createNewUser",
-        "initialOptions": {}
-      }
-    ,
-    "set_default_version": 
-      {
-        "name": "set_default_version",
-        "behaviourSource": "main",
-        "behaviourName": "setDefaultVersion",
-        "initialOptions": {}
-      }
-    
+    "initialise_instance": {
+      "name": "initialise_instance",
+      "behaviourSource": "main",
+      "behaviourName": "initialiseInstance",
+      "initialOptions": {}
+    },
+    "create_user": {
+      "name": "create_user",
+      "behaviourSource": "main",
+      "behaviourName": "createNewUser",
+      "initialOptions": {}
+    },
+    "set_default_version": {
+      "name": "set_default_version",
+      "behaviourSource": "main",
+      "behaviourName": "setDefaultVersion",
+      "initialOptions": {}
+    }
   },
   "props": {
-    "main": {},
+    "main": {
+      "_component": "@budibase/standard-components/login",
+      "logo": "/assets/budibase-logo.png",
+      "loginRedirect": "",
+      "usernameLabel": "Username",
+      "passwordLabel": "Password",
+      "loginButtonLabel": "Login"
+    },
     "unauthenticated": {
-      "_component": "budibase-standard-components/login",
+      "_component": "@budibase/standard-components/login",
       "logo": "/assets/budibase-logo.png",
       "loginRedirect": "",
       "usernameLabel": "Username",

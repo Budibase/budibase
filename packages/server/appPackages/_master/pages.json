@@ -1,13 +1,15 @@
 {
   "main": {
-    "index": {},
-    "appBody": ""
+    "index": {
+      "title": "Budibase"
+    },
+    "appBody": "Login Screen"
   },
   "unauthenticated": {
     "index": {
-      "title": "Test App Two"
+      "title": "Budibase - Login"
     },
-    "appBody": "login_screen"
+    "appBody": "Login Screen"
   },
   "componentLibraries": [
     "@budibase/standard-components"
