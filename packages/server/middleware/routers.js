@@ -50,6 +50,7 @@ module.exports = (config, app) => {
     
             ctx.instance = instance.instance;
             ctx.publicPath = instance.publicPath;
+            ctx.sharedPath = instance.sharedPath;
             ctx.isAuthenticated = !!instance.instance;
     
             await next();
@@ -210,7 +211,13 @@ module.exports = (config, app) => {
 
         if(path.startsWith("/api/")) {
             await next();
-        } else {
+        } else if(path.startsWith("/_shared/")) {
+            await send(
+                ctx, 
+                path.replace(`/_shared/`, ""), 
+                { root: ctx.sharedPath });
+        }
+        else {
             await send(ctx, path, { root: ctx.publicPath });
         }
     })
@@ -347,8 +354,8 @@ module.exports = (config, app) => {
             ctx.body
         );
         ctx.response.status = StatusCodes.OK;
-    })
-    .post("/:appname/api/actionsAndTriggers", async (ctx) => {
+    });
+    /*.post("/:appname/api/actionsAndTriggers", async (ctx) => {
         ctx.body = await ctx.instance.templateApi.saveApplicationHierarchy(
             ctx.body
         );
@@ -359,7 +366,7 @@ module.exports = (config, app) => {
             ctx.body
         );
         ctx.response.status = StatusCodes.OK;
-    });
+    })*/
 
     const getRecordKey = (appname, wholePath) => 
         wholePath

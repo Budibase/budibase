@@ -159,7 +159,7 @@
     "main": {},
     "unauthenticated": {
       "_component": "budibase-standard-components/login",
-      "logo": "/assets/budibase-logo.png",
+      "logo": "/_shared/budibase-logo.png",
       "loginRedirect": "",
       "usernameLabel": "Username",
       "passwordLabel": "Password",

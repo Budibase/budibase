@@ -100,7 +100,7 @@ module.exports = () => {
         testAppInfo: {
             name: "testApp"
         },
-        destroy: () => server.destroy(),
+        destroy: () => server && server.destroy(),
         masterAppPackage: masterAppPackage({ config }),
         testAppInstance1AppPackage: async (app) => applictionVersionPackage(
             await buildAppContext(config, true), 

@@ -45,4 +45,26 @@ module.exports = (app) => {
         
     });
 
+
+    it("should serve file from shared when authenticated", async () => {
+        const response = await app.get("/testApp/_shared/shared_file.txt")
+                            .set("cookie", app.credentials.testAppUser1.cookie)
+                            .expect(statusCodes.OK);
+
+        const expectedFile = await readFile("appPackages/testApp/public/_shared/shared_file.txt", "utf8");
+
+        expect(response.text).toBe(expectedFile);
+        
+    });
+
+    it("should serve file from shared when not authenticated", async () => {
+        const response = await app.get("/testApp/_shared/shared_file.txt")
+                            .expect(statusCodes.OK);
+
+        const expectedFile = await readFile("appPackages/testApp/public/_shared/shared_file.txt", "utf8");
+
+        expect(response.text).toBe(expectedFile);
+        
+    });
+
 }

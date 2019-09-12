@@ -3,7 +3,7 @@ const constructHierarchy = require("../utilities/constructHierarchy");
 const { readFile } = require("fs-extra");
 const {getRecordApi, getAuthApi} = require("@budibase/core");
 const masterAppDefinition = constructHierarchy(
-    require("../appPackages/master/appDefinition.json"));
+    require("../appPackages/_master/appDefinition.json"));
 const {getApisWithFullAccess} = require("../utilities/budibaseApi");
 const { createTarGzPackage } = require("../utilities/targzAppPackage");
 const { timeout } = require("./helpers");

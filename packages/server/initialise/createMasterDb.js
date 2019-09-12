@@ -2,8 +2,8 @@ const {initialiseData, setupDatastore} = require("@budibase/core");
 const constructHierarchy  = require("../utilities/constructHierarchy");
 const getDatabaseManager = require("../utilities/databaseManager"); 
 const {getApisForUser, getApisWithFullAccess} = require("../utilities/budibaseApi");  
-const masterDbAppDefinition = require("../appPackages/master/appDefinition.json");
-const masterDbAccessLevels = require("../appPackages/master/access_levels.json");
+const masterDbAppDefinition = require("../appPackages/_master/appDefinition.json");
+const masterDbAccessLevels = require("../appPackages/_master/access_levels.json");
 const { masterAppPackage } = require("../utilities/createAppPackage");
 
 module.exports = async (context, datastoreModule, username, password) => {

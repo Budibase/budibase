@@ -152,14 +152,16 @@ module.exports = async (context) => {
                                 masterDatastore, 
                                 masterAppPackage(context), 
                                 session),
-                    publicPath: masterPkg.mainUiPath
+                    publicPath: masterPkg.mainUiPath,
+                    sharedPath: masterPkg.sharedPath
                 });
 
 
             } catch(_) {
                 return ({
                     instance: null,
-                    publicPath: masterPkg.unauthenticatedUiPath
+                    publicPath: masterPkg.unauthenticatedUiPath,
+                    sharedPath: masterPkg.sharedPath
                 });
             }
         }
@@ -183,15 +185,18 @@ module.exports = async (context) => {
                                     instanceDatastore, 
                                     appPackage, 
                                     session),
-                    publicPath: appPackage.mainUiPath
+                    publicPath: appPackage.mainUiPath,
+                    sharedPath: appPackage.sharedPath
                 });
 
             } catch(_) {
+                const appPublicPaths = applictionVersionPublicPaths(
+                    app.name,
+                    app.defaultVersion.id);
                 return ({
                     instance:null,
-                    publicPath: applictionVersionPublicPaths(
-                        app.name,
-                        app.defaultVersion.id).unauthenticatedUiPath
+                    publicPath: appPublicPaths.unauthenticatedUiPath,
+                    sharedPath: appPublicPaths.sharedPath
                 });
             }
         }

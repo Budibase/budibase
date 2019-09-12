@@ -64,7 +64,7 @@ const buildIndexHtml = async (config, appname, appPath, pages, pageName) => {
 
     const templateObj = {
         title: pages[pageName].index.title || "Budibase App",
-        favicon: `${appRootPath}/${pages[pageName].index.favicon || "/assets/favicon.png"}`,
+        favicon: `${appRootPath}/${pages[pageName].index.favicon || "/_shared/favicon.png"}`,
         stylesheets: (pages.stylesheets || []).map(stylesheetUrl),
         appRootPath
     }

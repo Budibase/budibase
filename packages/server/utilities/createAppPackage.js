@@ -56,7 +56,8 @@ module.exports.masterAppPackage = (context) => {
                           : plugins,
         appPath: standardPackage.appPath,
         unauthenticatedUiPath: standardPackage.unauthenticatedUiPath,
-        mainUiPath: standardPackage.mainUiPath
+        mainUiPath: standardPackage.mainUiPath,
+        sharedPath: standardPackage.sharedPath
     });
 }
 
@@ -67,7 +68,9 @@ const publicPaths = (appPath) =>  ({
         mainUiPath: resolve(join(
             __dirname, appPath, "public", "main")),
         unauthenticatedUiPath: resolve(join(
-            __dirname, appPath, "public", "unauthenticated"))
+            __dirname, appPath, "public", "unauthenticated")),
+        sharedPath: resolve(join(
+            __dirname, appPath, "public", "_shared"))
         
     });
 

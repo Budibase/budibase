@@ -4,7 +4,7 @@ const { readFile } = require("fs-extra");
 const { hierarchy } = require("@budibase/core");
 const { take } = require("lodash/fp");
 const masterAppDefinition = constructHierarchy(
-    require("../appPackages/master/appDefinition.json"));
+    require("../appPackages/_master/appDefinition.json"));
 const {getApisWithFullAccess} = require("../utilities/budibaseApi");
 const { createTarGzPackage } = require("../utilities/targzAppPackage");
 const { timeout } = require("./helpers");
