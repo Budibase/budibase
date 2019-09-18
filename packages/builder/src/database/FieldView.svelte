@@ -109,7 +109,7 @@ const save = () => {
 
     <ButtonGroup style="float: right;">
         <Button color="primary" grouped on:click={save}>Save</Button>
-        <Button color="secondary" grouped on:click={() => onFinished(false)}>Cancel</Button>
+        <Button color="tertiary" grouped on:click={() => onFinished(false)}>Cancel</Button>
     </ButtonGroup>
 
 </div>

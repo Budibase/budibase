@@ -1,8 +1,11 @@
 import App from "./App.svelte";
 import "./global.css";
 import "./fonts.css";
-import "/assets/lato-latin-ext.woff2";
-import "/assets/lato-latin.woff2";
+import "/assets/roboto-v20-latin-ext_latin-300";
+import "/assets/roboto-v20-latin-ext_latin-400";
+import "/assets/roboto-v20-latin-ext_latin-500";
+import "/assets/roboto-v20-latin-ext_latin-700";
+import "/assets/roboto-v20-latin-ext_latin-900";
 import "/assets/budibase-logo.png";
 import "/assets/budibase-logo-only.png";
 import "uikit/dist/css/uikit.min.css";
