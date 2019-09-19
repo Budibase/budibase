@@ -94,7 +94,7 @@ const cancel = () => {
 
     <ButtonGroup>
         <Button color="primary" grouped on:click={save}>Save</Button>
-        <Button color="secondary" grouped on:click={cancel}>Cancel</Button>
+        <Button color="tertiary" grouped on:click={cancel}>Cancel</Button>
     </ButtonGroup>
 
     

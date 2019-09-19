@@ -87,7 +87,7 @@ let onTriggerDelete = (trigger) => {
 <div class="root">
 
 <ButtonGroup>
-    <Button color="secondary" 
+    <Button color="primary" 
             grouped
             on:click={newAction}>Create New Action</Button>
     <Button color="secondary" 

@@ -1,9 +1,0 @@
-{
-    "inherits": "./customComponents/textbox",
-    "name": "myTextBox",
-    "tags": [],
-    "description": "A text input, with a label",
-    "props" : {
-        "label": "hello"
-    }
-}
