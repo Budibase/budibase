@@ -1,0 +1,11 @@
+{
+  "name": "Button",
+  "description": "PrimaryButton",
+  "inherits": "@budibase/standard-components/button",
+  "props": {
+    "contentText": "Save"
+  },
+  "tags": [
+    "button"
+  ]
+}
