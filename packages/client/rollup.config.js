@@ -26,12 +26,19 @@ const coreExternal = [
 
 export default {
 	input: 'src/index.js',
-	output: {
-		sourcemap: true,
-		format: 'iife',
-		name: 'app',
-		file: `./dist/budibase-client.js`
-	},
+	output: [
+        {
+            sourcemap: true,
+            format: 'iife',
+            name: 'app',
+            file: `./dist/budibase-client.js`
+        },
+        {
+            file: 'dist/budibase-client.esm.mjs',
+            format: 'esm',
+            sourcemap: 'inline'
+        }
+    ],
     plugins: [
        
         resolve({

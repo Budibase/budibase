@@ -3,7 +3,8 @@ import {
     isBoolean, 
     isNumber,
     isArray,
-    isObjectLike
+    isObjectLike,
+    some
 } from "lodash/fp";
 
 const defaultDef = typeName => () => ({
@@ -47,6 +48,14 @@ export const expandPropsDefinition = propsDefinition => {
 }
 
 const isComponent = isObjectLike;
+const isEvent = e => 
+    isObjectLike(e) 
+    && e.handlerType && isString(e.handlerType)
+    && e.parameters && isArray(e.parameters);
+
+const isEventList = e => 
+    isArray(e) && !some(ev => !isEvent(ev));
+
 
 export const types = {
     string: propType(() => "", isString, defaultDef("string")),
@@ -56,4 +65,5 @@ export const types = {
     options: propType(() => "", isString, defaultDef("options")),
     component: propType(() => ({_component:""}), isComponent, defaultDef("component")),
     asset: propType(() => "", isString, defaultDef("asset")),
+    event: propType(() => [], isEventList, defaultDef("event"))
 };

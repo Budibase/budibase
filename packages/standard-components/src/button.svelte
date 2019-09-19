@@ -3,6 +3,7 @@ export let className = "default";
 export let disabled = false;
 export let contentText;
 export let contentComponent;
+export let onClick = () => {};
 
 export let _app;
 let contentComponentContainer;
