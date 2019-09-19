@@ -4,6 +4,7 @@
     --primary50: #454CA080;
     --primary25: #454CA040;
     --primary10: #454CA01A;
+    --primary5: #454ca00c;
     --primarydark: #3F448A;
     
     --secondary100: #162B4DFF;
@@ -11,6 +12,7 @@
     --secondary50: #162B4D80;
     --secondary25: #162B4D40;
     --secondary10: #162B4D1A;
+    --secondary5: rgba(22, 43, 77, 0.068);
     --secondarydark: #3F448A;
 
     --tertiary: #F2F5F7;
@@ -30,17 +32,18 @@
     --deletiondark: #CF4046;
 
     --white: #FFFFFF;
-    --darkslate: #5C6B82;
-    --slate: #8B95A6;
-    --lightslate: rgb(203, 212, 228);
+    --darkslate: #1a202c;
+    --slate: #a0aec0;
+    --lightslate: #f7fafc;
 
     --borderradius: 2px;
     --borderradiusall: 2px 2px 2px 2px;
 
-    --fontblack: "Lato Black";
-    --fontbold: "Lato Bold";
-    --fontsemibold: "Lato Semi Bold";
-    --fontnormal: "Lato";
+    --fontblack: "Roboto Black";
+    --fontbold: "Roboto Bold";
+    --fontsemibold: "Roboto Medium";
+    --fontnormal: "Roboto";
+    --fontlight: "Roboto Light";
 
     --bodytext: var(--fontnormal) "regular" var(--secondary100) 16pt;
     --bigbodytext: var(--fontnormal) "regular" var(--secondary100) 20pt;
@@ -79,7 +82,7 @@ h3 {
 }
 
 h4 {
-    font-family: var(--fontsemibold);
+    font-family: var(--fontbold);
     font-size: 18pt;
     color: var(--secondary100);
 }

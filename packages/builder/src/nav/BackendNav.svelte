@@ -73,7 +73,7 @@ store.subscribe(db => {
 
 .root {
     height: 100%;
-    background-color: var(--primary10);
+    background-color: var(--secondary5);
 }
 
 .items-root {
@@ -90,8 +90,8 @@ store.subscribe(db => {
 
 
 .hierarchy-title-row {
-    padding: 15px 7px;
-    font-size: 12pt;
+    padding: 2rem 1rem 0rem 1rem;
+    font-size: 10pt;
     display: flex;
     font-weight: bold;
 }

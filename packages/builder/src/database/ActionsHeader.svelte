@@ -30,7 +30,7 @@ const deleteCurrentNode = () => {
         </Button>
 
         {#if !$store.currentNodeIsNew}
-        <Button color="secondary" grouped on:click={openConfirmDelete}>
+        <Button color="tertiary" grouped on:click={openConfirmDelete}>
             Delete
         </Button>
         {/if}
@@ -54,9 +54,9 @@ const deleteCurrentNode = () => {
 <style>
 
 .root {
-    padding:5px;
-    top:0;
-    width:100%;
-}
+    padding: 1.5rem;
+    width: 100%;
+    align-items: right;
+    }
 
 </style>

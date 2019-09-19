@@ -25,8 +25,8 @@ const setActive = () =>
 <style>
 
 .nav-item {
-    padding: 7px;
-    font-size: 12pt;
+    padding: 1rem 1rem 0rem 1rem;
+    font-size: 10pt;
     font-weight: bold;
     cursor: pointer;
     flex: 0 0 auto;
