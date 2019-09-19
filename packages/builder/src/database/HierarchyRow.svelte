@@ -24,13 +24,13 @@ export let node;
 
 .root { 
     display: block;
-    font-size: 13pt;
+    font-size: 1rem;
     width: 100%;
     cursor: pointer;
 }
 
 .title {
-    font: var(--bodytext);
+    font: var(--fontblack);
     padding-top: 10px;
     padding-right: 5px;
     padding-bottom: 10px;

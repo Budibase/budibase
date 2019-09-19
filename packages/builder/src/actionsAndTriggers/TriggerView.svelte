@@ -57,8 +57,8 @@ let save = () => {
     </form>
 
     <ButtonGroup>
-        <Button grouped on:click={save}>Save</Button>
-        <Button grouped on:click={cancel}>Cancel</Button>
+        <Button color="primary" grouped on:click={save}>Save</Button>
+        <Button color="tertiary" grouped on:click={cancel}>Cancel</Button>
     </ButtonGroup>
 
 </div>
