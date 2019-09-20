@@ -81,8 +81,8 @@ const cancel = () => {
     <div class=" uk-form-stacked" style="margin-bottom: 20px">
         <label class="uk-form-label">Default Options</label>
         <div class="uk-grid-small" uk-grid>
-            <input class="uk-input uk-width-1-4" placeholder="key" bind:value={optKey} >        
-            <input class="uk-input uk-width-1-4" placeholder="value" bind:value={optValue} >        
+            <input class="uk-input uk-width-1-4 uk-margin-right" placeholder="key" bind:value={optKey} >        
+            <input class="uk-input uk-width-1-4 uk-margin-right" placeholder="value" bind:value={optValue} >        
             <Button color="primary-outline uk-width-1-4" on:click={addNewOption}>Add</Button>
         </div>
         <div style="margin-top: 10px">
@@ -93,7 +93,7 @@ const cancel = () => {
     </div>
 
     <ButtonGroup>
-        <Button color="primary" grouped on:click={save}>Save</Button>
+        <Button color="secondary" grouped on:click={save}>Save</Button>
         <Button color="tertiary" grouped on:click={cancel}>Cancel</Button>
     </ButtonGroup>
 
@@ -104,7 +104,12 @@ const cancel = () => {
 <style>
 
 .root {
-    padding: 10px;
+    padding: 2rem;
+    border-radius: 2rem;
+}
+
+.uk-grid-small {
+    padding: 1rem;
 }
 
 .option-container {
