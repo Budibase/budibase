@@ -185,12 +185,12 @@ let getTypeOptions = typeOptions =>
 }
 
 .settings-title {
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .title {
     margin: 3rem 0rem 0rem 0rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .recordkey {
@@ -210,10 +210,11 @@ let getTypeOptions = typeOptions =>
 
 .edit-button {
     cursor:pointer;
-    color: var(--white);
+    color: var(--secondary25);
 }
 
 .edit-button:hover {
+    cursor:pointer;
     color: var(--secondary75);
 }
 
