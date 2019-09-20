@@ -155,7 +155,7 @@ const componentInstancePropsChanged = (instanceProps) => {
                              instanceProps={editingComponentInstance}
                              onPropsChanged={componentInstancePropsChanged}/>
     {:else}
-    <div>
+    <div class="component-props-container">
 
         <div class="section-header padding" on:click={() => componentDetailsExpanded = !componentDetailsExpanded}>
             <span style="margin-right: 7px">Component Details</span>
@@ -232,6 +232,8 @@ const componentInstancePropsChanged = (instanceProps) => {
     border-style: solid;
     border-color: var(--lightslate);
     border-width: 0px 0px 0px 1px;
+    display:flex;
+    flex-direction: column;
 }
 
 .padding {
@@ -267,4 +269,8 @@ const componentInstancePropsChanged = (instanceProps) => {
     margin-top: 20px;
 }
 
+.component-props-container {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
 </style>
