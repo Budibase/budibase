@@ -1,0 +1,16 @@
+{
+  "name": "Centered Panel",
+  "description": "",
+  "inherits": "@budibase/standard-components/grid",
+  "props": {
+    "gridTemplateColumns": "[left] 30px [center] 1fr [right] 30px",
+    "gridTemplateRows": "[top] 30px [middle] 1fr [bottom] 30px"
+  },
+  "tags": [
+    "div",
+    "container",
+    "layout",
+    "panel",
+    "grid"
+  ]
+}

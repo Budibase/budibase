@@ -1,0 +1,37 @@
+{
+  "name": "Button in the middle",
+  "description": "",
+  "inherits": "Centered Panel",
+  "props": {
+    "children": [
+      {
+        "_component": "undefined:children",
+        "control": {
+          "_component": "@budibase/standard-components/button",
+          "contentText": "Button",
+          "contentComponent": {
+            "_component": ""
+          },
+          "className": "default",
+          "disabled": false,
+          "onClick": []
+        },
+        "gridColumn": "center",
+        "gridRow": "middle",
+        "gridColumnStart": "",
+        "gridColumnEnd": "",
+        "gridRowStart": "",
+        "gridRowEnd": ""
+      }
+    ],
+    "height": "200px",
+    "width": "200px"
+  },
+  "tags": [
+    "div",
+    "container",
+    "layout",
+    "panel",
+    "grid"
+  ]
+}

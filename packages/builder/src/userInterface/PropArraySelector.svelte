@@ -18,7 +18,6 @@ export let onEditComponentProp = () => {};
 
 let value = [];
 let elementDefinitionArray;
-let label = "";
 let elementErrors = {};
 
 $: {
@@ -31,7 +30,6 @@ $: {
         });
     }
     elementDefinitionArray = elArray;
-    label = propDef.____name;
     value = parentProps[propDef.____name];
 }
 
@@ -73,9 +71,7 @@ const onEditComponent = (index, propName) => () => {
 </script>
 
 <div class="root">
-    <div>
-        {label}
-    </div>
+
 
     <div class="item-container">
         {#each value as item, index}

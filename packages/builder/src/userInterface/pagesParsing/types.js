@@ -4,7 +4,8 @@ import {
     isNumber,
     isArray,
     isObjectLike,
-    some
+    isPlainObject,
+    every
 } from "lodash/fp";
 
 const defaultDef = typeName => () => ({
@@ -49,12 +50,12 @@ export const expandPropsDefinition = propsDefinition => {
 
 const isComponent = isObjectLike;
 const isEvent = e => 
-    isObjectLike(e) 
-    && e.handlerType && isString(e.handlerType)
-    && e.parameters && isArray(e.parameters);
+    isPlainObject(e) 
+    && isString(e.handlerType)
+    && isPlainObject(e.parameters);
 
 const isEventList = e => 
-    isArray(e) && !some(ev => !isEvent(ev));
+    isArray(e) && every(isEvent)(e);
 
 
 export const types = {
