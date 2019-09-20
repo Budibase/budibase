@@ -45,13 +45,13 @@ let actionEditingFinished = (action) => {
 
 </script>
 
-<h3>Actions</h3>
+<h3 class="title">Actions</h3>
 
 {#if actionsArray}
-<table class="fields-table uk-table uk-table-small">
+<table class="fields-table uk-table uk-table-small uk-table-striped">
     <thead>
         <tr>
-            <th>Description</th>
+            <th >Description</th>
             <th>Behaviour Source</th>
             <th>Behaviour Name</th>
             <th>Default Options</th>
@@ -61,10 +61,10 @@ let actionEditingFinished = (action) => {
     <tbody>
         {#each actionsArray as action}
         <tr>
-            <td >{action.name}</td>
-            <td >{action.behaviourSource}</td>
-            <td >{action.behaviourName}</td>
-            <td >{@html getDefaultOptionsHtml(action.initialOptions)}</td>
+            <td class="table-content">{action.name}</td>
+            <td class="table-content">{action.behaviourSource}</td>
+            <td class="table-content">{action.behaviourName}</td>
+            <td class="table-content">{@html getDefaultOptionsHtml(action.initialOptions)}</td>
             <td class="edit-button">
                 <span on:click={() => onActionEdit(action)}>{@html getIcon("edit")}</span>
                 <span on:click={() => onActionDelete(action)}>{@html getIcon("trash")}</span>
@@ -92,12 +92,21 @@ let actionEditingFinished = (action) => {
 
 .edit-button {
     cursor:pointer;
-    color: var(--white);
+    color: var(--secondary25);
 }
 
 tr:hover .edit-button  {
     color: var(--secondary75);
 }
 
+.title {
+    margin: 3rem 0rem 0rem 0rem;
+    font-weight: 700;
+}
+
+.table-content {
+    font-weight: 500;
+    font-size: .9rem;
+}
 
 </style>
