@@ -1,5 +1,5 @@
 
-export const BB_STATE_INDICATOR = "##bbstate";
+export const BB_STATE_BINDINGPATH = "##bbstate";
 export const BB_STATE_FALLBACK = "##bbstatefallback";
 
 export const bindComponent = (store, component) => {
@@ -49,8 +49,8 @@ export const bindComponent = (store, component) => {
 
 }
 
-const isState = (prop) => prop[BB_STATE_INDICATOR] !== undefined;
-const stateBinding = (prop) => prop[BB_STATE_INDICATOR];
+const isState = (prop) => prop[BB_STATE_BINDINGPATH] !== undefined;
+const stateBinding = (prop) => prop[BB_STATE_BINDINGPATH];
 const stateFallback = (prop) => prop[BB_STATE_FALLBACK];
 const boundValueFromStore = (s, binding, fallback) => {
     const value = s[binding];

@@ -8,7 +8,8 @@
 			"contentText": { "type": "string", "default": "Button" },
 			"contentComponent": "component",
 			"className": {"type": "string", "default": "default"},
-			"disabled": "bool"
+			"disabled": "bool",
+			"onClick": "event"
 		},
 		"tags": ["button"]
 	}, 

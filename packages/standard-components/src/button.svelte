@@ -16,7 +16,7 @@ $:{
 </script>
 
 
-<button class={className} {disabled} on:click>
+<button class={className} {disabled} on:click={onClick}>
     {#if contentComponent && contentComponent._component}
 	<div bind:this={contentComponentContainer}>
 	</div>
