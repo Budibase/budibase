@@ -1,13 +1,15 @@
 {
   "main": {
-    "index": {},
-    "appBody": ""
+    "index": {
+      "title": "main yeo"
+    },
+    "appBody": "mike"
   },
   "unauthenticated": {
     "index": {
-      "title": "Test App Two"
+      "title": "main"
     },
-    "appBody": "login"
+    "appBody": "containers/two_columns"
   },
   "componentLibraries": [
     "@budibase/standard-components"

@@ -6,8 +6,8 @@ import { terser } from 'rollup-plugin-terser';
 
 const lodash_fp_exports = [
     "find", "isUndefined", "split", 
-    "last", "union", "reduce",
-    "cloneDeep", "some"];
+    "last", "union", "reduce", "isObject",
+    "cloneDeep", "some", "isArray"];
 
 const lodash_exports = [
     "flow","reduce", "constant", "head", "isEmpty", 

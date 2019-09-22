@@ -59,7 +59,8 @@ export default {
 		copy({
 			targets: [
 				{ src: 'src/index.html', dest: outputpath },
-				{ src: 'src/favicon.png', dest: outputpath }
+				{ src: 'src/favicon.png', dest: outputpath },
+				{ src: 'node_modules/@budibase/client/dist/budibase-client.esm.mjs', dest: outputpath }
 			  ]
 		}),
 

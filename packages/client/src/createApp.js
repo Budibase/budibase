@@ -4,7 +4,7 @@ import {
 } from "lodash/fp";
 import {writable} from "svelte/store";
 import { $ } from "./core/common";
-import { bindComponent } from "./stateBinding";
+import { setupBinding } from "./state/stateBinding";
 
 export const createApp = componentLibraries => {
 
@@ -12,12 +12,16 @@ export const createApp = componentLibraries => {
 
         const {componentName, libName} = splitName(props._component);
 
+        if(!componentName || !libName) return;
+
+        const {initialProps, bind} = setupBinding(store, props);
+
         const component = new (componentLibraries[libName][componentName])({
             target: htmlElement,
-            props: {...props, _app}
+            props: {...initialProps, _app}
         });
 
-        bindComponent(store, component);
+        bind(component);
 
     }
 

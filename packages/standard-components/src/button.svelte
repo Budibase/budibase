@@ -9,14 +9,19 @@ export let _app;
 let contentComponentContainer;
 
 $:{
-	if(_app && contentComponentContainer)
+	if(_app && contentComponentContainer && contentComponent._component)
 		_app.initialiseComponent(contentComponent, contentComponentContainer);
+}
+
+
+const clickHandler = () => {
+	if(onClick) onClick();
 }
 
 </script>
 
 
-<button class={className} {disabled} on:click={onClick}>
+<button class={className} {disabled} on:click={clickHandler}>
     {#if contentComponent && contentComponent._component}
 	<div bind:this={contentComponentContainer}>
 	</div>

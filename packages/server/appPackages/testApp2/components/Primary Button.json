@@ -5,14 +5,14 @@
   "props": {
     "onClick": [
       {
-        "handlerType": "Load Record",
+        "##eventHandlerType": "Load Record",
         "parameters": {
           "recordKey": "waa",
           "statePath": "yea"
         }
       },
       {
-        "handlerType": "Load Record",
+        "##eventHandlerType": "Load Record",
         "parameters": {
           "recordKey": "ttt",
           "statePath": "eee"
