@@ -4,7 +4,7 @@ import EventSelector from "./EventSelector.svelte";
 import {
     filter
 } from "lodash/fp";
-
+import {EVENT_TYPE_MEMBER_NAME} from "../common/eventHandlers";
 export let parentProps;
 export let propDef;
 export let onValueChanged;
@@ -18,7 +18,8 @@ $: {
 }
 
 const addHandler = () => {
-    const newHandler = {handlerType:"", parameters:{}};
+    const newHandler = {parameters:{}};
+    newHandler[EVENT_TYPE_MEMBER_NAME] = "";
     events = [...events, newHandler];
     onValueChanged(events);
 }

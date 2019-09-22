@@ -5,6 +5,7 @@ import {
     find, map, keys, reduce
 } from "lodash/fp";
 import { pipe } from "../common/core";
+import { EVENT_TYPE_MEMBER_NAME } from "../common/eventHandlers";
 
 export let event;
 export let onChanged;
@@ -21,7 +22,7 @@ let parameters = [];
 
 $: {
     if(event) {
-        eventType = event.handlerType;
+        eventType = event[EVENT_TYPE_MEMBER_NAME];
         parameters = pipe(event.parameters, [
             keys,
             map(k => ({name:k, value:event.parameters[k]}))
@@ -41,10 +42,11 @@ const eventChanged = (type, parameters) => {
         , {}
     )(parameters)
 
-    onChanged({
-        handlerType:type, 
-        parameters: paramsAsObject
-    });
+    const ev = {};
+    ev[EVENT_TYPE_MEMBER_NAME]=type;
+    ev.parameters = paramsAsObject;
+
+    onChanged(ev);
 }
 
 const eventTypeChanged = (ev) => {
@@ -53,9 +55,9 @@ const eventTypeChanged = (ev) => {
     eventChanged(eType.name, emptyParameters);
 }
 
-const onParameterChanged = index => ev => {
+const onParameterChanged = index => val => {
     const newparameters = [...parameters];
-    newparameters[index].value = ev.target.value;
+    newparameters[index].value = val;
     eventChanged(eventType, newparameters);
 }
 

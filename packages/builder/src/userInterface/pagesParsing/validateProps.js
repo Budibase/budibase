@@ -145,7 +145,6 @@ export const validateProps = (propsDefinition, props, stack=[], isFinal=true) =>
         if(propDef.type === "array") {
             let index = 0;
             for(let arrayItem of propValue) {
-                arrayItem._component = arrayElementComponentName(props._component, propDefName);
                 const arrayErrs = validateProps(
                     propDef.elementDefinition,
                     arrayItem,

@@ -1,0 +1,1 @@
+export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType";

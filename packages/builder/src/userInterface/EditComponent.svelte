@@ -36,6 +36,10 @@ let modalElement
 let propsValidationErrors = [];
 let editingComponentInstance;
 let editingComponentInstancePropName="";
+let editingComponentArrayIndex;
+let editingComponentArrayPropName;
+let editingComponentInstanceTitle;
+
 let allComponents;
 
 $: shortName = last(name.split("/"));
@@ -116,9 +120,13 @@ const onEditComponentProp = (propName, arrayIndex, arrayPropName) => {
     editingComponentInstance = isUndefined(arrayIndex) 
                                ? component.props[propName]
                                : component.props[propName][arrayIndex][arrayPropName];
-    editingComponentInstancePropName = isUndefined(arrayIndex)
+    editingComponentInstancePropName = propName;
+    editingComponentInstanceTitle = isUndefined(arrayIndex)
                                        ? propName
                                        : `${propName}[${arrayIndex}].${arrayPropName}`;
+                                
+    editingComponentArrayIndex = arrayIndex;
+    editingComponentArrayPropName = arrayPropName;
 }
 
 const componentInstanceCancelEdit = () => {
@@ -127,8 +135,15 @@ const componentInstanceCancelEdit = () => {
 }
 
 const componentInstancePropsChanged = (instanceProps) => {
-    updateComponent(newComponent => 
-        newComponent.props[editingComponentInstancePropName] = instanceProps);
+    updateComponent(newComponent => {
+        if(isUndefined(editingComponentArrayIndex)) {
+            newComponent.props[editingComponentInstancePropName] = instanceProps;
+        } else {
+            newComponent.props[editingComponentInstancePropName]
+                              [editingComponentArrayIndex]
+                              [editingComponentArrayPropName] = instanceProps;
+        }
+    });
 }
 
 </script>
@@ -151,7 +166,7 @@ const componentInstancePropsChanged = (instanceProps) => {
 
     {#if editingComponentInstance}
     <ComponentInstanceEditor onGoBack={componentInstanceCancelEdit}
-                             propertyName={editingComponentInstancePropName}
+                             title={editingComponentInstanceTitle}
                              instanceProps={editingComponentInstance}
                              onPropsChanged={componentInstancePropsChanged}/>
     {:else}

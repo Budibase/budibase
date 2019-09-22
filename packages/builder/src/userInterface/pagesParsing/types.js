@@ -8,6 +8,10 @@ import {
     every
 } from "lodash/fp";
 
+import {
+    EVENT_TYPE_MEMBER_NAME
+} from "../../common/eventHandlers";
+
 const defaultDef = typeName => () => ({
     type: typeName,
     required:false,
@@ -51,7 +55,7 @@ export const expandPropsDefinition = propsDefinition => {
 const isComponent = isObjectLike;
 const isEvent = e => 
     isPlainObject(e) 
-    && isString(e.handlerType)
+    && isString(e[EVENT_TYPE_MEMBER_NAME])
     && isPlainObject(e.parameters);
 
 const isEventList = e => 
