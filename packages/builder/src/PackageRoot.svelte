@@ -51,7 +51,7 @@ import { fade } from "svelte/transition";
 
 .top-nav {
     flex: 0 0 auto;
-    height:25px;
+    height: 25px;
     background: white;
     border-style:solid;
     border-width: 0px 0px 1px 0px;
@@ -73,16 +73,21 @@ import { fade } from "svelte/transition";
 
 .topnavitem {
     cursor: pointer;
-    color: var(--slate);
+    color: var(--secondary50);
     padding: 0px 15px;
+    font-weight: 600;
+    font-size: .9rem;
 }
 
 .topnavitem:hover {
     color: var(--secondary75);
+    font-weight: 600;
+
 }
 
 .active {
-    color: var(--secondary100);
+    color: var(--primary100);
+    font-weight: 900;
 }
 
 
