@@ -9,7 +9,7 @@ import {
 export const BB_STATE_BINDINGPATH = "##bbstate";
 export const BB_STATE_FALLBACK = "##bbstatefallback";
 const doNothing = () => {};
-export const setupBinding = (store, props) => {
+export const setupBinding = (store, props, coreApi) => {
 
     const initialProps = {...props};
     const boundProps = [];
@@ -50,7 +50,7 @@ export const setupBinding = (store, props) => {
 
         if(boundProps.length === 0 && componentEventHandlers.length === 0) return;
 
-        const handlerTypes = eventHandlers(store);
+        const handlerTypes = eventHandlers(store, coreApi);
 
         const unsubscribe = store.subscribe(s => {
             const newProps = {};

@@ -2,5 +2,5 @@ Contributors
 ===
 
 * Michael Shanks - [@mjashanks](https://github.com/mjashanks)
-* Dan - [@danbudi](https://github.com/danbudi)
+* Daniel Loudon - [@danbudi](https://github.com/marblekirby)
 * Joe  - [@joebudi](https://github.com/joebudi)

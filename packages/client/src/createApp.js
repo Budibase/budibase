@@ -5,8 +5,9 @@ import {
 import {writable} from "svelte/store";
 import { $ } from "./core/common";
 import { setupBinding } from "./state/stateBinding";
+import { createCoreApi } from "./core";
 
-export const createApp = componentLibraries => {
+export const createApp = (componentLibraries, appDefinition, user) => {
 
     const initialiseComponent = (props, htmlElement) => {
 
@@ -14,7 +15,7 @@ export const createApp = componentLibraries => {
 
         if(!componentName || !libName) return;
 
-        const {initialProps, bind} = setupBinding(store, props);
+        const {initialProps, bind} = setupBinding(store, props, coreApi);
 
         const component = new (componentLibraries[libName][componentName])({
             target: htmlElement,
@@ -25,6 +26,7 @@ export const createApp = componentLibraries => {
 
     }
 
+    const coreApi = createCoreApi(appDefinition, user);
     const store = writable({});
 
     const _app = {
