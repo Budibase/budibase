@@ -37,7 +37,7 @@ import { fade } from "svelte/transition";
         </div>
         {/if}
     </div>
-
+    
 </div>
 
 <style>
