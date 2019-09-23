@@ -44,7 +44,7 @@
     "shortid": "^2.2.8",
     "string_decoder": "^1.2.0",
     "uikit": "^3.1.7"
-},
+  },
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/plugin-transform-runtime": "^7.5.5",
