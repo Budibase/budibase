@@ -43,15 +43,14 @@ store.subscribe(s => {
 
 .root { 
     display: block;
-    font-size: 12pt;
+    font-size: 10pt;
     width: 100%;
     cursor: pointer;
 }
 
 .title {
-    padding-top: 5px;
-    padding-right: 5px;
-    padding-bottom: 5px;
+    padding-top: .5rem;
+    padding-right: .5rem;
     color: var(--secondary100);
 }
 

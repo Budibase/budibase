@@ -1,21 +1,17 @@
 import { types } from "./types";
 import { 
-    createProps, 
-    arrayElementComponentName 
+    createProps, arrayElementComponentName 
 } from "./createProps";
 import { isString } from "util";
 import { 
-    includes,
-    filter, 
-    map, 
-    keys, 
-    flatten,
-    flattenDeep,
-    each,
-    indexOf,
-    isUndefined
+    includes, filter, map, keys, 
+    flatten, flattenDeep, each,
+    indexOf, isUndefined
 } from "lodash/fp";
 import { common } from "../../../../core/src";
+import {
+    isBinding
+} from "../../common/binding";
 
 const pipe = common.$;
 
@@ -133,7 +129,15 @@ export const validateProps = (propsDefinition, props, stack=[], isFinal=true) =>
             continue;
         } 
 
-        if(!type.isOfType(propValue)) {
+        if(isBinding(propValue)) {
+            if(propDef.type === "array" 
+                || propDef.type === "component"
+                || propDef.type === "event") {
+                error(`Cannot apply binding to type ${propDef.type}`);
+                continue;
+            }
+        }
+        else if(!type.isOfType(propValue)) {
             error(`Property ${propDefName} is not of type ${propDef.type}. Actual value ${propValue}`)
             continue;
         }
@@ -141,7 +145,6 @@ export const validateProps = (propsDefinition, props, stack=[], isFinal=true) =>
         if(propDef.type === "array") {
             let index = 0;
             for(let arrayItem of propValue) {
-                arrayItem._component = arrayElementComponentName(props._component, propDefName);
                 const arrayErrs = validateProps(
                     propDef.elementDefinition,
                     arrayItem,
@@ -157,6 +160,7 @@ export const validateProps = (propsDefinition, props, stack=[], isFinal=true) =>
 
         if(propDef.type === "options" 
            && propValue
+           && !isBinding(propValue)
            && !includes(propValue)(propDef.options)) {
             error(`Property ${propDefName} is not one of allowed options. Acutal value is ${propValue}`);
         }

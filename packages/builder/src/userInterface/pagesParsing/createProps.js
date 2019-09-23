@@ -150,7 +150,7 @@ export const createProps = (componentName, propsDefinition, derivedFromProps) =>
 
 export const createArrayElementProps = (arrayPropName, elementDefinition) => 
     createProps(
-        `#element#${arrayPropName}`,
+        `#${arrayPropName}#array_element`,
         elementDefinition);
 
 const parsePropDef = propDef => {

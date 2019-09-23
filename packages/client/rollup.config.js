@@ -6,8 +6,8 @@ import { terser } from 'rollup-plugin-terser';
 
 const lodash_fp_exports = [
     "find", "isUndefined", "split", 
-    "last", "union", "reduce",
-    "cloneDeep", "some"];
+    "last", "union", "reduce", "isObject",
+    "cloneDeep", "some", "isArray"];
 
 const lodash_exports = [
     "flow","reduce", "constant", "head", "isEmpty", 
@@ -26,12 +26,19 @@ const coreExternal = [
 
 export default {
 	input: 'src/index.js',
-	output: {
-		sourcemap: true,
-		format: 'iife',
-		name: 'app',
-		file: `./dist/budibase-client.js`
-	},
+	output: [
+        {
+            sourcemap: true,
+            format: 'iife',
+            name: 'app',
+            file: `./dist/budibase-client.js`
+        },
+        {
+            file: 'dist/budibase-client.esm.mjs',
+            format: 'esm',
+            sourcemap: 'inline'
+        }
+    ],
     plugins: [
        
         resolve({

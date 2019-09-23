@@ -27,8 +27,10 @@ $: borderClass = grouped
 
 button {  
     border-style: solid; 
-    padding: 7px 15px;
+    padding: 7.5px 15px;
     cursor:pointer;
+    margin:5px;
+    border-radius: 5px;
 }
 
 /* ---- PRIMARY ----*/

@@ -1,5 +1,3 @@
-import { isUndefined } from "lodash/fp";
-
 const apiCall = (method) => (url, body) => 
     fetch(url, {
         method: method,

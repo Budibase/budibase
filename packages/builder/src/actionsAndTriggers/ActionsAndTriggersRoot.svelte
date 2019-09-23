@@ -85,31 +85,45 @@ let onTriggerDelete = (trigger) => {
 </script>
 
 <div class="root">
+    <div class="actions-header">
+        <ButtonGroup>
+            <Button color="secondary" 
+                    grouped
+                    on:click={newAction}>Create New Action</Button>
+            <Button color="tertiary" 
+                    grouped
+                    on:click={newTrigger}>Create New Trigger</Button>
+        </ButtonGroup>
+    </div>
 
-<ButtonGroup>
-    <Button color="secondary" 
-            grouped
-            on:click={newAction}>Create New Action</Button>
-    <Button color="secondary" 
-            grouped
-            on:click={newTrigger}>Create New Trigger</Button>
-</ButtonGroup>
+    <div class="node-view">
+        <Actions {editingActionIsNew} {editingAction} 
+                {onActionEdit} {onActionDelete} {onActionSave}
+                {onActionCancel} />
 
-<Actions {editingActionIsNew} {editingAction} 
-         {onActionEdit} {onActionDelete} {onActionSave}
-         {onActionCancel} />
-
-<Triggers {editingTriggerIsNew} {editingTrigger} 
-         {onTriggerEdit} {onTriggerDelete} {onTriggerSave}
-         {onTriggerCancel} />
+        <Triggers {editingTriggerIsNew} {editingTrigger} 
+                {onTriggerEdit} {onTriggerDelete} {onTriggerSave}
+                {onTriggerCancel} />
+    </div>
 
 </div>
 
 <style>
 
 .root {
-    padding: 10px;
+    height: 100%;
+    position: relative;
+    padding: 1.5rem;
+
 }
 
+.actions-header {
+    flex: 0 1 auto;
+}
+
+.node-view {
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
 
 </style>

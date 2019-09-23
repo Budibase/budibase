@@ -18,7 +18,6 @@ export let props = emptyProps();
 export let onValueChanged = () => {};
 export let onComponentChosen = () => {};
 export let onEdit = () => {};
-export let label = "";
 export let disabled = false;
 
 const CHOOSE_COMPONENT = "choose_component";
@@ -70,7 +69,6 @@ const confirmClearComponent = () => {
 </script>
 
 
-<label class="uk-form-label">{label}</label>
 <div class="root uk-form-controls">
     <div class:selectedname={componentSelected}>
         {componentSelected ?  shortName : "(none)"}

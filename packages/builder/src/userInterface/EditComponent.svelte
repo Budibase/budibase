@@ -36,6 +36,10 @@ let modalElement
 let propsValidationErrors = [];
 let editingComponentInstance;
 let editingComponentInstancePropName="";
+let editingComponentArrayIndex;
+let editingComponentArrayPropName;
+let editingComponentInstanceTitle;
+
 let allComponents;
 
 $: shortName = last(name.split("/"));
@@ -116,9 +120,13 @@ const onEditComponentProp = (propName, arrayIndex, arrayPropName) => {
     editingComponentInstance = isUndefined(arrayIndex) 
                                ? component.props[propName]
                                : component.props[propName][arrayIndex][arrayPropName];
-    editingComponentInstancePropName = isUndefined(arrayIndex)
+    editingComponentInstancePropName = propName;
+    editingComponentInstanceTitle = isUndefined(arrayIndex)
                                        ? propName
                                        : `${propName}[${arrayIndex}].${arrayPropName}`;
+                                
+    editingComponentArrayIndex = arrayIndex;
+    editingComponentArrayPropName = arrayPropName;
 }
 
 const componentInstanceCancelEdit = () => {
@@ -127,8 +135,15 @@ const componentInstanceCancelEdit = () => {
 }
 
 const componentInstancePropsChanged = (instanceProps) => {
-    updateComponent(newComponent => 
-        newComponent.props[editingComponentInstancePropName] = instanceProps);
+    updateComponent(newComponent => {
+        if(isUndefined(editingComponentArrayIndex)) {
+            newComponent.props[editingComponentInstancePropName] = instanceProps;
+        } else {
+            newComponent.props[editingComponentInstancePropName]
+                              [editingComponentArrayIndex]
+                              [editingComponentArrayPropName] = instanceProps;
+        }
+    });
 }
 
 </script>
@@ -151,11 +166,11 @@ const componentInstancePropsChanged = (instanceProps) => {
 
     {#if editingComponentInstance}
     <ComponentInstanceEditor onGoBack={componentInstanceCancelEdit}
-                             propertyName={editingComponentInstancePropName}
+                             title={editingComponentInstanceTitle}
                              instanceProps={editingComponentInstance}
                              onPropsChanged={componentInstancePropsChanged}/>
     {:else}
-    <div>
+    <div class="component-props-container">
 
         <div class="section-header padding" on:click={() => componentDetailsExpanded = !componentDetailsExpanded}>
             <span style="margin-right: 7px">Component Details</span>
@@ -232,6 +247,8 @@ const componentInstancePropsChanged = (instanceProps) => {
     border-style: solid;
     border-color: var(--lightslate);
     border-width: 0px 0px 0px 1px;
+    display:flex;
+    flex-direction: column;
 }
 
 .padding {
@@ -267,4 +284,8 @@ const componentInstancePropsChanged = (instanceProps) => {
     margin-top: 20px;
 }
 
+.component-props-container {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
 </style>
