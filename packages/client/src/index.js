@@ -4,6 +4,12 @@ import { createApp } from "./createApp";
 export const loadBudibase = async (componentLibraries, props) => {
 
     const appDefinition = window["##BUDIBASE_APPDEFINITION##"];
+    const user = localStorage.getItem("budibase:user") || {
+        name: "annonymous",
+        permissions : [],
+        isUser:false,
+        temp:false
+    }
 
     if(!componentLibraries) {
 
@@ -22,7 +28,7 @@ export const loadBudibase = async (componentLibraries, props) => {
         props = appDefinition.props;
     }
 
-    const _app = createApp(componentLibraries);
+    const _app = createApp(componentLibraries, user);
     _app.initialiseComponent(
         props,
         document.body);
