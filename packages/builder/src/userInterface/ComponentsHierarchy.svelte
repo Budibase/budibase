@@ -147,6 +147,8 @@ $: {
 
 .root {
     color: var(--secondary50);
+    font-size: .9rem;
+    font-weight: 500;
 }
 
 .hierarchy-item {
@@ -155,7 +157,7 @@ $: {
 }
 
 .hierarchy-item:hover {
-    color: var(--secondary75);
+    color: var(--secondary);
 }
 
 .component {
@@ -168,6 +170,7 @@ $: {
 
 .selected {
     color: var(--primary100);
+    font-weight: bold;
 }
 
 .title {

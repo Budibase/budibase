@@ -20,7 +20,7 @@ store.subscribe(s => {
 
 <div class="root">
     <div class="title {navActive}" on:click={() => store.selectExistingNode(node.nodeId)} style="padding-left: {20 + (level * 20)}px">
-        {@html getIcon(icon, 12)} <span style="margin-left: 5px">{node.name}</span>
+        {@html getIcon(icon, 12)} <span style="margin-left: 1rem">{node.name}</span>
     </div>
     {#if node.children}
         {#each node.children as child}
@@ -43,15 +43,16 @@ store.subscribe(s => {
 
 .root { 
     display: block;
-    font-size: 10pt;
+    font-size: .9rem;
     width: 100%;
     cursor: pointer;
+    color: var(--secondary50);
+    font-weight: 500;
 }
 
 .title {
     padding-top: .5rem;
     padding-right: .5rem;
-    color: var(--secondary100);
 }
 
 .title:hover {

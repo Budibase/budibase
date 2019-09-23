@@ -5,6 +5,8 @@ import HierarchyRow from "./HierarchyRow.svelte";
 import DropdownButton from "../common/DropdownButton.svelte";
 import {hierarchy as hierarchyFunctions} from "../../../core/src";
 import NavItem from "./NavItem.svelte";
+import getIcon from "../common/icon";
+
 
 const defaultNewChildActions =  [
     {
@@ -46,9 +48,12 @@ store.subscribe(db => {
 <div class="root">
     <div class="items-root">
         <div class="hierarchy">
-            <div class="hierarchy-title-row">
-                <div class="hierarchy-title">Database</div>
-                <DropdownButton iconName="plus" actions={newChildActions} />
+            <div class="components-list-container">
+                <div class="nav-group-header">
+                    <div>{@html getIcon("database","18")}</div>
+                    <div class="hierarchy-title">Database</div>
+                    <DropdownButton iconName="plus" actions={newChildActions} />
+                </div>
             </div>
 
             {#each $store.hierarchy.children as record}
@@ -63,7 +68,7 @@ store.subscribe(db => {
 
         </div>
 
-        <NavItem name="actions" label="Actions and Triggers"/>
+        <NavItem name="actions" label="Actions & Triggers"/>
         <NavItem name="access levels" label="User Levels"/>
         <div class="space-filler"></div>
     </div>
@@ -80,19 +85,52 @@ store.subscribe(db => {
     display: flex;
     flex-direction: column;
     max-height: 100%;
-    height: 10px;
+    height: 1rem;
 }
 
 
-.hierarchy {
-    flex: 1 1 auto;
+
+.nav-items-container {
+    padding: 2rem 1rem 0rem 1rem;
+}
+
+.nav-group-header {
+    display:grid;
+    grid-template-columns: [icon] auto [title] 1fr [button] auto;
+    padding: 2rem 1rem 0rem 1rem;
+    font-size: .9rem;
+    font-weight: bold;
+}
+
+.nav-group-header>div:nth-child(1) {
+    padding: 0rem .7rem 0rem 0rem;
+    vertical-align: bottom;
+    grid-column-start: icon;
+    margin-right: 5px;
+}
+
+.nav-group-header>span:nth-child(2) {
+    margin-left:5px;
+    vertical-align: bottom;
+    grid-column-start: title;
+    margin-top:auto;
+}
+
+.nav-group-header>div:nth-child(3) {
+    vertical-align: bottom;
+    grid-column-start: button;
+    cursor: pointer;
+    color: var(--primary75);
+}
+
+.nav-group-header>div:nth-child(3):hover {
+    color: var(--primary75);   
 }
 
 
 .hierarchy-title-row {
     padding: 2rem 1rem 0rem 1rem;
-    font-size: 10pt;
-    display: flex;
+    font-size: 1rem;
     font-weight: bold;
 }
 

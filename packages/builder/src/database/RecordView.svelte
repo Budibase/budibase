@@ -115,8 +115,8 @@ let getTypeOptions = typeOptions =>
             {#each record.fields as field}
             <tr>
                 <td >
-                    <div>{field.label}</div>
-                    <div style="font-size: 0.7em; color: var(--slate)">{field.name}</div>
+                    <div class="field-label">{field.label}</div>
+                    <div style="font-size: 0.8em; color: var(--slate)">{field.name}</div>
                 </td>
                 <td >{field.type}</td>
                 <td >{@html getTypeOptions(field.typeOptions)}</td>
@@ -219,13 +219,20 @@ let getTypeOptions = typeOptions =>
 }
 
 th {
-    text-align: left;
+    text-align: left;    
 }
 
 td {
     padding: 1rem 5rem 1rem 0rem;
     margin:0;
-    
+    font-size: 14px;
+    font-weight: 500;
+
+}
+
+.field-label {
+      font-size: 14px;
+      font-weight: 500;
 }
 
 thead > tr {
