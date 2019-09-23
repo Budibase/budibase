@@ -11,6 +11,17 @@ export const loadLibs = async (appName, appPackage) => {
     return allLibraries;
 }
 
+export const loadLibUrls = (appName, appPackage) => {
+
+    const allLibraries = [];
+    for(let lib of appPackage.pages.componentLibraries) {
+        const libUrl = makeLibraryUrl(appName, lib);
+        allLibraries.push({libName:lib, importPath:libUrl});
+    }
+
+    return allLibraries;
+}
+
 export const loadLib = async (appName, lib, allLibs) => {
     allLibs[lib] = await import(makeLibraryUrl(appName, lib));
     return allLibs;

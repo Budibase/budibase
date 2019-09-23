@@ -3,19 +3,25 @@ export let className = "default";
 export let disabled = false;
 export let contentText;
 export let contentComponent;
+export let onClick = () => {};
 
 export let _app;
 let contentComponentContainer;
 
 $:{
-	if(_app && contentComponentContainer)
+	if(_app && contentComponentContainer && contentComponent._component)
 		_app.initialiseComponent(contentComponent, contentComponentContainer);
+}
+
+
+const clickHandler = () => {
+	if(onClick) onClick();
 }
 
 </script>
 
 
-<button class={className} {disabled} on:click>
+<button class={className} {disabled} on:click={clickHandler}>
     {#if contentComponent && contentComponent._component}
 	<div bind:this={contentComponentContainer}>
 	</div>

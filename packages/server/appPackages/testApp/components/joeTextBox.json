@@ -1,0 +1,9 @@
+{
+  "name": "joeTextBox",
+  "description": "",
+  "inherits": "subfolder/otherTextBox",
+  "props": {},
+  "tags": [
+    ""
+  ]
+}

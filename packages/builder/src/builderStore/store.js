@@ -1,26 +1,14 @@
 import {
     hierarchy as hierarchyFunctions, 
-    common 
 } from "../../../core/src";
 import {
-    filter, 
-    cloneDeep, 
-    sortBy, 
-    map, 
-    last, 
-    keys,
-    concat,
-    find, 
-    isEmpty, 
-    groupBy, 
-    reduce
+    filter, cloneDeep, sortBy, 
+    map, last, keys, concat,
+    find, isEmpty, reduce
 } from "lodash/fp";
 import {
-    pipe, 
-    getNode, 
-    validate,
-    constructHierarchy, 
-    templateApi
+    pipe, getNode, validate,
+    constructHierarchy, templateApi
 } from "../common/core";
 import {writable} from "svelte/store";
 import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
@@ -28,10 +16,9 @@ import { buildPropsHierarchy } from "../userInterface/pagesParsing/buildPropsHie
 import api from "./api";
 import { isRootComponent } from "../userInterface/pagesParsing/searchComponents";
 import { 
-    getComponentInfo, 
-    getNewComponentInfo 
+    getComponentInfo, getNewComponentInfo 
 } from "../userInterface/pagesParsing/createProps";
-import { loadLibs } from "./loadComponentLibraries";
+import { loadLibs, loadLibUrls } from "./loadComponentLibraries";
 
 let appname = "";
 
@@ -121,6 +108,7 @@ const initialise = (store, initial) => async () => {
                          .then(r => r.json());
 
     initial.libraries = await loadLibs(appname, pkg);
+    initial.loadLibraryUrls = () => loadLibUrls(appname, pkg);
     initial.appname = appname;
     initial.pages = pkg.pages;
     initial.hasAppPackage = true;

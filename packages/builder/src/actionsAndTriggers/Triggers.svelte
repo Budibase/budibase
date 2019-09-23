@@ -27,10 +27,10 @@ let triggerEditingFinished = (trigger) => {
 
 </script>
 
-<h3>Triggers</h3>
+<h3 class="title">Triggers</h3>
 
 {#if $store.triggers}
-<table class="fields-table uk-table uk-table-small">
+<table class="fields-table uk-table uk-table-small uk-table-striped">
     <thead>
         <tr>
             <th>Event</th>
@@ -43,10 +43,10 @@ let triggerEditingFinished = (trigger) => {
     <tbody>
         {#each $store.triggers as trigger}
         <tr>
-            <td >{trigger.eventName}</td>
-            <td >{trigger.actionName}</td>
-            <td >{trigger.condition}</td>
-            <td >{trigger.optionsCreator}</td>
+            <td class="table-content">{trigger.eventName}</td>
+            <td class="table-content">{trigger.actionName}</td>
+            <td class="table-content">{trigger.condition}</td>
+            <td class="table-content">{trigger.optionsCreator}</td>
             <td class="edit-button">
                 <span on:click={() => onTriggerEdit(trigger)}>{@html getIcon("edit")}</span>
                 <span on:click={() => onTriggerDelete(trigger)}>{@html getIcon("trash")}</span>
@@ -74,7 +74,17 @@ let triggerEditingFinished = (trigger) => {
 
 .edit-button {
     cursor:pointer;
-    color: var(--white);
+    color: var(--secondary25);
+}
+
+.title {
+    margin: 3rem 0rem 0rem 0rem;
+    font-weight: 700;
+}
+
+.table-content {
+    font-weight: 500;
+    font-size: .9rem;
 }
 
 tr:hover .edit-button  {

@@ -46,7 +46,7 @@ let isDroppedDown = false;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
     font-weight: normal;
-    border-style:solid;
+    border-style: solid;
     border-width: 1px;
     border-color: var(--secondary10);
 }

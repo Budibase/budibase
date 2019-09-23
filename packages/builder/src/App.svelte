@@ -48,7 +48,7 @@
 	main {
 		height: 100%;
 		width: 100%;
-		font-family: "Lato", Helvetica, Arial, sans-serif;
+		font-family: "Roboto", Helvetica, Arial, sans-serif;
 	}
 
 	.settings {

@@ -1,0 +1,29 @@
+{
+  "name": "Primary Button",
+  "description": "",
+  "inherits": "@budibase/standard-components/button",
+  "props": {
+    "onClick": [
+      {
+        "##eventHandlerType": "Load Record",
+        "parameters": {
+          "recordKey": "waa",
+          "statePath": "yea"
+        }
+      },
+      {
+        "##eventHandlerType": "Load Record",
+        "parameters": {
+          "recordKey": "ttt",
+          "statePath": "eee"
+        }
+      }
+    ],
+    "contentText": {
+      "##bbstate": "yea"
+    }
+  },
+  "tags": [
+    "button"
+  ]
+}

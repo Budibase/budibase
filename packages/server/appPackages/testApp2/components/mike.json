@@ -1,0 +1,65 @@
+{
+  "name": "mike",
+  "description": "",
+  "inherits": "containers/two_columns",
+  "props": {
+    "children": [
+      {
+        "_component": "#children#array_element",
+        "control": {
+          "_component": "@budibase/standard-components/button",
+          "contentText": "Click Me",
+          "contentComponent": {
+            "_component": ""
+          },
+          "className": "default",
+          "disabled": false,
+          "onClick": [
+            {
+              "##eventHandlerType": "Set State",
+              "parameters": {
+                "path": "SomeText",
+                "value": "hello !"
+              }
+            }
+          ]
+        },
+        "gridColumn": "left",
+        "gridRow": "",
+        "gridColumnStart": "",
+        "gridColumnEnd": "",
+        "gridRowStart": "",
+        "gridRowEnd": ""
+      },
+      {
+        "_component": "#children#array_element",
+        "control": {
+          "_component": "@budibase/standard-components/button",
+          "contentText": {
+            "##bbstate": "SomeText",
+            "##bbstatefallback": "(none)"
+          },
+          "contentComponent": {
+            "_component": ""
+          },
+          "className": "default",
+          "disabled": false,
+          "onClick": []
+        },
+        "gridColumn": "",
+        "gridRow": "",
+        "gridColumnStart": "",
+        "gridColumnEnd": "",
+        "gridRowStart": "",
+        "gridRowEnd": ""
+      }
+    ]
+  },
+  "tags": [
+    "div",
+    "container",
+    "layout",
+    "panel",
+    "grid"
+  ]
+}

@@ -103,6 +103,18 @@ describe("createDefaultProps", () => {
         expect(props.columns).toEqual([]);
     });
 
+    it("should create a object with single empty array, when prop definition is 'event' ", () => {
+        const propDef = {
+            onClick: "event"
+        };
+
+        const { props, errors } = createProps("some_component",propDef);
+
+        expect(errors).toEqual([]);
+        expect(props.onClick).toBeDefined();
+        expect(props.onClick).toEqual([]);
+    });
+
     it("should create a object with single empty component props, when prop definition is 'component' ", () => {
         const propDef = {
             content: "component"
