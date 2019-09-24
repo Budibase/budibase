@@ -54,7 +54,7 @@ export const createApi = ({rootPath, setState, getState}) => {
 
     return {
         loadRecord:loadRecord(apiOpts), 
-        listRecords: listRecords(api)
+        listRecords: listRecords(apiOpts)
     }
 }
 
