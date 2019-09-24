@@ -32,10 +32,10 @@ const settings = () => {
         <div class="components-list-container">
             <div class="nav-group-header">
                 <div>{@html getIcon("sidebar","18")}</div>
-                <span>COMPONENTS</span>
+                <span class="components-nav-header">Components</span>
                 <div>
                     <IconButton icon="settings" 
-                                size="14"
+                                size="14px"
                                 on:click={settings}/>
                     <IconButton icon="plus" 
                                 on:click={newComponent}/>
@@ -49,7 +49,7 @@ const settings = () => {
         <div class="pages-list-container">
             <div class="nav-group-header">
                 <div>{@html getIcon("grid","18")}</div>
-                <span>PAGES</span>
+                <span>Pages</span>
             </div>
             <div class="nav-items-container">
                 <PagesList />
@@ -93,38 +93,44 @@ const settings = () => {
 
 .ui-nav {
     grid-column-start: uiNav;
-    background-color: var(--primary10);
+    background-color: var(--secondary5);
     height: 100%;
 }
 
 .properties-pane {
     grid-column-start: properties;
-    background-color: var(--primary10);
+    background-color: var(--secondary5);
     height: 100%;
     overflow-y: hidden;
 }
 
 .pages-list-container {
-    padding-top: 20px;
+    padding-top: 2rem;
+}
+
+.components-nav-header {
+    font-size: .9rem;
 }
 
 .nav-group-header {
-    font-size: 10pt;
-    padding-left: 10px;
+    font-size: .9rem;
+    padding-left: 1rem;
 }
 
 .nav-items-container {
-    padding-top: 10px;
+    padding: 1rem 1rem 0rem 1rem;
 }
 
 .nav-group-header {
     display:grid;
     grid-template-columns: [icon] auto [title] 1fr [button] auto;
-    padding: 10px 2px 0px 7px;
+    padding: 2rem 1rem 0rem 1rem;
+    font-size: .9rem;
+    font-weight: bold;
 }
 
 .nav-group-header>div:nth-child(1) {
-    padding:0px 7px 0px 0px;
+    padding: 0rem .5rem 0rem 0rem;
     vertical-align: bottom;
     grid-column-start: icon;
     margin-right: 5px;
@@ -141,7 +147,7 @@ const settings = () => {
     vertical-align: bottom;
     grid-column-start: button;
     cursor: pointer;
-    color: var(--slate);
+    color: var(--primary75);
 }
 
 .nav-group-header>div:nth-child(3):hover {

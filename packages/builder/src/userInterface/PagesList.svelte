@@ -29,8 +29,9 @@ const getPage = (s, name) => {
 .root {
     padding-bottom: 10px;
     padding-left: 10px;
-    font-size: 16px;
+    font-size: .9rem;
     color: var(--secondary50);
+    font-weight: 500;
 }
 
 .hierarchy-item {
@@ -39,7 +40,7 @@ const getPage = (s, name) => {
 }
 
 .hierarchy-item:hover {
-    color: var(--secondary75);
+    color: var(--secondary100);
 }
 
 .component {
@@ -48,6 +49,7 @@ const getPage = (s, name) => {
 
 .selected {
     color: var(--primary100);
+    font-weight: bold;
 }
 
 
