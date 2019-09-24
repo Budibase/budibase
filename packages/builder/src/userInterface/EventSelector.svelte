@@ -5,17 +5,13 @@ import {
     find, map, keys, reduce
 } from "lodash/fp";
 import { pipe } from "../common/core";
-import { EVENT_TYPE_MEMBER_NAME } from "../common/eventHandlers";
+import { EVENT_TYPE_MEMBER_NAME, allHandlers } from "../common/eventHandlers";
 
 export let event;
 export let onChanged;
 export let onRemoved;
 
-const events = [
-    {name:"", parameters: []},
-    {name:"Set State", parameters: ["path", "value"]},
-    {name:"Load Record", parameters: ["recordKey", "statePath"]},
-];
+const events = allHandlers();
 
 let eventType;
 let parameters = [];
