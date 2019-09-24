@@ -24,7 +24,7 @@ export let node;
 
 .root { 
     display: block;
-    font-size: 1rem;
+    font-size: .9rem;
     width: 100%;
     cursor: pointer;
 }
