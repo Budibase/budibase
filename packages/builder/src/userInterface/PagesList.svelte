@@ -31,7 +31,7 @@ const getPage = (s, name) => {
     padding-left: 10px;
     font-size: .9rem;
     color: var(--secondary50);
-    font-weight: 500;
+    font-weight: bold;
 }
 
 .hierarchy-item {
