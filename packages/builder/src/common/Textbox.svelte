@@ -25,8 +25,8 @@ export let disabled = false;
 
 <style>
 .info-text {
-    font-size: 0.8em;
-    color: var(--slate);
+    font-size: 0.7rem;
+    color: var(--secondary50);
 }
 </style>
 
