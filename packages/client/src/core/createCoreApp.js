@@ -6,10 +6,9 @@ export const createCoreApp = (appDefinition, user) => {
         crypto:null,
         publish: () => {},
         hierarchy: appDefinition.hierarchy,
-        actions: appDefinition.actions
+        actions: appDefinition.actions,
+        user
     };
-
-    app.asUser(user);
 
     return app;
 }

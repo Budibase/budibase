@@ -71,6 +71,9 @@ var app = (function () {
     function element(name) {
         return document.createElement(name);
     }
+    function svg_element(name) {
+        return document.createElementNS('http://www.w3.org/2000/svg', name);
+    }
     function text(data) {
         return document.createTextNode(data);
     }
@@ -93,8 +96,38 @@ var app = (function () {
     function children(element) {
         return Array.from(element.childNodes);
     }
+    function claim_element(nodes, name, attributes, svg) {
+        for (let i = 0; i < nodes.length; i += 1) {
+            const node = nodes[i];
+            if (node.nodeName === name) {
+                for (let j = 0; j < node.attributes.length; j += 1) {
+                    const attribute = node.attributes[j];
+                    if (!attributes[attribute.name])
+                        node.removeAttribute(attribute.name);
+                }
+                return nodes.splice(i, 1)[0]; // TODO strip unwanted attributes
+            }
+        }
+        return svg ? svg_element(name) : element(name);
+    }
+    function claim_text(nodes, data) {
+        for (let i = 0; i < nodes.length; i += 1) {
+            const node = nodes[i];
+            if (node.nodeType === 3) {
+                node.data = '' + data;
+                return nodes.splice(i, 1)[0];
+            }
+        }
+        return text(data);
+    }
+    function claim_space(nodes) {
+        return claim_text(nodes, ' ');
+    }
     function set_style(node, key, value, important) {
         node.style.setProperty(key, value, important ? 'important' : '');
+    }
+    function toggle_class(element, name, toggle) {
+        element.classList[toggle ? 'add' : 'remove'](name);
     }
     function custom_event(type, detail) {
         const e = document.createEvent('CustomEvent');
@@ -549,6 +582,18 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			input = element("input");
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			input = claim_element(nodes, "INPUT", { class: true, type: true, value: true }, false);
+    			var input_nodes = children(input);
+
+    			input_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
     			attr_dev(input, "class", input_class_value = "" + null_to_empty(ctx.className) + " svelte-1ec4wqj");
     			attr_dev(input, "type", "text");
     			input.value = ctx.actualValue;
@@ -586,6 +631,18 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			input = element("input");
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			input = claim_element(nodes, "INPUT", { class: true, type: true, value: true }, false);
+    			var input_nodes = children(input);
+
+    			input_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
     			attr_dev(input, "class", input_class_value = "" + null_to_empty(ctx.className) + " svelte-1ec4wqj");
     			attr_dev(input, "type", "password");
     			input.value = ctx.actualValue;
@@ -637,7 +694,8 @@ var app = (function () {
     		},
 
     		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			if_block.l(nodes);
+    			if_block_anchor = empty();
     		},
 
     		m: function mount(target, anchor) {
@@ -796,6 +854,25 @@ var app = (function () {
     			t0 = text(t0_value);
     			t1 = space();
     			div1 = element("div");
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div0 = claim_element(nodes, "DIV", { class: true }, false);
+    			var div0_nodes = children(div0);
+
+    			t0 = claim_text(div0_nodes, t0_value);
+    			div0_nodes.forEach(detach_dev);
+    			t1 = claim_space(nodes);
+
+    			div1 = claim_element(nodes, "DIV", { class: true }, false);
+    			var div1_nodes = children(div1);
+
+    			div1_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
     			attr_dev(div0, "class", "label svelte-m9d6ue");
     			add_location(div0, file$1, 30, 4, 562);
     			attr_dev(div1, "class", "control svelte-m9d6ue");
@@ -855,12 +932,24 @@ var app = (function () {
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			attr_dev(div, "class", div_class_value = "form-root " + ctx.containerClass + " svelte-m9d6ue");
-    			add_location(div, file$1, 28, 0, 476);
+    			this.h();
     		},
 
     		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			div = claim_element(nodes, "DIV", { class: true }, false);
+    			var div_nodes = children(div);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].l(div_nodes);
+    			}
+
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(div, "class", div_class_value = "form-root " + ctx.containerClass + " svelte-m9d6ue");
+    			add_location(div, file$1, 28, 0, 476);
     		},
 
     		m: function mount(target, anchor) {
@@ -1022,7 +1111,7 @@ var app = (function () {
 
     const file$2 = "src\\Button.svelte";
 
-    // (24:4) {:else}
+    // (30:4) {:else}
     function create_else_block$1(ctx) {
     	var current;
 
@@ -1070,17 +1159,21 @@ var app = (function () {
     			if (default_slot) default_slot.d(detaching);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_else_block$1.name, type: "else", source: "(24:4) {:else}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_else_block$1.name, type: "else", source: "(30:4) {:else}", ctx });
     	return block;
     }
 
-    // (22:26) 
+    // (28:26) 
     function create_if_block_1(ctx) {
     	var t;
 
     	const block = {
     		c: function create() {
     			t = text(ctx.contentText);
+    		},
+
+    		l: function claim(nodes) {
+    			t = claim_text(nodes, ctx.contentText);
     		},
 
     		m: function mount(target, anchor) {
@@ -1102,18 +1195,30 @@ var app = (function () {
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block_1.name, type: "if", source: "(22:26) ", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block_1.name, type: "if", source: "(28:26) ", ctx });
     	return block;
     }
 
-    // (19:4) {#if contentComponent && contentComponent._component}
+    // (25:4) {#if contentComponent && contentComponent._component}
     function create_if_block$1(ctx) {
     	var div;
 
     	const block = {
     		c: function create() {
     			div = element("div");
-    			add_location(div, file$2, 19, 1, 412);
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div = claim_element(nodes, "DIV", {}, false);
+    			var div_nodes = children(div);
+
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			add_location(div, file$2, 25, 1, 546);
     		},
 
     		m: function mount(target, anchor) {
@@ -1133,7 +1238,7 @@ var app = (function () {
     			ctx.div_binding(null);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$1.name, type: "if", source: "(19:4) {#if contentComponent && contentComponent._component}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$1.name, type: "if", source: "(25:4) {#if contentComponent && contentComponent._component}", ctx });
     	return block;
     }
 
@@ -1161,14 +1266,23 @@ var app = (function () {
     		c: function create() {
     			button = element("button");
     			if_block.c();
-    			attr_dev(button, "class", button_class_value = "" + null_to_empty(ctx.className) + " svelte-1q8lga0");
-    			button.disabled = ctx.disabled;
-    			add_location(button, file$2, 17, 0, 306);
-    			dispose = listen_dev(button, "click", ctx.click_handler);
+    			this.h();
     		},
 
     		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			button = claim_element(nodes, "BUTTON", { class: true, disabled: true }, false);
+    			var button_nodes = children(button);
+
+    			if_block.l(button_nodes);
+    			button_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(button, "class", button_class_value = "" + null_to_empty(ctx.className) + " svelte-1q8lga0");
+    			button.disabled = ctx.disabled;
+    			add_location(button, file$2, 23, 0, 425);
+    			dispose = listen_dev(button, "click", ctx.clickHandler);
     		},
 
     		m: function mount(target, anchor) {
@@ -1232,19 +1346,22 @@ var app = (function () {
     }
 
     function instance$2($$self, $$props, $$invalidate) {
-    	let { className = "default", disabled = false, contentText, contentComponent, _app } = $$props;
+    	let { className = "default", disabled = false, contentText, contentComponent, onClick = () => {} } = $$props;
+
+    let { _app } = $$props;
     let contentComponentContainer;
 
-    	const writable_props = ['className', 'disabled', 'contentText', 'contentComponent', '_app'];
+
+    const clickHandler = () => {
+    	if(onClick) onClick();
+    };
+
+    	const writable_props = ['className', 'disabled', 'contentText', 'contentComponent', 'onClick', '_app'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Button> was created with unknown prop '${key}'`);
     	});
 
     	let { $$slots = {}, $$scope } = $$props;
-
-    	function click_handler(event) {
-    		bubble($$self, event);
-    	}
 
     	function div_binding($$value) {
     		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
@@ -1257,12 +1374,13 @@ var app = (function () {
     		if ('disabled' in $$props) $$invalidate('disabled', disabled = $$props.disabled);
     		if ('contentText' in $$props) $$invalidate('contentText', contentText = $$props.contentText);
     		if ('contentComponent' in $$props) $$invalidate('contentComponent', contentComponent = $$props.contentComponent);
+    		if ('onClick' in $$props) $$invalidate('onClick', onClick = $$props.onClick);
     		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
     		if ('$$scope' in $$props) $$invalidate('$$scope', $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => {
-    		return { className, disabled, contentText, contentComponent, _app, contentComponentContainer };
+    		return { className, disabled, contentText, contentComponent, onClick, _app, contentComponentContainer };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -1270,13 +1388,14 @@ var app = (function () {
     		if ('disabled' in $$props) $$invalidate('disabled', disabled = $$props.disabled);
     		if ('contentText' in $$props) $$invalidate('contentText', contentText = $$props.contentText);
     		if ('contentComponent' in $$props) $$invalidate('contentComponent', contentComponent = $$props.contentComponent);
+    		if ('onClick' in $$props) $$invalidate('onClick', onClick = $$props.onClick);
     		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
     		if ('contentComponentContainer' in $$props) $$invalidate('contentComponentContainer', contentComponentContainer = $$props.contentComponentContainer);
     	};
 
     	$$self.$$.update = ($$dirty = { _app: 1, contentComponentContainer: 1, contentComponent: 1 }) => {
     		if ($$dirty._app || $$dirty.contentComponentContainer || $$dirty.contentComponent) { {
-    			if(_app && contentComponentContainer)
+    			if(_app && contentComponentContainer && contentComponent._component)
     				_app.initialiseComponent(contentComponent, contentComponentContainer);
     		} }
     	};
@@ -1286,9 +1405,10 @@ var app = (function () {
     		disabled,
     		contentText,
     		contentComponent,
+    		onClick,
     		_app,
     		contentComponentContainer,
-    		click_handler,
+    		clickHandler,
     		div_binding,
     		$$slots,
     		$$scope
@@ -1298,7 +1418,7 @@ var app = (function () {
     class Button extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, ["className", "disabled", "contentText", "contentComponent", "_app"]);
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, ["className", "disabled", "contentText", "contentComponent", "onClick", "_app"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Button", options, id: create_fragment$2.name });
 
     		const { ctx } = this.$$;
@@ -1346,6 +1466,14 @@ var app = (function () {
     		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
+    	get onClick() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set onClick(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
     	get _app() {
     		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
@@ -1364,9 +1492,9 @@ var app = (function () {
             body: body && JSON.stringify(body), 
         });
 
-    const post = apiCall("POST");
+    const post$1 = apiCall("POST");
 
-    const authenticate = (username, password) => post("./api/authenticate", {
+    const authenticate = (username, password) => post$1("./api/authenticate", {
         username, password
     });
 
@@ -1374,7 +1502,7 @@ var app = (function () {
 
     const file$3 = "src\\Login.svelte";
 
-    // (39:8) {#if logo}
+    // (48:8) {#if logo}
     function create_if_block_1$1(ctx) {
     	var div, img;
 
@@ -1382,12 +1510,28 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			img = element("img");
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div = claim_element(nodes, "DIV", { class: true }, false);
+    			var div_nodes = children(div);
+
+    			img = claim_element(div_nodes, "IMG", { src: true, alt: true, class: true }, false);
+    			var img_nodes = children(img);
+
+    			img_nodes.forEach(detach_dev);
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
     			attr_dev(img, "src", ctx.logo);
     			attr_dev(img, "alt", "logo");
     			attr_dev(img, "class", "svelte-1oto99m");
-    			add_location(img, file$3, 40, 12, 807);
+    			add_location(img, file$3, 49, 12, 991);
     			attr_dev(div, "class", "logo-container svelte-1oto99m");
-    			add_location(div, file$3, 39, 8, 766);
+    			add_location(div, file$3, 48, 8, 950);
     		},
 
     		m: function mount(target, anchor) {
@@ -1407,17 +1551,21 @@ var app = (function () {
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block_1$1.name, type: "if", source: "(39:8) {#if logo}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block_1$1.name, type: "if", source: "(48:8) {#if logo}", ctx });
     	return block;
     }
 
-    // (61:12) <Button disabled={busy}                      on:click={login}                     class={buttonClass}>
+    // (70:12) <Button disabled={busy}                      on:click={login}                     class={buttonClass}>
     function create_default_slot(ctx) {
     	var t;
 
     	const block = {
     		c: function create() {
     			t = text(ctx.loginButtonLabel);
+    		},
+
+    		l: function claim(nodes) {
+    			t = claim_text(nodes, ctx.loginButtonLabel);
     		},
 
     		m: function mount(target, anchor) {
@@ -1436,24 +1584,38 @@ var app = (function () {
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot.name, type: "slot", source: "(61:12) <Button disabled={busy}                      on:click={login}                     class={buttonClass}>", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot.name, type: "slot", source: "(70:12) <Button disabled={busy}                      on:click={login}                     class={buttonClass}>", ctx });
     	return block;
     }
 
-    // (68:8) {#if incorrect}
+    // (77:8) {#if incorrect}
     function create_if_block$2(ctx) {
-    	var div;
+    	var div, t;
 
     	const block = {
     		c: function create() {
     			div = element("div");
-    			div.textContent = "Incorrect username or password";
+    			t = text("Incorrect username or password");
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div = claim_element(nodes, "DIV", { class: true }, false);
+    			var div_nodes = children(div);
+
+    			t = claim_text(div_nodes, "Incorrect username or password");
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
     			attr_dev(div, "class", "incorrect-details-panel svelte-1oto99m");
-    			add_location(div, file$3, 68, 8, 1570);
+    			add_location(div, file$3, 77, 8, 1754);
     		},
 
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
+    			append_dev(div, t);
     		},
 
     		d: function destroy(detaching) {
@@ -1462,7 +1624,7 @@ var app = (function () {
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$2.name, type: "if", source: "(68:8) {#if incorrect}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$2.name, type: "if", source: "(77:8) {#if incorrect}", ctx });
     	return block;
     }
 
@@ -1535,26 +1697,80 @@ var app = (function () {
     			button.$$.fragment.c();
     			t7 = space();
     			if (if_block1) if_block1.c();
-    			attr_dev(div0, "class", "label svelte-1oto99m");
-    			add_location(div0, file$3, 45, 12, 910);
-    			attr_dev(div1, "class", "control svelte-1oto99m");
-    			add_location(div1, file$3, 48, 12, 993);
-    			attr_dev(div2, "class", "label svelte-1oto99m");
-    			add_location(div2, file$3, 51, 12, 1096);
-    			attr_dev(div3, "class", "control svelte-1oto99m");
-    			add_location(div3, file$3, 54, 12, 1179);
-    			attr_dev(div4, "class", "form-root svelte-1oto99m");
-    			add_location(div4, file$3, 44, 8, 874);
-    			attr_dev(div5, "class", "login-button-container svelte-1oto99m");
-    			add_location(div5, file$3, 59, 8, 1309);
-    			attr_dev(div6, "class", "content svelte-1oto99m");
-    			add_location(div6, file$3, 36, 4, 716);
-    			attr_dev(div7, "class", "root svelte-1oto99m");
-    			add_location(div7, file$3, 34, 0, 692);
+    			this.h();
     		},
 
     		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			div7 = claim_element(nodes, "DIV", { class: true }, false);
+    			var div7_nodes = children(div7);
+
+    			div6 = claim_element(div7_nodes, "DIV", { class: true }, false);
+    			var div6_nodes = children(div6);
+
+    			if (if_block0) if_block0.l(div6_nodes);
+    			t0 = claim_space(div6_nodes);
+
+    			div4 = claim_element(div6_nodes, "DIV", { class: true }, false);
+    			var div4_nodes = children(div4);
+
+    			div0 = claim_element(div4_nodes, "DIV", { class: true }, false);
+    			var div0_nodes = children(div0);
+
+    			t1 = claim_text(div0_nodes, ctx.usernameLabel);
+    			div0_nodes.forEach(detach_dev);
+    			t2 = claim_space(div4_nodes);
+
+    			div1 = claim_element(div4_nodes, "DIV", { class: true }, false);
+    			var div1_nodes = children(div1);
+
+    			textbox0.$$.fragment.l(div1_nodes);
+    			div1_nodes.forEach(detach_dev);
+    			t3 = claim_space(div4_nodes);
+
+    			div2 = claim_element(div4_nodes, "DIV", { class: true }, false);
+    			var div2_nodes = children(div2);
+
+    			t4 = claim_text(div2_nodes, ctx.passwordLabel);
+    			div2_nodes.forEach(detach_dev);
+    			t5 = claim_space(div4_nodes);
+
+    			div3 = claim_element(div4_nodes, "DIV", { class: true }, false);
+    			var div3_nodes = children(div3);
+
+    			textbox1.$$.fragment.l(div3_nodes);
+    			div3_nodes.forEach(detach_dev);
+    			div4_nodes.forEach(detach_dev);
+    			t6 = claim_space(div6_nodes);
+
+    			div5 = claim_element(div6_nodes, "DIV", { class: true }, false);
+    			var div5_nodes = children(div5);
+
+    			button.$$.fragment.l(div5_nodes);
+    			div5_nodes.forEach(detach_dev);
+    			t7 = claim_space(div6_nodes);
+    			if (if_block1) if_block1.l(div6_nodes);
+    			div6_nodes.forEach(detach_dev);
+    			div7_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(div0, "class", "label svelte-1oto99m");
+    			add_location(div0, file$3, 54, 12, 1094);
+    			attr_dev(div1, "class", "control svelte-1oto99m");
+    			add_location(div1, file$3, 57, 12, 1177);
+    			attr_dev(div2, "class", "label svelte-1oto99m");
+    			add_location(div2, file$3, 60, 12, 1280);
+    			attr_dev(div3, "class", "control svelte-1oto99m");
+    			add_location(div3, file$3, 63, 12, 1363);
+    			attr_dev(div4, "class", "form-root svelte-1oto99m");
+    			add_location(div4, file$3, 53, 8, 1058);
+    			attr_dev(div5, "class", "login-button-container svelte-1oto99m");
+    			add_location(div5, file$3, 68, 8, 1493);
+    			attr_dev(div6, "class", "content svelte-1oto99m");
+    			add_location(div6, file$3, 45, 4, 900);
+    			attr_dev(div7, "class", "root svelte-1oto99m");
+    			add_location(div7, file$3, 43, 0, 876);
     		},
 
     		m: function mount(target, anchor) {
@@ -1675,7 +1891,7 @@ var app = (function () {
     function instance$3($$self, $$props, $$invalidate) {
     	
 
-    let { usernameLabel = "Username", passwordLabel = "Password", loginButtonLabel = "Login", loginRedirect = "", logo = "", buttonClass = "" } = $$props;
+    let { usernameLabel = "Username", passwordLabel = "Password", loginButtonLabel = "Login", loginRedirect = "", logo = "", buttonClass = "", _app } = $$props;
 
     let username = "";
     let password = "";
@@ -1687,13 +1903,22 @@ var app = (function () {
         authenticate(username, password)
         .then(r => {
             $$invalidate('busy', busy = false);
-            if(r.status === 200) ; else {
+            if(r.status === 200) {
+                return r.json();
+            } else {
                 $$invalidate('incorrect', incorrect = true);
+                return;
+            }
+        })
+        .then(user => {
+            if(user) {
+                localStorage.setItem("budibase:user", user);
+                location.reload();
             }
         });
     };
 
-    	const writable_props = ['usernameLabel', 'passwordLabel', 'loginButtonLabel', 'loginRedirect', 'logo', 'buttonClass'];
+    	const writable_props = ['usernameLabel', 'passwordLabel', 'loginButtonLabel', 'loginRedirect', 'logo', 'buttonClass', '_app'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Login> was created with unknown prop '${key}'`);
     	});
@@ -1715,10 +1940,11 @@ var app = (function () {
     		if ('loginRedirect' in $$props) $$invalidate('loginRedirect', loginRedirect = $$props.loginRedirect);
     		if ('logo' in $$props) $$invalidate('logo', logo = $$props.logo);
     		if ('buttonClass' in $$props) $$invalidate('buttonClass', buttonClass = $$props.buttonClass);
+    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
     	};
 
     	$$self.$capture_state = () => {
-    		return { usernameLabel, passwordLabel, loginButtonLabel, loginRedirect, logo, buttonClass, username, password, busy, incorrect };
+    		return { usernameLabel, passwordLabel, loginButtonLabel, loginRedirect, logo, buttonClass, _app, username, password, busy, incorrect };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -1728,6 +1954,7 @@ var app = (function () {
     		if ('loginRedirect' in $$props) $$invalidate('loginRedirect', loginRedirect = $$props.loginRedirect);
     		if ('logo' in $$props) $$invalidate('logo', logo = $$props.logo);
     		if ('buttonClass' in $$props) $$invalidate('buttonClass', buttonClass = $$props.buttonClass);
+    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
     		if ('username' in $$props) $$invalidate('username', username = $$props.username);
     		if ('password' in $$props) $$invalidate('password', password = $$props.password);
     		if ('busy' in $$props) $$invalidate('busy', busy = $$props.busy);
@@ -1741,6 +1968,7 @@ var app = (function () {
     		loginRedirect,
     		logo,
     		buttonClass,
+    		_app,
     		username,
     		password,
     		busy,
@@ -1754,8 +1982,14 @@ var app = (function () {
     class Login extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$3, create_fragment$3, safe_not_equal, ["usernameLabel", "passwordLabel", "loginButtonLabel", "loginRedirect", "logo", "buttonClass"]);
+    		init(this, options, instance$3, create_fragment$3, safe_not_equal, ["usernameLabel", "passwordLabel", "loginButtonLabel", "loginRedirect", "logo", "buttonClass", "_app"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Login", options, id: create_fragment$3.name });
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx._app === undefined && !('_app' in props)) {
+    			console.warn("<Login> was created without expected prop '_app'");
+    		}
     	}
 
     	get usernameLabel() {
@@ -1805,6 +2039,14 @@ var app = (function () {
     	set buttonClass(value) {
     		throw new Error("<Login>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
+
+    	get _app() {
+    		throw new Error("<Login>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set _app(value) {
+    		throw new Error("<Login>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
     }
 
     const buildStyle = (styles) => {
@@ -1838,6 +2080,18 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			div = element("div");
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div = claim_element(nodes, "DIV", { class: true, style: true }, false);
+    			var div_nodes = children(div);
+
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
     			attr_dev(div, "class", div_class_value = "" + null_to_empty(ctx.itemContainerClass) + " svelte-10kw8to");
     			attr_dev(div, "style", div_style_value = ctx.childStyle(ctx.child));
     			add_location(div, file$4, 49, 4, 1271);
@@ -1895,16 +2149,28 @@ var app = (function () {
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div = claim_element(nodes, "DIV", { class: true, style: true }, false);
+    			var div_nodes = children(div);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].l(div_nodes);
+    			}
+
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
     			attr_dev(div, "class", div_class_value = "root " + ctx.containerClass + " svelte-10kw8to");
     			set_style(div, "width", ctx.width);
     			set_style(div, "height", ctx.height);
     			set_style(div, "grid-template-columns", ctx.gridTemplateColumns);
     			set_style(div, "grid-template-rows", ctx.gridTemplateRows);
     			add_location(div, file$4, 46, 0, 1058);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
 
     		m: function mount(target, anchor) {
@@ -2150,13 +2416,22 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			t = text(ctx.value);
-    			attr_dev(div, "class", ctx.containerClass);
-    			attr_dev(div, "style", ctx.style);
-    			add_location(div, file$5, 29, 0, 477);
+    			this.h();
     		},
 
     		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			div = claim_element(nodes, "DIV", { class: true, style: true }, false);
+    			var div_nodes = children(div);
+
+    			t = claim_text(div_nodes, ctx.value);
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(div, "class", ctx.containerClass);
+    			attr_dev(div, "style", ctx.style);
+    			add_location(div, file$5, 27, 0, 443);
     		},
 
     		m: function mount(target, anchor) {
@@ -2192,11 +2467,11 @@ var app = (function () {
     }
 
     function instance$5($$self, $$props, $$invalidate) {
-    	let { value="", containerClass="", background="", border="", font="", display="", textAlign="", color="", padding="", _app } = $$props;
+    	let { value="", containerClass="", font="", textAlign="", verticalAlign="", color="", display="", _app } = $$props;
 
     let style="";
 
-    	const writable_props = ['value', 'containerClass', 'background', 'border', 'font', 'display', 'textAlign', 'color', 'padding', '_app'];
+    	const writable_props = ['value', 'containerClass', 'font', 'textAlign', 'verticalAlign', 'color', 'display', '_app'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Text> was created with unknown prop '${key}'`);
     	});
@@ -2204,40 +2479,36 @@ var app = (function () {
     	$$self.$set = $$props => {
     		if ('value' in $$props) $$invalidate('value', value = $$props.value);
     		if ('containerClass' in $$props) $$invalidate('containerClass', containerClass = $$props.containerClass);
-    		if ('background' in $$props) $$invalidate('background', background = $$props.background);
-    		if ('border' in $$props) $$invalidate('border', border = $$props.border);
     		if ('font' in $$props) $$invalidate('font', font = $$props.font);
-    		if ('display' in $$props) $$invalidate('display', display = $$props.display);
     		if ('textAlign' in $$props) $$invalidate('textAlign', textAlign = $$props.textAlign);
+    		if ('verticalAlign' in $$props) $$invalidate('verticalAlign', verticalAlign = $$props.verticalAlign);
     		if ('color' in $$props) $$invalidate('color', color = $$props.color);
-    		if ('padding' in $$props) $$invalidate('padding', padding = $$props.padding);
+    		if ('display' in $$props) $$invalidate('display', display = $$props.display);
     		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
     	};
 
     	$$self.$capture_state = () => {
-    		return { value, containerClass, background, border, font, display, textAlign, color, padding, _app, style };
+    		return { value, containerClass, font, textAlign, verticalAlign, color, display, _app, style };
     	};
 
     	$$self.$inject_state = $$props => {
     		if ('value' in $$props) $$invalidate('value', value = $$props.value);
     		if ('containerClass' in $$props) $$invalidate('containerClass', containerClass = $$props.containerClass);
-    		if ('background' in $$props) $$invalidate('background', background = $$props.background);
-    		if ('border' in $$props) $$invalidate('border', border = $$props.border);
     		if ('font' in $$props) $$invalidate('font', font = $$props.font);
-    		if ('display' in $$props) $$invalidate('display', display = $$props.display);
     		if ('textAlign' in $$props) $$invalidate('textAlign', textAlign = $$props.textAlign);
+    		if ('verticalAlign' in $$props) $$invalidate('verticalAlign', verticalAlign = $$props.verticalAlign);
     		if ('color' in $$props) $$invalidate('color', color = $$props.color);
-    		if ('padding' in $$props) $$invalidate('padding', padding = $$props.padding);
+    		if ('display' in $$props) $$invalidate('display', display = $$props.display);
     		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
     		if ('style' in $$props) $$invalidate('style', style = $$props.style);
     	};
 
-    	$$self.$$.update = ($$dirty = { border: 1, background: 1, font: 1, padding: 1, display: 1, color: 1, textAlign: 1 }) => {
-    		if ($$dirty.border || $$dirty.background || $$dirty.font || $$dirty.padding || $$dirty.display || $$dirty.color || $$dirty.textAlign) { {
+    	$$self.$$.update = ($$dirty = { font: 1, verticalAlign: 1, color: 1, textAlign: 1 }) => {
+    		if ($$dirty.font || $$dirty.verticalAlign || $$dirty.color || $$dirty.textAlign) { {
                 $$invalidate('style', style=buildStyle({
-                    border, background, font, 
-                    padding, display, color,
-                    "text-align": textAlign
+                    font,  verticalAlign, color, 
+                    "text-align": textAlign,
+                    "vertical-align": verticalAlign
                 }));
             } }
     	};
@@ -2245,13 +2516,11 @@ var app = (function () {
     	return {
     		value,
     		containerClass,
-    		background,
-    		border,
     		font,
-    		display,
     		textAlign,
+    		verticalAlign,
     		color,
-    		padding,
+    		display,
     		_app,
     		style
     	};
@@ -2260,7 +2529,7 @@ var app = (function () {
     class Text extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$5, create_fragment$5, safe_not_equal, ["value", "containerClass", "background", "border", "font", "display", "textAlign", "color", "padding", "_app"]);
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, ["value", "containerClass", "font", "textAlign", "verticalAlign", "color", "display", "_app"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Text", options, id: create_fragment$5.name });
 
     		const { ctx } = this.$$;
@@ -2286,35 +2555,11 @@ var app = (function () {
     		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get background() {
-    		throw new Error("<Text>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set background(value) {
-    		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get border() {
-    		throw new Error("<Text>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set border(value) {
-    		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
     	get font() {
     		throw new Error("<Text>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
     	set font(value) {
-    		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get display() {
-    		throw new Error("<Text>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set display(value) {
     		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
@@ -2326,6 +2571,14 @@ var app = (function () {
     		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
+    	get verticalAlign() {
+    		throw new Error("<Text>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set verticalAlign(value) {
+    		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
     	get color() {
     		throw new Error("<Text>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
@@ -2334,11 +2587,11 @@ var app = (function () {
     		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get padding() {
+    	get display() {
     		throw new Error("<Text>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set padding(value) {
+    	set display(value) {
     		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
@@ -2348,6 +2601,644 @@ var app = (function () {
 
     	set _app(value) {
     		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    // https://github.com/kaisermann/svelte-css-vars
+
+    var cssVars = (node, props) => {
+        Object.entries(props).forEach(([key, value]) => {
+          node.style.setProperty(`--${key}`, value);
+        });
+      
+        return {
+          update(new_props) {
+            Object.entries(new_props).forEach(([key, value]) => {
+              node.style.setProperty(`--${key}`, value);
+              delete props[key];
+            });
+      
+            Object.keys(props).forEach(name =>
+              node.style.removeProperty(`--${name}`),
+            );
+            props = new_props;
+          },
+        };
+      };
+
+    /* src\Nav.svelte generated by Svelte v3.12.1 */
+
+    const file$6 = "src\\Nav.svelte";
+
+    function get_each_context$2(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.navItem = list[i];
+    	child_ctx.index = i;
+    	return child_ctx;
+    }
+
+    // (36:8) {#each items as navItem, index}
+    function create_each_block$2(ctx) {
+    	var div, t0_value = ctx.navItem.title + "", t0, t1, dispose;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div = claim_element(nodes, "DIV", { class: true }, false);
+    			var div_nodes = children(div);
+
+    			t0 = claim_text(div_nodes, t0_value);
+    			t1 = claim_space(div_nodes);
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(div, "class", "navitem svelte-aihwli");
+    			toggle_class(div, "selected", ctx.selectedIndex === ctx.index);
+    			add_location(div, file$6, 36, 8, 867);
+    			dispose = listen_dev(div, "click", ctx.onSelectItem(ctx.index));
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, t0);
+    			append_dev(div, t1);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if ((changed.items) && t0_value !== (t0_value = ctx.navItem.title + "")) {
+    				set_data_dev(t0, t0_value);
+    			}
+
+    			if (changed.selectedIndex) {
+    				toggle_class(div, "selected", ctx.selectedIndex === ctx.index);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach_dev(div);
+    			}
+
+    			dispose();
+    		}
+    	};
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block$2.name, type: "each", source: "(36:8) {#each items as navItem, index}", ctx });
+    	return block;
+    }
+
+    function create_fragment$6(ctx) {
+    	var div2, div0, t, div1, cssVars_action;
+
+    	let each_value = ctx.items;
+
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			div2 = element("div");
+    			div0 = element("div");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			t = space();
+    			div1 = element("div");
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div2 = claim_element(nodes, "DIV", { class: true }, false);
+    			var div2_nodes = children(div2);
+
+    			div0 = claim_element(div2_nodes, "DIV", { class: true }, false);
+    			var div0_nodes = children(div0);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].l(div0_nodes);
+    			}
+
+    			div0_nodes.forEach(detach_dev);
+    			t = claim_space(div2_nodes);
+
+    			div1 = claim_element(div2_nodes, "DIV", { class: true }, false);
+    			var div1_nodes = children(div1);
+
+    			div1_nodes.forEach(detach_dev);
+    			div2_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(div0, "class", "navbar svelte-aihwli");
+    			add_location(div0, file$6, 34, 4, 796);
+    			attr_dev(div1, "class", "content svelte-aihwli");
+    			add_location(div1, file$6, 43, 4, 1068);
+    			attr_dev(div2, "class", "root svelte-aihwli");
+    			add_location(div2, file$6, 33, 0, 748);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div2, anchor);
+    			append_dev(div2, div0);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div0, null);
+    			}
+
+    			append_dev(div2, t);
+    			append_dev(div2, div1);
+    			ctx.div1_binding(div1);
+    			cssVars_action = cssVars.call(null, div2, ctx.styleVars) || {};
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.selectedIndex || changed.items) {
+    				each_value = ctx.items;
+
+    				let i;
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$2(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$2(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div0, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+
+    			if (typeof cssVars_action.update === 'function' && changed.styleVars) {
+    				cssVars_action.update.call(null, ctx.styleVars);
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach_dev(div2);
+    			}
+
+    			destroy_each(each_blocks, detaching);
+
+    			ctx.div1_binding(null);
+    			if (cssVars_action && typeof cssVars_action.destroy === 'function') cssVars_action.destroy();
+    		}
+    	};
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_fragment$6.name, type: "component", source: "", ctx });
+    	return block;
+    }
+
+    function instance$6($$self, $$props, $$invalidate) {
+    	let { navBarBackground = "", navBarBorder="", navBarColor="", selectedItemBackground="", selectedItemColor="", selectedItemBorder="", itemHoverBackground="", itemHoverColor="", items = [], _app } = $$props;
+
+    let selectedIndex;
+    let contentElement;
+
+    const onSelectItem = (index) => () => {
+        $$invalidate('selectedIndex', selectedIndex = index);
+        _app.initialiseComponent(items[index].component, contentElement);
+    };
+
+    	const writable_props = ['navBarBackground', 'navBarBorder', 'navBarColor', 'selectedItemBackground', 'selectedItemColor', 'selectedItemBorder', 'itemHoverBackground', 'itemHoverColor', 'items', '_app'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Nav> was created with unknown prop '${key}'`);
+    	});
+
+    	function div1_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			$$invalidate('contentElement', contentElement = $$value);
+    		});
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('navBarBackground' in $$props) $$invalidate('navBarBackground', navBarBackground = $$props.navBarBackground);
+    		if ('navBarBorder' in $$props) $$invalidate('navBarBorder', navBarBorder = $$props.navBarBorder);
+    		if ('navBarColor' in $$props) $$invalidate('navBarColor', navBarColor = $$props.navBarColor);
+    		if ('selectedItemBackground' in $$props) $$invalidate('selectedItemBackground', selectedItemBackground = $$props.selectedItemBackground);
+    		if ('selectedItemColor' in $$props) $$invalidate('selectedItemColor', selectedItemColor = $$props.selectedItemColor);
+    		if ('selectedItemBorder' in $$props) $$invalidate('selectedItemBorder', selectedItemBorder = $$props.selectedItemBorder);
+    		if ('itemHoverBackground' in $$props) $$invalidate('itemHoverBackground', itemHoverBackground = $$props.itemHoverBackground);
+    		if ('itemHoverColor' in $$props) $$invalidate('itemHoverColor', itemHoverColor = $$props.itemHoverColor);
+    		if ('items' in $$props) $$invalidate('items', items = $$props.items);
+    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    	};
+
+    	$$self.$capture_state = () => {
+    		return { navBarBackground, navBarBorder, navBarColor, selectedItemBackground, selectedItemColor, selectedItemBorder, itemHoverBackground, itemHoverColor, items, _app, selectedIndex, contentElement, styleVars };
+    	};
+
+    	$$self.$inject_state = $$props => {
+    		if ('navBarBackground' in $$props) $$invalidate('navBarBackground', navBarBackground = $$props.navBarBackground);
+    		if ('navBarBorder' in $$props) $$invalidate('navBarBorder', navBarBorder = $$props.navBarBorder);
+    		if ('navBarColor' in $$props) $$invalidate('navBarColor', navBarColor = $$props.navBarColor);
+    		if ('selectedItemBackground' in $$props) $$invalidate('selectedItemBackground', selectedItemBackground = $$props.selectedItemBackground);
+    		if ('selectedItemColor' in $$props) $$invalidate('selectedItemColor', selectedItemColor = $$props.selectedItemColor);
+    		if ('selectedItemBorder' in $$props) $$invalidate('selectedItemBorder', selectedItemBorder = $$props.selectedItemBorder);
+    		if ('itemHoverBackground' in $$props) $$invalidate('itemHoverBackground', itemHoverBackground = $$props.itemHoverBackground);
+    		if ('itemHoverColor' in $$props) $$invalidate('itemHoverColor', itemHoverColor = $$props.itemHoverColor);
+    		if ('items' in $$props) $$invalidate('items', items = $$props.items);
+    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('selectedIndex' in $$props) $$invalidate('selectedIndex', selectedIndex = $$props.selectedIndex);
+    		if ('contentElement' in $$props) $$invalidate('contentElement', contentElement = $$props.contentElement);
+    		if ('styleVars' in $$props) $$invalidate('styleVars', styleVars = $$props.styleVars);
+    	};
+
+    	let styleVars;
+
+    	$$self.$$.update = ($$dirty = { navBarBackground: 1, navBarBorder: 1, navBarColor: 1, selectedItemBackground: 1, selectedItemColor: 1, selectedItemBorder: 1, itemHoverBackground: 1, itemHoverColor: 1 }) => {
+    		if ($$dirty.navBarBackground || $$dirty.navBarBorder || $$dirty.navBarColor || $$dirty.selectedItemBackground || $$dirty.selectedItemColor || $$dirty.selectedItemBorder || $$dirty.itemHoverBackground || $$dirty.itemHoverColor) { $$invalidate('styleVars', styleVars = {
+                navBarBackground, navBarBorder,
+                navBarColor, selectedItemBackground,
+                selectedItemColor, selectedItemBorder,
+                itemHoverBackground, itemHoverColor
+            }); }
+    	};
+
+    	return {
+    		navBarBackground,
+    		navBarBorder,
+    		navBarColor,
+    		selectedItemBackground,
+    		selectedItemColor,
+    		selectedItemBorder,
+    		itemHoverBackground,
+    		itemHoverColor,
+    		items,
+    		_app,
+    		selectedIndex,
+    		contentElement,
+    		onSelectItem,
+    		styleVars,
+    		div1_binding
+    	};
+    }
+
+    class Nav extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$6, create_fragment$6, safe_not_equal, ["navBarBackground", "navBarBorder", "navBarColor", "selectedItemBackground", "selectedItemColor", "selectedItemBorder", "itemHoverBackground", "itemHoverColor", "items", "_app"]);
+    		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Nav", options, id: create_fragment$6.name });
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx._app === undefined && !('_app' in props)) {
+    			console.warn("<Nav> was created without expected prop '_app'");
+    		}
+    	}
+
+    	get navBarBackground() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set navBarBackground(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get navBarBorder() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set navBarBorder(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get navBarColor() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set navBarColor(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get selectedItemBackground() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set selectedItemBackground(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get selectedItemColor() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set selectedItemColor(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get selectedItemBorder() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set selectedItemBorder(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get itemHoverBackground() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set itemHoverBackground(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get itemHoverColor() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set itemHoverColor(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get items() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set items(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get _app() {
+    		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set _app(value) {
+    		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\Panel.svelte generated by Svelte v3.12.1 */
+
+    const file$7 = "src\\Panel.svelte";
+
+    function create_fragment$7(ctx) {
+    	var div, t;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			t = text(ctx.text);
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div = claim_element(nodes, "DIV", { class: true, style: true, "this:bind": true }, false);
+    			var div_nodes = children(div);
+
+    			t = claim_text(div_nodes, ctx.text);
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(div, "class", ctx.containerClass);
+    			attr_dev(div, "style", ctx.style);
+    			attr_dev(div, "this:bind", ctx.componentElement);
+    			add_location(div, file$7, 35, 0, 691);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, t);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.text) {
+    				set_data_dev(t, ctx.text);
+    			}
+
+    			if (changed.containerClass) {
+    				attr_dev(div, "class", ctx.containerClass);
+    			}
+
+    			if (changed.style) {
+    				attr_dev(div, "style", ctx.style);
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach_dev(div);
+    			}
+    		}
+    	};
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_fragment$7.name, type: "component", source: "", ctx });
+    	return block;
+    }
+
+    function instance$7($$self, $$props, $$invalidate) {
+    	let { component="", text="", containerClass="", background="", border="", borderRadius="", font="", display="", textAlign="", color="", padding="", _app } = $$props;
+
+    let style="";
+    let componentElement;
+
+    	const writable_props = ['component', 'text', 'containerClass', 'background', 'border', 'borderRadius', 'font', 'display', 'textAlign', 'color', 'padding', '_app'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Panel> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$set = $$props => {
+    		if ('component' in $$props) $$invalidate('component', component = $$props.component);
+    		if ('text' in $$props) $$invalidate('text', text = $$props.text);
+    		if ('containerClass' in $$props) $$invalidate('containerClass', containerClass = $$props.containerClass);
+    		if ('background' in $$props) $$invalidate('background', background = $$props.background);
+    		if ('border' in $$props) $$invalidate('border', border = $$props.border);
+    		if ('borderRadius' in $$props) $$invalidate('borderRadius', borderRadius = $$props.borderRadius);
+    		if ('font' in $$props) $$invalidate('font', font = $$props.font);
+    		if ('display' in $$props) $$invalidate('display', display = $$props.display);
+    		if ('textAlign' in $$props) $$invalidate('textAlign', textAlign = $$props.textAlign);
+    		if ('color' in $$props) $$invalidate('color', color = $$props.color);
+    		if ('padding' in $$props) $$invalidate('padding', padding = $$props.padding);
+    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    	};
+
+    	$$self.$capture_state = () => {
+    		return { component, text, containerClass, background, border, borderRadius, font, display, textAlign, color, padding, _app, style, componentElement };
+    	};
+
+    	$$self.$inject_state = $$props => {
+    		if ('component' in $$props) $$invalidate('component', component = $$props.component);
+    		if ('text' in $$props) $$invalidate('text', text = $$props.text);
+    		if ('containerClass' in $$props) $$invalidate('containerClass', containerClass = $$props.containerClass);
+    		if ('background' in $$props) $$invalidate('background', background = $$props.background);
+    		if ('border' in $$props) $$invalidate('border', border = $$props.border);
+    		if ('borderRadius' in $$props) $$invalidate('borderRadius', borderRadius = $$props.borderRadius);
+    		if ('font' in $$props) $$invalidate('font', font = $$props.font);
+    		if ('display' in $$props) $$invalidate('display', display = $$props.display);
+    		if ('textAlign' in $$props) $$invalidate('textAlign', textAlign = $$props.textAlign);
+    		if ('color' in $$props) $$invalidate('color', color = $$props.color);
+    		if ('padding' in $$props) $$invalidate('padding', padding = $$props.padding);
+    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('style' in $$props) $$invalidate('style', style = $$props.style);
+    		if ('componentElement' in $$props) $$invalidate('componentElement', componentElement = $$props.componentElement);
+    	};
+
+    	$$self.$$.update = ($$dirty = { border: 1, background: 1, font: 1, padding: 1, display: 1, color: 1, textAlign: 1, borderRadius: 1, _app: 1, component: 1, componentElement: 1 }) => {
+    		if ($$dirty.border || $$dirty.background || $$dirty.font || $$dirty.padding || $$dirty.display || $$dirty.color || $$dirty.textAlign || $$dirty.borderRadius || $$dirty._app || $$dirty.component || $$dirty.componentElement) { {
+                $$invalidate('style', style=buildStyle({
+                    border, background, font, 
+                    padding, display, color,
+                    "text-align": textAlign,
+                    "border-radius":borderRadius
+                }));
+            
+                if(_app && component) {
+                    _app.initialiseComponent(component, componentElement);
+                }
+            } }
+    	};
+
+    	return {
+    		component,
+    		text,
+    		containerClass,
+    		background,
+    		border,
+    		borderRadius,
+    		font,
+    		display,
+    		textAlign,
+    		color,
+    		padding,
+    		_app,
+    		style,
+    		componentElement
+    	};
+    }
+
+    class Panel extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$7, create_fragment$7, safe_not_equal, ["component", "text", "containerClass", "background", "border", "borderRadius", "font", "display", "textAlign", "color", "padding", "_app"]);
+    		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Panel", options, id: create_fragment$7.name });
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx._app === undefined && !('_app' in props)) {
+    			console.warn("<Panel> was created without expected prop '_app'");
+    		}
+    	}
+
+    	get component() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set component(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get text() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set text(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get containerClass() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set containerClass(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get background() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set background(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get border() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set border(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get borderRadius() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set borderRadius(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get font() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set font(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get display() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set display(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get textAlign() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set textAlign(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get color() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set color(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get padding() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set padding(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get _app() {
+    		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set _app(value) {
+    		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
@@ -20716,6 +21607,9 @@ var app = (function () {
       }
     }
 
+
+    const events = _events;
+
     // Found this seed-based random generator somewhere
     // Based on The Central Randomizer 1.3 (C) 1997 by Paul Houle (houle@msc.cornell.edu)
 
@@ -20828,12 +21722,12 @@ var app = (function () {
         return alphabetShuffled[index];
     }
 
-    function get () {
+    function get$1 () {
       return alphabet || ORIGINAL;
     }
 
     var alphabet_1 = {
-        get: get,
+        get: get$1,
         characters: characters,
         seed: setSeed$1,
         lookup: lookup,
@@ -21049,6 +21943,104 @@ var app = (function () {
     var shortid = lib;
     var shortid_1 = shortid.generate;
 
+    class BadRequestError extends Error {
+        constructor(message) {
+            super(message);
+            this.httpStatusCode = 400;
+        }
+    }
+
+    class UnauthorisedError extends Error {
+        constructor(message) {
+            super(message);
+            this.httpStatusCode = 401;
+        }
+    }
+
+    const apiWrapperSync = (app, eventNamespace, isAuthorized, eventContext, func, ...params) => {
+      pushCallStack(app, eventNamespace);
+
+      if (!isAuthorized(app)) {
+        handleNotAuthorized(app, eventContext, eventNamespace);
+        return;
+      }
+
+      const startDate = Date.now();
+      const elapsed = () => (Date.now() - startDate);
+
+      try {
+        app.publish(
+          eventNamespace.onBegin,
+          eventContext,
+        );
+
+        const result = func(...params);
+
+        publishComplete(app, eventContext, eventNamespace, elapsed, result);
+        return result;
+      } catch (error) {
+        publishError(app, eventContext, eventNamespace, elapsed, error);
+        throw error;
+      }
+    };
+
+    const handleNotAuthorized = (app, eventContext, eventNamespace) => {
+      const err = new UnauthorisedError(`Unauthorized: ${eventNamespace}`);
+      publishError(app, eventContext, eventNamespace, () => 0, err);
+      throw err;
+    };
+
+    const pushCallStack = (app, eventNamespace, seedCallId) => {
+      const callId = shortid_1();
+
+      const createCallStack = () => ({
+        seedCallId: !fp_3(seedCallId)
+          ? seedCallId
+          : callId,
+        threadCallId: callId,
+        stack: [],
+      });
+
+      if (fp_3(app.calls)) {
+        app.calls = createCallStack();
+      }
+
+      app.calls.stack.push({
+        namespace: eventNamespace,
+        callId,
+      });
+    };
+
+    const popCallStack = (app) => {
+      app.calls.stack.pop();
+      if (app.calls.stack.length === 0) {
+        delete app.calls;
+      }
+    };
+
+    const publishError = async (app, eventContext, eventNamespace, elapsed, err) => {
+      const ctx = fp_4(eventContext);
+      ctx.error = err;
+      ctx.elapsed = elapsed();
+      await app.publish(
+        eventNamespace.onError,
+        ctx,
+      );
+      popCallStack(app);
+    };
+
+    const publishComplete = async (app, eventContext, eventNamespace, elapsed, result) => {
+      const endcontext = fp_4(eventContext);
+      endcontext.result = result;
+      endcontext.elapsed = elapsed();
+      await app.publish(
+        eventNamespace.onComplete,
+        endcontext,
+      );
+      popCallStack(app);
+      return result;
+    };
+
     // this is the combinator function
     const $$ = (...funcs) => arg => lodash_2(funcs)(arg);
 
@@ -21057,17 +22049,38 @@ var app = (function () {
 
     const keySep = '/';
     const trimKeySep = str => lodash_6(str, keySep);
+    const splitByKeySep = str => lodash_23(str, keySep);
     const safeKey = key => lodash_5(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
     const joinKey = (...strs) => {
       const paramsOrArray = strs.length === 1 & lodash_3(strs[0])
         ? strs[0] : strs;
       return safeKey(lodash_4(paramsOrArray, keySep));
     };
+    const splitKey = $$(trimKeySep, splitByKeySep);
 
     const configFolder = `${keySep}.config`;
     const fieldDefinitions = joinKey(configFolder, 'fields.json');
     const templateDefinitions = joinKey(configFolder, 'templates.json');
     const appDefinitionFile = joinKey(configFolder, 'appDefinition.json');
+
+    const not = func => val => !func(val);
+    const isDefined = not(lodash_10);
+    const isNonNull = not(lodash_11);
+    const isNotNaN = not(lodash_12);
+
+    const allTrue = (...funcArgs) => val => lodash_13(funcArgs,
+      (result, conditionFunc) => (lodash_11(result) || result == true) && conditionFunc(val),
+      null);
+
+    const isSomething = allTrue(isDefined, isNonNull, isNotNaN);
+    const isNothing = not(isSomething);
+
+    const none = predicate => collection => !fp_6(predicate)(collection);
+
+    const all = predicate => collection => none(v => !predicate(v))(collection);
+
+    const isNotEmpty = ob => !lodash_14(ob);
+    const isNonEmptyString = allTrue(lodash_22, isNotEmpty);
     const tryOr = failFunc => (func, ...args) => {
       try {
         return func.apply(null, ...args);
@@ -21075,26 +22088,1366 @@ var app = (function () {
         return failFunc();
       }
     };
+    const causesException = (func) => {
+      try {
+        func();
+        return false;
+      } catch (e) {
+        return true;
+      }
+    };
+
+    const executesWithoutException = func => !causesException(func);
 
     const handleErrorWith = returnValInError => tryOr(lodash_15(returnValInError));
 
     const handleErrorWithUndefined = handleErrorWith(undefined);
+
+    const switchCase = (...cases) => (value) => {
+      const nextCase = () => lodash_9(cases)[0](value);
+      const nextResult = () => lodash_9(cases)[1](value);
+
+      if (lodash_14(cases)) return; // undefined
+      if (nextCase() === true) return nextResult();
+      return switchCase(...lodash_16(cases))(value);
+    };
+    const isOneOf = (...vals) => val => lodash_17(vals, val);
     const defaultCase = lodash_15(true);
 
-    const createApp = componentLibraries => {
+    const isSafeInteger = n => lodash_20(n)
+        && n <= Number.MAX_SAFE_INTEGER
+        && n >= 0 - Number.MAX_SAFE_INTEGER;
+
+    const toDateOrNull = s => (lodash_11(s) ? null
+      : lodash_21(s) ? s : new Date(s));
+    const toBoolOrNull = s => (lodash_11(s) ? null
+      : s === 'true' || s === true);
+    const toNumberOrNull = s => (lodash_11(s) ? null
+      : lodash_1(s));
+
+    const isArrayOfString = opts => lodash_3(opts) && all(lodash_22)(opts);
+
+    const setState$1 = (store, path, value) => {
+
+        const pathParts = path.split(".");
+        const safeSetPath = (obj, currentPartIndex=0) => {
+
+            const currentKey = pathParts[currentPartIndex];
+
+            if(pathParts.length - 1 == currentPartIndex) {
+                obj[currentKey] = value;
+                return;
+            }
+
+            if(obj[currentKey] === null 
+              || obj[currentKey] === undefined
+              || !fp_26(obj.currentKey)) {
+
+                obj[currentKey] = {};
+            }
+
+            safeSetPath(obj[currentKey], currentPartIndex + 1);
+
+        };
+
+        store.update(s => {
+            safeSetPath(s);
+            return s;
+        });
+    };
+
+    const getState = (s, path, fallback) => {
+
+        const pathParts = path.split(".");
+        const safeGetPath = (obj, currentPartIndex=0) => {
+
+            const currentKey = pathParts[currentPartIndex];
+
+            if(pathParts.length - 1 == currentPartIndex) {
+                const value = obj[currentKey];
+                if(fp_3(value))
+                    return fallback;
+                else 
+                    return value;
+            }
+
+            if(obj[currentKey] === null 
+              || obj[currentKey] === undefined
+              || !fp_26(obj[currentKey])) {
+
+                return fallback;
+            }
+
+            return safeGetPath(obj[currentKey], currentPartIndex + 1);
+
+        };
+
+
+        return safeGetPath(s);
+    };
+
+    const ERROR = "##error_message";
+
+    const loadRecord = (api) => async ({recordKey, statePath}) => {
+
+        if(!recordKey) {
+            api.error("Load Record: record key not set");
+            return;
+        }  
+        
+        if(!statePath) {
+            api.error("Load Record: state path not set");
+            return;
+        } 
+
+        const record = await get({
+            url:`${rootPath}/api/record/${key}`
+        });
+
+        if(api.isSuccess(record))
+            api.setState(statePath, record);
+    };
+
+    const listRecords = api => async ({indexKey, statePath}) => {
+        if(!recordKey) {
+            api.error("Load Record: record key not set");
+            return;
+        }  
+        
+        if(!statePath) {
+            api.error("Load Record: state path not set");
+            return;
+        } 
+
+        const records = get({
+            url:`${rootPath}/api/listRecords/${indexKey}`
+        });
+
+        if(api.isSuccess(records))
+            api.setState(statePath, records);
+    };
+
+    const USER_STATE_PATH = "_bbuser";
+
+    const authenticate$1 = (api) => async ({username, password}) => {
+
+        if(!username) {
+            api.error("Authenticate: username not set");
+            return;
+        }  
+        
+        if(!password) {
+            api.error("Authenticate: password not set");
+            return;
+        } 
+
+        const user = await post({
+            url:`${rootPath}/api/authenticate`,
+            body : {username, password}
+        });
+
+        // set user even if error - so it is defined at least
+        api.setState(USER_STATE_PATH, user);
+        localStorage.setItem("budibase:user", user);
+    };
+
+    const createApi = ({rootPath, setState, getState}) => {
+
+        const apiCall = (method) => ({url, body, notFound, badRequest, forbidden}) => {
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: body && JSON.stringify(body), 
+                credentials: "same-origin"
+            }).then(r => {
+                switch (r.status) {
+                    case 200:
+                        return r.json();
+                    case 404:
+                        return error(notFound || `${url} Not found`);
+                    case 400:
+                        return error(badRequest || `${url} Bad Request`);
+                    case 403:
+                        return error(forbidden || `${url} Forbidden`);
+                    default:
+                        if(r.status.toString().startsWith("2")
+                            || r.status.toString().startsWith("3"))
+                            return r.json()
+                        else
+                            return error(`${url} - ${r.statusText}`);
+                }
+            });
+        };
+
+        const post = apiCall("POST");
+        const get = apiCall("GET");
+        const patch = apiCall("PATCH");
+        const del = apiCall("DELETE");
+
+        const ERROR_MEMBER = "##error";
+        const error = message => {
+            const e = {};
+            e[ERROR_MEMBER] = message;
+            setState(ERROR, message);
+            return e;
+        };
+
+        const isSuccess = obj => !!obj[ERROR_MEMBER];
+
+        const apiOpts = {
+            rootPath, setState, getState, isSuccess, error,
+            post, get, patch, delete:del
+        };
+
+        return {
+            loadRecord:loadRecord(apiOpts), 
+            listRecords: listRecords(apiOpts),
+            authenticate: authenticate$1(apiOpts)
+        }
+    };
+
+    const getNewChildRecordToState = (store, coreApi) =>
+                ({recordKey, collectionName,childRecordType,statePath}) => {
+        const error = errorHandler(setState);
+        try {
+            if(!recordKey) {
+                error("getNewChild > recordKey not set");
+                return;
+            }
+
+            if(!collectionName) {
+                error("getNewChild > collectionName not set");
+                return;
+            }
+
+            if(!childRecordType) {
+                error("getNewChild > childRecordType not set");
+                return;
+            }
+
+            if(!statePath) {
+                error("getNewChild > statePath not set");
+                return;
+            }
+
+            const rec = coreApi.recordApi.getNewChild(recordKey, collectionName, childRecordType);
+            setState(store, statePath, rec);
+        }
+        catch(e) {
+            error(e.message);
+        }
+    };
+
+
+    const getNewRecordToState = (store, coreApi) =>
+                ({collectionKey,childRecordType,statePath}) => {
+        const error = errorHandler(setState);
+        try {
+            if(!collectionKey) {
+                error("getNewChild > collectionKey not set");
+                return;
+            }
+
+            if(!childRecordType) {
+                error("getNewChild > childRecordType not set");
+                return;
+            }
+
+            if(!statePath) {
+                error("getNewChild > statePath not set");
+                return;
+            }
+
+            const rec = coreApi.recordApi.getNew(collectionKey, childRecordType);
+            setState(store, statePath, rec);
+        }
+        catch(e) {
+            error(e.message);
+        }
+    };
+
+    const errorHandler = setState => message => setState(ERROR, message);
+
+    const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType";
+
+    const eventHandlers = (store,coreApi) => {
+        
+        const handler = (parameters, execute) => ({
+            execute, parameters
+        });
+
+        const api = createApi({
+            rootPath:"",
+            setState: (path, value) => setState$1(store, path, value),
+            getState: (path, fallback) => getState(store, path, fallback)
+        });
+
+        const setStateHandler = ({path, value}) => setState$1(store, path, value);
+        
+        return {
+            "Set State": handler(["path", "value"],  setStateHandler),
+            "Load Record": handler(["recordKey", "statePath"], api.loadRecord),
+            "List Records": handler(["indexKey", "statePath"], api.listRecords),
+            "Save Record": handler(["statePath"], api.saveRecord),
+            
+            "Get New Child Record": handler(
+                ["recordKey", "collectionName", "childRecordType", "statePath"], 
+                getNewChildRecordToState(store, coreApi)),
+
+            "Get New Record": handler(
+                ["collectionKey", "childRecordType", "statePath"], 
+                getNewRecordToState(store, coreApi)),
+
+            "Authenticate": handler(["username", "password"], api.authenticate)
+        };
+    };
+
+    const isEventType = prop => 
+        fp_25(prop) 
+        && prop.length > 0
+        && !fp_3(prop[0][EVENT_TYPE_MEMBER_NAME]);
+
+    const BB_STATE_BINDINGPATH = "##bbstate";
+    const BB_STATE_FALLBACK = "##bbstatefallback";
+    const doNothing = () => {};
+    const setupBinding = (store, props, coreApi) => {
+
+        const initialProps = {...props};
+        const boundProps = [];
+        const componentEventHandlers = [];
+
+        for(let propName in props) {
+            const val = initialProps[propName];
+            
+            if(isState(val)) {
+
+                const binding = stateBinding(val);
+                const fallback = stateFallback(val);
+
+                boundProps.push({ 
+                    stateBinding:binding,
+                    fallback, propName
+                });
+
+                initialProps[propName] = fallback;
+            } else if(isEventType(val)) {
+
+                const handlers = { propName, handlers:[] };
+                componentEventHandlers.push(handlers);
+                
+                for(let e of val) {
+                    handlers.handlers.push({
+                        handlerType: e[EVENT_TYPE_MEMBER_NAME],
+                        parameters: e.parameters
+                    });
+                }
+                
+                initialProps[propName] = doNothing;
+            }
+            
+        }
+
+        const bind = (component) => {
+
+            if(boundProps.length === 0 && componentEventHandlers.length === 0) return;
+
+            const handlerTypes = eventHandlers(store, coreApi);
+
+            const unsubscribe = store.subscribe(s => {
+                const newProps = {};
+
+                for(let boundProp of boundProps) {
+                    const val = getState(
+                        s, 
+                        boundProp.stateBinding, 
+                        boundProp.fallback);
+
+                    if(val === undefined && newProps[boundProp.propName] !== undefined) {
+                        delete newProps[boundProp.propName];
+                    }
+
+                    if(val !== undefined) {
+                        newProps[boundProp.propName] = val;
+                    }
+                }
+
+                for(let boundHandler of componentEventHandlers) {
+
+                    const closuredHandlers = [];
+                    for(let h of boundHandler.handlers) {
+                        const parameters = {};
+                        for(let pname in h.parameters) {
+                            const p = h.parameters[pname];
+                            parameters[pname] = isState(p) 
+                                ? getState(
+                                    s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
+                                : p;
+                            
+                        }
+                        const handlerType = handlerTypes[h.handlerType];
+                        closuredHandlers.push(() => handlerType.execute(parameters));
+                    }
+
+                    newProps[boundHandler.propName] = async () => {
+                        for(let runHandler of closuredHandlers) {
+                            await runHandler();
+                        }
+                    };
+
+                }
+                
+
+                component.$set(newProps);
+            });
+
+            return unsubscribe;
+        };
+
+        return {
+            initialProps, bind
+        };
+
+    };
+
+
+    const isState = (prop) => prop[BB_STATE_BINDINGPATH] !== undefined;
+    const stateBinding = (prop) => prop[BB_STATE_BINDINGPATH];
+    const stateFallback = (prop) => prop[BB_STATE_FALLBACK];
+
+    const createCoreApp = (appDefinition, user) => {
+        const app = {
+            datastore: null,
+            crypto:null,
+            publish: () => {},
+            hierarchy: appDefinition.hierarchy,
+            actions: appDefinition.actions,
+            user
+        };
+
+        return app;
+    };
+
+    const makerule = (field, error, isValid) => ({ field, error, isValid });
+
+    var filters = new Map();
+    var limiters = new Map();
+
+    function compileRawExpression(src) {
+      return new Function('context', 'tempVars', // eslint-disable-line
+      ("const sandbox = $nxCompileToSandbox(context, tempVars)\n    try { with (sandbox) { return " + src + " } } catch (err) {\n      if (!(err instanceof TypeError)) throw err\n    }\n    $nxClearSandbox()"));
+    }
+
+    function compileRawCode(src) {
+      return new Function('context', 'tempVars', // eslint-disable-line
+      ("const sandbox = $nxCompileToSandbox(context, tempVars)\n    with (sandbox) { " + src + " }\n    $nxClearSandbox()"));
+    }
+
+    var filterRegex = /(?:[^\|]|\|\|)+/g;
+    var limiterRegex = /(?:[^&]|&&)+/g;
+    var argsRegex = /\S+/g;
+
+    function parseExpression(src) {
+      var tokens = src.match(filterRegex);
+      if (tokens.length === 1) {
+        return compileRawExpression(tokens[0]);
+      }
+
+      var expression = {
+        exec: compileRawExpression(tokens[0]),
+        filters: []
+      };
+      for (var i = 1; i < tokens.length; i++) {
+        var filterTokens = tokens[i].match(argsRegex);
+        var filterName = filterTokens.shift();
+        var effect = filters.get(filterName);
+        if (!effect) {
+          throw new Error(("There is no filter named: " + filterName + "."));
+        }
+        expression.filters.push({ effect: effect, argExpressions: filterTokens.map(compileRawExpression) });
+      }
+      return expression;
+    }
+
+    function parseCode(src) {
+      var tokens = src.match(limiterRegex);
+      if (tokens.length === 1) {
+        return compileRawCode(tokens[0]);
+      }
+
+      var code = {
+        exec: compileRawCode(tokens[0]),
+        limiters: []
+      };
+      for (var i = 1; i < tokens.length; i++) {
+        var limiterTokens = tokens[i].match(argsRegex);
+        var limiterName = limiterTokens.shift();
+        var effect = limiters.get(limiterName);
+        if (!effect) {
+          throw new Error(("There is no limiter named: " + limiterName + "."));
+        }
+        code.limiters.push({ effect: effect, argExpressions: limiterTokens.map(compileRawExpression) });
+      }
+      return code;
+    }
+
+    var expressionCache = new Map();
+    var codeCache = new Map();
+
+    function compileExpression(src) {
+      if (typeof src !== 'string') {
+        throw new TypeError('First argument must be a string.');
+      }
+      var expression = expressionCache.get(src);
+      if (!expression) {
+        expression = parseExpression(src);
+        expressionCache.set(src, expression);
+      }
+
+      if (typeof expression === 'function') {
+        return expression;
+      }
+
+      return function evaluateExpression(context, tempVars) {
+        var value = expression.exec(context, tempVars);
+        for (var i = 0, list = expression.filters; i < list.length; i += 1) {
+          var filter = list[i];
+
+          var args = filter.argExpressions.map(evaluateArgExpression, context);
+          value = filter.effect.apply(filter, [ value ].concat( args ));
+        }
+        return value;
+      };
+    }
+
+    function compileCode(src) {
+      if (typeof src !== 'string') {
+        throw new TypeError('First argument must be a string.');
+      }
+      var code = codeCache.get(src);
+      if (!code) {
+        code = parseCode(src);
+        codeCache.set(src, code);
+      }
+
+      if (typeof code === 'function') {
+        return code;
+      }
+
+      var context = {};
+      return function evaluateCode(state, tempVars) {
+        var i = 0;
+        function next() {
+          Object.assign(context, tempVars);
+          if (i < code.limiters.length) {
+            var limiter = code.limiters[i++];
+            var args = limiter.argExpressions.map(evaluateArgExpression, state);
+            limiter.effect.apply(limiter, [ next, context ].concat( args ));
+          } else {
+            code.exec(state, tempVars);
+          }
+        }
+        next();
+      };
+    }
+
+    function evaluateArgExpression(argExpression) {
+      return argExpression(this);
+    }
+
+    var hasHandler = { has: has };
+    var allHandlers = { has: has, get: get$2 };
+    var globals = new Set();
+    var temp;
+
+    var globalObj;
+    if (typeof window !== 'undefined') { globalObj = window; } // eslint-disable-line
+    else if (typeof global !== 'undefined') { globalObj = global; } // eslint-disable-line
+      else if (typeof self !== 'undefined') { globalObj = self; } // eslint-disable-line
+    globalObj.$nxCompileToSandbox = toSandbox;
+    globalObj.$nxClearSandbox = clearSandbox;
+
+    function has(target, key) {
+      return globals.has(key) ? key in target : true;
+    }
+
+    function get$2(target, key) {
+      return key in temp ? temp[key] : target[key];
+    }
+
+    function toSandbox(obj, tempVars) {
+      if (tempVars) {
+        temp = tempVars;
+        return new Proxy(obj, allHandlers);
+      }
+      return new Proxy(obj, hasHandler);
+    }
+
+    function clearSandbox() {
+      temp = undefined;
+    }
+
+    const compileFilter = index => compileExpression(index.filter);
+
+    const compileMap = index => compileCode(index.map);
+
+    const indexTypes = { reference: 'reference', ancestor: 'ancestor' };
+
+    const indexRuleSet = [
+      makerule('map', 'index has no map function',
+        index => isNonEmptyString(index.map)),
+      makerule('map', "index's map function does not compile",
+        index => !isNonEmptyString(index.map)
+                    || executesWithoutException(() => compileMap(index))),
+      makerule('filter', "index's filter function does not compile",
+        index => !isNonEmptyString(index.filter)
+                    || executesWithoutException(() => compileFilter(index))),
+      makerule('name', 'must declare a name for index',
+        index => isNonEmptyString(index.name)),
+      makerule('name', 'there is a duplicate named index on this node',
+        index => fp_9(index.name)
+                    || fp_10('name')(index.parent().indexes)[index.name] === 1),
+      makerule('indexType', 'reference index may only exist on a record node',
+        index => isRecord(index.parent())
+                      || index.indexType !== indexTypes.reference),
+      makerule('indexType', `index type must be one of: ${lodash_4(', ', lodash_25(indexTypes))}`,
+        index => fp_11(index.indexType)(lodash_25(indexTypes))),
+    ];
+
+    const getFlattenedHierarchy = (appHierarchy, useCached = true) => {
+      if (isSomething(appHierarchy.getFlattenedHierarchy) && useCached) { return appHierarchy.getFlattenedHierarchy(); }
+
+      const flattenHierarchy = (currentNode, flattened) => {
+        flattened.push(currentNode);
+        if ((!currentNode.children
+                || currentNode.children.length === 0)
+                && (!currentNode.indexes
+                || currentNode.indexes.length === 0)
+                && (!currentNode.aggregateGroups
+                || currentNode.aggregateGroups.length === 0)) {
+          return flattened;
+        }
+
+        const unionIfAny = l2 => l1 => fp_1(l1)(!l2 ? [] : l2);
+
+        const children = $([], [
+          unionIfAny(currentNode.children),
+          unionIfAny(currentNode.indexes),
+          unionIfAny(currentNode.aggregateGroups),
+        ]);
+
+        for (const child of children) {
+          flattenHierarchy(child, flattened);
+        }
+        return flattened;
+      };
+
+      appHierarchy.getFlattenedHierarchy = () => flattenHierarchy(appHierarchy, []);
+      return appHierarchy.getFlattenedHierarchy();
+    };
+
+    const getExactNodeForPath = appHierarchy => key => $(appHierarchy, [
+      getFlattenedHierarchy,
+      fp_13(n => new RegExp(`${n.pathRegx()}$`).test(key)),
+    ]);
+
+    const getNodeForCollectionPath = appHierarchy => collectionKey => $(appHierarchy, [
+      getFlattenedHierarchy,
+      fp_13(n => (isCollectionRecord(n)
+                       && new RegExp(`${n.collectionPathRegx()}$`).test(collectionKey))),
+    ]);
+
+    const getNode = (appHierarchy, nodeKey) => $(appHierarchy, [
+      getFlattenedHierarchy,
+      fp_13(n => n.nodeKey() === nodeKey
+                      || (isCollectionRecord(n)
+                          && n.collectionNodeKey() === nodeKey)),
+    ]);
+
+    const getNodeByKeyOrNodeKey = (appHierarchy, keyOrNodeKey) => {
+      const nodeByKey = getExactNodeForPath(appHierarchy)(keyOrNodeKey);
+      return isNothing(nodeByKey)
+        ? getNode(appHierarchy, keyOrNodeKey)
+        : nodeByKey;
+    };
+
+    const isNode = (appHierarchy, key) => isSomething(getExactNodeForPath(appHierarchy)(key));
+
+    const isRecord = node => isSomething(node) && node.type === 'record';
+    const isCollectionRecord = node => isRecord(node) && !node.isSingle;
+
+    const getSafeFieldParser = (tryParse, defaultValueFunctions) => (field, record) => {
+      if (lodash_28(record, field.name)) {
+        return getSafeValueParser(tryParse, defaultValueFunctions)(record[field.name]);
+      }
+      return defaultValueFunctions[field.getUndefinedValue]();
+    };
+
+    const getSafeValueParser = (tryParse, defaultValueFunctions) => (value) => {
+      const parsed = tryParse(value);
+      if (parsed.success) {
+        return parsed.value;
+      }
+      return defaultValueFunctions.default();
+    };
+
+    const getNewValue = (tryParse, defaultValueFunctions) => (field) => {
+      const getInitialValue = fp_3(field) || fp_3(field.getInitialValue)
+        ? 'default'
+        : field.getInitialValue;
+
+      return lodash_28(defaultValueFunctions, getInitialValue)
+        ? defaultValueFunctions[getInitialValue]()
+        : getSafeValueParser(tryParse, defaultValueFunctions)(getInitialValue);
+    };
+
+    const typeFunctions = specificFunctions => lodash_27({
+      value: fp_14,
+      null: fp_14(null),
+    }, specificFunctions);
+
+    const validateTypeConstraints = validationRules => async (field, record, context) => {
+      const fieldValue = record[field.name];
+      const validateRule = async r => (!await r.isValid(fieldValue, field.typeOptions, context)
+        ? r.getMessage(fieldValue, field.typeOptions)
+        : '');
+
+      const errors = [];
+      for (const r of validationRules) {
+        const err = await validateRule(r);
+        if (isNotEmpty(err)) errors.push(err);
+      }
+
+      return errors;
+    };
+
+    const getDefaultOptions = fp_18(v => v.defaultValue);
+
+    const makerule$1 = (isValid, getMessage) => ({ isValid, getMessage });
+    const parsedFailed = val => ({ success: false, value: val });
+    const parsedSuccess = val => ({ success: true, value: val });
+    const getDefaultExport = (name, tryParse, functions, options, validationRules, sampleValue, stringify) => ({
+      getNew: getNewValue(tryParse, functions),
+      safeParseField: getSafeFieldParser(tryParse, functions),
+      safeParseValue: getSafeValueParser(tryParse, functions),
+      tryParse,
+      name,
+      getDefaultOptions: () => getDefaultOptions(fp_4(options)),
+      optionDefinitions: options,
+      validateTypeConstraints: validateTypeConstraints(validationRules),
+      sampleValue,
+      stringify: val => (val === null || val === undefined
+        ? '' : stringify(val)),
+      getDefaultValue: functions.default,
+    });
+
+    const stringFunctions = typeFunctions({
+      default: lodash_15(null),
+    });
+
+    const stringTryParse = switchCase(
+      [lodash_22, parsedSuccess],
+      [lodash_11, parsedSuccess],
+      [defaultCase, v => parsedSuccess(v.toString())],
+    );
+
+    const options = {
+      maxLength: {
+        defaultValue: null,
+        isValid: n => n === null || isSafeInteger(n) && n > 0,
+        requirementDescription: 'max length must be null (no limit) or a greater than zero integer',
+        parse: toNumberOrNull,
+      },
+      values: {
+        defaultValue: null,
+        isValid: v => v === null || (isArrayOfString(v) && v.length > 0 && v.length < 10000),
+        requirementDescription: "'values' must be null (no values) or an arry of at least one string",
+        parse: s => s,
+      },
+      allowDeclaredValuesOnly: {
+        defaultValue: false,
+        isValid: lodash_29,
+        requirementDescription: 'allowDeclaredValuesOnly must be true or false',
+        parse: toBoolOrNull,
+      },
+    };
+
+    const typeConstraints = [
+      makerule$1(async (val, opts) => val === null || opts.maxLength === null || val.length <= opts.maxLength,
+        (val, opts) => `value exceeds maximum length of ${opts.maxLength}`),
+      makerule$1(async (val, opts) => val === null
+                               || opts.allowDeclaredValuesOnly === false
+                               || lodash_17(opts.values, val),
+      (val) => `"${val}" does not exist in the list of allowed values`),
+    ];
+
+    var string = getDefaultExport(
+      'string',
+      stringTryParse,
+      stringFunctions,
+      options,
+      typeConstraints,
+      'abcde',
+      str => str,
+    );
+
+    const boolFunctions = typeFunctions({
+      default: lodash_15(null),
+    });
+
+    const boolTryParse = switchCase(
+      [lodash_29, parsedSuccess],
+      [lodash_11, parsedSuccess],
+      [isOneOf('true', '1', 'yes', 'on'), () => parsedSuccess(true)],
+      [isOneOf('false', '0', 'no', 'off'), () => parsedSuccess(false)],
+      [defaultCase, parsedFailed],
+    );
+
+    const options$1 = {
+      allowNulls: {
+        defaultValue: true,
+        isValid: lodash_29,
+        requirementDescription: 'must be a true or false',
+        parse: toBoolOrNull,
+      },
+    };
+
+    const typeConstraints$1 = [
+      makerule$1(async (val, opts) => opts.allowNulls === true || val !== null,
+        () => 'field cannot be null'),
+    ];
+
+    var bool = getDefaultExport(
+      'bool', boolTryParse, boolFunctions,
+      options$1, typeConstraints$1, true, JSON.stringify,
+    );
+
+    const numberFunctions = typeFunctions({
+      default: lodash_15(null),
+    });
+
+    const parseStringtoNumberOrNull = (s) => {
+      const num = Number(s);
+      return isNaN(num) ? parsedFailed(s) : parsedSuccess(num);
+    };
+
+    const numberTryParse = switchCase(
+      [lodash_30, parsedSuccess],
+      [lodash_22, parseStringtoNumberOrNull],
+      [lodash_11, parsedSuccess],
+      [defaultCase, parsedFailed],
+    );
+
+    const options$2 = {
+      maxValue: {
+        defaultValue: Number.MAX_SAFE_INTEGER,
+        isValid: isSafeInteger,
+        requirementDescription: 'must be a valid integer',
+        parse: toNumberOrNull,
+      },
+      minValue: {
+        defaultValue: 0 - Number.MAX_SAFE_INTEGER,
+        isValid: isSafeInteger,
+        requirementDescription: 'must be a valid integer',
+        parse: toNumberOrNull,
+      },
+      decimalPlaces: {
+        defaultValue: 0,
+        isValid: n => isSafeInteger(n) && n >= 0,
+        requirementDescription: 'must be a positive integer',
+        parse: toNumberOrNull,
+      },
+    };
+
+    const getDecimalPlaces = (val) => {
+      const splitDecimal = val.toString().split('.');
+      if (splitDecimal.length === 1) return 0;
+      return splitDecimal[1].length;
+    };
+
+    const typeConstraints$2 = [
+      makerule$1(async (val, opts) => val === null || opts.minValue === null || val >= opts.minValue,
+        (val, opts) => `value (${val.toString()}) must be greater than or equal to ${opts.minValue}`),
+      makerule$1(async (val, opts) => val === null || opts.maxValue === null || val <= opts.maxValue,
+        (val, opts) => `value (${val.toString()}) must be less than or equal to ${opts.minValue} options`),
+      makerule$1(async (val, opts) => val === null || opts.decimalPlaces >= getDecimalPlaces(val),
+        (val, opts) => `value (${val.toString()}) must have ${opts.decimalPlaces} decimal places or less`),
+    ];
+
+    var number = getDefaultExport(
+      'number',
+      numberTryParse,
+      numberFunctions,
+      options$2,
+      typeConstraints$2,
+      1,
+      num => num.toString(),
+    );
+
+    const dateFunctions = typeFunctions({
+      default: lodash_15(null),
+      now: () => new Date(),
+    });
+
+    const isValidDate = d => d instanceof Date && !isNaN(d);
+
+    const parseStringToDate = s => switchCase(
+      [isValidDate, parsedSuccess],
+      [defaultCase, parsedFailed],
+    )(new Date(s));
+
+
+    const dateTryParse = switchCase(
+      [lodash_21, parsedSuccess],
+      [lodash_22, parseStringToDate],
+      [lodash_11, parsedSuccess],
+      [defaultCase, parsedFailed],
+    );
+
+    const options$3 = {
+      maxValue: {
+        defaultValue: new Date(32503680000000),
+        isValid: lodash_21,
+        requirementDescription: 'must be a valid date',
+        parse: toDateOrNull,
+      },
+      minValue: {
+        defaultValue: new Date(-8520336000000),
+        isValid: lodash_21,
+        requirementDescription: 'must be a valid date',
+        parse: toDateOrNull,
+      },
+    };
+
+    const typeConstraints$3 = [
+      makerule$1(async (val, opts) => val === null || opts.minValue === null || val >= opts.minValue,
+        (val, opts) => `value (${val.toString()}) must be greater than or equal to ${opts.minValue}`),
+      makerule$1(async (val, opts) => val === null || opts.maxValue === null || val <= opts.maxValue,
+        (val, opts) => `value (${val.toString()}) must be less than or equal to ${opts.minValue} options`),
+    ];
+
+    var datetime = getDefaultExport(
+      'datetime',
+      dateTryParse,
+      dateFunctions,
+      options$3,
+      typeConstraints$3,
+      new Date(1984, 4, 1),
+      date => JSON.stringify(date).replace(new RegExp('"', 'g'), ''),
+    );
+
+    const arrayFunctions = () => typeFunctions({
+      default: lodash_15([]),
+    });
+
+    const mapToParsedArrary = type => $$(
+      fp_7(i => type.safeParseValue(i)),
+      parsedSuccess,
+    );
+
+    const arrayTryParse = type => switchCase(
+      [lodash_3, mapToParsedArrary(type)],
+      [defaultCase, parsedFailed],
+    );
+
+    const typeName = type => `array<${type}>`;
+
+
+    const options$4 = {
+      maxLength: {
+        defaultValue: 10000,
+        isValid: isSafeInteger,
+        requirementDescription: 'must be a positive integer',
+        parse: toNumberOrNull,
+      },
+      minLength: {
+        defaultValue: 0,
+        isValid: n => isSafeInteger(n) && n >= 0,
+        requirementDescription: 'must be a positive integer',
+        parse: toNumberOrNull,
+      },
+    };
+
+    const typeConstraints$4 = [
+      makerule$1(async (val, opts) => val === null || val.length >= opts.minLength,
+        (val, opts) => `must choose ${opts.minLength} or more options`),
+      makerule$1(async (val, opts) => val === null || val.length <= opts.maxLength,
+        (val, opts) => `cannot choose more than ${opts.maxLength} options`),
+    ];
+
+    var array = type => getDefaultExport(
+      typeName(type.name),
+      arrayTryParse(type),
+      arrayFunctions(),
+      options$4,
+      typeConstraints$4,
+      [type.sampleValue],
+      JSON.stringify,
+    );
+
+    const referenceNothing = () => ({ key: '' });
+
+    const referenceFunctions = typeFunctions({
+      default: referenceNothing,
+    });
+
+    const hasStringValue = (ob, path) => lodash_28(ob, path)
+        && lodash_22(ob[path]);
+
+    const isObjectWithKey = v => lodash_31(v)
+        && hasStringValue(v, 'key');
+
+    const tryParseFromString = s => {
+
+      try {
+        const asObj = JSON.parse(s);
+        if(isObjectWithKey) {
+          return parsedSuccess(asObj);
+        }
+      }
+      catch(_) {
+        // EMPTY
+      }
+
+      return parsedFailed(s);
+    };
+
+    const referenceTryParse = v => switchCase(
+      [isObjectWithKey, parsedSuccess],
+      [lodash_22, tryParseFromString],
+      [lodash_11, () => parsedSuccess(referenceNothing())],
+      [defaultCase, parsedFailed],
+    )(v);
+
+    const options$5 = {
+      indexNodeKey: {
+        defaultValue: null,
+        isValid: isNonEmptyString,
+        requirementDescription: 'must be a non-empty string',
+        parse: s => s,
+      },
+      displayValue: {
+        defaultValue: '',
+        isValid: isNonEmptyString,
+        requirementDescription: 'must be a non-empty string',
+        parse: s => s,
+      },
+      reverseIndexNodeKeys: {
+        defaultValue: null,
+        isValid: v => isArrayOfString(v) && v.length > 0,
+        requirementDescription: 'must be a non-empty array of strings',
+        parse: s => s,
+      },
+    };
+
+    const isEmptyString = s => lodash_22(s) && lodash_14(s);
+
+    const ensureReferenceExists = async (val, opts, context) => isEmptyString(val.key)
+        || await context.referenceExists(opts, val.key);
+
+    const typeConstraints$5 = [
+      makerule$1(
+        ensureReferenceExists,
+        (val, opts) => `"${val[opts.displayValue]}" does not exist in options list (key: ${val.key})`,
+      ),
+    ];
+
+    var reference = getDefaultExport(
+      'reference',
+      referenceTryParse,
+      referenceFunctions,
+      options$5,
+      typeConstraints$5,
+      { key: 'key', value: 'value' },
+      JSON.stringify,
+    );
+
+    const illegalCharacters = '*?\\/:<>|\0\b\f\v';
+
+    const isLegalFilename = (filePath) => {
+      const fn = fileName(filePath);
+      return fn.length <= 255
+        && fp_17(fn.split(''))(illegalCharacters.split('')).length === 0
+        && none(f => f === '..')(splitKey(filePath));
+    };
+
+    const fileNothing = () => ({ relativePath: '', size: 0 });
+
+    const fileFunctions = typeFunctions({
+      default: fileNothing,
+    });
+
+    const fileTryParse = v => switchCase(
+      [isValidFile, parsedSuccess],
+      [fp_19, () => parsedSuccess(fileNothing())],
+      [defaultCase, parsedFailed],
+    )(v);
+
+    const fileName = filePath => $(filePath, [
+      splitKey,
+      fp_12,
+    ]);
+
+    const isValidFile = f => !fp_19(f)
+        && fp_20('relativePath')(f) && fp_20('size')(f)
+        && fp_21(f.size)
+        && fp_22(f.relativePath)
+        && isLegalFilename(f.relativePath);
+
+    const options$6 = {};
+
+    const typeConstraints$6 = [];
+
+    var file$8 = getDefaultExport(
+      'file',
+      fileTryParse,
+      fileFunctions,
+      options$6,
+      typeConstraints$6,
+      { relativePath: 'some_file.jpg', size: 1000 },
+      JSON.stringify,
+    );
+
+    const allTypes = () => {
+      const basicTypes = {
+        string, number, datetime, bool, reference, file: file$8,
+      };
+
+      const arrays = $(basicTypes, [
+        lodash_25,
+        fp_7((k) => {
+          const kvType = {};
+          const concreteArray = array(basicTypes[k]);
+          kvType[concreteArray.name] = concreteArray;
+          return kvType;
+        }),
+        types => lodash_32({}, ...types),
+      ]);
+
+      return lodash_27({}, basicTypes, arrays);
+    };
+
+
+    const all$1 = allTypes();
+
+    const getType = (typeName) => {
+      if (!lodash_28(all$1, typeName)) throw new BadRequestError(`Do not recognise type ${typeName}`);
+      return all$1[typeName];
+    };
+
+    const getNewFieldValue = field => getType(field.type).getNew(field);
+
+    const AUTH_FOLDER = '/.auth';
+    const USERS_LIST_FILE = joinKey(AUTH_FOLDER, 'users.json');
+    const USERS_LOCK_FILE = joinKey(AUTH_FOLDER, 'users_lock');
+    const ACCESS_LEVELS_FILE = joinKey(AUTH_FOLDER, 'access_levels.json');
+    const ACCESS_LEVELS_LOCK_FILE = joinKey(AUTH_FOLDER, 'access_levels_lock');
+
+    const permissionTypes = {
+      CREATE_RECORD: 'create record',
+      UPDATE_RECORD: 'update record',
+      READ_RECORD: 'read record',
+      DELETE_RECORD: 'delete record',
+      READ_INDEX: 'read index',
+      MANAGE_INDEX: 'manage index',
+      MANAGE_COLLECTION: 'manage collection',
+      WRITE_TEMPLATES: 'write templates',
+      CREATE_USER: 'create user',
+      SET_PASSWORD: 'set password',
+      CREATE_TEMPORARY_ACCESS: 'create temporary access',
+      ENABLE_DISABLE_USER: 'enable or disable user',
+      WRITE_ACCESS_LEVELS: 'write access levels',
+      LIST_USERS: 'list users',
+      LIST_ACCESS_LEVELS: 'list access levels',
+      EXECUTE_ACTION: 'execute action',
+      SET_USER_ACCESS_LEVELS: 'set user access levels',
+    };
+
+    const isAuthorized = app => (permissionType, resourceKey) => apiWrapperSync(
+      app,
+      events.authApi.isAuthorized,
+      alwaysAuthorized,
+      { resourceKey, permissionType },
+      _isAuthorized, app, permissionType, resourceKey,
+    );
+
+    const _isAuthorized = (app, permissionType, resourceKey) => {
+      if (!app.user) {
+        return false;
+      }
+
+      const validType = $(permissionTypes, [
+        fp_28,
+        fp_11(permissionType),
+      ]);
+
+      if (!validType) {
+        return false;
+      }
+
+      const permMatchesResource = (userperm) => {
+        const nodeKey = isNothing(resourceKey)
+          ? null
+          : isNode(app.hierarchy, resourceKey)
+            ? getNodeByKeyOrNodeKey(
+              app.hierarchy, resourceKey,
+            ).nodeKey()
+            : resourceKey;
+
+        return (userperm.type === permissionType)
+            && (
+              isNothing(resourceKey)
+                || nodeKey === userperm.nodeKey
+            );
+      };
+
+      return $(app.user.permissions, [
+        fp_6(permMatchesResource),
+      ]);
+    };
+
+    const nodePermission = type => ({
+      add: (nodeKey, accessLevel) => accessLevel.permissions.push({ type, nodeKey }),
+      isAuthorized: resourceKey => app => isAuthorized(app)(type, resourceKey),
+      isNode: true,
+      get: nodeKey => ({ type, nodeKey }),
+    });
+
+    const staticPermission = type => ({
+      add: accessLevel => accessLevel.permissions.push({ type }),
+      isAuthorized: app => isAuthorized(app)(type),
+      isNode: false,
+      get: () => ({ type }),
+    });
+
+    const createRecord = nodePermission(permissionTypes.CREATE_RECORD);
+
+    const updateRecord = nodePermission(permissionTypes.UPDATE_RECORD);
+
+    const deleteRecord = nodePermission(permissionTypes.DELETE_RECORD);
+
+    const readRecord = nodePermission(permissionTypes.READ_RECORD);
+
+    const writeTemplates = staticPermission(permissionTypes.WRITE_TEMPLATES);
+
+    const createUser = staticPermission(permissionTypes.CREATE_USER);
+
+    const setPassword = staticPermission(permissionTypes.SET_PASSWORD);
+
+    const readIndex = nodePermission(permissionTypes.READ_INDEX);
+
+    const manageIndex = staticPermission(permissionTypes.MANAGE_INDEX);
+
+    const manageCollection = staticPermission(permissionTypes.MANAGE_COLLECTION);
+
+    const createTemporaryAccess = staticPermission(permissionTypes.CREATE_TEMPORARY_ACCESS);
+
+    const enableDisableUser = staticPermission(permissionTypes.ENABLE_DISABLE_USER);
+
+    const writeAccessLevels = staticPermission(permissionTypes.WRITE_ACCESS_LEVELS);
+
+    const listUsers = staticPermission(permissionTypes.LIST_USERS);
+
+    const listAccessLevels = staticPermission(permissionTypes.LIST_ACCESS_LEVELS);
+
+    const setUserAccessLevels = staticPermission(permissionTypes.SET_USER_ACCESS_LEVELS);
+
+    const executeAction = nodePermission(permissionTypes.EXECUTE_ACTION);
+
+    const alwaysAuthorized = () => true;
+
+    const permission = {
+      createRecord,
+      updateRecord,
+      deleteRecord,
+      readRecord,
+      writeTemplates,
+      createUser,
+      setPassword,
+      readIndex,
+      createTemporaryAccess,
+      enableDisableUser,
+      writeAccessLevels,
+      listUsers,
+      listAccessLevels,
+      manageIndex,
+      manageCollection,
+      executeAction,
+      setUserAccessLevels,
+    };
+
+    const getNew = app => (collectionKey, recordTypeName) => {
+      const recordNode = getRecordNode(app, collectionKey);
+      return apiWrapperSync(
+        app,
+        events.recordApi.getNew,
+        permission.createRecord.isAuthorized(recordNode.nodeKey()),
+        { collectionKey, recordTypeName },
+        _getNew, recordNode, collectionKey,
+      );
+    };
+
+    const _getNew = (recordNode, collectionKey) => constructRecord(recordNode, getNewFieldValue, collectionKey);
+
+    const getRecordNode = (app, collectionKey) => {
+      collectionKey = safeKey(collectionKey);
+      return getNodeForCollectionPath(app.hierarchy)(collectionKey);
+    };
+
+    const getNewChild = app => (recordKey, collectionName, recordTypeName) => 
+      getNew(app)(joinKey(recordKey, collectionName), recordTypeName);
+
+    const constructRecord = (recordNode, getFieldValue, collectionKey) => {
+      const record = $(recordNode.fields, [
+        fp_29('name'),
+        fp_18(getFieldValue),
+      ]);
+
+      record.id = `${recordNode.nodeId}-${shortid_1()}`;
+      record.key = joinKey(collectionKey, record.id);
+      record.isNew = true;
+      record.type = recordNode.name;
+      return record;
+    };
+
+    const createCoreApi = (appDefinition, user) => {
+        
+        const app = createCoreApp(appDefinition, user);
+
+        return {
+            recordApi: {
+                getNew: getNew(app),
+                getNewChild: getNewChild(app)
+            }
+        }
+
+    };
+
+    const createApp = (componentLibraries, appDefinition, user) => {
 
         const initialiseComponent = (props, htmlElement) => {
 
             const {componentName, libName} = splitName(props._component);
 
-            new (componentLibraries[libName][componentName])({
+            if(!componentName || !libName) return;
+
+            const {initialProps, bind} = setupBinding(store, props, coreApi);
+
+            const component = new (componentLibraries[libName][componentName])({
                 target: htmlElement,
-                props: {...props, _app}
+                props: {...initialProps, _app},
+                hydrate:true
             });
+
+            bind(component);
 
         };
 
-        const store = writable({});
+        const coreApi = createCoreApi(appDefinition, user);
+        const store = writable({
+            _bbuser: user
+        });
 
         const _app = {
             initialiseComponent, 
@@ -21126,29 +23479,17 @@ var app = (function () {
                 grid : Grid,
                 form : Form,
                 textbox : Textbox,
-                text: Text
+                text: Text,
+                nav: Nav,
+                panel: Panel
             }
         };
+
+        const appDef = {hierarchy:{}, actions:{}};
+        const user = {name:"yeo", permissions:[]};
        
-        return createApp(componentLibraries);
+        return createApp(componentLibraries, appDef, user);
 
-        const initialiseComponent = (props, htmlElement) => {
-
-            new (components[props._component])({
-                target: htmlElement,
-                props: {...props, _app}
-            });
-
-        };
-
-        const store = writable({});
-
-        const _app = {
-            initialiseComponent, 
-            store
-        };
-
-        return _app;
     };
 
     const props = {
@@ -21169,6 +23510,41 @@ var app = (function () {
                         _component: "components/textbox"
                     },
                     label:"Last Name"
+                }
+            ]
+        },
+
+        nav: {
+            _component: "components/nav",
+            navBarBackground: "red",
+            navBarBorder: "1px solid maroon",
+            navBarColor: "black",
+            selectedItemBackground: "maroon",
+            selectedItemColor: "white",
+            selectedItemBorder: "green",
+            itemHoverBackground: "yellow",
+            itemHoverColor: "pink",
+            items: [
+                {
+                    title: "People",
+                    component: {
+                        _component: "components/panel",
+                        text:"People Panel",
+                        padding: "40px",
+                        border: "2px solid pink",
+                        background: "mistyrose"
+
+                    }
+                },
+                {
+                    title: "Animals",
+                    component: {
+                        _component: "components/panel",
+                        text:"Animals Panel",
+                        padding: "40px",
+                        border: "2px solid green",
+                        background: "azure"
+                    }
                 }
             ]
         },
@@ -21219,12 +23595,13 @@ var app = (function () {
 
     /* src\Test\TestApp.svelte generated by Svelte v3.12.1 */
 
-    const file$6 = "src\\Test\\TestApp.svelte";
+    const file$9 = "src\\Test\\TestApp.svelte";
 
     // (1:0) <script> import createApp from "./createApp"; import { props }
     function create_catch_block(ctx) {
     	const block = {
     		c: noop,
+    		l: noop,
     		m: noop,
     		p: noop,
     		d: noop
@@ -21240,9 +23617,21 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			div = element("div");
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			div = claim_element(nodes, "DIV", { id: true, class: true }, false);
+    			var div_nodes = children(div);
+
+    			div_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
     			attr_dev(div, "id", "current_component");
     			attr_dev(div, "class", "svelte-1xqz9vm");
-    			add_location(div, file$6, 27, 0, 380);
+    			add_location(div, file$9, 27, 0, 379);
     		},
 
     		m: function mount(target, anchor) {
@@ -21273,6 +23662,10 @@ var app = (function () {
     			t = text("loading");
     		},
 
+    		l: function claim(nodes) {
+    			t = claim_text(nodes, "loading");
+    		},
+
     		m: function mount(target, anchor) {
     			insert_dev(target, t, anchor);
     		},
@@ -21289,7 +23682,7 @@ var app = (function () {
     	return block;
     }
 
-    function create_fragment$6(ctx) {
+    function create_fragment$8(ctx) {
     	var await_block_anchor, promise;
 
     	let info = {
@@ -21313,7 +23706,9 @@ var app = (function () {
     		},
 
     		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			await_block_anchor = empty();
+
+    			info.block.l(nodes);
     		},
 
     		m: function mount(target, anchor) {
@@ -21342,11 +23737,11 @@ var app = (function () {
     			info = null;
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_fragment$6.name, type: "component", source: "", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_fragment$8.name, type: "component", source: "", ctx });
     	return block;
     }
 
-    function instance$6($$self, $$props, $$invalidate) {
+    function instance$8($$self, $$props, $$invalidate) {
     	
 
     let _app;
@@ -21354,7 +23749,7 @@ var app = (function () {
     const _appPromise = createApp$1();
     _appPromise.then(a => $$invalidate('_app', _app = a));
 
-    const testProps = props.grid;
+    const testProps = props.nav;
 
     let currentComponent;
 
@@ -21391,8 +23786,8 @@ var app = (function () {
     class TestApp extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$6, create_fragment$6, safe_not_equal, []);
-    		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "TestApp", options, id: create_fragment$6.name });
+    		init(this, options, instance$8, create_fragment$8, safe_not_equal, []);
+    		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "TestApp", options, id: create_fragment$8.name });
     	}
     }
 

@@ -1,6 +1,7 @@
 import { ERROR } from "../state/standardState";
 import {loadRecord} from "./loadRecord";
 import {listRecords} from "./listRecords";
+import {authenticate} from "./authenticate";
 
 export const createApi = ({rootPath, setState, getState}) => {
 
@@ -54,7 +55,8 @@ export const createApi = ({rootPath, setState, getState}) => {
 
     return {
         loadRecord:loadRecord(apiOpts), 
-        listRecords: listRecords(apiOpts)
+        listRecords: listRecords(apiOpts),
+        authenticate: authenticate(apiOpts)
     }
 }
 

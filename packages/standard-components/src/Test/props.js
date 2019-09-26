@@ -21,6 +21,41 @@ export const props = {
         ]
     },
 
+    nav: {
+        _component: "components/nav",
+        navBarBackground: "red",
+        navBarBorder: "1px solid maroon",
+        navBarColor: "black",
+        selectedItemBackground: "maroon",
+        selectedItemColor: "white",
+        selectedItemBorder: "green",
+        itemHoverBackground: "yellow",
+        itemHoverColor: "pink",
+        items: [
+            {
+                title: "People",
+                component: {
+                    _component: "components/panel",
+                    text:"People Panel",
+                    padding: "40px",
+                    border: "2px solid pink",
+                    background: "mistyrose"
+
+                }
+            },
+            {
+                title: "Animals",
+                component: {
+                    _component: "components/panel",
+                    text:"Animals Panel",
+                    padding: "40px",
+                    border: "2px solid green",
+                    background: "azure"
+                }
+            }
+        ]
+    },
+
     grid: {
         _component: "components/grid",
         gridTemplateColumns: "[left] auto [center] auto [right] auto",

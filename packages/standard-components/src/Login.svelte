@@ -12,6 +12,8 @@ export let loginRedirect = "";
 export let logo = "";
 export let buttonClass = "";
 
+export let _app;
+
 let username = "";
 let password = "";
 let busy = false;
@@ -23,9 +25,16 @@ const login = () => {
     .then(r => {
         busy = false;
         if(r.status === 200) {
-            // reload page
+            return r.json();
         } else {
             incorrect = true;
+            return;
+        }
+    })
+    .then(user => {
+        if(user) {
+            localStorage.setItem("budibase:user", user);
+            location.reload();
         }
     })
 }
