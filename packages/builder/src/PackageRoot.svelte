@@ -53,9 +53,6 @@ import { fade } from "svelte/transition";
     flex: 0 0 auto;
     height: 25px;
     background: white;
-    border-style:solid;
-    border-width: 0px 0px 1px 0px;
-    border-color: var(--lightslate);
     padding: 5px;
     width: 100%;
 }
