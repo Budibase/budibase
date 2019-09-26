@@ -162,18 +162,17 @@ const onEditComponent = (propName) => (arrayIndex, arrayPropName) => {
 }
 
 .inherited-title {
-    margin-top: 40px;
+    padding: 1rem 1rem 1rem 1rem;
     display: grid;
     grid-template-columns: [name] 1fr [actions] auto;
-    border-style: solid;
-    border-width: 0px 0px 1px 0px;
-    border-color: var(--lightslate);
-    font-style: italic;
+    color: var(--secondary100);
+    font-size: .9rem;
+    font-weight: bold;
 }
 
 .inherited-title > div:nth-child(1) {
     grid-column-start: name;
-    color: var(--slate);
+    color: var(--secondary50);
 }
 
 .inherited-title > div:nth-child(2) {

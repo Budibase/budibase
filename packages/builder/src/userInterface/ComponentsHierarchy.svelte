@@ -148,7 +148,7 @@ $: {
 .root {
     color: var(--secondary50);
     font-size: .9rem;
-    font-weight: 500;
+    font-weight: bold;
 }
 
 .hierarchy-item {
