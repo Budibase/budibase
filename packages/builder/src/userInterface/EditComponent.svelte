@@ -155,12 +155,12 @@ const componentInstancePropsChanged = (instanceProps) => {
         <div>
             <IconButton icon="save" 
                         on:click={save} 
-                        color="var(--primary100)"
-                        hoverColor="red"/>
+                        color="var(--secondary100)"
+                        hoverColor="var(--primary100)"/>
             <IconButton icon="trash" 
                         on:click={deleteComponent} 
-                        color="var(--primary100)"
-                        hoverColor="red"/>
+                        color="var(--secondary100)"
+                        hoverColor="var(--primary100)"/>
         </div>
     </div>
 
@@ -179,18 +179,18 @@ const componentInstancePropsChanged = (instanceProps) => {
 
         {#if componentDetailsExpanded}
         <div class="padding">
-            <Textbox label="Name" 
-                    infoText="use forward slash to store in subfolders"
-                    bind:text={name}
-                    disabled={!$store.currentComponentIsNew}
-                    hasError={!!nameInvalid}/>
-            <div class="info-text"></div>
-            <Textbox label="Description"
-                        bind:text={description}/>
-            <Textbox label="Tags" 
-                        infoText="comma separated"
-                        bind:text={tagsString}/>
-            
+            <div class="info-text">
+                <Textbox label="Name" 
+                        infoText="use forward slash to store in subfolders"
+                        bind:text={name}
+                        disabled={!$store.currentComponentIsNew}
+                        hasError={!!nameInvalid}/>
+                <Textbox label="Description"
+                            bind:text={description}/>
+                <Textbox label="Tags" 
+                            infoText="comma separated"
+                            bind:text={tagsString}/>
+            </div>    
         </div>
         {/if}
 
@@ -244,22 +244,27 @@ const componentInstancePropsChanged = (instanceProps) => {
 
 .root {
     height: 100%;
-    border-style: solid;
-    border-color: var(--lightslate);
-    border-width: 0px 0px 0px 1px;
-    display:flex;
+    display: flex;
     flex-direction: column;
 }
 
 .padding {
-    padding: 0px 5px 0px 10px;
+    padding: 1rem 1rem 0rem 1rem;
+}
+
+.info-text {
+    color: var(--secondary100);
+    font-size: .8rem !important;
+    font-weight: bold;
 }
 
 .title {
-    background-color: white;
-    padding: 3px;
+    padding: 2rem 1rem 1rem 1rem;
     display: grid;
     grid-template-columns: [name] 1fr [actions] auto;
+    color: var(--secondary100);
+    font-size: .9rem;
+    font-weight: bold;
 }
 
 .title > div:nth-child(1) {
@@ -272,16 +277,12 @@ const componentInstancePropsChanged = (instanceProps) => {
 }
 
 .section-header {
-    font-style: italic;    
-    color: var(--slate);
-    border-style: solid;
-    border-color: var(--lightslate);
-    border-width: 0px 0px 1px 0px;
-}
-
-.section-header {
+    display: grid;
+    grid-template-columns: [name] 1fr [actions] auto;
+    color: var(--secondary50);
+    font-size: .9rem;
+    font-weight: bold;
     vertical-align: middle;
-    margin-top: 20px;
 }
 
 .component-props-container {
