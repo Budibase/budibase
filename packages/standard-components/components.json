@@ -106,12 +106,47 @@
 	"text": {
 		"importPath": "Text",
 		"name": "Text",
-		"desciption": "A div with text inside ",
+		"desciption": "stylable block of text",
 		"props" : {
 			"value": "string",
 			"containerClass": "string",
+			"font": "string",
+			"color": "string",
+			"textAlign": {
+				"type": "options", 
+				"default":"inline", 
+				"options": [
+					"left", "center", "right"
+				]
+			},
+			"verticalAlign": {
+				"type": "options", 
+				"default":"inline", 
+				"options": [
+					"top", "middle", "bottom"
+				]
+			},
+			"display": {
+				"type": "options", 
+				"default":"inline", 
+				"options": [
+					"inline", "block", "inline-block"
+				]
+			}
+		},
+		"tags": ["div", "container"]
+	},
+	"panel": {
+		"importPath": "Panel",
+		"name": "Panel",
+		"desciption": "A stylable div with a component inside",
+		"props" : {
+			"text": "string",
+			"component": "component",
+			"containerClass": "string",
 			"background": "string",
 			"border": "string",
+			"borderRadius":"string",
 			"font": "string",
 			"color": "string",
 			"padding": "string",
@@ -124,5 +159,29 @@
 			}
 		},
 		"tags": ["div", "container"]
+	},
+	"nav": {
+		"importPath": "Nav",
+		"name": "Nav",
+		"desciption": "A nav - a side bar of buttons that control the currently active component",
+		"props" : {
+			"navBarBackground": {"type" :"string", "default":"silver"},
+			"navBarBorder": "string",
+			"navBarColor": {"type" :"string", "default":"black"},
+			"selectedItemBackground": {"type" :"string", "default":"white"},
+			"selectedItemColor": {"type" :"string", "default":"black"},
+			"selectedItemBorder": "string",
+			"itemHoverBackground": {"type" :"string", "default":"gainsboro"},
+			"itemHoverColor": {"type" :"string", "default":"black"},
+			"items": {
+				"type": "array",
+				"elementDefinition" : {
+					"title": "string",
+					"component": "component"
+				}
+			}
+
+		},
+		"tags": ["nav", "navigation", "sidebar"]
 	}
 }

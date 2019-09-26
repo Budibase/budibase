@@ -7,7 +7,7 @@ let _app;
 const _appPromise = createApp();
 _appPromise.then(a => _app = a);
 
-const testProps = props.grid;
+const testProps = props.nav;
 
 let currentComponent;
 

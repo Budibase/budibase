@@ -4,13 +4,11 @@ import {buildStyle} from "./buildStyle";
 export let value="";
 export let containerClass="";
 
-export let background="";
-export let border="";
 export let font="";
-export let display="";
 export let textAlign="";
+export let verticalAlign=""
 export let color="";
-export let padding="";
+export let display="";
 
 export let _app;
 
@@ -19,9 +17,9 @@ let style="";
 
 $: {
     style=buildStyle({
-        border, background, font, 
-        padding, display, color,
-        "text-align": textAlign
+        font,  verticalAlign, color, 
+        "text-align": textAlign,
+        "vertical-align": verticalAlign
     });
 }
 

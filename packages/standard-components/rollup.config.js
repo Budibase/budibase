@@ -12,7 +12,9 @@ export default {
 		}
 	],
 	plugins: [
-		svelte(),
+		svelte({
+			hydratable:true
+		}),
 		resolve()
 	]
 };

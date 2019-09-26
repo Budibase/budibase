@@ -87,9 +87,9 @@ export const setupBinding = (store, props, coreApi) => {
                     closuredHandlers.push(() => handlerType.execute(parameters));
                 }
 
-                newProps[boundHandler.propName] = () => {
+                newProps[boundHandler.propName] = async () => {
                     for(let runHandler of closuredHandlers) {
-                        runHandler();
+                        await runHandler();
                     }
                 }
 

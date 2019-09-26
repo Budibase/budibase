@@ -38,6 +38,8 @@ export const eventHandlers = (store,coreApi) => {
         "Get New Record": handler(
             ["collectionKey", "childRecordType", "statePath"], 
             getNewRecordToState(store, coreApi)),
+
+        "Authenticate": handler(["username", "password"], api.authenticate)
     };
 };
 

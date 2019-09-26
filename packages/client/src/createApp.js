@@ -19,7 +19,8 @@ export const createApp = (componentLibraries, appDefinition, user) => {
 
         const component = new (componentLibraries[libName][componentName])({
             target: htmlElement,
-            props: {...initialProps, _app}
+            props: {...initialProps, _app},
+            hydrate:true
         });
 
         bind(component);
@@ -27,7 +28,9 @@ export const createApp = (componentLibraries, appDefinition, user) => {
     }
 
     const coreApi = createCoreApi(appDefinition, user);
-    const store = writable({});
+    const store = writable({
+        _bbuser: user
+    });
 
     const _app = {
         initialiseComponent, 
