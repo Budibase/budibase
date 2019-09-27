@@ -597,7 +597,7 @@ var app = (function () {
     			attr_dev(input, "class", input_class_value = "" + null_to_empty(ctx.className) + " svelte-1ec4wqj");
     			attr_dev(input, "type", "text");
     			input.value = ctx.actualValue;
-    			add_location(input, file, 32, 0, 552);
+    			add_location(input, file, 32, 0, 546);
     		},
 
     		m: function mount(target, anchor) {
@@ -646,7 +646,7 @@ var app = (function () {
     			attr_dev(input, "class", input_class_value = "" + null_to_empty(ctx.className) + " svelte-1ec4wqj");
     			attr_dev(input, "type", "password");
     			input.value = ctx.actualValue;
-    			add_location(input, file, 28, 0, 461);
+    			add_location(input, file, 28, 0, 455);
     			dispose = listen_dev(input, "change", ctx.change_handler);
     		},
 
@@ -732,11 +732,11 @@ var app = (function () {
     }
 
     function instance($$self, $$props, $$invalidate) {
-    	let { value="", hideValue = false, className = "default", _app } = $$props;
+    	let { value="", hideValue = false, className = "default", _bb } = $$props;
 
     let actualValue = "";
 
-    	const writable_props = ['value', 'hideValue', 'className', '_app'];
+    	const writable_props = ['value', 'hideValue', 'className', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Textbox> was created with unknown prop '${key}'`);
     	});
@@ -749,26 +749,26 @@ var app = (function () {
     		if ('value' in $$props) $$invalidate('value', value = $$props.value);
     		if ('hideValue' in $$props) $$invalidate('hideValue', hideValue = $$props.hideValue);
     		if ('className' in $$props) $$invalidate('className', className = $$props.className);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     	};
 
     	$$self.$capture_state = () => {
-    		return { value, hideValue, className, _app, actualValue };
+    		return { value, hideValue, className, _bb, actualValue };
     	};
 
     	$$self.$inject_state = $$props => {
     		if ('value' in $$props) $$invalidate('value', value = $$props.value);
     		if ('hideValue' in $$props) $$invalidate('hideValue', hideValue = $$props.hideValue);
     		if ('className' in $$props) $$invalidate('className', className = $$props.className);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('actualValue' in $$props) $$invalidate('actualValue', actualValue = $$props.actualValue);
     	};
 
-    	$$self.$$.update = ($$dirty = { _app: 1, value: 1 }) => {
-    		if ($$dirty._app || $$dirty.value) { {
-    			if(_app && value._isstate) {
-    				_app.store.subscribe(s => {
-    					$$invalidate('actualValue', actualValue = _app.store.getValue(s, value));
+    	$$self.$$.update = ($$dirty = { _bb: 1, value: 1 }) => {
+    		if ($$dirty._bb || $$dirty.value) { {
+    			if(_bb && value._isstate) {
+    				_bb.store.subscribe(s => {
+    					$$invalidate('actualValue', actualValue = _bb.store.getValue(s, value));
     				});
     			}
     		} }
@@ -778,7 +778,7 @@ var app = (function () {
     		value,
     		hideValue,
     		className,
-    		_app,
+    		_bb,
     		actualValue,
     		change_handler
     	};
@@ -787,13 +787,13 @@ var app = (function () {
     class Textbox extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance, create_fragment, safe_not_equal, ["value", "hideValue", "className", "_app"]);
+    		init(this, options, instance, create_fragment, safe_not_equal, ["value", "hideValue", "className", "_bb"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Textbox", options, id: create_fragment.name });
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx._app === undefined && !('_app' in props)) {
-    			console.warn("<Textbox> was created without expected prop '_app'");
+    		if (ctx._bb === undefined && !('_bb' in props)) {
+    			console.warn("<Textbox> was created without expected prop '_bb'");
     		}
     	}
 
@@ -821,11 +821,11 @@ var app = (function () {
     		throw new Error("<Textbox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get _app() {
+    	get _bb() {
     		throw new Error("<Textbox>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set _app(value) {
+    	set _bb(value) {
     		throw new Error("<Textbox>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -874,9 +874,9 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div0, "class", "label svelte-m9d6ue");
-    			add_location(div0, file$1, 30, 4, 562);
+    			add_location(div0, file$1, 30, 4, 559);
     			attr_dev(div1, "class", "control svelte-m9d6ue");
-    			add_location(div1, file$1, 31, 4, 607);
+    			add_location(div1, file$1, 31, 4, 604);
     		},
 
     		m: function mount(target, anchor) {
@@ -949,7 +949,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div, "class", div_class_value = "form-root " + ctx.containerClass + " svelte-m9d6ue");
-    			add_location(div, file$1, 28, 0, 476);
+    			add_location(div, file$1, 28, 0, 473);
     		},
 
     		m: function mount(target, anchor) {
@@ -1004,12 +1004,12 @@ var app = (function () {
     }
 
     function instance$1($$self, $$props, $$invalidate) {
-    	let { containerClass = "", formControls = [], _app } = $$props;
+    	let { containerClass = "", formControls = [], _bb } = $$props;
 
     let htmlElements = {};
     let labels = {};
 
-    	const writable_props = ['containerClass', 'formControls', '_app'];
+    	const writable_props = ['containerClass', 'formControls', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Form> was created with unknown prop '${key}'`);
     	});
@@ -1025,32 +1025,32 @@ var app = (function () {
     	$$self.$set = $$props => {
     		if ('containerClass' in $$props) $$invalidate('containerClass', containerClass = $$props.containerClass);
     		if ('formControls' in $$props) $$invalidate('formControls', formControls = $$props.formControls);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     	};
 
     	$$self.$capture_state = () => {
-    		return { containerClass, formControls, _app, htmlElements, labels };
+    		return { containerClass, formControls, _bb, htmlElements, labels };
     	};
 
     	$$self.$inject_state = $$props => {
     		if ('containerClass' in $$props) $$invalidate('containerClass', containerClass = $$props.containerClass);
     		if ('formControls' in $$props) $$invalidate('formControls', formControls = $$props.formControls);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('htmlElements' in $$props) $$invalidate('htmlElements', htmlElements = $$props.htmlElements);
     		if ('labels' in $$props) $$invalidate('labels', labels = $$props.labels);
     	};
 
-    	$$self.$$.update = ($$dirty = { formControls: 1, _app: 1, htmlElements: 1 }) => {
-    		if ($$dirty.formControls || $$dirty._app || $$dirty.htmlElements) { {
+    	$$self.$$.update = ($$dirty = { formControls: 1, _bb: 1, htmlElements: 1 }) => {
+    		if ($$dirty.formControls || $$dirty._bb || $$dirty.htmlElements) { {
                 let cIndex = 0;
                 for(let c of formControls) {
                     $$invalidate('labels', labels[cIndex] = c.label, labels);
                     cIndex++;
                 }
             
-                if(_app && htmlElements) {
+                if(_bb && htmlElements) {
                     for(let el in htmlElements) {
-                        _app.initialiseComponent(
+                        _bb.initialiseComponent(
                             formControls[el].control,
                             htmlElements[el]
                         );
@@ -1062,7 +1062,7 @@ var app = (function () {
     	return {
     		containerClass,
     		formControls,
-    		_app,
+    		_bb,
     		htmlElements,
     		labels,
     		div1_binding
@@ -1072,13 +1072,13 @@ var app = (function () {
     class Form extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, ["containerClass", "formControls", "_app"]);
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, ["containerClass", "formControls", "_bb"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Form", options, id: create_fragment$1.name });
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx._app === undefined && !('_app' in props)) {
-    			console.warn("<Form> was created without expected prop '_app'");
+    		if (ctx._bb === undefined && !('_bb' in props)) {
+    			console.warn("<Form> was created without expected prop '_bb'");
     		}
     	}
 
@@ -1098,11 +1098,11 @@ var app = (function () {
     		throw new Error("<Form>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get _app() {
+    	get _bb() {
     		throw new Error("<Form>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set _app(value) {
+    	set _bb(value) {
     		throw new Error("<Form>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -1218,7 +1218,7 @@ var app = (function () {
     		},
 
     		h: function hydrate() {
-    			add_location(div, file$2, 25, 1, 546);
+    			add_location(div, file$2, 25, 1, 543);
     		},
 
     		m: function mount(target, anchor) {
@@ -1281,7 +1281,7 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(button, "class", button_class_value = "" + null_to_empty(ctx.className) + " svelte-1q8lga0");
     			button.disabled = ctx.disabled;
-    			add_location(button, file$2, 23, 0, 425);
+    			add_location(button, file$2, 23, 0, 422);
     			dispose = listen_dev(button, "click", ctx.clickHandler);
     		},
 
@@ -1348,7 +1348,7 @@ var app = (function () {
     function instance$2($$self, $$props, $$invalidate) {
     	let { className = "default", disabled = false, contentText, contentComponent, onClick = () => {} } = $$props;
 
-    let { _app } = $$props;
+    let { _bb } = $$props;
     let contentComponentContainer;
 
 
@@ -1356,7 +1356,7 @@ var app = (function () {
     	if(onClick) onClick();
     };
 
-    	const writable_props = ['className', 'disabled', 'contentText', 'contentComponent', 'onClick', '_app'];
+    	const writable_props = ['className', 'disabled', 'contentText', 'contentComponent', 'onClick', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Button> was created with unknown prop '${key}'`);
     	});
@@ -1375,12 +1375,12 @@ var app = (function () {
     		if ('contentText' in $$props) $$invalidate('contentText', contentText = $$props.contentText);
     		if ('contentComponent' in $$props) $$invalidate('contentComponent', contentComponent = $$props.contentComponent);
     		if ('onClick' in $$props) $$invalidate('onClick', onClick = $$props.onClick);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('$$scope' in $$props) $$invalidate('$$scope', $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => {
-    		return { className, disabled, contentText, contentComponent, onClick, _app, contentComponentContainer };
+    		return { className, disabled, contentText, contentComponent, onClick, _bb, contentComponentContainer };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -1389,14 +1389,14 @@ var app = (function () {
     		if ('contentText' in $$props) $$invalidate('contentText', contentText = $$props.contentText);
     		if ('contentComponent' in $$props) $$invalidate('contentComponent', contentComponent = $$props.contentComponent);
     		if ('onClick' in $$props) $$invalidate('onClick', onClick = $$props.onClick);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('contentComponentContainer' in $$props) $$invalidate('contentComponentContainer', contentComponentContainer = $$props.contentComponentContainer);
     	};
 
-    	$$self.$$.update = ($$dirty = { _app: 1, contentComponentContainer: 1, contentComponent: 1 }) => {
-    		if ($$dirty._app || $$dirty.contentComponentContainer || $$dirty.contentComponent) { {
-    			if(_app && contentComponentContainer && contentComponent._component)
-    				_app.initialiseComponent(contentComponent, contentComponentContainer);
+    	$$self.$$.update = ($$dirty = { _bb: 1, contentComponentContainer: 1, contentComponent: 1 }) => {
+    		if ($$dirty._bb || $$dirty.contentComponentContainer || $$dirty.contentComponent) { {
+    			if(_bb && contentComponentContainer && contentComponent._component)
+    				_bb.initialiseComponent(contentComponent, contentComponentContainer);
     		} }
     	};
 
@@ -1406,7 +1406,7 @@ var app = (function () {
     		contentText,
     		contentComponent,
     		onClick,
-    		_app,
+    		_bb,
     		contentComponentContainer,
     		clickHandler,
     		div_binding,
@@ -1418,7 +1418,7 @@ var app = (function () {
     class Button extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, ["className", "disabled", "contentText", "contentComponent", "onClick", "_app"]);
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, ["className", "disabled", "contentText", "contentComponent", "onClick", "_bb"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Button", options, id: create_fragment$2.name });
 
     		const { ctx } = this.$$;
@@ -1429,8 +1429,8 @@ var app = (function () {
     		if (ctx.contentComponent === undefined && !('contentComponent' in props)) {
     			console.warn("<Button> was created without expected prop 'contentComponent'");
     		}
-    		if (ctx._app === undefined && !('_app' in props)) {
-    			console.warn("<Button> was created without expected prop '_app'");
+    		if (ctx._bb === undefined && !('_bb' in props)) {
+    			console.warn("<Button> was created without expected prop '_bb'");
     		}
     	}
 
@@ -1474,11 +1474,11 @@ var app = (function () {
     		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get _app() {
+    	get _bb() {
     		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set _app(value) {
+    	set _bb(value) {
     		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -1529,9 +1529,9 @@ var app = (function () {
     			attr_dev(img, "src", ctx.logo);
     			attr_dev(img, "alt", "logo");
     			attr_dev(img, "class", "svelte-1oto99m");
-    			add_location(img, file$3, 49, 12, 991);
+    			add_location(img, file$3, 49, 12, 990);
     			attr_dev(div, "class", "logo-container svelte-1oto99m");
-    			add_location(div, file$3, 48, 8, 950);
+    			add_location(div, file$3, 48, 8, 949);
     		},
 
     		m: function mount(target, anchor) {
@@ -1610,7 +1610,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div, "class", "incorrect-details-panel svelte-1oto99m");
-    			add_location(div, file$3, 77, 8, 1754);
+    			add_location(div, file$3, 77, 8, 1753);
     		},
 
     		m: function mount(target, anchor) {
@@ -1756,21 +1756,21 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div0, "class", "label svelte-1oto99m");
-    			add_location(div0, file$3, 54, 12, 1094);
+    			add_location(div0, file$3, 54, 12, 1093);
     			attr_dev(div1, "class", "control svelte-1oto99m");
-    			add_location(div1, file$3, 57, 12, 1177);
+    			add_location(div1, file$3, 57, 12, 1176);
     			attr_dev(div2, "class", "label svelte-1oto99m");
-    			add_location(div2, file$3, 60, 12, 1280);
+    			add_location(div2, file$3, 60, 12, 1279);
     			attr_dev(div3, "class", "control svelte-1oto99m");
-    			add_location(div3, file$3, 63, 12, 1363);
+    			add_location(div3, file$3, 63, 12, 1362);
     			attr_dev(div4, "class", "form-root svelte-1oto99m");
-    			add_location(div4, file$3, 53, 8, 1058);
+    			add_location(div4, file$3, 53, 8, 1057);
     			attr_dev(div5, "class", "login-button-container svelte-1oto99m");
-    			add_location(div5, file$3, 68, 8, 1493);
+    			add_location(div5, file$3, 68, 8, 1492);
     			attr_dev(div6, "class", "content svelte-1oto99m");
-    			add_location(div6, file$3, 45, 4, 900);
+    			add_location(div6, file$3, 45, 4, 899);
     			attr_dev(div7, "class", "root svelte-1oto99m");
-    			add_location(div7, file$3, 43, 0, 876);
+    			add_location(div7, file$3, 43, 0, 875);
     		},
 
     		m: function mount(target, anchor) {
@@ -1891,7 +1891,7 @@ var app = (function () {
     function instance$3($$self, $$props, $$invalidate) {
     	
 
-    let { usernameLabel = "Username", passwordLabel = "Password", loginButtonLabel = "Login", loginRedirect = "", logo = "", buttonClass = "", _app } = $$props;
+    let { usernameLabel = "Username", passwordLabel = "Password", loginButtonLabel = "Login", loginRedirect = "", logo = "", buttonClass = "", _bb } = $$props;
 
     let username = "";
     let password = "";
@@ -1918,7 +1918,7 @@ var app = (function () {
         });
     };
 
-    	const writable_props = ['usernameLabel', 'passwordLabel', 'loginButtonLabel', 'loginRedirect', 'logo', 'buttonClass', '_app'];
+    	const writable_props = ['usernameLabel', 'passwordLabel', 'loginButtonLabel', 'loginRedirect', 'logo', 'buttonClass', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Login> was created with unknown prop '${key}'`);
     	});
@@ -1940,11 +1940,11 @@ var app = (function () {
     		if ('loginRedirect' in $$props) $$invalidate('loginRedirect', loginRedirect = $$props.loginRedirect);
     		if ('logo' in $$props) $$invalidate('logo', logo = $$props.logo);
     		if ('buttonClass' in $$props) $$invalidate('buttonClass', buttonClass = $$props.buttonClass);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     	};
 
     	$$self.$capture_state = () => {
-    		return { usernameLabel, passwordLabel, loginButtonLabel, loginRedirect, logo, buttonClass, _app, username, password, busy, incorrect };
+    		return { usernameLabel, passwordLabel, loginButtonLabel, loginRedirect, logo, buttonClass, _bb, username, password, busy, incorrect };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -1954,7 +1954,7 @@ var app = (function () {
     		if ('loginRedirect' in $$props) $$invalidate('loginRedirect', loginRedirect = $$props.loginRedirect);
     		if ('logo' in $$props) $$invalidate('logo', logo = $$props.logo);
     		if ('buttonClass' in $$props) $$invalidate('buttonClass', buttonClass = $$props.buttonClass);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('username' in $$props) $$invalidate('username', username = $$props.username);
     		if ('password' in $$props) $$invalidate('password', password = $$props.password);
     		if ('busy' in $$props) $$invalidate('busy', busy = $$props.busy);
@@ -1968,7 +1968,7 @@ var app = (function () {
     		loginRedirect,
     		logo,
     		buttonClass,
-    		_app,
+    		_bb,
     		username,
     		password,
     		busy,
@@ -1982,13 +1982,13 @@ var app = (function () {
     class Login extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$3, create_fragment$3, safe_not_equal, ["usernameLabel", "passwordLabel", "loginButtonLabel", "loginRedirect", "logo", "buttonClass", "_app"]);
+    		init(this, options, instance$3, create_fragment$3, safe_not_equal, ["usernameLabel", "passwordLabel", "loginButtonLabel", "loginRedirect", "logo", "buttonClass", "_bb"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Login", options, id: create_fragment$3.name });
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx._app === undefined && !('_app' in props)) {
-    			console.warn("<Login> was created without expected prop '_app'");
+    		if (ctx._bb === undefined && !('_bb' in props)) {
+    			console.warn("<Login> was created without expected prop '_bb'");
     		}
     	}
 
@@ -2040,11 +2040,11 @@ var app = (function () {
     		throw new Error("<Login>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get _app() {
+    	get _bb() {
     		throw new Error("<Login>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set _app(value) {
+    	set _bb(value) {
     		throw new Error("<Login>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -2094,7 +2094,7 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(div, "class", div_class_value = "" + null_to_empty(ctx.itemContainerClass) + " svelte-10kw8to");
     			attr_dev(div, "style", div_style_value = ctx.childStyle(ctx.child));
-    			add_location(div, file$4, 49, 4, 1271);
+    			add_location(div, file$4, 49, 4, 1268);
     		},
 
     		m: function mount(target, anchor) {
@@ -2170,7 +2170,7 @@ var app = (function () {
     			set_style(div, "height", ctx.height);
     			set_style(div, "grid-template-columns", ctx.gridTemplateColumns);
     			set_style(div, "grid-template-rows", ctx.gridTemplateRows);
-    			add_location(div, file$4, 46, 0, 1058);
+    			add_location(div, file$4, 46, 0, 1055);
     		},
 
     		m: function mount(target, anchor) {
@@ -2245,7 +2245,7 @@ var app = (function () {
     function instance$4($$self, $$props, $$invalidate) {
     	
 
-    let { gridTemplateRows ="", gridTemplateColumns ="", children = [], width = "auto", height = "auto", containerClass="", itemContainerClass="", _app } = $$props;
+    let { gridTemplateRows ="", gridTemplateColumns ="", children = [], width = "auto", height = "auto", containerClass="", itemContainerClass="", _bb } = $$props;
     let htmlElements = {};
 
     const childStyle = child => 
@@ -2258,7 +2258,7 @@ var app = (function () {
             "grid-row": child.gridRow,
         });
 
-    	const writable_props = ['gridTemplateRows', 'gridTemplateColumns', 'children', 'width', 'height', 'containerClass', 'itemContainerClass', '_app'];
+    	const writable_props = ['gridTemplateRows', 'gridTemplateColumns', 'children', 'width', 'height', 'containerClass', 'itemContainerClass', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Grid> was created with unknown prop '${key}'`);
     	});
@@ -2279,11 +2279,11 @@ var app = (function () {
     		if ('height' in $$props) $$invalidate('height', height = $$props.height);
     		if ('containerClass' in $$props) $$invalidate('containerClass', containerClass = $$props.containerClass);
     		if ('itemContainerClass' in $$props) $$invalidate('itemContainerClass', itemContainerClass = $$props.itemContainerClass);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     	};
 
     	$$self.$capture_state = () => {
-    		return { gridTemplateRows, gridTemplateColumns, children, width, height, containerClass, itemContainerClass, _app, style, htmlElements };
+    		return { gridTemplateRows, gridTemplateColumns, children, width, height, containerClass, itemContainerClass, _bb, style, htmlElements };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -2294,16 +2294,16 @@ var app = (function () {
     		if ('height' in $$props) $$invalidate('height', height = $$props.height);
     		if ('containerClass' in $$props) $$invalidate('containerClass', containerClass = $$props.containerClass);
     		if ('itemContainerClass' in $$props) $$invalidate('itemContainerClass', itemContainerClass = $$props.itemContainerClass);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('style' in $$props) style = $$props.style;
     		if ('htmlElements' in $$props) $$invalidate('htmlElements', htmlElements = $$props.htmlElements);
     	};
 
-    	$$self.$$.update = ($$dirty = { _app: 1, htmlElements: 1, children: 1 }) => {
-    		if ($$dirty._app || $$dirty.htmlElements || $$dirty.children) { {
-                if(_app && htmlElements) {
+    	$$self.$$.update = ($$dirty = { _bb: 1, htmlElements: 1, children: 1 }) => {
+    		if ($$dirty._bb || $$dirty.htmlElements || $$dirty.children) { {
+                if(_bb && htmlElements) {
                     for(let el in htmlElements) {
-                        _app.initialiseComponent(
+                        _bb.initialiseComponent(
                             children[el].control,
                             htmlElements[el]
                         );
@@ -2320,7 +2320,7 @@ var app = (function () {
     		height,
     		containerClass,
     		itemContainerClass,
-    		_app,
+    		_bb,
     		htmlElements,
     		childStyle,
     		div_binding
@@ -2330,13 +2330,13 @@ var app = (function () {
     class Grid extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, ["gridTemplateRows", "gridTemplateColumns", "children", "width", "height", "containerClass", "itemContainerClass", "_app"]);
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, ["gridTemplateRows", "gridTemplateColumns", "children", "width", "height", "containerClass", "itemContainerClass", "_bb"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Grid", options, id: create_fragment$4.name });
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx._app === undefined && !('_app' in props)) {
-    			console.warn("<Grid> was created without expected prop '_app'");
+    		if (ctx._bb === undefined && !('_bb' in props)) {
+    			console.warn("<Grid> was created without expected prop '_bb'");
     		}
     	}
 
@@ -2396,11 +2396,11 @@ var app = (function () {
     		throw new Error("<Grid>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get _app() {
+    	get _bb() {
     		throw new Error("<Grid>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set _app(value) {
+    	set _bb(value) {
     		throw new Error("<Grid>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -2431,7 +2431,7 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(div, "class", ctx.containerClass);
     			attr_dev(div, "style", ctx.style);
-    			add_location(div, file$5, 27, 0, 443);
+    			add_location(div, file$5, 27, 0, 442);
     		},
 
     		m: function mount(target, anchor) {
@@ -2467,11 +2467,11 @@ var app = (function () {
     }
 
     function instance$5($$self, $$props, $$invalidate) {
-    	let { value="", containerClass="", font="", textAlign="", verticalAlign="", color="", display="", _app } = $$props;
+    	let { value="", containerClass="", font="", textAlign="", verticalAlign="", color="", display="", _bb } = $$props;
 
     let style="";
 
-    	const writable_props = ['value', 'containerClass', 'font', 'textAlign', 'verticalAlign', 'color', 'display', '_app'];
+    	const writable_props = ['value', 'containerClass', 'font', 'textAlign', 'verticalAlign', 'color', 'display', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Text> was created with unknown prop '${key}'`);
     	});
@@ -2484,11 +2484,11 @@ var app = (function () {
     		if ('verticalAlign' in $$props) $$invalidate('verticalAlign', verticalAlign = $$props.verticalAlign);
     		if ('color' in $$props) $$invalidate('color', color = $$props.color);
     		if ('display' in $$props) $$invalidate('display', display = $$props.display);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     	};
 
     	$$self.$capture_state = () => {
-    		return { value, containerClass, font, textAlign, verticalAlign, color, display, _app, style };
+    		return { value, containerClass, font, textAlign, verticalAlign, color, display, _bb, style };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -2499,7 +2499,7 @@ var app = (function () {
     		if ('verticalAlign' in $$props) $$invalidate('verticalAlign', verticalAlign = $$props.verticalAlign);
     		if ('color' in $$props) $$invalidate('color', color = $$props.color);
     		if ('display' in $$props) $$invalidate('display', display = $$props.display);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('style' in $$props) $$invalidate('style', style = $$props.style);
     	};
 
@@ -2521,7 +2521,7 @@ var app = (function () {
     		verticalAlign,
     		color,
     		display,
-    		_app,
+    		_bb,
     		style
     	};
     }
@@ -2529,13 +2529,13 @@ var app = (function () {
     class Text extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$5, create_fragment$5, safe_not_equal, ["value", "containerClass", "font", "textAlign", "verticalAlign", "color", "display", "_app"]);
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, ["value", "containerClass", "font", "textAlign", "verticalAlign", "color", "display", "_bb"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Text", options, id: create_fragment$5.name });
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx._app === undefined && !('_app' in props)) {
-    			console.warn("<Text> was created without expected prop '_app'");
+    		if (ctx._bb === undefined && !('_bb' in props)) {
+    			console.warn("<Text> was created without expected prop '_bb'");
     		}
     	}
 
@@ -2595,11 +2595,11 @@ var app = (function () {
     		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get _app() {
+    	get _bb() {
     		throw new Error("<Text>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set _app(value) {
+    	set _bb(value) {
     		throw new Error("<Text>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -2662,7 +2662,7 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(div, "class", "navitem svelte-aihwli");
     			toggle_class(div, "selected", ctx.selectedIndex === ctx.index);
-    			add_location(div, file$6, 36, 8, 867);
+    			add_location(div, file$6, 36, 8, 865);
     			dispose = listen_dev(div, "click", ctx.onSelectItem(ctx.index));
     		},
 
@@ -2744,11 +2744,11 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div0, "class", "navbar svelte-aihwli");
-    			add_location(div0, file$6, 34, 4, 796);
+    			add_location(div0, file$6, 34, 4, 794);
     			attr_dev(div1, "class", "content svelte-aihwli");
-    			add_location(div1, file$6, 43, 4, 1068);
+    			add_location(div1, file$6, 43, 4, 1066);
     			attr_dev(div2, "class", "root svelte-aihwli");
-    			add_location(div2, file$6, 33, 0, 748);
+    			add_location(div2, file$6, 33, 0, 746);
     		},
 
     		m: function mount(target, anchor) {
@@ -2812,17 +2812,17 @@ var app = (function () {
     }
 
     function instance$6($$self, $$props, $$invalidate) {
-    	let { navBarBackground = "", navBarBorder="", navBarColor="", selectedItemBackground="", selectedItemColor="", selectedItemBorder="", itemHoverBackground="", itemHoverColor="", items = [], _app } = $$props;
+    	let { navBarBackground = "", navBarBorder="", navBarColor="", selectedItemBackground="", selectedItemColor="", selectedItemBorder="", itemHoverBackground="", itemHoverColor="", items = [], _bb } = $$props;
 
     let selectedIndex;
     let contentElement;
 
     const onSelectItem = (index) => () => {
         $$invalidate('selectedIndex', selectedIndex = index);
-        _app.initialiseComponent(items[index].component, contentElement);
+        _bb.initialiseComponent(items[index].component, contentElement);
     };
 
-    	const writable_props = ['navBarBackground', 'navBarBorder', 'navBarColor', 'selectedItemBackground', 'selectedItemColor', 'selectedItemBorder', 'itemHoverBackground', 'itemHoverColor', 'items', '_app'];
+    	const writable_props = ['navBarBackground', 'navBarBorder', 'navBarColor', 'selectedItemBackground', 'selectedItemColor', 'selectedItemBorder', 'itemHoverBackground', 'itemHoverColor', 'items', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Nav> was created with unknown prop '${key}'`);
     	});
@@ -2843,11 +2843,11 @@ var app = (function () {
     		if ('itemHoverBackground' in $$props) $$invalidate('itemHoverBackground', itemHoverBackground = $$props.itemHoverBackground);
     		if ('itemHoverColor' in $$props) $$invalidate('itemHoverColor', itemHoverColor = $$props.itemHoverColor);
     		if ('items' in $$props) $$invalidate('items', items = $$props.items);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     	};
 
     	$$self.$capture_state = () => {
-    		return { navBarBackground, navBarBorder, navBarColor, selectedItemBackground, selectedItemColor, selectedItemBorder, itemHoverBackground, itemHoverColor, items, _app, selectedIndex, contentElement, styleVars };
+    		return { navBarBackground, navBarBorder, navBarColor, selectedItemBackground, selectedItemColor, selectedItemBorder, itemHoverBackground, itemHoverColor, items, _bb, selectedIndex, contentElement, styleVars };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -2860,7 +2860,7 @@ var app = (function () {
     		if ('itemHoverBackground' in $$props) $$invalidate('itemHoverBackground', itemHoverBackground = $$props.itemHoverBackground);
     		if ('itemHoverColor' in $$props) $$invalidate('itemHoverColor', itemHoverColor = $$props.itemHoverColor);
     		if ('items' in $$props) $$invalidate('items', items = $$props.items);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('selectedIndex' in $$props) $$invalidate('selectedIndex', selectedIndex = $$props.selectedIndex);
     		if ('contentElement' in $$props) $$invalidate('contentElement', contentElement = $$props.contentElement);
     		if ('styleVars' in $$props) $$invalidate('styleVars', styleVars = $$props.styleVars);
@@ -2887,7 +2887,7 @@ var app = (function () {
     		itemHoverBackground,
     		itemHoverColor,
     		items,
-    		_app,
+    		_bb,
     		selectedIndex,
     		contentElement,
     		onSelectItem,
@@ -2899,13 +2899,13 @@ var app = (function () {
     class Nav extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$6, create_fragment$6, safe_not_equal, ["navBarBackground", "navBarBorder", "navBarColor", "selectedItemBackground", "selectedItemColor", "selectedItemBorder", "itemHoverBackground", "itemHoverColor", "items", "_app"]);
+    		init(this, options, instance$6, create_fragment$6, safe_not_equal, ["navBarBackground", "navBarBorder", "navBarColor", "selectedItemBackground", "selectedItemColor", "selectedItemBorder", "itemHoverBackground", "itemHoverColor", "items", "_bb"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Nav", options, id: create_fragment$6.name });
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx._app === undefined && !('_app' in props)) {
-    			console.warn("<Nav> was created without expected prop '_app'");
+    		if (ctx._bb === undefined && !('_bb' in props)) {
+    			console.warn("<Nav> was created without expected prop '_bb'");
     		}
     	}
 
@@ -2981,11 +2981,11 @@ var app = (function () {
     		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get _app() {
+    	get _bb() {
     		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set _app(value) {
+    	set _bb(value) {
     		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -3017,7 +3017,7 @@ var app = (function () {
     			attr_dev(div, "class", ctx.containerClass);
     			attr_dev(div, "style", ctx.style);
     			attr_dev(div, "this:bind", ctx.componentElement);
-    			add_location(div, file$7, 35, 0, 691);
+    			add_location(div, file$7, 35, 0, 688);
     		},
 
     		m: function mount(target, anchor) {
@@ -3053,12 +3053,12 @@ var app = (function () {
     }
 
     function instance$7($$self, $$props, $$invalidate) {
-    	let { component="", text="", containerClass="", background="", border="", borderRadius="", font="", display="", textAlign="", color="", padding="", _app } = $$props;
+    	let { component="", text="", containerClass="", background="", border="", borderRadius="", font="", display="", textAlign="", color="", padding="", _bb } = $$props;
 
     let style="";
     let componentElement;
 
-    	const writable_props = ['component', 'text', 'containerClass', 'background', 'border', 'borderRadius', 'font', 'display', 'textAlign', 'color', 'padding', '_app'];
+    	const writable_props = ['component', 'text', 'containerClass', 'background', 'border', 'borderRadius', 'font', 'display', 'textAlign', 'color', 'padding', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Panel> was created with unknown prop '${key}'`);
     	});
@@ -3075,11 +3075,11 @@ var app = (function () {
     		if ('textAlign' in $$props) $$invalidate('textAlign', textAlign = $$props.textAlign);
     		if ('color' in $$props) $$invalidate('color', color = $$props.color);
     		if ('padding' in $$props) $$invalidate('padding', padding = $$props.padding);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     	};
 
     	$$self.$capture_state = () => {
-    		return { component, text, containerClass, background, border, borderRadius, font, display, textAlign, color, padding, _app, style, componentElement };
+    		return { component, text, containerClass, background, border, borderRadius, font, display, textAlign, color, padding, _bb, style, componentElement };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -3094,13 +3094,13 @@ var app = (function () {
     		if ('textAlign' in $$props) $$invalidate('textAlign', textAlign = $$props.textAlign);
     		if ('color' in $$props) $$invalidate('color', color = $$props.color);
     		if ('padding' in $$props) $$invalidate('padding', padding = $$props.padding);
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('style' in $$props) $$invalidate('style', style = $$props.style);
     		if ('componentElement' in $$props) $$invalidate('componentElement', componentElement = $$props.componentElement);
     	};
 
-    	$$self.$$.update = ($$dirty = { border: 1, background: 1, font: 1, padding: 1, display: 1, color: 1, textAlign: 1, borderRadius: 1, _app: 1, component: 1, componentElement: 1 }) => {
-    		if ($$dirty.border || $$dirty.background || $$dirty.font || $$dirty.padding || $$dirty.display || $$dirty.color || $$dirty.textAlign || $$dirty.borderRadius || $$dirty._app || $$dirty.component || $$dirty.componentElement) { {
+    	$$self.$$.update = ($$dirty = { border: 1, background: 1, font: 1, padding: 1, display: 1, color: 1, textAlign: 1, borderRadius: 1, _bb: 1, component: 1, componentElement: 1 }) => {
+    		if ($$dirty.border || $$dirty.background || $$dirty.font || $$dirty.padding || $$dirty.display || $$dirty.color || $$dirty.textAlign || $$dirty.borderRadius || $$dirty._bb || $$dirty.component || $$dirty.componentElement) { {
                 $$invalidate('style', style=buildStyle({
                     border, background, font, 
                     padding, display, color,
@@ -3108,8 +3108,8 @@ var app = (function () {
                     "border-radius":borderRadius
                 }));
             
-                if(_app && component) {
-                    _app.initialiseComponent(component, componentElement);
+                if(_bb && component) {
+                    _bb.initialiseComponent(component, componentElement);
                 }
             } }
     	};
@@ -3126,7 +3126,7 @@ var app = (function () {
     		textAlign,
     		color,
     		padding,
-    		_app,
+    		_bb,
     		style,
     		componentElement
     	};
@@ -3135,13 +3135,13 @@ var app = (function () {
     class Panel extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$7, create_fragment$7, safe_not_equal, ["component", "text", "containerClass", "background", "border", "borderRadius", "font", "display", "textAlign", "color", "padding", "_app"]);
+    		init(this, options, instance$7, create_fragment$7, safe_not_equal, ["component", "text", "containerClass", "background", "border", "borderRadius", "font", "display", "textAlign", "color", "padding", "_bb"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Panel", options, id: create_fragment$7.name });
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
-    		if (ctx._app === undefined && !('_app' in props)) {
-    			console.warn("<Panel> was created without expected prop '_app'");
+    		if (ctx._bb === undefined && !('_bb' in props)) {
+    			console.warn("<Panel> was created without expected prop '_bb'");
     		}
     	}
 
@@ -3233,12 +3233,548 @@ var app = (function () {
     		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get _app() {
+    	get _bb() {
     		throw new Error("<Panel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set _app(value) {
+    	set _bb(value) {
     		throw new Error("<Panel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\Table.svelte generated by Svelte v3.12.1 */
+
+    const file$8 = "src\\Table.svelte";
+
+    function get_each_context_1(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.col = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context$3(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.row = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_2(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.col = list[i];
+    	return child_ctx;
+    }
+
+    // (23:12) {#each columns as col}
+    function create_each_block_2(ctx) {
+    	var th, t_value = ctx.col.title + "", t, th_class_value;
+
+    	const block = {
+    		c: function create() {
+    			th = element("th");
+    			t = text(t_value);
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			th = claim_element(nodes, "TH", { class: true }, false);
+    			var th_nodes = children(th);
+
+    			t = claim_text(th_nodes, t_value);
+    			th_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(th, "class", th_class_value = "" + null_to_empty(ctx.thClass) + " svelte-h8rqk6");
+    			add_location(th, file$8, 23, 12, 452);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert_dev(target, th, anchor);
+    			append_dev(th, t);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((changed.columns) && t_value !== (t_value = ctx.col.title + "")) {
+    				set_data_dev(t, t_value);
+    			}
+
+    			if ((changed.thClass) && th_class_value !== (th_class_value = "" + null_to_empty(ctx.thClass) + " svelte-h8rqk6")) {
+    				attr_dev(th, "class", th_class_value);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach_dev(th);
+    			}
+    		}
+    	};
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block_2.name, type: "each", source: "(23:12) {#each columns as col}", ctx });
+    	return block;
+    }
+
+    // (32:12) {#each columns as col}
+    function create_each_block_1(ctx) {
+    	var th, t_value = ctx._bb.getStateOrValue(ctx.col.value, ctx.row) + "", t, th_class_value;
+
+    	const block = {
+    		c: function create() {
+    			th = element("th");
+    			t = text(t_value);
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			th = claim_element(nodes, "TH", { class: true }, false);
+    			var th_nodes = children(th);
+
+    			t = claim_text(th_nodes, t_value);
+    			th_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(th, "class", th_class_value = "" + null_to_empty(ctx.thClass) + " svelte-h8rqk6");
+    			add_location(th, file$8, 32, 12, 725);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert_dev(target, th, anchor);
+    			append_dev(th, t);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((changed._bb || changed.columns || changed.data) && t_value !== (t_value = ctx._bb.getStateOrValue(ctx.col.value, ctx.row) + "")) {
+    				set_data_dev(t, t_value);
+    			}
+
+    			if ((changed.thClass) && th_class_value !== (th_class_value = "" + null_to_empty(ctx.thClass) + " svelte-h8rqk6")) {
+    				attr_dev(th, "class", th_class_value);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach_dev(th);
+    			}
+    		}
+    	};
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block_1.name, type: "each", source: "(32:12) {#each columns as col}", ctx });
+    	return block;
+    }
+
+    // (29:8) {#each data as row}
+    function create_each_block$3(ctx) {
+    	var tr, t, tr_class_value, dispose;
+
+    	let each_value_1 = ctx.columns;
+
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			tr = element("tr");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			t = space();
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			tr = claim_element(nodes, "TR", { class: true }, false);
+    			var tr_nodes = children(tr);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].l(tr_nodes);
+    			}
+
+    			t = claim_space(tr_nodes);
+    			tr_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(tr, "class", tr_class_value = "" + null_to_empty(ctx.trClass) + " svelte-h8rqk6");
+    			add_location(tr, file$8, 29, 8, 609);
+    			dispose = listen_dev(tr, "click", ctx.rowClickHandler(ctx.row));
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert_dev(target, tr, anchor);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(tr, null);
+    			}
+
+    			append_dev(tr, t);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if (changed.thClass || changed._bb || changed.columns || changed.data) {
+    				each_value_1 = ctx.columns;
+
+    				let i;
+    				for (i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block_1(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(tr, t);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value_1.length;
+    			}
+
+    			if ((changed.trClass) && tr_class_value !== (tr_class_value = "" + null_to_empty(ctx.trClass) + " svelte-h8rqk6")) {
+    				attr_dev(tr, "class", tr_class_value);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach_dev(tr);
+    			}
+
+    			destroy_each(each_blocks, detaching);
+
+    			dispose();
+    		}
+    	};
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block$3.name, type: "each", source: "(29:8) {#each data as row}", ctx });
+    	return block;
+    }
+
+    function create_fragment$8(ctx) {
+    	var table, thead, tr, tr_class_value, thead_class_value, t, tbody, tbody_class_value, table_class_value;
+
+    	let each_value_2 = ctx.columns;
+
+    	let each_blocks_1 = [];
+
+    	for (let i = 0; i < each_value_2.length; i += 1) {
+    		each_blocks_1[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
+    	}
+
+    	let each_value = ctx.data;
+
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			table = element("table");
+    			thead = element("thead");
+    			tr = element("tr");
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].c();
+    			}
+
+    			t = space();
+    			tbody = element("tbody");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+    			this.h();
+    		},
+
+    		l: function claim(nodes) {
+    			table = claim_element(nodes, "TABLE", { class: true }, false);
+    			var table_nodes = children(table);
+
+    			thead = claim_element(table_nodes, "THEAD", { class: true }, false);
+    			var thead_nodes = children(thead);
+
+    			tr = claim_element(thead_nodes, "TR", { class: true }, false);
+    			var tr_nodes = children(tr);
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].l(tr_nodes);
+    			}
+
+    			tr_nodes.forEach(detach_dev);
+    			thead_nodes.forEach(detach_dev);
+    			t = claim_space(table_nodes);
+
+    			tbody = claim_element(table_nodes, "TBODY", { class: true }, false);
+    			var tbody_nodes = children(tbody);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].l(tbody_nodes);
+    			}
+
+    			tbody_nodes.forEach(detach_dev);
+    			table_nodes.forEach(detach_dev);
+    			this.h();
+    		},
+
+    		h: function hydrate() {
+    			attr_dev(tr, "class", tr_class_value = "" + null_to_empty(ctx.trClass) + " svelte-h8rqk6");
+    			add_location(tr, file$8, 21, 8, 382);
+    			attr_dev(thead, "class", thead_class_value = "" + null_to_empty(ctx.theadClass) + " svelte-h8rqk6");
+    			add_location(thead, file$8, 20, 4, 346);
+    			attr_dev(tbody, "class", tbody_class_value = "" + null_to_empty(ctx.tbodyClass) + " svelte-h8rqk6");
+    			add_location(tbody, file$8, 27, 4, 544);
+    			attr_dev(table, "class", table_class_value = "" + null_to_empty(ctx.tableClass) + " svelte-h8rqk6");
+    			add_location(table, file$8, 19, 1, 314);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert_dev(target, table, anchor);
+    			append_dev(table, thead);
+    			append_dev(thead, tr);
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].m(tr, null);
+    			}
+
+    			append_dev(table, t);
+    			append_dev(table, tbody);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(tbody, null);
+    			}
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.thClass || changed.columns) {
+    				each_value_2 = ctx.columns;
+
+    				let i;
+    				for (i = 0; i < each_value_2.length; i += 1) {
+    					const child_ctx = get_each_context_2(ctx, each_value_2, i);
+
+    					if (each_blocks_1[i]) {
+    						each_blocks_1[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks_1[i] = create_each_block_2(child_ctx);
+    						each_blocks_1[i].c();
+    						each_blocks_1[i].m(tr, null);
+    					}
+    				}
+
+    				for (; i < each_blocks_1.length; i += 1) {
+    					each_blocks_1[i].d(1);
+    				}
+    				each_blocks_1.length = each_value_2.length;
+    			}
+
+    			if ((changed.trClass) && tr_class_value !== (tr_class_value = "" + null_to_empty(ctx.trClass) + " svelte-h8rqk6")) {
+    				attr_dev(tr, "class", tr_class_value);
+    			}
+
+    			if ((changed.theadClass) && thead_class_value !== (thead_class_value = "" + null_to_empty(ctx.theadClass) + " svelte-h8rqk6")) {
+    				attr_dev(thead, "class", thead_class_value);
+    			}
+
+    			if (changed.trClass || changed.columns || changed.thClass || changed._bb || changed.data) {
+    				each_value = ctx.data;
+
+    				let i;
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$3(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$3(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(tbody, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+
+    			if ((changed.tbodyClass) && tbody_class_value !== (tbody_class_value = "" + null_to_empty(ctx.tbodyClass) + " svelte-h8rqk6")) {
+    				attr_dev(tbody, "class", tbody_class_value);
+    			}
+
+    			if ((changed.tableClass) && table_class_value !== (table_class_value = "" + null_to_empty(ctx.tableClass) + " svelte-h8rqk6")) {
+    				attr_dev(table, "class", table_class_value);
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach_dev(table);
+    			}
+
+    			destroy_each(each_blocks_1, detaching);
+
+    			destroy_each(each_blocks, detaching);
+    		}
+    	};
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_fragment$8.name, type: "component", source: "", ctx });
+    	return block;
+    }
+
+    function instance$8($$self, $$props, $$invalidate) {
+    	let { columns=[], data="", tableClass="", theadClass="", tbodyClass="", trClass="", thClass="", onRowClick, _bb } = $$props;
+
+    const rowClickHandler = (row) => () => {
+        onRowClick(row);
+    };
+
+    	const writable_props = ['columns', 'data', 'tableClass', 'theadClass', 'tbodyClass', 'trClass', 'thClass', 'onRowClick', '_bb'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Table> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$set = $$props => {
+    		if ('columns' in $$props) $$invalidate('columns', columns = $$props.columns);
+    		if ('data' in $$props) $$invalidate('data', data = $$props.data);
+    		if ('tableClass' in $$props) $$invalidate('tableClass', tableClass = $$props.tableClass);
+    		if ('theadClass' in $$props) $$invalidate('theadClass', theadClass = $$props.theadClass);
+    		if ('tbodyClass' in $$props) $$invalidate('tbodyClass', tbodyClass = $$props.tbodyClass);
+    		if ('trClass' in $$props) $$invalidate('trClass', trClass = $$props.trClass);
+    		if ('thClass' in $$props) $$invalidate('thClass', thClass = $$props.thClass);
+    		if ('onRowClick' in $$props) $$invalidate('onRowClick', onRowClick = $$props.onRowClick);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
+    	};
+
+    	$$self.$capture_state = () => {
+    		return { columns, data, tableClass, theadClass, tbodyClass, trClass, thClass, onRowClick, _bb };
+    	};
+
+    	$$self.$inject_state = $$props => {
+    		if ('columns' in $$props) $$invalidate('columns', columns = $$props.columns);
+    		if ('data' in $$props) $$invalidate('data', data = $$props.data);
+    		if ('tableClass' in $$props) $$invalidate('tableClass', tableClass = $$props.tableClass);
+    		if ('theadClass' in $$props) $$invalidate('theadClass', theadClass = $$props.theadClass);
+    		if ('tbodyClass' in $$props) $$invalidate('tbodyClass', tbodyClass = $$props.tbodyClass);
+    		if ('trClass' in $$props) $$invalidate('trClass', trClass = $$props.trClass);
+    		if ('thClass' in $$props) $$invalidate('thClass', thClass = $$props.thClass);
+    		if ('onRowClick' in $$props) $$invalidate('onRowClick', onRowClick = $$props.onRowClick);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
+    	};
+
+    	return {
+    		columns,
+    		data,
+    		tableClass,
+    		theadClass,
+    		tbodyClass,
+    		trClass,
+    		thClass,
+    		onRowClick,
+    		_bb,
+    		rowClickHandler
+    	};
+    }
+
+    class Table extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$8, create_fragment$8, safe_not_equal, ["columns", "data", "tableClass", "theadClass", "tbodyClass", "trClass", "thClass", "onRowClick", "_bb"]);
+    		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Table", options, id: create_fragment$8.name });
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+    		if (ctx.onRowClick === undefined && !('onRowClick' in props)) {
+    			console.warn("<Table> was created without expected prop 'onRowClick'");
+    		}
+    		if (ctx._bb === undefined && !('_bb' in props)) {
+    			console.warn("<Table> was created without expected prop '_bb'");
+    		}
+    	}
+
+    	get columns() {
+    		throw new Error("<Table>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set columns(value) {
+    		throw new Error("<Table>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get data() {
+    		throw new Error("<Table>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set data(value) {
+    		throw new Error("<Table>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get tableClass() {
+    		throw new Error("<Table>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set tableClass(value) {
+    		throw new Error("<Table>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get theadClass() {
+    		throw new Error("<Table>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set theadClass(value) {
+    		throw new Error("<Table>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get tbodyClass() {
+    		throw new Error("<Table>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set tbodyClass(value) {
+    		throw new Error("<Table>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get trClass() {
+    		throw new Error("<Table>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set trClass(value) {
+    		throw new Error("<Table>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get thClass() {
+    		throw new Error("<Table>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set thClass(value) {
+    		throw new Error("<Table>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get onRowClick() {
+    		throw new Error("<Table>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set onRowClick(value) {
+    		throw new Error("<Table>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get _bb() {
+    		throw new Error("<Table>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set _bb(value) {
+    		throw new Error("<Table>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
@@ -22129,6 +22665,8 @@ var app = (function () {
 
     const setState$1 = (store, path, value) => {
 
+        if(!path || path.length === 0) return;
+
         const pathParts = path.split(".");
         const safeSetPath = (obj, currentPartIndex=0) => {
 
@@ -22156,7 +22694,18 @@ var app = (function () {
         });
     };
 
+    const BB_STATE_BINDINGPATH = "##bbstate";
+    const BB_STATE_BINDINGSOURCE = "##bbsource";
+    const BB_STATE_FALLBACK = "##bbstatefallback";
+
+    const isBound = (prop) => prop[BB_STATE_BINDINGPATH] !== undefined;
+    const takeStateFromStore = (prop) => 
+        prop[BB_STATE_BINDINGSOURCE] === undefined 
+        || prop[BB_STATE_BINDINGSOURCE] === "store";
+
     const getState = (s, path, fallback) => {
+
+        if(!path || path.length === 0) return fallback;
 
         const pathParts = path.split(".");
         const safeGetPath = (obj, currentPartIndex=0) => {
@@ -22184,6 +22733,16 @@ var app = (function () {
 
 
         return safeGetPath(s);
+    };
+
+    const getStateOrValue = (globalState, prop, currentContext) => {
+        if(!isBound(prop)) return prop;
+
+        const stateToUse = takeStateFromStore(prop) 
+                           ? globalState
+                           : currentContext;
+
+        return getState(stateToUse, prop[BB_STATE_BINDINGPATH], prop[BB_STATE_FALLBACK]);
     };
 
     const ERROR = "##error_message";
@@ -22409,110 +22968,161 @@ var app = (function () {
         && prop.length > 0
         && !fp_3(prop[0][EVENT_TYPE_MEMBER_NAME]);
 
-    const BB_STATE_BINDINGPATH = "##bbstate";
-    const BB_STATE_FALLBACK = "##bbstatefallback";
     const doNothing = () => {};
-    const setupBinding = (store, props, coreApi) => {
+    const setupBinding = (store, rootProps, coreApi) => {
 
-        const initialProps = {...props};
-        const boundProps = [];
-        const componentEventHandlers = [];
+        const rootInitialProps = {...rootProps};
 
-        for(let propName in props) {
-            const val = initialProps[propName];
-            
-            if(isState(val)) {
+        const getBindings = (props, initialProps) => {
 
-                const binding = stateBinding(val);
-                const fallback = stateFallback(val);
+            const boundProps = [];
+            const componentEventHandlers = [];
+            const boundArrays = [];
 
-                boundProps.push({ 
-                    stateBinding:binding,
-                    fallback, propName
-                });
-
-                initialProps[propName] = fallback;
-            } else if(isEventType(val)) {
-
-                const handlers = { propName, handlers:[] };
-                componentEventHandlers.push(handlers);
+            for(let propName in props) {
                 
-                for(let e of val) {
-                    handlers.handlers.push({
-                        handlerType: e[EVENT_TYPE_MEMBER_NAME],
-                        parameters: e.parameters
+                if(propName === "_component") continue;
+
+                const val = initialProps[propName];
+                
+                if(isBound(val) && takeStateFromStore(val)) {
+
+                    const binding = stateBinding(val);
+                    const fallback = stateFallback(val);
+
+                    boundProps.push({ 
+                        stateBinding:binding,
+                        fallback, propName
+                    });
+
+                    initialProps[propName] = fallback;
+                } else if(isEventType(val)) {
+
+                    const handlers = { propName, handlers:[] };
+                    componentEventHandlers.push(handlers);
+                    
+                    for(let e of val) {
+                        handlers.handlers.push({
+                            handlerType: e[EVENT_TYPE_MEMBER_NAME],
+                            parameters: e.parameters
+                        });
+                    }
+                    
+                    initialProps[propName] = doNothing;
+                } else if(Array.isArray(val)) {
+                    const arrayOfBindings = [];
+                    for(let element of val){
+                        arrayOfBindings.push(getBindings(element, {...element}));
+                    }
+
+                    boundArrays.push({ 
+                        arrayOfBindings,
+                        propName
                     });
                 }
                 
-                initialProps[propName] = doNothing;
             }
-            
-        }
 
-        const bind = (component) => {
+            return {boundProps, componentEventHandlers, boundArrays, initialProps};
+        };
 
-            if(boundProps.length === 0 && componentEventHandlers.length === 0) return;
+
+
+        const bind = (rootBindings) => (component) => {
+
+            if(rootBindings.boundProps.length === 0 
+                && rootBindings.componentEventHandlers.length === 0
+                && rootBindings.boundArrays.length === 0) return;
 
             const handlerTypes = eventHandlers(store, coreApi);
 
-            const unsubscribe = store.subscribe(s => {
-                const newProps = {};
+            const unsubscribe = store.subscribe(rootState => {
+               
 
-                for(let boundProp of boundProps) {
-                    const val = getState(
-                        s, 
-                        boundProp.stateBinding, 
-                        boundProp.fallback);
+                const getPropsFromBindings = (s, bindings) => {
 
-                    if(val === undefined && newProps[boundProp.propName] !== undefined) {
-                        delete newProps[boundProp.propName];
-                    }
-
-                    if(val !== undefined) {
-                        newProps[boundProp.propName] = val;
-                    }
-                }
-
-                for(let boundHandler of componentEventHandlers) {
-
-                    const closuredHandlers = [];
-                    for(let h of boundHandler.handlers) {
-                        const parameters = {};
-                        for(let pname in h.parameters) {
-                            const p = h.parameters[pname];
-                            parameters[pname] = isState(p) 
-                                ? getState(
-                                    s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                                : p;
-                            
-                        }
-                        const handlerType = handlerTypes[h.handlerType];
-                        closuredHandlers.push(() => handlerType.execute(parameters));
-                    }
-
-                    newProps[boundHandler.propName] = async () => {
-                        for(let runHandler of closuredHandlers) {
-                            await runHandler();
-                        }
-                    };
-
-                }
+                    const {boundProps, componentEventHandlers, boundArrays} = bindings;
+                    const newProps = {...bindings.initialProps};
                 
+                    for(let boundProp of boundProps) {
+                        const val = getState(
+                            s, 
+                            boundProp.stateBinding, 
+                            boundProp.fallback);
 
-                component.$set(newProps);
+                        if(val === undefined && newProps[boundProp.propName] !== undefined) {
+                            delete newProps[boundProp.propName];
+                        }
+
+                        if(val !== undefined) {
+                            newProps[boundProp.propName] = val;
+                        }
+                    }
+
+                    for(let boundHandler of componentEventHandlers) {
+
+                        const closuredHandlers = [];
+                        for(let h of boundHandler.handlers) {
+                            const handlerType = handlerTypes[h.handlerType];
+                            closuredHandlers.push((context) => {
+
+                                const parameters = {};
+                                for(let pname in h.parameters) {
+                                    const p = h.parameters[pname];
+                                    parameters[pname] = 
+                                        !isBound(p) 
+                                        ? p 
+                                        : takeStateFromStore(p)
+                                        ? getState(
+                                            s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
+                                        : getState(
+                                            context, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK]);
+                                    
+                                }
+                                handlerType.execute(parameters);
+                            });
+                        }
+
+                        newProps[boundHandler.propName] = async (context) => {
+                            for(let runHandler of closuredHandlers) {
+                                await runHandler(context);
+                            }
+                        };
+
+                    }
+
+                    for(let boundArray of boundArrays) {
+                        let index = 0;
+                        if(!newProps[boundArray.propName])
+                            newProps[boundArray.propName] = [];
+                        for(let bindings of boundArray.arrayOfBindings){
+                            newProps[boundArray.propName][index] = getPropsFromBindings(
+                                s,
+                                bindings);
+                            index++;
+                        }   
+                    }
+
+                    return newProps;
+
+                };
+
+                const rootNewProps = getPropsFromBindings(rootState, rootBindings);
+                
+                component.$set(rootNewProps);
             });
 
             return unsubscribe;
         };
 
+        const bindings = getBindings(rootProps, rootInitialProps);
+
         return {
-            initialProps, bind
+            initialProps:rootInitialProps, bind:bind(bindings)
         };
 
     };
 
-
-    const isState = (prop) => prop[BB_STATE_BINDINGPATH] !== undefined;
     const stateBinding = (prop) => prop[BB_STATE_BINDINGPATH];
     const stateFallback = (prop) => prop[BB_STATE_FALLBACK];
 
@@ -23199,7 +23809,7 @@ var app = (function () {
 
     const typeConstraints$6 = [];
 
-    var file$8 = getDefaultExport(
+    var file$9 = getDefaultExport(
       'file',
       fileTryParse,
       fileFunctions,
@@ -23211,7 +23821,7 @@ var app = (function () {
 
     const allTypes = () => {
       const basicTypes = {
-        string, number, datetime, bool, reference, file: file$8,
+        string, number, datetime, bool, reference, file: file$9,
       };
 
       const arrays = $(basicTypes, [
@@ -23436,7 +24046,7 @@ var app = (function () {
 
             const component = new (componentLibraries[libName][componentName])({
                 target: htmlElement,
-                props: {...initialProps, _app},
+                props: {...initialProps, _bb},
                 hydrate:true
             });
 
@@ -23449,12 +24059,20 @@ var app = (function () {
             _bbuser: user
         });
 
-        const _app = {
+
+        let globalState = null;
+        store.subscribe(s => {
+            globalState = s;
+        });
+
+        const _bb = {
             initialiseComponent, 
-            store
+            store,
+            getStateOrValue: (prop, currentContext) => 
+                getStateOrValue(globalState, prop, currentContext)
         };
 
-        return _app;
+        return _bb;
 
     };
 
@@ -23481,14 +24099,25 @@ var app = (function () {
                 textbox : Textbox,
                 text: Text,
                 nav: Nav,
-                panel: Panel
+                panel: Panel,
+                table: Table
             }
         };
 
         const appDef = {hierarchy:{}, actions:{}};
         const user = {name:"yeo", permissions:[]};
        
-        return createApp(componentLibraries, appDef, user);
+        var app = createApp(componentLibraries, appDef, user);
+        app.store.update(s => {
+            s.people = [
+                {name:"bob", address: "123 Main Street", status: "Open"},
+                {name:"poppy", address: "456 Side Road", status: "Closed"},
+                {name:"Oscar", address: "678 Dodgy Alley", status: "Open"},
+            ];
+            return s;
+        });
+
+        return app;
 
     };
 
@@ -23549,6 +24178,59 @@ var app = (function () {
             ]
         },
 
+        table: {
+            _component:"components/table",
+            columns: [
+                {
+                    title: {
+                        "##bbstate":"NameColumnName",
+                        "##bbsource":"store",
+                        "##bbstatefallback": "Name"
+                    },
+                    value: {
+                        "##bbstate":"name",
+                        "##bbsource":"context"
+                    }
+                },
+                {
+                    title: "Address",
+                    value: {
+                        "##bbstate":"address",
+                        "##bbsource":"context"
+                    }
+                },
+                {
+                    title: "Status",
+                    value: {
+                        "##bbstate":"status",
+                        "##bbsource":"context"
+                    }
+                }
+            ],
+            data: {
+                "##bbstate":"people"
+            },
+            onRowClick: [
+                {
+                    "##eventHandlerType": "Set State",
+                    parameters: {
+                        path: "NameColumnName",
+                        value: {
+                            "##bbstate":"name",
+                            "##bbsource":"context",
+                            "##bbstatefallback": "balls to that"
+                        }
+                    }
+                }
+            ],
+            tableClass: "table-default",
+            theadClass: "thead-default",
+            tbodyClass: "tbody-default",
+            trClass: "tr-default",
+            thClass: "th-default"
+
+        },
+
         grid: {
             _component: "components/grid",
             gridTemplateColumns: "[left] auto [center] auto [right] auto",
@@ -23595,7 +24277,7 @@ var app = (function () {
 
     /* src\Test\TestApp.svelte generated by Svelte v3.12.1 */
 
-    const file$9 = "src\\Test\\TestApp.svelte";
+    const file$a = "src\\Test\\TestApp.svelte";
 
     // (1:0) <script> import createApp from "./createApp"; import { props }
     function create_catch_block(ctx) {
@@ -23610,7 +24292,7 @@ var app = (function () {
     	return block;
     }
 
-    // (26:0) {:then _app}
+    // (26:0) {:then _bb}
     function create_then_block(ctx) {
     	var div;
 
@@ -23631,7 +24313,7 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(div, "id", "current_component");
     			attr_dev(div, "class", "svelte-1xqz9vm");
-    			add_location(div, file$9, 27, 0, 379);
+    			add_location(div, file$a, 27, 0, 376);
     		},
 
     		m: function mount(target, anchor) {
@@ -23649,11 +24331,11 @@ var app = (function () {
     			ctx.div_binding(null);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_then_block.name, type: "then", source: "(26:0) {:then _app}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_then_block.name, type: "then", source: "(26:0) {:then _bb}", ctx });
     	return block;
     }
 
-    // (24:20)  loading {:then _app}
+    // (24:20)  loading {:then _bb}
     function create_pending_block(ctx) {
     	var t;
 
@@ -23678,11 +24360,11 @@ var app = (function () {
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_pending_block.name, type: "pending", source: "(24:20)  loading {:then _app}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_pending_block.name, type: "pending", source: "(24:20)  loading {:then _bb}", ctx });
     	return block;
     }
 
-    function create_fragment$8(ctx) {
+    function create_fragment$9(ctx) {
     	var await_block_anchor, promise;
 
     	let info = {
@@ -23692,7 +24374,7 @@ var app = (function () {
     		pending: create_pending_block,
     		then: create_then_block,
     		catch: create_catch_block,
-    		value: '_app',
+    		value: '_bb',
     		error: 'null'
     	};
 
@@ -23737,19 +24419,19 @@ var app = (function () {
     			info = null;
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_fragment$8.name, type: "component", source: "", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_fragment$9.name, type: "component", source: "", ctx });
     	return block;
     }
 
-    function instance$8($$self, $$props, $$invalidate) {
+    function instance$9($$self, $$props, $$invalidate) {
     	
 
-    let _app;
+    let _bb;
 
     const _appPromise = createApp$1();
-    _appPromise.then(a => $$invalidate('_app', _app = a));
+    _appPromise.then(a => $$invalidate('_bb', _bb = a));
 
-    const testProps = props.nav;
+    const testProps = props.table;
 
     let currentComponent;
 
@@ -23764,14 +24446,14 @@ var app = (function () {
     	};
 
     	$$self.$inject_state = $$props => {
-    		if ('_app' in $$props) $$invalidate('_app', _app = $$props._app);
+    		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('currentComponent' in $$props) $$invalidate('currentComponent', currentComponent = $$props.currentComponent);
     	};
 
-    	$$self.$$.update = ($$dirty = { _app: 1, currentComponent: 1 }) => {
-    		if ($$dirty._app || $$dirty.currentComponent) { {
-                if(_app && currentComponent) {
-                    _app.initialiseComponent(testProps, currentComponent);
+    	$$self.$$.update = ($$dirty = { _bb: 1, currentComponent: 1 }) => {
+    		if ($$dirty._bb || $$dirty.currentComponent) { {
+                if(_bb && currentComponent) {
+                    _bb.initialiseComponent(testProps, currentComponent);
                 }
             } }
     	};
@@ -23786,8 +24468,8 @@ var app = (function () {
     class TestApp extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$8, create_fragment$8, safe_not_equal, []);
-    		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "TestApp", options, id: create_fragment$8.name });
+    		init(this, options, instance$9, create_fragment$9, safe_not_equal, []);
+    		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "TestApp", options, id: create_fragment$9.name });
     	}
     }
 

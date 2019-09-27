@@ -73,8 +73,7 @@ export const recursivelyValidate = (rootProps, getComponent, stack=[]) => {
     const childArrayErrors = pipe(propsDefArray, [
         filter(d => d.type === "array"),
         map(d => pipe(rootProps[d.name], [ 
-                    map(elementProps => pipe(elementProps._component, [
-                                            getComponentPropsDefinition,
+                    map(elementProps => pipe(d.elementDefinition, [
                                             getPropsDefArray,
                                             arr => validateChildren(
                                                         arr, 
@@ -99,11 +98,11 @@ const expandPropDef = propDef => {
 }
 
 
-export const validateProps = (propsDefinition, props, stack=[], isFinal=true) => {
+export const validateProps = (propsDefinition, props, stack=[], isFinal=true, isArrayElement=false) => {
 
     const errors = [];
 
-    if(isFinal && !props._component) {
+    if(isFinal && !props._component && !isArrayElement) {
         makeError(errors, "_component", stack)("Component is not set");
         return errors;
         // this would break everything else anyway
@@ -149,7 +148,8 @@ export const validateProps = (propsDefinition, props, stack=[], isFinal=true) =>
                     propDef.elementDefinition,
                     arrayItem,
                     [...stack, `${propDefName}[${index}]`],
-                    isFinal
+                    isFinal,
+                    true
                 )
                 for(let arrErr of arrayErrs) {
                     errors.push(arrErr);

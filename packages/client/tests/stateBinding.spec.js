@@ -1,8 +1,11 @@
 import {
-    setupBinding,
-    BB_STATE_BINDINGPATH,
-    BB_STATE_FALLBACK
+    setupBinding
 } from "../src/state/stateBinding";
+import {
+    BB_STATE_BINDINGPATH,
+    BB_STATE_FALLBACK,
+    BB_STATE_BINDINGSOURCE
+} from "../src/state/isState";
 import { EVENT_TYPE_MEMBER_NAME } from "../src/state/eventHandlers";
 import {writable} from "svelte/store";
 import { isFunction } from "lodash/fp";
@@ -71,6 +74,59 @@ describe("setupBinding", () => {
 
     });
 
+    it("should update bound array props when updated ", () => {
+
+        const {component, store, props} = testSetup();
+
+        const {bind} = testSetupBinding(store, props, component);
+        bind(component);
+
+        store.update(s => {
+            s.FirstName = "Bobby";
+            s.LastName = "Thedog";
+            s.Customer = {
+                Name: "ACME inc",
+                Address: ""
+            };
+            s.addressToSet = "123 Main Street";
+            s.ArrayVal1 = "item 1 - version 1";
+            s.ArrayVal2 = "item 2 - version 1";
+            s.ArrayVal3 = "inner array item";
+            return s;
+        });
+
+        expect(component.props.arrayWithInnerBinding[0].innerBound).toBe("item 1 - version 1");
+        expect(component.props.arrayWithInnerBinding[1].innerBound).toBe("item 2 - version 1");
+        expect(component.props.arrayWithInnerBinding[0].innerUnbound).toBe("not bound 1");
+        expect(component.props.arrayWithInnerBinding[1].innerUnbound).toBe("not bound 2");
+
+    });
+
+    it("should update bound nested (2nd level) array props when updated ", () => {
+
+        const {component, store, props} = testSetup();
+
+        const {bind} = testSetupBinding(store, props, component);
+        bind(component);
+
+        store.update(s => {
+            s.FirstName = "Bobby";
+            s.LastName = "Thedog";
+            s.Customer = {
+                Name: "ACME inc",
+                Address: ""
+            };
+            s.addressToSet = "123 Main Street";
+            s.ArrayVal1 = "item 1 - version 1";
+            s.ArrayVal2 = "item 2 - version 1";
+            s.ArrayVal3 = "inner array item";
+            return s;
+        });
+
+        expect(component.props.arrayWithInnerBinding[2].innerArray[0].innerInnerBound).toBe("inner array item");
+
+    });
+
     it("should update event handlers on state change", () => {
 
         const {component, store, props} = testSetup();
@@ -92,6 +148,30 @@ describe("setupBinding", () => {
 
     });
 
+    it("event handlers should recognise context state", () => {
+
+        const {component, store, props} = testSetup();
+
+        const {bind} = testSetupBinding(store, props, component);
+        bind(component);
+        
+        expect(component.props.boundToEventOutput).toBe("initial address");
+        component.props.eventBoundUsingContext({addressOverride: "Overridden Address"});
+        expect(component.props.boundToEventOutput).toBe("Overridden Address");
+        
+        store.update(s => {
+            s.addressToSet = "123 Main Street"
+            return s;
+        });
+
+        component.props.eventBound();
+        expect(component.props.boundToEventOutput).toBe("123 Main Street");
+
+        component.props.eventBoundUsingContext({addressOverride: "Overridden Address"});
+        expect(component.props.boundToEventOutput).toBe("Overridden Address");
+
+    });
+
 });
 const testSetupBinding = (store, props, component) => {
     const setup = setupBinding(store, props);
@@ -109,10 +189,11 @@ const testSetup = () => {
     }
 
 
-    const binding = (path, fallback) => {
+    const binding = (path, fallback, source) => {
         const b = {};
         b[BB_STATE_BINDINGPATH] = path;
         b[BB_STATE_FALLBACK] = fallback;
+        b[BB_STATE_BINDINGSOURCE] = source || "store";
         return b;
     };
 
@@ -134,6 +215,29 @@ const testSetup = () => {
                 path: "Customer.Address",
                 value: binding("addressToSet", "event fallback address")
             })
+        ],
+        eventBoundUsingContext: [
+            event("Set State", {
+                path: "Customer.Address",
+                value: binding("addressOverride", "", "context")
+            })
+        ],
+        arrayWithInnerBinding: [
+            {
+                innerBound: binding("ArrayVal1"),
+                innerUnbound: "not bound 1"
+            },
+            {
+                innerBound: binding("ArrayVal2"),
+                innerUnbound: "not bound 2"
+            },
+            {
+                innerArray: [
+                    {
+                        innerInnerBound: binding("ArrayVal3")
+                    }
+                ]
+            }
         ]
     }
 

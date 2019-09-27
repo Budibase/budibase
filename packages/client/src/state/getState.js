@@ -2,8 +2,13 @@ import {
     isUndefined,
     isObject
 } from "lodash/fp";
+import { 
+    isBound,BB_STATE_BINDINGPATH, BB_STATE_FALLBACK, takeStateFromStore
+} from "./isState";
 
 export const getState = (s, path, fallback) => {
+
+    if(!path || path.length === 0) return fallback;
 
     const pathParts = path.split(".");
     const safeGetPath = (obj, currentPartIndex=0) => {
@@ -31,4 +36,14 @@ export const getState = (s, path, fallback) => {
 
 
     return safeGetPath(s);
+}
+
+export const getStateOrValue = (globalState, prop, currentContext) => {
+    if(!isBound(prop)) return prop;
+
+    const stateToUse = takeStateFromStore(prop) 
+                       ? globalState
+                       : currentContext;
+
+    return getState(stateToUse, prop[BB_STATE_BINDINGPATH], prop[BB_STATE_FALLBACK]);
 }

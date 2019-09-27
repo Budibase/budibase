@@ -4,20 +4,20 @@ export let value="";
 export let hideValue = false;
 export let className = "default";
 
-export let _app;
+export let _bb;
 
 let actualValue = "";
 $: {
-	if(_app && value._isstate) {
-		_app.store.subscribe(s => {
-			actualValue = _app.store.getValue(s, value);
+	if(_bb && value._isstate) {
+		_bb.store.subscribe(s => {
+			actualValue = _bb.store.getValue(s, value);
 		});
 	}
 }
 
 const onchange = (ev) => {
-	if(_app && value._isstate) {
-		_app.store.setValue(value, ev.target.value);
+	if(_bb && value._isstate) {
+		_bb.store.setValue(value, ev.target.value);
 	} else if(!value._isstate) {
 		actualValue = ev.target.value;
 	}

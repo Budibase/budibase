@@ -1,11 +1,12 @@
 import { 
     createProps,
-    createPropsAndDefinition 
 } from "../src/userInterface/pagesParsing/createProps";
 import {
     keys, some
 } from "lodash/fp";
-import { allComponents } from "./testData";
+import {
+    BB_STATE_BINDINGPATH
+} from "@budibase/client/src/state/isState";
 
 describe("createDefaultProps", () => {
 
@@ -113,6 +114,18 @@ describe("createDefaultProps", () => {
         expect(errors).toEqual([]);
         expect(props.onClick).toBeDefined();
         expect(props.onClick).toEqual([]);
+    });
+
+    it("should create a object with empty state when prop def is 'state' ", () => {
+        const propDef = {
+            data: "state"
+        };
+
+        const { props, errors } = createProps("some_component",propDef);
+
+        expect(errors).toEqual([]);
+        expect(props.data[BB_STATE_BINDINGPATH]).toBeDefined();
+        expect(props.data[BB_STATE_BINDINGPATH]).toBe("");
     });
 
     it("should create a object with single empty component props, when prop definition is 'component' ", () => {

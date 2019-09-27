@@ -6,110 +6,166 @@ import {
     getState
 } from "./getState";
 
-export const BB_STATE_BINDINGPATH = "##bbstate";
-export const BB_STATE_FALLBACK = "##bbstatefallback";
+import {
+    isBound, takeStateFromStore,
+    BB_STATE_FALLBACK, BB_STATE_BINDINGPATH
+} from "./isState";
+
 const doNothing = () => {};
-export const setupBinding = (store, props, coreApi) => {
+export const setupBinding = (store, rootProps, coreApi) => {
 
-    const initialProps = {...props};
-    const boundProps = [];
-    const componentEventHandlers = [];
+    const rootInitialProps = {...rootProps};
 
-    for(let propName in props) {
-        const val = initialProps[propName];
-        
-        if(isState(val)) {
+    const getBindings = (props, initialProps) => {
 
-            const binding = stateBinding(val);
-            const fallback = stateFallback(val);
+        const boundProps = [];
+        const componentEventHandlers = [];
+        const boundArrays = [];
 
-            boundProps.push({ 
-                stateBinding:binding,
-                fallback, propName
-            });
-
-            initialProps[propName] = fallback;
-        } else if(isEventType(val)) {
-
-            const handlers = { propName, handlers:[] };
-            componentEventHandlers.push(handlers);
+        for(let propName in props) {
             
-            for(let e of val) {
-                handlers.handlers.push({
-                    handlerType: e[EVENT_TYPE_MEMBER_NAME],
-                    parameters: e.parameters
-                })
+            if(propName === "_component") continue;
+
+            const val = initialProps[propName];
+            
+            if(isBound(val) && takeStateFromStore(val)) {
+
+                const binding = stateBinding(val);
+                const fallback = stateFallback(val);
+
+                boundProps.push({ 
+                    stateBinding:binding,
+                    fallback, propName
+                });
+
+                initialProps[propName] = fallback;
+            } else if(isEventType(val)) {
+
+                const handlers = { propName, handlers:[] };
+                componentEventHandlers.push(handlers);
+                
+                for(let e of val) {
+                    handlers.handlers.push({
+                        handlerType: e[EVENT_TYPE_MEMBER_NAME],
+                        parameters: e.parameters
+                    })
+                }
+                
+                initialProps[propName] = doNothing;
+            } else if(Array.isArray(val)) {
+                const arrayOfBindings = [];
+                for(let element of val){
+                    arrayOfBindings.push(getBindings(element, {...element}));
+                }
+
+                boundArrays.push({ 
+                    arrayOfBindings,
+                    propName
+                });
             }
             
-            initialProps[propName] = doNothing;
         }
-        
+
+        return {boundProps, componentEventHandlers, boundArrays, initialProps};
     }
 
-    const bind = (component) => {
 
-        if(boundProps.length === 0 && componentEventHandlers.length === 0) return;
+
+    const bind = (rootBindings) => (component) => {
+
+        if(rootBindings.boundProps.length === 0 
+            && rootBindings.componentEventHandlers.length === 0
+            && rootBindings.boundArrays.length === 0) return;
 
         const handlerTypes = eventHandlers(store, coreApi);
 
-        const unsubscribe = store.subscribe(s => {
-            const newProps = {};
+        const unsubscribe = store.subscribe(rootState => {
+           
 
-            for(let boundProp of boundProps) {
-                const val = getState(
-                    s, 
-                    boundProp.stateBinding, 
-                    boundProp.fallback);
+            const getPropsFromBindings = (s, bindings) => {
 
-                if(val === undefined && newProps[boundProp.propName] !== undefined) {
-                    delete newProps[boundProp.propName];
-                }
-
-                if(val !== undefined) {
-                    newProps[boundProp.propName] = val;
-                }
-            }
-
-            for(let boundHandler of componentEventHandlers) {
-
-                const closuredHandlers = [];
-                for(let h of boundHandler.handlers) {
-                    const parameters = {};
-                    for(let pname in h.parameters) {
-                        const p = h.parameters[pname];
-                        parameters[pname] = isState(p) 
-                            ? getState(
-                                s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                            : p;
-                        
-                    }
-                    const handlerType = handlerTypes[h.handlerType];
-                    closuredHandlers.push(() => handlerType.execute(parameters));
-                }
-
-                newProps[boundHandler.propName] = async () => {
-                    for(let runHandler of closuredHandlers) {
-                        await runHandler();
-                    }
-                }
-
-            }
+                const {boundProps, componentEventHandlers, boundArrays} = bindings;
+                const newProps = {...bindings.initialProps};
             
+                for(let boundProp of boundProps) {
+                    const val = getState(
+                        s, 
+                        boundProp.stateBinding, 
+                        boundProp.fallback);
 
-            component.$set(newProps);
+                    if(val === undefined && newProps[boundProp.propName] !== undefined) {
+                        delete newProps[boundProp.propName];
+                    }
+
+                    if(val !== undefined) {
+                        newProps[boundProp.propName] = val;
+                    }
+                }
+
+                for(let boundHandler of componentEventHandlers) {
+
+                    const closuredHandlers = [];
+                    for(let h of boundHandler.handlers) {
+                        const handlerType = handlerTypes[h.handlerType];
+                        closuredHandlers.push((context) => {
+
+                            const parameters = {};
+                            for(let pname in h.parameters) {
+                                const p = h.parameters[pname];
+                                parameters[pname] = 
+                                    !isBound(p) 
+                                    ? p 
+                                    : takeStateFromStore(p)
+                                    ? getState(
+                                        s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
+                                    : getState(
+                                        context, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
+                                
+                            }
+                            handlerType.execute(parameters)
+                        });
+                    }
+
+                    newProps[boundHandler.propName] = async (context) => {
+                        for(let runHandler of closuredHandlers) {
+                            await runHandler(context);
+                        }
+                    }
+
+                }
+
+                for(let boundArray of boundArrays) {
+                    let index = 0;
+                    if(!newProps[boundArray.propName])
+                        newProps[boundArray.propName] = [];
+                    for(let bindings of boundArray.arrayOfBindings){
+                        newProps[boundArray.propName][index] = getPropsFromBindings(
+                            s,
+                            bindings);
+                        index++;
+                    }   
+                }
+
+                return newProps;
+
+            }
+
+            const rootNewProps = getPropsFromBindings(rootState, rootBindings);
+            
+            component.$set(rootNewProps);
         });
 
         return unsubscribe;
     }
 
+    const bindings = getBindings(rootProps, rootInitialProps);
+
     return {
-        initialProps, bind
+        initialProps:rootInitialProps, bind:bind(bindings)
     };
 
 }
 
-
-const isState = (prop) => prop[BB_STATE_BINDINGPATH] !== undefined;
 const stateBinding = (prop) => prop[BB_STATE_BINDINGPATH];
 const stateFallback = (prop) => prop[BB_STATE_FALLBACK];
 

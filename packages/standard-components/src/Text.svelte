@@ -10,7 +10,7 @@ export let verticalAlign=""
 export let color="";
 export let display="";
 
-export let _app;
+export let _bb;
 
 let style="";
 

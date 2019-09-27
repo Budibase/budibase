@@ -12,7 +12,7 @@ export let loginRedirect = "";
 export let logo = "";
 export let buttonClass = "";
 
-export let _app;
+export let _bb;
 
 let username = "";
 let password = "";

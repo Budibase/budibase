@@ -6,6 +6,7 @@ import Textbox from "../Textbox.svelte";
 import Text from "../Text.svelte";
 import Nav from "../Nav.svelte";
 import Panel from "../Panel.svelte";
+import Table from "../Table.svelte";
 import { createApp } from "@budibase/client/src/createApp";
 
 export default async () =>  {
@@ -18,13 +19,24 @@ export default async () =>  {
             textbox : Textbox,
             text: Text,
             nav: Nav,
-            panel: Panel
+            panel: Panel,
+            table: Table
         }
     }
 
     const appDef = {hierarchy:{}, actions:{}};
     const user = {name:"yeo", permissions:[]};
    
-    return createApp(componentLibraries, appDef, user);
+    var app = createApp(componentLibraries, appDef, user);
+    app.store.update(s => {
+        s.people = [
+            {name:"bob", address: "123 Main Street", status: "Open"},
+            {name:"poppy", address: "456 Side Road", status: "Closed"},
+            {name:"Oscar", address: "678 Dodgy Alley", status: "Open"},
+        ];
+        return s;
+    })
+
+    return app;
 
 }

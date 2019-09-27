@@ -5,6 +5,8 @@ import {
 
 export const setState = (store, path, value) => {
 
+    if(!path || path.length === 0) return;
+
     const pathParts = path.split(".");
     const safeSetPath = (obj, currentPartIndex=0) => {
 

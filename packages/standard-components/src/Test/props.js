@@ -56,6 +56,59 @@ export const props = {
         ]
     },
 
+    table: {
+        _component:"components/table",
+        columns: [
+            {
+                title: {
+                    "##bbstate":"NameColumnName",
+                    "##bbsource":"store",
+                    "##bbstatefallback": "Name"
+                },
+                value: {
+                    "##bbstate":"name",
+                    "##bbsource":"context"
+                }
+            },
+            {
+                title: "Address",
+                value: {
+                    "##bbstate":"address",
+                    "##bbsource":"context"
+                }
+            },
+            {
+                title: "Status",
+                value: {
+                    "##bbstate":"status",
+                    "##bbsource":"context"
+                }
+            }
+        ],
+        data: {
+            "##bbstate":"people"
+        },
+        onRowClick: [
+            {
+                "##eventHandlerType": "Set State",
+                parameters: {
+                    path: "NameColumnName",
+                    value: {
+                        "##bbstate":"name",
+                        "##bbsource":"context",
+                        "##bbstatefallback": "balls to that"
+                    }
+                }
+            }
+        ],
+        tableClass: "table-default",
+        theadClass: "thead-default",
+        tbodyClass: "tbody-default",
+        trClass: "tr-default",
+        thClass: "th-default"
+
+    },
+
     grid: {
         _component: "components/grid",
         gridTemplateColumns: "[left] auto [center] auto [right] auto",

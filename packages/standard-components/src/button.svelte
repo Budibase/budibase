@@ -5,12 +5,12 @@ export let contentText;
 export let contentComponent;
 export let onClick = () => {};
 
-export let _app;
+export let _bb;
 let contentComponentContainer;
 
 $:{
-	if(_app && contentComponentContainer && contentComponent._component)
-		_app.initialiseComponent(contentComponent, contentComponentContainer);
+	if(_bb && contentComponentContainer && contentComponent._component)
+		_bb.initialiseComponent(contentComponent, contentComponentContainer);
 }
 
 

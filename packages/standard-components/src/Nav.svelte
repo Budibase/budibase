@@ -11,7 +11,7 @@ export let itemHoverBackground="";
 export let itemHoverColor="";
 export let items = []
 
-export let _app;
+export let _bb;
 
 let selectedIndex;
 let contentElement;
@@ -25,7 +25,7 @@ $: styleVars = {
 
 const onSelectItem = (index) => () => {
     selectedIndex = index;
-    _app.initialiseComponent(items[index].component, contentElement);
+    _bb.initialiseComponent(items[index].component, contentElement);
 }
 
 

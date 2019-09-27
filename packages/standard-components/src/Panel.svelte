@@ -13,7 +13,7 @@ export let textAlign="";
 export let color="";
 export let padding="";
 
-export let _app;
+export let _bb;
 
 let style="";
 let componentElement;
@@ -26,8 +26,8 @@ $: {
         "border-radius":borderRadius
     });
 
-    if(_app && component) {
-        _app.initialiseComponent(component, componentElement);
+    if(_bb && component) {
+        _bb.initialiseComponent(component, componentElement);
     }
 }
 
