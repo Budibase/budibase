@@ -35,12 +35,20 @@ export const allComponents = () => ([
         }
     },
     {
+        name:"budibase-components/RecordView",
+        tags: ["record"],
+        props: {
+            data: "state"
+        }
+    },
+    {
         inherits:"budibase-components/TextBox",
         name: "common/SmallTextbox",
         props: {
             size: "small"
         }
     },
+    
     {
         inherits:"common/SmallTextbox",
         name: "common/PasswordBox",

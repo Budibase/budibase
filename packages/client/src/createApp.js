@@ -4,8 +4,12 @@ import {
 } from "lodash/fp";
 import {writable} from "svelte/store";
 import { $ } from "./core/common";
-import { setupBinding } from "./state/stateBinding";
+import { 
+    setupBinding 
+} from "./state/stateBinding";
 import { createCoreApi } from "./core";
+import { getStateOrValue } from "./state/getState";
+
 
 export const createApp = (componentLibraries, appDefinition, user) => {
 
@@ -19,7 +23,7 @@ export const createApp = (componentLibraries, appDefinition, user) => {
 
         const component = new (componentLibraries[libName][componentName])({
             target: htmlElement,
-            props: {...initialProps, _app},
+            props: {...initialProps, _bb},
             hydrate:true
         });
 
@@ -32,12 +36,20 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         _bbuser: user
     });
 
-    const _app = {
+
+    let globalState = null;
+    store.subscribe(s => {
+        globalState = s;
+    });
+
+    const _bb = {
         initialiseComponent, 
-        store
+        store,
+        getStateOrValue: (prop, currentContext) => 
+            getStateOrValue(globalState, prop, currentContext)
     };
 
-    return _app;
+    return _bb;
 
 }
 

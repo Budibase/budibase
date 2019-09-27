@@ -12,6 +12,10 @@ import {
     EVENT_TYPE_MEMBER_NAME
 } from "../../common/eventHandlers";
 
+import {
+    isBound, BB_STATE_BINDINGPATH
+} from "@budibase/client/src/state/isState";
+
 const defaultDef = typeName => () => ({
     type: typeName,
     required:false,
@@ -61,6 +65,11 @@ const isEvent = e =>
 const isEventList = e => 
     isArray(e) && every(isEvent)(e);
 
+const emptyState = () => {
+    const s = {};
+    s[BB_STATE_BINDINGPATH] = "";
+    return s;
+}
 
 export const types = {
     string: propType(() => "", isString, defaultDef("string")),
@@ -70,5 +79,6 @@ export const types = {
     options: propType(() => "", isString, defaultDef("options")),
     component: propType(() => ({_component:""}), isComponent, defaultDef("component")),
     asset: propType(() => "", isString, defaultDef("asset")),
-    event: propType(() => [], isEventList, defaultDef("event"))
+    event: propType(() => [], isEventList, defaultDef("event")),
+    state: propType(() => emptyState(), isBound, defaultDef("state"))
 };

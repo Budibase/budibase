@@ -183,5 +183,27 @@
 
 		},
 		"tags": ["nav", "navigation", "sidebar"]
+	},
+	"table": {
+		"importPath": "Table",
+		"name": "Table",
+		"desciption": "An HTML table",
+		"props" : {
+			"data": "state",
+			"columns": {
+				"type": "array",
+				"elementDefinition" : {
+					"title": "string",
+					"value": "string"
+				}
+			},
+			"onRowClick":"event",
+			"tableClass": {"type":"string", "default":"table-default"},
+			"theadClass": {"type":"string", "default":"thead-default"},
+			"tbodyClass": {"type":"string", "default":"tbody-default"},
+			"trClass": {"type":"string", "default":"tr-default"},
+			"thClass": {"type":"string", "default":"th-default"}
+		},
+		"tags": ["table"]
 	}
 }

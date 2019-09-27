@@ -30,7 +30,7 @@ describe("buildPropsHierarchy", () => {
         const button1 = primaryButtonProps();
         button1.contentText = "Button 1";
         expect(allprops.children[0]).toEqual({
-            _component: "children[0]",
+            _component: "children#array_element#",
             control: button1
         });
 
@@ -38,7 +38,7 @@ describe("buildPropsHierarchy", () => {
         const button2 = primaryButtonProps();
         button2.contentText = "Button 2";
         expect(allprops.children[1]).toEqual({
-            _component: "children[1]",
+            _component: "children#array_element#",
             control: button2
         })
 

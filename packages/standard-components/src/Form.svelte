@@ -2,7 +2,7 @@
 export let containerClass = "";
 export let formControls = [];
 
-export let _app;
+export let _bb;
 
 let htmlElements = {};
 let labels = {};
@@ -14,9 +14,9 @@ $ : {
         cIndex++;
     }
 
-    if(_app && htmlElements) {
+    if(_bb && htmlElements) {
         for(let el in htmlElements) {
-            _app.initialiseComponent(
+            _bb.initialiseComponent(
                 formControls[el].control,
                 htmlElements[el]
             );
