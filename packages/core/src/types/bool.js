@@ -1,4 +1,4 @@
-import { constant, isBoolean, isNull } from 'lodash';
+import { constant, isBoolean, isNull } from 'lodash/fp';
 import {
   typeFunctions,
   makerule, parsedFailed, parsedSuccess,

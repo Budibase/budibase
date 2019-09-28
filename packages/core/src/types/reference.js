@@ -1,7 +1,7 @@
 import {
   isString, isObjectLike,
   isNull, has, isEmpty,
-} from 'lodash';
+} from 'lodash/fp';
 import {
   typeFunctions, makerule,
   parsedSuccess, getDefaultExport,
@@ -18,7 +18,7 @@ const referenceFunctions = typeFunctions({
   default: referenceNothing,
 });
 
-const hasStringValue = (ob, path) => has(ob, path)
+const hasStringValue = (ob, path) => has(path)(ob)
     && isString(ob[path]);
 
 const isObjectWithKey = v => isObjectLike(v)

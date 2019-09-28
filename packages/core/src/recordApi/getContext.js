@@ -1,5 +1,4 @@
-import { has, some } from 'lodash';
-import { map, isString } from 'lodash/fp';
+import { map, isString, has, some } from 'lodash/fp';
 import {
   getExactNodeForPath,
   findField, getNode, isGlobalIndex,
@@ -25,7 +24,7 @@ export const _getContext = (app, recordKey) => {
   const cachedReferenceIndexes = {};
 
   const lazyLoadReferenceIndex = async (typeOptions) => {
-    if (!has(cachedReferenceIndexes, typeOptions.indexNodeKey)) {
+    if (!has(typeOptions.indexNodeKey)(cachedReferenceIndexes)) {
       cachedReferenceIndexes[typeOptions.indexNodeKey] = {
         typeOptions,
         data: await readReferenceIndex(
@@ -46,7 +45,7 @@ export const _getContext = (app, recordKey) => {
     referenceExists: async (typeOptions_or_fieldName, key) => {
       const typeOptions = getTypeOptions(typeOptions_or_fieldName);
       const { data } = await lazyLoadReferenceIndex(typeOptions);
-      return some(data, i => i.key === key);
+      return some(i => i.key === key)(data);
     },
     referenceOptions: async (typeOptions_or_fieldName) => {
       const typeOptions = getTypeOptions(typeOptions_or_fieldName);

@@ -1,10 +1,10 @@
 import {
-  assign, keys, merge, has,
+  assign, merge, 
 } from 'lodash';
 import {
   map, isString, isNumber,
-  isBoolean, isDate,
-  isObject, isArray,
+  isBoolean, isDate, keys,
+  isObject, isArray, has
 } from 'lodash/fp';
 import { $ } from '../common';
 import { parsedSuccess } from './typeHelpers';
@@ -40,7 +40,7 @@ const allTypes = () => {
 export const all = allTypes();
 
 export const getType = (typeName) => {
-  if (!has(all, typeName)) throw new BadRequestError(`Do not recognise type ${typeName}`);
+  if (!has(typeName)(all)) throw new BadRequestError(`Do not recognise type ${typeName}`);
   return all[typeName];
 };
 
@@ -50,7 +50,7 @@ export const getNewFieldValue = field => getType(field.type).getNew(field);
 
 export const safeParseField = (field, record) => getType(field.type).safeParseField(field, record);
 
-export const validateFieldParse = (field, record) => (has(record, field.name)
+export const validateFieldParse = (field, record) => (has(field.name)(record)
   ? getType(field.type).tryParse(record[field.name])
   : parsedSuccess(undefined)); // fields may be undefined by default
 
@@ -65,11 +65,11 @@ export const detectType = (value) => {
   if (isDate(value)) return datetime;
   if (isArray(value)) return array(detectType(value[0]));
   if (isObject(value)
-       && has(value, 'key')
-       && has(value, 'value')) return reference;
+       && has('key')(value)
+       && has('value')(value)) return reference;
   if (isObject(value)
-        && has(value, 'relativePath')
-        && has(value, 'size')) return file;
+        && has('relativePath')(value)
+        && has('size')(value)) return file;
 
   throw new BadRequestError(`cannot determine type: ${JSON.stringify(value)}`);
 };

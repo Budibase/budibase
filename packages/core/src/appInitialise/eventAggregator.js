@@ -1,7 +1,7 @@
-import { has } from 'lodash';
+import { has } from 'lodash/fp';
 
 const publish = handlers => async (eventName, context = {}) => {
-  if (!has(handlers, eventName)) return;
+  if (!has(eventName)(handlers)) return;
 
   for (const handler of handlers[eventName]) {
     await handler(eventName, context);
@@ -9,7 +9,7 @@ const publish = handlers => async (eventName, context = {}) => {
 };
 
 const subscribe = handlers => (eventName, handler) => {
-  if (!has(handlers, eventName)) {
+  if (!has(eventName)(handlers)) {
     handlers[eventName] = [];
   }
   handlers[eventName].push(handler);

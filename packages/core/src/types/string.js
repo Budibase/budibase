@@ -1,7 +1,7 @@
 import {
   constant, isString,
   isNull, includes, isBoolean,
-} from 'lodash';
+} from 'lodash/fp';
 import {
   typeFunctions,
   makerule, parsedSuccess, getDefaultExport,
@@ -47,7 +47,7 @@ const typeConstraints = [
     (val, opts) => `value exceeds maximum length of ${opts.maxLength}`),
   makerule(async (val, opts) => val === null
                            || opts.allowDeclaredValuesOnly === false
-                           || includes(opts.values, val),
+                           || includes(val)(opts.values),
   (val) => `"${val}" does not exist in the list of allowed values`),
 ];
 

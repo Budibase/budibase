@@ -1,7 +1,7 @@
 <script>
 
 import {store} from "../builderStore";
-import {cloneDeep} from "lodash";
+import {cloneDeep} from "lodash/fp";
 import getIcon from "../common/icon";
 export let level = 0;
 export let node;

@@ -1,5 +1,6 @@
-import { constant, isArray } from 'lodash';
-import { map } from 'lodash/fp';
+import { 
+  map,  constant, isArray 
+} from 'lodash/fp';
 import {
   typeFunctions, makerule,
   parsedFailed, getDefaultExport, parsedSuccess,

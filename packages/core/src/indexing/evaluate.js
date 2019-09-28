@@ -2,7 +2,7 @@ import { compileExpression, compileCode } from '@nx-js/compiler-util';
 import {
   isUndefined, keys, 
   cloneDeep, isFunction,
-} from 'lodash';
+} from 'lodash/fp';
 import { defineError } from '../common';
 
 export const filterEval = 'FILTER_EVALUATE';

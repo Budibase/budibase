@@ -35,7 +35,6 @@
   },
   "dependencies": {
     "@nx-js/compiler-util": "^2.0.0",
-    "date-fns": "^1.29.0",
     "lodash": "^4.17.15",
     "lunr": "^2.3.5",
     "shortid": "^2.2.8",

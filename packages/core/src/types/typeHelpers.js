@@ -1,12 +1,12 @@
-import { merge, has } from 'lodash';
+import { merge } from 'lodash';
 import {
-  constant, isUndefined, 
+  constant, isUndefined, has,
   mapValues, cloneDeep,
 } from 'lodash/fp';
 import { isNotEmpty } from '../common';
 
 export const getSafeFieldParser = (tryParse, defaultValueFunctions) => (field, record) => {
-  if (has(record, field.name)) {
+  if (has(field.name)(record)) {
     return getSafeValueParser(tryParse, defaultValueFunctions)(record[field.name]);
   }
   return defaultValueFunctions[field.getUndefinedValue]();
@@ -25,7 +25,7 @@ export const getNewValue = (tryParse, defaultValueFunctions) => (field) => {
     ? 'default'
     : field.getInitialValue;
 
-  return has(defaultValueFunctions, getInitialValue)
+  return has(getInitialValue)(defaultValueFunctions)
     ? defaultValueFunctions[getInitialValue]()
     : getSafeValueParser(tryParse, defaultValueFunctions)(getInitialValue);
 };
