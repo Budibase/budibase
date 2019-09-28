@@ -2083,44 +2083,47 @@
     var fp_18 = fp.mapValues;
     var fp_19 = fp.isNull;
     var fp_20 = fp.has;
-    var fp_21 = fp.isNumber;
-    var fp_22 = fp.isString;
-    var fp_23 = fp.isBoolean;
-    var fp_24 = fp.isDate;
-    var fp_25 = fp.isArray;
-    var fp_26 = fp.isObject;
-    var fp_27 = fp.clone;
-    var fp_28 = fp.values;
-    var fp_29 = fp.keyBy;
-    var fp_30 = fp.keys;
-    var fp_31 = fp.orderBy;
-    var fp_32 = fp.concat;
-    var fp_33 = fp.reverse;
-    var fp_34 = fp.difference;
-    var fp_35 = fp.merge;
-    var fp_36 = fp.flatten;
-    var fp_37 = fp.each;
-    var fp_38 = fp.pull;
-    var fp_39 = fp.join;
-    var fp_40 = fp.defaultCase;
-    var fp_41 = fp.uniqBy;
-    var fp_42 = fp.every;
-    var fp_43 = fp.uniqWith;
-    var fp_44 = fp.isFunction;
-    var fp_45 = fp.groupBy;
-    var fp_46 = fp.differenceBy;
-    var fp_47 = fp.intersectionBy;
-    var fp_48 = fp.isEqual;
-    var fp_49 = fp.max;
-    var fp_50 = fp.sortBy;
-    var fp_51 = fp.assign;
-    var fp_52 = fp.uniq;
-    var fp_53 = fp.trimChars;
-    var fp_54 = fp.trimCharsStart;
-    var fp_55 = fp.isObjectLike;
-    var fp_56 = fp.flattenDeep;
-    var fp_57 = fp.indexOf;
-    var fp_58 = fp.isPlainObject;
+    var fp_21 = fp.isInteger;
+    var fp_22 = fp.isNumber;
+    var fp_23 = fp.isString;
+    var fp_24 = fp.isBoolean;
+    var fp_25 = fp.isDate;
+    var fp_26 = fp.isArray;
+    var fp_27 = fp.isObject;
+    var fp_28 = fp.clone;
+    var fp_29 = fp.values;
+    var fp_30 = fp.keyBy;
+    var fp_31 = fp.isNaN;
+    var fp_32 = fp.keys;
+    var fp_33 = fp.orderBy;
+    var fp_34 = fp.concat;
+    var fp_35 = fp.reverse;
+    var fp_36 = fp.difference;
+    var fp_37 = fp.merge;
+    var fp_38 = fp.flatten;
+    var fp_39 = fp.each;
+    var fp_40 = fp.pull;
+    var fp_41 = fp.join;
+    var fp_42 = fp.defaultCase;
+    var fp_43 = fp.uniqBy;
+    var fp_44 = fp.every;
+    var fp_45 = fp.uniqWith;
+    var fp_46 = fp.isFunction;
+    var fp_47 = fp.groupBy;
+    var fp_48 = fp.differenceBy;
+    var fp_49 = fp.intersectionBy;
+    var fp_50 = fp.isEqual;
+    var fp_51 = fp.max;
+    var fp_52 = fp.sortBy;
+    var fp_53 = fp.assign;
+    var fp_54 = fp.uniq;
+    var fp_55 = fp.trimChars;
+    var fp_56 = fp.trimCharsStart;
+    var fp_57 = fp.isObjectLike;
+    var fp_58 = fp.flattenDeep;
+    var fp_59 = fp.indexOf;
+    var fp_60 = fp.isPlainObject;
+    var fp_61 = fp.toNumber;
 
     // Found this seed-based random generator somewhere
     // Based on The Central Randomizer 1.3 (C) 1997 by Paul Houle (houle@msc.cornell.edu)
@@ -19547,44 +19550,23 @@
       }
     }.call(commonjsGlobal));
     });
-    var lodash_1 = lodash.toNumber;
-    var lodash_2 = lodash.flow;
-    var lodash_3 = lodash.isArray;
-    var lodash_4 = lodash.join;
-    var lodash_5 = lodash.replace;
-    var lodash_6 = lodash.trim;
-    var lodash_7 = lodash.dropRight;
-    var lodash_8 = lodash.takeRight;
-    var lodash_9 = lodash.head;
-    var lodash_10 = lodash.isUndefined;
-    var lodash_11 = lodash.isNull;
-    var lodash_12 = lodash.isNaN;
-    var lodash_13 = lodash.reduce;
-    var lodash_14 = lodash.isEmpty;
-    var lodash_15 = lodash.constant;
-    var lodash_16 = lodash.tail;
-    var lodash_17 = lodash.includes;
-    var lodash_18 = lodash.startsWith;
-    var lodash_19 = lodash.findIndex;
-    var lodash_20 = lodash.isInteger;
-    var lodash_21 = lodash.isDate;
-    var lodash_22 = lodash.isString;
-    var lodash_23 = lodash.split;
-    var lodash_24 = lodash.clone;
-    var lodash_25 = lodash.keys;
-    var lodash_26 = lodash.isFunction;
-    var lodash_27 = lodash.merge;
-    var lodash_28 = lodash.has;
-    var lodash_29 = lodash.isBoolean;
-    var lodash_30 = lodash.isNumber;
-    var lodash_31 = lodash.isObjectLike;
-    var lodash_32 = lodash.assign;
-    var lodash_33 = lodash.some;
-    var lodash_34 = lodash.each;
-    var lodash_35 = lodash.find;
-    var lodash_36 = lodash.orderBy;
-    var lodash_37 = lodash.union;
-    var lodash_38 = lodash.cloneDeep;
+    var lodash_1 = lodash.flow;
+    var lodash_2 = lodash.join;
+    var lodash_3 = lodash.replace;
+    var lodash_4 = lodash.trim;
+    var lodash_5 = lodash.dropRight;
+    var lodash_6 = lodash.takeRight;
+    var lodash_7 = lodash.head;
+    var lodash_8 = lodash.reduce;
+    var lodash_9 = lodash.tail;
+    var lodash_10 = lodash.startsWith;
+    var lodash_11 = lodash.findIndex;
+    var lodash_12 = lodash.merge;
+    var lodash_13 = lodash.assign;
+    var lodash_14 = lodash.each;
+    var lodash_15 = lodash.find;
+    var lodash_16 = lodash.orderBy;
+    var lodash_17 = lodash.union;
 
     const commonPlus = extra => fp_1(['onBegin', 'onComplete', 'onError'])(extra);
 
@@ -19888,23 +19870,23 @@
     const sleepForRetry = () => new Promise(resolve => setTimeout(resolve, lockOverlapMilliseconds));
 
     // this is the combinator function
-    const $$ = (...funcs) => arg => lodash_2(funcs)(arg);
+    const $$ = (...funcs) => arg => lodash_1(funcs)(arg);
 
     // this is the pipe function
     const $ = (arg, funcs) => $$(...funcs)(arg);
 
     const keySep = '/';
-    const trimKeySep = str => lodash_6(str, keySep);
-    const splitByKeySep = str => lodash_23(str, keySep);
-    const safeKey = key => lodash_5(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
+    const trimKeySep = str => lodash_4(str, keySep);
+    const splitByKeySep = str => fp_5(keySep)(str);
+    const safeKey = key => lodash_3(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
     const joinKey = (...strs) => {
-      const paramsOrArray = strs.length === 1 & lodash_3(strs[0])
+      const paramsOrArray = strs.length === 1 & fp_26(strs[0])
         ? strs[0] : strs;
-      return safeKey(lodash_4(paramsOrArray, keySep));
+      return safeKey(fp_41(keySep)(paramsOrArray));
     };
     const splitKey = $$(trimKeySep, splitByKeySep);
-    const getDirFomKey = $$(splitKey, lodash_7, p => joinKey(...p));
-    const getFileFromKey = $$(splitKey, lodash_8, lodash_9);
+    const getDirFomKey = $$(splitKey, lodash_5, p => joinKey(...p));
+    const getFileFromKey = $$(splitKey, lodash_6, lodash_7);
 
     const configFolder = `${keySep}.config`;
     const fieldDefinitions = joinKey(configFolder, 'fields.json');
@@ -19913,32 +19895,32 @@
     const dirIndex = folderPath => joinKey(configFolder, 'dir', ...splitKey(folderPath), 'dir.idx');
     const getIndexKeyFromFileKey = $$(getDirFomKey, dirIndex);
 
-    const ifExists = (val, exists, notExists) => (lodash_10(val)
-      ? lodash_10(notExists) ? (() => { })() : notExists()
+    const ifExists = (val, exists, notExists) => (fp_3(val)
+      ? fp_3(notExists) ? (() => { })() : notExists()
       : exists());
 
     const getOrDefault = (val, defaultVal) => ifExists(val, () => val, () => defaultVal);
 
     const not = func => val => !func(val);
-    const isDefined = not(lodash_10);
-    const isNonNull = not(lodash_11);
-    const isNotNaN = not(lodash_12);
+    const isDefined = not(fp_3);
+    const isNonNull = not(fp_19);
+    const isNotNaN = not(fp_31);
 
-    const allTrue = (...funcArgs) => val => lodash_13(funcArgs,
-      (result, conditionFunc) => (lodash_11(result) || result == true) && conditionFunc(val),
-      null);
+    const allTrue = (...funcArgs) => val => fp_2(
+      (result, conditionFunc) => (fp_19(result) || result == true) && conditionFunc(val),
+      null)(funcArgs);
 
-    const anyTrue = (...funcArgs) => val => lodash_13(funcArgs,
+    const anyTrue = (...funcArgs) => val => fp_2(
       (result, conditionFunc) => result == true || conditionFunc(val),
-      null);
+      null)(funcArgs);
 
     const insensitiveEquals = (str1, str2) => str1.trim().toLowerCase() === str2.trim().toLowerCase();
 
     const isSomething = allTrue(isDefined, isNonNull, isNotNaN);
     const isNothing = not(isSomething);
-    const isNothingOrEmpty = v => isNothing(v) || lodash_14(v);
+    const isNothingOrEmpty = v => isNothing(v) || fp_9(v);
     const somethingOrGetDefault = getDefaultFunc => val => (isSomething(val) ? val : getDefaultFunc());
-    const somethingOrDefault = (val, defaultVal) => somethingOrGetDefault(lodash_15(defaultVal))(val);
+    const somethingOrDefault = (val, defaultVal) => somethingOrGetDefault(fp_14(defaultVal))(val);
 
     const mapIfSomethingOrDefault = (mapFunc, defaultVal) => val => (isSomething(val) ? mapFunc(val) : defaultVal);
 
@@ -19948,9 +19930,9 @@
 
     const all = predicate => collection => none(v => !predicate(v))(collection);
 
-    const isNotEmpty = ob => !lodash_14(ob);
-    const isNonEmptyArray = allTrue(lodash_3, isNotEmpty);
-    const isNonEmptyString = allTrue(lodash_22, isNotEmpty);
+    const isNotEmpty = ob => !fp_9(ob);
+    const isNonEmptyArray = allTrue(fp_26, isNotEmpty);
+    const isNonEmptyString = allTrue(fp_23, isNotEmpty);
     const tryOr = failFunc => (func, ...args) => {
       try {
         return func.apply(null, ...args);
@@ -19989,28 +19971,28 @@
 
     const executesWithoutException = func => !causesException(func);
 
-    const handleErrorWith = returnValInError => tryOr(lodash_15(returnValInError));
+    const handleErrorWith = returnValInError => tryOr(fp_14(returnValInError));
 
     const handleErrorWithUndefined = handleErrorWith(undefined);
 
     const switchCase = (...cases) => (value) => {
-      const nextCase = () => lodash_9(cases)[0](value);
-      const nextResult = () => lodash_9(cases)[1](value);
+      const nextCase = () => lodash_7(cases)[0](value);
+      const nextResult = () => lodash_7(cases)[1](value);
 
-      if (lodash_14(cases)) return; // undefined
+      if (fp_9(cases)) return; // undefined
       if (nextCase() === true) return nextResult();
-      return switchCase(...lodash_16(cases))(value);
+      return switchCase(...lodash_9(cases))(value);
     };
 
     const isValue = val1 => val2 => (val1 === val2);
-    const isOneOf = (...vals) => val => lodash_17(vals, val);
-    const defaultCase = lodash_15(true);
+    const isOneOf = (...vals) => val => fp_11(val)(vals);
+    const defaultCase = fp_14(true);
     const memberMatches = (member, match) => obj => match(obj[member]);
 
 
-    const StartsWith = searchFor => searchIn => lodash_18(searchIn, searchFor);
+    const StartsWith = searchFor => searchIn => lodash_10(searchIn, searchFor);
 
-    const contains = val => array => (lodash_19(array, v => v === val) > -1);
+    const contains = val => array => (lodash_11(array, v => v === val) > -1);
 
     const getHashCode = (s) => {
       let hash = 0; let i; let char; let
@@ -20037,18 +20019,18 @@
       }
     };
 
-    const isSafeInteger = n => lodash_20(n)
+    const isSafeInteger = n => fp_21(n)
         && n <= Number.MAX_SAFE_INTEGER
         && n >= 0 - Number.MAX_SAFE_INTEGER;
 
-    const toDateOrNull = s => (lodash_11(s) ? null
-      : lodash_21(s) ? s : new Date(s));
-    const toBoolOrNull = s => (lodash_11(s) ? null
+    const toDateOrNull = s => (fp_19(s) ? null
+      : fp_25(s) ? s : new Date(s));
+    const toBoolOrNull = s => (fp_19(s) ? null
       : s === 'true' || s === true);
-    const toNumberOrNull = s => (lodash_11(s) ? null
-      : lodash_1(s));
+    const toNumberOrNull = s => (fp_19(s) ? null
+      : fp_61(s));
 
-    const isArrayOfString = opts => lodash_3(opts) && all(lodash_22)(opts);
+    const isArrayOfString = opts => fp_26(opts) && all(fp_23)(opts);
 
     const pause = async duration => new Promise(res => setTimeout(res, duration));
 
@@ -20117,7 +20099,7 @@
       eventsList,
       isNothingOrEmpty,
       isSafeInteger,
-      toNumber: lodash_1,
+      toNumber: fp_61,
       toDate: toDateOrNull,
       toBool: toBoolOrNull,
       isArrayOfString,
@@ -20328,8 +20310,8 @@
       makerule('indexType', 'reference index may only exist on a record node',
         index => isRecord(index.parent())
                       || index.indexType !== indexTypes.reference),
-      makerule('indexType', `index type must be one of: ${lodash_4(', ', lodash_25(indexTypes))}`,
-        index => fp_11(index.indexType)(lodash_25(indexTypes))),
+      makerule('indexType', `index type must be one of: ${fp_41(', ')(fp_32(indexTypes))}`,
+        index => fp_11(index.indexType)(fp_32(indexTypes))),
     ];
 
     const getFlattenedHierarchy = (appHierarchy, useCached = true) => {
@@ -20537,7 +20519,7 @@
     };
 
     const getSafeFieldParser = (tryParse, defaultValueFunctions) => (field, record) => {
-      if (lodash_28(record, field.name)) {
+      if (fp_20(field.name)(record)) {
         return getSafeValueParser(tryParse, defaultValueFunctions)(record[field.name]);
       }
       return defaultValueFunctions[field.getUndefinedValue]();
@@ -20556,12 +20538,12 @@
         ? 'default'
         : field.getInitialValue;
 
-      return lodash_28(defaultValueFunctions, getInitialValue)
+      return fp_20(getInitialValue)(defaultValueFunctions)
         ? defaultValueFunctions[getInitialValue]()
         : getSafeValueParser(tryParse, defaultValueFunctions)(getInitialValue);
     };
 
-    const typeFunctions = specificFunctions => lodash_27({
+    const typeFunctions = specificFunctions => lodash_12({
       value: fp_14,
       null: fp_14(null),
     }, specificFunctions);
@@ -20602,12 +20584,12 @@
     });
 
     const stringFunctions = typeFunctions({
-      default: lodash_15(null),
+      default: fp_14(null),
     });
 
     const stringTryParse = switchCase(
-      [lodash_22, parsedSuccess],
-      [lodash_11, parsedSuccess],
+      [fp_23, parsedSuccess],
+      [fp_19, parsedSuccess],
       [defaultCase, v => parsedSuccess(v.toString())],
     );
 
@@ -20626,7 +20608,7 @@
       },
       allowDeclaredValuesOnly: {
         defaultValue: false,
-        isValid: lodash_29,
+        isValid: fp_24,
         requirementDescription: 'allowDeclaredValuesOnly must be true or false',
         parse: toBoolOrNull,
       },
@@ -20637,7 +20619,7 @@
         (val, opts) => `value exceeds maximum length of ${opts.maxLength}`),
       makerule$1(async (val, opts) => val === null
                                || opts.allowDeclaredValuesOnly === false
-                               || lodash_17(opts.values, val),
+                               || fp_11(val)(opts.values),
       (val) => `"${val}" does not exist in the list of allowed values`),
     ];
 
@@ -20652,12 +20634,12 @@
     );
 
     const boolFunctions = typeFunctions({
-      default: lodash_15(null),
+      default: fp_14(null),
     });
 
     const boolTryParse = switchCase(
-      [lodash_29, parsedSuccess],
-      [lodash_11, parsedSuccess],
+      [fp_24, parsedSuccess],
+      [fp_19, parsedSuccess],
       [isOneOf('true', '1', 'yes', 'on'), () => parsedSuccess(true)],
       [isOneOf('false', '0', 'no', 'off'), () => parsedSuccess(false)],
       [defaultCase, parsedFailed],
@@ -20666,7 +20648,7 @@
     const options$1 = {
       allowNulls: {
         defaultValue: true,
-        isValid: lodash_29,
+        isValid: fp_24,
         requirementDescription: 'must be a true or false',
         parse: toBoolOrNull,
       },
@@ -20683,7 +20665,7 @@
     );
 
     const numberFunctions = typeFunctions({
-      default: lodash_15(null),
+      default: fp_14(null),
     });
 
     const parseStringtoNumberOrNull = (s) => {
@@ -20692,9 +20674,9 @@
     };
 
     const numberTryParse = switchCase(
-      [lodash_30, parsedSuccess],
-      [lodash_22, parseStringtoNumberOrNull],
-      [lodash_11, parsedSuccess],
+      [fp_22, parsedSuccess],
+      [fp_23, parseStringtoNumberOrNull],
+      [fp_19, parsedSuccess],
       [defaultCase, parsedFailed],
     );
 
@@ -20745,7 +20727,7 @@
     );
 
     const dateFunctions = typeFunctions({
-      default: lodash_15(null),
+      default: fp_14(null),
       now: () => new Date(),
     });
 
@@ -20758,22 +20740,22 @@
 
 
     const dateTryParse = switchCase(
-      [lodash_21, parsedSuccess],
-      [lodash_22, parseStringToDate],
-      [lodash_11, parsedSuccess],
+      [fp_25, parsedSuccess],
+      [fp_23, parseStringToDate],
+      [fp_19, parsedSuccess],
       [defaultCase, parsedFailed],
     );
 
     const options$3 = {
       maxValue: {
         defaultValue: new Date(32503680000000),
-        isValid: lodash_21,
+        isValid: fp_25,
         requirementDescription: 'must be a valid date',
         parse: toDateOrNull,
       },
       minValue: {
         defaultValue: new Date(-8520336000000),
-        isValid: lodash_21,
+        isValid: fp_25,
         requirementDescription: 'must be a valid date',
         parse: toDateOrNull,
       },
@@ -20797,7 +20779,7 @@
     );
 
     const arrayFunctions = () => typeFunctions({
-      default: lodash_15([]),
+      default: fp_14([]),
     });
 
     const mapToParsedArrary = type => $$(
@@ -20806,7 +20788,7 @@
     );
 
     const arrayTryParse = type => switchCase(
-      [lodash_3, mapToParsedArrary(type)],
+      [fp_26, mapToParsedArrary(type)],
       [defaultCase, parsedFailed],
     );
 
@@ -20851,10 +20833,10 @@
       default: referenceNothing,
     });
 
-    const hasStringValue = (ob, path) => lodash_28(ob, path)
-        && lodash_22(ob[path]);
+    const hasStringValue = (ob, path) => fp_20(path)(ob)
+        && fp_23(ob[path]);
 
-    const isObjectWithKey = v => lodash_31(v)
+    const isObjectWithKey = v => fp_57(v)
         && hasStringValue(v, 'key');
 
     const tryParseFromString = s => {
@@ -20874,8 +20856,8 @@
 
     const referenceTryParse = v => switchCase(
       [isObjectWithKey, parsedSuccess],
-      [lodash_22, tryParseFromString],
-      [lodash_11, () => parsedSuccess(referenceNothing())],
+      [fp_23, tryParseFromString],
+      [fp_19, () => parsedSuccess(referenceNothing())],
       [defaultCase, parsedFailed],
     )(v);
 
@@ -20900,7 +20882,7 @@
       },
     };
 
-    const isEmptyString = s => lodash_22(s) && lodash_14(s);
+    const isEmptyString = s => fp_23(s) && fp_9(s);
 
     const ensureReferenceExists = async (val, opts, context) => isEmptyString(val.key)
         || await context.referenceExists(opts, val.key);
@@ -20950,8 +20932,8 @@
 
     const isValidFile = f => !fp_19(f)
         && fp_20('relativePath')(f) && fp_20('size')(f)
-        && fp_21(f.size)
-        && fp_22(f.relativePath)
+        && fp_22(f.size)
+        && fp_23(f.relativePath)
         && isLegalFilename(f.relativePath);
 
     const options$6 = {};
@@ -20974,24 +20956,24 @@
       };
 
       const arrays = $(basicTypes, [
-        lodash_25,
+        fp_32,
         fp_7((k) => {
           const kvType = {};
           const concreteArray = array(basicTypes[k]);
           kvType[concreteArray.name] = concreteArray;
           return kvType;
         }),
-        types => lodash_32({}, ...types),
+        types => lodash_13({}, ...types),
       ]);
 
-      return lodash_27({}, basicTypes, arrays);
+      return lodash_12({}, basicTypes, arrays);
     };
 
 
     const all$1 = allTypes();
 
     const getType = (typeName) => {
-      if (!lodash_28(all$1, typeName)) throw new BadRequestError(`Do not recognise type ${typeName}`);
+      if (!fp_20(typeName)(all$1)) throw new BadRequestError(`Do not recognise type ${typeName}`);
       return all$1[typeName];
     };
 
@@ -21032,7 +21014,7 @@
     ]);
 
     const stripUserOfSensitiveStuff = (user) => {
-      const stripped = fp_27(user);
+      const stripped = fp_28(user);
       delete stripped.tempCode;
       return stripped;
     };
@@ -21059,7 +21041,7 @@
       }
 
       const validType = $(permissionTypes, [
-        fp_28,
+        fp_29,
         fp_11(permissionType),
       ]);
 
@@ -26694,7 +26676,7 @@
         )],
 
       [isRoot,
-        lodash_15('/')],
+        fp_14('/')],
 
       [defaultCase,
         n => joinKey(node.parent().nodeKey(), n.name)],
@@ -26724,7 +26706,7 @@
     const construct = parent => (node) => {
       node.nodeKey = nodeKeyMaker(node);
       node.pathRegx = pathRegxMaker(node);
-      node.parent = lodash_15(parent);
+      node.parent = fp_14(parent);
       node.isRoot = () => isNothing(parent)
                             && node.name === 'root'
                             && node.type === 'root';
@@ -26748,7 +26730,7 @@
         { parent.indexes.push(obj); } else if (isaggregateGroup(obj)) { parent.aggregateGroups.push(obj); } else { parent.children.push(obj); }
 
         if (isRecord(obj)) {
-          const defaultIndex = lodash_35(
+          const defaultIndex = lodash_15(
             parent.indexes,
             i => i.name === `${parent.name}_index`,
           );
@@ -26775,26 +26757,26 @@
       return ($(root, [
         getFlattenedHierarchy,
         fp_7(n => n.nodeId),
-        fp_49]) + 1);
+        fp_51]) + 1);
     };
 
     const constructHierarchy = (node, parent) => {
       construct(parent)(node);
       if (node.indexes) {
-        lodash_34(node.indexes,
+        lodash_14(node.indexes,
           child => constructHierarchy(child, node));
       }
       if (node.aggregateGroups) {
-        lodash_34(node.aggregateGroups,
+        lodash_14(node.aggregateGroups,
           child => constructHierarchy(child, node));
       }
       if (node.children && node.children.length > 0) {
-        lodash_34(node.children,
+        lodash_14(node.children,
           child => constructHierarchy(child, node));
       }
       if (node.fields) {
-        lodash_34(node.fields,
-          f => lodash_34(f.typeOptions, (val, key) => {
+        lodash_14(node.fields,
+          f => lodash_14(f.typeOptions, (val, key) => {
             const def = all$1[f.type].optionDefinitions[key];
             if (!def) {
               // unknown typeOption
@@ -26879,7 +26861,7 @@
       AddFieldValidationFailed: 'Add field validation: ',
     };
 
-    const allowedTypes = () => fp_30(all$1);
+    const allowedTypes = () => fp_32(all$1);
 
     const getNewField = type => ({
       name: '', // how field is referenced internally
@@ -26916,7 +26898,7 @@
       const def = optName => type.optionDefinitions[optName];
 
       return $(field.typeOptions, [
-        fp_30,
+        fp_32,
         fp_8(o => isSomething(def(o))
                         && isSomething(def(o).isValid)),
         fp_7(o => makerule(
@@ -26934,7 +26916,7 @@
 
     const validateAllFields = recordNode => $(recordNode.fields, [
       fp_7(validateField(recordNode.fields)),
-      fp_36,
+      fp_38,
     ]);
 
     const addField = (recordTemplate, field) => {
@@ -26956,9 +26938,9 @@
     });
 
     const getStaticValue = switchCase(
-      [fp_21, v => v.toString()],
-      [fp_23, v => v.toString()],
-      [fp_40, v => `'${v}'`],
+      [fp_22, v => v.toString()],
+      [fp_24, v => v.toString()],
+      [fp_42, v => `'${v}'`],
     );
 
     const commonRecordValidationRules = ({
@@ -27011,7 +26993,7 @@
       makerule('name', 'choose a name for the aggregate',
         a => isNonEmptyString(a.name)),
       makerule('aggregatedValue', 'aggregatedValue does not compile',
-        a => lodash_14(a.aggregatedValue)
+        a => fp_9(a.aggregatedValue)
                 || executesWithoutException(
                   () => compileCode(a.aggregatedValue),
                 )),
@@ -27021,10 +27003,10 @@
 
     const validateAllAggregates = all => $(all, [
       fp_7(validateAggregate),
-      fp_36,
+      fp_38,
     ]);
 
-    const ruleSet = (...sets) => fp_14(fp_36([...sets]));
+    const ruleSet = (...sets) => fp_14(fp_38([...sets]));
 
     const commonRules = [
       makerule('name', 'node name is not set',
@@ -27037,9 +27019,9 @@
       makerule('fields', 'no fields have been added to the record',
         node => isNonEmptyArray(node.fields)),
       makerule('validationRules', "validation rule is missing a 'messageWhenValid' member",
-        node => fp_42(r => lodash_28(r, 'messageWhenInvalid'))(node.validationRules)),
+        node => fp_44(r => fp_20('messageWhenInvalid')(r))(node.validationRules)),
       makerule('validationRules', "validation rule is missing a 'expressionWhenValid' member",
-        node => fp_42(r => lodash_28(r, 'expressionWhenValid'))(node.validationRules)),
+        node => fp_44(r => fp_20('expressionWhenValid')(r))(node.validationRules)),
     ];
 
 
@@ -27087,13 +27069,13 @@
       const duplicateNodeKeyErrors = $(flattened, [
         fp_7(n => applyRuleSet([duplicateNameRule])(n)),
         fp_8(isSomething),
-        fp_36,
+        fp_38,
       ]);
 
       const fieldErrors = $(flattened, [
         fp_8(isRecord),
         fp_7(validateAllFields),
-        fp_36,
+        fp_38,
       ]);
 
       const aggregateErrors = $(flattened, [
@@ -27101,12 +27083,12 @@
         fp_7(s => validateAllAggregates(
           s.aggregates,
         )),
-        fp_36,
+        fp_38,
       ]);
 
       return $(flattened, [
         fp_7(validateNode),
-        fp_36,
+        fp_38,
         fp_1(duplicateNodeKeyErrors),
         fp_1(fieldErrors),
         fp_1(aggregateErrors),
@@ -27135,9 +27117,9 @@
 
       const errors = $(allActions, [
         fp_7(validateAction),
-        fp_36,
+        fp_38,
         fp_1(duplicateActions),
-        fp_41('name'),
+        fp_43('name'),
       ]);
 
       return errors;
@@ -27180,7 +27162,7 @@
 
     const validateTriggers = (triggers, allActions) => $(triggers, [
       fp_7(t => validateTrigger(t, allActions)),
-      fp_36,
+      fp_38,
     ]);
 
     const getApplicationDefinition = datastore => async () => {
@@ -27207,7 +27189,7 @@
     const _saveApplicationHierarchy = async (datastore, hierarchy) => {
       const validationErrors = await validateAll(hierarchy);
       if (validationErrors.length > 0) {
-        throw new Error(`Hierarchy is invalid: ${lodash_4(
+        throw new Error(`Hierarchy is invalid: ${lodash_2(
       validationErrors.map(e => `${e.item.nodeKey ? e.item.nodeKey() : ''} : ${e.error}`),
       ',',
     )}`);
@@ -27241,13 +27223,13 @@
         const actionValidErrs = fp_7(e => e.error)(validateActions(actions));
 
         if (actionValidErrs.length > 0) {
-          throw new BadRequestError(`Actions are invalid: ${lodash_4(actionValidErrs, ', ')}`);
+          throw new BadRequestError(`Actions are invalid: ${lodash_2(actionValidErrs, ', ')}`);
         }
 
         const triggerValidErrs = fp_7(e => e.error)(validateTriggers(triggers, actions));
 
         if (triggerValidErrs.length > 0) {
-          throw new BadRequestError(`Triggers are invalid: ${lodash_4(triggerValidErrs, ', ')}`);
+          throw new BadRequestError(`Triggers are invalid: ${lodash_2(triggerValidErrs, ', ')}`);
         }
 
         await datastore.updateJson(appDefinitionFile, appDefinition);
@@ -27414,7 +27396,7 @@
       return $(allAccessLevels.levels, [
         fp_8(l => fp_6(ua => l.name === ua)(userAccessLevels)),
         fp_7(l => l.permissions),
-        fp_36,
+        fp_38,
       ]);
     };
 
@@ -27689,7 +27671,7 @@
       const users = await app.datastore.loadJson(USERS_LIST_FILE);
 
       const userErrors = validateUser()([...users, user], user);
-      if (userErrors.length > 0) { throw new BadRequestError(`User is invalid. ${fp_39('; ')(userErrors)}`); }
+      if (userErrors.length > 0) { throw new BadRequestError(`User is invalid. ${fp_41('; ')(userErrors)}`); }
 
       const { auth, tempCode, temporaryAccessId } = await getAccess(
         app, password,
@@ -27800,7 +27782,7 @@
     });
 
     const isAllowedType = t => $(permissionTypes, [
-      fp_28,
+      fp_29,
       fp_11(t),
     ]);
 
@@ -27837,8 +27819,8 @@
     const validateAccessLevel = app => (allLevels, level) => {
       const errs = $(level.permissions, [
         fp_7(applyPermissionRules(app)),
-        fp_36,
-        fp_32(
+        fp_38,
+        fp_34(
           applyLevelRules(allLevels)(level),
         ),
       ]);
@@ -27856,8 +27838,8 @@
 
     const _validateAccessLevels = (app, allLevels) => $(allLevels, [
       fp_7(l => validateAccessLevel(app)(allLevels, l)),
-      fp_36,
-      fp_43((x, y) => x.field === y.field
+      fp_38,
+      fp_45((x, y) => x.field === y.field
                             && x.item === y.item
                             && x.error === y.error),
     ]);
@@ -27875,7 +27857,7 @@
       if (validationErrors.length > 0) {
         const errs = $(validationErrors, [
           fp_7(e => e.error),
-          fp_39(', '),
+          fp_41(', '),
         ]);
         throw new Error(
           `Access Levels Invalid: ${errs}`,
@@ -27923,14 +27905,14 @@
         permission.readIndex.add(n.nodeKey(), accessLevel);
       }
 
-      for (const a of fp_30(app.actions)) {
+      for (const a of fp_32(app.actions)) {
         permission.executeAction.add(a, accessLevel);
       }
 
       $(permission, [
-        fp_28,
+        fp_29,
         fp_8(p => !p.isNode),
-        fp_37(p => p.add(accessLevel)),
+        fp_39(p => p.add(accessLevel)),
       ]);
 
       return accessLevel.permissions;
@@ -27955,9 +27937,9 @@
         ],
       );
 
-      const missing = fp_34(accessLevels)(actualAccessLevels);
+      const missing = fp_36(accessLevels)(actualAccessLevels);
       if (missing.length > 0) {
-        throw new Error(`Invalid access levels supplied: ${fp_39(', ', missing)}`);
+        throw new Error(`Invalid access levels supplied: ${fp_41(', ', missing)}`);
       }
 
       if (isNolock(lock)) { throw new Error('Could set user access levels cannot get lock'); }
@@ -28015,7 +27997,7 @@
 
     const templateApi = hierarchy => getTemplateApi({hierarchy});
     const authApi = (hierarchy, actions) => getAuthApi({
-        hierarchy, actions: fp_29("name")(actions), publish:()=>{}});
+        hierarchy, actions: fp_30("name")(actions), publish:()=>{}});
 
     const allTypes$1 = templateApi({}).allTypes;
 
@@ -28031,7 +28013,7 @@
             fp_8(n => hierarchyFunctions.isAncestor(refIndex)(n)
                         || hierarchyFunctions.isAncestor(refIndex)(n.parent())),
             fp_7(n => n.indexes),
-            fp_36,
+            fp_38,
             fp_8(hierarchyFunctions.isReferenceIndex)
         ]);
 
@@ -28151,7 +28133,7 @@
 
             if(obj[currentKey] === null 
               || obj[currentKey] === undefined
-              || !fp_26(obj.currentKey)) {
+              || !fp_27(obj.currentKey)) {
 
                 obj[currentKey] = {};
             }
@@ -28191,7 +28173,7 @@
 
             if(obj[currentKey] === null 
               || obj[currentKey] === undefined
-              || !fp_26(obj[currentKey])) {
+              || !fp_27(obj[currentKey])) {
 
                 return fallback;
             }
@@ -28444,11 +28426,11 @@
     });
 
     const expandSingleProp = propDef => {
-        const p = fp_22(propDef)
+        const p = fp_23(propDef)
                   ? types[propDef].defaultDefinition()
                   : propDef;
         
-        if(!fp_22(propDef)) {
+        if(!fp_23(propDef)) {
             const def = types[propDef.type].defaultDefinition();
             for(let p in def) {
                 if(propDef[p] === undefined) {
@@ -28471,14 +28453,14 @@
         return expandedProps;
     };
 
-    const isComponent = fp_55;
+    const isComponent = fp_57;
     const isEvent = e => 
-        fp_58(e) 
-        && fp_22(e[EVENT_TYPE_MEMBER_NAME])
-        && fp_58(e.parameters);
+        fp_60(e) 
+        && fp_23(e[EVENT_TYPE_MEMBER_NAME])
+        && fp_60(e.parameters);
 
     const isEventList = e => 
-        fp_25(e) && fp_42(isEvent)(e);
+        fp_26(e) && fp_44(isEvent)(e);
 
     const emptyState = () => {
         const s = {};
@@ -28487,13 +28469,13 @@
     };
 
     const types = {
-        string: propType(() => "", fp_22, defaultDef("string")),
-        bool: propType(() => false, fp_23, defaultDef("bool")),
-        number: propType(() => 0, fp_21, defaultDef("number")),
-        array: propType(() => [], fp_25, defaultDef("array")),
-        options: propType(() => "", fp_22, defaultDef("options")),
+        string: propType(() => "", fp_23, defaultDef("string")),
+        bool: propType(() => false, fp_24, defaultDef("bool")),
+        number: propType(() => 0, fp_22, defaultDef("number")),
+        array: propType(() => [], fp_26, defaultDef("array")),
+        options: propType(() => "", fp_23, defaultDef("options")),
         component: propType(() => ({_component:""}), isComponent, defaultDef("component")),
-        asset: propType(() => "", fp_22, defaultDef("asset")),
+        asset: propType(() => "", fp_23, defaultDef("asset")),
         event: propType(() => [], isEventList, defaultDef("event")),
         state: propType(() => emptyState(), isBound, defaultDef("state"))
     };
@@ -28567,10 +28549,10 @@
 
 
     const getComponentInfo = (allComponents, comp, stack=[], subComponentProps=null) => {
-        const component = fp_22(comp) 
+        const component = fp_23(comp) 
                           ? fp_13(c => c.name === comp)(allComponents)
                           : comp;
-        const cname = fp_22(comp) ? comp : comp.name;
+        const cname = fp_23(comp) ? comp : comp.name;
         if(isRootComponent(component)) {
             subComponentProps = subComponentProps||{};
             const p = createProps(cname, component.props, subComponentProps);
@@ -28583,7 +28565,7 @@
                 
                 for(let prop in subComponentProps) {
                     const hasProp = pipe$1(targetComponent.props, [
-                                            fp_30,
+                                            fp_32,
                                             fp_11(prop)]);
 
                     if(!hasProp)
@@ -28591,8 +28573,8 @@
                 }
             }
             const unsetProps = pipe$1(p.props, [
-                fp_30,
-                fp_8(k => !fp_11(k)(fp_30(subComponentProps)) && k !== "_component")
+                fp_32,
+                fp_8(k => !fp_11(k)(fp_32(subComponentProps)) && k !== "_component")
             ]);
 
             const fullProps = fp_4(p.props);
@@ -28639,7 +28621,7 @@
         }
 
         if(derivedFromProps) {
-            lodash_32(props, derivedFromProps);
+            lodash_13(props, derivedFromProps);
         }
 
         return ({
@@ -28655,7 +28637,7 @@
     const parsePropDef = propDef => {
         const error = message => ({error:message, propDef});
 
-        if(fp_22(propDef)) {
+        if(fp_23(propDef)) {
             if(!types[propDef])
                 return error(`Do not recognise type ${propDef}`);
             
@@ -29022,7 +29004,7 @@
             };
 
             parentNode.children = pipe$1(parentNode.children, [
-                fp_50(newIndexOfchild)
+                fp_52(newIndexOfchild)
             ]);
 
             s.currentNodeIsNew = false;
@@ -29183,12 +29165,12 @@
 
             const components = pipe$1(s.allComponents, [
                 fp_8(c => c.name !== derivedComponent.name),
-                fp_32([derivedComponent])
+                fp_34([derivedComponent])
             ]);
 
             const derivedComponents = pipe$1(s.derivedComponents, [
                 fp_8(c => c.name !== derivedComponent.name),
-                fp_32([derivedComponent])
+                fp_34([derivedComponent])
             ]);
 
             s.allComponents = components;
@@ -29250,7 +29232,7 @@
 
             const allComponents = pipe$1(s.allComponents, [
                 fp_8(c => c.name !== name),
-                fp_32([component])
+                fp_34([component])
             ]);
 
             s.allComponents = allComponents;
@@ -29303,7 +29285,7 @@
 
                 s.allComponents = pipe$1(s.allComponents, [
                     fp_8(c => !c.name.startsWith(`${lib}/`)),
-                    fp_32(componentsArray)
+                    fp_34(componentsArray)
                 ]);
 
                 s.pages.componentLibraries.push(lib);
@@ -29351,14 +29333,14 @@
             await api$1.get(`/_builder/api/${db.appname}/components`).then(r => r.json());
 
         const rootComponents = pipe$1(components, [
-            fp_30,
+            fp_32,
             fp_7(k => ({...components[k], name:k}))
         ]);
 
         store.update(s => {
             s.allComponents = pipe$1(s.allComponents, [
                 fp_8(c => !isRootComponent(c)),
-                fp_32(rootComponents)
+                fp_34(rootComponents)
             ]);
             return s;
         });
@@ -31984,7 +31966,7 @@
 
     /******/ });
     });
-    //# sourceMappingURL=feather.js.map
+
     });
 
     var feather$1 = unwrapExports(feather);
@@ -32558,13 +32540,13 @@
 
     let expandedFolders = [];
 
-    const joinPath = fp_39("/");
+    const joinPath = fp_41("/");
 
     const normalizedName = name => pipe$1(name, [
-            fp_54("./"),
-            fp_54("~/"),
-            fp_54("../"),
-            fp_53(" ")
+            fp_56("./"),
+            fp_56("~/"),
+            fp_56("../"),
+            fp_55(" ")
         ]);
 
 
@@ -32577,7 +32559,7 @@
 
     const isInSubfolder = (subfolder, c) => 
         normalizedName(c.name).startsWith(
-            fp_54("/")(
+            fp_56("/")(
                 joinPath([thisLevel, subfolder])));
 
     const lastPartOfName = (c) => 
@@ -32658,15 +32640,15 @@
                     pipe$1(components, [
                         fp_8(isOnThisLevel),
                         fp_7(c => ({component:c, title:lastPartOfName(c)})),
-                        fp_50("title")
+                        fp_52("title")
                     ]));
             
                 $$invalidate('subfolders', subfolders = 
                     pipe$1(components, [
                         fp_8(notOnThisLevel),
-                        fp_50("name"),
+                        fp_52("name"),
                         fp_7(subFolder),
-                        fp_43((f1,f2) => f1.path === f2.path)
+                        fp_45((f1,f2) => f1.path === f2.path)
                     ]));
             } }
     	};
@@ -33724,9 +33706,9 @@
     }
 
     const isBinding = value => 
-        !fp_22(value) 
+        !fp_23(value) 
         && value
-        && fp_22(value[BB_STATE_BINDINGPATH])
+        && fp_23(value[BB_STATE_BINDINGPATH])
         && value[BB_STATE_BINDINGPATH].length > 0;
 
     const setBinding = ({path, fallback, source}, binding={} ) => {
@@ -33742,7 +33724,7 @@
         source: binding[BB_STATE_BINDINGSOURCE] || "store"
     });
 
-    const isNonEmptyString$1 = s => fp_22(s) && s.length > 0;
+    const isNonEmptyString$1 = s => fp_23(s) && s.length > 0;
 
     const makeError = (errors, propName, stack) => (message) =>
         errors.push({
@@ -48797,7 +48779,7 @@
                 if(event) {
                     $$invalidate('eventType', eventType = event[EVENT_TYPE_MEMBER_NAME]);
                     $$invalidate('parameters', parameters = pipe$1(event.parameters, [
-                        fp_30,
+                        fp_32,
                         fp_7(k => ({name:k, value:event.parameters[k]}))
                     ]));
                 } else {
@@ -50170,12 +50152,12 @@
         if(!isInstance) {
             const nowSet = [];
             for(let p of componentInfo.unsetProps) {
-                if(!fp_48(newProps[p])(componentInfo.rootDefaultProps[p])) {
+                if(!fp_50(newProps[p])(componentInfo.rootDefaultProps[p])) {
                     finalProps[p] = newProps[p];
                     nowSet.push(p);
                 }
             }
-            $$invalidate('componentInfo', componentInfo.unsetProps = fp_34(nowSet)(componentInfo.unsetProps), componentInfo);
+            $$invalidate('componentInfo', componentInfo.unsetProps = fp_36(nowSet)(componentInfo.unsetProps), componentInfo);
         }
 
         newProps[name] = value;
@@ -50245,17 +50227,17 @@
                             : fp_4(componentInfo.fullProps));
             
                     $$invalidate('propsDefinitions', propsDefinitions = pipe$1(componentInfo.propsDefinition, [
-                            fp_30,
+                            fp_32,
                             fp_8(k => !isPropInherited(k)),
                             fp_7(k => ({...componentInfo.propsDefinition[k], ____name:k})),
-                            fp_50("____name")
+                            fp_52("____name")
                         ]));
             
                     $$invalidate('inheritedPropsDefinitions', inheritedPropsDefinitions = pipe$1(componentInfo.propsDefinition, [
-                            fp_30,
+                            fp_32,
                             fp_8(k => isPropInherited(k)),
                             fp_7(k => ({...componentInfo.propsDefinition[k], ____name:k})),
-                            fp_50("____name")
+                            fp_52("____name")
                         ]));
                 }
             } }
@@ -51446,7 +51428,7 @@
         if(!component) return;
         $$invalidate('name', name = component.name);
         $$invalidate('description', description = component.description);
-        $$invalidate('tagsString', tagsString = fp_39(", ")(component.tags));
+        $$invalidate('tagsString', tagsString = fp_41(", ")(component.tags));
         $$invalidate('componentInfo', componentInfo = s.currentComponentInfo);
         $$invalidate('componentDetailsExpanded', componentDetailsExpanded = s.currentComponentIsNew);
         allComponents = s.allComponents;
@@ -51488,7 +51470,7 @@
 
     const onPropsChanged = newProps => {
         updateComponent(newComponent => 
-            lodash_32(newComponent.props, newProps));
+            lodash_13(newComponent.props, newProps));
         
     };
 
@@ -52070,7 +52052,7 @@
         component = s.libraries[libName][componentName];
         $$invalidate('stylesheetLinks', stylesheetLinks = pipe$1(s.pages.stylesheets, [
             fp_7(s => `<link rel="stylesheet" href="${s}"/>`),
-            fp_39("\n")
+            fp_41("\n")
         ]));
         $$invalidate('appDefinition', appDefinition = {
             componentLibraries: s.loadLibraryUrls(),
@@ -52946,7 +52928,7 @@
         $$invalidate('title', title = s.currentFrontEndItem.index.title);
         $$invalidate('components', components = pipe$1(s.allComponents, [
             fp_8(s => !isRootComponent(s)),
-            fp_32([notSeletedComponent])
+            fp_34([notSeletedComponent])
         ]));
         $$invalidate('entryComponent', entryComponent = fp_13(c => c.name === s.currentFrontEndItem.appBody)(components));
         if(!entryComponent) $$invalidate('entryComponent', entryComponent = notSeletedComponent);
@@ -53839,12 +53821,12 @@
     			if (if_block1) if_block1.c();
     			html_tag = new HtmlTag(raw_value, t0);
     			set_style(span, "margin-left", "1rem");
-    			add_location(span, file$q, 22, 34, 617);
+    			add_location(span, file$q, 22, 34, 620);
     			attr_dev(div0, "class", div0_class_value = "title " + ctx.navActive + " svelte-17ju2r");
     			set_style(div0, "padding-left", "" + (20 + (ctx.level * 20)) + "px");
-    			add_location(div0, file$q, 21, 4, 452);
+    			add_location(div0, file$q, 21, 4, 455);
     			attr_dev(div1, "class", "root svelte-17ju2r");
-    			add_location(div1, file$q, 20, 0, 429);
+    			add_location(div1, file$q, 20, 0, 432);
     			dispose = listen_dev(div0, "click", ctx.click_handler);
     		},
 
@@ -55023,7 +55005,7 @@
     	let valuesText;
 
     	$$self.$$.update = ($$dirty = { values: 1 }) => {
-    		if ($$dirty.values) { $$invalidate('valuesText', valuesText = fp_39("\n")(values)); }
+    		if ($$dirty.values) { $$invalidate('valuesText', valuesText = fp_41("\n")(values)); }
     	};
 
     	return { values, label, inputChanged, valuesText };
@@ -58895,7 +58877,7 @@
     		add_flush_callback(() => updating_selected = false);
     	}
 
-    	let dropdown_props = { label: "Type", options: fp_30(allTypes$1) };
+    	let dropdown_props = { label: "Type", options: fp_32(allTypes$1) };
     	if (ctx.clonedField.type !== void 0) {
     		dropdown_props.selected = ctx.clonedField.type;
     	}
@@ -59154,7 +59136,7 @@
         if(errors.length > 0) return;
         $$invalidate('field', field.typeOptions = fp_4(clonedField.typeOptions), field);
         onFinished(
-            fp_51(field)(clonedField)
+            fp_53(field)(clonedField)
         );
     };
 
@@ -60333,7 +60315,7 @@
                 fp_8(id => fp_6(n => n.nodeId === id)(flattened)),
                 fp_7(id => fp_13(n => n.nodeId === id)
                               (flattened).name),
-                fp_39(", ")
+                fp_41(", ")
             ]));
 
         $$invalidate('newField', newField = () => {
@@ -60377,9 +60359,9 @@
 
     let getTypeOptions = typeOptions => 
         pipe$1(typeOptions, [
-            fp_30,
+            fp_32,
             fp_7(k => `<span style="color:var(--slate)">${k}: </span>${getTypeOptionsValueText(typeOptions[k])}`),
-            fp_39("<br>")
+            fp_41("<br>")
         ]);
 
     	function textbox_text_binding(value) {
@@ -62452,7 +62434,7 @@
 
     let clonedAction = fp_4(action); 
     let initialOptions = pipe$1(action.initialOptions, [
-        fp_30,
+        fp_32,
         fp_7(k => ({key:k, value:action.initialOptions[k]}))
     ]);
     let errors = [];
@@ -63103,16 +63085,16 @@
     let actionsArray = [];
     store.subscribe(s => {
         $$invalidate('actionsArray', actionsArray = pipe$1(s.actions, [
-            fp_30,
+            fp_32,
             fp_7(k => s.actions[k])
         ]));
     });
 
     let getDefaultOptionsHtml = defaultOptions => 
         pipe$1(defaultOptions, [
-            fp_30,
+            fp_32,
             fp_7(k => `<span style="color:var(--slate)">${k}: </span>${JSON.stringify(defaultOptions[k])}`),
-            fp_39("<br>")
+            fp_41("<br>")
         ]);
 
 

@@ -1,6 +1,6 @@
 import {
   constant, isNumber, isString, isNull,
-} from 'lodash';
+} from 'lodash/fp';
 import {
   makerule, typeFunctions,
   parsedFailed, parsedSuccess, getDefaultExport,

@@ -1,9 +1,8 @@
 import {
   filter, union, constant,
   map, flatten, every, uniqBy,
-  some, includes, isEmpty,
+  some, includes, isEmpty, has
 } from 'lodash/fp';
-import { has } from 'lodash';
 import { compileExpression, compileCode } from '@nx-js/compiler-util';
 import {
   $, isSomething, switchCase,
@@ -36,9 +35,9 @@ const recordRules = [
   makerule('fields', 'no fields have been added to the record',
     node => isNonEmptyArray(node.fields)),
   makerule('validationRules', "validation rule is missing a 'messageWhenValid' member",
-    node => every(r => has(r, 'messageWhenInvalid'))(node.validationRules)),
+    node => every(r => has('messageWhenInvalid')(r))(node.validationRules)),
   makerule('validationRules', "validation rule is missing a 'expressionWhenValid' member",
-    node => every(r => has(r, 'expressionWhenValid'))(node.validationRules)),
+    node => every(r => has('expressionWhenValid')(r))(node.validationRules)),
 ];
 
 

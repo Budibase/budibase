@@ -1,5 +1,5 @@
-import { each, constant, find } from 'lodash';
-import { map, max } from 'lodash/fp';
+import { each, find } from 'lodash';
+import { map, max, constant } from 'lodash/fp';
 import {
   switchCase, defaultCase, joinKey,
   $, isNothing, isSomething,

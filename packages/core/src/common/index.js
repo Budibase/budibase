@@ -1,12 +1,17 @@
 import {
-  isUndefined, isNaN, isNull,
-  reduce, constant, head, isEmpty,
-  tail, findIndex, startsWith, join,
+  
+  head, 
+  tail, findIndex, startsWith, 
   dropRight, flow, takeRight, trim,
-  split, includes, replace, isArray,
-  isString, isInteger, isDate, toNumber,
+  replace
+  
 } from 'lodash';
-import { some } from 'lodash/fp';
+import { 
+  some, reduce, isEmpty, isArray, join,
+  isString, isInteger, isDate, toNumber,
+  isUndefined, isNaN, isNull, constant,
+  split, includes
+} from 'lodash/fp';
 import { events, eventsList } from './events';
 import { apiWrapper } from './apiWrapper';
 import {
@@ -22,12 +27,12 @@ export const $ = (arg, funcs) => $$(...funcs)(arg);
 
 export const keySep = '/';
 const trimKeySep = str => trim(str, keySep);
-const splitByKeySep = str => split(str, keySep);
+const splitByKeySep = str => split(keySep)(str);
 export const safeKey = key => replace(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
 export const joinKey = (...strs) => {
   const paramsOrArray = strs.length === 1 & isArray(strs[0])
     ? strs[0] : strs;
-  return safeKey(join(paramsOrArray, keySep));
+  return safeKey(join(keySep)(paramsOrArray));
 };
 export const splitKey = $$(trimKeySep, splitByKeySep);
 export const getDirFomKey = $$(splitKey, dropRight, p => joinKey(...p));
@@ -51,13 +56,13 @@ export const isDefined = not(isUndefined);
 export const isNonNull = not(isNull);
 export const isNotNaN = not(isNaN);
 
-export const allTrue = (...funcArgs) => val => reduce(funcArgs,
+export const allTrue = (...funcArgs) => val => reduce(
   (result, conditionFunc) => (isNull(result) || result == true) && conditionFunc(val),
-  null);
+  null)(funcArgs);
 
-export const anyTrue = (...funcArgs) => val => reduce(funcArgs,
+export const anyTrue = (...funcArgs) => val => reduce(
   (result, conditionFunc) => result == true || conditionFunc(val),
-  null);
+  null)(funcArgs);
 
 export const insensitiveEquals = (str1, str2) => str1.trim().toLowerCase() === str2.trim().toLowerCase();
 
@@ -131,7 +136,7 @@ export const switchCase = (...cases) => (value) => {
 };
 
 export const isValue = val1 => val2 => (val1 === val2);
-export const isOneOf = (...vals) => val => includes(vals, val);
+export const isOneOf = (...vals) => val => includes(val)(vals);
 export const defaultCase = constant(true);
 export const memberMatches = (member, match) => obj => match(obj[member]);
 

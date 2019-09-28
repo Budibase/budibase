@@ -7,19 +7,24 @@ import { terser } from 'rollup-plugin-terser';
 const lodash_fp_exports = [
     "find", "isUndefined", "split", 
     "last", "union", "reduce", "isObject",
-    "cloneDeep", "some", "isArray"];
+    "cloneDeep", "some", "isArray", "map",
+    "filter", "keys", "isFunction", "isEmpty",
+    "countBy", "join", "includes", "flatten",
+    "constant", "first", "intersection", "take",
+    "has", "mapValues", "isString", "isBoolean",
+    "isNull", "isNumber", "isObjectLike", "isDate",
+    "clone", "values", "keyBy", "isNaN",
+    "isInteger", "toNumber"];
 
 const lodash_exports = [
-    "flow","reduce", "constant", "head", "isEmpty", 
+    "flow", "head",  
     "tail", "findIndex", "startsWith", 
-    "join", "dropRight", "takeRight", 
-    "trim", "split", "includes", "replace", 
-    "isArray", "isString", "isInteger", 
-    "isDate", "toNumber", "isUndefined",
-    "isNull", "isNaN"];
+    "dropRight", "takeRight", 
+    "trim", "split", "replace", 
+    "merge", "assign"];
 
 const coreExternal = [
-	"lodash", "lodash/fp", "date-fns",
+	"lodash", "lodash/fp", 
 	"lunr", "safe-buffer", "shortid",
 	"@nx-js/compiler-util"
 ];
@@ -36,7 +41,7 @@ export default {
         {
             file: 'dist/budibase-client.esm.mjs',
             format: 'esm',
-            sourcemap: 'inline'
+            sourcemap: true
         }
     ],
     plugins: [

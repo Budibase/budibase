@@ -1,5 +1,4 @@
-import { flatten, map } from 'lodash/fp';
-import { isEmpty } from 'lodash';
+import { flatten, map, isEmpty } from 'lodash/fp';
 import { compileCode } from '@nx-js/compiler-util';
 import {
   isNonEmptyString, 
