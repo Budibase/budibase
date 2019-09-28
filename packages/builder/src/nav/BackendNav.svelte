@@ -45,17 +45,18 @@ store.subscribe(db => {
 
 </script>
 
-<div class="root">
-    <div class="items-root">
-        <div class="hierarchy">
-            <div class="components-list-container">
-                <div class="nav-group-header">
-                    <div>{@html getIcon("database","18")}</div>
-                    <div class="hierarchy-title">Database</div>
-                    <DropdownButton iconName="plus" actions={newChildActions} />
-                </div>
-            </div>
 
+<div class="items-root">
+    <div class="hierarchy">
+        <div class="components-list-container">
+            <div class="nav-group-header">
+                <div>{@html getIcon("database","18")}</div>
+                <div class="hierarchy-title">Database</div>
+                <DropdownButton iconName="plus" actions={newChildActions} />
+            </div>
+        </div>
+
+        <div class="hierarchy-items-container">
             {#each $store.hierarchy.children as record}
             <HierarchyRow node={record}
                         type="record" />
@@ -65,33 +66,24 @@ store.subscribe(db => {
             <HierarchyRow node={index}
                         type="index" />
             {/each}
-
         </div>
-
-        <NavItem name="actions" label="Actions & Triggers"/>
-        <NavItem name="access levels" label="User Levels"/>
-        <div class="space-filler"></div>
     </div>
+
+    <NavItem name="actions" label="Actions & Triggers"/>
+    <NavItem name="access levels" label="User Levels"/>
+
 </div>
+
 
 <style>
 
-.root {
-    height: 100%;
-    background-color: var(--secondary5);
-}
 
 .items-root {
     display: flex;
     flex-direction: column;
     max-height: 100%;
-    height: 1rem;
-}
-
-
-
-.nav-items-container {
-    padding: 2rem 1rem 0rem 1rem;
+    height: 100%;
+    background-color: var(--secondary5);
 }
 
 .nav-group-header {
@@ -109,7 +101,7 @@ store.subscribe(db => {
     margin-right: 5px;
 }
 
-.nav-group-header>span:nth-child(2) {
+.nav-group-header>div:nth-child(2) {
     margin-left:5px;
     vertical-align: bottom;
     grid-column-start: title;
@@ -127,21 +119,21 @@ store.subscribe(db => {
     color: var(--primary75);   
 }
 
-
-.hierarchy-title-row {
-    padding: 2rem 1rem 0rem 1rem;
-    font-size: 1rem;
-    font-weight: bold;
-}
-
 .hierarchy-title {
     flex: auto 1 1;
 }
 
 
+.hierarchy {
+    display:flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+    height: 100px;
+}
 
-.space-filler {
+.hierarchy-items-container {
     flex: 1 1 auto;
+    overflow-y:auto;
 }
 
 
