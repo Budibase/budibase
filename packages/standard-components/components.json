@@ -23,7 +23,8 @@
 			"usernameLabel": {"type":"string", "default": "Username"},
 			"passwordLabel": {"type":"string", "default": "Password"},
 			"loginButtonLabel": {"type":"string", "default": "Login"},
-			"buttonClass": "string"
+			"buttonClass": "string",
+			"inputClass": "string"
 		},
 		"tags": ["login", "credentials", "password", "logon"]
 	},

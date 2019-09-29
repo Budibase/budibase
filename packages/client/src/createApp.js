@@ -9,6 +9,7 @@ import {
 } from "./state/stateBinding";
 import { createCoreApi } from "./core";
 import { getStateOrValue } from "./state/getState";
+import { trimSlash } from "./common/trimSlash";
 
 
 export const createApp = (componentLibraries, appDefinition, user) => {
@@ -42,9 +43,33 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         globalState = s;
     });
 
+    const relativeUrl = (url) =>  
+        appDefinition.appRootPath 
+        ? appDefinition.appRootPath + "/" + trimSlash(url)
+        : url;
+
+
+    const apiCall = (method) => (url, body) => 
+        fetch(relativeUrl(url), {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: body && JSON.stringify(body), 
+        });
+
+    const api = {
+        post: apiCall("POST"), 
+        get: apiCall("GET"), 
+        patch: apiCall("PATCH"), 
+        delete:apiCall("DELETE")
+    };
+
     const _bb = {
         initialiseComponent, 
         store,
+        relativeUrl,
+        api,
         getStateOrValue: (prop, currentContext) => 
             getStateOrValue(globalState, prop, currentContext)
     };
@@ -65,3 +90,5 @@ const splitName = fullname => {
 
     return {libName, componentName}; 
 }
+
+

@@ -39,6 +39,7 @@ module.exports = (config, app) => {
         }
 
         const appname = pathParts[1];
+        ctx.set("x-bbappname", appname);
 
         if(appname === "_builder")  {
             await next();
@@ -98,7 +99,7 @@ module.exports = (config, app) => {
         if(!user) {
             ctx.throw(StatusCodes.UNAUTHORIZED, "invalid username or password");
         } 
-
+        ctx.body = user;
         ctx.response.status = StatusCodes.OK;
     })
     .post("/:appname/api/setPasswordFromTemporaryCode", async (ctx) => {

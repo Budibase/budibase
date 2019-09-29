@@ -7,7 +7,7 @@
   "scripts": {
     "build": "rollup -c",
     "test": "jest",
-    "publish:dev": "yarn build && node ./scripts/publishDev.js"
+    "publishdev": "yarn build && node ./scripts/publishDev.js"
   },
   "jest": {
     "globals": {

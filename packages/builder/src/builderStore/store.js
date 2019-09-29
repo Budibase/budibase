@@ -433,7 +433,8 @@ const saveDerivedComponent = store => (derivedComponent) => {
             s.allComponents, derivedComponent.name);
         s.currentComponentIsNew = false;
         
-        api.post(`/_builder/api/${s.appname}/derivedcomponent`, derivedComponent);
+        api.post(`/_builder/api/${s.appname}/derivedcomponent`, derivedComponent)
+            .then(() => savePackage(store, s));
 
         return s;
     })

@@ -3,7 +3,6 @@
 import Textbox from "./Textbox.svelte";
 import Form from "./Form.svelte";
 import Button from "./Button.svelte";
-import { authenticate } from "./api";
 
 export let usernameLabel = "Username";
 export let passwordLabel = "Password";
@@ -11,6 +10,7 @@ export let loginButtonLabel = "Login";
 export let loginRedirect = "";
 export let logo = "";
 export let buttonClass = "";
+export let inputClass=""
 
 export let _bb;
 
@@ -18,10 +18,19 @@ let username = "";
 let password = "";
 let busy = false;
 let incorrect = false;
+let _logo = "";
+let _buttonClass = "";
+let _inputClass = "";
+
+$: {
+    _logo = _bb.relativeUrl(logo);
+    _buttonClass = buttonClass || "default-button";
+    _inputClass = inputClass || "default-input";
+}
 
 const login = () => {
     busy = true;
-    authenticate(username, password)
+    _bb.api.post("/api/authenticate", {username, password})
     .then(r => {
         busy = false;
         if(r.status === 200) {
@@ -45,9 +54,9 @@ const login = () => {
 
     <div class="content">
 
-        {#if logo}
+        {#if _logo}
         <div class="logo-container">
-            <img src={logo} alt="logo"/>
+            <img src={_logo} alt="logo"/>
         </div>
         {/if}
 
@@ -56,22 +65,22 @@ const login = () => {
                 {usernameLabel}
             </div>
             <div class="control">
-                <Textbox bind:value={username} />
+                <input bind:value={username} type="text" class={_inputClass}/>
             </div>
             <div class="label">
                 {passwordLabel}
             </div>
             <div class="control">
-                <Textbox bind:value={password} hideValue=true />
+                <input bind:value={password} type="password" class={_inputClass}/>
             </div>
         </div>
 
         <div class="login-button-container">
-            <Button disabled={busy} 
+            <button disabled={busy} 
                     on:click={login}
-                    class={buttonClass}>
+                    class={_buttonClass}>
                     {loginButtonLabel}
-            </Button>
+            </button>
         </div>
 
         {#if incorrect}
@@ -137,6 +146,38 @@ const login = () => {
 .control {
     grid-column-start: control;
     padding: 5px 10px;
+}
+
+.default-input {
+	font-family: inherit;
+	font-size: inherit;
+	padding: 0.4em;
+	margin: 0 0 0.5em 0;
+	box-sizing: border-box;
+	border: 1px solid #ccc;
+    border-radius: 2px;
+    width: 100%;
+}
+
+.default-button {
+	font-family: inherit;
+	font-size: inherit;
+	padding: 0.4em;
+	margin: 0 0 0.5em 0;
+	box-sizing: border-box;
+	border: 1px solid #ccc;
+	border-radius: 2px;
+	color: #333;
+	background-color: #f4f4f4;
+	outline: none;
+}
+
+.default-button:active {
+	background-color: #ddd;
+}
+
+.default-button:focus {
+	border-color: #666;
 }
 
 </style>
