@@ -3,18 +3,12 @@ const {
     appsFolder 
 } = require("../createAppPackage");
 const { 
-    readJSON,
-    writeJSON,
-    readdir,
-    stat,
-    ensureDir,
-    rename,
-    unlink,
-    rmdir
+    readJSON, writeJSON, readdir,
+    stat, ensureDir, rename,
+    unlink, rmdir
 } = require("fs-extra");
 const { 
-    join,
-    dirname
+    join,dirname
 } = require("path");
 const { $ } = require("@budibase/core").common;
 const { 
@@ -24,16 +18,20 @@ const {merge} = require("lodash");
 
 const { componentLibraryInfo } = require("./componentLibraryInfo");
 const savePackage = require("./savePackage");
+const buildApp = require("./buildApp");
 
 module.exports.savePackage = savePackage;
+
+const getPages = async (appPath) => await readJSON(`${appPath}/pages.json`);
+const getAppDefinition = async (appPath) => await readJSON(`${appPath}/appDefinition.json`);
 
 module.exports.getPackageForBuilder = async (config, appname) => {
     const appPath = appPackageFolder(config, appname);
 
-    const pages = await readJSON(`${appPath}/pages.json`);
+    const pages = await getPages(appPath);
 
     return ({
-        appDefinition: await readJSON(`${appPath}/appDefinition.json`),
+        appDefinition: await getAppDefinition(appPath),
 
         accessLevels: await readJSON(`${appPath}/access_levels.json`),
 

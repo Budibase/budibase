@@ -1,5 +1,5 @@
 import { createApp } from "./createApp";
-
+import { trimSlash } from "./common/trimSlash";
 
 export const loadBudibase = async (componentLibraries, props) => {
 
@@ -14,7 +14,6 @@ export const loadBudibase = async (componentLibraries, props) => {
     if(!componentLibraries) {
 
         const componentLibraryUrl = (lib) =>  "./" + trimSlash(lib)
-        const trimSlash = (str) => str.replace(/^\/+|\/+$/g, '');
         componentLibraries = {};
 
         for(let lib of appDefinition.componentLibraries) {
@@ -28,7 +27,7 @@ export const loadBudibase = async (componentLibraries, props) => {
         props = appDefinition.props;
     }
 
-    const _app = createApp(componentLibraries, user);
+    const _app = createApp(componentLibraries, appDefinition,  user);
     _app.initialiseComponent(
         props,
         document.body);

@@ -3,7 +3,7 @@
   "description": "",
   "inherits": "@budibase/standard-components/login",
   "props": {
-    "logo": "/_shared/budibase-logo.png"
+    "logo": "_shared/budibase-logo.png"
   },
   "tags": [
     "login",

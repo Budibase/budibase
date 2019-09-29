@@ -4,8 +4,8 @@ const { join, basename } = require("path");
 
 const packagesFolder = "..";
 
-const jsFile = dir => join(dir, "budibase-client.js");
-const jsMapFile = dir => join(dir, "budibase-client.js.map");
+const jsFile = dir => join(dir, "index.js");
+const jsMapFile = dir => join(dir, "index.js.map");
 const sourceJs = jsFile("dist");
 const sourceJsMap = jsMapFile("dist");
 
@@ -13,7 +13,7 @@ const appPackages = join(packagesFolder, "server", "appPackages");
 
 const publicMain = appName => join(appPackages, appName, "public", "main");
 const publicUnauth = appName => join(appPackages, appName, "public", "unauthenticated");
-const nodeModules = appName => join(appPackages, appName, "node_modules", "@budibase", "client", "dist");
+const nodeModules = appName => join(appPackages, appName, "node_modules", "@budibase", "standard-components", "dist");
 
 (async () => {
 

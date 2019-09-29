@@ -527,19 +527,21 @@
   "props": {
     "main": {
       "_component": "@budibase/standard-components/login",
-      "logo": "/_shared/budibase-logo.png",
+      "logo": "_shared/budibase-logo.png",
       "loginRedirect": "",
       "usernameLabel": "Username",
       "passwordLabel": "Password",
-      "loginButtonLabel": "Login"
+      "loginButtonLabel": "Login",
+      "buttonClass": ""
     },
     "unauthenticated": {
       "_component": "@budibase/standard-components/login",
-      "logo": "/_shared/budibase-logo.png",
+      "logo": "_shared/budibase-logo.png",
       "loginRedirect": "",
       "usernameLabel": "Username",
       "passwordLabel": "Password",
-      "loginButtonLabel": "Login"
+      "loginButtonLabel": "Login",
+      "buttonClass": ""
     }
   }
 }
