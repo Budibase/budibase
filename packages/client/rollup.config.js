@@ -41,7 +41,7 @@ export default {
         {
             file: 'dist/budibase-client.esm.mjs',
             format: 'esm',
-            sourcemap: true
+            sourcemap: "inline"
         }
     ],
     plugins: [
@@ -62,7 +62,7 @@ export default {
         }),
         builtins(),
         nodeglobals(),
-        terser()
+        //terser()
     ],
 	watch: {
 		clearScreen: false
