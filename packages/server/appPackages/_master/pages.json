@@ -3,7 +3,7 @@
     "index": {
       "title": "Budibase"
     },
-    "appBody": "Login Screen"
+    "appBody": "Main App Root"
   },
   "unauthenticated": {
     "index": {

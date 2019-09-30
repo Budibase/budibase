@@ -13,16 +13,18 @@ import {
 let entryComponent;
 let title = "";
 let components = [];
-
+let page={};
 const notSeletedComponent = {name:"(none selected)"};
 
 store.subscribe(s => {
-    title = s.currentFrontEndItem.index.title;
+    page = s.pages[s.currentPageName];
+    if(!page) return;
+    title = page.index.title;
     components = pipe(s.allComponents, [
         filter(s => !isRootComponent(s)),
         concat([notSeletedComponent])
     ]);
-    entryComponent = find(c => c.name === s.currentFrontEndItem.appBody)(components);
+    entryComponent = find(c => c.name === page.appBody)(components);
     if(!entryComponent) entryComponent = notSeletedComponent;
 });
 

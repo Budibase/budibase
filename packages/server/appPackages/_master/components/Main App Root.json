@@ -1,0 +1,21 @@
+{
+  "name": "Main App Root",
+  "description": "",
+  "inherits": "@budibase/standard-components/nav",
+  "props": {
+    "items": [
+      {
+        "_component": "#items#array_element",
+        "title": "Applications",
+        "component": {
+          "_component": ""
+        }
+      }
+    ]
+  },
+  "tags": [
+    "nav",
+    "navigation",
+    "sidebar"
+  ]
+}

@@ -526,13 +526,24 @@
   },
   "props": {
     "main": {
-      "_component": "@budibase/standard-components/login",
-      "logo": "_shared/budibase-logo.png",
-      "loginRedirect": "",
-      "usernameLabel": "Username",
-      "passwordLabel": "Password",
-      "loginButtonLabel": "Login",
-      "buttonClass": ""
+      "_component": "@budibase/standard-components/nav",
+      "navBarBackground": "silver",
+      "navBarBorder": "",
+      "navBarColor": "black",
+      "selectedItemBackground": "white",
+      "selectedItemColor": "black",
+      "selectedItemBorder": "",
+      "itemHoverBackground": "gainsboro",
+      "itemHoverColor": "black",
+      "items": [
+        {
+          "_component": "items#array_element#",
+          "title": "Applications",
+          "component": {
+            "_component": ""
+          }
+        }
+      ]
     },
     "unauthenticated": {
       "_component": "@budibase/standard-components/login",

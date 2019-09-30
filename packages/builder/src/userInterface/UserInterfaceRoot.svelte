@@ -59,16 +59,14 @@ const settings = () => {
     </div>
 
     <div>
-        {#if $store.currentFrontEndItem}
-            {#if isComponent($store.currentFrontEndItem)}
-            <CurrentItemPreview />
-            {:else}
-            <PageView />
-            {/if}
+        {#if $store.currentFrontEndType === "component"}
+        <CurrentItemPreview />
+        {:else if $store.currentFrontEndType === "page"}
+        <PageView />
         {/if} 
     </div>
 
-    {#if $store.currentFrontEndItem && isComponent($store.currentFrontEndItem)}
+    {#if $store.currentFrontEndType === "component"}
     <div class="properties-pane">
         <EditComponent />
     </div>
