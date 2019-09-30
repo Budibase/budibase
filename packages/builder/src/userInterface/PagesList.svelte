@@ -10,13 +10,13 @@ const getPage = (s, name) => {
 </script>
 
 <div class="root">
-    <div class="hierarchy-item component" class:selected={$store.currentFrontEndItem && $store.currentPageName === "main"}
+    <div class="hierarchy-item component" class:selected={$store.currentFrontEndType === "page" && $store.currentPageName === "main"}
             on:click|stopPropagation={() => store.setCurrentPage("main")}>
         <span>{@html getIcon("circle", "7")}</span>
         <span class="title">Main</span>
     </div>
 
-    <div class="hierarchy-item component" class:selected={$store.currentFrontEndItem && $store.currentPageName === "unauthenticated"}
+    <div class="hierarchy-item component" class:selected={$store.currentFrontEndType === "page" && $store.currentPageName === "unauthenticated"}
             on:click|stopPropagation={() => store.setCurrentPage("unauthenticated")}>
         <span>{@html getIcon("circle", "7")}</span>
         <span class="title">Login</span>

@@ -37,6 +37,7 @@ export const getStore = () => {
         currentFrontEndItem:null,
         currentComponentInfo:null,
         currentComponentIsNew:false,
+        currentFrontEndType:"none",
         currentPageName: "",
         currentNodeIsNew: false,
         errors: [],
@@ -501,12 +502,11 @@ const renameDerivedComponent = store => (oldname, newname) => {
 
 const savePage = store => async page => {
     store.update(s => {
-        if(s.currentFrontEndIsComponent || !s.currentFrontEndItem) {
+        if(s.currentFrontEndType === "page" || !s.currentPageName) {
             return;
         }
 
         s.pages[s.currentPageName] = page;
-        s.currentFrontEndItem = page;
         savePackage(store, s);
         return s;
     });
@@ -624,7 +624,7 @@ const savePackage = (store, s) => {
 const setCurrentComponent = store => component => {
     store.update(s => {
         s.currentFrontEndItem = component;
-        s.currentFrontEndIsComponent = true;
+        s.currentFrontEndType = "component";
         s.currentComponentIsNew = false;
         s.currentComponentInfo = getComponentInfo(s.allComponents, component.name);
         return s;
@@ -633,8 +633,7 @@ const setCurrentComponent = store => component => {
 
 const setCurrentPage = store => pageName => {
     store.update(s => {
-        s.currentFrontEndItem = s.pages[pageName];
-        s.currentFrontEndIsComponent = false;
+        s.currentFrontEndType = "page";
         s.currentPageName = pageName;
         return s;
     })

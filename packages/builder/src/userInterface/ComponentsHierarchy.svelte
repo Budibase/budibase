@@ -87,8 +87,9 @@ const expandFolder = folder => {
      
 }
 
-const isComponentSelected = (current,c) =>
-    current 
+const isComponentSelected = (type, current,c) =>
+    type==="component"
+    && current 
     && current.name === c.name
 
 const isFolderSelected = (current, folder) => 
@@ -134,7 +135,7 @@ $: {
     {/each}
 
     {#each componentsThisLevel as component}
-    <div class="hierarchy-item component" class:selected={isComponentSelected($store.currentFrontEndItem, component.component)}
+    <div class="hierarchy-item component" class:selected={isComponentSelected($store.currentFrontEndType, $store.currentFrontEndItem, component.component)}
          on:click|stopPropagation={() => store.setCurrentComponent(component.component)}>
         <span>{@html getIcon("circle", "7")}</span>
         <span class="title">{component.title}</span>
