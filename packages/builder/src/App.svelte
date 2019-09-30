@@ -18,30 +18,31 @@
 		<h1>loading</h1>
 
 	{:then result}
-		{#if $store.showSettings}
-			<Settings />
+
+		{#if $store.hasAppPackage}
+		<PackageRoot />
+
 		{:else}
-			{#if $store.hasAppPackage}
-			<PackageRoot />
 
-			{:else}
-
-			<NoPackage />
-			{/if}
+		<NoPackage />
 		{/if}
+
 
 	{:catch err}
 		<h1 style="color:red">{err}</h1>
 	{/await}
 
+<!--
 	<div class="settings">
 		<IconButton icon="settings"
                 on:click={store.showSettings}/>
 	</div>
 
+
 	{#if $store.useAnalytics}
 		<iframe src="https://marblekirby.github.io/bb-analytics.html" width="0" height="0" style="visibility:hidden;display:none"/>
 	{/if}
+-->
 </main>
 
 <style>
