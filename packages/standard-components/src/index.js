@@ -4,3 +4,6 @@ export {default as form} from  "./Form.svelte";
 export {default as grid} from  "./Grid.svelte";
 export {default as textbox} from  "./Textbox.svelte";
 export {default as stackpanel} from  "./StackPanel.svelte";
+export {default as nav} from  "./Nav.svelte";
+export {default as panel} from  "./Panel.svelte";
+export {default as text} from  "./Text.svelte";
