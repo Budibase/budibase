@@ -14,22 +14,23 @@ import { trimSlash } from "./common/trimSlash";
 
 export const createApp = (componentLibraries, appDefinition, user) => {
 
-    const initialiseComponent = (props, htmlElement) => {
+    const initialiseComponent = (parentContext) => (props, htmlElement, context) => {
 
         const {componentName, libName} = splitName(props._component);
 
         if(!componentName || !libName) return;
 
-        const {initialProps, bind} = setupBinding(store, props, coreApi);
+        const {initialProps, bind} = setupBinding(store, props, coreApi, context);
 
         const component = new (componentLibraries[libName][componentName])({
             target: htmlElement,
-            props: {...initialProps, _bb},
+            props: {...initialProps, _bb:bbInContext(context || parentContext)},
             hydrate:true
         });
 
         bind(component);
 
+        return component;
     }
 
     const coreApi = createCoreApi(appDefinition, user);
@@ -65,16 +66,26 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         delete:apiCall("DELETE")
     };
 
-    const _bb = {
-        initialiseComponent, 
+    const bb = () => ({
+        initialiseComponent: initialiseComponent(), 
         store,
         relativeUrl,
         api,
         getStateOrValue: (prop, currentContext) => 
             getStateOrValue(globalState, prop, currentContext)
-    };
+    });
 
-    return _bb;
+    const bbRoot = bb();
+
+    const bbInContext = (context) => {
+        if(!context) return bbRoot;
+        const bbCxt = bb();
+        bbCxt.context = context;
+        bbCxt.initialiseComponent=initialiseComponent(context);
+        return bbCxt;
+    }
+
+    return bbRoot;
 
 }
 

@@ -74,7 +74,9 @@
 			"width": {"type":"string","default":"auto"},
 			"height": {"type":"string","default":"auto"},
 			"containerClass":"string",
-			"itemContainerClass":"string"
+			"itemContainerClass":"string",
+			"data": "state",
+			"dataItemComponent": "component"
 		},
 		"tags": ["div", "container", "layout", "panel"]
 	},
