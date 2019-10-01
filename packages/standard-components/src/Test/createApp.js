@@ -6,6 +6,7 @@ import Textbox from "../Textbox.svelte";
 import Text from "../Text.svelte";
 import Nav from "../Nav.svelte";
 import Panel from "../Panel.svelte";
+import StackPanel from "../StackPanel.svelte";
 import Table from "../Table.svelte";
 import { createApp } from "@budibase/client/src/createApp";
 
@@ -20,7 +21,8 @@ export default async () =>  {
             text: Text,
             nav: Nav,
             panel: Panel,
-            table: Table
+            table: Table,
+            stackpanel: StackPanel
         }
     }
 

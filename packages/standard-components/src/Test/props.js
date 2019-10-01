@@ -150,5 +150,30 @@ export const props = {
             }
         ]
     },
+    boundStackPanel: {
+        _component: "components/stackpanel",
+        direction: "horizontal",
+        children: [
+            {
+                control: {
+                    _component: "components/text",
+                    value: "STATIC"
+                }
+            }
+        ],
+        data: {
+            "##bbstate":"people"
+        },
+        dataItemComponent: {
+            _component: "components/panel",
+            text: {
+                "##bbstate":"name",
+                "##bbsource":"context",
+                "##bbstatefallback": "balls to that"
+            },
+            padding: "10px",
+            border: "5px solid black"
+        }
+    }
 
 }

@@ -6,3 +6,9 @@ export const isBound = (prop) => prop[BB_STATE_BINDINGPATH] !== undefined;
 export const takeStateFromStore = (prop) => 
     prop[BB_STATE_BINDINGSOURCE] === undefined 
     || prop[BB_STATE_BINDINGSOURCE] === "store";
+
+export const takeStateFromContext = (prop) => 
+    prop[BB_STATE_BINDINGSOURCE] === "context";
+
+export const takeStateFromEventParameters = (prop) => 
+    prop[BB_STATE_BINDINGSOURCE] === "event";

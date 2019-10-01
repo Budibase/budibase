@@ -7,7 +7,7 @@ let _bb;
 const _appPromise = createApp();
 _appPromise.then(a => _bb = a);
 
-const testProps = props.table;
+const testProps = props.boundStackPanel;
 
 let currentComponent;
 

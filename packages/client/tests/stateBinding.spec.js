@@ -148,7 +148,7 @@ describe("setupBinding", () => {
 
     });
 
-    it("event handlers should recognise context state", () => {
+    it("event handlers should recognise event parameter", () => {
 
         const {component, store, props} = testSetup();
 
@@ -156,7 +156,7 @@ describe("setupBinding", () => {
         bind(component);
         
         expect(component.props.boundToEventOutput).toBe("initial address");
-        component.props.eventBoundUsingContext({addressOverride: "Overridden Address"});
+        component.props.eventBoundUsingEventParam({addressOverride: "Overridden Address"});
         expect(component.props.boundToEventOutput).toBe("Overridden Address");
         
         store.update(s => {
@@ -167,14 +167,27 @@ describe("setupBinding", () => {
         component.props.eventBound();
         expect(component.props.boundToEventOutput).toBe("123 Main Street");
 
-        component.props.eventBoundUsingContext({addressOverride: "Overridden Address"});
+        component.props.eventBoundUsingEventParam({addressOverride: "Overridden Address"});
         expect(component.props.boundToEventOutput).toBe("Overridden Address");
 
     });
 
+    it("should bind initial props to supplied context", () => {
+
+        const {component, store, props} = testSetup();
+
+        const {bind} = testSetupBinding(store, props, component, {
+            ContextValue : "Real Context Value"
+        });
+        bind(component);
+
+        expect(component.props.boundToContext).toBe("Real Context Value");
+
+    });
+
 });
-const testSetupBinding = (store, props, component) => {
-    const setup = setupBinding(store, props);
+const testSetupBinding = (store, props, component, context) => {
+    const setup = setupBinding(store, props, undefined, context);
     component.props = setup.initialProps; // svelte does this for us in real life
     return setup;
 }
@@ -210,16 +223,17 @@ const testSetup = () => {
         unbound: "hello",
         multiPartBound: binding("Customer.Name", "ACME"),
         boundToEventOutput: binding("Customer.Address", "initial address"),
+        boundToContext: binding("ContextValue", "context fallback", "context"),
         eventBound: [
             event("Set State", {
                 path: "Customer.Address",
                 value: binding("addressToSet", "event fallback address")
             })
         ],
-        eventBoundUsingContext: [
+        eventBoundUsingEventParam: [
             event("Set State", {
                 path: "Customer.Address",
-                value: binding("addressOverride", "", "context")
+                value: binding("addressOverride", "", "event")
             })
         ],
         arrayWithInnerBinding: [

@@ -8,11 +8,12 @@ import {
 
 import {
     isBound, takeStateFromStore,
+    takeStateFromContext, takeStateFromEventParameters,
     BB_STATE_FALLBACK, BB_STATE_BINDINGPATH
 } from "./isState";
 
 const doNothing = () => {};
-export const setupBinding = (store, rootProps, coreApi) => {
+export const setupBinding = (store, rootProps, coreApi, context) => {
 
     const rootInitialProps = {...rootProps};
 
@@ -39,6 +40,17 @@ export const setupBinding = (store, rootProps, coreApi) => {
                 });
 
                 initialProps[propName] = fallback;
+            } else if(isBound(val) && takeStateFromContext(val)) {
+
+                const binding = stateBinding(val);
+                const fallback = stateFallback(val);
+
+                initialProps[propName] = getState(
+                    context || {},
+                    binding,
+                    fallback
+                );
+
             } else if(isEventType(val)) {
 
                 const handlers = { propName, handlers:[] };
@@ -107,7 +119,7 @@ export const setupBinding = (store, rootProps, coreApi) => {
                     const closuredHandlers = [];
                     for(let h of boundHandler.handlers) {
                         const handlerType = handlerTypes[h.handlerType];
-                        closuredHandlers.push((context) => {
+                        closuredHandlers.push((eventContext) => {
 
                             const parameters = {};
                             for(let pname in h.parameters) {
@@ -118,8 +130,13 @@ export const setupBinding = (store, rootProps, coreApi) => {
                                     : takeStateFromStore(p)
                                     ? getState(
                                         s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                                    : getState(
+                                    : takeStateFromEventParameters(p)
+                                    ? getState(
+                                        eventContext, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
+                                    : takeStateFromContext(p)
+                                    ? getState(
                                         context, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
+                                    : p[BB_STATE_FALLBACK];
                                 
                             }
                             handlerType.execute(parameters)
