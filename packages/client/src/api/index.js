@@ -6,7 +6,7 @@ import {authenticate} from "./authenticate";
 export const createApi = ({rootPath, setState, getState}) => {
 
     const apiCall = (method) => ({url, body, notFound, badRequest, forbidden}) => {
-        fetch(url, {
+        fetch(`${rootPath}${url}`, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',

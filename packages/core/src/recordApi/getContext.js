@@ -5,20 +5,24 @@ import {
 } from '../templateApi/hierarchy';
 import { listItems } from '../indexApi/listItems';
 import {
-  $, apiWrapperSync, events,
+  $, apiWrapperSync, events, safeKey
 } from '../common';
 import { getIndexKey_BasedOnDecendant } from '../indexing/sharding';
 import { permission } from '../authApi/permissions';
 
-export const getContext = app => recordKey => apiWrapperSync(
-  app,
-  events.recordApi.getContext,
-  permission.readRecord.isAuthorized(recordKey),
-  { recordKey },
-  _getContext, app, recordKey,
-);
+export const getContext = app => recordKey => {
+  recordKey = safeKey(recordKey);
+  return  apiWrapperSync(
+    app,
+    events.recordApi.getContext,
+    permission.readRecord.isAuthorized(recordKey),
+    { recordKey },
+    _getContext, app, recordKey,
+  );
+}
 
 export const _getContext = (app, recordKey) => {
+  recordKey = safeKey(recordKey);
   const recordNode = getExactNodeForPath(app.hierarchy)(recordKey);
 
   const cachedReferenceIndexes = {};

@@ -172,8 +172,82 @@ export const props = {
                 "##bbstatefallback": "balls to that"
             },
             padding: "10px",
-            border: "5px solid black"
+            border: "5px solid black",
+            margin: "10px",
+            hoverColor: "white",
+            hoverBackground: "black",
+            height:"200px",
+            weight:"200px"
         }
+    },
+    hiddenNav: {
+        _component: "components/stackpanel",
+        children: [
+            {
+                control:{
+                    _component: "components/button",
+                    contentText: "Peep",
+                    onClick: [
+                        {
+                            "##eventHandlerType": "Set State",
+                            parameters: {
+                                path: "selected",
+                                value: "People"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                control:{
+                    _component: "components/button",
+                    contentText: "Ani",
+                    onClick: [
+                        {
+                            "##eventHandlerType": "Set State",
+                            parameters: {
+                                path: "selected",
+                                value: "Animals"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                control: {
+                    _component: "components/nav",
+                    hideNavBar: true,
+                    selectedItem: {
+                        "##bbstate":"selected",
+                        "##bbsource":"store",
+                        "##bbstatefallback": "Animals"
+                    },
+                    items: [
+                        {
+                            title: "People",
+                            component: {
+                                _component: "components/panel",
+                                text:"People Panel",
+                                padding: "40px",
+                                border: "2px solid pink",
+                                background: "mistyrose"
+            
+                            }
+                        },
+                        {
+                            title: "Animals",
+                            component: {
+                                _component: "components/panel",
+                                text:"Animals Panel",
+                                padding: "40px",
+                                border: "2px solid green",
+                                background: "azure"
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
     }
 
 }

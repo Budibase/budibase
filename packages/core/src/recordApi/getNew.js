@@ -11,6 +11,7 @@ import { permission } from '../authApi/permissions';
 
 export const getNew = app => (collectionKey, recordTypeName) => {
   const recordNode = getRecordNode(app, collectionKey, recordTypeName);
+  collectionKey=safeKey(collectionKey);
   return apiWrapperSync(
     app,
     events.recordApi.getNew,

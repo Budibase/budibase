@@ -1,5 +1,5 @@
 <script>
-import { onMount } from 'svelte'
+
 import { emptyProps } from "./emptyProps";
 
 export let direction = "horizontal";
@@ -19,6 +19,8 @@ let staticHtmlElements = {};
 let staticComponents = {};
 let dataBoundElements = {};
 let dataBoundComponents = {};
+
+let onLoadCalled = false;
 
 const hasDataBoundComponents = () => 
     Object.getOwnPropertyNames(dataBoundComponents).length === 0;
@@ -66,6 +68,11 @@ $: {
             );
         }
     }
+
+    if(!onLoadCalled && onLoad && !onLoad.isPlaceholder) {
+        onLoad();
+        onLoadCalled = true;
+    }
 }
 
 
@@ -73,6 +80,8 @@ $: {
 
 <div class="root {containerClass}"
      style="width: {width}; height: {height}">
+
+    {#if children}
     {#each children as child, index}
     <div class={direction}>
         <div class="{itemContainerClass}"
@@ -80,6 +89,9 @@ $: {
         </div>
     </div>
     {/each}
+    {/if}
+
+    {#if data && data.length > 0}
     {#each data as child, index}
     <div class={direction}>
         <div class="{itemContainerClass}"
@@ -87,6 +99,7 @@ $: {
         </div>
     </div>
     {/each}
+    {/if}
 </div>
 
 <style>

@@ -18544,12 +18544,12 @@ var app = (function (exports) {
 	    return alphabetShuffled[index];
 	}
 
-	function get$1 () {
+	function get () {
 	  return alphabet || ORIGINAL;
 	}
 
 	var alphabet_1 = {
-	    get: get$1,
+	    get: get,
 	    characters: characters,
 	    seed: setSeed$1,
 	    lookup: lookup,
@@ -18949,7 +18949,7 @@ var app = (function (exports) {
 
 	const isArrayOfString = opts => fp_10(opts) && all(fp_26)(opts);
 
-	const setState$1 = (store, path, value) => {
+	const setState = (store, path, value) => {
 
 	    if(!path || path.length === 0) return;
 
@@ -18988,6 +18988,12 @@ var app = (function (exports) {
 	const takeStateFromStore = (prop) => 
 	    prop[BB_STATE_BINDINGSOURCE] === undefined 
 	    || prop[BB_STATE_BINDINGSOURCE] === "store";
+
+	const takeStateFromContext = (prop) => 
+	    prop[BB_STATE_BINDINGSOURCE] === "context";
+
+	const takeStateFromEventParameters = (prop) => 
+	    prop[BB_STATE_BINDINGSOURCE] === "event";
 
 	const getState = (s, path, fallback) => {
 
@@ -19033,6 +19039,8 @@ var app = (function (exports) {
 
 	const ERROR = "##error_message";
 
+	const trimSlash = (str) => str.replace(/^\/+|\/+$/g, '');
+
 	const loadRecord = (api) => async ({recordKey, statePath}) => {
 
 	    if(!recordKey) {
@@ -19045,8 +19053,8 @@ var app = (function (exports) {
 	        return;
 	    } 
 
-	    const record = await get({
-	        url:`${rootPath}/api/record/${key}`
+	    const record = await api.get({
+	        url:`/api/record/${trimSlash(key)}`
 	    });
 
 	    if(api.isSuccess(record))
@@ -19054,7 +19062,7 @@ var app = (function (exports) {
 	};
 
 	const listRecords = api => async ({indexKey, statePath}) => {
-	    if(!recordKey) {
+	    if(!indexKey) {
 	        api.error("Load Record: record key not set");
 	        return;
 	    }  
@@ -19064,8 +19072,8 @@ var app = (function (exports) {
 	        return;
 	    } 
 
-	    const records = get({
-	        url:`${rootPath}/api/listRecords/${indexKey}`
+	    const records = api.get({
+	        url:`/api/listRecords/${trimSlash(indexKey)}`
 	    });
 
 	    if(api.isSuccess(records))
@@ -19086,8 +19094,8 @@ var app = (function (exports) {
 	        return;
 	    } 
 
-	    const user = await post({
-	        url:`${rootPath}/api/authenticate`,
+	    const user = await api.post({
+	        url:"/api/authenticate",
 	        body : {username, password}
 	    });
 
@@ -19099,7 +19107,7 @@ var app = (function (exports) {
 	const createApi = ({rootPath, setState, getState}) => {
 
 	    const apiCall = (method) => ({url, body, notFound, badRequest, forbidden}) => {
-	        fetch(url, {
+	        fetch(`${rootPath}${url}`, {
 	            method: method,
 	            headers: {
 	                'Content-Type': 'application/json',
@@ -19153,7 +19161,7 @@ var app = (function (exports) {
 	    }
 	};
 
-	const getNewChildRecordToState = (store, coreApi) =>
+	const getNewChildRecordToState = (store, coreApi, setState) =>
 	            ({recordKey, collectionName,childRecordType,statePath}) => {
 	    const error = errorHandler(setState);
 	    try {
@@ -19186,7 +19194,7 @@ var app = (function (exports) {
 	};
 
 
-	const getNewRecordToState = (store, coreApi) =>
+	const getNewRecordToState = (store, coreApi, setState) =>
 	            ({collectionKey,childRecordType,statePath}) => {
 	    const error = errorHandler(setState);
 	    try {
@@ -19217,19 +19225,21 @@ var app = (function (exports) {
 
 	const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType";
 
-	const eventHandlers = (store,coreApi) => {
+	const eventHandlers = (store,coreApi,rootPath) => {
 	    
 	    const handler = (parameters, execute) => ({
 	        execute, parameters
 	    });
 
+	    const setStateWithStore = (path, value) => setState(store, path, value);
+
 	    const api = createApi({
-	        rootPath:"",
-	        setState: (path, value) => setState$1(store, path, value),
+	        rootPath:rootPath,
+	        setState: (path, value) => setStateWithStore,
 	        getState: (path, fallback) => getState(store, path, fallback)
 	    });
 
-	    const setStateHandler = ({path, value}) => setState$1(store, path, value);
+	    const setStateHandler = ({path, value}) => setState(store, path, value);
 	    
 	    return {
 	        "Set State": handler(["path", "value"],  setStateHandler),
@@ -19239,11 +19249,11 @@ var app = (function (exports) {
 	        
 	        "Get New Child Record": handler(
 	            ["recordKey", "collectionName", "childRecordType", "statePath"], 
-	            getNewChildRecordToState(store, coreApi)),
+	            getNewChildRecordToState(store, coreApi, setStateWithStore)),
 
 	        "Get New Record": handler(
 	            ["collectionKey", "childRecordType", "statePath"], 
-	            getNewRecordToState(store, coreApi)),
+	            getNewRecordToState(store, coreApi, setStateWithStore)),
 
 	        "Authenticate": handler(["username", "password"], api.authenticate)
 	    };
@@ -19255,7 +19265,9 @@ var app = (function (exports) {
 	    && !fp_2(prop[0][EVENT_TYPE_MEMBER_NAME]);
 
 	const doNothing = () => {};
-	const setupBinding = (store, rootProps, coreApi) => {
+	doNothing.isPlaceholder=true;
+
+	const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
 
 	    const rootInitialProps = {...rootProps};
 
@@ -19282,6 +19294,17 @@ var app = (function (exports) {
 	                });
 
 	                initialProps[propName] = fallback;
+	            } else if(isBound(val) && takeStateFromContext(val)) {
+
+	                const binding = stateBinding(val);
+	                const fallback = stateFallback(val);
+
+	                initialProps[propName] = getState(
+	                    context || {},
+	                    binding,
+	                    fallback
+	                );
+
 	            } else if(isEventType(val)) {
 
 	                const handlers = { propName, handlers:[] };
@@ -19320,7 +19343,7 @@ var app = (function (exports) {
 	            && rootBindings.componentEventHandlers.length === 0
 	            && rootBindings.boundArrays.length === 0) return;
 
-	        const handlerTypes = eventHandlers(store, coreApi);
+	        const handlerTypes = eventHandlers(store, coreApi, rootPath);
 
 	        const unsubscribe = store.subscribe(rootState => {
 	           
@@ -19350,7 +19373,7 @@ var app = (function (exports) {
 	                    const closuredHandlers = [];
 	                    for(let h of boundHandler.handlers) {
 	                        const handlerType = handlerTypes[h.handlerType];
-	                        closuredHandlers.push((context) => {
+	                        closuredHandlers.push((eventContext) => {
 
 	                            const parameters = {};
 	                            for(let pname in h.parameters) {
@@ -19361,8 +19384,13 @@ var app = (function (exports) {
 	                                    : takeStateFromStore(p)
 	                                    ? getState(
 	                                        s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-	                                    : getState(
-	                                        context, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK]);
+	                                    : takeStateFromEventParameters(p)
+	                                    ? getState(
+	                                        eventContext, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
+	                                    : takeStateFromContext(p)
+	                                    ? getState(
+	                                        context, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
+	                                    : p[BB_STATE_FALLBACK];
 	                                
 	                            }
 	                            handlerType.execute(parameters);
@@ -19557,7 +19585,7 @@ var app = (function (exports) {
 	}
 
 	var hasHandler = { has: has };
-	var allHandlers = { has: has, get: get$2 };
+	var allHandlers = { has: has, get: get$1 };
 	var globals = new Set();
 	var temp;
 
@@ -19572,7 +19600,7 @@ var app = (function (exports) {
 	  return globals.has(key) ? key in target : true;
 	}
 
-	function get$2(target, key) {
+	function get$1(target, key) {
 	  return key in temp ? temp[key] : target[key];
 	}
 
@@ -20279,6 +20307,7 @@ var app = (function (exports) {
 
 	const getNew = app => (collectionKey, recordTypeName) => {
 	  const recordNode = getRecordNode(app, collectionKey);
+	  collectionKey=safeKey(collectionKey);
 	  return apiWrapperSync(
 	    app,
 	    events.recordApi.getNew,
@@ -20324,26 +20353,25 @@ var app = (function (exports) {
 
 	};
 
-	const trimSlash = (str) => str.replace(/^\/+|\/+$/g, '');
-
 	const createApp = (componentLibraries, appDefinition, user) => {
 
-	    const initialiseComponent = (props, htmlElement) => {
+	    const initialiseComponent = (parentContext) => (props, htmlElement, context) => {
 
 	        const {componentName, libName} = splitName(props._component);
 
 	        if(!componentName || !libName) return;
 
-	        const {initialProps, bind} = setupBinding(store, props, coreApi);
+	        const {initialProps, bind} = setupBinding(store, props, coreApi, context, appDefinition.appRootPath);
 
 	        const component = new (componentLibraries[libName][componentName])({
 	            target: htmlElement,
-	            props: {...initialProps, _bb},
+	            props: {...initialProps, _bb:bbInContext(context || parentContext)},
 	            hydrate:true
 	        });
 
 	        bind(component);
 
+	        return component;
 	    };
 
 	    const coreApi = createCoreApi(appDefinition, user);
@@ -20379,16 +20407,26 @@ var app = (function (exports) {
 	        delete:apiCall("DELETE")
 	    };
 
-	    const _bb = {
-	        initialiseComponent, 
+	    const bb = () => ({
+	        initialiseComponent: initialiseComponent(), 
 	        store,
 	        relativeUrl,
 	        api,
 	        getStateOrValue: (prop, currentContext) => 
 	            getStateOrValue(globalState, prop, currentContext)
+	    });
+
+	    const bbRoot = bb();
+
+	    const bbInContext = (context) => {
+	        if(!context) return bbRoot;
+	        const bbCxt = bb();
+	        bbCxt.context = context;
+	        bbCxt.initialiseComponent=initialiseComponent(context);
+	        return bbCxt;
 	    };
 
-	    return _bb;
+	    return bbRoot;
 
 	};
 

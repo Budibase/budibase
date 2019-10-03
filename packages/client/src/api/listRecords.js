@@ -1,5 +1,7 @@
+import {trimSlash} from "../common/trimSlash";
+
 export const listRecords = api => async ({indexKey, statePath}) => {
-    if(!recordKey) {
+    if(!indexKey) {
         api.error("Load Record: record key not set");
         return;
     }  
@@ -9,8 +11,8 @@ export const listRecords = api => async ({indexKey, statePath}) => {
         return;
     } 
 
-    const records = get({
-        url:`${rootPath}/api/listRecords/${indexKey}`
+    const records = api.get({
+        url:`/api/listRecords/${trimSlash(indexKey)}`
     });
 
     if(api.isSuccess(records))

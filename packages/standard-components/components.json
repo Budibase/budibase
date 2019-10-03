@@ -76,7 +76,8 @@
 			"containerClass":"string",
 			"itemContainerClass":"string",
 			"data": "state",
-			"dataItemComponent": "component"
+			"dataItemComponent": "component",
+			"onLoad": "event"
 		},
 		"tags": ["div", "container", "layout", "panel"]
 	},
@@ -153,6 +154,12 @@
 			"font": "string",
 			"color": "string",
 			"padding": "string",
+			"margin": "string",
+			"hoverColor": "string",
+			"hoverBackground": "string",
+			"height":"string",
+			"width":"string",
+			"onClick": "event",
 			"display": {
 				"type": "options", 
 				"default":"inline", 
@@ -182,7 +189,9 @@
 					"title": "string",
 					"component": "component"
 				}
-			}
+			},
+			"selectedItem":"string",
+			"hideNavBar":"bool"
 
 		},
 		"tags": ["nav", "navigation", "sidebar"]

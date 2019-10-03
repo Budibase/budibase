@@ -8,6 +8,7 @@ import Nav from "../Nav.svelte";
 import Panel from "../Panel.svelte";
 import StackPanel from "../StackPanel.svelte";
 import Table from "../Table.svelte";
+import Button from "../Button.svelte";
 import { createApp } from "@budibase/client/src/createApp";
 
 export default async () =>  {
@@ -22,7 +23,8 @@ export default async () =>  {
             nav: Nav,
             panel: Panel,
             table: Table,
-            stackpanel: StackPanel
+            stackpanel: StackPanel,
+            button: Button
         }
     }
 

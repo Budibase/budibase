@@ -42,8 +42,8 @@ const save = () => {
 
     const newLevels = 
         isNew 
-        ? [...allLevels, clonedLevel]
-        : [...filter(l => l.name !== level.name)(allLevels), clonedLevel];
+        ? [...allLevels.levels, clonedLevel]
+        : [...filter(l => l.name !== level.name)(allLevels.levels), clonedLevel];
 
     errors = validateAccessLevels(
         hierarchy,
@@ -62,7 +62,7 @@ const permissionChanged = perm => ev => {
     if(hasPermission) {
         clonedLevel.permissions.push(perm);
     } else {
-        clonedLevel.permissions = filter(p => !matchPermissions(p, perm));
+        clonedLevel.permissions = filter(p => !matchPermissions(p, perm))(clonedLevel.permissions);
     }
 }
 

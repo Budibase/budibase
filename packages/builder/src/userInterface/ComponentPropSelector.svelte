@@ -76,13 +76,13 @@ const confirmClearComponent = () => {
     <div>
         {#if !disabled && componentSelected}
         <IconButton icon="edit" 
-                    on:click={onEdit}/>
+                    on:click={() => onEdit()}/>
 
         <IconButton icon="trash" 
-                    on:click={clearComponent} />
+                    on:click={() => clearComponent()} />
         {:else if !disabled && !componentSelected}
         <IconButton icon="plus" 
-                    on:click={chooseComponent} />
+                    on:click={() => chooseComponent()} />
         {/if}
         
     </div>

@@ -1,6 +1,6 @@
 import { ERROR } from "./standardState";
 
-export const getNewChildRecordToState = (store, coreApi) =>
+export const getNewChildRecordToState = (store, coreApi, setState) =>
             ({recordKey, collectionName,childRecordType,statePath}) => {
     const error = errorHandler(setState);
     try {
@@ -33,7 +33,7 @@ export const getNewChildRecordToState = (store, coreApi) =>
 }
 
 
-export const getNewRecordToState = (store, coreApi) =>
+export const getNewRecordToState = (store, coreApi, setState) =>
             ({collectionKey,childRecordType,statePath}) => {
     const error = errorHandler(setState);
     try {

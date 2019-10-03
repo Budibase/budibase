@@ -12,6 +12,7 @@ export const buildPropsHierarchy = (allComponents, baseComponent) => {
             if(propName === "_component") continue;
 
             const propDef = propsDefinition[propName];
+            if(!propDef) continue;
             if(propDef.type === "component") {
 
                 const subComponentProps = props[propName];

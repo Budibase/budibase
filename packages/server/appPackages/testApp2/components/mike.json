@@ -1,7 +1,7 @@
 {
   "name": "mike",
   "description": "",
-  "inherits": "containers/two_columns",
+  "inherits": "containers_eh/two_columns_yes",
   "props": {
     "children": [
       {

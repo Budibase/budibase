@@ -136,7 +136,7 @@ $: {
 
     {#each componentsThisLevel as component}
     <div class="hierarchy-item component" class:selected={isComponentSelected($store.currentFrontEndType, $store.currentFrontEndItem, component.component)}
-         on:click|stopPropagation={() => store.setCurrentComponent(component.component)}>
+         on:click|stopPropagation={() => store.setCurrentComponent(component.component.name)}>
         <span>{@html getIcon("circle", "7")}</span>
         <span class="title">{component.title}</span>
     </div>

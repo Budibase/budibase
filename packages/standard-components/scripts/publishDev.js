@@ -8,12 +8,14 @@ const jsFile = dir => join(dir, "index.js");
 const jsMapFile = dir => join(dir, "index.js.map");
 const sourceJs = jsFile("dist");
 const sourceJsMap = jsMapFile("dist");
+const componentsFile = "components.json";
 
 const appPackages = join(packagesFolder, "server", "appPackages");
 
-const publicMain = appName => join(appPackages, appName, "public", "main");
-const publicUnauth = appName => join(appPackages, appName, "public", "unauthenticated");
-const nodeModules = appName => join(appPackages, appName, "node_modules", "@budibase", "standard-components", "dist");
+const publicMain = appName => join(appPackages, appName, "public", "main", "lib", "node_modules", "@budibase", "standard-components");
+const publicUnauth = appName => join(appPackages, appName, "public", "unauthenticated", "lib", "node_modules", "@budibase", "standard-components");
+const nodeModulesDist = appName => join(appPackages, appName, "node_modules", "@budibase", "standard-components", "dist");
+const nodeModules = appName => join(appPackages, appName, "node_modules", "@budibase", "standard-components");
 
 (async () => {
 
@@ -31,19 +33,21 @@ const nodeModules = appName => join(appPackages, appName, "node_modules", "@budi
 
     const copySourceJs = copySource(sourceJs);
     const copySourceJsMap = copySource(sourceJsMap);
+    const copyComponentsJson = copySource(componentsFile);
     
 
     for(let app of apps) {
         if(!(await stat(join(appPackages, app))).isDirectory()) continue;
 
-        await copySourceJs(nodeModules(app));
-        await copySourceJsMap(nodeModules(app));
+        await copySourceJs(nodeModulesDist(app));
+        await copySourceJsMap(nodeModulesDist(app));
+        await copyComponentsJson(nodeModules(app))
 
-        await copySourceJs(publicMain(app));
-        await copySourceJsMap(publicMain(app));
+        await copySourceJs(join(publicMain(app), "dist"));
+        await copySourceJsMap(join(publicMain(app), "dist"));
 
-        await copySourceJs(publicUnauth(app));
-        await copySourceJsMap(publicUnauth(app));
+        await copySourceJs(join(publicUnauth(app), "dist"));
+        await copySourceJsMap(join(publicUnauth(app), "dist"));
     }
 
 })();

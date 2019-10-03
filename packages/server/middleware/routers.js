@@ -280,6 +280,11 @@ module.exports = (config, app) => {
         ctx.body = await ctx.instance.authApi.getAccessLevels();
         ctx.response.status = StatusCodes.OK;
     })
+    .get("/:appname/api/listRecords/:indexkey", async (ctx) => {
+        ctx.body = await ctx.instance.indexApi.listItems(
+            ctx.params.indexkey);
+        ctx.response.status = StatusCodes.OK;
+    })
     .post("/:appname/api/listRecords/:indexkey", async (ctx) => {
         ctx.body = await ctx.instance.indexApi.listItems(
             ctx.request.body.indexKey,

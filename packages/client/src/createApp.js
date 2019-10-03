@@ -20,7 +20,7 @@ export const createApp = (componentLibraries, appDefinition, user) => {
 
         if(!componentName || !libName) return;
 
-        const {initialProps, bind} = setupBinding(store, props, coreApi, context);
+        const {initialProps, bind} = setupBinding(store, props, coreApi, context, appDefinition.appRootPath);
 
         const component = new (componentLibraries[libName][componentName])({
             target: htmlElement,
