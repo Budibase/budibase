@@ -9,29 +9,55 @@ export let selectedItemColor="";
 export let selectedItemBorder="";
 export let itemHoverBackground="";
 export let itemHoverColor="";
-export let items = []
+export let items = [];
+export let hideNavBar=false;
+export let selectedItem="";
 
 export let _bb;
 
-let selectedIndex;
+let selectedIndex = -1;
 let contentElement;
+let styleVars={};
+let currentComponent;
 
-$: styleVars = {
-    navBarBackground, navBarBorder,
-    navBarColor, selectedItemBackground,
-    selectedItemColor, selectedItemBorder,
-    itemHoverBackground, itemHoverColor
+
+$: {
+    styleVars = {
+        navBarBackground, navBarBorder,
+        navBarColor, selectedItemBackground,
+        selectedItemColor, selectedItemBorder,
+        itemHoverBackground, itemHoverColor
+    };
+
+    if(items && items.length > 0 && contentElement) {
+        const currentSelectedItem = selectedIndex > 0
+                                   ? items[selectedIndex].title
+                                   : "";
+        if(selectedItem && currentSelectedItem !== selectedItem) {
+            let i=0;
+            for(let item of items) {
+                if(item.title === selectedItem) {
+                    onSelectItem(i)();
+                }
+                i++;
+            }
+        } else if(!currentSelectedItem) {
+            onSelectItem(0);
+        }
+    }
 }
 
 const onSelectItem = (index) => () => {
     selectedIndex = index;
-    _bb.initialiseComponent(items[index].component, contentElement);
+    if(currentComponent) currentComponent.$destoy();
+    currentComponent = _bb.initialiseComponent(items[index].component, contentElement);
 }
 
 
 </script>
 
 <div class="root" use:cssVars={styleVars}>
+    {#if !hideNavBar}
     <div class="navbar">
         {#each items as navItem, index}
         <div class="navitem"
@@ -41,6 +67,7 @@ const onSelectItem = (index) => () => {
         </div>
         {/each}
     </div>
+    {/if}
     <div class="content"
          bind:this={contentElement}>
     </div>

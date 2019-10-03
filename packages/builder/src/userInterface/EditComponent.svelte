@@ -39,14 +39,17 @@ let editingComponentInstancePropName="";
 let editingComponentArrayIndex;
 let editingComponentArrayPropName;
 let editingComponentInstanceTitle;
-
+let originalName="";
 let allComponents;
+let ignoreStore = false;
 
 $: shortName = last(name.split("/"));
 
 store.subscribe(s => {
+    if(ignoreStore) return;
     component = s.currentFrontEndItem;
     if(!component) return;
+    originalName = component.name;
     name = component.name;
     description = component.description;
     tagsString = join(", ")(component.tags);
@@ -57,9 +60,13 @@ store.subscribe(s => {
 
 const save = () => {
 
-    if(!validate()) return;
+    ignoreStore = true;
+    if(!validate()) {
+        ignoreStore = false;
+        return;
+    }
 
-    component.name = name;
+    component.name = originalName;
     component.description = description;
     component.tags = pipe(tagsString, [
         split(","),
@@ -67,6 +74,12 @@ const save = () => {
     ]);
 
     store.saveDerivedComponent(component);
+
+    ignoreStore = false;
+    // now do the rename
+    if(name !== originalName) {
+        store.renameDerivedComponent(originalName, name);
+    }
 }
 
 const deleteComponent = () => {
@@ -165,10 +178,12 @@ const componentInstancePropsChanged = (instanceProps) => {
     </div>
 
     {#if editingComponentInstance}
-    <ComponentInstanceEditor onGoBack={componentInstanceCancelEdit}
-                             title={editingComponentInstanceTitle}
-                             instanceProps={editingComponentInstance}
-                             onPropsChanged={componentInstancePropsChanged}/>
+    <div class="component-props-container">
+        <ComponentInstanceEditor onGoBack={componentInstanceCancelEdit}
+                                title={editingComponentInstanceTitle}
+                                instanceProps={editingComponentInstance}
+                                onPropsChanged={componentInstancePropsChanged}/>
+    </div>
     {:else}
     <div class="component-props-container">
 
@@ -182,14 +197,16 @@ const componentInstancePropsChanged = (instanceProps) => {
             <div class="info-text">
                 <Textbox label="Name" 
                         infoText="use forward slash to store in subfolders"
-                        bind:text={name}
-                        disabled={!$store.currentComponentIsNew}
+                        text={name}
+                        on:change={ev => name = ev.target.value}
                         hasError={!!nameInvalid}/>
                 <Textbox label="Description"
-                            bind:text={description}/>
+                         on:change={ev => description = ev.target.value}
+                         text={description}/>
                 <Textbox label="Tags" 
-                            infoText="comma separated"
-                            bind:text={tagsString}/>
+                         infoText="comma separated"
+                         on:change={ev => tagsString = ev.target.value}
+                         text={tagsString}/>
             </div>    
         </div>
         {/if}
@@ -215,7 +232,7 @@ const componentInstancePropsChanged = (instanceProps) => {
     <div class="uk-modal-dialog">
 
         <div class="uk-modal-header">
-            Delete {component.name} ? 
+            Delete {name} ? 
         </div>
 
         <div class="uk-modal-body">

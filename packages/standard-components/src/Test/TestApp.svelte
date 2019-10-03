@@ -7,7 +7,7 @@ let _bb;
 const _appPromise = createApp();
 _appPromise.then(a => _bb = a);
 
-const testProps = props.boundStackPanel;
+const testProps = props.hiddenNav;
 
 let currentComponent;
 

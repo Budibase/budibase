@@ -1,4 +1,4 @@
-
+import {trimSlash} from "../common/trimSlash";
 
  export const loadRecord = (api) => async ({recordKey, statePath}) => {
 
@@ -12,8 +12,8 @@
         return;
     } 
 
-    const record = await get({
-        url:`${rootPath}/api/record/${key}`
+    const record = await api.get({
+        url:`/api/record/${trimSlash(key)}`
     });
 
     if(api.isSuccess(record))

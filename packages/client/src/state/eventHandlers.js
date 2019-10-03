@@ -11,15 +11,17 @@ import {
 
 export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType";
 
-export const eventHandlers = (store,coreApi) => {
+export const eventHandlers = (store,coreApi,rootPath) => {
     
     const handler = (parameters, execute) => ({
         execute, parameters
     });
 
+    const setStateWithStore = (path, value) => setState(store, path, value);
+
     const api = createApi({
-        rootPath:"",
-        setState: (path, value) => setState(store, path, value),
+        rootPath:rootPath,
+        setState: (path, value) => setStateWithStore,
         getState: (path, fallback) => getState(store, path, fallback)
     });
 
@@ -33,11 +35,11 @@ export const eventHandlers = (store,coreApi) => {
         
         "Get New Child Record": handler(
             ["recordKey", "collectionName", "childRecordType", "statePath"], 
-            getNewChildRecordToState(store, coreApi)),
+            getNewChildRecordToState(store, coreApi, setStateWithStore)),
 
         "Get New Record": handler(
             ["collectionKey", "childRecordType", "statePath"], 
-            getNewRecordToState(store, coreApi)),
+            getNewRecordToState(store, coreApi, setStateWithStore)),
 
         "Authenticate": handler(["username", "password"], api.authenticate)
     };

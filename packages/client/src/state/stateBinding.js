@@ -13,7 +13,9 @@ import {
 } from "./isState";
 
 const doNothing = () => {};
-export const setupBinding = (store, rootProps, coreApi, context) => {
+doNothing.isPlaceholder=true;
+
+export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
 
     const rootInitialProps = {...rootProps};
 
@@ -89,7 +91,7 @@ export const setupBinding = (store, rootProps, coreApi, context) => {
             && rootBindings.componentEventHandlers.length === 0
             && rootBindings.boundArrays.length === 0) return;
 
-        const handlerTypes = eventHandlers(store, coreApi);
+        const handlerTypes = eventHandlers(store, coreApi, rootPath);
 
         const unsubscribe = store.subscribe(rootState => {
            

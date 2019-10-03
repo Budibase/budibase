@@ -40,11 +40,11 @@ store.subscribe(s => {
 
 </script>
 
-<div class="component-preview" >
-    <div class="component-container">
-        <iframe style="height: 100%; width: 100%"
-                title="componentPreview"
-                srcdoc={
+
+<div class="component-container">
+    <iframe style="height: 100%; width: 100%"
+            title="componentPreview"
+            srcdoc={
 `<html>
     
 <head>
@@ -56,26 +56,39 @@ store.subscribe(s => {
             module.loadBudibase();
         })        
     </script>
+    <style>
+
+        body {
+            box-sizing: border-box;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
 </body>
 </html>`}>
-        </iframe>
-    </div>
+    </iframe>
 </div>
 
+
 <style>
-.component-preview {
-    display: grid;
-    grid-template-rows: [top] 1fr [middle] auto [bottom] 1fr;
-    grid-template-columns: [left] 1fr [middle] auto [right] 1fr;
-    grid-column-start: preview;
-    height:100%;
-}
 
 .component-container {
     grid-row-start: middle;
     grid-column-start: middle;
+    position: relative;
+    overflow: hidden;
+    padding-top: 56.25%;
+    margin: auto;
+}
+
+.component-container iframe {
+    border: 0;
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
 }
 
 </style>

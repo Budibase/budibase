@@ -2237,12 +2237,12 @@
         return alphabetShuffled[index];
     }
 
-    function get$1 () {
+    function get () {
       return alphabet || ORIGINAL;
     }
 
     var alphabet_1 = {
-        get: get$1,
+        get: get,
         characters: characters,
         seed: setSeed$1,
         lookup: lookup,
@@ -20256,7 +20256,7 @@
     }
 
     var hasHandler = { has: has };
-    var allHandlers = { has: has, get: get$2 };
+    var allHandlers = { has: has, get: get$1 };
     var globals = new Set();
     var temp;
 
@@ -20271,7 +20271,7 @@
       return globals.has(key) ? key in target : true;
     }
 
-    function get$2(target, key) {
+    function get$1(target, key) {
       return key in temp ? temp[key] : target[key];
     }
 
@@ -28117,7 +28117,7 @@
 
     });
 
-    const setState$1 = (store, path, value) => {
+    const setState = (store, path, value) => {
 
         if(!path || path.length === 0) return;
 
@@ -28188,6 +28188,8 @@
 
     const ERROR = "##error_message";
 
+    const trimSlash = (str) => str.replace(/^\/+|\/+$/g, '');
+
     const loadRecord = (api) => async ({recordKey, statePath}) => {
 
         if(!recordKey) {
@@ -28200,8 +28202,8 @@
             return;
         } 
 
-        const record = await get({
-            url:`${rootPath}/api/record/${key}`
+        const record = await api.get({
+            url:`/api/record/${trimSlash(key)}`
         });
 
         if(api.isSuccess(record))
@@ -28209,7 +28211,7 @@
     };
 
     const listRecords = api => async ({indexKey, statePath}) => {
-        if(!recordKey) {
+        if(!indexKey) {
             api.error("Load Record: record key not set");
             return;
         }  
@@ -28219,8 +28221,8 @@
             return;
         } 
 
-        const records = get({
-            url:`${rootPath}/api/listRecords/${indexKey}`
+        const records = api.get({
+            url:`/api/listRecords/${trimSlash(indexKey)}`
         });
 
         if(api.isSuccess(records))
@@ -28241,8 +28243,8 @@
             return;
         } 
 
-        const user = await post({
-            url:`${rootPath}/api/authenticate`,
+        const user = await api.post({
+            url:"/api/authenticate",
             body : {username, password}
         });
 
@@ -28254,7 +28256,7 @@
     const createApi = ({rootPath, setState, getState}) => {
 
         const apiCall = (method) => ({url, body, notFound, badRequest, forbidden}) => {
-            fetch(url, {
+            fetch(`${rootPath}${url}`, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
@@ -28308,7 +28310,7 @@
         }
     };
 
-    const getNewChildRecordToState = (store, coreApi) =>
+    const getNewChildRecordToState = (store, coreApi, setState) =>
                 ({recordKey, collectionName,childRecordType,statePath}) => {
         const error = errorHandler(setState);
         try {
@@ -28341,7 +28343,7 @@
     };
 
 
-    const getNewRecordToState = (store, coreApi) =>
+    const getNewRecordToState = (store, coreApi, setState) =>
                 ({collectionKey,childRecordType,statePath}) => {
         const error = errorHandler(setState);
         try {
@@ -28372,19 +28374,21 @@
 
     const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType";
 
-    const eventHandlers = (store,coreApi) => {
+    const eventHandlers = (store,coreApi,rootPath) => {
         
         const handler = (parameters, execute) => ({
             execute, parameters
         });
 
+        const setStateWithStore = (path, value) => setState(store, path, value);
+
         const api = createApi({
-            rootPath:"",
-            setState: (path, value) => setState$1(store, path, value),
+            rootPath:rootPath,
+            setState: (path, value) => setStateWithStore,
             getState: (path, fallback) => getState(store, path, fallback)
         });
 
-        const setStateHandler = ({path, value}) => setState$1(store, path, value);
+        const setStateHandler = ({path, value}) => setState(store, path, value);
         
         return {
             "Set State": handler(["path", "value"],  setStateHandler),
@@ -28394,11 +28398,11 @@
             
             "Get New Child Record": handler(
                 ["recordKey", "collectionName", "childRecordType", "statePath"], 
-                getNewChildRecordToState(store, coreApi)),
+                getNewChildRecordToState(store, coreApi, setStateWithStore)),
 
             "Get New Record": handler(
                 ["collectionKey", "childRecordType", "statePath"], 
-                getNewRecordToState(store, coreApi)),
+                getNewRecordToState(store, coreApi, setStateWithStore)),
 
             "Authenticate": handler(["username", "password"], api.authenticate)
         };
@@ -28677,6 +28681,7 @@
                 if(propName === "_component") continue;
 
                 const propDef = propsDefinition[propName];
+                if(!propDef) continue;
                 if(propDef.type === "component") {
 
                     const subComponentProps = props[propName];
@@ -28735,13 +28740,82 @@
             body: body && JSON.stringify(body), 
         });
 
-    const post$1 = apiCall("POST");
-    const get$3 = apiCall("GET");
+    const post = apiCall("POST");
+    const get$2 = apiCall("GET");
     const patch = apiCall("PATCH");
     const del = apiCall("DELETE");
 
     var api$1 = {
-        post: post$1, get: get$3, patch, delete:del
+        post, get: get$2, patch, delete:del
+    };
+
+    const rename = (pages, allComponents, oldname, newname) => {
+
+        pages = fp_4(pages);
+        allComponents = fp_4(allComponents);
+        const changedComponents = [];
+
+        const existingWithNewName = getExactComponent(allComponents, newname);
+        if(existingWithNewName) return {
+            allComponents, pages, error: "Component by that name already exists"
+        };
+
+        const traverseProps = (props) => {
+            let hasEdited = false;
+            if(props._component && props._component === oldname) {
+                props._component = newname;
+                hasEdited = true;
+            } 
+
+            for(let propName in props) {
+                const prop = props[propName];
+                if(fp_60(prop) && prop._component) {
+                    hasEdited = traverseProps(prop) || hasEdited;
+                }
+                if(fp_26(prop)) {
+                    for(let element of prop) {
+                        hasEdited = traverseProps(element) || hasEdited;
+                    }
+                }
+            }
+            return hasEdited;
+        };
+
+
+        for(let component of allComponents) {
+            
+            if(isRootComponent(component)) {
+                continue;
+            }
+
+            let hasEdited = false;
+
+            if(component.name === oldname) {
+                component.name = newname;
+                hasEdited = true;
+            }
+
+            if(component.inherits === oldname) {
+                component.inherits = newname;
+                hasEdited = true;
+            }
+            
+            hasEdited = traverseProps(component.props) || hasEdited;
+
+            if(hasEdited && component.name !== newname)
+                changedComponents.push(component.name);
+        }
+
+        for(let pageName in pages) {
+            const page = pages[pageName];
+            if(page.appBody === oldname) {
+                page.appBody = newname;
+            }
+        }
+
+        return {allComponents, pages, changedComponents};
+
+
     };
 
     const loadLibs = async (appName, appPackage) => {
@@ -28861,7 +28935,7 @@
         initial.pages = pkg.pages;
         initial.hasAppPackage = true;
         initial.hierarchy = pkg.appDefinition.hierarchy;
-        initial.accessLevels = pkg.accessLevels;
+        initial.accessLevels = pkg.accessLevels.levels;
         initial.derivedComponents = pkg.derivedComponents;
         initial.allComponents = combineComponents(
             pkg.derivedComponents, pkg.rootComponents);
@@ -29195,6 +29269,7 @@
 
             s.currentFrontEndItem = newComponentInfo.component;
             s.currentComponentInfo = newComponentInfo;
+            s.currentFrontEndType = "component";
             s.currentComponentIsNew = true;
             return s;
         });
@@ -29226,22 +29301,34 @@
     const renameDerivedComponent = store => (oldname, newname) => {
         store.update(s => {
 
-            const component = pipe$1(s.allComponents, [
-                fp_13(c => c.name === name)
-            ]);
+            const {
+                allComponents, pages, error, changedComponents
+            } = rename(s.pages, s.allComponents, oldname, newname);
 
-            component.name = newname;
-
-            const allComponents = pipe$1(s.allComponents, [
-                fp_8(c => c.name !== name),
-                fp_34([component])
-            ]);
+            if(error) {
+                // should really do something with this
+                return s;
+            }
 
             s.allComponents = allComponents;
+            s.pages = pages;
+            if(s.currentFrontEndItem.name === oldname)
+                s.currentFrontEndItem.name = newname;
+
+            const saveAllChanged = async () => {
+                for(let cname of changedComponents) {
+                    const changedComponent = getExactComponent(allComponents, cname);
+                    await api$1.post(`/_builder/api/${s.appname}/derivedcomponent`, changedComponent);
+                }
+            };
 
             api$1.patch(`/_builder/api/${s.appname}/derivedcomponent`, {
                 oldname, newname
-            });
+            })
+            .then(() => saveAllChanged())
+            .then(() => {
+                savePackage(store, s);
+            });        
 
             return s;
         });
@@ -29249,8 +29336,8 @@
 
     const savePage = store => async page => {
         store.update(s => {
-            if(s.currentFrontEndType === "page" || !s.currentPageName) {
-                return;
+            if(s.currentFrontEndType !== "page" || !s.currentPageName) {
+                return s;
             }
 
             s.pages[s.currentPageName] = page;
@@ -29368,8 +29455,9 @@
         api$1.post(`/_builder/api/${s.appname}/appPackage`, data);
     };
 
-    const setCurrentComponent = store => component => {
+    const setCurrentComponent = store => componentName => {
         store.update(s => {
+            const component = getExactComponent(s.allComponents, componentName);
             s.currentFrontEndItem = component;
             s.currentFrontEndType = "component";
             s.currentComponentIsNew = false;
@@ -32336,9 +32424,9 @@
     			span1 = element("span");
     			t1 = text(t1_value);
     			t2 = space();
-    			add_location(span0, file$4, 139, 8, 3844);
+    			add_location(span0, file$4, 139, 8, 3849);
     			attr_dev(span1, "class", "title svelte-1r2dipt");
-    			add_location(span1, file$4, 140, 8, 3896);
+    			add_location(span1, file$4, 140, 8, 3901);
     			attr_dev(div, "class", "hierarchy-item component svelte-1r2dipt");
     			toggle_class(div, "selected", ctx.isComponentSelected(ctx.$store.currentFrontEndType, ctx.$store.currentFrontEndItem, ctx.component.component));
     			add_location(div, file$4, 137, 4, 3594);
@@ -32610,7 +32698,7 @@
 
     	const click_handler = ({ folder }) => expandFolder(folder);
 
-    	const click_handler_1 = ({ component }) => store.setCurrentComponent(component.component);
+    	const click_handler_1 = ({ component }) => store.setCurrentComponent(component.component.name);
 
     	$$self.$set = $$props => {
     		if ('components' in $$props) $$invalidate('components', components = $$props.components);
@@ -46376,7 +46464,7 @@
     	var current;
 
     	var iconbutton = new IconButton({ props: { icon: "plus" }, $$inline: true });
-    	iconbutton.$on("click", ctx.chooseComponent);
+    	iconbutton.$on("click", ctx.click_handler_2);
 
     	const block = {
     		c: function create() {
@@ -46413,10 +46501,10 @@
     	var t, current;
 
     	var iconbutton0 = new IconButton({ props: { icon: "edit" }, $$inline: true });
-    	iconbutton0.$on("click", ctx.onEdit);
+    	iconbutton0.$on("click", ctx.click_handler);
 
     	var iconbutton1 = new IconButton({ props: { icon: "trash" }, $$inline: true });
-    	iconbutton1.$on("click", ctx.clearComponent);
+    	iconbutton1.$on("click", ctx.click_handler_1);
 
     	const block = {
     		c: function create() {
@@ -46481,9 +46569,9 @@
     			div1 = element("div");
     			buttongroup.$$.fragment.c();
     			attr_dev(div0, "class", "uk-modal-body");
-    			add_location(div0, file$b, 98, 8, 2428);
+    			add_location(div0, file$b, 98, 8, 2452);
     			attr_dev(div1, "class", "uk-modal-footer");
-    			add_location(div1, file$b, 101, 8, 2514);
+    			add_location(div1, file$b, 101, 8, 2538);
     		},
 
     		m: function mount(target, anchor) {
@@ -46540,7 +46628,7 @@
     			div = element("div");
     			componentsearch.$$.fragment.c();
     			attr_dev(div, "class", "uk-modal-body");
-    			add_location(div, file$b, 94, 8, 2258);
+    			add_location(div, file$b, 94, 8, 2282);
     		},
 
     		m: function mount(target, anchor) {
@@ -46756,10 +46844,10 @@
     			attr_dev(div2, "class", "root uk-form-controls svelte-ogh8o0");
     			add_location(div2, file$b, 71, 0, 1592);
     			attr_dev(div3, "class", "uk-modal-dialog");
-    			add_location(div3, file$b, 91, 4, 2172);
+    			add_location(div3, file$b, 91, 4, 2196);
     			attr_dev(div4, "uk-modal", "");
     			attr_dev(div4, "class", "svelte-ogh8o0");
-    			add_location(div4, file$b, 90, 0, 2128);
+    			add_location(div4, file$b, 90, 0, 2152);
     		},
 
     		l: function claim(nodes) {
@@ -46933,6 +47021,12 @@
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<ComponentPropSelector> was created with unknown prop '${key}'`);
     	});
 
+    	const click_handler = () => onEdit();
+
+    	const click_handler_1 = () => clearComponent();
+
+    	const click_handler_2 = () => chooseComponent();
+
     	function div4_binding($$value) {
     		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
     			$$invalidate('modalElement', modalElement = $$value);
@@ -46986,6 +47080,9 @@
     		confirmClearComponent,
     		componentSelected,
     		shortName,
+    		click_handler,
+    		click_handler_1,
+    		click_handler_2,
     		div4_binding
     	};
     }
@@ -50754,7 +50851,7 @@
 
     const file$j = "src\\userInterface\\EditComponent.svelte";
 
-    // (172:4) {:else}
+    // (187:4) {:else}
     function create_else_block$4(ctx) {
     	var div2, div0, span0, t1, t2, t3, div1, span1, t5, current, dispose;
 
@@ -50792,14 +50889,14 @@
     			t5 = space();
     			propsview.$$.fragment.c();
     			set_style(span0, "margin-right", "7px");
-    			add_location(span0, file$j, 175, 12, 5076);
+    			add_location(span0, file$j, 190, 12, 5476);
     			attr_dev(div0, "class", "section-header padding svelte-1abif7s");
-    			add_location(div0, file$j, 174, 8, 4957);
-    			add_location(span1, file$j, 197, 12, 5975);
+    			add_location(div0, file$j, 189, 8, 5357);
+    			add_location(span1, file$j, 214, 12, 6496);
     			attr_dev(div1, "class", "section-header padding svelte-1abif7s");
-    			add_location(div1, file$j, 196, 8, 5926);
+    			add_location(div1, file$j, 213, 8, 6447);
     			attr_dev(div2, "class", "component-props-container svelte-1abif7s");
-    			add_location(div2, file$j, 172, 4, 4908);
+    			add_location(div2, file$j, 187, 4, 5308);
     			dispose = listen_dev(div0, "click", ctx.click_handler);
     		},
 
@@ -50879,13 +50976,13 @@
     			dispose();
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_else_block$4.name, type: "else", source: "(172:4) {:else}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_else_block$4.name, type: "else", source: "(187:4) {:else}", ctx });
     	return block;
     }
 
-    // (167:4) {#if editingComponentInstance}
+    // (180:4) {#if editingComponentInstance}
     function create_if_block$9(ctx) {
-    	var current;
+    	var div, current;
 
     	var componentinstanceeditor = new ComponentInstanceEditor({
     		props: {
@@ -50899,11 +50996,15 @@
 
     	const block = {
     		c: function create() {
+    			div = element("div");
     			componentinstanceeditor.$$.fragment.c();
+    			attr_dev(div, "class", "component-props-container svelte-1abif7s");
+    			add_location(div, file$j, 180, 4, 4945);
     		},
 
     		m: function mount(target, anchor) {
-    			mount_component(componentinstanceeditor, target, anchor);
+    			insert_dev(target, div, anchor);
+    			mount_component(componentinstanceeditor, div, null);
     			current = true;
     		},
 
@@ -50927,66 +51028,50 @@
     		},
 
     		d: function destroy(detaching) {
-    			destroy_component(componentinstanceeditor, detaching);
+    			if (detaching) {
+    				detach_dev(div);
+    			}
+
+    			destroy_component(componentinstanceeditor);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$9.name, type: "if", source: "(167:4) {#if editingComponentInstance}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$9.name, type: "if", source: "(180:4) {#if editingComponentInstance}", ctx });
     	return block;
     }
 
-    // (180:8) {#if componentDetailsExpanded}
+    // (195:8) {#if componentDetailsExpanded}
     function create_if_block_1$4(ctx) {
-    	var div1, div0, updating_text, t0, updating_text_1, t1, updating_text_2, current;
+    	var div1, div0, t0, t1, current;
 
-    	function textbox0_text_binding(value) {
-    		ctx.textbox0_text_binding.call(null, value);
-    		updating_text = true;
-    		add_flush_callback(() => updating_text = false);
-    	}
-
-    	let textbox0_props = {
+    	var textbox0 = new Textbox({
+    		props: {
     		label: "Name",
     		infoText: "use forward slash to store in subfolders",
-    		disabled: !ctx.$store.currentComponentIsNew,
+    		text: ctx.name,
     		hasError: !!ctx.nameInvalid
-    	};
-    	if (ctx.name !== void 0) {
-    		textbox0_props.text = ctx.name;
-    	}
-    	var textbox0 = new Textbox({ props: textbox0_props, $$inline: true });
+    	},
+    		$$inline: true
+    	});
+    	textbox0.$on("change", ctx.change_handler);
 
-    	binding_callbacks.push(() => bind(textbox0, 'text', textbox0_text_binding));
+    	var textbox1 = new Textbox({
+    		props: {
+    		label: "Description",
+    		text: ctx.description
+    	},
+    		$$inline: true
+    	});
+    	textbox1.$on("change", ctx.change_handler_1);
 
-    	function textbox1_text_binding(value_1) {
-    		ctx.textbox1_text_binding.call(null, value_1);
-    		updating_text_1 = true;
-    		add_flush_callback(() => updating_text_1 = false);
-    	}
-
-    	let textbox1_props = { label: "Description" };
-    	if (ctx.description !== void 0) {
-    		textbox1_props.text = ctx.description;
-    	}
-    	var textbox1 = new Textbox({ props: textbox1_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(textbox1, 'text', textbox1_text_binding));
-
-    	function textbox2_text_binding(value_2) {
-    		ctx.textbox2_text_binding.call(null, value_2);
-    		updating_text_2 = true;
-    		add_flush_callback(() => updating_text_2 = false);
-    	}
-
-    	let textbox2_props = {
+    	var textbox2 = new Textbox({
+    		props: {
     		label: "Tags",
-    		infoText: "comma separated"
-    	};
-    	if (ctx.tagsString !== void 0) {
-    		textbox2_props.text = ctx.tagsString;
-    	}
-    	var textbox2 = new Textbox({ props: textbox2_props, $$inline: true });
-
-    	binding_callbacks.push(() => bind(textbox2, 'text', textbox2_text_binding));
+    		infoText: "comma separated",
+    		text: ctx.tagsString
+    	},
+    		$$inline: true
+    	});
+    	textbox2.$on("change", ctx.change_handler_2);
 
     	const block = {
     		c: function create() {
@@ -50998,9 +51083,9 @@
     			t1 = space();
     			textbox2.$$.fragment.c();
     			attr_dev(div0, "class", "info-text svelte-1abif7s");
-    			add_location(div0, file$j, 181, 12, 5323);
+    			add_location(div0, file$j, 196, 12, 5723);
     			attr_dev(div1, "class", "padding svelte-1abif7s");
-    			add_location(div1, file$j, 180, 8, 5289);
+    			add_location(div1, file$j, 195, 8, 5689);
     		},
 
     		m: function mount(target, anchor) {
@@ -51016,23 +51101,16 @@
 
     		p: function update(changed, ctx) {
     			var textbox0_changes = {};
-    			if (changed.$store) textbox0_changes.disabled = !ctx.$store.currentComponentIsNew;
+    			if (changed.name) textbox0_changes.text = ctx.name;
     			if (changed.nameInvalid) textbox0_changes.hasError = !!ctx.nameInvalid;
-    			if (!updating_text && changed.name) {
-    				textbox0_changes.text = ctx.name;
-    			}
     			textbox0.$set(textbox0_changes);
 
     			var textbox1_changes = {};
-    			if (!updating_text_1 && changed.description) {
-    				textbox1_changes.text = ctx.description;
-    			}
+    			if (changed.description) textbox1_changes.text = ctx.description;
     			textbox1.$set(textbox1_changes);
 
     			var textbox2_changes = {};
-    			if (!updating_text_2 && changed.tagsString) {
-    				textbox2_changes.text = ctx.tagsString;
-    			}
+    			if (changed.tagsString) textbox2_changes.text = ctx.tagsString;
     			textbox2.$set(textbox2_changes);
     		},
 
@@ -51066,11 +51144,11 @@
     			destroy_component(textbox2);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block_1$4.name, type: "if", source: "(180:8) {#if componentDetailsExpanded}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block_1$4.name, type: "if", source: "(195:8) {#if componentDetailsExpanded}", ctx });
     	return block;
     }
 
-    // (227:16) <Button grouped                          on:click={confirmDeleteComponent}>
+    // (244:16) <Button grouped                          on:click={confirmDeleteComponent}>
     function create_default_slot_2$1(ctx) {
     	var t;
 
@@ -51089,11 +51167,11 @@
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot_2$1.name, type: "slot", source: "(227:16) <Button grouped                          on:click={confirmDeleteComponent}>", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot_2$1.name, type: "slot", source: "(244:16) <Button grouped                          on:click={confirmDeleteComponent}>", ctx });
     	return block;
     }
 
-    // (231:16) <Button grouped                          on:click={hideDialog}                          color="secondary" >
+    // (248:16) <Button grouped                          on:click={hideDialog}                          color="secondary" >
     function create_default_slot_1$1(ctx) {
     	var t;
 
@@ -51112,11 +51190,11 @@
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot_1$1.name, type: "slot", source: "(231:16) <Button grouped                          on:click={hideDialog}                          color=\"secondary\" >", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot_1$1.name, type: "slot", source: "(248:16) <Button grouped                          on:click={hideDialog}                          color=\"secondary\" >", ctx });
     	return block;
     }
 
-    // (226:12) <ButtonGroup>
+    // (243:12) <ButtonGroup>
     function create_default_slot$1(ctx) {
     	var t, current;
 
@@ -51190,12 +51268,12 @@
     			destroy_component(button1, detaching);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot$1.name, type: "slot", source: "(226:12) <ButtonGroup>", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot$1.name, type: "slot", source: "(243:12) <ButtonGroup>", ctx });
     	return block;
     }
 
     function create_fragment$i(ctx) {
-    	var div3, div2, div0, t0, t1, div1, t2, t3, current_block_type_index, if_block, t4, div8, div7, div4, t5, t6_value = ctx.component.name + "", t6, t7, t8, div5, t10, div6, current;
+    	var div3, div2, div0, t0, t1, div1, t2, t3, current_block_type_index, if_block, t4, div8, div7, div4, t5, t6, t7, t8, div5, t10, div6, current;
 
     	var iconbutton0 = new IconButton({
     		props: {
@@ -51258,7 +51336,7 @@
     			div7 = element("div");
     			div4 = element("div");
     			t5 = text("Delete ");
-    			t6 = text(t6_value);
+    			t6 = text(ctx.name);
     			t7 = text(" ?");
     			t8 = space();
     			div5 = element("div");
@@ -51267,24 +51345,24 @@
     			div6 = element("div");
     			buttongroup.$$.fragment.c();
     			attr_dev(div0, "class", "svelte-1abif7s");
-    			add_location(div0, file$j, 153, 8, 4124);
+    			add_location(div0, file$j, 166, 8, 4456);
     			attr_dev(div1, "class", "svelte-1abif7s");
-    			add_location(div1, file$j, 154, 8, 4155);
+    			add_location(div1, file$j, 167, 8, 4487);
     			attr_dev(div2, "class", "title svelte-1abif7s");
-    			add_location(div2, file$j, 152, 4, 4096);
+    			add_location(div2, file$j, 165, 4, 4428);
     			attr_dev(div3, "class", "root svelte-1abif7s");
-    			add_location(div3, file$j, 150, 0, 4072);
+    			add_location(div3, file$j, 163, 0, 4404);
     			attr_dev(div4, "class", "uk-modal-header");
-    			add_location(div4, file$j, 216, 8, 6300);
+    			add_location(div4, file$j, 233, 8, 6821);
     			attr_dev(div5, "class", "uk-modal-body");
-    			add_location(div5, file$j, 220, 8, 6393);
+    			add_location(div5, file$j, 237, 8, 6904);
     			attr_dev(div6, "class", "uk-modal-footer");
-    			add_location(div6, file$j, 224, 8, 6506);
+    			add_location(div6, file$j, 241, 8, 7017);
     			attr_dev(div7, "class", "uk-modal-dialog");
-    			add_location(div7, file$j, 214, 4, 6261);
+    			add_location(div7, file$j, 231, 4, 6782);
     			attr_dev(div8, "uk-modal", "");
     			attr_dev(div8, "class", "svelte-1abif7s");
-    			add_location(div8, file$j, 213, 0, 6217);
+    			add_location(div8, file$j, 230, 0, 6738);
     		},
 
     		l: function claim(nodes) {
@@ -51344,8 +51422,8 @@
     				if_block.m(div3, null);
     			}
 
-    			if ((!current || changed.component) && t6_value !== (t6_value = ctx.component.name + "")) {
-    				set_data_dev(t6, t6_value);
+    			if (!current || changed.name) {
+    				set_data_dev(t6, ctx.name);
     			}
 
     			var buttongroup_changes = {};
@@ -51400,11 +51478,6 @@
     }
 
     function instance$i($$self, $$props, $$invalidate) {
-    	let $store;
-
-    	validate_store(store, 'store');
-    	component_subscribe($$self, store, $$value => { $store = $$value; $$invalidate('$store', $store); });
-
     	
 
     let component;
@@ -51421,12 +51494,15 @@
     let editingComponentArrayIndex;
     let editingComponentArrayPropName;
     let editingComponentInstanceTitle;
-
+    let originalName="";
     let allComponents;
+    let ignoreStore = false;
 
     store.subscribe(s => {
-        $$invalidate('component', component = s.currentFrontEndItem);
+        if(ignoreStore) return;
+        component = s.currentFrontEndItem;
         if(!component) return;
+        originalName = component.name;
         $$invalidate('name', name = component.name);
         $$invalidate('description', description = component.description);
         $$invalidate('tagsString', tagsString = fp_41(", ")(component.tags));
@@ -51437,16 +51513,26 @@
 
     const save = () => {
 
-        if(!validate()) return;
+        ignoreStore = true;
+        if(!validate()) {
+            ignoreStore = false;
+            return;
+        }
 
-        $$invalidate('component', component.name = name, component);
-        $$invalidate('component', component.description = description, component);
-        $$invalidate('component', component.tags = pipe$1(tagsString, [
+        component.name = originalName;
+        component.description = description;
+        component.tags = pipe$1(tagsString, [
             fp_5(","),
             fp_7(s => s.trim())
-        ]), component);
+        ]);
 
         store.saveDerivedComponent(component);
+
+        ignoreStore = false;
+        // now do the rename
+        if(name !== originalName) {
+            store.renameDerivedComponent(originalName, name);
+        }
     };
 
     const deleteComponent = () => {
@@ -51465,7 +51551,7 @@
     const updateComponent = doChange => {
         const newComponent = fp_4(component);
         doChange(newComponent);
-        $$invalidate('component', component = newComponent);
+        component = newComponent;
         $$invalidate('componentInfo', componentInfo = getComponentInfo(allComponents, newComponent));
     };
 
@@ -51524,20 +51610,11 @@
 
     	const click_handler = () => $$invalidate('componentDetailsExpanded', componentDetailsExpanded = !componentDetailsExpanded);
 
-    	function textbox0_text_binding(value) {
-    		name = value;
-    		$$invalidate('name', name);
-    	}
+    	const change_handler = (ev) => $$invalidate('name', name = ev.target.value);
 
-    	function textbox1_text_binding(value_1) {
-    		description = value_1;
-    		$$invalidate('description', description);
-    	}
+    	const change_handler_1 = (ev) => $$invalidate('description', description = ev.target.value);
 
-    	function textbox2_text_binding(value_2) {
-    		tagsString = value_2;
-    		$$invalidate('tagsString', tagsString);
-    	}
+    	const change_handler_2 = (ev) => $$invalidate('tagsString', tagsString = ev.target.value);
 
     	function div8_binding($$value) {
     		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
@@ -51550,7 +51627,7 @@
     	};
 
     	$$self.$inject_state = $$props => {
-    		if ('component' in $$props) $$invalidate('component', component = $$props.component);
+    		if ('component' in $$props) component = $$props.component;
     		if ('name' in $$props) $$invalidate('name', name = $$props.name);
     		if ('description' in $$props) $$invalidate('description', description = $$props.description);
     		if ('tagsString' in $$props) $$invalidate('tagsString', tagsString = $$props.tagsString);
@@ -51564,9 +51641,10 @@
     		if ('editingComponentArrayIndex' in $$props) editingComponentArrayIndex = $$props.editingComponentArrayIndex;
     		if ('editingComponentArrayPropName' in $$props) editingComponentArrayPropName = $$props.editingComponentArrayPropName;
     		if ('editingComponentInstanceTitle' in $$props) $$invalidate('editingComponentInstanceTitle', editingComponentInstanceTitle = $$props.editingComponentInstanceTitle);
+    		if ('originalName' in $$props) originalName = $$props.originalName;
     		if ('allComponents' in $$props) allComponents = $$props.allComponents;
+    		if ('ignoreStore' in $$props) ignoreStore = $$props.ignoreStore;
     		if ('shortName' in $$props) $$invalidate('shortName', shortName = $$props.shortName);
-    		if ('$store' in $$props) store.set($store);
     	};
 
     	let shortName;
@@ -51576,7 +51654,6 @@
     	};
 
     	return {
-    		component,
     		name,
     		description,
     		tagsString,
@@ -51596,11 +51673,10 @@
     		componentInstanceCancelEdit,
     		componentInstancePropsChanged,
     		shortName,
-    		$store,
     		click_handler,
-    		textbox0_text_binding,
-    		textbox1_text_binding,
-    		textbox2_text_binding,
+    		change_handler,
+    		change_handler_1,
+    		change_handler_2,
     		div8_binding
     	};
     }
@@ -51959,12 +52035,11 @@
     const file$m = "src\\userInterface\\CurrentItemPreview.svelte";
 
     function create_fragment$l(ctx) {
-    	var div1, div0, iframe, iframe_srcdoc_value;
+    	var div, iframe, iframe_srcdoc_value;
 
     	const block = {
     		c: function create() {
-    			div1 = element("div");
-    			div0 = element("div");
+    			div = element("div");
     			iframe = element("iframe");
     			set_style(iframe, "height", "100%");
     			set_style(iframe, "width", "100%");
@@ -51980,15 +52055,21 @@
             module.loadBudibase();
         })        
     </script>
+    <style>
+
+        body {
+            box-sizing: border-box;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
 </body>
 </html>`);
-    			add_location(iframe, file$m, 44, 8, 1261);
-    			attr_dev(div0, "class", "component-container svelte-1jir83x");
-    			add_location(div0, file$m, 43, 4, 1219);
-    			attr_dev(div1, "class", "component-preview svelte-1jir83x");
-    			add_location(div1, file$m, 42, 0, 1182);
+    			attr_dev(iframe, "class", "svelte-teqoiq");
+    			add_location(iframe, file$m, 44, 4, 1221);
+    			attr_dev(div, "class", "component-container svelte-teqoiq");
+    			add_location(div, file$m, 43, 0, 1183);
     		},
 
     		l: function claim(nodes) {
@@ -51996,9 +52077,8 @@
     		},
 
     		m: function mount(target, anchor) {
-    			insert_dev(target, div1, anchor);
-    			append_dev(div1, div0);
-    			append_dev(div0, iframe);
+    			insert_dev(target, div, anchor);
+    			append_dev(div, iframe);
     		},
 
     		p: function update(changed, ctx) {
@@ -52013,6 +52093,13 @@
             module.loadBudibase();
         })        
     </script>
+    <style>
+
+        body {
+            box-sizing: border-box;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
 </body>
@@ -52026,7 +52113,7 @@
 
     		d: function destroy(detaching) {
     			if (detaching) {
-    				detach_dev(div1);
+    				detach_dev(div);
     			}
     		}
     	};
@@ -64667,7 +64754,7 @@
     			div = element("div");
     			checkbox.$$.fragment.c();
     			t = space();
-    			add_location(div, file$J, 79, 8, 1844);
+    			add_location(div, file$J, 79, 8, 1883);
     		},
 
     		m: function mount(target, anchor) {
@@ -64892,8 +64979,8 @@
     			t2 = space();
     			buttongroup.$$.fragment.c();
     			attr_dev(form, "class", "uk-form-horizontal");
-    			add_location(form, file$J, 74, 4, 1691);
-    			add_location(div, file$J, 70, 0, 1652);
+    			add_location(form, file$J, 74, 4, 1730);
+    			add_location(div, file$J, 70, 0, 1691);
     		},
 
     		l: function claim(nodes) {
@@ -65031,8 +65118,8 @@
 
         const newLevels = 
             isNew 
-            ? [...allLevels, clonedLevel]
-            : [...fp_8(l => l.name !== level.name)(allLevels), clonedLevel];
+            ? [...allLevels.levels, clonedLevel]
+            : [...fp_8(l => l.name !== level.name)(allLevels.levels), clonedLevel];
 
         $$invalidate('errors', errors = validateAccessLevels$1(
             hierarchy,
@@ -65051,7 +65138,7 @@
         if(hasPermission) {
             clonedLevel.permissions.push(perm);
         } else {
-            $$invalidate('clonedLevel', clonedLevel.permissions = fp_8(p => !matchPermissions(p, perm)), clonedLevel);
+            $$invalidate('clonedLevel', clonedLevel.permissions = fp_8(p => !matchPermissions(p, perm))(clonedLevel.permissions), clonedLevel);
         }
     };
 

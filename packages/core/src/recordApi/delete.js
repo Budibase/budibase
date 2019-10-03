@@ -5,22 +5,23 @@ import {
 import { _load, getRecordFileName } from './load';
 import { _deleteCollection } from '../collectionApi/delete';
 import {
-  getExactNodeForPath,
-  getFlattenedHierarchy, getNode,
-  fieldReversesReferenceToNode,
+  getExactNodeForPath
 } from '../templateApi/hierarchy';
 import { _deleteIndex } from '../indexApi/delete';
 import { transactionForDeleteRecord } from '../transactions/create';
 import { removeFromAllIds } from '../indexing/allIds';
 import { permission } from '../authApi/permissions';
 
-export const deleteRecord = (app, disableCleanup = false) => async key => apiWrapper(
-  app,
-  events.recordApi.delete,
-  permission.deleteRecord.isAuthorized(key),
-  { key },
-  _deleteRecord, app, key, disableCleanup,
-);
+export const deleteRecord = (app, disableCleanup = false) => async key => {
+  key = safeKey(key);
+  return apiWrapper(
+    app,
+    events.recordApi.delete,
+    permission.deleteRecord.isAuthorized(key),
+    { key },
+    _deleteRecord, app, key, disableCleanup,
+  );
+}
 
 // called deleteRecord because delete is a keyword
 export const _deleteRecord = async (app, key, disableCleanup) => {

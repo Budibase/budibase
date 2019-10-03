@@ -14,7 +14,8 @@ import {writable} from "svelte/store";
 import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
 import { buildPropsHierarchy } from "../userInterface/pagesParsing/buildPropsHierarchy"
 import api from "./api";
-import { isRootComponent } from "../userInterface/pagesParsing/searchComponents";
+import { isRootComponent, getExactComponent } from "../userInterface/pagesParsing/searchComponents";
+import { rename } from "../userInterface/pagesParsing/renameComponent";
 import { 
     getComponentInfo, getNewComponentInfo 
 } from "../userInterface/pagesParsing/createProps";
@@ -114,7 +115,7 @@ const initialise = (store, initial) => async () => {
     initial.pages = pkg.pages;
     initial.hasAppPackage = true;
     initial.hierarchy = pkg.appDefinition.hierarchy;
-    initial.accessLevels = pkg.accessLevels;
+    initial.accessLevels = pkg.accessLevels.levels;
     initial.derivedComponents = pkg.derivedComponents;
     initial.allComponents = combineComponents(
         pkg.derivedComponents, pkg.rootComponents);
@@ -448,6 +449,7 @@ const createDerivedComponent = store => (componentName) => {
 
         s.currentFrontEndItem = newComponentInfo.component;
         s.currentComponentInfo = newComponentInfo;
+        s.currentFrontEndType = "component";
         s.currentComponentIsNew = true;
         return s;
     });
@@ -479,22 +481,34 @@ const deleteDerivedComponent = store => name => {
 const renameDerivedComponent = store => (oldname, newname) => {
     store.update(s => {
 
-        const component = pipe(s.allComponents, [
-            find(c => c.name === name)
-        ]);
+        const {
+            allComponents, pages, error, changedComponents
+        } = rename(s.pages, s.allComponents, oldname, newname);
 
-        component.name = newname;
-
-        const allComponents = pipe(s.allComponents, [
-            filter(c => c.name !== name),
-            concat([component])
-        ]);
+        if(error) {
+            // should really do something with this
+            return s;
+        }
 
         s.allComponents = allComponents;
+        s.pages = pages;
+        if(s.currentFrontEndItem.name === oldname)
+            s.currentFrontEndItem.name = newname;
+
+        const saveAllChanged = async () => {
+            for(let cname of changedComponents) {
+                const changedComponent = getExactComponent(allComponents, cname);
+                await api.post(`/_builder/api/${s.appname}/derivedcomponent`, changedComponent);
+            }
+        }
 
         api.patch(`/_builder/api/${s.appname}/derivedcomponent`, {
             oldname, newname
-        });
+        })
+        .then(() => saveAllChanged())
+        .then(() => {
+            savePackage(store, s);
+        });        
 
         return s;
     })
@@ -502,8 +516,8 @@ const renameDerivedComponent = store => (oldname, newname) => {
 
 const savePage = store => async page => {
     store.update(s => {
-        if(s.currentFrontEndType === "page" || !s.currentPageName) {
-            return;
+        if(s.currentFrontEndType !== "page" || !s.currentPageName) {
+            return s;
         }
 
         s.pages[s.currentPageName] = page;
@@ -621,8 +635,9 @@ const savePackage = (store, s) => {
     api.post(`/_builder/api/${s.appname}/appPackage`, data);
 }
 
-const setCurrentComponent = store => component => {
+const setCurrentComponent = store => componentName => {
     store.update(s => {
+        const component = getExactComponent(s.allComponents, componentName);
         s.currentFrontEndItem = component;
         s.currentFrontEndType = "component";
         s.currentComponentIsNew = false;

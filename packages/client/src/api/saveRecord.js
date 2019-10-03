@@ -1,4 +1,4 @@
-
+import {trimSlash} from "../common/trimSlash";
 
  export const saveRecord = (api) => async ({statePath}) => {
     
@@ -19,8 +19,8 @@
         return;
     }
 
-    const savedRecord = await post({
-        url:`${rootPath}/api/record/${recordtoSave.key}`,
+    const savedRecord = await api.post({
+        url:`/api/record/${trimSlash(recordtoSave.key)}`,
         body: recordtoSave
     });
 

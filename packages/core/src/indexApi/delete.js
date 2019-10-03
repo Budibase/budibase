@@ -1,5 +1,6 @@
 import {
   tryAwaitOrIgnore,
+  safeKey
 } from '../common';
 import {
   isIndex, isShardedIndex,
@@ -11,6 +12,7 @@ import {
 } from '../indexing/sharding';
 
 export const _deleteIndex = async (app, indexKey, includeFolder) => {
+  indexKey = safeKey(indexKey);
   const indexNode = getExactNodeForPath(app.hierarchy)(indexKey);
 
   if (!isIndex(indexNode)) { throw new Error('Supplied key is not an index'); }

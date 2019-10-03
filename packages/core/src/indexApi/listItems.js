@@ -14,13 +14,16 @@ import {
 } from '../templateApi/hierarchy';
 import { permission } from '../authApi/permissions';
 
-export const listItems = app => async (indexKey, options) => apiWrapper(
-  app,
-  events.indexApi.listItems,
-  permission.readIndex.isAuthorized(indexKey),
-  { indexKey, options },
-  _listItems, app, indexKey, options,
-);
+export const listItems = app => async (indexKey, options) => {
+  indexKey = safeKey(indexKey);
+  return apiWrapper(
+    app,
+    events.indexApi.listItems,
+    permission.readIndex.isAuthorized(indexKey),
+    { indexKey, options },
+    _listItems, app, indexKey, options,
+  );
+}
 
 const defaultOptions = { rangeStartParams: null, rangeEndParams: null, searchPhrase: null };
 

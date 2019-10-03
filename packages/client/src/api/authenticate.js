@@ -13,8 +13,8 @@ export const authenticate = (api) => async ({username, password}) => {
         return;
     } 
 
-    const user = await post({
-        url:`${rootPath}/api/authenticate`,
+    const user = await api.post({
+        url:"/api/authenticate",
         body : {username, password}
     });
 

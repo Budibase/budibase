@@ -13,13 +13,16 @@ import { permission } from '../authApi/permissions';
 
 export const getRecordFileName = key => joinKey(key, 'record.json');
 
-export const load = app => async key => apiWrapper(
-  app,
-  events.recordApi.load,
-  permission.readRecord.isAuthorized(key),
-  { key },
-  _load, app, key,
-);
+export const load = app => async key => {
+  key = safeKey(key);
+  return apiWrapper(
+    app,
+    events.recordApi.load,
+    permission.readRecord.isAuthorized(key),
+    { key },
+    _load, app, key,
+  );
+}
 
 export const _load = async (app, key, keyStack = []) => {
   key = safeKey(key);

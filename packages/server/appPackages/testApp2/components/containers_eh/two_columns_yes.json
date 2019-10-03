@@ -1,5 +1,5 @@
 {
-  "name": "/containers/two_columns",
+  "name": "containers/two_columns_yes",
   "description": "",
   "inherits": "@budibase/standard-components/grid",
   "props": {

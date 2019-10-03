@@ -1,0 +1,65 @@
+{
+  "name": "apps/Application List Item",
+  "description": "",
+  "inherits": "@budibase/standard-components/panel",
+  "props": {
+    "border": "1px solid dimgray",
+    "borderRadius": "2px",
+    "color": "black",
+    "padding": "10px",
+    "margin": "20px",
+    "onClick": [
+      {
+        "##eventHandlerType": "Load Record",
+        "parameters": {
+          "recordKey": {
+            "##bbstate": "key",
+            "##bbsource": "context"
+          },
+          "statePath": "currentApplication"
+        }
+      }
+    ],
+    "component": {
+      "_component": "@budibase/standard-components/stackpanel",
+      "direction": "horizontal",
+      "children": [
+        {
+          "_component": "#children#array_element",
+          "control": {
+            "_component": "@budibase/standard-components/text",
+            "value": "",
+            "containerClass": "",
+            "font": "",
+            "color": "",
+            "textAlign": "inline",
+            "verticalAlign": "inline",
+            "display": "inline"
+          }
+        }
+      ],
+      "width": "auto",
+      "height": "auto",
+      "containerClass": "",
+      "itemContainerClass": "",
+      "data": {
+        "##bbstate": "allApplications",
+        "##bbsource": "store"
+      },
+      "dataItemComponent": {
+        "_component": ""
+      },
+      "onLoad": []
+    },
+    "display": "",
+    "text": {
+      "##bbstate": "name",
+      "##bbstatefallback": "My App Name",
+      "##bbsource": "context"
+    }
+  },
+  "tags": [
+    "div",
+    "container"
+  ]
+}
