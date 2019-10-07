@@ -5,10 +5,12 @@ const { join, basename } = require("path");
 const packagesFolder = "..";
 
 const jsFile = dir => join(dir, "index.js");
+const generatorsFile = dir => join(dir, "generators.js");
 const jsMapFile = dir => join(dir, "index.js.map");
 const sourceJs = jsFile("dist");
 const sourceJsMap = jsMapFile("dist");
 const componentsFile = "components.json";
+const sourceGenerators = generatorsFile("dist");
 
 const appPackages = join(packagesFolder, "server", "appPackages");
 
@@ -33,6 +35,7 @@ const nodeModules = appName => join(appPackages, appName, "node_modules", "@budi
 
     const copySourceJs = copySource(sourceJs);
     const copySourceJsMap = copySource(sourceJsMap);
+    const copyGenerators = copySource(sourceGenerators);
     const copyComponentsJson = copySource(componentsFile);
     
 
@@ -41,13 +44,18 @@ const nodeModules = appName => join(appPackages, appName, "node_modules", "@budi
 
         await copySourceJs(nodeModulesDist(app));
         await copySourceJsMap(nodeModulesDist(app));
-        await copyComponentsJson(nodeModules(app))
+        await copyGenerators(nodeModulesDist(app));
+
+        await copyComponentsJson(nodeModules(app));
 
         await copySourceJs(join(publicMain(app), "dist"));
         await copySourceJsMap(join(publicMain(app), "dist"));
+        await copyGenerators(join(publicMain(app), "dist"));
+
 
         await copySourceJs(join(publicUnauth(app), "dist"));
         await copySourceJsMap(join(publicUnauth(app), "dist"));
+        await copyGenerators(join(publicUnauth(app), "dist"));
     }
 
 })();

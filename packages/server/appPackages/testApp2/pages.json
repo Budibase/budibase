@@ -3,13 +3,13 @@
     "index": {
       "title": "main yeo"
     },
-    "appBody": "mike"
+    "appBody": "common/Prim Button"
   },
   "unauthenticated": {
     "index": {
       "title": "main"
     },
-    "appBody": "containers/two_columns"
+    "appBody": "common/Secondary Button"
   },
   "componentLibraries": [
     "@budibase/standard-components"

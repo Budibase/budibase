@@ -66,11 +66,20 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         delete:apiCall("DELETE")
     };
 
+    const safeCallEvent = (event, context) => {
+        
+        const isFunction = (obj) =>
+            !!(obj && obj.constructor && obj.call && obj.apply);
+
+        if(isFunction(event)) event(context);
+    }
+
     const bb = () => ({
         initialiseComponent: initialiseComponent(), 
         store,
         relativeUrl,
         api,
+        call:safeCallEvent,
         getStateOrValue: (prop, currentContext) => 
             getStateOrValue(globalState, prop, currentContext)
     });

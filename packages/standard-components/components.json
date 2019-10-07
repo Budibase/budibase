@@ -1,5 +1,32 @@
 {
 	"_lib": "./dist/index.js",
+	"_generators": {
+		"_lib": "./dist/generators.js",
+		"app": {
+			"name": "App",
+			"description": "Generate app based on your backend"
+		},
+		"forms": {
+			"name": "Forms",
+			"description": "Generate forms, based on your records"
+		},
+		"buttons": {
+			"name": "Buttons",
+			"description": "Generate some styled buttons"
+		},
+		"headers": {
+			"name": "Headers",
+			"description": "Generate some styled headings"
+		},
+		"nav": {
+			"name": "Nav bar",
+			"description": "Generate a nav bar, based n your root records"
+		},
+		"indexTables": {
+			"name": "Nav bar",
+			"description": "Generate a table based on an index"
+		}
+	},
 	"button" : {
 		"importPath": "button",
 		"name": "Button",
@@ -9,14 +36,21 @@
 			"contentComponent": "component",
 			"className": {"type": "string", "default": "default"},
 			"disabled": "bool",
-			"onClick": "event"
+			"onClick": "event",
+			"background": "string",
+			"color": "string",
+			"border": "string",
+			"padding": "string",
+			"hoverColor": "string",
+			"hoverBackground": "string",
+			"hoverBorder": "string"
 		},
 		"tags": ["button"]
 	}, 
 	"login" : {
 		"importPath": "Login",
 		"name": "Login Control",
-		"desciption": "A control that accepts username, password an also handles password resets",
+		"description": "A control that accepts username, password an also handles password resets",
 		"props" : {
 			"logo": "asset",
 			"loginRedirect": "string",
@@ -31,7 +65,7 @@
 	"form" : {
 		"importPath": "Form",
 		"name": "Form",
-		"desciption": "A form - allgned fields with labels",
+		"description": "A form - allgned fields with labels",
 		"props" : {
 			"containerClass": "string",
 			"formControls": {
@@ -47,10 +81,10 @@
 	"textbox" : {
 		"importPath": "Textbox",
 		"name": "Textbox",
-		"desciption": "An input type=text or password",
+		"description": "An input type=text or password",
 		"props" : {
 			"value": "string",
-			"hideValue": "boolean",
+			"hideValue": "bool",
 			"className": {"type": "string", "default": "default"}
 		},
 		"tags": ["form"]
@@ -58,7 +92,7 @@
 	"stackpanel": {
 		"importPath": "StackPanel",
 		"name": "StackPanel",
-		"desciption": "Layout elements in a stack, either horizontally or vertically",
+		"description": "Layout elements in a stack, either horizontally or vertically",
 		"props" : {
 			"direction": {
 				"type": "options", 
@@ -84,7 +118,7 @@
 	"grid": {
 		"importPath": "Grid",
 		"name": "Grid",
-		"desciption": "CSS Grid layout ",
+		"description": "CSS Grid layout ",
 		"props" : {
 			"gridTemplateRows": "string",
 			"gridTemplateColumns": "string",
@@ -110,7 +144,7 @@
 	"text": {
 		"importPath": "Text",
 		"name": "Text",
-		"desciption": "stylable block of text",
+		"description": "stylable block of text",
 		"props" : {
 			"value": "string",
 			"containerClass": "string",
@@ -143,7 +177,7 @@
 	"panel": {
 		"importPath": "Panel",
 		"name": "Panel",
-		"desciption": "A stylable div with a component inside",
+		"description": "A stylable div with a component inside",
 		"props" : {
 			"text": "string",
 			"component": "component",
@@ -173,7 +207,7 @@
 	"nav": {
 		"importPath": "Nav",
 		"name": "Nav",
-		"desciption": "A nav - a side bar of buttons that control the currently active component",
+		"description": "A nav - a side bar of buttons that control the currently active component",
 		"props" : {
 			"navBarBackground": {"type" :"string", "default":"silver"},
 			"navBarBorder": "string",
@@ -199,7 +233,7 @@
 	"table": {
 		"importPath": "Table",
 		"name": "Table",
-		"desciption": "An HTML table",
+		"description": "An HTML table",
 		"props" : {
 			"data": "state",
 			"columns": {

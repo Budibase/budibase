@@ -23,13 +23,13 @@ let dataBoundComponents = {};
 let onLoadCalled = false;
 
 const hasDataBoundComponents = () => 
-    Object.getOwnPropertyNames(dataBoundComponents).length === 0;
+    Object.getOwnPropertyNames(dataBoundComponents).length > 0;
 
 const hasData = () => 
     Array.isArray(data) && data.length > 0;
 
 const hasStaticComponents = () => {
-    return Object.getOwnPropertyNames(staticComponents).length === 0;
+    return Object.getOwnPropertyNames(staticComponents).length > 0;
 }
 
 $: {
@@ -70,7 +70,7 @@ $: {
     }
 
     if(!onLoadCalled && onLoad && !onLoad.isPlaceholder) {
-        onLoad();
+        _bb.call(onLoad);
         onLoadCalled = true;
     }
 }

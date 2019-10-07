@@ -1,0 +1,228 @@
+{
+  "name": "Main View Switcher",
+  "description": "",
+  "inherits": "@budibase/standard-components/nav",
+  "props": {
+    "items": [
+      {
+        "_component": "#items#array_element",
+        "title": "Apps List",
+        "component": {
+          "_component": "apps/Apps List",
+          "direction": "horizontal",
+          "children": [
+            {
+              "_component": "#children#array_element",
+              "control": {
+                "_component": "apps/Create App List Item",
+                "text": "Create New",
+                "component": {
+                  "_component": ""
+                },
+                "containerClass": "",
+                "background": "",
+                "border": "1px solid black",
+                "borderRadius": "2px",
+                "font": "",
+                "color": "",
+                "padding": "10px",
+                "margin": "20px",
+                "hoverColor": "",
+                "hoverBackground": "gainsboro",
+                "height": "100px",
+                "width": "100px",
+                "onClick": [
+                  {
+                    "##eventHandlerType": "Get New Record",
+                    "parameters": {
+                      "collectionKey": "/applications",
+                      "childRecordType": "application",
+                      "statePath": "currentApplication"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "width": "auto",
+          "height": "auto",
+          "containerClass": "",
+          "itemContainerClass": "",
+          "data": {
+            "##bbstate": "allApplications",
+            "##bbsource": "store"
+          },
+          "dataItemComponent": {
+            "_component": "apps/Application List Item",
+            "text": "",
+            "component": {
+              "_component": "@budibase/standard-components/stackpanel",
+              "children": [
+                {
+                  "_component": "#children#array_element",
+                  "control": {
+                    "_component": "@budibase/standard-components/text",
+                    "value": "",
+                    "containerClass": "",
+                    "font": "",
+                    "color": "",
+                    "textAlign": "inline",
+                    "verticalAlign": "inline",
+                    "display": "inline"
+                  }
+                }
+              ],
+              "width": "auto",
+              "height": "auto",
+              "containerClass": "",
+              "itemContainerClass": "",
+              "data": {
+                "##bbstate": ""
+              },
+              "dataItemComponent": {
+                "_component": ""
+              },
+              "onLoad": []
+            },
+            "containerClass": "",
+            "background": "",
+            "border": "1px solid dimgray",
+            "borderRadius": "2px",
+            "font": "",
+            "color": "black",
+            "padding": "10px",
+            "margin": "20px",
+            "hoverColor": "",
+            "hoverBackground": "",
+            "height": "",
+            "width": "",
+            "onClick": [
+              {
+                "##eventHandlerType": "Load Record",
+                "parameters": {
+                  "recordKey": {
+                    "##bbstate": "key",
+                    "##bbsource": "context"
+                  },
+                  "statePath": "currentApp"
+                }
+              }
+            ],
+            "display": "inline"
+          },
+          "onLoad": [
+            {
+              "##eventHandlerType": "List Records",
+              "parameters": {
+                "indexKey": "/all_applications",
+                "statePath": "allApplications"
+              }
+            }
+          ],
+          "component": {
+            "_component": "@budibase/standard-components/stackpanel",
+            "direction": "horizontal",
+            "children": [
+              {
+                "_component": "#children#array_element",
+                "control": {
+                  "_component": "@budibase/standard-components/text",
+                  "value": "",
+                  "containerClass": "",
+                  "font": "",
+                  "color": "",
+                  "textAlign": "inline",
+                  "verticalAlign": "inline",
+                  "display": "inline"
+                }
+              }
+            ],
+            "width": "auto",
+            "height": "auto",
+            "containerClass": "",
+            "itemContainerClass": "",
+            "data": {
+              "##bbstate": "allApplications",
+              "##bbsource": "store"
+            },
+            "dataItemComponent": {
+              "_component": "apps/Application List Item",
+              "text": {
+                "##bbstate": "name",
+                "##bbstatefallback": "My App Name",
+                "##bbsource": "context"
+              },
+              "component": {
+                "_component": "@budibase/standard-components/stackpanel",
+                "direction": "horizontal",
+                "children": [
+                  {
+                    "_component": "#children#array_element",
+                    "control": {
+                      "_component": "@budibase/standard-components/text",
+                      "value": "",
+                      "containerClass": "",
+                      "font": "",
+                      "color": "",
+                      "textAlign": "inline",
+                      "verticalAlign": "inline",
+                      "display": "inline"
+                    }
+                  }
+                ],
+                "width": "auto",
+                "height": "auto",
+                "containerClass": "",
+                "itemContainerClass": "",
+                "data": {
+                  "##bbstate": "allApplications",
+                  "##bbsource": "store"
+                },
+                "dataItemComponent": {
+                  "_component": ""
+                },
+                "onLoad": []
+              },
+              "containerClass": "",
+              "background": "",
+              "border": "1px solid dimgray",
+              "borderRadius": "2px",
+              "font": "",
+              "color": "black",
+              "padding": "10px",
+              "margin": "20px",
+              "hoverColor": "",
+              "hoverBackground": "",
+              "height": "",
+              "width": "",
+              "onClick": [
+                {
+                  "##eventHandlerType": "Load Record",
+                  "parameters": {
+                    "recordKey": {
+                      "##bbstate": "key",
+                      "##bbsource": "context"
+                    },
+                    "statePath": "currentApplication"
+                  }
+                }
+              ],
+              "display": ""
+            },
+            "onLoad": []
+          }
+        }
+      }
+    ],
+    "selectedItem": {
+      "##bbstate": "currentView",
+      "##bbstatefallback": "Apps List",
+      "##bbsource": "store"
+    }
+  },
+  "tags": [
+    "nav",
+    "navigation",
+    "sidebar"
+  ]
+}

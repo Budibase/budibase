@@ -85,6 +85,11 @@ export const allComponents = () => ([
                         _component: "PrimaryButton",
                         contentText: "Button 2"
                     }
+                },
+                {
+                    control: {
+                        _component: "common/PasswordBox",
+                    }
                 }
             ]
         }

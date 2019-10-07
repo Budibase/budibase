@@ -16,10 +16,13 @@ export let selectedItem="";
 export let _bb;
 
 let selectedIndex = -1;
-let contentElement;
 let styleVars={};
-let currentComponent;
+let components = {};
+let componentElements = {}
 
+
+const hasComponentElements = () => 
+    Object.getOwnPropertyNames(componentElements).length > 0;
 
 $: {
     styleVars = {
@@ -29,7 +32,7 @@ $: {
         itemHoverBackground, itemHoverColor
     };
 
-    if(items && items.length > 0 && contentElement) {
+    if(items && items.length > 0 && hasComponentElements()) {
         const currentSelectedItem = selectedIndex > 0
                                    ? items[selectedIndex].title
                                    : "";
@@ -49,8 +52,11 @@ $: {
 
 const onSelectItem = (index) => () => {
     selectedIndex = index;
-    if(currentComponent) currentComponent.$destoy();
-    currentComponent = _bb.initialiseComponent(items[index].component, contentElement);
+    if(!components[index]) {
+        const comp = _bb.initialiseComponent(
+            items[index].component, componentElements[index]);
+        components[index] = comp;   
+    }
 }
 
 
@@ -68,9 +74,12 @@ const onSelectItem = (index) => () => {
         {/each}
     </div>
     {/if}
+    {#each items as navItem, index}
+
     <div class="content"
-         bind:this={contentElement}>
+         bind:this={componentElements[index]}>
     </div>
+    {/each}
 </div>
 
 <style>

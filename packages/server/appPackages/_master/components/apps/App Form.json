@@ -1,0 +1,25 @@
+{
+  "name": "apps/App Form",
+  "description": "",
+  "inherits": "@budibase/standard-components/form",
+  "props": {
+    "formControls": [
+      {
+        "_component": "#formControls#array_element",
+        "label": "Name",
+        "control": {
+          "_component": "@budibase/standard-components/textbox",
+          "value": {
+            "##bbstate": "currentApplication.name",
+            "##bbsource": "store"
+          },
+          "hideValue": false,
+          "className": "default"
+        }
+      }
+    ]
+  },
+  "tags": [
+    "form"
+  ]
+}
