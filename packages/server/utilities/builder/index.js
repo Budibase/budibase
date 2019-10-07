@@ -111,14 +111,18 @@ const getRootComponents = async (appPath, pages ,lib) => {
     }
 
     const components = {};
+    const generators = {};
+
     for(let l of libs) {
         const info = await componentLibraryInfo(appPath, l);
         merge(components, info.components);
+        merge(generators, info.generators);
     }
 
     if(components._lib) delete components._lib;
+    if(components._generators) delete components._generators;
     
-    return components;
+    return {components, generators};
 }
 
 const fetchDerivedComponents = async (appPath, relativePath = "") => {

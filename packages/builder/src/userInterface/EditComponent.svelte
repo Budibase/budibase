@@ -66,7 +66,7 @@ const save = () => {
         return;
     }
 
-    component.name = originalName;
+    component.name = originalName || name;
     component.description = description;
     component.tags = pipe(tagsString, [
         split(","),

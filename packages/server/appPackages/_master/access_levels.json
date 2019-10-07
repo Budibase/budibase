@@ -1,4 +1,6 @@
-[
+{ 
+"version":0,
+"levels":[
   {
     "name": "owner",
     "permissions": [
@@ -170,3 +172,4 @@
     ]
   }
 ]
+}

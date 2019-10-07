@@ -37,13 +37,26 @@ module.exports.componentLibraryInfo = async (appPath, libname) => {
         const components = await readJSON(componentsPath);
         const namespacedComponents = {_lib:components._lib};
         for(let cname in components) {
-            if(cname === "_lib") continue;
+            if(cname === "_lib" || cname == "_generators") continue;
             const namespacedName = `${libname}/${cname}`;
             components[cname].name = namespacedName;
             namespacedComponents[namespacedName] = components[cname];
         }
+
+        const namespacedGenerators = {}
+        if(components._generators) {
+            namespacedGenerators._lib=components._generators._lib || "generators.js";
+            for(let gname in components._generators) {
+                if(gname === "_lib") continue;
+                const namespacedName = `${libname}/${gname}`;
+                components._generators[gname].name = namespacedName;
+                namespacedGenerators[namespacedName] = components._generators[gname];
+            }
+        }
+
         return ({
             components: namespacedComponents,
+            generators: namespacedGenerators,
             libDir,
             componentsPath
         });

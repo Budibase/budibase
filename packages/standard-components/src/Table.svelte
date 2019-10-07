@@ -12,7 +12,7 @@ export let onRowClick;
 export let _bb;
 
 const rowClickHandler = (row) => () => {
-    onRowClick(row);
+    _bb.call(onRowClick, row);
 }
 
 </script>

@@ -19,7 +19,9 @@ import { rename } from "../userInterface/pagesParsing/renameComponent";
 import { 
     getComponentInfo, getNewComponentInfo 
 } from "../userInterface/pagesParsing/createProps";
-import { loadLibs, loadLibUrls } from "./loadComponentLibraries";
+import { 
+    loadLibs, loadLibUrls, loadGeneratorLibs
+} from "./loadComponentLibraries";
 
 let appname = "";
 
@@ -45,7 +47,7 @@ export const getStore = () => {
         activeNav: "database",
         isBackend:true,
         hasAppPackage: false,
-        accessLevels: [],
+        accessLevels: {version:0, levels:[]},
         currentNode: null,
         libraries:null,
         showSettings:false,
@@ -88,6 +90,7 @@ export const getStore = () => {
     store.showBackend = showBackend(store);
     store.showSettings = showSettings(store);
     store.useAnalytics = useAnalytics(store);
+    store.createGeneratedComponents = createGeneratedComponents(store);
     return store;
 } 
 
@@ -110,15 +113,17 @@ const initialise = (store, initial) => async () => {
                          .then(r => r.json());
 
     initial.libraries = await loadLibs(appname, pkg);
+    initial.generatorLibraries = await loadGeneratorLibs(appname, pkg);
     initial.loadLibraryUrls = () => loadLibUrls(appname, pkg);
     initial.appname = appname;
     initial.pages = pkg.pages;
     initial.hasAppPackage = true;
     initial.hierarchy = pkg.appDefinition.hierarchy;
-    initial.accessLevels = pkg.accessLevels.levels;
+    initial.accessLevels = pkg.accessLevels;
     initial.derivedComponents = pkg.derivedComponents;
+    initial.generators = generatorsArray(pkg.rootComponents.generators);
     initial.allComponents = combineComponents(
-        pkg.derivedComponents, pkg.rootComponents);
+        pkg.derivedComponents, pkg.rootComponents.components);
     initial.actions = reduce((arr, action) => {
         arr.push(action);
         return arr;
@@ -136,6 +141,14 @@ const initialise = (store, initial) => async () => {
     store.set(initial);
     return initial;
 }
+
+const generatorsArray = generators => 
+    pipe(generators, [
+        keys,
+        filter(k => k !== "_lib"),
+        map(k => generators[k])
+    ]);
+
 
 const showSettings = store => show => {
     store.update(s => {
@@ -377,20 +390,28 @@ const deleteTrigger  = store => trigger => {
     });
 }
 
+const incrementAccessLevelsVersion = (s) =>
+    s.accessLevels.version = (s.accessLevels.version || 0) + 1; 
+
 const saveLevel = store => (newLevel, isNew, oldLevel=null) => {
     store.update(s => {
 
+        const levels = s.accessLevels.levels;
+
         const existingLevel = isNew 
                                ? null
-                               : find(a => a.name === oldLevel.name)(s.accessLevels);
+                               : find(a => a.name === oldLevel.name)(levels);
             
         if(existingLevel) {
-            s.accessLevels = pipe(s.accessLevels, [
+            s.accessLevels.levels = pipe(levels, [
                 map(a => a === existingLevel ? newLevel : a)
             ]);
         } else {
-            s.accessLevels.push(newLevel);
+            s.accessLevels.levels.push(newLevel);
         }
+
+        incrementAccessLevelsVersion(s);
+
         savePackage(store, s);
         return s;
     });
@@ -398,7 +419,8 @@ const saveLevel = store => (newLevel, isNew, oldLevel=null) => {
 
 const deleteLevel = store => level => {
     store.update(s => {
-        s.accessLevels = filter(t => t.name !== level.name)(s.accessLevels);
+        s.accessLevels.levels = filter(t => t.name !== level.name)(s.accessLevels.levels);
+        incrementAccessLevelsVersion(s);
         savePackage(store, s);
         return s;
     });
@@ -442,7 +464,7 @@ const saveDerivedComponent = store => (derivedComponent) => {
     })
 };
 
-const createDerivedComponent = store => (componentName) => {
+const createDerivedComponent = store => componentName => {
     store.update(s => {
         const newComponentInfo = getNewComponentInfo(
             s.allComponents, componentName);
@@ -453,7 +475,25 @@ const createDerivedComponent = store => (componentName) => {
         s.currentComponentIsNew = true;
         return s;
     });
-}
+};
+
+const createGeneratedComponents = store => components => {
+    store.update(s => {
+        s.allComponents = [...s.allComponents, ...components];
+
+        const doCreate = async () => {
+            for(let c of components) {
+                await api.post(`/_builder/api/${s.appname}/derivedcomponent`, c);
+            }
+
+            await savePackage(store, s);
+        }
+        
+        doCreate();
+
+        return s;
+    });
+};
 
 const deleteDerivedComponent = store => name => {
     store.update(s => {
@@ -470,6 +510,7 @@ const deleteDerivedComponent = store => name => {
         s.derivedComponents = derivedComponents;
         if(s.currentFrontEndItem.name === name) {
             s.currentFrontEndItem = null;
+            s.currentFrontEndType = "";
         }
 
         api.delete(`/_builder/api/${s.appname}/derivedcomponent/${name}`);
@@ -598,9 +639,9 @@ const removeStylesheet = store => stylesheet => {
 const refreshComponents = store => async () => {
 
     const components = 
-        await api.get(`/_builder/api/${db.appname}/components`).then(r => r.json());
+        await api.get(`/_builder/api/${db.appname}/rootcomponents`).then(r => r.json());
 
-    const rootComponents = pipe(components, [
+    const rootComponents = pipe(components.components, [
         keys,
         map(k => ({...components[k], name:k}))
     ]);
@@ -610,6 +651,7 @@ const refreshComponents = store => async () => {
             filter(c => !isRootComponent(c)),
             concat(rootComponents)
         ]);
+        s.generators = components.generators;
         return s;
     });
 };
@@ -632,7 +674,7 @@ const savePackage = (store, s) => {
         pages:s.pages,
     }
 
-    api.post(`/_builder/api/${s.appname}/appPackage`, data);
+    return api.post(`/_builder/api/${s.appname}/appPackage`, data);
 }
 
 const setCurrentComponent = store => componentName => {

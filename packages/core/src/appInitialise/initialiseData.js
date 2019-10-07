@@ -5,8 +5,7 @@ import { AUTH_FOLDER, USERS_LIST_FILE, ACCESS_LEVELS_FILE } from '../authApi/aut
 import { initialiseRootCollections } from '../collectionApi/initialise';
 import { initialiseIndex } from '../indexing/initialiseIndex';
 import { getFlattenedHierarchy, isGlobalIndex, isSingleRecord } from '../templateApi/hierarchy';
-import { _save } from '../recordApi/save';
-import { getNew } from '../recordApi/getNew';
+
 
 export const initialiseData = async (datastore, applicationDefinition, accessLevels) => {
   await datastore.createFolder(configFolder);

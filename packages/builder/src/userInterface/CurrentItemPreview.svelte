@@ -11,19 +11,13 @@ import { getRootComponent } from "./pagesParsing/getRootComponent";
 import { buildPropsHierarchy } from "./pagesParsing/buildPropsHierarchy";
 
 
-let component;
+let hasComponent=false;
 let stylesheetLinks = "";
-let rootComponentName = "";
-let libraries;
-let allComponents;
 let appDefinition = {};
 
 store.subscribe(s => {
-    const {componentName, libName} = splitName(
-        s.currentComponentInfo.rootComponent.name);
-
-    rootComponentName = componentName;
-    component = s.libraries[libName][componentName];
+    hasComponent = !!s.currentFrontEndItem;
+    
     stylesheetLinks = pipe(s.pages.stylesheets, [
         map(s => `<link rel="stylesheet" href="${s}"/>`),
         join("\n")
@@ -32,8 +26,7 @@ store.subscribe(s => {
         componentLibraries: s.loadLibraryUrls(),
         props: buildPropsHierarchy(s.allComponents, s.currentFrontEndItem)
     };
-    libraries = s.libraries;
-    allComponents = s.allComponents;
+
 });
 
 
@@ -42,6 +35,7 @@ store.subscribe(s => {
 
 
 <div class="component-container">
+    {#if hasComponent}
     <iframe style="height: 100%; width: 100%"
             title="componentPreview"
             srcdoc={
@@ -68,6 +62,7 @@ store.subscribe(s => {
 </body>
 </html>`}>
     </iframe>
+    {/if}
 </div>
 
 

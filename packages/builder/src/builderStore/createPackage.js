@@ -7,7 +7,6 @@ export const createPackage = (packageInfo, store) => {
       hierarchy:root,
       actions:[],
       triggers:[],
-      accessLevels: [],
-      accessLevelsVersion: 0
+      accessLevels: {version:0, levels:[]}
     });
 };

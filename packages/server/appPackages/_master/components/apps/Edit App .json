@@ -1,0 +1,37 @@
+{
+  "name": "apps/Edit App ",
+  "description": "",
+  "inherits": "@budibase/standard-components/stackpanel",
+  "props": {
+    "children": [
+      {
+        "_component": "#children#array_element",
+        "control": {
+          "_component": "apps/App Form",
+          "containerClass": "",
+          "formControls": [
+            {
+              "_component": "#formControls#array_element",
+              "label": "Name",
+              "control": {
+                "_component": "@budibase/standard-components/textbox",
+                "value": {
+                  "##bbstate": "currentApplication.name",
+                  "##bbsource": "store"
+                },
+                "hideValue": false,
+                "className": "default"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "tags": [
+    "div",
+    "container",
+    "layout",
+    "panel"
+  ]
+}

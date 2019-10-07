@@ -65,7 +65,7 @@ const getPermissionsString = perms => {
         </tr>
     </thead>
     <tbody>
-        {#each $store.accessLevels as level}
+        {#each $store.accessLevels.levels as level}
         <tr>
             <td >{level.name}</td>
             <td >{getPermissionsString(level.permissions)}</td>
@@ -88,7 +88,7 @@ const getPermissionsString = perms => {
                      allPermissions={allPermissions}
                      onFinished={onEditingFinished}
                      isNew={editingLevelIsNew}
-                     allLevels={$store.accessLevels}
+                     allLevels={$store.accessLevels.levels}
                      hierarchy={$store.hierarchy}
                      actions={$store.actions} />
     {/if}    

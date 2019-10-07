@@ -3,6 +3,10 @@ import {hierarchy as hierarchyFunctions,
 import {find, filter, includes, keyBy, some,
     flatten, map} from "lodash/fp";
 
+import {
+    generateSchema
+} from "../../../core/src/indexing/indexSchemaCreator";
+
 export const pipe = common.$;
 
 export const events = common.eventsList;
@@ -73,3 +77,18 @@ export const getNewAccessLevel = () =>
 
 export const validateAccessLevels = (hierarchy, actions, accessLevels) => 
     authApi(hierarchy, actions).validateAccessLevels(accessLevels);
+
+export const getIndexNodes = (hierarchy) => 
+    pipe(hierarchy, [
+        hierarchyFunctions.getFlattenedHierarchy,
+        filter(hierarchyFunctions.isIndex)
+    ]);
+
+export const getRecordNodes = (hierarchy) => 
+    pipe(hierarchy, [
+        hierarchyFunctions.getFlattenedHierarchy,
+        filter(hierarchyFunctions.isIndex)
+    ]);
+
+export const getIndexSchema = hierarchy => index => 
+    generateSchema(hierarchy, index);

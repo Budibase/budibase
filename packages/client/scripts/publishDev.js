@@ -44,6 +44,10 @@ const nodeModules = appName => join(appPackages, appName, "node_modules", "@budi
 
         await copySourceJs(publicUnauth(app));
         await copySourceJsMap(publicUnauth(app));
+
+        await copySource(
+            join("dist", "budibase-client.esm.mjs"))(
+            join(packagesFolder, "server", "builder" ));
     }
 
 })();
