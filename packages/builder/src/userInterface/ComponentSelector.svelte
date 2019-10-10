@@ -11,6 +11,7 @@ import { pipe } from "../common/core";
 
 export let onComponentChosen;
 export let onGeneratorChosen;
+export let allowGenerators;
 
 let derivedComponents=[];
 let componentLibraries=[];
@@ -77,6 +78,7 @@ store.subscribe(s => {
 
 <div class="library-container">
 
+    {#if allowGenerators}
     <div class="inner-header">
         Generators
     </div>
@@ -94,6 +96,7 @@ store.subscribe(s => {
     </div>
 
     {/each}
+    {/if}
 
     <div class="inner-header">
         Components

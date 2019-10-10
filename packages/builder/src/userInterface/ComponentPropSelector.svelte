@@ -3,7 +3,7 @@ import {
     last
 } from "lodash/fp";
 import IconButton from "../common/IconButton.svelte";
-import ComponentSearch from "./ComponentSearch.svelte";
+import ComponentSelector from "./ComponentSelector.svelte";
 import Button from "../common/Button.svelte";
 import ButtonGroup from "../common/ButtonGroup.svelte";
 import UIkit from "uikit";
@@ -89,11 +89,12 @@ const confirmClearComponent = () => {
 </div>
 
 <div bind:this={modalElement} uk-modal>
-    <div class="uk-modal-dialog">
+    <div class="uk-modal-dialog" uk-overflow-auto>
 
         {#if modalAction === CHOOSE_COMPONENT}
         <div class="uk-modal-body">
-            <ComponentSearch onComponentChosen={componentChosen} />
+            <ComponentSelector onComponentChosen={componentChosen}
+                               allowGenerators={false} />
         </div>
         {:else if modalAction === CLEAR_COMPONENT}
         <div class="uk-modal-body">

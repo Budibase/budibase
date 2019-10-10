@@ -3,9 +3,6 @@
   "description": "Header 1",
   "inherits": "@budibase/standard-components/text",
   "props": {
-    "font": "29pt"
-  },
-  "tags": [
-    ""
-  ]
+    "font": "20pt"
+  }
 }
