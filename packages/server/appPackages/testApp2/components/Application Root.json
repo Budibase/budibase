@@ -1,0 +1,20 @@
+{
+  "name": "Application Root",
+  "inherits": "@budibase/standard-components/nav",
+  "props": {
+    "items": [
+      {
+        "title": "Yeo index",
+        "component": {
+          "_component": "tables/Yeo index Table"
+        }
+      },
+      {
+        "title": "everyones_invoices",
+        "component": {
+          "_component": "tables/everyones_invoices Table"
+        }
+      }
+    ]
+  }
+}

@@ -9,7 +9,9 @@ import {
 } from "./state/stateBinding";
 import { createCoreApi } from "./core";
 import { getStateOrValue } from "./state/getState";
+import { setState, setStateFromBinding } from "./state/setState";
 import { trimSlash } from "./common/trimSlash";
+import { isBound } from "./state/isState";
 
 
 export const createApp = (componentLibraries, appDefinition, user) => {
@@ -20,11 +22,27 @@ export const createApp = (componentLibraries, appDefinition, user) => {
 
         if(!componentName || !libName) return;
 
-        const {initialProps, bind} = setupBinding(store, props, coreApi, context, appDefinition.appRootPath);
+        const {initialProps, bind, boundProps} = setupBinding(store, props, coreApi, context, appDefinition.appRootPath);
+
+        const bindings = {};
+        if(boundProps && boundProps.length > 0) {
+            for(let p of boundProps) {
+                bindings[p.propName] = {
+                    path: p.path,
+                    fallback: p.fallback,
+                    source: p.source
+                }
+            }
+        }
+
+        const componentProps = {
+            ...initialProps, 
+            _bb:bb(bindings, context || parentContext)
+        };
 
         const component = new (componentLibraries[libName][componentName])({
             target: htmlElement,
-            props: {...initialProps, _bb:bbInContext(context || parentContext)},
+            props: componentProps,
             hydrate:true
         });
 
@@ -74,27 +92,22 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         if(isFunction(event)) event(context);
     }
 
-    const bb = () => ({
-        initialiseComponent: initialiseComponent(), 
+    const bb = (bindings, context) => ({
+        initialiseComponent: initialiseComponent(context), 
         store,
         relativeUrl,
         api,
         call:safeCallEvent,
+        isBound,
+        setStateFromBinding: (binding, value) => setStateFromBinding(store, binding, value),
+        setState: (path, value) => setState(store, path, value),
         getStateOrValue: (prop, currentContext) => 
-            getStateOrValue(globalState, prop, currentContext)
+            getStateOrValue(globalState, prop, currentContext),
+        bindings,
+        context,        
     });
 
-    const bbRoot = bb();
-
-    const bbInContext = (context) => {
-        if(!context) return bbRoot;
-        const bbCxt = bb();
-        bbCxt.context = context;
-        bbCxt.initialiseComponent=initialiseComponent(context);
-        return bbCxt;
-    }
-
-    return bbRoot;
+    return bb();
 
 }
 

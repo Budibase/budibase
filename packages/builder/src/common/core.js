@@ -87,7 +87,7 @@ export const getIndexNodes = (hierarchy) =>
 export const getRecordNodes = (hierarchy) => 
     pipe(hierarchy, [
         hierarchyFunctions.getFlattenedHierarchy,
-        filter(hierarchyFunctions.isIndex)
+        filter(hierarchyFunctions.isRecord)
     ]);
 
 export const getIndexSchema = hierarchy => index => 

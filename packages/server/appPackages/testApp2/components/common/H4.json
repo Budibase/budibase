@@ -1,0 +1,8 @@
+{
+  "name": "common/H4",
+  "description": "Header 4",
+  "inherits": "@budibase/standard-components/text",
+  "props": {
+    "font": "10pt bold"
+  }
+}

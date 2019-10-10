@@ -18949,6 +18949,24 @@ var app = (function (exports) {
 
 	const isArrayOfString = opts => fp_10(opts) && all(fp_26)(opts);
 
+	const BB_STATE_BINDINGPATH = "##bbstate";
+	const BB_STATE_BINDINGSOURCE = "##bbsource";
+	const BB_STATE_FALLBACK = "##bbstatefallback";
+
+	const isBound = (prop) =>
+	    prop !== undefined 
+	    && prop[BB_STATE_BINDINGPATH] !== undefined;
+	    
+	const takeStateFromStore = (prop) => 
+	    prop[BB_STATE_BINDINGSOURCE] === undefined 
+	    || prop[BB_STATE_BINDINGSOURCE] === "store";
+
+	const takeStateFromContext = (prop) => 
+	    prop[BB_STATE_BINDINGSOURCE] === "context";
+
+	const takeStateFromEventParameters = (prop) => 
+	    prop[BB_STATE_BINDINGSOURCE] === "event";
+
 	const setState = (store, path, value) => {
 
 	    if(!path || path.length === 0) return;
@@ -18980,20 +18998,8 @@ var app = (function (exports) {
 	    });
 	};
 
-	const BB_STATE_BINDINGPATH = "##bbstate";
-	const BB_STATE_BINDINGSOURCE = "##bbsource";
-	const BB_STATE_FALLBACK = "##bbstatefallback";
-
-	const isBound = (prop) => prop[BB_STATE_BINDINGPATH] !== undefined;
-	const takeStateFromStore = (prop) => 
-	    prop[BB_STATE_BINDINGSOURCE] === undefined 
-	    || prop[BB_STATE_BINDINGSOURCE] === "store";
-
-	const takeStateFromContext = (prop) => 
-	    prop[BB_STATE_BINDINGSOURCE] === "context";
-
-	const takeStateFromEventParameters = (prop) => 
-	    prop[BB_STATE_BINDINGSOURCE] === "event";
+	const setStateFromBinding = (store, binding, value) => 
+	    setState(store, binding[BB_STATE_BINDINGPATH], value);
 
 	const getState = (s, path, fallback) => {
 
@@ -19285,25 +19291,26 @@ var app = (function (exports) {
 	            
 	            if(isBound(val) && takeStateFromStore(val)) {
 
-	                const binding = stateBinding(val);
-	                const fallback = stateFallback(val);
+	                const binding = BindingPath(val);
+	                const source = BindingSource(val);
+	                const fallback = BindingFallback(val);
 
 	                boundProps.push({ 
-	                    stateBinding:binding,
-	                    fallback, propName
+	                    path:binding,
+	                    fallback, propName, source
 	                });
 
 	                initialProps[propName] = fallback;
 	            } else if(isBound(val) && takeStateFromContext(val)) {
 
-	                const binding = stateBinding(val);
-	                const fallback = stateFallback(val);
+	                const binding = BindingPath(val);
+	                const fallback = BindingFallback(val);
+	                const source = BindingSource(val);
 
 	                initialProps[propName] = getState(
 	                    context || {},
 	                    binding,
-	                    fallback
-	                );
+	                    fallback);
 
 	            } else if(isEventType(val)) {
 
@@ -19356,7 +19363,7 @@ var app = (function (exports) {
 	                for(let boundProp of boundProps) {
 	                    const val = getState(
 	                        s, 
-	                        boundProp.stateBinding, 
+	                        boundProp.path, 
 	                        boundProp.fallback);
 
 	                    if(val === undefined && newProps[boundProp.propName] !== undefined) {
@@ -19432,13 +19439,16 @@ var app = (function (exports) {
 	    const bindings = getBindings(rootProps, rootInitialProps);
 
 	    return {
-	        initialProps:rootInitialProps, bind:bind(bindings)
+	        initialProps:rootInitialProps, 
+	        bind:bind(bindings), 
+	        boundProps:bindings.boundProps
 	    };
 
 	};
 
-	const stateBinding = (prop) => prop[BB_STATE_BINDINGPATH];
-	const stateFallback = (prop) => prop[BB_STATE_FALLBACK];
+	const BindingPath = (prop) => prop[BB_STATE_BINDINGPATH];
+	const BindingFallback = (prop) => prop[BB_STATE_FALLBACK];
+	const BindingSource = (prop) => prop[BB_STATE_BINDINGSOURCE];
 
 	const createCoreApp = (appDefinition, user) => {
 	    const app = {
@@ -20361,11 +20371,27 @@ var app = (function (exports) {
 
 	        if(!componentName || !libName) return;
 
-	        const {initialProps, bind} = setupBinding(store, props, coreApi, context, appDefinition.appRootPath);
+	        const {initialProps, bind, boundProps} = setupBinding(store, props, coreApi, context, appDefinition.appRootPath);
+
+	        const bindings = {};
+	        if(boundProps && boundProps.length > 0) {
+	            for(let p of boundProps) {
+	                bindings[p.propName] = {
+	                    path: p.path,
+	                    fallback: p.fallback,
+	                    source: p.source
+	                };
+	            }
+	        }
+
+	        const componentProps = {
+	            ...initialProps, 
+	            _bb:bb(bindings, context || parentContext)
+	        };
 
 	        const component = new (componentLibraries[libName][componentName])({
 	            target: htmlElement,
-	            props: {...initialProps, _bb:bbInContext(context || parentContext)},
+	            props: componentProps,
 	            hydrate:true
 	        });
 
@@ -20415,27 +20441,22 @@ var app = (function (exports) {
 	        if(isFunction(event)) event(context);
 	    };
 
-	    const bb = () => ({
-	        initialiseComponent: initialiseComponent(), 
+	    const bb = (bindings, context) => ({
+	        initialiseComponent: initialiseComponent(context), 
 	        store,
 	        relativeUrl,
 	        api,
 	        call:safeCallEvent,
+	        isBound,
+	        setStateFromBinding: (binding, value) => setStateFromBinding(store, binding, value),
+	        setState: (path, value) => setState(store, path, value),
 	        getStateOrValue: (prop, currentContext) => 
-	            getStateOrValue(globalState, prop, currentContext)
+	            getStateOrValue(globalState, prop, currentContext),
+	        bindings,
+	        context,        
 	    });
 
-	    const bbRoot = bb();
-
-	    const bbInContext = (context) => {
-	        if(!context) return bbRoot;
-	        const bbCxt = bb();
-	        bbCxt.context = context;
-	        bbCxt.initialiseComponent=initialiseComponent(context);
-	        return bbCxt;
-	    };
-
-	    return bbRoot;
+	    return bb();
 
 	};
 

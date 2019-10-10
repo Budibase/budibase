@@ -9,7 +9,7 @@ import {
 import {
     isBound, takeStateFromStore,
     takeStateFromContext, takeStateFromEventParameters,
-    BB_STATE_FALLBACK, BB_STATE_BINDINGPATH
+    BB_STATE_FALLBACK, BB_STATE_BINDINGPATH, BB_STATE_BINDINGSOURCE
 } from "./isState";
 
 const doNothing = () => {};
@@ -33,24 +33,27 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
             
             if(isBound(val) && takeStateFromStore(val)) {
 
-                const binding = stateBinding(val);
-                const fallback = stateFallback(val);
+                const binding = BindingPath(val);
+                const source = BindingSource(val);
+                const fallback = BindingFallback(val);
 
                 boundProps.push({ 
-                    stateBinding:binding,
-                    fallback, propName
+                    path:binding,
+                    fallback, propName, source
                 });
 
                 initialProps[propName] = fallback;
             } else if(isBound(val) && takeStateFromContext(val)) {
 
-                const binding = stateBinding(val);
-                const fallback = stateFallback(val);
+                const binding = BindingPath(val);
+                const fallback = BindingFallback(val);
+                const source = BindingSource(val);
 
                 initialProps[propName] = getState(
                     context || {},
                     binding,
-                    fallback
+                    fallback,
+                    source
                 );
 
             } else if(isEventType(val)) {
@@ -104,7 +107,7 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
                 for(let boundProp of boundProps) {
                     const val = getState(
                         s, 
-                        boundProp.stateBinding, 
+                        boundProp.path, 
                         boundProp.fallback);
 
                     if(val === undefined && newProps[boundProp.propName] !== undefined) {
@@ -180,13 +183,16 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
     const bindings = getBindings(rootProps, rootInitialProps);
 
     return {
-        initialProps:rootInitialProps, bind:bind(bindings)
+        initialProps:rootInitialProps, 
+        bind:bind(bindings), 
+        boundProps:bindings.boundProps
     };
 
 }
 
-const stateBinding = (prop) => prop[BB_STATE_BINDINGPATH];
-const stateFallback = (prop) => prop[BB_STATE_FALLBACK];
+const BindingPath = (prop) => prop[BB_STATE_BINDINGPATH];
+const BindingFallback = (prop) => prop[BB_STATE_FALLBACK];
+const BindingSource = (prop) => prop[BB_STATE_BINDINGSOURCE];
 
 
 

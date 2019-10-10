@@ -28172,7 +28172,7 @@
     const getRecordNodes = (hierarchy) => 
         pipe$1(hierarchy, [
             hierarchyFunctions.getFlattenedHierarchy,
-            fp_8(hierarchyFunctions.isIndex)
+            fp_8(hierarchyFunctions.isRecord)
         ]);
 
     const getIndexSchema = hierarchy => index => 
@@ -28248,6 +28248,14 @@
 
     });
 
+    const BB_STATE_BINDINGPATH = "##bbstate";
+    const BB_STATE_BINDINGSOURCE = "##bbsource";
+    const BB_STATE_FALLBACK = "##bbstatefallback";
+
+    const isBound = (prop) =>
+        prop !== undefined 
+        && prop[BB_STATE_BINDINGPATH] !== undefined;
+
     const setState = (store, path, value) => {
 
         if(!path || path.length === 0) return;
@@ -28278,12 +28286,6 @@
             return s;
         });
     };
-
-    const BB_STATE_BINDINGPATH = "##bbstate";
-    const BB_STATE_BINDINGSOURCE = "##bbsource";
-    const BB_STATE_FALLBACK = "##bbstatefallback";
-
-    const isBound = (prop) => prop[BB_STATE_BINDINGPATH] !== undefined;
 
     const getState = (s, path, fallback) => {
 
@@ -52746,7 +52748,7 @@
     	return child_ctx;
     }
 
-    // (114:8) {#if isComponentSelected(c)}
+    // (116:8) {#if isComponentSelected(c)}
     function create_if_block$a(ctx) {
     	var span, t_value = ctx.c.error + "", t;
 
@@ -52755,7 +52757,7 @@
     			span = element("span");
     			t = text(t_value);
     			attr_dev(span, "class", "error svelte-3sgo90");
-    			add_location(span, file$m, 114, 8, 3514);
+    			add_location(span, file$m, 116, 8, 3628);
     		},
 
     		m: function mount(target, anchor) {
@@ -52775,11 +52777,11 @@
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$a.name, type: "if", source: "(114:8) {#if isComponentSelected(c)}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$a.name, type: "if", source: "(116:8) {#if isComponentSelected(c)}", ctx });
     	return block;
     }
 
-    // (100:0) {#each components as c}
+    // (102:0) {#each components as c}
     function create_each_block$a(ctx) {
     	var div2, div0, input0, input0_disabled_value, input0_checked_value, t0, input1, input1_value_value, input1_class_value, t1, show_if = ctx.isComponentSelected(ctx.c), t2, div1, t3_value = ctx.c.component.description + "", t3, dispose;
 
@@ -52801,17 +52803,17 @@
     			input0.disabled = input0_disabled_value = ctx.c.dependants.length > 0;
     			attr_dev(input0, "class", "uk-checkbox");
     			input0.checked = input0_checked_value = ctx.isComponentSelected(ctx.c);
-    			add_location(input0, file$m, 104, 8, 3065);
+    			add_location(input0, file$m, 106, 8, 3179);
     			attr_dev(input1, "type", "text");
     			input1.value = input1_value_value = ctx.c.component.name;
     			attr_dev(input1, "class", input1_class_value = "uk-input title " + (ctx.c.error ? 'uk-form-danger' : '') + " svelte-3sgo90");
-    			add_location(input1, file$m, 109, 8, 3286);
+    			add_location(input1, file$m, 111, 8, 3400);
     			attr_dev(div0, "class", "uk-inline");
-    			add_location(div0, file$m, 103, 4, 3032);
+    			add_location(div0, file$m, 105, 4, 3146);
     			attr_dev(div1, "class", "description svelte-3sgo90");
-    			add_location(div1, file$m, 118, 4, 3585);
+    			add_location(div1, file$m, 120, 4, 3699);
     			attr_dev(div2, "class", "component svelte-3sgo90");
-    			add_location(div2, file$m, 101, 0, 3001);
+    			add_location(div2, file$m, 103, 0, 3115);
 
     			dispose = [
     				listen_dev(input0, "change", ctx.onSelectedChanged(ctx.c)),
@@ -52879,11 +52881,11 @@
     			run_all(dispose);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block$a.name, type: "each", source: "(100:0) {#each components as c}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block$a.name, type: "each", source: "(102:0) {#each components as c}", ctx });
     	return block;
     }
 
-    // (128:4) <Button on:click={() => onConfirmGenerate(selectedComponents)}>
+    // (130:4) <Button on:click={() => onConfirmGenerate(selectedComponents)}>
     function create_default_slot$2(ctx) {
     	var t;
 
@@ -52902,7 +52904,7 @@
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot$2.name, type: "slot", source: "(128:4) <Button on:click={() => onConfirmGenerate(selectedComponents)}>", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_default_slot$2.name, type: "slot", source: "(130:4) <Button on:click={() => onConfirmGenerate(selectedComponents)}>", ctx });
     	return block;
     }
 
@@ -52936,7 +52938,7 @@
     			div = element("div");
     			button.$$.fragment.c();
     			attr_dev(div, "class", "button-container svelte-3sgo90");
-    			add_location(div, file$m, 126, 0, 3682);
+    			add_location(div, file$m, 128, 0, 3796);
     		},
 
     		l: function claim(nodes) {
@@ -53042,11 +53044,12 @@
         
         const cmp = fp_7(c => {
             const dependants = componentDependencies(
-                {}, selectedComponents, c);
+                {}, [...selectedComponents, ...existingComponents], c);
+            const exists = componentExists(c.name);
             return {
                 dependants: dependants.dependantComponents, 
                 component:c,
-                error: componentExists(c.name) ? "a component by this name already exists" : ""
+                error: exists ? "a component by this name already exists" : ""
             };
         })(allGeneratedComponents); 
         $$invalidate('components', components = cmp);
@@ -53120,7 +53123,8 @@
                     $$invalidate('componentName', componentName = sp.componentName);
             
                     $$invalidate('allGeneratedComponents', allGeneratedComponents = libs[libName][componentName](generateParameter));
-                    $$invalidate('selectedComponents', selectedComponents = [...allGeneratedComponents]);
+                    $$invalidate('selectedComponents', selectedComponents = 
+                        fp_8(c => !componentExists(c.name))(allGeneratedComponents));
                     componentsWithDependencies();
                 }
             } }

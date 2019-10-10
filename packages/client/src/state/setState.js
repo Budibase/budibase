@@ -1,7 +1,7 @@
 import {
     isObject
 } from "lodash/fp";
-
+import { BB_STATE_BINDINGPATH } from "./isState";
 
 export const setState = (store, path, value) => {
 
@@ -32,4 +32,7 @@ export const setState = (store, path, value) => {
         safeSetPath(s);
         return s;
     });
-}
+};
+
+export const setStateFromBinding = (store, binding, value) => 
+    setState(store, binding[BB_STATE_BINDINGPATH], value);

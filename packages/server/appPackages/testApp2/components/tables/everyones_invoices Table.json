@@ -1,0 +1,54 @@
+{
+  "name": "tables/everyones_invoices Table",
+  "inherits": "@budibase/standard-components/table",
+  "props": {
+    "data": {
+      "##bbstate": "/everyones_invoices",
+      "##bbsource": "store"
+    },
+    "columns": [
+      {
+        "title": "amount",
+        "value": {
+          "##bbstate": "amount",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "id",
+        "value": {
+          "##bbstate": "id",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "isNew",
+        "value": {
+          "##bbstate": "isNew",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "key",
+        "value": {
+          "##bbstate": "key",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "type",
+        "value": {
+          "##bbstate": "type",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "sortKey",
+        "value": {
+          "##bbstate": "sortKey",
+          "##bbsource": "context"
+        }
+      }
+    ]
+  }
+}
