@@ -2,7 +2,7 @@
 import { store } from "../builderStore";
 import { splitName } from "./pagesParsing/splitRootComponentName";
 import {
-    getIndexNodes, getRecordNodes, getIndexSchema
+    getIndexNodes, getRecordNodes, getIndexSchema, pipe
 } from "../common/core";
 import {
     map, some, filter
@@ -43,11 +43,12 @@ const componentsWithDependencies = () => {
     
     const cmp = map(c => {
         const dependants = componentDependencies(
-            {}, selectedComponents, c);
+            {}, [...selectedComponents, ...existingComponents], c);
+        const exists = componentExists(c.name);
         return {
             dependants: dependants.dependantComponents, 
             component:c,
-            error: componentExists(c.name) ? "a component by this name already exists" : ""
+            error: exists ? "a component by this name already exists" : ""
         };
     })(allGeneratedComponents); 
     components = cmp;
@@ -62,7 +63,8 @@ $ : {
         componentName = sp.componentName;
 
         allGeneratedComponents = libs[libName][componentName](generateParameter);
-        selectedComponents = [...allGeneratedComponents];
+        selectedComponents = 
+            filter(c => !componentExists(c.name))(allGeneratedComponents);
         componentsWithDependencies();
     }
 }

@@ -5,7 +5,7 @@ export let className = "default";
 export let disabled = false;
 export let contentText;
 export let contentComponent;
-export let onClick = () => {};
+export let onClick;
 export let background;
 export let color;
 export let border;
@@ -53,7 +53,7 @@ const clickHandler = () => {
 
 <button use:cssVars={cssVariables} 
 		class="{className} {customHoverColorClass} {customHoverBorderClass} {customHoverBackClass}" 
-		{disabled} 
+		disabled={disabled || false} 
 		on:click={clickHandler} 
 		style={buttonStyles}>
     {#if contentComponent && contentComponent._component}

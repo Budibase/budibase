@@ -1,0 +1,54 @@
+{
+  "name": "tables/Yeo index Table",
+  "inherits": "@budibase/standard-components/table",
+  "props": {
+    "data": {
+      "##bbstate": "/Yeo index",
+      "##bbsource": "store"
+    },
+    "columns": [
+      {
+        "title": "id",
+        "value": {
+          "##bbstate": "id",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "isNew",
+        "value": {
+          "##bbstate": "isNew",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "key",
+        "value": {
+          "##bbstate": "key",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "name",
+        "value": {
+          "##bbstate": "name",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "type",
+        "value": {
+          "##bbstate": "type",
+          "##bbsource": "context"
+        }
+      },
+      {
+        "title": "sortKey",
+        "value": {
+          "##bbstate": "sortKey",
+          "##bbsource": "context"
+        }
+      }
+    ]
+  }
+}

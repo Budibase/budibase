@@ -7,19 +7,10 @@ export let className = "default";
 export let _bb;
 
 let actualValue = "";
-$: {
-	if(_bb && value._isstate) {
-		_bb.store.subscribe(s => {
-			actualValue = _bb.store.getValue(s, value);
-		});
-	}
-}
 
 const onchange = (ev) => {
-	if(_bb && value._isstate) {
-		_bb.store.setValue(value, ev.target.value);
-	} else if(!value._isstate) {
-		actualValue = ev.target.value;
+	if(_bb) {
+		_bb.setStateFromBinding(_bb.bindings.value, ev.target.value);
 	}
 }
 
@@ -28,9 +19,13 @@ const onchange = (ev) => {
 {#if hideValue}
 <input class={className} 
 	   type="password" 
-	   value={actualValue} on:change/>
+	   value={value} 
+	   on:change={onchange}/>
 {:else}
-<input class={className} type="text" value={actualValue}/>
+<input class={className} 
+	   type="text" 
+	   value={value}
+	   on:change={onchange}/>
 {/if}
 
 <style>

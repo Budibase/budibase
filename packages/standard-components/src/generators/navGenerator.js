@@ -5,7 +5,9 @@ export const nav = ({records, indexes, helpers}) => [
         name: "Application Root",
         inherits: "@budibase/standard-components/nav",
         props: {
-            items: index.map(navItem)
+            items: indexes
+                    .filter(i => i.parent().type === "root")
+                    .map(navItem)
         }
     },
     ...indexTables({records, indexes, helpers})

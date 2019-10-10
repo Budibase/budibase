@@ -25,6 +25,7 @@ export let _bb;
 let styleVars;
 let style="";
 let componentElement;
+let componentInitialised=false;
 
 $: {
     style=buildStyle({
@@ -35,8 +36,9 @@ $: {
         cursor: onClick ? "pointer" : "none"
     });
 
-    if(_bb && component) {
+    if(_bb && component && componentElement && !componentInitialised) {
         _bb.initialiseComponent(component, componentElement);
+        componentInitialised = true;
     }
 
     styleVars = {
@@ -54,7 +56,7 @@ const clickHandler = () => {
 <div class="{containerClass} panel" 
      style={style}
      use:cssVars={styleVars}
-     this:bind={componentElement}
+     bind:this={componentElement}
      on:click={clickHandler}>
     {component && component._component ? "" : text}
 </div>
