@@ -23,22 +23,38 @@ let customHoverColorClass;
 let customHoverBorderClass;
 let customHoverBackClass;
 
+let customClasses = "";
+
+const createClasses = (classes) => {
+	let all = "";
+	for(let cls in classes) {
+		if(classes[cls]) {
+			all = all + " " + cls;
+		}
+	}
+	return all;
+}
+	
+
 $:{
 	if(_bb && contentComponentContainer && contentComponent._component)
 		_bb.initialiseComponent(contentComponent, contentComponentContainer);
 
 	cssVariables = {
 		hoverColor, hoverBorder,
-		hoverBackground
+		hoverBackground,
+		background, color, border,
 	};
 
 	buttonStyles = buildStyle({
-		background, color, border, padding
-	})
-
-	customHoverColorClass = hoverColor ? "customHoverColor" : "";
-	customHoverBorderClass = hoverBorder ? "customHoverBorder" : "";
-	customHoverBackClass = hoverBackground ? "customHoverBack" : "";
+		padding
+	});	
+	
+	customClasses = createClasses({
+		hoverColor, hoverBorder, hoverBackground,
+		background, border, color
+	});
+	
 }
 
 
@@ -52,7 +68,7 @@ const clickHandler = () => {
 
 
 <button use:cssVars={cssVariables} 
-		class="{className} {customHoverColorClass} {customHoverBorderClass} {customHoverBackClass}" 
+		class="{className} {customClasses}" 
 		disabled={disabled || false} 
 		on:click={clickHandler} 
 		style={buttonStyles}>
@@ -90,15 +106,29 @@ const clickHandler = () => {
 	border-color: #666;
 }
 
-.customHoverBorder:hover {
+.border {
+	border: var(--border);
+}
+
+.color {
+	color: var(--color);
+}
+
+.background {
+	background: var(--background);
+}
+
+.hoverBorder:hover {
 	border: var(--hoverBorder);
 }
 
-.customHoverColor:hover {
+.hoverColor:hover {
 	color: var(--hoverColor);
 }
 
-.customHoverBack:hover {
+.hoverBack:hover {
 	background: var(--hoverBackground);
 }
+
+
 </style>

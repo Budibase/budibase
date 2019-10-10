@@ -21,11 +21,8 @@
                 "_component": "@budibase/standard-components/textbox",
                 "value": {
                   "##bbstate": "currentcustomer.name",
-                  "##bbstatefallback": "mike",
                   "##bbsource": "store"
-                },
-                "hideValue": false,
-                "className": "default"
+                }
               }
             }
           ]
@@ -76,8 +73,5 @@
         }
       }
     ]
-  },
-  "tags": [
-    ""
-  ]
+  }
 }

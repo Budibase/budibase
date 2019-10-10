@@ -58,6 +58,7 @@ const onGeneratorChosen = (g) => {
 
 const onConfirmGenerate = (components) => {
     store.createGeneratedComponents(components);
+    UIkit.modal(generatorOptionsModal).hide();
     generator = null;
 }
 
@@ -72,7 +73,8 @@ const onConfirmGenerate = (components) => {
 
         <div class="uk-modal-body">
             <ComponentSelector onComponentChosen={onComponentChosen}
-                               onGeneratorChosen={onGeneratorChosen} />
+                               onGeneratorChosen={onGeneratorChosen}
+                               allowGenerators={true} />
         </div>
     </div>
 </div>

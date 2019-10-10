@@ -4,7 +4,7 @@ import {
 import {
     filter, cloneDeep, sortBy, 
     map, last, keys, concat,
-    find, isEmpty, reduce
+    find, isEmpty, reduce, values
 } from "lodash/fp";
 import {
     pipe, getNode, validate,
@@ -120,7 +120,7 @@ const initialise = (store, initial) => async () => {
     initial.hasAppPackage = true;
     initial.hierarchy = pkg.appDefinition.hierarchy;
     initial.accessLevels = pkg.accessLevels;
-    initial.derivedComponents = pkg.derivedComponents;
+    initial.derivedComponents = values(pkg.derivedComponents);
     initial.generators = generatorsArray(pkg.rootComponents.generators);
     initial.allComponents = combineComponents(
         pkg.derivedComponents, pkg.rootComponents.components);
@@ -453,7 +453,7 @@ const saveDerivedComponent = store => (derivedComponent) => {
         s.allComponents = components;
         s.derivedComponents = derivedComponents;
         s.currentFrontEndItem = derivedComponent;
-        s.currentComponentInfo = getNewComponentInfo(
+        s.currentComponentInfo = getComponentInfo(
             s.allComponents, derivedComponent.name);
         s.currentComponentIsNew = false;
         
@@ -480,6 +480,7 @@ const createDerivedComponent = store => componentName => {
 const createGeneratedComponents = store => components => {
     store.update(s => {
         s.allComponents = [...s.allComponents, ...components];
+        s.derivedComponents = [...s.derivedComponents, ...components];
 
         const doCreate = async () => {
             for(let c of components) {
