@@ -4,10 +4,10 @@ Install requires [node-gyp](https://github.com/nodejs/node-gyp), due to a depend
 
 ### 1.  Prerequisites
 
-*nodegyp - Windows  -* `npm install --global --production windows-build-tools`
-if you have problems, this might help: https://github.com/nodejs/node-gyp/issues/1278
-
-*nodegyp - Ubuntu (same for Mac ?)* `sudo apt-get install build-essentials`
+*nodegyp -*
+  - Windows  - https://github.com/nodejs/node-gyp#on-windows
+  - Ubuntu `sudo apt-get install build-essentials`
+  - Mac: https://github.com/nodejs/node-gyp#on-macos
 
 *yarn -* `npm install -g yarn`
 
