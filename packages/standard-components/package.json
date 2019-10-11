@@ -12,7 +12,7 @@
     "publishdev": "yarn build && node ./scripts/publishDev.js"
   },
   "devDependencies": {
-    "@budibase/client": "^0.0.6",
+    "@budibase/client": "^0.0.7",
     "fs-extra": "^8.1.0",
     "lodash": "^4.17.15",
     "npm-run-all": "^4.1.5",
@@ -33,7 +33,7 @@
   "files": [
     "dist/**"
   ],
-  "version": "0.0.6",
+  "version": "0.0.7",
   "license": "MIT",
-  "gitHead": "3d75263b165ecc5a7f69a8189707051a8c977f89"
+  "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
 }
