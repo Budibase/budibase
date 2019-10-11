@@ -4,7 +4,7 @@ const uuid = require("uuid/v1");
 const { take, takeRight, last } = require("lodash/fp");
 const { splitKey, $, joinKey } = require("@budibase/core").common;
 const { unzipTarGzPackageToRuntime } = require("../../utilities/targzAppPackage");
-const { getRuntimePackageDirectory } = require("../../utilities/runtimePackages");
+const { getRuntimePackageDirectory, determineVersionId } = require("../../utilities/runtimePackages");
 const { pathExists } = require("fs-extra");
 const createInstanceDb = require("../../initialise/createInstanceDb"); 
 const { createWriteStream } = require("fs");
@@ -24,17 +24,15 @@ module.exports = (context) => {
         
         const application = await apis.recordApi.load(appKey);
 
-        const versionId = $(instance.version.key, [
-            splitKey,
-            last
-        ]);
+        const versionId = determineVersionId(instance.version);
         
         const runtimeDir = getRuntimePackageDirectory(
+            context,
             application.name,
             versionId);
 
         if(!await pathExists(runtimeDir))
-            await downloadAppPackage(apis, instance, application.name, versionId);
+            await downloadAppPackage(context, apis, instance, application.name, versionId);
             
         const dbConfig = await createInstanceDb(
             context,
@@ -65,10 +63,7 @@ module.exports = (context) => {
         
         const application = await apis.recordApi.load(appKey);
 
-        const versionId = $(instance.version.key, [
-            splitKey,
-            last,
-        ]);
+        const versionId = determineVersionId(instance.version);
 
         const appPackage = await applictionVersionPackage(
             context,
@@ -107,7 +102,7 @@ module.exports = (context) => {
     });
 }
 
-const downloadAppPackage = async (apis, instance, appName, versionId) => {
+const downloadAppPackage = async (context, apis, instance, appName, versionId) => {
     const inputStream = await apis.recordApi.downloadFile(instance.version.key, "package.tar.gz");
 
     const tempFilePath = join(tmpdir(), `bbpackage_${uuid()}.tar.gz`);
@@ -119,5 +114,5 @@ const downloadAppPackage = async (apis, instance, appName, versionId) => {
         outputStream.on('finish', resolve);
     });
 
-    await unzipTarGzPackageToRuntime(tempFilePath, appName, versionId);
+    await unzipTarGzPackageToRuntime(context, tempFilePath, appName, versionId);
 }

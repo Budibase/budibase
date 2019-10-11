@@ -126,4 +126,62 @@ module.exports = (app) => {
 
 
     });
+
+    let versionlessInstance;
+    it("should be able to create a versionless instance", async () => {
+        const master = await getmaster();
+        versionlessInstance = master.recordApi
+                            .getNew(`${app.apps.testApp1.key}/instances`, "instance");
+        versionlessInstance.name = "versionless instance";
+        versionlessInstance.active = true;
+        versionlessInstance.version = {key:"", defaultAccessLevel:"owner"};
+        
+        await app.post(`/_master/api/record/${versionlessInstance.key}`, versionlessInstance)
+                    .set("cookie", app.credentials.masterOwner.cookie)
+                    .expect(statusCodes.OK);
+
+        const loadInstanceResponse = await app.get(`/_master/api/record/${versionlessInstance.key}`)
+                    .set("cookie", app.credentials.masterOwner.cookie)
+                    .expect(statusCodes.OK);
+
+        versionlessInstance = loadInstanceResponse.body;
+        app.apps.testApp1.versionlessInstance = versionlessInstance;
+
+    });
+
+    let user1_versionlessInstance;
+    it("should be able to create new user on versionless, via master", async () => {
+        const master = await getmaster();
+        user1_versionlessInstance = master.recordApi  
+                        .getNew(`${app.apps.testApp1.key}/users`, "user");
+        user1_versionlessInstance.name = app.credentials.user1_versionlessInstance.username;
+        user1_versionlessInstance.createdByMaster = true;
+        master.recordApi.setCustomId(user1_versionlessInstance, user1_versionlessInstance.name);
+
+        user1_versionlessInstance.instance = versionlessInstance;
+        user1_versionlessInstance.active = true;
+        //await timeout(100);
+        await app.post(`/_master/api/record/${user1_versionlessInstance.key}`, user1_versionlessInstance)
+                    .set("cookie", app.credentials.masterOwner.cookie)
+                    .expect(statusCodes.OK);
+
+        const testUserTempCode = await readFile(`./tests/.data/tempaccess${user1_versionlessInstance.name}`, "utf8");
+        user1_versionlessInstance.password = app.credentials.user1_versionlessInstance.password;
+
+        await app.post("/testApp/api/setPasswordFromTemporaryCode", {
+            username: app.credentials.user1_versionlessInstance.username,
+            tempCode:testUserTempCode,
+            newPassword:app.credentials.user1_versionlessInstance.password
+        })
+        .expect(statusCodes.OK);
+
+        const response = await app.post("/testApp/api/authenticate", {
+            username: app.credentials.user1_versionlessInstance.username,
+            password: app.credentials.user1_versionlessInstance.password
+        })
+        .expect(statusCodes.OK);
+
+        app.credentials.user1_versionlessInstance.cookie = response.header['set-cookie'];
+    });
+
 }

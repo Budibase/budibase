@@ -87,6 +87,11 @@ module.exports = () => {
                 username: "testAppUser2",
                 password: "user1_instance2_password",
                 cookie: ""
+            },
+            user1_versionlessInstance : {
+                username: "user1_versionlessInstance",
+                password: "user1_versionlessInstance_password",
+                cookie: ""
             }
         },
         apps: {

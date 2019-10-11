@@ -1,5 +1,5 @@
 const statusCodes = require("../utilities/statusCodes");
-const { readFile } = require("fs-extra");
+const { readFile, writeFile, remove } = require("fs-extra");
 
 module.exports = (app) => {
 
@@ -66,5 +66,51 @@ module.exports = (app) => {
         expect(response.text).toBe(expectedFile);
         
     });
+
+    it("should serve file from latest when instance is versionless", async () => {
+
+        try {
+            await writeFile("appPackages/testApp/public/_shared/new_file_for_versionless_test.txt", "thats right", {encoding:"utf8"});
+        } catch(err) {
+            // empty
+        }
+
+        try {
+            await app.get("/testApp/_shared/new_file_for_versionless_test.txt")
+            .set("cookie", app.credentials.user1_versionlessInstance.cookie)
+            .expect(statusCodes.OK);
+        } finally {
+            try {
+                await remove("appPackages/testApp/public/_shared/new_file_for_versionless_test.txt");
+            } catch(err) {
+                // empty
+            }
+        }
+        
+    });
+
+
+    it("should not serve file from latest when instance has version", async () => {
+
+        try {
+            await writeFile("appPackages/testApp/public/_shared/new_file_for_versionless_test.txt", "thats right", {encoding:"utf8"});
+        } catch(err) {
+            // empty
+        }
+
+        try {
+            await app.get("/testApp/_shared/new_file_for_versionless_test.txt")
+            .set("cookie", app.credentials.testAppUser1.cookie)
+            .expect(statusCodes.NOT_FOUND);
+        } finally {
+            try {
+                await remove("appPackages/testApp/public/_shared/new_file_for_versionless_test.txt");
+            } catch(err) {
+                // empty
+            }
+        }
+        
+    });
+
 
 }

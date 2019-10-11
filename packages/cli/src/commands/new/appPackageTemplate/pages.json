@@ -1,0 +1,14 @@
+{
+  "main": {
+    "index": {},
+    "appBody": ""
+  },
+  "unauthenticated": {
+    "index": {},
+    "appBody": ""
+  },
+  "componentLibraries": [
+    "@budibase/standard-components"
+  ],
+  "stylesheets": []
+}

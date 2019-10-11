@@ -31,8 +31,8 @@ module.exports.createTarGzPackage = async (config, appName) => {
     return {size, path:packagePath};
 }
 
-module.exports.unzipTarGzPackageToRuntime = async (src, appName, versionId) => {
-    const versionDir = getRuntimePackageDirectory(appName, versionId);
+module.exports.unzipTarGzPackageToRuntime = async (context, src, appName, versionId) => {
+    const versionDir = getRuntimePackageDirectory(context, appName, versionId);
     const appDir = getRuntimeAppsDirectory(appName);
 
     if(await exists(appDir)) {

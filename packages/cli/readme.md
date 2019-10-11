@@ -1,0 +1,1 @@
+If you want to test this on dev, from the mono repo, run `npm link` from here first. you may run the cli using `budibase ... ` (a normal install will be used as `budi ... `)

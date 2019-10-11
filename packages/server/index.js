@@ -1,6 +1,19 @@
 const app = require("./app");
-const config = require("./config");
 const buildAppContext = require("./initialise/buildAppContext");
+const process = require("process");
+
+let configIsNext = false;
+let configPath = "./config";
+for(let arg of process.argv) {
+    if(arg === "-c") {
+        configIsNext = true;
+    }
+    if(configIsNext) {
+        configPath = arg;
+    }
+}
+
+const config = require(configPath);
 
 (async () => {
     const bbContext = await buildAppContext(config(), true);

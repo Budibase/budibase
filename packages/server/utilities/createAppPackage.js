@@ -61,8 +61,8 @@ module.exports.masterAppPackage = (context) => {
     });
 }
 
-const applictionVersionPath = (appname, versionId) =>
-    join("..", getRuntimePackageDirectory(appname, versionId))
+const applictionVersionPath = (context, appname, versionId) =>
+    join("..", getRuntimePackageDirectory(context, appname, versionId))
 
 const publicPaths = (appPath) =>  ({
         mainUiPath: resolve(join(
@@ -74,15 +74,15 @@ const publicPaths = (appPath) =>  ({
         
     });
 
-module.exports.applictionVersionPublicPaths = (appname, versionId) => {
-    const appPath = applictionVersionPath(appname, versionId);
+module.exports.applictionVersionPublicPaths = (context, appname, versionId) => {
+    const appPath = applictionVersionPath(context, appname, versionId);
     return publicPaths(appPath);
 }
 
 module.exports.applictionVersionPackage = async (context, appname, versionId, instanceKey) => {
     const pkg = createAppPackage(
         context,
-        applictionVersionPath(appname, versionId)
+        applictionVersionPath(context, appname, versionId)
     );
 
     pkg.appDefinition = constructHierarchy(pkg.appDefinition);
