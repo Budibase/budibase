@@ -6,7 +6,7 @@ const {
 const getDatastore = require("./datastore");
 const getDatabaseManager = require("./databaseManager");
 const {$, splitKey} = require("@budibase/core").common;
-const { keyBy, last, filter } = require("lodash/fp");
+const { keyBy, values } = require("lodash/fp");
 const { 
     masterAppPackage, 
     applictionVersionPackage,
@@ -34,7 +34,6 @@ module.exports = async (context) => {
     const loadApplications = async () => { 
         const apps = await bb.indexApi.listItems("/all_applications");
         applications = $(apps, [
-            filter(a => !!a.defaultVersion.key),
             keyBy("name")
         ]);
     }
@@ -286,7 +285,7 @@ module.exports = async (context) => {
         await bb.recordApi.save(userInMaster);
     }
 
-    const listApplications = () => applications;
+    const listApplications = () => values(applications);
     
 
     return ({

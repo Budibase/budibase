@@ -64,7 +64,7 @@ const createDevConfig = async (opts) => {
 
 const initialiseDatabase = async (opts) => {
 
-    const appContext = await getAppContext();
+    const appContext = await getAppContext({masterIsCreated:false});
 
     await createMasterDb(
         appContext,
