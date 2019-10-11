@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "license": "AGPL-3.0",
   "scripts": {
     "build": "rollup -c",
@@ -33,7 +33,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/client": "^0.0.6",
+    "@budibase/client": "^0.0.7",
     "@nx-js/compiler-util": "^2.0.0",
     "date-fns": "^1.29.0",
     "feather-icons": "^4.21.0",
@@ -70,5 +70,5 @@
     "rollup-plugin-url": "^2.2.2",
     "svelte": "^3.0.0"
   },
-  "gitHead": "3d75263b165ecc5a7f69a8189707051a8c977f89"
+  "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
 }

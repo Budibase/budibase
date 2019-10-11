@@ -1,6 +1,6 @@
 {
   "name": "@budibase/core",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "core javascript library for budibase",
   "main": "dist/budibase-core.umd.js",
   "module": "dist/budibase-core.esm.js",
@@ -83,5 +83,5 @@
     "npm": ">=4.x",
     "yarn": ">=0.21.3"
   },
-  "gitHead": "3d75263b165ecc5a7f69a8189707051a8c977f89"
+  "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
 }
