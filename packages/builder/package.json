@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "AGPL-3.0",
   "scripts": {
     "build": "rollup -c",
@@ -33,7 +33,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/client": "*",
+    "@budibase/client": "^0.0.4",
     "@nx-js/compiler-util": "^2.0.0",
     "date-fns": "^1.29.0",
     "feather-icons": "^4.21.0",
