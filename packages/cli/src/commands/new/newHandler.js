@@ -12,7 +12,7 @@ module.exports = ({name}) => {
 }
 
 const run = async (opts) => {
-    const context = await getAppContext(opts.config);
+    const context = await getAppContext({configName:opts.config, masterIsCreated:true}); 
     const bb = await getMasterApisWithFullAccess(context);
 
     const app = bb.recordApi.getNew("/applications", "application");

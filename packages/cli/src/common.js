@@ -10,7 +10,7 @@ module.exports.serverFileName = relativePath =>
             "server", 
             relativePath);
 
-module.exports.getAppContext = async (configName) => {
+module.exports.getAppContext = async ({configName, masterIsCreated}) => {
 
     if(configName) {
         if(!configName.endsWith(".js")) {
@@ -21,5 +21,5 @@ module.exports.getAppContext = async (configName) => {
     }
 
     const config = require(join(cwd(), configName))();
-    return await buildAppContext(config, false);
+    return await buildAppContext(config, masterIsCreated);
 }
