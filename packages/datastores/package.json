@@ -1,6 +1,6 @@
 {
   "name": "@budibase/datastores",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "implementations of all the datastores... azureblob, local etc",
   "main": "index.js",
   "scripts": {
@@ -27,7 +27,7 @@
     "@babel/core": "^7.1.2",
     "@babel/node": "^7.0.0",
     "@babel/preset-env": "^7.1.0",
-    "@budibase/core": "^0.0.8",
+    "@budibase/core": "^0.0.9",
     "es6-promisify": "^6.0.1",
     "lodash": "^4.17.13",
     "p-limit": "^2.0.0",
