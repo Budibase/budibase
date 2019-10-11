@@ -1,6 +1,6 @@
 {
   "name": "budibase",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Budibase CLI",
   "main": "src/cli.js",
   "bin": {
@@ -18,8 +18,8 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/datastores": "^0.0.4",
-    "@budibase/server": "^0.0.4",
+    "@budibase/datastores": "^0.0.5",
+    "@budibase/server": "^0.0.5",
     "chalk": "^2.4.2",
     "fs-extra": "^8.1.0",
     "inquirer": "^7.0.0",
