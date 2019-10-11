@@ -1,6 +1,6 @@
 {
   "name": "@budibase/datastores",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "implementations of all the datastores... azureblob, local etc",
   "main": "index.js",
   "scripts": {
@@ -27,11 +27,12 @@
     "@babel/core": "^7.1.2",
     "@babel/node": "^7.0.0",
     "@babel/preset-env": "^7.1.0",
-    "@budibase/core": "^0.0.5",
+    "@budibase/core": "^0.0.6",
     "es6-promisify": "^6.0.1",
     "lodash": "^4.17.13",
     "p-limit": "^2.0.0",
     "papaparse": "^4.6.1",
     "rimraf": "^2.6.2"
-  }
+  },
+  "gitHead": "3d75263b165ecc5a7f69a8189707051a8c977f89"
 }
