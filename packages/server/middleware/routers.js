@@ -143,7 +143,7 @@ module.exports = (config, app) => {
         ctx.response.status = StatusCodes.OK;
     })
     .get("/_builder/api/apps", async (ctx) => {
-        ctx.body = await getApps(config);
+        ctx.body = await getApps(config, ctx.master);
         ctx.response.status = StatusCodes.OK;
 
     })

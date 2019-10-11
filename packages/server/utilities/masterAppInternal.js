@@ -12,6 +12,7 @@ const {
     applictionVersionPackage,
     applictionVersionPublicPaths
  } = require("../utilities/createAppPackage");
+ const { determineVersionId } = require("./runtimePackages");
 
 const isMaster = appname => appname === "_master";
 
@@ -111,10 +112,7 @@ module.exports = async (context) => {
         const instance = await bb.recordApi.load(
             userInMaster.instance.key);
         
-        const versionId = $(instance.version.key, [
-            splitKey,
-            last
-        ]);
+        const versionId = determineVersionId(instance.version); 
 
         const dsConfig = JSON.parse(instance.datastoreconfig);
         const appPackage = await applictionVersionPackage(
@@ -172,10 +170,8 @@ module.exports = async (context) => {
                 const session = await bb.recordApi.load(`/applications/${app.id}/sessions/${customId}`);
                 const dsConfig = JSON.parse(session.instanceDatastoreConfig);
                 const instanceDatastore = getInstanceDatastore(dsConfig)
-                const versionId = $(session.instanceVersion,[
-                    splitKey,
-                    last
-                ]);
+
+                const versionId = determineVersionId(session.instanceVersion);
 
                 const appPackage = await applictionVersionPackage(
                     context, appname, versionId, session.instanceKey);
@@ -190,9 +186,11 @@ module.exports = async (context) => {
                 });
 
             } catch(_) {
+                const versionId = determineVersionId(app.defaultVersion);
                 const appPublicPaths = applictionVersionPublicPaths(
+                    context, 
                     app.name,
-                    app.defaultVersion.id);
+                    versionId);
                 return ({
                     instance:null,
                     publicPath: appPublicPaths.unauthenticatedUiPath,
@@ -229,10 +227,9 @@ module.exports = async (context) => {
                 dsConfig
                 );
 
-            const versionId = $((await bb.recordApi.load(user.instance.key)).version.key, [
-                splitKey,
-                last
-            ]);
+            const versionId = determineVersionId(
+                (await bb.recordApi.load(user.instance.key)).version
+            );
     
             const appPackage = await applictionVersionPackage(
                 context, appname, versionId, user.instance.key);
@@ -289,6 +286,9 @@ module.exports = async (context) => {
         await bb.recordApi.save(userInMaster);
     }
 
+    const listApplications = () => applications;
+    
+
     return ({
         getApplication,
         getSession,
@@ -300,7 +300,8 @@ module.exports = async (context) => {
         disableUser,
         enableUser,
         getUser,
-        bbMaster:bb
+        bbMaster:bb,
+        listApplications
     });
 
 }

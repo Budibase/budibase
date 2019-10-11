@@ -12,7 +12,7 @@ const {
 } = require("path");
 const { $ } = require("@budibase/core").common;
 const { 
-    keyBy
+    keyBy, intersection, map
 } = require("lodash/fp");
 const {merge} = require("lodash");
 
@@ -47,8 +47,14 @@ module.exports.getPackageForBuilder = async (config, appname) => {
 
 
 
-module.exports.getApps = async (config) => 
-    await readdir(appsFolder(config));
+module.exports.getApps = async (config, master) => {
+    const dirs = await readdir(appsFolder(config));
+
+    return $(master.listApplications(), [
+        map(a => a.name),
+        intersection(dirs)
+    ]);
+}
 
 
 const componentPath = (appPath, name) =>

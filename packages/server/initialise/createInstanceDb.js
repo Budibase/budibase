@@ -1,13 +1,10 @@
 const {
     initialiseData, 
-    setupDatastore,
-    common
+    setupDatastore
 } = require("@budibase/core");
 const getDatabaseManager = require("../utilities/databaseManager");  
 const { applictionVersionPackage }  = require("../utilities/createAppPackage");
-const { last } = require("lodash/fp");
-const {$,splitKey} = common;
-
+const { determineVersionId }  = require("../utilities/runtimePackages");
 
 module.exports = async (context, datastoreModule, app, instance) => {
     try {
@@ -25,10 +22,7 @@ module.exports = async (context, datastoreModule, app, instance) => {
         const datastore = setupDatastore(
             datastoreModule.getDatastore(dbConfig));  
             
-        const versionId = $(instance.version.key, [
-            splitKey,
-            last
-        ]);
+        const versionId = determineVersionId(instance.version);
 
         const appPackage = await applictionVersionPackage(
             context, app.name, versionId, instance.key

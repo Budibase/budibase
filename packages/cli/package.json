@@ -1,0 +1,28 @@
+{
+  "name": "budibase",
+  "version": "0.0.3",
+  "description": "Budibase CLI",
+  "main": "src/cli.js",
+  "bin": {
+    "budibase": "bin/budi"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "budibase"
+  ],
+  "author": "Budibase",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@budibase/datastores": "^0.0.3",
+    "@budibase/server": "^0.0.3",
+    "chalk": "^2.4.2",
+    "fs-extra": "^8.1.0",
+    "inquirer": "^7.0.0",
+    "yargs": "^14.2.0"
+  }
+}
