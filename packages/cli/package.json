@@ -4,7 +4,7 @@
   "description": "Budibase CLI",
   "main": "src/cli.js",
   "bin": {
-    "budibase": "bin/budi"
+    "budi": "bin/budi"
   },
   "publishConfig": {
     "access": "public"
