@@ -30,9 +30,6 @@
   "keywords": [
     "svelte"
   ],
-  "files": [
-    "dist/**"
-  ],
   "version": "0.0.8",
   "license": "MIT",
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
