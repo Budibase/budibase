@@ -1,6 +1,6 @@
 {
   "name": "@budibase/server",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Budibase Web Server",
   "main": "index.js",
   "scripts": {
@@ -15,8 +15,8 @@
   "author": "Michael Shanks",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/client": "^0.0.10",
-    "@budibase/core": "^0.0.10",
+    "@budibase/client": "^0.0.11",
+    "@budibase/core": "^0.0.11",
     "@koa/router": "^8.0.0",
     "argon2": "^0.23.0",
     "fs-extra": "^8.1.0",
