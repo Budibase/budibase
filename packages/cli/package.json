@@ -2,6 +2,8 @@
   "name": "budibase",
   "version": "0.0.10",
   "description": "Budibase CLI",
+  "repository":"https://github.com/Budibase/Budibase",
+  "homepage": "https://budibase.com",
   "main": "src/cli.js",
   "bin": {
     "budi": "bin/budi"
