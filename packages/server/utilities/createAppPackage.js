@@ -62,17 +62,17 @@ module.exports.masterAppPackage = (context) => {
 }
 
 const applictionVersionPath = (context, appname, versionId) =>
-    join("..", getRuntimePackageDirectory(context, appname, versionId))
+    join(cwd(), getRuntimePackageDirectory(context, appname, versionId))
 
 const publicPaths = (appPath) =>  ({
-        mainUiPath: resolve(join(
-            __dirname, appPath, "public", "main")),
-        unauthenticatedUiPath: resolve(join(
-            __dirname, appPath, "public", "unauthenticated")),
-        sharedPath: resolve(join(
-            __dirname, appPath, "public", "_shared"))
-        
-    });
+    mainUiPath: resolve(join(
+        appPath, "public", "main")),
+    unauthenticatedUiPath: resolve(join(
+        appPath, "public", "unauthenticated")),
+    sharedPath: resolve(join(
+        appPath, "public", "_shared"))
+    
+});
 
 module.exports.applictionVersionPublicPaths = (context, appname, versionId) => {
     const appPath = applictionVersionPath(context, appname, versionId);

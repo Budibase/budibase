@@ -30,6 +30,23 @@
             "args": ["run"],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/sandbox"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "instance",
+            "program": "${workspaceFolder}\\bin\\budi",
+            "args": ["instance", "my-app"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/sandbox"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "budi",
+            "program": "${workspaceFolder}\\bin\\budi",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/sandbox"
         }
     ]
 }

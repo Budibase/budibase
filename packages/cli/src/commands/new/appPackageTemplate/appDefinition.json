@@ -1,5 +1,12 @@
 {
-  "hierarchy": {},
+  "hierarchy": {
+    "name": "root",
+    "type": "root",
+    "children": [],
+    "pathMaps":[],
+    "indexes":[],
+    "nodeId": 0
+  },
   "triggers": [],
   "actions": {},
   "props": {}

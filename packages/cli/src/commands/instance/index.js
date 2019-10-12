@@ -1,10 +1,15 @@
-const handler = require("./runHandler");
+const handler = require("./instanceHandler");
 
 module.exports = {
-    command: "run [config]", 
-    aliases: ["$0"],
-    desc: "Start budibase Server. You can access your apps and the builder from here if you have dev=true in your config",
+    command: "instance <appname> [config]", 
+    desc: "Create a new instance for an app",
     builder: yargs => {
+        yargs.positional("appname", {
+            type: "string",
+            describe: "the name of the app to create an instance",
+            alias: "a"
+        });
+
         yargs.positional("config", {
             type: "string",
             describe: "config file to use. optional, defaults to config.js. Use 'dev' as shorthand for 'config.dev.js' ",

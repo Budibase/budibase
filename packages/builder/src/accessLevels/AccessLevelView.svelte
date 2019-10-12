@@ -42,8 +42,8 @@ const save = () => {
 
     const newLevels = 
         isNew 
-        ? [...allLevels.levels, clonedLevel]
-        : [...filter(l => l.name !== level.name)(allLevels.levels), clonedLevel];
+        ? [...allLevels, clonedLevel]
+        : [...filter(l => l.name !== level.name)(allLevels), clonedLevel];
 
     errors = validateAccessLevels(
         hierarchy,
