@@ -1,4 +1,6 @@
-Getting Started with Budibase
+# Getting Started with Budibase
+
+(For contributors - scroll down)
 
 ### 1. Prerequisites (for nodegyp)
 
