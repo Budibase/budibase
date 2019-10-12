@@ -2,7 +2,7 @@ const { getAppContext } = require("../../common");
 const { 
     getMasterApisWithFullAccess 
 } = require("@budibase/server/utilities/budibaseApi");
-const { copy, readJSON, writeJSON } = require("fs-extra");
+const { copy, readJSON, writeJSON, remove } = require("fs-extra");
 const { resolve, join } = require("path");
 const thisPackageJson = require("../../../package.json");
 const {exec} = require('child_process');
@@ -39,5 +39,15 @@ const createEmtpyAppPackage = async (opts) => {
     packageJson.dependencies["@budibase/standard-components"] = `^${thisPackageJson.version}`;
 
     await writeJSON(packageJsonPath, packageJson);
+
+    const removePlaceholder = async (...args) => {
+        await remove(join(destinationFolder, ...args, "placeholder"));
+    }
+
+    await removePlaceholder("components");
+    await removePlaceholder("public", "shared");
+    await removePlaceholder("public", "main");
+    await removePlaceholder("public", "unauthenticated");
+    
 
 }

@@ -15,6 +15,7 @@
   "author": "Michael Shanks",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@budibase/client": "^0.0.9",
     "@budibase/core": "^0.0.9",
     "@koa/router": "^8.0.0",
     "argon2": "^0.23.0",

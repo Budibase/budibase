@@ -20,9 +20,11 @@
   "dependencies": {
     "@budibase/datastores": "^0.0.9",
     "@budibase/server": "^0.0.9",
+    "@inquirer/password": "^0.0.6-alpha.0",
     "chalk": "^2.4.2",
     "fs-extra": "^8.1.0",
     "inquirer": "^7.0.0",
+    "lodash": "^4.17.15",
     "yargs": "^14.2.0"
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"

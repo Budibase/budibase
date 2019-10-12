@@ -703,10 +703,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/core@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@budibase/core/-/core-0.0.1.tgz#722a2f5dd402cdb44688f8ce4ba5fdbcad850dfe"
-  integrity sha512-m2kgrfSb+hujAdJ3vYsgdemTkfDiQ8VVF73/i86n/TlfmbG390ColVlrg3ies/Bw8WBHVa3WlTOeVtyWTa4s0g==
+"@budibase/core@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@budibase/core/-/core-0.0.9.tgz#6de9bd65b6c3d3fa64b2d7f76d5057f9b69b82d2"
+  integrity sha512-ZUZDdQBsJlX2J3k7PTxkOzhZINdCdJUIKGQ+KAZIyH9ZlglTOBpRpwvk+cr0jw2BjQI4Od+gGjoojutoZ70a3A==
   dependencies:
     "@nx-js/compiler-util" "^2.0.0"
     date-fns "^1.29.0"
@@ -715,29 +715,29 @@
     safe-buffer "^5.1.2"
     shortid "^2.2.8"
 
-"@budibase/datastores@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@budibase/datastores/-/datastores-0.0.1.tgz#2d3440ead49056622d43728f1bf8ebe6f82b54c9"
-  integrity sha512-X7W6V0H7/KFnG1tzd6njDvi4yL1+xFdadiIwVVBOS/rXnj6qmslunLm6p1X1yukMXV+7yZHpkF9sjWHNqfM3LA==
+"@budibase/datastores@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@budibase/datastores/-/datastores-0.0.9.tgz#baec83e39fb693c5b34b933a8aed0d274ac1d40a"
+  integrity sha512-KL/eQReRPJbZZszRIsevoiWuIGtOfWxR4zArCiAIoIeDZeBVqfc+tLtxUNt7aswfkM96v7D9JO7p0f6hJyqwJQ==
   dependencies:
     "@azure/storage-blob" "^10.1.0-preview"
     "@babel/cli" "^7.1.2"
     "@babel/core" "^7.1.2"
     "@babel/node" "^7.0.0"
     "@babel/preset-env" "^7.1.0"
-    "@budibase/core" "^0.0.1"
+    "@budibase/core" "^0.0.9"
     es6-promisify "^6.0.1"
     lodash "^4.17.13"
     p-limit "^2.0.0"
     papaparse "^4.6.1"
     rimraf "^2.6.2"
 
-"@budibase/server@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@budibase/server/-/server-0.0.1.tgz#851b9bac43a5d6d5c01571467ae87ef2098ce5a0"
-  integrity sha512-R1g6pX0GMTCucErV3TB6hwZndiDpx7Pks/LtfaXGIBQOQnu/3wD8ZSKquye9D8qLtsFuSdOcxkEe+zD22/9jKQ==
+"@budibase/server@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@budibase/server/-/server-0.0.9.tgz#51a9a43c770faf50530628cf2d1fc5baa7595e40"
+  integrity sha512-OEc3UAV0iANPmhoyVjhzxHPVjoLL13TdUFzraIFrlE31bksJ1YiEgnHh9r14CgMe8yMqJrK64lmI/bpxqB3a7w==
   dependencies:
-    "@budibase/core" "^0.0.1"
+    "@budibase/core" "^0.0.9"
     "@koa/router" "^8.0.0"
     argon2 "^0.23.0"
     fs-extra "^8.1.0"
@@ -751,6 +751,37 @@
     tar-fs "^2.0.0"
     uuid "^3.3.2"
     yargs "^13.2.4"
+
+"@inquirer/core@^0.0.7-alpha.0":
+  version "0.0.7-alpha.0"
+  resolved "https://registry.yarnpkg.com/@inquirer/core/-/core-0.0.7-alpha.0.tgz#20d2a5376508f09e7d7ec2bd47ac6849d42e3be5"
+  integrity sha512-ixf0s2kgvZqOCZ15GqTG5r+1faAtfHRJMZmLPFll0JGka+go0iX9byw0WrXkTVkdBK6Bg4Cr8A6R+CsFjUNC3A==
+  dependencies:
+    ansi-escapes "^4.2.1"
+    chalk "^2.4.2"
+    cli-spinners "^2.2.0"
+    cli-width "^2.2.0"
+    lodash "^4.17.12"
+    mute-stream "^0.0.8"
+    run-async "^2.3.0"
+    string-width "^4.1.0"
+    strip-ansi "^5.2.0"
+
+"@inquirer/input@^0.0.7-alpha.0":
+  version "0.0.7-alpha.0"
+  resolved "https://registry.yarnpkg.com/@inquirer/input/-/input-0.0.7-alpha.0.tgz#d5fc70050a3de56fa940699491ca7a7d8211431c"
+  integrity sha512-cFmWRpptVygvu4G2NlW+q5gZIa39cNft9IT6X5CSCuugUQpPPuwoODFFOn+wriblWOxRisUT7wONKtuhxz3clQ==
+  dependencies:
+    "@inquirer/core" "^0.0.7-alpha.0"
+    chalk "^2.4.1"
+
+"@inquirer/password@^0.0.6-alpha.0":
+  version "0.0.6-alpha.0"
+  resolved "https://registry.yarnpkg.com/@inquirer/password/-/password-0.0.6-alpha.0.tgz#4ba92ab85e9c08e25b8995c2e055b2ad12db490a"
+  integrity sha512-7GkMkDa4thQuRNFpFup0lapFAckU5ZW9k7O8A+wwJj7EItlNSJaJM/HKkXWlXAxB2Ce0nDdymfYSw4WLmHwPEg==
+  dependencies:
+    "@inquirer/input" "^0.0.7-alpha.0"
+    chalk "^2.4.1"
 
 "@koa/router@^8.0.0":
   version "8.0.2"
@@ -1058,7 +1089,7 @@ caniuse-lite@^1.0.30000989:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30000999.tgz#427253a69ad7bea4aa8d8345687b8eec51ca0e43"
   integrity sha512-1CUyKyecPeksKwXZvYw0tEoaMCo/RwBlXmEtN5vVnabvO0KPd9RQLcaAuR9/1F+KDMv6esmOFWlsXuzDk+8rxg==
 
-chalk@^2.0.0, chalk@^2.4.2:
+chalk@^2.0.0, chalk@^2.4.1, chalk@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.4.2.tgz#cd42541677a54333cf541a49108c1432b44c9424"
   integrity sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==
@@ -1113,7 +1144,12 @@ cli-cursor@^3.1.0:
   dependencies:
     restore-cursor "^3.1.0"
 
-cli-width@^2.0.0:
+cli-spinners@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/cli-spinners/-/cli-spinners-2.2.0.tgz#e8b988d9206c692302d8ee834e7a85c0144d8f77"
+  integrity sha512-tgU3fKwzYjiLEQgPMD9Jt+JjHVL9kW93FiIMX/l7rivvOD4/LL0Mf7gda3+4U2KJBloybwgj5KEoQgGRioMiKQ==
+
+cli-width@^2.0.0, cli-width@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/cli-width/-/cli-width-2.2.0.tgz#ff19ede8a9a5e579324147b0c11f0fbcbabed639"
   integrity sha1-/xnt6Kml5XkyQUewwR8PvLq+1jk=
@@ -2204,7 +2240,7 @@ locate-path@^3.0.0:
     p-locate "^3.0.0"
     path-exists "^3.0.0"
 
-lodash@^4.17.13, lodash@^4.17.15:
+lodash@^4.17.12, lodash@^4.17.13, lodash@^4.17.15:
   version "4.17.15"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
   integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
@@ -2344,7 +2380,7 @@ ms@^2.1.1:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
-mute-stream@0.0.8:
+mute-stream@0.0.8, mute-stream@^0.0.8:
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
@@ -2902,7 +2938,7 @@ rimraf@^2.6.1, rimraf@^2.6.2:
   dependencies:
     glob "^7.1.3"
 
-run-async@^2.2.0:
+run-async@^2.2.0, run-async@^2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/run-async/-/run-async-2.3.0.tgz#0371ab4ae0bdd720d4166d7dfda64ff7a445a6c0"
   integrity sha1-A3GrSuC91yDUFm19/aZP96RFpsA=

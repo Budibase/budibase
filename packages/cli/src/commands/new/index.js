@@ -1,8 +1,8 @@
 const handler = require("./newHandler");
 
 module.exports = {
-    cmd: "new <name> [config]", 
-    description: "Create a new Budibase app",
+    command: "new <name> [config]", 
+    desc: "Create a new Budibase app",
     builder: yargs => {
         yargs.positional("name", {
             type: "string",

@@ -1,45 +1,50 @@
 const inquirer = require("inquirer");
 const { mkdir, exists, copy } = require("fs-extra");
 const chalk = require("chalk");
-const { cwd } = require("process");
-const { join } = require("path");
 const { serverFileName, getAppContext } = require("../../common");
+const passwordQuestion = require("@inquirer/password");
 const createMasterDb = require("@budibase/server/initialise/createMasterDb");
 var localDatastore = require("@budibase/datastores/datastores/local");
 
-module.exports = (argv) => {
-
-    const questions = [
-        {
-            type: "input",
-            name: "username",
-            message: "Choose a username for Admin: ",
-            validate: function(value) {
-              return !!value || "Please enter a username"
-            }
-        },
-        {
-            type: "input",
-            name: "password",
-            message: "Choose a password for Admin: ",
-            validate: function(value) {
-              return !!value || "Please enter a password"
-            }
-        }
-    ]
-
-    inquirer
-    .prompt(questions)
-    .then(run);
-
+module.exports = (opts) => {
+   run(opts);
 }
 
 const run = async (opts) => {
 
     opts.datapath = "./.data";
+    await prompts(opts);
     await createDataFolder(opts);
     await createDevConfig(opts);
     await initialiseDatabase(opts);
+}
+
+const prompts = async (opts) => {
+
+    const questions = [
+        {
+            type: "input",
+            name: "username",
+            message: "Username for Admin: ",
+            validate: function(value) {
+              return !!value || "Please enter a username"
+            }
+        }
+    ]
+
+    const answers = await inquirer.prompt(questions);
+    const password = await passwordQuestion({
+        message: "Password for Admin: ", mask: "*"
+    });
+    const passwordConfirm = await passwordQuestion({
+        message: "Confirm Password: ", mask: "*"
+    });
+
+    if(password !== passwordConfirm) 
+        throw new Exception("Passwords do not match!");
+    
+    opts.username = answers.username;
+    opts.password = password;
 }
 
 const createDataFolder = async (opts) => {
