@@ -20365,13 +20365,14 @@ var app = (function (exports) {
 
 	const createApp = (componentLibraries, appDefinition, user) => {
 
-	    const initialiseComponent = (parentContext) => (props, htmlElement, context) => {
+	    const initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context) => {
 
 	        const {componentName, libName} = splitName(props._component);
 
 	        if(!componentName || !libName) return;
 
-	        const {initialProps, bind, boundProps} = setupBinding(store, props, coreApi, context, appDefinition.appRootPath);
+	        const {initialProps, bind, boundProps} = setupBinding(
+	            store, props, coreApi, context || parentContext, appDefinition.appRootPath);
 
 	        const bindings = {};
 	        if(boundProps && boundProps.length > 0) {
@@ -20392,7 +20393,7 @@ var app = (function (exports) {
 	        const component = new (componentLibraries[libName][componentName])({
 	            target: htmlElement,
 	            props: componentProps,
-	            hydrate:true
+	            hydrate: hydrate
 	        });
 
 	        bind(component);
@@ -20442,7 +20443,8 @@ var app = (function (exports) {
 	    };
 
 	    const bb = (bindings, context) => ({
-	        initialiseComponent: initialiseComponent(context), 
+	        initialiseComponent: initialiseComponent(context, true), 
+	        appendComponent: initialiseComponent(context, false), 
 	        store,
 	        relativeUrl,
 	        api,

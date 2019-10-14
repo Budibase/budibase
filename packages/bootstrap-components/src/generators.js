@@ -1,0 +1,1 @@
+/*export { app } from "./generators/appGenerator";*/

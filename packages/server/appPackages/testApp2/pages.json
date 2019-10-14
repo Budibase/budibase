@@ -1,18 +1,16 @@
 {
   "main": {
-    "index": {
-      "title": "main yeo"
-    },
-    "appBody": "common/Prim Button"
+    "index": {},
+    "appBody": ""
   },
   "unauthenticated": {
-    "index": {
-      "title": "main"
-    },
-    "appBody": "common/Secondary Button"
+    "index": {},
+    "appBody": ""
   },
   "componentLibraries": [
     "@budibase/standard-components"
   ],
-  "stylesheets": []
+  "stylesheets": [
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+  ]
 }

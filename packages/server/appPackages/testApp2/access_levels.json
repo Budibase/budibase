@@ -1,5 +1,4 @@
 {
-  "version": 0,
   "levels": [
     {
       "name": "owner",
@@ -21,20 +20,8 @@
           "nodeKey": "/customers/1-{id}"
         },
         {
-          "type": "create record",
-          "nodeKey": "/customers/1-{id}/invoices/2-{id}"
-        },
-        {
-          "type": "update record",
-          "nodeKey": "/customers/1-{id}/invoices/2-{id}"
-        },
-        {
-          "type": "delete record",
-          "nodeKey": "/customers/1-{id}/invoices/2-{id}"
-        },
-        {
-          "type": "read record",
-          "nodeKey": "/customers/1-{id}/invoices/2-{id}"
+          "type": "read index",
+          "nodeKey": "/all_customers"
         },
         {
           "type": "write templates"
@@ -64,12 +51,14 @@
           "type": "manage index"
         },
         {
-          "type": "set user access levels"
+          "type": "manage collection"
         },
         {
-          "type": "manage collection"
+          "type": "set user access levels"
         }
-      ]
+      ],
+      "default": false
     }
-  ]
+  ],
+  "version": 1
 }
