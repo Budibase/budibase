@@ -251,5 +251,23 @@
 			"thClass": {"type":"string", "default":"th-default"}
 		},
 		"tags": ["table"]
+	},
+	"div": {
+		"importPath": "Div",
+		"name": "Div",
+		"description": "An HTML div tag",
+		"props" : {
+			"children": {
+				"type":"array",
+				"elementDefinition": {
+					"component":"component"
+				}
+			},
+			"className":"string",
+			"data": "state",
+			"dataItemComponent": "component",
+			"onLoad": "event"
+		},
+		"tags": ["div", "container", "layout"]
 	}
 }

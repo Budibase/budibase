@@ -1,8 +1,0 @@
-{
-  "name": "common/H1",
-  "description": "Header 1",
-  "inherits": "@budibase/standard-components/text",
-  "props": {
-    "font": "20pt"
-  }
-}

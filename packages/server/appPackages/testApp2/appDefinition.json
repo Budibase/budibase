@@ -11,60 +11,35 @@
             "name": "name",
             "type": "string",
             "typeOptions": {
-              "maxLength": 1000,
+              "maxLength": null,
               "values": null,
               "allowDeclaredValuesOnly": false
             },
-            "label": "name",
+            "label": "Name",
+            "getInitialValue": "default",
+            "getUndefinedValue": "default"
+          },
+          {
+            "name": "enquiry",
+            "type": "string",
+            "typeOptions": {
+              "maxLength": null,
+              "values": [
+                "Google",
+                "Facebook",
+                "Word of Mouth"
+              ],
+              "allowDeclaredValuesOnly": true
+            },
+            "label": "Enquiry Source",
             "getInitialValue": "default",
             "getUndefinedValue": "default"
           }
         ],
-        "children": [
-          {
-            "name": "invoiceyooo",
-            "type": "record",
-            "fields": [
-              {
-                "name": "amount",
-                "type": "number",
-                "typeOptions": {
-                  "minValue": 99999999999,
-                  "maxValue": 99999999999,
-                  "decimalPlaces": 2
-                },
-                "label": "amount",
-                "getInitialValue": "default",
-                "getUndefinedValue": "default"
-              }
-            ],
-            "children": [],
-            "validationRules": [],
-            "nodeId": 2,
-            "indexes": [],
-            "allidsShardFactor": 1,
-            "collectionName": "invoices",
-            "isSingle": false
-          }
-        ],
+        "children": [],
         "validationRules": [],
         "nodeId": 1,
-        "indexes": [
-          {
-            "name": "customer_invoices",
-            "type": "index",
-            "map": "return {...record};",
-            "filter": "",
-            "indexType": "ancestor",
-            "getShardName": "",
-            "getSortKey": "record.id",
-            "aggregateGroups": [],
-            "allowedRecordNodeIds": [
-              2
-            ],
-            "nodeId": 5
-          }
-        ],
+        "indexes": [],
         "allidsShardFactor": 64,
         "collectionName": "customers",
         "isSingle": false
@@ -73,7 +48,7 @@
     "pathMaps": [],
     "indexes": [
       {
-        "name": "Yeo index",
+        "name": "all_customers",
         "type": "index",
         "map": "return {...record};",
         "filter": "",
@@ -84,111 +59,15 @@
         "allowedRecordNodeIds": [
           1
         ],
-        "nodeId": 4
-      },
-      {
-        "name": "everyones_invoices",
-        "type": "index",
-        "map": "return {...record};",
-        "filter": "",
-        "indexType": "ancestor",
-        "getShardName": "",
-        "getSortKey": "record.id",
-        "aggregateGroups": [],
-        "allowedRecordNodeIds": [
-          2
-        ],
-        "nodeId": 6
+        "nodeId": 2
       }
     ],
     "nodeId": 0
   },
-  "triggers": [
-    {
-      "actionName": "output_to_file",
-      "eventName": "authApi:createUser:onComplete",
-      "optionsCreator": "return { filename:'tempaccess' + context.user.name, content:context.result.tempCode };",
-      "condition": "!context.password"
-    },
-    {
-      "actionName": "output_to_file",
-      "eventName": "authApi:createTemporaryAccess:onComplete",
-      "optionsCreator": "return { filename:'tempaccess' + context.userName, content:context.result };",
-      "condition": ""
-    }
-  ],
-  "actions": {
-    "undefined": [
-      [
-        [
-          [
-            [
-              [
-                [
-                  [
-                    [
-                      [
-                        [
-                          [
-                            [
-                              [
-                                [
-                                  {
-                                    "name": "output_to_file",
-                                    "behaviourSource": "main",
-                                    "behaviourName": "outputToFile",
-                                    "initialOptions": {}
-                                  }
-                                ]
-                              ]
-                            ]
-                          ]
-                        ]
-                      ]
-                    ]
-                  ]
-                ]
-              ]
-            ]
-          ]
-        ]
-      ]
-    ]
-  },
+  "triggers": [],
+  "actions": {},
   "props": {
-    "main": {
-      "_component": "@budibase/standard-components/button",
-      "contentText": "Button",
-      "contentComponent": {
-        "_component": ""
-      },
-      "className": "default",
-      "disabled": false,
-      "onClick": [],
-      "background": "##f2f2f2",
-      "color": "#5F6368",
-      "border": "1px solid #EEE",
-      "padding": "5px 7px",
-      "hoverColor": "black",
-      "hoverBackground": "#cccccc",
-      "hoverBorder": ""
-    },
-    "unauthenticated": {
-      "_component": "@budibase/standard-components/button",
-      "contentText": "Button",
-      "contentComponent": {
-        "_component": ""
-      },
-      "className": "default",
-      "disabled": false,
-      "onClick": [],
-      "background": "##f2f2f2",
-      "color": "#5F6368",
-      "border": "1px solid #EEE",
-      "padding": "5px 7px",
-      "hoverColor": "black",
-      "hoverBackground": "#cccccc",
-      "hoverBorder": ""
-    }
+    "main": {},
+    "unauthenticated": {}
   }
 }

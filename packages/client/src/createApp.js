@@ -13,16 +13,16 @@ import { setState, setStateFromBinding } from "./state/setState";
 import { trimSlash } from "./common/trimSlash";
 import { isBound } from "./state/isState";
 
-
 export const createApp = (componentLibraries, appDefinition, user) => {
 
-    const initialiseComponent = (parentContext) => (props, htmlElement, context) => {
+    const initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context) => {
 
         const {componentName, libName} = splitName(props._component);
 
         if(!componentName || !libName) return;
 
-        const {initialProps, bind, boundProps} = setupBinding(store, props, coreApi, context, appDefinition.appRootPath);
+        const {initialProps, bind, boundProps} = setupBinding(
+            store, props, coreApi, context || parentContext, appDefinition.appRootPath);
 
         const bindings = {};
         if(boundProps && boundProps.length > 0) {
@@ -43,7 +43,7 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         const component = new (componentLibraries[libName][componentName])({
             target: htmlElement,
             props: componentProps,
-            hydrate:true
+            hydrate: hydrate
         });
 
         bind(component);
@@ -93,7 +93,8 @@ export const createApp = (componentLibraries, appDefinition, user) => {
     }
 
     const bb = (bindings, context) => ({
-        initialiseComponent: initialiseComponent(context), 
+        initialiseComponent: initialiseComponent(context, true), 
+        appendComponent: initialiseComponent(context, false), 
         store,
         relativeUrl,
         api,
