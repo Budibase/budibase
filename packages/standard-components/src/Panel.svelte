@@ -37,7 +37,7 @@ $: {
     });
 
     if(_bb && component && componentElement && !componentInitialised) {
-        _bb.initialiseComponent(component, componentElement);
+        _bb.hydrateComponent(component, componentElement);
         componentInitialised = true;
     }
 

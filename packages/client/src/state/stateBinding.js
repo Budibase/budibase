@@ -130,16 +130,12 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
                             for(let pname in h.parameters) {
                                 const p = h.parameters[pname];
                                 parameters[pname] = 
-                                    !isBound(p) 
-                                    ? p 
-                                    : takeStateFromStore(p)
-                                    ? getState(
+                                    !isBound(p) ? p 
+                                    : takeStateFromStore(p) ? getState(
                                         s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                                    : takeStateFromEventParameters(p)
-                                    ? getState(
+                                    : takeStateFromEventParameters(p) ? getState(
                                         eventContext, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                                    : takeStateFromContext(p)
-                                    ? getState(
+                                    : takeStateFromContext(p) ? getState(
                                         context, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
                                     : p[BB_STATE_FALLBACK];
                                 

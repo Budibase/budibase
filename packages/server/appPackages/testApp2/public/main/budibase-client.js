@@ -20365,7 +20365,7 @@ var app = (function (exports) {
 
 	const createApp = (componentLibraries, appDefinition, user) => {
 
-	    const initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context) => {
+	    const hydrateComponent = (parentContext, hydrate) => (props, htmlElement, context) => {
 
 	        const {componentName, libName} = splitName(props._component);
 
@@ -20443,8 +20443,8 @@ var app = (function (exports) {
 	    };
 
 	    const bb = (bindings, context) => ({
-	        initialiseComponent: initialiseComponent(context, true), 
-	        appendComponent: initialiseComponent(context, false), 
+	        hydrateComponent: hydrateComponent(context, true), 
+	        appendComponent: hydrateComponent(context, false), 
 	        store,
 	        relativeUrl,
 	        api,
@@ -20502,7 +20502,7 @@ var app = (function (exports) {
 	    }
 
 	    const _app = createApp(componentLibraries, appDefinition,  user);
-	    _app.initialiseComponent(
+	    _app.hydrateComponent(
 	        props,
 	        document.body);
 

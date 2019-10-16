@@ -10,7 +10,30 @@ export const indexTableProps = (index, helpers) => ({
     },
     tableClass: "table table-hover",
     theadClass: "thead-dark",
-    columns: helpers.indexSchema(index).map(column)
+    columns: helpers.indexSchema(index).map(column),
+    onRowClick: [
+        {
+            "##eventHandlerType": "Load Record",
+            parameters: {
+                recordKey: {
+                    "##bbstate": "key",
+                    "##bbsource": "context"
+                },
+                statePath: {
+                    "##bbstate": "type",
+                    "##bbsource": "context"
+                }
+            },
+            "##eventHandlerType": "Set State",
+            parameters: {
+                path: "currentView",
+                value: {
+                    "##bbstate": "type",
+                    "##bbsource": "context"
+                }
+            },
+        }
+    ]
 });
 
 export const getIndexTableName = (index) => 

@@ -27,41 +27,6 @@
 			"description": "Generate a table based on an index"
 		}
 	},
-	"button" : {
-		"importPath": "button",
-		"name": "Button",
-		"description": "an html <button />",
-		"props": {
-			"contentText": { "type": "string", "default": "Button" },
-			"contentComponent": "component",
-			"className": {"type": "string", "default": "default"},
-			"disabled": "bool",
-			"onClick": "event",
-			"background": "string",
-			"color": "string",
-			"border": "string",
-			"padding": "string",
-			"hoverColor": "string",
-			"hoverBackground": "string",
-			"hoverBorder": "string"
-		},
-		"tags": ["button"]
-	}, 
-	"login" : {
-		"importPath": "Login",
-		"name": "Login Control",
-		"description": "A control that accepts username, password an also handles password resets",
-		"props" : {
-			"logo": "asset",
-			"loginRedirect": "string",
-			"usernameLabel": {"type":"string", "default": "Username"},
-			"passwordLabel": {"type":"string", "default": "Password"},
-			"loginButtonLabel": {"type":"string", "default": "Login"},
-			"buttonClass": "string",
-			"inputClass": "string"
-		},
-		"tags": ["login", "credentials", "password", "logon"]
-	},
 	"form" : {
 		"importPath": "Form",
 		"name": "Form",
@@ -72,137 +37,16 @@
 				"type":"array",
 				"elementDefinition": {
 					"label": "string",
-					"control":"component"
-				}
-			}
-		},
-		"tags": ["form"]
-	},
-	"textbox" : {
-		"importPath": "Textbox",
-		"name": "Textbox",
-		"description": "An input type=text or password",
-		"props" : {
-			"value": "string",
-			"hideValue": "bool",
-			"className": {"type": "string", "default": "default"}
-		},
-		"tags": ["form"]
-	},
-	"stackpanel": {
-		"importPath": "StackPanel",
-		"name": "StackPanel",
-		"description": "Layout elements in a stack, either horizontally or vertically",
-		"props" : {
-			"direction": {
-				"type": "options", 
-				"options": ["horizontal", "vertical"],
-				"default":"horizontal"
-			},
-			"children": {
-				"type":"array",
-				"elementDefinition": {
-					"control":"component"
-				}
-			},
-			"width": {"type":"string","default":"auto"},
-			"height": {"type":"string","default":"auto"},
-			"containerClass":"string",
-			"itemContainerClass":"string",
-			"data": "state",
-			"dataItemComponent": "component",
-			"onLoad": "event"
-		},
-		"tags": ["div", "container", "layout", "panel"]
-	},
-	"grid": {
-		"importPath": "Grid",
-		"name": "Grid",
-		"description": "CSS Grid layout ",
-		"props" : {
-			"gridTemplateRows": "string",
-			"gridTemplateColumns": "string",
-			"children": {
-				"type":"array",
-				"elementDefinition": {
 					"control":"component",
-					"gridColumn":"string",
-					"gridRow":"string",
-					"gridColumnStart":"string",
-					"gridColumnEnd":"string",
-					"gridRowStart":"string",
-					"gridRowEnd":"string"
+					"controlPosition": {
+						"type":"options",
+						"options": ["Before Label","After Label"],
+						"default": "After Label"
+					}
 				}
-			},
-			"width": {"type":"string","default":"auto"},
-			"height": {"type":"string","default":"auto"},
-			"containerClass":"string",
-			"itemContainerClass":"string"
-		},
-		"tags": ["div", "container", "layout", "panel", "grid"]
-	},
-	"text": {
-		"importPath": "Text",
-		"name": "Text",
-		"description": "stylable block of text",
-		"props" : {
-			"value": "string",
-			"containerClass": "string",
-			"font": "string",
-			"color": "string",
-			"textAlign": {
-				"type": "options", 
-				"default":"inline", 
-				"options": [
-					"left", "center", "right"
-				]
-			},
-			"verticalAlign": {
-				"type": "options", 
-				"default":"inline", 
-				"options": [
-					"top", "middle", "bottom"
-				]
-			},
-			"display": {
-				"type": "options", 
-				"default":"inline", 
-				"options": [
-					"inline", "block", "inline-block"
-				]
 			}
 		},
-		"tags": ["div", "container"]
-	},
-	"panel": {
-		"importPath": "Panel",
-		"name": "Panel",
-		"description": "A stylable div with a component inside",
-		"props" : {
-			"text": "string",
-			"component": "component",
-			"containerClass": "string",
-			"background": "string",
-			"border": "string",
-			"borderRadius":"string",
-			"font": "string",
-			"color": "string",
-			"padding": "string",
-			"margin": "string",
-			"hoverColor": "string",
-			"hoverBackground": "string",
-			"height":"string",
-			"width":"string",
-			"onClick": "event",
-			"display": {
-				"type": "options", 
-				"default":"inline", 
-				"options": [
-					"inline", "block", "inline-block"
-				]
-			}
-		},
-		"tags": ["div", "container"]
+		"tags": ["form"]
 	},
 	"nav": {
 		"importPath": "Nav",
@@ -229,27 +73,5 @@
 
 		},
 		"tags": ["nav", "navigation", "sidebar"]
-	},
-	"table": {
-		"importPath": "Table",
-		"name": "Table",
-		"description": "An HTML table",
-		"props" : {
-			"data": "state",
-			"columns": {
-				"type": "array",
-				"elementDefinition" : {
-					"title": "string",
-					"value": "string"
-				}
-			},
-			"onRowClick":"event",
-			"tableClass": {"type":"string", "default":"table-default"},
-			"theadClass": {"type":"string", "default":"thead-default"},
-			"tbodyClass": {"type":"string", "default":"tbody-default"},
-			"trClass": {"type":"string", "default":"tr-default"},
-			"thClass": {"type":"string", "default":"th-default"}
-		},
-		"tags": ["table"]
 	}
 }

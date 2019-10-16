@@ -10,6 +10,8 @@ export const getState = (s, path, fallback) => {
 
     if(!path || path.length === 0) return fallback;
 
+    if(path === "$") return s;
+
     const pathParts = path.split(".");
     const safeGetPath = (obj, currentPartIndex=0) => {
 

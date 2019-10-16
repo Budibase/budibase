@@ -28,7 +28,7 @@ export const loadBudibase = async (componentLibraries, props) => {
     }
 
     const _app = createApp(componentLibraries, appDefinition,  user);
-    _app.initialiseComponent(
+    _app.hydrateComponent(
         props,
         document.body);
 
