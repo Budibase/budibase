@@ -89,6 +89,43 @@
 		},
 		"tags": ["form"]
 	},
+	"input" : {
+		"importPath": "Input",
+		"name": "Input",
+		"description": "An HTML input",
+		"props" : {
+			"value": "string",
+			"type": {
+				"type":"options", 
+				"options":[
+					"text", "password", "checkbox", "color", 
+					"date", "datetime-local", "email", 
+					"file", "hidden", "image", "month", "number",
+					"radio", "range", "reset", "search", "submit",
+					"tel", "time", "week"],
+				"default":"text"
+			},
+			"className": {"type": "string", "default": "default"}
+		},
+		"tags": ["form"]
+	},
+	"select" : {
+		"importPath": "Input",
+		"name": "Input",
+		"description": "An HTML input",
+		"props" : {
+			"value": "string",
+			"options": {
+				"type" : "array",
+				"elementDefinition" : {
+					"id":"string",
+					"value":"string"
+				}
+			},
+			"className": {"type": "string", "default": "default"}
+		},
+		"tags": ["form"]
+	},
 	"stackpanel": {
 		"importPath": "StackPanel",
 		"name": "StackPanel",
@@ -269,5 +306,65 @@
 			"onLoad": "event"
 		},
 		"tags": ["div", "container", "layout"]
+	},
+	"h1": {
+		"importPath": "h1",
+		"name": "H1",
+		"description": "An HTML H1 tag",
+		"props" : {
+			"text": "string",
+			"className":"string"
+		},
+		"tags": []
+	},
+	"h2": {
+		"importPath": "h2",
+		"name": "H2",
+		"description": "An HTML H2 tag",
+		"props" : {
+			"text": "string",
+			"className":"string"
+		},
+		"tags": []
+	},
+	"h3": {
+		"importPath": "h3",
+		"name": "H3",
+		"description": "An HTML H3 tag",
+		"props" : {
+			"text": "string",
+			"className":"string"
+		},
+		"tags": []
+	},
+	"h4": {
+		"importPath": "h4",
+		"name": "H4",
+		"description": "An HTML H4 tag",
+		"props" : {
+			"text": "string",
+			"className":"string"
+		},
+		"tags": []
+	},
+	"h5": {
+		"importPath": "h5",
+		"name": "H5",
+		"description": "An HTML H5 tag",
+		"props" : {
+			"text": "string",
+			"className":"string"
+		},
+		"tags": ["div", "container", "layout"]
+	},
+	"h6": {
+		"importPath": "h6",
+		"name": "H6",
+		"description": "An HTML H6 tag",
+		"props" : {
+			"text": "string",
+			"className":"string"
+		},
+		"tags": []
 	}
 }

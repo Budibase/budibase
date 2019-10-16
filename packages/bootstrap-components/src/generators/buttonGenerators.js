@@ -8,11 +8,11 @@ export const buttons = () => [
         }
     },
     {
-        name: "common/Secondary Button",
-        description: "Bootstrap primary button",
+        name: "common/Default Button",
+        description: "Bootstrap default button",
         inherits: "@budibase/standard-components/button",
         props: {
-            className: "btn btn-primary"
+            className: "btn"
         }
     }
 ]

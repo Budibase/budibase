@@ -43,7 +43,7 @@ $: {
         }
 
         for(let el in staticHtmlElements) {
-            staticComponents[el] = _bb.initialiseComponent(
+            staticComponents[el] = _bb.hydrateComponent(
                 children[el].control,
                 staticHtmlElements[el]
             );
@@ -61,7 +61,7 @@ $: {
     if(hasData()) {
         let index = 0;
         for(let d in dataBoundElements) {
-            _bb.initialiseComponent(
+            _bb.hydrateComponent(
                 dataItemComponent,
                 dataBoundElements[d],
                 data[parseInt(d)]

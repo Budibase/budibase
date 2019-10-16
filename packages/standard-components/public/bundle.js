@@ -1047,7 +1047,7 @@ var app = (function () {
             
                 if(_bb && htmlElements) {
                     for(let el in htmlElements) {
-                        _bb.initialiseComponent(
+                        _bb.hydrateComponent(
                             formControls[el].control,
                             htmlElements[el]
                         );
@@ -1393,7 +1393,7 @@ var app = (function () {
     	$$self.$$.update = ($$dirty = { _bb: 1, contentComponentContainer: 1, contentComponent: 1 }) => {
     		if ($$dirty._bb || $$dirty.contentComponentContainer || $$dirty.contentComponent) { {
     			if(_bb && contentComponentContainer && contentComponent._component)
-    				_bb.initialiseComponent(contentComponent, contentComponentContainer);
+    				_bb.hydrateComponent(contentComponent, contentComponentContainer);
     		} }
     	};
 
@@ -2258,7 +2258,7 @@ var app = (function () {
     		if ($$dirty._bb || $$dirty.htmlElements || $$dirty.children) { {
                 if(_bb && htmlElements) {
                     for(let el in htmlElements) {
-                        _bb.initialiseComponent(
+                        _bb.hydrateComponent(
                             children[el].control,
                             htmlElements[el]
                         );
@@ -2925,7 +2925,7 @@ var app = (function () {
     const onSelectItem = (index) => () => {
         $$invalidate('selectedIndex', selectedIndex = index);
         if(!components[index]) {
-            const comp = _bb.initialiseComponent(
+            const comp = _bb.hydrateComponent(
                 items[index].component, componentElements[index]);
             components[index] = comp;   
         }
@@ -3288,7 +3288,7 @@ var app = (function () {
                 }));
             
                 if(_bb && component) {
-                    _bb.initialiseComponent(component, componentElement);
+                    _bb.hydrateComponent(component, componentElement);
                 }
             
                 $$invalidate('styleVars', styleVars = {
@@ -3983,7 +3983,7 @@ var app = (function () {
                     }
             
                     for(let el in staticHtmlElements) {
-                        $$invalidate('staticComponents', staticComponents[el] = _bb.initialiseComponent(
+                        $$invalidate('staticComponents', staticComponents[el] = _bb.hydrateComponent(
                             children[el].control,
                             staticHtmlElements[el]
                         ), staticComponents);
@@ -4000,7 +4000,7 @@ var app = (function () {
             
                 if(hasData()) {
                     for(let d in dataBoundElements) {
-                        _bb.initialiseComponent(
+                        _bb.hydrateComponent(
                             dataItemComponent,
                             dataBoundElements[d],
                             data[parseInt(d)]
@@ -24910,7 +24910,7 @@ var app = (function () {
 
     const createApp = (componentLibraries, appDefinition, user) => {
 
-        const initialiseComponent = (parentContext) => (props, htmlElement, context) => {
+        const hydrateComponent = (parentContext) => (props, htmlElement, context) => {
 
             const {componentName, libName} = splitName(props._component);
 
@@ -24963,7 +24963,7 @@ var app = (function () {
         };
 
         const bb = () => ({
-            initialiseComponent: initialiseComponent(), 
+            hydrateComponent: hydrateComponent(), 
             store,
             relativeUrl,
             api,
@@ -24977,7 +24977,7 @@ var app = (function () {
             if(!context) return bbRoot;
             const bbCxt = bb();
             bbCxt.context = context;
-            bbCxt.initialiseComponent=initialiseComponent(context);
+            bbCxt.hydrateComponent=hydrateComponent(context);
             return bbCxt;
         };
 
@@ -25463,7 +25463,7 @@ var app = (function () {
     	$$self.$$.update = ($$dirty = { _bb: 1, currentComponent: 1 }) => {
     		if ($$dirty._bb || $$dirty.currentComponent) { {
                 if(_bb && currentComponent) {
-                    _bb.initialiseComponent(testProps, currentComponent);
+                    _bb.hydrateComponent(testProps, currentComponent);
                 }
             } }
     	};

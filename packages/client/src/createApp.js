@@ -15,7 +15,7 @@ import { isBound } from "./state/isState";
 
 export const createApp = (componentLibraries, appDefinition, user) => {
 
-    const initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context) => {
+    const _initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context, anchor=null) => {
 
         const {componentName, libName} = splitName(props._component);
 
@@ -43,7 +43,8 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         const component = new (componentLibraries[libName][componentName])({
             target: htmlElement,
             props: componentProps,
-            hydrate: hydrate
+            hydrate,
+            anchor
         });
 
         bind(component);
@@ -93,8 +94,10 @@ export const createApp = (componentLibraries, appDefinition, user) => {
     }
 
     const bb = (bindings, context) => ({
-        initialiseComponent: initialiseComponent(context, true), 
-        appendComponent: initialiseComponent(context, false), 
+        hydrateComponent: _initialiseComponent(context, true), 
+        appendComponent: _initialiseComponent(context, false), 
+        insertComponent: (props, htmlElement, anchor, context) => 
+            _initialiseComponent(context, false)(props, htmlElement, context, anchor), 
         store,
         relativeUrl,
         api,

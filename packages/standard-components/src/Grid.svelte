@@ -24,7 +24,7 @@ let htmlElements = {};
 $ : {
     if(_bb && htmlElements) {
         for(let el in htmlElements) {
-            _bb.initialiseComponent(
+            _bb.hydrateComponent(
                 children[el].control,
                 htmlElements[el]
             );

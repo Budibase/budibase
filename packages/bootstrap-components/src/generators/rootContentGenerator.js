@@ -19,6 +19,21 @@ const findIndexForRecord = (indexes, record) => {
     return noMap[0];
 }
 
-const component = (recordAndIndex) => {
-    _component: ""
-}
+const component = (recordAndIndex) => ({
+    _component: "@budibase/standard-components/div",
+    className: "p-3",
+    children: [
+        {
+            component: {
+                _component: "@budibase/standard-components/H2",
+                text: recordAndIndex.record.collectionName
+            }
+        },
+        {
+            component: {
+                _component: getIndexTableName(recordAndIndex.index)
+            }
+        }
+    ]
+
+})

@@ -639,7 +639,7 @@ const clickHandler = () => {
 	$$self.$$.update = ($$dirty = { _bb: 1, contentComponentContainer: 1, contentComponent: 1 }) => {
 		if ($$dirty._bb || $$dirty.contentComponentContainer || $$dirty.contentComponent) { {
 			if(_bb && contentComponentContainer && contentComponent._component)
-				_bb.initialiseComponent(contentComponent, contentComponentContainer);
+				_bb.hydrateComponent(contentComponent, contentComponentContainer);
 		} }
 	};
 
@@ -1068,7 +1068,7 @@ let labels = {};
         
             if(_bb && htmlElements) {
                 for(let el in htmlElements) {
-                    _bb.initialiseComponent(
+                    _bb.hydrateComponent(
                         formControls[el].control,
                         htmlElements[el]
                     );
@@ -1736,7 +1736,7 @@ const childStyle = child =>
 		if ($$dirty._bb || $$dirty.htmlElements || $$dirty.children) { {
             if(_bb && htmlElements) {
                 for(let el in htmlElements) {
-                    _bb.initialiseComponent(
+                    _bb.hydrateComponent(
                         children[el].control,
                         htmlElements[el]
                     );
@@ -2130,7 +2130,7 @@ const hasStaticComponents = () => {
                 }
         
                 for(let el in staticHtmlElements) {
-                    $$invalidate('staticComponents', staticComponents[el] = _bb.initialiseComponent(
+                    $$invalidate('staticComponents', staticComponents[el] = _bb.hydrateComponent(
                         children[el].control,
                         staticHtmlElements[el]
                     ), staticComponents);
@@ -2147,7 +2147,7 @@ const hasStaticComponents = () => {
         
             if(hasData()) {
                 for(let d in dataBoundElements) {
-                    _bb.initialiseComponent(
+                    _bb.hydrateComponent(
                         dataItemComponent,
                         dataBoundElements[d],
                         data[parseInt(d)]
@@ -2395,7 +2395,7 @@ let contentElement;
 
 const onSelectItem = (index) => () => {
     $$invalidate('selectedIndex', selectedIndex = index);
-    _bb.initialiseComponent(items[index].component, contentElement);
+    _bb.hydrateComponent(items[index].component, contentElement);
 };
 
 	function div1_binding($$value) {
@@ -2570,7 +2570,7 @@ let componentElement;
             }));
         
             if(_bb && component) {
-                _bb.initialiseComponent(component, componentElement);
+                _bb.hydrateComponent(component, componentElement);
             }
         
             $$invalidate('styleVars', styleVars = {

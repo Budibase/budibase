@@ -20362,7 +20362,7 @@ const createCoreApi = (appDefinition, user) => {
 
 const createApp = (componentLibraries, appDefinition, user) => {
 
-    const initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context) => {
+    const hydrateComponent = (parentContext, hydrate) => (props, htmlElement, context) => {
 
         const {componentName, libName} = splitName(props._component);
 
@@ -20440,8 +20440,8 @@ const createApp = (componentLibraries, appDefinition, user) => {
     };
 
     const bb = (bindings, context) => ({
-        initialiseComponent: initialiseComponent(context, true), 
-        appendComponent: initialiseComponent(context, false), 
+        hydrateComponent: hydrateComponent(context, true), 
+        appendComponent: hydrateComponent(context, false), 
         store,
         relativeUrl,
         api,
@@ -20499,7 +20499,7 @@ const loadBudibase = async (componentLibraries, props) => {
     }
 
     const _app = createApp(componentLibraries, appDefinition,  user);
-    _app.initialiseComponent(
+    _app.hydrateComponent(
         props,
         document.body);
 

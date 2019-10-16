@@ -38,7 +38,7 @@ const createClasses = (classes) => {
 
 $:{
 	if(_bb && contentComponentContainer && contentComponent._component)
-		_bb.initialiseComponent(contentComponent, contentComponentContainer);
+		_bb.hydrateComponent(contentComponent, contentComponentContainer);
 
 	cssVariables = {
 		hoverColor, hoverBorder,

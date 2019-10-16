@@ -16,7 +16,7 @@ $ : {
 
     if(_bb && htmlElements) {
         for(let el in htmlElements) {
-            _bb.initialiseComponent(
+            _bb.hydrateComponent(
                 formControls[el].control,
                 htmlElements[el]
             );
