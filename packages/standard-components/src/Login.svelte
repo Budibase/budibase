@@ -42,7 +42,7 @@ const login = () => {
     })
     .then(user => {
         if(user) {
-            localStorage.setItem("budibase:user", user);
+            localStorage.setItem("budibase:user", JSON.stringify(user));
             location.reload();
         }
     })

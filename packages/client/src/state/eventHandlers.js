@@ -19,10 +19,15 @@ export const eventHandlers = (store,coreApi,rootPath) => {
 
     const setStateWithStore = (path, value) => setState(store, path, value);
 
+    let currentState;
+    store.subscribe(s => {
+        currentState = s;
+    });
+
     const api = createApi({
         rootPath:rootPath,
-        setState: (path, value) => setStateWithStore,
-        getState: (path, fallback) => getState(store, path, fallback)
+        setState: setStateWithStore,
+        getState: (path, fallback) => getState(currentState, path, fallback)
     });
 
     const setStateHandler = ({path, value}) => setState(store, path, value);
@@ -35,11 +40,11 @@ export const eventHandlers = (store,coreApi,rootPath) => {
         
         "Get New Child Record": handler(
             ["recordKey", "collectionName", "childRecordType", "statePath"], 
-            getNewChildRecordToState(store, coreApi, setStateWithStore)),
+            getNewChildRecordToState(coreApi, setStateWithStore)),
 
         "Get New Record": handler(
             ["collectionKey", "childRecordType", "statePath"], 
-            getNewRecordToState(store, coreApi, setStateWithStore)),
+            getNewRecordToState(coreApi, setStateWithStore)),
 
         "Authenticate": handler(["username", "password"], api.authenticate)
     };

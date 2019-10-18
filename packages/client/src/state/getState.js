@@ -8,6 +8,7 @@ import {
 
 export const getState = (s, path, fallback) => {
 
+    if(!s) return fallback;
     if(!path || path.length === 0) return fallback;
 
     if(path === "$") return s;
@@ -41,11 +42,26 @@ export const getState = (s, path, fallback) => {
 }
 
 export const getStateOrValue = (globalState, prop, currentContext) => {
-    if(!isBound(prop)) return prop;
+    
+    if(!prop) return prop;
+    
+    if(isBound(prop)) {
 
-    const stateToUse = takeStateFromStore(prop) 
-                       ? globalState
-                       : currentContext;
+        const stateToUse = takeStateFromStore(prop) 
+                        ? globalState
+                        : currentContext;
 
-    return getState(stateToUse, prop[BB_STATE_BINDINGPATH], prop[BB_STATE_FALLBACK]);
+        return getState(stateToUse, prop[BB_STATE_BINDINGPATH], prop[BB_STATE_FALLBACK]);
+    }
+
+    if(prop.path && prop.source) {
+        const stateToUse = prop.source === "store" 
+                        ? globalState
+                        : currentContext;
+
+        return getState(stateToUse, prop.path, prop.fallback);
+    }
+
+    return prop;
+    
 }

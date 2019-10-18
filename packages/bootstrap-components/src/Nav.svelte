@@ -4,7 +4,7 @@ export let items = [];
 export let hideNavBar=false;
 export let selectedItem="";
 export let orientation="horizontal"; // horizontal, verical
-export let alignment="left"; // start, center, end
+export let alignment="start"; // start, center, end
 export let pills=false;
 export let fill=false;
 export let _bb;
@@ -12,12 +12,19 @@ export let _bb;
 let selectedIndex = -1;
 let styleVars={};
 let components = {};
-let componentElements = {}
+let componentElement;
 let orientationClass="";
 let navClasses="";
+let currentComponent;
+let _selectedItem="";
 
 const hasComponentElements = () => 
     Object.getOwnPropertyNames(componentElements).length > 0;
+
+const getSelectedItemByIndex = (index) => 
+    index >= 0
+    ? items[index].title
+    : "";
 
 $: {
 
@@ -37,30 +44,54 @@ $: {
 
     navClasses = _navClasses;
 
-    if(items && items.length > 0 && hasComponentElements()) {
-        const currentSelectedItem = selectedIndex > 0
-                                   ? items[selectedIndex].title
-                                   : "";
+
+    if(items ) {
+        
+        const currentSelectedItem = getSelectedItemByIndex(selectedIndex);
+
         if(selectedItem && currentSelectedItem !== selectedItem) {
             let i=0;
             for(let item of items) {
                 if(item.title === selectedItem) {
-                    onSelectItem(i)();
+                    SelectItem(i);
                 }
                 i++;
             }
-        } else if(!currentSelectedItem) {
-            onSelectItem(0);
+        } else if(!selectedItem) {
+            SelectItem(-1);
         }
     }
 }
 
-const onSelectItem = (index) => () => {
+const SelectItem = (index) => {
+
     selectedIndex = index;
-    if(!components[index]) {
-        const comp = _bb.hydrateComponent(
-            items[index].component, componentElements[index]);
-        components[index] = comp;   
+    const newSelectedItem = getSelectedItemByIndex(index);
+    if(newSelectedItem !== selectedItem) {
+        selectedItem = newSelectedItem;
+    }
+
+    if(currentComponent) {
+        try {
+            currentComponent.$destroy();
+        } catch(_) {}
+    }
+
+    if(index >= 0)
+        currentComponent = _bb.hydrateComponent(
+            items[index].component, componentElement);
+
+}
+
+const onSelectItemClicked = index => () => {
+    if(_bb.bindings["selectedItem"]) {
+        // binding - call state, which should SelectItem(..)
+        const selectedItemBinding = _bb.bindings["selectedItem"];
+        _bb.setStateFromBinding(
+            selectedItemBinding, getSelectedItemByIndex(index))
+    } else {
+        // no binding - call this 
+        SelectItem(index);
     }
 }
 
@@ -69,21 +100,22 @@ const onSelectItem = (index) => () => {
 
 <div class="root">
     {#if !hideNavBar}
-    <nav class="nav {navClasses}">
+    <ul class="nav {navClasses}">
         {#each items as navItem, index}
-        <div class="nav-item"
-             on:click={onSelectItem(index)}
-             class:disabled={navItem.disabled}
-             class:active={selectedIndex === index}>
-            {navItem.title}
-        </div>
+        <li class="nav-item">
+            <button class="nav-link btn btn-link"
+                on:click={onSelectItemClicked(index)}
+                class:disabled={navItem.disabled}
+                class:active={selectedIndex === index}>
+                {navItem.title}
+            </button>
+        </li>
         {/each}
-    </nav>
+    </ul>
     {/if}
     {#each items as navItem, index}
 
-    <div class="content"
-         bind:this={componentElements[index]}>
+    <div bind:this={componentElement}>
     </div>
     {/each}
 </div>
@@ -93,36 +125,8 @@ const onSelectItem = (index) => () => {
 .root {
     height: 100%;
     width:100%;
-    grid-template-columns: [navbar] auto [content] 1fr;
-    display: grid;
 }
 
-.navbar {
-    grid-column: navbar;
-    background: var(--navBarBackground);
-    border: var(--navBarBorder);
-    color: var(--navBarColor);
-}
-
-.navitem {
-    padding: 10px 17px;
-    cursor: pointer;
-}
-
-.navitem:hover {
-    background: var(--itemHoverBackground);
-    color: var(--itemHoverColor);
-}
-
-.navitem.selected {
-    background: var(--selectedItemBackground);
-    border: var(--selectedItemBorder);
-    color: var(--selectedItemColor);
-}
-
-.content {
-    grid-column: content;
-}
 
 </style>
 

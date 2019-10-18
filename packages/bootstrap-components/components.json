@@ -10,21 +10,13 @@
 			"name": "Forms",
 			"description": "Generate forms, based on your records"
 		},
-		"buttons": {
-			"name": "Buttons",
-			"description": "Generate some styled buttons"
-		},
-		"headers": {
-			"name": "Headers",
-			"description": "Generate some styled headings"
-		},
-		"nav": {
-			"name": "Nav bar",
-			"description": "Generate a nav bar, based n your root records"
-		},
 		"indexTables": {
-			"name": "Nav bar",
+			"name": "Index Tables",
 			"description": "Generate a table based on an index"
+		},
+		"recordHomepages": {
+			"name": "Record Homepage",
+			"description": "Generates a 'homepage' based on your record types, including a create/edit form. Selecting a nav item will display a root content"
 		}
 	},
 	"form" : {
@@ -53,14 +45,6 @@
 		"name": "Nav",
 		"description": "A nav - a side bar of buttons that control the currently active component",
 		"props" : {
-			"navBarBackground": {"type" :"string", "default":"silver"},
-			"navBarBorder": "string",
-			"navBarColor": {"type" :"string", "default":"black"},
-			"selectedItemBackground": {"type" :"string", "default":"white"},
-			"selectedItemColor": {"type" :"string", "default":"black"},
-			"selectedItemBorder": "string",
-			"itemHoverBackground": {"type" :"string", "default":"gainsboro"},
-			"itemHoverColor": {"type" :"string", "default":"black"},
 			"items": {
 				"type": "array",
 				"elementDefinition" : {
@@ -69,6 +53,10 @@
 				}
 			},
 			"selectedItem":"string",
+			"pills":"bool",
+			"orientation":{"type":"options", "options": ["horizontal", "vertical"]},
+			"alignment":{"type":"options", "options": ["start", "center", "end"]},
+			"fill":"bool",
 			"hideNavBar":"bool"
 
 		},

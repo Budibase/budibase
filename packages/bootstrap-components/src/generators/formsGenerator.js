@@ -1,19 +1,23 @@
-import {headers} from "./headersGenerator";
+import {buttons} from "./buttonGenerators";
 
-export const forms = ({records, indexes}) => 
-    [...headers({records, indexes}),
-    ...records.map(root)];
+export const forms = ({records, indexes, helpers}) => 
+    [
+        ...records.map(root),
+        ...buttons({records, indexes, helpers})
+    ];
+
+export const formName = record =>  `${record.name}/${record.name} Form`;
 
 const root = record => ({
-    name: `${record.name} Form`,
+    name: formName(record),
     description: `Control for creating/updating '${record.nodeKey()}' `,
     inherits: "@budibase/standard-components/div",
     props: {
-        direction: "vertical",
+        className:"p-1",
         children: [
             {
-                control: {
-                    _component: "@budibase/standard-components/H3",
+                component: {
+                    _component: "@budibase/standard-components/h3",
                     text: `Edit ${record.name}`,
                 }
             },
@@ -24,51 +28,48 @@ const root = record => ({
 }) 
 
 const form = record => ({
-    control: {
+    component: {
         _component: "@budibase/standard-components/form",
         formControls: 
-            record.fields.map(f => ({
-                label: f.label,
-                control: {
-                    _component: "@budibase/standard-components/input",
-                    value: {
-                        "##bbstate":`current${record.name}.${f.name}`,
-                        "##bbsource":"store"
-                    }
-                }
-            }))
+            record.fields.map(f => formControl(record, f))
     }
 })
 
 const formControl = (record, field) => {
-    if(field.type === "string" && field.typeOptions.values && values.typeOptions.length > 0) {
+    if(field.type === "string" && field.typeOptions.values && field.typeOptions.values.length > 0) {
         return ({
-            _component: "@budibase/standard-components/select",
-            options: field.typeOptions.values.map(v => ({id:v, value:v})),
-            value: {
-                "##bbstate":`current${record.name}.${f.name}`,
-                "##bbsource":"store"
+            control: {
+                _component: "@budibase/standard-components/select",
+                options: field.typeOptions.values.map(v => ({id:v, value:v})),
+                value: {
+                    "##bbstate":`${record.name}.${field.name}`,
+                    "##bbsource":"store"
+                },
+                className: "form-control"
             },
-            className: "form-control"
+            label: field.label
         });
     } else {
         return ({
-            _component: "@budibase/standard-components/input",
-            value: {
-                "##bbstate":`current${record.name}.${f.name}`,
-                "##bbsource":"store"
+            control: {
+                _component: "@budibase/standard-components/input",
+                value: {
+                    "##bbstate":`${record.name}.${field.name}`,
+                    "##bbsource":"store"
+                },
+                className: "form-control",
+                type: field.type === "string" ? "text"
+                    : field.type === "datetime" ? "date"
+                    : field.type === "number" ? "number"
+                    : "text"
             },
-            className: "form-control",
-            type: field.type === "string" ? "text"
-                  : field.type === "datetime" ? "date"
-                  : field.type === "number" ? "number"
-                  : "text"
+            label: field.label
         });
     }
 }
 
 const saveCancelButtons = (record) => ({
-    control: {
+    component: {
         _component: "@budibase/standard-components/stackpanel",
         direction: "horizontal",
         children: [
@@ -79,7 +80,14 @@ const saveCancelButtons = (record) => ({
                     {
                         "##eventHandlerType": "Save Record",
                         parameters: {
-                            statePath: `current${record.name}`,
+                            statePath: `${record.name}`,
+                        }
+                    },
+                    {
+                        "##eventHandlerType": "Set State",
+                        parameters: {
+                            path: `isEditing${record.name}`,
+                            value: ""
                         }
                     }
                 ]
@@ -89,9 +97,10 @@ const saveCancelButtons = (record) => ({
                 contentText: `Cancel`,
                 onClick: [
                     {
-                        "##eventHandlerType": "Save Record",
+                        "##eventHandlerType": "Set State",
                         parameters: {
-                            statePath: `current${record.name}`,
+                            path: `isEditing${record.name}`,
+                            value: ""
                         }
                     }
                 ]
@@ -102,9 +111,13 @@ const saveCancelButtons = (record) => ({
 
 const paddedPanelForButton = (button) => ({
     control: {
-        _component: "@budibase/standard-components/panel",
-        padding: "20px",
-        component: button
+        _component: "@budibase/standard-components/div",
+        className: "btn-group",
+        children: [
+            {
+                component: button
+            }
+        ]
     }
 });
 

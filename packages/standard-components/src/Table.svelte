@@ -15,6 +15,14 @@ const rowClickHandler = (row) => () => {
     _bb.call(onRowClick, row);
 }
 
+const cellValue = (colIndex, row) => {
+    const val = _bb.getStateOrValue(
+        _bb.bindings.columns[colIndex].value
+        , row)
+    return val;
+}
+
+
 </script>
 
  <table class={tableClass}>
@@ -26,14 +34,16 @@ const rowClickHandler = (row) => () => {
         </tr>
     </thead>
     <tbody class={tbodyClass}>
+        {#if data}
         {#each data as row}
         <tr class={trClass}
             on:click={rowClickHandler(row)} >
-            {#each columns as col}
-            <th class={thClass}>{_bb.getStateOrValue(col.value, row)}</th>
+            {#each columns as col, index}
+            <th class={thClass}>{cellValue(index, row)}</th>
             {/each}
         </tr>
         {/each}
+        {/if}
     </tbody>
 </table> 
 

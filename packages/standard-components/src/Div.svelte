@@ -19,38 +19,41 @@ const hasData = () =>
 
 $: {
 
-    if(children && children.length > 0 && !staticComponentsApplied) {
-        for(let child of children) {
-            _bb.appendComponent(
-                child.control,
-                rootDiv);
-        }
-    }
-    
-
-    if(previousData !== data) {
-
-        for(let c of dataBoundComponents) {
-            dataBoundComponents[c].$destroy();
-        }
-        dataBoundComponents = [];
-
-
-        if(hasData()) {
-            let index = 0;
-            for(let dataItem of data) {
+    if(rootDiv) {
+        if(children && children.length > 0 && !staticComponentsApplied) {
+            for(let child of children) {
                 _bb.appendComponent(
-                    dataItemComponent,
-                    rootDiv,
-                    dataItem
-                );
+                    child.component,
+                    rootDiv);
+            }
+            staticComponentsApplied = true;
+        }
+        
+
+        if(previousData !== data) {
+
+            for(let c of dataBoundComponents) {
+                dataBoundComponents[c].$destroy();
+            }
+            dataBoundComponents = [];
+
+
+            if(hasData()) {
+                let index = 0;
+                for(let dataItem of data) {
+                    _bb.appendComponent(
+                        dataItemComponent,
+                        rootDiv,
+                        dataItem
+                    );
+                }
             }
         }
-    }
 
-    if(!onLoadCalled && onLoad && !onLoad.isPlaceholder) {
-        _bb.call(onLoad);
-        onLoadCalled = true;
+        if(!onLoadCalled && onLoad && !onLoad.isPlaceholder) {
+            _bb.call(onLoad);
+            onLoadCalled = true;
+        }
     }
 }
 

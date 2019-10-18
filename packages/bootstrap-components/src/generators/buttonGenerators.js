@@ -12,7 +12,7 @@ export const buttons = () => [
         description: "Bootstrap default button",
         inherits: "@budibase/standard-components/button",
         props: {
-            className: "btn"
+            className: "btn btn-light"
         }
     }
 ]

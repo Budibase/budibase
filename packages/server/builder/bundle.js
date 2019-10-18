@@ -20394,6 +20394,12 @@
       fp_13(n => new RegExp(`${n.pathRegx()}$`).test(key)),
     ]);
 
+    const getNodeForCollectionPath = appHierarchy => collectionKey => $(appHierarchy, [
+      getFlattenedHierarchy,
+      fp_13(n => (isCollectionRecord(n)
+                       && new RegExp(`${n.collectionPathRegx()}$`).test(collectionKey))),
+    ]);
+
     const hasMatchingAncestor = ancestorPredicate => decendantNode => switchCase(
 
       [node => isNothing(node.parent()),
@@ -21015,6 +21021,8 @@
 
     const getSampleFieldValue = field => getType(field.type).sampleValue;
 
+    const getNewFieldValue = field => getType(field.type).getNew(field);
+
     const getDefaultOptions$1 = type => getType(type).getDefaultOptions();
 
     const detectType = (value) => {
@@ -21193,6 +21201,28 @@
       executeAction,
       setUserAccessLevels,
     };
+
+    const getNew = app => (collectionKey, recordTypeName) => {
+      const recordNode = getRecordNode(app, collectionKey);
+      collectionKey=safeKey(collectionKey);
+      return apiWrapperSync(
+        app,
+        events.recordApi.getNew,
+        permission.createRecord.isAuthorized(recordNode.nodeKey()),
+        { collectionKey, recordTypeName },
+        _getNew, recordNode, collectionKey,
+      );
+    };
+
+    const _getNew = (recordNode, collectionKey) => constructRecord(recordNode, getNewFieldValue, collectionKey);
+
+    const getRecordNode = (app, collectionKey) => {
+      collectionKey = safeKey(collectionKey);
+      return getNodeForCollectionPath(app.hierarchy)(collectionKey);
+    };
+
+    const getNewChild = app => (recordKey, collectionName, recordTypeName) => 
+      getNew(app)(joinKey(recordKey, collectionName), recordTypeName);
 
     const constructRecord = (recordNode, getFieldValue, collectionKey) => {
       const record = $(recordNode.fields, [
@@ -28096,6 +28126,16 @@
       setUserAccessLevels: setUserAccessLevels$1(app),
     });
 
+    const userWithFullAccess = (app) => {
+        app.user = {
+            name: "app",
+            permissions : generateFullPermissions(app),
+            isUser:false,
+            temp:false
+        };
+        return app.user;
+    };
+
     const pipe$1 = common$1.$;
 
     const events$1 = common$1.eventsList;
@@ -28272,7 +28312,7 @@
 
             if(obj[currentKey] === null 
               || obj[currentKey] === undefined
-              || !fp_27(obj.currentKey)) {
+              || !fp_27(obj[currentKey])) {
 
                 obj[currentKey] = {};
             }
@@ -28289,7 +28329,10 @@
 
     const getState = (s, path, fallback) => {
 
+        if(!s) return fallback;
         if(!path || path.length === 0) return fallback;
+
+        if(path === "$") return s;
 
         const pathParts = path.split(".");
         const safeGetPath = (obj, currentPartIndex=0) => {
@@ -28354,7 +28397,7 @@
             return;
         } 
 
-        const records = api.get({
+        const records = await api.get({
             url:`/api/listRecords/${trimSlash(indexKey)}`
         });
 
@@ -28383,13 +28426,41 @@
 
         // set user even if error - so it is defined at least
         api.setState(USER_STATE_PATH, user);
-        localStorage.setItem("budibase:user", user);
+        localStorage.setItem("budibase:user", JSON.stringify(user));
+    };
+
+    const saveRecord = (api) => async ({statePath}) => {
+        
+        if(!statePath) {
+            api.error("Load Record: state path not set");
+            return;
+        } 
+
+        const recordtoSave = api.getState(statePath);
+
+        if(!recordtoSave) {
+            api.error(`there is no record in state: ${statePath}`);
+            return;
+        }
+
+        if(!recordtoSave.key) {
+            api.error(`item in state does not appear to be a record - it has no key (${statePath})`);
+            return;
+        }
+
+        const savedRecord = await api.post({
+            url:`/api/record/${trimSlash(recordtoSave.key)}`,
+            body: recordtoSave
+        });
+
+        if(api.isSuccess(savedRecord))
+            api.setState(statePath, savedRecord);
     };
 
     const createApi = ({rootPath, setState, getState}) => {
 
         const apiCall = (method) => ({url, body, notFound, badRequest, forbidden}) => {
-            fetch(`${rootPath}${url}`, {
+            return fetch(`${rootPath}${url}`, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
@@ -28429,7 +28500,7 @@
             return e;
         };
 
-        const isSuccess = obj => !!obj[ERROR_MEMBER];
+        const isSuccess = obj => !obj || !obj[ERROR_MEMBER];
 
         const apiOpts = {
             rootPath, setState, getState, isSuccess, error,
@@ -28439,11 +28510,12 @@
         return {
             loadRecord:loadRecord(apiOpts), 
             listRecords: listRecords(apiOpts),
-            authenticate: authenticate$1(apiOpts)
+            authenticate: authenticate$1(apiOpts),
+            saveRecord: saveRecord(apiOpts)
         }
     };
 
-    const getNewChildRecordToState = (store, coreApi, setState) =>
+    const getNewChildRecordToState = (coreApi, setState) =>
                 ({recordKey, collectionName,childRecordType,statePath}) => {
         const error = errorHandler(setState);
         try {
@@ -28468,7 +28540,7 @@
             }
 
             const rec = coreApi.recordApi.getNewChild(recordKey, collectionName, childRecordType);
-            setState(store, statePath, rec);
+            setState(statePath, rec);
         }
         catch(e) {
             error(e.message);
@@ -28476,7 +28548,7 @@
     };
 
 
-    const getNewRecordToState = (store, coreApi, setState) =>
+    const getNewRecordToState = (coreApi, setState) =>
                 ({collectionKey,childRecordType,statePath}) => {
         const error = errorHandler(setState);
         try {
@@ -28496,7 +28568,7 @@
             }
 
             const rec = coreApi.recordApi.getNew(collectionKey, childRecordType);
-            setState(store, statePath, rec);
+            setState(statePath, rec);
         }
         catch(e) {
             error(e.message);
@@ -28515,10 +28587,15 @@
 
         const setStateWithStore = (path, value) => setState(store, path, value);
 
+        let currentState;
+        store.subscribe(s => {
+            currentState = s;
+        });
+
         const api = createApi({
             rootPath:rootPath,
-            setState: (path, value) => setStateWithStore,
-            getState: (path, fallback) => getState(store, path, fallback)
+            setState: setStateWithStore,
+            getState: (path, fallback) => getState(currentState, path, fallback)
         });
 
         const setStateHandler = ({path, value}) => setState(store, path, value);
@@ -28531,18 +28608,55 @@
             
             "Get New Child Record": handler(
                 ["recordKey", "collectionName", "childRecordType", "statePath"], 
-                getNewChildRecordToState(store, coreApi, setStateWithStore)),
+                getNewChildRecordToState(coreApi, setStateWithStore)),
 
             "Get New Record": handler(
                 ["collectionKey", "childRecordType", "statePath"], 
-                getNewRecordToState(store, coreApi, setStateWithStore)),
+                getNewRecordToState(coreApi, setStateWithStore)),
 
             "Authenticate": handler(["username", "password"], api.authenticate)
         };
     };
 
-    const allHandlers$1 = ()  => {
-        const handlersObj = eventHandlers({}, {});
+    const createCoreApp = (appDefinition, user) => {
+        const app = {
+            datastore: null,
+            crypto:null,
+            publish: () => {},
+            hierarchy: appDefinition.hierarchy,
+            actions: appDefinition.actions,
+            user
+        };
+
+        return app;
+    };
+
+    const createCoreApi = (appDefinition, user) => {
+        
+        const app = createCoreApp(appDefinition, user);
+
+        return {
+            recordApi: {
+                getNew: getNew(app),
+                getNewChild: getNewChild(app)
+            },
+
+            templateApi: {
+                constructHierarchy
+            }
+        }
+
+    };
+
+    const allHandlers$1 = (appDefinition, user)  => {
+
+        const coreApi = createCoreApi(appDefinition, user);
+        appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(appDefinition.hierarchy);
+        const store = writable({
+            _bbuser: user
+        });
+
+        const handlersObj = eventHandlers(store, coreApi);
         const handlersArray = [];
         for(let key in handlersObj) {
             handlersArray.push({name:key, ...handlersObj[key]});
@@ -29067,10 +29181,7 @@
         initial.generators = generatorsArray(pkg.rootComponents.generators);
         initial.allComponents = combineComponents(
             pkg.derivedComponents, pkg.rootComponents.components);
-        initial.actions = fp_2((arr, action) => {
-            arr.push(action);
-            return arr;
-        })(pkg.appDefinition.actions, []);
+        initial.actions = fp_29(pkg.appDefinition.actions);
         initial.triggers = pkg.appDefinition.triggers;
 
         if(!!initial.hierarchy && !fp_9(initial.hierarchy)) {
@@ -29605,7 +29716,7 @@
         const appDefinition = {
             hierarchy:s.hierarchy,
             triggers:s.triggers,
-            actions: s.actions,
+            actions: fp_30("name")(s.actions),
             props: {
                 main: buildPropsHierarchy(s.allComponents, s.pages.main.appBody),
                 unauthenticated:  buildPropsHierarchy(s.allComponents, s.pages.unauthenticated.appBody)
@@ -48414,7 +48525,7 @@
     			input = element("input");
     			attr_dev(input, "class", "uk-input uk-form-small svelte-jubmd5");
     			set_style(input, "flex", "1 0 auto");
-    			add_location(input, file$d, 134, 4, 3275);
+    			add_location(input, file$d, 134, 4, 3276);
 
     			dispose = [
     				listen_dev(input, "input", ctx.input_input_handler),
@@ -48467,7 +48578,7 @@
     				each_blocks[i_1].c();
     			}
     			attr_dev(select, "class", "uk-select uk-form-small svelte-jubmd5");
-    			add_location(select, file$d, 124, 4, 3016);
+    			add_location(select, file$d, 124, 4, 3019);
     			dispose = listen_dev(select, "change", ctx.change_handler);
     		},
 
@@ -48605,7 +48716,7 @@
     			t = text(t_value);
     			option.__value = option_value_value = ctx.option;
     			option.value = option.__value;
-    			add_location(option, file$d, 128, 8, 3186);
+    			add_location(option, file$d, 128, 8, 3187);
     		},
 
     		m: function mount(target, anchor) {
@@ -48921,9 +49032,9 @@
 
     	const click_handler = () => $$invalidate('isExpanded', isExpanded=!isExpanded);
 
-    	const click_handler_1 = () => $$invalidate('value', value = !value);
+    	const click_handler_1 = () => onChanged(!value);
 
-    	const change_handler = (ev) => onChanged(ev.target.checked);
+    	const change_handler = (ev) => onChanged(ev.target.value);
 
     	function input_input_handler() {
     		value = this.value;
@@ -49059,17 +49170,17 @@
     	return child_ctx;
     }
 
-    // (64:8) {#each events as ev}
+    // (74:8) {#each events as ev}
     function create_each_block_1$4(ctx) {
-    	var option, t_value = ctx.ev.name + "", t;
+    	var option, t_value = ctx.ev.name + "", t, option_value_value;
 
     	const block = {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = ctx.ev.name;
+    			option.__value = option_value_value = ctx.ev.name;
     			option.value = option.__value;
-    			add_location(option, file$e, 64, 8, 1689);
+    			add_location(option, file$e, 74, 8, 1965);
     		},
 
     		m: function mount(target, anchor) {
@@ -49077,7 +49188,17 @@
     			append_dev(option, t);
     		},
 
-    		p: noop,
+    		p: function update(changed, ctx) {
+    			if ((changed.events) && t_value !== (t_value = ctx.ev.name + "")) {
+    				set_data_dev(t, t_value);
+    			}
+
+    			if ((changed.events) && option_value_value !== (option_value_value = ctx.ev.name)) {
+    				prop_dev(option, "__value", option_value_value);
+    			}
+
+    			option.value = option.__value;
+    		},
 
     		d: function destroy(detaching) {
     			if (detaching) {
@@ -49085,11 +49206,11 @@
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block_1$4.name, type: "each", source: "(64:8) {#each events as ev}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block_1$4.name, type: "each", source: "(74:8) {#each events as ev}", ctx });
     	return block;
     }
 
-    // (75:0) {#if parameters}
+    // (85:0) {#if parameters}
     function create_if_block$6(ctx) {
     	var each_1_anchor, current;
 
@@ -49176,11 +49297,11 @@
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$6.name, type: "if", source: "(75:0) {#if parameters}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$6.name, type: "if", source: "(85:0) {#if parameters}", ctx });
     	return block;
     }
 
-    // (76:0) {#each parameters as p, index}
+    // (86:0) {#each parameters as p, index}
     function create_each_block$6(ctx) {
     	var div, t0_value = ctx.p.name + "", t0, t1, current;
 
@@ -49198,7 +49319,7 @@
     			t0 = text(t0_value);
     			t1 = space();
     			statebindingcontrol.$$.fragment.c();
-    			add_location(div, file$e, 77, 0, 1930);
+    			add_location(div, file$e, 87, 0, 2206);
     		},
 
     		m: function mount(target, anchor) {
@@ -49240,7 +49361,7 @@
     			destroy_component(statebindingcontrol, detaching);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block$6.name, type: "each", source: "(76:0) {#each parameters as p, index}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block$6.name, type: "each", source: "(86:0) {#each parameters as p, index}", ctx });
     	return block;
     }
 
@@ -49278,9 +49399,9 @@
     			if (if_block) if_block.c();
     			if_block_anchor = empty();
     			attr_dev(select, "class", "type-selector uk-select uk-form-small  svelte-1b6pj9u");
-    			add_location(select, file$e, 62, 4, 1547);
+    			add_location(select, file$e, 72, 4, 1823);
     			attr_dev(div, "class", "type-selector-container svelte-1b6pj9u");
-    			add_location(div, file$e, 61, 0, 1504);
+    			add_location(div, file$e, 71, 0, 1780);
     			dispose = listen_dev(select, "change", ctx.eventTypeChanged);
     		},
 
@@ -49412,10 +49533,19 @@
 
     let { event, onChanged, onRemoved } = $$props;
 
-    const events = allHandlers$1();
-
+    let events;
     let eventType;
     let parameters = [];
+
+    store.subscribe(s => {
+        $$invalidate('events', events = allHandlers$1(
+            {hierarchy: s.hierarchy},
+            userWithFullAccess({
+                hierarchy: s.hierarchy,
+                actions: fp_30("name")(s.actions)
+            })
+        ));
+    });
 
     const eventChanged = (type, parameters) => {
         const paramsAsObject = fp_2(
@@ -49457,13 +49587,14 @@
     	};
 
     	$$self.$capture_state = () => {
-    		return { event, onChanged, onRemoved, eventType, parameters };
+    		return { event, onChanged, onRemoved, events, eventType, parameters };
     	};
 
     	$$self.$inject_state = $$props => {
     		if ('event' in $$props) $$invalidate('event', event = $$props.event);
     		if ('onChanged' in $$props) $$invalidate('onChanged', onChanged = $$props.onChanged);
     		if ('onRemoved' in $$props) $$invalidate('onRemoved', onRemoved = $$props.onRemoved);
+    		if ('events' in $$props) $$invalidate('events', events = $$props.events);
     		if ('eventType' in $$props) $$invalidate('eventType', eventType = $$props.eventType);
     		if ('parameters' in $$props) $$invalidate('parameters', parameters = $$props.parameters);
     	};
@@ -53289,7 +53420,7 @@
 
     const file$n = "src\\userInterface\\CurrentItemPreview.svelte";
 
-    // (38:4) {#if hasComponent}
+    // (39:4) {#if hasComponent}
     function create_if_block$d(ctx) {
     	var iframe, iframe_srcdoc_value;
 
@@ -53322,7 +53453,7 @@
 </body>
 </html>`);
     			attr_dev(iframe, "class", "svelte-teqoiq");
-    			add_location(iframe, file$n, 38, 4, 982);
+    			add_location(iframe, file$n, 39, 4, 1014);
     		},
 
     		m: function mount(target, anchor) {
@@ -53362,7 +53493,7 @@
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$d.name, type: "if", source: "(38:4) {#if hasComponent}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$d.name, type: "if", source: "(39:4) {#if hasComponent}", ctx });
     	return block;
     }
 
@@ -53376,7 +53507,7 @@
     			div = element("div");
     			if (if_block) if_block.c();
     			attr_dev(div, "class", "component-container svelte-teqoiq");
-    			add_location(div, file$n, 36, 0, 921);
+    			add_location(div, file$n, 37, 0, 953);
     		},
 
     		l: function claim(nodes) {
@@ -53435,7 +53566,8 @@
         ]));
         $$invalidate('appDefinition', appDefinition = {
             componentLibraries: s.loadLibraryUrls(),
-            props: buildPropsHierarchy(s.allComponents, s.currentFrontEndItem)
+            props: buildPropsHierarchy(s.allComponents, s.currentFrontEndItem),
+            hierarchy: s.hierarchy
         });
 
     });

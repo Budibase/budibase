@@ -3,7 +3,7 @@ import {
 } from "../../../core/src";
 import {
     filter, cloneDeep, sortBy, 
-    map, last, keys, concat,
+    map, last, keys, concat, keyBy,
     find, isEmpty, reduce, values
 } from "lodash/fp";
 import {
@@ -124,10 +124,7 @@ const initialise = (store, initial) => async () => {
     initial.generators = generatorsArray(pkg.rootComponents.generators);
     initial.allComponents = combineComponents(
         pkg.derivedComponents, pkg.rootComponents.components);
-    initial.actions = reduce((arr, action) => {
-        arr.push(action);
-        return arr;
-    })(pkg.appDefinition.actions, []);
+    initial.actions = values(pkg.appDefinition.actions);
     initial.triggers = pkg.appDefinition.triggers;
 
     if(!!initial.hierarchy && !isEmpty(initial.hierarchy)) {
@@ -662,7 +659,7 @@ const savePackage = (store, s) => {
     const appDefinition = {
         hierarchy:s.hierarchy,
         triggers:s.triggers,
-        actions: s.actions,
+        actions: keyBy("name")(s.actions),
         props: {
             main: buildPropsHierarchy(s.allComponents, s.pages.main.appBody),
             unauthenticated:  buildPropsHierarchy(s.allComponents, s.pages.unauthenticated.appBody)

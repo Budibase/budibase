@@ -22,6 +22,7 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
     const getBindings = (props, initialProps) => {
 
         const boundProps = [];
+        const contextBoundProps = [];
         const componentEventHandlers = [];
         const boundArrays = [];
 
@@ -48,6 +49,11 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
                 const binding = BindingPath(val);
                 const fallback = BindingFallback(val);
                 const source = BindingSource(val);
+
+                contextBoundProps.push({ 
+                    path:binding,
+                    fallback, propName, source
+                });
 
                 initialProps[propName] = getState(
                     context || {},
@@ -83,7 +89,7 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
             
         }
 
-        return {boundProps, componentEventHandlers, boundArrays, initialProps};
+        return {contextBoundProps, boundProps, componentEventHandlers, boundArrays, initialProps};
     }
 
 
@@ -181,7 +187,9 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
     return {
         initialProps:rootInitialProps, 
         bind:bind(bindings), 
-        boundProps:bindings.boundProps
+        boundProps:bindings.boundProps,
+        boundArrays: bindings.boundArrays,
+        contextBoundProps: bindings.contextBoundProps
     };
 
 }

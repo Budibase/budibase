@@ -20,5 +20,5 @@ export const authenticate = (api) => async ({username, password}) => {
 
     // set user even if error - so it is defined at least
     api.setState(USER_STATE_PATH, user);
-    localStorage.setItem("budibase:user", user);
+    localStorage.setItem("budibase:user", JSON.stringify(user));
 }

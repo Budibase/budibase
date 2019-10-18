@@ -1,0 +1,47 @@
+{
+  "inherits": "@budibase/standard-components/div",
+  "name": "customer/homepage buttons",
+  "props": {
+    "className": "btn-group",
+    "children": [
+      {
+        "component": {
+          "_component": "common/Default Button",
+          "contentText": "Create customer",
+          "onClick": [
+            {
+              "##eventHandlerType": "Get New Record",
+              "parameters": {
+                "statePath": "customer",
+                "collectionKey": "/customers",
+                "childRecordType": "customer"
+              }
+            },
+            {
+              "##eventHandlerType": "Set State",
+              "parameters": {
+                "path": "isEditingcustomer",
+                "value": "true"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "component": {
+          "_component": "common/Default Button",
+          "contentText": "Refresh",
+          "onClick": [
+            {
+              "##eventHandlerType": "List Records",
+              "parameters": {
+                "statePath": "/all_customers",
+                "indexKey": "/all_customers"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

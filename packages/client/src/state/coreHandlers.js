@@ -1,6 +1,6 @@
 import { ERROR } from "./standardState";
 
-export const getNewChildRecordToState = (store, coreApi, setState) =>
+export const getNewChildRecordToState = (coreApi, setState) =>
             ({recordKey, collectionName,childRecordType,statePath}) => {
     const error = errorHandler(setState);
     try {
@@ -25,7 +25,7 @@ export const getNewChildRecordToState = (store, coreApi, setState) =>
         }
 
         const rec = coreApi.recordApi.getNewChild(recordKey, collectionName, childRecordType);
-        setState(store, statePath, rec);
+        setState(statePath, rec);
     }
     catch(e) {
         error(e.message);
@@ -33,7 +33,7 @@ export const getNewChildRecordToState = (store, coreApi, setState) =>
 }
 
 
-export const getNewRecordToState = (store, coreApi, setState) =>
+export const getNewRecordToState = (coreApi, setState) =>
             ({collectionKey,childRecordType,statePath}) => {
     const error = errorHandler(setState);
     try {
@@ -53,7 +53,7 @@ export const getNewRecordToState = (store, coreApi, setState) =>
         }
 
         const rec = coreApi.recordApi.getNew(collectionKey, childRecordType);
-        setState(store, statePath, rec);
+        setState(statePath, rec);
     }
     catch(e) {
         error(e.message);

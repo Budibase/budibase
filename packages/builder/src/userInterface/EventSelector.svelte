@@ -2,19 +2,29 @@
 import IconButton from "../common/IconButton.svelte";
 import StateBindingControl from "./StateBindingControl.svelte";
 import {
-    find, map, keys, reduce
+    find, map, keys, reduce, keyBy
 } from "lodash/fp";
-import { pipe } from "../common/core";
+import { pipe, userWithFullAccess } from "../common/core";
 import { EVENT_TYPE_MEMBER_NAME, allHandlers } from "../common/eventHandlers";
+import { store } from "../builderStore";
 
 export let event;
 export let onChanged;
 export let onRemoved;
 
-const events = allHandlers();
-
+let events;
 let eventType;
 let parameters = [];
+
+store.subscribe(s => {
+    events = allHandlers(
+        {hierarchy: s.hierarchy},
+        userWithFullAccess({
+            hierarchy: s.hierarchy,
+            actions: keyBy("name")(s.actions)
+        })
+    );
+});
 
 $: {
     if(event) {

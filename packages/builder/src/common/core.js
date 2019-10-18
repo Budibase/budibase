@@ -7,6 +7,8 @@ import {
     generateSchema
 } from "../../../core/src/indexing/indexSchemaCreator";
 
+export { userWithFullAccess } from "../../../core/src/index";
+
 export const pipe = common.$;
 
 export const events = common.eventsList;

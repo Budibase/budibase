@@ -149,15 +149,6 @@ var app = (function () {
             throw new Error(`Function called outside component initialization`);
         return current_component;
     }
-    // TODO figure out if we still want to support
-    // shorthand events, or if we want to implement
-    // a real bubbling mechanism
-    function bubble(component, event) {
-        const callbacks = component.$$.callbacks[event.type];
-        if (callbacks) {
-            callbacks.slice().forEach(fn => fn(event));
-        }
-    }
 
     const dirty_components = [];
     const binding_callbacks = [];
@@ -572,9 +563,9 @@ var app = (function () {
 
     const file = "src\\Textbox.svelte";
 
-    // (32:0) {:else}
+    // (24:0) {:else}
     function create_else_block(ctx) {
-    	var input, input_class_value;
+    	var input, input_class_value, dispose;
 
     	const block = {
     		c: function create() {
@@ -593,8 +584,9 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(input, "class", input_class_value = "" + null_to_empty(ctx.className) + " svelte-1ec4wqj");
     			attr_dev(input, "type", "text");
-    			input.value = ctx.actualValue;
-    			add_location(input, file, 32, 0, 546);
+    			input.value = ctx.value;
+    			add_location(input, file, 24, 0, 372);
+    			dispose = listen_dev(input, "change", ctx.onchange);
     		},
 
     		m: function mount(target, anchor) {
@@ -606,8 +598,8 @@ var app = (function () {
     				attr_dev(input, "class", input_class_value);
     			}
 
-    			if (changed.actualValue) {
-    				prop_dev(input, "value", ctx.actualValue);
+    			if (changed.value) {
+    				prop_dev(input, "value", ctx.value);
     			}
     		},
 
@@ -615,13 +607,15 @@ var app = (function () {
     			if (detaching) {
     				detach_dev(input);
     			}
+
+    			dispose();
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_else_block.name, type: "else", source: "(32:0) {:else}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_else_block.name, type: "else", source: "(24:0) {:else}", ctx });
     	return block;
     }
 
-    // (28:0) {#if hideValue}
+    // (19:0) {#if hideValue}
     function create_if_block(ctx) {
     	var input, input_class_value, dispose;
 
@@ -642,9 +636,9 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(input, "class", input_class_value = "" + null_to_empty(ctx.className) + " svelte-1ec4wqj");
     			attr_dev(input, "type", "password");
-    			input.value = ctx.actualValue;
-    			add_location(input, file, 28, 0, 455);
-    			dispose = listen_dev(input, "change", ctx.change_handler);
+    			input.value = ctx.value;
+    			add_location(input, file, 19, 0, 271);
+    			dispose = listen_dev(input, "change", ctx.onchange);
     		},
 
     		m: function mount(target, anchor) {
@@ -656,8 +650,8 @@ var app = (function () {
     				attr_dev(input, "class", input_class_value);
     			}
 
-    			if (changed.actualValue) {
-    				prop_dev(input, "value", ctx.actualValue);
+    			if (changed.value) {
+    				prop_dev(input, "value", ctx.value);
     			}
     		},
 
@@ -669,7 +663,7 @@ var app = (function () {
     			dispose();
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block.name, type: "if", source: "(28:0) {#if hideValue}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block.name, type: "if", source: "(19:0) {#if hideValue}", ctx });
     	return block;
     }
 
@@ -728,19 +722,21 @@ var app = (function () {
     	return block;
     }
 
+    let actualValue = "";
+
     function instance($$self, $$props, $$invalidate) {
     	let { value="", hideValue = false, className = "default", _bb } = $$props;
 
-    let actualValue = "";
+    const onchange = (ev) => {
+    	if(_bb) {
+    		_bb.setStateFromBinding(_bb.bindings.value, ev.target.value);
+    	}
+    };
 
     	const writable_props = ['value', 'hideValue', 'className', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Textbox> was created with unknown prop '${key}'`);
     	});
-
-    	function change_handler(event) {
-    		bubble($$self, event);
-    	}
 
     	$$self.$set = $$props => {
     		if ('value' in $$props) $$invalidate('value', value = $$props.value);
@@ -758,17 +754,7 @@ var app = (function () {
     		if ('hideValue' in $$props) $$invalidate('hideValue', hideValue = $$props.hideValue);
     		if ('className' in $$props) $$invalidate('className', className = $$props.className);
     		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
-    		if ('actualValue' in $$props) $$invalidate('actualValue', actualValue = $$props.actualValue);
-    	};
-
-    	$$self.$$.update = ($$dirty = { _bb: 1, value: 1 }) => {
-    		if ($$dirty._bb || $$dirty.value) { {
-    			if(_bb && value._isstate) {
-    				_bb.store.subscribe(s => {
-    					$$invalidate('actualValue', actualValue = _bb.store.getValue(s, value));
-    				});
-    			}
-    		} }
+    		if ('actualValue' in $$props) actualValue = $$props.actualValue;
     	};
 
     	return {
@@ -776,8 +762,7 @@ var app = (function () {
     		hideValue,
     		className,
     		_bb,
-    		actualValue,
-    		change_handler
+    		onchange
     	};
     }
 
@@ -871,9 +856,9 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div0, "class", "label svelte-m9d6ue");
-    			add_location(div0, file$1, 30, 4, 559);
+    			add_location(div0, file$1, 30, 4, 556);
     			attr_dev(div1, "class", "control svelte-m9d6ue");
-    			add_location(div1, file$1, 31, 4, 604);
+    			add_location(div1, file$1, 31, 4, 601);
     		},
 
     		m: function mount(target, anchor) {
@@ -946,7 +931,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div, "class", div_class_value = "form-root " + ctx.containerClass + " svelte-m9d6ue");
-    			add_location(div, file$1, 28, 0, 473);
+    			add_location(div, file$1, 28, 0, 470);
     		},
 
     		m: function mount(target, anchor) {
@@ -1104,11 +1089,43 @@ var app = (function () {
     	}
     }
 
+    // https://github.com/kaisermann/svelte-css-vars
+
+    var cssVars = (node, props) => {
+        Object.entries(props).forEach(([key, value]) => {
+          node.style.setProperty(`--${key}`, value);
+        });
+      
+        return {
+          update(new_props) {
+            Object.entries(new_props).forEach(([key, value]) => {
+              node.style.setProperty(`--${key}`, value);
+              delete props[key];
+            });
+      
+            Object.keys(props).forEach(name =>
+              node.style.removeProperty(`--${name}`),
+            );
+            props = new_props;
+          },
+        };
+      };
+
+    const buildStyle = (styles) => {
+        let str = "";
+        for(let s in styles) {
+            if(styles[s]) {
+                str += `${s}: ${styles[s]}; `;
+            }
+        }
+        return str;
+    };
+
     /* src\Button.svelte generated by Svelte v3.12.1 */
 
     const file$2 = "src\\Button.svelte";
 
-    // (30:4) {:else}
+    // (80:4) {:else}
     function create_else_block$1(ctx) {
     	var current;
 
@@ -1156,11 +1173,11 @@ var app = (function () {
     			if (default_slot) default_slot.d(detaching);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_else_block$1.name, type: "else", source: "(30:4) {:else}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_else_block$1.name, type: "else", source: "(80:4) {:else}", ctx });
     	return block;
     }
 
-    // (28:26) 
+    // (78:26) 
     function create_if_block_1(ctx) {
     	var t;
 
@@ -1192,11 +1209,11 @@ var app = (function () {
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block_1.name, type: "if", source: "(28:26) ", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block_1.name, type: "if", source: "(78:26) ", ctx });
     	return block;
     }
 
-    // (25:4) {#if contentComponent && contentComponent._component}
+    // (75:4) {#if contentComponent && contentComponent._component}
     function create_if_block$1(ctx) {
     	var div;
 
@@ -1215,7 +1232,7 @@ var app = (function () {
     		},
 
     		h: function hydrate() {
-    			add_location(div, file$2, 25, 1, 543);
+    			add_location(div, file$2, 75, 1, 1404);
     		},
 
     		m: function mount(target, anchor) {
@@ -1235,12 +1252,12 @@ var app = (function () {
     			ctx.div_binding(null);
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$1.name, type: "if", source: "(25:4) {#if contentComponent && contentComponent._component}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$1.name, type: "if", source: "(75:4) {#if contentComponent && contentComponent._component}", ctx });
     	return block;
     }
 
     function create_fragment$2(ctx) {
-    	var button, current_block_type_index, if_block, button_class_value, current, dispose;
+    	var button, current_block_type_index, if_block, button_class_value, button_disabled_value, cssVars_action, current, dispose;
 
     	var if_block_creators = [
     		create_if_block$1,
@@ -1267,7 +1284,7 @@ var app = (function () {
     		},
 
     		l: function claim(nodes) {
-    			button = claim_element(nodes, "BUTTON", { class: true, disabled: true }, false);
+    			button = claim_element(nodes, "BUTTON", { class: true, disabled: true, style: true }, false);
     			var button_nodes = children(button);
 
     			if_block.l(button_nodes);
@@ -1276,15 +1293,17 @@ var app = (function () {
     		},
 
     		h: function hydrate() {
-    			attr_dev(button, "class", button_class_value = "" + null_to_empty(ctx.className) + " svelte-1q8lga0");
-    			button.disabled = ctx.disabled;
-    			add_location(button, file$2, 23, 0, 422);
+    			attr_dev(button, "class", button_class_value = "" + ctx.className + " " + ctx.customClasses + " svelte-181okpd");
+    			button.disabled = button_disabled_value = ctx.disabled || false;
+    			attr_dev(button, "style", ctx.buttonStyles);
+    			add_location(button, file$2, 69, 0, 1187);
     			dispose = listen_dev(button, "click", ctx.clickHandler);
     		},
 
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
     			if_blocks[current_block_type_index].m(button, null);
+    			cssVars_action = cssVars.call(null, button, ctx.cssVariables) || {};
     			current = true;
     		},
 
@@ -1309,12 +1328,20 @@ var app = (function () {
     				if_block.m(button, null);
     			}
 
-    			if ((!current || changed.className) && button_class_value !== (button_class_value = "" + null_to_empty(ctx.className) + " svelte-1q8lga0")) {
+    			if ((!current || changed.className || changed.customClasses) && button_class_value !== (button_class_value = "" + ctx.className + " " + ctx.customClasses + " svelte-181okpd")) {
     				attr_dev(button, "class", button_class_value);
     			}
 
-    			if (!current || changed.disabled) {
-    				prop_dev(button, "disabled", ctx.disabled);
+    			if ((!current || changed.disabled) && button_disabled_value !== (button_disabled_value = ctx.disabled || false)) {
+    				prop_dev(button, "disabled", button_disabled_value);
+    			}
+
+    			if (!current || changed.buttonStyles) {
+    				attr_dev(button, "style", ctx.buttonStyles);
+    			}
+
+    			if (typeof cssVars_action.update === 'function' && changed.cssVariables) {
+    				cssVars_action.update.call(null, ctx.cssVariables);
     			}
     		},
 
@@ -1335,6 +1362,7 @@ var app = (function () {
     			}
 
     			if_blocks[current_block_type_index].d();
+    			if (cssVars_action && typeof cssVars_action.destroy === 'function') cssVars_action.destroy();
     			dispose();
     		}
     	};
@@ -1343,17 +1371,36 @@ var app = (function () {
     }
 
     function instance$2($$self, $$props, $$invalidate) {
-    	let { className = "default", disabled = false, contentText, contentComponent, onClick = () => {} } = $$props;
-
-    let { _bb } = $$props;
+    	
+    let { className = "default", disabled = false, contentText, contentComponent, onClick, background, color, border, padding, hoverColor, hoverBackground, hoverBorder, _bb } = $$props;
     let contentComponentContainer;
+    let cssVariables;
+    let buttonStyles;
+
+    let customHoverColorClass;
+    let customHoverBorderClass;
+    let customHoverBackClass;
+
+    let customClasses = "";
+
+    const createClasses = (classes) => {
+    	let all = "";
+    	for(let cls in classes) {
+    		if(classes[cls]) {
+    			all = all + " " + cls;
+    		}
+    	}
+    	return all;
+    };
+
+
 
 
     const clickHandler = () => {
-    	if(onClick) onClick();
+    	_bb.call(onClick);
     };
 
-    	const writable_props = ['className', 'disabled', 'contentText', 'contentComponent', 'onClick', '_bb'];
+    	const writable_props = ['className', 'disabled', 'contentText', 'contentComponent', 'onClick', 'background', 'color', 'border', 'padding', 'hoverColor', 'hoverBackground', 'hoverBorder', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Button> was created with unknown prop '${key}'`);
     	});
@@ -1372,12 +1419,19 @@ var app = (function () {
     		if ('contentText' in $$props) $$invalidate('contentText', contentText = $$props.contentText);
     		if ('contentComponent' in $$props) $$invalidate('contentComponent', contentComponent = $$props.contentComponent);
     		if ('onClick' in $$props) $$invalidate('onClick', onClick = $$props.onClick);
+    		if ('background' in $$props) $$invalidate('background', background = $$props.background);
+    		if ('color' in $$props) $$invalidate('color', color = $$props.color);
+    		if ('border' in $$props) $$invalidate('border', border = $$props.border);
+    		if ('padding' in $$props) $$invalidate('padding', padding = $$props.padding);
+    		if ('hoverColor' in $$props) $$invalidate('hoverColor', hoverColor = $$props.hoverColor);
+    		if ('hoverBackground' in $$props) $$invalidate('hoverBackground', hoverBackground = $$props.hoverBackground);
+    		if ('hoverBorder' in $$props) $$invalidate('hoverBorder', hoverBorder = $$props.hoverBorder);
     		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('$$scope' in $$props) $$invalidate('$$scope', $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => {
-    		return { className, disabled, contentText, contentComponent, onClick, _bb, contentComponentContainer };
+    		return { className, disabled, contentText, contentComponent, onClick, background, color, border, padding, hoverColor, hoverBackground, hoverBorder, _bb, contentComponentContainer, cssVariables, buttonStyles, customHoverColorClass, customHoverBorderClass, customHoverBackClass, customClasses };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -1386,14 +1440,43 @@ var app = (function () {
     		if ('contentText' in $$props) $$invalidate('contentText', contentText = $$props.contentText);
     		if ('contentComponent' in $$props) $$invalidate('contentComponent', contentComponent = $$props.contentComponent);
     		if ('onClick' in $$props) $$invalidate('onClick', onClick = $$props.onClick);
+    		if ('background' in $$props) $$invalidate('background', background = $$props.background);
+    		if ('color' in $$props) $$invalidate('color', color = $$props.color);
+    		if ('border' in $$props) $$invalidate('border', border = $$props.border);
+    		if ('padding' in $$props) $$invalidate('padding', padding = $$props.padding);
+    		if ('hoverColor' in $$props) $$invalidate('hoverColor', hoverColor = $$props.hoverColor);
+    		if ('hoverBackground' in $$props) $$invalidate('hoverBackground', hoverBackground = $$props.hoverBackground);
+    		if ('hoverBorder' in $$props) $$invalidate('hoverBorder', hoverBorder = $$props.hoverBorder);
     		if ('_bb' in $$props) $$invalidate('_bb', _bb = $$props._bb);
     		if ('contentComponentContainer' in $$props) $$invalidate('contentComponentContainer', contentComponentContainer = $$props.contentComponentContainer);
+    		if ('cssVariables' in $$props) $$invalidate('cssVariables', cssVariables = $$props.cssVariables);
+    		if ('buttonStyles' in $$props) $$invalidate('buttonStyles', buttonStyles = $$props.buttonStyles);
+    		if ('customHoverColorClass' in $$props) customHoverColorClass = $$props.customHoverColorClass;
+    		if ('customHoverBorderClass' in $$props) customHoverBorderClass = $$props.customHoverBorderClass;
+    		if ('customHoverBackClass' in $$props) customHoverBackClass = $$props.customHoverBackClass;
+    		if ('customClasses' in $$props) $$invalidate('customClasses', customClasses = $$props.customClasses);
     	};
 
-    	$$self.$$.update = ($$dirty = { _bb: 1, contentComponentContainer: 1, contentComponent: 1 }) => {
-    		if ($$dirty._bb || $$dirty.contentComponentContainer || $$dirty.contentComponent) { {
+    	$$self.$$.update = ($$dirty = { _bb: 1, contentComponentContainer: 1, contentComponent: 1, hoverColor: 1, hoverBorder: 1, hoverBackground: 1, background: 1, color: 1, border: 1, padding: 1 }) => {
+    		if ($$dirty._bb || $$dirty.contentComponentContainer || $$dirty.contentComponent || $$dirty.hoverColor || $$dirty.hoverBorder || $$dirty.hoverBackground || $$dirty.background || $$dirty.color || $$dirty.border || $$dirty.padding) { {
     			if(_bb && contentComponentContainer && contentComponent._component)
     				_bb.hydrateComponent(contentComponent, contentComponentContainer);
+    		
+    			$$invalidate('cssVariables', cssVariables = {
+    				hoverColor, hoverBorder,
+    				hoverBackground,
+    				background, color, border,
+    			});
+    		
+    			$$invalidate('buttonStyles', buttonStyles = buildStyle({
+    				padding
+    			}));	
+    			
+    			$$invalidate('customClasses', customClasses = createClasses({
+    				hoverColor, hoverBorder, hoverBackground,
+    				background, border, color
+    			}));
+    			
     		} }
     	};
 
@@ -1403,8 +1486,18 @@ var app = (function () {
     		contentText,
     		contentComponent,
     		onClick,
+    		background,
+    		color,
+    		border,
+    		padding,
+    		hoverColor,
+    		hoverBackground,
+    		hoverBorder,
     		_bb,
     		contentComponentContainer,
+    		cssVariables,
+    		buttonStyles,
+    		customClasses,
     		clickHandler,
     		div_binding,
     		$$slots,
@@ -1415,7 +1508,7 @@ var app = (function () {
     class Button extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, ["className", "disabled", "contentText", "contentComponent", "onClick", "_bb"]);
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, ["className", "disabled", "contentText", "contentComponent", "onClick", "background", "color", "border", "padding", "hoverColor", "hoverBackground", "hoverBorder", "_bb"]);
     		dispatch_dev("SvelteRegisterComponent", { component: this, tagName: "Button", options, id: create_fragment$2.name });
 
     		const { ctx } = this.$$;
@@ -1425,6 +1518,30 @@ var app = (function () {
     		}
     		if (ctx.contentComponent === undefined && !('contentComponent' in props)) {
     			console.warn("<Button> was created without expected prop 'contentComponent'");
+    		}
+    		if (ctx.onClick === undefined && !('onClick' in props)) {
+    			console.warn("<Button> was created without expected prop 'onClick'");
+    		}
+    		if (ctx.background === undefined && !('background' in props)) {
+    			console.warn("<Button> was created without expected prop 'background'");
+    		}
+    		if (ctx.color === undefined && !('color' in props)) {
+    			console.warn("<Button> was created without expected prop 'color'");
+    		}
+    		if (ctx.border === undefined && !('border' in props)) {
+    			console.warn("<Button> was created without expected prop 'border'");
+    		}
+    		if (ctx.padding === undefined && !('padding' in props)) {
+    			console.warn("<Button> was created without expected prop 'padding'");
+    		}
+    		if (ctx.hoverColor === undefined && !('hoverColor' in props)) {
+    			console.warn("<Button> was created without expected prop 'hoverColor'");
+    		}
+    		if (ctx.hoverBackground === undefined && !('hoverBackground' in props)) {
+    			console.warn("<Button> was created without expected prop 'hoverBackground'");
+    		}
+    		if (ctx.hoverBorder === undefined && !('hoverBorder' in props)) {
+    			console.warn("<Button> was created without expected prop 'hoverBorder'");
     		}
     		if (ctx._bb === undefined && !('_bb' in props)) {
     			console.warn("<Button> was created without expected prop '_bb'");
@@ -1471,6 +1588,62 @@ var app = (function () {
     		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
+    	get background() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set background(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get color() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set color(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get border() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set border(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get padding() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set padding(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get hoverColor() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set hoverColor(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get hoverBackground() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set hoverBackground(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get hoverBorder() {
+    		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set hoverBorder(value) {
+    		throw new Error("<Button>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
     	get _bb() {
     		throw new Error("<Button>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
@@ -1511,9 +1684,9 @@ var app = (function () {
     			attr_dev(img, "src", ctx._logo);
     			attr_dev(img, "alt", "logo");
     			attr_dev(img, "class", "svelte-crnq0a");
-    			add_location(img, file$3, 58, 12, 1206);
+    			add_location(img, file$3, 58, 12, 1222);
     			attr_dev(div, "class", "logo-container svelte-crnq0a");
-    			add_location(div, file$3, 57, 8, 1165);
+    			add_location(div, file$3, 57, 8, 1181);
     		},
 
     		m: function mount(target, anchor) {
@@ -1559,7 +1732,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div, "class", "incorrect-details-panel svelte-crnq0a");
-    			add_location(div, file$3, 86, 8, 2018);
+    			add_location(div, file$3, 86, 8, 2034);
     		},
 
     		m: function mount(target, anchor) {
@@ -1677,30 +1850,30 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div0, "class", "label svelte-crnq0a");
-    			add_location(div0, file$3, 63, 12, 1310);
+    			add_location(div0, file$3, 63, 12, 1326);
     			attr_dev(input0, "type", "text");
     			attr_dev(input0, "class", input0_class_value = "" + null_to_empty(ctx._inputClass) + " svelte-crnq0a");
-    			add_location(input0, file$3, 67, 16, 1431);
+    			add_location(input0, file$3, 67, 16, 1447);
     			attr_dev(div1, "class", "control svelte-crnq0a");
-    			add_location(div1, file$3, 66, 12, 1393);
+    			add_location(div1, file$3, 66, 12, 1409);
     			attr_dev(div2, "class", "label svelte-crnq0a");
-    			add_location(div2, file$3, 69, 12, 1525);
+    			add_location(div2, file$3, 69, 12, 1541);
     			attr_dev(input1, "type", "password");
     			attr_dev(input1, "class", input1_class_value = "" + null_to_empty(ctx._inputClass) + " svelte-crnq0a");
-    			add_location(input1, file$3, 73, 16, 1646);
+    			add_location(input1, file$3, 73, 16, 1662);
     			attr_dev(div3, "class", "control svelte-crnq0a");
-    			add_location(div3, file$3, 72, 12, 1608);
+    			add_location(div3, file$3, 72, 12, 1624);
     			attr_dev(div4, "class", "form-root svelte-crnq0a");
-    			add_location(div4, file$3, 62, 8, 1274);
+    			add_location(div4, file$3, 62, 8, 1290);
     			button.disabled = ctx.busy;
     			attr_dev(button, "class", button_class_value = "" + null_to_empty(ctx._buttonClass) + " svelte-crnq0a");
-    			add_location(button, file$3, 78, 12, 1805);
+    			add_location(button, file$3, 78, 12, 1821);
     			attr_dev(div5, "class", "login-button-container svelte-crnq0a");
-    			add_location(div5, file$3, 77, 8, 1756);
+    			add_location(div5, file$3, 77, 8, 1772);
     			attr_dev(div6, "class", "content svelte-crnq0a");
-    			add_location(div6, file$3, 54, 4, 1114);
+    			add_location(div6, file$3, 54, 4, 1130);
     			attr_dev(div7, "class", "root svelte-crnq0a");
-    			add_location(div7, file$3, 52, 0, 1090);
+    			add_location(div7, file$3, 52, 0, 1106);
 
     			dispose = [
     				listen_dev(input0, "input", ctx.input0_input_handler),
@@ -1842,7 +2015,7 @@ var app = (function () {
         })
         .then(user => {
             if(user) {
-                localStorage.setItem("budibase:user", user);
+                localStorage.setItem("budibase:user", JSON.stringify(user));
                 location.reload();
             }
         });
@@ -2004,16 +2177,6 @@ var app = (function () {
     	}
     }
 
-    const buildStyle = (styles) => {
-        let str = "";
-        for(let s in styles) {
-            if(styles[s]) {
-                str += `${s}: ${styles[s]}; `;
-            }
-        }
-        return str;
-    };
-
     /* src\Grid.svelte generated by Svelte v3.12.1 */
 
     const file$4 = "src\\Grid.svelte";
@@ -2049,7 +2212,7 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(div, "class", div_class_value = "" + null_to_empty(ctx.itemContainerClass) + " svelte-10kw8to");
     			attr_dev(div, "style", div_style_value = ctx.childStyle(ctx.child));
-    			add_location(div, file$4, 49, 4, 1268);
+    			add_location(div, file$4, 49, 4, 1265);
     		},
 
     		m: function mount(target, anchor) {
@@ -2125,7 +2288,7 @@ var app = (function () {
     			set_style(div, "height", ctx.height);
     			set_style(div, "grid-template-columns", ctx.gridTemplateColumns);
     			set_style(div, "grid-template-rows", ctx.gridTemplateRows);
-    			add_location(div, file$4, 46, 0, 1055);
+    			add_location(div, file$4, 46, 0, 1052);
     		},
 
     		m: function mount(target, anchor) {
@@ -2559,28 +2722,6 @@ var app = (function () {
     	}
     }
 
-    // https://github.com/kaisermann/svelte-css-vars
-
-    var cssVars = (node, props) => {
-        Object.entries(props).forEach(([key, value]) => {
-          node.style.setProperty(`--${key}`, value);
-        });
-      
-        return {
-          update(new_props) {
-            Object.entries(new_props).forEach(([key, value]) => {
-              node.style.setProperty(`--${key}`, value);
-              delete props[key];
-            });
-      
-            Object.keys(props).forEach(name =>
-              node.style.removeProperty(`--${name}`),
-            );
-            props = new_props;
-          },
-        };
-      };
-
     /* src\Nav.svelte generated by Svelte v3.12.1 */
     const { Object: Object_1 } = globals;
 
@@ -2636,7 +2777,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div, "class", "navbar svelte-aihwli");
-    			add_location(div, file$6, 66, 4, 1774);
+    			add_location(div, file$6, 66, 4, 1771);
     		},
 
     		m: function mount(target, anchor) {
@@ -2708,7 +2849,7 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(div, "class", "navitem svelte-aihwli");
     			toggle_class(div, "selected", ctx.selectedIndex === ctx.index);
-    			add_location(div, file$6, 68, 8, 1845);
+    			add_location(div, file$6, 68, 8, 1842);
     			dispose = listen_dev(div, "click", ctx.onSelectItem(ctx.index));
     		},
 
@@ -2764,7 +2905,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div, "class", "content svelte-aihwli");
-    			add_location(div, file$6, 78, 4, 2096);
+    			add_location(div, file$6, 78, 4, 2093);
     		},
 
     		m: function mount(target, anchor) {
@@ -2835,7 +2976,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div, "class", "root svelte-aihwli");
-    			add_location(div, file$6, 64, 0, 1703);
+    			add_location(div, file$6, 64, 0, 1700);
     		},
 
     		m: function mount(target, anchor) {
@@ -3154,7 +3295,7 @@ var app = (function () {
     		},
 
     		l: function claim(nodes) {
-    			div = claim_element(nodes, "DIV", { class: true, style: true, "this:bind": true }, false);
+    			div = claim_element(nodes, "DIV", { class: true, style: true }, false);
     			var div_nodes = children(div);
 
     			t = claim_text(div_nodes, t_value);
@@ -3163,16 +3304,16 @@ var app = (function () {
     		},
 
     		h: function hydrate() {
-    			attr_dev(div, "class", div_class_value = "" + ctx.containerClass + " panel" + " svelte-6yfcjx");
+    			attr_dev(div, "class", div_class_value = "" + ctx.containerClass + " panel" + " svelte-1nuhpxd");
     			attr_dev(div, "style", ctx.style);
-    			attr_dev(div, "this:bind", ctx.componentElement);
-    			add_location(div, file$7, 53, 0, 1137);
+    			add_location(div, file$7, 57, 0, 1219);
     			dispose = listen_dev(div, "click", ctx.clickHandler);
     		},
 
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, t);
+    			ctx.div_binding(div);
     			cssVars_action = cssVars.call(null, div, ctx.styleVars) || {};
     		},
 
@@ -3181,7 +3322,7 @@ var app = (function () {
     				set_data_dev(t, t_value);
     			}
 
-    			if ((changed.containerClass) && div_class_value !== (div_class_value = "" + ctx.containerClass + " panel" + " svelte-6yfcjx")) {
+    			if ((changed.containerClass) && div_class_value !== (div_class_value = "" + ctx.containerClass + " panel" + " svelte-1nuhpxd")) {
     				attr_dev(div, "class", div_class_value);
     			}
 
@@ -3202,6 +3343,7 @@ var app = (function () {
     				detach_dev(div);
     			}
 
+    			ctx.div_binding(null);
     			if (cssVars_action && typeof cssVars_action.destroy === 'function') cssVars_action.destroy();
     			dispose();
     		}
@@ -3218,15 +3360,24 @@ var app = (function () {
     let styleVars;
     let style="";
     let componentElement;
+    let componentInitialised=false;
 
     const clickHandler = () => {
-        if(onClick) onClick();
+        if(onClick) {
+            _bb.call(onClick);
+        }
     };
 
     	const writable_props = ['component', 'text', 'containerClass', 'background', 'border', 'borderRadius', 'font', 'display', 'textAlign', 'color', 'padding', 'margin', 'hoverBackground', 'hoverColor', 'onClick', 'height', 'width', '_bb'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Panel> was created with unknown prop '${key}'`);
     	});
+
+    	function div_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			$$invalidate('componentElement', componentElement = $$value);
+    		});
+    	}
 
     	$$self.$set = $$props => {
     		if ('component' in $$props) $$invalidate('component', component = $$props.component);
@@ -3250,7 +3401,7 @@ var app = (function () {
     	};
 
     	$$self.$capture_state = () => {
-    		return { component, text, containerClass, background, border, borderRadius, font, display, textAlign, color, padding, margin, hoverBackground, hoverColor, onClick, height, width, _bb, styleVars, style, componentElement };
+    		return { component, text, containerClass, background, border, borderRadius, font, display, textAlign, color, padding, margin, hoverBackground, hoverColor, onClick, height, width, _bb, styleVars, style, componentElement, componentInitialised };
     	};
 
     	$$self.$inject_state = $$props => {
@@ -3275,10 +3426,11 @@ var app = (function () {
     		if ('styleVars' in $$props) $$invalidate('styleVars', styleVars = $$props.styleVars);
     		if ('style' in $$props) $$invalidate('style', style = $$props.style);
     		if ('componentElement' in $$props) $$invalidate('componentElement', componentElement = $$props.componentElement);
+    		if ('componentInitialised' in $$props) $$invalidate('componentInitialised', componentInitialised = $$props.componentInitialised);
     	};
 
-    	$$self.$$.update = ($$dirty = { border: 1, background: 1, font: 1, margin: 1, padding: 1, display: 1, color: 1, height: 1, width: 1, textAlign: 1, borderRadius: 1, onClick: 1, _bb: 1, component: 1, componentElement: 1, hoverBackground: 1, hoverColor: 1 }) => {
-    		if ($$dirty.border || $$dirty.background || $$dirty.font || $$dirty.margin || $$dirty.padding || $$dirty.display || $$dirty.color || $$dirty.height || $$dirty.width || $$dirty.textAlign || $$dirty.borderRadius || $$dirty.onClick || $$dirty._bb || $$dirty.component || $$dirty.componentElement || $$dirty.hoverBackground || $$dirty.hoverColor) { {
+    	$$self.$$.update = ($$dirty = { border: 1, background: 1, font: 1, margin: 1, padding: 1, display: 1, color: 1, height: 1, width: 1, textAlign: 1, borderRadius: 1, onClick: 1, _bb: 1, component: 1, componentElement: 1, componentInitialised: 1, hoverBackground: 1, hoverColor: 1 }) => {
+    		if ($$dirty.border || $$dirty.background || $$dirty.font || $$dirty.margin || $$dirty.padding || $$dirty.display || $$dirty.color || $$dirty.height || $$dirty.width || $$dirty.textAlign || $$dirty.borderRadius || $$dirty.onClick || $$dirty._bb || $$dirty.component || $$dirty.componentElement || $$dirty.componentInitialised || $$dirty.hoverBackground || $$dirty.hoverColor) { {
                 $$invalidate('style', style=buildStyle({
                     border, background, font, margin,
                     padding, display, color, height, width,
@@ -3287,8 +3439,9 @@ var app = (function () {
                     cursor: onClick ? "pointer" : "none"
                 }));
             
-                if(_bb && component) {
+                if(_bb && component && componentElement && !componentInitialised) {
                     _bb.hydrateComponent(component, componentElement);
+                    $$invalidate('componentInitialised', componentInitialised = true);
                 }
             
                 $$invalidate('styleVars', styleVars = {
@@ -3320,7 +3473,8 @@ var app = (function () {
     		styleVars,
     		style,
     		componentElement,
-    		clickHandler
+    		clickHandler,
+    		div_binding
     	};
     }
 
@@ -3613,9 +3767,9 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div0, "class", div0_class_value = "" + null_to_empty(ctx.itemContainerClass) + " svelte-osi0db");
-    			add_location(div0, file$8, 86, 8, 1926);
+    			add_location(div0, file$8, 86, 8, 1928);
     			attr_dev(div1, "class", div1_class_value = "" + null_to_empty(ctx.direction) + " svelte-osi0db");
-    			add_location(div1, file$8, 85, 4, 1894);
+    			add_location(div1, file$8, 85, 4, 1896);
     		},
 
     		m: function mount(target, anchor) {
@@ -3757,9 +3911,9 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(div0, "class", div0_class_value = "" + null_to_empty(ctx.itemContainerClass) + " svelte-osi0db");
-    			add_location(div0, file$8, 96, 8, 2163);
+    			add_location(div0, file$8, 96, 8, 2165);
     			attr_dev(div1, "class", div1_class_value = "" + null_to_empty(ctx.direction) + " svelte-osi0db");
-    			add_location(div1, file$8, 95, 4, 2131);
+    			add_location(div1, file$8, 95, 4, 2133);
     		},
 
     		m: function mount(target, anchor) {
@@ -3829,7 +3983,7 @@ var app = (function () {
     			attr_dev(div, "class", div_class_value = "root " + ctx.containerClass + " svelte-osi0db");
     			set_style(div, "width", ctx.width);
     			set_style(div, "height", ctx.height);
-    			add_location(div, file$8, 80, 0, 1751);
+    			add_location(div, file$8, 80, 0, 1753);
     		},
 
     		m: function mount(target, anchor) {
@@ -4009,7 +4163,7 @@ var app = (function () {
                 }
             
                 if(!onLoadCalled && onLoad && !onLoad.isPlaceholder) {
-                    onLoad();
+                    _bb.call(onLoad);
                     $$invalidate('onLoadCalled', onLoadCalled = true);
                 }
             } }
@@ -4140,6 +4294,7 @@ var app = (function () {
     function get_each_context_1$2(ctx, list, i) {
     	const child_ctx = Object.create(ctx);
     	child_ctx.col = list[i];
+    	child_ctx.index = i;
     	return child_ctx;
     }
 
@@ -4155,7 +4310,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (23:12) {#each columns as col}
+    // (29:12) {#each columns as col}
     function create_each_block_2(ctx) {
     	var th, t_value = ctx.col.title + "", t, th_class_value;
 
@@ -4177,7 +4332,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(th, "class", th_class_value = "" + null_to_empty(ctx.thClass) + " svelte-h8rqk6");
-    			add_location(th, file$9, 23, 12, 452);
+    			add_location(th, file$9, 29, 12, 593);
     		},
 
     		m: function mount(target, anchor) {
@@ -4201,13 +4356,86 @@ var app = (function () {
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block_2.name, type: "each", source: "(23:12) {#each columns as col}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block_2.name, type: "each", source: "(29:12) {#each columns as col}", ctx });
     	return block;
     }
 
-    // (32:12) {#each columns as col}
+    // (35:8) {#if data}
+    function create_if_block$5(ctx) {
+    	var each_1_anchor;
+
+    	let each_value = ctx.data;
+
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			each_1_anchor = empty();
+    		},
+
+    		l: function claim(nodes) {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].l(nodes);
+    			}
+
+    			each_1_anchor = empty();
+    		},
+
+    		m: function mount(target, anchor) {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(target, anchor);
+    			}
+
+    			insert_dev(target, each_1_anchor, anchor);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.trClass || changed.columns || changed.thClass || changed.cellValue || changed.data) {
+    				each_value = ctx.data;
+
+    				let i;
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$4(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block$4(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_each(each_blocks, detaching);
+
+    			if (detaching) {
+    				detach_dev(each_1_anchor);
+    			}
+    		}
+    	};
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_if_block$5.name, type: "if", source: "(35:8) {#if data}", ctx });
+    	return block;
+    }
+
+    // (39:12) {#each columns as col, index}
     function create_each_block_1$2(ctx) {
-    	var th, t_value = ctx._bb.getStateOrValue(ctx.col.value, ctx.row) + "", t, th_class_value;
+    	var th, t_value = ctx.cellValue(ctx.index, ctx.row) + "", t, th_class_value;
 
     	const block = {
     		c: function create() {
@@ -4227,7 +4455,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(th, "class", th_class_value = "" + null_to_empty(ctx.thClass) + " svelte-h8rqk6");
-    			add_location(th, file$9, 32, 12, 725);
+    			add_location(th, file$9, 39, 12, 893);
     		},
 
     		m: function mount(target, anchor) {
@@ -4236,7 +4464,7 @@ var app = (function () {
     		},
 
     		p: function update(changed, ctx) {
-    			if ((changed._bb || changed.columns || changed.data) && t_value !== (t_value = ctx._bb.getStateOrValue(ctx.col.value, ctx.row) + "")) {
+    			if ((changed.data) && t_value !== (t_value = ctx.cellValue(ctx.index, ctx.row) + "")) {
     				set_data_dev(t, t_value);
     			}
 
@@ -4251,11 +4479,11 @@ var app = (function () {
     			}
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block_1$2.name, type: "each", source: "(32:12) {#each columns as col}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block_1$2.name, type: "each", source: "(39:12) {#each columns as col, index}", ctx });
     	return block;
     }
 
-    // (29:8) {#each data as row}
+    // (36:8) {#each data as row}
     function create_each_block$4(ctx) {
     	var tr, t, tr_class_value, dispose;
 
@@ -4294,7 +4522,7 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(tr, "class", tr_class_value = "" + null_to_empty(ctx.trClass) + " svelte-h8rqk6");
-    			add_location(tr, file$9, 29, 8, 609);
+    			add_location(tr, file$9, 36, 8, 770);
     			dispose = listen_dev(tr, "click", ctx.rowClickHandler(ctx.row));
     		},
 
@@ -4310,7 +4538,7 @@ var app = (function () {
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if (changed.thClass || changed._bb || changed.columns || changed.data) {
+    			if (changed.thClass || changed.cellValue || changed.data || changed.columns) {
     				each_value_1 = ctx.columns;
 
     				let i;
@@ -4347,7 +4575,7 @@ var app = (function () {
     			dispose();
     		}
     	};
-    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block$4.name, type: "each", source: "(29:8) {#each data as row}", ctx });
+    	dispatch_dev("SvelteRegisterBlock", { block, id: create_each_block$4.name, type: "each", source: "(36:8) {#each data as row}", ctx });
     	return block;
     }
 
@@ -4356,19 +4584,13 @@ var app = (function () {
 
     	let each_value_2 = ctx.columns;
 
-    	let each_blocks_1 = [];
-
-    	for (let i = 0; i < each_value_2.length; i += 1) {
-    		each_blocks_1[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
-    	}
-
-    	let each_value = ctx.data;
-
     	let each_blocks = [];
 
-    	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
+    	for (let i = 0; i < each_value_2.length; i += 1) {
+    		each_blocks[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
     	}
+
+    	var if_block = (ctx.data) && create_if_block$5(ctx);
 
     	const block = {
     		c: function create() {
@@ -4376,16 +4598,13 @@ var app = (function () {
     			thead = element("thead");
     			tr = element("tr");
 
-    			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].c();
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
     			}
 
     			t = space();
     			tbody = element("tbody");
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
+    			if (if_block) if_block.c();
     			this.h();
     		},
 
@@ -4399,8 +4618,8 @@ var app = (function () {
     			tr = claim_element(thead_nodes, "TR", { class: true }, false);
     			var tr_nodes = children(tr);
 
-    			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].l(tr_nodes);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].l(tr_nodes);
     			}
 
     			tr_nodes.forEach(detach_dev);
@@ -4410,10 +4629,7 @@ var app = (function () {
     			tbody = claim_element(table_nodes, "TBODY", { class: true }, false);
     			var tbody_nodes = children(tbody);
 
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].l(tbody_nodes);
-    			}
-
+    			if (if_block) if_block.l(tbody_nodes);
     			tbody_nodes.forEach(detach_dev);
     			table_nodes.forEach(detach_dev);
     			this.h();
@@ -4421,13 +4637,13 @@ var app = (function () {
 
     		h: function hydrate() {
     			attr_dev(tr, "class", tr_class_value = "" + null_to_empty(ctx.trClass) + " svelte-h8rqk6");
-    			add_location(tr, file$9, 21, 8, 382);
+    			add_location(tr, file$9, 27, 8, 523);
     			attr_dev(thead, "class", thead_class_value = "" + null_to_empty(ctx.theadClass) + " svelte-h8rqk6");
-    			add_location(thead, file$9, 20, 4, 346);
+    			add_location(thead, file$9, 26, 4, 487);
     			attr_dev(tbody, "class", tbody_class_value = "" + null_to_empty(ctx.tbodyClass) + " svelte-h8rqk6");
-    			add_location(tbody, file$9, 27, 4, 544);
+    			add_location(tbody, file$9, 33, 4, 685);
     			attr_dev(table, "class", table_class_value = "" + null_to_empty(ctx.tableClass) + " svelte-h8rqk6");
-    			add_location(table, file$9, 19, 1, 314);
+    			add_location(table, file$9, 25, 1, 455);
     		},
 
     		m: function mount(target, anchor) {
@@ -4435,16 +4651,13 @@ var app = (function () {
     			append_dev(table, thead);
     			append_dev(thead, tr);
 
-    			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].m(tr, null);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(tr, null);
     			}
 
     			append_dev(table, t);
     			append_dev(table, tbody);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(tbody, null);
-    			}
+    			if (if_block) if_block.m(tbody, null);
     		},
 
     		p: function update(changed, ctx) {
@@ -4455,19 +4668,19 @@ var app = (function () {
     				for (i = 0; i < each_value_2.length; i += 1) {
     					const child_ctx = get_each_context_2(ctx, each_value_2, i);
 
-    					if (each_blocks_1[i]) {
-    						each_blocks_1[i].p(changed, child_ctx);
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
     					} else {
-    						each_blocks_1[i] = create_each_block_2(child_ctx);
-    						each_blocks_1[i].c();
-    						each_blocks_1[i].m(tr, null);
+    						each_blocks[i] = create_each_block_2(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(tr, null);
     					}
     				}
 
-    				for (; i < each_blocks_1.length; i += 1) {
-    					each_blocks_1[i].d(1);
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
     				}
-    				each_blocks_1.length = each_value_2.length;
+    				each_blocks.length = each_value_2.length;
     			}
 
     			if ((changed.trClass) && tr_class_value !== (tr_class_value = "" + null_to_empty(ctx.trClass) + " svelte-h8rqk6")) {
@@ -4478,26 +4691,17 @@ var app = (function () {
     				attr_dev(thead, "class", thead_class_value);
     			}
 
-    			if (changed.trClass || changed.columns || changed.thClass || changed._bb || changed.data) {
-    				each_value = ctx.data;
-
-    				let i;
-    				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$4(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(changed, child_ctx);
-    					} else {
-    						each_blocks[i] = create_each_block$4(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(tbody, null);
-    					}
+    			if (ctx.data) {
+    				if (if_block) {
+    					if_block.p(changed, ctx);
+    				} else {
+    					if_block = create_if_block$5(ctx);
+    					if_block.c();
+    					if_block.m(tbody, null);
     				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-    				each_blocks.length = each_value.length;
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
     			}
 
     			if ((changed.tbodyClass) && tbody_class_value !== (tbody_class_value = "" + null_to_empty(ctx.tbodyClass) + " svelte-h8rqk6")) {
@@ -4517,9 +4721,9 @@ var app = (function () {
     				detach_dev(table);
     			}
 
-    			destroy_each(each_blocks_1, detaching);
-
     			destroy_each(each_blocks, detaching);
+
+    			if (if_block) if_block.d();
     		}
     	};
     	dispatch_dev("SvelteRegisterBlock", { block, id: create_fragment$9.name, type: "component", source: "", ctx });
@@ -4530,8 +4734,13 @@ var app = (function () {
     	let { columns=[], data="", tableClass="", theadClass="", tbodyClass="", trClass="", thClass="", onRowClick, _bb } = $$props;
 
     const rowClickHandler = (row) => () => {
-        onRowClick(row);
+        _bb.call(onRowClick, row);
     };
+
+    const cellValue = (colIndex, row) => 
+        _bb.getStateOrValue(
+            _bb.bindings.columns[colIndex].value
+            , row);
 
     	const writable_props = ['columns', 'data', 'tableClass', 'theadClass', 'tbodyClass', 'trClass', 'thClass', 'onRowClick', '_bb'];
     	Object.keys($$props).forEach(key => {
@@ -4576,7 +4785,8 @@ var app = (function () {
     		thClass,
     		onRowClick,
     		_bb,
-    		rowClickHandler
+    		rowClickHandler,
+    		cellValue
     	};
     }
 
@@ -5763,40 +5973,41 @@ var app = (function () {
     var fp_1 = fp.find;
     var fp_2 = fp.isUndefined;
     var fp_3 = fp.split;
-    var fp_4 = fp.last;
-    var fp_5 = fp.union;
-    var fp_6 = fp.reduce;
-    var fp_7 = fp.isObject;
-    var fp_8 = fp.cloneDeep;
-    var fp_9 = fp.some;
-    var fp_10 = fp.isArray;
-    var fp_11 = fp.map;
-    var fp_12 = fp.filter;
-    var fp_13 = fp.keys;
-    var fp_14 = fp.isFunction;
-    var fp_15 = fp.isEmpty;
-    var fp_16 = fp.countBy;
-    var fp_17 = fp.join;
-    var fp_18 = fp.includes;
-    var fp_19 = fp.flatten;
-    var fp_20 = fp.constant;
-    var fp_21 = fp.first;
-    var fp_22 = fp.intersection;
-    var fp_23 = fp.take;
-    var fp_24 = fp.has;
-    var fp_25 = fp.mapValues;
-    var fp_26 = fp.isString;
-    var fp_27 = fp.isBoolean;
-    var fp_28 = fp.isNull;
-    var fp_29 = fp.isNumber;
-    var fp_30 = fp.isObjectLike;
-    var fp_31 = fp.isDate;
-    var fp_32 = fp.clone;
-    var fp_33 = fp.values;
-    var fp_34 = fp.keyBy;
-    var fp_35 = fp.isNaN;
-    var fp_36 = fp.isInteger;
-    var fp_37 = fp.toNumber;
+    var fp_4 = fp.max;
+    var fp_5 = fp.last;
+    var fp_6 = fp.union;
+    var fp_7 = fp.reduce;
+    var fp_8 = fp.isObject;
+    var fp_9 = fp.cloneDeep;
+    var fp_10 = fp.some;
+    var fp_11 = fp.isArray;
+    var fp_12 = fp.map;
+    var fp_13 = fp.filter;
+    var fp_14 = fp.keys;
+    var fp_15 = fp.isFunction;
+    var fp_16 = fp.isEmpty;
+    var fp_17 = fp.countBy;
+    var fp_18 = fp.join;
+    var fp_19 = fp.includes;
+    var fp_20 = fp.flatten;
+    var fp_21 = fp.constant;
+    var fp_22 = fp.first;
+    var fp_23 = fp.intersection;
+    var fp_24 = fp.take;
+    var fp_25 = fp.has;
+    var fp_26 = fp.mapValues;
+    var fp_27 = fp.isString;
+    var fp_28 = fp.isBoolean;
+    var fp_29 = fp.isNull;
+    var fp_30 = fp.isNumber;
+    var fp_31 = fp.isObjectLike;
+    var fp_32 = fp.isDate;
+    var fp_33 = fp.clone;
+    var fp_34 = fp.values;
+    var fp_35 = fp.keyBy;
+    var fp_36 = fp.isNaN;
+    var fp_37 = fp.isInteger;
+    var fp_38 = fp.toNumber;
 
     var lodash = createCommonjsModule(function (module, exports) {
     (function() {
@@ -22892,18 +23103,20 @@ var app = (function () {
     });
     var lodash_1 = lodash.flow;
     var lodash_2 = lodash.head;
-    var lodash_3 = lodash.tail;
-    var lodash_4 = lodash.findIndex;
-    var lodash_5 = lodash.startsWith;
-    var lodash_6 = lodash.dropRight;
-    var lodash_7 = lodash.takeRight;
-    var lodash_8 = lodash.trim;
-    var lodash_9 = lodash.split;
-    var lodash_10 = lodash.replace;
-    var lodash_11 = lodash.merge;
-    var lodash_12 = lodash.assign;
+    var lodash_3 = lodash.find;
+    var lodash_4 = lodash.each;
+    var lodash_5 = lodash.tail;
+    var lodash_6 = lodash.findIndex;
+    var lodash_7 = lodash.startsWith;
+    var lodash_8 = lodash.dropRight;
+    var lodash_9 = lodash.takeRight;
+    var lodash_10 = lodash.trim;
+    var lodash_11 = lodash.split;
+    var lodash_12 = lodash.replace;
+    var lodash_13 = lodash.merge;
+    var lodash_14 = lodash.assign;
 
-    const commonPlus = extra => fp_5(['onBegin', 'onComplete', 'onError'])(extra);
+    const commonPlus = extra => fp_6(['onBegin', 'onComplete', 'onError'])(extra);
 
     const common = () => commonPlus([]);
 
@@ -22969,7 +23182,7 @@ var app = (function () {
 
     for (const areaKey in _events) {
       for (const methodKey in _events[areaKey]) {
-        _events[areaKey][methodKey] = fp_6((obj, s) => {
+        _events[areaKey][methodKey] = fp_7((obj, s) => {
           obj[s] = makeEvent(areaKey, methodKey, s);
           return obj;
         },
@@ -23400,7 +23613,7 @@ var app = (function () {
     };
 
     const publishError = async (app, eventContext, eventNamespace, elapsed, err) => {
-      const ctx = fp_8(eventContext);
+      const ctx = fp_9(eventContext);
       ctx.error = err;
       ctx.elapsed = elapsed();
       await app.publish(
@@ -23411,7 +23624,7 @@ var app = (function () {
     };
 
     const publishComplete = async (app, eventContext, eventNamespace, elapsed, result) => {
-      const endcontext = fp_8(eventContext);
+      const endcontext = fp_9(eventContext);
       endcontext.result = result;
       endcontext.elapsed = elapsed();
       await app.publish(
@@ -23429,13 +23642,13 @@ var app = (function () {
     const $ = (arg, funcs) => $$(...funcs)(arg);
 
     const keySep = '/';
-    const trimKeySep = str => lodash_8(str, keySep);
+    const trimKeySep = str => lodash_10(str, keySep);
     const splitByKeySep = str => fp_3(keySep)(str);
-    const safeKey = key => lodash_10(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
+    const safeKey = key => lodash_12(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
     const joinKey = (...strs) => {
-      const paramsOrArray = strs.length === 1 & fp_10(strs[0])
+      const paramsOrArray = strs.length === 1 & fp_11(strs[0])
         ? strs[0] : strs;
-      return safeKey(fp_17(keySep)(paramsOrArray));
+      return safeKey(fp_18(keySep)(paramsOrArray));
     };
     const splitKey = $$(trimKeySep, splitByKeySep);
 
@@ -23446,22 +23659,22 @@ var app = (function () {
 
     const not = func => val => !func(val);
     const isDefined = not(fp_2);
-    const isNonNull = not(fp_28);
-    const isNotNaN = not(fp_35);
+    const isNonNull = not(fp_29);
+    const isNotNaN = not(fp_36);
 
-    const allTrue = (...funcArgs) => val => fp_6(
-      (result, conditionFunc) => (fp_28(result) || result == true) && conditionFunc(val),
+    const allTrue = (...funcArgs) => val => fp_7(
+      (result, conditionFunc) => (fp_29(result) || result == true) && conditionFunc(val),
       null)(funcArgs);
 
     const isSomething = allTrue(isDefined, isNonNull, isNotNaN);
     const isNothing = not(isSomething);
 
-    const none = predicate => collection => !fp_9(predicate)(collection);
+    const none = predicate => collection => !fp_10(predicate)(collection);
 
     const all = predicate => collection => none(v => !predicate(v))(collection);
 
-    const isNotEmpty = ob => !fp_15(ob);
-    const isNonEmptyString = allTrue(fp_26, isNotEmpty);
+    const isNotEmpty = ob => !fp_16(ob);
+    const isNonEmptyString = allTrue(fp_27, isNotEmpty);
     const tryOr = failFunc => (func, ...args) => {
       try {
         return func.apply(null, ...args);
@@ -23480,7 +23693,7 @@ var app = (function () {
 
     const executesWithoutException = func => !causesException(func);
 
-    const handleErrorWith = returnValInError => tryOr(fp_20(returnValInError));
+    const handleErrorWith = returnValInError => tryOr(fp_21(returnValInError));
 
     const handleErrorWithUndefined = handleErrorWith(undefined);
 
@@ -23488,25 +23701,43 @@ var app = (function () {
       const nextCase = () => lodash_2(cases)[0](value);
       const nextResult = () => lodash_2(cases)[1](value);
 
-      if (fp_15(cases)) return; // undefined
+      if (fp_16(cases)) return; // undefined
       if (nextCase() === true) return nextResult();
-      return switchCase(...lodash_3(cases))(value);
+      return switchCase(...lodash_5(cases))(value);
     };
-    const isOneOf = (...vals) => val => fp_18(val)(vals);
-    const defaultCase = fp_20(true);
+    const isOneOf = (...vals) => val => fp_19(val)(vals);
+    const defaultCase = fp_21(true);
 
-    const isSafeInteger = n => fp_36(n)
+    const isSafeInteger = n => fp_37(n)
         && n <= Number.MAX_SAFE_INTEGER
         && n >= 0 - Number.MAX_SAFE_INTEGER;
 
-    const toDateOrNull = s => (fp_28(s) ? null
-      : fp_31(s) ? s : new Date(s));
-    const toBoolOrNull = s => (fp_28(s) ? null
+    const toDateOrNull = s => (fp_29(s) ? null
+      : fp_32(s) ? s : new Date(s));
+    const toBoolOrNull = s => (fp_29(s) ? null
       : s === 'true' || s === true);
-    const toNumberOrNull = s => (fp_28(s) ? null
-      : fp_37(s));
+    const toNumberOrNull = s => (fp_29(s) ? null
+      : fp_38(s));
 
-    const isArrayOfString = opts => fp_10(opts) && all(fp_26)(opts);
+    const isArrayOfString = opts => fp_11(opts) && all(fp_27)(opts);
+
+    const BB_STATE_BINDINGPATH = "##bbstate";
+    const BB_STATE_BINDINGSOURCE = "##bbsource";
+    const BB_STATE_FALLBACK = "##bbstatefallback";
+
+    const isBound = (prop) =>
+        prop !== undefined 
+        && prop[BB_STATE_BINDINGPATH] !== undefined;
+        
+    const takeStateFromStore = (prop) => 
+        prop[BB_STATE_BINDINGSOURCE] === undefined 
+        || prop[BB_STATE_BINDINGSOURCE] === "store";
+
+    const takeStateFromContext = (prop) => 
+        prop[BB_STATE_BINDINGSOURCE] === "context";
+
+    const takeStateFromEventParameters = (prop) => 
+        prop[BB_STATE_BINDINGSOURCE] === "event";
 
     const setState = (store, path, value) => {
 
@@ -23524,7 +23755,7 @@ var app = (function () {
 
             if(obj[currentKey] === null 
               || obj[currentKey] === undefined
-              || !fp_7(obj.currentKey)) {
+              || !fp_8(obj[currentKey])) {
 
                 obj[currentKey] = {};
             }
@@ -23539,24 +23770,15 @@ var app = (function () {
         });
     };
 
-    const BB_STATE_BINDINGPATH = "##bbstate";
-    const BB_STATE_BINDINGSOURCE = "##bbsource";
-    const BB_STATE_FALLBACK = "##bbstatefallback";
-
-    const isBound = (prop) => prop[BB_STATE_BINDINGPATH] !== undefined;
-    const takeStateFromStore = (prop) => 
-        prop[BB_STATE_BINDINGSOURCE] === undefined 
-        || prop[BB_STATE_BINDINGSOURCE] === "store";
-
-    const takeStateFromContext = (prop) => 
-        prop[BB_STATE_BINDINGSOURCE] === "context";
-
-    const takeStateFromEventParameters = (prop) => 
-        prop[BB_STATE_BINDINGSOURCE] === "event";
+    const setStateFromBinding = (store, binding, value) => 
+        setState(store, binding.path, value);
 
     const getState = (s, path, fallback) => {
 
+        if(!s) return fallback;
         if(!path || path.length === 0) return fallback;
+
+        if(path === "$") return s;
 
         const pathParts = path.split(".");
         const safeGetPath = (obj, currentPartIndex=0) => {
@@ -23573,7 +23795,7 @@ var app = (function () {
 
             if(obj[currentKey] === null 
               || obj[currentKey] === undefined
-              || !fp_7(obj[currentKey])) {
+              || !fp_8(obj[currentKey])) {
 
                 return fallback;
             }
@@ -23587,13 +23809,28 @@ var app = (function () {
     };
 
     const getStateOrValue = (globalState, prop, currentContext) => {
-        if(!isBound(prop)) return prop;
+        
+        if(!prop) return prop;
+        
+        if(isBound(prop)) {
 
-        const stateToUse = takeStateFromStore(prop) 
-                           ? globalState
-                           : currentContext;
+            const stateToUse = takeStateFromStore(prop) 
+                            ? globalState
+                            : currentContext;
 
-        return getState(stateToUse, prop[BB_STATE_BINDINGPATH], prop[BB_STATE_FALLBACK]);
+            return getState(stateToUse, prop[BB_STATE_BINDINGPATH], prop[BB_STATE_FALLBACK]);
+        }
+
+        if(prop.path && prop.source) {
+            const stateToUse = prop.source === "store" 
+                            ? globalState
+                            : currentContext;
+
+            return getState(stateToUse, prop.path, prop.fallback);
+        }
+
+        return prop;
+        
     };
 
     const ERROR = "##error_message";
@@ -23631,7 +23868,7 @@ var app = (function () {
             return;
         } 
 
-        const records = api.get({
+        const records = await api.get({
             url:`/api/listRecords/${trimSlash(indexKey)}`
         });
 
@@ -23660,13 +23897,41 @@ var app = (function () {
 
         // set user even if error - so it is defined at least
         api.setState(USER_STATE_PATH, user);
-        localStorage.setItem("budibase:user", user);
+        localStorage.setItem("budibase:user", JSON.stringify(user));
+    };
+
+    const saveRecord = (api) => async ({statePath}) => {
+        
+        if(!statePath) {
+            api.error("Load Record: state path not set");
+            return;
+        } 
+
+        const recordtoSave = api.getState(statePath);
+
+        if(!recordtoSave) {
+            api.error(`there is no record in state: ${statePath}`);
+            return;
+        }
+
+        if(!recordtoSave.key) {
+            api.error(`item in state does not appear to be a record - it has no key (${statePath})`);
+            return;
+        }
+
+        const savedRecord = await api.post({
+            url:`/api/record/${trimSlash(recordtoSave.key)}`,
+            body: recordtoSave
+        });
+
+        if(api.isSuccess(savedRecord))
+            api.setState(statePath, savedRecord);
     };
 
     const createApi = ({rootPath, setState, getState}) => {
 
         const apiCall = (method) => ({url, body, notFound, badRequest, forbidden}) => {
-            fetch(`${rootPath}${url}`, {
+            return fetch(`${rootPath}${url}`, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
@@ -23706,7 +23971,7 @@ var app = (function () {
             return e;
         };
 
-        const isSuccess = obj => !!obj[ERROR_MEMBER];
+        const isSuccess = obj => !obj || !obj[ERROR_MEMBER];
 
         const apiOpts = {
             rootPath, setState, getState, isSuccess, error,
@@ -23716,11 +23981,12 @@ var app = (function () {
         return {
             loadRecord:loadRecord(apiOpts), 
             listRecords: listRecords(apiOpts),
-            authenticate: authenticate(apiOpts)
+            authenticate: authenticate(apiOpts),
+            saveRecord: saveRecord(apiOpts)
         }
     };
 
-    const getNewChildRecordToState = (store, coreApi, setState) =>
+    const getNewChildRecordToState = (coreApi, setState) =>
                 ({recordKey, collectionName,childRecordType,statePath}) => {
         const error = errorHandler(setState);
         try {
@@ -23745,7 +24011,7 @@ var app = (function () {
             }
 
             const rec = coreApi.recordApi.getNewChild(recordKey, collectionName, childRecordType);
-            setState(store, statePath, rec);
+            setState(statePath, rec);
         }
         catch(e) {
             error(e.message);
@@ -23753,7 +24019,7 @@ var app = (function () {
     };
 
 
-    const getNewRecordToState = (store, coreApi, setState) =>
+    const getNewRecordToState = (coreApi, setState) =>
                 ({collectionKey,childRecordType,statePath}) => {
         const error = errorHandler(setState);
         try {
@@ -23773,7 +24039,7 @@ var app = (function () {
             }
 
             const rec = coreApi.recordApi.getNew(collectionKey, childRecordType);
-            setState(store, statePath, rec);
+            setState(statePath, rec);
         }
         catch(e) {
             error(e.message);
@@ -23792,10 +24058,15 @@ var app = (function () {
 
         const setStateWithStore = (path, value) => setState(store, path, value);
 
+        let currentState;
+        store.subscribe(s => {
+            currentState = s;
+        });
+
         const api = createApi({
             rootPath:rootPath,
-            setState: (path, value) => setStateWithStore,
-            getState: (path, fallback) => getState(store, path, fallback)
+            setState: setStateWithStore,
+            getState: (path, fallback) => getState(currentState, path, fallback)
         });
 
         const setStateHandler = ({path, value}) => setState(store, path, value);
@@ -23808,18 +24079,18 @@ var app = (function () {
             
             "Get New Child Record": handler(
                 ["recordKey", "collectionName", "childRecordType", "statePath"], 
-                getNewChildRecordToState(store, coreApi, setStateWithStore)),
+                getNewChildRecordToState(coreApi, setStateWithStore)),
 
             "Get New Record": handler(
                 ["collectionKey", "childRecordType", "statePath"], 
-                getNewRecordToState(store, coreApi, setStateWithStore)),
+                getNewRecordToState(coreApi, setStateWithStore)),
 
             "Authenticate": handler(["username", "password"], api.authenticate)
         };
     };
 
     const isEventType = prop => 
-        fp_10(prop) 
+        fp_11(prop) 
         && prop.length > 0
         && !fp_2(prop[0][EVENT_TYPE_MEMBER_NAME]);
 
@@ -23833,6 +24104,7 @@ var app = (function () {
         const getBindings = (props, initialProps) => {
 
             const boundProps = [];
+            const contextBoundProps = [];
             const componentEventHandlers = [];
             const boundArrays = [];
 
@@ -23844,25 +24116,31 @@ var app = (function () {
                 
                 if(isBound(val) && takeStateFromStore(val)) {
 
-                    const binding = stateBinding(val);
-                    const fallback = stateFallback(val);
+                    const binding = BindingPath(val);
+                    const source = BindingSource(val);
+                    const fallback = BindingFallback(val);
 
                     boundProps.push({ 
-                        stateBinding:binding,
-                        fallback, propName
+                        path:binding,
+                        fallback, propName, source
                     });
 
                     initialProps[propName] = fallback;
                 } else if(isBound(val) && takeStateFromContext(val)) {
 
-                    const binding = stateBinding(val);
-                    const fallback = stateFallback(val);
+                    const binding = BindingPath(val);
+                    const fallback = BindingFallback(val);
+                    const source = BindingSource(val);
+
+                    contextBoundProps.push({ 
+                        path:binding,
+                        fallback, propName, source
+                    });
 
                     initialProps[propName] = getState(
                         context || {},
                         binding,
-                        fallback
-                    );
+                        fallback);
 
                 } else if(isEventType(val)) {
 
@@ -23891,7 +24169,7 @@ var app = (function () {
                 
             }
 
-            return {boundProps, componentEventHandlers, boundArrays, initialProps};
+            return {contextBoundProps, boundProps, componentEventHandlers, boundArrays, initialProps};
         };
 
 
@@ -23915,7 +24193,7 @@ var app = (function () {
                     for(let boundProp of boundProps) {
                         const val = getState(
                             s, 
-                            boundProp.stateBinding, 
+                            boundProp.path, 
                             boundProp.fallback);
 
                         if(val === undefined && newProps[boundProp.propName] !== undefined) {
@@ -23938,16 +24216,12 @@ var app = (function () {
                                 for(let pname in h.parameters) {
                                     const p = h.parameters[pname];
                                     parameters[pname] = 
-                                        !isBound(p) 
-                                        ? p 
-                                        : takeStateFromStore(p)
-                                        ? getState(
+                                        !isBound(p) ? p 
+                                        : takeStateFromStore(p) ? getState(
                                             s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                                        : takeStateFromEventParameters(p)
-                                        ? getState(
+                                        : takeStateFromEventParameters(p) ? getState(
                                             eventContext, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                                        : takeStateFromContext(p)
-                                        ? getState(
+                                        : takeStateFromContext(p) ? getState(
                                             context, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
                                         : p[BB_STATE_FALLBACK];
                                     
@@ -23991,13 +24265,18 @@ var app = (function () {
         const bindings = getBindings(rootProps, rootInitialProps);
 
         return {
-            initialProps:rootInitialProps, bind:bind(bindings)
+            initialProps:rootInitialProps, 
+            bind:bind(bindings), 
+            boundProps:bindings.boundProps,
+            boundArrays: bindings.boundArrays,
+            contextBoundProps: bindings.contextBoundProps
         };
 
     };
 
-    const stateBinding = (prop) => prop[BB_STATE_BINDINGPATH];
-    const stateFallback = (prop) => prop[BB_STATE_FALLBACK];
+    const BindingPath = (prop) => prop[BB_STATE_BINDINGPATH];
+    const BindingFallback = (prop) => prop[BB_STATE_FALLBACK];
+    const BindingSource = (prop) => prop[BB_STATE_BINDINGSOURCE];
 
     const createCoreApp = (appDefinition, user) => {
         const app = {
@@ -24189,13 +24468,13 @@ var app = (function () {
       makerule('name', 'must declare a name for index',
         index => isNonEmptyString(index.name)),
       makerule('name', 'there is a duplicate named index on this node',
-        index => fp_15(index.name)
-                    || fp_16('name')(index.parent().indexes)[index.name] === 1),
+        index => fp_16(index.name)
+                    || fp_17('name')(index.parent().indexes)[index.name] === 1),
       makerule('indexType', 'reference index may only exist on a record node',
         index => isRecord(index.parent())
                       || index.indexType !== indexTypes.reference),
-      makerule('indexType', `index type must be one of: ${fp_17(', ')(fp_13(indexTypes))}`,
-        index => fp_18(index.indexType)(fp_13(indexTypes))),
+      makerule('indexType', `index type must be one of: ${fp_18(', ')(fp_14(indexTypes))}`,
+        index => fp_19(index.indexType)(fp_14(indexTypes))),
     ];
 
     const getFlattenedHierarchy = (appHierarchy, useCached = true) => {
@@ -24212,7 +24491,7 @@ var app = (function () {
           return flattened;
         }
 
-        const unionIfAny = l2 => l1 => fp_5(l1)(!l2 ? [] : l2);
+        const unionIfAny = l2 => l1 => fp_6(l1)(!l2 ? [] : l2);
 
         const children = $([], [
           unionIfAny(currentNode.children),
@@ -24258,10 +24537,12 @@ var app = (function () {
     const isNode = (appHierarchy, key) => isSomething(getExactNodeForPath(appHierarchy)(key));
 
     const isRecord = node => isSomething(node) && node.type === 'record';
+    const isSingleRecord = node => isRecord(node) && node.isSingle;
     const isCollectionRecord = node => isRecord(node) && !node.isSingle;
+    const isRoot = node => isSomething(node) && node.isRoot();
 
     const getSafeFieldParser = (tryParse, defaultValueFunctions) => (field, record) => {
-      if (fp_24(field.name)(record)) {
+      if (fp_25(field.name)(record)) {
         return getSafeValueParser(tryParse, defaultValueFunctions)(record[field.name]);
       }
       return defaultValueFunctions[field.getUndefinedValue]();
@@ -24280,14 +24561,14 @@ var app = (function () {
         ? 'default'
         : field.getInitialValue;
 
-      return fp_24(getInitialValue)(defaultValueFunctions)
+      return fp_25(getInitialValue)(defaultValueFunctions)
         ? defaultValueFunctions[getInitialValue]()
         : getSafeValueParser(tryParse, defaultValueFunctions)(getInitialValue);
     };
 
-    const typeFunctions = specificFunctions => lodash_11({
-      value: fp_20,
-      null: fp_20(null),
+    const typeFunctions = specificFunctions => lodash_13({
+      value: fp_21,
+      null: fp_21(null),
     }, specificFunctions);
 
     const validateTypeConstraints = validationRules => async (field, record, context) => {
@@ -24305,7 +24586,7 @@ var app = (function () {
       return errors;
     };
 
-    const getDefaultOptions = fp_25(v => v.defaultValue);
+    const getDefaultOptions = fp_26(v => v.defaultValue);
 
     const makerule$1 = (isValid, getMessage) => ({ isValid, getMessage });
     const parsedFailed = val => ({ success: false, value: val });
@@ -24316,7 +24597,7 @@ var app = (function () {
       safeParseValue: getSafeValueParser(tryParse, functions),
       tryParse,
       name,
-      getDefaultOptions: () => getDefaultOptions(fp_8(options)),
+      getDefaultOptions: () => getDefaultOptions(fp_9(options)),
       optionDefinitions: options,
       validateTypeConstraints: validateTypeConstraints(validationRules),
       sampleValue,
@@ -24326,12 +24607,12 @@ var app = (function () {
     });
 
     const stringFunctions = typeFunctions({
-      default: fp_20(null),
+      default: fp_21(null),
     });
 
     const stringTryParse = switchCase(
-      [fp_26, parsedSuccess],
-      [fp_28, parsedSuccess],
+      [fp_27, parsedSuccess],
+      [fp_29, parsedSuccess],
       [defaultCase, v => parsedSuccess(v.toString())],
     );
 
@@ -24350,7 +24631,7 @@ var app = (function () {
       },
       allowDeclaredValuesOnly: {
         defaultValue: false,
-        isValid: fp_27,
+        isValid: fp_28,
         requirementDescription: 'allowDeclaredValuesOnly must be true or false',
         parse: toBoolOrNull,
       },
@@ -24361,7 +24642,7 @@ var app = (function () {
         (val, opts) => `value exceeds maximum length of ${opts.maxLength}`),
       makerule$1(async (val, opts) => val === null
                                || opts.allowDeclaredValuesOnly === false
-                               || fp_18(val)(opts.values),
+                               || fp_19(val)(opts.values),
       (val) => `"${val}" does not exist in the list of allowed values`),
     ];
 
@@ -24376,12 +24657,12 @@ var app = (function () {
     );
 
     const boolFunctions = typeFunctions({
-      default: fp_20(null),
+      default: fp_21(null),
     });
 
     const boolTryParse = switchCase(
-      [fp_27, parsedSuccess],
       [fp_28, parsedSuccess],
+      [fp_29, parsedSuccess],
       [isOneOf('true', '1', 'yes', 'on'), () => parsedSuccess(true)],
       [isOneOf('false', '0', 'no', 'off'), () => parsedSuccess(false)],
       [defaultCase, parsedFailed],
@@ -24390,7 +24671,7 @@ var app = (function () {
     const options$1 = {
       allowNulls: {
         defaultValue: true,
-        isValid: fp_27,
+        isValid: fp_28,
         requirementDescription: 'must be a true or false',
         parse: toBoolOrNull,
       },
@@ -24407,7 +24688,7 @@ var app = (function () {
     );
 
     const numberFunctions = typeFunctions({
-      default: fp_20(null),
+      default: fp_21(null),
     });
 
     const parseStringtoNumberOrNull = (s) => {
@@ -24416,9 +24697,9 @@ var app = (function () {
     };
 
     const numberTryParse = switchCase(
+      [fp_30, parsedSuccess],
+      [fp_27, parseStringtoNumberOrNull],
       [fp_29, parsedSuccess],
-      [fp_26, parseStringtoNumberOrNull],
-      [fp_28, parsedSuccess],
       [defaultCase, parsedFailed],
     );
 
@@ -24469,7 +24750,7 @@ var app = (function () {
     );
 
     const dateFunctions = typeFunctions({
-      default: fp_20(null),
+      default: fp_21(null),
       now: () => new Date(),
     });
 
@@ -24482,22 +24763,22 @@ var app = (function () {
 
 
     const dateTryParse = switchCase(
-      [fp_31, parsedSuccess],
-      [fp_26, parseStringToDate],
-      [fp_28, parsedSuccess],
+      [fp_32, parsedSuccess],
+      [fp_27, parseStringToDate],
+      [fp_29, parsedSuccess],
       [defaultCase, parsedFailed],
     );
 
     const options$3 = {
       maxValue: {
         defaultValue: new Date(32503680000000),
-        isValid: fp_31,
+        isValid: fp_32,
         requirementDescription: 'must be a valid date',
         parse: toDateOrNull,
       },
       minValue: {
         defaultValue: new Date(-8520336000000),
-        isValid: fp_31,
+        isValid: fp_32,
         requirementDescription: 'must be a valid date',
         parse: toDateOrNull,
       },
@@ -24521,16 +24802,16 @@ var app = (function () {
     );
 
     const arrayFunctions = () => typeFunctions({
-      default: fp_20([]),
+      default: fp_21([]),
     });
 
     const mapToParsedArrary = type => $$(
-      fp_11(i => type.safeParseValue(i)),
+      fp_12(i => type.safeParseValue(i)),
       parsedSuccess,
     );
 
     const arrayTryParse = type => switchCase(
-      [fp_10, mapToParsedArrary(type)],
+      [fp_11, mapToParsedArrary(type)],
       [defaultCase, parsedFailed],
     );
 
@@ -24575,10 +24856,10 @@ var app = (function () {
       default: referenceNothing,
     });
 
-    const hasStringValue = (ob, path) => fp_24(path)(ob)
-        && fp_26(ob[path]);
+    const hasStringValue = (ob, path) => fp_25(path)(ob)
+        && fp_27(ob[path]);
 
-    const isObjectWithKey = v => fp_30(v)
+    const isObjectWithKey = v => fp_31(v)
         && hasStringValue(v, 'key');
 
     const tryParseFromString = s => {
@@ -24598,8 +24879,8 @@ var app = (function () {
 
     const referenceTryParse = v => switchCase(
       [isObjectWithKey, parsedSuccess],
-      [fp_26, tryParseFromString],
-      [fp_28, () => parsedSuccess(referenceNothing())],
+      [fp_27, tryParseFromString],
+      [fp_29, () => parsedSuccess(referenceNothing())],
       [defaultCase, parsedFailed],
     )(v);
 
@@ -24624,7 +24905,7 @@ var app = (function () {
       },
     };
 
-    const isEmptyString = s => fp_26(s) && fp_15(s);
+    const isEmptyString = s => fp_27(s) && fp_16(s);
 
     const ensureReferenceExists = async (val, opts, context) => isEmptyString(val.key)
         || await context.referenceExists(opts, val.key);
@@ -24651,7 +24932,7 @@ var app = (function () {
     const isLegalFilename = (filePath) => {
       const fn = fileName(filePath);
       return fn.length <= 255
-        && fp_22(fn.split(''))(illegalCharacters.split('')).length === 0
+        && fp_23(fn.split(''))(illegalCharacters.split('')).length === 0
         && none(f => f === '..')(splitKey(filePath));
     };
 
@@ -24663,19 +24944,19 @@ var app = (function () {
 
     const fileTryParse = v => switchCase(
       [isValidFile, parsedSuccess],
-      [fp_28, () => parsedSuccess(fileNothing())],
+      [fp_29, () => parsedSuccess(fileNothing())],
       [defaultCase, parsedFailed],
     )(v);
 
     const fileName = filePath => $(filePath, [
       splitKey,
-      fp_4,
+      fp_5,
     ]);
 
-    const isValidFile = f => !fp_28(f)
-        && fp_24('relativePath')(f) && fp_24('size')(f)
-        && fp_29(f.size)
-        && fp_26(f.relativePath)
+    const isValidFile = f => !fp_29(f)
+        && fp_25('relativePath')(f) && fp_25('size')(f)
+        && fp_30(f.size)
+        && fp_27(f.relativePath)
         && isLegalFilename(f.relativePath);
 
     const options$6 = {};
@@ -24698,24 +24979,24 @@ var app = (function () {
       };
 
       const arrays = $(basicTypes, [
-        fp_13,
-        fp_11((k) => {
+        fp_14,
+        fp_12((k) => {
           const kvType = {};
           const concreteArray = array(basicTypes[k]);
           kvType[concreteArray.name] = concreteArray;
           return kvType;
         }),
-        types => lodash_12({}, ...types),
+        types => lodash_14({}, ...types),
       ]);
 
-      return lodash_11({}, basicTypes, arrays);
+      return lodash_13({}, basicTypes, arrays);
     };
 
 
     const all$1 = allTypes();
 
     const getType = (typeName) => {
-      if (!fp_24(typeName)(all$1)) throw new BadRequestError(`Do not recognise type ${typeName}`);
+      if (!fp_25(typeName)(all$1)) throw new BadRequestError(`Do not recognise type ${typeName}`);
       return all$1[typeName];
     };
 
@@ -24761,8 +25042,8 @@ var app = (function () {
       }
 
       const validType = $(permissionTypes, [
-        fp_33,
-        fp_18(permissionType),
+        fp_34,
+        fp_19(permissionType),
       ]);
 
       if (!validType) {
@@ -24786,7 +25067,7 @@ var app = (function () {
       };
 
       return $(app.user.permissions, [
-        fp_9(permMatchesResource),
+        fp_10(permMatchesResource),
       ]);
     };
 
@@ -24884,8 +25165,8 @@ var app = (function () {
 
     const constructRecord = (recordNode, getFieldValue, collectionKey) => {
       const record = $(recordNode.fields, [
-        fp_34('name'),
-        fp_25(getFieldValue),
+        fp_35('name'),
+        fp_26(getFieldValue),
       ]);
 
       record.id = `${recordNode.nodeId}-${shortid_1()}`;
@@ -24893,6 +25174,72 @@ var app = (function () {
       record.isNew = true;
       record.type = recordNode.name;
       return record;
+    };
+
+    const pathRegxMaker = node => () => node.nodeKey().replace(/{id}/g, '[a-zA-Z0-9_-]+');
+
+    const nodeKeyMaker = node => () => switchCase(
+
+      [n => isRecord(n) && !isSingleRecord(n),
+        n => joinKey(
+          node.parent().nodeKey(),
+          node.collectionName,
+          `${n.nodeId}-{id}`,
+        )],
+
+      [isRoot,
+        fp_21('/')],
+
+      [defaultCase,
+        n => joinKey(node.parent().nodeKey(), n.name)],
+
+    )(node);
+
+    const construct = parent => (node) => {
+      node.nodeKey = nodeKeyMaker(node);
+      node.pathRegx = pathRegxMaker(node);
+      node.parent = fp_21(parent);
+      node.isRoot = () => isNothing(parent)
+                            && node.name === 'root'
+                            && node.type === 'root';
+      if (isCollectionRecord(node)) {
+        node.collectionNodeKey = () => joinKey(
+          parent.nodeKey(), node.collectionName,
+        );
+        node.collectionPathRegx = () => joinKey(
+          parent.pathRegx(), node.collectionName,
+        );
+      }
+      return node;
+    };
+
+    const constructHierarchy = (node, parent) => {
+      construct(parent)(node);
+      if (node.indexes) {
+        lodash_4(node.indexes,
+          child => constructHierarchy(child, node));
+      }
+      if (node.aggregateGroups) {
+        lodash_4(node.aggregateGroups,
+          child => constructHierarchy(child, node));
+      }
+      if (node.children && node.children.length > 0) {
+        lodash_4(node.children,
+          child => constructHierarchy(child, node));
+      }
+      if (node.fields) {
+        lodash_4(node.fields,
+          f => lodash_4(f.typeOptions, (val, key) => {
+            const def = all$1[f.type].optionDefinitions[key];
+            if (!def) {
+              // unknown typeOption
+              delete f.typeOptions[key];
+            } else {
+              f.typeOptions[key] = def.parse(val);
+            }
+          }));
+      }
+      return node;
     };
 
     const createCoreApi = (appDefinition, user) => {
@@ -24903,6 +25250,10 @@ var app = (function () {
             recordApi: {
                 getNew: getNew(app),
                 getNewChild: getNewChild(app)
+            },
+
+            templateApi: {
+                constructHierarchy
             }
         }
 
@@ -24910,18 +25261,32 @@ var app = (function () {
 
     const createApp = (componentLibraries, appDefinition, user) => {
 
-        const hydrateComponent = (parentContext) => (props, htmlElement, context) => {
+        const _initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context, anchor=null) => {
 
             const {componentName, libName} = splitName(props._component);
 
             if(!componentName || !libName) return;
 
-            const {initialProps, bind} = setupBinding(store, props, coreApi, context, appDefinition.appRootPath);
+            const {
+                initialProps, bind, 
+                boundProps, boundArrays,
+                contextBoundProps
+            } = setupBinding(
+                    store, props, coreApi, 
+                    context || parentContext, appDefinition.appRootPath);
+
+            const bindings = buildBindings(boundProps, boundArrays, contextBoundProps);
+
+            const componentProps = {
+                ...initialProps, 
+                _bb:bb(bindings, context || parentContext)
+            };
 
             const component = new (componentLibraries[libName][componentName])({
                 target: htmlElement,
-                props: {...initialProps, _bb:bbInContext(context || parentContext)},
-                hydrate:true
+                props: componentProps,
+                hydrate,
+                anchor
             });
 
             bind(component);
@@ -24930,6 +25295,7 @@ var app = (function () {
         };
 
         const coreApi = createCoreApi(appDefinition, user);
+        appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(appDefinition.hierarchy);
         const store = writable({
             _bbuser: user
         });
@@ -24962,34 +25328,83 @@ var app = (function () {
             delete:apiCall("DELETE")
         };
 
-        const bb = () => ({
-            hydrateComponent: hydrateComponent(), 
+        const safeCallEvent = (event, context) => {
+            
+            const isFunction = (obj) =>
+                !!(obj && obj.constructor && obj.call && obj.apply);
+
+            if(isFunction(event)) event(context);
+        };
+
+        const bb = (bindings, context) => ({
+            hydrateComponent: _initialiseComponent(context, true), 
+            appendComponent: _initialiseComponent(context, false), 
+            insertComponent: (props, htmlElement, anchor, context) => 
+                _initialiseComponent(context, false)(props, htmlElement, context, anchor), 
             store,
             relativeUrl,
             api,
+            call:safeCallEvent,
+            isBound,
+            setStateFromBinding: (binding, value) => setStateFromBinding(store, binding, value),
+            setState: (path, value) => setState(store, path, value),
             getStateOrValue: (prop, currentContext) => 
-                getStateOrValue(globalState, prop, currentContext)
+                getStateOrValue(globalState, prop, currentContext),
+            bindings,
+            context,        
         });
 
-        const bbRoot = bb();
+        return bb();
 
-        const bbInContext = (context) => {
-            if(!context) return bbRoot;
-            const bbCxt = bb();
-            bbCxt.context = context;
-            bbCxt.hydrateComponent=hydrateComponent(context);
-            return bbCxt;
-        };
+    };
 
-        return bbRoot;
+    const buildBindings = (boundProps, boundArrays, contextBoundProps) => {
+        const bindings = {};
+        if(boundProps && boundProps.length > 0) {
+            for(let p of boundProps) {
+                bindings[p.propName] = {
+                    path: p.path,
+                    fallback: p.fallback,
+                    source: p.source
+                };
+            }
+        }
 
+        if(contextBoundProps && contextBoundProps.length > 0) {
+            for(let p of contextBoundProps) {
+                bindings[p.propName] = {
+                    path: p.path,
+                    fallback: p.fallback,
+                    source: p.source
+                };
+            }
+        }
+
+        if(boundArrays && boundArrays.length > 0) {
+            for(let a of boundArrays) {
+                const arrayOfBindings = [];
+
+                for(let b of a.arrayOfBindings) {
+                    arrayOfBindings.push(
+                        buildBindings(
+                            b.boundProps, 
+                            b.boundArrays, 
+                            b.contextBoundProps)
+                    );
+                }
+
+                bindings[a.propName] = arrayOfBindings;
+            }
+        }
+
+        return bindings;
     };
 
 
     const splitName = fullname => {
         const componentName = $(fullname, [
             fp_3("/"),
-            fp_4
+            fp_5
         ]);
 
         const libName =fullname.substring(
@@ -25323,7 +25738,7 @@ var app = (function () {
     		h: function hydrate() {
     			attr_dev(div, "id", "current_component");
     			attr_dev(div, "class", "svelte-1xqz9vm");
-    			add_location(div, file$b, 27, 0, 380);
+    			add_location(div, file$b, 27, 0, 373);
     		},
 
     		m: function mount(target, anchor) {
@@ -25441,7 +25856,7 @@ var app = (function () {
     const _appPromise = createApp$1();
     _appPromise.then(a => $$invalidate('_bb', _bb = a));
 
-    const testProps = props.hiddenNav;
+    const testProps = props.table;
 
     let currentComponent;
 

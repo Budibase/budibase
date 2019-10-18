@@ -1,0 +1,41 @@
+{
+  "inherits": "@budibase/standard-components/div",
+  "name": "Contact/Contact homepage",
+  "props": {
+    "className": "p-3",
+    "children": [
+      {
+        "component": {
+          "_component": "@budibase/standard-components/h2",
+          "text": "contacts"
+        }
+      },
+      {
+        "component": {
+          "_component": "Contact/homepage buttons"
+        }
+      },
+      {
+        "component": {
+          "_component": "all_contacts Table"
+        }
+      }
+    ],
+    "onLoad": [
+      {
+        "##eventHandlerType": "Set State",
+        "parameters": {
+          "path": "isEditingContact",
+          "value": ""
+        }
+      },
+      {
+        "##eventHandlerType": "List Records",
+        "parameters": {
+          "statePath": "/all_contacts",
+          "indexKey": "/all_contacts"
+        }
+      }
+    ]
+  }
+}

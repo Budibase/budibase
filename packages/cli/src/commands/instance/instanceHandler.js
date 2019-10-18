@@ -14,6 +14,8 @@ module.exports = (opts) => {
 
 const run = async (opts) => {
 
+    const appContext = await getAppContext({configName: opts.config, masterIsCreated:true});
+    opts.appContext = appContext;
     opts.datapath = "./.data";
     await fetchUserLevels(opts);
     await prompts(opts);
@@ -22,7 +24,10 @@ const run = async (opts) => {
 
 const fetchUserLevels = async (opts) => {
     const accessLevels = await readJSON(
-        join(opts.appname, "access_levels.json")
+        join(
+            opts.appContext.config.latestPackagesFolder || ".", 
+            opts.appname, 
+            "access_levels.json")
     );
 
     if(accessLevels.levels.length === 0)
@@ -76,16 +81,21 @@ const prompts = async (opts) => {
 
 const createInstance = async (opts) => {
 
-    const appContext = await getAppContext({configName: opts.config, masterIsCreated:true});
+    const bb = opts.appContext.master.bbMaster;
 
-    const bb = appContext.master.bbMaster;
-
-    const app = await appContext.master.getApplication(opts.appname);
+    const app = await opts.appContext.master.getApplication(opts.appname);
     const instance = bb.recordApi.getNew(`${app.key}/instances`, "instance");
     instance.name = "dev instance";
     instance.active = true;
     instance.version = {key:""};
 
+    const user = bb.authApi.getNewUser();
+    user.accessLevels.push(opts.userAccessLevel);
+    user.name = opts.username;
+
     await bb.recordApi.save(instance);
+    const savedInstance = await bb.recordApi.load(instance.key);
+    await opts.appContext.master.createAppUser(
+        opts.appname, savedInstance, user, opts.password);
 
 }

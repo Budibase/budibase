@@ -8,6 +8,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@budibase/standard-components": "^0.0.10"
+    "@budibase/bootstrap-components": "file:../../../bootstrap-components",
+    "@budibase/standard-components": "file:../../../standard-components"
   }
 }

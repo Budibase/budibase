@@ -3,6 +3,8 @@ import { getRecordPath } from "./getRecordPath";
 export const indexTables = ({indexes, helpers}) => 
     indexes.map(i => indexTable(i, helpers));
 
+const excludedColumns = ["id", "isNew", "key", "type", "sortKey"];
+
 export const indexTableProps = (index, helpers) => ({
     data: {
         "##bbstate":index.nodeKey(),
@@ -10,7 +12,10 @@ export const indexTableProps = (index, helpers) => ({
     },
     tableClass: "table table-hover",
     theadClass: "thead-dark",
-    columns: helpers.indexSchema(index).map(column),
+    columns: helpers
+                .indexSchema(index)
+                .filter(c => !excludedColumns.includes(c.name))
+                .map(column),
     onRowClick: [
         {
             "##eventHandlerType": "Load Record",
@@ -36,8 +41,14 @@ export const indexTableProps = (index, helpers) => ({
     ]
 });
 
-export const getIndexTableName = (index) => 
-    `${getRecordPath}/${index.name} Table`
+export const getIndexTableName = (index, record) => {
+    record = record 
+             || index.parent().type === "record" ? index.parent() : null;
+    
+    return (record
+            ? `${getRecordPath(record)}/${index.name} Table`
+            : `${index.name} Table`);
+}
 
 const indexTable = (index, helpers) => ({
     name: getIndexTableName(index),
