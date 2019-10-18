@@ -21,23 +21,19 @@ export const createApp = (componentLibraries, appDefinition, user) => {
 
         if(!componentName || !libName) return;
 
-        const {initialProps, bind, boundProps} = setupBinding(
-            store, props, coreApi, context || parentContext, appDefinition.appRootPath);
+        const {
+            initialProps, bind, 
+            boundProps, boundArrays,
+            contextBoundProps
+        } = setupBinding(
+                store, props, coreApi, 
+                context || parentContext, appDefinition.appRootPath);
 
-        const bindings = {};
-        if(boundProps && boundProps.length > 0) {
-            for(let p of boundProps) {
-                bindings[p.propName] = {
-                    path: p.path,
-                    fallback: p.fallback,
-                    source: p.source
-                }
-            }
-        }
+        const bindings = buildBindings(boundProps, boundArrays, contextBoundProps);
 
         const componentProps = {
             ...initialProps, 
-            _bb:bb(bindings, context || parentContext)
+            _bb:bb(bindings, context || parentContext, props)
         };
 
         const component = new (componentLibraries[libName][componentName])({
@@ -53,6 +49,7 @@ export const createApp = (componentLibraries, appDefinition, user) => {
     }
 
     const coreApi = createCoreApi(appDefinition, user);
+    appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(appDefinition.hierarchy);
     const store = writable({
         _bbuser: user
     });
@@ -93,7 +90,7 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         if(isFunction(event)) event(context);
     }
 
-    const bb = (bindings, context) => ({
+    const bb = (bindings, context, props) => ({
         hydrateComponent: _initialiseComponent(context, true), 
         appendComponent: _initialiseComponent(context, false), 
         insertComponent: (props, htmlElement, anchor, context) => 
@@ -108,11 +105,54 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         getStateOrValue: (prop, currentContext) => 
             getStateOrValue(globalState, prop, currentContext),
         bindings,
-        context,        
+        context,
+        props        
     });
 
     return bb();
 
+}
+
+const buildBindings = (boundProps, boundArrays, contextBoundProps) => {
+    const bindings = {};
+    if(boundProps && boundProps.length > 0) {
+        for(let p of boundProps) {
+            bindings[p.propName] = {
+                path: p.path,
+                fallback: p.fallback,
+                source: p.source
+            }
+        }
+    }
+
+    if(contextBoundProps && contextBoundProps.length > 0) {
+        for(let p of contextBoundProps) {
+            bindings[p.propName] = {
+                path: p.path,
+                fallback: p.fallback,
+                source: p.source
+            }
+        }
+    }
+
+    if(boundArrays && boundArrays.length > 0) {
+        for(let a of boundArrays) {
+            const arrayOfBindings = [];
+
+            for(let b of a.arrayOfBindings) {
+                arrayOfBindings.push(
+                    buildBindings(
+                        b.boundProps, 
+                        b.boundArrays, 
+                        b.contextBoundProps)
+                );
+            }
+
+            bindings[a.propName] = arrayOfBindings;
+        }
+    }
+
+    return bindings;
 }
 
 

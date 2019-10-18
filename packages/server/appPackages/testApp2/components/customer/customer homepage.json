@@ -1,0 +1,41 @@
+{
+  "inherits": "@budibase/standard-components/div",
+  "name": "customer/customer homepage",
+  "props": {
+    "className": "p-3",
+    "children": [
+      {
+        "component": {
+          "_component": "@budibase/standard-components/h2",
+          "text": "customers"
+        }
+      },
+      {
+        "component": {
+          "_component": "customer/homepage buttons"
+        }
+      },
+      {
+        "component": {
+          "_component": "all_customers Table"
+        }
+      }
+    ],
+    "onLoad": [
+      {
+        "##eventHandlerType": "Set State",
+        "parameters": {
+          "path": "isEditingcustomer",
+          "value": ""
+        }
+      },
+      {
+        "##eventHandlerType": "List Records",
+        "parameters": {
+          "statePath": "/all_customers",
+          "indexKey": "/all_customers"
+        }
+      }
+    ]
+  }
+}

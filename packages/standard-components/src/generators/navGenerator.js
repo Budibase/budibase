@@ -7,8 +7,13 @@ export const nav = ({records, indexes, helpers}) => [
         props: {
             items: indexes
                     .filter(i => i.parent().type === "root")
-                    .map(navItem)
-        }
+                    .map(navItem),
+            selectedItem: {
+                "##bbstate": "selectedNav",
+                "##bbstatefallback": records[0].collectionName,
+                "##bbsource":"store"
+            }
+        },
     },
     ...indexTables({records, indexes, helpers})
 ]

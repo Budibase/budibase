@@ -2,11 +2,12 @@ import { ERROR } from "../state/standardState";
 import {loadRecord} from "./loadRecord";
 import {listRecords} from "./listRecords";
 import {authenticate} from "./authenticate";
+import {saveRecord} from "./saveRecord";
 
 export const createApi = ({rootPath, setState, getState}) => {
 
     const apiCall = (method) => ({url, body, notFound, badRequest, forbidden}) => {
-        fetch(`${rootPath}${url}`, {
+        return fetch(`${rootPath}${url}`, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
@@ -46,7 +47,7 @@ export const createApi = ({rootPath, setState, getState}) => {
         return e;
     }
 
-    const isSuccess = obj => !!obj[ERROR_MEMBER];
+    const isSuccess = obj => !obj || !obj[ERROR_MEMBER];
 
     const apiOpts = {
         rootPath, setState, getState, isSuccess, error,
@@ -56,7 +57,8 @@ export const createApi = ({rootPath, setState, getState}) => {
     return {
         loadRecord:loadRecord(apiOpts), 
         listRecords: listRecords(apiOpts),
-        authenticate: authenticate(apiOpts)
+        authenticate: authenticate(apiOpts),
+        saveRecord: saveRecord(apiOpts)
     }
 }
 

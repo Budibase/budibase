@@ -106,7 +106,7 @@ module.exports = (config, app) => {
         if(!user) {
             ctx.throw(StatusCodes.UNAUTHORIZED, "invalid username or password");
         } 
-        ctx.body = user;
+        ctx.body = user.user_json;
         ctx.response.status = StatusCodes.OK;
     })
     .post("/:appname/api/setPasswordFromTemporaryCode", async (ctx) => {

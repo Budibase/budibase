@@ -11,7 +11,7 @@ export const listRecords = api => async ({indexKey, statePath}) => {
         return;
     } 
 
-    const records = api.get({
+    const records = await api.get({
         url:`/api/listRecords/${trimSlash(indexKey)}`
     });
 

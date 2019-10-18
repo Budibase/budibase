@@ -1,0 +1,5 @@
+{
+  "name": "Login",
+  "inherits": "@budibase/standard-components/login",
+  "props": {}
+}

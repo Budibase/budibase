@@ -366,5 +366,16 @@
 			"className":"string"
 		},
 		"tags": []
+	},
+	"if": {
+		"importPath": "if",
+		"name": "If",
+		"description": "An if condition.. if (CONDITION) THEN [display component A] ELSE [display component B]",
+		"props" : {
+			"condition": "string",
+			"thenComponent":{"type":"component", "required":true},
+			"elseComponent":"component"
+		},
+		"tags": []
 	}
 }

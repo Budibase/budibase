@@ -87,6 +87,24 @@ module.exports = async (context) => {
         }
     };
 
+    const createAppUser = async (appname, instance, user, password) => {
+        if(isMaster(appname)) {
+            throw new Exception("This method is for creating app users - not on master!");
+        }
+
+        const versionId = determineVersionId(instance.version); 
+        const dsConfig = JSON.parse(instance.datastoreconfig);
+        const appPackage = await applictionVersionPackage(
+            context, appname, versionId, instance.key);
+
+        const bbInstance = await getApisWithFullAccess(
+            datastoreModule.getDatastore(dsConfig),
+            appPackage
+        );
+
+        await bbInstance.authApi.createUser(user, password);
+    }
+
     const authenticate = async (sessionId, appname, username, password, instanceName="default") => {
 
         if(isMaster(appname)) {
@@ -299,6 +317,7 @@ module.exports = async (context) => {
         disableUser,
         enableUser,
         getUser,
+        createAppUser,
         bbMaster:bb,
         listApplications
     });

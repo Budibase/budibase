@@ -24,6 +24,6 @@ import {trimSlash} from "../common/trimSlash";
         body: recordtoSave
     });
 
-    if(api.isSuccess(record))
+    if(api.isSuccess(savedRecord))
         api.setState(statePath, savedRecord);
 }

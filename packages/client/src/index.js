@@ -4,12 +4,15 @@ import { trimSlash } from "./common/trimSlash";
 export const loadBudibase = async (componentLibraries, props) => {
 
     const appDefinition = window["##BUDIBASE_APPDEFINITION##"];
-    const user = localStorage.getItem("budibase:user") || {
+
+    const userFromStorage = localStorage.getItem("budibase:user")
+
+    const user = userFromStorage ? JSON.parse(userFromStorage) : {
         name: "annonymous",
         permissions : [],
         isUser:false,
         temp:false
-    }
+    };
 
     if(!componentLibraries) {
 

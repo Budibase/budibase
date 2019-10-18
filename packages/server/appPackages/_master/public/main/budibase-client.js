@@ -1095,40 +1095,41 @@ var app = (function (exports) {
 	var fp_1 = fp.find;
 	var fp_2 = fp.isUndefined;
 	var fp_3 = fp.split;
-	var fp_4 = fp.last;
-	var fp_5 = fp.union;
-	var fp_6 = fp.reduce;
-	var fp_7 = fp.isObject;
-	var fp_8 = fp.cloneDeep;
-	var fp_9 = fp.some;
-	var fp_10 = fp.isArray;
-	var fp_11 = fp.map;
-	var fp_12 = fp.filter;
-	var fp_13 = fp.keys;
-	var fp_14 = fp.isFunction;
-	var fp_15 = fp.isEmpty;
-	var fp_16 = fp.countBy;
-	var fp_17 = fp.join;
-	var fp_18 = fp.includes;
-	var fp_19 = fp.flatten;
-	var fp_20 = fp.constant;
-	var fp_21 = fp.first;
-	var fp_22 = fp.intersection;
-	var fp_23 = fp.take;
-	var fp_24 = fp.has;
-	var fp_25 = fp.mapValues;
-	var fp_26 = fp.isString;
-	var fp_27 = fp.isBoolean;
-	var fp_28 = fp.isNull;
-	var fp_29 = fp.isNumber;
-	var fp_30 = fp.isObjectLike;
-	var fp_31 = fp.isDate;
-	var fp_32 = fp.clone;
-	var fp_33 = fp.values;
-	var fp_34 = fp.keyBy;
-	var fp_35 = fp.isNaN;
-	var fp_36 = fp.isInteger;
-	var fp_37 = fp.toNumber;
+	var fp_4 = fp.max;
+	var fp_5 = fp.last;
+	var fp_6 = fp.union;
+	var fp_7 = fp.reduce;
+	var fp_8 = fp.isObject;
+	var fp_9 = fp.cloneDeep;
+	var fp_10 = fp.some;
+	var fp_11 = fp.isArray;
+	var fp_12 = fp.map;
+	var fp_13 = fp.filter;
+	var fp_14 = fp.keys;
+	var fp_15 = fp.isFunction;
+	var fp_16 = fp.isEmpty;
+	var fp_17 = fp.countBy;
+	var fp_18 = fp.join;
+	var fp_19 = fp.includes;
+	var fp_20 = fp.flatten;
+	var fp_21 = fp.constant;
+	var fp_22 = fp.first;
+	var fp_23 = fp.intersection;
+	var fp_24 = fp.take;
+	var fp_25 = fp.has;
+	var fp_26 = fp.mapValues;
+	var fp_27 = fp.isString;
+	var fp_28 = fp.isBoolean;
+	var fp_29 = fp.isNull;
+	var fp_30 = fp.isNumber;
+	var fp_31 = fp.isObjectLike;
+	var fp_32 = fp.isDate;
+	var fp_33 = fp.clone;
+	var fp_34 = fp.values;
+	var fp_35 = fp.keyBy;
+	var fp_36 = fp.isNaN;
+	var fp_37 = fp.isInteger;
+	var fp_38 = fp.toNumber;
 
 	function noop() { }
 	function run(fn) {
@@ -18333,18 +18334,20 @@ var app = (function (exports) {
 	});
 	var lodash_1 = lodash.flow;
 	var lodash_2 = lodash.head;
-	var lodash_3 = lodash.tail;
-	var lodash_4 = lodash.findIndex;
-	var lodash_5 = lodash.startsWith;
-	var lodash_6 = lodash.dropRight;
-	var lodash_7 = lodash.takeRight;
-	var lodash_8 = lodash.trim;
-	var lodash_9 = lodash.split;
-	var lodash_10 = lodash.replace;
-	var lodash_11 = lodash.merge;
-	var lodash_12 = lodash.assign;
+	var lodash_3 = lodash.find;
+	var lodash_4 = lodash.each;
+	var lodash_5 = lodash.tail;
+	var lodash_6 = lodash.findIndex;
+	var lodash_7 = lodash.startsWith;
+	var lodash_8 = lodash.dropRight;
+	var lodash_9 = lodash.takeRight;
+	var lodash_10 = lodash.trim;
+	var lodash_11 = lodash.split;
+	var lodash_12 = lodash.replace;
+	var lodash_13 = lodash.merge;
+	var lodash_14 = lodash.assign;
 
-	const commonPlus = extra => fp_5(['onBegin', 'onComplete', 'onError'])(extra);
+	const commonPlus = extra => fp_6(['onBegin', 'onComplete', 'onError'])(extra);
 
 	const common = () => commonPlus([]);
 
@@ -18410,7 +18413,7 @@ var app = (function (exports) {
 
 	for (const areaKey in _events) {
 	  for (const methodKey in _events[areaKey]) {
-	    _events[areaKey][methodKey] = fp_6((obj, s) => {
+	    _events[areaKey][methodKey] = fp_7((obj, s) => {
 	      obj[s] = makeEvent(areaKey, methodKey, s);
 	      return obj;
 	    },
@@ -18841,7 +18844,7 @@ var app = (function (exports) {
 	};
 
 	const publishError = async (app, eventContext, eventNamespace, elapsed, err) => {
-	  const ctx = fp_8(eventContext);
+	  const ctx = fp_9(eventContext);
 	  ctx.error = err;
 	  ctx.elapsed = elapsed();
 	  await app.publish(
@@ -18852,7 +18855,7 @@ var app = (function (exports) {
 	};
 
 	const publishComplete = async (app, eventContext, eventNamespace, elapsed, result) => {
-	  const endcontext = fp_8(eventContext);
+	  const endcontext = fp_9(eventContext);
 	  endcontext.result = result;
 	  endcontext.elapsed = elapsed();
 	  await app.publish(
@@ -18870,13 +18873,13 @@ var app = (function (exports) {
 	const $ = (arg, funcs) => $$(...funcs)(arg);
 
 	const keySep = '/';
-	const trimKeySep = str => lodash_8(str, keySep);
+	const trimKeySep = str => lodash_10(str, keySep);
 	const splitByKeySep = str => fp_3(keySep)(str);
-	const safeKey = key => lodash_10(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
+	const safeKey = key => lodash_12(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
 	const joinKey = (...strs) => {
-	  const paramsOrArray = strs.length === 1 & fp_10(strs[0])
+	  const paramsOrArray = strs.length === 1 & fp_11(strs[0])
 	    ? strs[0] : strs;
-	  return safeKey(fp_17(keySep)(paramsOrArray));
+	  return safeKey(fp_18(keySep)(paramsOrArray));
 	};
 	const splitKey = $$(trimKeySep, splitByKeySep);
 
@@ -18887,22 +18890,22 @@ var app = (function (exports) {
 
 	const not = func => val => !func(val);
 	const isDefined = not(fp_2);
-	const isNonNull = not(fp_28);
-	const isNotNaN = not(fp_35);
+	const isNonNull = not(fp_29);
+	const isNotNaN = not(fp_36);
 
-	const allTrue = (...funcArgs) => val => fp_6(
-	  (result, conditionFunc) => (fp_28(result) || result == true) && conditionFunc(val),
+	const allTrue = (...funcArgs) => val => fp_7(
+	  (result, conditionFunc) => (fp_29(result) || result == true) && conditionFunc(val),
 	  null)(funcArgs);
 
 	const isSomething = allTrue(isDefined, isNonNull, isNotNaN);
 	const isNothing = not(isSomething);
 
-	const none = predicate => collection => !fp_9(predicate)(collection);
+	const none = predicate => collection => !fp_10(predicate)(collection);
 
 	const all = predicate => collection => none(v => !predicate(v))(collection);
 
-	const isNotEmpty = ob => !fp_15(ob);
-	const isNonEmptyString = allTrue(fp_26, isNotEmpty);
+	const isNotEmpty = ob => !fp_16(ob);
+	const isNonEmptyString = allTrue(fp_27, isNotEmpty);
 	const tryOr = failFunc => (func, ...args) => {
 	  try {
 	    return func.apply(null, ...args);
@@ -18921,7 +18924,7 @@ var app = (function (exports) {
 
 	const executesWithoutException = func => !causesException(func);
 
-	const handleErrorWith = returnValInError => tryOr(fp_20(returnValInError));
+	const handleErrorWith = returnValInError => tryOr(fp_21(returnValInError));
 
 	const handleErrorWithUndefined = handleErrorWith(undefined);
 
@@ -18929,25 +18932,25 @@ var app = (function (exports) {
 	  const nextCase = () => lodash_2(cases)[0](value);
 	  const nextResult = () => lodash_2(cases)[1](value);
 
-	  if (fp_15(cases)) return; // undefined
+	  if (fp_16(cases)) return; // undefined
 	  if (nextCase() === true) return nextResult();
-	  return switchCase(...lodash_3(cases))(value);
+	  return switchCase(...lodash_5(cases))(value);
 	};
-	const isOneOf = (...vals) => val => fp_18(val)(vals);
-	const defaultCase = fp_20(true);
+	const isOneOf = (...vals) => val => fp_19(val)(vals);
+	const defaultCase = fp_21(true);
 
-	const isSafeInteger = n => fp_36(n)
+	const isSafeInteger = n => fp_37(n)
 	    && n <= Number.MAX_SAFE_INTEGER
 	    && n >= 0 - Number.MAX_SAFE_INTEGER;
 
-	const toDateOrNull = s => (fp_28(s) ? null
-	  : fp_31(s) ? s : new Date(s));
-	const toBoolOrNull = s => (fp_28(s) ? null
+	const toDateOrNull = s => (fp_29(s) ? null
+	  : fp_32(s) ? s : new Date(s));
+	const toBoolOrNull = s => (fp_29(s) ? null
 	  : s === 'true' || s === true);
-	const toNumberOrNull = s => (fp_28(s) ? null
-	  : fp_37(s));
+	const toNumberOrNull = s => (fp_29(s) ? null
+	  : fp_38(s));
 
-	const isArrayOfString = opts => fp_10(opts) && all(fp_26)(opts);
+	const isArrayOfString = opts => fp_11(opts) && all(fp_27)(opts);
 
 	const BB_STATE_BINDINGPATH = "##bbstate";
 	const BB_STATE_BINDINGSOURCE = "##bbsource";
@@ -18983,7 +18986,7 @@ var app = (function (exports) {
 
 	        if(obj[currentKey] === null 
 	          || obj[currentKey] === undefined
-	          || !fp_7(obj.currentKey)) {
+	          || !fp_8(obj[currentKey])) {
 
 	            obj[currentKey] = {};
 	        }
@@ -18999,11 +19002,14 @@ var app = (function (exports) {
 	};
 
 	const setStateFromBinding = (store, binding, value) => 
-	    setState(store, binding[BB_STATE_BINDINGPATH], value);
+	    setState(store, binding.path, value);
 
 	const getState = (s, path, fallback) => {
 
+	    if(!s) return fallback;
 	    if(!path || path.length === 0) return fallback;
+
+	    if(path === "$") return s;
 
 	    const pathParts = path.split(".");
 	    const safeGetPath = (obj, currentPartIndex=0) => {
@@ -19020,7 +19026,7 @@ var app = (function (exports) {
 
 	        if(obj[currentKey] === null 
 	          || obj[currentKey] === undefined
-	          || !fp_7(obj[currentKey])) {
+	          || !fp_8(obj[currentKey])) {
 
 	            return fallback;
 	        }
@@ -19034,13 +19040,28 @@ var app = (function (exports) {
 	};
 
 	const getStateOrValue = (globalState, prop, currentContext) => {
-	    if(!isBound(prop)) return prop;
+	    
+	    if(!prop) return prop;
+	    
+	    if(isBound(prop)) {
 
-	    const stateToUse = takeStateFromStore(prop) 
-	                       ? globalState
-	                       : currentContext;
+	        const stateToUse = takeStateFromStore(prop) 
+	                        ? globalState
+	                        : currentContext;
 
-	    return getState(stateToUse, prop[BB_STATE_BINDINGPATH], prop[BB_STATE_FALLBACK]);
+	        return getState(stateToUse, prop[BB_STATE_BINDINGPATH], prop[BB_STATE_FALLBACK]);
+	    }
+
+	    if(prop.path && prop.source) {
+	        const stateToUse = prop.source === "store" 
+	                        ? globalState
+	                        : currentContext;
+
+	        return getState(stateToUse, prop.path, prop.fallback);
+	    }
+
+	    return prop;
+	    
 	};
 
 	const ERROR = "##error_message";
@@ -19078,7 +19099,7 @@ var app = (function (exports) {
 	        return;
 	    } 
 
-	    const records = api.get({
+	    const records = await api.get({
 	        url:`/api/listRecords/${trimSlash(indexKey)}`
 	    });
 
@@ -19107,13 +19128,41 @@ var app = (function (exports) {
 
 	    // set user even if error - so it is defined at least
 	    api.setState(USER_STATE_PATH, user);
-	    localStorage.setItem("budibase:user", user);
+	    localStorage.setItem("budibase:user", JSON.stringify(user));
+	};
+
+	const saveRecord = (api) => async ({statePath}) => {
+	    
+	    if(!statePath) {
+	        api.error("Load Record: state path not set");
+	        return;
+	    } 
+
+	    const recordtoSave = api.getState(statePath);
+
+	    if(!recordtoSave) {
+	        api.error(`there is no record in state: ${statePath}`);
+	        return;
+	    }
+
+	    if(!recordtoSave.key) {
+	        api.error(`item in state does not appear to be a record - it has no key (${statePath})`);
+	        return;
+	    }
+
+	    const savedRecord = await api.post({
+	        url:`/api/record/${trimSlash(recordtoSave.key)}`,
+	        body: recordtoSave
+	    });
+
+	    if(api.isSuccess(savedRecord))
+	        api.setState(statePath, savedRecord);
 	};
 
 	const createApi = ({rootPath, setState, getState}) => {
 
 	    const apiCall = (method) => ({url, body, notFound, badRequest, forbidden}) => {
-	        fetch(`${rootPath}${url}`, {
+	        return fetch(`${rootPath}${url}`, {
 	            method: method,
 	            headers: {
 	                'Content-Type': 'application/json',
@@ -19153,7 +19202,7 @@ var app = (function (exports) {
 	        return e;
 	    };
 
-	    const isSuccess = obj => !!obj[ERROR_MEMBER];
+	    const isSuccess = obj => !obj || !obj[ERROR_MEMBER];
 
 	    const apiOpts = {
 	        rootPath, setState, getState, isSuccess, error,
@@ -19163,11 +19212,12 @@ var app = (function (exports) {
 	    return {
 	        loadRecord:loadRecord(apiOpts), 
 	        listRecords: listRecords(apiOpts),
-	        authenticate: authenticate(apiOpts)
+	        authenticate: authenticate(apiOpts),
+	        saveRecord: saveRecord(apiOpts)
 	    }
 	};
 
-	const getNewChildRecordToState = (store, coreApi, setState) =>
+	const getNewChildRecordToState = (coreApi, setState) =>
 	            ({recordKey, collectionName,childRecordType,statePath}) => {
 	    const error = errorHandler(setState);
 	    try {
@@ -19192,7 +19242,7 @@ var app = (function (exports) {
 	        }
 
 	        const rec = coreApi.recordApi.getNewChild(recordKey, collectionName, childRecordType);
-	        setState(store, statePath, rec);
+	        setState(statePath, rec);
 	    }
 	    catch(e) {
 	        error(e.message);
@@ -19200,7 +19250,7 @@ var app = (function (exports) {
 	};
 
 
-	const getNewRecordToState = (store, coreApi, setState) =>
+	const getNewRecordToState = (coreApi, setState) =>
 	            ({collectionKey,childRecordType,statePath}) => {
 	    const error = errorHandler(setState);
 	    try {
@@ -19220,7 +19270,7 @@ var app = (function (exports) {
 	        }
 
 	        const rec = coreApi.recordApi.getNew(collectionKey, childRecordType);
-	        setState(store, statePath, rec);
+	        setState(statePath, rec);
 	    }
 	    catch(e) {
 	        error(e.message);
@@ -19239,10 +19289,15 @@ var app = (function (exports) {
 
 	    const setStateWithStore = (path, value) => setState(store, path, value);
 
+	    let currentState;
+	    store.subscribe(s => {
+	        currentState = s;
+	    });
+
 	    const api = createApi({
 	        rootPath:rootPath,
-	        setState: (path, value) => setStateWithStore,
-	        getState: (path, fallback) => getState(store, path, fallback)
+	        setState: setStateWithStore,
+	        getState: (path, fallback) => getState(currentState, path, fallback)
 	    });
 
 	    const setStateHandler = ({path, value}) => setState(store, path, value);
@@ -19255,18 +19310,18 @@ var app = (function (exports) {
 	        
 	        "Get New Child Record": handler(
 	            ["recordKey", "collectionName", "childRecordType", "statePath"], 
-	            getNewChildRecordToState(store, coreApi, setStateWithStore)),
+	            getNewChildRecordToState(coreApi, setStateWithStore)),
 
 	        "Get New Record": handler(
 	            ["collectionKey", "childRecordType", "statePath"], 
-	            getNewRecordToState(store, coreApi, setStateWithStore)),
+	            getNewRecordToState(coreApi, setStateWithStore)),
 
 	        "Authenticate": handler(["username", "password"], api.authenticate)
 	    };
 	};
 
 	const isEventType = prop => 
-	    fp_10(prop) 
+	    fp_11(prop) 
 	    && prop.length > 0
 	    && !fp_2(prop[0][EVENT_TYPE_MEMBER_NAME]);
 
@@ -19280,6 +19335,7 @@ var app = (function (exports) {
 	    const getBindings = (props, initialProps) => {
 
 	        const boundProps = [];
+	        const contextBoundProps = [];
 	        const componentEventHandlers = [];
 	        const boundArrays = [];
 
@@ -19306,6 +19362,11 @@ var app = (function (exports) {
 	                const binding = BindingPath(val);
 	                const fallback = BindingFallback(val);
 	                const source = BindingSource(val);
+
+	                contextBoundProps.push({ 
+	                    path:binding,
+	                    fallback, propName, source
+	                });
 
 	                initialProps[propName] = getState(
 	                    context || {},
@@ -19339,7 +19400,7 @@ var app = (function (exports) {
 	            
 	        }
 
-	        return {boundProps, componentEventHandlers, boundArrays, initialProps};
+	        return {contextBoundProps, boundProps, componentEventHandlers, boundArrays, initialProps};
 	    };
 
 
@@ -19386,16 +19447,12 @@ var app = (function (exports) {
 	                            for(let pname in h.parameters) {
 	                                const p = h.parameters[pname];
 	                                parameters[pname] = 
-	                                    !isBound(p) 
-	                                    ? p 
-	                                    : takeStateFromStore(p)
-	                                    ? getState(
+	                                    !isBound(p) ? p 
+	                                    : takeStateFromStore(p) ? getState(
 	                                        s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-	                                    : takeStateFromEventParameters(p)
-	                                    ? getState(
+	                                    : takeStateFromEventParameters(p) ? getState(
 	                                        eventContext, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-	                                    : takeStateFromContext(p)
-	                                    ? getState(
+	                                    : takeStateFromContext(p) ? getState(
 	                                        context, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
 	                                    : p[BB_STATE_FALLBACK];
 	                                
@@ -19441,7 +19498,9 @@ var app = (function (exports) {
 	    return {
 	        initialProps:rootInitialProps, 
 	        bind:bind(bindings), 
-	        boundProps:bindings.boundProps
+	        boundProps:bindings.boundProps,
+	        boundArrays: bindings.boundArrays,
+	        contextBoundProps: bindings.contextBoundProps
 	    };
 
 	};
@@ -19644,13 +19703,13 @@ var app = (function (exports) {
 	  makerule('name', 'must declare a name for index',
 	    index => isNonEmptyString(index.name)),
 	  makerule('name', 'there is a duplicate named index on this node',
-	    index => fp_15(index.name)
-	                || fp_16('name')(index.parent().indexes)[index.name] === 1),
+	    index => fp_16(index.name)
+	                || fp_17('name')(index.parent().indexes)[index.name] === 1),
 	  makerule('indexType', 'reference index may only exist on a record node',
 	    index => isRecord(index.parent())
 	                  || index.indexType !== indexTypes.reference),
-	  makerule('indexType', `index type must be one of: ${fp_17(', ')(fp_13(indexTypes))}`,
-	    index => fp_18(index.indexType)(fp_13(indexTypes))),
+	  makerule('indexType', `index type must be one of: ${fp_18(', ')(fp_14(indexTypes))}`,
+	    index => fp_19(index.indexType)(fp_14(indexTypes))),
 	];
 
 	const getFlattenedHierarchy = (appHierarchy, useCached = true) => {
@@ -19667,7 +19726,7 @@ var app = (function (exports) {
 	      return flattened;
 	    }
 
-	    const unionIfAny = l2 => l1 => fp_5(l1)(!l2 ? [] : l2);
+	    const unionIfAny = l2 => l1 => fp_6(l1)(!l2 ? [] : l2);
 
 	    const children = $([], [
 	      unionIfAny(currentNode.children),
@@ -19713,10 +19772,12 @@ var app = (function (exports) {
 	const isNode = (appHierarchy, key) => isSomething(getExactNodeForPath(appHierarchy)(key));
 
 	const isRecord = node => isSomething(node) && node.type === 'record';
+	const isSingleRecord = node => isRecord(node) && node.isSingle;
 	const isCollectionRecord = node => isRecord(node) && !node.isSingle;
+	const isRoot = node => isSomething(node) && node.isRoot();
 
 	const getSafeFieldParser = (tryParse, defaultValueFunctions) => (field, record) => {
-	  if (fp_24(field.name)(record)) {
+	  if (fp_25(field.name)(record)) {
 	    return getSafeValueParser(tryParse, defaultValueFunctions)(record[field.name]);
 	  }
 	  return defaultValueFunctions[field.getUndefinedValue]();
@@ -19735,14 +19796,14 @@ var app = (function (exports) {
 	    ? 'default'
 	    : field.getInitialValue;
 
-	  return fp_24(getInitialValue)(defaultValueFunctions)
+	  return fp_25(getInitialValue)(defaultValueFunctions)
 	    ? defaultValueFunctions[getInitialValue]()
 	    : getSafeValueParser(tryParse, defaultValueFunctions)(getInitialValue);
 	};
 
-	const typeFunctions = specificFunctions => lodash_11({
-	  value: fp_20,
-	  null: fp_20(null),
+	const typeFunctions = specificFunctions => lodash_13({
+	  value: fp_21,
+	  null: fp_21(null),
 	}, specificFunctions);
 
 	const validateTypeConstraints = validationRules => async (field, record, context) => {
@@ -19760,7 +19821,7 @@ var app = (function (exports) {
 	  return errors;
 	};
 
-	const getDefaultOptions = fp_25(v => v.defaultValue);
+	const getDefaultOptions = fp_26(v => v.defaultValue);
 
 	const makerule$1 = (isValid, getMessage) => ({ isValid, getMessage });
 	const parsedFailed = val => ({ success: false, value: val });
@@ -19771,7 +19832,7 @@ var app = (function (exports) {
 	  safeParseValue: getSafeValueParser(tryParse, functions),
 	  tryParse,
 	  name,
-	  getDefaultOptions: () => getDefaultOptions(fp_8(options)),
+	  getDefaultOptions: () => getDefaultOptions(fp_9(options)),
 	  optionDefinitions: options,
 	  validateTypeConstraints: validateTypeConstraints(validationRules),
 	  sampleValue,
@@ -19781,12 +19842,12 @@ var app = (function (exports) {
 	});
 
 	const stringFunctions = typeFunctions({
-	  default: fp_20(null),
+	  default: fp_21(null),
 	});
 
 	const stringTryParse = switchCase(
-	  [fp_26, parsedSuccess],
-	  [fp_28, parsedSuccess],
+	  [fp_27, parsedSuccess],
+	  [fp_29, parsedSuccess],
 	  [defaultCase, v => parsedSuccess(v.toString())],
 	);
 
@@ -19805,7 +19866,7 @@ var app = (function (exports) {
 	  },
 	  allowDeclaredValuesOnly: {
 	    defaultValue: false,
-	    isValid: fp_27,
+	    isValid: fp_28,
 	    requirementDescription: 'allowDeclaredValuesOnly must be true or false',
 	    parse: toBoolOrNull,
 	  },
@@ -19816,7 +19877,7 @@ var app = (function (exports) {
 	    (val, opts) => `value exceeds maximum length of ${opts.maxLength}`),
 	  makerule$1(async (val, opts) => val === null
 	                           || opts.allowDeclaredValuesOnly === false
-	                           || fp_18(val)(opts.values),
+	                           || fp_19(val)(opts.values),
 	  (val) => `"${val}" does not exist in the list of allowed values`),
 	];
 
@@ -19831,12 +19892,12 @@ var app = (function (exports) {
 	);
 
 	const boolFunctions = typeFunctions({
-	  default: fp_20(null),
+	  default: fp_21(null),
 	});
 
 	const boolTryParse = switchCase(
-	  [fp_27, parsedSuccess],
 	  [fp_28, parsedSuccess],
+	  [fp_29, parsedSuccess],
 	  [isOneOf('true', '1', 'yes', 'on'), () => parsedSuccess(true)],
 	  [isOneOf('false', '0', 'no', 'off'), () => parsedSuccess(false)],
 	  [defaultCase, parsedFailed],
@@ -19845,7 +19906,7 @@ var app = (function (exports) {
 	const options$1 = {
 	  allowNulls: {
 	    defaultValue: true,
-	    isValid: fp_27,
+	    isValid: fp_28,
 	    requirementDescription: 'must be a true or false',
 	    parse: toBoolOrNull,
 	  },
@@ -19862,7 +19923,7 @@ var app = (function (exports) {
 	);
 
 	const numberFunctions = typeFunctions({
-	  default: fp_20(null),
+	  default: fp_21(null),
 	});
 
 	const parseStringtoNumberOrNull = (s) => {
@@ -19871,9 +19932,9 @@ var app = (function (exports) {
 	};
 
 	const numberTryParse = switchCase(
+	  [fp_30, parsedSuccess],
+	  [fp_27, parseStringtoNumberOrNull],
 	  [fp_29, parsedSuccess],
-	  [fp_26, parseStringtoNumberOrNull],
-	  [fp_28, parsedSuccess],
 	  [defaultCase, parsedFailed],
 	);
 
@@ -19924,7 +19985,7 @@ var app = (function (exports) {
 	);
 
 	const dateFunctions = typeFunctions({
-	  default: fp_20(null),
+	  default: fp_21(null),
 	  now: () => new Date(),
 	});
 
@@ -19937,22 +19998,22 @@ var app = (function (exports) {
 
 
 	const dateTryParse = switchCase(
-	  [fp_31, parsedSuccess],
-	  [fp_26, parseStringToDate],
-	  [fp_28, parsedSuccess],
+	  [fp_32, parsedSuccess],
+	  [fp_27, parseStringToDate],
+	  [fp_29, parsedSuccess],
 	  [defaultCase, parsedFailed],
 	);
 
 	const options$3 = {
 	  maxValue: {
 	    defaultValue: new Date(32503680000000),
-	    isValid: fp_31,
+	    isValid: fp_32,
 	    requirementDescription: 'must be a valid date',
 	    parse: toDateOrNull,
 	  },
 	  minValue: {
 	    defaultValue: new Date(-8520336000000),
-	    isValid: fp_31,
+	    isValid: fp_32,
 	    requirementDescription: 'must be a valid date',
 	    parse: toDateOrNull,
 	  },
@@ -19976,16 +20037,16 @@ var app = (function (exports) {
 	);
 
 	const arrayFunctions = () => typeFunctions({
-	  default: fp_20([]),
+	  default: fp_21([]),
 	});
 
 	const mapToParsedArrary = type => $$(
-	  fp_11(i => type.safeParseValue(i)),
+	  fp_12(i => type.safeParseValue(i)),
 	  parsedSuccess,
 	);
 
 	const arrayTryParse = type => switchCase(
-	  [fp_10, mapToParsedArrary(type)],
+	  [fp_11, mapToParsedArrary(type)],
 	  [defaultCase, parsedFailed],
 	);
 
@@ -20030,10 +20091,10 @@ var app = (function (exports) {
 	  default: referenceNothing,
 	});
 
-	const hasStringValue = (ob, path) => fp_24(path)(ob)
-	    && fp_26(ob[path]);
+	const hasStringValue = (ob, path) => fp_25(path)(ob)
+	    && fp_27(ob[path]);
 
-	const isObjectWithKey = v => fp_30(v)
+	const isObjectWithKey = v => fp_31(v)
 	    && hasStringValue(v, 'key');
 
 	const tryParseFromString = s => {
@@ -20053,8 +20114,8 @@ var app = (function (exports) {
 
 	const referenceTryParse = v => switchCase(
 	  [isObjectWithKey, parsedSuccess],
-	  [fp_26, tryParseFromString],
-	  [fp_28, () => parsedSuccess(referenceNothing())],
+	  [fp_27, tryParseFromString],
+	  [fp_29, () => parsedSuccess(referenceNothing())],
 	  [defaultCase, parsedFailed],
 	)(v);
 
@@ -20079,7 +20140,7 @@ var app = (function (exports) {
 	  },
 	};
 
-	const isEmptyString = s => fp_26(s) && fp_15(s);
+	const isEmptyString = s => fp_27(s) && fp_16(s);
 
 	const ensureReferenceExists = async (val, opts, context) => isEmptyString(val.key)
 	    || await context.referenceExists(opts, val.key);
@@ -20106,7 +20167,7 @@ var app = (function (exports) {
 	const isLegalFilename = (filePath) => {
 	  const fn = fileName(filePath);
 	  return fn.length <= 255
-	    && fp_22(fn.split(''))(illegalCharacters.split('')).length === 0
+	    && fp_23(fn.split(''))(illegalCharacters.split('')).length === 0
 	    && none(f => f === '..')(splitKey(filePath));
 	};
 
@@ -20118,19 +20179,19 @@ var app = (function (exports) {
 
 	const fileTryParse = v => switchCase(
 	  [isValidFile, parsedSuccess],
-	  [fp_28, () => parsedSuccess(fileNothing())],
+	  [fp_29, () => parsedSuccess(fileNothing())],
 	  [defaultCase, parsedFailed],
 	)(v);
 
 	const fileName = filePath => $(filePath, [
 	  splitKey,
-	  fp_4,
+	  fp_5,
 	]);
 
-	const isValidFile = f => !fp_28(f)
-	    && fp_24('relativePath')(f) && fp_24('size')(f)
-	    && fp_29(f.size)
-	    && fp_26(f.relativePath)
+	const isValidFile = f => !fp_29(f)
+	    && fp_25('relativePath')(f) && fp_25('size')(f)
+	    && fp_30(f.size)
+	    && fp_27(f.relativePath)
 	    && isLegalFilename(f.relativePath);
 
 	const options$6 = {};
@@ -20153,24 +20214,24 @@ var app = (function (exports) {
 	  };
 
 	  const arrays = $(basicTypes, [
-	    fp_13,
-	    fp_11((k) => {
+	    fp_14,
+	    fp_12((k) => {
 	      const kvType = {};
 	      const concreteArray = array(basicTypes[k]);
 	      kvType[concreteArray.name] = concreteArray;
 	      return kvType;
 	    }),
-	    types => lodash_12({}, ...types),
+	    types => lodash_14({}, ...types),
 	  ]);
 
-	  return lodash_11({}, basicTypes, arrays);
+	  return lodash_13({}, basicTypes, arrays);
 	};
 
 
 	const all$1 = allTypes();
 
 	const getType = (typeName) => {
-	  if (!fp_24(typeName)(all$1)) throw new BadRequestError(`Do not recognise type ${typeName}`);
+	  if (!fp_25(typeName)(all$1)) throw new BadRequestError(`Do not recognise type ${typeName}`);
 	  return all$1[typeName];
 	};
 
@@ -20216,8 +20277,8 @@ var app = (function (exports) {
 	  }
 
 	  const validType = $(permissionTypes, [
-	    fp_33,
-	    fp_18(permissionType),
+	    fp_34,
+	    fp_19(permissionType),
 	  ]);
 
 	  if (!validType) {
@@ -20241,7 +20302,7 @@ var app = (function (exports) {
 	  };
 
 	  return $(app.user.permissions, [
-	    fp_9(permMatchesResource),
+	    fp_10(permMatchesResource),
 	  ]);
 	};
 
@@ -20339,8 +20400,8 @@ var app = (function (exports) {
 
 	const constructRecord = (recordNode, getFieldValue, collectionKey) => {
 	  const record = $(recordNode.fields, [
-	    fp_34('name'),
-	    fp_25(getFieldValue),
+	    fp_35('name'),
+	    fp_26(getFieldValue),
 	  ]);
 
 	  record.id = `${recordNode.nodeId}-${shortid_1()}`;
@@ -20348,6 +20409,72 @@ var app = (function (exports) {
 	  record.isNew = true;
 	  record.type = recordNode.name;
 	  return record;
+	};
+
+	const pathRegxMaker = node => () => node.nodeKey().replace(/{id}/g, '[a-zA-Z0-9_-]+');
+
+	const nodeKeyMaker = node => () => switchCase(
+
+	  [n => isRecord(n) && !isSingleRecord(n),
+	    n => joinKey(
+	      node.parent().nodeKey(),
+	      node.collectionName,
+	      `${n.nodeId}-{id}`,
+	    )],
+
+	  [isRoot,
+	    fp_21('/')],
+
+	  [defaultCase,
+	    n => joinKey(node.parent().nodeKey(), n.name)],
+
+	)(node);
+
+	const construct = parent => (node) => {
+	  node.nodeKey = nodeKeyMaker(node);
+	  node.pathRegx = pathRegxMaker(node);
+	  node.parent = fp_21(parent);
+	  node.isRoot = () => isNothing(parent)
+	                        && node.name === 'root'
+	                        && node.type === 'root';
+	  if (isCollectionRecord(node)) {
+	    node.collectionNodeKey = () => joinKey(
+	      parent.nodeKey(), node.collectionName,
+	    );
+	    node.collectionPathRegx = () => joinKey(
+	      parent.pathRegx(), node.collectionName,
+	    );
+	  }
+	  return node;
+	};
+
+	const constructHierarchy = (node, parent) => {
+	  construct(parent)(node);
+	  if (node.indexes) {
+	    lodash_4(node.indexes,
+	      child => constructHierarchy(child, node));
+	  }
+	  if (node.aggregateGroups) {
+	    lodash_4(node.aggregateGroups,
+	      child => constructHierarchy(child, node));
+	  }
+	  if (node.children && node.children.length > 0) {
+	    lodash_4(node.children,
+	      child => constructHierarchy(child, node));
+	  }
+	  if (node.fields) {
+	    lodash_4(node.fields,
+	      f => lodash_4(f.typeOptions, (val, key) => {
+	        const def = all$1[f.type].optionDefinitions[key];
+	        if (!def) {
+	          // unknown typeOption
+	          delete f.typeOptions[key];
+	        } else {
+	          f.typeOptions[key] = def.parse(val);
+	        }
+	      }));
+	  }
+	  return node;
 	};
 
 	const createCoreApi = (appDefinition, user) => {
@@ -20358,6 +20485,10 @@ var app = (function (exports) {
 	        recordApi: {
 	            getNew: getNew(app),
 	            getNewChild: getNewChild(app)
+	        },
+
+	        templateApi: {
+	            constructHierarchy
 	        }
 	    }
 
@@ -20365,25 +20496,21 @@ var app = (function (exports) {
 
 	const createApp = (componentLibraries, appDefinition, user) => {
 
-	    const initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context) => {
+	    const _initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context, anchor=null) => {
 
 	        const {componentName, libName} = splitName(props._component);
 
 	        if(!componentName || !libName) return;
 
-	        const {initialProps, bind, boundProps} = setupBinding(
-	            store, props, coreApi, context || parentContext, appDefinition.appRootPath);
+	        const {
+	            initialProps, bind, 
+	            boundProps, boundArrays,
+	            contextBoundProps
+	        } = setupBinding(
+	                store, props, coreApi, 
+	                context || parentContext, appDefinition.appRootPath);
 
-	        const bindings = {};
-	        if(boundProps && boundProps.length > 0) {
-	            for(let p of boundProps) {
-	                bindings[p.propName] = {
-	                    path: p.path,
-	                    fallback: p.fallback,
-	                    source: p.source
-	                };
-	            }
-	        }
+	        const bindings = buildBindings(boundProps, boundArrays, contextBoundProps);
 
 	        const componentProps = {
 	            ...initialProps, 
@@ -20393,7 +20520,8 @@ var app = (function (exports) {
 	        const component = new (componentLibraries[libName][componentName])({
 	            target: htmlElement,
 	            props: componentProps,
-	            hydrate: hydrate
+	            hydrate,
+	            anchor
 	        });
 
 	        bind(component);
@@ -20402,6 +20530,7 @@ var app = (function (exports) {
 	    };
 
 	    const coreApi = createCoreApi(appDefinition, user);
+	    appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(appDefinition.hierarchy);
 	    const store = writable({
 	        _bbuser: user
 	    });
@@ -20443,8 +20572,10 @@ var app = (function (exports) {
 	    };
 
 	    const bb = (bindings, context) => ({
-	        initialiseComponent: initialiseComponent(context, true), 
-	        appendComponent: initialiseComponent(context, false), 
+	        hydrateComponent: _initialiseComponent(context, true), 
+	        appendComponent: _initialiseComponent(context, false), 
+	        insertComponent: (props, htmlElement, anchor, context) => 
+	            _initialiseComponent(context, false)(props, htmlElement, context, anchor), 
 	        store,
 	        relativeUrl,
 	        api,
@@ -20462,11 +20593,53 @@ var app = (function (exports) {
 
 	};
 
+	const buildBindings = (boundProps, boundArrays, contextBoundProps) => {
+	    const bindings = {};
+	    if(boundProps && boundProps.length > 0) {
+	        for(let p of boundProps) {
+	            bindings[p.propName] = {
+	                path: p.path,
+	                fallback: p.fallback,
+	                source: p.source
+	            };
+	        }
+	    }
+
+	    if(contextBoundProps && contextBoundProps.length > 0) {
+	        for(let p of contextBoundProps) {
+	            bindings[p.propName] = {
+	                path: p.path,
+	                fallback: p.fallback,
+	                source: p.source
+	            };
+	        }
+	    }
+
+	    if(boundArrays && boundArrays.length > 0) {
+	        for(let a of boundArrays) {
+	            const arrayOfBindings = [];
+
+	            for(let b of a.arrayOfBindings) {
+	                arrayOfBindings.push(
+	                    buildBindings(
+	                        b.boundProps, 
+	                        b.boundArrays, 
+	                        b.contextBoundProps)
+	                );
+	            }
+
+	            bindings[a.propName] = arrayOfBindings;
+	        }
+	    }
+
+	    return bindings;
+	};
+
 
 	const splitName = fullname => {
 	    const componentName = $(fullname, [
 	        fp_3("/"),
-	        fp_4
+	        fp_5
 	    ]);
 
 	    const libName =fullname.substring(
@@ -20478,7 +20651,10 @@ var app = (function (exports) {
 	const loadBudibase = async (componentLibraries, props) => {
 
 	    const appDefinition = window["##BUDIBASE_APPDEFINITION##"];
-	    const user = localStorage.getItem("budibase:user") || {
+
+	    const userFromStorage = localStorage.getItem("budibase:user");
+
+	    const user = userFromStorage ? JSON.parse(userFromStorage) : {
 	        name: "annonymous",
 	        permissions : [],
 	        isUser:false,
@@ -20502,7 +20678,7 @@ var app = (function (exports) {
 	    }
 
 	    const _app = createApp(componentLibraries, appDefinition,  user);
-	    _app.initialiseComponent(
+	    _app.hydrateComponent(
 	        props,
 	        document.body);
 

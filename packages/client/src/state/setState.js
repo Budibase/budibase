@@ -19,7 +19,7 @@ export const setState = (store, path, value) => {
 
         if(obj[currentKey] === null 
           || obj[currentKey] === undefined
-          || !isObject(obj.currentKey)) {
+          || !isObject(obj[currentKey])) {
 
             obj[currentKey] = {};
         }
@@ -35,4 +35,4 @@ export const setState = (store, path, value) => {
 };
 
 export const setStateFromBinding = (store, binding, value) => 
-    setState(store, binding[BB_STATE_BINDINGPATH], value);
+    setState(store, binding.path, value);

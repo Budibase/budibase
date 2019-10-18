@@ -8,7 +8,7 @@ import json from 'rollup-plugin-json';
 const production = !process.env.ROLLUP_WATCH;
 
 const lodash_fp_exports = [
-    "find", "isUndefined", "split", 
+    "find", "isUndefined", "split", "max",
     "last", "union", "reduce", "isObject",
     "cloneDeep", "some", "isArray", "map",
     "filter", "keys", "isFunction", "isEmpty",
@@ -20,7 +20,7 @@ const lodash_fp_exports = [
     "isInteger", "toNumber"];
 
 const lodash_exports = [
-    "flow", "head",  
+    "flow", "head",  "find","each",
     "tail", "findIndex", "startsWith", 
     "dropRight", "takeRight", 
     "trim", "split", "replace", 

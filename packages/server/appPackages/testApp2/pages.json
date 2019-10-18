@@ -1,14 +1,19 @@
 {
   "main": {
-    "index": {},
-    "appBody": ""
+    "index": {
+      "title": "My App"
+    },
+    "appBody": "Application Root"
   },
   "unauthenticated": {
-    "index": {},
-    "appBody": ""
+    "index": {
+      "title": "My App - Login"
+    },
+    "appBody": "Login"
   },
   "componentLibraries": [
-    "@budibase/standard-components"
+    "@budibase/standard-components",
+    "@budibase/bootstrap-components"
   ],
   "stylesheets": [
     "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"

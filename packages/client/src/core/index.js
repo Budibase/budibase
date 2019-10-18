@@ -2,6 +2,9 @@ import { createCoreApp } from "./createCoreApp"
 import {
     getNew, getNewChild
 } from "../../../core/src/recordApi/getNew";
+import {
+    constructHierarchy
+} from "../../../core/src/templateApi/createNodes";
 
 export const createCoreApi = (appDefinition, user) => {
     
@@ -11,6 +14,10 @@ export const createCoreApi = (appDefinition, user) => {
         recordApi: {
             getNew: getNew(app),
             getNewChild: getNewChild(app)
+        },
+
+        templateApi: {
+            constructHierarchy
         }
     }
 

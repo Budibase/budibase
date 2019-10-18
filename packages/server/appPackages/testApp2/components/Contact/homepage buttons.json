@@ -1,0 +1,47 @@
+{
+  "inherits": "@budibase/standard-components/div",
+  "name": "Contact/homepage buttons",
+  "props": {
+    "className": "btn-group",
+    "children": [
+      {
+        "component": {
+          "_component": "common/Default Button",
+          "contentText": "Create Contact",
+          "onClick": [
+            {
+              "##eventHandlerType": "Get New Record",
+              "parameters": {
+                "statePath": "Contact",
+                "collectionKey": "/contacts",
+                "childRecordType": "Contact"
+              }
+            },
+            {
+              "##eventHandlerType": "Set State",
+              "parameters": {
+                "path": "isEditingContact",
+                "value": "true"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "component": {
+          "_component": "common/Default Button",
+          "contentText": "Refresh",
+          "onClick": [
+            {
+              "##eventHandlerType": "List Records",
+              "parameters": {
+                "statePath": "/all_contacts",
+                "indexKey": "/all_contacts"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

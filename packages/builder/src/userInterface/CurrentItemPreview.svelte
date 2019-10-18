@@ -24,7 +24,8 @@ store.subscribe(s => {
     ]);
     appDefinition = {
         componentLibraries: s.loadLibraryUrls(),
-        props: buildPropsHierarchy(s.allComponents, s.currentFrontEndItem)
+        props: buildPropsHierarchy(s.allComponents, s.currentFrontEndItem),
+        hierarchy: s.hierarchy
     };
 
 });

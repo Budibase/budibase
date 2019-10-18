@@ -1,0 +1,107 @@
+{
+  "name": "Contact/Contact Form",
+  "description": "Control for creating/updating '/contacts/3-{id}' ",
+  "inherits": "@budibase/standard-components/div",
+  "props": {
+    "className": "p-1",
+    "children": [
+      {
+        "component": {
+          "_component": "@budibase/standard-components/h3",
+          "text": "Edit Contact"
+        }
+      },
+      {
+        "component": {
+          "_component": "@budibase/standard-components/form",
+          "formControls": [
+            {
+              "control": {
+                "_component": "@budibase/standard-components/input",
+                "value": {
+                  "##bbstate": "Contact.name",
+                  "##bbsource": "store"
+                },
+                "className": "form-control",
+                "type": "text"
+              },
+              "label": "Name"
+            },
+            {
+              "control": {
+                "_component": "@budibase/standard-components/input",
+                "value": {
+                  "##bbstate": "Contact.contacted",
+                  "##bbsource": "store"
+                },
+                "className": "form-control",
+                "type": "text"
+              },
+              "label": "Has Been Contacted"
+            }
+          ]
+        }
+      },
+      {
+        "component": {
+          "_component": "@budibase/standard-components/stackpanel",
+          "direction": "horizontal",
+          "children": [
+            {
+              "control": {
+                "_component": "@budibase/standard-components/div",
+                "className": "btn-group",
+                "children": [
+                  {
+                    "component": {
+                      "_component": "common/Primary Button",
+                      "contentText": "Save Contact",
+                      "onClick": [
+                        {
+                          "##eventHandlerType": "Save Record",
+                          "parameters": {
+                            "statePath": "Contact"
+                          }
+                        },
+                        {
+                          "##eventHandlerType": "Set State",
+                          "parameters": {
+                            "path": "isEditingContact",
+                            "value": ""
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "control": {
+                "_component": "@budibase/standard-components/div",
+                "className": "btn-group",
+                "children": [
+                  {
+                    "component": {
+                      "_component": "common/Default Button",
+                      "contentText": "Cancel",
+                      "onClick": [
+                        {
+                          "##eventHandlerType": "Set State",
+                          "parameters": {
+                            "path": "isEditingContact",
+                            "value": ""
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

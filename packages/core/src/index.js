@@ -58,20 +58,12 @@ export const getAppApis = async (store, behaviourSources = null,
         app.user = await authApi.authenticate(username, password);
     };
 
-    const withFullAccess = () => {
-        app.user = {
-            name: "app",
-            permissions : generateFullPermissions(app),
-            isUser:false,
-            temp:false
-        }
-    };
+    const withFullAccess = () => 
+        userWithFullAccess(app);    
 
     const asUser = (user) => {
         app.user = user
-    };
-
-    
+    };    
 
     let apis = {
         recordApi, 
@@ -95,6 +87,16 @@ export const getAppApis = async (store, behaviourSources = null,
 
 
     return apis;
+};
+
+export const userWithFullAccess = (app) => {
+    app.user = {
+        name: "app",
+        permissions : generateFullPermissions(app),
+        isUser:false,
+        temp:false
+    }
+    return app.user;
 };
 
 export {events, eventsList} from "./common/events";

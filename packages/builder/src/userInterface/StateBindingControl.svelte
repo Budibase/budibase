@@ -117,14 +117,14 @@ const makeBinding = () => {
     <div>
         <IconButton icon={value == true ? "check-square" : "square"}
                     size="19"
-                    on:click={() => value = !value}/>
+                    on:click={() => onChanged(!value)}/>
     </div>
 
     {:else if type === "options"}
 
     <select class="uk-select uk-form-small" 
             value={value} 
-            on:change={ev => onChanged(ev.target.checked)}>
+            on:change={ev => onChanged(ev.target.value)}>
         {#each options as option}
         <option value={option}>{option}</option>
         {/each}
