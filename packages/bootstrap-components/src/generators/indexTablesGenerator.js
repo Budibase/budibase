@@ -18,23 +18,12 @@ export const indexTableProps = (index, helpers) => ({
                 .map(column),
     onRowClick: [
         {
-            "##eventHandlerType": "Load Record",
-            parameters: {
-                recordKey: {
-                    "##bbstate": "key",
-                    "##bbsource": "context"
-                },
-                statePath: {
-                    "##bbstate": "type",
-                    "##bbsource": "context"
-                }
-            },
             "##eventHandlerType": "Set State",
             parameters: {
-                path: "currentView",
+                path: `selectedrow_${index.name}`,
                 value: {
-                    "##bbstate": "type",
-                    "##bbsource": "context"
+                    "##bbstate": "key",
+                    "##bbsource": "event"
                 }
             },
         }

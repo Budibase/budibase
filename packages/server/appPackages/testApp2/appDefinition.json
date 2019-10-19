@@ -134,7 +134,8 @@
                     "_component": "@budibase/standard-components/h3",
                     "text": "Edit customer",
                     "className": ""
-                  }
+                  },
+                  "className": ""
                 },
                 {
                   "_component": "children#array_element#",
@@ -185,7 +186,8 @@
                         }
                       }
                     ]
-                  }
+                  },
+                  "className": ""
                 },
                 {
                   "_component": "children#array_element#",
@@ -230,7 +232,8 @@
                                 "hoverColor": "",
                                 "hoverBackground": "",
                                 "hoverBorder": ""
-                              }
+                              },
+                              "className": ""
                             }
                           ],
                           "className": "btn-group",
@@ -256,7 +259,7 @@
                                 "contentComponent": {
                                   "_component": ""
                                 },
-                                "className": "btn btn-light",
+                                "className": "btn btn-secondary",
                                 "disabled": false,
                                 "onClick": [
                                   {
@@ -274,7 +277,8 @@
                                 "hoverColor": "",
                                 "hoverBackground": "",
                                 "hoverBorder": ""
-                              }
+                              },
+                              "className": ""
                             }
                           ],
                           "className": "btn-group",
@@ -299,7 +303,8 @@
                       "_component": ""
                     },
                     "onLoad": []
-                  }
+                  },
+                  "className": ""
                 }
               ],
               "className": "p-1",
@@ -317,82 +322,187 @@
                 {
                   "_component": "children#array_element#",
                   "component": {
-                    "_component": "@budibase/standard-components/h2",
-                    "text": "customers",
-                    "className": ""
-                  }
-                },
-                {
-                  "_component": "children#array_element#",
-                  "component": {
                     "_component": "@budibase/standard-components/div",
                     "children": [
                       {
                         "_component": "children#array_element#",
                         "component": {
-                          "_component": "@budibase/standard-components/button",
-                          "contentText": "Create customer",
-                          "contentComponent": {
-                            "_component": ""
-                          },
-                          "className": "btn btn-light",
-                          "disabled": false,
-                          "onClick": [
+                          "_component": "@budibase/standard-components/div",
+                          "children": [
                             {
-                              "##eventHandlerType": "Get New Record",
-                              "parameters": {
-                                "statePath": "customer",
-                                "collectionKey": "/customers",
-                                "childRecordType": "customer"
-                              }
+                              "_component": "children#array_element#",
+                              "component": {
+                                "_component": "@budibase/standard-components/button",
+                                "contentText": "Create customer",
+                                "contentComponent": {
+                                  "_component": ""
+                                },
+                                "className": "btn btn-secondary",
+                                "disabled": false,
+                                "onClick": [
+                                  {
+                                    "##eventHandlerType": "Get New Record",
+                                    "parameters": {
+                                      "statePath": "customer",
+                                      "collectionKey": "/customers",
+                                      "childRecordType": "customer"
+                                    }
+                                  },
+                                  {
+                                    "##eventHandlerType": "Set State",
+                                    "parameters": {
+                                      "path": "isEditingcustomer",
+                                      "value": "true"
+                                    }
+                                  }
+                                ],
+                                "background": "",
+                                "color": "",
+                                "border": "",
+                                "padding": "",
+                                "hoverColor": "",
+                                "hoverBackground": "",
+                                "hoverBorder": ""
+                              },
+                              "className": ""
                             },
                             {
-                              "##eventHandlerType": "Set State",
-                              "parameters": {
-                                "path": "isEditingcustomer",
-                                "value": "true"
-                              }
+                              "_component": "children#array_element#",
+                              "component": {
+                                "_component": "@budibase/standard-components/button",
+                                "contentText": "Refresh",
+                                "contentComponent": {
+                                  "_component": ""
+                                },
+                                "className": "btn btn-secondary",
+                                "disabled": false,
+                                "onClick": [
+                                  {
+                                    "##eventHandlerType": "List Records",
+                                    "parameters": {
+                                      "statePath": "/all_customers",
+                                      "indexKey": "/all_customers"
+                                    }
+                                  }
+                                ],
+                                "background": "",
+                                "color": "",
+                                "border": "",
+                                "padding": "",
+                                "hoverColor": "",
+                                "hoverBackground": "",
+                                "hoverBorder": ""
+                              },
+                              "className": ""
                             }
                           ],
-                          "background": "",
-                          "color": "",
-                          "border": "",
-                          "padding": "",
-                          "hoverColor": "",
-                          "hoverBackground": "",
-                          "hoverBorder": ""
-                        }
+                          "className": "btn-group mr-3",
+                          "data": {
+                            "##bbstate": ""
+                          },
+                          "dataItemComponent": {
+                            "_component": ""
+                          },
+                          "onLoad": []
+                        },
+                        "className": ""
                       },
                       {
                         "_component": "children#array_element#",
                         "component": {
-                          "_component": "@budibase/standard-components/button",
-                          "contentText": "Refresh",
-                          "contentComponent": {
-                            "_component": ""
-                          },
-                          "className": "btn btn-light",
-                          "disabled": false,
-                          "onClick": [
-                            {
-                              "##eventHandlerType": "List Records",
-                              "parameters": {
-                                "statePath": "/all_customers",
-                                "indexKey": "/all_customers"
+                          "_component": "@budibase/standard-components/if",
+                          "condition": "$store.selectedrow_all_customers && $store.selectedrow_all_customers.length > 0",
+                          "thenComponent": {
+                            "_component": "@budibase/standard-components/div",
+                            "children": [
+                              {
+                                "_component": "children#array_element#",
+                                "component": {
+                                  "_component": "@budibase/standard-components/button",
+                                  "contentText": "Edit customer",
+                                  "contentComponent": {
+                                    "_component": ""
+                                  },
+                                  "className": "btn btn-secondary",
+                                  "disabled": false,
+                                  "onClick": [
+                                    {
+                                      "##eventHandlerType": "Load Record",
+                                      "parameters": {
+                                        "statePath": "customer",
+                                        "recordKey": {
+                                          "##bbstate": "selectedrow_all_customers",
+                                          "##source": "store"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "##eventHandlerType": "Set State",
+                                      "parameters": {
+                                        "path": "isEditingcustomer",
+                                        "value": "true"
+                                      }
+                                    }
+                                  ],
+                                  "background": "",
+                                  "color": "",
+                                  "border": "",
+                                  "padding": "",
+                                  "hoverColor": "",
+                                  "hoverBackground": "",
+                                  "hoverBorder": ""
+                                },
+                                "className": ""
+                              },
+                              {
+                                "_component": "children#array_element#",
+                                "component": {
+                                  "_component": "@budibase/standard-components/button",
+                                  "contentText": "Delete customer",
+                                  "contentComponent": {
+                                    "_component": ""
+                                  },
+                                  "className": "btn btn-secondary",
+                                  "disabled": false,
+                                  "onClick": [
+                                    {
+                                      "##eventHandlerType": "Delete Record",
+                                      "parameters": {
+                                        "recordKey": {
+                                          "##bbstate": "selectedrow_all_customers",
+                                          "##source": "store"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "background": "",
+                                  "color": "",
+                                  "border": "",
+                                  "padding": "",
+                                  "hoverColor": "",
+                                  "hoverBackground": "",
+                                  "hoverBorder": ""
+                                },
+                                "className": ""
                               }
-                            }
-                          ],
-                          "background": "",
-                          "color": "",
-                          "border": "",
-                          "padding": "",
-                          "hoverColor": "",
-                          "hoverBackground": "",
-                          "hoverBorder": ""
-                        }
+                            ],
+                            "className": "btn-group",
+                            "data": {
+                              "##bbstate": ""
+                            },
+                            "dataItemComponent": {
+                              "_component": ""
+                            },
+                            "onLoad": []
+                          },
+                          "elseComponent": {
+                            "_component": ""
+                          }
+                        },
+                        "className": ""
                       }
                     ],
-                    "className": "btn-group",
+                    "className": "btn-toolbar mt-4 mb-2",
                     "data": {
                       "##bbstate": ""
                     },
@@ -400,7 +510,8 @@
                       "_component": ""
                     },
                     "onLoad": []
-                  }
+                  },
+                  "className": ""
                 },
                 {
                   "_component": "children#array_element#",
@@ -432,10 +543,10 @@
                       {
                         "##eventHandlerType": "Set State",
                         "parameters": {
-                          "path": "currentView",
+                          "path": "selectedrow_all_customers",
                           "value": {
-                            "##bbstate": "type",
-                            "##bbsource": "context"
+                            "##bbstate": "key",
+                            "##bbsource": "event"
                           }
                         }
                       }
@@ -445,10 +556,11 @@
                     "tbodyClass": "tbody-default",
                     "trClass": "tr-default",
                     "thClass": "th-default"
-                  }
+                  },
+                  "className": "flex-gow-1 overflow-auto"
                 }
               ],
-              "className": "p-3",
+              "className": "d-flex flex-column h-100",
               "data": {
                 "##bbstate": ""
               },
@@ -489,7 +601,8 @@
                     "_component": "@budibase/standard-components/h3",
                     "text": "Edit Contact",
                     "className": ""
-                  }
+                  },
+                  "className": ""
                 },
                 {
                   "_component": "children#array_element#",
@@ -524,7 +637,8 @@
                         }
                       }
                     ]
-                  }
+                  },
+                  "className": ""
                 },
                 {
                   "_component": "children#array_element#",
@@ -569,7 +683,8 @@
                                 "hoverColor": "",
                                 "hoverBackground": "",
                                 "hoverBorder": ""
-                              }
+                              },
+                              "className": ""
                             }
                           ],
                           "className": "btn-group",
@@ -595,7 +710,7 @@
                                 "contentComponent": {
                                   "_component": ""
                                 },
-                                "className": "btn btn-light",
+                                "className": "btn btn-secondary",
                                 "disabled": false,
                                 "onClick": [
                                   {
@@ -613,7 +728,8 @@
                                 "hoverColor": "",
                                 "hoverBackground": "",
                                 "hoverBorder": ""
-                              }
+                              },
+                              "className": ""
                             }
                           ],
                           "className": "btn-group",
@@ -638,7 +754,8 @@
                       "_component": ""
                     },
                     "onLoad": []
-                  }
+                  },
+                  "className": ""
                 }
               ],
               "className": "p-1",
@@ -656,82 +773,187 @@
                 {
                   "_component": "children#array_element#",
                   "component": {
-                    "_component": "@budibase/standard-components/h2",
-                    "text": "contacts",
-                    "className": ""
-                  }
-                },
-                {
-                  "_component": "children#array_element#",
-                  "component": {
                     "_component": "@budibase/standard-components/div",
                     "children": [
                       {
                         "_component": "children#array_element#",
                         "component": {
-                          "_component": "@budibase/standard-components/button",
-                          "contentText": "Create Contact",
-                          "contentComponent": {
-                            "_component": ""
-                          },
-                          "className": "btn btn-light",
-                          "disabled": false,
-                          "onClick": [
+                          "_component": "@budibase/standard-components/div",
+                          "children": [
                             {
-                              "##eventHandlerType": "Get New Record",
-                              "parameters": {
-                                "statePath": "Contact",
-                                "collectionKey": "/contacts",
-                                "childRecordType": "Contact"
-                              }
+                              "_component": "children#array_element#",
+                              "component": {
+                                "_component": "@budibase/standard-components/button",
+                                "contentText": "Create Contact",
+                                "contentComponent": {
+                                  "_component": ""
+                                },
+                                "className": "btn btn-secondary",
+                                "disabled": false,
+                                "onClick": [
+                                  {
+                                    "##eventHandlerType": "Get New Record",
+                                    "parameters": {
+                                      "statePath": "Contact",
+                                      "collectionKey": "/contacts",
+                                      "childRecordType": "Contact"
+                                    }
+                                  },
+                                  {
+                                    "##eventHandlerType": "Set State",
+                                    "parameters": {
+                                      "path": "isEditingContact",
+                                      "value": "true"
+                                    }
+                                  }
+                                ],
+                                "background": "",
+                                "color": "",
+                                "border": "",
+                                "padding": "",
+                                "hoverColor": "",
+                                "hoverBackground": "",
+                                "hoverBorder": ""
+                              },
+                              "className": ""
                             },
                             {
-                              "##eventHandlerType": "Set State",
-                              "parameters": {
-                                "path": "isEditingContact",
-                                "value": "true"
-                              }
+                              "_component": "children#array_element#",
+                              "component": {
+                                "_component": "@budibase/standard-components/button",
+                                "contentText": "Refresh",
+                                "contentComponent": {
+                                  "_component": ""
+                                },
+                                "className": "btn btn-secondary",
+                                "disabled": false,
+                                "onClick": [
+                                  {
+                                    "##eventHandlerType": "List Records",
+                                    "parameters": {
+                                      "statePath": "/all_contacts",
+                                      "indexKey": "/all_contacts"
+                                    }
+                                  }
+                                ],
+                                "background": "",
+                                "color": "",
+                                "border": "",
+                                "padding": "",
+                                "hoverColor": "",
+                                "hoverBackground": "",
+                                "hoverBorder": ""
+                              },
+                              "className": ""
                             }
                           ],
-                          "background": "",
-                          "color": "",
-                          "border": "",
-                          "padding": "",
-                          "hoverColor": "",
-                          "hoverBackground": "",
-                          "hoverBorder": ""
-                        }
+                          "className": "btn-group mr-3",
+                          "data": {
+                            "##bbstate": ""
+                          },
+                          "dataItemComponent": {
+                            "_component": ""
+                          },
+                          "onLoad": []
+                        },
+                        "className": ""
                       },
                       {
                         "_component": "children#array_element#",
                         "component": {
-                          "_component": "@budibase/standard-components/button",
-                          "contentText": "Refresh",
-                          "contentComponent": {
-                            "_component": ""
-                          },
-                          "className": "btn btn-light",
-                          "disabled": false,
-                          "onClick": [
-                            {
-                              "##eventHandlerType": "List Records",
-                              "parameters": {
-                                "statePath": "/all_contacts",
-                                "indexKey": "/all_contacts"
+                          "_component": "@budibase/standard-components/if",
+                          "condition": "$store.selectedrow_all_contacts && $store.selectedrow_all_contacts.length > 0",
+                          "thenComponent": {
+                            "_component": "@budibase/standard-components/div",
+                            "children": [
+                              {
+                                "_component": "children#array_element#",
+                                "component": {
+                                  "_component": "@budibase/standard-components/button",
+                                  "contentText": "Edit Contact",
+                                  "contentComponent": {
+                                    "_component": ""
+                                  },
+                                  "className": "btn btn-secondary",
+                                  "disabled": false,
+                                  "onClick": [
+                                    {
+                                      "##eventHandlerType": "Load Record",
+                                      "parameters": {
+                                        "statePath": "Contact",
+                                        "recordKey": {
+                                          "##bbstate": "selectedrow_all_contacts",
+                                          "##source": "store"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "##eventHandlerType": "Set State",
+                                      "parameters": {
+                                        "path": "isEditingContact",
+                                        "value": "true"
+                                      }
+                                    }
+                                  ],
+                                  "background": "",
+                                  "color": "",
+                                  "border": "",
+                                  "padding": "",
+                                  "hoverColor": "",
+                                  "hoverBackground": "",
+                                  "hoverBorder": ""
+                                },
+                                "className": ""
+                              },
+                              {
+                                "_component": "children#array_element#",
+                                "component": {
+                                  "_component": "@budibase/standard-components/button",
+                                  "contentText": "Delete Contact",
+                                  "contentComponent": {
+                                    "_component": ""
+                                  },
+                                  "className": "btn btn-secondary",
+                                  "disabled": false,
+                                  "onClick": [
+                                    {
+                                      "##eventHandlerType": "Delete Record",
+                                      "parameters": {
+                                        "recordKey": {
+                                          "##bbstate": "selectedrow_all_contacts",
+                                          "##source": "store"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "background": "",
+                                  "color": "",
+                                  "border": "",
+                                  "padding": "",
+                                  "hoverColor": "",
+                                  "hoverBackground": "",
+                                  "hoverBorder": ""
+                                },
+                                "className": ""
                               }
-                            }
-                          ],
-                          "background": "",
-                          "color": "",
-                          "border": "",
-                          "padding": "",
-                          "hoverColor": "",
-                          "hoverBackground": "",
-                          "hoverBorder": ""
-                        }
+                            ],
+                            "className": "btn-group",
+                            "data": {
+                              "##bbstate": ""
+                            },
+                            "dataItemComponent": {
+                              "_component": ""
+                            },
+                            "onLoad": []
+                          },
+                          "elseComponent": {
+                            "_component": ""
+                          }
+                        },
+                        "className": ""
                       }
                     ],
-                    "className": "btn-group",
+                    "className": "btn-toolbar mt-4 mb-2",
                     "data": {
                       "##bbstate": ""
                     },
@@ -739,7 +961,8 @@
                       "_component": ""
                     },
                     "onLoad": []
-                  }
+                  },
+                  "className": ""
                 },
                 {
                   "_component": "children#array_element#",
@@ -771,10 +994,10 @@
                       {
                         "##eventHandlerType": "Set State",
                         "parameters": {
-                          "path": "currentView",
+                          "path": "selectedrow_all_contacts",
                           "value": {
-                            "##bbstate": "type",
-                            "##bbsource": "context"
+                            "##bbstate": "key",
+                            "##bbsource": "event"
                           }
                         }
                       }
@@ -784,10 +1007,11 @@
                     "tbodyClass": "tbody-default",
                     "trClass": "tr-default",
                     "thClass": "th-default"
-                  }
+                  },
+                  "className": "flex-gow-1 overflow-auto"
                 }
               ],
-              "className": "p-3",
+              "className": "d-flex flex-column h-100",
               "data": {
                 "##bbstate": ""
               },
@@ -816,14 +1040,15 @@
       ],
       "selectedItem": {
         "##bbstate": "selectedNav",
-        "##bbstatefallback": "customer",
+        "##bbstatefallback": "customers",
         "##bbsource": "store"
       },
-      "pills": true,
+      "pills": false,
       "orientation": "horizontal",
-      "alignment": "start",
+      "alignment": "end",
       "fill": false,
-      "hideNavBar": false
+      "hideNavBar": false,
+      "className": "p-3"
     },
     "unauthenticated": {
       "_component": "@budibase/standard-components/login",

@@ -15,7 +15,8 @@ export const app = ({records, indexes, helpers}) => [
                 "##bbstate":"selectedNav",
                 "##bbstatefallback":`${records[0].name}`,
                 "##bbsource": "store"
-            }
+            },
+            className: "p-3"
         }
     },
     {

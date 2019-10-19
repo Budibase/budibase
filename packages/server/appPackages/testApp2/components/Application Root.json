@@ -17,13 +17,17 @@
       }
     ],
     "orientation": "horizontal",
-    "alignment": "start",
+    "alignment": "end",
     "fill": false,
-    "pills": true,
+    "pills": false,
     "selectedItem": {
       "##bbstate": "selectedNav",
-      "##bbstatefallback": "customer",
+      "##bbstatefallback": "customers",
       "##bbsource": "store"
-    }
-  }
+    },
+    "className": "p-3"
+  },
+  "tags": [
+    ""
+  ]
 }

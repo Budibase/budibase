@@ -19002,7 +19002,7 @@ var app = (function (exports) {
 	};
 
 	const setStateFromBinding = (store, binding, value) => 
-	    setState(store, binding.path, value);
+	    setState(store, binding[BB_STATE_BINDINGPATH], value);
 
 	const getState = (s, path, fallback) => {
 
@@ -19081,7 +19081,7 @@ var app = (function (exports) {
 	    } 
 
 	    const record = await api.get({
-	        url:`/api/record/${trimSlash(key)}`
+	        url:`/api/record/${trimSlash(recordKey)}`
 	    });
 
 	    if(api.isSuccess(record))
@@ -19368,10 +19368,12 @@ var app = (function (exports) {
 	                    fallback, propName, source
 	                });
 
-	                initialProps[propName] = getState(
-	                    context || {},
-	                    binding,
-	                    fallback);
+	                initialProps[propName] = !context 
+	                                         ? val 
+	                                         : getState(
+	                                                context ,
+	                                                binding,
+	                                                fallback);
 
 	            } else if(isEventType(val)) {
 
@@ -20502,19 +20504,14 @@ var app = (function (exports) {
 
 	        if(!componentName || !libName) return;
 
-	        const {
-	            initialProps, bind, 
-	            boundProps, boundArrays,
-	            contextBoundProps
-	        } = setupBinding(
+	        const {initialProps, bind} = setupBinding(
 	                store, props, coreApi, 
 	                context || parentContext, appDefinition.appRootPath);
 
-	        const bindings = buildBindings(boundProps, boundArrays, contextBoundProps);
-
+	  
 	        const componentProps = {
 	            ...initialProps, 
-	            _bb:bb(bindings, context || parentContext)
+	            _bb:bb(context || parentContext, props)
 	        };
 
 	        const component = new (componentLibraries[libName][componentName])({
@@ -20571,7 +20568,7 @@ var app = (function (exports) {
 	        if(isFunction(event)) event(context);
 	    };
 
-	    const bb = (bindings, context) => ({
+	    const bb = (context, props) => ({
 	        hydrateComponent: _initialiseComponent(context, true), 
 	        appendComponent: _initialiseComponent(context, false), 
 	        insertComponent: (props, htmlElement, anchor, context) => 
@@ -20585,54 +20582,12 @@ var app = (function (exports) {
 	        setState: (path, value) => setState(store, path, value),
 	        getStateOrValue: (prop, currentContext) => 
 	            getStateOrValue(globalState, prop, currentContext),
-	        bindings,
-	        context,        
+	        context,
+	        props        
 	    });
 
 	    return bb();
 
-	};
-
-	const buildBindings = (boundProps, boundArrays, contextBoundProps) => {
-	    const bindings = {};
-	    if(boundProps && boundProps.length > 0) {
-	        for(let p of boundProps) {
-	            bindings[p.propName] = {
-	                path: p.path,
-	                fallback: p.fallback,
-	                source: p.source
-	            };
-	        }
-	    }
-
-	    if(contextBoundProps && contextBoundProps.length > 0) {
-	        for(let p of contextBoundProps) {
-	            bindings[p.propName] = {
-	                path: p.path,
-	                fallback: p.fallback,
-	                source: p.source
-	            };
-	        }
-	    }
-
-	    if(boundArrays && boundArrays.length > 0) {
-	        for(let a of boundArrays) {
-	            const arrayOfBindings = [];
-
-	            for(let b of a.arrayOfBindings) {
-	                arrayOfBindings.push(
-	                    buildBindings(
-	                        b.boundProps, 
-	                        b.boundArrays, 
-	                        b.contextBoundProps)
-	                );
-	            }
-
-	            bindings[a.propName] = arrayOfBindings;
-	        }
-	    }
-
-	    return bindings;
 	};
 
 

@@ -17,7 +17,7 @@ const rowClickHandler = (row) => () => {
 
 const cellValue = (colIndex, row) => {
     const val = _bb.getStateOrValue(
-        _bb.bindings.columns[colIndex].value
+        _bb.props.columns[colIndex].value
         , row)
     return val;
 }

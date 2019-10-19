@@ -28,10 +28,10 @@
       {
         "##eventHandlerType": "Set State",
         "parameters": {
-          "path": "currentView",
+          "path": "selectedrow_all_contacts",
           "value": {
-            "##bbstate": "type",
-            "##bbsource": "context"
+            "##bbstate": "key",
+            "##bbsource": "event"
           }
         }
       }

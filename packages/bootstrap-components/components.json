@@ -57,7 +57,8 @@
 			"orientation":{"type":"options", "options": ["horizontal", "vertical"]},
 			"alignment":{"type":"options", "options": ["start", "center", "end"]},
 			"fill":"bool",
-			"hideNavBar":"bool"
+			"hideNavBar":"bool",
+			"className": "string"
 
 		},
 		"tags": ["nav", "navigation", "sidebar"]

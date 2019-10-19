@@ -22,12 +22,12 @@ $ : {
         for(let el in htmlElements) {
             if(formControls[el].control.controlPosition === "Before Label") {
                 _bb.insertComponent(
-                    formControls[el].control,
+                    _bb.props.formControls[el].control,
                     htmlElements[el],
                     labelElements[el]);
             } else {
                 _bb.appendComponent(
-                    formControls[el].control,
+                    _bb.props.formControls[el].control,
                     htmlElements[el]);
             }
         }

@@ -10,7 +10,7 @@ let actualValue = "";
 
 const onchange = (ev) => {
 	if(_bb) {
-		_bb.setStateFromBinding(_bb.bindings.value, ev.target.value);
+		_bb.setStateFromBinding(_bb.props.value, ev.target.value);
 	}
 }
 
