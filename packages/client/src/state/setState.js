@@ -35,4 +35,4 @@ export const setState = (store, path, value) => {
 };
 
 export const setStateFromBinding = (store, binding, value) => 
-    setState(store, binding.path, value);
+    setState(store, binding[BB_STATE_BINDINGPATH], value);

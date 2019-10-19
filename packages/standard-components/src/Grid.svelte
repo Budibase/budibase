@@ -5,8 +5,6 @@ import {buildStyle} from "./buildStyle";
 export let gridTemplateRows ="";
 export let gridTemplateColumns ="";
 export let children = [];
-export let width = "auto";
-export let height = "auto";
 export let containerClass="";
 export let itemContainerClass="";
 
@@ -20,15 +18,16 @@ export let _bb;
 
 let style="";
 let htmlElements = {};
-
+let isInitilised = false;
 $ : {
-    if(_bb && htmlElements) {
+    if(!isInitilised && _bb && htmlElements && Object.keys(htmlElements).length > 0) {
         for(let el in htmlElements) {
             _bb.hydrateComponent(
-                children[el].control,
+                _bb.props.children[el].component,
                 htmlElements[el]
             );
         }
+        isInitilised = true;
     }
 }
 
@@ -36,16 +35,14 @@ const childStyle = child =>
     buildStyle({
         "grid-column-start": child.gridColumnStart,
         "grid-column-end": child.gridColumnEnd,
-        "grid-column": child.gridColumn,
         "grid-row-start": child.gridRowStart,
-        "grid-row-end": child.gridRowStart,
-        "grid-row": child.gridRow,
+        "grid-row-end": child.gridRowStart
     });
 
 </script>
 
 <div class="root {containerClass}"
-     style="width: {width}; height: {height}; grid-template-columns: {gridTemplateColumns}; grid-template-rows: {gridTemplateRows};">
+     style="grid-template-columns: {gridTemplateColumns}; grid-template-rows: {gridTemplateRows};">
     {#each children as child, index}
     <div class="{itemContainerClass}"
         style={childStyle(child)}
@@ -58,6 +55,8 @@ const childStyle = child =>
 
 .root {
     display: grid;
+    width: 100%; 
+    height: 100%;
 }
 
 </style>

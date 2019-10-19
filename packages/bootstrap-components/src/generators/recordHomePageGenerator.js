@@ -45,14 +45,8 @@ const component = ({record, index}) => ({
     inherits: "@budibase/standard-components/div",
     name: homepageComponentName(record),
     props: {
-        className: "p-3",
+        className: "d-flex flex-column h-100",
         children: [
-            {
-                component: {
-                    _component: "@budibase/standard-components/h2",
-                    text: record.collectionName
-                }
-            },
             {
                 component: {
                     _component: `${record.name}/homepage buttons`,
@@ -61,7 +55,8 @@ const component = ({record, index}) => ({
             {
                 component: {
                     _component: getIndexTableName(index)
-                }
+                },
+                className: "flex-gow-1 overflow-auto"
             }
         ],
         onLoad: [
@@ -88,26 +83,49 @@ const homePageButtons = ({index, record}) => ({
     inherits: "@budibase/standard-components/div",
     name: `${record.name}/homepage buttons`,
     props: {
-        className: "btn-group",
+        className: "btn-toolbar mt-4 mb-2",
         children: [
             {
                 component: {
-                    _component: "common/Default Button",
-                    contentText: `Create ${record.name}`,
-                    onClick: [
+                    _component: "@budibase/standard-components/div",
+                    className: "btn-group mr-3",
+                    children: [
                         {
-                            "##eventHandlerType": "Get New Record",
-                            parameters: {
-                                statePath: record.name,
-                                collectionKey: `/${record.collectionName}`,
-                                childRecordType: record.name
+                            component: {
+                                _component: "common/Default Button",
+                                contentText: `Create ${record.name}`,
+                                onClick: [
+                                    {
+                                        "##eventHandlerType": "Get New Record",
+                                        parameters: {
+                                            statePath: record.name,
+                                            collectionKey: `/${record.collectionName}`,
+                                            childRecordType: record.name
+                                        }
+                                    }, 
+                                    {
+                                        "##eventHandlerType": "Set State",
+                                        parameters: {
+                                            path: `isEditing${record.name}`,
+                                            value: "true"
+                                        }
+                                    }
+                                ]
                             }
-                        }, 
+                        },
                         {
-                            "##eventHandlerType": "Set State",
-                            parameters: {
-                                path: `isEditing${record.name}`,
-                                value: "true"
+                            component: {
+                                _component: "common/Default Button",
+                                contentText: `Refresh`,
+                                onClick: [
+                                    {
+                                        "##eventHandlerType": "List Records",
+                                        parameters: {
+                                            statePath: index.nodeKey(),
+                                            indexKey: index.nodeKey()
+                                        }
+                                    }
+                                ]
                             }
                         }
                     ]
@@ -115,17 +133,56 @@ const homePageButtons = ({index, record}) => ({
             },
             {
                 component: {
-                    _component: "common/Default Button",
-                    contentText: `Refresh`,
-                    onClick: [
-                        {
-                            "##eventHandlerType": "List Records",
-                            parameters: {
-                                statePath: index.nodeKey(),
-                                indexKey: index.nodeKey()
+                    _component: "@budibase/standard-components/if",
+                    condition: `$store.selectedrow_${index.name} && $store.selectedrow_${index.name}.length > 0`,
+                    thenComponent: {
+                        _component: "@budibase/standard-components/div",
+                        className: "btn-group",
+                        children: [
+                            {
+                                component: {
+                                    _component: "common/Default Button",
+                                    contentText: `Edit ${record.name}`,
+                                    onClick: [
+                                        {
+                                            "##eventHandlerType": "Load Record",
+                                            parameters: {
+                                                statePath: record.name,
+                                                recordKey: {
+                                                    "##bbstate" : `selectedrow_${index.name}`,
+                                                    "##source": "store"
+                                                }
+                                            }
+                                        }, 
+                                        {
+                                            "##eventHandlerType": "Set State",
+                                            parameters: {
+                                                path: `isEditing${record.name}`,
+                                                value: "true"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                component: {
+                                    _component: "common/Default Button",
+                                    contentText: `Delete ${record.name}`,
+                                    onClick: [
+                                        {
+                                            "##eventHandlerType": "Delete Record",
+                                            parameters: {
+                                                recordKey: {
+                                                    "##bbstate" : `selectedrow_${index.name}`,
+                                                    "##source": "store"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
                             }
-                        }
-                    ]
+                        ]
+                    }
                 }
             }
         ]

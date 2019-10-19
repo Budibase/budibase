@@ -13,7 +13,7 @@ import {trimSlash} from "../common/trimSlash";
     } 
 
     const record = await api.get({
-        url:`/api/record/${trimSlash(key)}`
+        url:`/api/record/${trimSlash(recordKey)}`
     });
 
     if(api.isSuccess(record))

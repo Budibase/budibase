@@ -2,14 +2,8 @@
   "inherits": "@budibase/standard-components/div",
   "name": "customer/customer homepage",
   "props": {
-    "className": "p-3",
+    "className": "d-flex flex-column h-100",
     "children": [
-      {
-        "component": {
-          "_component": "@budibase/standard-components/h2",
-          "text": "customers"
-        }
-      },
       {
         "component": {
           "_component": "customer/homepage buttons"
@@ -18,7 +12,8 @@
       {
         "component": {
           "_component": "all_customers Table"
-        }
+        },
+        "className": "flex-gow-1 overflow-auto"
       }
     ],
     "onLoad": [

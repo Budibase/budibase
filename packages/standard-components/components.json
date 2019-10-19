@@ -162,13 +162,16 @@
 			"children": {
 				"type":"array",
 				"elementDefinition": {
-					"control":"component",
-					"gridColumn":"string",
-					"gridRow":"string",
+					"component":"component",
 					"gridColumnStart":"string",
 					"gridColumnEnd":"string",
 					"gridRowStart":"string",
-					"gridRowEnd":"string"
+					"gridRowEnd":"string",
+					"justifySelf": {
+						"type":"options", 
+						"options":["start", "center", "end", "stretch"], 
+						"default":"stretch"
+					}
 				}
 			},
 			"width": {"type":"string","default":"auto"},
@@ -297,7 +300,8 @@
 			"children": {
 				"type":"array",
 				"elementDefinition": {
-					"component":"component"
+					"component":"component",
+					"className": "string"
 				}
 			},
 			"className":"string",

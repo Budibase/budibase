@@ -54,7 +54,7 @@ const onSelectItem = (index) => () => {
     selectedIndex = index;
     if(!components[index]) {
         const comp = _bb.hydrateComponent(
-            items[index].component, componentElements[index]);
+            _bb.props.items[index].component, componentElements[index]);
         components[index] = comp;   
     }
 }

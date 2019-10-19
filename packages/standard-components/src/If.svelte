@@ -33,10 +33,10 @@ $: {
 
             if(result) {
                 currentComponent = _bb.hydrateComponent(
-                    thenComponent,element);
+                    _bb.props.thenComponent,element);
             } else if(elseComponent && elseComponent._component) {
                 currentComponent = _bb.hydrateComponent(
-                    elseComponent,element);
+                    _bb.props.elseComponent,element);
             }
             
         }

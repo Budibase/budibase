@@ -21,19 +21,14 @@ export const createApp = (componentLibraries, appDefinition, user) => {
 
         if(!componentName || !libName) return;
 
-        const {
-            initialProps, bind, 
-            boundProps, boundArrays,
-            contextBoundProps
-        } = setupBinding(
+        const {initialProps, bind} = setupBinding(
                 store, props, coreApi, 
                 context || parentContext, appDefinition.appRootPath);
 
-        const bindings = buildBindings(boundProps, boundArrays, contextBoundProps);
-
+  
         const componentProps = {
             ...initialProps, 
-            _bb:bb(bindings, context || parentContext, props)
+            _bb:bb(context || parentContext, props)
         };
 
         const component = new (componentLibraries[libName][componentName])({
@@ -90,7 +85,7 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         if(isFunction(event)) event(context);
     }
 
-    const bb = (bindings, context, props) => ({
+    const bb = (context, props) => ({
         hydrateComponent: _initialiseComponent(context, true), 
         appendComponent: _initialiseComponent(context, false), 
         insertComponent: (props, htmlElement, anchor, context) => 
@@ -104,7 +99,6 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         setState: (path, value) => setState(store, path, value),
         getStateOrValue: (prop, currentContext) => 
             getStateOrValue(globalState, prop, currentContext),
-        bindings,
         context,
         props        
     });

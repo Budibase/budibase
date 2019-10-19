@@ -28379,7 +28379,7 @@
         } 
 
         const record = await api.get({
-            url:`/api/record/${trimSlash(key)}`
+            url:`/api/record/${trimSlash(recordKey)}`
         });
 
         if(api.isSuccess(record))
@@ -32331,7 +32331,7 @@
 
     /******/ });
     });
-
+    //# sourceMappingURL=feather.js.map
     });
 
     var feather$1 = unwrapExports(feather);

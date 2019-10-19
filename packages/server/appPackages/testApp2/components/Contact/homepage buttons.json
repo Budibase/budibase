@@ -2,26 +2,49 @@
   "inherits": "@budibase/standard-components/div",
   "name": "Contact/homepage buttons",
   "props": {
-    "className": "btn-group",
+    "className": "btn-toolbar mt-4 mb-2",
     "children": [
       {
         "component": {
-          "_component": "common/Default Button",
-          "contentText": "Create Contact",
-          "onClick": [
+          "_component": "@budibase/standard-components/div",
+          "className": "btn-group mr-3",
+          "children": [
             {
-              "##eventHandlerType": "Get New Record",
-              "parameters": {
-                "statePath": "Contact",
-                "collectionKey": "/contacts",
-                "childRecordType": "Contact"
+              "component": {
+                "_component": "common/Default Button",
+                "contentText": "Create Contact",
+                "onClick": [
+                  {
+                    "##eventHandlerType": "Get New Record",
+                    "parameters": {
+                      "statePath": "Contact",
+                      "collectionKey": "/contacts",
+                      "childRecordType": "Contact"
+                    }
+                  },
+                  {
+                    "##eventHandlerType": "Set State",
+                    "parameters": {
+                      "path": "isEditingContact",
+                      "value": "true"
+                    }
+                  }
+                ]
               }
             },
             {
-              "##eventHandlerType": "Set State",
-              "parameters": {
-                "path": "isEditingContact",
-                "value": "true"
+              "component": {
+                "_component": "common/Default Button",
+                "contentText": "Refresh",
+                "onClick": [
+                  {
+                    "##eventHandlerType": "List Records",
+                    "parameters": {
+                      "statePath": "/all_contacts",
+                      "indexKey": "/all_contacts"
+                    }
+                  }
+                ]
               }
             }
           ]
@@ -29,17 +52,56 @@
       },
       {
         "component": {
-          "_component": "common/Default Button",
-          "contentText": "Refresh",
-          "onClick": [
-            {
-              "##eventHandlerType": "List Records",
-              "parameters": {
-                "statePath": "/all_contacts",
-                "indexKey": "/all_contacts"
+          "_component": "@budibase/standard-components/if",
+          "condition": "$store.selectedrow_all_contacts && $store.selectedrow_all_contacts.length > 0",
+          "thenComponent": {
+            "_component": "@budibase/standard-components/div",
+            "className": "btn-group",
+            "children": [
+              {
+                "component": {
+                  "_component": "common/Default Button",
+                  "contentText": "Edit Contact",
+                  "onClick": [
+                    {
+                      "##eventHandlerType": "Load Record",
+                      "parameters": {
+                        "statePath": "Contact",
+                        "recordKey": {
+                          "##bbstate": "selectedrow_all_contacts",
+                          "##source": "store"
+                        }
+                      }
+                    },
+                    {
+                      "##eventHandlerType": "Set State",
+                      "parameters": {
+                        "path": "isEditingContact",
+                        "value": "true"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "component": {
+                  "_component": "common/Default Button",
+                  "contentText": "Delete Contact",
+                  "onClick": [
+                    {
+                      "##eventHandlerType": "Delete Record",
+                      "parameters": {
+                        "recordKey": {
+                          "##bbstate": "selectedrow_all_contacts",
+                          "##source": "store"
+                        }
+                      }
+                    }
+                  ]
+                }
               }
-            }
-          ]
+            ]
+          }
         }
       }
     ]

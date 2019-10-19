@@ -7,6 +7,7 @@ export let orientation="horizontal"; // horizontal, verical
 export let alignment="start"; // start, center, end
 export let pills=false;
 export let fill=false;
+export let className="";
 export let _bb;
 
 let selectedIndex = -1;
@@ -45,7 +46,7 @@ $: {
     navClasses = _navClasses;
 
 
-    if(items ) {
+    if(items && componentElement) {
         
         const currentSelectedItem = getSelectedItemByIndex(selectedIndex);
 
@@ -79,14 +80,14 @@ const SelectItem = (index) => {
 
     if(index >= 0)
         currentComponent = _bb.hydrateComponent(
-            items[index].component, componentElement);
+            _bb.props.items[index].component, componentElement);
 
 }
 
 const onSelectItemClicked = index => () => {
-    if(_bb.bindings["selectedItem"]) {
+    if(_bb.props.selectedItem) {
         // binding - call state, which should SelectItem(..)
-        const selectedItemBinding = _bb.bindings["selectedItem"];
+        const selectedItemBinding = _bb.props.selectedItem;
         _bb.setStateFromBinding(
             selectedItemBinding, getSelectedItemByIndex(index))
     } else {
@@ -98,7 +99,7 @@ const onSelectItemClicked = index => () => {
 
 </script>
 
-<div class="root">
+<div class="root {className}">
     {#if !hideNavBar}
     <ul class="nav {navClasses}">
         {#each items as navItem, index}
@@ -126,7 +127,6 @@ const onSelectItemClicked = index => () => {
     height: 100%;
     width:100%;
 }
-
 
 </style>
 

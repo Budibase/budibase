@@ -2,26 +2,49 @@
   "inherits": "@budibase/standard-components/div",
   "name": "customer/homepage buttons",
   "props": {
-    "className": "btn-group",
+    "className": "btn-toolbar mt-4 mb-2",
     "children": [
       {
         "component": {
-          "_component": "common/Default Button",
-          "contentText": "Create customer",
-          "onClick": [
+          "_component": "@budibase/standard-components/div",
+          "className": "btn-group mr-3",
+          "children": [
             {
-              "##eventHandlerType": "Get New Record",
-              "parameters": {
-                "statePath": "customer",
-                "collectionKey": "/customers",
-                "childRecordType": "customer"
+              "component": {
+                "_component": "common/Default Button",
+                "contentText": "Create customer",
+                "onClick": [
+                  {
+                    "##eventHandlerType": "Get New Record",
+                    "parameters": {
+                      "statePath": "customer",
+                      "collectionKey": "/customers",
+                      "childRecordType": "customer"
+                    }
+                  },
+                  {
+                    "##eventHandlerType": "Set State",
+                    "parameters": {
+                      "path": "isEditingcustomer",
+                      "value": "true"
+                    }
+                  }
+                ]
               }
             },
             {
-              "##eventHandlerType": "Set State",
-              "parameters": {
-                "path": "isEditingcustomer",
-                "value": "true"
+              "component": {
+                "_component": "common/Default Button",
+                "contentText": "Refresh",
+                "onClick": [
+                  {
+                    "##eventHandlerType": "List Records",
+                    "parameters": {
+                      "statePath": "/all_customers",
+                      "indexKey": "/all_customers"
+                    }
+                  }
+                ]
               }
             }
           ]
@@ -29,17 +52,56 @@
       },
       {
         "component": {
-          "_component": "common/Default Button",
-          "contentText": "Refresh",
-          "onClick": [
-            {
-              "##eventHandlerType": "List Records",
-              "parameters": {
-                "statePath": "/all_customers",
-                "indexKey": "/all_customers"
+          "_component": "@budibase/standard-components/if",
+          "condition": "$store.selectedrow_all_customers && $store.selectedrow_all_customers.length > 0",
+          "thenComponent": {
+            "_component": "@budibase/standard-components/div",
+            "className": "btn-group",
+            "children": [
+              {
+                "component": {
+                  "_component": "common/Default Button",
+                  "contentText": "Edit customer",
+                  "onClick": [
+                    {
+                      "##eventHandlerType": "Load Record",
+                      "parameters": {
+                        "statePath": "customer",
+                        "recordKey": {
+                          "##bbstate": "selectedrow_all_customers",
+                          "##source": "store"
+                        }
+                      }
+                    },
+                    {
+                      "##eventHandlerType": "Set State",
+                      "parameters": {
+                        "path": "isEditingcustomer",
+                        "value": "true"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "component": {
+                  "_component": "common/Default Button",
+                  "contentText": "Delete customer",
+                  "onClick": [
+                    {
+                      "##eventHandlerType": "Delete Record",
+                      "parameters": {
+                        "recordKey": {
+                          "##bbstate": "selectedrow_all_customers",
+                          "##source": "store"
+                        }
+                      }
+                    }
+                  ]
+                }
               }
-            }
-          ]
+            ]
+          }
         }
       }
     ]

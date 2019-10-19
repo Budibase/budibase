@@ -55,12 +55,13 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
                     fallback, propName, source
                 });
 
-                initialProps[propName] = getState(
-                    context || {},
-                    binding,
-                    fallback,
-                    source
-                );
+                initialProps[propName] = !context 
+                                         ? val 
+                                         : getState(
+                                                context ,
+                                                binding,
+                                                fallback,
+                                                source);
 
             } else if(isEventType(val)) {
 

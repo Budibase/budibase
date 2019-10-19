@@ -13,18 +13,53 @@ let staticComponentsApplied=false;
 let dataBoundComponents = [];
 let previousData;
 let onLoadCalled = false;
+let staticHtmlElements = {};
 
 const hasData = () => 
     Array.isArray(data) && data.length > 0;
 
+const staticElementsInitialised = () => {
+ 
+    if(!children) return false;
+
+    if(children.filter(c => c.className).length ===  Object.keys(staticHtmlElements).length) 
+        return true;
+}
+
+const getStaticAnchor = (elementIndex) => {
+    const nextElements = Object.keys(staticHtmlElements).filter(k => k > elementIndex);
+
+    return nextElements.length === 0 
+           ? null 
+           : staticHtmlElements[Math.min(...nextElements)];    
+}
+
 $: {
 
     if(rootDiv) {
-        if(children && children.length > 0 && !staticComponentsApplied) {
-            for(let child of children) {
-                _bb.appendComponent(
-                    child.component,
-                    rootDiv);
+        if(children && children.length > 0 
+        && !staticComponentsApplied
+        && staticElementsInitialised()) {
+            let index = 0;
+            for(let child of _bb.props.children) {
+                if(child.className) {
+                    _bb.hydrateComponent(
+                        child.component,
+                        staticHtmlElements[index]);
+                } else {
+                    const anchor = getStaticAnchor(index);
+                    if(!anchor) {
+                        _bb.appendComponent(
+                            child.component,
+                            rootDiv);
+                    } else {
+                        _bb.insertComponent(
+                            child.component,
+                            rootDiv,
+                            anchor);
+                    }
+                }
+                index += 1;
             }
             staticComponentsApplied = true;
         }
@@ -42,7 +77,7 @@ $: {
                 let index = 0;
                 for(let dataItem of data) {
                     _bb.appendComponent(
-                        dataItemComponent,
+                        _bb.props.dataItemComponent,
                         rootDiv,
                         dataItem
                     );
@@ -61,5 +96,12 @@ $: {
 </script>
 
 <div class="{className}" bind:this={rootDiv}>
+    {#each children as child, index}
+    {#if child.className}
+    <div class="{child.className}"
+        bind:this={staticHtmlElements[index]}>
+    </div>
+    {/if}
+    {/each}
 </div>
 
