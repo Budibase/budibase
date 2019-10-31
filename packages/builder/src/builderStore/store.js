@@ -253,7 +253,7 @@ const saveCurrentNode = (store) => () => {
             existingNode.parent().children = pipe(existingNode.parent().children, [
                 filter(c => c.nodeId !== existingNode.nodeId)
             ]);
-        }
+        } 
 
         // should add node into existing hierarchy
         const cloned = cloneDeep(s.currentNode);
@@ -271,6 +271,13 @@ const saveCurrentNode = (store) => () => {
         parentNode.children = pipe(parentNode.children, [
             sortBy(newIndexOfchild)
         ]);
+
+        if(!existingNode && s.currentNode.type === "record") {
+            const defaultIndex = templateApi(s.hierarchy)
+                                    .getNewIndexTemplate(cloned.parent());
+            defaultIndex.name = `all_${cloned.collectionName}`;
+            defaultIndex.allowedRecordNodeIds = [cloned.nodeId];
+        }
 
         s.currentNodeIsNew = false;
         
