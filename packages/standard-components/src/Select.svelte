@@ -20,6 +20,7 @@ const onchange = (ev) => {
 <select class={className} 
 	    value={value} 
 	    on:change={onchange}>
+	<option></option>
 	{#each options as opt}
 	<option id={opt.id ? opt.id : opt.value}>{opt.value}</option>
 	{/each}
