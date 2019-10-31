@@ -82,7 +82,15 @@ const addToParent = (obj) => {
     if (isIndex(obj))
     // Q: why are indexes not children ?
     // A: because they cannot have children of their own.
-    { parent.indexes.push(obj); } else if (isaggregateGroup(obj)) { parent.aggregateGroups.push(obj); } else { parent.children.push(obj); }
+    { 
+      parent.indexes.push(obj); 
+    } 
+    else if (isaggregateGroup(obj)) 
+    { 
+      parent.aggregateGroups.push(obj); 
+    } else { 
+      parent.children.push(obj); 
+    }
 
     if (isRecord(obj)) {
       const defaultIndex = find(
