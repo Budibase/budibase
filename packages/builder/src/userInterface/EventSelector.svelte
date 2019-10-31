@@ -71,6 +71,7 @@ const onParameterChanged = index => val => {
 
 <div class="type-selector-container">
     <select class="type-selector uk-select uk-form-small " value={eventType} on:change={eventTypeChanged}>
+        <option></option>
         {#each events as ev}
         <option value={ev.name}>{ev.name}</option>
         {/each}
