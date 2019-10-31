@@ -79,6 +79,12 @@ let getTypeOptions = typeOptions =>
         join("<br>")
     ]);
 
+const nameChanged = ev => {
+    const pluralName = n => `${n}s`;
+    if(record.collectionName === "") {
+        record.collectionName = pluralName(ev.target.value);
+    }
+}
 
 </script>
 
@@ -87,9 +93,9 @@ let getTypeOptions = typeOptions =>
     <form class="uk-form-horizontal">
         <h3 class="settings-title">
         Settings 
-    </h3>
+        </h3>
     
-        <Textbox label="Name:" bind:text={record.name} />
+        <Textbox label="Name:" bind:text={record.name} on:change={nameChanged}/>
         {#if !record.isSingle}
         <Textbox label="Collection Name:" bind:text={record.collectionName} />
         <Textbox label="Shard Factor:" bind:text={record.allidsShardFactor} />
