@@ -65,6 +65,14 @@ describe("initialiseData", () => {
         expect(levels.levels[0].name).toBe("owner");
     });
 
+    it("should initialise 'single record' type nodes", async () => {
+        const {appDef, datastore} = getApplicationDefinition();
+        await initialiseData(datastore, appDef);        
+        expect(await datastore.exists(`/settings`)).toBeTruthy();
+        const settings = await datastore.loadJson("/settings/record.json");
+        expect(settings.type).toBe("settings");
+    });
+
     const getApplicationDefinition = () => {
         const {templateApi, app} = getMemoryTemplateApi();
         const h = basicAppHierarchyCreator_WithFields_AndIndexes(templateApi);

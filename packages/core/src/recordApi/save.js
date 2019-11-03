@@ -12,15 +12,10 @@ import {
   apiWrapper, events, $, joinKey,
 } from '../common';
 import {
-  getFlattenedHierarchy,
-  getExactNodeForPath,
-  isRecord,
-  getNode,
-  getLastPartInKey,
+  getFlattenedHierarchy, getExactNodeForPath,
+  isRecord, getNode, isSingleRecord,
   fieldReversesReferenceToNode,
 } from '../templateApi/hierarchy';
-import { mapRecord } from '../indexing/evaluate';
-import { listItems } from '../indexApi/listItems';
 import { addToAllIds } from '../indexing/allIds';
 import {
   transactionForCreateRecord,
@@ -52,7 +47,13 @@ export const _save = async (app, record, context, skipValidation = false) => {
   }
 
   if (recordClone.isNew) {
-    await addToAllIds(app.hierarchy, app.datastore)(recordClone);
+    const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+    if(!recordNode)
+      throw new Error("Cannot find node for " + record.key);
+
+    if(!isSingleRecord(recordNode))
+      await addToAllIds(app.hierarchy, app.datastore)(recordClone);
+      
     const transaction = await transactionForCreateRecord(
       app, recordClone,
     );
