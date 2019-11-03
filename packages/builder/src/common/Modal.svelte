@@ -8,12 +8,12 @@ export let id = "";
 let ukModal;
 let listenerAdded = false;
 
-$: if(ukModal && !listenerAdded) {
-    listenerAdded = true;
-    ukModal.addEventListener("hide", onClosed);
-}
-
 $: {
+    if(ukModal && !listenerAdded) {
+        listenerAdded = true;
+        ukModal.addEventListener("hide", onClosed);
+    }
+
     if(ukModal) {
         if(isOpen) {
             UIkit.modal(ukModal).show();
