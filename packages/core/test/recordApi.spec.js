@@ -3,6 +3,7 @@ import {setupApphierarchy, basicAppHierarchyCreator_WithFields,
 import {events, isNonEmptyString} from "../src/common";
 import { isBoolean } from "util";
 import {permission} from "../src/authApi/permissions";
+import { _getNew } from "../src/recordApi/getNew";
 
 describe("recordApi > getNew", () => {
 
@@ -32,7 +33,7 @@ describe("recordApi > getNew", () => {
     it("should create object with all declared fields, and use inital values", async () => {
         const {recordApi} = await setupApphierarchy(templateApi => {
             const hierarchy = basicAppHierarchyCreator_WithFields(templateApi);
-            const {root, customerRecord} = hierarchy;
+            const {customerRecord} = hierarchy;
 
             customerRecord.fields = [];
 
@@ -80,6 +81,13 @@ describe("recordApi > getNew", () => {
         app.withOnlyThisPermission(permission.createRecord.get(appHierarchy.customerRecord.nodeKey()));
         recordApi.getNew("/customers", "customer");
     });
+
+    it("for 'single record' type, should create with key ending in node name", async () => {
+        const {appHierarchy} = await setupApphierarchy(basicAppHierarchyCreator_WithFields);
+        const {settingsRecord} = appHierarchy;
+        const result = _getNew(settingsRecord, "");
+        expect(result.key).toBe("/settings")
+    })
 });
 
 describe('recordApi > save then load', () => {

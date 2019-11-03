@@ -1,6 +1,4 @@
-import {setupApphierarchy, basicAppHierarchyCreator_WithFields, 
-    getNewFieldAndAdd, stubEventHandler} from "./specHelpers";
-import { iterateIndex } from "../src/indexing/read";
+import {setupApphierarchy, basicAppHierarchyCreator_WithFields} from "./specHelpers";
 
 describe("get customId",  () => {
     it("should generate an id with given value", async () => {

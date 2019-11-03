@@ -5,7 +5,8 @@ import { AUTH_FOLDER, USERS_LIST_FILE, ACCESS_LEVELS_FILE } from '../authApi/aut
 import { initialiseRootCollections } from '../collectionApi/initialise';
 import { initialiseIndex } from '../indexing/initialiseIndex';
 import { getFlattenedHierarchy, isGlobalIndex, isSingleRecord } from '../templateApi/hierarchy';
-
+import { _getNew } from "../recordApi/getNew";
+import { _save } from "../recordApi/save";
 
 export const initialiseData = async (datastore, applicationDefinition, accessLevels) => {
   await datastore.createFolder(configFolder);
@@ -13,8 +14,6 @@ export const initialiseData = async (datastore, applicationDefinition, accessLev
 
   await initialiseRootCollections(datastore, applicationDefinition.hierarchy);
   await initialiseRootIndexes(datastore, applicationDefinition.hierarchy);
-
-  await initialiseRootSingleRecords(datastore, applicationDefinition.hierarchy);
 
   await datastore.createFolder(TRANSACTIONS_FOLDER);
 
@@ -25,6 +24,8 @@ export const initialiseData = async (datastore, applicationDefinition, accessLev
   await datastore.createJson(
     ACCESS_LEVELS_FILE, 
     accessLevels ? accessLevels : { version: 0, levels: [] });
+
+  await initialiseRootSingleRecords(datastore, applicationDefinition.hierarchy);
 };
 
 const initialiseRootIndexes = async (datastore, hierarchy) => {
@@ -38,20 +39,20 @@ const initialiseRootIndexes = async (datastore, hierarchy) => {
   }
 };
 
-const initialiseRootSingleRecords = async (datastore, hierachy) => {
-  const flathierarchy = getFlattenedHierarchy(hierachy);
+const initialiseRootSingleRecords = async (datastore, hierarchy) => {
+  const app = { 
+    publish:()=>{},
+    cleanupTransactions: () => {},
+    datastore, hierarchy 
+  };
+
+  const flathierarchy = getFlattenedHierarchy(hierarchy);
   const singleRecords = $(flathierarchy, [
     filter(isSingleRecord),
   ]);
 
-  /* for (let record of singleRecords) {
-        const result = getNew({ datastore: datastore, hierarchy: appDefinition.hierarchy })
-            (record.nodeKey(),
-                record.name
-            );
-
-        _save({ datastore: datastore, hierarchy: appDefinition.hierarchy },
-            result
-        );
-    } */
+  for (let record of singleRecords) {
+    const result = _getNew(record, "");
+    await _save(app,result);
+  }
 };
