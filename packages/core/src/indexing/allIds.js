@@ -9,9 +9,19 @@ import {
   getCollectionNodeByKeyOrNodeKey, getNodeForCollectionPath,
   isCollectionRecord, isAncestor,
 } from '../templateApi/hierarchy';
-import { joinKey, safeKey, $ } from '../common';
+import { joinKey, safeKey, $, getFileFromKey } from '../common';
+
+const RECORDS_PER_FOLDER = 1000;
 
 const allIdChars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
+
+const _new_getShardPath = (recordNode, key) => {
+  const id = getFileFromKey(key);
+
+  const determineShardFactors = (currentRecordCount, factors=[]) => {
+    const thisFactor = currentRecordCount / 1000
+  }
+}
 
 const allIdsStringsForFactor = (collectionNode) => {
   const factor = collectionNode.allidsShardFactor;
@@ -65,48 +75,9 @@ export const getAllIdsShardKey = (appHierarchy, collectionKey, recordId) => {
   );
 };
 
-const getOrCreateShardFile = async (datastore, allIdsKey) => {
-  try {
-    return await datastore.loadFile(allIdsKey);
-  } catch (eLoad) {
-    try {
-      await datastore.createFile(allIdsKey, '');
-      return '';
-    } catch (eCreate) {
-      throw new Error(
-        `Error loading, then creating allIds ${allIdsKey
-        } : LOAD : ${eLoad.message
-        } : CREATE : ${eCreate}`,
-      );
-    }
-  }
-};
-
-const getShardFile = async (datastore, allIdsKey) => {
-  try {
-    return await datastore.loadFile(allIdsKey);
-  } catch (eLoad) {
-    return '';
-  }
-};
-
-export const addToAllIds = (appHierarchy, datastore) => async (record) => {
-  const allIdsKey = getAllIdsShardKey(
-    appHierarchy,
-    getParentKey(record.key),
-    record.id,
-  );
-
-  let allIds = await getOrCreateShardFile(datastore, allIdsKey);
-
-  allIds += `${allIds.length > 0 ? ',' : ''}${record.id}`;
-
-  await datastore.updateFile(allIdsKey, allIds);
-};
-
 export const getAllIdsIterator = app => async (collection_Key_or_NodeKey) => {
   collection_Key_or_NodeKey = safeKey(collection_Key_or_NodeKey);
-  const targetNode = getCollectionNodeByKeyOrNodeKey(
+  const recordNode = getCollectionNodeByKeyOrNodeKey(
     app.hierarchy,
     collection_Key_or_NodeKey,
   );
@@ -138,8 +109,8 @@ export const getAllIdsIterator = app => async (collection_Key_or_NodeKey) => {
 
   const ancestors = $(getFlattenedHierarchy(app.hierarchy), [
     filter(isCollectionRecord),
-    filter(n => isAncestor(targetNode)(n)
-                    || n.nodeKey() === targetNode.nodeKey()),
+    filter(n => isAncestor(recordNode)(n)
+                    || n.nodeKey() === recordNode.nodeKey()),
     orderBy([n => n.nodeKey().length], ['asc']),
   ]); // parents first
 
@@ -149,7 +120,7 @@ export const getAllIdsIterator = app => async (collection_Key_or_NodeKey) => {
       parentRecordKey,
       currentNode.collectionName,
     );
-    if (currentNode.nodeKey() === targetNode.nodeKey()) {
+    if (currentNode.nodeKey() === recordNode.nodeKey()) {
       return [
         await getAllIdsIteratorForCollectionKey(
           currentCollectionKey,
@@ -191,39 +162,5 @@ export const getAllIdsIterator = app => async (collection_Key_or_NodeKey) => {
   };
 };
 
-const getAllIdsFromShard = async (datastore, shardKey) => {
-  const allIdsStr = await getShardFile(datastore, shardKey);
-
-  const allIds = [];
-  let currentId = '';
-  for (let i = 0; i < allIdsStr.length; i++) {
-    const currentChar = allIdsStr.charAt(i);
-    const isLast = (i === allIdsStr.length - 1);
-    if (currentChar === ',' || isLast) {
-      if (isLast) currentId += currentChar;
-      allIds.push(currentId);
-      currentId = '';
-    } else {
-      currentId += currentChar;
-    }
-  }
-  return allIds;
-};
-
-export const removeFromAllIds = (appHierarchy, datastore) => async (record) => {
-  const shardKey = getAllIdsShardKey(
-    appHierarchy,
-    getParentKey(record.key),
-    record.id,
-  );
-  const allIds = await getAllIdsFromShard(datastore, shardKey);
-
-  const newIds = $(allIds, [
-    pull(record.id),
-    join(','),
-  ]);
-
-  await datastore.updateFile(shardKey, newIds);
-};
 
 export default getAllIdsIterator;

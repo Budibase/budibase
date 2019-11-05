@@ -2,9 +2,7 @@ import {
   cloneDeep,
   flatten,
   map,
-  filter,
-  isEqual
-} from 'lodash/fp';
+  filter} from 'lodash/fp';
 import { initialiseChildCollections } from '../collectionApi/initialise';
 import { validate } from './validate';
 import { _load, getRecordFileName } from './load';
@@ -13,10 +11,8 @@ import {
 } from '../common';
 import {
   getFlattenedHierarchy, getExactNodeForPath,
-  isRecord, getNode, isSingleRecord,
-  fieldReversesReferenceToNode,
+  isRecord, getNode, fieldReversesReferenceToNode,
 } from '../templateApi/hierarchy';
-import { addToAllIds } from '../indexing/allIds';
 import {
   transactionForCreateRecord,
   transactionForUpdateRecord,
@@ -51,9 +47,6 @@ export const _save = async (app, record, context, skipValidation = false) => {
     if(!recordNode)
       throw new Error("Cannot find node for " + record.key);
 
-    if(!isSingleRecord(recordNode))
-      await addToAllIds(app.hierarchy, app.datastore)(recordClone);
-      
     const transaction = await transactionForCreateRecord(
       app, recordClone,
     );
@@ -131,3 +124,7 @@ const fieldsThatReferenceThisRecord = (app, recordNode) => $(app.hierarchy, [
   flatten,
   filter(fieldReversesReferenceToNode(recordNode)),
 ]);
+
+const recordFolderPath = (recordNode, key) => {
+  
+}

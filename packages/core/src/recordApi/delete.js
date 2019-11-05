@@ -9,7 +9,6 @@ import {
 } from '../templateApi/hierarchy';
 import { _deleteIndex } from '../indexApi/delete';
 import { transactionForDeleteRecord } from '../transactions/create';
-import { removeFromAllIds } from '../indexing/allIds';
 import { permission } from '../authApi/permissions';
 
 export const deleteRecord = (app, disableCleanup = false) => async key => {
@@ -43,8 +42,6 @@ export const _deleteRecord = async (app, key, disableCleanup) => {
   );
 
   await deleteFiles(app, key);
-
-  await removeFromAllIds(app.hierarchy, app.datastore)(record);
 
   if (!disableCleanup) { await app.cleanupTransactions(); }
 
