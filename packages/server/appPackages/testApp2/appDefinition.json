@@ -78,6 +78,81 @@
         "allidsShardFactor": 64,
         "collectionName": "contacts",
         "isSingle": false
+      },
+      {
+        "name": "naw",
+        "type": "record",
+        "fields": [
+          {
+            "name": "s",
+            "type": "string",
+            "typeOptions": {
+              "maxLength": null,
+              "values": null,
+              "allowDeclaredValuesOnly": false
+            },
+            "label": "s",
+            "getInitialValue": "default",
+            "getUndefinedValue": "default"
+          }
+        ],
+        "children": [],
+        "validationRules": [],
+        "nodeId": 5,
+        "indexes": [],
+        "allidsShardFactor": 64,
+        "collectionName": "nas",
+        "isSingle": false
+      },
+      {
+        "name": "jon",
+        "type": "record",
+        "fields": [
+          {
+            "name": "j",
+            "type": "string",
+            "typeOptions": {
+              "maxLength": null,
+              "values": null,
+              "allowDeclaredValuesOnly": false
+            },
+            "label": "j",
+            "getInitialValue": "default",
+            "getUndefinedValue": "default"
+          }
+        ],
+        "children": [],
+        "validationRules": [],
+        "nodeId": 6,
+        "indexes": [],
+        "allidsShardFactor": 64,
+        "collectionName": "jos",
+        "isSingle": false
+      },
+      {
+        "name": "Hello",
+        "type": "record",
+        "fields": [
+          {
+            "name": "yes",
+            "type": "string",
+            "typeOptions": {
+              "maxLength": null,
+              "values": null,
+              "allowDeclaredValuesOnly": false
+            },
+            "label": "Yea",
+            "getInitialValue": "default",
+            "getUndefinedValue": "default"
+          }
+        ],
+        "children": [],
+        "validationRules": [],
+        "nodeId": 7,
+        "indexes": [],
+        "allidsShardFactor": 64,
+        "collectionName": "",
+        "isSingle": false
       }
     ],
     "pathMaps": [],
@@ -109,6 +184,20 @@
           3
         ],
         "nodeId": 4
+      },
+      {
+        "name": "all_",
+        "type": "index",
+        "map": "return {...record};",
+        "filter": "",
+        "indexType": "ancestor",
+        "getShardName": "",
+        "getSortKey": "record.id",
+        "aggregateGroups": [],
+        "allowedRecordNodeIds": [
+          7
+        ],
+        "nodeId": 8
       }
     ],
     "nodeId": 0
