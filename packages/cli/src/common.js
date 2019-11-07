@@ -20,6 +20,6 @@ module.exports.getAppContext = async ({configName, masterIsCreated}) => {
         configName = "config.js";
     }
 
-    const config = require(join(cwd(), configName))();
+    const config = require(resolve(cwd(), configName))();
     return await buildAppContext(config, masterIsCreated);
 }

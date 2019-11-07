@@ -2,17 +2,18 @@ const { getAppContext } = require("../../common");
 const { 
     getMasterApisWithFullAccess 
 } = require("@budibase/server/utilities/budibaseApi");
-const { copy, readJSON, writeJSON, remove } = require("fs-extra");
+const { copy, readJSON, writeJSON, remove, exists } = require("fs-extra");
 const { resolve, join } = require("path");
 const thisPackageJson = require("../../../package.json");
 const {exec} = require('child_process');
 
-module.exports = ({name}) => {
-    run({name});
+module.exports = (opts) => {
+    run(opts);
 }
 
 const run = async (opts) => {
     const context = await getAppContext({configName:opts.config, masterIsCreated:true}); 
+    opts.config = context.config;
     const bb = await getMasterApisWithFullAccess(context);
 
     const app = bb.recordApi.getNew("/applications", "application");
@@ -28,11 +29,14 @@ const createEmtpyAppPackage = async (opts) => {
     const templateFolder = resolve(
         __dirname, "appPackageTemplate");
 
-    const destinationFolder = resolve(".", opts.name);
+    const appsFolder = opts.config.latestPackagesFolder || ".";
+    const destinationFolder = resolve(appsFolder, opts.name);
+
+    if(await exists(destinationFolder)) return;
 
     await copy(templateFolder, destinationFolder);
 
-    const packageJsonPath = join(opts.name, "package.json");
+    const packageJsonPath = join(appsFolder, opts.name, "package.json");
     const packageJson = await readJSON(packageJsonPath);
 
     packageJson.name = opts.name;

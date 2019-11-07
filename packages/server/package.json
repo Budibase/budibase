@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "build": "cd appPackages/_master && yarn && cd ../testApp && yarn && cd ../testApp2 && yarn",
-    "initialise": "node initialise/initialiseBudibase --datastore local --username admin --password admin --rootPath .data --cleanDev",
+    "initialise": "node initialise/initialiseBudibase --datastore local --username admin --password admin --rootPath .data --cleanDev && node ../cli/bin/budi new testApp2",
     "dev:builder": "node index"
   },
   "keywords": [
