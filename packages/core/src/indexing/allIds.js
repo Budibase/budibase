@@ -18,9 +18,32 @@ const allIdChars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX
 const _new_getShardPath = (recordNode, key) => {
   const id = getFileFromKey(key);
 
-  const determineShardFactors = (currentRecordCount, factors=[]) => {
-    const thisFactor = currentRecordCount / 1000
+
+  /**
+   * folderStructureArray should return an array like
+   * - [1] = all records fit into one folder
+   * - [2] = all records fite into 2 folders
+   * - [64, 3] = all records fit into 64 * 3 folders
+   * - [64, 64, 10] = all records fit into 64 * 64 * 10 folder
+   * (there are 64 possible chars in allIsChars) 
+  */
+  const folderStructureArray = (currentArray=[], currentFolderPosition=0) => {
+    const maxRecords = currentFolderPosition === 0 
+                       ? RECORDS_PER_FOLDER
+                       : currentFolderPosition * 64 * RECORDS_PER_FOLDER;
+
+    if(maxRecords < recordNode.estimatedRecordCount) {
+      return folderStructureArray(
+              [...currentArray, 64], 
+              currentFolderPosition + 1);
+    } else {
+      const childFolderCount = Math.ceil(maxRecords / recordNode.estimatedRecordCount);
+      return [...currentArray, childFolderCount]
+    }
   }
+
+  const folderStructure = folderStructureArray();
+
 }
 
 const allIdsStringsForFactor = (collectionNode) => {
