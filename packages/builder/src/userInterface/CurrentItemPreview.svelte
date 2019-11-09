@@ -25,7 +25,8 @@ store.subscribe(s => {
     appDefinition = {
         componentLibraries: s.loadLibraryUrls(),
         props: buildPropsHierarchy(s.allComponents, s.currentFrontEndItem),
-        hierarchy: s.hierarchy
+        hierarchy: s.hierarchy,
+        appRootPath: ""
     };
 
 });
@@ -46,7 +47,7 @@ store.subscribe(s => {
     ${stylesheetLinks}
     <script>
         window["##BUDIBASE_APPDEFINITION##"] = ${JSON.stringify(appDefinition)};
-        import('./budibase-client.esm.mjs')
+        import('/_builder/budibase-client.esm.mjs')
         .then(module => {
             module.loadBudibase();
         })        
