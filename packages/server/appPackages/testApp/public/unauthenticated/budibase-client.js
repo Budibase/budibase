@@ -20407,7 +20407,9 @@ var app = (function (exports) {
 	  ]);
 
 	  record.id = `${recordNode.nodeId}-${shortid_1()}`;
-	  record.key = joinKey(collectionKey, record.id);
+	  record.key = isSingleRecord(recordNode)
+	               ? joinKey(collectionKey, recordNode.name)
+	               : joinKey(collectionKey, record.id);
 	  record.isNew = true;
 	  record.type = recordNode.name;
 	  return record;
@@ -20618,7 +20620,10 @@ var app = (function (exports) {
 
 	    if(!componentLibraries) {
 
-	        const componentLibraryUrl = (lib) =>  "./" + trimSlash(lib);
+	        const rootPath = appDefinition.appRootPath === "" 
+	                         ? "" 
+	                         : "/" + trimSlash(appDefinition.appRootPath);
+	        const componentLibraryUrl = (lib) =>  rootPath + "/" + trimSlash(lib);
 	        componentLibraries = {};
 
 	        for(let lib of appDefinition.componentLibraries) {
