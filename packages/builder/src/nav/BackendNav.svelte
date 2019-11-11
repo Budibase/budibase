@@ -8,14 +8,30 @@ import NavItem from "./NavItem.svelte";
 import getIcon from "../common/icon";
 
 
+const newRootRecord = () => {
+    store.newRootRecord();
+}
+
+const newRootIndex = () => {
+    store.newRootIndex();
+}
+
+const newChildRecord = () => {
+    store.newChildRecord();
+}
+
+const newChildIndex = () => {
+    store.newChildIndex();
+}
+
 const defaultNewChildActions =  [
     {
-        label:"New Root Index", 
-        onclick: store.newRootIndex
-    }, 
-    {
         label:"New Root Record", 
-        onclick: store.newRootRecord
+        onclick: newRootRecord
+    },
+    {
+        label:"New Root Index", 
+        onclick: newRootIndex
     }
 ];
 
@@ -25,20 +41,27 @@ const setActiveNav = (name) => () => {
     store.setActiveNav(name);
 }
 
-
 store.subscribe(db => {
     if(!db.currentNode || hierarchyFunctions.isIndex(db.currentNode)) {
         newChildActions = defaultNewChildActions;
     } else {
         newChildActions = [
-            {label:"New Root Record", 
-            onclick: store.newRootRecord},
-            {label: `New Child Record of ${db.currentNode.name}`, 
-            onclick: store.newChildRecord},
-            {label:"New Root Index", 
-            onclick: store.newRootIndex},
-            {label: `New Index on ${db.currentNode.name}`, 
-            onclick: store.newChildIndex}
+            {
+                label:"New Root Record", 
+                onclick: newRootRecord
+            },
+            {
+                label:"New Root Index", 
+                onclick: newRootIndex
+            },
+            {
+                label: `New Child Record of ${db.currentNode.name}`, 
+                onclick: newChildRecord
+            },
+            {
+                label: `New Index on ${db.currentNode.name}`, 
+                onclick: newChildIndex
+            }
         ];
     }
 });
