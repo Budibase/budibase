@@ -62,7 +62,7 @@ Install requires [node-gyp](https://github.com/nodejs/node-gyp), due to a depend
 
 ### 2. Clone this repository
 
-`git clone git@github.com:Budibase/budibase.git`
+`git clone https://github.com/Budibase/budibase.git`
 
 then `cd ` into your local copy...
 
