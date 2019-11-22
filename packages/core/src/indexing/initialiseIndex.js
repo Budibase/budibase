@@ -2,8 +2,8 @@ import { isShardedIndex } from '../templateApi/hierarchy';
 import { joinKey } from '../common';
 import { getShardMapKey, getUnshardedIndexDataKey, createIndexFile } from './sharding';
 
-export const initialiseIndex = async (datastore, parentKey, index) => {
-  const indexKey = joinKey(parentKey, index.name);
+export const initialiseIndex = async (datastore, dir, index) => {
+  const indexKey = joinKey(dir, index.name);
 
   await datastore.createFolder(indexKey);
 
