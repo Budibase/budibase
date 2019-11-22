@@ -5,8 +5,9 @@ import {
   events, joinKey,
 } from '../common';
 import { _deleteRecord } from '../recordApi/delete';
-import { getAllIdsIterator, getAllIdsShardKey } from '../indexing/allIds';
+import { getAllIdsIterator, getAllIdsShardKey, folderStructureArray } from '../indexing/allIds';
 import { permission } from '../authApi/permissions';
+import { getRecordInfo } from "../recordApi/recordInfo";
 
 export const deleteCollection = (app, disableCleanup = false) => async key => apiWrapper(
   app,
@@ -18,19 +19,16 @@ export const deleteCollection = (app, disableCleanup = false) => async key => ap
 
 
 export const _deleteCollection = async (app, key, disableCleanup) => {
-  key = safeKey(key);
-  const node = getNodeForCollectionPath(app.hierarchy)(key);
-
-  await deleteRecords(app, key);
-  await deleteAllIdsFolders(app, node, key);
-  await deleteCollectionFolder(app, key);
+  const recordInfo = getRecordInfo(key);
+  await app.datastore.deleteFolder(recordInfo)
   if (!disableCleanup) { await app.cleanupTransactions(); }
 };
 
 const deleteCollectionFolder = async (app, key) => await app.datastore.deleteFolder(key);
 
 
-const deleteAllIdsFolders = async (app, node, key) => {
+const deleteShardFolders = async (app, node, key) => {
+
   await app.datastore.deleteFolder(
     joinKey(
       key, 'allids',
@@ -43,37 +41,4 @@ const deleteAllIdsFolders = async (app, node, key) => {
   );
 };
 
-const deleteRecords = async (app, key) => {
-  const deletedAllIdsShards = [];
-  const deleteAllIdsShard = async (recordId) => {
-    const shardKey = getAllIdsShardKey(
-      app.hierarchy, key, recordId,
-    );
 
-    if (includes(shardKey)(deletedAllIdsShards)) {
-      return;
-    }
-
-    deletedAllIdsShards.push(shardKey);
-
-    await app.datastore.deleteFile(shardKey);
-  };
-
-  const iterate = await getAllIdsIterator(app)(key);
-
-  let ids = await iterate();
-  while (!ids.done) {
-    if (ids.result.collectionKey === key) {
-      for (const id of ids.result.ids) {
-        await _deleteRecord(
-          app,
-          joinKey(key, id),
-          true,
-        );
-        await deleteAllIdsShard(id);
-      }
-    }
-
-    ids = await iterate();
-  }
-};
