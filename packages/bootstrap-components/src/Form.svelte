@@ -1,5 +1,5 @@
 <script>
-export let containerClass = "";
+
 export let formControls = [];
 
 export let _bb;
@@ -24,7 +24,7 @@ $ : {
                 _bb.insertComponent(
                     _bb.props.formControls[el].control,
                     htmlElements[el],
-                    labelElements[el]);
+                    htmlElements[el].childNodes.find(n => n.tagName === "LABEL"));
             } else {
                 _bb.appendComponent(
                     _bb.props.formControls[el].control,
@@ -38,9 +38,9 @@ $ : {
 </script>
 
 <form>
-    {#each formControls as child, index}
-    <div class="form-group" bind:this={htmlElements[index]}>
-        <label bind:this={labelElements[index]}>{labels[index]}</label>
+    {#each formControls as child, idx}
+    <div class="form-group" bind:this={htmlElements[idx]}>
+        <label>{labels[idx]}</label>
     </div>
     {/each}
 </form>
