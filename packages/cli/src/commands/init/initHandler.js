@@ -4,7 +4,8 @@ const chalk = require("chalk");
 const { serverFileName, getAppContext } = require("../../common");
 const passwordQuestion = require("@inquirer/password");
 const createMasterDb = require("@budibase/server/initialise/createMasterDb");
-var localDatastore = require("@budibase/datastores/datastores/local");
+const { join, resolve } = require("path");
+const localDatastore = require("@budibase/datastores/datastores/local");
 
 module.exports = (opts) => {
    run(opts);
@@ -12,10 +13,10 @@ module.exports = (opts) => {
 
 const run = async (opts) => {
 
-    opts.datapath = "./.data";
     await prompts(opts);
-    await createDataFolder(opts);
     await createDevConfig(opts);
+    await createAppsDir(opts);
+    await createDataFolder(opts);
     await initialiseDatabase(opts);
 }
 
@@ -32,39 +33,58 @@ const prompts = async (opts) => {
         }
     ]
 
-    const answers = await inquirer.prompt(questions);
-    const password = await passwordQuestion({
-        message: "Password for Admin: ", mask: "*"
-    });
-    const passwordConfirm = await passwordQuestion({
-        message: "Confirm Password: ", mask: "*"
-    });
+    if(!opts.username) {
+        const answers = await inquirer.prompt(questions);
+        opts.username = answers.username;
+    }
 
-    if(password !== passwordConfirm) 
-        throw new Exception("Passwords do not match!");
+    if(!opts.password) {
+
+        const password = await passwordQuestion({
+            message: "Password for Admin: ", mask: "*"
+        });
+        const passwordConfirm = await passwordQuestion({
+            message: "Confirm Password: ", mask: "*"
+        });
     
-    opts.username = answers.username;
-    opts.password = password;
+        if(password !== passwordConfirm) 
+            throw new Exception("Passwords do not match!");
+        
+        
+        opts.password = password;
+    }
+}
+
+const createAppsDir = async (opts) => {
+    if(!await exists(opts.configJson.latestPackagesFolder)) {
+        await mkdir(opts.configJson.latestPackagesFolder);
+    }
 }
 
 const createDataFolder = async (opts) => {
-    if(await exists(opts.datapath)) {
+    
+    const dataPath = opts.configJson.datastoreConfig.rootPath;
+
+    if(await exists(dataPath)) {
         const err = `The path ${opts.datapath} already exists - has budibase already been initialised? Remove the directory to try again.`;
         throw new Error(err);
     }
 
-    await mkdir(opts.datapath);
+    await mkdir(dataPath);
 }
 
 const createDevConfig = async (opts) => {
 
-    if(await exists("config.js")) {
+    const configTemplateFile = `config.${opts.config}.js`;
+    const destConfigFile = "./config.js";
+
+    if(await exists(destConfigFile)) {
         console.log(chalk.yellow("Config file already exists (config.js) - keeping your existing config"));
     } else {
-        const srcConfig = serverFileName("config.dev.js");
-        const destFile = "./config.js";
-        await copy(srcConfig, destFile);
+        const srcConfig = serverFileName(configTemplateFile);
+        await copy(srcConfig, destConfigFile);
     }
+    opts.configJson = require(resolve("./config.js"))();
 }
 
 const initialiseDatabase = async (opts) => {

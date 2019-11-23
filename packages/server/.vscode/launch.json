@@ -40,8 +40,8 @@
           "type": "node",
           "request": "launch",
           "name": "Initialise Budibase",
-          "program": "${workspaceFolder}/initialise/initialiseBudibase.js",
-          "args": ["--datastore=local", "--username=test", "--password=test", "--rootPath=./.data", "--cleanDev"],
+          "program": "yarn",
+          "args": ["run", "initialise"],
           "console": "externalTerminal" 
         }
     ]

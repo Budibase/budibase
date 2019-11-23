@@ -3,11 +3,11 @@
 module.exports = () => ({
     datastore: "local",
     datastoreConfig: {
-        rootPath: "./.data"
+        rootPath: "./myapps/.data"
     },
     keys: ["secret1", "secret2"],
     port: 4001,
-    latestPackagesFolder: "appPackages",
+    latestPackagesFolder: "./myapps",
     extraMasterPlugins: {},
     dev:true,
     customizeMaster: appDefinition => appDefinition,
