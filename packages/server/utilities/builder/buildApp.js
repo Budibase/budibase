@@ -41,9 +41,7 @@ const publicPath = (appPath, pageName) => join(appPath, "public", pageName);
 const rootPath = (config, appname) => config.useAppRootPath ? `/${appname}` : "";
 
 const copyClientLib = async (appPath, pageName) => {
-    var sourcepath = require.resolve("@budibase/client",{
-        paths: [appPath]
-    });
+    var sourcepath = require.resolve("@budibase/client");
     var destPath = join(publicPath(appPath, pageName), "budibase-client.js");
 
     await copyFile(sourcepath, destPath, constants.COPYFILE_FICLONE);

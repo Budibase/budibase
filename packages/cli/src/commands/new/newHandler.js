@@ -22,7 +22,7 @@ const run = async (opts) => {
     await bb.recordApi.save(app);
     await createEmtpyAppPackage(opts);
 
-    exec(`cd ${opts.name} && npm install`);
+    exec(`cd ${join(opts.config.latestPackagesFolder, opts.name)} && npm install`);
 }
 
 const createEmtpyAppPackage = async (opts) => {

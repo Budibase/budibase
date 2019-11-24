@@ -62,7 +62,7 @@ Install requires [node-gyp](https://github.com/nodejs/node-gyp), due to a depend
 
 ### 2. Clone this repository
 
-`git clone git@github.com:Budibase/budibase.git`
+`git clone https://github.com/Budibase/budibase.git`
 
 then `cd ` into your local copy...
 
@@ -76,7 +76,30 @@ then `cd ` into your local copy...
 
 ### 4. Running
 
-`lerna run dev:builder` - will run up the builder and server together - i.e. when you want to do some work on the builder
+A Budibase apps folder will have been created in `packages/server/myapps`. This is a blank apps folder, so you will need to create yourself an app:
+
+```
+cd packages/server
+yarn run budi -- new your-app-name
+```
+
+then 
+
+`yarn run budi` and to run the budibase server
+
+if you then want to run the builder in dev mode (i.e. with hot reloading):
+
+... keep the server running, and..
+1. Open a new console
+2. `cd packages/builder`
+3. `yarn start`
+4. Access the builder on http://localhost:3000
+
+Notice that when inside `packages/server`, you can use any Budibase CLI command via yarn:
+
+e.g. `yarn budi -- new mikes_app` == `budi new mikes_app`
+
+This will use the CLI directly from `packages/cli`, rather than your globally installed `budi`
 
 ## Documentation
 
