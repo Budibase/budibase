@@ -11,7 +11,7 @@ let listenerAdded = false;
 $: {
     if(ukModal && !listenerAdded) {
         listenerAdded = true;
-        ukModal.addEventListener("hide", onClosed);
+        ukModal.addEventListener("hidden", onClosed);
     }
 
     if(ukModal) {
