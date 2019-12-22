@@ -49,7 +49,7 @@ export const getNodesInPath = appHierarchy => key => $(appHierarchy, [
   filter(n => new RegExp(`${n.pathRegx()}`).test(key)),
 ]);
 
-export const getExactNodeForPath = appHierarchy => key => $(appHierarchy, [
+export const getExactNodeForKey = appHierarchy => key => $(appHierarchy, [
   getFlattenedHierarchy,
   find(n => new RegExp(`${n.pathRegx()}$`).test(key)),
 ]);
@@ -87,7 +87,7 @@ export const getCollectionNode = (appHierarchy, nodeKey) => $(appHierarchy, [
 ]);
 
 export const getNodeByKeyOrNodeKey = (appHierarchy, keyOrNodeKey) => {
-  const nodeByKey = getExactNodeForPath(appHierarchy)(keyOrNodeKey);
+  const nodeByKey = getExactNodeForKey(appHierarchy)(keyOrNodeKey);
   return isNothing(nodeByKey)
     ? getNode(appHierarchy, keyOrNodeKey)
     : nodeByKey;
@@ -100,13 +100,14 @@ export const getCollectionNodeByKeyOrNodeKey = (appHierarchy, keyOrNodeKey) => {
     : nodeByKey;
 };
 
-export const isNode = (appHierarchy, key) => isSomething(getExactNodeForPath(appHierarchy)(key));
+export const isNode = (appHierarchy, key) => isSomething(getExactNodeForKey(appHierarchy)(key));
 
-export const getActualKeyOfParent = (parentNodeKey, actualChildKey) => $(actualChildKey, [
-  splitKey,
-  take(splitKey(parentNodeKey).length),
-  ks => joinKey(...ks),
-]);
+export const getActualKeyOfParent = (parentNodeKey, actualChildKey) => 
+  $(actualChildKey, [
+    splitKey,
+    take(splitKey(parentNodeKey).length),
+    ks => joinKey(...ks),
+  ]);
 
 export const getParentKey = (key) => {
   return $(key, [
@@ -199,7 +200,7 @@ export const fieldReversesReferenceToIndex = indexNode => field => field.type ==
 export default {
   getLastPartInKey,
   getNodesInPath,
-  getExactNodeForPath,
+  getExactNodeForKey,
   hasMatchingAncestor,
   getNode,
   getNodeByKeyOrNodeKey,

@@ -1,13 +1,11 @@
-import { includes } from 'lodash/fp';
-import { getNodeForCollectionPath } from '../templateApi/hierarchy';
 import {
   safeKey, apiWrapper,
   events, joinKey,
 } from '../common';
 import { _deleteRecord } from '../recordApi/delete';
-import { getAllIdsIterator, getAllIdsShardKey, folderStructureArray } from '../indexing/allIds';
+import { getAllIdsIterator } from '../indexing/allIds';
 import { permission } from '../authApi/permissions';
-import { getRecordInfo } from "../recordApi/recordInfo";
+import { getCollectionDir } from "../recordApi/recordInfo";
 
 export const deleteCollection = (app, disableCleanup = false) => async key => apiWrapper(
   app,
@@ -17,28 +15,38 @@ export const deleteCollection = (app, disableCleanup = false) => async key => ap
   _deleteCollection, app, key, disableCleanup,
 );
 
+/*
+  const recordNode = getCollectionNode(app.hierarchy, key);
+
+*/
 
 export const _deleteCollection = async (app, key, disableCleanup) => {
-  const recordInfo = getRecordInfo(key);
-  await app.datastore.deleteFolder(recordInfo)
+  key = safeKey(key);
+  const collectionDir = getCollectionDir(app.hierarchy, key);
+  await deleteRecords(app, key);
+  await deleteCollectionFolder(app, collectionDir);
   if (!disableCleanup) { await app.cleanupTransactions(); }
 };
 
-const deleteCollectionFolder = async (app, key) => await app.datastore.deleteFolder(key);
+const deleteCollectionFolder = async (app, dir) => 
+  await app.datastore.deleteFolder(dir);
 
+const deleteRecords = async (app, key) => {
+  
+  const iterate = await getAllIdsIterator(app)(key);
 
-const deleteShardFolders = async (app, node, key) => {
+  let ids = await iterate();
+  while (!ids.done) {
+    if (ids.result.collectionKey === key) {
+      for (const id of ids.result.ids) {
+        await _deleteRecord(
+          app,
+          joinKey(key, id),
+          true,
+        );
+      }
+    }
 
-  await app.datastore.deleteFolder(
-    joinKey(
-      key, 'allids',
-      node.nodeId,
-    ),
-  );
-
-  await app.datastore.deleteFolder(
-    joinKey(key, 'allids'),
-  );
+    ids = await iterate();
+  }
 };
-
-

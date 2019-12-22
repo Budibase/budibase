@@ -1,16 +1,16 @@
 import {
-  find, filter, 
+  filter, 
   includes, some,
 } from 'lodash/fp';
 import { getAllIdsIterator } from '../indexing/allIds';
 import {
   getFlattenedHierarchy, getRecordNodeById,
-  getCollectionNodeByKeyOrNodeKey, getNode, isIndex,
-  isRecord, isDecendant, getAllowedRecordNodesForIndex,
+  getNode, isIndex,
+  isRecord, getAllowedRecordNodesForIndex,
   fieldReversesReferenceToIndex,
 } from '../templateApi/hierarchy';
 import {
-  joinKey, apiWrapper, events, $, allTrue,
+  joinKey, apiWrapper, events, $
 } from '../common';
 import {
   createBuildIndexFolder,
@@ -82,9 +82,11 @@ const buildReverseReferenceIndex = async (app, indexNode) => {
   }
 };
 
+/*
 const getAllowedParentCollectionNodes = (hierarchy, indexNode) => $(getAllowedRecordNodesForIndex(hierarchy, indexNode), [
   map(n => n.parent()),
 ]);
+*/
 
 const buildHeirarchalIndex = async (app, indexNode) => {
   let recordCount = 0;
@@ -127,10 +129,11 @@ const buildHeirarchalIndex = async (app, indexNode) => {
   return recordCount;
 };
 
-const chooseChildRecordNodeByKey = (collectionNode, recordId) => find(c => recordId.startsWith(c.nodeId))(collectionNode.children);
+// const chooseChildRecordNodeByKey = (collectionNode, recordId) => find(c => recordId.startsWith(c.nodeId))(collectionNode.children);
 
 const recordNodeApplies = indexNode => recordNode => includes(recordNode.nodeId)(indexNode.allowedRecordNodeIds);
 
+/*
 const hasApplicableDecendant = (hierarchy, ancestorNode, indexNode) => $(hierarchy, [
   getFlattenedHierarchy,
   filter(
@@ -141,7 +144,9 @@ const hasApplicableDecendant = (hierarchy, ancestorNode, indexNode) => $(hierarc
     ),
   ),
 ]);
+*/
 
+ /*
 const applyAllDecendantRecords = async (app, collection_Key_or_NodeKey,
   indexNode, indexKey, currentIndexedData,
   currentIndexedDataKey, recordCount = 0) => {
@@ -194,5 +199,6 @@ const applyAllDecendantRecords = async (app, collection_Key_or_NodeKey,
 
   return recordCount;
 };
+*/
 
 export default buildIndex;

@@ -721,7 +721,7 @@
     fp.filter(n => new RegExp(`${n.pathRegx()}`).test(key)),
   ]);
 
-  const getExactNodeForPath = appHierarchy => key => $(appHierarchy, [
+  const getExactNodeForKey = appHierarchy => key => $(appHierarchy, [
     getFlattenedHierarchy,
     fp.find(n => new RegExp(`${n.pathRegx()}$`).test(key)),
   ]);
@@ -759,7 +759,7 @@
   ]);
 
   const getNodeByKeyOrNodeKey = (appHierarchy, keyOrNodeKey) => {
-    const nodeByKey = getExactNodeForPath(appHierarchy)(keyOrNodeKey);
+    const nodeByKey = getExactNodeForKey(appHierarchy)(keyOrNodeKey);
     return isNothing(nodeByKey)
       ? getNode(appHierarchy, keyOrNodeKey)
       : nodeByKey;
@@ -772,7 +772,7 @@
       : nodeByKey;
   };
 
-  const isNode = (appHierarchy, key) => isSomething(getExactNodeForPath(appHierarchy)(key));
+  const isNode = (appHierarchy, key) => isSomething(getExactNodeForKey(appHierarchy)(key));
 
   const getActualKeyOfParent = (parentNodeKey, actualChildKey) => $(actualChildKey, [
     splitKey,
@@ -871,7 +871,7 @@
   var hierarchy = {
     getLastPartInKey,
     getNodesInPath,
-    getExactNodeForPath,
+    getExactNodeForKey,
     hasMatchingAncestor,
     getNode,
     getNodeByKeyOrNodeKey,
@@ -1607,7 +1607,7 @@
 
   const _load = async (app, key, keyStack = []) => {
     key = safeKey(key);
-    const recordNode = getExactNodeForPath(app.hierarchy)(key);
+    const recordNode = getExactNodeForKey(app.hierarchy)(key);
     const storedData = await app.datastore.loadJson(
       getRecordFileName(key),
     );
@@ -1753,7 +1753,7 @@
   };
 
   const getShardKeysInRange = async (app, indexKey, startRecord = null, endRecord = null) => {
-    const indexNode = getExactNodeForPath(app.hierarchy)(indexKey);
+    const indexNode = getExactNodeForKey(app.hierarchy)(indexKey);
 
     const startShardName = !startRecord
       ? null
@@ -4398,7 +4398,7 @@
       ));
 
     indexKey = safeKey(indexKey);
-    const indexNode = getExactNodeForPath(app.hierarchy)(indexKey);
+    const indexNode = getExactNodeForKey(app.hierarchy)(indexKey);
 
     if (!isIndex(indexNode)) { throw new Error('supplied key is not an index'); }
 
@@ -4430,7 +4430,7 @@
 
   const _getContext = (app, recordKey) => {
     recordKey = safeKey(recordKey);
-    const recordNode = getExactNodeForPath(app.hierarchy)(recordKey);
+    const recordNode = getExactNodeForKey(app.hierarchy)(recordKey);
 
     const cachedReferenceIndexes = {};
 
@@ -4538,7 +4538,7 @@
       ? _getContext(app, record.key)
       : context;
 
-    const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+    const recordNode = getExactNodeForKey(app.hierarchy)(record.key);
     const fieldParseFails = validateAllFieldParse(record, recordNode);
 
     // non parsing would cause further issues - exit here
@@ -4598,7 +4598,7 @@
 
   const initialiseChildCollections = async (app, recordKey) => {
     const childCollectionRecords = $(recordKey, [
-      getExactNodeForPath(app.hierarchy),
+      getExactNodeForKey(app.hierarchy),
       n => n.children,
       fp.filter(isCollectionRecord),
     ]);
@@ -4969,7 +4969,7 @@
     }
 
     if (recordClone.isNew) {
-      const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+      const recordNode = getExactNodeForKey(app.hierarchy)(record.key);
       if(!recordNode)
         throw new Error("Cannot find node for " + record.key);
 
@@ -5018,7 +5018,7 @@
   };
 
   const initialiseAncestorIndexes = async (app, record) => {
-    const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+    const recordNode = getExactNodeForKey(app.hierarchy)(record.key);
 
     for (const index of recordNode.indexes) {
       const indexKey = joinKey(record.key, index.name);
@@ -5027,7 +5027,7 @@
   };
 
   const initialiseReverseReferenceIndexes = async (app, record) => {
-    const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+    const recordNode = getExactNodeForKey(app.hierarchy)(record.key);
 
     const indexNodes = $(fieldsThatReferenceThisRecord(app, recordNode), [
       fp.map(f => $(f.typeOptions.reverseIndexNodeKeys, [
@@ -5126,7 +5126,7 @@
 
   const _deleteIndex = async (app, indexKey, includeFolder) => {
     indexKey = safeKey(indexKey);
-    const indexNode = getExactNodeForPath(app.hierarchy)(indexKey);
+    const indexNode = getExactNodeForKey(app.hierarchy)(indexKey);
 
     if (!isIndex(indexNode)) { throw new Error('Supplied key is not an index'); }
 
@@ -5171,7 +5171,7 @@
   // called deleteRecord because delete is a keyword
   const _deleteRecord = async (app, key, disableCleanup) => {
     key = safeKey(key);
-    const node = getExactNodeForPath(app.hierarchy)(key);
+    const node = getExactNodeForKey(app.hierarchy)(key);
 
     const record = await _load(app, key);
     await transactionForDeleteRecord(app, record);
@@ -5198,7 +5198,7 @@
   };
 
   const deleteIndexes = async (app, key) => {
-    const node = getExactNodeForPath(app.hierarchy)(key);
+    const node = getExactNodeForKey(app.hierarchy)(key);
     /* const reverseIndexKeys = $(app.hierarchy, [
           getFlattenedHierarchy,
           map(n => n.fields),
@@ -5305,7 +5305,7 @@
   };
 
   const checkFileSizeAgainstFields = (app, record, relativeFilePath, expectedSize) => {
-    const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+    const recordNode = getExactNodeForKey(app.hierarchy)(record.key);
 
     const incorrectFileFields = $(recordNode.fields, [
       fp.filter(f => f.type === 'file'
@@ -5552,7 +5552,7 @@
 
   const _aggregates = async (app, indexKey, rangeStartParams, rangeEndParams) => {
     indexKey = safeKey(indexKey);
-    const indexNode = getExactNodeForPath(app.hierarchy)(indexKey);
+    const indexNode = getExactNodeForKey(app.hierarchy)(indexKey);
 
     if (!isIndex(indexNode)) { throw new BadRequestError('supplied key is not an index'); }
 
@@ -7426,7 +7426,7 @@
   };
 
   const getRelevantReverseReferenceIndexes = (appHierarchy, record) => $(record.key, [
-    getExactNodeForPath(appHierarchy),
+    getExactNodeForKey(appHierarchy),
     n => n.fields,
     fp.filter(f => f.type === 'reference'
                       && isSomething(record[f.name])
@@ -7836,7 +7836,7 @@
       }
 
       if (isReferenceIndex(indexNode)) {
-        const recordNode = getExactNodeForPath(hierarchy)(t.record.key);
+        const recordNode = getExactNodeForKey(hierarchy)(t.record.key);
         const refFields = $(recordNode.fields, [
           fp.filter(fieldReversesReferenceToIndex(indexNode)),
         ]);

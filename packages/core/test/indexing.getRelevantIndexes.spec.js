@@ -1,11 +1,14 @@
-import {getMemoryTemplateApi, 
-        basicAppHierarchyCreator_WithFields, 
-        setupApphierarchy, 
-        basicAppHierarchyCreator_WithFields_AndIndexes} from "./specHelpers";
-import {getRelevantReverseReferenceIndexes,
-        getRelevantAncestorIndexes} from "../src/indexing/relevant";
+import {
+setupApphierarchy, 
+basicAppHierarchyCreator_WithFields_AndIndexes
+} from "./specHelpers";
+import {
+getRelevantReverseReferenceIndexes,
+getRelevantAncestorIndexes
+} from "../src/indexing/relevant";
 import {some} from "lodash";
 import {joinKey} from "../src/common";
+import { getRecordInfo } from "../src/recordApi/recordInfo";
 
 describe("getRelevantIndexes", () => {
 
@@ -45,7 +48,7 @@ describe("getRelevantIndexes", () => {
         expect(indexes.length).toBe(4);
         
         const indexExists = key => 
-            some(indexes, c => c.indexKey === key);
+            some(indexes, c => c.indexDir === key);
         
         expect(indexExists("/customer_index")).toBeTruthy();
         expect(indexExists("/deceased")).toBeTruthy();
@@ -64,7 +67,7 @@ describe("getRelevantIndexes", () => {
             appHierarchy.root, invoice);
         
         const indexExists = key => 
-            some(indexes, c => c.indexKey === key);
+            some(indexes, c => c.indexDir === key);
 
         expect(indexExists("/customersBySurname")).toBeFalsy();
     });
@@ -82,7 +85,7 @@ describe("getRelevantIndexes", () => {
         expect(indexes.length).toBe(4);
         
         const indexExists = key => 
-            some(indexes, c => c.indexKey === key);
+            some(indexes, c => c.indexDir === key);
 
         expect(indexExists("/customersBySurname")).toBeTruthy();
     });
@@ -96,14 +99,14 @@ describe("getRelevantIndexes", () => {
 
         const indexes = getRelevantAncestorIndexes(
             appHierarchy.root, invoice);
-
+        const {dir} = getRecordInfo(appHierarchy.root, `/customers/${nodeid}-1234`);
         expect(indexes.length).toBe(4);
-        expect(some(indexes, i => i.indexKey === `/customer_invoices`)).toBeTruthy();
-        expect(some(indexes, i => i.indexKey === `/customers/${nodeid}-1234/invoice_index`)).toBeTruthy();
+        expect(some(indexes, i => i.indexDir === `/customer_invoices`)).toBeTruthy();
+        expect(some(indexes, i => i.indexDir === `${dir}/invoice_index`)).toBeTruthy();
     });
 
     it("should get reverseReferenceIndex accross hierarchy branches", async () => {
-        const {appHierarchy,
+        const {appHierarchy, 
                 recordApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
         
         const partner = recordApi.getNew("/partners", "partner");
@@ -118,8 +121,9 @@ describe("getRelevantIndexes", () => {
         const indexes = getRelevantReverseReferenceIndexes(
             appHierarchy.root, customer);
         expect(indexes.length).toBe(1);
-        expect(indexes[0].indexKey)
-        .toBe(joinKey(partner.key, appHierarchy.partnerCustomersReverseIndex.name));
+        const partnerdir = getRecordInfo(appHierarchy.root, partner.key).dir;
+        expect(indexes[0].indexDir)
+        .toBe(joinKey(partnerdir, appHierarchy.partnerCustomersReverseIndex.name));
 
 
     });
@@ -136,8 +140,11 @@ describe("getRelevantIndexes", () => {
         
         const indexes = getRelevantReverseReferenceIndexes(
             appHierarchy.root, referredToCustomer);
+
+        const referredByCustomerDir = getRecordInfo(appHierarchy.root, referredByCustomer.key).dir;
+        
         expect(indexes.length).toBe(1);
-        expect(indexes[0].indexKey)
-        .toBe(joinKey(referredByCustomer.key, appHierarchy.referredToCustomersReverseIndex.name));
+        expect(indexes[0].indexDir)
+        .toBe(joinKey(referredByCustomerDir, appHierarchy.referredToCustomersReverseIndex.name));
     });
 });

@@ -3,19 +3,19 @@ import { joinKey } from '../common';
 import { getShardMapKey, getUnshardedIndexDataKey, createIndexFile } from './sharding';
 
 export const initialiseIndex = async (datastore, dir, index) => {
-  const indexKey = joinKey(dir, index.name);
+  const indexDir = joinKey(dir, index.name);
 
-  await datastore.createFolder(indexKey);
+  await datastore.createFolder(indexDir);
 
   if (isShardedIndex(index)) {
     await datastore.createFile(
-      getShardMapKey(indexKey),
+      getShardMapKey(indexDir),
       '[]',
     );
   } else {
     await createIndexFile(
       datastore,
-      getUnshardedIndexDataKey(indexKey),
+      getUnshardedIndexDataKey(indexDir),
       index,
     );
   }

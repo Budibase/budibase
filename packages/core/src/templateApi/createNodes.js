@@ -171,7 +171,7 @@ const _getNewRecordTemplate = (parent, name, createDefaultIndex, isSingle) => {
     validationRules: [],
     nodeId: getNodeId(parent),
     indexes: [],
-    allidsShardFactor: isRecord(parent) ? 1 : 64,
+    estimatedRecordCount: isRecord(parent) ? 500 : 1000000,
     collectionName: '',
     isSingle,
   });

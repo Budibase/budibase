@@ -5,7 +5,7 @@ import {getLockFileContent} from "../src/common/lock";
 import {some, isArray} from "lodash";
 import {cleanup} from "../src/transactions/cleanup";
 import {LOCK_FILE_KEY} from "../src/transactions/transactionsCommon";
-
+import { getRecordInfo } from "../src/recordApi/recordInfo";
 
 describe("cleanup transactions", () => {
 
@@ -96,7 +96,7 @@ describe("cleanup transactions", () => {
 
     it("should not reindex when transactionId does not match that of the record", async () => {
 
-        const {recordApi, app,
+        const {recordApi, app, 
             indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes, true);
         const record = recordApi.getNew("/customers", "customer");
         record.surname = "Ledog";
@@ -109,8 +109,10 @@ describe("cleanup transactions", () => {
         await recordApi.save(savedRecord);
 
         savedRecord.transactionId = "something else";
+
+        const recordInfo = getRecordInfo(app.hierarchy, savedRecord.key);
         await recordApi._storeHandle.updateJson(
-            joinKey(savedRecord.key, "record.json"), 
+            recordInfo.child("record.json"), 
             savedRecord);
         
         await cleanup(app);
@@ -123,7 +125,7 @@ describe("cleanup transactions", () => {
 
     it("should not reindex when transactionId does not match that of the record, and has multiple transactions", async () => {
 
-        const {recordApi, app,
+        const {recordApi, app, 
             indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes, true);
         const record = recordApi.getNew("/customers", "customer");
         record.surname = "Ledog";
@@ -139,8 +141,10 @@ describe("cleanup transactions", () => {
         await recordApi.save(savedRecord);
 
         savedRecord.transactionId = "something else";
+        
+        const recordInfo = getRecordInfo(app.hierarchy, savedRecord.key);
         await recordApi._storeHandle.updateJson(
-            joinKey(savedRecord.key, "record.json"), 
+            recordInfo.child("record.json"), 
             savedRecord);
         
         await cleanup(app);
@@ -228,7 +232,7 @@ describe("cleanup transactions", () => {
             indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes, true);
         const record = recordApi.getNew("/customers", "customer");
         record.surname = "Ledog";
-        const savedRecord = await recordApi.save(record);
+        await recordApi.save(record);
         const currentTime = await app.getEpochTime();
         await recordApi._storeHandle.createFile(
             LOCK_FILE_KEY, 
@@ -252,7 +256,7 @@ describe("cleanup transactions", () => {
             indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes, true);
         const record = recordApi.getNew("/customers", "customer");
         record.surname = "Ledog";
-        const savedRecord = await recordApi.save(record);
+        await recordApi.save(record);
         await recordApi._storeHandle.createFile(
             LOCK_FILE_KEY, 
             getLockFileContent(30000, (new Date(1990,1,1,0,0,0,0).getTime()))
