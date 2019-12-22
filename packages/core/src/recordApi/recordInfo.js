@@ -1,18 +1,19 @@
 import { 
-  getExactNodeForPath, getActualKeyOfParent, isRoot
+  getExactNodeForKey, getActualKeyOfParent, 
+  isRoot, isSingleRecord, getNodeForCollectionPath
 } from '../templateApi/hierarchy';
 import {
-map, reduce
+reduce, find, filter, take
 } from 'lodash/fp';
 import {
-$, getDirFomKey, getFileFromKey, joinKey, safeKey
+$, getFileFromKey, joinKey, safeKey, keySep
 } from '../common';
 import { 
     folderStructureArray, allIdChars 
 } from "../indexing/allIds";
 
-export const getRecordInfo = (app, key) => {
-  const recordNode = getExactNodeForPath(app.hierarchy)(key);
+export const getRecordInfo = (hierarchy, key) => {
+  const recordNode = getExactNodeForKey(hierarchy)(key);
   const pathInfo = getRecordDirectory(recordNode, key);
   const dir = joinKey(pathInfo.base, ...pathInfo.subdirs);
 
@@ -25,6 +26,13 @@ export const getRecordInfo = (app, key) => {
   };
 }
 
+export const getCollectionDir = (hierarchy, collectionKey) => {
+  const recordNode = getNodeForCollectionPath(hierarchy)(collectionKey);
+  const dummyRecordKey = joinKey(collectionKey, "1-abcd");
+  const pathInfo = getRecordDirectory(recordNode, dummyRecordKey);
+  return pathInfo.base;
+}
+
 const recordJson = (dir) => 
   joinKey(dir, "record.json")
 
@@ -34,31 +42,53 @@ const files = (dir) =>
 const getRecordDirectory = (recordNode, key) => {
   const id = getFileFromKey(key);
   
-  const traverseParentKeys = (n, keys=[]) => {
-    if(isRoot(n)) return keys;
-    const k = getActualKeyOfParent(n, key);
+  const traverseParentKeys = (n, parents=[]) => {
+    if(isRoot(n)) return parents;
+    const k = getActualKeyOfParent(n.nodeKey(), key);
+    const thisNodeDir = {
+      node:n,
+      relativeDir: joinKey(
+        recordRelativeDirectory(n, getFileFromKey(k)))
+    };
+    return traverseParentKeys(
+      n.parent(), 
+      [thisNodeDir, ...parents]);
   }
 
+  const parentDirs = $(recordNode.parent(), [
+    traverseParentKeys,
+    reduce((key, item) => {
+      return joinKey(key, item.node.collectionName, item.relativeDir)
+    }, keySep)
+  ]);
+
+  const subdirs = isSingleRecord(recordNode)
+                  ? []
+                  : recordRelativeDirectory(recordNode, id);
+  const base = isSingleRecord(recordNode)
+               ? joinKey(parentDirs, recordNode.name)
+               : joinKey(parentDirs, recordNode.collectionName);
+
   return ({
-    base:getDirFomKey(key),
-    subdirs: [recordNode.nodeId.toString(), ...subfolders]
+    subdirs, base
   });
 }
 
 const recordRelativeDirectory = (recordNode, id) => {
   const folderStructure = folderStructureArray(recordNode);
-
+  const strippedId = id.substring(recordNode.nodeId.toString().length + 1);
   const subfolders = $(folderStructure, [
     reduce((result, currentCount) => {
-    result.folders.push(
-        folderForChar(id[result.level], currentCount)
-    );
-    return {level:result.level+1, folders:result.folders}
+      result.folders.push(
+          folderForChar(strippedId[result.level], currentCount)
+      );
+      return {level:result.level+1, folders:result.folders};
     }, {level:0, folders:[]}),
-    map(f => f.folders),
+    f => f.folders,
+    filter(f => !!f)
   ]);
 
-  return [recordNode.nodeId.toString(), ...subfolders]
+  return [recordNode.nodeId.toString(), ...subfolders, id]
 }
 
 const folderForChar = (char, folderCount) => 

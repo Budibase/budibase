@@ -22,12 +22,10 @@ import {permission} from "../src/authApi/permissions";
 import {generateFullPermissions} from "../src/authApi/generateFullPermissions"
 import {initialiseData} from "../src/appInitialise/initialiseData";
 
-const exp = module.exports;
-
 export const testFileArea = (testNameArea) => path.join("test", "fs_test_area", testNameArea);
-export const testConfigFolder = (testAreaName) => path.join(exp.testFileArea(testAreaName), configFolder);
-export const testFieldDefinitionsPath = (testAreaName) => path.join(exp.testFileArea(testAreaName), fieldDefinitions);
-export const testTemplatesPath = (testAreaName) => path.join(exp.testFileArea(testAreaName), templateDefinitions);
+export const testConfigFolder = (testAreaName) => path.join(testFileArea(testAreaName), configFolder);
+export const testFieldDefinitionsPath = (testAreaName) => path.join(testFileArea(testAreaName), fieldDefinitions);
+export const testTemplatesPath = (testAreaName) => path.join(testFileArea(testAreaName), templateDefinitions);
  
 export const getMemoryStore = () => setupDatastore(memory({}));
 export const getMemoryTemplateApi = () => {

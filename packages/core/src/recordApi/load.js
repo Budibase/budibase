@@ -2,7 +2,7 @@ import {
   keyBy, mapValues, filter, 
   map, includes, last,
 } from 'lodash/fp';
-import { getExactNodeForPath, getNode } from '../templateApi/hierarchy';
+import { getExactNodeForKey, getNode } from '../templateApi/hierarchy';
 import { safeParseField } from '../types';
 import {
   $, splitKey, safeKey, isNonEmptyString,
@@ -72,7 +72,7 @@ export const _loadFromInfo = async (app, recordInfo, keyStack = []) => {
 export const _load = async (app, key, keyStack = []) => 
   _loadFromInfo(
     app,
-    getRecordInfo(app, key),
+    getRecordInfo(app.hierarchy, key),
     keyStack);
 
 

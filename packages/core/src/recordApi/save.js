@@ -4,13 +4,13 @@ import {
 } from 'lodash/fp';
 import { initialiseChildCollections } from '../collectionApi/initialise';
 import { validate } from './validate';
-import { _loadFromInfo, getRecordFileName } from './load';
+import { _loadFromInfo } from './load';
 import {
   apiWrapper, events, $, joinKey,
 } from '../common';
 import {
-  getFlattenedHierarchy, getExactNodeForPath,
-  isRecord, getNode, fieldReversesReferenceToNode,
+  getFlattenedHierarchy, isRecord, getNode, 
+  fieldReversesReferenceToNode,
 } from '../templateApi/hierarchy';
 import {
   transactionForCreateRecord,
@@ -42,7 +42,7 @@ export const _save = async (app, record, context, skipValidation = false) => {
     }
   }
 
-  const recordInfo = getRecordInfo(app.record.key);
+  const recordInfo = getRecordInfo(app.hierarchy, record.key);
   const {
     recordNode, pathInfo,
     recordJson, files,
@@ -92,7 +92,9 @@ export const _save = async (app, record, context, skipValidation = false) => {
 const initialiseAncestorIndexes = async (app, recordInfo) => {
   for (const index of recordInfo.recordNode.indexes) {
     const indexKey = recordInfo.child(index.name);
-    if (!await app.datastore.exists(indexKey)) { await initialiseIndex(app.datastore, recordInfo.dir, index); }
+    if (!await app.datastore.exists(indexKey)) { 
+      await initialiseIndex(app.datastore, recordInfo.dir, index); 
+    }
   }
 };
 
@@ -125,7 +127,7 @@ const fieldsThatReferenceThisRecord = (app, recordNode) => $(app.hierarchy, [
 
 const createRecordFolderPath = async (datastore, pathInfo) => {
   
-  const recursiveCreateFolder = async (subdirs, dirsThatNeedCreated=[]) => {
+  const recursiveCreateFolder = async (subdirs, dirsThatNeedCreated=undefined) => {
 
     // iterate backwards through directory hierachy
     // until we get to a folder that exists, then create the rest
@@ -138,12 +140,16 @@ const createRecordFolderPath = async (datastore, pathInfo) => {
     if(await datastore.exists(thisFolder)) {
 
       let creationFolder = thisFolder;
-      for(let nextDir of dirsThatNeedCreated) {
+      for(let nextDir of (dirsThatNeedCreated || []) ) {
         creationFolder = joinKey(creationFolder, nextDir);
         await datastore.createFolder(creationFolder);
       }
 
-    } else if(dirsThatNeedCreated.length > 0) {
+    } else if(!dirsThatNeedCreated || dirsThatNeedCreated.length > 0) {
+
+      dirsThatNeedCreated = !dirsThatNeedCreated
+                          ? []
+                          :dirsThatNeedCreated;
       
       await recursiveCreateFolder(
         take(subdirs.length - 1)(subdirs),

@@ -9,10 +9,11 @@ import {
   getShardKeysInRange,
 } from '../indexing/sharding';
 import {
-  getExactNodeForPath, isIndex,
+  getExactNodeForKey, isIndex,
   isShardedIndex,
 } from '../templateApi/hierarchy';
 import { permission } from '../authApi/permissions';
+import { getIndexDir } from "./getIndexDir";
 
 export const listItems = app => async (indexKey, options) => {
   indexKey = safeKey(indexKey);
@@ -33,29 +34,30 @@ const _listItems = async (app, indexKey, options = defaultOptions) => {
     merge(defaultOptions),
   ]);
 
-  const getItems = async key => (isNonEmptyString(searchPhrase)
+  const getItems = async indexedDataKey => (isNonEmptyString(searchPhrase)
     ? await searchIndex(
       app.hierarchy,
       app.datastore,
       indexNode,
-      key,
+      indexedDataKey,
       searchPhrase,
     )
     : await readIndex(
       app.hierarchy,
       app.datastore,
       indexNode,
-      key,
+      indexedDataKey,
     ));
 
   indexKey = safeKey(indexKey);
-  const indexNode = getExactNodeForPath(app.hierarchy)(indexKey);
+  const indexNode = getExactNodeForKey(app.hierarchy)(indexKey);
+  const indexDir = getIndexDir(app.hierarchy, indexKey);
 
   if (!isIndex(indexNode)) { throw new Error('supplied key is not an index'); }
 
   if (isShardedIndex(indexNode)) {
     const shardKeys = await getShardKeysInRange(
-      app, indexKey, rangeStartParams, rangeEndParams,
+      app, indexNode, indexDir, rangeStartParams, rangeEndParams,
     );
     const items = [];
     for (const k of shardKeys) {
@@ -64,6 +66,6 @@ const _listItems = async (app, indexKey, options = defaultOptions) => {
     return flatten(items);
   }
   return await getItems(
-    getUnshardedIndexDataKey(indexKey),
+    getUnshardedIndexDataKey(indexDir),
   );
 };

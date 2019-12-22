@@ -1,8 +1,5 @@
 import {setupApphierarchy,
     basicAppHierarchyCreator_WithFields} from "./specHelpers";
-import {keys, filter} from "lodash/fp";
-import {$} from "../src/common";
-import {permission} from "../src/authApi/permissions";
 import {Readable} from "readable-stream";
 
 

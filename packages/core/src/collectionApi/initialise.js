@@ -3,13 +3,13 @@ import {
   getFlattenedHierarchy,
   isCollectionRecord,
   isRoot,
-  getExactNodeForPath,
 } from '../templateApi/hierarchy';
 import { $, allTrue, joinKey } from '../common';
 
 const ensureCollectionIsInitialised = async (datastore, node, dir) => {
   if (!await datastore.exists(dir)) {
     await datastore.createFolder(dir);
+    await datastore.createFolder(joinKey(dir, node.nodeId));
   }
 };
 
@@ -29,7 +29,7 @@ export const initialiseRootCollections = async (datastore, hierarchy) => {
     await ensureCollectionIsInitialised(
       datastore,
       col,
-      col.collectionPathRegx(),
+      col.collectionPathRegx()
     );
   }
 };

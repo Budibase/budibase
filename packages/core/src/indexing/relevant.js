@@ -9,21 +9,23 @@ import {
 } from '../common';
 import {
   getFlattenedHierarchy, getNode, getRecordNodeId,
-  getExactNodeForPath, recordNodeIdIsAllowed,
+  getExactNodeForKey, recordNodeIdIsAllowed,
   isRecord, isGlobalIndex,
 } from '../templateApi/hierarchy';
 import { indexTypes } from '../templateApi/indexes';
+import { getIndexDir } from "../indexApi/getIndexDir";
+import { getRecordInfo} from "../recordApi/recordInfo";
 
-export const getRelevantAncestorIndexes = (appHierarchy, record) => {
+export const getRelevantAncestorIndexes = (hierarchy, record) => {
   const key = record.key;
   const keyParts = splitKey(key);
   const nodeId = getRecordNodeId(key);
 
-  const flatHierarchy = orderBy(getFlattenedHierarchy(appHierarchy),
+  const flatHierarchy = orderBy(getFlattenedHierarchy(hierarchy),
     [node => node.pathRegx().length],
     ['desc']);
 
-  const makeindexNodeAndKey_ForAncestorIndex = (indexNode, indexKey) => makeIndexNodeAndKey(indexNode, joinKey(indexKey, indexNode.name));
+  const makeindexNodeAndDir_ForAncestorIndex = (indexNode, parentRecordDir) => makeIndexNodeAndDir(indexNode, joinKey(parentRecordDir, indexNode.name));
 
   const traverseAncestorIndexesInPath = () => reduce((acc, part) => {
     const currentIndexKey = joinKey(acc.lastIndexKey, part);
@@ -42,8 +44,10 @@ export const getRelevantAncestorIndexes = (appHierarchy, record) => {
                          || includes(nodeId)(i.allowedRecordNodeIds))),
     ]);
 
+    const currentRecordDir = getRecordInfo(hierarchy, currentIndexKey).dir;
+
     each(v => acc.nodesAndKeys.push(
-      makeindexNodeAndKey_ForAncestorIndex(v, currentIndexKey),
+      makeindexNodeAndDir_ForAncestorIndex(v, currentRecordDir),
     ))(indexes);
 
     return acc;
@@ -51,31 +55,35 @@ export const getRelevantAncestorIndexes = (appHierarchy, record) => {
 
   const rootIndexes = $(flatHierarchy, [
     filter(n => isGlobalIndex(n) && recordNodeIdIsAllowed(n)(nodeId)),
-    map(i => makeIndexNodeAndKey(i, i.nodeKey())),
+    map(i => makeIndexNodeAndDir(
+              i, 
+              getIndexDir(hierarchy, i.nodeKey()))),
   ]);
 
   return union(traverseAncestorIndexesInPath())(rootIndexes);
 };
 
-export const getRelevantReverseReferenceIndexes = (appHierarchy, record) => $(record.key, [
-  getExactNodeForPath(appHierarchy),
+export const getRelevantReverseReferenceIndexes = (hierarchy, record) => $(record.key, [
+  getExactNodeForKey(hierarchy),
   n => n.fields,
   filter(f => f.type === 'reference'
                     && isSomething(record[f.name])
                     && isNonEmptyString(record[f.name].key)),
   map(f => $(f.typeOptions.reverseIndexNodeKeys, [
     map(n => ({
-      recordNode: getNode(appHierarchy, n),
+      recordNode: getNode(hierarchy, n),
       field: f,
     })),
   ])),
   flatten,
-  map(n => makeIndexNodeAndKey(
+  map(n => makeIndexNodeAndDir(
     n.recordNode,
-    joinKey(record[n.field.name].key, n.recordNode.name),
+    joinKey(
+      getRecordInfo(hierarchy, record[n.field.name].key).dir, 
+      n.recordNode.name),
   )),
 ]);
 
-const makeIndexNodeAndKey = (indexNode, indexKey) => ({ indexNode, indexKey });
+const makeIndexNodeAndDir = (indexNode, indexDir) => ({ indexNode, indexDir });
 
 export default getRelevantAncestorIndexes;

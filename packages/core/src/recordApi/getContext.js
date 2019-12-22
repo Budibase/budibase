@@ -1,6 +1,6 @@
 import { map, isString, has, some } from 'lodash/fp';
 import {
-  getExactNodeForPath,
+  getExactNodeForKey,
   findField, getNode, isGlobalIndex,
 } from '../templateApi/hierarchy';
 import { listItems } from '../indexApi/listItems';
@@ -23,7 +23,7 @@ export const getContext = app => recordKey => {
 
 export const _getContext = (app, recordKey) => {
   recordKey = safeKey(recordKey);
-  const recordNode = getExactNodeForPath(app.hierarchy)(recordKey);
+  const recordNode = getExactNodeForKey(app.hierarchy)(recordKey);
 
   const cachedReferenceIndexes = {};
 

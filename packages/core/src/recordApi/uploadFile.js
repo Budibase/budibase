@@ -3,15 +3,16 @@ import {
   map, some,
 } from 'lodash/fp';
 import { generate } from 'shortid';
-import { _load } from './load';
+import { _loadFromInfo } from './load';
 import {
   apiWrapper, events, splitKey,
   $, joinKey, isNothing, tryAwaitOrIgnore,
 } from '../common';
-import { getExactNodeForPath } from '../templateApi/hierarchy';
+import { getExactNodeForKey } from '../templateApi/hierarchy';
 import { permission } from '../authApi/permissions';
 import { isLegalFilename } from '../types/file';
 import { BadRequestError, ForbiddenError } from '../common/errors';
+import { getRecordInfo } from "./recordInfo";
 
 export const uploadFile = app => async (recordKey, readableStream, relativeFilePath) => apiWrapper(
   app,
@@ -26,10 +27,11 @@ const _uploadFile = async (app, recordKey, readableStream, relativeFilePath) => 
   if (isNothing(relativeFilePath)) { throw new BadRequestError('file path not supplied'); }
   if (!isLegalFilename(relativeFilePath)) { throw new BadRequestError('Illegal filename'); }
 
-  const record = await _load(app, recordKey);
+  const recordInfo = getRecordInfo(app.hierarchy, recordKey);
+  const record = await _loadFromInfo(app, recordInfo);
 
   const fullFilePath = safeGetFullFilePath(
-    recordKey, relativeFilePath,
+    recordInfo.dir, relativeFilePath,
   );
 
   const tempFilePath = `${fullFilePath}_${generate()}.temp`;
@@ -54,30 +56,10 @@ const _uploadFile = async (app, recordKey, readableStream, relativeFilePath) => 
   .then(() => tryAwaitOrIgnore(app.datastore.deleteFile, fullFilePath))
   .then(() => app.datastore.renameFile(tempFilePath, fullFilePath));
 
-  /*
-  readableStream.pipe(outputStream);
-
-  await new Promise(fulfill => outputStream.on('finish', fulfill));
-
-  const isExpectedFileSize = checkFileSizeAgainstFields(
-    app,
-    record, relativeFilePath,
-    await app.datastore.getFileSize(tempFilePath),
-  );
-
-  if (!isExpectedFileSize) {
-    throw new Error(
-      `Fields for ${relativeFilePath} do not have expected size`);
-  }
-
-  await tryAwaitOrIgnore(app.datastore.deleteFile, fullFilePath);
-
-  await app.datastore.renameFile(tempFilePath, fullFilePath);
-  */
 };
 
 const checkFileSizeAgainstFields = (app, record, relativeFilePath, expectedSize) => {
-  const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+  const recordNode = getExactNodeForKey(app.hierarchy)(record.key);
 
   const incorrectFileFields = $(recordNode.fields, [
     filter(f => f.type === 'file'
@@ -107,7 +89,7 @@ const checkFileSizeAgainstFields = (app, record, relativeFilePath, expectedSize)
   return true;
 };
 
-export const safeGetFullFilePath = (recordKey, relativeFilePath) => {
+export const safeGetFullFilePath = (recordDir, relativeFilePath) => {
   const naughtyUser = () => { throw new ForbiddenError('naughty naughty'); };
 
   if (relativeFilePath.startsWith('..')) naughtyUser();
@@ -116,7 +98,7 @@ export const safeGetFullFilePath = (recordKey, relativeFilePath) => {
 
   if (includes('..')(pathParts)) naughtyUser();
 
-  const recordKeyParts = splitKey(recordKey);
+  const recordKeyParts = splitKey(recordDir);
 
   const fullPathParts = [
     ...recordKeyParts,

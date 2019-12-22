@@ -1,13 +1,14 @@
 import {
-  join, flatten, orderBy,
-  filter
+  flatten, orderBy,
+  filter, isUndefined
 } from 'lodash/fp';
-import {
+import hierarchy, {
   getFlattenedHierarchy,
   getCollectionNodeByKeyOrNodeKey,
   isCollectionRecord, isAncestor,
 } from '../templateApi/hierarchy';
 import { joinKey, safeKey, $ } from '../common';
+import { getCollectionDir } from "../recordApi/recordInfo";
 
 export const RECORDS_PER_FOLDER = 1000;
 export const allIdChars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
@@ -23,19 +24,39 @@ export const allIdChars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ
  * - [64, 64, 10] = all records fit into 64 * 64 * 10 folder
  * (there are 64 possible chars in allIsChars) 
 */
-export const folderStructureArray = (recordNode, currentArray=[], currentFolderPosition=0) => {
+export const folderStructureArray = (recordNode) => {
+
+  const totalFolders = Math.ceil(recordNode.estimatedRecordCount / 1000);
+  const folderArray = [];
+  let levelCount = 1;
+  while(64**levelCount < totalFolders) {
+    levelCount += 1;
+    folderArray.push(64);
+  }
+
+  const parentFactor = (64**folderArray.length);
+  if(parentFactor < totalFolders) {
+    folderArray.push(
+      Math.ceil(totalFolders / parentFactor)
+    );
+  }  
+
+  return folderArray;
+
+  /*
   const maxRecords = currentFolderPosition === 0 
                      ? RECORDS_PER_FOLDER
                      : currentFolderPosition * 64 * RECORDS_PER_FOLDER;
 
   if(maxRecords < recordNode.estimatedRecordCount) {
     return folderStructureArray(
+            recordNode,
             [...currentArray, 64], 
             currentFolderPosition + 1);
   } else {
-    const childFolderCount = Math.ceil(maxRecords / recordNode.estimatedRecordCount);
+    const childFolderCount = Math.ceil(recordNode.estimatedRecordCount / maxRecords );
     return [...currentArray, childFolderCount]
-  }
+  }*/
 }
 
 
@@ -51,88 +72,150 @@ export const getAllIdsIterator = app => async (collection_Key_or_NodeKey) => {
     const folderStructure = folderStructureArray(recordNode)
 
     let currentFolderContents = [];
-    let currentFolderIndexes = [];
-    let currentSubPath = [];
+    let currentPosition = [];
 
+    const collectionDir = getCollectionDir(app.hierarchy, collectionKey);
     const basePath = joinKey(
-      collectionKey, recordNode.nodeId.toString());
+      collectionDir, recordNode.nodeId.toString());
   
 
-    let folderLevel = 0;
-    const levels = folderStructure.length;
+    
+    // "folderStructure" determines the top, sharding folders
+    // we need to add one, for the collection root folder, which
+    // always  exists 
+    const levels = folderStructure.length + 1;
     const topLevel = levels -1;
 
-    const lastPathHasContent = () => 
-      folderLevel === 0 
-      || currentFolderContents[folderLevel - 1].length > 0;
+   
+    /* populate initial directory structure in form:
+    [
+      {path: "/a", contents: ["b", "c", "d"]}, 
+      {path: "/a/b", contents: ["e","f","g"]},
+      {path: "/a/b/e", contents: ["1-abcd","2-cdef","3-efgh"]}, 
+    ]
+    // stores contents on each parent level
+    // top level has ID folders 
+    */
+    const firstFolder = async () => {
 
-    while (folderLevel < folderStructure.length && lastPathHasContent()) {
-      if(folderLevel < topLevel) {
-        const contentsThisLevel = 
-          await app.datastore.getFolderContents(
-            join(basePath, ...currentSubPath));
+      let folderLevel = 0;
 
-        currentFolderContents.push(contentsThisLevel);
-        currentFolderIndexes.push(0);
-        currentSubPath.push(currentFolderContents[0])
-      } else {
-        // placesholders only for the top level (which will be populated by nextFolder())
-        currentFolderContents.push([])
-        currentFolderIndexes.push(-1);
-        currentSubPath.push("");
-      }      
+      const lastPathHasContent = () => 
+        folderLevel === 0 
+        || currentFolderContents[folderLevel - 1].contents.length > 0;
 
-      folderLevel+=1;
-    }
 
-    
+      while (folderLevel <= topLevel && lastPathHasContent()) {
 
-    const nextFolder = async (lev=-1) => {
-      lev = (lev === -1) ? topLevel : lev;
-      if(currentFolderIndexes[lev] !== currentFolderContents[lev].length - 1){
-        
-        const folderIndexThisLevel = currentFolderIndexes[lev] + 1; 
-        currentFolderIndexes[lev] = folderIndexThisLevel;
-        currentSubPath[lev] = currentFolderContents[folderIndexThisLevel]
-        
-        if(lev < topLevel) {
-          let loopLev = lev + 1;
-          while(loopLev <= topLevel) {
-            currentFolderContents[loopLev] = 
-              await app.datastore.getFolderContents(join(basePath, ...currentSubPath));
-            loopLev+=1;
-          }
+        let thisPath = basePath;
+        for(let lev = 0; lev < currentPosition.length; lev++) {
+          thisPath = joinKey(
+            thisPath, currentFolderContents[lev].contents[0]);
         }
 
-        return false; // not complete 
+        const contentsThisLevel = 
+          await app.datastore.getFolderContents(thisPath);
+        currentFolderContents.push({
+            contents:contentsThisLevel, 
+            path: thisPath
+        });   
 
-      } else {
-        if(lev === 0) return true; // complete
-        return await nextFolder(lev - 1);
+        // should start as something like [0,0]
+        if(folderLevel < topLevel)
+          currentPosition.push(0); 
+
+        folderLevel+=1;
       }
+
+      return (currentPosition.length === levels - 1);
+    }  
+
+    const isOnLastFolder = level => {
+      
+      const result =  currentPosition[level] === currentFolderContents[level].contents.length - 1;
+      return result;
     }
+    
+    const getNextFolder = async (lev=undefined) => {
+      lev = isUndefined(lev) ? topLevel : lev;
+      const parentLev = lev - 1;
+
+      if(parentLev < 0) return false;
+      
+      if(isOnLastFolder(parentLev)) { 
+        return await getNextFolder(parentLev);
+      }
+
+      const newPosition = currentPosition[parentLev] + 1;
+      currentPosition[parentLev] = newPosition;
+      
+      const nextFolder = joinKey(
+        currentFolderContents[parentLev].path,
+        currentFolderContents[parentLev].contents[newPosition]);
+      currentFolderContents[lev].contents = await app.datastore.getFolderContents(
+        nextFolder
+      );
+      currentFolderContents[lev].path = nextFolder;
+
+      if(lev !== topLevel) {
+      
+        // we just advanced a parent folder, so now need to
+        // do the same to the next levels
+        let loopLevel = lev + 1;
+        while(loopLevel <= topLevel) {
+          const loopParentLevel = loopLevel-1;
+          
+          currentPosition[loopParentLevel] = 0;
+          const nextLoopFolder = joinKey(
+            currentFolderContents[loopParentLevel].path,
+            currentFolderContents[loopParentLevel].contents[0]);
+          currentFolderContents[loopLevel].contents = await app.datastore.getFolderContents(
+            nextLoopFolder
+          );
+          currentFolderContents[loopLevel].path = nextLoopFolder;
+          loopLevel+=1;
+        }
+      }
+
+      // true ==has more ids... (just loaded more)
+      return true;
+    }
+
+
+    const idsCurrentFolder = () => 
+      currentFolderContents[currentFolderContents.length - 1].contents;
 
     const fininshedResult = ({ done: true, result: { ids: [], collectionKey } });
 
+    let hasStarted = false;
+    let hasMore = true;
     const getIdsFromCurrentfolder = async () => {
 
-      if(currentFolderIndexes.length < folderStructure)
+      if(!hasMore) {
         return fininshedResult;
+      }
 
-      const hasMore = await nextFolder();
+      if(!hasStarted) {
+        hasMore = await firstFolder();
+        hasStarted = true;
+        return ({
+          result: {
+            ids: idsCurrentFolder(),
+            collectionKey
+          },
+          done: false
+        })
+      }
 
-      if(!hasMore) return fininshedResult;
+      hasMore = await getNextFolder();
       
-      const result = ({
+      return ({
         result: {
-          ids: await app.datastore.getFolderContents(
-            joinKey(basePath, currentSubPath)),
+          ids: hasMore ? idsCurrentFolder() : [],
           collectionKey
         },
-        done:false
-      })      
-
-      return result;
+        done: !hasMore
+      });
     }
 
     return getIdsFromCurrentfolder;

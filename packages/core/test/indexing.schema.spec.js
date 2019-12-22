@@ -1,5 +1,5 @@
 import {generateSchema} from "../src/indexing/indexSchemaCreator";
-import {setupApphierarchy, findCollectionDefaultIndex} from "./specHelpers";
+import {setupApphierarchy} from "./specHelpers";
 import {find} from "lodash";
 import {indexTypes} from "../src/templateApi/indexes";
 
