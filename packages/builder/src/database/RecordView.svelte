@@ -39,6 +39,7 @@ store.subscribe($store => {
         editingField = true;
     }
 
+
     onFinishedFieldEdit = (field) => {
         if(field) {
             store.saveField(field);
@@ -139,7 +140,7 @@ const nameChanged = ev => {
     {/if}
 
     {#if editingField}
-    <Modal bind:isOpen={editingField}>
+    <Modal bind:isOpen={editingField} onClosed={() => onFinishedFieldEdit(false) }>
         <FieldView field={fieldToEdit} 
                    onFinished={onFinishedFieldEdit}
                    allFields={record.fields} 
