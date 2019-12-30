@@ -34,7 +34,7 @@ const lodash_fp_exports = ["union", "reduce", "isUndefined", "cloneDeep", "split
 "take", "first", "intersection", "mapValues", "isNull", "has", "isInteger", "isNumber", "isString", "isBoolean", "isDate", "isArray", "isObject", "clone", "values", "keyBy", "isNaN",
 "keys", "orderBy", "concat", "reverse", "difference", "merge", "flatten", "each", "pull", "join", "defaultCase", "uniqBy", "every", "uniqWith", "isFunction", "groupBy", 
 "differenceBy", "intersectionBy", "isEqual", "max", "sortBy", "assign", "uniq", "trimChars", "trimCharsStart", "isObjectLike", "flattenDeep", "indexOf", "isPlainObject",
-"toNumber"];
+"toNumber", "takeRight"];
 
 const lodash_exports = ["flow", "join", "replace", "trim", "dropRight", "takeRight", "head", "reduce",  
 "tail", "startsWith", "findIndex", "merge",  
