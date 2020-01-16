@@ -24,8 +24,10 @@ import { applyToShard } from '../indexing/apply';
 import {
   getActualKeyOfParent,
   isGlobalIndex, fieldReversesReferenceToIndex, isReferenceIndex,
-  getExactNodeForPath,
+  getExactNodeForKey,
 } from '../templateApi/hierarchy';
+import { getRecordInfo } from "../recordApi/recordInfo";
+import { getIndexDir } from '../indexApi/getIndexDir';
 
 export const executeTransactions = app => async (transactions) => {
   const recordsByShard = mappedRecordsByIndexShard(app.hierarchy, transactions);
@@ -33,7 +35,7 @@ export const executeTransactions = app => async (transactions) => {
   for (const shard of keys(recordsByShard)) {
     await applyToShard(
       app.hierarchy, app.datastore,
-      recordsByShard[shard].indexKey,
+      recordsByShard[shard].indexDir,
       recordsByShard[shard].indexNode,
       shard,
       recordsByShard[shard].writes,
@@ -77,8 +79,8 @@ const mappedRecordsByIndexShard = (hierarchy, transactions) => {
       transByShard[t.indexShardKey] = {
         writes: [],
         removes: [],
-        indexKey: t.indexKey,
-        indexNodeKey: t.indexNodeKey,
+        indexDir: t.indexDir,
+        indexNodeKey: t.indexNode.nodeKey(),
         indexNode: t.indexNode,
       };
     }
@@ -109,10 +111,10 @@ const getUpdateTransactionsByShard = (hierarchy, transactions) => {
     return ({
       mappedRecord,
       indexNode: indexNodeAndPath.indexNode,
-      indexKey: indexNodeAndPath.indexKey,
+      indexDir: indexNodeAndPath.indexDir,
       indexShardKey: getIndexedDataKey(
         indexNodeAndPath.indexNode,
-        indexNodeAndPath.indexKey,
+        indexNodeAndPath.indexDir,
         mappedRecord.result,
       ),
     });
@@ -219,54 +221,56 @@ const getBuildIndexTransactionsByShard = (hierarchy, transactions) => {
   if (!isNonEmptyArray(buildTransactions)) return [];
   const indexNode = transactions.indexNode;
 
-  const getIndexKeys = (t) => {
+  const getIndexDirs = (t) => {
     if (isGlobalIndex(indexNode)) {
       return [indexNode.nodeKey()];
     }
 
     if (isReferenceIndex(indexNode)) {
-      const recordNode = getExactNodeForPath(hierarchy)(t.record.key);
+      const recordNode = getExactNodeForKey(hierarchy)(t.record.key);
       const refFields = $(recordNode.fields, [
         filter(fieldReversesReferenceToIndex(indexNode)),
       ]);
-      const indexKeys = [];
+      const indexDirs = [];
       for (const refField of refFields) {
         const refValue = t.record[refField.name];
         if (isSomething(refValue)
                    && isNonEmptyString(refValue.key)) {
-          const indexKey = joinKey(
-            refValue.key,
+          const indexDir = joinKey(
+            getRecordInfo(hierarchy, refValue.key).dir,
             indexNode.name,
           );
 
-          if (!includes(indexKey)(indexKeys)) { indexKeys.push(indexKey); }
+          if (!includes(indexDir)(indexDirs)) { indexDirs.push(indexDir); }
         }
       }
-      return indexKeys;
+      return indexDirs;
     }
 
-    return [joinKey(
+    const indexKey = joinKey(
       getActualKeyOfParent(
         indexNode.parent().nodeKey(),
         t.record.key,
       ),
       indexNode.name,
-    )];
+    );
+
+    return [getIndexDir(hierarchy, indexKey)];
   };
 
   return $(buildTransactions, [
     map((t) => {
       const mappedRecord = evaluate(t.record)(indexNode);
       if (!mappedRecord.passedFilter) return null;
-      const indexKeys = getIndexKeys(t);
-      return $(indexKeys, [
-        map(indexKey => ({
+      const indexDirs = getIndexDirs(t);
+      return $(indexDirs, [
+        map(indexDir => ({
           mappedRecord,
           indexNode,
-          indexKey,
+          indexDir,
           indexShardKey: getIndexedDataKey(
             indexNode,
-            indexKey,
+            indexDir,
             mappedRecord.result,
           ),
         })),
@@ -286,10 +290,10 @@ const get_Create_Delete_TransactionsByShard = pred => (hierarchy, transactions) 
       return ({
         mappedRecord,
         indexNode: n.indexNode,
-        indexKey: n.indexKey,
+        indexDir: n.indexDir,
         indexShardKey: getIndexedDataKey(
           n.indexNode,
-          n.indexKey,
+          n.indexDir,
           mappedRecord.result,
         ),
       });
@@ -327,17 +331,17 @@ const diffReverseRefForUpdate = (appHierarchy, oldRecord, newRecord) => {
   );
 
   const unReferenced = differenceBy(
-    i => i.indexKey,
+    i => i.indexDir,
     oldIndexes, newIndexes,
   );
 
   const newlyReferenced = differenceBy(
-    i => i.indexKey,
+    i => i.indexDir,
     newIndexes, oldIndexes,
   );
 
   const notChanged = intersectionBy(
-    i => i.indexKey,
+    i => i.indexDir,
     newIndexes, oldIndexes,
   );
 

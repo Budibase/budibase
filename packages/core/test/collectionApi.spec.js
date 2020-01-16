@@ -1,5 +1,4 @@
-import {setupApphierarchy, basicAppHierarchyCreator_WithFields,
-    basicAppHierarchyCreator_WithFields_AndIndexes} from "./specHelpers";
+import {setupApphierarchy, basicAppHierarchyCreator_WithFields} from "./specHelpers";
 import {includes, union} from "lodash";
 import {joinKey} from "../src/common";
 

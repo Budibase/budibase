@@ -1,145 +1,231 @@
 import {
-  join, pull,
-  map, flatten, orderBy,
-  filter, find,
+  flatten, orderBy,
+  filter, isUndefined
 } from 'lodash/fp';
-import {
-  getParentKey,
+import hierarchy, {
   getFlattenedHierarchy,
-  getCollectionNodeByKeyOrNodeKey, getNodeForCollectionPath,
+  getCollectionNodeByKeyOrNodeKey,
   isCollectionRecord, isAncestor,
 } from '../templateApi/hierarchy';
 import { joinKey, safeKey, $ } from '../common';
+import { getCollectionDir } from "../recordApi/recordInfo";
 
-const allIdChars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
+export const RECORDS_PER_FOLDER = 1000;
+export const allIdChars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
 
-const allIdsStringsForFactor = (collectionNode) => {
-  const factor = collectionNode.allidsShardFactor;
-  const charRangePerShard = 64 / factor;
-  const allIdStrings = [];
-  let index = 0;
-  let currentIdsShard = '';
-  while (index < 64) {
-    currentIdsShard += allIdChars[index];
-    if ((index + 1) % charRangePerShard === 0) {
-      allIdStrings.push(currentIdsShard);
-      currentIdsShard = '';
-    }
-    index++;
+// this should never be changed - ever 
+// - existing databases depend on the order of chars this string
+
+/**
+ * folderStructureArray should return an array like
+ * - [1] = all records fit into one folder
+ * - [2] = all records fite into 2 folders
+ * - [64, 3] = all records fit into 64 * 3 folders
+ * - [64, 64, 10] = all records fit into 64 * 64 * 10 folder
+ * (there are 64 possible chars in allIsChars) 
+*/
+export const folderStructureArray = (recordNode) => {
+
+  const totalFolders = Math.ceil(recordNode.estimatedRecordCount / 1000);
+  const folderArray = [];
+  let levelCount = 1;
+  while(64**levelCount < totalFolders) {
+    levelCount += 1;
+    folderArray.push(64);
   }
 
-  return allIdStrings;
-};
+  const parentFactor = (64**folderArray.length);
+  if(parentFactor < totalFolders) {
+    folderArray.push(
+      Math.ceil(totalFolders / parentFactor)
+    );
+  }  
 
-export const getAllIdsShardNames = (appHierarchy, collectionKey) => {
-  const collectionRecordNode = getNodeForCollectionPath(appHierarchy)(collectionKey);
-  return $(collectionRecordNode, [
-    c => [c.nodeId],
-    map(i => map(c => _allIdsShardKey(collectionKey, i, c))(allIdsStringsForFactor(collectionRecordNode))),
-    flatten,
-  ]);
-};
+  return folderArray;
 
-const _allIdsShardKey = (collectionKey, childNo, shardKey) => joinKey(
-  collectionKey,
-  'allids',
-  childNo,
-  shardKey,
-);
+  /*
+  const maxRecords = currentFolderPosition === 0 
+                     ? RECORDS_PER_FOLDER
+                     : currentFolderPosition * 64 * RECORDS_PER_FOLDER;
 
-export const getAllIdsShardKey = (appHierarchy, collectionKey, recordId) => {
-  const indexOfFirstDash = recordId.indexOf('-');
+  if(maxRecords < recordNode.estimatedRecordCount) {
+    return folderStructureArray(
+            recordNode,
+            [...currentArray, 64], 
+            currentFolderPosition + 1);
+  } else {
+    const childFolderCount = Math.ceil(recordNode.estimatedRecordCount / maxRecords );
+    return [...currentArray, childFolderCount]
+  }*/
+}
 
-  const collectionNode = getNodeForCollectionPath(appHierarchy)(collectionKey);
-
-  const idFirstChar = recordId[indexOfFirstDash + 1];
-  const allIdsShardId = $(collectionNode, [
-    allIdsStringsForFactor,
-    find(i => i.includes(idFirstChar)),
-  ]);
-
-  return _allIdsShardKey(
-    collectionKey,
-    recordId.slice(0, indexOfFirstDash),
-    allIdsShardId,
-  );
-};
-
-const getOrCreateShardFile = async (datastore, allIdsKey) => {
-  try {
-    return await datastore.loadFile(allIdsKey);
-  } catch (eLoad) {
-    try {
-      await datastore.createFile(allIdsKey, '');
-      return '';
-    } catch (eCreate) {
-      throw new Error(
-        `Error loading, then creating allIds ${allIdsKey
-        } : LOAD : ${eLoad.message
-        } : CREATE : ${eCreate}`,
-      );
-    }
-  }
-};
-
-const getShardFile = async (datastore, allIdsKey) => {
-  try {
-    return await datastore.loadFile(allIdsKey);
-  } catch (eLoad) {
-    return '';
-  }
-};
-
-export const addToAllIds = (appHierarchy, datastore) => async (record) => {
-  const allIdsKey = getAllIdsShardKey(
-    appHierarchy,
-    getParentKey(record.key),
-    record.id,
-  );
-
-  let allIds = await getOrCreateShardFile(datastore, allIdsKey);
-
-  allIds += `${allIds.length > 0 ? ',' : ''}${record.id}`;
-
-  await datastore.updateFile(allIdsKey, allIds);
-};
 
 export const getAllIdsIterator = app => async (collection_Key_or_NodeKey) => {
   collection_Key_or_NodeKey = safeKey(collection_Key_or_NodeKey);
-  const targetNode = getCollectionNodeByKeyOrNodeKey(
+  const recordNode = getCollectionNodeByKeyOrNodeKey(
     app.hierarchy,
     collection_Key_or_NodeKey,
   );
 
-  const getAllIdsIteratorForCollectionKey = async (collectionKey) => {
-    const all_allIdsKeys = getAllIdsShardNames(app.hierarchy, collectionKey);
-    let shardIndex = 0;
+  const getAllIdsIteratorForCollectionKey = async (recordNode, collectionKey) => {
+    
+    const folderStructure = folderStructureArray(recordNode)
 
-    const allIdsFromShardIterator = async () => {
-      if (shardIndex === all_allIdsKeys.length) { return ({ done: true, result: { ids: [], collectionKey } }); }
+    let currentFolderContents = [];
+    let currentPosition = [];
 
-      const shardKey = all_allIdsKeys[shardIndex];
+    const collectionDir = getCollectionDir(app.hierarchy, collectionKey);
+    const basePath = joinKey(
+      collectionDir, recordNode.nodeId.toString());
+  
 
-      const allIds = await getAllIdsFromShard(app.datastore, shardKey);
+    
+    // "folderStructure" determines the top, sharding folders
+    // we need to add one, for the collection root folder, which
+    // always  exists 
+    const levels = folderStructure.length + 1;
+    const topLevel = levels -1;
 
-      shardIndex++;
+   
+    /* populate initial directory structure in form:
+    [
+      {path: "/a", contents: ["b", "c", "d"]}, 
+      {path: "/a/b", contents: ["e","f","g"]},
+      {path: "/a/b/e", contents: ["1-abcd","2-cdef","3-efgh"]}, 
+    ]
+    // stores contents on each parent level
+    // top level has ID folders 
+    */
+    const firstFolder = async () => {
 
+      let folderLevel = 0;
+
+      const lastPathHasContent = () => 
+        folderLevel === 0 
+        || currentFolderContents[folderLevel - 1].contents.length > 0;
+
+
+      while (folderLevel <= topLevel && lastPathHasContent()) {
+
+        let thisPath = basePath;
+        for(let lev = 0; lev < currentPosition.length; lev++) {
+          thisPath = joinKey(
+            thisPath, currentFolderContents[lev].contents[0]);
+        }
+
+        const contentsThisLevel = 
+          await app.datastore.getFolderContents(thisPath);
+        currentFolderContents.push({
+            contents:contentsThisLevel, 
+            path: thisPath
+        });   
+
+        // should start as something like [0,0]
+        if(folderLevel < topLevel)
+          currentPosition.push(0); 
+
+        folderLevel+=1;
+      }
+
+      return (currentPosition.length === levels - 1);
+    }  
+
+    const isOnLastFolder = level => {
+      
+      const result =  currentPosition[level] === currentFolderContents[level].contents.length - 1;
+      return result;
+    }
+    
+    const getNextFolder = async (lev=undefined) => {
+      lev = isUndefined(lev) ? topLevel : lev;
+      const parentLev = lev - 1;
+
+      if(parentLev < 0) return false;
+      
+      if(isOnLastFolder(parentLev)) { 
+        return await getNextFolder(parentLev);
+      }
+
+      const newPosition = currentPosition[parentLev] + 1;
+      currentPosition[parentLev] = newPosition;
+      
+      const nextFolder = joinKey(
+        currentFolderContents[parentLev].path,
+        currentFolderContents[parentLev].contents[newPosition]);
+      currentFolderContents[lev].contents = await app.datastore.getFolderContents(
+        nextFolder
+      );
+      currentFolderContents[lev].path = nextFolder;
+
+      if(lev !== topLevel) {
+      
+        // we just advanced a parent folder, so now need to
+        // do the same to the next levels
+        let loopLevel = lev + 1;
+        while(loopLevel <= topLevel) {
+          const loopParentLevel = loopLevel-1;
+          
+          currentPosition[loopParentLevel] = 0;
+          const nextLoopFolder = joinKey(
+            currentFolderContents[loopParentLevel].path,
+            currentFolderContents[loopParentLevel].contents[0]);
+          currentFolderContents[loopLevel].contents = await app.datastore.getFolderContents(
+            nextLoopFolder
+          );
+          currentFolderContents[loopLevel].path = nextLoopFolder;
+          loopLevel+=1;
+        }
+      }
+
+      // true ==has more ids... (just loaded more)
+      return true;
+    }
+
+
+    const idsCurrentFolder = () => 
+      currentFolderContents[currentFolderContents.length - 1].contents;
+
+    const fininshedResult = ({ done: true, result: { ids: [], collectionKey } });
+
+    let hasStarted = false;
+    let hasMore = true;
+    const getIdsFromCurrentfolder = async () => {
+
+      if(!hasMore) {
+        return fininshedResult;
+      }
+
+      if(!hasStarted) {
+        hasMore = await firstFolder();
+        hasStarted = true;
+        return ({
+          result: {
+            ids: idsCurrentFolder(),
+            collectionKey
+          },
+          done: false
+        })
+      }
+
+      hasMore = await getNextFolder();
+      
       return ({
         result: {
-          ids: allIds,
-          collectionKey,
+          ids: hasMore ? idsCurrentFolder() : [],
+          collectionKey
         },
-        done: false,
+        done: !hasMore
       });
-    };
+    }
 
-    return allIdsFromShardIterator;
+    return getIdsFromCurrentfolder;
+    
   };
 
   const ancestors = $(getFlattenedHierarchy(app.hierarchy), [
     filter(isCollectionRecord),
-    filter(n => isAncestor(targetNode)(n)
-                    || n.nodeKey() === targetNode.nodeKey()),
+    filter(n => isAncestor(recordNode)(n)
+                    || n.nodeKey() === recordNode.nodeKey()),
     orderBy([n => n.nodeKey().length], ['asc']),
   ]); // parents first
 
@@ -149,14 +235,16 @@ export const getAllIdsIterator = app => async (collection_Key_or_NodeKey) => {
       parentRecordKey,
       currentNode.collectionName,
     );
-    if (currentNode.nodeKey() === targetNode.nodeKey()) {
+    if (currentNode.nodeKey() === recordNode.nodeKey()) {
       return [
         await getAllIdsIteratorForCollectionKey(
+          currentNode,
           currentCollectionKey,
         )];
     }
     const allIterators = [];
     const currentIterator = await getAllIdsIteratorForCollectionKey(
+      currentNode,
       currentCollectionKey,
     );
 
@@ -191,39 +279,5 @@ export const getAllIdsIterator = app => async (collection_Key_or_NodeKey) => {
   };
 };
 
-const getAllIdsFromShard = async (datastore, shardKey) => {
-  const allIdsStr = await getShardFile(datastore, shardKey);
-
-  const allIds = [];
-  let currentId = '';
-  for (let i = 0; i < allIdsStr.length; i++) {
-    const currentChar = allIdsStr.charAt(i);
-    const isLast = (i === allIdsStr.length - 1);
-    if (currentChar === ',' || isLast) {
-      if (isLast) currentId += currentChar;
-      allIds.push(currentId);
-      currentId = '';
-    } else {
-      currentId += currentChar;
-    }
-  }
-  return allIds;
-};
-
-export const removeFromAllIds = (appHierarchy, datastore) => async (record) => {
-  const shardKey = getAllIdsShardKey(
-    appHierarchy,
-    getParentKey(record.key),
-    record.id,
-  );
-  const allIds = await getAllIdsFromShard(datastore, shardKey);
-
-  const newIds = $(allIds, [
-    pull(record.id),
-    join(','),
-  ]);
-
-  await datastore.updateFile(shardKey, newIds);
-};
 
 export default getAllIdsIterator;

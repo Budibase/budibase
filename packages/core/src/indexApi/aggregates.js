@@ -10,12 +10,13 @@ import {
   getShardKeysInRange,
 } from '../indexing/sharding';
 import {
-  getExactNodeForPath, isIndex,
+  getExactNodeForKey, isIndex,
   isShardedIndex,
 } from '../templateApi/hierarchy';
 import { CONTINUE_READING_RECORDS } from '../indexing/serializer';
 import { permission } from '../authApi/permissions';
 import { BadRequestError } from '../common/errors';
+import { getIndexDir } from "./getIndexDir";
 
 export const aggregates = app => async (indexKey, rangeStartParams = null, rangeEndParams = null) => apiWrapper(
   app,
@@ -27,13 +28,14 @@ export const aggregates = app => async (indexKey, rangeStartParams = null, range
 
 const _aggregates = async (app, indexKey, rangeStartParams, rangeEndParams) => {
   indexKey = safeKey(indexKey);
-  const indexNode = getExactNodeForPath(app.hierarchy)(indexKey);
+  const indexNode = getExactNodeForKey(app.hierarchy)(indexKey);
+  const indexDir = getIndexDir(app.hierarchy, indexKey);
 
   if (!isIndex(indexNode)) { throw new BadRequestError('supplied key is not an index'); }
 
   if (isShardedIndex(indexNode)) {
     const shardKeys = await getShardKeysInRange(
-      app, indexKey, rangeStartParams, rangeEndParams,
+      app, indexNode, indexDir, rangeStartParams, rangeEndParams,
     );
     let aggregateResult = null;
     for (const k of shardKeys) {
@@ -53,7 +55,7 @@ const _aggregates = async (app, indexKey, rangeStartParams, rangeEndParams) => {
     app.hierarchy,
     app.datastore,
     indexNode,
-    getUnshardedIndexDataKey(indexKey),
+    getUnshardedIndexDataKey(indexDir),
   );
 };
 

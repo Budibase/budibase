@@ -27,7 +27,7 @@ describe("hierarchy node creation", () => {
         expect(record.indexes).toEqual([]);
         expect(record.parent()).toBe(root);
         expect(record.collectionName).toBe("");
-        expect(record.allidsShardFactor).toBe(64);
+        expect(record.estimatedRecordCount).toBe(1000000);
         expect(record.isSingle).toBe(false);
 
         record.collectionName = "records";

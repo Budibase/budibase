@@ -4,13 +4,12 @@ import {
   tail, findIndex, startsWith, 
   dropRight, flow, takeRight, trim,
   replace
-  
 } from 'lodash';
 import { 
   some, reduce, isEmpty, isArray, join,
   isString, isInteger, isDate, toNumber,
   isUndefined, isNaN, isNull, constant,
-  split, includes
+  split, includes, filter
 } from 'lodash/fp';
 import { events, eventsList } from './events';
 import { apiWrapper } from './apiWrapper';
@@ -32,7 +31,13 @@ export const safeKey = key => replace(`${keySep}${trimKeySep(key)}`, `${keySep}$
 export const joinKey = (...strs) => {
   const paramsOrArray = strs.length === 1 & isArray(strs[0])
     ? strs[0] : strs;
-  return safeKey(join(keySep)(paramsOrArray));
+  return $(paramsOrArray, [
+    filter(s => !isUndefined(s) 
+                && !isNull(s) 
+                && s.toString().length > 0),
+    join(keySep),
+    safeKey
+  ]);
 };
 export const splitKey = $$(trimKeySep, splitByKeySep);
 export const getDirFomKey = $$(splitKey, dropRight, p => joinKey(...p));
@@ -183,6 +188,10 @@ export const toNumberOrNull = s => (isNull(s) ? null
 
 export const isArrayOfString = opts => isArray(opts) && all(isString)(opts);
 
+export const pushAll = (target, items) => {
+  for(let i of items) target.push(i);
+}
+
 export const pause = async duration => new Promise(res => setTimeout(res, duration));
 
 export const retry = async (fn, retries, delay, ...args) => {
@@ -267,4 +276,5 @@ export default {
   insensitiveEquals,
   pause,
   retry,
+  pushAll
 };

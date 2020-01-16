@@ -1,13 +1,13 @@
 import { ensureShardNameIsInShardMap } from './sharding';
 import { getIndexWriter } from './serializer';
-import { isShardedIndex } from '../templateApi/hierarchy';
+import { isShardedIndex, getParentKey } from '../templateApi/hierarchy';
 import {promiseWriteableStream} from "./promiseWritableStream";
 import {promiseReadableStream} from "./promiseReadableStream";
 
-export const applyToShard = async (hierarchy, store, indexKey,
+export const applyToShard = async (hierarchy, store, indexDir,
   indexNode, indexShardKey, recordsToWrite, keysToRemove) => {
   const createIfNotExists = recordsToWrite.length > 0;
-  const writer = await getWriter(hierarchy, store, indexKey, indexShardKey, indexNode, createIfNotExists);
+  const writer = await getWriter(hierarchy, store, indexDir, indexShardKey, indexNode, createIfNotExists);
   if (writer === SHARD_DELETED) return;
 
   await writer.updateIndex(recordsToWrite, keysToRemove);
@@ -15,13 +15,17 @@ export const applyToShard = async (hierarchy, store, indexKey,
 };
 
 const SHARD_DELETED = 'SHARD_DELETED';
-const getWriter = async (hierarchy, store, indexKey, indexedDataKey, indexNode, createIfNotExists) => {
+const getWriter = async (hierarchy, store, indexDir, indexedDataKey, indexNode, createIfNotExists) => {
   let readableStream = null;
 
   if (isShardedIndex(indexNode)) {
-    await ensureShardNameIsInShardMap(store, indexKey, indexedDataKey);
+    await ensureShardNameIsInShardMap(store, indexDir, indexedDataKey);
     if(!await store.exists(indexedDataKey)) {
-      await store.createFile(indexedDataKey, "");
+      if (await store.exists(getParentKey(indexedDataKey))) {
+        await store.createFile(indexedDataKey, "");
+      } else {
+        return SHARD_DELETED;
+      }
     }
   }
 
@@ -37,7 +41,11 @@ const getWriter = async (hierarchy, store, indexKey, indexedDataKey, indexNode, 
       throw e;
     } else {
       if (createIfNotExists) { 
-        await store.createFile(indexedDataKey, ''); 
+        if(await store.exists(getParentKey(indexedDataKey))) {
+          await store.createFile(indexedDataKey, '');     
+        } else {
+          return SHARD_DELETED; 
+        }
       } else { 
         return SHARD_DELETED; 
       }
@@ -65,6 +73,12 @@ const swapTempFileIn = async (store, indexedDataKey, isRetry = false) => {
     await store.deleteFile(indexedDataKey);
   } catch (e) {
     // ignore failure, incase it has not been created yet
+
+    // if parent folder does not exist, assume that this index
+    // should not be there
+    if(!await store.exists(getParentKey(indexedDataKey))) {
+      return;
+    }
   }
   try {
     await store.renameFile(tempFile, indexedDataKey);
