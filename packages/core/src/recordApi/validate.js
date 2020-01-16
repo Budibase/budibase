@@ -4,7 +4,7 @@ import {
 } from 'lodash/fp';
 import { compileExpression } from '@nx-js/compiler-util';
 import _ from 'lodash';
-import { getExactNodeForPath } from '../templateApi/hierarchy';
+import { getExactNodeForKey } from '../templateApi/hierarchy';
 import { validateFieldParse, validateTypeConstraints } from '../types';
 import { $, isNothing, isNonEmptyString } from '../common';
 import { _getContext } from './getContext';
@@ -63,7 +63,7 @@ export const validate = app => async (record, context) => {
     ? _getContext(app, record.key)
     : context;
 
-  const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+  const recordNode = getExactNodeForKey(app.hierarchy)(record.key);
   const fieldParseFails = validateAllFieldParse(record, recordNode);
 
   // non parsing would cause further issues - exit here

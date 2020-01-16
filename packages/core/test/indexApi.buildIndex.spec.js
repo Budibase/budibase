@@ -4,7 +4,7 @@ import { joinKey } from "../src/common";
 import {some} from "lodash";
 import {_deleteIndex} from "../src/indexApi/delete";
 import {permission} from "../src/authApi/permissions";
-import { getExactNodeForPath } from "../src/templateApi/hierarchy";
+import { getExactNodeForKey } from "../src/templateApi/hierarchy";
 
 describe("buildIndex > Global index", () => {
 
@@ -213,7 +213,7 @@ describe("buildIndex > nested collection", () => {
         const indexKey = joinKey(customer.key, "invoice_index");
         await _deleteIndex(app, indexKey, false);
 
-        const indexNode = getExactNodeForPath(appHierarchy.root)(indexKey);
+        const indexNode = getExactNodeForKey(appHierarchy.root)(indexKey);
         await indexApi.buildIndex(indexNode.nodeKey());
         const indexItems = await indexApi.listItems(indexKey);
 
@@ -269,7 +269,7 @@ describe("buildIndex > nested collection", () => {
         const indexKey = joinKey(customer.key, "invoice_index");
         await _deleteIndex(app, indexKey, false);
 
-        const indexNode = getExactNodeForPath(appHierarchy.root)(indexKey);
+        const indexNode = getExactNodeForKey(appHierarchy.root)(indexKey);
         await indexApi.buildIndex(
             indexNode.nodeKey());
         const indexItems = await indexApi.listItems(indexKey);

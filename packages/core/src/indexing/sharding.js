@@ -5,13 +5,14 @@ import {
 import {
   getActualKeyOfParent, isGlobalIndex,
   getParentKey, isShardedIndex,
-  getExactNodeForPath,
+  getExactNodeForKey,
 } from '../templateApi/hierarchy';
 import {
   joinKey, isNonEmptyString, splitKey, $,
 } from '../common';
 
-export const getIndexedDataKey = (indexNode, indexKey, record) => {
+export const getIndexedDataKey = (indexNode, indexDir, record) => {
+  
   const getShardName = (indexNode, record) => {
     const shardNameFunc = compileCode(indexNode.getShardName);
     try {
@@ -27,18 +28,16 @@ export const getIndexedDataKey = (indexNode, indexKey, record) => {
     ? `${getShardName(indexNode, record)}.csv`
     : 'index.csv';
 
-  return joinKey(indexKey, shardName);
+  return joinKey(indexDir, shardName);
 };
 
-export const getShardKeysInRange = async (app, indexKey, startRecord = null, endRecord = null) => {
-  const indexNode = getExactNodeForPath(app.hierarchy)(indexKey);
-
+export const getShardKeysInRange = async (app, indexNode, indexDir, startRecord = null, endRecord = null) => {
   const startShardName = !startRecord
     ? null
     : shardNameFromKey(
       getIndexedDataKey(
         indexNode,
-        indexKey,
+        indexDir,
         startRecord,
       ),
     );
@@ -48,29 +47,29 @@ export const getShardKeysInRange = async (app, indexKey, startRecord = null, end
     : shardNameFromKey(
       getIndexedDataKey(
         indexNode,
-        indexKey,
+        indexDir,
         endRecord,
       ),
     );
 
-  return $(await getShardMap(app.datastore, indexKey), [
+  return $(await getShardMap(app.datastore, indexDir), [
     filter(k => (startRecord === null || k >= startShardName)
                     && (endRecord === null || k <= endShardName)),
-    map(k => joinKey(indexKey, `${k}.csv`)),
+    map(k => joinKey(indexDir, `${k}.csv`)),
   ]);
 };
 
-export const ensureShardNameIsInShardMap = async (store, indexKey, indexedDataKey) => {
-  const map = await getShardMap(store, indexKey);
+export const ensureShardNameIsInShardMap = async (store, indexDir, indexedDataKey) => {
+  const map = await getShardMap(store, indexDir);
   const shardName = shardNameFromKey(indexedDataKey);
   if (!includes(shardName)(map)) {
     map.push(shardName);
-    await writeShardMap(store, indexKey, map);
+    await writeShardMap(store, indexDir, map);
   }
 };
 
-export const getShardMap = async (datastore, indexKey) => {
-  const shardMapKey = getShardMapKey(indexKey);
+export const getShardMap = async (datastore, indexDir) => {
+  const shardMapKey = getShardMapKey(indexDir);
   try {
     return await datastore.loadJson(shardMapKey);
   } catch (_) {
@@ -79,27 +78,26 @@ export const getShardMap = async (datastore, indexKey) => {
   }
 };
 
-export const writeShardMap = async (datastore, indexKey, shardMap) => await datastore.updateJson(
-  getShardMapKey(indexKey),
+export const writeShardMap = async (datastore, indexDir, shardMap) => await datastore.updateJson(
+  getShardMapKey(indexDir),
   shardMap,
 );
 
-export const getAllShardKeys = async (app, indexKey) => await getShardKeysInRange(app, indexKey);
+export const getAllShardKeys = async (app, indexNode, indexDir) =>
+  await getShardKeysInRange(app, indexNode, indexDir);
 
-export const getShardMapKey = indexKey => joinKey(indexKey, 'shardMap.json');
+export const getShardMapKey = indexDir => joinKey(indexDir, 'shardMap.json');
 
-export const getUnshardedIndexDataKey = indexKey => joinKey(indexKey, 'index.csv');
-
-export const getIndexFolderKey = indexKey => indexKey;
+export const getUnshardedIndexDataKey = indexDir => joinKey(indexDir, 'index.csv');
 
 export const createIndexFile = async (datastore, indexedDataKey, index) => {
   if (isShardedIndex(index)) {
-    const indexKey = getParentKey(indexedDataKey);
-    const shardMap = await getShardMap(datastore, indexKey);
+    const indexDir = getParentKey(indexedDataKey);
+    const shardMap = await getShardMap(datastore, indexDir);
     shardMap.push(
       shardNameFromKey(indexedDataKey),
     );
-    await writeShardMap(datastore, indexKey, shardMap);
+    await writeShardMap(datastore, indexDir, shardMap);
   }
   await datastore.createFile(indexedDataKey, '');
 };

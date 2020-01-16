@@ -1,23 +1,27 @@
 import { retry } from '../common/index';
 import { NotFoundError } from '../common/errors';
 
-const createJson = originalCreateFile => async (key, obj, retries = 5, delay = 500) => await retry(originalCreateFile, retries, delay, key, JSON.stringify(obj));
+const createJson = originalCreateFile => async (key, obj, retries = 2, delay = 100) => await retry(originalCreateFile, retries, delay, key, JSON.stringify(obj));
 
-const createNewFile = originalCreateFile => async (path, content, retries = 5, delay = 500) => await retry(originalCreateFile, retries, delay, path, content);
+const createNewFile = originalCreateFile => async (path, content, retries = 2, delay = 100) => await retry(originalCreateFile, retries, delay, path, content);
 
-const loadJson = datastore => async (key, retries = 5, delay = 500) => {
+const loadJson = datastore => async (key, retries = 3, delay = 100) => {
   try {
     return await retry(JSON.parse, retries, delay, await datastore.loadFile(key));
   } catch (err) {
-    throw new NotFoundError(err.message);
+    const newErr = new NotFoundError(err.message);
+    newErr.stack = err.stack;
+    throw(newErr);
   }
 }
 
-const updateJson = datastore => async (key, obj, retries = 5, delay = 500) => {
+const updateJson = datastore => async (key, obj, retries = 3, delay = 100) => {
   try {
     return await retry(datastore.updateFile, retries, delay, key, JSON.stringify(obj));
   } catch (err) {
-    throw new NotFoundError(err.message);
+    const newErr = new NotFoundError(err.message);
+    newErr.stack = err.stack;
+    throw(newErr);
   }
 }
 

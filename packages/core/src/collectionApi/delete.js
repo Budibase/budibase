@@ -1,12 +1,11 @@
-import { includes } from 'lodash/fp';
-import { getNodeForCollectionPath } from '../templateApi/hierarchy';
 import {
   safeKey, apiWrapper,
   events, joinKey,
 } from '../common';
 import { _deleteRecord } from '../recordApi/delete';
-import { getAllIdsIterator, getAllIdsShardKey } from '../indexing/allIds';
+import { getAllIdsIterator } from '../indexing/allIds';
 import { permission } from '../authApi/permissions';
+import { getCollectionDir } from "../recordApi/recordInfo";
 
 export const deleteCollection = (app, disableCleanup = false) => async key => apiWrapper(
   app,
@@ -16,49 +15,24 @@ export const deleteCollection = (app, disableCleanup = false) => async key => ap
   _deleteCollection, app, key, disableCleanup,
 );
 
+/*
+  const recordNode = getCollectionNode(app.hierarchy, key);
+
+*/
 
 export const _deleteCollection = async (app, key, disableCleanup) => {
   key = safeKey(key);
-  const node = getNodeForCollectionPath(app.hierarchy)(key);
-
+  const collectionDir = getCollectionDir(app.hierarchy, key);
   await deleteRecords(app, key);
-  await deleteAllIdsFolders(app, node, key);
-  await deleteCollectionFolder(app, key);
+  await deleteCollectionFolder(app, collectionDir);
   if (!disableCleanup) { await app.cleanupTransactions(); }
 };
 
-const deleteCollectionFolder = async (app, key) => await app.datastore.deleteFolder(key);
-
-
-const deleteAllIdsFolders = async (app, node, key) => {
-  await app.datastore.deleteFolder(
-    joinKey(
-      key, 'allids',
-      node.nodeId,
-    ),
-  );
-
-  await app.datastore.deleteFolder(
-    joinKey(key, 'allids'),
-  );
-};
+const deleteCollectionFolder = async (app, dir) => 
+  await app.datastore.deleteFolder(dir);
 
 const deleteRecords = async (app, key) => {
-  const deletedAllIdsShards = [];
-  const deleteAllIdsShard = async (recordId) => {
-    const shardKey = getAllIdsShardKey(
-      app.hierarchy, key, recordId,
-    );
-
-    if (includes(shardKey)(deletedAllIdsShards)) {
-      return;
-    }
-
-    deletedAllIdsShards.push(shardKey);
-
-    await app.datastore.deleteFile(shardKey);
-  };
-
+  
   const iterate = await getAllIdsIterator(app)(key);
 
   let ids = await iterate();
@@ -70,7 +44,6 @@ const deleteRecords = async (app, key) => {
           joinKey(key, id),
           true,
         );
-        await deleteAllIdsShard(id);
       }
     }
 

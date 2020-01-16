@@ -35,7 +35,9 @@ const initialiseRootIndexes = async (datastore, hierarchy) => {
   ]);
 
   for (const index of globalIndexes) {
-    if (!await datastore.exists(index.nodeKey())) { await initialiseIndex(datastore, '', index); }
+    if (!await datastore.exists(index.nodeKey())) { 
+      await initialiseIndex(datastore, '', index); 
+    }
   }
 };
 
@@ -52,6 +54,7 @@ const initialiseRootSingleRecords = async (datastore, hierarchy) => {
   ]);
 
   for (let record of singleRecords) {
+    await datastore.createFolder(record.nodeKey());
     const result = _getNew(record, "");
     await _save(app,result);
   }

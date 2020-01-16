@@ -21,17 +21,6 @@ describe("initialiseData", () => {
         expect(await datastore.exists(`/customers`)).toBeTruthy();
     });
 
-
-    it("should create allids folders", async () => {
-        const {appDef, datastore, h} = getApplicationDefinition();
-        await initialiseData(datastore, appDef);
-
-        const allIdsTypeFolder = "/customers/allids/" + h.customerRecord.nodeId;
-        const allIdsFolder = "/customers/allids";
-        expect(await datastore.exists(allIdsTypeFolder)).toBeTruthy();
-        expect(await datastore.exists(allIdsFolder)).toBeTruthy();
-    });
-
     it("should create transactions folder", async () => {
         const {appDef, datastore} = getApplicationDefinition();
         await initialiseData(datastore, appDef);

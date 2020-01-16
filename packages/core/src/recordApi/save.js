@@ -1,22 +1,17 @@
 import {
-  cloneDeep,
-  flatten,
-  map,
-  filter,
-  isEqual
+  cloneDeep, take, takeRight,
+  flatten, map, filter
 } from 'lodash/fp';
 import { initialiseChildCollections } from '../collectionApi/initialise';
 import { validate } from './validate';
-import { _load, getRecordFileName } from './load';
+import { _loadFromInfo } from './load';
 import {
   apiWrapper, events, $, joinKey,
 } from '../common';
 import {
-  getFlattenedHierarchy, getExactNodeForPath,
-  isRecord, getNode, isSingleRecord,
+  getFlattenedHierarchy, isRecord, getNode, 
   fieldReversesReferenceToNode,
 } from '../templateApi/hierarchy';
-import { addToAllIds } from '../indexing/allIds';
 import {
   transactionForCreateRecord,
   transactionForUpdateRecord,
@@ -24,6 +19,7 @@ import {
 import { permission } from '../authApi/permissions';
 import { initialiseIndex } from '../indexing/initialiseIndex';
 import { BadRequestError } from '../common/errors';
+import { getRecordInfo } from "./recordInfo";
 
 export const save = app => async (record, context) => apiWrapper(
   app,
@@ -46,40 +42,38 @@ export const _save = async (app, record, context, skipValidation = false) => {
     }
   }
 
+  const recordInfo = getRecordInfo(app.hierarchy, record.key);
+  const {
+    recordNode, pathInfo,
+    recordJson, files,
+  } = recordInfo;
+
   if (recordClone.isNew) {
-    const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+    
     if(!recordNode)
       throw new Error("Cannot find node for " + record.key);
 
-    if(!isSingleRecord(recordNode))
-      await addToAllIds(app.hierarchy, app.datastore)(recordClone);
-      
     const transaction = await transactionForCreateRecord(
       app, recordClone,
     );
     recordClone.transactionId = transaction.id;
-    await app.datastore.createFolder(recordClone.key);
-    await app.datastore.createFolder(
-      joinKey(recordClone.key, 'files'),
-    );
-    await app.datastore.createJson(
-      getRecordFileName(recordClone.key),
-      recordClone,
-    );
-    await initialiseReverseReferenceIndexes(app, record);
-    await initialiseAncestorIndexes(app, record);
-    await initialiseChildCollections(app, recordClone.key);
+    await createRecordFolderPath(app.datastore, pathInfo);
+    await app.datastore.createFolder(files);
+    await app.datastore.createJson(recordJson, recordClone);
+    await initialiseReverseReferenceIndexes(app, recordInfo);
+    await initialiseAncestorIndexes(app, recordInfo);
+    await initialiseChildCollections(app, recordInfo);
     await app.publish(events.recordApi.save.onRecordCreated, {
       record: recordClone,
     });
   } else {
-    const oldRecord = await _load(app, recordClone.key);
+    const oldRecord = await _loadFromInfo(app, recordInfo);
     const transaction = await transactionForUpdateRecord(
       app, oldRecord, recordClone,
     );
     recordClone.transactionId = transaction.id;
     await app.datastore.updateJson(
-      getRecordFileName(recordClone.key),
+      recordJson,
       recordClone,
     );
     await app.publish(events.recordApi.save.onRecordUpdated, {
@@ -95,19 +89,18 @@ export const _save = async (app, record, context, skipValidation = false) => {
   return returnedClone;
 };
 
-const initialiseAncestorIndexes = async (app, record) => {
-  const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
-
-  for (const index of recordNode.indexes) {
-    const indexKey = joinKey(record.key, index.name);
-    if (!await app.datastore.exists(indexKey)) { await initialiseIndex(app.datastore, record.key, index); }
+const initialiseAncestorIndexes = async (app, recordInfo) => {
+  for (const index of recordInfo.recordNode.indexes) {
+    const indexKey = recordInfo.child(index.name);
+    if (!await app.datastore.exists(indexKey)) { 
+      await initialiseIndex(app.datastore, recordInfo.dir, index); 
+    }
   }
 };
 
-const initialiseReverseReferenceIndexes = async (app, record) => {
-  const recordNode = getExactNodeForPath(app.hierarchy)(record.key);
+const initialiseReverseReferenceIndexes = async (app, recordInfo) => {
 
-  const indexNodes = $(fieldsThatReferenceThisRecord(app, recordNode), [
+  const indexNodes = $(fieldsThatReferenceThisRecord(app, recordInfo.recordNode), [
     map(f => $(f.typeOptions.reverseIndexNodeKeys, [
       map(n => getNode(
         app.hierarchy,
@@ -119,7 +112,7 @@ const initialiseReverseReferenceIndexes = async (app, record) => {
 
   for (const indexNode of indexNodes) {
     await initialiseIndex(
-      app.datastore, record.key, indexNode,
+      app.datastore, recordInfo.dir, indexNode,
     );
   }
 };
@@ -131,3 +124,42 @@ const fieldsThatReferenceThisRecord = (app, recordNode) => $(app.hierarchy, [
   flatten,
   filter(fieldReversesReferenceToNode(recordNode)),
 ]);
+
+const createRecordFolderPath = async (datastore, pathInfo) => {
+  
+  const recursiveCreateFolder = async (subdirs, dirsThatNeedCreated=undefined) => {
+
+    // iterate backwards through directory hierachy
+    // until we get to a folder that exists, then create the rest
+    // e.g 
+    // - some/folder/here
+    // - some/folder
+    // - some
+    const thisFolder = joinKey(pathInfo.base, ...subdirs);
+
+    if(await datastore.exists(thisFolder)) {
+
+      let creationFolder = thisFolder;
+      for(let nextDir of (dirsThatNeedCreated || []) ) {
+        creationFolder = joinKey(creationFolder, nextDir);
+        await datastore.createFolder(creationFolder);
+      }
+
+    } else if(!dirsThatNeedCreated || dirsThatNeedCreated.length > 0) {
+
+      dirsThatNeedCreated = !dirsThatNeedCreated
+                          ? []
+                          :dirsThatNeedCreated;
+      
+      await recursiveCreateFolder(
+        take(subdirs.length - 1)(subdirs),
+        [...takeRight(1)(subdirs), ...dirsThatNeedCreated]
+      );
+    }
+  }
+
+  await recursiveCreateFolder(pathInfo.subdirs);
+
+  return joinKey(pathInfo.base, ...pathInfo.subdirs);
+
+}

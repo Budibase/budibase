@@ -3,23 +3,13 @@ import {
   getFlattenedHierarchy,
   isCollectionRecord,
   isRoot,
-  getExactNodeForPath,
 } from '../templateApi/hierarchy';
 import { $, allTrue, joinKey } from '../common';
 
-const ensureCollectionIsInitialised = async (datastore, node, parentKey) => {
-  if (!await datastore.exists(parentKey)) {
-    await datastore.createFolder(parentKey);
-    await datastore.createFolder(
-      joinKey(parentKey, 'allids'),
-    );
-    await datastore.createFolder(
-      joinKey(
-        parentKey,
-        'allids',
-        node.nodeId.toString(),
-      ),
-    );
+const ensureCollectionIsInitialised = async (datastore, node, dir) => {
+  if (!await datastore.exists(dir)) {
+    await datastore.createFolder(dir);
+    await datastore.createFolder(joinKey(dir, node.nodeId));
   }
 };
 
@@ -39,14 +29,13 @@ export const initialiseRootCollections = async (datastore, hierarchy) => {
     await ensureCollectionIsInitialised(
       datastore,
       col,
-      col.collectionPathRegx(),
+      col.collectionPathRegx()
     );
   }
 };
 
-export const initialiseChildCollections = async (app, recordKey) => {
-  const childCollectionRecords = $(recordKey, [
-    getExactNodeForPath(app.hierarchy),
+export const initialiseChildCollections = async (app, recordInfo) => {
+  const childCollectionRecords = $(recordInfo.recordNode, [
     n => n.children,
     filter(isCollectionRecord),
   ]);
@@ -55,7 +44,7 @@ export const initialiseChildCollections = async (app, recordKey) => {
     await ensureCollectionIsInitialised(
       app.datastore,
       child,
-      joinKey(recordKey, child.collectionName),
+      recordInfo.child(child.collectionName),
     );
   }
 };

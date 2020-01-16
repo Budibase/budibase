@@ -1,12 +1,4 @@
 import lunr from 'lunr';
-import {
-  getHashCode,
-  joinKey
-} from '../common';
-import {
-  getActualKeyOfParent,
-  isGlobalIndex,
-} from '../templateApi/hierarchy';
 import {promiseReadableStream} from "./promiseReadableStream";
 import { createIndexFile } from './sharding';
 import { generateSchema } from './indexSchemaCreator';
@@ -48,31 +40,6 @@ export const searchIndex = async (hierarchy, datastore, index, indexedDataKey, s
   );
 
   return await doRead(hierarchy, datastore, index, indexedDataKey);
-};
-
-export const getIndexedDataKey_fromIndexKey = (indexKey) => 
-  `${indexKey}${indexKey.endsWith('.csv') ? '' : '.csv'}`;
-
-export const uniqueIndexName = index => `idx_${
-  getHashCode(`${index.filter}${index.map}`)
-}.csv`;
-
-export const getIndexedDataKey = (decendantKey, indexNode) => {
-  if (isGlobalIndex(indexNode)) { return `${indexNode.nodeKey()}.csv`; }
-
-  const indexedDataParentKey = getActualKeyOfParent(
-    indexNode.parent().nodeKey(),
-    decendantKey,
-  );
-
-  const indexName = indexNode.name
-    ? `${indexNode.name}.csv`
-    : uniqueIndexName(indexNode);
-
-  return joinKey(
-    indexedDataParentKey,
-    indexName,
-  );
 };
 
 export const iterateIndex = (onGetItem, getFinalResult) => async (hierarchy, datastore, index, indexedDataKey) => {

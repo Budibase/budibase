@@ -4,21 +4,23 @@ import {
 } from '../common';
 import {
   isIndex, isShardedIndex,
-  getExactNodeForPath,
+  getExactNodeForKey,
 } from '../templateApi/hierarchy';
 import {
   getAllShardKeys, getShardMapKey,
   getUnshardedIndexDataKey,
 } from '../indexing/sharding';
+import { getIndexDir } from "./getIndexDir";
 
 export const _deleteIndex = async (app, indexKey, includeFolder) => {
   indexKey = safeKey(indexKey);
-  const indexNode = getExactNodeForPath(app.hierarchy)(indexKey);
+  const indexNode = getExactNodeForKey(app.hierarchy)(indexKey);
+  const indexDir = getIndexDir(app.hierarchy, indexKey);
 
   if (!isIndex(indexNode)) { throw new Error('Supplied key is not an index'); }
 
   if (isShardedIndex(indexNode)) {
-    const shardKeys = await getAllShardKeys(app, indexKey);
+    const shardKeys = await getAllShardKeys(app, indexNode, indexDir);
     for (const k of shardKeys) {
       await tryAwaitOrIgnore(
         app.datastore.deleteFile(k),
@@ -26,20 +28,20 @@ export const _deleteIndex = async (app, indexKey, includeFolder) => {
     }
     tryAwaitOrIgnore(
       await app.datastore.deleteFile(
-        getShardMapKey(indexKey),
+        getShardMapKey(indexDir),
       ),
     );
   } else {
     await tryAwaitOrIgnore(
       app.datastore.deleteFile(
-        getUnshardedIndexDataKey(indexKey),
+        getUnshardedIndexDataKey(indexDir),
       ),
     );
   }
 
   if (includeFolder) {
     tryAwaitOrIgnore(
-      await app.datastore.deleteFolder(indexKey),
+      await app.datastore.deleteFolder(indexDir),
     );
   }
 };
