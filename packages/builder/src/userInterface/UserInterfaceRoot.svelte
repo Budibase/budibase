@@ -2,7 +2,6 @@
 
 import ComponentsHierarchy from "./ComponentsHierarchy.svelte";
 import PagesList from "./PagesList.svelte"
-import EditComponent from "./EditComponent.svelte";
 import { store } from "../builderStore";
 import getIcon from "../common/icon";
 import { isComponent } from "./pagesParsing/searchComponents";
@@ -12,6 +11,7 @@ import NewComponent from "./NewComponent.svelte";
 import CurrentItemPreview from "./CurrentItemPreview.svelte";
 import SettingsView from "./SettingsView.svelte";
 import PageView from "./PageView.svelte";
+import ComponentsPaneSwitcher from "./ComponentsPaneSwitcher.svelte";
 
 let newComponentPicker;  
 const newComponent = () => {
@@ -32,7 +32,7 @@ const settings = () => {
         <div class="components-list-container">
             <div class="nav-group-header">
                 <div>{@html getIcon("sidebar","18")}</div>
-                <span class="components-nav-header">Components</span>
+                <span class="components-nav-header">Screens</span>
                 <div>
                     <IconButton icon="settings" 
                                 size="14px"
@@ -42,7 +42,7 @@ const settings = () => {
                 </div>
             </div>
             <div class="nav-items-container">
-                <ComponentsHierarchy components={$store.derivedComponents}/>
+                <ComponentsHierarchy components={$store.screens}/>
             </div>
         </div>
 
@@ -58,17 +58,17 @@ const settings = () => {
 
     </div>
 
-    <div>
-        {#if $store.currentFrontEndType === "component"}
+    <div class="preview-pane">
+        {#if $store.currentFrontEndType === "screen"}
         <CurrentItemPreview />
         {:else if $store.currentFrontEndType === "page"}
         <PageView />
         {/if} 
     </div>
 
-    {#if $store.currentFrontEndType === "component"}
-    <div class="properties-pane">
-        <EditComponent />
+    {#if $store.currentFrontEndType === "screen"}
+    <div class="components-pane">
+        <ComponentsPaneSwitcher />
     </div>
     {/if}
 
@@ -83,22 +83,25 @@ const settings = () => {
 
 .root {
     display: grid;
-    grid-template-columns: [uiNav] 250px [preview] auto [properties] 300px;
+    grid-template-columns: 250px 1fr 300px;
     height: 100%;
     width: 100%;
-    overflow-y: auto;
 }
 
 .ui-nav {
-    grid-column-start: uiNav;
+    grid-column: 1;
     background-color: var(--secondary5);
     height: 100%;
 }
 
-.properties-pane {
-    grid-column-start: properties;
+.preview-pane {
+    grid-column: 2;
+}
+
+.components-pane {
+    grid-column: 3;
     background-color: var(--secondary5);
-    height: 100%;
+    min-height: 0px;
     overflow-y: hidden;
 }
 

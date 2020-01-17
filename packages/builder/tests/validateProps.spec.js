@@ -1,5 +1,5 @@
 import { 
-    validatePropsDefinition,
+    validateComponentDefinition,
     validateProps,
     recursivelyValidate
 } from "../src/userInterface/pagesParsing/validateProps";
@@ -11,61 +11,22 @@ import {
 // not that allot of this functionality is covered
 // in createDefaultProps - as validate props uses that.
 
-describe("validatePropsDefinition", () => {
+describe("validateComponentDefinition", () => {
 
-    it("should recursively validate array props and return no errors when valid", () => {
-
-        const propsDef = {
-            columns : {
-                type: "array",
-                elementDefinition: {
-                    width: "number",
-                    units: {
-                        type: "string",
-                        default: "px"
-                    }
-                }
-            }
-        }
-
-        const errors = validatePropsDefinition(propsDef);
-
-        expect(errors).toEqual([]);
-
-    });
-
-    it("should recursively validate array props and return errors when invalid", () => {
-
-        const propsDef = {
-            columns : {
-                type: "array",
-                elementDefinition: {
-                    width: "invlid type",
-                    units: {
-                        type: "string",
-                        default: "px"
-                    }
-                }
-            }
-        }
-
-        const errors = validatePropsDefinition(propsDef);
-
-        expect(errors.length).toEqual(1);
-        expect(errors[0].propName).toBe("width");
-
-    });
 
     it("should return error when no options for options field", () => {
 
-        const propsDef = {
-            size: {
-                type: "options",
-                options: []
+        const compDef = { 
+            name:"some_component",
+            props: {
+                size: {
+                    type: "options",
+                    options: []
+                }
             }
-        }
+        };
 
-        const errors = validatePropsDefinition(propsDef);
+        const errors = validateComponentDefinition(compDef);
 
         expect(errors.length).toEqual(1);
         expect(errors[0].propName).toBe("size");
@@ -74,14 +35,17 @@ describe("validatePropsDefinition", () => {
 
     it("should not return error when options field has options", () => {
 
-        const propsDef = {
-            size: {
-                type: "options",
-                options: ["small", "medium", "large"]
+        const compDef = {
+            name: "some_component",
+            props: {
+                size: {
+                    type: "options",
+                    options: ["small", "medium", "large"]
+                }
             }
-        }
+        };
 
-        const errors = validatePropsDefinition(propsDef);
+        const errors = validateComponentDefinition(compDef);
 
         expect(errors).toEqual([]);
 
@@ -89,30 +53,34 @@ describe("validatePropsDefinition", () => {
 
 });
 
-const validPropDef = {
-    size: {
-        type: "options",
-        options: ["small", "medium", "large"],
-        default:"medium"
-    },
-    rowCount : "number",
-    columns : {
-        type: "array",
-        elementDefinition: {
-            width: "number",
-            units: {
-                type: "string",
-                default: "px"
-            }
+const validComponentDef = {
+    name: "some_component",
+    props: {
+        size: {
+            type: "options",
+            options: ["small", "medium", "large"],
+            default:"medium"
+        },
+        rowCount : "number"
+    }
+};
+
+const childComponentDef = {
+    name: "child_component",
+    props: {
+        width: "number",
+        units: {
+            type: "string",
+            default: "px"
         }
     }
-
 };
 
 const validProps = () => {
-    const { props } = createProps("some_component", validPropDef);
-    props.columns.push(
-        createProps("childcomponent", validPropDef.columns.elementDefinition).props);
+
+    const { props } = createProps(validComponentDef);
+    props._children.push(
+        createProps(childComponentDef));
     return props;
 }
 
@@ -120,7 +88,7 @@ describe("validateProps", () => {
 
     it("should have no errors with a big list of valid props", () => {
         
-        const errors = validateProps(validPropDef, validProps(), [], true);
+        const errors = validateProps(validComponentDef, validProps(), [], true);
         expect(errors).toEqual([]);
         
     });
@@ -129,7 +97,7 @@ describe("validateProps", () => {
         
         const props = validProps();
         props.rowCount = "1";
-        const errors = validateProps(validPropDef, props, [], true);
+        const errors = validateProps(validComponentDef, props, [], true);
         expect(errors.length).toEqual(1);
         expect(errors[0].propName).toBe("rowCount");
         
@@ -139,92 +107,92 @@ describe("validateProps", () => {
         
         const props = validProps();
         props.size = "really_small";
-        const errors = validateProps(validPropDef, props, [], true);
+        const errors = validateProps(validComponentDef, props, [], true);
         expect(errors.length).toEqual(1);
         expect(errors[0].propName).toBe("size");
         
     });
 
-    it("should return error with invalid array item", () => {
-        
-        const props = validProps();
-        props.columns[0].width = "seven";
-        const errors = validateProps(validPropDef, props, [], true);
-        expect(errors.length).toEqual(1);
-        expect(errors[0].propName).toBe("width");
-        
-    });
-
     it("should not return error when has binding", () => {
         const props = validProps();
-        props.columns[0].width = setBinding({path:"some_path"});
+        props._children[0].width = setBinding({path:"some_path"});
         props.size = setBinding({path:"other path", fallback:"small"});
-        const errors = validateProps(validPropDef, props, [], true);
+        const errors = validateProps(validComponentDef, props, [], true);
         expect(errors.length).toEqual(0);
     });
 });
 
 describe("recursivelyValidateProps", () => {
 
-    const rootComponent = {
-        width: "number",
-        child: "component",
-        navitems: {
-            type: "array",
-            elementDefinition: {
-                name: "string",
-                icon: "component"
-            }
+    const rootComponent = { 
+        name: "rootComponent",
+        children: true,
+        props: {
+            width: "number"
         }
     };
 
-    const todoListComponent = {
-        showTitle: "bool",
-        header: "component"
+    const todoListComponent = { 
+        name: "todoListComponent",
+        props:{
+            showTitle: "bool"
+        }
     };
 
     const headerComponent = {
-        text: "string"
-    }
+        name: "headerComponent",
+        props: {
+            text: "string"
+        }
+    };
 
     const iconComponent = {
-        iconName:  "string"
-    }
+        name: "iconComponent",
+        props: {
+           iconName:  "string"
+        }
+    };
+
+    const navItemComponent = {
+        name: "navItemComponent",
+        props: {
+            text: "string"
+        }
+    };
 
     const getComponent = name => ({
         rootComponent,
         todoListComponent,
         headerComponent,
-        iconComponent
+        iconComponent,
+        navItemComponent
     })[name];
 
     const rootProps = () => ({
         _component: "rootComponent",
         width: 100,
-        child: {
+        _children: [{
             _component: "todoListComponent",
             showTitle: true,
-            header: {
-                _component: "headerComponent",
-                text: "Your todo list"
-            }
-        },
-        navitems: [
-            {
-                name: "Main",
-                icon: {
+            _children : [
+                {
+                    _component: "navItemComponent",
+                    text: "todos"
+                },
+                {
+                    _component: "headerComponent",
+                    text: "Your todo list"
+                },
+                {
                     _component: "iconComponent",
-                    iconName:"fa fa-list"
-                }
-            },
-            {
-                name: "Settings",
-                icon: {
+                    iconName: "fa fa-list"
+                },
+                {
                     _component: "iconComponent",
                     iconName:"fa fa-cog"
                 }
-            }
-        ]
+            ]
+        }]
     });
 
     it("should return no errors for valid structure", () => {
@@ -245,38 +213,20 @@ describe("recursivelyValidateProps", () => {
 
     it("should return error on first nested child component", () => {
         const root = rootProps();
-        root.child.showTitle = "yeeeoooo";
+        root._children[0].showTitle = "yeeeoooo";
         const result = recursivelyValidate(root, getComponent);
         expect(result.length).toBe(1);
-        expect(result[0].stack).toEqual(["child"]);
+        expect(result[0].stack).toEqual([0]);
         expect(result[0].propName).toBe("showTitle");
     });
 
     it("should return error on second nested child component", () => {
         const root = rootProps();
-        root.child.header.text = false;
+        root._children[0]._children[0].text = false;
         const result = recursivelyValidate(root, getComponent);
         expect(result.length).toBe(1);
-        expect(result[0].stack).toEqual(["child", "header"]);
+        expect(result[0].stack).toEqual([0,0]);
         expect(result[0].propName).toBe("text");
-    });
-
-    it("should return error on invalid array prop", () => {
-        const root = rootProps();
-        root.navitems[1].name = false;
-        const result = recursivelyValidate(root, getComponent);
-        expect(result.length).toBe(1);
-        expect(result[0].propName).toBe("name");
-        expect(result[0].stack).toEqual(["navitems[1]"]);
-    });
-
-    it("should return error on invalid array child", () => {
-        const root = rootProps();
-        root.navitems[1].icon.iconName = false;
-        const result = recursivelyValidate(root, getComponent);
-        expect(result.length).toBe(1);
-        expect(result[0].propName).toBe("iconName");
-        expect(result[0].stack).toEqual(["navitems[1]", "icon"]);
     });
 
 });

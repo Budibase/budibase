@@ -22,7 +22,7 @@ let isInitilised = false;
 $ : {
     if(!isInitilised && _bb && htmlElements && Object.keys(htmlElements).length > 0) {
         for(let el in htmlElements) {
-            _bb.hydrateComponent(
+            _bb.hydrateChildren(
                 _bb.props.children[el].component,
                 htmlElements[el]
             );

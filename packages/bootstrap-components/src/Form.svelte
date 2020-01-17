@@ -21,12 +21,12 @@ $ : {
 
         for(let el in htmlElements) {
             if(formControls[el].control.controlPosition === "Before Label") {
-                _bb.insertComponent(
+                _bb.insertChildren(
                     _bb.props.formControls[el].control,
                     htmlElements[el],
                     htmlElements[el].childNodes.find(n => n.tagName === "LABEL"));
             } else {
-                _bb.appendComponent(
+                _bb.appendChildren(
                     _bb.props.formControls[el].control,
                     htmlElements[el]);
             }

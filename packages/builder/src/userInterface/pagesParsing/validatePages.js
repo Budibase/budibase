@@ -14,9 +14,9 @@ export const validatePage = (page, getComponent) => {
     const errors = [];
     const error = message => errors.push(message);
 
-    const noIndex = !page.index || !page.index._component;
+    const noIndex = !page.index;
     if(noIndex) {
-        error("Must choose a component for your index.html");
+        error("Page does not define an index member");
     }
 
     if(!page.appBody 
@@ -25,14 +25,18 @@ export const validatePage = (page, getComponent) => {
         error("App body must be set toa valid JSON file");
     }
 
+    /* Commenting this for now
+    * index is a load of static members just now, but maybe useful
+    for pageLayout props (which is just a pipe dream at time of writing)
     const indexHtmlErrors = noIndex 
-    ? []
-    : pipe(
-        recursivelyValidate(page.index, getComponent), [
-        map(e => `Index.html: ${e.error}`)
-    ]);
+        ? []
+        : pipe(
+            recursivelyValidate(page.index, getComponent), [
+            map(e => `Index.html: ${e.error}`)
+        ]);
+    */
 
-    return [...errors, ...indexHtmlErrors];
+    return errors;
 }
 
 export const validatePages = (pages, getComponent) => {

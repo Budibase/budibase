@@ -25338,7 +25338,7 @@ var app = (function () {
 
         const bb = (bindings, context) => ({
             hydrateComponent: _initialiseComponent(context, true), 
-            appendComponent: _initialiseComponent(context, false), 
+            appendChildren: _initialiseComponent(context, false), 
             insertComponent: (props, htmlElement, anchor, context) => 
                 _initialiseComponent(context, false)(props, htmlElement, context, anchor), 
             store,

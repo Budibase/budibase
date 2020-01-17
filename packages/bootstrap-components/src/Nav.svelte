@@ -79,7 +79,7 @@ const SelectItem = (index) => {
     }
 
     if(index >= 0)
-        currentComponent = _bb.hydrateComponent(
+        currentComponent = _bb.hydrateChildren(
             _bb.props.items[index].component, componentElement);
 
 }

@@ -2,7 +2,7 @@
 import {buildStyle} from "./buildStyle";
 import cssVars from "./cssVars";
 
-export let component="";
+export let children="";
 export let text="";
 export let containerClass="";
 export let background="";
@@ -36,8 +36,8 @@ $: {
         cursor: onClick ? "pointer" : "none"
     });
 
-    if(_bb && component && componentElement && !componentInitialised) {
-        _bb.hydrateComponent(_bb.props.component, componentElement);
+    if(_bb && children && children.length > 0 && componentElement && !componentInitialised) {
+        _bb.hydrateChildren(_bb.props.children, componentElement);
         componentInitialised = true;
     }
 
@@ -60,7 +60,7 @@ const clickHandler = () => {
      use:cssVars={styleVars}
      bind:this={componentElement}
      on:click={clickHandler}>
-    {component && component._component ? "" : text}
+    {children && children.length === 0 ? "" : text}
 </div>
 
 <style>
