@@ -6,12 +6,12 @@ const { resolve } = require("path");
 const send = require('koa-send');
 const { 
     getPackageForBuilder, 
-    getRootComponents,
+    getComponents,
     savePackage, 
     getApps,
-    saveDerivedComponent,
-    renameDerivedComponent,
-    deleteDerivedComponent,
+    saveScreen,
+    renameScreen,
+    deleteScreen,
     componentLibraryInfo
 } = require("../utilities/builder");
 
@@ -162,9 +162,9 @@ module.exports = (config, app) => {
             ctx.request.body);
         ctx.response.status = StatusCodes.OK;
     })
-    .get("/_builder/api/:appname/rootcomponents", async (ctx) => {
+    .get("/_builder/api/:appname/components", async (ctx) => {
         try {
-            ctx.body = getRootComponents(
+            ctx.body = getComponents(
                 config, 
                 ctx.params.appname,
                 ctx.query.lib);
@@ -194,26 +194,26 @@ module.exports = (config, app) => {
         ctx.body = info.generators;
         ctx.response.status = StatusCodes.OK;
     })
-    .post("/_builder/api/:appname/derivedcomponent", async (ctx) => {
-        await saveDerivedComponent(
+    .post("/_builder/api/:appname/screen", async (ctx) => {
+        await saveScreen(
             config,
             ctx.params.appname,
             ctx.request.body);
         ctx.response.status = StatusCodes.OK;
     })
-    .patch("/_builder/api/:appname/derivedcomponent", async (ctx) => {
-        await renameDerivedComponent(
+    .patch("/_builder/api/:appname/screen", async (ctx) => {
+        await renameScreen(
             config,
             ctx.params.appname,
             ctx.request.body.oldname,
             ctx.request.body.newname);
         ctx.response.status = StatusCodes.OK;
     })
-    .delete("/_builder/api/:appname/derivedcomponent/*", async (ctx) => {
+    .delete("/_builder/api/:appname/screen/*", async (ctx) => {
         const name = ctx.request.path.replace(
-            `/_builder/api/${ctx.params.appname}/derivedcomponent/`, "");
+            `/_builder/api/${ctx.params.appname}/screen/`, "");
 
-        await deleteDerivedComponent(
+        await deleteScreen(
             config,
             ctx.params.appname,
             decodeURI(name));

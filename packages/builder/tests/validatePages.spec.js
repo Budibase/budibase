@@ -6,21 +6,13 @@ import {
 const validPages = () => ({
     "main" : {
         "index" : {
-            "_component": "testIndexHtml",
-            "title": "My Cool App",
-            "customScripts": [
-                {"url": "MyCustomComponents.js"}
-            ]
+            "title": "My Cool App"
         },
         "appBody" : "./main.app.json"
     },
     "unauthenticated" : {
         "index" : {
-            "_component": "testIndexHtml",
-            "title": "My Cool App - Login",
-            "customScripts": [
-                {"url": "MyCustomComponents.js"}
-            ]
+            "title": "My Cool App - Login"
         },
         "appBody" : "./unauthenticated.app.json"
     },
@@ -29,12 +21,9 @@ const validPages = () => ({
 
 const getComponent = name => ({
     testIndexHtml : {
-        title: "string",
-        customScripts: {
-            type:"array", 
-            elementDefinition: {
-                url: "string"
-            }
+        name: "testIndexHtml",
+        props: {
+            title: "string",
         }
     }
 }[name])
@@ -53,11 +42,6 @@ describe("validate single page", () => {
         let page = validPages().main;
         delete page.index;
         expect(validatePage(page, getComponent).length).toEqual(1);
-
-        page.index = {title:"something"}; // no _component
-        const noComponent = validatePage(page, getComponent);
-        expect(noComponent.length).toEqual(1);
-
     });
 
     it("should return error when appBody is not set, or set incorrectly", () => {

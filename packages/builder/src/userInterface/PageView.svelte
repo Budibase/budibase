@@ -20,7 +20,7 @@ store.subscribe(s => {
     page = s.pages[s.currentPageName];
     if(!page) return;
     title = page.index.title;
-    components = pipe(s.allComponents, [
+    components = pipe(s.components, [
         filter(s => !isRootComponent(s)),
         concat([notSeletedComponent])
     ]);

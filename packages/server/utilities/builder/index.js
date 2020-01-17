@@ -37,10 +37,10 @@ module.exports.getPackageForBuilder = async (config, appname) => {
 
         pages,
 
-        rootComponents: await getRootComponents(appPath, pages),
+        components: await getComponents(appPath, pages),
 
-        derivedComponents: keyBy("name")(
-            await fetchDerivedComponents(appPath))
+        screens: keyBy("name")(
+            await fetchscreens(appPath))
     });
 
 }
@@ -60,7 +60,7 @@ module.exports.getApps = async (config, master) => {
 const componentPath = (appPath, name) =>
     join(appPath, "components", name + ".json");
 
-module.exports.saveDerivedComponent = async (config, appname, component) => {
+module.exports.saveScreen = async (config, appname, component) => {
     const appPath = appPackageFolder(config, appname);
     const compPath = componentPath(appPath, component.name);
     await ensureDir(dirname(compPath));
@@ -70,7 +70,7 @@ module.exports.saveDerivedComponent = async (config, appname, component) => {
         {encoding:"utf8", flag:"w", spaces:2});
 }
 
-module.exports.renameDerivedComponent = async (config, appname, oldName, newName) => {
+module.exports.renameScreen = async (config, appname, oldName, newName) => {
     const appPath = appPackageFolder(config, appname);
 
     const oldComponentPath = componentPath(
@@ -85,7 +85,7 @@ module.exports.renameDerivedComponent = async (config, appname, oldName, newName
         newComponentPath);    
 }
 
-module.exports.deleteDerivedComponent = async (config, appname, name) => {
+module.exports.deleteScreen = async (config, appname, name) => {
     const appPath = appPackageFolder(config, appname);
     const componentFile = componentPath(appPath, name);
     await unlink(componentFile);
@@ -102,7 +102,7 @@ module.exports.componentLibraryInfo = async (config, appname, lib) => {
 };
 
 
-const getRootComponents = async (appPath, pages ,lib) => {
+const getComponents = async (appPath, pages ,lib) => {
 
     let libs;
     if(!lib) {
@@ -131,7 +131,7 @@ const getRootComponents = async (appPath, pages ,lib) => {
     return {components, generators};
 }
 
-const fetchDerivedComponents = async (appPath, relativePath = "") => {
+const fetchscreens = async (appPath, relativePath = "") => {
     
     const currentDir = join(appPath, "components", relativePath);
 
@@ -159,7 +159,7 @@ const fetchDerivedComponents = async (appPath, relativePath = "") => {
 
             components.push(component);
         } else {
-            const childComponents = await fetchDerivedComponents(
+            const childComponents = await fetchscreens(
                 appPath, join(relativePath, item)
             );
 
@@ -172,4 +172,4 @@ const fetchDerivedComponents = async (appPath, relativePath = "") => {
     return components;
 }
 
-module.exports.getRootComponents = getRootComponents;
+module.exports.getComponents = getComponents;

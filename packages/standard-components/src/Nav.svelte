@@ -53,8 +53,8 @@ $: {
 const onSelectItem = (index) => () => {
     selectedIndex = index;
     if(!components[index]) {
-        const comp = _bb.hydrateComponent(
-            _bb.props.items[index].component, componentElements[index]);
+        const comp = _bb.hydrateChildren(
+            _bb.props.items[index].children, componentElements[index]);
         components[index] = comp;   
     }
 }

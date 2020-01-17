@@ -43,18 +43,18 @@ $: {
             let index = 0;
             for(let child of _bb.props.children) {
                 if(child.className) {
-                    _bb.hydrateComponent(
-                        child.component,
+                    _bb.hydrateChildren(
+                        child.children,
                         staticHtmlElements[index]);
                 } else {
                     const anchor = getStaticAnchor(index);
                     if(!anchor) {
-                        _bb.appendComponent(
-                            child.component,
+                        _bb.appendChildren(
+                            child.children,
                             rootDiv);
                     } else {
-                        _bb.insertComponent(
-                            child.component,
+                        _bb.insertChildren(
+                            child.children,
                             rootDiv,
                             anchor);
                     }
@@ -76,7 +76,7 @@ $: {
             if(hasData()) {
                 let index = 0;
                 for(let dataItem of data) {
-                    _bb.appendComponent(
+                    _bb.appendChildren(
                         _bb.props.dataItemComponent,
                         rootDiv,
                         dataItem

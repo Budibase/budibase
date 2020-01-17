@@ -15,32 +15,37 @@ import { isBound } from "./state/isState";
 
 export const createApp = (componentLibraries, appDefinition, user) => {
 
-    const _initialiseComponent = (parentContext, hydrate) => (props, htmlElement, context, anchor=null) => {
+    const _initialiseChildren = (parentContext, hydrate) => (childrenProps, htmlElement, context, anchor=null) => {
 
-        const {componentName, libName} = splitName(props._component);
+        const childComponents = [];
 
-        if(!componentName || !libName) return;
+        for(let childProps of childrenProps) {        
+            const {componentName, libName} = splitName(childProps._component);
 
-        const {initialProps, bind} = setupBinding(
-                store, props, coreApi, 
-                context || parentContext, appDefinition.appRootPath);
+            if(!componentName || !libName) return;
 
-  
-        const componentProps = {
-            ...initialProps, 
-            _bb:bb(context || parentContext, props)
-        };
+            const {initialProps, bind} = setupBinding(
+                    store, childProps, coreApi, 
+                    context || parentContext, appDefinition.appRootPath);
 
-        const component = new (componentLibraries[libName][componentName])({
-            target: htmlElement,
-            props: componentProps,
-            hydrate,
-            anchor
-        });
+    
+            const componentProps = {
+                ...initialProps, 
+                _bb:bb(context || parentContext, childProps)
+            };
 
-        bind(component);
+            const component = new (componentLibraries[libName][componentName])({
+                target: htmlElement,
+                props: componentProps,
+                hydrate,
+                anchor
+            });
 
-        return component;
+            bind(component);
+            childComponents.push(component);
+        }
+
+        return childComponents;
     }
 
     const coreApi = createCoreApi(appDefinition, user);
@@ -86,10 +91,10 @@ export const createApp = (componentLibraries, appDefinition, user) => {
     }
 
     const bb = (context, props) => ({
-        hydrateComponent: _initialiseComponent(context, true), 
-        appendComponent: _initialiseComponent(context, false), 
-        insertComponent: (props, htmlElement, anchor, context) => 
-            _initialiseComponent(context, false)(props, htmlElement, context, anchor), 
+        hydrateChildren: _initialiseChildren(context, true), 
+        appendChildren: _initialiseChildren(context, false), 
+        insertChildren: (props, htmlElement, anchor, context) => 
+            _initialiseChildren(context, false)(props, htmlElement, context, anchor), 
         store,
         relativeUrl,
         api,

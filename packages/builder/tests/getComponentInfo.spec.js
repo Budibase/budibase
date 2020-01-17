@@ -1,11 +1,12 @@
 import { 
     getInstanceProps,
-    getComponentInfo 
+    getScreenInfo ,
+    getComponentInfo
 } from "../src/userInterface/pagesParsing/createProps";
 import {
-    keys, some
+    keys, some, find
 } from "lodash/fp";
-import { allComponents } from "./testData";
+import { componentsAndScreens } from "./testData";
 
 
 
@@ -13,7 +14,7 @@ describe("getComponentInfo", () => {
 
     it("should return default props for root component", () => {
         const result = getComponentInfo(
-            allComponents(), 
+            componentsAndScreens().components, 
             "budibase-components/TextBox");
 
         expect(result.errors).toEqual([]);
@@ -26,19 +27,10 @@ describe("getComponentInfo", () => {
         });
     });
 
-    it("should return no inherited for root component", () => {
-        const result = getComponentInfo(
-            allComponents(), 
-            "budibase-components/TextBox");
-
-        expect(result.inheritedProps).toEqual([]);
-        
-    });
-
     it("getInstanceProps should set supplied props on top of default props", () => {
         const result = getInstanceProps(
             getComponentInfo(
-                allComponents(), 
+                componentsAndScreens().components, 
                 "budibase-components/TextBox"),
             {size:"small"});
 
@@ -51,11 +43,18 @@ describe("getComponentInfo", () => {
         });
         
     });
+});
 
-    it("should return correct props for derived component", () => {
-        const result = getComponentInfo(
-            allComponents(), 
-            "common/SmallTextbox");
+describe("getScreenInfo", () => {
+
+    const getScreen = (screens, name) => 
+        find(s => s.name === name)(screens);
+
+    it("should return correct props for screen", () => {
+        const {components, screens} = componentsAndScreens();
+        const result = getScreenInfo(
+            components, 
+            getScreen(screens, "common/SmallTextbox"));
 
         expect(result.errors).toEqual([]);
         expect(result.fullProps).toEqual({
@@ -68,9 +67,10 @@ describe("getComponentInfo", () => {
     });
 
     it("should return correct props for twice derived component", () => {
-        const result = getComponentInfo(
-            allComponents(), 
-            "common/PasswordBox");
+        const {components, screens} = componentsAndScreens();
+        const result = getScreenInfo(
+            components, 
+            getScreen(screens, "common/PasswordBox"));
 
         expect(result.errors).toEqual([]);
         expect(result.fullProps).toEqual({
@@ -82,19 +82,12 @@ describe("getComponentInfo", () => {
         });
     });
 
-    it("should list inheirted props as those that are defined in ancestor, derived components", () => {
-        const result = getComponentInfo(
-            allComponents(), 
-            "common/PasswordBox");
-
-        // size is inherited from SmallTextbox
-        expect(result.inheritedProps).toEqual(["size"]);
-    });
 
     it("should list unset props as those that are only defined in root", () => {
-        const result = getComponentInfo(
-            allComponents(), 
-            "common/PasswordBox");
+        const {components, screens} = componentsAndScreens();
+        const result = getScreenInfo(
+            components, 
+            getScreen(screens, "common/PasswordBox"));
 
         expect(result.unsetProps).toEqual([
             "placeholder", "label"]);

@@ -33,7 +33,6 @@
 		"description": "an html <button />",
 		"props": {
 			"contentText": { "type": "string", "default": "Button" },
-			"contentComponent": "component",
 			"className": {"type": "string", "default": "default"},
 			"disabled": "bool",
 			"onClick": "event",
@@ -71,8 +70,7 @@
 			"formControls": {
 				"type":"array",
 				"elementDefinition": {
-					"label": "string",
-					"control":"component"
+					"label": "string"
 				}
 			}
 		},
@@ -136,18 +134,11 @@
 				"options": ["horizontal", "vertical"],
 				"default":"horizontal"
 			},
-			"children": {
-				"type":"array",
-				"elementDefinition": {
-					"control":"component"
-				}
-			},
 			"width": {"type":"string","default":"auto"},
 			"height": {"type":"string","default":"auto"},
 			"containerClass":"string",
 			"itemContainerClass":"string",
 			"data": "state",
-			"dataItemComponent": "component",
 			"onLoad": "event"
 		},
 		"tags": ["div", "container", "layout", "panel"]
@@ -162,7 +153,6 @@
 			"children": {
 				"type":"array",
 				"elementDefinition": {
-					"component":"component",
 					"gridColumnStart":"string",
 					"gridColumnEnd":"string",
 					"gridRowStart":"string",
@@ -220,7 +210,6 @@
 		"description": "A stylable div with a component inside",
 		"props" : {
 			"text": "string",
-			"component": "component",
 			"containerClass": "string",
 			"background": "string",
 			"border": "string",
@@ -260,8 +249,7 @@
 			"items": {
 				"type": "array",
 				"elementDefinition" : {
-					"title": "string",
-					"component": "component"
+					"title": "string"
 				}
 			},
 			"selectedItem":"string",
@@ -300,13 +288,11 @@
 			"children": {
 				"type":"array",
 				"elementDefinition": {
-					"component":"component",
 					"className": "string"
 				}
 			},
 			"className":"string",
 			"data": "state",
-			"dataItemComponent": "component",
 			"onLoad": "event"
 		},
 		"tags": ["div", "container", "layout"]
@@ -368,17 +354,6 @@
 		"props" : {
 			"text": "string",
 			"className":"string"
-		},
-		"tags": []
-	},
-	"if": {
-		"importPath": "if",
-		"name": "If",
-		"description": "An if condition.. if (CONDITION) THEN [display component A] ELSE [display component B]",
-		"props" : {
-			"condition": "string",
-			"thenComponent":{"type":"component", "required":true},
-			"elseComponent":"component"
 		},
 		"tags": []
 	}
