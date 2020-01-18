@@ -9,10 +9,10 @@ export let selectedItemColor="";
 export let selectedItemBorder="";
 export let itemHoverBackground="";
 export let itemHoverColor="";
-export let items = [];
 export let hideNavBar=false;
 export let selectedItem="";
 
+export let _children;
 export let _bb;
 
 let selectedIndex = -1;
@@ -32,14 +32,14 @@ $: {
         itemHoverBackground, itemHoverColor
     };
 
-    if(items && items.length > 0 && hasComponentElements()) {
+    if(_children && _children.length > 0 && hasComponentElements()) {
         const currentSelectedItem = selectedIndex > 0
-                                   ? items[selectedIndex].title
+                                   ? _children[selectedIndex].title
                                    : "";
         if(selectedItem && currentSelectedItem !== selectedItem) {
             let i=0;
-            for(let item of items) {
-                if(item.title === selectedItem) {
+            for(let child of _children) {
+                if(child.title === selectedItem) {
                     onSelectItem(i)();
                 }
                 i++;
@@ -54,7 +54,7 @@ const onSelectItem = (index) => () => {
     selectedIndex = index;
     if(!components[index]) {
         const comp = _bb.hydrateChildren(
-            _bb.props.items[index].children, componentElements[index]);
+            _children[index].children, componentElements[index]);
         components[index] = comp;   
     }
 }
@@ -65,7 +65,7 @@ const onSelectItem = (index) => () => {
 <div class="root" use:cssVars={styleVars}>
     {#if !hideNavBar}
     <div class="navbar">
-        {#each items as navItem, index}
+        {#each _children as navItem, index}
         <div class="navitem"
              on:click={onSelectItem(index)}
              class:selected={selectedIndex === index}>
@@ -74,8 +74,7 @@ const onSelectItem = (index) => () => {
         {/each}
     </div>
     {/if}
-    {#each items as navItem, index}
-
+    {#each _children as navItem, index}
     <div class="content"
          bind:this={componentElements[index]}>
     </div>

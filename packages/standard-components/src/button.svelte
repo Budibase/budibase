@@ -4,7 +4,6 @@ import {buildStyle} from "./buildStyle";
 export let className = "default";
 export let disabled = false;
 export let contentText;
-export let contentComponent;
 export let onClick;
 export let background;
 export let color;
@@ -13,9 +12,10 @@ export let padding;
 export let hoverColor;
 export let hoverBackground;
 export let hoverBorder;
+export let _children;
 
 export let _bb;
-let contentComponentContainer;
+let theButton;
 let cssVariables;
 let buttonStyles;
 
@@ -34,12 +34,13 @@ const createClasses = (classes) => {
 	}
 	return all;
 }
-	
 
 $:{
-	if(_bb && contentComponentContainer && contentComponent._component)
-		_bb.hydrateChildren(_bb.props.contentComponent, contentComponentContainer);
+	if(_bb && theButton && _children && _children.length)
+		_bb.hydrateChildren(_children, theButton);
+}
 
+$:{
 	cssVariables = {
 		hoverColor, hoverBorder,
 		hoverBackground,
@@ -54,7 +55,6 @@ $:{
 		hoverColor, hoverBorder, hoverBackground,
 		background, border, color
 	});
-	
 }
 
 
@@ -67,18 +67,14 @@ const clickHandler = () => {
 </script>
 
 
-<button use:cssVars={cssVariables} 
+<button bind:this={theButton}
+		use:cssVars={cssVariables} 
 		class="{className} {customClasses}" 
 		disabled={disabled || false} 
 		on:click={clickHandler} 
 		style={buttonStyles}>
-    {#if contentComponent && contentComponent._component}
-	<div bind:this={contentComponentContainer}>
-	</div>
-    {:else if contentText}
+    {#if !_children || _children.length === 0}
     {contentText}
-    {:else}
-    <slot />
     {/if}
 </button>
 

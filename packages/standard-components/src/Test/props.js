@@ -1,6 +1,37 @@
 
 export const props = {
 
+    divWithAFewControls : {
+        _component:"components/div",
+        _children: [
+            {
+                _component:"components/h1",
+                text: "This is an <h1> component"
+            },
+            {
+                _component:"components/text",
+                value: "Label for field"
+            },
+            {
+                _component:"components/input",
+                type:"text"
+            },
+            {
+                _component:"components/button",
+                _children: [
+                    {
+                        _component:"components/text",
+                        value:"☢"
+                    },
+                    {
+                        _component:"components/text",
+                        value:"Click Me"
+                    },
+                ]
+            }
+        ]
+    },
+
     login: { _component:"components/login" },
 
     form: {
@@ -109,77 +140,6 @@ export const props = {
 
     },
 
-    grid: {
-        _component: "components/grid",
-        gridTemplateColumns: "[left] auto [center] auto [right] auto",
-        gridTemplateRows: "[top] auto [middle] auto [bottom] auto",
-        children : [
-            {
-                control: {
-                    _component: "components/text",
-                    value: "1",
-                    background: "blue",
-                    textAlign:"center",
-                    color: "white"
-                },
-                gridColumn: "left",
-                gridRow: "top"
-            },
-            {
-                control: {
-                    _component: "components/text",
-                    value: "2",
-                    background: "red",
-                    textAlign:"center",
-                    color: "white",
-                    padding: "10px"
-                },
-                gridColumn: "center",
-                gridRow: "middle"
-            },
-            {
-                control: {
-                    _component: "components/text",
-                    value: "3",
-                    background: "yellow",
-                    textAlign:"center",
-                    color: "black"
-                },
-                gridColumn: "right",
-                gridRow: "bottom"
-            }
-        ]
-    },
-    boundStackPanel: {
-        _component: "components/stackpanel",
-        direction: "horizontal",
-        children: [
-            {
-                control: {
-                    _component: "components/text",
-                    value: "STATIC"
-                }
-            }
-        ],
-        data: {
-            "##bbstate":"people"
-        },
-        dataItemComponent: {
-            _component: "components/panel",
-            text: {
-                "##bbstate":"name",
-                "##bbsource":"context",
-                "##bbstatefallback": "balls to that"
-            },
-            padding: "10px",
-            border: "5px solid black",
-            margin: "10px",
-            hoverColor: "white",
-            hoverBackground: "black",
-            height:"200px",
-            weight:"200px"
-        }
-    },
     hiddenNav: {
         _component: "components/stackpanel",
         children: [
