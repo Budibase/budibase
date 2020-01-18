@@ -7,13 +7,13 @@ let _bb;
 const _appPromise = createApp();
 _appPromise.then(a => _bb = a);
 
-const testProps = props.table;
+const testProps = props.divWithAFewControls;
 
 let currentComponent;
 
 $: {
     if(_bb && currentComponent) {
-        _bb.hydrateChildren(testProps, currentComponent);
+        _bb.hydrateChildren(testProps._children, currentComponent);
     }
 }
 
