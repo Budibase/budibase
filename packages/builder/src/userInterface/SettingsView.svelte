@@ -11,14 +11,14 @@ let addNewLib = "";
 let addNewStylesheet = "";
 let addComponentError = "";
 let modalElement;
-let allComponents;
+let components;
 
 store.subscribe(s => {
-    allComponents = s.allComponents;
+    components = s.components;
 })
 
 const removeLibrary = lib => {
-    const dependencies = libraryDependencies(allComponents, lib);
+    const dependencies = libraryDependencies(components, lib);
     if(dependencies.length > 0) return;
     store.removeComponentLibrary(lib);
 }

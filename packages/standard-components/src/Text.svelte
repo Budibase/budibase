@@ -8,7 +8,6 @@ export let font="";
 export let textAlign="";
 export let verticalAlign=""
 export let color="";
-export let display="";
 
 export let _bb;
 

@@ -1,12 +1,10 @@
 import { writable } from "svelte/store";
 import Login from "../Login.svelte";
-import Grid from "../Grid.svelte";
-import Form from "../Form.svelte";
-import Textbox from "../Textbox.svelte";
+import Input from "../Input.svelte";
 import Text from "../Text.svelte";
 import Nav from "../Nav.svelte";
-import Panel from "../Panel.svelte";
-import StackPanel from "../StackPanel.svelte";
+import H1 from "../H1.svelte";
+import Div from "../Div.svelte";
 import Table from "../Table.svelte";
 import Button from "../Button.svelte";
 import { createApp } from "@budibase/client/src/createApp";
@@ -16,15 +14,13 @@ export default async () =>  {
     const componentLibraries = {
         components : {
             login : Login,
-            grid : Grid,
-            form : Form,
-            textbox : Textbox,
+            input : Input,
             text: Text,
             nav: Nav,
-            panel: Panel,
             table: Table,
-            stackpanel: StackPanel,
-            button: Button
+            button: Button,
+            div: Div,
+            h1: H1
         }
     }
 

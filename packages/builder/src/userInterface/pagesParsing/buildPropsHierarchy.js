@@ -2,51 +2,47 @@ import {
     getComponentInfo, createProps, getInstanceProps 
 } from "./createProps";
 
-export const buildPropsHierarchy = (allComponents, baseComponent) => {
+export const buildPropsHierarchy = (components, screens, baseComponent) => {
 
-    const buildProps = (componentName, propsDefinition, derivedFromProps) => {
+    const allComponents = [...components, ...screens];
 
-        const {props} = createProps(componentName, propsDefinition, derivedFromProps);
-        props._component = componentName;
+    const buildProps = (componentDefinition, derivedFromProps) => {
+        
+        const {props} = createProps(componentDefinition, derivedFromProps);
+        const propsDefinition = componentDefinition.props;
+        props._component = componentDefinition.name;
         for(let propName in props) {
             if(propName === "_component") continue;
 
             const propDef = propsDefinition[propName];
             if(!propDef) continue;
-            if(propDef.type === "component") {
+            if(propName === "_children") {
 
-                const subComponentProps = props[propName];
+                const childrenProps = props[propName];
                 
-                if(!subComponentProps._component) continue;
-
-                const propComponentInfo = getComponentInfo(
-                    allComponents, subComponentProps._component);
-
-                const subComponentInstanceProps = getInstanceProps(
-                    propComponentInfo,
-                    subComponentProps
-                );
-
-                props[propName] = buildProps(
-                    propComponentInfo.rootComponent.name,
-                    propComponentInfo.propsDefinition,
-                    subComponentInstanceProps);
-
-            } else if(propDef.type === "array") {
-                const propsArray = props[propName];
-                const newPropsArray = [];
-                let index = 0;
-                for(let element of propsArray) {
-                    newPropsArray.push(
-                        buildProps(
-                            `${propName}#array_element#`,
-                            propDef.elementDefinition,
-                            element));
-                    index++;
+                if(!childrenProps 
+                   || childrenProps.length === 0) {
+                       continue;
                 }
 
-                props[propName] = newPropsArray;
-            }
+                props[propName] = [];
+
+                for(let child of childrenProps) {
+                    const propComponentInfo = getComponentInfo(
+                        allComponents, child._component);
+    
+                    const subComponentInstanceProps = getInstanceProps(
+                        propComponentInfo,
+                        child
+                    );
+    
+                    props[propName].push(
+                        buildProps(
+                            propComponentInfo.rootComponent.name,
+                            propComponentInfo.propsDefinition,
+                            subComponentInstanceProps));
+                }
+            } 
         }
 
         return props;
@@ -58,8 +54,7 @@ export const buildPropsHierarchy = (allComponents, baseComponent) => {
     const baseComponentInfo  = getComponentInfo(allComponents, baseComponent);
 
     return buildProps(
-        baseComponentInfo.rootComponent.name,
-        baseComponentInfo.propsDefinition,
+        baseComponentInfo.rootComponent,
         baseComponentInfo.fullProps);
 
 }

@@ -1,27 +1,16 @@
 <script>
 
 import {
-    keys,
-    map,
-    some,
-    includes,
-    cloneDeep,
-    isEqual,
-    sortBy,
-    filter,
-    difference
+    keys, map, some, includes,
+    cloneDeep, isEqual, sortBy,
+    filter, difference
 } from "lodash/fp";
 import { pipe } from "../common/core";
-import { 
-    getComponentInfo ,
-    getInstanceProps
-} from "./pagesParsing/createProps";
-import { getExactComponent } from "./pagesParsing/searchComponents";
+import { getInstanceProps } from "./pagesParsing/createProps";
 import Checkbox from "../common/Checkbox.svelte";
 import Textbox from "../common/Textbox.svelte";
 import Dropdown from "../common/Dropdown.svelte";
 import { validateProps } from "./pagesParsing/validateProps";
-import ComponentPropSelector from "./ComponentPropSelector.svelte";
 import PropControl from "./PropControl.svelte";
 import IconButton from "../common/IconButton.svelte";
 
@@ -30,17 +19,12 @@ export let onValidate = () => {};
 export let componentInfo;
 export let instanceProps = null;
 export let onPropsChanged = () => {};
-export let onEditComponentProp = () => {};
 
 let errors = [];
 let props = {};
 let propsDefinitions = [];
-let inheritedPropsDefinitions = [];
-let inheritedExpanded = false;
 let isInstance = false;
 
-const isPropInherited = name => 
-    includes(name)(componentInfo.inheritedProps);
 
 $: {
     if(componentInfo)
@@ -52,14 +36,6 @@ $: {
 
         propsDefinitions = pipe(componentInfo.propsDefinition, [
                 keys,
-                filter(k => !isPropInherited(k)),
-                map(k => ({...componentInfo.propsDefinition[k], ____name:k})),
-                sortBy("____name")
-            ]);
-
-        inheritedPropsDefinitions = pipe(componentInfo.propsDefinition, [
-                keys,
-                filter(k => isPropInherited(k)),
                 map(k => ({...componentInfo.propsDefinition[k], ____name:k})),
                 sortBy("____name")
             ]);
@@ -92,7 +68,7 @@ let setProp = (name, value) => {
 }
                   
 const validate = (finalProps) => {
-    errors = validateProps(componentInfo.propsDefinition, finalProps, [], false);
+    errors = validateProps(componentInfo.rootComponent, finalProps, [], false);
     onValidate(errors);
     return errors.length === 0;
 }
@@ -100,49 +76,26 @@ const validate = (finalProps) => {
 const fieldHasError = (propName) => 
     some(e => e.propName === propName)(errors);
 
-const onEditComponent = (propName) => (arrayIndex, arrayPropName) => {
-    onEditComponentProp(propName, arrayIndex, arrayPropName);
-}
-
 </script>
 
 <div class="root">
 
-    <form class="uk-form-stacked">
+    <form class="uk-form-stacked form-root">
         {#each propsDefinitions as propDef, index}
         
-        <PropControl {setProp}
-                     {fieldHasError}
-                     {propDef}
-                     {props}
-                     {index}
-                     onEditComponent={onEditComponent(propDef.____name)}
-                     disabled={false} />
+        <div class="prop-container">
+
+            <PropControl {setProp}
+                        {fieldHasError}
+                        {propDef}
+                        {props}
+                        {index}
+                        disabled={false} />
+
+        </div>
             
         {/each}
 
-        {#if inheritedPropsDefinitions.length > 0}
-        <div class="inherited-title padding">
-            <div>Inherited</div>
-            <div>
-                <IconButton icon={inheritedExpanded ? "chevron-down" : "chevron-right"}
-                            on:click={() => inheritedExpanded = !inheritedExpanded}/>
-            </div>
-        </div>
-        {/if}
-
-        {#if inheritedExpanded}
-            {#each inheritedPropsDefinitions as propDef, index}
-            
-            <PropControl {setProp}
-                         {fieldHasError}
-                         {propDef}
-                         {props}
-                         {index}
-                         disabled={true} />
-                
-            {/each}
-        {/if}
     </form>
 
 
@@ -155,29 +108,17 @@ const onEditComponent = (propName) => (arrayIndex, arrayPropName) => {
 
 .root {
     font-size:10pt;
+    width: 100%;
 }
 
-.padding {
-    padding: 0 10px;
+.form-root {
+    display: flex;
+    flex-wrap: wrap;
 }
 
-.inherited-title {
-    padding: 1rem 1rem 1rem 1rem;
-    display: grid;
-    grid-template-columns: [name] 1fr [actions] auto;
-    color: var(--secondary100);
-    font-size: .9rem;
-    font-weight: bold;
-}
-
-.inherited-title > div:nth-child(1) {
-    grid-column-start: name;
-    color: var(--secondary50);
-}
-
-.inherited-title > div:nth-child(2) {
-    grid-column-start: actions;
-    color: var(--secondary100);
+.prop-container {
+    flex: 1 1 auto;
+    min-width: 250px;
 }
 
 </style>

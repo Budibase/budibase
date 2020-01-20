@@ -28,13 +28,11 @@
 		}
 	},
 	"button" : {
-		"importPath": "button",
 		"name": "Button",
 		"description": "an html <button />",
 		"props": {
 			"contentText": { "type": "string", "default": "Button" },
-			"contentComponent": "component",
-			"className": {"type": "string", "default": "default"},
+			"className": "string",
 			"disabled": "bool",
 			"onClick": "event",
 			"background": "string",
@@ -48,7 +46,6 @@
 		"tags": ["button"]
 	}, 
 	"login" : {
-		"importPath": "Login",
 		"name": "Login Control",
 		"description": "A control that accepts username, password an also handles password resets",
 		"props" : {
@@ -62,35 +59,7 @@
 		},
 		"tags": ["login", "credentials", "password", "logon"]
 	},
-	"form" : {
-		"importPath": "Form",
-		"name": "Form",
-		"description": "A form - allgned fields with labels",
-		"props" : {
-			"containerClass": "string",
-			"formControls": {
-				"type":"array",
-				"elementDefinition": {
-					"label": "string",
-					"control":"component"
-				}
-			}
-		},
-		"tags": ["form"]
-	},
-	"textbox" : {
-		"importPath": "Textbox",
-		"name": "Textbox",
-		"description": "An input type=text or password",
-		"props" : {
-			"value": "string",
-			"hideValue": "bool",
-			"className": {"type": "string", "default": "default"}
-		},
-		"tags": ["form"]
-	},
 	"input" : {
-		"importPath": "Input",
 		"name": "Input",
 		"description": "An HTML input",
 		"props" : {
@@ -105,14 +74,14 @@
 					"tel", "time", "week"],
 				"default":"text"
 			},
-			"className": {"type": "string", "default": "default"}
+			"className": "string"
 		},
 		"tags": ["form"]
 	},
 	"select" : {
-		"importPath": "Input",
 		"name": "Input",
 		"description": "An HTML input",
+		"children": false,
 		"props" : {
 			"value": "string",
 			"options": {
@@ -122,72 +91,16 @@
 					"value":"string"
 				}
 			},
-			"className": {"type": "string", "default": "default"}
+			"className": "string"
 		},
 		"tags": ["form"]
 	},
-	"stackpanel": {
-		"importPath": "StackPanel",
-		"name": "StackPanel",
-		"description": "Layout elements in a stack, either horizontally or vertically",
-		"props" : {
-			"direction": {
-				"type": "options", 
-				"options": ["horizontal", "vertical"],
-				"default":"horizontal"
-			},
-			"children": {
-				"type":"array",
-				"elementDefinition": {
-					"control":"component"
-				}
-			},
-			"width": {"type":"string","default":"auto"},
-			"height": {"type":"string","default":"auto"},
-			"containerClass":"string",
-			"itemContainerClass":"string",
-			"data": "state",
-			"dataItemComponent": "component",
-			"onLoad": "event"
-		},
-		"tags": ["div", "container", "layout", "panel"]
-	},
-	"grid": {
-		"importPath": "Grid",
-		"name": "Grid",
-		"description": "CSS Grid layout ",
-		"props" : {
-			"gridTemplateRows": "string",
-			"gridTemplateColumns": "string",
-			"children": {
-				"type":"array",
-				"elementDefinition": {
-					"component":"component",
-					"gridColumnStart":"string",
-					"gridColumnEnd":"string",
-					"gridRowStart":"string",
-					"gridRowEnd":"string",
-					"justifySelf": {
-						"type":"options", 
-						"options":["start", "center", "end", "stretch"], 
-						"default":"stretch"
-					}
-				}
-			},
-			"width": {"type":"string","default":"auto"},
-			"height": {"type":"string","default":"auto"},
-			"containerClass":"string",
-			"itemContainerClass":"string"
-		},
-		"tags": ["div", "container", "layout", "panel", "grid"]
-	},
 	"text": {
-		"importPath": "Text",
 		"name": "Text",
 		"description": "stylable block of text",
+		"children": false,
 		"props" : {
 			"value": "string",
-			"containerClass": "string",
 			"font": "string",
 			"color": "string",
 			"textAlign": {
@@ -203,49 +116,11 @@
 				"options": [
 					"top", "middle", "bottom"
 				]
-			},
-			"display": {
-				"type": "options", 
-				"default":"inline", 
-				"options": [
-					"inline", "block", "inline-block"
-				]
-			}
-		},
-		"tags": ["div", "container"]
-	},
-	"panel": {
-		"importPath": "Panel",
-		"name": "Panel",
-		"description": "A stylable div with a component inside",
-		"props" : {
-			"text": "string",
-			"component": "component",
-			"containerClass": "string",
-			"background": "string",
-			"border": "string",
-			"borderRadius":"string",
-			"font": "string",
-			"color": "string",
-			"padding": "string",
-			"margin": "string",
-			"hoverColor": "string",
-			"hoverBackground": "string",
-			"height":"string",
-			"width":"string",
-			"onClick": "event",
-			"display": {
-				"type": "options", 
-				"default":"inline", 
-				"options": [
-					"inline", "block", "inline-block"
-				]
 			}
 		},
 		"tags": ["div", "container"]
 	},
 	"nav": {
-		"importPath": "Nav",
 		"name": "Nav",
 		"description": "A nav - a side bar of buttons that control the currently active component",
 		"props" : {
@@ -257,13 +132,6 @@
 			"selectedItemBorder": "string",
 			"itemHoverBackground": {"type" :"string", "default":"gainsboro"},
 			"itemHoverColor": {"type" :"string", "default":"black"},
-			"items": {
-				"type": "array",
-				"elementDefinition" : {
-					"title": "string",
-					"component": "component"
-				}
-			},
 			"selectedItem":"string",
 			"hideNavBar":"bool"
 
@@ -271,7 +139,6 @@
 		"tags": ["nav", "navigation", "sidebar"]
 	},
 	"table": {
-		"importPath": "Table",
 		"name": "Table",
 		"description": "An HTML table",
 		"props" : {
@@ -293,20 +160,10 @@
 		"tags": ["table"]
 	},
 	"div": {
-		"importPath": "Div",
 		"name": "Div",
 		"description": "An HTML div tag",
 		"props" : {
-			"children": {
-				"type":"array",
-				"elementDefinition": {
-					"component":"component",
-					"className": "string"
-				}
-			},
 			"className":"string",
-			"data": "state",
-			"dataItemComponent": "component",
 			"onLoad": "event"
 		},
 		"tags": ["div", "container", "layout"]
@@ -368,17 +225,6 @@
 		"props" : {
 			"text": "string",
 			"className":"string"
-		},
-		"tags": []
-	},
-	"if": {
-		"importPath": "if",
-		"name": "If",
-		"description": "An if condition.. if (CONDITION) THEN [display component A] ELSE [display component B]",
-		"props" : {
-			"condition": "string",
-			"thenComponent":{"type":"component", "required":true},
-			"elseComponent":"component"
 		},
 		"tags": []
 	}

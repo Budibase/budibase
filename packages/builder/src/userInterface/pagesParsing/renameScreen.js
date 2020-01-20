@@ -2,18 +2,18 @@ import {
     isPlainObject, isArray, cloneDeep
 } from "lodash/fp";
 import {
-    isRootComponent, getExactComponent
+    getExactComponent
 } from "./searchComponents";
 
-export const rename = (pages, allComponents, oldname, newname) => {
+export const rename = (pages, screens, oldname, newname) => {
 
     pages = cloneDeep(pages);
-    allComponents = cloneDeep(allComponents);
-    const changedComponents = [];
+    screens = cloneDeep(screens);
+    const changedScreens = [];
 
-    const existingWithNewName = getExactComponent(allComponents, newname);
+    const existingWithNewName = getExactComponent(screens, newname);
     if(existingWithNewName) return {
-        allComponents, pages, error: "Component by that name already exists"
+        components: screens, pages, error: "Component by that name already exists"
     };
 
     const traverseProps = (props) => {
@@ -38,28 +38,24 @@ export const rename = (pages, allComponents, oldname, newname) => {
     }
 
 
-    for(let component of allComponents) {
-        
-        if(isRootComponent(component)) {
-            continue;
-        }
+    for(let screen of screens) {
 
         let hasEdited = false;
 
-        if(component.name === oldname) {
-            component.name = newname;
+        if(screen.name === oldname) {
+            screen.name = newname;
             hasEdited = true;
         }
 
-        if(component.inherits === oldname) {
-            component.inherits = newname;
+        if(screen.props._component === oldname) {
+            screen.props._component = newname;
             hasEdited = true;
         }
         
-        hasEdited = traverseProps(component.props) || hasEdited;
+        hasEdited = traverseProps(screen.props) || hasEdited;
 
-        if(hasEdited && component.name !== newname)
-            changedComponents.push(component.name);
+        if(hasEdited && screen.name !== newname)
+            changedScreens.push(screen.name);
     }
 
     for(let pageName in pages) {
@@ -69,7 +65,7 @@ export const rename = (pages, allComponents, oldname, newname) => {
         }
     }
 
-    return {allComponents, pages, changedComponents};
+    return {screens, pages, changedScreens};
 
 
 }
