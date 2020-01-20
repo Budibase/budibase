@@ -41,14 +41,15 @@ const settings = () => {
 
         <div class="components-list-container">
             <div class="nav-group-header">
-                <div>{@html getIcon("sidebar","18")}</div>
+
                 <span class="components-nav-header">Screens</span>
                 <div>
-                    <IconButton icon="settings"
+                    <!-- <IconButton icon="settings"
                                 size="14px"
-                                on:click={settings}/>
-                    <IconButton icon="plus"
-                                on:click={newComponent}/>
+                                on:click={settings}/> -->
+                    <!-- <IconButton icon="plus"
+                                on:click={newComponent}/> -->
+                    <button on:click={newComponent}>+</button>
                 </div>
             </div>
             <div class="nav-items-container">
@@ -80,6 +81,25 @@ const settings = () => {
 
 
 <style>
+button {
+    cursor: pointer;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    background: var(--background-button);
+
+    width: 1.8rem;
+    height: 1.8rem;
+    padding-bottom: 10px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--button-text);
+}
 
 .root {
     display: grid;
@@ -112,7 +132,9 @@ const settings = () => {
 }
 
 .components-nav-header {
-    font-size: .9rem;
+    font-size: 0.75rem;
+    color: #999;
+    text-transform: uppercase;
 }
 
 .nav-group-header {
@@ -125,11 +147,12 @@ const settings = () => {
 }
 
 .nav-group-header {
-    display:grid;
-    grid-template-columns: [icon] auto [title] 1fr [button] auto;
+    display: flex;
     padding: 2rem 0 0 0;
     font-size: .9rem;
     font-weight: bold;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .nav-group-header>div:nth-child(1) {
