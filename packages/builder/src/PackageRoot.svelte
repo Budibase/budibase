@@ -48,6 +48,7 @@ import { fade } from "svelte/transition";
     width:100%;
     display: flex;
     flex-direction: column;
+
 }
 
 .top-nav {
@@ -70,6 +71,7 @@ import { fade } from "svelte/transition";
 .content > div {
     height:100%;
     width:100%;
+
 }
 
 .topnavitem {

@@ -13,7 +13,7 @@ import SettingsView from "./SettingsView.svelte";
 import PageView from "./PageView.svelte";
 import ComponentsPaneSwitcher from "./ComponentsPaneSwitcher.svelte";
 
-let newComponentPicker;  
+let newComponentPicker;
 const newComponent = () => {
     newComponentPicker.show();
 }
@@ -26,7 +26,7 @@ const settings = () => {
 </script>
 
 <div class="root">
-    
+
     <div class="ui-nav">
 
         <div class="components-list-container">
@@ -34,10 +34,10 @@ const settings = () => {
                 <div>{@html getIcon("sidebar","18")}</div>
                 <span class="components-nav-header">Screens</span>
                 <div>
-                    <IconButton icon="settings" 
+                    <IconButton icon="settings"
                                 size="14px"
                                 on:click={settings}/>
-                    <IconButton icon="plus" 
+                    <IconButton icon="plus"
                                 on:click={newComponent}/>
                 </div>
             </div>
@@ -63,7 +63,7 @@ const settings = () => {
         <CurrentItemPreview />
         {:else if $store.currentFrontEndType === "page"}
         <PageView />
-        {/if} 
+        {/if}
     </div>
 
     {#if $store.currentFrontEndType === "screen"}
@@ -83,19 +83,25 @@ const settings = () => {
 
 .root {
     display: grid;
-    grid-template-columns: 250px 1fr 300px;
+    grid-template-columns: 290px 1fr 300px;
     height: 100%;
     width: 100%;
+    background: #fafafa;
 }
 
 .ui-nav {
     grid-column: 1;
     background-color: var(--secondary5);
     height: 100%;
+    padding: 0 1.5rem 0rem 1.5rem
 }
 
 .preview-pane {
     grid-column: 2;
+    margin: 80px 60px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0px 6px rgba(0,0,0,0.05)
 }
 
 .components-pane {
@@ -125,7 +131,7 @@ const settings = () => {
 .nav-group-header {
     display:grid;
     grid-template-columns: [icon] auto [title] 1fr [button] auto;
-    padding: 2rem 1rem 0rem 1rem;
+    padding: 2rem 0 0 0;
     font-size: .9rem;
     font-weight: bold;
 }
@@ -152,7 +158,7 @@ const settings = () => {
 }
 
 .nav-group-header>div:nth-child(3):hover {
-    color: var(--primary75);   
+    color: var(--primary75);
 }
 
 </style>
