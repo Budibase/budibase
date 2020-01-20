@@ -31,7 +31,7 @@ let saveAttempted=false;
 store.subscribe(s => {
 
     layoutComponents = pipe(s.components, [
-        filter(c => includes("layout")(c.tags)),
+        filter(c => c.container),
         map(c => ({name:c.name, ...splitName(c.name)}))
     ]);
 

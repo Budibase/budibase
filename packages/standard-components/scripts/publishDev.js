@@ -1,6 +1,7 @@
 const { readdir, stat, copyFile } = require("fs-extra");
 const { constants } = require("fs");
 const { join, basename } = require("path");
+const serverConfig = require("../../server/config")();
 
 const packagesFolder = "..";
 
@@ -12,7 +13,7 @@ const sourceJsMap = jsMapFile("dist");
 const componentsFile = "components.json";
 const sourceGenerators = generatorsFile("dist");
 
-const appPackages = join(packagesFolder, "server", "appPackages");
+const appPackages = join(packagesFolder, "server", serverConfig.latestPackagesFolder);
 
 const publicMain = appName => join(appPackages, appName, "public", "main", "lib", "node_modules", "@budibase", "standard-components");
 const publicUnauth = appName => join(appPackages, appName, "public", "unauthenticated", "lib", "node_modules", "@budibase", "standard-components");
@@ -40,6 +41,7 @@ const nodeModules = appName => join(appPackages, appName, "node_modules", "@budi
     
 
     for(let app of apps) {
+        if(app === ".data") continue;
         if(!(await stat(join(appPackages, app))).isDirectory()) continue;
 
         await copySourceJs(nodeModulesDist(app));
