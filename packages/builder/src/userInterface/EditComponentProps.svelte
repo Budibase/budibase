@@ -13,8 +13,8 @@ import {
 import Button from "../common/Button.svelte";
 import ButtonGroup from "../common/ButtonGroup.svelte";
 
-import { 
-    cloneDeep, 
+import {
+    cloneDeep,
     join,
     split,
     map,
@@ -95,15 +95,15 @@ const updateComponent = doChange => {
 }
 
 const onPropsChanged = newProps => {
-    updateComponent(newComponent => 
+    updateComponent(newComponent =>
         assign(newComponent.props, newProps));
-    
+
 }
 
 const validate = () => {
-    const fieldInvalid = (field, err) => 
+    const fieldInvalid = (field, err) =>
         errors[field] = err;
-    const fieldValid = field => 
+    const fieldValid = field =>
         errors[field] && delete errors[field];
 
     if(!name) nameInvalid = "component name i not supplied";
@@ -127,12 +127,12 @@ const showDialog = () => {
     <div class="title">
         <div>{shortName}</div>
         <div>
-            <IconButton icon="save" 
-                        on:click={save} 
+            <IconButton icon="save"
+                        on:click={save}
                         color="var(--secondary100)"
                         hoverColor="var(--primary100)"/>
-            <IconButton icon="trash" 
-                        on:click={deleteComponent} 
+            <IconButton icon="trash"
+                        on:click={deleteComponent}
                         color="var(--secondary100)"
                         hoverColor="var(--primary100)"/>
         </div>
@@ -140,11 +140,11 @@ const showDialog = () => {
 
     <div class="component-props-container">
 
-       
+
         <PropsView onValidate={onPropsValidate}
                 {componentInfo}
                 {onPropsChanged} />
-        
+
 
     </div>
 
@@ -155,7 +155,7 @@ const showDialog = () => {
     <div class="uk-modal-dialog">
 
         <div class="uk-modal-header">
-            Delete {name} ? 
+            Delete {name} ?
         </div>
 
         <div class="uk-modal-body">
@@ -164,12 +164,12 @@ const showDialog = () => {
 
         <div class="uk-modal-footer">
             <ButtonGroup>
-                <Button grouped 
+                <Button grouped
                         on:click={confirmDeleteComponent}>
                         OK
                 </Button>
-                <Button grouped 
-                        on:click={hideDialog} 
+                <Button grouped
+                        on:click={hideDialog}
                         color="secondary" >
                         Cancel
                 </Button>
@@ -186,9 +186,7 @@ const showDialog = () => {
     height: 100%;
     display: flex;
     flex-direction: column;
-    border-style: solid;
-    border-width: 1px 0 0 0;
-    border-color: var(--slate);
+
 }
 
 .title {

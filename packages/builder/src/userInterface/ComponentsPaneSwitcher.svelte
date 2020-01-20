@@ -4,10 +4,10 @@ import ComponentsList from "./ComponentsList.svelte";
 
 let selected="properties";
 
-const isSelected = tab => 
+const isSelected = tab =>
     selected === tab;
 
-const selectTab = tab => 
+const selectTab = tab =>
     selected = tab;
 
 
@@ -17,13 +17,13 @@ const selectTab = tab =>
 
     <div class="switcher">
 
-        <button 
+        <button
             class:selected={selected==="properties"}
             on:click={() => selectTab("properties")}>
             Properties
         </button>
 
-        <button 
+        <button
             class:selected={selected==="components"}
             on:click={() => selectTab("components")}>
             Components
@@ -50,24 +50,28 @@ const selectTab = tab =>
     height: 100%;
     display: flex;
     flex-direction: column;
+    padding: 2rem 1.5rem 2rem 1.5rem;
 }
 
 .switcher {
-    flex: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
 }
 
 .switcher > button {
     display: inline-block;
-    background-color: rgba(0,0,0,0);
-    border-style: solid;
-    border-color: var(--slate);
+    border: none;
     margin: 5px;
     padding: 5px;
     cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #999;
 }
 
 .switcher > .selected {
-    background-color: red;
+    color: #333;
 }
 
 .panel {
