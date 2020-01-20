@@ -7,7 +7,7 @@
     --primary5: #454ca00c;
     --primarydark: #3F448A;
 
-    --secondary100: #162B4DFF;
+    --secondary100:#828fa5;
     --secondary75: #162B4DBF;
     --secondary50: #162B4D80;
     --secondary25: #162B4D40;
@@ -52,6 +52,9 @@
     --heavybodytext: var(--fontbold) "regular" var(--secondary100) 16pt;
     --quotation: var(--fontnormal) "italics" var(--darkslate) 16pt;
     --smallheavybodytext: var(--fontbold) "regular" var(--secondary100) 14pt;
+
+    --background-button: #e6eeff;
+    --button-text: #0055ff;
 }
 
 html, body {
