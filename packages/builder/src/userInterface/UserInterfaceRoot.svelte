@@ -29,6 +29,16 @@ const settings = () => {
 
     <div class="ui-nav">
 
+        <div class="pages-list-container">
+            <div class="nav-group-header">
+
+                <span class="navigator-title">Navigator</span>
+            </div>
+            <div class="nav-items-container">
+                <PagesList />
+            </div>
+        </div>
+
         <div class="components-list-container">
             <div class="nav-group-header">
                 <div>{@html getIcon("sidebar","18")}</div>
@@ -43,16 +53,6 @@ const settings = () => {
             </div>
             <div class="nav-items-container">
                 <ComponentsHierarchy components={$store.screens}/>
-            </div>
-        </div>
-
-        <div class="pages-list-container">
-            <div class="nav-group-header">
-                <div>{@html getIcon("grid","18")}</div>
-                <span>Pages</span>
-            </div>
-            <div class="nav-items-container">
-                <PagesList />
             </div>
         </div>
 
@@ -111,10 +111,6 @@ const settings = () => {
     overflow-y: hidden;
 }
 
-.pages-list-container {
-    padding-top: 2rem;
-}
-
 .components-nav-header {
     font-size: .9rem;
 }
@@ -125,7 +121,7 @@ const settings = () => {
 }
 
 .nav-items-container {
-    padding: 1rem 1rem 0rem 1rem;
+    padding: 1rem 0rem 0rem 0rem;
 }
 
 .nav-group-header {
@@ -159,6 +155,12 @@ const settings = () => {
 
 .nav-group-header>div:nth-child(3):hover {
     color: var(--primary75);
+}
+
+.navigator-title {
+    text-transform: uppercase;
+    font-weight: 400;
+    color: #999;
 }
 
 </style>
