@@ -30,11 +30,11 @@ $: {
     if(componentInfo)
     {
         isInstance = !!instanceProps;
-        props = isInstance 
+        props = isInstance
                 ? getInstanceProps(componentInfo, instanceProps)
                 : cloneDeep(componentInfo.fullProps);
 
-        propsDefinitions = pipe(componentInfo.propsDefinition, [
+        propsDefinitions = pipe(componentInfo.propsDefinition.props, [
                 keys,
                 map(k => ({...componentInfo.propsDefinition[k], ____name:k})),
                 sortBy("____name")
@@ -64,16 +64,16 @@ let setProp = (name, value) => {
     props = newProps;
     if(validate(finalProps))
         onPropsChanged(finalProps);
-    
+
 }
-                  
+
 const validate = (finalProps) => {
     errors = validateProps(componentInfo.rootComponent, finalProps, [], false);
     onValidate(errors);
     return errors.length === 0;
 }
 
-const fieldHasError = (propName) => 
+const fieldHasError = (propName) =>
     some(e => e.propName === propName)(errors);
 
 </script>
@@ -82,7 +82,7 @@ const fieldHasError = (propName) =>
 
     <form class="uk-form-stacked form-root">
         {#each propsDefinitions as propDef, index}
-        
+
         <div class="prop-container">
 
             <PropControl {setProp}
@@ -93,13 +93,13 @@ const fieldHasError = (propName) =>
                         disabled={false} />
 
         </div>
-            
+
         {/each}
 
     </form>
 
 
-    
+
 
 </div>
 
