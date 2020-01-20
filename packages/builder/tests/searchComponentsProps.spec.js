@@ -3,42 +3,31 @@ import {
     getExactComponent,
     getAncestorProps
 } from "../src/userInterface/pagesParsing/searchComponents";
-import { allComponents } from "./testData";
+import { componentsAndScreens } from "./testData";
 
 describe("searchAllComponents", () => {
 
-    it("should match derived component by name", () => {
+    it("should match component by name", () => {
 
         const results = searchAllComponents(
-            allComponents(),
-            "password"
+            componentsAndScreens().components,
+            "Textbox"
         );
 
         expect(results.length).toBe(1);
-        expect(results[0].name).toBe("common/PasswordBox");
+        expect(results[0].name).toBe("budibase-components/TextBox");
 
     });
 
-    it("should match derived component by tag", () => {
+    it("should match component by tag", () => {
 
         const results = searchAllComponents(
-            allComponents(),
-            "mask"
+            componentsAndScreens().components,
+            "record"
         );
 
         expect(results.length).toBe(1);
-        expect(results[0].name).toBe("common/PasswordBox");
-
-    });
-
-    it("should match component if ancestor matches", () => {
-
-        const results = searchAllComponents(
-            allComponents(),
-            "smalltext"
-        );
-
-        expect(results.length).toBe(2);
+        expect(results[0].name).toBe("budibase-components/RecordView");
 
     });
 
@@ -46,8 +35,9 @@ describe("searchAllComponents", () => {
 
 describe("getExactComponent", () => {
     it("should get component by name", () => {
+        const {components, screens} = componentsAndScreens();
         const result = getExactComponent(
-            allComponents(),
+            [...components, ...screens],
             "common/SmallTextbox"
         )
 
@@ -56,8 +46,9 @@ describe("getExactComponent", () => {
     });
 
     it("should return nothing when no result (should not fail)", () => {
+        const {components, screens} = componentsAndScreens();
         const result = getExactComponent(
-            allComponents(),
+            [...components, ...screens],
             "bla/bla/bla"
         )
 
@@ -71,29 +62,29 @@ describe("getAncestorProps", () => {
     it("should return props of root component", () => {
 
         const result = getAncestorProps(
-            allComponents(),
+            componentsAndScreens().components,
             "budibase-components/TextBox"   
         );
 
         expect(result).toEqual([
-            allComponents()[0].props
+            componentsAndScreens().components[0].props
         ]);
 
     });
 
-    it("should return props of all ancestors and current component, in order", () => {
+    it("should return props of inherited and current component, in order", () => {
 
-        const components = allComponents();
+        const {components, screens} = componentsAndScreens();
+        const allComponentsAndScreens = [...components, ...screens];
 
         const result = getAncestorProps(
-            components,
+            allComponentsAndScreens,
             "common/PasswordBox"   
         );
 
         expect(result).toEqual([
-            components[0].props,
-            {...components[4].props},
-            {...components[5].props}
+            allComponentsAndScreens[0].props,
+            {...allComponentsAndScreens[5].props}
         ]);
 
     });

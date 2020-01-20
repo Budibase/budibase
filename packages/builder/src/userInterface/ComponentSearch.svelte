@@ -5,17 +5,17 @@ import { store } from "../builderStore";
 
 export let onComponentChosen = () => {};
 
-let allComponents = [];
+let components = [];
 let phrase = "";
 
 store.subscribe(s => {
-    allComponents = s.allComponents;
+    components = s.components;
 });
 
 $: filteredComponents = 
     !phrase 
     ? [] 
-    : searchAllComponents(allComponents, phrase);
+    : searchAllComponents(components, phrase);
 
 </script>
 

@@ -13,7 +13,7 @@ export let onComponentChosen;
 export let onGeneratorChosen;
 export let allowGenerators;
 
-let derivedComponents=[];
+let screens=[];
 let componentLibraries=[];
 
 const addRootComponent = (c, all, isGenerator) => {
@@ -41,16 +41,16 @@ const addRootComponent = (c, all, isGenerator) => {
 store.subscribe(s => {
 
     const newComponentLibraries = [];
-    const newDerivedComponents = [];
+    const newscreens = [];
 
-    for(let comp of sortBy(["name"])(s.allComponents)) {
+    for(let comp of sortBy(["name"])(s.components)) {
         if(isRootComponent(comp)) {
             addRootComponent(
                 comp, 
                 newComponentLibraries, 
                 false);
         } else {
-            newDerivedComponents.push(comp);
+            newscreens.push(comp);
         }
     }
 
@@ -61,7 +61,7 @@ store.subscribe(s => {
             true);
     }
 
-    derivedComponents = sortBy(["name"])(newDerivedComponents);
+    screens = sortBy(["name"])(newscreens);
     componentLibraries = newComponentLibraries;
 });
 
@@ -127,7 +127,7 @@ store.subscribe(s => {
 
 <div class="library-container">
 
-    {#each derivedComponents as component}
+    {#each screens as component}
 
     <div class="component"
          on:click={() => onComponentChosen(component)}>

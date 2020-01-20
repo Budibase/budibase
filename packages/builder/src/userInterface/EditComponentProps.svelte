@@ -8,11 +8,10 @@ import Textbox from "../common/Textbox.svelte";
 import UIkit from "uikit";
 import { pipe } from "../common/core";
 import {
-    getComponentInfo
+    getScreenInfo
 } from "./pagesParsing/createProps";
 import Button from "../common/Button.svelte";
 import ButtonGroup from "../common/ButtonGroup.svelte";
-import ComponentInstanceEditor from "./ComponentInstanceEditor.svelte";
 
 import { 
     cloneDeep, 
@@ -30,17 +29,11 @@ let name = "";
 let description = "";
 let tagsString = "";
 let nameInvalid = "";
-let componentDetailsExpanded = false;
 let componentInfo;
 let modalElement
 let propsValidationErrors = [];
-let editingComponentInstance;
-let editingComponentInstancePropName="";
-let editingComponentArrayIndex;
-let editingComponentArrayPropName;
-let editingComponentInstanceTitle;
 let originalName="";
-let allComponents;
+let components;
 let ignoreStore = false;
 
 $: shortName = last(name.split("/"));
@@ -54,8 +47,7 @@ store.subscribe(s => {
     description = component.description;
     tagsString = join(", ")(component.tags);
     componentInfo = s.currentComponentInfo;
-    componentDetailsExpanded = s.currentComponentIsNew;
-    allComponents = s.allComponents;
+    components = s.components;
 });
 
 const save = () => {
@@ -73,12 +65,12 @@ const save = () => {
         map(s => s.trim())
     ]);
 
-    store.saveDerivedComponent(component);
+    store.saveScreen(component);
 
     ignoreStore = false;
     // now do the rename
     if(name !== originalName) {
-        store.renameDerivedComponent(originalName, name);
+        store.renameScreen(originalName, name);
     }
 }
 
@@ -87,7 +79,7 @@ const deleteComponent = () => {
 }
 
 const confirmDeleteComponent = () => {
-    store.deleteDerivedComponent(component.name);
+    store.deleteScreen(component.name);
     hideDialog();
 }
 
@@ -99,7 +91,7 @@ const updateComponent = doChange => {
     const newComponent = cloneDeep(component);
     doChange(newComponent);
     component = newComponent;
-    componentInfo = getComponentInfo(allComponents, newComponent);
+    componentInfo = getScreenInfo(components, newComponent);
 }
 
 const onPropsChanged = newProps => {
@@ -128,37 +120,6 @@ const showDialog = () => {
     UIkit.modal(modalElement).show();
 }
 
-const onEditComponentProp = (propName, arrayIndex, arrayPropName) => {
-
-    editingComponentInstance = isUndefined(arrayIndex) 
-                               ? component.props[propName]
-                               : component.props[propName][arrayIndex][arrayPropName];
-    editingComponentInstancePropName = propName;
-    editingComponentInstanceTitle = isUndefined(arrayIndex)
-                                       ? propName
-                                       : `${propName}[${arrayIndex}].${arrayPropName}`;
-                                
-    editingComponentArrayIndex = arrayIndex;
-    editingComponentArrayPropName = arrayPropName;
-}
-
-const componentInstanceCancelEdit = () => {
-    editingComponentInstance = null;
-    editingComponentInstancePropName = "";
-}
-
-const componentInstancePropsChanged = (instanceProps) => {
-    updateComponent(newComponent => {
-        if(isUndefined(editingComponentArrayIndex)) {
-            newComponent.props[editingComponentInstancePropName] = instanceProps;
-        } else {
-            newComponent.props[editingComponentInstancePropName]
-                              [editingComponentArrayIndex]
-                              [editingComponentArrayPropName] = instanceProps;
-        }
-    });
-}
-
 </script>
 
 <div class="root">
@@ -177,53 +138,15 @@ const componentInstancePropsChanged = (instanceProps) => {
         </div>
     </div>
 
-    {#if editingComponentInstance}
     <div class="component-props-container">
-        <ComponentInstanceEditor onGoBack={componentInstanceCancelEdit}
-                                title={editingComponentInstanceTitle}
-                                instanceProps={editingComponentInstance}
-                                onPropsChanged={componentInstancePropsChanged}/>
-    </div>
-    {:else}
-    <div class="component-props-container">
-
-        <div class="section-header padding" on:click={() => componentDetailsExpanded = !componentDetailsExpanded}>
-            <span style="margin-right: 7px">Component Details</span>
-            <IconButton icon={componentDetailsExpanded ? "chevron-down" : "chevron-right"}/>
-        </div>
-
-        {#if componentDetailsExpanded}
-        <div class="padding">
-            <div class="info-text">
-                <Textbox label="Name" 
-                        infoText="use forward slash to store in subfolders"
-                        text={name}
-                        on:change={ev => name = ev.target.value}
-                        hasError={!!nameInvalid}/>
-                <Textbox label="Description"
-                         on:change={ev => description = ev.target.value}
-                         text={description}/>
-                <Textbox label="Tags" 
-                         infoText="comma separated"
-                         on:change={ev => tagsString = ev.target.value}
-                         text={tagsString}/>
-            </div>    
-        </div>
-        {/if}
-
-        <div class="section-header padding">
-            <span>Properties</span>
-        </div>
 
        
         <PropsView onValidate={onPropsValidate}
                 {componentInfo}
-                {onPropsChanged}
-                {onEditComponentProp}/>
+                {onPropsChanged} />
         
 
     </div>
-    {/if}
 
 </div>
 
@@ -263,20 +186,13 @@ const componentInstancePropsChanged = (instanceProps) => {
     height: 100%;
     display: flex;
     flex-direction: column;
-}
-
-.padding {
-    padding: 1rem 1rem 0rem 1rem;
-}
-
-.info-text {
-    color: var(--secondary100);
-    font-size: .8rem !important;
-    font-weight: bold;
+    border-style: solid;
+    border-width: 1px 0 0 0;
+    border-color: var(--slate);
 }
 
 .title {
-    padding: 2rem 1rem 1rem 1rem;
+    padding: 1rem;
     display: grid;
     grid-template-columns: [name] 1fr [actions] auto;
     color: var(--secondary100);
@@ -291,15 +207,6 @@ const componentInstancePropsChanged = (instanceProps) => {
 
 .title > div:nth-child(2) {
     grid-column-start: actions;
-}
-
-.section-header {
-    display: grid;
-    grid-template-columns: [name] 1fr [actions] auto;
-    color: var(--secondary50);
-    font-size: .9rem;
-    font-weight: bold;
-    vertical-align: middle;
 }
 
 .component-props-container {

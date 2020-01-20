@@ -1,7 +1,5 @@
 <script>
 
-import Textbox from "./Textbox.svelte";
-import Form from "./Form.svelte";
 import Button from "./Button.svelte";
 
 export let usernameLabel = "Username";

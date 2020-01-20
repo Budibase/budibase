@@ -88,7 +88,7 @@ const expandFolder = folder => {
 }
 
 const isComponentSelected = (type, current,c) =>
-    type==="component"
+    type==="screen"
     && current 
     && current.name === c.name
 
@@ -136,7 +136,7 @@ $: {
 
     {#each componentsThisLevel as component}
     <div class="hierarchy-item component" class:selected={isComponentSelected($store.currentFrontEndType, $store.currentFrontEndItem, component.component)}
-         on:click|stopPropagation={() => store.setCurrentComponent(component.component.name)}>
+         on:click|stopPropagation={() => store.setCurrentScreen(component.component.name)}>
         <span>{@html getIcon("circle", "7")}</span>
         <span class="title">{component.title}</span>
     </div>

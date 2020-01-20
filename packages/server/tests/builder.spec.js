@@ -5,8 +5,8 @@ const testPages = require("../appPackages/testApp/pages.json");
 const testComponents = require("../appPackages/testApp/customComponents/components.json");
 const testMoreComponents = require("../appPackages/testApp/moreCustomComponents/components.json");
 const statusCodes = require("../utilities/statusCodes");
-const derivedComponent1 = require("../appPackages/testApp/components/myTextBox.json");
-const derivedComponent2 = require("../appPackages/testApp/components/subfolder/otherTextBox.json");
+const screen1 = require("../appPackages/testApp/components/myTextBox.json");
+const screen2 = require("../appPackages/testApp/components/subfolder/otherTextBox.json");
 const { readJSON, pathExists, unlink } = require("fs-extra");
 
 const app = require("./testApp")();
@@ -49,36 +49,36 @@ it("/apppackage should get pages", async () => {
     expect(body.pages).toEqual(testPages);
 });
 
-it("/apppackage should get rootComponents", async () => {
+it("/apppackage should get components", async () => {
 
     const {body} = await app.get("/_builder/api/testApp/appPackage")
                          .expect(statusCodes.OK);
 
-    expect(body.rootComponents["./customComponents/textbox"]).toBeDefined();
-    expect(body.rootComponents["./moreCustomComponents/textbox"]).toBeDefined();
+    expect(body.components["./customComponents/textbox"]).toBeDefined();
+    expect(body.components["./moreCustomComponents/textbox"]).toBeDefined();
 
-    expect(body.rootComponents["./customComponents/textbox"])
+    expect(body.components["./customComponents/textbox"])
     .toEqual(testComponents.textbox);
 
-    expect(body.rootComponents["./moreCustomComponents/textbox"])
+    expect(body.components["./moreCustomComponents/textbox"])
     .toEqual(testMoreComponents.textbox);
 });
 
-it("/apppackage should get derivedComponents", async () => {
+it("/apppackage should get screens", async () => {
 
     const {body} = await app.get("/_builder/api/testApp/appPackage")
                          .expect(statusCodes.OK);
 
     const expectedComponents = {
-        "myTextBox" : {...derivedComponent1, name:"myTextBox"},
-        "subfolder/otherTextBox": {...derivedComponent2, name:"subfolder/otherTextBox"}
+        "myTextBox" : {...screen1, name:"myTextBox"},
+        "subfolder/otherTextBox": {...screen2, name:"subfolder/otherTextBox"}
     };
                 
-    expect(body.derivedComponents).toEqual(expectedComponents);
+    expect(body.screens).toEqual(expectedComponents);
 });
 
 it("should be able to create new derived component", async () => {
-    const newDerivedComponent = {
+    const newscreen = {
         name: "newTextBox",
         inherits: "./customComponents/textbox",
         props: {
@@ -86,17 +86,17 @@ it("should be able to create new derived component", async () => {
         }
     };
 
-    await app.post("/_builder/api/testApp/derivedcomponent", newDerivedComponent)
+    await app.post("/_builder/api/testApp/screen", newscreen)
              .expect(statusCodes.OK);
     
     const componentFile = "./appPackages/testApp/components/newTextBox.json";
     expect(await pathExists(componentFile)).toBe(true);
-    expect(await readJSON(componentFile)).toEqual(newDerivedComponent);    
+    expect(await readJSON(componentFile)).toEqual(newscreen);    
 
 });
 
 it("should be able to update derived component", async () => {
-    const updatedDerivedComponent = {
+    const updatedscreen = {
         name: "newTextBox",
         inherits: "./customComponents/textbox",
         props: {
@@ -104,15 +104,15 @@ it("should be able to update derived component", async () => {
         }
     };
 
-    await app.post("/_builder/api/testApp/derivedcomponent", updatedDerivedComponent)
+    await app.post("/_builder/api/testApp/screen", updatedscreen)
              .expect(statusCodes.OK);
     
     const componentFile = "./appPackages/testApp/components/newTextBox.json";
-    expect(await readJSON(componentFile)).toEqual(updatedDerivedComponent);    
+    expect(await readJSON(componentFile)).toEqual(updatedscreen);    
 });
 
 it("should be able to rename derived component", async () => {
-    await app.patch("/_builder/api/testApp/derivedcomponent", {
+    await app.patch("/_builder/api/testApp/screen", {
         oldname: "newTextBox", newname: "anotherSubFolder/newTextBox"
     }).expect(statusCodes.OK);
     
@@ -124,7 +124,7 @@ it("should be able to rename derived component", async () => {
 });
 
 it("should be able to delete derived component", async () => {
-    await app.delete("/_builder/api/testApp/derivedcomponent/anotherSubFolder/newTextBox")
+    await app.delete("/_builder/api/testApp/screen/anotherSubFolder/newTextBox")
              .expect(statusCodes.OK);
 
     const componentFile = "./appPackages/testApp/components/anotherSubFolder/newTextBox.json";
