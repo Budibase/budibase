@@ -1,3 +1,4 @@
 myapps/
 config.js
-/builder/
+/builder/*
+!/builder/assets/
