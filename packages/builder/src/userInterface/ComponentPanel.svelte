@@ -5,14 +5,15 @@ import { store } from "../builderStore";
 import { isRootComponent } from "./pagesParsing/searchComponents";
 import IconButton from "../common/IconButton.svelte";
 import Textbox from "../common/Textbox.svelte";
-import UIkit from "uikit";
+// import UIkit from "uikit";
 import { pipe } from "../common/core";
 import {
     getScreenInfo
 } from "./pagesParsing/createProps";
-import Button from "../common/Button.svelte";
-import ButtonGroup from "../common/ButtonGroup.svelte";
+// import Button from "../common/Button.svelte";
+// import ButtonGroup from "../common/ButtonGroup.svelte";
 import { LayoutIcon, PaintIcon, TerminalIcon } from '../common/Icons/';
+import CodeEditor from './CodeEditor.svelte';
 
 import {
     cloneDeep,
@@ -51,38 +52,38 @@ store.subscribe(s => {
     components = s.components;
 });
 
-const save = () => {
+// const save = () => {
 
-    ignoreStore = true;
-    if(!validate()) {
-        ignoreStore = false;
-        return;
-    }
+//     ignoreStore = true;
+//     if(!validate()) {
+//         ignoreStore = false;
+//         return;
+//     }
 
-    component.name = originalName || name;
-    component.description = description;
-    component.tags = pipe(tagsString, [
-        split(","),
-        map(s => s.trim())
-    ]);
+//     component.name = originalName || name;
+//     component.description = description;
+//     component.tags = pipe(tagsString, [
+//         split(","),
+//         map(s => s.trim())
+//     ]);
 
-    store.saveScreen(component);
+//     store.saveScreen(component);
 
-    ignoreStore = false;
-    // now do the rename
-    if(name !== originalName) {
-        store.renameScreen(originalName, name);
-    }
-}
+//     ignoreStore = false;
+//     // now do the rename
+//     if(name !== originalName) {
+//         store.renameScreen(originalName, name);
+//     }
+// }
 
-const deleteComponent = () => {
-    showDialog();
-}
+// const deleteComponent = () => {
+//     showDialog();
+// }
 
-const confirmDeleteComponent = () => {
-    store.deleteScreen(component.name);
-    hideDialog();
-}
+// const confirmDeleteComponent = () => {
+//     store.deleteScreen(component.name);
+//     hideDialog();
+// }
 
 const onPropsValidate = result => {
     propsValidationErrors = result;
@@ -113,13 +114,17 @@ const validate = () => {
     return (!nameInvalid && propsValidationErrors.length === 0);
 }
 
-const hideDialog = () => {
-    UIkit.modal(modalElement).hide();
-}
+// const hideDialog = () => {
+//     UIkit.modal(modalElement).hide();
+// }
 
-const showDialog = () => {
-    UIkit.modal(modalElement).show();
-}
+// const showDialog = () => {
+//     UIkit.modal(modalElement).show();
+// }
+
+let current_view = 'props';
+
+
 
 </script>
 
@@ -140,25 +145,41 @@ const showDialog = () => {
     </div> -->
 
     <ul>
-        <li><button><PaintIcon /></button></li>
-        <li><button><LayoutIcon /></button></li>
-        <li><button><TerminalIcon /></button></li>
+        <li>
+          <button class:selected={current_view === 'props'} on:click={() => current_view = 'props'}>
+            <PaintIcon />
+          </button>
+        </li>
+        <li>
+          <button class:selected={current_view === 'layout'} on:click={() => current_view = 'layout'}>
+            <LayoutIcon />
+          </button>
+        </li>
+        <li>
+          <button class:selected={current_view === 'code'} on:click={() => current_view = 'code'}>
+            <TerminalIcon />
+          </button>
+        </li>
     </ul>
 
     <div class="component-props-container">
 
-
+      {#if current_view === 'props'}
         <PropsView onValidate={onPropsValidate}
-                {componentInfo}
-                {onPropsChanged} />
-
+                  {componentInfo}
+                  {onPropsChanged} />
+      {:else if current_view === 'layout'}
+        <p>Layout</p>
+      {:else}
+        <CodeEditor />
+      {/if}
 
     </div>
 
 </div>
 
 
-<div bind:this={modalElement} uk-modal>
+<!-- <div bind:this={modalElement} uk-modal>
     <div class="uk-modal-dialog">
 
         <div class="uk-modal-header">
@@ -185,7 +206,7 @@ const showDialog = () => {
 
     </div>
 
-</div>
+</div> -->
 
 <style>
 
@@ -194,15 +215,6 @@ const showDialog = () => {
     display: flex;
     flex-direction: column;
 
-}
-
-.title {
-    padding: 1rem;
-    display: grid;
-    grid-template-columns: [name] 1fr [actions] auto;
-    color: var(--secondary100);
-    font-size: .9rem;
-    font-weight: bold;
 }
 
 .title > div:nth-child(1) {
@@ -215,6 +227,7 @@ const showDialog = () => {
 }
 
 .component-props-container {
+  margin-top: 10px;
     flex: 1 1 auto;
     overflow-y: auto;
 }
@@ -240,10 +253,13 @@ li button {
     border: none;
     border-radius: 5px;
     padding: 12px;
+    outline: none;
+    cursor: pointer;
 }
 
 .selected {
-    background: lightblue;
+    color: var(--button-text);
+    background: var(--background-button)!important;
 }
 
 </style>

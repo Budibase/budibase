@@ -40,14 +40,14 @@ const setComponentProp = (props) => {
                          options={propDef.options}
                          onChanged={v => setProp(propDef.____name, v)}/>
 
-    {/if} 
+    {/if}
 
 </div>
 
 <style>
 
 .root {
-    padding: 1rem 1rem 0rem 1rem;
+    padding: 1rem 0 0rem 0;
 }
 
 .prop-label {
