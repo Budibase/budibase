@@ -1,5 +1,5 @@
 <script>
-import EditComponentProps from "./EditComponentProps.svelte";
+import ComponentPanel from "./ComponentPanel.svelte";
 import ComponentsList from "./ComponentsList.svelte";
 
 let selected="properties";
@@ -33,11 +33,11 @@ const selectTab = tab =>
 
     <div class="panel">
         {#if selected==="properties"}
-        <EditComponentProps />
+            <ComponentPanel />
         {/if}
 
         {#if selected==="components"}
-        <ComponentsList />
+            <ComponentsList />
         {/if}
     </div>
 
@@ -56,13 +56,14 @@ const selectTab = tab =>
 .switcher {
     display: flex;
     justify-content: space-between;
+    margin-bottom: 25px;
 }
 
 .switcher > button {
     display: inline-block;
     border: none;
-    margin: 5px;
-    padding: 5px;
+    margin: 0;
+    padding: 0;
     cursor: pointer;
     font-weight: 600;
     font-size: 0.85rem;
