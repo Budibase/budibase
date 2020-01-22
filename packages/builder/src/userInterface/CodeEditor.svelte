@@ -30,7 +30,7 @@
 <p>Use the code box below to add snippets of javascript to enhance your webapp</p>
 
 <div class="editor">
-  <textarea bind:value={snippet_text} />
+  <textarea class="code" bind:value={snippet_text} />
   <button on:click={save_snippet}>Save</button>
 </div>
 
@@ -38,7 +38,7 @@
   <h3>Snippets added</h3>
   {#each snippets as { id, snippet } }
   <div class="snippet">
-    <pre>{snippet}</pre>
+    <pre class="code">{snippet}</pre>
     <button on:click={() => edit_snippet(id)}>Edit</button>
   </div>
   {/each}
@@ -63,10 +63,9 @@
     position: relative;
   }
 
-  .editor textarea {
+  .code {
     width: 100%;
     outline: none;
-    height: 150px;
     border: none;
     background: #173157;
     border-radius: 5px;
@@ -75,8 +74,12 @@
     color: #eee;
     padding: 10px;
     font-family: monospace;
-    resize: none;
     overflow-y: scroll;
+  }
+
+  .editor textarea {
+    resize: none;
+    height: 150px;
   }
 
   button {
@@ -104,20 +107,9 @@
   }
 
   .snippet pre {
-    width: 100%;
-    outline: none;
-    max-height: 150px;
-    border: none;
     background: #f9f9f9;
-    border-radius: 5px;
-    box-sizing: border-box;
-    white-space: pre;
     color: #333;
-    padding: 10px;
-    font-family: monospace;
-    resize: none;
-    overflow-y: scroll;
-    margin: 10px;
+    max-height: 150px;
   }
 
   .snippet button {
