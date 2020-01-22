@@ -53,38 +53,38 @@ store.subscribe(s => {
     components = s.components;
 });
 
-// const save = () => {
+const save = () => {
 
-//     ignoreStore = true;
-//     if(!validate()) {
-//         ignoreStore = false;
-//         return;
-//     }
+    ignoreStore = true;
+    if(!validate()) {
+        ignoreStore = false;
+        return;
+    }
 
-//     component.name = originalName || name;
-//     component.description = description;
-//     component.tags = pipe(tagsString, [
-//         split(","),
-//         map(s => s.trim())
-//     ]);
+    component.name = originalName || name;
+    component.description = description;
+    component.tags = pipe(tagsString, [
+        split(","),
+        map(s => s.trim())
+    ]);
 
-//     store.saveScreen(component);
+    store.saveScreen(component);
 
-//     ignoreStore = false;
-//     // now do the rename
-//     if(name !== originalName) {
-//         store.renameScreen(originalName, name);
-//     }
-// }
+    ignoreStore = false;
+    // now do the rename
+    if(name !== originalName) {
+        store.renameScreen(originalName, name);
+    }
+}
 
-// const deleteComponent = () => {
-//     showDialog();
-// }
+const deleteComponent = () => {
+    showDialog();
+}
 
-// const confirmDeleteComponent = () => {
-//     store.deleteScreen(component.name);
-//     hideDialog();
-// }
+const confirmDeleteComponent = () => {
+    store.deleteScreen(component.name);
+    hideDialog();
+}
 
 const onPropsValidate = result => {
     propsValidationErrors = result;
@@ -100,6 +100,7 @@ const updateComponent = doChange => {
 const onPropsChanged = newProps => {
     updateComponent(newComponent =>
         assign(newComponent.props, newProps));
+    save();
 
 }
 
