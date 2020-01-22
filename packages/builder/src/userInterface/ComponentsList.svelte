@@ -26,11 +26,11 @@ const addRootComponent = (c, all) => {
     }
 
     group.components.push(c)
-    
+
 };
 
 const onComponentChosen = (component) => {
-    
+
 };
 
 store.subscribe(s => {
@@ -39,16 +39,12 @@ store.subscribe(s => {
 
     for(let comp of sortBy(["name"])(s.components)) {
         addRootComponent(
-            comp, 
+            comp,
             newComponentLibraries);
     }
 
     componentLibraries = newComponentLibraries;
 });
-
-
-
-
 
 </script>
 
@@ -60,7 +56,7 @@ store.subscribe(s => {
 
     <div class="library-container">
 
-    
+
         <div class="inner-header">
             Components
         </div>
