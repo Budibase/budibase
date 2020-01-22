@@ -27,14 +27,14 @@ const setComponentProp = (props) => {
 
     {#if propDef.type === "event"}
 
-    <div class="prop-label">{propDef.____name}</div>
+    <h5>{propDef.____name}</h5>
     <EventListSelector parentProps={props}
                        {propDef}
                        onValueChanged={setComponentProp} />
 
     {:else }
 
-    <div class="prop-label">{propDef.____name}</div>
+    <h5>{propDef.____name}</h5>
     <StateBindingControl value={props[propDef.____name]}
                          type={propDef.type}
                          options={propDef.options}
@@ -47,13 +47,21 @@ const setComponentProp = (props) => {
 <style>
 
 .root {
-    padding: 1rem 0 0rem 0;
+    height: 40px;
+    margin-bottom: 15px;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 70px 1fr;
+    grid-gap: 10px;
 }
 
-.prop-label {
-    font-size: 0.8rem;
-    color: var(--secondary100);
-    font-weight: bold;
-}
+h5 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #163057;
+    opacity: 0.6;
+    padding-top: 12px;
+    margin-bottom: 0;
+  }
 
 </style>
