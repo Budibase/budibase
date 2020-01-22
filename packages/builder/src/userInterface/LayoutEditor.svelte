@@ -1,4 +1,28 @@
-<script></script>
+<script>
+  import InputGroup from '../common/Inputs/InputGroup.svelte';
+
+  let grid_values = ['', '', '', ''];
+  let column_values = ['', ''];
+  let row_values = ['', ''];
+  let gap_values = [''];
+  let margin_values = ['', '', '', ''];
+  let padding_values = ['', '', '', ''];
+  let zindex_values = [''];
+
+  const tbrl = [
+    { placeholder: 'T' },
+    { placeholder: 'R' },
+    { placeholder: 'B' },
+    { placeholder: 'L' }
+  ];
+
+  const se = [
+    { placeholder: 'START' },
+    { placeholder: 'END' },
+  ]
+
+  const single = [{ placeholder: '' }];
+</script>
 
 
 <h3>Layout</h3>
@@ -8,35 +32,22 @@
 <div class="layout-pos">
   <div class="grid">
     <h5>Grid Area:</h5>
-    <div class="inputs small">
-      <input type="number" placeholder="T"/>
-      <input type="number" placeholder="R"/>
-      <input type="number" placeholder="B"/>
-      <input type="number" placeholder="L"/>
-    </div>
+    <InputGroup meta={tbrl} bind:values={grid_values} size="small"/>
   </div>
 
   <div class="grid">
     <h5>Column:</h5>
-    <div class="inputs">
-      <input type="number" placeholder="START"/>
-      <input type="number" placeholder="END"/>
-    </div>
+    <InputGroup meta={se} bind:values={column_values} />
   </div>
 
   <div class="grid">
     <h5>Row:</h5>
-    <div class="inputs">
-      <input type="number" placeholder="START"/>
-      <input type="number" placeholder="END"/>
-    </div>
+    <InputGroup meta={se} bind:values={row_values} />
   </div>
 
   <div class="grid">
     <h5>Gap:</h5>
-    <div class="inputs">
-      <input type="number"/>
-    </div>
+    <InputGroup meta={single} bind:values={gap_values} />
   </div>
 </div>
 
@@ -45,22 +56,12 @@
 <div class="layout-spacing">
   <div class="grid">
     <h5>Margin:</h5>
-    <div class="inputs small">
-      <input type="number" placeholder="T"/>
-      <input type="number" placeholder="R"/>
-      <input type="number" placeholder="B"/>
-      <input type="number" placeholder="L"/>
-    </div>
+    <InputGroup meta={tbrl} bind:values={margin_values} size="small"/>
   </div>
 
   <div  class="grid">
     <h5>Padding:</h5>
-    <div class="inputs small">
-      <input type="number" placeholder="T"/>
-      <input type="number" placeholder="R"/>
-      <input type="number" placeholder="B"/>
-      <input type="number" placeholder="L"/>
-    </div>
+    <InputGroup meta={tbrl} bind:values={padding_values} size="small"/>
   </div>
 </div>
 
@@ -69,9 +70,7 @@
 <div class="layout-layer">
   <div class="grid">
     <h5>Z-Index:</h5>
-    <div class="inputs">
-      <input type="text">
-    </div>
+    <InputGroup meta={single} bind:values={zindex_values}/>
   </div>
 </div>
 
@@ -99,6 +98,7 @@
     color: #163057;
     opacity: 0.6;
     padding-top: 12px;
+    margin-bottom: 0;
   }
 
   div > div {
@@ -113,49 +113,4 @@
     grid-template-columns: 70px 1fr;
   }
 
-  .inputs {
-    display: flex;
-    justify-content: space-between;
-
-  }
-
-  input {
-    width: 83px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #163057;
-    opacity: 0.7;
-    padding: 5px 10px;
-    box-sizing: border-box;
-
-    /* margin: 0; */
-  }
-
-  input[type=number]::-webkit-inner-spin-button,
-  input[type=number]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    margin: 0;
-}
-
-  .small > input {
-    width: 38px;
-    height: 38px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 0;
-  }
-
-  .small > input::placeholder {
-    text-align: center;
-  }
-
-  input, input {
-    border: 1px solid #DBDBDB;
-    border-radius: 2px;
-    outline: none;
-  }
 </style>
