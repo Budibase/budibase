@@ -243,8 +243,8 @@ li {
     margin-right: 20px;
     background: none;
     border-radius: 5px;
-    width: 45px;
-    height: 45px;
+    width: 48px;
+    height: 48px;
 }
 
 li button {
