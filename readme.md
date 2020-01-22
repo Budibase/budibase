@@ -56,8 +56,6 @@ Install requires [node-gyp](https://github.com/nodejs/node-gyp), due to a depend
 
 *yarn -* `npm install -g yarn`
 
-*lerna -* `npm install -g lerna`
-
 *jest* - `npm install -g jest`
 
 ### 2. Clone this repository
@@ -68,11 +66,11 @@ then `cd ` into your local copy...
 
 ### 3.  Install and Build
 
-`lerna bootstrap` will install all modules
+`yarn bootstrap` will install all modules
 
-`lerna run build` will build all packages
+`yarn build` will build all packages
 
-`lerna run initialise` will initialise your budibase (i.e. create local database)
+`yarn initialise` will initialise your budibase (i.e. create local database)
 
 ### 4. Running
 
