@@ -14,6 +14,7 @@ import {
 // import ButtonGroup from "../common/ButtonGroup.svelte";
 import { LayoutIcon, PaintIcon, TerminalIcon } from '../common/Icons/';
 import CodeEditor from './CodeEditor.svelte';
+import LayoutEditor from './LayoutEditor.svelte';
 
 import {
     cloneDeep,
@@ -169,7 +170,7 @@ let current_view = 'props';
                   {componentInfo}
                   {onPropsChanged} />
       {:else if current_view === 'layout'}
-        <p>Layout</p>
+        <LayoutEditor />
       {:else}
         <CodeEditor />
       {/if}
