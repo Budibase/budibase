@@ -4,7 +4,9 @@
   "devDependencies": {
     "lerna": "^3.14.1"
   },
-  "dependencies": {},
+  "dependencies": {
+    "bcryptjs": "^2.4.3"
+  },
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
