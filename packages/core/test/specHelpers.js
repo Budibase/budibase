@@ -6,7 +6,9 @@ import {setupDatastore} from "../src/appInitialise";
 import {configFolder, fieldDefinitions, 
     templateDefinitions,
     joinKey,
-    isSomething} from "../src/common";
+    isSomething,
+    crypto as nodeCrypto
+} from "../src/common";
 import { getNewIndexTemplate } from "../src/templateApi/createNodes";
 import {indexTypes} from "../src/templateApi/indexes";
 import getTemplateApi from "../src/templateApi";
@@ -17,7 +19,6 @@ import {createBehaviourSources} from "../src/actionsApi/buildBehaviourSource";
 import {createAction, createTrigger} from "../src/templateApi/createActions";
 import {initialiseActions} from "../src/actionsApi/initialise";
 import {cleanup} from "../src/transactions/cleanup";
-import nodeCrypto from "./nodeCrypto";
 import {permission} from "../src/authApi/permissions";
 import {generateFullPermissions} from "../src/authApi/generateFullPermissions"
 import {initialiseData} from "../src/appInitialise/initialiseData";

@@ -6,7 +6,7 @@ import getAuthApi from "./authApi";
 import getActionsApi from "./actionsApi";
 import {setupDatastore, createEventAggregator} from "./appInitialise";
 import {initialiseActions} from "./actionsApi/initialise"
-import {isSomething} from "./common";
+import {isSomething, crypto} from "./common";
 import {cleanup} from "./transactions/cleanup";
 import {generateFullPermissions} from "./authApi/generateFullPermissions";
 import {getApplicationDefinition} from "./templateApi/getApplicationDefinition";
@@ -111,5 +111,6 @@ export {initialiseData} from "./appInitialise/initialiseData";
 export {getDatabaseManager} from "./appInitialise/databaseManager";
 export {hierarchy};
 export {common};
+export {crypto};
 
 export default getAppApis;
