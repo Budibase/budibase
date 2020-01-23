@@ -17,7 +17,7 @@ import {createBehaviourSources} from "../src/actionsApi/buildBehaviourSource";
 import {createAction, createTrigger} from "../src/templateApi/createActions";
 import {initialiseActions} from "../src/actionsApi/initialise";
 import {cleanup} from "../src/transactions/cleanup";
-import nodeCrypto from "./nodeCrypto";
+import { crypto as nodeCrypto } from "@budibase/core";
 import {permission} from "../src/authApi/permissions";
 import {generateFullPermissions} from "../src/authApi/generateFullPermissions"
 import {initialiseData} from "../src/appInitialise/initialiseData";
