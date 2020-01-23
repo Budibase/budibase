@@ -19,7 +19,6 @@
     "@budibase/client": "^0.0.15",
     "@budibase/core": "^0.0.15",
     "@koa/router": "^8.0.0",
-    "argon2": "^0.23.0",
     "fs-extra": "^8.1.0",
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",

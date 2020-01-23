@@ -13,6 +13,7 @@
   },
   "scripts": {
     "test": "jest",
+    "test:watch": "jest --watch",
     "build": "rollup -c rollup.config.js"
   },
   "keywords": [
@@ -50,7 +51,6 @@
     "@babel/plugin-transform-runtime": "^7.4.4",
     "@babel/preset-env": "^7.4.5",
     "@babel/runtime": "^7.4.5",
-    "argon2": "^0.20.1",
     "babel-eslint": "^10.0.2",
     "babel-jest": "^23.6.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
@@ -72,6 +72,7 @@
   },
   "dependencies": {
     "@nx-js/compiler-util": "^2.0.0",
+    "bcryptjs": "^2.4.3",
     "date-fns": "^1.29.0",
     "lodash": "^4.17.13",
     "lunr": "^2.3.5",
