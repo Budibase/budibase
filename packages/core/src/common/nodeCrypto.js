@@ -8,7 +8,6 @@ function verify(password, hash) {
     return bcrypt.compareSync(password, hash);
 }
 
-
 export default {
     hash, verify
 };
