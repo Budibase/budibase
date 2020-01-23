@@ -30,7 +30,7 @@ export const _changeMyPassword = async (app, currentPw, newpassword) => {
   );
 
   if (isSomething(existingAuth.passwordHash)) {
-    const verified = await app.crypto.verify(
+    const verified = app.crypto.verify(
       existingAuth.passwordHash,
       currentPw,
     );
@@ -73,7 +73,7 @@ export const _setPasswordFromTemporaryCode = async (app, tempCode, newpassword) 
 
   if (isSomething(existingAuth.temporaryAccessHash)
        && existingAuth.temporaryAccessExpiryEpoch > currentTime) {
-    const verified = await app.crypto.verify(
+    const verified = app.crypto.verify(
       existingAuth.temporaryAccessHash,
       temp.code,
     );
@@ -93,7 +93,7 @@ export const _setPasswordFromTemporaryCode = async (app, tempCode, newpassword) 
 const doSet = async (app, auth, username, newpassword) => {
   auth.temporaryAccessHash = '';
   auth.temporaryAccessExpiryEpoch = 0;
-  auth.passwordHash = await app.crypto.hash(
+  auth.passwordHash = app.crypto.hash(
     newpassword,
   );
   await app.datastore.updateJson(
