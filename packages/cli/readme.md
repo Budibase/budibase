@@ -34,59 +34,8 @@ Once you have created your app, you need to create yourself an instance of your 
 
 `budi instance my-app`
 
-## Getting Started for Contributors
+## Running the cli on dev
 
-### 1.  Prerequisites
+If you want to test this on dev, from the mono repo, run `npm link` from here first.
 
-*yarn -* `npm install -g yarn`
-
-*jest* - `npm install -g jest`
-
-### 2. Clone this repository
-
-`git clone https://github.com/Budibase/budibase.git`
-
-then `cd ` into your local copy...
-
-### 3.  Install and Build
-
-`yarn bootstrap` will install all modules
-
-`yarn build` will build all packages
-
-`yarn initialise` will initialise your budibase (i.e. create local database)
-
-### 4. Running
-
-A Budibase apps folder will have been created in `packages/server/myapps`. This is a blank apps folder, so you will need to create yourself an app:
-
-```
-cd packages/server
-yarn run budi -- new your-app-name
-```
-
-then 
-
-`yarn run budi` and to run the budibase server
-
-if you then want to run the builder in dev mode (i.e. with hot reloading):
-
-... keep the server running, and..
-1. Open a new console
-2. `cd packages/builder`
-3. `yarn start`
-4. Access the builder on http://localhost:3000
-
-Notice that when inside `packages/server`, you can use any Budibase CLI command via yarn:
-
-e.g. `yarn budi -- new mikes_app` == `budi new mikes_app`
-
-This will use the CLI directly from `packages/cli`, rather than your globally installed `budi`
-
-## Documentation
-
-A work in progress, lives here: https://docs.budibase.com
-
-
-
-
+If you use VS Code, open it in this directory, and you will find launch configurations for each command - debugging, yay!
