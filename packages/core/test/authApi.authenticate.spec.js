@@ -7,7 +7,7 @@ import {permission} from "../src/authApi/permissions";
 
 describe("authApi > authenticate", () => {
 
-    it("should return user + access when correct password supplied", async () => {
+    fit("should return user + access when correct password supplied", async () => {
         const {authApi, app} = await setupApphierarchy(basicAppHierarchyCreator_WithFields);
         const u = await validUser(app, authApi, "password");
         const result = await authApi.authenticate(u.name, "password");
