@@ -1,25 +1,28 @@
 const inquirer = require("inquirer");
-const { mkdir, exists, copy, readJSON } = require("fs-extra");
+const { readJSON } = require("fs-extra");
 const { join } = require("path");
 const chalk = require("chalk");
 const fp = require("lodash/fp");
-const { serverFileName, getAppContext } = require("../../common");
+const { getAppContext } = require("../../common");
 const passwordQuestion = require("@inquirer/password");
-const createMasterDb = require("@budibase/server/initialise/createMasterDb");
-var localDatastore = require("@budibase/datastores/datastores/local");
 
 module.exports = (opts) => {
    run(opts);
 }
 
 const run = async (opts) => {
+    try {
+        const appContext = await getAppContext({configName: opts.config, masterIsCreated:true});
+        opts.appContext = appContext;
+        opts.datapath = "./.data";
+        await fetchUserLevels(opts);
+        await prompts(opts);
+        await createInstance(opts);
+        console.log(chalk.green(`Budibase instance created for app ${opts.appname}.`))
+    } catch (error) {
+        console.error(chalk.red(`Error creating instance of app ${opts.appname}: ${error.message}`))
+    }
 
-    const appContext = await getAppContext({configName: opts.config, masterIsCreated:true});
-    opts.appContext = appContext;
-    opts.datapath = "./.data";
-    await fetchUserLevels(opts);
-    await prompts(opts);
-    await createInstance(opts);
 }
 
 const fetchUserLevels = async (opts) => {
@@ -31,7 +34,7 @@ const fetchUserLevels = async (opts) => {
     );
 
     if(accessLevels.levels.length === 0)
-        throw new Exception("No access levels. Use the builder to create one");
+        throw new Error("No access levels. Use the builder to create one");
 
     opts.accessLevels = accessLevels.levels;
 }
@@ -69,7 +72,7 @@ const prompts = async (opts) => {
     });
 
     if(password !== passwordConfirm) 
-        throw new Exception("Passwords do not match!");
+        throw new Error("Passwords do not match!");
     
     opts.username = answers.username;
     opts.password = password;

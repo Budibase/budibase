@@ -8,6 +8,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
-    "init": "lerna run initialise"
+    "initialise": "lerna run initialise",
+    "clean": "lerna clean"
   }
 }
