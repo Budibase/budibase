@@ -6,13 +6,12 @@ import Dropdown from "../common/Dropdown.svelte";
 import EventListSelector from "./EventListSelector.svelte";
 import StateBindingControl from "./StateBindingControl.svelte";
 
-export let errors = [];
 export let setProp = () => {};
-export let fieldHasError =() => {};
-export let propDef = {};
-export let props = {};
 export let disabled;
 export let index;
+export let prop_name;
+export let prop_value;
+export let prop_type = {};
 
 $: isOdd = (index % 2 !== 0);
 
@@ -25,20 +24,20 @@ const setComponentProp = (props) => {
 
 <div class="root" >
 
-    {#if propDef.type === "event"}
+    {#if prop_type === "event"}
 
-    <h5>{propDef.____name}</h5>
+    <!-- <h5>{prop_name}</h5>
     <EventListSelector parentProps={props}
                        {propDef}
-                       onValueChanged={setComponentProp} />
+                       onValueChanged={setComponentProp} /> -->
 
     {:else }
 
-    <h5>{propDef.____name}</h5>
-    <StateBindingControl value={props[propDef.____name]}
-                         type={propDef.type}
-                         options={propDef.options}
-                         onChanged={v => setProp(propDef.____name, v)}/>
+    <h5>{prop_name}</h5>
+    <StateBindingControl value={prop_value}
+                         type={prop_type}
+                         options={prop_type.options}
+                         onChanged={v => setProp(prop_name, v)}/>
 
     {/if}
 
