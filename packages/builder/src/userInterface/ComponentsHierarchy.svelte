@@ -20,8 +20,6 @@ import { store } from "../builderStore";
 
 export let components = []
 
-let _components;
-
 const joinPath = join("/");
 
 const normalizedName = name => pipe(name, [
@@ -87,7 +85,7 @@ function select_component(screen, component) {
     </div>
         {#if component.component.props && component.component.props._children}
             <ComponentsHierarchyChildren components={component.component.props._children}
-                                         onSelect={component =>select_component(component.component.name, component)} />
+                                         onSelect={child => select_component(component.component.name, child)} />
         {/if}
     {/each}
 
