@@ -138,7 +138,7 @@ const initialise = (store, initial) => async () => {
                 shadowHierarchy, initial.currentNode.nodeId
             );
     }
-    console.log(initial)
+
     store.set(initial);
     return initial;
 }
@@ -712,7 +712,6 @@ const addChildComponent = store => component => {
             children ?
                 children.concat(component_definition) :
                 [component_definition];
-        console.log(component_definition)
 
         return s;
     })
@@ -721,7 +720,6 @@ const addChildComponent = store => component => {
 const selectComponent = store => component => {
     store.update(s => {
         s.currentComponentInfo = component;
-        console.log(s)
         return s;
     })
 
