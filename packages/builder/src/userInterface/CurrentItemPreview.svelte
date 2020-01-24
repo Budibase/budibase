@@ -52,7 +52,8 @@ store.subscribe(s => {
         window["##BUDIBASE_APPDEFINITION##"] = ${JSON.stringify(appDefinition)};
         import('/_builder/budibase-client.esm.mjs')
         .then(module => {
-            module.loadBudibase();
+            console.log(module, window);
+            module.loadBudibase({ window, localStorage });
         })
     </script>
     <style>
