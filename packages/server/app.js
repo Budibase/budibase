@@ -16,5 +16,7 @@ module.exports = async (budibaseContext) => {
     );
     app.use(koaBody({ multipart : true }));
     app.use(router(config, app).routes());
-    return app.listen(config.port);
+    return app.listen(config.port).then(() => {
+        console.log(`Budibase Builder running on port ${config.port}..`);
+    });
 };
