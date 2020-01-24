@@ -131,10 +131,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/client@^0.0.15":
-  version "0.0.15"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.0.15.tgz#4bf7af751802a5703e72176ba2b7648f6983931f"
-  integrity sha512-D+r0vrKaxjUITi+4BNpn06aQwrhazYLLyt4yAVBkPjabJwS6DRVYgGYElXkDrgqqHnst6jRAiZVhlbJDq9CHTQ==
+"@budibase/client@^0.0.16":
+  version "0.0.16"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.0.16.tgz#4eef9373816448e99cafd2714f417c6610af5e69"
+  integrity sha512-fx4ptePj7+IehM37xdNPHdu5jEUgAFmDx23jI0yb4sI6Z5U4gxH10FZYyoJ/A9KdzmShsIfgrmudV5ffvoehdg==
   dependencies:
     "@nx-js/compiler-util" "^2.0.0"
     lodash "^4.17.15"
@@ -142,10 +142,10 @@
     shortid "^2.2.8"
     svelte "^3.9.2"
 
-"@budibase/core@^0.0.15":
-  version "0.0.15"
-  resolved "https://registry.yarnpkg.com/@budibase/core/-/core-0.0.15.tgz#aab510246804c59085de588cb1ff0cc116306204"
-  integrity sha512-TV0oCCTJww3BEDAN5y/GAe0aLmekCqt4/adBLaeZ8z9fyZwPTZZ1ggoyy4DTSmljO4fABAoFnCHEC7dLNyAQRg==
+"@budibase/core@^0.0.16":
+  version "0.0.16"
+  resolved "https://registry.yarnpkg.com/@budibase/core/-/core-0.0.16.tgz#efff16876f906b2aa59803c3312ec7593664b623"
+  integrity sha512-DvzfurHHp9KkSjkvbGbKsVczR5ne38bMLRA2hHEJxAmC0Tshld06cEq7HMy2BmPb6kaC1URYHlFs/gPhW2cSFQ==
   dependencies:
     "@nx-js/compiler-util" "^2.0.0"
     date-fns "^1.29.0"
