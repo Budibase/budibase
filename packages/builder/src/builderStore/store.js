@@ -93,7 +93,8 @@ export const getStore = () => {
     store.createGeneratedComponents = createGeneratedComponents(store);
     store.addChildComponent = addChildComponent(store);
     store.selectComponent = selectComponent(store);
-    store.saveComponent = saveComponent(store);
+    store.updateComponentProp = updateComponentProp(store);
+
     return store;
 }
 
@@ -137,6 +138,7 @@ const initialise = (store, initial) => async () => {
                 shadowHierarchy, initial.currentNode.nodeId
             );
     }
+    console.log(initial)
     store.set(initial);
     return initial;
 }
@@ -701,19 +703,16 @@ const addChildComponent = store => component => {
 
         const children = s.currentFrontEndItem.props._children;
 
-        const component_definition = {
-            ...newComponent.fullProps,
+        const component_definition = Object.assign(
+            cloneDeep(newComponent.fullProps), {
             _component: component,
-            name: component,
-            description: '',
-            location: (s.currentFrontEndItem.location ? s.currentFrontEndItem.location : [])
-                .concat(children && children.length || 0)
-        }
+        })
 
         s.currentFrontEndItem.props._children =
             children ?
                 children.concat(component_definition) :
                 [component_definition];
+        console.log(component_definition)
 
         return s;
     })
@@ -721,15 +720,20 @@ const addChildComponent = store => component => {
 
 const selectComponent = store => component => {
     store.update(s => {
-        s.currentComponentInfo = getComponentInfo(s.components, component);
+        s.currentComponentInfo = component;
+        console.log(s)
         return s;
     })
+
 }
 
-const saveComponent = store => component => {
+const updateComponentProp = store => (name, value) => {
     store.update(s => {
-        s.currentComponentInfo = getComponentInfo(s.components, component);
-        console.log(s.currentFrontEndItem, s.screens)
-        return _saveScreen(store, s, s.currentFrontEndItem);
+        const current_component = s.currentComponentInfo;
+        s.currentComponentInfo[name] = value;
+        _saveScreen(store, s, s.currentFrontEndItem);
+        s.currentComponentInfo = current_component;
+        return s;
     })
+
 }

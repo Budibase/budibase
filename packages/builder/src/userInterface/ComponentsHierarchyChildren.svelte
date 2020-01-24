@@ -13,7 +13,7 @@
 {#each components as component}
   <ul>
     <li on:click|stopPropagation={() => onSelect(component)}>
-      {get_capitalised_name(component.name)}
+      {get_capitalised_name(component._component)}
 
       {#if component._children}
         <svelte:self components={component._children}/>

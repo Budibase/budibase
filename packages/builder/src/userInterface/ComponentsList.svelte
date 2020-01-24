@@ -81,9 +81,6 @@ let current_view = 'text';
             <div class="name">
                 {splitName(component.name).componentName}
             </div>
-            <!-- <div class="description">
-                {component.description}
-            </div> -->
         </div>
 
         {/each}
