@@ -25,7 +25,6 @@ let props = {};
 let propsDefinitions = [];
 let isInstance = false;
 
-
 $: {
     if(componentInfo)
     {
@@ -46,7 +45,7 @@ $: {
 let setProp = (name, value) => {
     const newProps = cloneDeep(props);
 
-    let finalProps = isInstance ? newProps : cloneDeep(componentInfo.component.props);
+    let finalProps = isInstance ? newProps : cloneDeep(componentInfo.component.props ? componentInfo.component.props : componentInfo.component);
 
     if(!isInstance) {
         const nowSet = [];
@@ -97,9 +96,6 @@ const fieldHasError = (propName) =>
         {/each}
 
     </form>
-
-
-
 
 </div>
 

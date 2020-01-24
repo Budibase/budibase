@@ -1,4 +1,5 @@
 <script>
+import ComponentHierarchyChildren from './ComponentHierarchyChildren.svelte';
 
 import {
     last,
@@ -22,6 +23,7 @@ export let thisLevel = "";
 
 let pathPartsThisLevel;
 let componentsThisLevel;
+let _components;
 let subfolders;
 
 let expandedFolders = [];
@@ -52,7 +54,7 @@ const isOnNextLevel = (c) =>
     normalizedName(c.name).split("/").length === pathPartsThisLevel + 1
 
 const lastPartOfName = (c) =>
-    last(c.name.split("/"))
+    last(c.name ? c.name.split("/") : c._component.split("/"))
 
 const subFolder = (c) => {
     const cname = normalizedName(c.name);
@@ -102,27 +104,27 @@ $: {
                             ? 1
                             : normalizedName(thisLevel).split("/").length + 1;
 
-    componentsThisLevel =
+    _components =
         pipe(components, [
-            filter(isOnThisLevel),
-            map(c => ({component:c, title:lastPartOfName(c)})),
+            // filter(isOnThisLevel),
+            map(c => ({component: c, title:lastPartOfName(c)})),
             sortBy("title")
         ]);
 
-    subfolders =
-        pipe(components, [
-            filter(notOnThisLevel),
-            sortBy("name"),
-            map(subFolder),
-            uniqWith((f1,f2) => f1.path === f2.path)
-        ]);
+    // subfolders =
+    //     pipe(components, [
+    //         filter(notOnThisLevel),
+    //         sortBy("name"),
+    //         map(subFolder),
+    //         uniqWith((f1,f2) => f1.path === f2.path)
+    //     ]);
 }
 
 </script>
 
 <div class="root">
 
-    {#each subfolders as folder}
+    <!-- {#each subfolders as folder}
     <div class="hierarchy-item folder"
          on:click|stopPropagation={() => expandFolder(folder)}>
         <span>{@html getIcon(folder.isExpanded ? "chevron-down" : "chevron-right", "16")}</span>
@@ -132,14 +134,18 @@ $: {
                      thisLevel={folder.path} />
         {/if}
     </div>
-    {/each}
+    {/each} -->
 
-    {#each componentsThisLevel as component}
-    <div class="hierarchy-item component" class:selected={isComponentSelected($store.currentFrontEndType, $store.currentFrontEndItem, component.component)}
+    {#each _components as component}
+    <div class="hierarchy-item component"
+         class:selected={isComponentSelected($store.currentFrontEndType, $store.currentFrontEndItem, component.component)}
          on:click|stopPropagation={() => store.setCurrentScreen(component.component.name)}>
-        <!-- <span>{@html getIcon("circle", "7")}</span> -->
+
         <span class="title">{component.title}</span>
     </div>
+        {#if component.component.props && component.component.props._children}
+            <ComponentHierarchyChildren components={component.component.props._children} onSelect={store.selectComponent}/>
+        {/if}
     {/each}
 
 </div>

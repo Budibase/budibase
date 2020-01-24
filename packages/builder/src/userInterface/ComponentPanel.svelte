@@ -43,7 +43,7 @@ $: shortName = last(name.split("/"));
 
 store.subscribe(s => {
     if(ignoreStore) return;
-    component = s.currentFrontEndItem;
+    component = s.currentComponentInfo.component;
     if(!component) return;
     originalName = component.name;
     name = component.name;
@@ -68,7 +68,7 @@ const save = () => {
         map(s => s.trim())
     ]);
 
-    store.saveScreen(component);
+    store.saveComponent(component);
 
     ignoreStore = false;
     // now do the rename
@@ -92,14 +92,15 @@ const onPropsValidate = result => {
 
 const updateComponent = doChange => {
     const newComponent = cloneDeep(component);
-    doChange(newComponent);
-    component = newComponent;
+
+    component = doChange(newComponent);
+    console.log(component, $store.screens[0].props._children[1])
     componentInfo = getScreenInfo(components, newComponent);
 }
 
 const onPropsChanged = newProps => {
     updateComponent(newComponent =>
-        assign(newComponent.props, newProps));
+        assign(newComponent, newProps))
     save();
 
 }

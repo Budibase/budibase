@@ -29,7 +29,6 @@ let name="";
 let saveAttempted=false;
 
 store.subscribe(s => {
-    console.log(s)
     layoutComponents = pipe(s.components, [
         filter(c => c.container),
         map(c => ({name:c.name, ...splitName(c.name)}))
