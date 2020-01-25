@@ -15,6 +15,12 @@ import {
 const doNothing = () => {};
 doNothing.isPlaceholder=true;
 
+const isMetaProp = (propName) => 
+    propName === "_component"
+    || propName === "_children"
+    || propName === "_id"
+    || propName === "_style";
+
 export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
 
     const rootInitialProps = {...rootProps};
@@ -27,9 +33,9 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
 
         for(let propName in props) {
             
-            if(propName === "_component") continue;
+            if(isMetaProp(propName)) continue;
 
-            const val = initialProps[propName];
+            const val = props[propName];
             
             if(isBound(val) && takeStateFromStore(val)) {
 
