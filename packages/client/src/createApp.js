@@ -1,59 +1,14 @@
-import { 
-    split,
-    last
-} from "lodash/fp";
 import {writable} from "svelte/store";
-import { $ } from "./core/common";
-import { 
-    setupBinding 
-} from "./state/stateBinding";
 import { createCoreApi } from "./core";
 import { getStateOrValue } from "./state/getState";
 import { setState, setStateFromBinding } from "./state/setState";
 import { trimSlash } from "./common/trimSlash";
 import { isBound } from "./state/isState";
+import { _initialiseChildren } from "./render/initialiseChildren";
 
 export const createApp = (componentLibraries, appDefinition, user) => {
 
-    const _initialiseChildren = (parentContext, hydrate) => (childrenProps, htmlElement, context, anchor=null) => {
-
-        const childComponents = [];
-
-        if(hydrate) {
-            while (htmlElement.firstChild) {
-                htmlElement.removeChild(htmlElement.firstChild);
-            }
-        }
-        
-        for(let childProps of childrenProps) {        
-            const {componentName, libName} = splitName(childProps._component);
-
-            if(!componentName || !libName) return;
-
-            const {initialProps, bind} = setupBinding(
-                    store, childProps, coreApi, 
-                    context || parentContext, appDefinition.appRootPath);
-
     
-            const componentProps = {
-                ...initialProps, 
-                _bb:bb(context || parentContext, childProps)
-            };
-
-            const component = new (componentLibraries[libName][componentName])({
-                target: htmlElement,
-                props: componentProps,
-                hydrate:false,
-                anchor
-            });
-
-            bind(component);
-            childComponents.push(component);
-        }
-
-        return childComponents;
-    }
-
     const coreApi = createCoreApi(appDefinition, user);
     appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(appDefinition.hierarchy);
     const store = writable({
@@ -96,11 +51,18 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         if(isFunction(event)) event(context);
     }
 
+    const initialiseChildrenParams = (parentContext, hydrate) =>  ({
+        bb, coreApi, store, 
+        componentLibraries, appDefinition, 
+        parentContext, hydrate
+    });
+
     const bb = (context, props) => ({
-        hydrateChildren: _initialiseChildren(context, true), 
-        appendChildren: _initialiseChildren(context, false), 
+        hydrateChildren: _initialiseChildren(initialiseChildrenParams(context, true)), 
+        appendChildren: _initialiseChildren(initialiseChildrenParams(context, false)), 
         insertChildren: (props, htmlElement, anchor, context) => 
-            _initialiseChildren(context, false)(props, htmlElement, context, anchor), 
+            _initialiseChildren(initialiseChildrenParams(context, false))
+                                (props, htmlElement, context, anchor), 
         store,
         relativeUrl,
         api,
@@ -159,18 +121,4 @@ const buildBindings = (boundProps, boundArrays, contextBoundProps) => {
 
     return bindings;
 }
-
-
-const splitName = fullname => {
-    const componentName = $(fullname, [
-        split("/"),
-        last
-    ]);
-
-    const libName =fullname.substring(
-        0, fullname.length - componentName.length - 1);
-
-    return {libName, componentName}; 
-}
-
 
