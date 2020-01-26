@@ -6,8 +6,7 @@ import { trimSlash } from "./common/trimSlash";
 import { isBound } from "./state/isState";
 import { _initialiseChildren } from "./render/initialiseChildren";
 
-export const createApp = (componentLibraries, appDefinition, user) => {
-
+export const createApp = (componentLibraries, appDefinition, user, uiFunctions) => {
     
     const coreApi = createCoreApi(appDefinition, user);
     appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(appDefinition.hierarchy);
@@ -37,10 +36,10 @@ export const createApp = (componentLibraries, appDefinition, user) => {
         });
 
     const api = {
-        post: apiCall("POST"), 
-        get: apiCall("GET"), 
-        patch: apiCall("PATCH"), 
-        delete:apiCall("DELETE")
+        post: apiCall("POST"),
+        get: apiCall("GET"),
+        patch: apiCall("PATCH"),
+        delete: apiCall("DELETE")
     };
 
     const safeCallEvent = (event, context) => {
@@ -54,7 +53,7 @@ export const createApp = (componentLibraries, appDefinition, user) => {
     const initialiseChildrenParams = (parentContext, hydrate) =>  ({
         bb, coreApi, store, 
         componentLibraries, appDefinition, 
-        parentContext, hydrate
+        parentContext, hydrate, uiFunctions
     });
 
     const bb = (context, props) => ({

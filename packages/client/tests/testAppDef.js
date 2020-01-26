@@ -3,15 +3,31 @@ import { loadBudibase } from "../src/index";
 
 export const load = async (props) => {
     const dom = new JSDOM(`<!DOCTYPE html><html><body></body><html>`);
+    autoAssignIds(props);
     setAppDef(dom.window, props);
     const app = await loadBudibase({
         componentLibraries: allLibs(dom.window), 
         window: dom.window,
         localStorage: createLocalStorage(),
-        props
+        props,
+        uiFunctions
     });
     return {dom, app};
 }
+
+// this happens for real by the builder... 
+// ..this only assigns _ids when missing
+const autoAssignIds = (props, count=0) => {
+    if(!props._id) {
+        props._id = `auto_id_${count}`;
+    }
+    if(props._children) {
+        for(let child of props._children) {
+            count += 1;
+            autoAssignIds(child, count);
+        }
+    }
+} 
 
 const setAppDef = (window, props) => {
     window["##BUDIBASE_APPDEFINITION##"] = ({
@@ -87,5 +103,18 @@ const maketestlib = (window) => ({
     }
 });
 
+const uiFunctions = ({
 
+    never_render : (render, parentContext) => {},
+
+    always_render : (render, parentContext) => {
+        render();
+    },
+
+    three_clones : (render, parentContext) => {
+        for(let i = 0; i<3; i++) {
+            render();
+        }
+    }
+});
 
