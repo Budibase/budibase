@@ -13,7 +13,7 @@ let currentComponent;
 
 $: {
     if(_bb && currentComponent) {
-        _bb.hydrateChildren(testProps._children, currentComponent);
+        _bb.hydrateChildren([testProps], currentComponent);
     }
 }
 
