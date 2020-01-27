@@ -38,7 +38,10 @@ export default {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		file: 'public/bundle.js'
+		file: 'public/bundle.js',
+		globals: {
+			"crypto": "crypto"
+		}
 	},
 	plugins: [
 		svelte({
@@ -64,7 +67,8 @@ export default {
 				return importee === 'svelte' 
 					   || importee.startsWith('svelte/')
 					   || coreExternal.includes(importee);
-			}
+			},
+			preferBuiltins: true
 		}),
 		commonjs({
 			namedExports: {
