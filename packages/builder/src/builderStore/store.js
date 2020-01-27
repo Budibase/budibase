@@ -726,8 +726,11 @@ const addChildComponent = store => component => {
                 s.currentComponentInfo._children = [component_definition]
             }
         }
+<<<<<<< HEAD
 
         _saveScreen(store, s, s.currentFrontEndItem);
+=======
+>>>>>>> Allow creation of nested child components.
 
         _saveScreen(store, s, s.currentFrontEndItem);
 
