@@ -19,6 +19,12 @@ export const createApp = (componentLibraries, appDefinition, user) => {
 
         const childComponents = [];
 
+        if(hydrate) {
+            while (htmlElement.firstChild) {
+                htmlElement.removeChild(htmlElement.firstChild);
+            }
+        }
+        
         for(let childProps of childrenProps) {        
             const {componentName, libName} = splitName(childProps._component);
 
@@ -37,7 +43,7 @@ export const createApp = (componentLibraries, appDefinition, user) => {
             const component = new (componentLibraries[libName][componentName])({
                 target: htmlElement,
                 props: componentProps,
-                hydrate,
+                hydrate:false,
                 anchor
             });
 

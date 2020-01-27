@@ -2,19 +2,11 @@
 
 (For contributors - scroll down)
 
-### 1. Prerequisites (for nodegyp)
-
-We will try to make this bit easier, but for now:
-
-- Windows  - https://github.com/nodejs/node-gyp#on-windows
-- Ubuntu `sudo apt-get install build-essentials`
-- Mac: https://github.com/nodejs/node-gyp#on-macos
-
-### 2. Global install budibase
+### 1. Global install budibase
 
 `npm install -g budibase`
 
-### 3. Start using Budibase
+### 2. Start using Budibase
 
 Create a directory to store your Budibase apps
 
@@ -44,19 +36,9 @@ Once you have created your app, you need to create yourself an instance of your 
 
 ## Getting Started for Contributors
 
-Install requires [node-gyp](https://github.com/nodejs/node-gyp), due to a dependancy on [argon2](https://github.com/ranisalt/node-argon2)
-
 ### 1.  Prerequisites
 
-*nodegyp -*
-
-  - Windows  - https://github.com/nodejs/node-gyp#on-windows
-  - Ubuntu `sudo apt-get install build-essentials`
-  - Mac: https://github.com/nodejs/node-gyp#on-macos
-
 *yarn -* `npm install -g yarn`
-
-*lerna -* `npm install -g lerna`
 
 *jest* - `npm install -g jest`
 
@@ -68,11 +50,11 @@ then `cd ` into your local copy...
 
 ### 3.  Install and Build
 
-`lerna bootstrap` will install all modules
+`yarn bootstrap` will install all modules
 
-`lerna run build` will build all packages
+`yarn build` will build all packages
 
-`lerna run initialise` will initialise your budibase (i.e. create local database)
+`yarn initialise` will initialise your budibase (i.e. create local database)
 
 ### 4. Running
 
@@ -80,7 +62,7 @@ A Budibase apps folder will have been created in `packages/server/myapps`. This 
 
 ```
 cd packages/server
-yarn run budi -- new your-app-name
+yarn run budi new your-app-name
 ```
 
 then 
@@ -97,7 +79,7 @@ if you then want to run the builder in dev mode (i.e. with hot reloading):
 
 Notice that when inside `packages/server`, you can use any Budibase CLI command via yarn:
 
-e.g. `yarn budi -- new mikes_app` == `budi new mikes_app`
+e.g. `yarn budi new mikes_app` == `budi new mikes_app`
 
 This will use the CLI directly from `packages/cli`, rather than your globally installed `budi`
 

@@ -49,7 +49,7 @@ export const _authenticate = async (app, username, password) => {
 
   const permissions = await buildUserPermissions(app, user.accessLevels);
 
-  const verified = await app.crypto.verify(
+  const verified = app.crypto.verify(
     userAuth.passwordHash,
     password,
   );
@@ -89,7 +89,7 @@ export const authenticateTemporaryAccess = app => async (tempAccessCode) => {
   if (userAuth.temporaryAccessExpiryEpoch < await app.getEpochTime()) { user = notAUser; }
 
   const tempCode = !temp.code ? generate() : temp.code;
-  const verified = await app.crypto.verify(
+  const verified = app.crypto.verify(
     userAuth.temporaryAccessHash,
     tempCode,
   );

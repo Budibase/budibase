@@ -4,5 +4,11 @@
   "devDependencies": {
     "lerna": "^3.14.1"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "build": "lerna run build",
+    "initialise": "lerna run initialise",
+    "clean": "lerna clean"
+  }
 }
