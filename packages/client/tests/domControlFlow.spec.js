@@ -49,4 +49,26 @@ describe("controlFlow", () => {
 
     })
 
+    it("should display 3 div, in a looped render, as children", async () => {
+        const {dom} = await load({
+            _component: "testlib/div",
+            _children: [
+                {
+                    _component: "testlib/div",
+                    className: "my-test-class",
+                    _id: "three_clones" 
+                }
+            ]
+        });
+
+        expect(dom.window.document.body.children.length).toBe(1);
+
+        const rootDiv = dom.window.document.body.children[0];
+        expect(rootDiv.children.length).toBe(3);
+        
+        expect(rootDiv.children[0].className).toBe("my-test-class");
+        expect(rootDiv.children[1].className).toBe("my-test-class");
+        expect(rootDiv.children[2].className).toBe("my-test-class");
+    })
+
 });
