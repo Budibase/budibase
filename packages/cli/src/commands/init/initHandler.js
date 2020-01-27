@@ -4,7 +4,7 @@ const chalk = require("chalk");
 const { serverFileName, getAppContext } = require("../../common");
 const passwordQuestion = require("@inquirer/password");
 const createMasterDb = require("@budibase/server/initialise/createMasterDb");
-const { join, resolve } = require("path");
+const { resolve } = require("path");
 const localDatastore = require("@budibase/datastores/datastores/local");
 
 module.exports = (opts) => {
@@ -12,12 +12,16 @@ module.exports = (opts) => {
 }
 
 const run = async (opts) => {
-
-    await prompts(opts);
-    await createDevConfig(opts);
-    await createAppsDir(opts);
-    await createDataFolder(opts);
-    await initialiseDatabase(opts);
+    try {
+        await prompts(opts);
+        await createDevConfig(opts);
+        await createAppsDir(opts);
+        await createDataFolder(opts);
+        await initialiseDatabase(opts);
+        console.log(chalk.green("Budibase successfully initialised."));
+    } catch (error) {
+        console.error(`Error initialising Budibase: ${error.message}`)
+    }
 }
 
 const prompts = async (opts) => {

@@ -62,7 +62,7 @@ A Budibase apps folder will have been created in `packages/server/myapps`. This 
 
 ```
 cd packages/server
-yarn run budi -- new your-app-name
+yarn run budi new your-app-name
 ```
 
 then 
@@ -79,7 +79,7 @@ if you then want to run the builder in dev mode (i.e. with hot reloading):
 
 Notice that when inside `packages/server`, you can use any Budibase CLI command via yarn:
 
-e.g. `yarn budi -- new mikes_app` == `budi new mikes_app`
+e.g. `yarn budi new mikes_app` == `budi new mikes_app`
 
 This will use the CLI directly from `packages/cli`, rather than your globally installed `budi`
 

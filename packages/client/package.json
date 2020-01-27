@@ -1,6 +1,6 @@
 {
   "name": "@budibase/client",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "license": "MPL-2.0",
   "main": "dist/budibase-client.js",
   "module": "dist/budibase-client.esm.mjs",
@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@nx-js/compiler-util": "^2.0.0",
+    "bcryptjs": "^2.4.3",
     "lodash": "^4.17.15",
     "lunr": "^2.3.5",
     "shortid": "^2.2.8",

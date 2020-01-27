@@ -1,11 +1,11 @@
-const Koa = require('koa');
-const app = new Koa();
+const Koa = require("koa");
 const router = require("./middleware/routers");
-const koaBody = require('koa-body');
+const koaBody = require("koa-body");
 const initialiseRuntimePackages  = require("./initialise/initialiseRuntimePackages");
 
-module.exports = async (budibaseContext) => {
+const app = new Koa();
 
+module.exports = async (budibaseContext) => {
     const { config } = budibaseContext;
     app.keys = config.keys;
     app.context.master = budibaseContext.master;
