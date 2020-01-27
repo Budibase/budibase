@@ -729,6 +729,8 @@ const addChildComponent = store => component => {
 
         _saveScreen(store, s, s.currentFrontEndItem);
 
+        _saveScreen(store, s, s.currentFrontEndItem);
+
         return s;
     })
 }
