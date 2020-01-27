@@ -1,0 +1,12 @@
+{
+	"_lib": "./dist/index.js",
+	"h1": {
+		"name": "H1",
+		"description": "An HTML H1 tag",
+		"props" : {
+			"text": "string",
+			"className":"string"
+		},
+		"tags": []
+	}
+}
