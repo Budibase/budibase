@@ -1,6 +1,6 @@
 {
   "name": "@budibase/server",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Budibase Web Server",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "build": "cd appPackages/_master && yarn && cd ../testApp && yarn && cd ../testApp2 && yarn",
     "initialise": "node ./initialise/initialiseBudibase init -d ./myapps -c contributors -u admin -p admin",
     "budi": "node ../cli/bin/budi",
-    "dev:builder": "node index"
+    "dev:builder": "nodemon index"
   },
   "keywords": [
     "budibase"
@@ -16,8 +16,8 @@
   "author": "Michael Shanks",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/client": "^0.0.15",
-    "@budibase/core": "^0.0.15",
+    "@budibase/client": "^0.0.16",
+    "@budibase/core": "^0.0.16",
     "@koa/router": "^8.0.0",
     "fs-extra": "^8.1.0",
     "koa": "^2.7.0",
@@ -34,6 +34,7 @@
   "devDependencies": {
     "@jest/test-sequencer": "^24.8.0",
     "jest": "^24.8.0",
+    "nodemon": "^2.0.2",
     "server-destroy": "^1.0.1",
     "supertest": "^4.0.2"
   },
