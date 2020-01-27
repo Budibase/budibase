@@ -19,7 +19,9 @@
       </span>
 
       {#if component._children}
-        <svelte:self components={component._children} />
+        <svelte:self components={component._children}
+                     {currentComponent}
+                     {onSelect} />
       {/if}
     </li>
 

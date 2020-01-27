@@ -701,17 +701,28 @@ const addChildComponent = store => component => {
         const newComponent = getNewComponentInfo(
             s.components, component);
 
-        const children = s.currentFrontEndItem.props._children;
+        let children = s.currentComponentInfo.component ?
+            s.currentComponentInfo.component.props._children :
+            s.currentComponentInfo._children;
 
         const component_definition = Object.assign(
             cloneDeep(newComponent.fullProps), {
             _component: component,
         })
 
-        s.currentFrontEndItem.props._children =
-            children ?
-                children.concat(component_definition) :
-                [component_definition];
+        if (children) {
+            if (s.currentComponentInfo.component) {
+                s.currentComponentInfo.component.props._children = children.concat(component_definition);
+            } else {
+                s.currentComponentInfo._children = children.concat(component_definition)
+            }
+        } else {
+            if (s.currentComponentInfo.component) {
+                s.currentComponentInfo.component.props._children = [component_definition];
+            } else {
+                s.currentComponentInfo._children = [component_definition]
+            }
+        }
 
         _saveScreen(store, s, s.currentFrontEndItem);
 
