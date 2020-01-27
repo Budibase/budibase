@@ -713,6 +713,8 @@ const addChildComponent = store => component => {
                 children.concat(component_definition) :
                 [component_definition];
 
+        _saveScreen(store, s, s.currentFrontEndItem);
+
         return s;
     })
 }
