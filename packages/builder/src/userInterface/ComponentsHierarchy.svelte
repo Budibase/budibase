@@ -97,7 +97,7 @@ const isScreenSelected = component =>
     padding: 11px 7px;
     margin: 5px 0;
     border-radius: 5px;
-    display: flec;
+    display: flex;
     align-items: center;
 }
 
