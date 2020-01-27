@@ -75,7 +75,7 @@ const getAccess = async (app, password) => {
 
   if (isNonEmptyString(password)) {
     if (isValidPassword(password)) {
-      auth.passwordHash = await app.crypto.hash(password);
+      auth.passwordHash = app.crypto.hash(password);
       auth.temporaryAccessHash = '';
       auth.temporaryAccessId = '';
       auth.temporaryAccessExpiryEpoch = 0;

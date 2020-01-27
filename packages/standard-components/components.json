@@ -43,7 +43,7 @@
 			"hoverBackground": "string",
 			"hoverBorder": "string"
 		},
-		"tags": ["button"]
+		"tags": ["layout"]
 	}, 
 	"login" : {
 		"name": "Login Control",
@@ -166,6 +166,7 @@
 			"className":"string",
 			"onLoad": "event"
 		},
+		"container": true,
 		"tags": ["div", "container", "layout"]
 	},
 	"h1": {
