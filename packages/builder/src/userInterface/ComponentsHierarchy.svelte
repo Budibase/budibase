@@ -15,8 +15,8 @@ import {
 } from "lodash/fp";
 
 import { pipe } from "../common/core";
-import getIcon from "../common/icon";
 import { store } from "../builderStore";
+import { ArrowDownIcon } from '../common/Icons/'
 
 export let components = []
 
@@ -32,33 +32,14 @@ const normalizedName = name => pipe(name, [
 const lastPartOfName = (c) =>
     last(c.name ? c.name.split("/") : c._component.split("/"))
 
-const expandFolder = folder => {
-    const expandedFolder = {...folder};
-    if(expandedFolder.isExpanded) {
-        expandedFolder.isExpanded = false;
-        expandedFolders = filter(f => f.name !== folder.name)(expandedFolders);
-    } else {
-        expandedFolder.isExpanded = true;
-        expandedFolders.push(folder.name);
-    }
-    const newFolders = [...subfolders];
-    newFolders.splice(
-        newFolders.indexOf(folder),
-        1,
-        expandedFolder);
-    subfolders = newFolders;
-
-}
-
-const isComponentSelected = (type, current,c) =>
-    type==="screen"
-    && current
-    && current.name === c.name
+const isComponentSelected = (current, comp) =>
+    current &&
+    current.component &&
+    comp.component &&
+    current.component.name === comp.component.name
 
 const isFolderSelected = (current, folder) =>
     isInSubfolder(current, folder)
-
-
 
 $:  _components =
         pipe(components, [
@@ -71,6 +52,11 @@ function select_component(screen, component) {
     store.selectComponent(component);
 }
 
+const isScreenSelected = component =>
+    component.component &&
+    $store.currentFrontEndItem &&
+    component.component.name === $store.currentFrontEndItem.name;
+
 </script>
 
 <div class="root">
@@ -78,13 +64,20 @@ function select_component(screen, component) {
 
     {#each _components as component}
     <div class="hierarchy-item component"
-         class:selected={isComponentSelected($store.currentFrontEndType, $store.currentFrontEndItem, component.component)}
+         class:selected={isComponentSelected($store.currentComponentInfo, component)}
          on:click|stopPropagation={() => store.setCurrentScreen(component.component.name)}>
+
+        <span class="icon" style="transform: rotate({isScreenSelected(component) ? 0 : -90}deg);">
+            {#if component.component.props && component.component.props._children}
+                <ArrowDownIcon />
+            {/if}
+        </span>
 
         <span class="title">{component.title}</span>
     </div>
-        {#if component.component.props && component.component.props._children}
+        {#if isScreenSelected(component) && component.component.props && component.component.props._children}
             <ComponentsHierarchyChildren components={component.component.props._children}
+                                         currentComponent={$store.currentComponentInfo}
                                          onSelect={child => select_component(component.component.name, child)} />
         {/if}
     {/each}
@@ -102,20 +95,15 @@ function select_component(screen, component) {
 .hierarchy-item {
     cursor: pointer;
     padding: 11px 7px;
-
     margin: 5px 0;
     border-radius: 5px;
+    display: flec;
+    align-items: center;
 }
 
 .hierarchy-item:hover {
     /* color: var(--secondary); */
     background: #fafafa;
-}
-
-
-
-.currentfolder {
-    color: var(--secondary100);
 }
 
 .selected {
@@ -127,5 +115,10 @@ function select_component(screen, component) {
     margin-left: 10px;
 }
 
-
+.icon {
+    display: inline-block;
+    transition: 0.2s;
+    width: 24px;
+    height: 24px;
+}
 </style>
