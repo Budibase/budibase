@@ -12,9 +12,9 @@
   const get_name = s => last(s.split('/'));
   const get_capitalised_name = name => pipe(name, [get_name,capitalise]);
 </script>
-<ul>
-{#each components as component}
 
+<ul>
+  {#each components as component}
     <li  on:click|stopPropagation={() => onSelect(component)}>
       <span class="item"
             class:selected={currentComponent === component}
@@ -24,14 +24,12 @@
 
       {#if component._children}
         <svelte:self components={component._children}
-                     {currentComponent}
-                     {onSelect}
-                     level={level + 1}/>
+                    {currentComponent}
+                    {onSelect}
+                    level={level + 1}/>
       {/if}
     </li>
-
-
-{/each}
+  {/each}
 </ul>
 
 <style>

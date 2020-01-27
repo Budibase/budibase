@@ -50,7 +50,7 @@ store.subscribe(s => {
     components = s.components;
 });
 
-const onPropsChanged = store.updateComponentProp;
+const onPropsChanged = store.setComponentProp;
 
 let current_view = 'props';
 </script>

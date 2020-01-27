@@ -93,7 +93,7 @@ export const getStore = () => {
     store.createGeneratedComponents = createGeneratedComponents(store);
     store.addChildComponent = addChildComponent(store);
     store.selectComponent = selectComponent(store);
-    store.updateComponentProp = updateComponentProp(store);
+    store.setComponentProp = setComponentProp(store);
 
     return store;
 }
@@ -738,7 +738,7 @@ const selectComponent = store => component => {
 
 }
 
-const updateComponentProp = store => (name, value) => {
+const setComponentProp = store => (name, value) => {
     store.update(s => {
         const current_component = s.currentComponentInfo;
         s.currentComponentInfo[name] = value;
@@ -746,5 +746,4 @@ const updateComponentProp = store => (name, value) => {
         s.currentComponentInfo = current_component;
         return s;
     })
-
 }
