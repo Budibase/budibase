@@ -1,80 +1,76 @@
 <script>
-import ComponentsHierarchyChildren from './ComponentsHierarchyChildren.svelte';
+    import ComponentsHierarchyChildren from './ComponentsHierarchyChildren.svelte';
 
-import {
-    last,
-    sortBy,
-    filter,
-    map,
-    uniqWith,
-    isEqual,
-    trimCharsStart,
-    trimChars,
-    join,
-    includes
-} from "lodash/fp";
+    import {
+        last,
+        sortBy,
+        map,
+        trimCharsStart,
+        trimChars,
+        join,
+    } from "lodash/fp";
 
-import { pipe } from "../common/core";
-import { store } from "../builderStore";
-import { ArrowDownIcon } from '../common/Icons/'
+    import { pipe } from "../common/core";
+    import { store } from "../builderStore";
+    import { ArrowDownIcon } from '../common/Icons/'
 
-export let components = []
+    export let components = []
 
-const joinPath = join("/");
+    const joinPath = join("/");
 
-const normalizedName = name => pipe(name, [
-        trimCharsStart("./"),
-        trimCharsStart("~/"),
-        trimCharsStart("../"),
-        trimChars(" ")
-    ]);
-
-const lastPartOfName = (c) =>
-    last(c.name ? c.name.split("/") : c._component.split("/"))
-
-const isComponentSelected = (current, comp) =>
-    current &&
-    current.component &&
-    comp.component &&
-    current.component.name === comp.component.name
-
-const isFolderSelected = (current, folder) =>
-    isInSubfolder(current, folder)
-
-$:  _components =
-        pipe(components, [
-            map(c => ({component: c, title:lastPartOfName(c)})),
-            sortBy("title")
+    const normalizedName = name => pipe(name, [
+            trimCharsStart("./"),
+            trimCharsStart("~/"),
+            trimCharsStart("../"),
+            trimChars(" ")
         ]);
 
-function select_component(screen, component) {
-    store.setCurrentScreen(screen);
-    store.selectComponent(component);
-}
+    const lastPartOfName = (c) =>
+        last(c.name ? c.name.split("/") : c._component.split("/"))
 
-const isScreenSelected = component =>
-    component.component &&
-    $store.currentFrontEndItem &&
-    component.component.name === $store.currentFrontEndItem.name;
+    const isComponentSelected = (current, comp) =>
+        current &&
+        current.component &&
+        comp.component &&
+        current.component.name === comp.component.name
+
+    const isFolderSelected = (current, folder) =>
+        isInSubfolder(current, folder)
+
+    $:  _components =
+            pipe(components, [
+                map(c => ({component: c, title:lastPartOfName(c)})),
+                sortBy("title")
+            ]);
+
+    function select_component(screen, component) {
+        store.setCurrentScreen(screen);
+        store.selectComponent(component);
+    }
+
+    const isScreenSelected = component =>
+        component.component &&
+        $store.currentFrontEndItem &&
+        component.component.name === $store.currentFrontEndItem.name;
 
 </script>
 
 <div class="root">
 
-
     {#each _components as component}
-    <div class="hierarchy-item component"
-         class:selected={isComponentSelected($store.currentComponentInfo, component)}
-         on:click|stopPropagation={() => store.setCurrentScreen(component.component.name)}>
+        <div class="hierarchy-item component"
+            class:selected={isComponentSelected($store.currentComponentInfo, component)}
+            on:click|stopPropagation={() => store.setCurrentScreen(component.component.name)}>
 
-        <span class="icon" style="transform: rotate({isScreenSelected(component) ? 0 : -90}deg);">
-            {#if component.component.props && component.component.props._children}
-                <ArrowDownIcon />
-            {/if}
-        </span>
+            <span class="icon" style="transform: rotate({isScreenSelected(component) ? 0 : -90}deg);">
+                {#if component.component.props && component.component.props._children}
+                    <ArrowDownIcon />
+                {/if}
+            </span>
 
-        <span class="title">{component.title}</span>
-    </div>
+            <span class="title">{component.title}</span>
+        </div>
+
         {#if isScreenSelected(component) && component.component.props && component.component.props._children}
             <ComponentsHierarchyChildren components={component.component.props._children}
                                          currentComponent={$store.currentComponentInfo}

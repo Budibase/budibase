@@ -1,31 +1,27 @@
 <script>
 
-import { searchAllComponents } from "./pagesParsing/searchComponents";
-import { store } from "../builderStore";
+    import { searchAllComponents } from "./pagesParsing/searchComponents";
+    import { store } from "../builderStore";
 
-export let onComponentChosen = () => {};
+    export let onComponentChosen = () => {};
 
-let components = [];
-let phrase = "";
+    let phrase = "";
 
-store.subscribe(s => {
-    components = s.components;
-});
+    components = $store.components;
 
-$: filteredComponents = 
-    !phrase 
-    ? [] 
-    : searchAllComponents(components, phrase);
-
+    $: filteredComponents =
+        !phrase
+        ? []
+        : searchAllComponents(components, phrase);
 </script>
 
 <div class="root">
 
     <form class="uk-search uk-search-large">
         <span uk-search-icon></span>
-        <input class="uk-search-input" 
-               type="search" 
-               placeholder="Based on component..." 
+        <input class="uk-search-input"
+               type="search"
+               placeholder="Based on component..."
                bind:value={phrase}>
     </form>
 

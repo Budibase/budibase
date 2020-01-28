@@ -121,5 +121,4 @@
   .grid {
     grid-template-columns: 70px 1fr;
   }
-
 </style>

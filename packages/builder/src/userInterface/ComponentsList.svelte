@@ -1,52 +1,43 @@
 <script>
-import {
-    isRootComponent
-} from "./pagesParsing/searchComponents"
-import { splitName } from "./pagesParsing/splitRootComponentName.js"
-import { store } from "../builderStore";
-import {
-    groupBy, keys, find, sortBy
-} from "lodash/fp";
-import { pipe } from "../common/core";
-import { ImageIcon, InputIcon, LayoutIcon } from '../common/Icons/';
+    import { splitName } from "./pagesParsing/splitRootComponentName.js"
+    import { store } from "../builderStore";
+    import { find, sortBy } from "lodash/fp";
+    import { ImageIcon, InputIcon, LayoutIcon } from '../common/Icons/';
 
-let componentLibraries=[];
+    let componentLibraries = [];
+    let current_view = 'text';
 
-const addRootComponent = (c, all) => {
-    const { libName } = splitName(c.name);
-    let group = find(r => r.libName === libName)(all);
+    const addRootComponent = (c, all) => {
+        const { libName } = splitName(c.name);
+        let group = find(r => r.libName === libName)(all);
 
-    if(!group) {
-        group = {
-            libName,
-            components: [],
-            generators: []
-        };
+        if(!group) {
+            group = {
+                libName,
+                components: [],
+                generators: []
+            };
 
-        all.push(group);
+            all.push(group);
+        }
+
+        group.components.push(c)
+
+    };
+
+    const onComponentChosen = store.addChildComponent;
+
+    $: {
+        const newComponentLibraries = [];
+
+        for(let comp of sortBy(["name"])($store.components)) {
+            addRootComponent(
+                comp,
+                newComponentLibraries);
+        }
+
+        componentLibraries = newComponentLibraries;
     }
-
-    group.components.push(c)
-
-};
-
-const onComponentChosen = store.addChildComponent;
-
-store.subscribe(s => {
-
-    const newComponentLibraries = [];
-
-    for(let comp of sortBy(["name"])(s.components)) {
-        addRootComponent(
-            comp,
-            newComponentLibraries);
-    }
-
-    componentLibraries = newComponentLibraries;
-});
-
-let current_view = 'text';
-
 </script>
 
 <div class="root">
