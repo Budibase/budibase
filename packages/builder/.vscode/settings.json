@@ -1,0 +1,8 @@
+{
+  "javascript.format.enable": false,
+  "svelte.plugin.svelte.format.enable": false,
+  "html.format.enable": false,
+  "json.format.enable": false,
+  "editor.trimAutoWhitespace": false,
+  "sass.format.deleteWhitespace": false
+}
