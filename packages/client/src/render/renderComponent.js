@@ -4,7 +4,10 @@ export const renderComponent = ({
     htmlElement, anchor, parentContext,
     componentProps}) => {
 
-    const func = uiFunctions[componentProps._id];
+    const func = componentProps._id 
+                 ? uiFunctions[componentProps._id]
+                 : undefined;
+                 
     let component;
     let componentContext;
     const render = (context) => {
