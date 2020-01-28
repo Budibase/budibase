@@ -50,74 +50,32 @@ export const createApp = (componentLibraries, appDefinition, user, uiFunctions) 
         if(isFunction(event)) event(context);
     }
 
-    const initialiseChildrenParams = (parentContext, hydrate) =>  ({
-        bb, coreApi, store, 
+    const initialiseChildrenParams = (hydrate, parentContext) =>  ({
+        bb, coreApi, store, parentContext,
         componentLibraries, appDefinition, 
-        parentContext, hydrate, uiFunctions
+        hydrate, uiFunctions
     });
 
-    const bb = (context, props) => ({
-        hydrateChildren: _initialiseChildren(initialiseChildrenParams(context, true)), 
-        appendChildren: _initialiseChildren(initialiseChildrenParams(context, false)), 
-        insertChildren: (props, htmlElement, anchor, context) => 
-            _initialiseChildren(initialiseChildrenParams(context, false))
-                                (props, htmlElement, context, anchor), 
-        store,
-        relativeUrl,
-        api,
+    const bb = (componentProps, componentContext, parent) => ({
+        hydrateChildren: _initialiseChildren(initialiseChildrenParams(true, componentContext)), 
+        appendChildren: _initialiseChildren(initialiseChildrenParams(false, componentContext)), 
+        insertChildren: (props, htmlElement, anchor) => 
+            _initialiseChildren(initialiseChildrenParams(false, componentContext))
+                                (props, htmlElement, anchor), 
+        context: componentContext,
+        props: componentProps,
         call:safeCallEvent,
-        isBound,
         setStateFromBinding: (binding, value) => setStateFromBinding(store, binding, value),
         setState: (path, value) => setState(store, path, value),
         getStateOrValue: (prop, currentContext) => 
             getStateOrValue(globalState, prop, currentContext),
-        context,
-        props        
+        store,
+        relativeUrl,
+        api,
+        isBound,
+        parent
     });
 
     return bb();
 
 }
-
-const buildBindings = (boundProps, boundArrays, contextBoundProps) => {
-    const bindings = {};
-    if(boundProps && boundProps.length > 0) {
-        for(let p of boundProps) {
-            bindings[p.propName] = {
-                path: p.path,
-                fallback: p.fallback,
-                source: p.source
-            }
-        }
-    }
-
-    if(contextBoundProps && contextBoundProps.length > 0) {
-        for(let p of contextBoundProps) {
-            bindings[p.propName] = {
-                path: p.path,
-                fallback: p.fallback,
-                source: p.source
-            }
-        }
-    }
-
-    if(boundArrays && boundArrays.length > 0) {
-        for(let a of boundArrays) {
-            const arrayOfBindings = [];
-
-            for(let b of a.arrayOfBindings) {
-                arrayOfBindings.push(
-                    buildBindings(
-                        b.boundProps, 
-                        b.boundArrays, 
-                        b.contextBoundProps)
-                );
-            }
-
-            bindings[a.propName] = arrayOfBindings;
-        }
-    }
-
-    return bindings;
-}
-

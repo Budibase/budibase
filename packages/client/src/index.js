@@ -40,11 +40,11 @@ export const loadBudibase = async ({
         appDefinition,  
         user, 
         uiFunctions || {});
-    _app.hydrateChildren(
+    app.hydrateChildren(
         [props],
         window.document.body);
 
-    return _app;
+    return app;
 };
 
 if(window) {

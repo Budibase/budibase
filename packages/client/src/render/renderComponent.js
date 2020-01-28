@@ -2,9 +2,9 @@
 export const renderComponent = ({
     componentConstructor, uiFunctions,
     htmlElement, anchor, parentContext,
-    componentProps}) => {
+    initialProps, bb}) => {
 
-    const func = componentProps._id 
+    const func = initialProps._id 
                  ? uiFunctions[componentProps._id]
                  : undefined;
                  
@@ -19,9 +19,11 @@ export const renderComponent = ({
             componentContext = parentContext;
         }
 
+        initialProps._bb = bb(initialProps, componentContext);
+
         component = new componentConstructor({
             target: htmlElement,
-            props: componentProps,
+            props: initialProps,
             hydrate:false,
             anchor
         });

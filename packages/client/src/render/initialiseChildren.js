@@ -9,7 +9,7 @@ import { $ } from "../core/common";
 import { renderComponent } from "./renderComponent";
 
 export const _initialiseChildren = (initialiseOpts) => 
-                            (childrenProps, htmlElement, context, anchor=null) => {
+                            (childrenProps, htmlElement, anchor=null) => {
 
     const { uiFunctions, bb, coreApi, 
         store, componentLibraries, 
@@ -30,25 +30,20 @@ export const _initialiseChildren = (initialiseOpts) =>
         if(!componentName || !libName) return;
         
         const {initialProps, bind} = setupBinding(
-                store, childProps, coreApi, 
-                context || parentContext, appDefinition.appRootPath);
+                store, childProps, coreApi,  
+                appDefinition.appRootPath);
 
-        /// here needs to go inside renderComponent ???
-        const componentProps = {
-            ...initialProps, 
-            _bb:bb(context || parentContext, childProps)
-        };
-
+       
         const componentConstructor = componentLibraries[libName][componentName];
 
-        const {component} = renderComponent({
+        const {component, context} = renderComponent({
             componentConstructor,uiFunctions, 
             htmlElement, anchor, 
-            parentContext, componentProps});
+            parentContext, initialProps, bb});
 
 
         bind(component);
-        childComponents.push(component);
+        childComponents.push({component, context});
     }
 
     return childComponents;
