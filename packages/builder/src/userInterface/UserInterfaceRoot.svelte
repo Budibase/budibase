@@ -13,7 +13,7 @@ import SettingsView from "./SettingsView.svelte";
 import PageView from "./PageView.svelte";
 import ComponentsPaneSwitcher from "./ComponentsPaneSwitcher.svelte";
 
-let newComponentPicker;  
+let newComponentPicker;
 const newComponent = () => {
     newComponentPicker.show();
 }
@@ -26,33 +26,34 @@ const settings = () => {
 </script>
 
 <div class="root">
-    
+
     <div class="ui-nav">
+
+        <div class="pages-list-container">
+            <div class="nav-group-header">
+
+                <span class="navigator-title">Navigator</span>
+            </div>
+            <div class="nav-items-container">
+                <PagesList />
+            </div>
+        </div>
 
         <div class="components-list-container">
             <div class="nav-group-header">
-                <div>{@html getIcon("sidebar","18")}</div>
+
                 <span class="components-nav-header">Screens</span>
                 <div>
-                    <IconButton icon="settings" 
+                    <!-- <IconButton icon="settings"
                                 size="14px"
-                                on:click={settings}/>
-                    <IconButton icon="plus" 
-                                on:click={newComponent}/>
+                                on:click={settings}/> -->
+                    <!-- <IconButton icon="plus"
+                                on:click={newComponent}/> -->
+                    <button on:click={newComponent}>+</button>
                 </div>
             </div>
             <div class="nav-items-container">
                 <ComponentsHierarchy components={$store.screens}/>
-            </div>
-        </div>
-
-        <div class="pages-list-container">
-            <div class="nav-group-header">
-                <div>{@html getIcon("grid","18")}</div>
-                <span>Pages</span>
-            </div>
-            <div class="nav-items-container">
-                <PagesList />
             </div>
         </div>
 
@@ -63,7 +64,7 @@ const settings = () => {
         <CurrentItemPreview />
         {:else if $store.currentFrontEndType === "page"}
         <PageView />
-        {/if} 
+        {/if}
     </div>
 
     {#if $store.currentFrontEndType === "screen"}
@@ -80,22 +81,47 @@ const settings = () => {
 
 
 <style>
+button {
+    cursor: pointer;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    background: var(--background-button);
+
+    width: 1.8rem;
+    height: 1.8rem;
+    padding-bottom: 10px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--button-text);
+}
 
 .root {
     display: grid;
-    grid-template-columns: 250px 1fr 300px;
+    grid-template-columns: 290px 1fr 300px;
     height: 100%;
     width: 100%;
+    background: #fafafa;
 }
 
 .ui-nav {
     grid-column: 1;
     background-color: var(--secondary5);
     height: 100%;
+    padding: 0 1.5rem 0rem 1.5rem
 }
 
 .preview-pane {
     grid-column: 2;
+    margin: 80px 60px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0px 6px rgba(0,0,0,0.05)
 }
 
 .components-pane {
@@ -105,12 +131,10 @@ const settings = () => {
     overflow-y: hidden;
 }
 
-.pages-list-container {
-    padding-top: 2rem;
-}
-
 .components-nav-header {
-    font-size: .9rem;
+    font-size: 0.75rem;
+    color: #999;
+    text-transform: uppercase;
 }
 
 .nav-group-header {
@@ -119,15 +143,16 @@ const settings = () => {
 }
 
 .nav-items-container {
-    padding: 1rem 1rem 0rem 1rem;
+    padding: 1rem 0rem 0rem 0rem;
 }
 
 .nav-group-header {
-    display:grid;
-    grid-template-columns: [icon] auto [title] 1fr [button] auto;
-    padding: 2rem 1rem 0rem 1rem;
+    display: flex;
+    padding: 2rem 0 0 0;
     font-size: .9rem;
     font-weight: bold;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .nav-group-header>div:nth-child(1) {
@@ -152,7 +177,13 @@ const settings = () => {
 }
 
 .nav-group-header>div:nth-child(3):hover {
-    color: var(--primary75);   
+    color: var(--primary75);
+}
+
+.navigator-title {
+    text-transform: uppercase;
+    font-weight: 400;
+    color: #999;
 }
 
 </style>
