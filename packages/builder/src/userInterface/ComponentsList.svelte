@@ -8,6 +8,7 @@ import {
     groupBy, keys, find, sortBy
 } from "lodash/fp";
 import { pipe } from "../common/core";
+import { ImageIcon, InputIcon, LayoutIcon } from '../common/Icons/';
 
 let componentLibraries=[];
 
@@ -26,12 +27,10 @@ const addRootComponent = (c, all) => {
     }
 
     group.components.push(c)
-    
+
 };
 
-const onComponentChosen = (component) => {
-    
-};
+const onComponentChosen = store.addChildComponent;
 
 store.subscribe(s => {
 
@@ -39,16 +38,14 @@ store.subscribe(s => {
 
     for(let comp of sortBy(["name"])(s.components)) {
         addRootComponent(
-            comp, 
+            comp,
             newComponentLibraries);
     }
 
     componentLibraries = newComponentLibraries;
 });
 
-
-
-
+let current_view = 'text';
 
 </script>
 
@@ -59,21 +56,30 @@ store.subscribe(s => {
     </div>
 
     <div class="library-container">
+        <ul>
+            <li>
+            <button class:selected={current_view === 'text'} on:click={() => current_view = 'text'}>
+                <InputIcon />
+            </button>
+            </li>
+            <li>
+                <button class:selected={current_view === 'layout'} on:click={() => current_view = 'layout'}>
+                    <LayoutIcon />
+                </button>
+            </li>
+            <li>
+                <button class:selected={current_view === 'media'} on:click={() => current_view = 'media'}>
+                    <ImageIcon />
+                </button>
+            </li>
+        </ul>
 
-    
-        <div class="inner-header">
-            Components
-        </div>
-
-        {#each lib.components as component}
+        {#each lib.components.filter(_ => true) as component}
 
         <div class="component"
-            on:click={() => onComponentChosen(component)}>
+            on:click={() =>  onComponentChosen(component.name)}>
             <div class="name">
                 {splitName(component.name).componentName}
-            </div>
-            <div class="description">
-                {component.description}
             </div>
         </div>
 
@@ -117,8 +123,16 @@ store.subscribe(s => {
 }
 
 .component {
-    padding: 2px 0px;
+    padding: 0 15px;
     cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    margin: 10px 0;
+    height: 40px;
+    box-sizing: border-box;
+    color: #163057;
+    display: flex;
+    align-items: center;
 }
 
 .component:hover {
@@ -126,8 +140,11 @@ store.subscribe(s => {
 }
 
 .component > .name {
-    color: var(--secondary100);
+    color: #163057;
     display: inline-block;
+    font-size: 12px;
+    font-weight: bold;
+    opacity: 0.6;
 }
 
 .component > .description {
@@ -137,6 +154,34 @@ store.subscribe(s => {
     margin-left: 10px;
 }
 
+ul {
+    list-style: none;
+    display: flex;
+    padding: 0;
+}
 
+li {
+    margin-right: 20px;
+    background: none;
+    border-radius: 5px;
+    width: 48px;
+    height: 48px;
+}
+
+li button {
+    width: 100%;
+    height: 100%;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    padding: 12px;
+    outline: none;
+    cursor: pointer;
+}
+
+.selected {
+    color: var(--button-text);
+    background: var(--background-button)!important;
+}
 
 </style>

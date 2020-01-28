@@ -6,13 +6,12 @@ import Dropdown from "../common/Dropdown.svelte";
 import EventListSelector from "./EventListSelector.svelte";
 import StateBindingControl from "./StateBindingControl.svelte";
 
-export let errors = [];
 export let setProp = () => {};
-export let fieldHasError =() => {};
-export let propDef = {};
-export let props = {};
 export let disabled;
 export let index;
+export let prop_name;
+export let prop_value;
+export let prop_type = {};
 
 $: isOdd = (index % 2 !== 0);
 
@@ -25,35 +24,43 @@ const setComponentProp = (props) => {
 
 <div class="root" >
 
-    {#if propDef.type === "event"}
+    {#if prop_type === "event"}
 
-    <div class="prop-label">{propDef.____name}</div>
+    <!-- <h5>{prop_name}</h5>
     <EventListSelector parentProps={props}
                        {propDef}
-                       onValueChanged={setComponentProp} />
+                       onValueChanged={setComponentProp} /> -->
 
     {:else }
 
-    <div class="prop-label">{propDef.____name}</div>
-    <StateBindingControl value={props[propDef.____name]}
-                         type={propDef.type}
-                         options={propDef.options}
-                         onChanged={v => setProp(propDef.____name, v)}/>
+    <h5>{prop_name}</h5>
+    <StateBindingControl value={prop_value}
+                         type={prop_type}
+                         options={prop_type.options}
+                         onChanged={v => setProp(prop_name, v)}/>
 
-    {/if} 
+    {/if}
 
 </div>
 
 <style>
 
 .root {
-    padding: 1rem 1rem 0rem 1rem;
+    height: 40px;
+    margin-bottom: 15px;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 70px 1fr;
+    grid-gap: 10px;
 }
 
-.prop-label {
-    font-size: 0.8rem;
-    color: var(--secondary100);
-    font-weight: bold;
-}
+h5 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #163057;
+    opacity: 0.6;
+    padding-top: 12px;
+    margin-bottom: 0;
+  }
 
 </style>
