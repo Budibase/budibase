@@ -1,3 +1,8 @@
 myapps/
 config.js
+<<<<<<< HEAD
+/builder/*
+!/builder/assets/
+=======
 builder/
+>>>>>>> ee5a4e8c962b29242152cbbd8065d8f3ccf65eaf

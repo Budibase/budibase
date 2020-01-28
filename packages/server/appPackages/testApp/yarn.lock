@@ -3,27 +3,21 @@
 
 
 "@budibase/client@file:../../../client":
-  version "0.0.3"
+  version "0.0.15"
   dependencies:
     "@nx-js/compiler-util" "^2.0.0"
-    date-fns "^1.29.0"
     lodash "^4.17.15"
     lunr "^2.3.5"
     shortid "^2.2.8"
     svelte "^3.9.2"
 
 "@budibase/standard-components@file:../../../standard-components":
-  version "0.0.5"
+  version "0.0.15"
 
 "@nx-js/compiler-util@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@nx-js/compiler-util/-/compiler-util-2.0.0.tgz#c74c12165fa2f017a292bb79af007e8fce0af297"
   integrity sha512-AxSQbwj9zqt8DYPZ6LwZdytqnwfiOEdcFdq4l8sdjkZmU2clTht7RDLCI8xvkp7KqgcNaOGlTeCM55TULWruyQ==
-
-date-fns@^1.29.0:
-  version "1.30.1"
-  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-1.30.1.tgz#2e71bf0b119153dbb4cc4e88d9ea5acfb50dc05c"
-  integrity sha512-hBSVCvSmWC+QypYObzwGOd9wqdDpOt+0wl0KbU+R+uuZBS1jN8VsD1ss3irQDknRj5NvxiTF6oj/nDRnN/UQNw==
 
 lodash@^4.17.15:
   version "4.17.15"
