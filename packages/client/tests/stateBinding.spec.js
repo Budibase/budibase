@@ -74,59 +74,6 @@ describe("setupBinding", () => {
 
     });
 
-    it("should update bound array props when updated ", () => {
-
-        const {component, store, props} = testSetup();
-
-        const {bind} = testSetupBinding(store, props, component);
-        bind(component);
-
-        store.update(s => {
-            s.FirstName = "Bobby";
-            s.LastName = "Thedog";
-            s.Customer = {
-                Name: "ACME inc",
-                Address: ""
-            };
-            s.addressToSet = "123 Main Street";
-            s.ArrayVal1 = "item 1 - version 1";
-            s.ArrayVal2 = "item 2 - version 1";
-            s.ArrayVal3 = "inner array item";
-            return s;
-        });
-
-        expect(component.props.arrayWithInnerBinding[0].innerBound).toBe("item 1 - version 1");
-        expect(component.props.arrayWithInnerBinding[1].innerBound).toBe("item 2 - version 1");
-        expect(component.props.arrayWithInnerBinding[0].innerUnbound).toBe("not bound 1");
-        expect(component.props.arrayWithInnerBinding[1].innerUnbound).toBe("not bound 2");
-
-    });
-
-    it("should update bound nested (2nd level) array props when updated ", () => {
-
-        const {component, store, props} = testSetup();
-
-        const {bind} = testSetupBinding(store, props, component);
-        bind(component);
-
-        store.update(s => {
-            s.FirstName = "Bobby";
-            s.LastName = "Thedog";
-            s.Customer = {
-                Name: "ACME inc",
-                Address: ""
-            };
-            s.addressToSet = "123 Main Street";
-            s.ArrayVal1 = "item 1 - version 1";
-            s.ArrayVal2 = "item 2 - version 1";
-            s.ArrayVal3 = "inner array item";
-            return s;
-        });
-
-        expect(component.props.arrayWithInnerBinding[2].innerArray[0].innerInnerBound).toBe("inner array item");
-
-    });
-
     it("should update event handlers on state change", () => {
 
         const {component, store, props} = testSetup();
@@ -235,23 +182,6 @@ const testSetup = () => {
                 path: "Customer.Address",
                 value: binding("addressOverride", "", "event")
             })
-        ],
-        arrayWithInnerBinding: [
-            {
-                innerBound: binding("ArrayVal1"),
-                innerUnbound: "not bound 1"
-            },
-            {
-                innerBound: binding("ArrayVal2"),
-                innerUnbound: "not bound 2"
-            },
-            {
-                innerArray: [
-                    {
-                        innerInnerBound: binding("ArrayVal3")
-                    }
-                ]
-            }
         ]
     }
 

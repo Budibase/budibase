@@ -15,6 +15,12 @@ import {
 const doNothing = () => {};
 doNothing.isPlaceholder=true;
 
+const isMetaProp = (propName) => 
+    propName === "_component"
+    || propName === "_children"
+    || propName === "_id"
+    || propName === "_style";
+
 export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
 
     const rootInitialProps = {...rootProps};
@@ -24,13 +30,12 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
         const boundProps = [];
         const contextBoundProps = [];
         const componentEventHandlers = [];
-        const boundArrays = [];
 
         for(let propName in props) {
             
-            if(propName === "_component") continue;
+            if(isMetaProp(propName)) continue;
 
-            const val = initialProps[propName];
+            const val = props[propName];
             
             if(isBound(val) && takeStateFromStore(val)) {
 
@@ -76,21 +81,10 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
                 }
                 
                 initialProps[propName] = doNothing;
-            } else if(Array.isArray(val)) {
-                const arrayOfBindings = [];
-                for(let element of val){
-                    arrayOfBindings.push(getBindings(element, {...element}));
-                }
-
-                boundArrays.push({ 
-                    arrayOfBindings,
-                    propName
-                });
-            }
-            
+            }             
         }
 
-        return {contextBoundProps, boundProps, componentEventHandlers, boundArrays, initialProps};
+        return {contextBoundProps, boundProps, componentEventHandlers, initialProps};
     }
 
 
@@ -98,8 +92,7 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
     const bind = (rootBindings) => (component) => {
 
         if(rootBindings.boundProps.length === 0 
-            && rootBindings.componentEventHandlers.length === 0
-            && rootBindings.boundArrays.length === 0) return;
+            && rootBindings.componentEventHandlers.length === 0) return;
 
         const handlerTypes = eventHandlers(store, coreApi, rootPath);
 
@@ -108,7 +101,7 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
 
             const getPropsFromBindings = (s, bindings) => {
 
-                const {boundProps, componentEventHandlers, boundArrays} = bindings;
+                const {boundProps, componentEventHandlers} = bindings;
                 const newProps = {...bindings.initialProps};
             
                 for(let boundProp of boundProps) {
@@ -159,18 +152,6 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
 
                 }
 
-                for(let boundArray of boundArrays) {
-                    let index = 0;
-                    if(!newProps[boundArray.propName])
-                        newProps[boundArray.propName] = [];
-                    for(let bindings of boundArray.arrayOfBindings){
-                        newProps[boundArray.propName][index] = getPropsFromBindings(
-                            s,
-                            bindings);
-                        index++;
-                    }   
-                }
-
                 return newProps;
 
             }
@@ -189,7 +170,6 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
         initialProps:rootInitialProps, 
         bind:bind(bindings), 
         boundProps:bindings.boundProps,
-        boundArrays: bindings.boundArrays,
         contextBoundProps: bindings.contextBoundProps
     };
 
