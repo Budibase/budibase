@@ -1,74 +1,66 @@
 <script>
-import {
-    isRootComponent
-} from "./pagesParsing/searchComponents"
-import { splitName } from "./pagesParsing/splitRootComponentName.js"
-import { store } from "../builderStore";
-import {
-    groupBy, keys, find, sortBy
-} from "lodash/fp";
-import { pipe } from "../common/core";
+    import {
+        isRootComponent
+    } from "./pagesParsing/searchComponents"
+    import { splitName } from "./pagesParsing/splitRootComponentName.js"
+    import { store } from "../builderStore";
+    import { find, sortBy } from "lodash/fp";
 
-export let onComponentChosen;
-export let onGeneratorChosen;
-export let allowGenerators;
+    export let onComponentChosen;
+    export let onGeneratorChosen;
+    export let allowGenerators;
 
-let screens=[];
-let componentLibraries=[];
+    let screens = [];
+    let componentLibraries=[];
 
-const addRootComponent = (c, all, isGenerator) => {
-    const { libName } = splitName(c.name);
-    let group = find(r => r.libName === libName)(all);
+    const addRootComponent = (c, all, isGenerator) => {
+        const { libName } = splitName(c.name);
+        let group = find(r => r.libName === libName)(all);
 
-    if(!group) {
-        group = {
-            libName,
-            components: [],
-            generators: []
-        };
+        if(!group) {
+            group = {
+                libName,
+                components: [],
+                generators: []
+            };
 
-        all.push(group);
-    } 
-    
-    if(isGenerator) {
-        group.generators.push(c)
-    } else {
-        group.components.push(c)
-    }
-    
-};
-
-store.subscribe(s => {
-
-    const newComponentLibraries = [];
-    const newscreens = [];
-
-    for(let comp of sortBy(["name"])(s.components)) {
-        if(isRootComponent(comp)) {
-            addRootComponent(
-                comp, 
-                newComponentLibraries, 
-                false);
-        } else {
-            newscreens.push(comp);
+            all.push(group);
         }
-    }
 
-    for(let generator of s.generators) {
-        addRootComponent(
-            generator, 
-            newComponentLibraries, 
-            true);
-    }
+        if(isGenerator) {
+            group.generators.push(c)
+        } else {
+            group.components.push(c)
+        }
 
-    screens = sortBy(["name"])(newscreens);
-    componentLibraries = newComponentLibraries;
-});
+    };
 
+    $: {
 
+        const newComponentLibraries = [];
+        const newscreens = [];
 
+        for(let comp of sortBy(["name"])($store.components)) {
+            if(isRootComponent(comp)) {
+                addRootComponent(
+                    comp,
+                    newComponentLibraries,
+                    false);
+            } else {
+                newscreens.push(comp);
+            }
+        }
 
+        for(let generator of $store.generators) {
+            addRootComponent(
+                generator,
+                newComponentLibraries,
+                true);
+        }
 
+        screens = sortBy(["name"])(newscreens);
+        componentLibraries = newComponentLibraries;
+    };
 </script>
 
 {#each componentLibraries as lib}

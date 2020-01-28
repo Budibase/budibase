@@ -1,16 +1,14 @@
 <script>
-import ComponentPanel from "./ComponentPanel.svelte";
-import ComponentsList from "./ComponentsList.svelte";
+    import ComponentPanel from "./ComponentPanel.svelte";
+    import ComponentsList from "./ComponentsList.svelte";
 
-let selected="properties";
+    let selected="properties";
 
-const isSelected = tab =>
-    selected === tab;
+    const isSelected = tab =>
+        selected === tab;
 
-const selectTab = tab =>
-    selected = tab;
-
-
+    const selectTab = tab =>
+        selected = tab;
 </script>
 
 <div class="root">

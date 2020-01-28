@@ -1,58 +1,22 @@
 <script>
+    import PropsView from "./PropsView.svelte";
+    import { store } from "../builderStore";
+    import IconButton from "../common/IconButton.svelte";
+    import { LayoutIcon, PaintIcon, TerminalIcon } from '../common/Icons/';
+    import CodeEditor from './CodeEditor.svelte';
+    import LayoutEditor from './LayoutEditor.svelte';
 
-import PropsView from "./PropsView.svelte";
-import { store } from "../builderStore";
-import { isRootComponent } from "./pagesParsing/searchComponents";
-import IconButton from "../common/IconButton.svelte";
-import Textbox from "../common/Textbox.svelte";
-import { pipe } from "../common/core";
-import {
-    getScreenInfo
-} from "./pagesParsing/createProps";
-import { LayoutIcon, PaintIcon, TerminalIcon } from '../common/Icons/';
-import CodeEditor from './CodeEditor.svelte';
-import LayoutEditor from './LayoutEditor.svelte';
+    let current_view = 'props';
 
-import {
-    cloneDeep,
-    join,
-    split,
-    map,
-    keys,
-    isUndefined,
-    last
-} from "lodash/fp";
-import { assign } from "lodash";
+    $: component = $store.currentComponentInfo;
+    $: originalName = component.name;
+    $: name = component.name;
+    $: description = component.description;
+    $: componentInfo = $store.currentComponentInfo;
+    $: components = $store.components;
 
-let component;
-let name = "";
-let description = "";
-let tagsString = "";
-let nameInvalid = "";
-let componentInfo = {};
-let modalElement
-let propsValidationErrors = [];
-let originalName="";
-let components;
-let ignoreStore = false;
-
-// $: shortName = last(name.split("/"));
-
-store.subscribe(s => {
-    if(ignoreStore) return;
-    component = s.currentComponentInfo;
-    if(!component) return;
-    originalName = component.name;
-    name = component.name;
-    description = component.description;
-    tagsString = join(", ")(component.tags);
-    componentInfo = s.currentComponentInfo;
-    components = s.components;
-});
-
-const onPropsChanged = store.updateComponentProp;
-
-let current_view = 'props';
+    const onPropChanged = store.setComponentProp;
+    const onStyleChanged = store.setComponentStyle;
 </script>
 
 <div class="root">
@@ -78,9 +42,9 @@ let current_view = 'props';
         <div class="component-props-container">
 
         {#if current_view === 'props'}
-            <PropsView {componentInfo} {components} {onPropsChanged} />
+            <PropsView {componentInfo} {components} {onPropChanged} />
         {:else if current_view === 'layout'}
-            <LayoutEditor />
+            <LayoutEditor {onStyleChanged} {componentInfo}/>
         {:else}
             <CodeEditor />
         {/if}
