@@ -1,12 +1,13 @@
 import { createApp } from "@budibase/client/src/createApp";
-import componentsJson from "../../components.json";
+import components from "./testComponents";
 import packageJson from "../../package.json";
 
 export default async () =>  {
 
-    const components = {...componentsJson};
+
     delete components._lib;
 
+    const componentLibraries = {};
     componentLibraries[packageJson.name] = components;
 
     const appDef = {hierarchy:{}, actions:{}};
