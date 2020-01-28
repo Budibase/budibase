@@ -2,11 +2,19 @@
   export let meta = [];
   export let size = '';
   export let values = [];
+  export let onStyleChanged = () => {};
+
+  let _values = values.map(v => v);
+
+  $: onStyleChanged(_values);
 </script>
 
 <div class="inputs {size}">
   {#each meta as { placeholder }, i}
-    <input type="number" placeholder="{placeholder}" bind:value={values[i]}/>
+    <input type="number"
+           placeholder="{placeholder}"
+           value={values[i]}
+           on:input={(e) => _values[i] = e.target.value} />
   {/each}
 </div>
 

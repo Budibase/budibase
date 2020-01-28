@@ -1,65 +1,64 @@
 <script>
+    import ComponentSelector from "./ComponentSelector.svelte";
+    import { store } from "../builderStore";
+    import PropsView from "./PropsView.svelte";
+    import Textbox from "../common/Textbox.svelte";
+    import Button from "../common/Button.svelte";
+    import ButtonGroup from "../common/ButtonGroup.svelte";
+    import { pipe } from "../common/core";
+    import UIkit from "uikit";
+    import { isRootComponent } from "./pagesParsing/searchComponents";
+    import { splitName } from "./pagesParsing/splitRootComponentName.js"
 
-import ComponentSelector from "./ComponentSelector.svelte";
-import { store } from "../builderStore";
-import PropsView from "./PropsView.svelte";
-import Textbox from "../common/Textbox.svelte";
-import Button from "../common/Button.svelte";
-import ButtonGroup from "../common/ButtonGroup.svelte";
-import { pipe } from "../common/core";
-import UIkit from "uikit";
-import { isRootComponent } from "./pagesParsing/searchComponents";
-import { splitName } from "./pagesParsing/splitRootComponentName.js"
-
-import {
-    find, filter, some, map, includes
-} from "lodash/fp";
-import { assign } from "lodash";
+    import {
+        find, filter, some, map, includes
+    } from "lodash/fp";
+    import { assign } from "lodash";
 
 
-export const show = () => {
-    UIkit.modal(componentSelectorModal).show();
-}
+    export const show = () => {
+        UIkit.modal(componentSelectorModal).show();
+    }
 
-let componentSelectorModal;
-let layoutComponents;
-let layoutComponent;
-let screens;
-let name="";
-let saveAttempted=false;
+    let componentSelectorModal;
+    let layoutComponents;
+    let layoutComponent;
+    let screens;
+    let name="";
+    let saveAttempted=false;
 
-store.subscribe(s => {
-    layoutComponents = pipe(s.components, [
-        filter(c => c.container),
-        map(c => ({name:c.name, ...splitName(c.name)}))
-    ]);
+    store.subscribe(s => {
+        layoutComponents = pipe(s.components, [
+            filter(c => c.container),
+            map(c => ({name:c.name, ...splitName(c.name)}))
+        ]);
 
-    layoutComponent = layoutComponent
-                      ? find(c => c.name === layoutComponent.name)(layoutComponents)
-                      : layoutComponents[0];
+        layoutComponent = layoutComponent
+                        ? find(c => c.name === layoutComponent.name)(layoutComponents)
+                        : layoutComponents[0];
 
-    screens = s.screens;
-});
+        screens = s.screens;
+    });
 
-const save = () => {
-    saveAttempted = true;
+    const save = () => {
+        saveAttempted = true;
 
-    const isValid = name.length > 0
-                    && !screenNameExists(name)
-                    && layoutComponent;
+        const isValid = name.length > 0
+                        && !screenNameExists(name)
+                        && layoutComponent;
 
-    if(!isValid) return;
+        if(!isValid) return;
 
-    store.createScreen(name, layoutComponent.name);
-    UIkit.modal(componentSelectorModal).hide();
-}
+        store.createScreen(name, layoutComponent.name);
+        UIkit.modal(componentSelectorModal).hide();
+    }
 
-const cancel = () => {
-    UIkit.modal(componentSelectorModal).hide();
-}
+    const cancel = () => {
+        UIkit.modal(componentSelectorModal).hide();
+    }
 
-const screenNameExists = (name) =>
-    some(s => s.name.toLowerCase() === name.toLowerCase())(screens)
+    const screenNameExists = (name) =>
+        some(s => s.name.toLowerCase() === name.toLowerCase())(screens)
 
 </script>
 
@@ -106,27 +105,7 @@ const screenNameExists = (name) =>
 
 
 <style>
-h1 {
-    font-size:1.2em;
-}
-
-.component-option {
-    border-style: solid;
-    border-color: var(--slate);
-    border-width: 0 0 1px 0;
-    padding: 3px;
-}
-
-.component-option:hover {
-    background-color: var(--lightslate);
-}
-
-.component-name {
-    font-size: 11pt;
-}
-
-.lib-name {
-    font-size: 9pt;
-}
-
+    h1 {
+        font-size:1.2em;
+    }
 </style>
