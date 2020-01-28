@@ -11,7 +11,7 @@ import UIkit from "uikit";
 import { isRootComponent } from "./pagesParsing/searchComponents";
 import { splitName } from "./pagesParsing/splitRootComponentName.js"
 
-import { 
+import {
     find, filter, some, map, includes
 } from "lodash/fp";
 import { assign } from "lodash";
@@ -29,13 +29,12 @@ let name="";
 let saveAttempted=false;
 
 store.subscribe(s => {
-
     layoutComponents = pipe(s.components, [
         filter(c => c.container),
         map(c => ({name:c.name, ...splitName(c.name)}))
     ]);
 
-    layoutComponent = layoutComponent 
+    layoutComponent = layoutComponent
                       ? find(c => c.name === layoutComponent.name)(layoutComponents)
                       : layoutComponents[0];
 
@@ -48,7 +47,7 @@ const save = () => {
     const isValid = name.length > 0
                     && !screenNameExists(name)
                     && layoutComponent;
-                    
+
     if(!isValid) return;
 
     store.createScreen(name, layoutComponent.name);
@@ -59,7 +58,7 @@ const cancel = () => {
     UIkit.modal(componentSelectorModal).hide();
 }
 
-const screenNameExists = (name) => 
+const screenNameExists = (name) =>
     some(s => s.name.toLowerCase() === name.toLowerCase())(screens)
 
 </script>
@@ -84,7 +83,7 @@ const screenNameExists = (name) =>
             <div class="uk-margin">
                 <label class="uk-form-label">Layout Component</label>
                 <div class="uk-form-controls">
-                    <select class="uk-select uk-form-small" 
+                    <select class="uk-select uk-form-small"
                             bind:value={layoutComponent}
                             class:uk-form-danger={saveAttempted && !layoutComponent}>
                         {#each layoutComponents as comp}

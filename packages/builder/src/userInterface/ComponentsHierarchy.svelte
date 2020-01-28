@@ -1,9 +1,10 @@
 <script>
+import ComponentsHierarchyChildren from './ComponentsHierarchyChildren.svelte';
 
-import { 
-    last, 
-    sortBy, 
-    filter, 
+import {
+    last,
+    sortBy,
+    filter,
     map,
     uniqWith,
     isEqual,
@@ -18,13 +19,6 @@ import getIcon from "../common/icon";
 import { store } from "../builderStore";
 
 export let components = []
-export let thisLevel = "";
-
-let pathPartsThisLevel;
-let componentsThisLevel;
-let subfolders;
-
-let expandedFolders = [];
 
 const joinPath = join("/");
 
@@ -35,39 +29,8 @@ const normalizedName = name => pipe(name, [
         trimChars(" ")
     ]);
 
-
-const isOnThisLevel = (c) => 
-    normalizedName(c.name).split("/").length === pathPartsThisLevel
-    &&
-    (!thisLevel || normalizedName(c.name).startsWith(normalizedName(thisLevel)));
-
-const notOnThisLevel = (c) => !isOnThisLevel(c);
-
-const isInSubfolder = (subfolder, c) => 
-    normalizedName(c.name).startsWith(
-        trimCharsStart("/")(
-            joinPath([thisLevel, subfolder])));
-
-const isOnNextLevel = (c) => 
-    normalizedName(c.name).split("/").length === pathPartsThisLevel + 1
-
-const lastPartOfName = (c) => 
-    last(c.name.split("/"))
-
-const subFolder = (c) => {
-    const cname = normalizedName(c.name);
-    const folderName = cname.substring(thisLevel.length, cname.length).split("/")[0];
-
-    return ({
-        name: folderName,
-        isExpanded: includes(folderName)(expandedFolders),
-        path: thisLevel + "/" + folderName
-    });
-}
-
-const subComponents = (subfolder) => pipe(components, [
-        filter(c => isInSubfolder(subfolder, c))
-    ]);
+const lastPartOfName = (c) =>
+    last(c.name ? c.name.split("/") : c._component.split("/"))
 
 const expandFolder = folder => {
     const expandedFolder = {...folder};
@@ -84,62 +47,46 @@ const expandFolder = folder => {
         1,
         expandedFolder);
     subfolders = newFolders;
-     
+
 }
 
 const isComponentSelected = (type, current,c) =>
     type==="screen"
-    && current 
+    && current
     && current.name === c.name
 
-const isFolderSelected = (current, folder) => 
+const isFolderSelected = (current, folder) =>
     isInSubfolder(current, folder)
 
 
 
-$: {
-    pathPartsThisLevel = !thisLevel 
-                            ? 1
-                            : normalizedName(thisLevel).split("/").length + 1;
-
-    componentsThisLevel = 
+$:  _components =
         pipe(components, [
-            filter(isOnThisLevel),
-            map(c => ({component:c, title:lastPartOfName(c)})),
+            map(c => ({component: c, title:lastPartOfName(c)})),
             sortBy("title")
         ]);
 
-    subfolders = 
-        pipe(components, [
-            filter(notOnThisLevel),
-            sortBy("name"),
-            map(subFolder),
-            uniqWith((f1,f2) => f1.path === f2.path)
-        ]);
+function select_component(screen, component) {
+    store.setCurrentScreen(screen);
+    store.selectComponent(component);
 }
 
 </script>
 
-<div class="root" style={`padding-left: calc(10px * ${pathPartsThisLevel})`}>
- 
-    {#each subfolders as folder}
-    <div class="hierarchy-item folder"
-         on:click|stopPropagation={() => expandFolder(folder)}>
-        <span>{@html getIcon(folder.isExpanded ? "chevron-down" : "chevron-right", "16")}</span>
-        <span class="title" class:currentfolder={$store.currentFrontEndItem && isInSubfolder(folder.name, $store.currentFrontEndItem)}>{folder.name}</span>
-        {#if folder.isExpanded}
-        <svelte:self components={subComponents(folder.name)} 
-                     thisLevel={folder.path} />
-        {/if}
-    </div>
-    {/each}
+<div class="root">
 
-    {#each componentsThisLevel as component}
-    <div class="hierarchy-item component" class:selected={isComponentSelected($store.currentFrontEndType, $store.currentFrontEndItem, component.component)}
+
+    {#each _components as component}
+    <div class="hierarchy-item component"
+         class:selected={isComponentSelected($store.currentFrontEndType, $store.currentFrontEndItem, component.component)}
          on:click|stopPropagation={() => store.setCurrentScreen(component.component.name)}>
-        <span>{@html getIcon("circle", "7")}</span>
+
         <span class="title">{component.title}</span>
     </div>
+        {#if component.component.props && component.component.props._children}
+            <ComponentsHierarchyChildren components={component.component.props._children}
+                                         onSelect={child => select_component(component.component.name, child)} />
+        {/if}
     {/each}
 
 </div>
@@ -147,31 +94,33 @@ $: {
 <style>
 
 .root {
-    color: var(--secondary50);
-    font-size: .9rem;
-    font-weight: bold;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #828fa5;
 }
 
 .hierarchy-item {
     cursor: pointer;
-    padding: 5px 0px;
+    padding: 11px 7px;
+
+    margin: 5px 0;
+    border-radius: 5px;
 }
 
 .hierarchy-item:hover {
-    color: var(--secondary);
+    /* color: var(--secondary); */
+    background: #fafafa;
 }
 
-.component {
-    margin-left: 5px;
-}
+
 
 .currentfolder {
     color: var(--secondary100);
 }
 
 .selected {
-    color: var(--primary100);
-    font-weight: bold;
+    color: var(--button-text);
+    background: var(--background-button)!important;
 }
 
 .title {

@@ -5,14 +5,13 @@ import { store } from "../builderStore";
 import { isRootComponent } from "./pagesParsing/searchComponents";
 import IconButton from "../common/IconButton.svelte";
 import Textbox from "../common/Textbox.svelte";
-import UIkit from "uikit";
 import { pipe } from "../common/core";
 import {
     getScreenInfo
 } from "./pagesParsing/createProps";
-import Button from "../common/Button.svelte";
-import ButtonGroup from "../common/ButtonGroup.svelte";
 import { LayoutIcon, PaintIcon, TerminalIcon } from '../common/Icons/';
+import CodeEditor from './CodeEditor.svelte';
+import LayoutEditor from './LayoutEditor.svelte';
 
 import {
     cloneDeep,
@@ -30,18 +29,18 @@ let name = "";
 let description = "";
 let tagsString = "";
 let nameInvalid = "";
-let componentInfo;
+let componentInfo = {};
 let modalElement
 let propsValidationErrors = [];
 let originalName="";
 let components;
 let ignoreStore = false;
 
-$: shortName = last(name.split("/"));
+// $: shortName = last(name.split("/"));
 
 store.subscribe(s => {
     if(ignoreStore) return;
-    component = s.currentFrontEndItem;
+    component = s.currentComponentInfo;
     if(!component) return;
     originalName = component.name;
     name = component.name;
@@ -51,39 +50,48 @@ store.subscribe(s => {
     components = s.components;
 });
 
-const updateComponent = doChange => {
-    const newComponent = cloneDeep(component);
-    doChange(newComponent);
-    component = newComponent;
-    componentInfo = getScreenInfo(components, newComponent);
-}
+const onPropsChanged = store.updateComponentProp;
 
-const onPropsChanged = newProps => {
-    updateComponent(newComponent =>
-        assign(newComponent.props, newProps));
-}
-
+let current_view = 'props';
 </script>
 
 <div class="root">
-
     <ul>
-        <li><button><PaintIcon /></button></li>
-        <li><button><LayoutIcon /></button></li>
-        <li><button><TerminalIcon /></button></li>
+        <li>
+          <button class:selected={current_view === 'props'} on:click={() => current_view = 'props'}>
+            <PaintIcon />
+          </button>
+        </li>
+        <li>
+          <button class:selected={current_view === 'layout'} on:click={() => current_view = 'layout'}>
+            <LayoutIcon />
+          </button>
+        </li>
+        <li>
+          <button class:selected={current_view === 'code'} on:click={() => current_view = 'code'}>
+            <TerminalIcon />
+          </button>
+        </li>
     </ul>
 
-    <div class="component-props-container">
+    {#if !componentInfo.component}
+        <div class="component-props-container">
 
+        {#if current_view === 'props'}
+            <PropsView {componentInfo} {components} {onPropsChanged} />
+        {:else if current_view === 'layout'}
+            <LayoutEditor />
+        {:else}
+            <CodeEditor />
+        {/if}
 
-        <PropsView
-                {componentInfo}
-                {onPropsChanged} />
-
-
-    </div>
+        </div>
+    {:else}
+        <h1> This is a screen, this will be dealt with later</h1>
+    {/if}
 
 </div>
+
 
 <style>
 
@@ -92,15 +100,6 @@ const onPropsChanged = newProps => {
     display: flex;
     flex-direction: column;
 
-}
-
-.title {
-    padding: 1rem;
-    display: grid;
-    grid-template-columns: [name] 1fr [actions] auto;
-    color: var(--secondary100);
-    font-size: .9rem;
-    font-weight: bold;
 }
 
 .title > div:nth-child(1) {
@@ -113,6 +112,7 @@ const onPropsChanged = newProps => {
 }
 
 .component-props-container {
+  margin-top: 10px;
     flex: 1 1 auto;
     overflow-y: auto;
 }
@@ -127,8 +127,8 @@ li {
     margin-right: 20px;
     background: none;
     border-radius: 5px;
-    width: 45px;
-    height: 45px;
+    width: 48px;
+    height: 48px;
 }
 
 li button {
@@ -138,10 +138,13 @@ li button {
     border: none;
     border-radius: 5px;
     padding: 12px;
+    outline: none;
+    cursor: pointer;
 }
 
 .selected {
-    background: lightblue;
+    color: var(--button-text);
+    background: var(--background-button)!important;
 }
 
 </style>

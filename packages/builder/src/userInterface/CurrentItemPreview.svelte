@@ -17,7 +17,7 @@ let appDefinition = {};
 
 store.subscribe(s => {
     hasComponent = !!s.currentFrontEndItem;
-    
+
     stylesheetLinks = pipe(s.pages.stylesheets, [
         map(s => `<link rel="stylesheet" href="${s}"/>`),
         join("\n")
@@ -25,8 +25,8 @@ store.subscribe(s => {
     appDefinition = {
         componentLibraries: s.loadLibraryUrls(),
         props: buildPropsHierarchy(
-                s.components, 
-                s.screens, 
+                s.components,
+                s.screens,
                 s.currentFrontEndItem),
         hierarchy: s.hierarchy,
         appRootPath: ""
@@ -45,15 +45,16 @@ store.subscribe(s => {
             title="componentPreview"
             srcdoc={
 `<html>
-    
+
 <head>
     ${stylesheetLinks}
     <script>
         window["##BUDIBASE_APPDEFINITION##"] = ${JSON.stringify(appDefinition)};
         import('/_builder/budibase-client.esm.mjs')
         .then(module => {
-            module.loadBudibase();
-        })        
+            console.log(module, window);
+            module.loadBudibase({ window, localStorage });
+        })
     </script>
     <style>
 
