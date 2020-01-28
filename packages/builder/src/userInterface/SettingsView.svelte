@@ -10,7 +10,7 @@
     let addNewStylesheet = "";
     let modalElement;
 
-    $: components = s.components;
+    $: components = $store.components;
 
     const removeLibrary = lib => {
         const dependencies = libraryDependencies(components, lib);
