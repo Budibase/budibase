@@ -50,7 +50,8 @@ store.subscribe(s => {
     components = s.components;
 });
 
-const onPropsChanged = store.setComponentProp;
+const onPropChanged = store.setComponentProp;
+const onStyleChanged = store.setComponentStyle;
 
 let current_view = 'props';
 </script>
@@ -78,9 +79,9 @@ let current_view = 'props';
         <div class="component-props-container">
 
         {#if current_view === 'props'}
-            <PropsView {componentInfo} {components} {onPropsChanged} />
+            <PropsView {componentInfo} {components} {onPropChanged} />
         {:else if current_view === 'layout'}
-            <LayoutEditor />
+            <LayoutEditor {onStyleChanged} {componentInfo}/>
         {:else}
             <CodeEditor />
         {/if}

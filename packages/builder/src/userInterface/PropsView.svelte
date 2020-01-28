@@ -15,7 +15,7 @@ import IconButton from "../common/IconButton.svelte";
 
 export let componentInfo;
 export let instanceProps = null;
-export let onPropsChanged = () => {};
+export let onPropChanged = () => {};
 export let components;
 
 let errors = [];
@@ -33,7 +33,7 @@ function find_type(prop_name) {
 }
 
 let setProp = (name, value) => {
-    onPropsChanged(name, value);
+    onPropChanged(name, value);
 }
 
 const fieldHasError = (propName) =>
