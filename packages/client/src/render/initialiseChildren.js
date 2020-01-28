@@ -9,10 +9,10 @@ import { $ } from "../core/common";
 import { renderComponent } from "./renderComponent";
 
 export const _initialiseChildren = (initialiseOpts) => 
-                            (childrenProps, htmlElement, context, anchor=null) => {
+                            (childrenProps, htmlElement, anchor=null) => {
 
     const { uiFunctions, bb, coreApi, 
-        store, componentLibraries, 
+        store, componentLibraries, childIndex,
         appDefinition, parentContext, hydrate } = initialiseOpts;
         
     const childComponents = [];
@@ -23,6 +23,7 @@ export const _initialiseChildren = (initialiseOpts) =>
         }
     }
     
+    let childIndex = 0;
     for(let childProps of childrenProps) {       
         
         const {componentName, libName} = splitName(childProps._component);
@@ -30,25 +31,25 @@ export const _initialiseChildren = (initialiseOpts) =>
         if(!componentName || !libName) return;
         
         const {initialProps, bind} = setupBinding(
-                store, childProps, coreApi, 
-                context || parentContext, appDefinition.appRootPath);
+                store, childProps, coreApi,  
+                appDefinition.appRootPath);
 
-        /// here needs to go inside renderComponent ???
-        const componentProps = {
-            ...initialProps, 
-            _bb:bb(context || parentContext, childProps)
-        };
-
+       
         const componentConstructor = componentLibraries[libName][componentName];
 
-        const {component} = renderComponent({
+        const {component, context, lastChildIndex} = renderComponent({
             componentConstructor,uiFunctions, 
-            htmlElement, anchor, 
-            parentContext, componentProps});
+            htmlElement, anchor, childIndex,  
+            parentContext, initialProps, bb});
 
-
-        bind(component);
-        childComponents.push(component);
+        childIndex = lastChildIndex;
+        
+        const unsubscribe = bind(component);
+        childComponents.push({
+            component, 
+            context,
+            unsubscribe
+        });
     }
 
     return childComponents;
