@@ -66,10 +66,10 @@ const setBindingSource = ev => {
     bind(bindingPath, bindingFallbackValue, ev.target.value);
 }
 
-const makeBinding = () => {
-    forceIsBound=true;
-    isExpanded=true;
-}
+// const makeBinding = () => {
+//     forceIsBound=true;
+//     isExpanded=true;
+// }
 
 </script>
 
@@ -77,11 +77,11 @@ const makeBinding = () => {
 <div>
     <div class="bound-header">
         <div>{isExpanded ? "" : bindingPath}</div>
-        <IconButton icon={isExpanded ? "chevron-up" : "chevron-down"} 
+        <IconButton icon={isExpanded ? "chevron-up" : "chevron-down"}
                     size="12"
                     on:click={() => isExpanded=!isExpanded}/>
         {#if !canOnlyBind}
-        <IconButton icon="trash" 
+        <IconButton icon="trash"
                     size="12"
                     on:click={clearBinding}/>
         {/if}
@@ -97,8 +97,8 @@ const makeBinding = () => {
                value={bindingFallbackValue}
                on:change={setBindingFallback} >
         <div class="binding-prop-label">Binding Source</div>
-        <select class="uk-select uk-form-small" 
-            value={bindingSource} 
+        <select class="uk-select uk-form-small"
+            value={bindingSource}
             on:change={setBindingSource}>
 
             <option>store</option>
@@ -117,13 +117,13 @@ const makeBinding = () => {
     <div>
         <IconButton icon={value == true ? "check-square" : "square"}
                     size="19"
-                    on:click={() => onChanged(!value)}/>
+                    on:click={() => onChanged(!value)} />
     </div>
 
     {:else if type === "options"}
 
-    <select class="uk-select uk-form-small" 
-            value={value} 
+    <select class="uk-select uk-form-small"
+            value={value}
             on:change={ev => onChanged(ev.target.value)}>
         {#each options as option}
         <option value={option}>{option}</option>
@@ -132,49 +132,46 @@ const makeBinding = () => {
 
     {:else}
 
-    <input class="uk-input uk-form-small"
-            on:change={ev => onChanged(ev.target.value)}
-            bind:value={value}
-            style="flex: 1 0 auto;" > 
+    <input on:change={ev => onChanged(ev.target.value)}
+           bind:value={value}
+           style="flex: 1 0 auto;" />
 
 
     {/if}
-    <IconButton icon="link" 
-                size="12"
-                on:click={makeBinding} />
+
 </div>
 {/if}
 
 
 <style>
+    .unbound-container {
+        display:flex;
+    }
 
-.unbound-container {
-    display:flex;
-    margin: .5rem 0rem .5rem 0rem;
-}
+    .bound-header {
+        display: flex;
+    }
 
-.unbound-container > *:nth-child(1) {
-    width:auto;
-    flex: 1 0 auto;
-    font-size: 0.8rem;
-    color: var(--secondary100);
-    border-radius: .2rem;
-}
+    .bound-header > div:nth-child(1) {
+        flex: 1 0 auto;
+        width: 30px;
+        color: var(--secondary50);
+        padding-left: 5px;
+    }
 
-.bound-header {
-    display: flex;
-}
+    .binding-prop-label {
+        color: var(--secondary50);
+    }
 
-.bound-header > div:nth-child(1) {
-    flex: 1 0 auto;
-    width: 30px;
-    color: var(--secondary50);
-    padding-left: 5px;
-}
-
-.binding-prop-label {
-    color: var(--secondary50);
-}
-
-
+    input {
+        font-size: 12px;
+        font-weight: 700;
+        color: #163057;
+        opacity: 0.7;
+        padding: 5px 10px;
+        box-sizing: border-box;
+        border: 1px solid #DBDBDB;
+        border-radius: 2px;
+        outline: none;
+    }
 </style>
