@@ -73,9 +73,12 @@ if you then want to run the builder in dev mode (i.e. with hot reloading):
 
 ... keep the server running, and..
 1. Open a new console
-2. `cd packages/builder`
-3. `yarn start`
-4. Access the builder on http://localhost:3000
+2. `yarn dev`
+3. Access the builder on http://localhost:3000
+
+This will enable watch mode for both the client AND the server.
+
+### Running Commands from /server Directory 
 
 Notice that when inside `packages/server`, you can use any Budibase CLI command via yarn:
 
