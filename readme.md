@@ -42,6 +42,8 @@ Once you have created your app, you need to create yourself an instance of your 
 
 *jest* - `npm install -g jest`
 
+*lerna* - `npm install -g lerna`
+
 ### 2. Clone this repository
 
 `git clone https://github.com/Budibase/budibase.git`
