@@ -1,12 +1,20 @@
 {
-	"_lib": "./dist/index.js",
-	"h1": {
-		"name": "H1",
-		"description": "An HTML H1 tag",
-		"props" : {
-			"text": "string",
-			"className":"string"
-		},
-		"tags": []
-	}
+  "_lib": "./dist/index.js",
+  "h1": {
+    "name": "H1",
+    "description": "An HTML H1 tag",
+    "props": {
+      "text": "string",
+      "className": "string"
+    },
+    "tags": []
+  },
+  "button": {
+    "name": "Button",
+    "description": "A button",
+    "props": {
+      "raised": "bool"
+    },
+    "tags": []
+  }
 }
