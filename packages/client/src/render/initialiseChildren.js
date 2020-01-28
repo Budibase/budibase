@@ -12,7 +12,7 @@ export const _initialiseChildren = (initialiseOpts) =>
                             (childrenProps, htmlElement, anchor=null) => {
 
     const { uiFunctions, bb, coreApi, 
-        store, componentLibraries, 
+        store, componentLibraries, childIndex,
         appDefinition, parentContext, hydrate } = initialiseOpts;
         
     const childComponents = [];
@@ -23,6 +23,7 @@ export const _initialiseChildren = (initialiseOpts) =>
         }
     }
     
+    let childIndex = 0;
     for(let childProps of childrenProps) {       
         
         const {componentName, libName} = splitName(childProps._component);
@@ -36,14 +37,19 @@ export const _initialiseChildren = (initialiseOpts) =>
        
         const componentConstructor = componentLibraries[libName][componentName];
 
-        const {component, context} = renderComponent({
+        const {component, context, lastChildIndex} = renderComponent({
             componentConstructor,uiFunctions, 
-            htmlElement, anchor, 
+            htmlElement, anchor, childIndex,  
             parentContext, initialProps, bb});
 
-
-        bind(component);
-        childComponents.push({component, context});
+        childIndex = lastChildIndex;
+        
+        const unsubscribe = bind(component);
+        childComponents.push({
+            component, 
+            context,
+            unsubscribe
+        });
     }
 
     return childComponents;
