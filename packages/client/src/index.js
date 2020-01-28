@@ -35,7 +35,7 @@ export const loadBudibase = async ({
         props = appDefinition.props;
     }
 
-    const _app = createApp(
+    const app = createApp(
         componentLibraries, 
         appDefinition,  
         user, 

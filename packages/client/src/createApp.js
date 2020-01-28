@@ -50,17 +50,17 @@ export const createApp = (componentLibraries, appDefinition, user, uiFunctions) 
         if(isFunction(event)) event(context);
     }
 
-    const initialiseChildrenParams = (hydrate, parentContext) =>  ({
+    const initialiseChildrenParams = (hydrate, parentContext, childIndex) =>  ({
         bb, coreApi, store, parentContext,
         componentLibraries, appDefinition, 
-        hydrate, uiFunctions
+        hydrate, uiFunctions, childIndex
     });
 
-    const bb = (componentProps, componentContext, parent) => ({
-        hydrateChildren: _initialiseChildren(initialiseChildrenParams(true, componentContext)), 
-        appendChildren: _initialiseChildren(initialiseChildrenParams(false, componentContext)), 
+    const bb = (componentProps, componentContext, childIndex) => ({
+        hydrateChildren: _initialiseChildren(initialiseChildrenParams(true, componentContext, childIndex)), 
+        appendChildren: _initialiseChildren(initialiseChildrenParams(false, componentContext, childIndex)), 
         insertChildren: (props, htmlElement, anchor) => 
-            _initialiseChildren(initialiseChildrenParams(false, componentContext))
+            _initialiseChildren(initialiseChildrenParams(false, componentContext, childIndex))
                                 (props, htmlElement, anchor), 
         context: componentContext,
         props: componentProps,

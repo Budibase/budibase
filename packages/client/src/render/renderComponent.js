@@ -2,7 +2,7 @@
 export const renderComponent = ({
     componentConstructor, uiFunctions,
     htmlElement, anchor, parentContext,
-    initialProps, bb}) => {
+    initialProps, bb, childIndex}) => {
 
     const func = initialProps._id 
                  ? uiFunctions[componentProps._id]
@@ -27,6 +27,8 @@ export const renderComponent = ({
             hydrate:false,
             anchor
         });
+
+        childIndex += 1;
     }
 
     if(func) {
@@ -37,6 +39,7 @@ export const renderComponent = ({
 
     return ({
         context: componentContext,
+        lastChildIndex: childIndex,
         component
     });
 }
