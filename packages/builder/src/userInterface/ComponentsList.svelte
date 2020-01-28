@@ -106,13 +106,6 @@
     min-height: 0px;
 }
 
-.inner-header {
-    font-size: 0.9em;
-    font-weight: bold;
-    margin-top: 7px;
-    margin-bottom: 3px;
-}
-
 .component {
     padding: 0 15px;
     cursor: pointer;
@@ -136,13 +129,6 @@
     font-size: 12px;
     font-weight: bold;
     opacity: 0.6;
-}
-
-.component > .description {
-    font-size: 0.8em;
-    color: var(--secondary75);
-    display: inline-block;
-    margin-left: 10px;
 }
 
 ul {
