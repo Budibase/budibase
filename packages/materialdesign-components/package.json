@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@budibase/client": "^0.0.15",
+    "@material/button": "^4.0.0",
     "@nx-js/compiler-util": "^2.0.0",
     "fs-extra": "^8.1.0",
     "lodash": "^4.17.15",
@@ -22,8 +23,10 @@
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-livereload": "^1.0.1",
     "rollup-plugin-node-resolve": "^5.0.0",
+    "rollup-plugin-postcss": "^2.0.5",
     "rollup-plugin-svelte": "^5.0.0",
     "rollup-plugin-terser": "^5.1.1",
+    "sass": "^1.25.1-test.1",
     "shortid": "^2.2.15",
     "sirv-cli": "^0.4.4",
     "svelte": "^3.12.1"
