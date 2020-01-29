@@ -12,18 +12,23 @@ export const _initialiseChildren = (initialiseOpts) =>
                             (childrenProps, htmlElement, anchor=null) => {
 
     const { uiFunctions, bb, coreApi, 
-        store, componentLibraries, childIndex,
-        appDefinition, parentContext, hydrate } = initialiseOpts;
-        
-    const childComponents = [];
+        store, componentLibraries, treeNode,
+        appDefinition, document, hydrate } = initialiseOpts;
+
+    for(let childNode of treeNode.children) {
+        if(childNode.unsubscribe)
+            childNode.unsubscribe();
+        if(childNode.component)
+            childNode.component.$destroy();
+    }
 
     if(hydrate) {
         while (htmlElement.firstChild) {
             htmlElement.removeChild(htmlElement.firstChild);
         }
     }
-    
-    let childIndex = 0;
+
+    const renderedComponents = [];
     for(let childProps of childrenProps) {       
         
         const {componentName, libName} = splitName(childProps._component);
@@ -33,26 +38,23 @@ export const _initialiseChildren = (initialiseOpts) =>
         const {initialProps, bind} = setupBinding(
                 store, childProps, coreApi,  
                 appDefinition.appRootPath);
-
        
         const componentConstructor = componentLibraries[libName][componentName];
 
-        const {component, context, lastChildIndex} = renderComponent({
+        const renderedComponentsThisIteration = renderComponent({
+            props: childProps,
+            parentNode: treeNode,
             componentConstructor,uiFunctions, 
-            htmlElement, anchor, childIndex,  
-            parentContext, initialProps, bb});
-
-        childIndex = lastChildIndex;
+            htmlElement, anchor, initialProps, 
+            bb, document});
         
-        const unsubscribe = bind(component);
-        childComponents.push({
-            component, 
-            context,
-            unsubscribe
-        });
+        for(let comp of renderedComponentsThisIteration) {
+            comp.unsubscribe = bind(comp.component);
+            renderedComponents.push(comp);
+        }   
     }
 
-    return childComponents;
+    return renderedComponents;
 }
 
 const splitName = fullname => {

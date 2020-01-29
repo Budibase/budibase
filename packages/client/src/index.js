@@ -36,6 +36,7 @@ export const loadBudibase = async ({
     }
 
     const app = createApp(
+        window.document,
         componentLibraries, 
         appDefinition,  
         user, 

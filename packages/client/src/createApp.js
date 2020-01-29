@@ -5,8 +5,9 @@ import { setState, setStateFromBinding } from "./state/setState";
 import { trimSlash } from "./common/trimSlash";
 import { isBound } from "./state/isState";
 import { _initialiseChildren } from "./render/initialiseChildren";
+import { createTreeNode } from "./render/renderComponent";
 
-export const createApp = (componentLibraries, appDefinition, user, uiFunctions) => {
+export const createApp = (document, componentLibraries, appDefinition, user, uiFunctions) => {
     
     const coreApi = createCoreApi(appDefinition, user);
     appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(appDefinition.hierarchy);
@@ -50,19 +51,19 @@ export const createApp = (componentLibraries, appDefinition, user, uiFunctions) 
         if(isFunction(event)) event(context);
     }
 
-    const initialiseChildrenParams = (hydrate, parentContext, childIndex) =>  ({
-        bb, coreApi, store, parentContext,
+    const initialiseChildrenParams = (hydrate, treeNode) =>  ({
+        bb, coreApi, store, document,
         componentLibraries, appDefinition, 
-        hydrate, uiFunctions, childIndex
+        hydrate, uiFunctions, treeNode
     });
 
-    const bb = (componentProps, componentContext, childIndex) => ({
-        hydrateChildren: _initialiseChildren(initialiseChildrenParams(true, componentContext, childIndex)), 
-        appendChildren: _initialiseChildren(initialiseChildrenParams(false, componentContext, childIndex)), 
+    const bb = (treeNode, componentProps) => ({
+        hydrateChildren: _initialiseChildren(initialiseChildrenParams(true, treeNode)), 
+        appendChildren: _initialiseChildren(initialiseChildrenParams(false, treeNode)), 
         insertChildren: (props, htmlElement, anchor) => 
-            _initialiseChildren(initialiseChildrenParams(false, componentContext, childIndex))
+            _initialiseChildren(initialiseChildrenParams(false, treeNode))
                                 (props, htmlElement, anchor), 
-        context: componentContext,
+        context: treeNode.context,
         props: componentProps,
         call:safeCallEvent,
         setStateFromBinding: (binding, value) => setStateFromBinding(store, binding, value),
@@ -76,6 +77,6 @@ export const createApp = (componentLibraries, appDefinition, user, uiFunctions) 
         parent
     });
 
-    return bb();
+    return bb(createTreeNode());
 
 }

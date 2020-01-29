@@ -70,7 +70,7 @@ const maketestlib = (window) => ({
                         node.removeChild(c);
                     }
                     const components = currentProps._bb.appendChildren(currentProps._children, node);
-                    childNodes = components.map(c => c._element);
+                    childNodes = components.map(c => c.component._element);
                 } else {
                     currentProps._bb.hydrateChildren(currentProps._children, node);
                 }
