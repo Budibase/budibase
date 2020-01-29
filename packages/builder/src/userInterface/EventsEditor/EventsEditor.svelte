@@ -17,6 +17,7 @@
   import PlusButton from "../../common/PlusButton.svelte";
   import IconButton from "../../common/IconButton.svelte";
   import Modal from "../../common/Modal.svelte";
+  import EventEditorModal from "./EventEditorModal.svelte";
   import HandlerSelector from "./HandlerSelector.svelte";
 
   import { PencilIcon } from "../../common/Icons";
@@ -28,27 +29,12 @@
   export let onPropChanged = () => {};
   export let components;
 
-  // Structure
-  // {
-  //    [eventName]: [{eventHandler}, {eventHandler1}],
-  //    [eventName1]: [{eventHandler}, {eventHandler1}],
-  // }
-
   let modalOpen = false;
   let events = [];
   let selectedEvent = {};
   let newEventType = "onClick";
 
   // TODO: only show events that have handlers
-
-  // $: {
-  //   let componentEvents = {};
-  //   for (let propName in componentInfo) {
-  //     const isEventProp = findType(propName) === EVENT_TYPE;
-  //     if (isEventProp) componentEvents[propName] = componentInfo[propName];
-  //   }
-  //   events = componentEvents;
-  // }
 
   $: events =
     componentInfo &&
@@ -63,8 +49,6 @@
     return components.find(({ name }) => name === componentInfo._component)
       .props[propName];
   }
-
-  console.log({ componentInfo, events, components });
 
   const openModal = event => {
     selectedEvent = event;
@@ -111,8 +95,6 @@
     handlers.splice(index, 1);
     onPropChanged(newEventType, handlers);
   };
-
-  console.log("DA HANDLERS", selectedEvent.handlers);
 </script>
 
 <style>
@@ -132,11 +114,6 @@
   .form-root {
     display: flex;
     flex-wrap: wrap;
-  }
-
-  .prop-container {
-    flex: 1 1 auto;
-    min-width: 250px;
   }
 
   .heading {
@@ -175,28 +152,6 @@
     font-size: 1.5em;
   }
 
-  h2 {
-    color: var(--primary100);
-    font-size: 20px;
-    font-weight: bold;
-  }
-
-  /* TODO: Should be it's own component */
-  input {
-    font-size: 12px;
-    font-weight: 700;
-    color: #163057;
-    opacity: 0.7;
-    padding: 5px 10px;
-    box-sizing: border-box;
-    border: 1px solid #dbdbdb;
-    border-radius: 2px;
-    outline: none;
-  }
-
-  .event-action {
-    background: #fafafa;
-  }
 </style>
 
 <div class="heading">
@@ -210,7 +165,7 @@
     {#each events as [name, handlers], index}
       {#if handlers.length > 0}
         <div
-          class="handler-container hierarchy-item"
+          class="handler-container hierarchy-item {selectedEvent.index === index ? 'selected' : ''}"
           on:click={() => openModal({ name, handlers, index })}>
           <span class="event-name">{name}</span>
           <span class="edit-text">EDIT</span>
@@ -220,37 +175,11 @@
     {/each}
   </form>
 </div>
-<Modal bind:isOpen={modalOpen} onClosed={closeModal}>
-  <h2>Create a New Component Event</h2>
-  <span>Click here to learn more about component events</span>
-
-  <h4>Event Name</h4>
-  <input type="text" />
-
-  <h4>Event Type</h4>
-  <select
-    class="type-selector uk-select uk-form-small"
-    bind:value={newEventType}>
-    {#each events as [name]}
-      <option value={name}>{name}</option>
-    {/each}
-  </select>
-
-  <h4>Event Action(s)</h4>
-  {#if selectedEvent.handlers}
-    {#each selectedEvent.handlers as handler, index}
-      <HandlerSelector
-        {index}
-        onChanged={changeEventHandler}
-        onRemoved={removeEventHandler}
-        {handler} />
-      <hr />
-    {/each}
-  {/if}
-  <div
-    class="addelement-container"
-    on:click={() => addEventHandler(newEventType)}>
-    <IconButton icon="plus" size="12" />
-    Add Handler
-  </div>
-</Modal>
+<EventEditorModal
+  open={modalOpen}
+  onClose={closeModal}
+  event={selectedEvent}
+  {events}
+  {addEventHandler}
+  {changeEventHandler}
+  {removeEventHandler} />
