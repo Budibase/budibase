@@ -7,6 +7,6 @@ export const props = {
   button: {
     _component: "@budibase/materialdesign-components/button",
     _children: [],
-    raised: true
+    variant: "raised"
   }
 };
