@@ -1,5 +1,6 @@
 <script>
   import IconButton from "../../common/IconButton.svelte";
+  import Select from "../../common/Select.svelte";
   import StateBindingControl from "./StateBindingControl.svelte";
   import { find, map, keys, reduce, keyBy } from "lodash/fp";
   import { pipe, userWithFullAccess } from "../../common/core";
@@ -76,7 +77,8 @@
 <style>
   .type-selector-container {
     display: grid;
-    grid-template-rows: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 10px;
     background: #fafafa;
     padding: 22px;
     border: 1px solid var(--primary75);
@@ -85,28 +87,33 @@
   .type-selector {
     border-color: var(--primary50);
     border-radius: 2px;
-    width: 50px;
     flex: 1 0 auto;
+  }
+
+  .handler-option {
+    display: flex;
+    flex-direction: column;
   }
 </style>
 
 <div class="type-selector-container">
-  Action
-  <select
-    class="type-selector uk-select uk-form-small "
-    value={handlerType}
-    on:change={handlerTypeChanged}>
-    <option />
-    {#each eventOptions as option}
-      <option value={option.name}>{option.name}</option>
-    {/each}
-  </select>
+  <div class="handler-option">
+    Action
+    <Select value={handlerType} on:change={handlerTypeChanged}>
+      <option />
+      {#each eventOptions as option}
+        <option value={option.name}>{option.name}</option>
+      {/each}
+    </Select>
+  </div>
   {#if parameters}
-    {#each parameters as param, index}
-      <div>{param.name}</div>
-      <StateBindingControl
-        onChanged={onParameterChanged(index)}
-        value={param.value} />
+    {#each parameters as param, idx}
+      <div class="handler-option">
+        <div>{param.name}</div>
+        <StateBindingControl
+          onChanged={onParameterChanged(idx)}
+          value={param.value} />
+      </div>
     {/each}
   {/if}
 </div>
