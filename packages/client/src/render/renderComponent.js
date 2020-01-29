@@ -1,30 +1,43 @@
 
 export const renderComponent = ({
     componentConstructor, uiFunctions,
-    htmlElement, anchor, parentContext,
-    componentProps}) => {
+    htmlElement, anchor, props, 
+    initialProps, bb, document,
+    parentNode}) => {
 
-    const func = componentProps._id 
-                 ? uiFunctions[componentProps._id]
+    const func = initialProps._id 
+                 ? uiFunctions[initialProps._id]
                  : undefined;
+
+    const parentContext = (parentNode && parentNode.context) || {};
                  
-    let component;
-    let componentContext;
+    let renderedNodes = [];
     const render = (context) => {
         
+        let componentContext = parentContext;
         if(context) {
             componentContext = {...componentContext};
             componentContext.$parent = parentContext;
-        } else {
-            componentContext = parentContext;
         }
 
-        component = new componentConstructor({
+        const thisNode = createTreeNode();
+        thisNode.context = componentContext;
+        thisNode.parentNode = parentNode;
+
+        parentNode.children.push(thisNode);
+        renderedNodes.push(thisNode);
+
+        initialProps._bb = bb(thisNode, props);  
+
+        thisNode.component = new componentConstructor({
             target: htmlElement,
-            props: componentProps,
+            props: initialProps,
             hydrate:false,
             anchor
-        });
+        });       
+
+        thisNode.rootElement = htmlElement.children[
+            htmlElement.children.length - 1];
     }
 
     if(func) {
@@ -33,9 +46,15 @@ export const renderComponent = ({
         render();
     }
 
-    return ({
-        context: componentContext,
-        component
-    });
+    return renderedNodes;
 }
+
+export const createTreeNode = () => ({
+    context: {},
+    rootElement: null,
+    parentNode: null,
+    children: [],
+    component: null,
+    unsubscribe: () => {}
+});
 
