@@ -5,8 +5,9 @@ import { setState, setStateFromBinding } from "./state/setState";
 import { trimSlash } from "./common/trimSlash";
 import { isBound } from "./state/isState";
 import { _initialiseChildren } from "./render/initialiseChildren";
+import { createTreeNode } from "./render/renderComponent";
 
-export const createApp = (componentLibraries, appDefinition, user, uiFunctions) => {
+export const createApp = (document, componentLibraries, appDefinition, user, uiFunctions) => {
     
     const coreApi = createCoreApi(appDefinition, user);
     appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(appDefinition.hierarchy);
@@ -50,74 +51,32 @@ export const createApp = (componentLibraries, appDefinition, user, uiFunctions) 
         if(isFunction(event)) event(context);
     }
 
-    const initialiseChildrenParams = (parentContext, hydrate) =>  ({
-        bb, coreApi, store, 
+    const initialiseChildrenParams = (hydrate, treeNode) =>  ({
+        bb, coreApi, store, document,
         componentLibraries, appDefinition, 
-        parentContext, hydrate, uiFunctions
+        hydrate, uiFunctions, treeNode
     });
 
-    const bb = (context, props) => ({
-        hydrateChildren: _initialiseChildren(initialiseChildrenParams(context, true)), 
-        appendChildren: _initialiseChildren(initialiseChildrenParams(context, false)), 
-        insertChildren: (props, htmlElement, anchor, context) => 
-            _initialiseChildren(initialiseChildrenParams(context, false))
-                                (props, htmlElement, context, anchor), 
-        store,
-        relativeUrl,
-        api,
+    const bb = (treeNode, componentProps) => ({
+        hydrateChildren: _initialiseChildren(initialiseChildrenParams(true, treeNode)), 
+        appendChildren: _initialiseChildren(initialiseChildrenParams(false, treeNode)), 
+        insertChildren: (props, htmlElement, anchor) => 
+            _initialiseChildren(initialiseChildrenParams(false, treeNode))
+                                (props, htmlElement, anchor), 
+        context: treeNode.context,
+        props: componentProps,
         call:safeCallEvent,
-        isBound,
         setStateFromBinding: (binding, value) => setStateFromBinding(store, binding, value),
         setState: (path, value) => setState(store, path, value),
         getStateOrValue: (prop, currentContext) => 
             getStateOrValue(globalState, prop, currentContext),
-        context,
-        props        
+        store,
+        relativeUrl,
+        api,
+        isBound,
+        parent
     });
 
-    return bb();
+    return bb(createTreeNode());
 
 }
-
-const buildBindings = (boundProps, boundArrays, contextBoundProps) => {
-    const bindings = {};
-    if(boundProps && boundProps.length > 0) {
-        for(let p of boundProps) {
-            bindings[p.propName] = {
-                path: p.path,
-                fallback: p.fallback,
-                source: p.source
-            }
-        }
-    }
-
-    if(contextBoundProps && contextBoundProps.length > 0) {
-        for(let p of contextBoundProps) {
-            bindings[p.propName] = {
-                path: p.path,
-                fallback: p.fallback,
-                source: p.source
-            }
-        }
-    }
-
-    if(boundArrays && boundArrays.length > 0) {
-        for(let a of boundArrays) {
-            const arrayOfBindings = [];
-
-            for(let b of a.arrayOfBindings) {
-                arrayOfBindings.push(
-                    buildBindings(
-                        b.boundProps, 
-                        b.boundArrays, 
-                        b.contextBoundProps)
-                );
-            }
-
-            bindings[a.propName] = arrayOfBindings;
-        }
-    }
-
-    return bindings;
-}
-
