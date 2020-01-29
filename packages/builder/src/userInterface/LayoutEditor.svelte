@@ -48,7 +48,7 @@
 <div class="layout-pos">
  {#each Object.entries(positions) as [key, [name, meta, size]]}
     <div class="grid">
-      <h5>Grid Area:</h5>
+      <h5>{name}:</h5>
       <InputGroup onStyleChanged={_value => onStyleChanged(key, _value)}
                   values={layout[key] || newValue(meta.length)}
                   {meta}
@@ -61,7 +61,7 @@
 <div class="layout-spacing">
   {#each Object.entries(spacing) as [key, [name, meta, size]]}
     <div class="grid">
-      <h5>Grid Area:</h5>
+      <h5>{name}:</h5>
       <InputGroup onStyleChanged={_value => onStyleChanged(key, _value)}
                   values={layout[key] || newValue(meta.length)}
                   {meta}
@@ -74,7 +74,7 @@
 <div class="layout-layer">
   {#each Object.entries(zindex) as [key, [name, meta, size]]}
     <div class="grid">
-      <h5>Grid Area:</h5>
+      <h5>{name}:</h5>
       <InputGroup onStyleChanged={_value => onStyleChanged(key, _value)}
                   values={layout[key] || newValue(meta.length)}
                   {meta}
