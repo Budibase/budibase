@@ -20,11 +20,10 @@
 
 
   $: layout  = { ...componentInfo._styles.position, ...componentInfo._styles.layout };
-  $: console.log(componentInfo)
 
   $: layouts = {
-    gridarea: ['Grid Area', tbrl, 'small'],
-    gap: ['Gap', single],
+    templaterows: ['Grid Rows', single],
+    templatecolumns: ['Grid Columns', single],
   };
 
   $: positions = {

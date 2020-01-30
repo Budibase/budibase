@@ -18,6 +18,14 @@ const tap = message => x => {
 }
 
 const css_map = {
+	templaterows: {
+		name: 'grid-template-columns',
+		generate: self
+	},
+	templatecolumns: {
+		name: 'grid-template-rows',
+		generate: self
+	},
 	gridarea: {
 		name: 'grid-area',
 		generate: make_margin
