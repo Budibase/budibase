@@ -37,6 +37,7 @@ $: {
 .uk-modal-dialog {
     border-radius: .3rem;
     width: 60%;
+    height: 80vh;
 }
 
 </style>

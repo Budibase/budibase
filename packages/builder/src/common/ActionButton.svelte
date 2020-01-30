@@ -20,7 +20,7 @@
   }
 
   .action-button:disabled {
-    color: #163057;
+    color: rgba(22, 48, 87, 0.2);
     cursor: default;
     background: transparent;
   }

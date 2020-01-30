@@ -6,6 +6,7 @@
   import PlusButton from "../../common/PlusButton.svelte";
   import Select from "../../common/Select.svelte";
   import Input from "../../common/Input.svelte";
+  import getIcon from "../../common/icon";
 
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers";
 
@@ -70,8 +71,9 @@
 
   h5 {
     color: rgba(22, 48, 87, 0.6);
-    font-size: 16px;
+    font-size: 15px;
     margin-bottom: 5px;
+    margin-top: 20px;
   }
 
   .event-options {
@@ -80,12 +82,13 @@
     grid-gap: 10px;
   }
 
-  .actions {
+  .actions, header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
   }
 
-  p {
+  a {
     color: rgba(22, 48, 87, 0.6);
     font-size: 12px;
     margin-top: 0;
@@ -93,13 +96,16 @@
 </style>
 
 <Modal bind:isOpen={open} onClosed={onClose}>
-  <h2>{eventData.name || 'Create a New Component Event'}</h2>
-  <p>Click here to learn more about component events</p>
+  <h2>{eventData.name ? `${eventData.name} Event` : 'Create a New Component Event'}</h2>
+  <a href="https://docs.budibase.com/" target="_blank" >Click here to learn more about component events</a>
 
   <div class="event-options">
     <div>
-      <h5>Event Type</h5>
-      <Select bind:value={eventType}>
+      <header>
+        <h5>Event Type</h5>
+        {@html getIcon('info')}
+      </header>
+      <Select :value={eventType}>
         {#each eventOptions as option}
           <option value={option.name}>{option.name}</option>
         {/each}

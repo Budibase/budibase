@@ -31,7 +31,6 @@
     })
   );
 
-  // TODO: refactor
   $: {
     if (handler) {
       handlerType = handler[EVENT_TYPE_MEMBER_NAME];
@@ -40,6 +39,7 @@
         value
       }));
     } else {
+      // Empty Handler 
       handlerType = "";
       parameters = [];
     }
@@ -63,11 +63,11 @@
     const handlerType = eventOptions.find(
       handler => handler.name === e.target.value
     );
-    // Set default params for handler
     const defaultParams = handlerType.parameters.map(param => ({
       name: param,
       value: ""
     }));
+
     handlerChanged(handlerType.name, defaultParams);
   };
 
@@ -93,10 +93,6 @@
     flex-direction: column;
   }
 
-  .handler-option > div {
-    margin-bottom: 5px;
-  }
-
   .new-handler {
     background: #fff;
   }
@@ -113,6 +109,7 @@
   }
 
   span {
+    font-size: 12px;
     margin-bottom: 5px;
   }
 </style>
@@ -131,7 +128,7 @@
     {#if parameters}
       {#each parameters as param, idx}
         <div class="handler-option">
-          <div>{param.name}</div>
+          <span>{param.name}</span>
           <StateBindingControl
             onChanged={onParameterChanged(idx)}
             value={param.value} />
@@ -140,10 +137,12 @@
     {/if}
   </div>
   <div class="event-action-button">
-    {#if newHandler}
-      <PlusButton on:click={onCreate} />
-    {:else}
-      <IconButton icon="x" on:click={onRemoved} />
+    {#if parameters.length > 0}
+      {#if newHandler}
+        <PlusButton on:click={onCreate} />
+      {:else}
+        <IconButton icon="x" on:click={onRemoved} />
+      {/if}
     {/if}
   </div>
 </div>
