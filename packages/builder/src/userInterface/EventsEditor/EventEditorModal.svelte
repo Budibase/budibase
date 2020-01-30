@@ -10,15 +10,20 @@
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers";
 
   export let event;
-
-  export let events;
+  export let eventOptions;
   export let open;
   export let onClose;
   export let onPropChanged;
 
   let eventType = "onClick";
   let newEventHandler = { parameters: [] };
-  let eventData = event || { handlers: [] };
+
+  $: eventData = event || { handlers: [] };
+
+  const resetModalState = () => {
+    newEventHandler = { parameters: [] };
+    eventData = { handlers: [] };
+  };
 
   const changeEventHandler = (updatedHandler, index) => {
     eventData.handlers[index] = updatedHandler;
@@ -44,13 +49,13 @@
 
   const deleteEvent = () => {
     onPropChanged(eventType, []);
-    eventData = { handlers: [] };
+    resetModalState();
     onClose();
   };
 
   const saveEventData = () => {
     onPropChanged(eventType, eventData.handlers);
-    eventData = { handlers: [] };
+    resetModalState();
     onClose();
   };
 </script>
@@ -79,18 +84,24 @@
     display: flex;
     justify-content: space-between;
   }
+
+  p {
+    color: rgba(22, 48, 87, 0.6);
+    font-size: 12px;
+    margin-top: 0;
+  }
 </style>
 
 <Modal bind:isOpen={open} onClosed={onClose}>
-  <h2>{eventData.name || "Create a New Component Event"}</h2>
+  <h2>{eventData.name || 'Create a New Component Event'}</h2>
   <p>Click here to learn more about component events</p>
 
   <div class="event-options">
     <div>
       <h5>Event Type</h5>
       <Select bind:value={eventType}>
-        {#each events as event}
-          <option value={event.name}>{event.name}</option>
+        {#each eventOptions as option}
+          <option value={option.name}>{option.name}</option>
         {/each}
       </Select>
     </div>
@@ -100,8 +111,8 @@
   <HandlerSelector
     newHandler
     onChanged={changeNewEventHandler}
-    onCreate={() => { 
-      createNewEventHandler(newEventHandler)
+    onCreate={() => {
+      createNewEventHandler(newEventHandler);
       newEventHandler = { parameters: [] };
     }}
     handler={newEventHandler} />
@@ -116,7 +127,16 @@
   {/if}
 
   <div class="actions">
-    <ActionButton on:click={deleteEvent}>Delete</ActionButton>
-    <ActionButton disabled={eventData.handlers.length === 0} on:click={saveEventData}>Save</ActionButton>
+    <ActionButton
+      disabled={eventData.handlers.length === 0}
+      visible={eventData.name}
+      on:click={deleteEvent}>
+      Delete
+    </ActionButton>
+    <ActionButton
+      disabled={eventData.handlers.length === 0}
+      on:click={saveEventData}>
+      Save
+    </ActionButton>
   </div>
 </Modal>

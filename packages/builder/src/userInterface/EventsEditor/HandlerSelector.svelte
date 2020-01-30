@@ -107,12 +107,20 @@
     grid-gap: 10px;
     padding: 22px;
   }
+
+  .event-action-button {
+    margin-right: 20px;
+  }
+
+  span {
+    margin-bottom: 5px;
+  }
 </style>
 
 <div class="type-selector-container {newHandler && 'new-handler'}">
   <div class="handler-controls">
     <div class="handler-option">
-      Action
+      <span>Action</span>
       <Select value={handlerType} on:change={handlerTypeChanged}>
         <option />
         {#each eventOptions as option}
@@ -131,9 +139,11 @@
       {/each}
     {/if}
   </div>
-  {#if newHandler}
-    <PlusButton on:click={onCreate} />
-  {:else}
-    <IconButton icon="x" on:click={onRemoved} />
-  {/if}
+  <div class="event-action-button">
+    {#if newHandler}
+      <PlusButton on:click={onCreate} />
+    {:else}
+      <IconButton icon="x" on:click={onRemoved} />
+    {/if}
+  </div>
 </div>

@@ -4,7 +4,7 @@
     outline: none;
     border: none;
     border-radius: 5px;
-    background: var(--background-button);
+    background: rgba(249, 249, 249, 1);
 
     width: 1.8rem;
     height: 1.8rem;
@@ -16,7 +16,7 @@
 
     font-size: 1.2rem;
     font-weight: 700;
-    color: var(--button-text);
+    color: rgba(22, 48, 87, 1);
   }
 </style>
 
