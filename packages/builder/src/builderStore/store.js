@@ -763,7 +763,7 @@ const setComponentStyle = store => (type, name, value) => {
         }
         s.currentComponentInfo._styles[type][name] = value;
         s.currentFrontEndItem._css = generate_screen_css(s.currentFrontEndItem.props._children)
-        console.log(s)
+
         // save without messing with the store
         _save(s.appname, s.currentFrontEndItem, store, s)
 

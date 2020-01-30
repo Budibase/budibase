@@ -54,7 +54,8 @@
       <InputGroup onStyleChanged={_value => onStyleChanged('layout',key, _value)}
                   values={layout[key] || newValue(meta.length)}
                   {meta}
-                  {size} />
+                  {size}
+                  type="text"/>
     </div>
   {/each}
 </div>

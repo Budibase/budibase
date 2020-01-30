@@ -81,17 +81,21 @@ const handle_grid = (acc, [name, value]) => {
 
 const object_to_css_string = [
 	toPairs,
-
 	reduce(handle_grid, []),
-	filter(v => v[1].length),
+	filter(v => Array.isArray(v[1]) ? v[1].some(s => s.length) : v[1].length),
 	map(generate_rule),
-	join_with('\n')
+	join_with('\n'),
 ];
 
-export const generate_css = ({ layout, position }) => ({
-	layout: pipe(layout, object_to_css_string),
-	position: pipe(position, object_to_css_string)
-})
+export const generate_css = ({ layout, position }) => {
+	let _layout = pipe(layout, object_to_css_string);
+	_layout = _layout.length ? _layout + "\ndisplay: grid;" : _layout;
+
+	return {
+		layout: _layout,
+		position: pipe(position, object_to_css_string)
+	}
+}
 
 const apply_class = (id, name, styles) => `.${name}-${id} {\n${styles}\n}`;
 

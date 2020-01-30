@@ -22049,7 +22049,7 @@ var app = (function (exports) {
                 htmlElement.children.length - 1];
             
             if (initialProps._id) {
-                thisNode.rootElement.classList.add(`.pos-${initialProps._id}`);
+                thisNode.rootElement.classList.add(`pos-${initialProps._id}`);
             }
         };
 
@@ -22092,7 +22092,7 @@ var app = (function (exports) {
             }
         }
         
-        htmlElement.classList.add(`.lay-${treeNode.props._id}`);
+        htmlElement.classList.add(`lay-${treeNode.props._id}`);
 
         const renderedComponents = [];
         for(let childProps of childrenProps) {       

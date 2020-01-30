@@ -28,7 +28,7 @@ export const _initialiseChildren = (initialiseOpts) =>
         }
     }
     
-    htmlElement.classList.add(`.lay-${treeNode.props._id}`)
+    htmlElement.classList.add(`lay-${treeNode.props._id}`)
 
     const renderedComponents = [];
     for(let childProps of childrenProps) {       
