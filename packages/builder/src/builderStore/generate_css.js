@@ -12,6 +12,11 @@ export const make_margin = (values) => pipe(values, [
 	join_with(' ')
 ]);
 
+const tap = message => x => {
+	console.log(x);
+	return x;
+}
+
 const css_map = {
 	gridarea: {
 		name: 'grid-area',
@@ -66,20 +71,36 @@ const handle_grid = (acc, [name, value]) => {
 	return acc.concat([[name, value]]);
 }
 
-const tap = message => x => {
-	console.log(x);
-	return x;
-}
-
 const object_to_css_string = [
 	toPairs,
+
 	reduce(handle_grid, []),
 	filter(v => v[1].length),
 	map(generate_rule),
 	join_with('\n')
 ];
 
-export const generateCss = ({ layout, position }) => ({
+export const generate_css = ({ layout, position }) => ({
 	layout: pipe(layout, object_to_css_string),
 	position: pipe(position, object_to_css_string)
 })
+
+const apply_class = (id, name, styles) => `.${name}-${id} {\n${styles}\n}`;
+
+export const generate_screen_css = (component_array) => {
+	let styles = "";
+
+	for (let i = 0; i < component_array.length; i += 1) {
+		const { _styles, _id, _children } = component_array[i];
+		const { layout, position } = generate_css(_styles);
+
+		styles += apply_class(_id, 'pos', position) + "\n";
+		styles += apply_class(_id, 'lay', layout) + "\n";
+
+		if (_children && _children.length) {
+			styles += generate_screen_css(_children) + "\n";
+		}
+
+	}
+	return styles.trim();
+}
