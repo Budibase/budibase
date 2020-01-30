@@ -18,6 +18,7 @@
 
     const onPropChanged = store.setComponentProp;
     const onStyleChanged = store.setComponentStyle;
+
 </script>
 
 <div class="root">

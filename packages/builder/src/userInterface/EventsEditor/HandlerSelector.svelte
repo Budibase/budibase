@@ -1,7 +1,8 @@
 <script>
   import IconButton from "../../common/IconButton.svelte";
+  import PlusButton from "../../common/PlusButton.svelte";
   import Select from "../../common/Select.svelte";
-  import StateBindingControl from "./StateBindingControl.svelte";
+  import StateBindingControl from "../StateBindingControl.svelte";
   import { find, map, keys, reduce, keyBy } from "lodash/fp";
   import { pipe, userWithFullAccess } from "../../common/core";
   import {
@@ -11,9 +12,12 @@
   import { store } from "../../builderStore";
 
   export let handler;
+  export let onCreate;
   export let onChanged;
   export let onRemoved;
+
   export let index;
+  export let newHandler;
 
   let eventOptions;
   let handlerType;
@@ -76,44 +80,60 @@
 
 <style>
   .type-selector-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 10px;
-    background: #fafafa;
-    padding: 22px;
-    border: 1px solid var(--primary75);
-  }
-
-  .type-selector {
-    border-color: var(--primary50);
-    border-radius: 2px;
-    flex: 1 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(223, 223, 223, 0.5);
+    border: 1px solid #dfdfdf;
+    margin-bottom: 18px;
   }
 
   .handler-option {
     display: flex;
     flex-direction: column;
   }
+
+  .handler-option > div {
+    margin-bottom: 5px;
+  }
+
+  .new-handler {
+    background: #fff;
+  }
+
+  .handler-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 10px;
+    padding: 22px;
+  }
 </style>
 
-<div class="type-selector-container">
-  <div class="handler-option">
-    Action
-    <Select value={handlerType} on:change={handlerTypeChanged}>
-      <option />
-      {#each eventOptions as option}
-        <option value={option.name}>{option.name}</option>
+<div class="type-selector-container {newHandler && 'new-handler'}">
+  <div class="handler-controls">
+    <div class="handler-option">
+      Action
+      <Select value={handlerType} on:change={handlerTypeChanged}>
+        <option />
+        {#each eventOptions as option}
+          <option value={option.name}>{option.name}</option>
+        {/each}
+      </Select>
+    </div>
+    {#if parameters}
+      {#each parameters as param, idx}
+        <div class="handler-option">
+          <div>{param.name}</div>
+          <StateBindingControl
+            onChanged={onParameterChanged(idx)}
+            value={param.value} />
+        </div>
       {/each}
-    </Select>
+    {/if}
   </div>
-  {#if parameters}
-    {#each parameters as param, idx}
-      <div class="handler-option">
-        <div>{param.name}</div>
-        <StateBindingControl
-          onChanged={onParameterChanged(idx)}
-          value={param.value} />
-      </div>
-    {/each}
+  {#if newHandler}
+    <PlusButton on:click={onCreate} />
+  {:else}
+    <IconButton icon="x" on:click={onRemoved} />
   {/if}
 </div>

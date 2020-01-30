@@ -31,18 +31,13 @@
 
   let modalOpen = false;
   let events = [];
-  let selectedEvent = {};
-  let newEventType = "onClick";
+  let selectedEvent = null;
 
-  // TODO: only show events that have handlers
-
-  $: events =
-    componentInfo &&
-    Object.entries(componentInfo).filter(
-      ([name]) => findType(name) == EVENT_TYPE
-    );
-
-  $: action = selectedEvent ? "Edit" : "Create";
+  $: { 
+    events = Object.keys(componentInfo)
+    .filter(key => componentInfo[key].length && findType(key) === EVENT_TYPE)
+    .map(key => ({ name: key, handlers: componentInfo[key] }));
+  }
 
   function findType(propName) {
     if (!componentInfo._component) return;
@@ -56,44 +51,8 @@
   };
 
   const closeModal = () => {
-    selectedEvent = {};
+    selectedEvent = null;
     modalOpen = false;
-  };
-
-  const addEventHandler = eventType => {
-    const newEventHandler = {
-      parameters: {},
-      [EVENT_TYPE_MEMBER_NAME]: ""
-    };
-    // TODO: improve - just pass the event from props
-    selectedEvent = {
-      ...selectedEvent,
-      handlers: [...(selectedEvent.handlers || []), newEventHandler]
-    };
-    // events = [...events, newEventHandler];
-    onPropChanged(newEventType, [...selectedEvent.handlers, newEventHandler]);
-  };
-
-  const changeEventHandler = (updatedHandler, index) => {
-    // TODO: Improve
-    const handlers = [...selectedEvent.handlers];
-    handlers[index] = updatedHandler;
-
-    console.log("CHANGED HANDLERS", handlers);
-
-    selectedEvent = {
-      ...selectedEvent,
-      handlers
-    };
-
-    onPropChanged(newEventType, handlers);
-  };
-
-  // TODO: verify
-  const removeEventHandler = index => {
-    const handlers = [...selectedEvent.handlers];
-    handlers.splice(index, 1);
-    onPropChanged(newEventType, handlers);
   };
 </script>
 
@@ -125,8 +84,7 @@
   .handler-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-gap: 10px;
-    border: 2px solid #fafafa;
+    border: 2px solid #f9f9f9;
   }
 
   .hierarchy-item {
@@ -134,52 +92,66 @@
     padding: 11px 7px;
     margin: 5px 0;
     border-radius: 5px;
+    font-size: 1.5em;
+    width: 100%;
   }
 
   .hierarchy-item:hover {
-    background: #fafafa;
+    background: #f9f9f9;
+  }
+
+  .event-name {
+    font-size: 12px;
+    color: rgba(35, 65, 105, 0.4);
+    grid-column: 1 / span 2;
+  }
+
+  .event-identifier {
+    margin-top: 5px;
+    font-weight: bold;
+    font-size: 16px;
+    color: rgba(22, 48, 87, 0.6)
+  }
+
+  .edit-text {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    align-self: end;
+    justify-self: end;
+    font-size: 10px;
+    color: rgba(35, 65, 105, 0.4);
   }
 
   .selected {
     color: var(--button-text);
     background: var(--background-button) !important;
   }
-
-  .event-name {
-  }
-
-  .handler-identifier {
-    font-size: 1.5em;
-  }
-
 </style>
 
 <div class="heading">
   <h3>Events</h3>
-  <PlusButton on:click={() => openModal({})} />
+  <PlusButton on:click={() => openModal()} />
 </div>
 
 <div class="root">
-
   <form class="uk-form-stacked form-root">
-    {#each events as [name, handlers], index}
-      {#if handlers.length > 0}
+    {#each events as event, index}
+      {#if event.handlers.length > 0}
         <div
-          class="handler-container hierarchy-item {selectedEvent.index === index ? 'selected' : ''}"
-          on:click={() => openModal({ name, handlers, index })}>
-          <span class="event-name">{name}</span>
+          class="handler-container hierarchy-item {selectedEvent && selectedEvent.index === index ? 'selected' : ''}"
+          on:click={() => openModal({ ...event, index })}>
+          <span class="event-name">{event.name}</span>
+          <span class="event-identifier">{event.name}</span>
           <span class="edit-text">EDIT</span>
-          <span class="handler-identifier">updateState</span>
         </div>
       {/if}
     {/each}
   </form>
 </div>
 <EventEditorModal
+  {onPropChanged}
+  events={events}
   open={modalOpen}
   onClose={closeModal}
   event={selectedEvent}
-  {events}
-  {addEventHandler}
-  {changeEventHandler}
-  {removeEventHandler} />
+  />

@@ -1,5 +1,6 @@
 <script>
     import IconButton from "../common/IconButton.svelte";
+    import Input from "../common/Input.svelte";
     import {
         isBinding, getBinding, setBinding
     } from "../common/binding";
@@ -81,13 +82,13 @@
         {#if isExpanded}
             <div>
                 <div class="binding-prop-label">Binding Path</div>
-                <input class="uk-input uk-form-small"
+                <Input
                     value={bindingPath}
-                    on:change={setBindingPath} >
+                    on:change={setBindingPath} />
                 <div class="binding-prop-label">Fallback Value</div>
-                <input class="uk-input uk-form-small"
+                <Input
                     value={bindingFallbackValue}
-                    on:change={setBindingFallback} >
+                    on:change={setBindingFallback} />
                 <div class="binding-prop-label">Binding Source</div>
                 <select class="uk-select uk-form-small"
                     value={bindingSource}
@@ -119,7 +120,7 @@
                 {/each}
             </select>
         {:else}
-            <input on:change={ev => onChanged(ev.target.value)}
+            <Input on:change={ev => onChanged(ev.target.value)}
                 bind:value={value}
                 style="flex: 1 0 auto;" />
         {/if}

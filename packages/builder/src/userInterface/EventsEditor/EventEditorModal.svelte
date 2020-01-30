@@ -1,19 +1,58 @@
 <script>
   import Modal from "../../common/Modal.svelte";
-  import EventSelector from "../EventSelector.svelte";
   import HandlerSelector from "./HandlerSelector.svelte";
   import IconButton from "../../common/IconButton.svelte";
+  import ActionButton from "../../common/ActionButton.svelte";
+  import PlusButton from "../../common/PlusButton.svelte";
   import Select from "../../common/Select.svelte";
+  import Input from "../../common/Input.svelte";
+
+  import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers";
 
   export let event;
+
   export let events;
   export let open;
-  export let closeModal;
-  export let changeEventHandler;
-  export let removeEventHandler;
-  export let addEventHandler;
+  export let onClose;
+  export let onPropChanged;
 
-  let newEventType = "onClick";
+  let eventType = "onClick";
+  let newEventHandler = { parameters: [] };
+  let eventData = event || { handlers: [] };
+
+  const changeEventHandler = (updatedHandler, index) => {
+    eventData.handlers[index] = updatedHandler;
+  };
+
+  const changeNewEventHandler = updatedHandler => {
+    newEventHandler = updatedHandler;
+  };
+
+  const deleteEventHandler = index => {
+    eventData.handlers.splice(index, 1);
+    eventData = eventData;
+  };
+
+  const createNewEventHandler = handler => {
+    const newHandler = handler || {
+      parameters: {},
+      [EVENT_TYPE_MEMBER_NAME]: ""
+    };
+    eventData.handlers.push(newHandler);
+    eventData = eventData;
+  };
+
+  const deleteEvent = () => {
+    onPropChanged(eventType, []);
+    eventData = { handlers: [] };
+    onClose();
+  };
+
+  const saveEventData = () => {
+    onPropChanged(eventType, eventData.handlers);
+    eventData = { handlers: [] };
+    onClose();
+  };
 </script>
 
 <style>
@@ -21,75 +60,63 @@
     color: var(--primary100);
     font-size: 20px;
     font-weight: bold;
+    margin-bottom: 0;
   }
 
-  h4 {
-    font-size: 0.7em;
-  }
-
-  /* TODO: Should be it's own component */
-  input {
-    font-size: 12px;
-    font-weight: 700;
-    color: #163057;
-    opacity: 0.7;
-    padding: 5px 10px;
-    box-sizing: border-box;
-    border: 1px solid #dbdbdb;
-    border-radius: 2px;
-    outline: none;
-  }
-
-  .event-action {
-    background: #fafafa;
+  h5 {
+    color: rgba(22, 48, 87, 0.6);
+    font-size: 16px;
+    margin-bottom: 5px;
   }
 
   .event-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 10px;
+  }
+
+  .actions {
     display: flex;
-    align-items: center;
     justify-content: space-between;
   }
 </style>
 
-<Modal bind:isOpen={open} onClosed={closeModal}>
-  {#if event}
-    <h2>{event.name}</h2>
-  {:else}
-    <h2>Create a New Component Event</h2>
-  {/if}
-  <span>Click here to learn more about component events</span>
+<Modal bind:isOpen={open} onClosed={onClose}>
+  <h2>{eventData.name || "Create a New Component Event"}</h2>
+  <p>Click here to learn more about component events</p>
 
   <div class="event-options">
     <div>
-      <h5>Event Name</h5>
-      <input type="text" />
-    </div>
-
-    <div>
       <h5>Event Type</h5>
-      <Select bind:value={newEventType}>
-        {#each events as [name]}
-          <option value={name}>{name}</option>
+      <Select bind:value={eventType}>
+        {#each events as event}
+          <option value={event.name}>{event.name}</option>
         {/each}
       </Select>
     </div>
   </div>
 
   <h5>Event Action(s)</h5>
-  {#if event.handlers}
-    {#each event.handlers as handler, index}
+  <HandlerSelector
+    newHandler
+    onChanged={changeNewEventHandler}
+    onCreate={() => { 
+      createNewEventHandler(newEventHandler)
+      newEventHandler = { parameters: [] };
+    }}
+    handler={newEventHandler} />
+  {#if eventData}
+    {#each eventData.handlers as handler, index}
       <HandlerSelector
         {index}
         onChanged={changeEventHandler}
-        onRemoved={() => removeEventHandler(index)}
+        onRemoved={() => deleteEventHandler(index)}
         {handler} />
-      <hr />
     {/each}
   {/if}
-  <div
-    class="addelement-container"
-    on:click={() => addEventHandler(newEventType)}>
-    <IconButton icon="plus" size="12" />
-    Add Handler
+
+  <div class="actions">
+    <ActionButton on:click={deleteEvent}>Delete</ActionButton>
+    <ActionButton disabled={eventData.handlers.length === 0} on:click={saveEventData}>Save</ActionButton>
   </div>
 </Modal>
