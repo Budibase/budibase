@@ -27,6 +27,8 @@ export const _initialiseChildren = (initialiseOpts) =>
             htmlElement.removeChild(htmlElement.firstChild);
         }
     }
+    
+    htmlElement.classList.add(`.lay-${treeNode.props._id}`)
 
     const renderedComponents = [];
     for(let childProps of childrenProps) {       

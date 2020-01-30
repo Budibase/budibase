@@ -23,6 +23,7 @@ export const renderComponent = ({
         const thisNode = createTreeNode();
         thisNode.context = componentContext;
         thisNode.parentNode = parentNode;
+        thisNode.props = props;
 
         parentNode.children.push(thisNode);
         renderedNodes.push(thisNode);
@@ -38,6 +39,10 @@ export const renderComponent = ({
 
         thisNode.rootElement = htmlElement.children[
             htmlElement.children.length - 1];
+        
+        if (initialProps._id) {
+            thisNode.rootElement.classList.add(`.pos-${initialProps._id}`)
+        }
     }
 
     if(func) {
@@ -51,6 +56,7 @@ export const renderComponent = ({
 
 export const createTreeNode = () => ({
     context: {},
+    props: {},
     rootElement: null,
     parentNode: null,
     children: [],
