@@ -35,7 +35,7 @@
 
   $: { 
     events = Object.keys(componentInfo)
-    .filter(key => componentInfo[key].length && findType(key) === EVENT_TYPE)
+    .filter(key => findType(key) === EVENT_TYPE)
     .map(key => ({ name: key, handlers: componentInfo[key] }));
   }
 
@@ -85,6 +85,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     border: 2px solid #f9f9f9;
+    height: 80px;
   }
 
   .hierarchy-item {
@@ -101,16 +102,11 @@
   }
 
   .event-name {
-    font-size: 12px;
-    color: rgba(35, 65, 105, 0.4);
-    grid-column: 1 / span 2;
-  }
-
-  .event-identifier {
     margin-top: 5px;
     font-weight: bold;
     font-size: 16px;
-    color: rgba(22, 48, 87, 0.6)
+    color: rgba(22, 48, 87, 0.6);
+    align-self: end;
   }
 
   .edit-text {
@@ -141,7 +137,6 @@
           class="handler-container hierarchy-item {selectedEvent && selectedEvent.index === index ? 'selected' : ''}"
           on:click={() => openModal({ ...event, index })}>
           <span class="event-name">{event.name}</span>
-          <span class="event-identifier">{event.name}</span>
           <span class="edit-text">EDIT</span>
         </div>
       {/if}
@@ -150,8 +145,8 @@
 </div>
 <EventEditorModal
   {onPropChanged}
-  events={events}
   open={modalOpen}
   onClose={closeModal}
+  eventOptions={events}
   event={selectedEvent}
   />

@@ -82,13 +82,13 @@
         {#if isExpanded}
             <div>
                 <div class="binding-prop-label">Binding Path</div>
-                <Input
+                <input class="uk-input uk-form-small"
                     value={bindingPath}
-                    on:change={setBindingPath} />
+                    on:change={setBindingPath} >
                 <div class="binding-prop-label">Fallback Value</div>
-                <Input
+                <input class="uk-input uk-form-small"
                     value={bindingFallbackValue}
-                    on:change={setBindingFallback} />
+                    on:change={setBindingFallback} >
                 <div class="binding-prop-label">Binding Source</div>
                 <select class="uk-select uk-form-small"
                     value={bindingSource}
@@ -120,9 +120,9 @@
                 {/each}
             </select>
         {:else}
-            <Input on:change={ev => onChanged(ev.target.value)}
-                bind:value={value}
-                style="flex: 1 0 auto;" />
+            <Input 
+                on:change={ev => onChanged(ev.target.value)}
+                bind:value={value} />
         {/if}
 
     </div>

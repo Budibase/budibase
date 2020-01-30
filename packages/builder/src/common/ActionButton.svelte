@@ -1,4 +1,5 @@
 <script>
+  export let visible = true;
   export let disabled = false;
 </script>
 
@@ -19,12 +20,16 @@
   }
 
   .action-button:disabled {
-    color:#163057;
+    color: #163057;
     cursor: default;
     background: transparent;
   }
+
+  .hidden {
+    visibility: hidden;
+  }
 </style>
 
-<button on:click class="action-button" {disabled}>
+<button on:click class="action-button {!visible && 'hidden'}" {disabled}>
   <slot />
 </button>
