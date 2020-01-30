@@ -1,6 +1,17 @@
 import { filter, map, reduce, toPairs } from "lodash/fp";
 import { pipe } from "../common/core";
 
+const self = n => n;
+const join_with = delimiter => a => a.join(delimiter);
+const empty_string_to_unset = s => s.length ? s : "unset";
+const add_suffix = suffix => s => s === 'unset' ? s : s + suffix;
+
+export const make_margin = (values) => pipe(values, [
+	map(empty_string_to_unset),
+	map(add_suffix('px')),
+	join_with(' ')
+]);
+
 const css_map = {
 	gridarea: {
 		name: 'grid-area',
@@ -40,18 +51,8 @@ const css_map = {
 	}
 }
 
-const self = n => n;
-const join_with = delimiter => a => a.join(delimiter);
-const empty_string_to_unset = s => s.length ? s : "unset";
-const add_suffix = suffix => s => s === 'unset' ? s : s + suffix;
-
-export const make_margin = (values) => pipe(values, [
-	map(empty_string_to_unset),
-	map(add_suffix('px')),
-	join_with(' ')
-]);
-
-export const generate_rule = ([name, values]) => `${css_map[name].name}: ${css_map[name].generate(values)};`;
+export const generate_rule = ([name, values]) =>
+	`${css_map[name].name}: ${css_map[name].generate(values)};`
 
 const handle_grid = (acc, [name, value]) => {
 	let tmp = [];
@@ -63,6 +64,11 @@ const handle_grid = (acc, [name, value]) => {
 	}
 
 	return acc.concat([[name, value]]);
+}
+
+const tap = message => x => {
+	console.log(x);
+	return x;
 }
 
 const object_to_css_string = [
