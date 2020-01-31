@@ -132,7 +132,7 @@ li button {
 
 .button-indicator {
     position: absolute;
-    top: 6px;
+    top: 8px;
     right: 10px;
     color: var(--button-text);
 }

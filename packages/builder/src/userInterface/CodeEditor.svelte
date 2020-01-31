@@ -15,21 +15,25 @@ export const show = () => {
 
 let codeModal;
 let editor;
+let cmInstance;
 
 $: currentCode = code; 
 $: originalCode = code;
 $: {
   if(editor) {
-    const cm = CodeMirror.fromTextArea(editor, {
-      mode: 'javascript',
-      lineNumbers: false,
-      lineWrapping: true,
-      smartIndent: true,
-      matchBrackets: true,
-      readOnly: false
-    });
-    cm.focus();
-    cm.on("change", () => currentCode = cm.getValue());
+    if(!cmInstance) {
+      cmInstance = CodeMirror.fromTextArea(editor, {
+        mode: 'javascript',
+        lineNumbers: false,
+        lineWrapping: true,
+        smartIndent: true,
+        matchBrackets: true,
+        readOnly: false
+      });
+      cmInstance.on("change", () => currentCode = cmInstance.getValue());
+    }
+    cmInstance.focus();
+    cmInstance.setValue(code);
   }
 }
 
@@ -41,6 +45,7 @@ const cancel = () => {
 const save = () => {
   originalCode = currentCode;
   onCodeChanged(currentCode);
+  UIkit.modal(codeModal).hide();
 }
 
 </script>
