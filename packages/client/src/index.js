@@ -6,6 +6,8 @@ export const loadBudibase = async ({
     window, localStorage, uiFunctions }) => {
 
     const appDefinition = window["##BUDIBASE_APPDEFINITION##"];
+    const uiFunctionsFromWindow = window["##BUDIBASE_APPDEFINITION##"];
+    uiFunctions = uiFunctionsFromWindow || uiFunctions;
 
     const userFromStorage = localStorage.getItem("budibase:user")
 

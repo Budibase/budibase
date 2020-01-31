@@ -12,7 +12,11 @@
     let errors = [];
     let props = {};
 
-    const props_to_ignore = ['_component','_children', '_styles', '_code', '_id'];
+<<<<<<< HEAD
+    const props_to_ignore = ['_component','_children', '_layout', '_code', '_id'];
+=======
+    const props_to_ignore = ['_component','_children', '_styles', '_id'];
+>>>>>>> master
 
     $: propDefs = componentInfo && Object.entries(componentInfo).filter(([name])=> !props_to_ignore.includes(name));
 

@@ -2,7 +2,7 @@
 export const renderComponent = ({
     componentConstructor, uiFunctions,
     htmlElement, anchor, props, 
-    initialProps, bb, document,
+    initialProps, bb, 
     parentNode}) => {
 
     const func = initialProps._id 

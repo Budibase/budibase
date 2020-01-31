@@ -2,7 +2,11 @@
     import PropsView from "./PropsView.svelte";
     import { store } from "../builderStore";
     import IconButton from "../common/IconButton.svelte";
-    import { LayoutIcon, PaintIcon, TerminalIcon, CircleIndicator, EventsIcon } from '../common/Icons/';
+<<<<<<< HEAD
+    import { LayoutIcon, PaintIcon, TerminalIcon, CircleIndicator } from '../common/Icons/';
+=======
+    import { LayoutIcon, PaintIcon, TerminalIcon, EventsIcon } from '../common/Icons/';
+>>>>>>> master
     import CodeEditor from './CodeEditor.svelte';
     import LayoutEditor from './LayoutEditor.svelte';
     import EventsEditor from "./EventsEditor";
@@ -58,8 +62,13 @@
             <PropsView {componentInfo} {components} {onPropChanged} />
         {:else if current_view === 'layout'}
             <LayoutEditor {onStyleChanged} {componentInfo}/>
+<<<<<<< HEAD
+=======
         {:else if current_view === 'events'}
             <EventsEditor {componentInfo} {components} {onPropChanged} />
+        {:else}
+            <CodeEditor />
+>>>>>>> master
         {/if}
 
         <CodeEditor 
@@ -132,7 +141,7 @@ li button {
 
 .button-indicator {
     position: absolute;
-    top: 8px;
+    top: 6px;
     right: 10px;
     color: var(--button-text);
 }
