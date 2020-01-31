@@ -67,6 +67,7 @@
     font-size: 0.85rem;
     text-transform: uppercase;
     color: #999;
+    background-color: rgba(0,0,0,0);
 }
 
 .switcher > .selected {
