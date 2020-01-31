@@ -41,6 +41,7 @@
     }
 
     h5 {
+        word-wrap: break-word;
         font-size: 12px;
         font-weight: 700;
         color: #163057;

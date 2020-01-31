@@ -33,7 +33,7 @@ $: {
       cmInstance.on("change", () => currentCode = cmInstance.getValue());
     }
     cmInstance.focus();
-    cmInstance.setValue(code);
+    cmInstance.setValue(code || "");
   }
 }
 
