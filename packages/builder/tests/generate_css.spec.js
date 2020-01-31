@@ -6,9 +6,9 @@ describe('make_margin', () => {
 	})
 
 	test('empty values should output 0', () => {
-		expect(make_margin(["1", "1", "", ""])).toEqual('1px 1px unset unset')
-		expect(make_margin(["1", "", "", "1"])).toEqual('1px unset unset 1px')
-		expect(make_margin(["", "", "", ""])).toEqual('unset unset unset unset')
+		expect(make_margin(["1", "1", "", ""])).toEqual('1px 1px 0px 0px')
+		expect(make_margin(["1", "", "", "1"])).toEqual('1px 0px 0px 1px')
+		expect(make_margin(["", "", "", ""])).toEqual('0px 0px 0px 0px')
 	})
 })
 
@@ -17,7 +17,7 @@ describe('generate_css', () => {
 		expect(
 			generate_css({ layout: { gridarea: ["", "", "", ""] } })
 		).toEqual({
-			layout: 'grid-area: unset unset unset unset;',
+			layout: '',
 			position: ''
 		});
 	})
@@ -26,7 +26,7 @@ describe('generate_css', () => {
 		expect(
 			generate_css({ layout: { gap: "10" } })
 		).toEqual({
-			layout: 'grid-gap: 10px;',
+			layout: 'grid-gap: 10px;\ndisplay: grid;',
 			position: ''
 		});
 	})
@@ -110,7 +110,7 @@ describe('generate_css', () => {
 		expect(
 			generate_css({ position: { padding: ["1", "", "", "1"] } })
 		).toEqual({
-			position: 'padding: 1px unset unset 1px;',
+			position: 'padding: 1px 0px 0px 1px;',
 			layout: ''
 		});
 	})
@@ -128,7 +128,7 @@ describe('generate_css', () => {
 		expect(
 			generate_css({ position: { margin: ["1", "", "", "1"] } })
 		).toEqual({
-			position: 'margin: 1px unset unset 1px;',
+			position: 'margin: 1px 0px 0px 1px;',
 			layout: ''
 		});
 	})
@@ -189,25 +189,25 @@ describe('generate_screen_css', () => {
 margin: 1px 1px 1px 1px;
 }
 .lay-1 {
-grid-area: unset unset unset unset;
+
 }
 .pos-2 {
 margin: 1px 1px 1px 1px;
 }
 .lay-2 {
-grid-area: unset unset unset unset;
+
 }
 .pos-3 {
 margin: 1px 1px 1px 1px;
 }
 .lay-3 {
-grid-area: unset unset unset unset;
+
 }
 .pos-4 {
 margin: 1px 1px 1px 1px;
 }
 .lay-4 {
-grid-area: unset unset unset unset;
+
 }`
 
 		expect(generate_screen_css(components)).toEqual(compiled)
@@ -287,49 +287,49 @@ grid-area: unset unset unset unset;
 margin: 1px 1px 1px 1px;
 }
 .lay-1 {
-grid-area: unset unset unset unset;
+
 }
 .pos-2 {
 margin: 1px 1px 1px 1px;
 }
 .lay-2 {
-grid-area: unset unset unset unset;
+
 }
 .pos-3 {
 margin: 1px 1px 1px 1px;
 }
 .lay-3 {
-grid-area: unset unset unset unset;
+
 }
 .pos-4 {
 margin: 1px 1px 1px 1px;
 }
 .lay-4 {
-grid-area: unset unset unset unset;
+
 }
 .pos-5 {
 margin: 1px 1px 1px 1px;
 }
 .lay-5 {
-grid-area: unset unset unset unset;
+
 }
 .pos-6 {
 margin: 1px 1px 1px 1px;
 }
 .lay-6 {
-grid-area: unset unset unset unset;
+
 }
 .pos-7 {
 margin: 1px 1px 1px 1px;
 }
 .lay-7 {
-grid-area: unset unset unset unset;
+
 }
 .pos-8 {
 margin: 1px 1px 1px 1px;
 }
 .lay-8 {
-grid-area: unset unset unset unset;
+
 }`
 
 		expect(generate_screen_css(components)).toEqual(compiled)
