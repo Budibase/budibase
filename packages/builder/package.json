@@ -6,6 +6,7 @@
     "build": "rollup -c",
     "start": "rollup -c -w",
     "test": "jest",
+    "test:watch": "jest --watchAll",
     "dev:builder": "rollup -c -w"
   },
   "jest": {
