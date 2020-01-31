@@ -4,7 +4,11 @@
     import { pipe } from "../common/core";
     import { buildPropsHierarchy } from "./pagesParsing/buildPropsHierarchy";
 
+    let iframe;
+
+    $: iframe && console.log(iframe.contentDocument.head.insertAdjacentHTML('beforeend', '<style></style>'))
     $: hasComponent = !!$store.currentFrontEndItem;
+    $: styles = hasComponent ? $store.currentFrontEndItem._css : '';
 
     $: stylesheetLinks = pipe($store.pages.stylesheets, [
         map(s => `<link rel="stylesheet" href="${s}"/>`),
@@ -27,6 +31,7 @@
     {#if hasComponent}
     <iframe style="height: 100%; width: 100%"
             title="componentPreview"
+            bind:this={iframe}
             srcdoc={
 `<html>
 
@@ -45,6 +50,7 @@
             box-sizing: border-box;
             padding: 20px;
         }
+    ${styles}
     </style>
 </head>
 <body>
