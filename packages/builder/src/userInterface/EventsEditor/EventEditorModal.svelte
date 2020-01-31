@@ -17,21 +17,22 @@
   export let onPropChanged;
 
   let eventType = "onClick";
-  let newEventHandler = { parameters: [] };
+  let draftEventHandler = { parameters: [] };
 
   $: eventData = event || { handlers: [] };
 
-  const resetModalState = () => {
-    newEventHandler = { parameters: [] };
+  const closeModal = () => {
+    onClose();
+    draftEventHandler = { parameters: [] };
     eventData = { handlers: [] };
   };
 
-  const changeEventHandler = (updatedHandler, index) => {
+  const updateEventHandler = (updatedHandler, index) => {
     eventData.handlers[index] = updatedHandler;
   };
 
-  const changeNewEventHandler = updatedHandler => {
-    newEventHandler = updatedHandler;
+  const updateDraftEventHandler = updatedHandler => {
+    draftEventHandler = updatedHandler;
   };
 
   const deleteEventHandler = index => {
@@ -50,14 +51,12 @@
 
   const deleteEvent = () => {
     onPropChanged(eventType, []);
-    resetModalState();
-    onClose();
+    closeModal();
   };
 
   const saveEventData = () => {
     onPropChanged(eventType, eventData.handlers);
-    resetModalState();
-    onClose();
+    closeModal();
   };
 </script>
 
@@ -72,8 +71,7 @@
   h5 {
     color: rgba(22, 48, 87, 0.6);
     font-size: 15px;
-    margin-bottom: 5px;
-    margin-top: 20px;
+    margin: 0;
   }
 
   .event-options {
@@ -82,10 +80,20 @@
     grid-gap: 10px;
   }
 
-  .actions, header {
+  .actions,
+  header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .actions {
+    margin-top: auto;
+  }
+
+  header {
+    margin-top: 30px;
+    margin-bottom: 10px;
   }
 
   a {
@@ -95,15 +103,19 @@
   }
 </style>
 
-<Modal bind:isOpen={open} onClosed={onClose}>
-  <h2>{eventData.name ? `${eventData.name} Event` : 'Create a New Component Event'}</h2>
-  <a href="https://docs.budibase.com/" target="_blank" >Click here to learn more about component events</a>
+<Modal bind:isOpen={open} onClosed={closeModal}>
+  <h2>
+    {eventData.name ? `${eventData.name} Event` : 'Create a New Component Event'}
+  </h2>
+  <a href="https://docs.budibase.com/" target="_blank">
+    Click here to learn more about component events
+  </a>
 
   <div class="event-options">
     <div>
       <header>
         <h5>Event Type</h5>
-        {@html getIcon('info')}
+        {@html getIcon('info', 20)}
       </header>
       <Select :value={eventType}>
         {#each eventOptions as option}
@@ -113,20 +125,23 @@
     </div>
   </div>
 
-  <h5>Event Action(s)</h5>
+  <header>
+    <h5>Event Action(s)</h5>
+    {@html getIcon('info', 20)}
+  </header>
   <HandlerSelector
     newHandler
-    onChanged={changeNewEventHandler}
+    onChanged={updateDraftEventHandler}
     onCreate={() => {
-      createNewEventHandler(newEventHandler);
-      newEventHandler = { parameters: [] };
+      createNewEventHandler(draftEventHandler);
+      draftEventHandler = { parameters: [] };
     }}
-    handler={newEventHandler} />
+    handler={draftEventHandler} />
   {#if eventData}
     {#each eventData.handlers as handler, index}
       <HandlerSelector
         {index}
-        onChanged={changeEventHandler}
+        onChanged={updateEventHandler}
         onRemoved={() => deleteEventHandler(index)}
         {handler} />
     {/each}
@@ -134,8 +149,9 @@
 
   <div class="actions">
     <ActionButton
+      alert
       disabled={eventData.handlers.length === 0}
-      visible={eventData.name}
+      hidden={!eventData.name}
       on:click={deleteEvent}>
       Delete
     </ActionButton>
