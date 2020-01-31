@@ -20,6 +20,7 @@
         hierarchy: $store.hierarchy,
         appRootPath: ""
     };
+    
 </script>
 
 
@@ -34,6 +35,8 @@
     ${stylesheetLinks}
     <script>
         window["##BUDIBASE_APPDEFINITION##"] = ${JSON.stringify(appDefinition)};
+        window["##BUDIBASE_UIFUNCTIONS"] = ${$store.currentScreenFunctions};
+        
         import('/_builder/budibase-client.esm.mjs')
         .then(module => {
             module.loadBudibase({ window, localStorage });

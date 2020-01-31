@@ -83,11 +83,9 @@ const buildIndexHtml = async (config, appname, appPath, pages, pageName) => {
 
 
 const buildClientAppDefinition = async (config, appname, appdefinition, appPath, pages, pageName) => {
-
     
     const appPublicPath = publicPath(appPath, pageName);
     const appRootPath = rootPath(config, appname);
-
     
     const componentLibraries = [];
 
@@ -129,6 +127,7 @@ const buildClientAppDefinition = async (config, appname, appdefinition, appPath,
     }
     
     await writeFile(filename, 
-            `window['##BUDIBASE_APPDEFINITION##'] = ${JSON.stringify(clientAppDefObj)}`);
+`window['##BUDIBASE_APPDEFINITION##'] = ${JSON.stringify(clientAppDefObj)};
+window['##BUDIBASE_UIFUNCTIONS##'] = ${appdefinition.uiFunctions}`);
 
 }

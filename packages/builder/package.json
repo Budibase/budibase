@@ -35,6 +35,7 @@
   "dependencies": {
     "@budibase/client": "^0.0.16",
     "@nx-js/compiler-util": "^2.0.0",
+    "codemirror": "^5.51.0",
     "date-fns": "^1.29.0",
     "feather-icons": "^4.21.0",
     "flatpickr": "^4.5.7",

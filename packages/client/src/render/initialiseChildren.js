@@ -46,7 +46,7 @@ export const _initialiseChildren = (initialiseOpts) =>
             parentNode: treeNode,
             componentConstructor,uiFunctions, 
             htmlElement, anchor, initialProps, 
-            bb, document});
+            bb});
         
         for(let comp of renderedComponentsThisIteration) {
             comp.unsubscribe = bind(comp.component);

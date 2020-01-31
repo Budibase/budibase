@@ -4,3 +4,4 @@ export { default as TerminalIcon } from './Terminal.svelte';
 export { default as InputIcon } from './Input.svelte';
 export { default as ImageIcon } from './Image.svelte';
 export { default as ArrowDownIcon } from './ArrowDown.svelte';
+export { default as CircleIndicator } from './CircleIndicator.svelte';

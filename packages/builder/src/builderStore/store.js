@@ -22,6 +22,7 @@ import {
 import {
     loadLibs, loadLibUrls, loadGeneratorLibs
 } from "./loadComponentLibraries";
+import { buildCodeForScreens } from "./buildCodeForScreens";
 
 let appname = "";
 
@@ -95,6 +96,7 @@ export const getStore = () => {
     store.selectComponent = selectComponent(store);
     store.setComponentProp = setComponentProp(store);
     store.setComponentStyle = setComponentStyle(store);
+    store.setComponentCode = setComponentCode(store);
     return store;
 }
 
@@ -667,7 +669,8 @@ const savePackage = (store, s) => {
                 s.components,
                 s.screens,
                 s.pages.unauthenticated.appBody)
-        }
+        },
+        uiFunctions: buildCodeForScreens(s.screens)
     };
 
     const data = {
@@ -685,6 +688,7 @@ const setCurrentScreen = store => screenName => {
         s.currentFrontEndItem = screen;
         s.currentFrontEndType = "screen";
         s.currentComponentInfo = getScreenInfo(s.components, screen);
+        setCurrentScreenFunctions(s);
         return s;
     })
 }
@@ -693,8 +697,9 @@ const setCurrentPage = store => pageName => {
     store.update(s => {
         s.currentFrontEndType = "page";
         s.currentPageName = pageName;
+        setCurrentScreenFunctions(s);
         return s;
-    })
+    });
 }
 
 const addChildComponent = store => component => {
@@ -763,4 +768,23 @@ const setComponentStyle = store => (name, value) => {
 
         return s;
     })
+}
+
+const setComponentCode = store => (code) => {
+    store.update(s => {
+        s.currentComponentInfo._code = code;
+
+        setCurrentScreenFunctions(s);
+        // save without messing with the store
+        _save(s.appname, s.currentFrontEndItem, store, s)
+        
+        return s;
+    })
+}
+
+const setCurrentScreenFunctions = (s) => {
+    s.currentScreenFunctions = 
+        s.currentFrontEndItem === "screen"
+        ? buildCodeForScreens([s.currentFrontEndItem])
+        : "({});";
 }

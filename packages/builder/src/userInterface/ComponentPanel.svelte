@@ -2,11 +2,12 @@
     import PropsView from "./PropsView.svelte";
     import { store } from "../builderStore";
     import IconButton from "../common/IconButton.svelte";
-    import { LayoutIcon, PaintIcon, TerminalIcon } from '../common/Icons/';
+    import { LayoutIcon, PaintIcon, TerminalIcon, CircleIndicator } from '../common/Icons/';
     import CodeEditor from './CodeEditor.svelte';
     import LayoutEditor from './LayoutEditor.svelte';
 
     let current_view = 'props';
+    let codeEditor;
 
     $: component = $store.currentComponentInfo;
     $: originalName = component.name;
@@ -17,6 +18,7 @@
 
     const onPropChanged = store.setComponentProp;
     const onStyleChanged = store.setComponentStyle;
+
 </script>
 
 <div class="root">
@@ -32,7 +34,12 @@
           </button>
         </li>
         <li>
-          <button class:selected={current_view === 'code'} on:click={() => current_view = 'code'}>
+          <button class:selected={current_view === 'code'} on:click={() => codeEditor && codeEditor.show()}>
+            {#if componentInfo._code && componentInfo._code.trim().length > 0}
+                <div class="button-indicator">
+                    <CircleIndicator />
+                </div>
+            {/if}
             <TerminalIcon />
           </button>
         </li>
@@ -45,9 +52,12 @@
             <PropsView {componentInfo} {components} {onPropChanged} />
         {:else if current_view === 'layout'}
             <LayoutEditor {onStyleChanged} {componentInfo}/>
-        {:else}
-            <CodeEditor />
         {/if}
+
+        <CodeEditor 
+            bind:this={codeEditor} 
+            code={$store.currentComponentInfo._code}
+            onCodeChanged={store.setComponentCode} />
 
         </div>
     {:else}
@@ -104,11 +114,19 @@ li button {
     padding: 12px;
     outline: none;
     cursor: pointer;
+    position: relative;
 }
 
 .selected {
     color: var(--button-text);
     background: var(--background-button)!important;
+}
+
+.button-indicator {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    color: var(--button-text);
 }
 
 </style>
