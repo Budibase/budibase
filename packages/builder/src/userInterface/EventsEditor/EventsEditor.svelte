@@ -75,7 +75,7 @@
     flex-wrap: wrap;
   }
 
-  .heading {
+  header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -124,10 +124,10 @@
   }
 </style>
 
-<div class="heading">
+<header>
   <h3>Events</h3>
   <PlusButton on:click={() => openModal()} />
-</div>
+</header>
 
 <div class="root">
   <form class="uk-form-stacked form-root">

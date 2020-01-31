@@ -1,12 +1,23 @@
 <script>
-  export let visible = true;
   export let disabled = false;
+  export let hidden = false;
+  export let primary = true;
+  export let alert = false;
+  export let warning = false;
 </script>
 
 <style>
-  .action-button {
+  .primary {
     color: #0055ff;
     background: rgb(54, 133, 249, 0.1);
+  }
+
+  .alert {
+    color: rgba(255, 0, 31, 1);
+    background: rgba(255, 0, 31, 0.1);;
+  }
+
+  .button {
     font-size: 18px;
     font-weight: bold;
     border-radius: 5px;
@@ -15,11 +26,11 @@
     height: 64px;
   }
 
-  .action-button:hover {
+  .button:hover {
     cursor: pointer;
   }
 
-  .action-button:disabled {
+  .button:disabled {
     color: rgba(22, 48, 87, 0.2);
     cursor: default;
     background: transparent;
@@ -30,6 +41,13 @@
   }
 </style>
 
-<button on:click class="action-button {!visible && 'hidden'}" {disabled}>
+<button
+  on:click
+  class="button"
+  class:hidden
+  class:primary
+  class:alert
+  class:warning
+  {disabled}>
   <slot />
 </button>
