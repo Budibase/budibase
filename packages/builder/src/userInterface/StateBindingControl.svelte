@@ -1,5 +1,6 @@
 <script>
     import IconButton from "../common/IconButton.svelte";
+    import Input from "../common/Input.svelte";
     import {
         isBinding, getBinding, setBinding
     } from "../common/binding";
@@ -119,9 +120,9 @@
                 {/each}
             </select>
         {:else}
-            <input on:change={ev => onChanged(ev.target.value)}
-                bind:value={value}
-                style="flex: 1 0 auto;" />
+            <Input 
+                on:change={ev => onChanged(ev.target.value)}
+                bind:value={value} />
         {/if}
 
     </div>
