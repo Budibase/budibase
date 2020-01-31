@@ -3,8 +3,8 @@ import { pipe } from "../common/core";
 
 const self = n => n;
 const join_with = delimiter => a => a.join(delimiter);
-const empty_string_to_unset = s => s.length ? s : "unset";
-const add_suffix = suffix => s => s === 'unset' ? s : s + suffix;
+const empty_string_to_unset = s => s.length ? s : "0";
+const add_suffix = suffix => s => s + suffix;
 
 export const make_margin = (values) => pipe(values, [
 	map(empty_string_to_unset),
