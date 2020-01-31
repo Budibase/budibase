@@ -11,34 +11,34 @@ import browsersync from "rollup-plugin-browsersync";
 import proxy from "http-proxy-middleware";
 
 const target = 'http://localhost:4001';
-const _builderProxy =  proxy('/_builder', {
-  target:"http://localhost:3000",
-  pathRewrite: {'^/_builder' : ''}
+const _builderProxy = proxy('/_builder', {
+	target: "http://localhost:3000",
+	pathRewrite: { '^/_builder': '' }
 });
 
-const apiProxy =  proxy(['/_builder/api/**', '/_builder/**/componentlibrary', '/_builder/**/componentlibraryGenerators'] , {
+const apiProxy = proxy(['/_builder/api/**', '/_builder/**/componentlibrary', '/_builder/**/componentlibraryGenerators'], {
 	target,
 	logLevel: "debug",
 	changeOrigin: true,
 	cookieDomainRewrite: true,
 	onProxyReq(proxyReq) {
-	  if (proxyReq.getHeader("origin")) {
-		proxyReq.setHeader("origin", target)
-	  }
+		if (proxyReq.getHeader("origin")) {
+			proxyReq.setHeader("origin", target)
+		}
 	}
-  });
+});
 
 const production = !process.env.ROLLUP_WATCH;
 
-const lodash_fp_exports = ["union", "reduce", "isUndefined", "cloneDeep", "split", "some", "map", "filter", "isEmpty", "countBy", "includes", "last", "find", "constant", 
-"take", "first", "intersection", "mapValues", "isNull", "has", "isInteger", "isNumber", "isString", "isBoolean", "isDate", "isArray", "isObject", "clone", "values", "keyBy", "isNaN",
-"keys", "orderBy", "concat", "reverse", "difference", "merge", "flatten", "each", "pull", "join", "defaultCase", "uniqBy", "every", "uniqWith", "isFunction", "groupBy", 
-"differenceBy", "intersectionBy", "isEqual", "max", "sortBy", "assign", "uniq", "trimChars", "trimCharsStart", "isObjectLike", "flattenDeep", "indexOf", "isPlainObject",
-"toNumber", "takeRight"];
+const lodash_fp_exports = ["union", "reduce", "isUndefined", "cloneDeep", "split", "some", "map", "filter", "isEmpty", "countBy", "includes", "last", "find", "constant",
+	"take", "first", "intersection", "mapValues", "isNull", "has", "isInteger", "isNumber", "isString", "isBoolean", "isDate", "isArray", "isObject", "clone", "values", "keyBy", "isNaN",
+	"keys", "orderBy", "concat", "reverse", "difference", "merge", "flatten", "each", "pull", "join", "defaultCase", "uniqBy", "every", "uniqWith", "isFunction", "groupBy",
+	"differenceBy", "intersectionBy", "isEqual", "max", "sortBy", "assign", "uniq", "trimChars", "trimCharsStart", "isObjectLike", "flattenDeep", "indexOf", "isPlainObject",
+	"toNumber", "takeRight", "toPairs"];
 
-const lodash_exports = ["flow", "join", "replace", "trim", "dropRight", "takeRight", "head", "reduce",  
-"tail", "startsWith", "findIndex", "merge",  
-"assign", "each", "find", "orderBy", "union"];
+const lodash_exports = ["flow", "join", "replace", "trim", "dropRight", "takeRight", "head", "reduce",
+	"tail", "startsWith", "findIndex", "merge",
+	"assign", "each", "find", "orderBy", "union"];
 
 const outputpath = "../server/builder";
 
@@ -63,7 +63,7 @@ export default {
 				{ src: 'src/favicon.png', dest: outputpath },
 				{ src: 'src/assets', dest: outputpath },
 				{ src: 'node_modules/@budibase/client/dist/budibase-client.esm.mjs', dest: outputpath },
-			  ]
+			]
 		}),
 
 		svelte({
@@ -80,28 +80,28 @@ export default {
 		resolve({
 			browser: true,
 			dedupe: importee => {
-				return importee === 'svelte' 
-					   || importee.startsWith('svelte/')
-					   || coreExternal.includes(importee);
+				return importee === 'svelte'
+					|| importee.startsWith('svelte/')
+					|| coreExternal.includes(importee);
 			}
-		
+
 		}),
 		commonjs({
 			namedExports: {
 				"lodash/fp": lodash_fp_exports,
-				"lodash":lodash_exports,
+				"lodash": lodash_exports,
 				"shortid": ["generate"]
 			}
 		}),
 		url({
-			limit: 0, 
-			include: ["**/*.woff2", "**/*.png"], 
+			limit: 0,
+			include: ["**/*.woff2", "**/*.png"],
 			fileName: "[dirname][name][extname]",
 			emitFiles: true
 		}),
 		url({
-			limit: 0, 
-			include: ["**/*.css"], 
+			limit: 0,
+			include: ["**/*.css"],
 			fileName: "[name][extname]",
 			emitFiles: true
 		}),
@@ -113,7 +113,7 @@ export default {
 		!production && livereload(outputpath),
 		!production && browsersync({
 			server: outputpath,
-			middleware: [apiProxy,_builderProxy]
+			middleware: [apiProxy, _builderProxy]
 		}),
 
 		// If we're building for production (npm run build

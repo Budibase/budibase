@@ -4,7 +4,7 @@ import {
 import {
     filter, cloneDeep, sortBy,
     map, last, keys, concat, keyBy,
-    find, isEmpty, reduce, values, isEqual
+    find, isEmpty, values,
 } from "lodash/fp";
 import {
     pipe, getNode, validate,
@@ -17,11 +17,13 @@ import api from "./api";
 import { isRootComponent, getExactComponent } from "../userInterface/pagesParsing/searchComponents";
 import { rename } from "../userInterface/pagesParsing/renameScreen";
 import {
-    getNewComponentInfo, getScreenInfo, getComponentInfo
+    getNewComponentInfo, getScreenInfo,
 } from "../userInterface/pagesParsing/createProps";
 import {
     loadLibs, loadLibUrls, loadGeneratorLibs
 } from "./loadComponentLibraries";
+import { uuid } from './uuid';
+import { generate_screen_css } from './generate_css';
 
 let appname = "";
 
@@ -710,7 +712,8 @@ const addChildComponent = store => component => {
         const component_definition = Object.assign(
             cloneDeep(newComponent.fullProps), {
             _component: component,
-            _layout: {}
+            _styles: { position: {}, layout: {} },
+            _id: uuid()
         })
 
         if (children) {
@@ -726,6 +729,8 @@ const addChildComponent = store => component => {
                 s.currentComponentInfo._children = [component_definition]
             }
         }
+
+        _saveScreen(store, s, s.currentFrontEndItem);
 
         _saveScreen(store, s, s.currentFrontEndItem);
 
@@ -751,12 +756,13 @@ const setComponentProp = store => (name, value) => {
     })
 }
 
-const setComponentStyle = store => (name, value) => {
+const setComponentStyle = store => (type, name, value) => {
     store.update(s => {
-        if (!s.currentComponentInfo._layout) {
-            s.currentComponentInfo._layout = {};
+        if (!s.currentComponentInfo._styles) {
+            s.currentComponentInfo._styles = {};
         }
-        s.currentComponentInfo._layout[name] = value;
+        s.currentComponentInfo._styles[type][name] = value;
+        s.currentFrontEndItem._css = generate_screen_css(s.currentFrontEndItem.props._children)
 
         // save without messing with the store
         _save(s.appname, s.currentFrontEndItem, store, s)
