@@ -22,9 +22,12 @@ import {
 import {
     loadLibs, loadLibUrls, loadGeneratorLibs
 } from "./loadComponentLibraries";
+<<<<<<< HEAD
 import { buildCodeForScreens } from "./buildCodeForScreens";
+=======
 import { uuid } from './uuid';
 import { generate_screen_css } from './generate_css';
+>>>>>>> master
 
 let appname = "";
 

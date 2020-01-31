@@ -19,13 +19,16 @@
   const single = [{ placeholder: '' }];
 
 
-  $: layout  = componentInfo._layout;
+  $: layout  = { ...componentInfo._styles.position, ...componentInfo._styles.layout };
+
+  $: layouts = {
+    templaterows: ['Grid Rows', single],
+    templatecolumns: ['Grid Columns', single],
+  };
 
   $: positions = {
-    gridarea: ['Grid Area', tbrl, 'small'],
     column: ['Column', se],
     row: ['Row', se],
-    gap: ['Gap', single],
   };
 
   $: spacing = {
@@ -41,15 +44,28 @@
 </script>
 
 
-<h3>Layout</h3>
+<h3>Styles</h3>
 
 <h4>Positioning</h4>
+<div class="layout-pos">
+ {#each Object.entries(layouts) as [key, [name, meta, size]]}
+    <div class="grid">
+      <h5>{name}:</h5>
+      <InputGroup onStyleChanged={_value => onStyleChanged('layout',key, _value)}
+                  values={layout[key] || newValue(meta.length)}
+                  {meta}
+                  {size}
+                  type="text"/>
+    </div>
+  {/each}
+</div>
 
+<h4>Positioning</h4>
 <div class="layout-pos">
  {#each Object.entries(positions) as [key, [name, meta, size]]}
     <div class="grid">
-      <h5>Grid Area:</h5>
-      <InputGroup onStyleChanged={_value => onStyleChanged(key, _value)}
+      <h5>{name}:</h5>
+      <InputGroup onStyleChanged={_value => onStyleChanged('position',key, _value)}
                   values={layout[key] || newValue(meta.length)}
                   {meta}
                   {size} />
@@ -61,8 +77,8 @@
 <div class="layout-spacing">
   {#each Object.entries(spacing) as [key, [name, meta, size]]}
     <div class="grid">
-      <h5>Grid Area:</h5>
-      <InputGroup onStyleChanged={_value => onStyleChanged(key, _value)}
+      <h5>{name}:</h5>
+      <InputGroup onStyleChanged={_value => onStyleChanged('position', key, _value)}
                   values={layout[key] || newValue(meta.length)}
                   {meta}
                   {size} />
@@ -74,8 +90,8 @@
 <div class="layout-layer">
   {#each Object.entries(zindex) as [key, [name, meta, size]]}
     <div class="grid">
-      <h5>Grid Area:</h5>
-      <InputGroup onStyleChanged={_value => onStyleChanged(key, _value)}
+      <h5>{name}:</h5>
+      <InputGroup onStyleChanged={_value => onStyleChanged('position', key, _value)}
                   values={layout[key] || newValue(meta.length)}
                   {meta}
                   {size} />

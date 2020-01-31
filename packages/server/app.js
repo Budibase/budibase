@@ -14,7 +14,7 @@ module.exports = async (budibaseContext) => {
         app.context.master,
         config.latestPackagesFolder
     );
-    app.use(koaBody({ multipart : true }));
+    app.use(koaBody({ multipart: true }));
     app.use(router(config, app).routes());
     return app.listen(config.port);
 };
