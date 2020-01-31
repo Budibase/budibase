@@ -2,6 +2,7 @@
   export let meta = [];
   export let size = '';
   export let values = [];
+  export let type = "number";
   export let onStyleChanged = () => {};
 
   let _values = values.map(v => v);
@@ -11,7 +12,7 @@
 
 <div class="inputs {size}">
   {#each meta as { placeholder }, i}
-    <input type="number"
+    <input {type}
            placeholder="{placeholder}"
            value={values[i]}
            on:input={(e) => _values[i] = e.target.value} />
