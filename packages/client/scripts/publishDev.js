@@ -1,53 +1,52 @@
-const { readdir, stat, copyFile } = require("fs-extra");
-const { constants } = require("fs");
-const { join, basename } = require("path");
+const { readdir, stat, copyFile } = require("fs-extra")
+const { constants } = require("fs")
+const { join, basename } = require("path")
 
-const packagesFolder = "..";
+const packagesFolder = ".."
 
-const jsFile = dir => join(dir, "budibase-client.js");
-const jsMapFile = dir => join(dir, "budibase-client.js.map");
-const sourceJs = jsFile("dist");
-const sourceJsMap = jsMapFile("dist");
+const jsFile = dir => join(dir, "budibase-client.js")
+const jsMapFile = dir => join(dir, "budibase-client.js.map")
+const sourceJs = jsFile("dist")
+const sourceJsMap = jsMapFile("dist")
 
-const appPackages = join(packagesFolder, "server", "appPackages");
+const appPackages = join(packagesFolder, "server", "appPackages")
 
-const publicMain = appName => join(appPackages, appName, "public", "main");
-const publicUnauth = appName => join(appPackages, appName, "public", "unauthenticated");
-const nodeModules = appName => join(appPackages, appName, "node_modules", "@budibase", "client", "dist");
+const publicMain = appName => join(appPackages, appName, "public", "main")
+const publicUnauth = appName =>
+  join(appPackages, appName, "public", "unauthenticated")
+const nodeModules = appName =>
+  join(appPackages, appName, "node_modules", "@budibase", "client", "dist")
 
-(async () => {
+;(async () => {
+  const apps = await readdir(appPackages)
 
-    const apps = await readdir(appPackages);
-
-    const copySource = file => async toDir => {
-        const dest = join(toDir, basename(file));
-        try {
-            await copyFile(file, dest, constants.COPYFILE_FICLONE);
-            console.log(`COPIED ${file} to ${dest}`);
-        } catch(e) {
-            console.log(`COPY FAILED ${file} to ${dest}: ${e}`);
-        }
+  const copySource = file => async toDir => {
+    const dest = join(toDir, basename(file))
+    try {
+      await copyFile(file, dest, constants.COPYFILE_FICLONE)
+      console.log(`COPIED ${file} to ${dest}`)
+    } catch (e) {
+      console.log(`COPY FAILED ${file} to ${dest}: ${e}`)
     }
+  }
 
-    const copySourceJs = copySource(sourceJs);
-    const copySourceJsMap = copySource(sourceJsMap);
-    
+  const copySourceJs = copySource(sourceJs)
+  const copySourceJsMap = copySource(sourceJsMap)
 
-    for(let app of apps) {
-        if(!(await stat(join(appPackages, app))).isDirectory()) continue;
+  for (let app of apps) {
+    if (!(await stat(join(appPackages, app))).isDirectory()) continue
 
-        await copySourceJs(nodeModules(app));
-        await copySourceJsMap(nodeModules(app));
+    await copySourceJs(nodeModules(app))
+    await copySourceJsMap(nodeModules(app))
 
-        await copySourceJs(publicMain(app));
-        await copySourceJsMap(publicMain(app));
+    await copySourceJs(publicMain(app))
+    await copySourceJsMap(publicMain(app))
 
-        await copySourceJs(publicUnauth(app));
-        await copySourceJsMap(publicUnauth(app));
+    await copySourceJs(publicUnauth(app))
+    await copySourceJsMap(publicUnauth(app))
 
-        await copySource(
-            join("dist", "budibase-client.esm.mjs"))(
-            join(packagesFolder, "server", "builder" ));
-    }
-
-})();
+    await copySource(join("dist", "budibase-client.esm.mjs"))(
+      join(packagesFolder, "server", "builder")
+    )
+  }
+})()
