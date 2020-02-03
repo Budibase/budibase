@@ -1,74 +1,74 @@
 <script>
-  import InputGroup from '../common/Inputs/InputGroup.svelte';
+  import InputGroup from "../common/Inputs/InputGroup.svelte"
 
-  export let onStyleChanged = () => {};
-  export let componentInfo;
+  export let onStyleChanged = () => {}
+  export let componentInfo
 
   const tbrl = [
-    { placeholder: 'T' },
-    { placeholder: 'R' },
-    { placeholder: 'B' },
-    { placeholder: 'L' }
-  ];
-
-  const se = [
-    { placeholder: 'START' },
-    { placeholder: 'END' },
+    { placeholder: "T" },
+    { placeholder: "R" },
+    { placeholder: "B" },
+    { placeholder: "L" },
   ]
 
-  const single = [{ placeholder: '' }];
+  const se = [{ placeholder: "START" }, { placeholder: "END" }]
 
+  const single = [{ placeholder: "" }]
 
-  $: layout  = { ...componentInfo._styles.position, ...componentInfo._styles.layout };
-
-  $: layouts = {
-    templaterows: ['Grid Rows', single],
-    templatecolumns: ['Grid Columns', single],
-  };
-
-  $: positions = {
-    column: ['Column', se],
-    row: ['Row', se],
-  };
-
-  $: spacing = {
-    margin: ['Margin', tbrl, 'small'],
-    padding: ['Padding', tbrl, 'small']
-  };
-
-  $: zindex = {
-    zindex: ['Z-Index', single]
+  $: layout = {
+    ...componentInfo._styles.position,
+    ...componentInfo._styles.layout,
   }
 
-  const newValue = n => Array(n).fill('');
-</script>
+  $: layouts = {
+    templaterows: ["Grid Rows", single],
+    templatecolumns: ["Grid Columns", single],
+  }
 
+  $: positions = {
+    column: ["Column", se],
+    row: ["Row", se],
+  }
+
+  $: spacing = {
+    margin: ["Margin", tbrl, "small"],
+    padding: ["Padding", tbrl, "small"],
+  }
+
+  $: zindex = {
+    zindex: ["Z-Index", single],
+  }
+
+  const newValue = n => Array(n).fill("")
+</script>
 
 <h3>Styles</h3>
 
 <h4>Positioning</h4>
 <div class="layout-pos">
- {#each Object.entries(layouts) as [key, [name, meta, size]]}
+  {#each Object.entries(layouts) as [key, [name, meta, size]]}
     <div class="grid">
       <h5>{name}:</h5>
-      <InputGroup onStyleChanged={_value => onStyleChanged('layout',key, _value)}
-                  values={layout[key] || newValue(meta.length)}
-                  {meta}
-                  {size}
-                  type="text"/>
+      <InputGroup
+        onStyleChanged={_value => onStyleChanged('layout', key, _value)}
+        values={layout[key] || newValue(meta.length)}
+        {meta}
+        {size}
+        type="text" />
     </div>
   {/each}
 </div>
 
 <h4>Positioning</h4>
 <div class="layout-pos">
- {#each Object.entries(positions) as [key, [name, meta, size]]}
+  {#each Object.entries(positions) as [key, [name, meta, size]]}
     <div class="grid">
       <h5>{name}:</h5>
-      <InputGroup onStyleChanged={_value => onStyleChanged('position',key, _value)}
-                  values={layout[key] || newValue(meta.length)}
-                  {meta}
-                  {size} />
+      <InputGroup
+        onStyleChanged={_value => onStyleChanged('position', key, _value)}
+        values={layout[key] || newValue(meta.length)}
+        {meta}
+        {size} />
     </div>
   {/each}
 </div>
@@ -78,10 +78,11 @@
   {#each Object.entries(spacing) as [key, [name, meta, size]]}
     <div class="grid">
       <h5>{name}:</h5>
-      <InputGroup onStyleChanged={_value => onStyleChanged('position', key, _value)}
-                  values={layout[key] || newValue(meta.length)}
-                  {meta}
-                  {size} />
+      <InputGroup
+        onStyleChanged={_value => onStyleChanged('position', key, _value)}
+        values={layout[key] || newValue(meta.length)}
+        {meta}
+        {size} />
     </div>
   {/each}
 </div>
@@ -91,10 +92,11 @@
   {#each Object.entries(zindex) as [key, [name, meta, size]]}
     <div class="grid">
       <h5>{name}:</h5>
-      <InputGroup onStyleChanged={_value => onStyleChanged('position', key, _value)}
-                  values={layout[key] || newValue(meta.length)}
-                  {meta}
-                  {size} />
+      <InputGroup
+        onStyleChanged={_value => onStyleChanged('position', key, _value)}
+        values={layout[key] || newValue(meta.length)}
+        {meta}
+        {size} />
     </div>
   {/each}
 </div>

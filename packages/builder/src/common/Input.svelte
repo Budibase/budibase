@@ -1,6 +1,8 @@
 <script>
-  export let value = "";
+  export let value = ""
 </script>
+
+<input type="text" on:change bind:value />
 
 <style>
   input {
@@ -23,5 +25,3 @@
     height: 50px;
   }
 </style>
-
-<input type="text" on:change bind:value />

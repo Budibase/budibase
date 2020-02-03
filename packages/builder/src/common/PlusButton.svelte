@@ -1,3 +1,5 @@
+<button on:click>+</button>
+
 <style>
   button {
     cursor: pointer;
@@ -19,5 +21,3 @@
     color: rgba(22, 48, 87, 1);
   }
 </style>
-
-<button on:click>+</button>

@@ -2310,7 +2310,9 @@ var app = (function(exports) {
                 null != n &&
                 !wu(n)
               ) ||
-              nn.test(n) || !X.test(n) || (null != t && n in Qu(t))
+              nn.test(n) ||
+              !X.test(n) ||
+              (null != t && n in Qu(t))
             )
           }
           function Re(n) {
@@ -12812,7 +12814,8 @@ var app = (function(exports) {
             // Non `Object` object instances with different constructors are not equal.
             if (
               objCtor != othCtor &&
-              "constructor" in object && "constructor" in other &&
+              "constructor" in object &&
+              "constructor" in other &&
               !(
                 typeof objCtor == "function" &&
                 objCtor instanceof objCtor &&
@@ -13306,7 +13309,9 @@ var app = (function(exports) {
           return (
             !!length &&
             (type == "number" || (type != "symbol" && reIsUint.test(value))) &&
-            value > -1 && value % 1 == 0 && value < length
+            value > -1 &&
+            value % 1 == 0 &&
+            value < length
           )
         }
 

@@ -1,64 +1,124 @@
 <script>
-  import Modal from "../../common/Modal.svelte";
-  import HandlerSelector from "./HandlerSelector.svelte";
-  import IconButton from "../../common/IconButton.svelte";
-  import ActionButton from "../../common/ActionButton.svelte";
-  import PlusButton from "../../common/PlusButton.svelte";
-  import Select from "../../common/Select.svelte";
-  import Input from "../../common/Input.svelte";
-  import getIcon from "../../common/icon";
+  import Modal from "../../common/Modal.svelte"
+  import HandlerSelector from "./HandlerSelector.svelte"
+  import IconButton from "../../common/IconButton.svelte"
+  import ActionButton from "../../common/ActionButton.svelte"
+  import PlusButton from "../../common/PlusButton.svelte"
+  import Select from "../../common/Select.svelte"
+  import Input from "../../common/Input.svelte"
+  import getIcon from "../../common/icon"
 
-  import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers";
+  import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
 
-  export let event;
-  export let eventOptions;
-  export let open;
-  export let onClose;
-  export let onPropChanged;
+  export let event
+  export let eventOptions
+  export let open
+  export let onClose
+  export let onPropChanged
 
-  let eventType = "onClick";
-  let draftEventHandler = { parameters: [] };
+  let eventType = "onClick"
+  let draftEventHandler = { parameters: [] }
 
-  $: eventData = event || { handlers: [] };
+  $: eventData = event || { handlers: [] }
 
   const closeModal = () => {
-    onClose();
-    draftEventHandler = { parameters: [] };
-    eventData = { handlers: [] };
-  };
+    onClose()
+    draftEventHandler = { parameters: [] }
+    eventData = { handlers: [] }
+  }
 
   const updateEventHandler = (updatedHandler, index) => {
-    eventData.handlers[index] = updatedHandler;
-  };
+    eventData.handlers[index] = updatedHandler
+  }
 
   const updateDraftEventHandler = updatedHandler => {
-    draftEventHandler = updatedHandler;
-  };
+    draftEventHandler = updatedHandler
+  }
 
   const deleteEventHandler = index => {
-    eventData.handlers.splice(index, 1);
-    eventData = eventData;
-  };
+    eventData.handlers.splice(index, 1)
+    eventData = eventData
+  }
 
   const createNewEventHandler = handler => {
     const newHandler = handler || {
       parameters: {},
-      [EVENT_TYPE_MEMBER_NAME]: ""
-    };
-    eventData.handlers.push(newHandler);
-    eventData = eventData;
-  };
+      [EVENT_TYPE_MEMBER_NAME]: "",
+    }
+    eventData.handlers.push(newHandler)
+    eventData = eventData
+  }
 
   const deleteEvent = () => {
-    onPropChanged(eventType, []);
-    closeModal();
-  };
+    onPropChanged(eventType, [])
+    closeModal()
+  }
 
   const saveEventData = () => {
-    onPropChanged(eventType, eventData.handlers);
-    closeModal();
-  };
+    onPropChanged(eventType, eventData.handlers)
+    closeModal()
+  }
 </script>
+
+<Modal bind:isOpen={open} onClosed={closeModal}>
+  <h2>
+    {eventData.name ? `${eventData.name} Event` : 'Create a New Component Event'}
+  </h2>
+  <a href="https://docs.budibase.com/" target="_blank">
+    Click here to learn more about component events
+  </a>
+
+  <div class="event-options">
+    <div>
+      <header>
+        <h5>Event Type</h5>
+        {@html getIcon('info', 20)}
+      </header>
+      <Select :value={eventType}>
+        {#each eventOptions as option}
+          <option value={option.name}>{option.name}</option>
+        {/each}
+      </Select>
+    </div>
+  </div>
+
+  <header>
+    <h5>Event Action(s)</h5>
+    {@html getIcon('info', 20)}
+  </header>
+  <HandlerSelector
+    newHandler
+    onChanged={updateDraftEventHandler}
+    onCreate={() => {
+      createNewEventHandler(draftEventHandler)
+      draftEventHandler = { parameters: [] }
+    }}
+    handler={draftEventHandler} />
+  {#if eventData}
+    {#each eventData.handlers as handler, index}
+      <HandlerSelector
+        {index}
+        onChanged={updateEventHandler}
+        onRemoved={() => deleteEventHandler(index)}
+        {handler} />
+    {/each}
+  {/if}
+
+  <div class="actions">
+    <ActionButton
+      alert
+      disabled={eventData.handlers.length === 0}
+      hidden={!eventData.name}
+      on:click={deleteEvent}>
+      Delete
+    </ActionButton>
+    <ActionButton
+      disabled={eventData.handlers.length === 0}
+      on:click={saveEventData}>
+      Save
+    </ActionButton>
+  </div>
+</Modal>
 
 <style>
   h2 {
@@ -102,63 +162,3 @@
     margin-top: 0;
   }
 </style>
-
-<Modal bind:isOpen={open} onClosed={closeModal}>
-  <h2>
-    {eventData.name ? `${eventData.name} Event` : 'Create a New Component Event'}
-  </h2>
-  <a href="https://docs.budibase.com/" target="_blank">
-    Click here to learn more about component events
-  </a>
-
-  <div class="event-options">
-    <div>
-      <header>
-        <h5>Event Type</h5>
-        {@html getIcon('info', 20)}
-      </header>
-      <Select :value={eventType}>
-        {#each eventOptions as option}
-          <option value={option.name}>{option.name}</option>
-        {/each}
-      </Select>
-    </div>
-  </div>
-
-  <header>
-    <h5>Event Action(s)</h5>
-    {@html getIcon('info', 20)}
-  </header>
-  <HandlerSelector
-    newHandler
-    onChanged={updateDraftEventHandler}
-    onCreate={() => {
-      createNewEventHandler(draftEventHandler);
-      draftEventHandler = { parameters: [] };
-    }}
-    handler={draftEventHandler} />
-  {#if eventData}
-    {#each eventData.handlers as handler, index}
-      <HandlerSelector
-        {index}
-        onChanged={updateEventHandler}
-        onRemoved={() => deleteEventHandler(index)}
-        {handler} />
-    {/each}
-  {/if}
-
-  <div class="actions">
-    <ActionButton
-      alert
-      disabled={eventData.handlers.length === 0}
-      hidden={!eventData.name}
-      on:click={deleteEvent}>
-      Delete
-    </ActionButton>
-    <ActionButton
-      disabled={eventData.handlers.length === 0}
-      on:click={saveEventData}>
-      Save
-    </ActionButton>
-  </div>
-</Modal>
