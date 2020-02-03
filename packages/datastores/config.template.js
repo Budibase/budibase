@@ -1,32 +1,29 @@
-import fs from "fs";
-import {mkdir} from "fs";
-import {join} from "path";
-import {promisify} from 'es6-promisify'; 
+import fs from "fs"
+import { mkdir } from "fs"
+import { join } from "path"
+import { promisify } from "es6-promisify"
 
-mkdirp = promisify(mkdir);
-
+mkdirp = promisify(mkdir)
 
 const getConfig = async () => {
+  const config = {
+    local: {
+      root: "./output/local/files",
+    },
+    memory: {},
+  }
 
-    const config = {
-        local: {
-            root: "./output/local/files"
-        },
-        memory: {}
-    };
+  try {
+    await mkdir("./output")
+  } catch (e) {}
 
-    try {
-        await mkdir("./output");
-    } catch(e){}
+  for (let type in config) {
+    await mkdir(join("output", type))
+  }
 
-    for(let type in config) {
-        await mkdir(join("output", type));
-    }
+  await mkdir("./output/local/files")
 
-    await mkdir("./output/local/files");
+  return config
+}
 
-    return config;
-};
-
-
-export default getConfig;
+export default getConfig

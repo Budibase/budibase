@@ -1,10 +1,21 @@
 <script>
-  export let disabled = false;
-  export let hidden = false;
-  export let primary = true;
-  export let alert = false;
-  export let warning = false;
+  export let disabled = false
+  export let hidden = false
+  export let primary = true
+  export let alert = false
+  export let warning = false
 </script>
+
+<button
+  on:click
+  class="button"
+  class:hidden
+  class:primary
+  class:alert
+  class:warning
+  {disabled}>
+  <slot />
+</button>
 
 <style>
   .primary {
@@ -14,7 +25,7 @@
 
   .alert {
     color: rgba(255, 0, 31, 1);
-    background: rgba(255, 0, 31, 0.1);;
+    background: rgba(255, 0, 31, 0.1);
   }
 
   .button {
@@ -40,14 +51,3 @@
     visibility: hidden;
   }
 </style>
-
-<button
-  on:click
-  class="button"
-  class:hidden
-  class:primary
-  class:alert
-  class:warning
-  {disabled}>
-  <slot />
-</button>

@@ -1,1 +1,1 @@
-require("../../cli/src/cli")();
+require("../../cli/src/cli")()

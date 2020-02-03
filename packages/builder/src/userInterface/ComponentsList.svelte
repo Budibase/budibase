@@ -1,96 +1,91 @@
 <script>
-    import { splitName } from "./pagesParsing/splitRootComponentName.js"
-    import { store } from "../builderStore";
-    import { find, sortBy } from "lodash/fp";
-    import { ImageIcon, InputIcon, LayoutIcon } from '../common/Icons/';
+  import { splitName } from "./pagesParsing/splitRootComponentName.js"
+  import { store } from "../builderStore"
+  import { find, sortBy } from "lodash/fp"
+  import { ImageIcon, InputIcon, LayoutIcon } from "../common/Icons/"
 
-    let componentLibraries = [];
-    let current_view = 'text';
+  let componentLibraries = []
+  let current_view = "text"
 
-    const addRootComponent = (c, all) => {
-        const { libName } = splitName(c.name);
-        let group = find(r => r.libName === libName)(all);
+  const addRootComponent = (c, all) => {
+    const { libName } = splitName(c.name)
+    let group = find(r => r.libName === libName)(all)
 
-        if(!group) {
-            group = {
-                libName,
-                components: [],
-                generators: []
-            };
+    if (!group) {
+      group = {
+        libName,
+        components: [],
+        generators: [],
+      }
 
-            all.push(group);
-        }
-
-        group.components.push(c)
-
-    };
-
-    const onComponentChosen = store.addChildComponent;
-
-    $: {
-        const newComponentLibraries = [];
-
-        for(let comp of sortBy(["name"])($store.components)) {
-            addRootComponent(
-                comp,
-                newComponentLibraries);
-        }
-
-        componentLibraries = newComponentLibraries;
+      all.push(group)
     }
+
+    group.components.push(c)
+  }
+
+  const onComponentChosen = store.addChildComponent
+
+  $: {
+    const newComponentLibraries = []
+
+    for (let comp of sortBy(["name"])($store.components)) {
+      addRootComponent(comp, newComponentLibraries)
+    }
+
+    componentLibraries = newComponentLibraries
+  }
 </script>
 
 <div class="root">
-    {#each componentLibraries as lib}
-    <div class="library-header">
-        {lib.libName}
-    </div>
+  {#each componentLibraries as lib}
+    <div class="library-header">{lib.libName}</div>
 
     <div class="library-container">
-        <ul>
-            <li>
-            <button class:selected={current_view === 'text'} on:click={() => current_view = 'text'}>
-                <InputIcon />
-            </button>
-            </li>
-            <li>
-                <button class:selected={current_view === 'layout'} on:click={() => current_view = 'layout'}>
-                    <LayoutIcon />
-                </button>
-            </li>
-            <li>
-                <button class:selected={current_view === 'media'} on:click={() => current_view = 'media'}>
-                    <ImageIcon />
-                </button>
-            </li>
-        </ul>
+      <ul>
+        <li>
+          <button
+            class:selected={current_view === 'text'}
+            on:click={() => (current_view = 'text')}>
+            <InputIcon />
+          </button>
+        </li>
+        <li>
+          <button
+            class:selected={current_view === 'layout'}
+            on:click={() => (current_view = 'layout')}>
+            <LayoutIcon />
+          </button>
+        </li>
+        <li>
+          <button
+            class:selected={current_view === 'media'}
+            on:click={() => (current_view = 'media')}>
+            <ImageIcon />
+          </button>
+        </li>
+      </ul>
 
-        {#each lib.components.filter(_ => true) as component}
-
-        <div class="component"
-            on:click={() =>  onComponentChosen(component.name)}>
-            <div class="name">
-                {splitName(component.name).componentName}
-            </div>
+      {#each lib.components.filter(_ => true) as component}
+        <div
+          class="component"
+          on:click={() => onComponentChosen(component.name)}>
+          <div class="name">{splitName(component.name).componentName}</div>
         </div>
-
-        {/each}
+      {/each}
 
     </div>
-
-    {/each}
+  {/each}
 
 </div>
 
-
 <style>
-
-.root {
+  .root {
     display: flex;
     flex-direction: column;
-}
+  }
 
-.library-header {
+  .library-header {
     font-size: 1.1em;
     border-color: var(--primary25);
     border-width: 1px 0px;
@@ -98,15 +93,15 @@
     background-color: var(--primary10);
     padding: 5px 0;
     flex: 0 0 auto;
-}
+  }
 
-.library-container {
+  .library-container {
     padding: 0 0 10px 10px;
     flex: 1 1 auto;
     min-height: 0px;
-}
+  }
 
-.component {
+  .component {
     padding: 0 15px;
     cursor: pointer;
     border: 1px solid #ccc;
@@ -117,35 +112,35 @@
     color: #163057;
     display: flex;
     align-items: center;
-}
+  }
 
-.component:hover {
+  .component:hover {
     background-color: var(--lightslate);
-}
+  }
 
-.component > .name {
+  .component > .name {
     color: #163057;
     display: inline-block;
     font-size: 12px;
     font-weight: bold;
     opacity: 0.6;
-}
+  }
 
-ul {
+  ul {
     list-style: none;
     display: flex;
     padding: 0;
-}
+  }
 
-li {
+  li {
     margin-right: 20px;
     background: none;
     border-radius: 5px;
     width: 48px;
     height: 48px;
-}
+  }
 
-li button {
+  li button {
     width: 100%;
     height: 100%;
     background: none;
@@ -154,11 +149,10 @@ li button {
     padding: 12px;
     outline: none;
     cursor: pointer;
-}
+  }
 
-.selected {
+  .selected {
     color: var(--button-text);
-    background: var(--background-button)!important;
-}
-
+    background: var(--background-button) !important;
+  }
 </style>

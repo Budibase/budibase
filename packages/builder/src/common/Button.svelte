@@ -1,163 +1,167 @@
 <script>
+  export let color = "primary"
+  export let className = ""
+  export let style = ""
+  export let groupPosition = ""
+  export let grouped = false
 
-export let color = "primary";
-export let className = "";
-export let style = "";
-export let groupPosition = "";
-export let grouped = false;
-
-$: borderClass = grouped 
-                 ? ""
-                 : "border-normal";
-
+  $: borderClass = grouped ? "" : "border-normal"
 </script>
 
-<button class="{color} {className} {borderClass} {grouped ? "grouped" : ""}" 
-        style="{style}"
-        on:click >
-    <slot/>
+<button
+  class="{color}
+  {className}
+  {borderClass}
+  {grouped ? 'grouped' : ''}"
+  {style}
+  on:click>
+  <slot />
 </button>
 
 <style>
+  .border-normal {
+    border-radius: var(--borderradiusall);
+  }
+  .border-left {
+    border-radius: var(--borderradius) 0 0 var(--borderradius);
+  }
+  .border-right {
+    border-radius: 0 var(--borderradius) var(--borderradius) 0;
+  }
+  .border-middle {
+    border-radius: 0;
+  }
 
-.border-normal { border-radius: var(--borderradiusall); }
-.border-left { border-radius: var(--borderradius) 0 0 var(--borderradius); }
-.border-right { border-radius: 0 var(--borderradius) var(--borderradius) 0; }
-.border-middle { border-radius: 0; }
-
-button {  
-    border-style: solid; 
+  button {
+    border-style: solid;
     padding: 7.5px 15px;
-    cursor:pointer;
-    margin:5px;
+    cursor: pointer;
+    margin: 5px;
     border-radius: 5px;
-}
+  }
 
-/* ---- PRIMARY ----*/
-.primary {
+  /* ---- PRIMARY ----*/
+  .primary {
     background-color: var(--primary100);
     border-color: var(--primary100);
     color: var(--white);
-}
+  }
 
-.primary:hover {
+  .primary:hover {
     background-color: var(--primary75);
     border-color: var(--primary75);
-}
+  }
 
-.primary:active {
+  .primary:active {
     background-color: var(--primarydark);
     border-color: var(--primarydark);
-}
+  }
 
-.primary-outline {
+  .primary-outline {
     background-color: var(--white);
     border-color: var(--primary100);
     color: var(--primary100);
-}
+  }
 
-.primary-outline:hover {
+  .primary-outline:hover {
     background-color: var(--primary10);
-}
+  }
 
-.primary-outline:pressed {
+  .primary-outline:pressed {
     background-color: var(--primary25);
-}
+  }
 
-/* ---- secondary ----*/
+  /* ---- secondary ----*/
 
-.secondary {
+  .secondary {
     background-color: var(--secondary100);
     border-color: var(--secondary100);
     color: var(--white);
-}
+  }
 
-.secondary:hover {
+  .secondary:hover {
     background-color: var(--secondary75);
     border-color: var(--secondary75);
-}
+  }
 
-.secondary:pressed {
+  .secondary:pressed {
     background-color: var(--secondarydark);
     border-color: var(--secondarydark);
-}
+  }
 
-.secondary-outline {
+  .secondary-outline {
     background-color: var(--white);
     border-color: var(--secondary100);
     color: var(--secondary100);
-}
+  }
 
-.secondary-outline:hover {
+  .secondary-outline:hover {
     background-color: var(--secondary10);
-}
+  }
 
-.secondary-outline:pressed {
+  .secondary-outline:pressed {
     background-color: var(--secondary25);
-}
+  }
 
-
-/* ---- success ----*/
-.success {
+  /* ---- success ----*/
+  .success {
     background-color: var(--success100);
     border-color: var(--success100);
     color: var(--white);
-}
+  }
 
-.success:hover {
+  .success:hover {
     background-color: var(--success75);
     border-color: var(--success75);
-}
+  }
 
-.success:pressed {
+  .success:pressed {
     background-color: var(--successdark);
     border-color: var(--successdark);
-}
+  }
 
-.success-outline {
+  .success-outline {
     background-color: var(--white);
     border-color: var(--success100);
     color: var(--success100);
-}
+  }
 
-.success-outline:hover {
+  .success-outline:hover {
     background-color: var(--success10);
-}
+  }
 
-.success-outline:pressed {
+  .success-outline:pressed {
     background-color: var(--success25);
-}
+  }
 
-/* ---- deletion ----*/
-.deletion {
+  /* ---- deletion ----*/
+  .deletion {
     background-color: var(--deletion100);
     border-color: var(--deletion100);
     color: var(--white);
-}
+  }
 
-.deletion:hover {
+  .deletion:hover {
     background-color: var(--deletion75);
     border-color: var(--deletion75);
-}
+  }
 
-.deletion:pressed {
+  .deletion:pressed {
     background-color: var(--deletiondark);
     border-color: var(--deletiondark);
-}
+  }
 
-.deletion-outline {
+  .deletion-outline {
     background-color: var(--white);
     border-color: var(--deletion100);
     color: var(--deletion100);
-}
+  }
 
-.deletion-outline:hover {
+  .deletion-outline:hover {
     background-color: var(--deletion10);
-}
+  }
 
-.deletion-outline:pressed {
+  .deletion-outline:pressed {
     background-color: var(--deletion25);
-}
-
-
+  }
 </style>

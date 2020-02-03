@@ -1,1 +1,1 @@
-export { default } from "./EventsEditor.svelte";
+export { default } from "./EventsEditor.svelte"

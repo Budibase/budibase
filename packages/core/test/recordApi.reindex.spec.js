@@ -1,623 +1,646 @@
-import {setupApphierarchy,
-    basicAppHierarchyCreator_WithFields, 
-    basicAppHierarchyCreator_WithFields_AndIndexes} from "./specHelpers";
-import {joinKey} from "../src/common";
-import {some, isArray, isObjectLike} from "lodash";
+import {
+  setupApphierarchy,
+  basicAppHierarchyCreator_WithFields,
+  basicAppHierarchyCreator_WithFields_AndIndexes,
+} from "./specHelpers"
+import { joinKey } from "../src/common"
+import { some, isArray, isObjectLike } from "lodash"
 
 describe("recordApi > create > reindex", () => {
+  it("should add to default index, when record created", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
+    const record = recordApi.getNew("/customers", "customer")
 
-    it("should add to default index, when record created", async () => {
+    record.surname = "Ledog"
+    record.isalive = true
+    record.age = 9
+    record.createddate = new Date()
 
-        const {recordApi,
-        indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        const record = recordApi.getNew("/customers", "customer");
+    await recordApi.save(record)
 
-        record.surname = "Ledog";
-        record.isalive = true;
-        record.age = 9;
-        record.createddate = new Date();
+    const items = await indexApi.listItems("/customer_index")
 
-        await recordApi.save(record);
+    expect(items.length).toBe(1)
+    expect(items[0].surname).toBe("Ledog")
+    expect(items[0].key).toBeDefined()
+    expect(items[0].key).toEqual(record.key)
+  })
 
-        const items = await indexApi.listItems("/customer_index");
+  it("should add to index with filter, when record created and passes filter", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
+    const record = recordApi.getNew("/customers", "customer")
 
-        expect(items.length).toBe(1);
-        expect(items[0].surname).toBe("Ledog");
-        expect(items[0].key).toBeDefined();
-        expect(items[0].key).toEqual(record.key);
-    });
+    record.surname = "Ledog"
+    record.isalive = false
+    record.age = 9
+    record.createddate = new Date()
 
-    it("should add to index with filter, when record created and passes filter", async () => {
+    await recordApi.save(record)
 
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        const record = recordApi.getNew("/customers", "customer");
+    const items = await indexApi.listItems("/deceased")
 
-        record.surname = "Ledog";
-        record.isalive = false;
-        record.age = 9;
-        record.createddate = new Date();
+    expect(items.length).toBe(1)
+    expect(items[0].surname).toBe("Ledog")
+    expect(items[0].key).toBeDefined()
+    expect(items[0].key).toEqual(record.key)
+  })
 
-        await recordApi.save(record);
+  it("should not add to index with filter, when record created and fails filter", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
+    const record = recordApi.getNew("/customers", "customer")
 
-        const items = await indexApi.listItems("/deceased");
+    record.surname = "Ledog"
+    record.isalive = true
+    record.age = 9
+    record.createddate = new Date()
 
-        expect(items.length).toBe(1);
-        expect(items[0].surname).toBe("Ledog");
-        expect(items[0].key).toBeDefined();
-        expect(items[0].key).toEqual(record.key);
-    });
+    await recordApi.save(record)
 
-    it("should not add to index with filter, when record created and fails filter", async () => {
+    const items = await indexApi.listItems("/deceased")
 
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        const record = recordApi.getNew("/customers", "customer");
+    expect(items.length).toBe(0)
+  })
 
-        record.surname = "Ledog";
-        record.isalive = true;
-        record.age = 9;
-        record.createddate = new Date();
+  it("should be able to add to and list subcollection, after save (i.e. save initialiieses collection)", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
 
-        await recordApi.save(record);
+    const customer = recordApi.getNew("/customers", "customer")
+    await recordApi.save(customer)
 
-        const items = await indexApi.listItems("/deceased");
+    const invoicesCollectionKey = joinKey(customer.key, "invoices")
+    const invoice = recordApi.getNew(invoicesCollectionKey, "invoice")
+    invoice.totalIncVat = 10.5
+    invoice.createdDate = new Date()
+    await recordApi.save(invoice)
 
-        expect(items.length).toBe(0);
-    });
+    const invoices = await indexApi.listItems(
+      joinKey(customer.key, "invoice_index")
+    )
 
+    expect(isArray(invoices)).toBeTruthy()
+    expect(invoices.length).toBe(1)
+    expect(invoices[0].totalIncVat).toBe(10.5)
+  })
 
-    it("should be able to add to and list subcollection, after save (i.e. save initialiieses collection)", async () => {
-        const {recordApi, indexApi} = 
-            await setupApphierarchy(basicAppHierarchyCreator_WithFields);
-        
-        const customer = recordApi.getNew("/customers", "customer");
-        await recordApi.save(customer);
-        
-        const invoicesCollectionKey = joinKey(customer.key, "invoices");
-        const invoice = recordApi.getNew(invoicesCollectionKey, "invoice");
-        invoice.totalIncVat = 10.5;
-        invoice.createdDate = new Date();
-        await recordApi.save(invoice);
+  it("should add to global index, when required", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
 
-        const invoices = await indexApi.listItems(
-                            joinKey(customer.key, "invoice_index"));
-        
-        expect(isArray(invoices)).toBeTruthy();
-        expect(invoices.length).toBe(1);
-        expect(invoices[0].totalIncVat).toBe(10.5);
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.age = 9
+    ;(customer.isalive = true), (customer.createdDate = new Date())
+    await recordApi.save(customer)
 
-    });
+    const customers = await indexApi.listItems("/customersReference")
 
-    it("should add to global index, when required", async () => {
-        const {recordApi, indexApi} = 
-            await setupApphierarchy(basicAppHierarchyCreator_WithFields);
+    expect(isArray(customers)).toBeTruthy()
+    expect(customers.length).toBe(1)
+    expect(customers[0].name).toBe("Ledog")
+  })
 
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.age = 9;
-        customer.isalive = true,
-        customer.createdDate = new Date();
-        await recordApi.save(customer);
+  it("should add reference field to index and reparse", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
 
-        const customers = await indexApi.listItems("/customersReference");
+    const partner = recordApi.getNew("/partners", "partner")
+    partner.businessName = "ACME"
+    partner.phone = "098766e6"
+    await recordApi.save(partner)
 
-        expect(isArray(customers)).toBeTruthy();
-        expect(customers.length).toBe(1);
-        expect(customers[0].name).toBe("Ledog");
-    });
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.age = 9
+    ;(customer.isalive = true), (customer.createdDate = new Date())
+    customer.partner = partner
+    await recordApi.save(customer)
 
-    it("should add reference field to index and reparse", async () => {
-        const {recordApi, indexApi} = 
-            await setupApphierarchy(basicAppHierarchyCreator_WithFields);
+    const customers = await indexApi.listItems("/customer_index")
 
-        const partner = recordApi.getNew("/partners", "partner");
-        partner.businessName = "ACME";
-        partner.phone = "098766e6";
-        await recordApi.save(partner);
+    expect(customers.length).toBe(1)
+    expect(isObjectLike(customer.partner)).toBeTruthy()
+    expect(customers[0].partner.key).toBe(partner.key)
+    expect(customers[0].partner.name).toBe(partner.businessName)
+    expect(customers[0].partner.phone).toBe(partner.phone)
+  })
 
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.age = 9;
-        customer.isalive = true,
-        customer.createdDate = new Date();
-        customer.partner = partner;
-        await recordApi.save(customer);
+  it("should add to reverse reference index, when required", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
 
-        const customers = await indexApi.listItems("/customer_index");
+    const referredByCustomer = recordApi.getNew("/customers", "customer")
+    referredByCustomer.surname = "Ledog"
+    referredByCustomer.age = 9
+    ;(referredByCustomer.isalive = true),
+      (referredByCustomer.createdDate = new Date())
+    await recordApi.save(referredByCustomer)
 
-        expect(customers.length).toBe(1);
-        expect(isObjectLike(customer.partner)).toBeTruthy();
-        expect(customers[0].partner.key).toBe(partner.key);
-        expect(customers[0].partner.name).toBe(partner.businessName);
-        expect(customers[0].partner.phone).toBe(partner.phone);
-    });
+    const referredCustomer = recordApi.getNew("/customers", "customer")
+    referredCustomer.surname = "Zeecat"
+    referredCustomer.age = 9
+    ;(referredCustomer.isalive = true),
+      (referredCustomer.createdDate = new Date())
+    referredCustomer.referredBy = {
+      key: referredByCustomer.key,
+      value: referredByCustomer.surname,
+    }
+    await recordApi.save(referredCustomer)
 
-    it("should add to reverse reference index, when required", async () => {
-        const {recordApi, indexApi} = 
-            await setupApphierarchy(basicAppHierarchyCreator_WithFields);
+    const customersReferredTo = await indexApi.listItems(
+      joinKey(referredByCustomer.key, "referredToCustomers")
+    )
 
-        const referredByCustomer = recordApi.getNew("/customers", "customer");
-        referredByCustomer.surname = "Ledog";
-        referredByCustomer.age = 9;
-        referredByCustomer.isalive = true,
-        referredByCustomer.createdDate = new Date();
-        await recordApi.save(referredByCustomer);
+    expect(isArray(customersReferredTo)).toBeTruthy()
+    expect(customersReferredTo.length).toBe(1)
+    expect(customersReferredTo[0].surname).toBe("Zeecat")
+  })
 
-        const referredCustomer = recordApi.getNew("/customers", "customer");
-        referredCustomer.surname = "Zeecat";
-        referredCustomer.age = 9;
-        referredCustomer.isalive = true,
-        referredCustomer.createdDate = new Date();
-        referredCustomer.referredBy = {
-            key:referredByCustomer.key, 
-            value:referredByCustomer.surname};
-        await recordApi.save(referredCustomer);
+  it("should add to sharded index, when record created, and should add into correct shards", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
 
-        const customersReferredTo = await indexApi.listItems(
-            joinKey(referredByCustomer.key, "referredToCustomers")
-        );
+    const record1 = recordApi.getNew("/customers", "customer")
+    record1.surname = "Ledog"
+    await recordApi.save(record1)
 
-        expect(isArray(customersReferredTo)).toBeTruthy();
-        expect(customersReferredTo.length).toBe(1);
-        expect(customersReferredTo[0].surname).toBe("Zeecat");
-    });
+    const record2 = recordApi.getNew("/customers", "customer")
+    record2.surname = "Zeecat"
+    await recordApi.save(record2)
 
-    it("should add to sharded index, when record created, and should add into correct shards", async () => {
+    const items = await indexApi.listItems("/customersBySurname")
 
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        
-        const record1 = recordApi.getNew("/customers", "customer");
-        record1.surname = "Ledog";
-        await recordApi.save(record1);
+    expect(items.length).toBe(2)
+    expect(items[0].surname).toBe("Ledog")
+    expect(items[0].key).toEqual(record1.key)
 
-        const record2 = recordApi.getNew("/customers", "customer");
-        record2.surname = "Zeecat";
-        await recordApi.save(record2);
-
-        const items = await indexApi.listItems("/customersBySurname");
-
-        expect(items.length).toBe(2);
-        expect(items[0].surname).toBe("Ledog");
-        expect(items[0].key).toEqual(record1.key);
-
-        expect(items[1].surname).toBe("Zeecat");
-        expect(items[1].key).toEqual(record2.key);
-    });
-
-});
+    expect(items[1].surname).toBe("Zeecat")
+    expect(items[1].key).toEqual(record2.key)
+  })
+})
 
 describe("recordApi > delete > reindex", () => {
+  it("should remove from default index", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
+    const record = recordApi.getNew("/customers", "customer")
 
-    it("should remove from default index", async () => {
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        const record = recordApi.getNew("/customers", "customer");
+    record.surname = "Ledog"
+    record.isalive = true
+    record.age = 9
+    record.createddate = new Date()
 
-        record.surname = "Ledog";
-        record.isalive = true;
-        record.age = 9;
-        record.createddate = new Date();
+    await recordApi.save(record)
+    await recordApi.delete(record.key)
 
-        await recordApi.save(record);
-        await recordApi.delete(record.key);
+    const itemsAfterDelete = await indexApi.listItems("/customer_index")
+    expect(itemsAfterDelete.length).toBe(0)
+  })
 
-        const itemsAfterDelete= await indexApi.listItems("/customer_index");
-        expect(itemsAfterDelete.length).toBe(0);
-    });
+  it("should remove from sharded index", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
 
-    
-    it("should remove from sharded index", async () => {
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        
-        const record1 = recordApi.getNew("/customers", "customer");
-        record1.surname = "Ledog";
-        await recordApi.save(record1);
+    const record1 = recordApi.getNew("/customers", "customer")
+    record1.surname = "Ledog"
+    await recordApi.save(record1)
 
-        const record2 = recordApi.getNew("/customers", "customer");
-        record2.surname = "Zeecat";
-        await recordApi.save(record2);
+    const record2 = recordApi.getNew("/customers", "customer")
+    record2.surname = "Zeecat"
+    await recordApi.save(record2)
 
-        await recordApi.delete(record1.key);
+    await recordApi.delete(record1.key)
 
-        const itemsAfterDelete= await indexApi.listItems("/customersBySurname");
-        expect(itemsAfterDelete.length).toBe(1);
-        expect(itemsAfterDelete[0].surname).toBe("Zeecat");
-    });
+    const itemsAfterDelete = await indexApi.listItems("/customersBySurname")
+    expect(itemsAfterDelete.length).toBe(1)
+    expect(itemsAfterDelete[0].surname).toBe("Zeecat")
+  })
 
-    it("should remove from all indexes", async () => {
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        
-        const referredBy = recordApi.getNew("/customers", "customer");
-        referredBy.surname = "Zeecat";
+  it("should remove from all indexes", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
 
-        await recordApi.save(referredBy);
+    const referredBy = recordApi.getNew("/customers", "customer")
+    referredBy.surname = "Zeecat"
 
-        const record = recordApi.getNew("/customers", "customer");
-        record.surname = "Ledog";
-        record.isalive = false;
-        record.age = 9;
-        record.createddate = new Date();
-        record.referredBy = {
-            key: referredBy.key,
-            value: referredBy.surname
-        };
+    await recordApi.save(referredBy)
 
-        await recordApi.save(record);
-        await recordApi.delete(record.key);
+    const record = recordApi.getNew("/customers", "customer")
+    record.surname = "Ledog"
+    record.isalive = false
+    record.age = 9
+    record.createddate = new Date()
+    record.referredBy = {
+      key: referredBy.key,
+      value: referredBy.surname,
+    }
 
-        const itemsAfterDelete= await indexApi.listItems("/customer_index");
-        expect(itemsAfterDelete.length).toBe(1);
-        expect(itemsAfterDelete[0].surname).toBe("Zeecat");
+    await recordApi.save(record)
+    await recordApi.delete(record.key)
 
-        const deceasedItemsAfterDelete=
-            await indexApi.listItems("/deceased");
-        expect(deceasedItemsAfterDelete.length).toBe(0);
+    const itemsAfterDelete = await indexApi.listItems("/customer_index")
+    expect(itemsAfterDelete.length).toBe(1)
+    expect(itemsAfterDelete[0].surname).toBe("Zeecat")
 
-        const referredToItemsAfterDelete = 
-            await indexApi.listItems(`${referredBy.key}/referredToCustomers`);
-        expect(referredToItemsAfterDelete.length).toBe(0);
+    const deceasedItemsAfterDelete = await indexApi.listItems("/deceased")
+    expect(deceasedItemsAfterDelete.length).toBe(0)
 
-    });
+    const referredToItemsAfterDelete = await indexApi.listItems(
+      `${referredBy.key}/referredToCustomers`
+    )
+    expect(referredToItemsAfterDelete.length).toBe(0)
+  })
 
-    it("should only remove relevant record from all indexes", async () => {
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        const record = recordApi.getNew("/customers", "customer");
+  it("should only remove relevant record from all indexes", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
+    const record = recordApi.getNew("/customers", "customer")
 
-        record.surname = "Ledog";
-        record.isalive = false;
-        record.age = 9;
-        record.createddate = new Date();
+    record.surname = "Ledog"
+    record.isalive = false
+    record.age = 9
+    record.createddate = new Date()
 
-        await recordApi.save(record);
+    await recordApi.save(record)
 
-        const otherRecord = recordApi.getNew("/customers", "customer");
-        otherRecord.surname = "Zeecat";
-        otherRecord.isalive = false;
-        otherRecord.age = 12;
-        record.createddate = new Date();
+    const otherRecord = recordApi.getNew("/customers", "customer")
+    otherRecord.surname = "Zeecat"
+    otherRecord.isalive = false
+    otherRecord.age = 12
+    record.createddate = new Date()
 
-        await recordApi.save(otherRecord);
+    await recordApi.save(otherRecord)
 
-        await recordApi.delete(record.key);
+    await recordApi.delete(record.key)
 
-        const itemsAfterDelete= await indexApi.listItems("/customer_index");
-        expect(itemsAfterDelete.length).toBe(1);
-        expect(itemsAfterDelete[0].surname).toBe("Zeecat");
+    const itemsAfterDelete = await indexApi.listItems("/customer_index")
+    expect(itemsAfterDelete.length).toBe(1)
+    expect(itemsAfterDelete[0].surname).toBe("Zeecat")
 
-        const deceasedItemsAfterDelete=
-            await indexApi.listItems("/deceased");
-        expect(deceasedItemsAfterDelete.length).toBe(1);
-        expect(deceasedItemsAfterDelete[0].surname).toBe("Zeecat");
-    });
+    const deceasedItemsAfterDelete = await indexApi.listItems("/deceased")
+    expect(deceasedItemsAfterDelete.length).toBe(1)
+    expect(deceasedItemsAfterDelete[0].surname).toBe("Zeecat")
+  })
 
-    it("should remove from global index", async () => {
-        const {recordApi, indexApi} = 
-            await setupApphierarchy(basicAppHierarchyCreator_WithFields);
+  it("should remove from global index", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
 
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.age = 9;
-        customer.isalive = true,
-        customer.createdDate = new Date();
-        await recordApi.save(customer);
-        await recordApi.delete(customer.key);
-        const customers = await indexApi.listItems("/customersReference");
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.age = 9
+    ;(customer.isalive = true), (customer.createdDate = new Date())
+    await recordApi.save(customer)
+    await recordApi.delete(customer.key)
+    const customers = await indexApi.listItems("/customersReference")
 
-        expect(isArray(customers)).toBeTruthy();
-        expect(customers.length).toBe(0);
-    });
-});
+    expect(isArray(customers)).toBeTruthy()
+    expect(customers.length).toBe(0)
+  })
+})
 
 describe("recordApi > update > reindex", () => {
-
-    it("should update values in indexes", async () => {
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        const record = recordApi.getNew("/customers", "customer");
-
-        record.surname = "Ledog";
-        record.isalive = false;
-        record.age = 9;
-        record.createddate = new Date();
-
-        await recordApi.save(record);
-
-        const loadedRecord = await recordApi.load(record.key);
-        loadedRecord.surname = "Zeedog";
-        await recordApi.save(loadedRecord);
-
-        const itemsDefault = await indexApi.listItems("/customer_index");
-        expect(itemsDefault[0].surname).toBe("Zeedog");
-        expect(itemsDefault.length).toBe(1);
-
-    });
-
-    it("should update values in sharded index", async () => {
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        const record = recordApi.getNew("/customers", "customer");
-        record.surname = "Ledog";
-        await recordApi.save(record);
-
-        const loadedRecord = await recordApi.load(record.key);
-        loadedRecord.surname = "Zeedog";
-        await recordApi.save(loadedRecord);
-
-        const itemsDefault = await indexApi.listItems("/customersBySurname");
-        expect(itemsDefault[0].surname).toBe("Zeedog");
-        expect(itemsDefault.length).toBe(1);
-
-    });
-
-    it("should only update values of relevant item", async () => {
-        const {recordApi,
-            indexApi} = await setupApphierarchy(basicAppHierarchyCreator_WithFields_AndIndexes);
-        const record = recordApi.getNew("/customers", "customer");
-
-        record.surname = "Ledog";
-        record.isalive = false;
-        record.age = 9;
-        record.createddate = new Date();
-
-        await recordApi.save(record);
-
-        const otherRecord = recordApi.getNew("/customers", "customer");
-        otherRecord.surname = "Zeecat";
-        otherRecord.isalive = false;
-        otherRecord.age = 12;
-        record.createddate = new Date();
-
-        await recordApi.save(otherRecord);
-
-        const loadedRecord = await recordApi.load(record.key);
-        loadedRecord.surname = "Zeedog";
-        await recordApi.save(loadedRecord);
-
-        const items = await indexApi.listItems("/customer_index");
-
-        const hasItemWithSurname = sn => 
-            some(items, i => i.surname === sn);
-
-        expect(hasItemWithSurname("Zeedog")).toEqual(true);
-        expect(hasItemWithSurname("Ledog")).toEqual(false);
-        expect(hasItemWithSurname("Zeecat")).toEqual(true);
-        expect(items.length).toBe(2);
-    });
-
-    it("should update global index", async () => {
-        const {recordApi, indexApi} = 
-            await setupApphierarchy(basicAppHierarchyCreator_WithFields);
-
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.age = 9;
-        customer.isalive = true,
-        customer.createdDate = new Date();
-        await recordApi.save(customer);
-
-        const loadedCustomer = await recordApi.load(customer.key);
-        loadedCustomer.surname = "Zeecat";
-        await recordApi.save(loadedCustomer);
-
-        const customers = await indexApi.listItems("/customersReference");
-        expect(isArray(customers)).toBeTruthy();
-        expect(customers.length).toBe(1);
-        expect(customers[0].name).toBe("Zeecat");
-    });
-
-    it("should remove from one reference index and add to another when field changed", async () => {
-        const {recordApi, indexApi} = 
-        await setupApphierarchy(basicAppHierarchyCreator_WithFields);
-
-        const partner1 = recordApi.getNew("/partners", "partner");
-        partner1.businessName = "ACME inc";
-        await recordApi.save(partner1);
-
-        const partner2 = recordApi.getNew("/partners", "partner");
-        partner2.businessName = "Big Corp ltd";
-        await recordApi.save(partner2);
-
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.partner = {
-            key: partner1.key, value: partner1.businessName
-        };
-
-        const customerSaved = await recordApi.save(customer);
-
-        customerSaved.partner = {
-            key: partner2.key, value: partner2.businessName
-        };
-
-        await recordApi.save(customerSaved);
-
-        const partner1Customer = 
-            await indexApi.listItems(`${partner1.key}/partnerCustomers`);
-        expect(partner1Customer.length).toBe(0);
-
-        const partner2Customer = 
-            await indexApi.listItems(`${partner2.key}/partnerCustomers`);
-        expect(partner2Customer.length).toBe(1);
-    });
-
-    it("should remove from reference index when reference blanked", async () => {
-        const {recordApi, indexApi} = 
-        await setupApphierarchy(basicAppHierarchyCreator_WithFields);
-
-        const partner1 = recordApi.getNew("/partners", "partner");
-        partner1.businessName = "ACME inc";
-        await recordApi.save(partner1);
-
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.partner = {
-            key: partner1.key, value: partner1.businessName
-        };
-
-        const customerSaved = await recordApi.save(customer);
-
-        customerSaved.partner = {
-            key: "", value: ""
-        };
-
-        await recordApi.save(customerSaved);
-
-        const partner1Customer = 
-            await indexApi.listItems(`${partner1.key}/partnerCustomers`);
-        expect(partner1Customer.length).toBe(0);
-    });
-
-    it("should remove from reference index when filter no longer passes", async () => {
-        const {recordApi, indexApi} = 
-        await setupApphierarchy(basicAppHierarchyCreator_WithFields);
-
-        const partner1 = recordApi.getNew("/partners", "partner");
-        partner1.businessName = "ACME inc";
-        await recordApi.save(partner1);
-
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.partner = {
-            key: partner1.key, value: partner1.businessName
-        };
-
-        const customerSaved = await recordApi.save(customer);
-
-        customerSaved.isalive = false;
-
-        await recordApi.save(customerSaved);
-
-        const partner1Customer = 
-            await indexApi.listItems(`${partner1.key}/partnerCustomers`);
-        expect(partner1Customer.length).toBe(0);
-    });
-
-    it("should not add to reference index when filter does not pass", async () => {
-        const {recordApi, indexApi} = 
-        await setupApphierarchy(basicAppHierarchyCreator_WithFields);
-
-        const partner1 = recordApi.getNew("/partners", "partner");
-        partner1.businessName = "ACME inc";
-        await recordApi.save(partner1);
-
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.partner = {
-            key: partner1.key, value: partner1.businessName
-        };
-        customer.isalive = false;
-
-        await recordApi.save(customer);
-
-        const partner1Customer = 
-            await indexApi.listItems(`${partner1.key}/partnerCustomers`);
-        expect(partner1Customer.length).toBe(0);
-    });
-
-
-    it("should remove from reference index, and not re-added when no longer passes filter, but reference is changed", async () => {
-        const {recordApi, indexApi} = 
-        await setupApphierarchy(basicAppHierarchyCreator_WithFields);
-
-        const partner1 = recordApi.getNew("/partners", "partner");
-        partner1.businessName = "ACME inc";
-        await recordApi.save(partner1);
-
-        const partner2 = recordApi.getNew("/partners", "partner");
-        partner2.businessName = "Big Corp ltd";
-        await recordApi.save(partner2);
-
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.partner = {
-            key: partner1.key, value: partner1.businessName
-        };
-
-        const customerSaved = await recordApi.save(customer);
-
-        customerSaved.partner = {
-            key: partner2.key, value: partner2.businessName
-        };
-        customerSaved.isalive = false;
-
-        await recordApi.save(customerSaved);
-
-        const partner1Customer = 
-            await indexApi.listItems(`${partner1.key}/partnerCustomers`);
-        expect(partner1Customer.length).toBe(0);
-
-        const partner2Customer = 
-            await indexApi.listItems(`${partner2.key}/partnerCustomers`);
-        expect(partner2Customer.length).toBe(0);
-    });
-
-    it("should add to reference index, when reference is changed, and did not previsouly pass filter", async () => {
-        const {recordApi, indexApi} = 
-        await setupApphierarchy(basicAppHierarchyCreator_WithFields);
-
-        const partner1 = recordApi.getNew("/partners", "partner");
-        partner1.businessName = "ACME inc";
-        await recordApi.save(partner1);
-
-        const partner2 = recordApi.getNew("/partners", "partner");
-        partner2.businessName = "Big Corp ltd";
-        await recordApi.save(partner2);
-
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.partner = {
-            key: partner1.key, value: partner1.businessName
-        };
-        customer.isalive = false;
-
-        const customerSaved = await recordApi.save(customer);
-
-        customerSaved.partner = {
-            key: partner2.key, value: partner2.businessName
-        };
-        customerSaved.isalive = true;
-
-        await recordApi.save(customerSaved);
-
-        const partner1Customer = 
-            await indexApi.listItems(`${partner1.key}/partnerCustomers`);
-        expect(partner1Customer.length).toBe(0);
-
-        const partner2Customer = 
-            await indexApi.listItems(`${partner2.key}/partnerCustomers`);
-        expect(partner2Customer.length).toBe(1);
-    });
-
-});
+  it("should update values in indexes", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
+    const record = recordApi.getNew("/customers", "customer")
+
+    record.surname = "Ledog"
+    record.isalive = false
+    record.age = 9
+    record.createddate = new Date()
+
+    await recordApi.save(record)
+
+    const loadedRecord = await recordApi.load(record.key)
+    loadedRecord.surname = "Zeedog"
+    await recordApi.save(loadedRecord)
+
+    const itemsDefault = await indexApi.listItems("/customer_index")
+    expect(itemsDefault[0].surname).toBe("Zeedog")
+    expect(itemsDefault.length).toBe(1)
+  })
+
+  it("should update values in sharded index", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
+    const record = recordApi.getNew("/customers", "customer")
+    record.surname = "Ledog"
+    await recordApi.save(record)
+
+    const loadedRecord = await recordApi.load(record.key)
+    loadedRecord.surname = "Zeedog"
+    await recordApi.save(loadedRecord)
+
+    const itemsDefault = await indexApi.listItems("/customersBySurname")
+    expect(itemsDefault[0].surname).toBe("Zeedog")
+    expect(itemsDefault.length).toBe(1)
+  })
+
+  it("should only update values of relevant item", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
+    const record = recordApi.getNew("/customers", "customer")
+
+    record.surname = "Ledog"
+    record.isalive = false
+    record.age = 9
+    record.createddate = new Date()
+
+    await recordApi.save(record)
+
+    const otherRecord = recordApi.getNew("/customers", "customer")
+    otherRecord.surname = "Zeecat"
+    otherRecord.isalive = false
+    otherRecord.age = 12
+    record.createddate = new Date()
+
+    await recordApi.save(otherRecord)
+
+    const loadedRecord = await recordApi.load(record.key)
+    loadedRecord.surname = "Zeedog"
+    await recordApi.save(loadedRecord)
+
+    const items = await indexApi.listItems("/customer_index")
+
+    const hasItemWithSurname = sn => some(items, i => i.surname === sn)
+
+    expect(hasItemWithSurname("Zeedog")).toEqual(true)
+    expect(hasItemWithSurname("Ledog")).toEqual(false)
+    expect(hasItemWithSurname("Zeecat")).toEqual(true)
+    expect(items.length).toBe(2)
+  })
+
+  it("should update global index", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
+
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.age = 9
+    ;(customer.isalive = true), (customer.createdDate = new Date())
+    await recordApi.save(customer)
+
+    const loadedCustomer = await recordApi.load(customer.key)
+    loadedCustomer.surname = "Zeecat"
+    await recordApi.save(loadedCustomer)
+
+    const customers = await indexApi.listItems("/customersReference")
+    expect(isArray(customers)).toBeTruthy()
+    expect(customers.length).toBe(1)
+    expect(customers[0].name).toBe("Zeecat")
+  })
+
+  it("should remove from one reference index and add to another when field changed", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
+
+    const partner1 = recordApi.getNew("/partners", "partner")
+    partner1.businessName = "ACME inc"
+    await recordApi.save(partner1)
+
+    const partner2 = recordApi.getNew("/partners", "partner")
+    partner2.businessName = "Big Corp ltd"
+    await recordApi.save(partner2)
+
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.partner = {
+      key: partner1.key,
+      value: partner1.businessName,
+    }
+
+    const customerSaved = await recordApi.save(customer)
+
+    customerSaved.partner = {
+      key: partner2.key,
+      value: partner2.businessName,
+    }
+
+    await recordApi.save(customerSaved)
+
+    const partner1Customer = await indexApi.listItems(
+      `${partner1.key}/partnerCustomers`
+    )
+    expect(partner1Customer.length).toBe(0)
+
+    const partner2Customer = await indexApi.listItems(
+      `${partner2.key}/partnerCustomers`
+    )
+    expect(partner2Customer.length).toBe(1)
+  })
+
+  it("should remove from reference index when reference blanked", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
+
+    const partner1 = recordApi.getNew("/partners", "partner")
+    partner1.businessName = "ACME inc"
+    await recordApi.save(partner1)
+
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.partner = {
+      key: partner1.key,
+      value: partner1.businessName,
+    }
+
+    const customerSaved = await recordApi.save(customer)
+
+    customerSaved.partner = {
+      key: "",
+      value: "",
+    }
+
+    await recordApi.save(customerSaved)
+
+    const partner1Customer = await indexApi.listItems(
+      `${partner1.key}/partnerCustomers`
+    )
+    expect(partner1Customer.length).toBe(0)
+  })
+
+  it("should remove from reference index when filter no longer passes", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
+
+    const partner1 = recordApi.getNew("/partners", "partner")
+    partner1.businessName = "ACME inc"
+    await recordApi.save(partner1)
+
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.partner = {
+      key: partner1.key,
+      value: partner1.businessName,
+    }
+
+    const customerSaved = await recordApi.save(customer)
+
+    customerSaved.isalive = false
+
+    await recordApi.save(customerSaved)
+
+    const partner1Customer = await indexApi.listItems(
+      `${partner1.key}/partnerCustomers`
+    )
+    expect(partner1Customer.length).toBe(0)
+  })
+
+  it("should not add to reference index when filter does not pass", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
+
+    const partner1 = recordApi.getNew("/partners", "partner")
+    partner1.businessName = "ACME inc"
+    await recordApi.save(partner1)
+
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.partner = {
+      key: partner1.key,
+      value: partner1.businessName,
+    }
+    customer.isalive = false
+
+    await recordApi.save(customer)
+
+    const partner1Customer = await indexApi.listItems(
+      `${partner1.key}/partnerCustomers`
+    )
+    expect(partner1Customer.length).toBe(0)
+  })
+
+  it("should remove from reference index, and not re-added when no longer passes filter, but reference is changed", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
+
+    const partner1 = recordApi.getNew("/partners", "partner")
+    partner1.businessName = "ACME inc"
+    await recordApi.save(partner1)
+
+    const partner2 = recordApi.getNew("/partners", "partner")
+    partner2.businessName = "Big Corp ltd"
+    await recordApi.save(partner2)
+
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.partner = {
+      key: partner1.key,
+      value: partner1.businessName,
+    }
+
+    const customerSaved = await recordApi.save(customer)
+
+    customerSaved.partner = {
+      key: partner2.key,
+      value: partner2.businessName,
+    }
+    customerSaved.isalive = false
+
+    await recordApi.save(customerSaved)
+
+    const partner1Customer = await indexApi.listItems(
+      `${partner1.key}/partnerCustomers`
+    )
+    expect(partner1Customer.length).toBe(0)
+
+    const partner2Customer = await indexApi.listItems(
+      `${partner2.key}/partnerCustomers`
+    )
+    expect(partner2Customer.length).toBe(0)
+  })
+
+  it("should add to reference index, when reference is changed, and did not previsouly pass filter", async () => {
+    const { recordApi, indexApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
+
+    const partner1 = recordApi.getNew("/partners", "partner")
+    partner1.businessName = "ACME inc"
+    await recordApi.save(partner1)
+
+    const partner2 = recordApi.getNew("/partners", "partner")
+    partner2.businessName = "Big Corp ltd"
+    await recordApi.save(partner2)
+
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.partner = {
+      key: partner1.key,
+      value: partner1.businessName,
+    }
+    customer.isalive = false
+
+    const customerSaved = await recordApi.save(customer)
+
+    customerSaved.partner = {
+      key: partner2.key,
+      value: partner2.businessName,
+    }
+    customerSaved.isalive = true
+
+    await recordApi.save(customerSaved)
+
+    const partner1Customer = await indexApi.listItems(
+      `${partner1.key}/partnerCustomers`
+    )
+    expect(partner1Customer.length).toBe(0)
+
+    const partner2Customer = await indexApi.listItems(
+      `${partner2.key}/partnerCustomers`
+    )
+    expect(partner2Customer.length).toBe(1)
+  })
+})
 
 describe("referenced object changed", () => {
+  it("should update the reference", async () => {
+    const { recordApi } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
 
-    it("should update the reference", async () => {
+    const partner1 = recordApi.getNew("/partners", "partner")
+    partner1.businessName = "ACME inc"
+    const savedPartner = await recordApi.save(partner1)
 
-        const { recordApi } = 
-        await setupApphierarchy(basicAppHierarchyCreator_WithFields);
+    const customer = recordApi.getNew("/customers", "customer")
+    customer.surname = "Ledog"
+    customer.partner = {
+      key: partner1.key,
+      value: partner1.businessName,
+    }
+    await recordApi.save(customer)
+    savedPartner.businessName = "A.C.M.E Inc"
+    await recordApi.save(savedPartner)
 
-        const partner1 = recordApi.getNew("/partners", "partner");
-        partner1.businessName = "ACME inc";
-        const savedPartner = await recordApi.save(partner1);
+    const updatedCustomer = await recordApi.load(customer.key)
 
-        const customer = recordApi.getNew("/customers", "customer");
-        customer.surname = "Ledog";
-        customer.partner = {
-            key: partner1.key, value: partner1.businessName
-        };
-        await recordApi.save(customer);
-        savedPartner.businessName = "A.C.M.E Inc";
-        await recordApi.save(savedPartner);
-
-        const updatedCustomer = await recordApi.load(customer.key);
-
-        expect(updatedCustomer.partner.name).toBe(savedPartner.businessName);
-    });
-
-});
+    expect(updatedCustomer.partner.name).toBe(savedPartner.businessName)
+  })
+})

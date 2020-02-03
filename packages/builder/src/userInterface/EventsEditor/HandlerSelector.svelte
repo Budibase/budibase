@@ -1,82 +1,115 @@
 <script>
-  import IconButton from "../../common/IconButton.svelte";
-  import PlusButton from "../../common/PlusButton.svelte";
-  import Select from "../../common/Select.svelte";
-  import StateBindingControl from "../StateBindingControl.svelte";
-  import { find, map, keys, reduce, keyBy } from "lodash/fp";
-  import { pipe, userWithFullAccess } from "../../common/core";
+  import IconButton from "../../common/IconButton.svelte"
+  import PlusButton from "../../common/PlusButton.svelte"
+  import Select from "../../common/Select.svelte"
+  import StateBindingControl from "../StateBindingControl.svelte"
+  import { find, map, keys, reduce, keyBy } from "lodash/fp"
+  import { pipe, userWithFullAccess } from "../../common/core"
   import {
     EVENT_TYPE_MEMBER_NAME,
-    allHandlers
-  } from "../../common/eventHandlers";
-  import { store } from "../../builderStore";
+    allHandlers,
+  } from "../../common/eventHandlers"
+  import { store } from "../../builderStore"
 
-  export let handler;
-  export let onCreate;
-  export let onChanged;
-  export let onRemoved;
+  export let handler
+  export let onCreate
+  export let onChanged
+  export let onRemoved
 
-  export let index;
-  export let newHandler;
+  export let index
+  export let newHandler
 
-  let eventOptions;
-  let handlerType;
-  let parameters = [];
+  let eventOptions
+  let handlerType
+  let parameters = []
 
   $: eventOptions = allHandlers(
     { hierarchy: $store.hierarchy },
     userWithFullAccess({
       hierarchy: $store.hierarchy,
-      actions: keyBy("name")($store.actions)
+      actions: keyBy("name")($store.actions),
     })
-  );
+  )
 
   $: {
     if (handler) {
-      handlerType = handler[EVENT_TYPE_MEMBER_NAME];
+      handlerType = handler[EVENT_TYPE_MEMBER_NAME]
       parameters = Object.entries(handler.parameters).map(([name, value]) => ({
         name,
-        value
-      }));
+        value,
+      }))
     } else {
-      // Empty Handler 
-      handlerType = "";
-      parameters = [];
+      // Empty Handler
+      handlerType = ""
+      parameters = []
     }
   }
 
   const handlerChanged = (type, params) => {
-    const handlerParams = {};
+    const handlerParams = {}
     for (let param of params) {
-      handlerParams[param.name] = param.value;
+      handlerParams[param.name] = param.value
     }
 
     const updatedHandler = {
       [EVENT_TYPE_MEMBER_NAME]: type,
-      parameters: handlerParams
-    };
+      parameters: handlerParams,
+    }
 
-    onChanged(updatedHandler, index);
-  };
+    onChanged(updatedHandler, index)
+  }
 
   const handlerTypeChanged = e => {
     const handlerType = eventOptions.find(
       handler => handler.name === e.target.value
-    );
+    )
     const defaultParams = handlerType.parameters.map(param => ({
       name: param,
-      value: ""
-    }));
+      value: "",
+    }))
 
-    handlerChanged(handlerType.name, defaultParams);
-  };
+    handlerChanged(handlerType.name, defaultParams)
+  }
 
   const onParameterChanged = index => value => {
-    const newParams = [...parameters];
-    newParams[index].value = value;
-    handlerChanged(handlerType, newParams);
-  };
+    const newParams = [...parameters]
+    newParams[index].value = value
+    handlerChanged(handlerType, newParams)
+  }
 </script>
+
+<div class="type-selector-container {newHandler && 'new-handler'}">
+  <div class="handler-controls">
+    <div class="handler-option">
+      <span>Action</span>
+      <Select value={handlerType} on:change={handlerTypeChanged}>
+        <option />
+        {#each eventOptions as option}
+          <option value={option.name}>{option.name}</option>
+        {/each}
+      </Select>
+    </div>
+    {#if parameters}
+      {#each parameters as param, idx}
+        <div class="handler-option">
+          <span>{param.name}</span>
+          <StateBindingControl
+            onChanged={onParameterChanged(idx)}
+            value={param.value} />
+        </div>
+      {/each}
+    {/if}
+  </div>
+  <div class="event-action-button">
+    {#if parameters.length > 0}
+      {#if newHandler}
+        <PlusButton on:click={onCreate} />
+      {:else}
+        <IconButton icon="x" on:click={onRemoved} />
+      {/if}
+    {/if}
+  </div>
+</div>
 
 <style>
   .type-selector-container {
@@ -113,36 +146,3 @@
     margin-bottom: 5px;
   }
 </style>
-
-<div class="type-selector-container {newHandler && 'new-handler'}">
-  <div class="handler-controls">
-    <div class="handler-option">
-      <span>Action</span>
-      <Select value={handlerType} on:change={handlerTypeChanged}>
-        <option />
-        {#each eventOptions as option}
-          <option value={option.name}>{option.name}</option>
-        {/each}
-      </Select>
-    </div>
-    {#if parameters}
-      {#each parameters as param, idx}
-        <div class="handler-option">
-          <span>{param.name}</span>
-          <StateBindingControl
-            onChanged={onParameterChanged(idx)}
-            value={param.value} />
-        </div>
-      {/each}
-    {/if}
-  </div>
-  <div class="event-action-button">
-    {#if parameters.length > 0}
-      {#if newHandler}
-        <PlusButton on:click={onCreate} />
-      {:else}
-        <IconButton icon="x" on:click={onRemoved} />
-      {/if}
-    {/if}
-  </div>
-</div>
