@@ -1,17 +1,16 @@
 export const defaultPagesObject = () => ({
-    main: {
-        index: {
-            _component : "./components/indexHtml"
-        },
-        appBody: "bbapp.main.json"
+  main: {
+    index: {
+      _component: "./components/indexHtml",
     },
-    unauthenticated: {
-        index: {
-            _component : "./components/indexHtml"
-        },
-        appBody: "bbapp.unauthenticated.json"
+    appBody: "bbapp.main.json",
+  },
+  unauthenticated: {
+    index: {
+      _component: "./components/indexHtml",
     },
-    componentLibraries: [],
-    stylesheets: []
-
-});
+    appBody: "bbapp.unauthenticated.json",
+  },
+  componentLibraries: [],
+  stylesheets: [],
+})

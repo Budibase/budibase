@@ -1,2 +1,1 @@
-
-export const ERROR = "##error_message";
+export const ERROR = "##error_message"

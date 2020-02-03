@@ -18,6 +18,7 @@
     "dev": "lerna run --parallel --stream dev:builder",
     "test": "lerna run test",
     "lint": "eslint packages",
+    "lint:fix": "eslint --fix packages",
     "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx}\""
   }
 }

@@ -1,5 +1,5 @@
 export const getNewAccessLevel = () => () => ({
-  name: '',
+  name: "",
   permissions: [],
-  default:false
-});
+  default: false,
+})

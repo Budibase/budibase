@@ -1,98 +1,82 @@
-import { compileExpression, compileCode } from '@nx-js/compiler-util';
-import {
-  isUndefined, keys, 
-  cloneDeep, isFunction,
-} from 'lodash/fp';
-import { defineError } from '../common';
+import { compileExpression, compileCode } from "@nx-js/compiler-util"
+import { isUndefined, keys, cloneDeep, isFunction } from "lodash/fp"
+import { defineError } from "../common"
 
-export const filterEval = 'FILTER_EVALUATE';
-export const filterCompile = 'FILTER_COMPILE';
-export const mapEval = 'MAP_EVALUATE';
-export const mapCompile = 'MAP_COMPILE';
-export const removeUndeclaredFields = 'REMOVE_UNDECLARED_FIELDS';
-export const addUnMappedFields = 'ADD_UNMAPPED_FIELDS';
-export const addTheKey = 'ADD_KEY';
-
+export const filterEval = "FILTER_EVALUATE"
+export const filterCompile = "FILTER_COMPILE"
+export const mapEval = "MAP_EVALUATE"
+export const mapCompile = "MAP_COMPILE"
+export const removeUndeclaredFields = "REMOVE_UNDECLARED_FIELDS"
+export const addUnMappedFields = "ADD_UNMAPPED_FIELDS"
+export const addTheKey = "ADD_KEY"
 
 const getEvaluateResult = () => ({
   isError: false,
   passedFilter: true,
   result: null,
-});
+})
 
-export const compileFilter = index => compileExpression(index.filter);
+export const compileFilter = index => compileExpression(index.filter)
 
-export const compileMap = index => compileCode(index.map);
+export const compileMap = index => compileCode(index.map)
 
 export const passesFilter = (record, index) => {
-  const context = { record };
-  if (!index.filter) return true;
+  const context = { record }
+  if (!index.filter) return true
 
-  const compiledFilter = defineError(
-    () => compileFilter(index),
-    filterCompile,
-  );
+  const compiledFilter = defineError(() => compileFilter(index), filterCompile)
 
-  return defineError(
-    () => compiledFilter(context),
-    filterEval,
-  );
-};
+  return defineError(() => compiledFilter(context), filterEval)
+}
 
 export const mapRecord = (record, index) => {
-  const recordClone = cloneDeep(record);
-  const context = { record: recordClone };
+  const recordClone = cloneDeep(record)
+  const context = { record: recordClone }
 
-  const map = index.map ? index.map : 'return {...record};';
+  const map = index.map ? index.map : "return {...record};"
 
-  const compiledMap = defineError(
-    () => compileCode(map),
-    mapCompile,
-  );
+  const compiledMap = defineError(() => compileCode(map), mapCompile)
 
-  const mapped = defineError(
-    () => compiledMap(context),
-    mapEval,
-  );
+  const mapped = defineError(() => compiledMap(context), mapEval)
 
-  const mappedKeys = keys(mapped);
+  const mappedKeys = keys(mapped)
   for (let i = 0; i < mappedKeys.length; i++) {
-    const key = mappedKeys[i];
-    mapped[key] = isUndefined(mapped[key]) ? null : mapped[key];
+    const key = mappedKeys[i]
+    mapped[key] = isUndefined(mapped[key]) ? null : mapped[key]
     if (isFunction(mapped[key])) {
-      delete mapped[key];
+      delete mapped[key]
     }
   }
 
-  mapped.key = record.key;
+  mapped.key = record.key
   mapped.sortKey = index.getSortKey
     ? compileCode(index.getSortKey)(context)
-    : record.id;
+    : record.id
 
-  return mapped;
-};
+  return mapped
+}
 
-export const evaluate = record => (index) => {
-  const result = getEvaluateResult();
-
-  try {
-    result.passedFilter = passesFilter(record, index);
-  } catch (err) {
-    result.isError = true;
-    result.passedFilter = false;
-    result.result = err.message;
-  }
-
-  if (!result.passedFilter) return result;
+export const evaluate = record => index => {
+  const result = getEvaluateResult()
 
   try {
-    result.result = mapRecord(record, index);
+    result.passedFilter = passesFilter(record, index)
   } catch (err) {
-    result.isError = true;
-    result.result = err.message;
+    result.isError = true
+    result.passedFilter = false
+    result.result = err.message
   }
 
-  return result;
-};
+  if (!result.passedFilter) return result
 
-export default evaluate;
+  try {
+    result.result = mapRecord(record, index)
+  } catch (err) {
+    result.isError = true
+    result.result = err.message
+  }
+
+  return result
+}
+
+export default evaluate
