@@ -8,53 +8,79 @@
     isEqual,
     sortBy,
     filter,
-    difference
-  } from "lodash/fp";
-  import { pipe } from "../../common/core";
-  import Checkbox from "../../common/Checkbox.svelte";
-  import Textbox from "../../common/Textbox.svelte";
-  import Dropdown from "../../common/Dropdown.svelte";
-  import PlusButton from "../../common/PlusButton.svelte";
-  import IconButton from "../../common/IconButton.svelte";
-  import Modal from "../../common/Modal.svelte";
-  import EventEditorModal from "./EventEditorModal.svelte";
-  import HandlerSelector from "./HandlerSelector.svelte";
+    difference,
+  } from "lodash/fp"
+  import { pipe } from "../../common/core"
+  import Checkbox from "../../common/Checkbox.svelte"
+  import Textbox from "../../common/Textbox.svelte"
+  import Dropdown from "../../common/Dropdown.svelte"
+  import PlusButton from "../../common/PlusButton.svelte"
+  import IconButton from "../../common/IconButton.svelte"
+  import Modal from "../../common/Modal.svelte"
+  import EventEditorModal from "./EventEditorModal.svelte"
+  import HandlerSelector from "./HandlerSelector.svelte"
 
-  import { PencilIcon } from "../../common/Icons";
-  import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers";
+  import { PencilIcon } from "../../common/Icons"
+  import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
 
-  export const EVENT_TYPE = "event";
+  export const EVENT_TYPE = "event"
 
-  export let componentInfo;
-  export let onPropChanged = () => {};
-  export let components;
+  export let componentInfo
+  export let onPropChanged = () => {}
+  export let components
 
-  let modalOpen = false;
-  let events = [];
-  let selectedEvent = null;
+  let modalOpen = false
+  let events = []
+  let selectedEvent = null
 
-  $: { 
+  $: {
     events = Object.keys(componentInfo)
-    .filter(key => findType(key) === EVENT_TYPE)
-    .map(key => ({ name: key, handlers: componentInfo[key] }));
+      .filter(key => findType(key) === EVENT_TYPE)
+      .map(key => ({ name: key, handlers: componentInfo[key] }))
   }
 
   function findType(propName) {
-    if (!componentInfo._component) return;
+    if (!componentInfo._component) return
     return components.find(({ name }) => name === componentInfo._component)
-      .props[propName];
+      .props[propName]
   }
 
   const openModal = event => {
-    selectedEvent = event;
-    modalOpen = true;
-  };
+    selectedEvent = event
+    modalOpen = true
+  }
 
   const closeModal = () => {
-    selectedEvent = null;
-    modalOpen = false;
-  };
+    selectedEvent = null
+    modalOpen = false
+  }
 </script>
+
+<header>
+  <h3>Events</h3>
+  <PlusButton on:click={() => openModal()} />
+</header>
+
+<div class="root">
+  <form class="uk-form-stacked form-root">
+    {#each events as event, index}
+      {#if event.handlers.length > 0}
+        <div
+          class="handler-container hierarchy-item {selectedEvent && selectedEvent.index === index ? 'selected' : ''}"
+          on:click={() => openModal({ ...event, index })}>
+          <span class="event-name">{event.name}</span>
+          <span class="edit-text">EDIT</span>
+        </div>
+      {/if}
+    {/each}
+  </form>
+</div>
+<EventEditorModal
+  {onPropChanged}
+  open={modalOpen}
+  onClose={closeModal}
+  eventOptions={events}
+  event={selectedEvent} />
 
 <style>
   h3 {
@@ -123,30 +149,3 @@
     background: var(--background-button) !important;
   }
 </style>
-
-<header>
-  <h3>Events</h3>
-  <PlusButton on:click={() => openModal()} />
-</header>
-
-<div class="root">
-  <form class="uk-form-stacked form-root">
-    {#each events as event, index}
-      {#if event.handlers.length > 0}
-        <div
-          class="handler-container hierarchy-item {selectedEvent && selectedEvent.index === index ? 'selected' : ''}"
-          on:click={() => openModal({ ...event, index })}>
-          <span class="event-name">{event.name}</span>
-          <span class="edit-text">EDIT</span>
-        </div>
-      {/if}
-    {/each}
-  </form>
-</div>
-<EventEditorModal
-  {onPropChanged}
-  open={modalOpen}
-  onClose={closeModal}
-  eventOptions={events}
-  event={selectedEvent}
-  />

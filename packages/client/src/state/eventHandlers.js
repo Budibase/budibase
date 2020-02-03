@@ -1,56 +1,54 @@
-import { setState } from "./setState";
-import { getState } from "./getState";
-import {
-    isArray, isUndefined
-} from "lodash/fp";
+import { setState } from "./setState"
+import { getState } from "./getState"
+import { isArray, isUndefined } from "lodash/fp"
 
-import { createApi } from "../api";
-import {
-    getNewChildRecordToState, getNewRecordToState
-} from "./coreHandlers";
+import { createApi } from "../api"
+import { getNewChildRecordToState, getNewRecordToState } from "./coreHandlers"
 
-export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType";
+export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType"
 
-export const eventHandlers = (store,coreApi,rootPath) => {
-    
-    const handler = (parameters, execute) => ({
-        execute, parameters
-    });
+export const eventHandlers = (store, coreApi, rootPath) => {
+  const handler = (parameters, execute) => ({
+    execute,
+    parameters,
+  })
 
-    const setStateWithStore = (path, value) => setState(store, path, value);
+  const setStateWithStore = (path, value) => setState(store, path, value)
 
-    let currentState;
-    store.subscribe(s => {
-        currentState = s;
-    });
+  let currentState
+  store.subscribe(s => {
+    currentState = s
+  })
 
-    const api = createApi({
-        rootPath:rootPath,
-        setState: setStateWithStore,
-        getState: (path, fallback) => getState(currentState, path, fallback)
-    });
+  const api = createApi({
+    rootPath: rootPath,
+    setState: setStateWithStore,
+    getState: (path, fallback) => getState(currentState, path, fallback),
+  })
 
-    const setStateHandler = ({path, value}) => setState(store, path, value);
-    
-    return {
-        "Set State": handler(["path", "value"],  setStateHandler),
-        "Load Record": handler(["recordKey", "statePath"], api.loadRecord),
-        "List Records": handler(["indexKey", "statePath"], api.listRecords),
-        "Save Record": handler(["statePath"], api.saveRecord),
-        
-        "Get New Child Record": handler(
-            ["recordKey", "collectionName", "childRecordType", "statePath"], 
-            getNewChildRecordToState(coreApi, setStateWithStore)),
+  const setStateHandler = ({ path, value }) => setState(store, path, value)
 
-        "Get New Record": handler(
-            ["collectionKey", "childRecordType", "statePath"], 
-            getNewRecordToState(coreApi, setStateWithStore)),
+  return {
+    "Set State": handler(["path", "value"], setStateHandler),
+    "Load Record": handler(["recordKey", "statePath"], api.loadRecord),
+    "List Records": handler(["indexKey", "statePath"], api.listRecords),
+    "Save Record": handler(["statePath"], api.saveRecord),
 
-        "Authenticate": handler(["username", "password"], api.authenticate)
-    };
-};
+    "Get New Child Record": handler(
+      ["recordKey", "collectionName", "childRecordType", "statePath"],
+      getNewChildRecordToState(coreApi, setStateWithStore)
+    ),
 
-export const isEventType = prop => 
-    isArray(prop) 
-    && prop.length > 0
-    && !isUndefined(prop[0][EVENT_TYPE_MEMBER_NAME]);
+    "Get New Record": handler(
+      ["collectionKey", "childRecordType", "statePath"],
+      getNewRecordToState(coreApi, setStateWithStore)
+    ),
+
+    Authenticate: handler(["username", "password"], api.authenticate),
+  }
+}
+
+export const isEventType = prop =>
+  isArray(prop) &&
+  prop.length > 0 &&
+  !isUndefined(prop[0][EVENT_TYPE_MEMBER_NAME])

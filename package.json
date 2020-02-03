@@ -7,7 +7,8 @@
     "eslint-plugin-svelte3": "^2.7.3",
     "lerna": "^3.14.1",
     "prettier": "^1.19.1",
-    "prettier-plugin-svelte": "^0.7.0"
+    "prettier-plugin-svelte": "^0.7.0",
+    "svelte": "^3.18.1"
   },
   "dependencies": {},
   "scripts": {
@@ -18,6 +19,7 @@
     "dev": "lerna run --parallel --stream dev:builder",
     "test": "lerna run test",
     "lint": "eslint packages",
-    "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx}\""
+    "lint:fix": "eslint --fix packages",
+    "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\""
   }
 }

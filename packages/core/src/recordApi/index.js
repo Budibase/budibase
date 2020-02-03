@@ -1,12 +1,12 @@
-import { getNew, getNewChild } from './getNew';
-import { load } from './load';
-import { validate } from './validate';
-import { getContext } from './getContext';
-import { save } from './save';
-import { deleteRecord } from './delete';
-import { uploadFile } from './uploadFile';
-import { downloadFile } from './downloadFile';
-import { customId, setCustomId } from './customId';
+import { getNew, getNewChild } from "./getNew"
+import { load } from "./load"
+import { validate } from "./validate"
+import { getContext } from "./getContext"
+import { save } from "./save"
+import { deleteRecord } from "./delete"
+import { uploadFile } from "./uploadFile"
+import { downloadFile } from "./downloadFile"
+import { customId, setCustomId } from "./customId"
 
 const api = app => ({
   getNew: getNew(app),
@@ -20,9 +20,8 @@ const api = app => ({
   downloadFile: downloadFile(app),
   customId: customId(app),
   setCustomId: setCustomId(app),
-});
+})
 
+export const getRecordApi = app => api(app)
 
-export const getRecordApi = app => api(app);
-
-export default getRecordApi;
+export default getRecordApi

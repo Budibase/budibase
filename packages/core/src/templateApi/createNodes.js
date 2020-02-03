@@ -1,224 +1,228 @@
-import { each, find } from 'lodash';
-import { map, max, constant } from 'lodash/fp';
+import { each, find } from "lodash"
+import { map, max, constant } from "lodash/fp"
 import {
-  switchCase, defaultCase, joinKey,
-  $, isNothing, isSomething,
-} from '../common';
+  switchCase,
+  defaultCase,
+  joinKey,
+  $,
+  isNothing,
+  isSomething,
+} from "../common"
 import {
-  isIndex, isRoot, isSingleRecord, isCollectionRecord,
-  isRecord, isaggregateGroup,
+  isIndex,
+  isRoot,
+  isSingleRecord,
+  isCollectionRecord,
+  isRecord,
+  isaggregateGroup,
   getFlattenedHierarchy,
-} from './hierarchy';
-import { all } from '../types';
-import { BadRequestError } from '../common/errors';
+} from "./hierarchy"
+import { all } from "../types"
+import { BadRequestError } from "../common/errors"
 
 export const createNodeErrors = {
-  indexCannotBeParent: 'Index template cannot be a parent',
-  allNonRootNodesMustHaveParent: 'Only the root node may have no parent',
-  indexParentMustBeRecordOrRoot: 'An index may only have a record or root as a parent',
-  aggregateParentMustBeAnIndex: 'aggregateGroup parent must be an index',
-};
+  indexCannotBeParent: "Index template cannot be a parent",
+  allNonRootNodesMustHaveParent: "Only the root node may have no parent",
+  indexParentMustBeRecordOrRoot:
+    "An index may only have a record or root as a parent",
+  aggregateParentMustBeAnIndex: "aggregateGroup parent must be an index",
+}
 
-const pathRegxMaker = node => () => node.nodeKey().replace(/{id}/g, '[a-zA-Z0-9_-]+');
+const pathRegxMaker = node => () =>
+  node.nodeKey().replace(/{id}/g, "[a-zA-Z0-9_-]+")
 
-const nodeKeyMaker = node => () => switchCase(
+const nodeKeyMaker = node => () =>
+  switchCase(
+    [
+      n => isRecord(n) && !isSingleRecord(n),
+      n =>
+        joinKey(
+          node.parent().nodeKey(),
+          node.collectionName,
+          `${n.nodeId}-{id}`
+        ),
+    ],
 
-  [n => isRecord(n) && !isSingleRecord(n),
-    n => joinKey(
-      node.parent().nodeKey(),
-      node.collectionName,
-      `${n.nodeId}-{id}`,
-    )],
+    [isRoot, constant("/")],
 
-  [isRoot,
-    constant('/')],
+    [defaultCase, n => joinKey(node.parent().nodeKey(), n.name)]
+  )(node)
 
-  [defaultCase,
-    n => joinKey(node.parent().nodeKey(), n.name)],
-
-)(node);
-
-
-const validate = parent => (node) => {
-  if (isIndex(node)
-        && isSomething(parent)
-        && !isRoot(parent)
-        && !isRecord(parent)) {
-    throw new BadRequestError(createNodeErrors.indexParentMustBeRecordOrRoot);
+const validate = parent => node => {
+  if (
+    isIndex(node) &&
+    isSomething(parent) &&
+    !isRoot(parent) &&
+    !isRecord(parent)
+  ) {
+    throw new BadRequestError(createNodeErrors.indexParentMustBeRecordOrRoot)
   }
 
-  if (isaggregateGroup(node)
-        && isSomething(parent)
-        && !isIndex(parent)) {
-    throw new BadRequestError(createNodeErrors.aggregateParentMustBeAnIndex);
+  if (isaggregateGroup(node) && isSomething(parent) && !isIndex(parent)) {
+    throw new BadRequestError(createNodeErrors.aggregateParentMustBeAnIndex)
   }
 
-  if (isNothing(parent) && !isRoot(node)) { throw new BadRequestError(createNodeErrors.allNonRootNodesMustHaveParent); }
+  if (isNothing(parent) && !isRoot(node)) {
+    throw new BadRequestError(createNodeErrors.allNonRootNodesMustHaveParent)
+  }
 
-  return node;
-};
+  return node
+}
 
-const construct = parent => (node) => {
-  node.nodeKey = nodeKeyMaker(node);
-  node.pathRegx = pathRegxMaker(node);
-  node.parent = constant(parent);
-  node.isRoot = () => isNothing(parent)
-                        && node.name === 'root'
-                        && node.type === 'root';
+const construct = parent => node => {
+  node.nodeKey = nodeKeyMaker(node)
+  node.pathRegx = pathRegxMaker(node)
+  node.parent = constant(parent)
+  node.isRoot = () =>
+    isNothing(parent) && node.name === "root" && node.type === "root"
   if (isCollectionRecord(node)) {
-    node.collectionNodeKey = () => joinKey(
-      parent.nodeKey(), node.collectionName,
-    );
-    node.collectionPathRegx = () => joinKey(
-      parent.pathRegx(), node.collectionName,
-    );
+    node.collectionNodeKey = () =>
+      joinKey(parent.nodeKey(), node.collectionName)
+    node.collectionPathRegx = () =>
+      joinKey(parent.pathRegx(), node.collectionName)
   }
-  return node;
-};
+  return node
+}
 
-const addToParent = (obj) => {
-  const parent = obj.parent();
+const addToParent = obj => {
+  const parent = obj.parent()
   if (isSomething(parent)) {
-    if (isIndex(obj))
-    // Q: why are indexes not children ?
-    // A: because they cannot have children of their own.
-    { 
-      parent.indexes.push(obj); 
-    } 
-    else if (isaggregateGroup(obj)) 
-    { 
-      parent.aggregateGroups.push(obj); 
-    } else { 
-      parent.children.push(obj); 
+    if (isIndex(obj)) {
+      // Q: why are indexes not children ?
+      // A: because they cannot have children of their own.
+      parent.indexes.push(obj)
+    } else if (isaggregateGroup(obj)) {
+      parent.aggregateGroups.push(obj)
+    } else {
+      parent.children.push(obj)
     }
 
     if (isRecord(obj)) {
       const defaultIndex = find(
         parent.indexes,
-        i => i.name === `${parent.name}_index`,
-      );
+        i => i.name === `${parent.name}_index`
+      )
       if (defaultIndex) {
-        defaultIndex.allowedRecordNodeIds.push(obj.nodeId);
+        defaultIndex.allowedRecordNodeIds.push(obj.nodeId)
       }
     }
   }
-  return obj;
-};
+  return obj
+}
 
-export const constructNode = (parent, obj) => $(obj, [
-  construct(parent),
-  validate(parent),
-  addToParent,
-]);
+export const constructNode = (parent, obj) =>
+  $(obj, [construct(parent), validate(parent), addToParent])
 
-const getNodeId = (parentNode) => {
+const getNodeId = parentNode => {
   // this case is handled better elsewhere
-  if (!parentNode) return null;
-  const findRoot = n => (isRoot(n) ? n : findRoot(n.parent()));
-  const root = findRoot(parentNode);
+  if (!parentNode) return null
+  const findRoot = n => (isRoot(n) ? n : findRoot(n.parent()))
+  const root = findRoot(parentNode)
 
-  return ($(root, [
-    getFlattenedHierarchy,
-    map(n => n.nodeId),
-    max]) + 1);
-};
+  return $(root, [getFlattenedHierarchy, map(n => n.nodeId), max]) + 1
+}
 
 export const constructHierarchy = (node, parent) => {
-  construct(parent)(node);
+  construct(parent)(node)
   if (node.indexes) {
-    each(node.indexes,
-      child => constructHierarchy(child, node));
+    each(node.indexes, child => constructHierarchy(child, node))
   }
   if (node.aggregateGroups) {
-    each(node.aggregateGroups,
-      child => constructHierarchy(child, node));
+    each(node.aggregateGroups, child => constructHierarchy(child, node))
   }
   if (node.children && node.children.length > 0) {
-    each(node.children,
-      child => constructHierarchy(child, node));
+    each(node.children, child => constructHierarchy(child, node))
   }
   if (node.fields) {
-    each(node.fields,
-      f => each(f.typeOptions, (val, key) => {
-        const def = all[f.type].optionDefinitions[key];
+    each(node.fields, f =>
+      each(f.typeOptions, (val, key) => {
+        const def = all[f.type].optionDefinitions[key]
         if (!def) {
           // unknown typeOption
-          delete f.typeOptions[key];
+          delete f.typeOptions[key]
         } else {
-          f.typeOptions[key] = def.parse(val);
+          f.typeOptions[key] = def.parse(val)
         }
-      }));
+      })
+    )
   }
-  return node;
-};
+  return node
+}
 
-
-export const getNewRootLevel = () => construct()({
-  name: 'root',
-  type: 'root',
-  children: [],
-  pathMaps: [],
-  indexes: [],
-  nodeId: 0,
-});
+export const getNewRootLevel = () =>
+  construct()({
+    name: "root",
+    type: "root",
+    children: [],
+    pathMaps: [],
+    indexes: [],
+    nodeId: 0,
+  })
 
 const _getNewRecordTemplate = (parent, name, createDefaultIndex, isSingle) => {
   const node = constructNode(parent, {
     name,
-    type: 'record',
+    type: "record",
     fields: [],
     children: [],
     validationRules: [],
     nodeId: getNodeId(parent),
     indexes: [],
     estimatedRecordCount: isRecord(parent) ? 500 : 1000000,
-    collectionName: '',
+    collectionName: "",
     isSingle,
-  });
+  })
 
   if (createDefaultIndex) {
-    const defaultIndex = getNewIndexTemplate(parent);
-    defaultIndex.name = `${name}_index`;
-    defaultIndex.allowedRecordNodeIds.push(node.nodeId);
+    const defaultIndex = getNewIndexTemplate(parent)
+    defaultIndex.name = `${name}_index`
+    defaultIndex.allowedRecordNodeIds.push(node.nodeId)
   }
 
-  return node;
-};
+  return node
+}
 
-export const getNewRecordTemplate = (parent, name = '', createDefaultIndex = true) => _getNewRecordTemplate(parent, name, createDefaultIndex, false);
+export const getNewRecordTemplate = (
+  parent,
+  name = "",
+  createDefaultIndex = true
+) => _getNewRecordTemplate(parent, name, createDefaultIndex, false)
 
-export const getNewSingleRecordTemplate = parent => _getNewRecordTemplate(parent, '', false, true);
+export const getNewSingleRecordTemplate = parent =>
+  _getNewRecordTemplate(parent, "", false, true)
 
-export const getNewIndexTemplate = (parent, type = 'ancestor') => constructNode(parent, {
-  name: '',
-  type: 'index',
-  map: 'return {...record};',
-  filter: '',
-  indexType: type,
-  getShardName: '',
-  getSortKey: 'record.id',
-  aggregateGroups: [],
-  allowedRecordNodeIds: [],
-  nodeId: getNodeId(parent),
-});
+export const getNewIndexTemplate = (parent, type = "ancestor") =>
+  constructNode(parent, {
+    name: "",
+    type: "index",
+    map: "return {...record};",
+    filter: "",
+    indexType: type,
+    getShardName: "",
+    getSortKey: "record.id",
+    aggregateGroups: [],
+    allowedRecordNodeIds: [],
+    nodeId: getNodeId(parent),
+  })
 
-export const getNewAggregateGroupTemplate = index => constructNode(index, {
-  name: '',
-  type: 'aggregateGroup',
-  groupBy: '',
-  aggregates: [],
-  condition: '',
-  nodeId: getNodeId(index),
-});
+export const getNewAggregateGroupTemplate = index =>
+  constructNode(index, {
+    name: "",
+    type: "aggregateGroup",
+    groupBy: "",
+    aggregates: [],
+    condition: "",
+    nodeId: getNodeId(index),
+  })
 
-export const getNewAggregateTemplate = (set) => {
+export const getNewAggregateTemplate = set => {
   const aggregatedValue = {
-    name: '',
-    aggregatedValue: '',
-  };
-  set.aggregates.push(aggregatedValue);
-  return aggregatedValue;
-};
+    name: "",
+    aggregatedValue: "",
+  }
+  set.aggregates.push(aggregatedValue)
+  return aggregatedValue
+}
 
 export default {
   getNewRootLevel,
@@ -228,4 +232,4 @@ export default {
   constructHierarchy,
   getNewAggregateGroupTemplate,
   getNewAggregateTemplate,
-};
+}

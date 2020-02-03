@@ -1,1 +1,1 @@
-console.log("test app 1 - unauthenticated");
+console.log("test app 1 - unauthenticated")

@@ -1,2 +1,2 @@
-module.exports = (config) => 
-    require(`../../datastores/datastores/${config.datastore}`);
+module.exports = config =>
+  require(`../../datastores/datastores/${config.datastore}`)
