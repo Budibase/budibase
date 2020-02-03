@@ -1,15 +1,12 @@
-import { union, reduce } from 'lodash/fp';
+import { union, reduce } from "lodash/fp"
 
-const commonPlus = extra => union(['onBegin', 'onComplete', 'onError'])(extra);
+const commonPlus = extra => union(["onBegin", "onComplete", "onError"])(extra)
 
-const common = () => commonPlus([]);
+const common = () => commonPlus([])
 
 const _events = {
   recordApi: {
-    save: commonPlus([
-      'onInvalid',
-      'onRecordUpdated',
-      'onRecordCreated']),
+    save: commonPlus(["onInvalid", "onRecordUpdated", "onRecordCreated"]),
     delete: common(),
     getContext: common(),
     getNew: common(),
@@ -58,36 +55,31 @@ const _events = {
   actionsApi: {
     execute: common(),
   },
-};
+}
 
-const _eventsList = [];
+const _eventsList = []
 
-const makeEvent = (area, method, name) => `${area}:${method}:${name}`;
+const makeEvent = (area, method, name) => `${area}:${method}:${name}`
 
 for (const areaKey in _events) {
   for (const methodKey in _events[areaKey]) {
     _events[areaKey][methodKey] = reduce((obj, s) => {
-      obj[s] = makeEvent(areaKey, methodKey, s);
-      return obj;
-    },
-    {})(_events[areaKey][methodKey]);
+      obj[s] = makeEvent(areaKey, methodKey, s)
+      return obj
+    }, {})(_events[areaKey][methodKey])
   }
 }
-
 
 for (const areaKey in _events) {
   for (const methodKey in _events[areaKey]) {
     for (const name in _events[areaKey][methodKey]) {
-      _eventsList.push(
-        _events[areaKey][methodKey][name],
-      );
+      _eventsList.push(_events[areaKey][methodKey][name])
     }
   }
 }
 
+export const events = _events
 
-export const events = _events;
+export const eventsList = _eventsList
 
-export const eventsList = _eventsList;
-
-export default { events: _events, eventsList: _eventsList };
+export default { events: _events, eventsList: _eventsList }

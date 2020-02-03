@@ -1,192 +1,138 @@
 <script>
-import {
-    isRootComponent
-} from "./pagesParsing/searchComponents"
-import { splitName } from "./pagesParsing/splitRootComponentName.js"
-import { store } from "../builderStore";
-import {
-    groupBy, keys, find, sortBy
-} from "lodash/fp";
-import { pipe } from "../common/core";
+  import { isRootComponent } from "./pagesParsing/searchComponents"
+  import { splitName } from "./pagesParsing/splitRootComponentName.js"
+  import { store } from "../builderStore"
+  import { find, sortBy } from "lodash/fp"
 
-export let onComponentChosen;
-export let onGeneratorChosen;
-export let allowGenerators;
+  export let onComponentChosen
+  export let onGeneratorChosen
+  export let allowGenerators
 
-let screens=[];
-let componentLibraries=[];
+  let screens = []
+  let componentLibraries = []
 
-const addRootComponent = (c, all, isGenerator) => {
-    const { libName } = splitName(c.name);
-    let group = find(r => r.libName === libName)(all);
+  const addRootComponent = (c, all, isGenerator) => {
+    const { libName } = splitName(c.name)
+    let group = find(r => r.libName === libName)(all)
 
-    if(!group) {
-        group = {
-            libName,
-            components: [],
-            generators: []
-        };
+    if (!group) {
+      group = {
+        libName,
+        components: [],
+        generators: [],
+      }
 
-        all.push(group);
-    } 
-    
-    if(isGenerator) {
-        group.generators.push(c)
+      all.push(group)
+    }
+
+    if (isGenerator) {
+      group.generators.push(c)
     } else {
-        group.components.push(c)
+      group.components.push(c)
     }
-    
-};
+  }
 
-store.subscribe(s => {
+  $: {
+    const newComponentLibraries = []
+    const newscreens = []
 
-    const newComponentLibraries = [];
-    const newscreens = [];
-
-    for(let comp of sortBy(["name"])(s.components)) {
-        if(isRootComponent(comp)) {
-            addRootComponent(
-                comp, 
-                newComponentLibraries, 
-                false);
-        } else {
-            newscreens.push(comp);
-        }
+    for (let comp of sortBy(["name"])($store.components)) {
+      if (isRootComponent(comp)) {
+        addRootComponent(comp, newComponentLibraries, false)
+      } else {
+        newscreens.push(comp)
+      }
     }
 
-    for(let generator of s.generators) {
-        addRootComponent(
-            generator, 
-            newComponentLibraries, 
-            true);
+    for (let generator of $store.generators) {
+      addRootComponent(generator, newComponentLibraries, true)
     }
 
-    screens = sortBy(["name"])(newscreens);
-    componentLibraries = newComponentLibraries;
-});
-
-
-
-
-
+    screens = sortBy(["name"])(newscreens)
+    componentLibraries = newComponentLibraries
+  }
 </script>
 
 {#each componentLibraries as lib}
-<div class="library-header">
-    {lib.libName}
-</div>
+  <div class="library-header">{lib.libName}</div>
 
-<div class="library-container">
+  <div class="library-container">
 
     {#if allowGenerators}
-    <div class="inner-header">
-        Generators
-    </div>
+      <div class="inner-header">Generators</div>
 
-    {#each lib.generators as generator}
-
-    <div class="component"
-         on:click={() => onGeneratorChosen(generator)}>
-        <div class="name">
-            {splitName(generator.name).componentName}
+      {#each lib.generators as generator}
+        <div class="component" on:click={() => onGeneratorChosen(generator)}>
+          <div class="name">{splitName(generator.name).componentName}</div>
+          <div class="description">{generator.description}</div>
         </div>
-        <div class="description">
-            {generator.description}
-        </div>
-    </div>
-
-    {/each}
+      {/each}
     {/if}
 
-    <div class="inner-header">
-        Components
-    </div>
+    <div class="inner-header">Components</div>
 
     {#each lib.components as component}
-
-    <div class="component"
-         on:click={() => onComponentChosen(component)}>
-        <div class="name">
-            {splitName(component.name).componentName}
-        </div>
-        <div class="description">
-            {component.description}
-        </div>
-    </div>
-
+      <div class="component" on:click={() => onComponentChosen(component)}>
+        <div class="name">{splitName(component.name).componentName}</div>
+        <div class="description">{component.description}</div>
+      </div>
     {/each}
 
-</div>
-
+  </div>
 {/each}
 
-
-<div class="library-header">
-    My Components
-</div>
+<div class="library-header">My Components</div>
 
 <div class="library-container">
 
-    {#each screens as component}
-
-    <div class="component"
-         on:click={() => onComponentChosen(component)}>
-        <div class="name">
-            {component.name}
-        </div>
-        <div class="description">
-            {component.description}
-        </div>
+  {#each screens as component}
+    <div class="component" on:click={() => onComponentChosen(component)}>
+      <div class="name">{component.name}</div>
+      <div class="description">{component.description}</div>
     </div>
-
-    {/each}
+  {/each}
 
 </div>
 
-
 <style>
-
-.library-header {
+  .library-header {
     font-size: 1.1em;
     border-color: var(--primary25);
     border-width: 1px 0px;
     border-style: solid;
     background-color: var(--primary10);
     padding: 5px 0;
-}
+  }
 
-.library-container {
+  .library-container {
     padding: 0 0 10px 10px;
-}
+  }
 
-.inner-header {
+  .inner-header {
     font-size: 0.9em;
     font-weight: bold;
     margin-top: 7px;
     margin-bottom: 3px;
-}
+  }
 
-.component {
+  .component {
     padding: 2px 0px;
     cursor: pointer;
-}
+  }
 
-.component:hover {
+  .component:hover {
     background-color: var(--lightslate);
-}
+  }
 
-.component > .name {
+  .component > .name {
     color: var(--secondary100);
     display: inline-block;
-}
+  }
 
-.component > .description {
+  .component > .description {
     font-size: 0.8em;
     color: var(--secondary75);
     display: inline-block;
     margin-left: 10px;
-}
-
-
-
+  }
 </style>

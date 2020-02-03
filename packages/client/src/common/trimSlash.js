@@ -1,1 +1,1 @@
-export const trimSlash = (str) => str.replace(/^\/+|\/+$/g, '');
+export const trimSlash = str => str.replace(/^\/+|\/+$/g, "")

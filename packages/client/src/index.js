@@ -1,46 +1,59 @@
-import { createApp } from "./createApp";
-import { trimSlash } from "./common/trimSlash";
+import { createApp } from "./createApp"
+import { trimSlash } from "./common/trimSlash"
 
-export const loadBudibase = async ({componentLibraries, props, window, localStorage}) => {
+export const loadBudibase = async ({
+  componentLibraries,
+  props,
+  window,
+  localStorage,
+  uiFunctions,
+}) => {
+  const appDefinition = window["##BUDIBASE_APPDEFINITION##"]
+  const uiFunctionsFromWindow = window["##BUDIBASE_APPDEFINITION##"]
+  uiFunctions = uiFunctionsFromWindow || uiFunctions
 
-    const appDefinition = window["##BUDIBASE_APPDEFINITION##"];
+  const userFromStorage = localStorage.getItem("budibase:user")
 
-    const userFromStorage = localStorage.getItem("budibase:user")
-
-    const user = userFromStorage ? JSON.parse(userFromStorage) : {
+  const user = userFromStorage
+    ? JSON.parse(userFromStorage)
+    : {
         name: "annonymous",
-        permissions : [],
-        isUser:false,
-        temp:false
-    };
+        permissions: [],
+        isUser: false,
+        temp: false,
+      }
 
-    if(!componentLibraries) {
+  if (!componentLibraries) {
+    const rootPath =
+      appDefinition.appRootPath === ""
+        ? ""
+        : "/" + trimSlash(appDefinition.appRootPath)
+    const componentLibraryUrl = lib => rootPath + "/" + trimSlash(lib)
+    componentLibraries = {}
 
-        const rootPath = appDefinition.appRootPath === "" 
-                         ? "" 
-                         : "/" + trimSlash(appDefinition.appRootPath);
-        const componentLibraryUrl = (lib) =>  rootPath + "/" + trimSlash(lib)
-        componentLibraries = {};
-
-        for(let lib of appDefinition.componentLibraries) {
-            componentLibraries[lib.libName] = await import(
-                componentLibraryUrl(lib.importPath)); 
-        }
-
+    for (let lib of appDefinition.componentLibraries) {
+      componentLibraries[lib.libName] = await import(
+        componentLibraryUrl(lib.importPath)
+      )
     }
+  }
 
-    if(!props) {
-        props = appDefinition.props;
-    }
+  if (!props) {
+    props = appDefinition.props
+  }
 
-    const _app = createApp(componentLibraries, appDefinition,  user);
-    _app.hydrateChildren(
-        [props],
-        window.document.body);
+  const app = createApp(
+    window.document,
+    componentLibraries,
+    appDefinition,
+    user,
+    uiFunctions || {}
+  )
+  app.hydrateChildren([props], window.document.body)
 
-    return _app;
-};
+  return app
+}
 
-if(window) {
-    window.loadBudibase = loadBudibase;
+if (window) {
+  window.loadBudibase = loadBudibase
 }

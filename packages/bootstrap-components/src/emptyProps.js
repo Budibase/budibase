@@ -1,1 +1,1 @@
-export const emptyProps = () => ({_component:""});
+export const emptyProps = () => ({ _component: "" })
