@@ -49,7 +49,7 @@ describe("recordApi > validate", () => {
   })
 
   it("should return error when string field is beyond maxLength", async () => {
-    const withFieldWithMaxLength = (hierarchy) => {
+    const withFieldWithMaxLength = hierarchy => {
       const surname = find(
         hierarchy.customerRecord.fields,
         f => f.name === "surname"
@@ -61,9 +61,7 @@ describe("recordApi > validate", () => {
       withFields,
       withFieldWithMaxLength
     )
-    const { recordApi } = await setupApphierarchy(
-      hierarchyCreator
-    )
+    const { recordApi } = await setupApphierarchy(hierarchyCreator)
 
     const record = recordApi.getNew("/customers", "customer")
     record.surname = "more than 5 chars"
@@ -74,7 +72,7 @@ describe("recordApi > validate", () => {
   })
 
   it("should return error when number field is > maxValue", async () => {
-    const withFieldWithMaxLength = (hierarchy) => {
+    const withFieldWithMaxLength = hierarchy => {
       const age = find(hierarchy.customerRecord.fields, f => f.name === "age")
       age.typeOptions.maxValue = 10
       age.typeOptions.minValue = 5
@@ -84,9 +82,7 @@ describe("recordApi > validate", () => {
       withFields,
       withFieldWithMaxLength
     )
-    const { recordApi } = await setupApphierarchy(
-      hierarchyCreator
-    )
+    const { recordApi } = await setupApphierarchy(hierarchyCreator)
 
     const tooOldRecord = recordApi.getNew("/customers", "customer")
     tooOldRecord.age = 11
@@ -97,7 +93,7 @@ describe("recordApi > validate", () => {
   })
 
   it("should return error when number field is < minValue", async () => {
-    const withFieldWithMaxLength = (hierarchy) => {
+    const withFieldWithMaxLength = hierarchy => {
       const age = find(hierarchy.customerRecord.fields, f => f.name === "age")
       age.typeOptions.minValue = 5
     }
@@ -106,9 +102,7 @@ describe("recordApi > validate", () => {
       withFields,
       withFieldWithMaxLength
     )
-    const { recordApi } = await setupApphierarchy(
-      hierarchyCreator
-    )
+    const { recordApi } = await setupApphierarchy(hierarchyCreator)
 
     const tooYoungRecord = recordApi.getNew("/customers", "customer")
     tooYoungRecord.age = 3
@@ -128,9 +122,7 @@ describe("recordApi > validate", () => {
       withFields,
       withFieldWithMaxLength
     )
-    const { recordApi } = await setupApphierarchy(
-      hierarchyCreator
-    )
+    const { recordApi } = await setupApphierarchy(hierarchyCreator)
 
     const record = recordApi.getNew("/customers", "customer")
     record.age = 3.123
@@ -141,7 +133,7 @@ describe("recordApi > validate", () => {
   })
 
   it("should return error when datetime field is > maxValue", async () => {
-    const withFieldWithMaxLength = (hierarchy) => {
+    const withFieldWithMaxLength = hierarchy => {
       const createddate = find(
         hierarchy.customerRecord.fields,
         f => f.name === "createddate"
@@ -153,9 +145,7 @@ describe("recordApi > validate", () => {
       withFields,
       withFieldWithMaxLength
     )
-    const { recordApi } = await setupApphierarchy(
-      hierarchyCreator
-    )
+    const { recordApi } = await setupApphierarchy(hierarchyCreator)
 
     const record = recordApi.getNew("/customers", "customer")
     record.createddate = addHours(new Date(), 1)
@@ -166,7 +156,7 @@ describe("recordApi > validate", () => {
   })
 
   it("should return error when number field is < minValue", async () => {
-    const withFieldWithMaxLength = (hierarchy) => {
+    const withFieldWithMaxLength = hierarchy => {
       const createddate = find(
         hierarchy.customerRecord.fields,
         f => f.name === "createddate"
@@ -178,9 +168,7 @@ describe("recordApi > validate", () => {
       withFields,
       withFieldWithMaxLength
     )
-    const { recordApi } = await setupApphierarchy(
-      hierarchyCreator
-    )
+    const { recordApi } = await setupApphierarchy(hierarchyCreator)
 
     const record = recordApi.getNew("/customers", "customer")
     record.createddate = new Date()
@@ -191,7 +179,7 @@ describe("recordApi > validate", () => {
   })
 
   it("should return error when string IS NOT one of declared values, and only declared values are allowed", async () => {
-    const withFieldWithMaxLength = (hierarchy) => {
+    const withFieldWithMaxLength = hierarchy => {
       const surname = find(
         hierarchy.customerRecord.fields,
         f => f.name === "surname"
@@ -204,9 +192,7 @@ describe("recordApi > validate", () => {
       withFields,
       withFieldWithMaxLength
     )
-    const { recordApi } = await setupApphierarchy(
-      hierarchyCreator
-    )
+    const { recordApi } = await setupApphierarchy(hierarchyCreator)
 
     const record = recordApi.getNew("/customers", "customer")
     record.surname = "zeecat"
@@ -217,7 +203,7 @@ describe("recordApi > validate", () => {
   })
 
   it("should not return error when string IS one of declared values, and only declared values are allowed", async () => {
-    const withFieldWithMaxLength = (hierarchy) => {
+    const withFieldWithMaxLength = hierarchy => {
       const surname = find(
         hierarchy.customerRecord.fields,
         f => f.name === "surname"

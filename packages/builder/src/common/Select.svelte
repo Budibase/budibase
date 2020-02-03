@@ -1,7 +1,16 @@
 <script>
-  import getIcon from "./icon";
-  export let value;
+  import getIcon from "./icon"
+  export let value
 </script>
+
+<div class="select-container">
+  <select on:change {value}>
+    <slot />
+  </select>
+  <span class="arrow">
+    {@html getIcon('chevron-down', '24')}
+  </span>
+</div>
 
 <style>
   .select-container {
@@ -44,12 +53,3 @@
     color: var(--primary100);
   }
 </style>
-
-<div class="select-container">
-  <select on:change {value}>
-    <slot />
-  </select>
-  <span class="arrow">
-    {@html getIcon('chevron-down', '24')}
-  </span>
-</div>

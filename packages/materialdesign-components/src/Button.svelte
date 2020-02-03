@@ -1,8 +1,8 @@
 <script>
-  import "@material/button/mdc-button.scss";
-  export let raised = false;
+  import "@material/button/mdc-button.scss"
+  export let raised = false
 
-  let c = raised ? "mdc-button mdc-button--raised" : "mdc-button";
+  let c = raised ? "mdc-button mdc-button--raised" : "mdc-button"
 </script>
 
 <button class={c}>

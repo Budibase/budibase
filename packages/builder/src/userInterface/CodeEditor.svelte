@@ -1,83 +1,84 @@
 <script>
-import { store } from "../builderStore/store";
-import UIkit from "uikit";
-import Button from "../common/Button.svelte";
-import ButtonGroup from "../common/ButtonGroup.svelte";
-import CodeMirror from "codemirror";
-import "codemirror/mode/javascript/javascript.js";
+  import { store } from "../builderStore/store"
+  import UIkit from "uikit"
+  import Button from "../common/Button.svelte"
+  import ButtonGroup from "../common/ButtonGroup.svelte"
+  import CodeMirror from "codemirror"
+  import "codemirror/mode/javascript/javascript.js"
 
-export let onCodeChanged;
-export let code;
+  export let onCodeChanged
+  export let code
 
-export const show = () => {
-  UIkit.modal(codeModal).show();
-}
-
-let codeModal;
-let editor;
-let cmInstance;
-
-$: currentCode = code; 
-$: originalCode = code;
-$: {
-  if(editor) {
-    if(!cmInstance) {
-      cmInstance = CodeMirror.fromTextArea(editor, {
-        mode: 'javascript',
-        lineNumbers: false,
-        lineWrapping: true,
-        smartIndent: true,
-        matchBrackets: true,
-        readOnly: false
-      });
-      cmInstance.on("change", () => currentCode = cmInstance.getValue());
-    }
-    cmInstance.focus();
-    cmInstance.setValue(code || "");
+  export const show = () => {
+    UIkit.modal(codeModal).show()
   }
-}
 
-const cancel = () => {
-  UIkit.modal(codeModal).hide();
-  currentCode = originalCode;
-}
+  let codeModal
+  let editor
+  let cmInstance
 
-const save = () => {
-  originalCode = currentCode;
-  onCodeChanged(currentCode);
-  UIkit.modal(codeModal).hide();
-}
+  $: currentCode = code
+  $: originalCode = code
+  $: {
+    if (editor) {
+      if (!cmInstance) {
+        cmInstance = CodeMirror.fromTextArea(editor, {
+          mode: "javascript",
+          lineNumbers: false,
+          lineWrapping: true,
+          smartIndent: true,
+          matchBrackets: true,
+          readOnly: false,
+        })
+        cmInstance.on("change", () => (currentCode = cmInstance.getValue()))
+      }
+      cmInstance.focus()
+      cmInstance.setValue(code || "")
+    }
+  }
 
+  const cancel = () => {
+    UIkit.modal(codeModal).hide()
+    currentCode = originalCode
+  }
+
+  const save = () => {
+    originalCode = currentCode
+    onCodeChanged(currentCode)
+    UIkit.modal(codeModal).hide()
+  }
 </script>
 
-
 <div bind:this={codeModal} uk-modal>
-    <div class="uk-modal-dialog" uk-overflow-auto>
+  <div class="uk-modal-dialog" uk-overflow-auto>
 
-      <div class="uk-modal-header">
-          <h3>Code</h3>
-      </div>
-
-      <div class="uk-modal-body uk-form-horizontal" >
-      
-        <p>Use the code box below to control how this component is displayed, with javascript.</p>
-        
-        <div>
-          <div class="editor-code-surround">function(render, context, store) {"{"}</div>
-          <div class="editor">
-            <textarea bind:this={editor}></textarea>
-          </div>
-          <div class="editor-code-surround">
-          {"}"}
-          </div>
-        </div>
-      </div>
-
-      <ButtonGroup style="float: right;">
-        <Button color="primary" grouped on:click={save}>Save</Button>
-        <Button color="tertiary" grouped on:click={cancel}>Close</Button>
-      </ButtonGroup>
+    <div class="uk-modal-header">
+      <h3>Code</h3>
     </div>
+
+    <div class="uk-modal-body uk-form-horizontal">
+
+      <p>
+        Use the code box below to control how this component is displayed, with
+        javascript.
+      </p>
+
+      <div>
+        <div class="editor-code-surround">
+          function(render, context, store) {'{'}
+        </div>
+        <div class="editor">
+          <textarea bind:this={editor} />
+        </div>
+        <div class="editor-code-surround">{'}'}</div>
+      </div>
+    </div>
+
+    <ButtonGroup style="float: right;">
+      <Button color="primary" grouped on:click={save}>Save</Button>
+      <Button color="tertiary" grouped on:click={cancel}>Close</Button>
+    </ButtonGroup>
+  </div>
 </div>
 
 <style>
@@ -105,5 +106,4 @@ const save = () => {
   .editor-code-surround {
     font-family: "Courier New", Courier, monospace;
   }
-
 </style>

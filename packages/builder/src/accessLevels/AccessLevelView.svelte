@@ -1,96 +1,88 @@
 <script>
+  import { cloneDeep, map, some, filter } from "lodash/fp"
+  import Textbox from "../common/Textbox.svelte"
+  import Checkbox from "../common/Checkbox.svelte"
+  import ButtonGroup from "../common/ButtonGroup.svelte"
+  import Button from "../common/Button.svelte"
+  import { validateAccessLevels } from "../common/core"
+  import ErrorsBox from "../common/ErrorsBox.svelte"
 
-import {cloneDeep, map, some, filter} from "lodash/fp";
-import Textbox from "../common/Textbox.svelte";
-import Checkbox from "../common/Checkbox.svelte";
-import ButtonGroup from "../common/ButtonGroup.svelte";
-import Button from "../common/Button.svelte";
-import {validateAccessLevels} from "../common/core";
-import ErrorsBox from "../common/ErrorsBox.svelte";
+  export let level
+  export let allPermissions
+  export let onFinished
+  export let isNew
+  export let allLevels
+  export let hierarchy
+  export let actions
 
-export let level;
-export let allPermissions;
-export let onFinished;
-export let isNew;
-export let allLevels;
-export let hierarchy;
-export let actions;
+  let errors = []
+  let clonedLevel = cloneDeep(level)
 
-let errors = [];
-let clonedLevel = cloneDeep(level);
+  const matchPermissions = (p1, p2) =>
+    p1.type === p2.type &&
+    ((!p2.nodeKey && !p1.nodeKey) || p2.nodeKey === p1.nodeKey)
 
-const matchPermissions = (p1, p2) => 
-    p1.type === p2.type
-    && 
-    ((!p2.nodeKey && !p1.nodeKey)
-      || p2.nodeKey === p1.nodeKey);
+  const hasPermission = hasPerm =>
+    some(p => matchPermissions(p, hasPerm))(clonedLevel.permissions)
 
-const hasPermission = hasPerm => 
-    some(p => matchPermissions(p, hasPerm))
-    (clonedLevel.permissions);
+  $: permissionMatrix = map(p => ({
+    permission: p,
+    hasPermission: hasPermission(p),
+  }))(allPermissions)
 
-$: permissionMatrix = 
-    map(p => ({permission:p, hasPermission: hasPermission(p)}))
-       (allPermissions)
+  const getPermissionName = perm =>
+    perm.nodeKey ? `${perm.type} - ${perm.nodeKey}` : perm.type
 
-const getPermissionName = perm => 
-    perm.nodeKey
-    ? `${perm.type} - ${perm.nodeKey}`
-    : perm.type;
+  const save = () => {
+    const newLevels = isNew
+      ? [...allLevels, clonedLevel]
+      : [...filter(l => l.name !== level.name)(allLevels), clonedLevel]
 
-const save = () => {
+    errors = validateAccessLevels(hierarchy, actions, newLevels)
 
-    const newLevels = 
-        isNew 
-        ? [...allLevels, clonedLevel]
-        : [...filter(l => l.name !== level.name)(allLevels), clonedLevel];
+    if (errors.length > 0) return
 
-    errors = validateAccessLevels(
-        hierarchy,
-        actions,
-        newLevels
-    );
+    onFinished(clonedLevel)
+  }
 
-    if(errors.length > 0) return;
+  const permissionChanged = perm => ev => {
+    const hasPermission = ev.target.checked
 
-    onFinished(clonedLevel);
-}
-
-const permissionChanged = perm => ev => {
-    const hasPermission = ev.target.checked;
-
-    if(hasPermission) {
-        clonedLevel.permissions.push(perm);
+    if (hasPermission) {
+      clonedLevel.permissions.push(perm)
     } else {
-        clonedLevel.permissions = filter(p => !matchPermissions(p, perm))(clonedLevel.permissions);
+      clonedLevel.permissions = filter(p => !matchPermissions(p, perm))(
+        clonedLevel.permissions
+      )
     }
-}
-
+  }
 </script>
 
 <div>
 
-    <ErrorsBox {errors} />
+  <ErrorsBox {errors} />
 
-    <form class="uk-form-horizontal">
+  <form class="uk-form-horizontal">
 
-        <Textbox label="Name" bind:text={clonedLevel.name} />
+    <Textbox label="Name" bind:text={clonedLevel.name} />
 
-        {#each permissionMatrix as permission}
-        <div>
-            <Checkbox label={getPermissionName(permission.permission)} 
-                    checked={permission.hasPermission} 
-                    on:change={permissionChanged(permission.permission)} />
-        </div>
-        {/each}
+    {#each permissionMatrix as permission}
+      <div>
+        <Checkbox
+          label={getPermissionName(permission.permission)}
+          checked={permission.hasPermission}
+          on:change={permissionChanged(permission.permission)} />
+      </div>
+    {/each}
 
-    </form>
+  </form>
 
-    <ButtonGroup style="margin-top: 10px">
-        <Button color="primary" grouped on:click={save}>Save</Button>
-        <Button color="secondary" grouped on:click={() => onFinished()}>Cancel</Button>
-    </ButtonGroup>
-
+  <ButtonGroup style="margin-top: 10px">
+    <Button color="primary" grouped on:click={save}>Save</Button>
+    <Button color="secondary" grouped on:click={() => onFinished()}>
+      Cancel
+    </Button>
+  </ButtonGroup>
 
 </div>
 
