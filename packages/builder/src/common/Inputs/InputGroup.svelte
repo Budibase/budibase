@@ -1,20 +1,29 @@
 <script>
-  export let meta = [];
-  export let size = '';
-  export let values = [];
+  export let meta = []
+  export let size = ""
+  export let values = []
+  export let type = "number"
+  export let onStyleChanged = () => {}
+
+  let _values = values.map(v => v)
+
+  $: onStyleChanged(_values)
 </script>
 
 <div class="inputs {size}">
   {#each meta as { placeholder }, i}
-    <input type="number" placeholder="{placeholder}" bind:value={values[i]}/>
+    <input
+      {type}
+      {placeholder}
+      value={values[i]}
+      on:input={e => (_values[i] = e.target.value)} />
   {/each}
 </div>
 
 <style>
-.inputs {
+  .inputs {
     display: flex;
     justify-content: space-between;
-
   }
 
   input {
@@ -25,18 +34,18 @@
     opacity: 0.7;
     padding: 5px 10px;
     box-sizing: border-box;
-    border: 1px solid #DBDBDB;
+    border: 1px solid #dbdbdb;
     border-radius: 2px;
     outline: none;
   }
 
-  input[type=number]::-webkit-inner-spin-button,
-  input[type=number]::-webkit-outer-spin-button {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     margin: 0;
-}
+  }
 
   .small > input {
     width: 38px;

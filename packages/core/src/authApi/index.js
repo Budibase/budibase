@@ -1,25 +1,23 @@
-import {
-  authenticate,
-  authenticateTemporaryAccess,
-} from './authenticate';
-import { createTemporaryAccess } from './createTemporaryAccess';
-import { createUser } from './createUser';
-import { enableUser, disableUser } from './enableUser';
-import { loadAccessLevels } from './loadAccessLevels';
-import { getNewAccessLevel } from './getNewAccessLevel';
-import { getNewUser, getNewUserAuth } from './getNewUser';
-import { getUsers } from './getUsers';
-import { isAuthorized } from './isAuthorized';
-import { saveAccessLevels } from './saveAccessLevels';
+import { authenticate, authenticateTemporaryAccess } from "./authenticate"
+import { createTemporaryAccess } from "./createTemporaryAccess"
+import { createUser } from "./createUser"
+import { enableUser, disableUser } from "./enableUser"
+import { loadAccessLevels } from "./loadAccessLevels"
+import { getNewAccessLevel } from "./getNewAccessLevel"
+import { getNewUser, getNewUserAuth } from "./getNewUser"
+import { getUsers } from "./getUsers"
+import { isAuthorized } from "./isAuthorized"
+import { saveAccessLevels } from "./saveAccessLevels"
 import {
   changeMyPassword,
-  scorePassword, setPasswordFromTemporaryCode,
+  scorePassword,
+  setPasswordFromTemporaryCode,
   isValidPassword,
-} from './setPassword';
-import { validateUser } from './validateUser';
-import { validateAccessLevels } from './validateAccessLevels';
-import { generateFullPermissions } from './generateFullPermissions';
-import { setUserAccessLevels } from './setUserAccessLevels';
+} from "./setPassword"
+import { validateUser } from "./validateUser"
+import { validateAccessLevels } from "./validateAccessLevels"
+import { generateFullPermissions } from "./generateFullPermissions"
+import { setUserAccessLevels } from "./setUserAccessLevels"
 
 export const getAuthApi = app => ({
   authenticate: authenticate(app),
@@ -43,6 +41,6 @@ export const getAuthApi = app => ({
   validateAccessLevels: validateAccessLevels(app),
   generateFullPermissions: () => generateFullPermissions(app),
   setUserAccessLevels: setUserAccessLevels(app),
-});
+})
 
-export default getAuthApi;
+export default getAuthApi

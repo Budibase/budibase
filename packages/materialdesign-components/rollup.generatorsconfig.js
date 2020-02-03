@@ -1,4 +1,4 @@
-import resolve from "rollup-plugin-node-resolve";
+import resolve from "rollup-plugin-node-resolve"
 
 export default {
   input: "src/generators.js",
@@ -7,8 +7,8 @@ export default {
       file: "dist/generators.js",
       format: "esm",
       name: "budibaseStandardComponents",
-      sourcemap: "inline"
-    }
+      sourcemap: "inline",
+    },
   ],
-  plugins: [resolve()]
-};
+  plugins: [resolve()],
+}

@@ -1,30 +1,27 @@
 <script>
-import {buildStyle} from "./buildStyle";
+  import { buildStyle } from "./buildStyle"
 
-export let value="";
-export let containerClass="";
+  export let value = ""
+  export let containerClass = ""
 
-export let font="";
-export let textAlign="";
-export let verticalAlign=""
-export let color="";
+  export let font = ""
+  export let textAlign = ""
+  export let verticalAlign = ""
+  export let color = ""
 
-export let _bb;
+  export let _bb
 
-let style="";
+  let style = ""
 
-
-$: {
-    style=buildStyle({
-        font,  verticalAlign, color, 
-        "text-align": textAlign,
-        "vertical-align": verticalAlign
-    });
-}
-
+  $: {
+    style = buildStyle({
+      font,
+      verticalAlign,
+      color,
+      "text-align": textAlign,
+      "vertical-align": verticalAlign,
+    })
+  }
 </script>
 
-<div class={containerClass}
-     style={style}>
-    {value}
-</div>
+<div class={containerClass} {style}>{value}</div>

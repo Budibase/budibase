@@ -1,47 +1,84 @@
 <script>
-  let snippets = [];
-  let current_snippet = 0;
-  let snippet_text = ''
-  let id = 0;
+  import { store } from "../builderStore/store"
+  import UIkit from "uikit"
+  import Button from "../common/Button.svelte"
+  import ButtonGroup from "../common/ButtonGroup.svelte"
+  import CodeMirror from "codemirror"
+  import "codemirror/mode/javascript/javascript.js"
 
-  function save_snippet() {
-    if (!snippet_text) return;
+  export let onCodeChanged
+  export let code
 
-    const index = snippets.findIndex(({ id }) => current_snippet === id);
-
-    if (index > -1) {
-      snippets[index].snippet = snippet_text;
-    } else {
-      snippets = snippets.concat({ snippet: snippet_text , id: id });
-    }
-    snippet_text = '';
-    current_snippet = ++id;
+  export const show = () => {
+    UIkit.modal(codeModal).show()
   }
 
-  function edit_snippet(id) {
-    const { snippet, id: _id } = snippets.find(({ id:_id }) => _id === id);
-    current_snippet = id
-    snippet_text = snippet;
+  let codeModal
+  let editor
+  let cmInstance
+
+  $: currentCode = code
+  $: originalCode = code
+  $: {
+    if (editor) {
+      if (!cmInstance) {
+        cmInstance = CodeMirror.fromTextArea(editor, {
+          mode: "javascript",
+          lineNumbers: false,
+          lineWrapping: true,
+          smartIndent: true,
+          matchBrackets: true,
+          readOnly: false,
+        })
+        cmInstance.on("change", () => (currentCode = cmInstance.getValue()))
+      }
+      cmInstance.focus()
+      cmInstance.setValue(code || "")
+    }
+  }
+
+  const cancel = () => {
+    UIkit.modal(codeModal).hide()
+    currentCode = originalCode
+  }
+
+  const save = () => {
+    originalCode = currentCode
+    onCodeChanged(currentCode)
+    UIkit.modal(codeModal).hide()
   }
 </script>
 
-<h3>Code</h3>
+<div bind:this={codeModal} uk-modal>
+  <div class="uk-modal-dialog" uk-overflow-auto>
 
-<p>Use the code box below to add snippets of javascript to enhance your webapp</p>
+    <div class="uk-modal-header">
+      <h3>Code</h3>
+    </div>
 
-<div class="editor">
-  <textarea class="code" bind:value={snippet_text} />
-  <button on:click={save_snippet}>Save</button>
-</div>
+    <div class="uk-modal-body uk-form-horizontal">
 
-<div class="snippets">
-  <h3>Snippets added</h3>
-  {#each snippets as { id, snippet } }
-  <div class="snippet">
-    <pre class="code">{snippet}</pre>
-    <button on:click={() => edit_snippet(id)}>Edit</button>
+      <p>
+        Use the code box below to control how this component is displayed, with
+        javascript.
+      </p>
+
+      <div>
+        <div class="editor-code-surround">
+          function(render, context, store) {'{'}
+        </div>
+        <div class="editor">
+          <textarea bind:this={editor} />
+        </div>
+        <div class="editor-code-surround">{'}'}</div>
+      </div>
+    </div>
+
+    <ButtonGroup style="float: right;">
+      <Button color="primary" grouped on:click={save}>Save</Button>
+      <Button color="tertiary" grouped on:click={cancel}>Close</Button>
+    </ButtonGroup>
   </div>
-  {/each}
 </div>
 
 <style>
@@ -60,60 +97,13 @@
   }
 
   .editor {
-    position: relative;
+    border-style: dotted;
+    border-width: 1px;
+    border-color: gainsboro;
+    padding: 10px 30px;
   }
 
-  .code {
-    width: 100%;
-    outline: none;
-    border: none;
-    background: #173157;
-    border-radius: 5px;
-    box-sizing: border-box;
-    white-space: pre;
-    color: #eee;
-    padding: 10px;
-    font-family: monospace;
-    overflow-y: scroll;
+  .editor-code-surround {
+    font-family: "Courier New", Courier, monospace;
   }
-
-  .editor textarea {
-    resize: none;
-    height: 150px;
-  }
-
-  button {
-    position: absolute;
-    box-shadow: 0 0 black;
-    color: #eee;
-    right: 5px;
-    bottom: 10px;
-    background: none;
-    border: none;
-    text-transform: uppercase;
-    font-size: 9px;
-    font-weight: 600;
-    outline: none;
-    cursor: pointer;
-  }
-
-  .snippets {
-    margin-top: 20px;
-  }
-
-  .snippet {
-    position: relative;
-    margin-top: 5px;
-  }
-
-  .snippet pre {
-    background: #f9f9f9;
-    color: #333;
-    max-height: 150px;
-  }
-
-  .snippet button {
-    color: #ccc;
-  }
-
 </style>

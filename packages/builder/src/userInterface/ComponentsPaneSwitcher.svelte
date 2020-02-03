@@ -1,65 +1,59 @@
 <script>
-import ComponentPanel from "./ComponentPanel.svelte";
-import ComponentsList from "./ComponentsList.svelte";
+  import ComponentPanel from "./ComponentPanel.svelte"
+  import ComponentsList from "./ComponentsList.svelte"
 
-let selected="properties";
+  let selected = "properties"
 
-const isSelected = tab =>
-    selected === tab;
+  const isSelected = tab => selected === tab
 
-const selectTab = tab =>
-    selected = tab;
-
-
+  const selectTab = tab => (selected = tab)
 </script>
 
 <div class="root">
 
-    <div class="switcher">
+  <div class="switcher">
 
-        <button
-            class:selected={selected==="properties"}
-            on:click={() => selectTab("properties")}>
-            Properties
-        </button>
+    <button
+      class:selected={selected === 'properties'}
+      on:click={() => selectTab('properties')}>
+      Properties
+    </button>
 
-        <button
-            class:selected={selected==="components"}
-            on:click={() => selectTab("components")}>
-            Components
-        </button>
+    <button
+      class:selected={selected === 'components'}
+      on:click={() => selectTab('components')}>
+      Components
+    </button>
 
-    </div>
+  </div>
 
-    <div class="panel">
-        {#if selected==="properties"}
-            <ComponentPanel />
-        {/if}
+  <div class="panel">
+    {#if selected === 'properties'}
+      <ComponentPanel />
+    {/if}
 
-        {#if selected==="components"}
-            <ComponentsList />
-        {/if}
-    </div>
+    {#if selected === 'components'}
+      <ComponentsList />
+    {/if}
+  </div>
 
 </div>
 
-
 <style>
-
-.root {
+  .root {
     height: 100%;
     display: flex;
     flex-direction: column;
     padding: 2rem 1.5rem 2rem 1.5rem;
-}
+  }
 
-.switcher {
+  .switcher {
     display: flex;
     justify-content: space-between;
     margin-bottom: 25px;
-}
+  }
 
-.switcher > button {
+  .switcher > button {
     display: inline-block;
     border: none;
     margin: 0;
@@ -69,16 +63,16 @@ const selectTab = tab =>
     font-size: 0.85rem;
     text-transform: uppercase;
     color: #999;
-}
+    background-color: rgba(0, 0, 0, 0);
+  }
 
-.switcher > .selected {
+  .switcher > .selected {
     color: #333;
-}
+  }
 
-.panel {
+  .panel {
     flex: 1 1 auto;
     height: 0px;
     overflow-y: auto;
-}
-
+  }
 </style>
