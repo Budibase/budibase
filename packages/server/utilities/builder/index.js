@@ -11,16 +11,18 @@ const {
 } = require("fs-extra")
 const { join, dirname } = require("path")
 const { $ } = require("@budibase/core").common
-const { keyBy, intersection, map } = require("lodash/fp")
+const { 
+  keyBy, intersection, 
+  map, values, flatten 
+} = require("lodash/fp")
 const { merge } = require("lodash")
 
 const { componentLibraryInfo } = require("./componentLibraryInfo")
-const savePackage = require("./savePackage")
-const buildApp = require("./buildApp")
+const savePagePackage = require("./savePagePackage")
+const buildPage = require("./buildPage")
 
-module.exports.savePackage = savePackage
+module.exports.savePagePackage = savePagePackage
 
-const getPages = async appPath => await readJSON(`${appPath}/pages.json`)
 const getAppDefinition = async appPath =>
   await readJSON(`${appPath}/appDefinition.json`)
 
@@ -36,9 +38,7 @@ module.exports.getPackageForBuilder = async (config, appname) => {
 
     pages,
 
-    components: await getComponents(appPath, pages),
-
-    screens: keyBy("name")(await fetchscreens(appPath)),
+    components: await getComponents(appPath, pages)
   }
 }
 
@@ -48,40 +48,83 @@ module.exports.getApps = async (config, master) => {
   return $(master.listApplications(), [map(a => a.name), intersection(dirs)])
 }
 
-const componentPath = (appPath, name) =>
-  join(appPath, "components", name + ".json")
+const getPages = async appPath => {
+  const pages = {};
+  
+  const pageFolders = await readdir(join(appPath, "pages"))
+  for(let pageFolder of pageFolders) {
+    try {
+      pages[pageFolder] = await readJSON(
+        join(appPath, "pages", pageFolder, "page.json")) 
+    } catch(_) {
+      // ignore error
+    }
+  }
 
-module.exports.saveScreen = async (config, appname, component) => {
+  return pages;
+}
+
+const screenPath = (appPath, pageName, name) =>
+  join(appPath, "pages", pageName, "screens", name + ".json")
+
+
+module.exports.listScreens = async  (config, appname, pagename) => {
+  const appPath = appPackageFolder(config, appname);
+  return keyBy("name")(await fetchscreens(appPath, pagename))
+}
+
+module.exports.saveScreen = async (config, appname, pagename, screen) => {
   const appPath = appPackageFolder(config, appname)
-  const compPath = componentPath(appPath, component.name)
+  const compPath = screenPath(appPath, pagename, screen.name)
   await ensureDir(dirname(compPath))
-  await writeJSON(compPath, component, {
+  await writeJSON(compPath, screen, {
     encoding: "utf8",
     flag: "w",
     spaces: 2,
   })
 }
 
-module.exports.renameScreen = async (config, appname, oldName, newName) => {
+module.exports.renameScreen = async (config, appname, pagename, oldName, newName) => {
   const appPath = appPackageFolder(config, appname)
 
-  const oldComponentPath = componentPath(appPath, oldName)
+  const oldComponentPath = screenPath(appPath, pagename, oldName)
 
-  const newComponentPath = componentPath(appPath, newName)
+  const newComponentPath = screenPath(appPath, pagename, newName)
 
   await ensureDir(dirname(newComponentPath))
   await rename(oldComponentPath, newComponentPath)
 }
 
-module.exports.deleteScreen = async (config, appname, name) => {
+module.exports.deleteScreen = async (config, appname, pagename, name) => {
   const appPath = appPackageFolder(config, appname)
-  const componentFile = componentPath(appPath, name)
+  const componentFile = screenPath(appPath, pagename, name)
   await unlink(componentFile)
 
   const dir = dirname(componentFile)
   if ((await readdir(dir)).length === 0) {
     await rmdir(dir)
   }
+}
+
+module.exports.savePage = async (config, appname, pagename, page) => {
+  
+  const appPath = appPackageFolder(config, appname);
+  const pageDir = join(
+    appPath, 
+    "pages", 
+    pagename)
+  
+  await ensureDir(pageDir)
+  await writeJSON(join(pageDir, "page.json"), page,  {
+    encoding: "utf8",
+    flag: "w",
+    space: 2
+  })
+  const appDefinition = await getAppDefinition(appPath)
+  await buildPage(
+    config, appname, 
+    appDefinition, 
+    pagename, page)
 }
 
 module.exports.componentLibraryInfo = async (config, appname, lib) => {
@@ -92,11 +135,14 @@ module.exports.componentLibraryInfo = async (config, appname, lib) => {
 const getComponents = async (appPath, pages, lib) => {
   let libs
   if (!lib) {
-    pages = pages || (await readJSON(`${appPath}/pages.json`))
+    pages = pages || await getPages(appPath);
 
-    if (!pages.componentLibraries) return []
+    if (!pages) return []
 
-    libs = pages.componentLibraries
+    libs = $(pages, [
+              values,
+              map(p => p.componentLibraries),
+              flatten])
   } else {
     libs = [lib]
   }
@@ -116,12 +162,12 @@ const getComponents = async (appPath, pages, lib) => {
   return { components, generators }
 }
 
-const fetchscreens = async (appPath, relativePath = "") => {
-  const currentDir = join(appPath, "components", relativePath)
+const fetchscreens = async (appPath, pagename, relativePath = "") => {
+  const currentDir = join(appPath, "pages", pagename, "screens", relativePath)
 
   const contents = await readdir(currentDir)
 
-  const components = []
+  const screens = []
 
   for (let item of contents) {
     const itemRelativePath = join(relativePath, item)
@@ -139,7 +185,7 @@ const fetchscreens = async (appPath, relativePath = "") => {
 
       component.props = component.props || {}
 
-      components.push(component)
+      screens.push(component)
     } else {
       const childComponents = await fetchscreens(
         appPath,
@@ -147,12 +193,12 @@ const fetchscreens = async (appPath, relativePath = "") => {
       )
 
       for (let c of childComponents) {
-        components.push(c)
+        screens.push(c)
       }
     }
   }
 
-  return components
+  return screens
 }
 
 module.exports.getComponents = getComponents
