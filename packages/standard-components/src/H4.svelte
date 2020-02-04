@@ -1,12 +1,8 @@
 <script>
-export let text="";
-export let className=""
+  export let text = ""
+  export let className = ""
 
-export let _bb;
-
-
+  export let _bb
 </script>
 
-<h4 class={className}>
-    {text}
-</h4>
+<h4 class={className}>{text}</h4>

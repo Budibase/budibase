@@ -1,20 +1,20 @@
-import svelte from "rollup-plugin-svelte";
-import resolve from "rollup-plugin-node-resolve";
-import commonjs from "rollup-plugin-commonjs";
-import livereload from "rollup-plugin-livereload";
-import { terser } from "rollup-plugin-terser";
-import json from "rollup-plugin-json";
-import alias from "rollup-plugin-alias";
-import path from "path";
+import svelte from "rollup-plugin-svelte"
+import resolve from "rollup-plugin-node-resolve"
+import commonjs from "rollup-plugin-commonjs"
+import livereload from "rollup-plugin-livereload"
+import { terser } from "rollup-plugin-terser"
+import json from "rollup-plugin-json"
+import alias from "rollup-plugin-alias"
+import path from "path"
 
 const aliases = {
   resolve: [".js", ".svelte"],
   entries: [
-    { find: "@BBMD", replacement: path.resolve(__dirname, "dist/index.js") }
-  ]
-};
+    { find: "@BBMD", replacement: path.resolve(__dirname, "dist/index.js") },
+  ],
+}
 
-const production = !process.env.ROLLUP_WATCH;
+const production = !process.env.ROLLUP_WATCH
 
 const lodash_fp_exports = [
   "find",
@@ -54,8 +54,8 @@ const lodash_fp_exports = [
   "keyBy",
   "isNaN",
   "isInteger",
-  "toNumber"
-];
+  "toNumber",
+]
 
 const lodash_exports = [
   "flow",
@@ -71,8 +71,8 @@ const lodash_exports = [
   "split",
   "replace",
   "merge",
-  "assign"
-];
+  "assign",
+]
 
 const coreExternal = [
   "lodash",
@@ -82,8 +82,8 @@ const coreExternal = [
   "safe-buffer",
   "shortid",
   "@nx-js/compiler-util",
-  "bcryptjs"
-];
+  "bcryptjs",
+]
 
 export default {
   input: "src/Test/testMain.js",
@@ -91,10 +91,10 @@ export default {
     sourcemap: true,
     format: "iife",
     name: "app",
-    file: "public/bundle.js",
+    file: "public/build/bundle.js",
     globals: {
-      crypto: "crypto"
-    }
+      crypto: "crypto",
+    },
   },
   plugins: [
     alias(aliases),
@@ -104,10 +104,10 @@ export default {
       // we'll extract any component CSS out into
       // a separate file — better for performance
       css: css => {
-        css.write("public/bundle.css");
+        css.write("public/build/bundle.css");
       },
 
-      hydratable: true
+      hydratable: true,
     }),
 
     // If you have external dependencies installed from
@@ -122,16 +122,16 @@ export default {
           importee === "svelte" ||
           importee.startsWith("svelte/") ||
           coreExternal.includes(importee)
-        );
+        )
       },
-      preferBuiltins: true
+      preferBuiltins: true,
     }),
     commonjs({
       namedExports: {
         "lodash/fp": lodash_fp_exports,
         lodash: lodash_exports,
-        shortid: ["generate"]
-      }
+        shortid: ["generate"],
+      },
     }),
     json(),
 
@@ -141,9 +141,9 @@ export default {
 
     // If we're building for production (npm run build
     // instead of npm run dev), minify
-    production && terser()
+    production && terser(),
   ],
   watch: {
-    clearScreen: false
-  }
-};
+    clearScreen: false,
+  },
+}

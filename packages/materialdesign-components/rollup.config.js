@@ -1,7 +1,7 @@
-import svelte from "rollup-plugin-svelte";
-import postcss from "rollup-plugin-postcss";
-import resolve from "rollup-plugin-node-resolve";
-import path from "path";
+import svelte from "rollup-plugin-svelte"
+import postcss from "rollup-plugin-postcss"
+import resolve from "rollup-plugin-node-resolve"
+import path from "path"
 
 const postcssOptions = () => ({
   extensions: [".scss", ".sass"],
@@ -11,11 +11,11 @@ const postcssOptions = () => ({
     [
       "sass",
       {
-        includePaths: ["./node_modules"]
-      }
-    ]
-  ]
-});
+        includePaths: ["./node_modules"],
+      },
+    ],
+  ],
+})
 
 export default {
   input: "src/index.js",
@@ -24,14 +24,14 @@ export default {
       file: "dist/index.js",
       format: "esm",
       name: "budibaseStandardComponents",
-      sourcemap: "inline"
-    }
+      sourcemap: "inline",
+    },
   ],
   plugins: [
     svelte({
-      hydratable: true
+      hydratable: true,
     }),
     resolve(),
-    postcss(postcssOptions())
-  ]
-};
+    postcss(postcssOptions()),
+  ],
+}

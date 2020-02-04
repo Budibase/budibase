@@ -1,137 +1,129 @@
 <script>
+  import PropsView from "./PropsView.svelte"
+  import { store } from "../builderStore"
+  import IconButton from "../common/IconButton.svelte"
+  import {
+    LayoutIcon,
+    PaintIcon,
+    TerminalIcon,
+    CircleIndicator,
+    EventsIcon,
+  } from "../common/Icons/"
+  import CodeEditor from "./CodeEditor.svelte"
+  import LayoutEditor from "./LayoutEditor.svelte"
+  import EventsEditor from "./EventsEditor"
 
-import PropsView from "./PropsView.svelte";
-import { store } from "../builderStore";
-import { isRootComponent } from "./pagesParsing/searchComponents";
-import IconButton from "../common/IconButton.svelte";
-import Textbox from "../common/Textbox.svelte";
-import { pipe } from "../common/core";
-import {
-    getScreenInfo
-} from "./pagesParsing/createProps";
-import { LayoutIcon, PaintIcon, TerminalIcon } from '../common/Icons/';
-import CodeEditor from './CodeEditor.svelte';
-import LayoutEditor from './LayoutEditor.svelte';
+  let current_view = "props"
+  let codeEditor
 
-import {
-    cloneDeep,
-    join,
-    split,
-    map,
-    keys,
-    isUndefined,
-    last
-} from "lodash/fp";
-import { assign } from "lodash";
+  $: component = $store.currentComponentInfo
+  $: originalName = component.name
+  $: name = component.name
+  $: description = component.description
+  $: componentInfo = $store.currentComponentInfo
+  $: components = $store.components
 
-let component;
-let name = "";
-let description = "";
-let tagsString = "";
-let nameInvalid = "";
-let componentInfo = {};
-let modalElement
-let propsValidationErrors = [];
-let originalName="";
-let components;
-let ignoreStore = false;
-
-// $: shortName = last(name.split("/"));
-
-store.subscribe(s => {
-    if(ignoreStore) return;
-    component = s.currentComponentInfo;
-    if(!component) return;
-    originalName = component.name;
-    name = component.name;
-    description = component.description;
-    tagsString = join(", ")(component.tags);
-    componentInfo = s.currentComponentInfo;
-    components = s.components;
-});
-
-const onPropsChanged = store.updateComponentProp;
-
-let current_view = 'props';
+  const onPropChanged = store.setComponentProp
+  const onStyleChanged = store.setComponentStyle
 </script>
 
 <div class="root">
-    <ul>
-        <li>
-          <button class:selected={current_view === 'props'} on:click={() => current_view = 'props'}>
-            <PaintIcon />
-          </button>
-        </li>
-        <li>
-          <button class:selected={current_view === 'layout'} on:click={() => current_view = 'layout'}>
-            <LayoutIcon />
-          </button>
-        </li>
-        <li>
-          <button class:selected={current_view === 'code'} on:click={() => current_view = 'code'}>
-            <TerminalIcon />
-          </button>
-        </li>
-    </ul>
-
-    {#if !componentInfo.component}
-        <div class="component-props-container">
-
-        {#if current_view === 'props'}
-            <PropsView {componentInfo} {components} {onPropsChanged} />
-        {:else if current_view === 'layout'}
-            <LayoutEditor />
-        {:else}
-            <CodeEditor />
+  <ul>
+    <li>
+      <button
+        class:selected={current_view === 'props'}
+        on:click={() => (current_view = 'props')}>
+        <PaintIcon />
+      </button>
+    </li>
+    <li>
+      <button
+        class:selected={current_view === 'layout'}
+        on:click={() => (current_view = 'layout')}>
+        <LayoutIcon />
+      </button>
+    </li>
+    <li>
+      <button
+        class:selected={current_view === 'code'}
+        on:click={() => codeEditor && codeEditor.show()}>
+        {#if componentInfo._code && componentInfo._code.trim().length > 0}
+          <div class="button-indicator">
+            <CircleIndicator />
+          </div>
         {/if}
+        <TerminalIcon />
+      </button>
+    </li>
+    <li>
+      <button
+        class:selected={current_view === 'events'}
+        on:click={() => (current_view = 'events')}>
+        <EventsIcon />
+      </button>
+    </li>
+  </ul>
 
-        </div>
-    {:else}
-        <h1> This is a screen, this will be dealt with later</h1>
-    {/if}
+  {#if !componentInfo.component}
+    <div class="component-props-container">
+
+      {#if current_view === 'props'}
+        <PropsView {componentInfo} {components} {onPropChanged} />
+      {:else if current_view === 'layout'}
+        <LayoutEditor {onStyleChanged} {componentInfo} />
+      {:else if current_view === 'events'}
+        <EventsEditor {componentInfo} {components} {onPropChanged} />
+      {/if}
+
+      <CodeEditor
+        bind:this={codeEditor}
+        code={$store.currentComponentInfo._code}
+        onCodeChanged={store.setComponentCode} />
+
+    </div>
+  {:else}
+    <h1>This is a screen, this will be dealt with later</h1>
+  {/if}
 
 </div>
 
-
 <style>
-
-.root {
+  .root {
     height: 100%;
     display: flex;
     flex-direction: column;
+  }
 
-}
-
-.title > div:nth-child(1) {
+  .title > div:nth-child(1) {
     grid-column-start: name;
     color: var(--secondary100);
-}
+  }
 
-.title > div:nth-child(2) {
+  .title > div:nth-child(2) {
     grid-column-start: actions;
-}
+  }
 
-.component-props-container {
-  margin-top: 10px;
+  .component-props-container {
+    margin-top: 10px;
     flex: 1 1 auto;
     overflow-y: auto;
-}
+  }
 
-ul {
+  ul {
     list-style: none;
     display: flex;
     padding: 0;
-}
+  }
 
-li {
+  li {
     margin-right: 20px;
     background: none;
     border-radius: 5px;
     width: 48px;
     height: 48px;
-}
+  }
 
-li button {
+  li button {
     width: 100%;
     height: 100%;
     background: none;
@@ -140,11 +132,18 @@ li button {
     padding: 12px;
     outline: none;
     cursor: pointer;
-}
+    position: relative;
+  }
 
-.selected {
+  .selected {
     color: var(--button-text);
-    background: var(--background-button)!important;
-}
+    background: var(--background-button) !important;
+  }
 
+  .button-indicator {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    color: var(--button-text);
+  }
 </style>
