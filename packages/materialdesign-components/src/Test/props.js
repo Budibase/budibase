@@ -7,6 +7,20 @@ export const props = {
   button: {
     _component: "@budibase/materialdesign-components/button",
     _children: [],
-    raised: true,
+    variant: "raised",
+    colour: "secondary",
+    size: "large",
+    href: "",
+    icon: "alarm_on",
+    trailingIcon: true,
+    fullBleed: false,
+    text: "I am button",
+    disabled: false
   },
-}
+  icon: {
+    _component: "@budibase/materialdesign-components/icon",
+    _children: [],
+    icon: ""
+  }
+};
+
