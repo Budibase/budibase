@@ -1,4 +1,5 @@
 <script>
+  import { store } from "../builderStore/"
   import ComponentPanel from "./ComponentPanel.svelte"
   import ComponentsList from "./ComponentsList.svelte"
 
@@ -7,35 +8,41 @@
   const isSelected = tab => selected === tab
 
   const selectTab = tab => (selected = tab)
+
+  $: console.log($store)
 </script>
 
 <div class="root">
+  {#if $store.screens.length}
+    <div class="switcher">
 
-  <div class="switcher">
+      <button
+        class:selected={selected === 'properties'}
+        on:click={() => selectTab('properties')}>
+        Properties
+      </button>
 
-    <button
-      class:selected={selected === 'properties'}
-      on:click={() => selectTab('properties')}>
-      Properties
-    </button>
+      <button
+        class:selected={selected === 'components'}
+        on:click={() => selectTab('components')}>
+        Components
+      </button>
 
-    <button
-      class:selected={selected === 'components'}
-      on:click={() => selectTab('components')}>
-      Components
-    </button>
+    </div>
 
-  </div>
+    <div class="panel">
+      {#if selected === 'properties'}
+        <ComponentPanel />
+      {/if}
 
-  <div class="panel">
-    {#if selected === 'properties'}
-      <ComponentPanel />
-    {/if}
+      {#if selected === 'components'}
+        <ComponentsList />
+      {/if}
 
-    {#if selected === 'components'}
-      <ComponentsList />
-    {/if}
-  </div>
+    </div>
+  {:else}
+    <p>Please create a new screen</p>
+  {/if}
 
 </div>
 

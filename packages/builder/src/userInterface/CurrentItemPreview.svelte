@@ -10,22 +10,22 @@
     console.log(
       iframe.contentDocument.head.insertAdjacentHTML(
         "beforeend",
-        '<style ✂prettier:content✂=""></style>'
+        `<\style></style>`
       )
     )
   $: hasComponent = !!$store.currentFrontEndItem
   $: styles = hasComponent ? $store.currentFrontEndItem._css : ""
 
-  $: stylesheetLinks = pipe($store.pages.stylesheets, [
-    map(s => `<link rel="stylesheet" href="${s}"/>`),
-    join("\n"),
-  ])
+  $: stylesheetLinks = pipe(
+    $store.pages.stylesheets,
+    [map(s => `<link rel="stylesheet" href="${s}"/>`), join("\n")]
+  )
 
   $: appDefinition = {
     componentLibraries: $store.loadLibraryUrls(),
     props: buildPropsHierarchy(
       $store.components,
-      $store.screens,
+      $store.pages[$store.currentPageName]._screens,
       $store.currentFrontEndItem
     ),
     hierarchy: $store.hierarchy,
@@ -40,12 +40,20 @@
       title="componentPreview"
       bind:this={iframe}
       srcdoc={`<html>
-
-<head>
+  <head>
     ${stylesheetLinks}
-    <script ✂prettier:content✂="CiAgICAgICAgd2luZG93WyIjI0JVRElCQVNFX0FQUERFRklOSVRJT04jIyJdID0gJHtKU09OLnN0cmluZ2lmeShhcHBEZWZpbml0aW9uKX07CiAgICAgICAgd2luZG93WyIjI0JVRElCQVNFX1VJRlVOQ1RJT05TIl0gPSAkeyRzdG9yZS5jdXJyZW50U2NyZWVuRnVuY3Rpb25zfTsKICAgICAgICAKICAgICAgICBpbXBvcnQoJy9fYnVpbGRlci9idWRpYmFzZS1jbGllbnQuZXNtLm1qcycpCiAgICAgICAgLnRoZW4obW9kdWxlID0+IHsKICAgICAgICAgICAgbW9kdWxlLmxvYWRCdWRpYmFzZSh7IHdpbmRvdywgbG9jYWxTdG9yYWdlIH0pOwogICAgICAgIH0pCiAgICA=">{}</script>    <style ✂prettier:content✂="CgogICAgICAgIGJvZHkgewogICAgICAgICAgICBib3gtc2l6aW5nOiBib3JkZXItYm94OwogICAgICAgICAgICBwYWRkaW5nOiAyMHB4OwogICAgICAgIH0KICAgICR7c3R5bGVzfQogICAg"></style></head>
-<body>
-</body>
+    <\script>
+        window["##BUDIBASE_APPDEFINITION##"] = ${JSON.stringify(appDefinition)};
+        window["##BUDIBASE_UIFUNCTIONS"] = ${$store.currentScreenFunctions};
+
+        import('/_builder/budibase-client.esm.mjs')
+        .then(module => {
+            module.loadBudibase({ window, localStorage });
+        })
+    <\/script>
+  </head>
+  <body>
+  </body>
 </html>`} />
   {/if}
 </div>

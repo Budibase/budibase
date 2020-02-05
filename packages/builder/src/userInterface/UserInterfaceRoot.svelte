@@ -20,6 +20,8 @@
   const settings = () => {
     settingsView.show()
   }
+
+  $: console.log($store)
 </script>
 
 <div class="root">
@@ -37,26 +39,55 @@
     </div>
 
     <div class="components-list-container">
+
       <div class="nav-group-header">
 
-        <span class="components-nav-header">Screens</span>
-        <div>
-          <button on:click={newComponent}>+</button>
-        </div>
+        <span
+          on:click={() => store.setScreenType('page')}
+          class="components-nav-header"
+          class:active={$store.currentFrontEndType === 'page'}>
+          Page
+        </span>
+
+        {#if $store.currentFrontEndType === 'page'}
+          <ComponentsHierarchy
+            components={$store.pages[$store.currentPageName]._props._children} />
+        {/if}
+      </div>
+    </div>
+
+    <div class="components-list-container">
+
+      <div class="nav-group-header">
+
+        <span
+          on:click={() => store.setScreenType('screen')}
+          class="components-nav-header"
+          class:active={$store.currentFrontEndType === 'screen'}>
+          Screens
+        </span>
+
+        {#if $store.currentFrontEndType === 'screen'}
+          <div>
+            <button on:click={newComponent}>+</button>
+          </div>
+        {/if}
       </div>
       <div class="nav-items-container">
-        <ComponentsHierarchy components={$store.screens} />
+        {#if $store.currentFrontEndType === 'screen'}
+          <ComponentsHierarchy components={$store.screens} />
+        {/if}
       </div>
     </div>
 
   </div>
 
   <div class="preview-pane">
-    {#if $store.currentFrontEndType === 'screen'}
-      <CurrentItemPreview />
-    {:else if $store.currentFrontEndType === 'page'}
-      <PageView />
-    {/if}
+    <!-- {#if $store.currentFrontEndType === 'screen'} -->
+    <CurrentItemPreview />
+    <!-- {:else if $store.currentFrontEndType === 'page'} -->
+    <!-- <PageView /> -->
+    <!-- {/if} -->
   </div>
 
   {#if $store.currentFrontEndType === 'screen'}
@@ -152,7 +183,7 @@
     margin-right: 5px;
   }
 
-  .nav-group-header > span:nth-child(2) {
+  .nav-group-header > span:nth-child(3) {
     margin-left: 5px;
     vertical-align: bottom;
     grid-column-start: title;
@@ -174,5 +205,9 @@
     text-transform: uppercase;
     font-weight: 400;
     color: #999;
+  }
+
+  .active {
+    color: #333;
   }
 </style>

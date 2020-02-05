@@ -40,6 +40,7 @@ import {
 import { buildCodeForScreens } from "./buildCodeForScreens"
 import { uuid } from "./uuid"
 import { generate_screen_css } from "./generate_css"
+import { current_component } from "svelte/internal"
 
 let appname = ""
 
@@ -113,6 +114,7 @@ export const getStore = () => {
   store.setComponentProp = setComponentProp(store)
   store.setComponentStyle = setComponentStyle(store)
   store.setComponentCode = setComponentCode(store)
+  store.setScreenType = setScreenType(store)
   return store
 }
 
@@ -133,6 +135,15 @@ const initialise = (store, initial) => async () => {
   const pkg = await api
     .get(`/_builder/api/${appname}/appPackage`)
     .then(r => r.json())
+
+  console.log(pkg)
+
+  pkg.pages = {
+    componentLibraries: ["@budibase/standard-components"],
+    main: { _props: {}, _screens: [], index: {}, appBody: "" },
+    stylesheets: [],
+    unauthenticated: { _props: {}, _screens: [], index: {}, appBody: "" }
+  }
 
   initial.libraries = await loadLibs(appname, pkg)
   initial.generatorLibraries = await loadGeneratorLibs(appname, pkg)
@@ -156,6 +167,7 @@ const initialise = (store, initial) => async () => {
   }
 
   store.set(initial)
+  console.log(initial)
   return initial
 }
 
@@ -442,18 +454,19 @@ const saveScreen = store => screen => {
 }
 
 const _saveScreen = (store, s, screen) => {
-  const screens = pipe(s.screens, [
+  const screens = pipe(s.pages[s.currentPageName]._screens, [
     filter(c => c.name !== screen.name),
     concat([screen]),
   ])
 
-  s.screens = screens
+  s.pages[s.currentPageName]._screens = screens
+  s.screens = s.pages[s.currentPageName]._screens
   s.currentFrontEndItem = screen
   s.currentComponentInfo = getScreenInfo(s.components, screen)
 
-  api
-    .post(`/_builder/api/${s.appname}/screen`, screen)
-    .then(() => savePackage(store, s))
+  // api
+  //   .post(`/_builder/api/${s.appname}/screen`, screen)
+  //   .then(() => savePackage(store, s))
 
   return s
 }
@@ -582,8 +595,8 @@ const addComponentLibrary = store => async lib => {
     response.status === 404
       ? `Could not find library ${lib}`
       : success
-      ? ""
-      : response.statusText
+        ? ""
+        : response.statusText
 
   const components = success ? await response.json() : []
 
@@ -691,9 +704,14 @@ const setCurrentScreen = store => screenName => {
 }
 
 const setCurrentPage = store => pageName => {
+
+
   store.update(s => {
+    const current_screens = s.pages[pageName]._screens;
+
     s.currentFrontEndType = "page"
     s.currentPageName = pageName
+    s.screens = Array.isArray(current_screens) ? current_screens : Object.values(current_screens);
     setCurrentScreenFunctions(s)
     return s
   })
@@ -736,8 +754,6 @@ const addChildComponent = store => component => {
 
     _saveScreen(store, s, s.currentFrontEndItem)
 
-    _saveScreen(store, s, s.currentFrontEndItem)
-
     return s
   })
 }
@@ -770,7 +786,7 @@ const setComponentStyle = store => (type, name, value) => {
     )
 
     // save without messing with the store
-    _save(s.appname, s.currentFrontEndItem, store, s)
+    // _save(s.appname, s.currentFrontEndItem, store, s)
 
     return s
   })
@@ -782,7 +798,7 @@ const setComponentCode = store => code => {
 
     setCurrentScreenFunctions(s)
     // save without messing with the store
-    _save(s.appname, s.currentFrontEndItem, store, s)
+    // _save(s.appname, s.currentFrontEndItem, store, s)
 
     return s
   })
@@ -794,3 +810,16 @@ const setCurrentScreenFunctions = s => {
       ? buildCodeForScreens([s.currentFrontEndItem])
       : "({});"
 }
+
+const setScreenType = store => type => {
+  store.update(s => {
+    s.currentFrontEndType = type
+    return s;
+  })
+}
+
+// pages = [{
+//   _props: { _component: "@budibase...", _children: [] }
+//  name: 'Boo',
+//  _screens: []
+// }]
