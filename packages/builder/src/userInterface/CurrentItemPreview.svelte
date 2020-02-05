@@ -2,7 +2,6 @@
   import { store } from "../builderStore"
   import { map, join } from "lodash/fp"
   import { pipe } from "../common/core"
-  import { buildPropsHierarchy } from "./pagesParsing/buildPropsHierarchy"
 
   let iframe
 
@@ -23,11 +22,8 @@
 
   $: appDefinition = {
     componentLibraries: $store.loadLibraryUrls(),
-    props: buildPropsHierarchy(
-      $store.components,
-      $store.screens,
-      $store.currentFrontEndItem
-    ),
+    // page: $store.currentPage,
+    // screens: $store.currentScreens,
     hierarchy: $store.hierarchy,
     appRootPath: "",
   }

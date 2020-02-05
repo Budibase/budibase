@@ -3,19 +3,14 @@ import {
   isUndefined,
   find,
   keys,
-  uniq,
-  some,
   filter,
-  reduce,
   cloneDeep,
-  includes,
-  last,
+  includes
 } from "lodash/fp"
 import { types, expandComponentDefinition } from "./types"
 import { assign } from "lodash"
 import { pipe } from "../../common/core"
 import { isRootComponent } from "./searchComponents"
-import { ensureShardNameIsInShardMap } from "../../../../core/src/indexing/sharding"
 
 export const getInstanceProps = (componentInfo, props) => {
   const finalProps = cloneDeep(componentInfo.fullProps)
@@ -31,6 +26,7 @@ export const getNewComponentInfo = (components, rootComponent, name) => {
   const component = {
     name: name || "",
     description: "",
+    url: "",
     props: {
       _component: rootComponent,
     },

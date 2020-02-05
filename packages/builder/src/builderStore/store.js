@@ -21,7 +21,6 @@ import {
 } from "../common/core"
 import { writable } from "svelte/store"
 import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
-import { buildPropsHierarchy } from "../userInterface/pagesParsing/buildPropsHierarchy"
 import api from "./api"
 import {
   isRootComponent,
@@ -463,14 +462,14 @@ const _save = (appname, screen, store, s) =>
     .post(`/_builder/api/${appname}/screen`, screen)
     .then(() => savePackage(store, s))
 
-const createScreen = store => (screenName, layoutComponentName) => {
+const createScreen = store => (screenName, url, layoutComponentName) => {
   store.update(s => {
     const newComponentInfo = getNewComponentInfo(
       s.components,
       layoutComponentName,
       screenName
     )
-
+    newComponentInfo.url = url;
     s.currentFrontEndItem = newComponentInfo.component
     s.currentComponentInfo = newComponentInfo
     s.currentFrontEndType = "screen"

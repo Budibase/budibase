@@ -22,7 +22,10 @@
   let layoutComponent
   let screens
   let name = ""
+  let url = ""
   let saveAttempted = false
+
+
 
   store.subscribe(s => {
     layoutComponents = pipe(s.components, [
@@ -45,7 +48,7 @@
 
     if (!isValid) return
 
-    store.createScreen(name, layoutComponent.name)
+    store.createScreen(name, url, layoutComponent.name)
     UIkit.modal(componentSelectorModal).hide()
   }
 
@@ -72,6 +75,14 @@
             class="uk-input uk-form-small"
             class:uk-form-danger={saveAttempted && (name.length === 0 || screenNameExists(name))}
             bind:value={name} />
+        </div>
+
+        <label class="uk-form-label">Route (Url)</label>
+        <div class="uk-form-controls">
+          <input
+            class="uk-input uk-form-small"
+            class:uk-form-danger={saveAttempted && url.length === 0}
+            bind:value={url} />
         </div>
       </div>
 
