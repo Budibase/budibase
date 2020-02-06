@@ -462,14 +462,14 @@ const _save = (appname, screen, store, s) =>
     .post(`/_builder/api/${appname}/screen`, screen)
     .then(() => savePackage(store, s))
 
-const createScreen = store => (screenName, url, layoutComponentName) => {
+const createScreen = store => (screenName, route, layoutComponentName) => {
   store.update(s => {
     const newComponentInfo = getNewComponentInfo(
       s.components,
       layoutComponentName,
       screenName
     )
-    newComponentInfo.url = url;
+    newComponentInfo.route = route;
     s.currentFrontEndItem = newComponentInfo.component
     s.currentComponentInfo = newComponentInfo
     s.currentFrontEndType = "screen"

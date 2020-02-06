@@ -22,7 +22,7 @@
   let layoutComponent
   let screens
   let name = ""
-  let url = ""
+  let route = ""
   let saveAttempted = false
 
 
@@ -48,7 +48,7 @@
 
     if (!isValid) return
 
-    store.createScreen(name, url, layoutComponent.name)
+    store.createScreen(name, route, layoutComponent.name)
     UIkit.modal(componentSelectorModal).hide()
   }
 
@@ -81,8 +81,8 @@
         <div class="uk-form-controls">
           <input
             class="uk-input uk-form-small"
-            class:uk-form-danger={saveAttempted && url.length === 0}
-            bind:value={url} />
+            class:uk-form-danger={saveAttempted && route.length === 0}
+            bind:value={route} />
         </div>
       </div>
 
