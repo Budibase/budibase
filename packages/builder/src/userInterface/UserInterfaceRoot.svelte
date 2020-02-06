@@ -53,9 +53,8 @@
       <div class="nav-items-container">
         {#if $store.currentFrontEndType === 'page'}
           <ComponentsHierarchyChildren
-            components={$store.currentComponentInfo.component.props._children}
+            components={$store.currentComponentInfo.props._children}
             currentComponent={$store.currentComponentInfo}
-            isPage={true}
             level={-2} />
         {/if}
 

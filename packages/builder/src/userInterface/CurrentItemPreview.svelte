@@ -2,7 +2,6 @@
   import { store } from "../builderStore"
   import { map, join } from "lodash/fp"
   import { pipe } from "../common/core"
-  import { buildPropsHierarchy } from "./pagesParsing/buildPropsHierarchy"
 
   let iframe
 
@@ -13,8 +12,8 @@
         `<\style></style>`
       )
     )
-  $: hasComponent = !!$store.currentFrontEndItem
-  $: styles = hasComponent ? $store.currentFrontEndItem._css : ""
+  $: hasComponent = !!$store.currentPreviewItem
+  $: styles = hasComponent ? $store.currentPreviewItem._css : ""
 
   $: stylesheetLinks = pipe(
     $store.pages.stylesheets,
@@ -23,11 +22,8 @@
 
   $: appDefinition = {
     componentLibraries: $store.loadLibraryUrls(),
-    props: buildPropsHierarchy(
-      $store.components,
-      $store.pages[$store.currentPageName]._screens,
-      $store.currentFrontEndItem
-    ),
+    page: $store.pages[$store.currentPageName],
+    screens: $store.pages[$store.currentPageName]._screens,
     hierarchy: $store.hierarchy,
     appRootPath: "",
   }

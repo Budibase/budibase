@@ -64,7 +64,8 @@ export const componentsAndScreens = () => ({
     },
 
     {
-      name: "ButtonGroup",
+      name: "Screen 1",
+      route: "",
       props: {
         _component: "budibase-components/div",
         width: 100,

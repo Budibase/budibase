@@ -9,7 +9,7 @@
   import { cloneDeep, join, split, last } from "lodash/fp"
   import { assign } from "lodash"
 
-  $: component = $store.currentFrontEndItem
+  $: component = $store.currentPreviewItem
   $: componentInfo = $store.currentComponentInfo
   $: components = $store.components
 

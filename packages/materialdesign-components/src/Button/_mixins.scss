@@ -1,0 +1,39 @@
+@import "@material/feature-targeting/functions";
+@import "@material/feature-targeting/mixins";
+
+@mixin bbmd-button-styles($query: mdc-feature-all()) {
+  $feat-structure: mdc-feature-create-target($query, structure);
+
+  .bbmd-mdc-button--size-large {
+    @include button-sizing($feat-structure, 21px, 40px, 15px);
+  }
+
+  .bbmd-mdc-button--size-small {
+    @include button-sizing($feat-structure, 9px, 32px, 13px);
+  }
+
+  .bbmd-mdc-button--colour-secondary {
+    //no feature target as relying on theme variable custom property
+    @include mdc-button-ink-color(secondary);
+
+    &.mdc-button--raised,
+    &.mdc-button--unelevated {
+      @include mdc-button-container-fill-color(secondary);
+      @include mdc-button-ink-color(on-secondary);
+    }
+
+    &.mdc-button--outlined {
+      @include mdc-button-outline-color(secondary);
+    }
+  }
+}
+
+@mixin button-sizing($feat, $padding, $height, $fontSize) {
+  @include mdc-feature-targets($feat) {
+    padding: 0px $padding;
+    height: $height;
+  }
+  > .mdc-button__label {
+    font-size: $fontSize;
+  }
+}
