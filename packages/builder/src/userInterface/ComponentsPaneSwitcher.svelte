@@ -13,7 +13,7 @@
 </script>
 
 <div class="root">
-  {#if $store.screens.length}
+  {#if $store.currentFrontEndType === 'page' || $store.screens.length}
     <div class="switcher">
 
       <button

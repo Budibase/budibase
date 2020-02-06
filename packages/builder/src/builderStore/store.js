@@ -40,7 +40,6 @@ import {
 import { buildCodeForScreens } from "./buildCodeForScreens"
 import { uuid } from "./uuid"
 import { generate_screen_css } from "./generate_css"
-import { current_component } from "svelte/internal"
 
 let appname = ""
 
@@ -140,9 +139,22 @@ const initialise = (store, initial) => async () => {
 
   pkg.pages = {
     componentLibraries: ["@budibase/standard-components"],
-    main: { _props: {}, _screens: [], index: {}, appBody: "" },
+    main: {
+      name: "main",
+      _component: "@budibase/standard-components/div",
+      props: {
+        _children: []
+      },
+      _screens: [], index: {}, appBody: ""
+    },
     stylesheets: [],
-    unauthenticated: { _props: {}, _screens: [], index: {}, appBody: "" }
+    unauthenticated: {
+      name: "unauthenticated",
+      _component: "@budibase/standard-components/div",
+      props: {
+        _children: []
+      }, _screens: [], index: {}, appBody: ""
+    }
   }
 
   initial.libraries = await loadLibs(appname, pkg)
@@ -712,6 +724,14 @@ const setCurrentPage = store => pageName => {
     s.currentFrontEndType = "page"
     s.currentPageName = pageName
     s.screens = Array.isArray(current_screens) ? current_screens : Object.values(current_screens);
+    if (s.currentComponentInfo) {
+      s.currentComponentInfo.component = s.pages[pageName]
+      s.currentFrontEndItem = s.currentComponentInfo.component
+    } else {
+      s.currentComponentInfo = { component: s.pages[pageName] }
+      s.currentFrontEndItem = s.currentComponentInfo.component
+    }
+
     setCurrentScreenFunctions(s)
     return s
   })
@@ -747,12 +767,14 @@ const addChildComponent = store => component => {
         s.currentComponentInfo.component.props._children = [
           component_definition,
         ]
-      } else {
-        s.currentComponentInfo._children = [component_definition]
       }
     }
+    if (s.currentFrontEndType !== 'page') {
+      _saveScreen(store, s, s.currentFrontEndItem)
+    } else {
+      s.currentComponentInfo.component = component_definition;
+    }
 
-    _saveScreen(store, s, s.currentFrontEndItem)
 
     return s
   })
@@ -813,7 +835,11 @@ const setCurrentScreenFunctions = s => {
 
 const setScreenType = store => type => {
   store.update(s => {
+    console.log('boo')
     s.currentFrontEndType = type
+
+    s.currentComponentInfo.component = type === 'page' ? s.pages[s.currentPageName] : s.pages[s.currentPageName]._screens[0]
+    s.currentFrontEndItem = s.currentComponentInfo.component
     return s;
   })
 }

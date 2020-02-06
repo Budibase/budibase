@@ -12,12 +12,15 @@
   const joinPath = join("/")
 
   const normalizedName = name =>
-    pipe(name, [
-      trimCharsStart("./"),
-      trimCharsStart("~/"),
-      trimCharsStart("../"),
-      trimChars(" "),
-    ])
+    pipe(
+      name,
+      [
+        trimCharsStart("./"),
+        trimCharsStart("~/"),
+        trimCharsStart("../"),
+        trimChars(" "),
+      ]
+    )
 
   const lastPartOfName = c =>
     last(c.name ? c.name.split("/") : c._component.split("/"))
@@ -30,15 +33,17 @@
 
   const isFolderSelected = (current, folder) => isInSubfolder(current, folder)
 
-  $: _components = pipe(components, [
-    map(c => ({ component: c, title: lastPartOfName(c) })),
-    sortBy("title"),
-  ])
+  $: _components = pipe(
+    components,
+    [map(c => ({ component: c, title: lastPartOfName(c) })), sortBy("title")]
+  )
 
   function select_component(screen, component) {
     store.setCurrentScreen(screen)
     store.selectComponent(component)
   }
+
+  $: console.log(_components, $store.currentComponentInfo)
 
   const isScreenSelected = component =>
     component.component &&
@@ -65,7 +70,7 @@
       <span class="title">{component.title}</span>
     </div>
 
-    {#if isScreenSelected(component) && component.component.props && component.component.props._children}
+    {#if isScreenSelected(component) && component.component.props && component.component.props._children && component.component.props._children.length}
       <ComponentsHierarchyChildren
         components={component.component.props._children}
         currentComponent={$store.currentComponentInfo}

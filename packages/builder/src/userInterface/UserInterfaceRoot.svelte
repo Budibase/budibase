@@ -1,5 +1,6 @@
 <script>
   import ComponentsHierarchy from "./ComponentsHierarchy.svelte"
+  import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
   import PagesList from "./PagesList.svelte"
   import { store } from "../builderStore"
   import IconButton from "../common/IconButton.svelte"
@@ -48,11 +49,16 @@
           class:active={$store.currentFrontEndType === 'page'}>
           Page
         </span>
-
+      </div>
+      <div class="nav-items-container">
         {#if $store.currentFrontEndType === 'page'}
-          <ComponentsHierarchy
-            components={$store.pages[$store.currentPageName]._props._children} />
+          <ComponentsHierarchyChildren
+            components={$store.currentComponentInfo.component.props._children}
+            currentComponent={$store.currentComponentInfo}
+            isPage={true}
+            level={-2} />
         {/if}
+
       </div>
     </div>
 
@@ -84,13 +90,13 @@
 
   <div class="preview-pane">
     <!-- {#if $store.currentFrontEndType === 'screen'} -->
-    <CurrentItemPreview />
+    <!-- <CurrentItemPreview /> -->
     <!-- {:else if $store.currentFrontEndType === 'page'} -->
     <!-- <PageView /> -->
     <!-- {/if} -->
   </div>
 
-  {#if $store.currentFrontEndType === 'screen'}
+  {#if $store.currentFrontEndType === 'screen' || $store.currentFrontEndType === 'page'}
     <div class="components-pane">
       <ComponentsPaneSwitcher />
     </div>

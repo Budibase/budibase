@@ -15,7 +15,6 @@ import { types, expandComponentDefinition } from "./types"
 import { assign } from "lodash"
 import { pipe } from "../../common/core"
 import { isRootComponent } from "./searchComponents"
-import { ensureShardNameIsInShardMap } from "../../../../core/src/indexing/sharding"
 
 export const getInstanceProps = (componentInfo, props) => {
   const finalProps = cloneDeep(componentInfo.fullProps)

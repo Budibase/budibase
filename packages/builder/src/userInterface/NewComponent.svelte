@@ -25,19 +25,23 @@
   let saveAttempted = false
 
   store.subscribe(s => {
-    layoutComponents = pipe(s.components, [
-      filter(c => c.container),
-      map(c => ({ name: c.name, ...splitName(c.name) })),
-    ])
+    layoutComponents = pipe(
+      s.components,
+      [
+        filter(c => c.container),
+        map(c => ({ name: c.name, ...splitName(c.name) })),
+      ]
+    )
 
     layoutComponent = layoutComponent
       ? find(c => c.name === layoutComponent.name)(layoutComponents)
       : layoutComponents[0]
-
+    console.log(s.screens)
     screens = s.screens
   })
 
   const save = () => {
+    console.log(!screenNameExists(name), layoutComponent)
     saveAttempted = true
 
     const isValid =
@@ -53,8 +57,12 @@
     UIkit.modal(componentSelectorModal).hide()
   }
 
-  const screenNameExists = name =>
-    some(s => s.name.toLowerCase() === name.toLowerCase())(screens)
+  const screenNameExists = name => {
+    return some(s => {
+      console.log(s, screens)
+      return s.name.toLowerCase() === name.toLowerCase()
+    })(screens)
+  }
 </script>
 
 <div bind:this={componentSelectorModal} id="new-component-modal" uk-modal>

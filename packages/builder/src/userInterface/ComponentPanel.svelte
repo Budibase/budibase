@@ -63,7 +63,7 @@
       </button>
     </li>
   </ul>
-
+  {$store.currentFrontEndType}
   {#if !componentInfo.component}
     <div class="component-props-container">
 
