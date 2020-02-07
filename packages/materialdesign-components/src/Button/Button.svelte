@@ -13,7 +13,7 @@
   export let href = ""
   export let icon = ""
   export let trailingIcon = false
-  export let fullBleed = false
+  export let fullwidth = false
 
   export let text = ""
   export let disabled = false
@@ -40,7 +40,7 @@
   <button
     use:ripple={{ colour }}
     class={blockClasses}
-    class:fullBleed
+    class:fullwidth
     {disabled}
     on:click>
     {#if renderLeadingIcon}
@@ -54,7 +54,7 @@
 {/if}
 
 <style>
-  .fullBleed {
+  .fullwidth {
     width: 100%;
   }
 </style>

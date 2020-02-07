@@ -18,15 +18,20 @@ export default class ClassBuilder {
     return this.buildClass(base, classParams);
   }
 
+  //TODO: Classparams modifier and custom could take an object. Booleans or numbers use key value for classes, strings use property value for classes. Extras to stay as is
   buildClass(base, classParams) {
     let cls = base;
     const { modifiers, customs, extras } = classParams;
-    if (!!modifiers) cls += modifiers.map(m => ` ${base}--${m}`).join(" ");
+    if (!!modifiers)
+      cls += modifiers.map(m => (!!m ? ` ${base}--${m}` : "")).join(" ");
     if (!!customs)
       cls += Object.entries(customs)
         .map(([property, value]) => {
           //disregard falsy and values set by customDefaults constructor param
-          if (!!value && !this.customDefaults.includes(value)) {
+          if (
+            !!value &&
+            (!this.customDefaults || !this.customDefaults.includes(value))
+          ) {
             //custom scss name convention = bbmd-[block | element]--[property]-[value]
             return ` bbmd-${base}--${property}-${value}`;
           }

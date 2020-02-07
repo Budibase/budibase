@@ -4,10 +4,9 @@
   export let icon = "";
 
   let iconContext = getContext("BBMD:icon:context");
-  let cls =
-    iconContext == "button"
-      ? "material-icons mdc-button__icon"
-      : "material-icons";
+  let cls = iconContext
+    ? `material-icons mdc-${iconContext}__icon`
+    : "material-icons";
 </script>
 
 <i class={cls}>{icon}</i>
