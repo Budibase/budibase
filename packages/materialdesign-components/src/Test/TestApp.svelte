@@ -9,12 +9,13 @@
 
   const testProps = props.justAnH1
   const button = props.button
+  const textfield = props.textfield
 
   let currentComponent
 
   $: {
     if (_bb && currentComponent) {
-      _bb.hydrateChildren([testProps, button], currentComponent)
+      _bb.hydrateChildren([testProps, button, textfield], currentComponent)
     }
   }
 </script>
