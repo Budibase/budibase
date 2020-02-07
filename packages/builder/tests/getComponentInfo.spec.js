@@ -1,9 +1,8 @@
 import {
-  getInstanceProps,
   getScreenInfo,
   getComponentInfo,
 } from "../src/userInterface/pagesParsing/createProps"
-import { keys, some, find } from "lodash/fp"
+import { find } from "lodash/fp"
 import { componentsAndScreens } from "./testData"
 
 describe("getComponentInfo", () => {
@@ -17,24 +16,6 @@ describe("getComponentInfo", () => {
     expect(result.fullProps).toEqual({
       _component: "budibase-components/TextBox",
       size: "",
-      isPassword: false,
-      placeholder: "",
-      label: "",
-    })
-  })
-
-  it("getInstanceProps should set supplied props on top of default props", () => {
-    const result = getInstanceProps(
-      getComponentInfo(
-        componentsAndScreens().components,
-        "budibase-components/TextBox"
-      ),
-      { size: "small" }
-    )
-
-    expect(result).toEqual({
-      _component: "budibase-components/TextBox",
-      size: "small",
       isPassword: false,
       placeholder: "",
       label: "",
