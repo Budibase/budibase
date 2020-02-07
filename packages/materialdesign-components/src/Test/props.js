@@ -15,7 +15,7 @@ export const props = {
     href: "",
     icon: "alarm_on",
     trailingIcon: true,
-    fullBleed: false,
+    fullwidth: false,
     text: "I am button",
     disabled: false
   },
@@ -31,6 +31,7 @@ export const props = {
     icon: "alarm_on",
     variant: "outlined",
     helperText: "Add Surname",
+    textarea: true,
     useCharCounter: true
   }
 };
