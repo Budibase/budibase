@@ -1,71 +1,76 @@
-import regexparam from 'regexparam';
+import regexparam from "regexparam"
+import { writable } from "svelte/store"
 
-export function router(screens, screenSelected) {
-    
-    const routes = screens.map(s => s.route);
-    const fallback = routes.findIndex(([p]) => p === '*');
+export const screenRouter = (screens, onScreenSelected) => {
+  const routes = screens.map(s => s.route)
+  let fallback = routes.findIndex(([p]) => p === "*")
+  if (fallback < 0) fallback = 0
 
-	let current;
+  let current
 
-	async function route(url) {
-		const _url = url.state || url;
-		current = routes.findIndex(
-			([p]) => p !== '*' && new RegExp('^' + p + '$').test(_url)
-		);
+  function route(url) {
+    const _url = url.state || url
+    current = routes.findIndex(
+      ([p]) => p !== "*" && new RegExp("^" + p + "$").test(_url)
+    )
 
-		const params = {};
+    const params = {}
 
-		if (current === -1) {
-			routes.forEach(([p], i) => {
-				const pm = regexparam(p);
-				const matches = pm.pattern.exec(_url);
+    if (current === -1) {
+      routes.forEach(([p], i) => {
+        const pm = regexparam(p)
+        const matches = pm.pattern.exec(_url)
 
-				if (!matches) return;
+        if (!matches) return
 
-				let j = 0;
-				while (j < pm.keys.length) {
-					params[pm.keys[j]] = matches[++j] || null;
-				}
+        let j = 0
+        while (j < pm.keys.length) {
+          params[pm.keys[j]] = matches[++j] || null
+        }
 
-				current = i;
-			});
-		}
+        current = i
+      })
+    }
 
-		if (current !== -1) {
-			screenSelected(screens[current])
-		} else if (fallback) {
-			screenSelected(fallback);
-		}
+    const storeInitial = {}
+    storeInitial["##routeParams"]
+    const store = writable(storeInitial)
 
-		!url.state && history.pushState(_url, null, _url);
-	}
+    if (current !== -1) {
+      onScreenSelected(screens[current], store, _url)
+    } else if (fallback) {
+      onScreenSelected(screens[fallback], store, _url)
+    }
 
-	const url = window.location.pathname;
-	route(url);
+    !url.state && history.pushState(_url, null, _url)
+  }
 
-	function click(e) {
-		const x = e.target.closest('a');
-		const y = x && x.getAttribute('href');
+  const url = window.location.pathname
+  route(url)
 
-		if (
-			e.ctrlKey ||
-			e.metaKey ||
-			e.altKey ||
-			e.shiftKey ||
-			e.button ||
-			e.defaultPrevented
-		)
-			return;
+  function click(e) {
+    const x = e.target.closest("a")
+    const y = x && x.getAttribute("href")
 
-		if (!y || x.target || x.host !== location.host) return;
+    if (
+      e.ctrlKey ||
+      e.metaKey ||
+      e.altKey ||
+      e.shiftKey ||
+      e.button ||
+      e.defaultPrevented
+    )
+      return
 
-		e.preventDefault();
-		route(y);
-	}
+    if (!y || x.target || x.host !== location.host) return
 
-	addEventListener('popstate', route);
-	addEventListener('pushstate', route);
-    addEventListener('click', click);
-    
-    return route;
+    e.preventDefault()
+    route(y)
+  }
+
+  addEventListener("popstate", route)
+  addEventListener("pushstate", route)
+  addEventListener("click", click)
+
+  return route
 }

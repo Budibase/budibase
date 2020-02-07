@@ -4,27 +4,24 @@ import { getStateOrValue } from "./state/getState"
 import { setState, setStateFromBinding } from "./state/setState"
 import { trimSlash } from "./common/trimSlash"
 import { isBound } from "./state/isState"
-import { _initialiseChildren } from "./render/initialiseChildren"
+import { initialiseChildren } from "./render/initialiseChildren"
 import { createTreeNode } from "./render/renderComponent"
+import { screenRouter } from "./render/screenRouter"
 
 export const createApp = (
   document,
   componentLibraries,
   appDefinition,
   user,
-  uiFunctions
+  uiFunctions,
+  screens
 ) => {
   const coreApi = createCoreApi(appDefinition, user)
   appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(
     appDefinition.hierarchy
   )
-  const store = writable({
+  const pageStore = writable({
     _bbuser: user,
-  })
-
-  let globalState = null
-  store.subscribe(s => {
-    globalState = s
   })
 
   const relativeUrl = url =>
@@ -55,45 +52,89 @@ export const createApp = (
     if (isFunction(event)) event(context)
   }
 
-  const initialiseChildrenParams = (hydrate, treeNode) => ({
-    bb,
-    coreApi,
-    store,
-    document,
-    componentLibraries,
-    appDefinition,
-    hydrate,
-    uiFunctions,
-    treeNode,
-  })
+  let routeTo
+  let currentRoute = "/"
+  let currentScreenUbsubscribe
 
-  const bb = (treeNode, componentProps) => ({
-    hydrateChildren: _initialiseChildren(
-      initialiseChildrenParams(true, treeNode)
-    ),
-    appendChildren: _initialiseChildren(
-      initialiseChildrenParams(false, treeNode)
-    ),
-    insertChildren: (props, htmlElement, anchor) =>
-      _initialiseChildren(initialiseChildrenParams(false, treeNode))(
-        props,
-        htmlElement,
-        anchor
-      ),
-    context: treeNode.context,
-    props: componentProps,
-    call: safeCallEvent,
-    setStateFromBinding: (binding, value) =>
-      setStateFromBinding(store, binding, value),
-    setState: (path, value) => setState(store, path, value),
-    getStateOrValue: (prop, currentContext) =>
-      getStateOrValue(globalState, prop, currentContext),
-    store,
-    relativeUrl,
-    api,
-    isBound,
-    parent,
-  })
+  const onScreenSlotRendered = screenSlotNode => {
+    const onScreenSelected = (screen, store, url) => {
+      const { getInitialiseParams, unsubscribe } = initialiseChildrenParams(store)
+      const initialiseChildParams = getInitialiseParams(true, screenSlotNode)
+      initialiseChildren(initialiseChildParams)(
+        [screen.props],
+        screenSlotNode.rootElement
+      )
+      currentRoute = url
+      if (currentScreenUbsubscribe) currentScreenUbsubscribe()
+      currentScreenUbsubscribe = unsubscribe
+    }
 
-  return bb(createTreeNode())
+    routeTo = screenRouter(screens, onScreenSelected)
+  }
+
+  const initialiseChildrenParams = store => {
+    let currentState = null
+    const unsubscribe = store.subscribe(s => {
+      currentState = s
+    })
+
+    const getInitialiseParams = (hydrate, treeNode) => ({
+      bb: getBbClientApi,
+      coreApi,
+      store,
+      document,
+      componentLibraries,
+      appDefinition,
+      hydrate,
+      uiFunctions,
+      treeNode,
+      onScreenSlotRendered,
+    })
+
+    const getBbClientApi = (treeNode, componentProps) => {
+      return {
+        hydrateChildren: initialiseChildren(
+          getInitialiseParams(true, treeNode)
+        ),
+        appendChildren: initialiseChildren(
+          getInitialiseParams(false, treeNode)
+        ),
+        insertChildren: (props, htmlElement, anchor) =>
+          initialiseChildren(getInitialiseParams(false, treeNode))(
+            props,
+            htmlElement,
+            anchor
+          ),
+        context: treeNode.context,
+        props: componentProps,
+        call: safeCallEvent,
+        setStateFromBinding: (binding, value) =>
+          setStateFromBinding(store, binding, value),
+        setState: (path, value) => setState(store, path, value),
+        getStateOrValue: (prop, currentContext) =>
+          getStateOrValue(currentState, prop, currentContext),
+        store,
+        relativeUrl,
+        api,
+        isBound,
+        parent,
+      }
+    }
+    return { getInitialiseParams, unsubscribe }
+  }
+
+  const initialisePage = (page, target, urlPath) => {
+    const rootTreeNode = createTreeNode()
+    const { getInitialiseParams } = initialiseChildrenParams(pageStore)
+    const initChildParams = getInitialiseParams(true, rootTreeNode)
+
+    initialiseChildren(initChildParams)([page.props], target)
+
+    if (routeTo && screens && screens.length > 0) routeTo(urlPath)
+
+    currentRoute = urlPath
+    return rootTreeNode
+  }
+
+  return initialisePage
 }

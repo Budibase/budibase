@@ -38,6 +38,7 @@
     "bcryptjs": "^2.4.3",
     "lodash": "^4.17.15",
     "lunr": "^2.3.5",
+    "regexparam": "^1.3.0",
     "shortid": "^2.2.8",
     "svelte": "^3.9.2"
   },

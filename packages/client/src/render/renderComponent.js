@@ -61,4 +61,16 @@ export const createTreeNode = () => ({
   children: [],
   component: null,
   unsubscribe: () => {},
+  get destroy() {
+    const node = this
+    return () => {
+      if (node.unsubscribe) node.unsubscribe()
+      if (node.component && node.component.$destroy) node.component.$destroy()
+      if (node.children) {
+        for (let child of node.children) {
+          child.destroy()
+        }
+      }
+    }
+  },
 })

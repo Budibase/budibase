@@ -1,9 +1,11 @@
 import { createApp } from "./createApp"
 import { trimSlash } from "./common/trimSlash"
+import { builtins, builtinLibName } from "./render/builtinComponents"
 
 export const loadBudibase = async ({
   componentLibraries,
-  props,
+  page,
+  screens,
   window,
   localStorage,
   uiFunctions,
@@ -23,11 +25,13 @@ export const loadBudibase = async ({
         temp: false,
       }
 
+  const rootPath =
+    appDefinition.appRootPath === ""
+      ? ""
+      : "/" + trimSlash(appDefinition.appRootPath)
+
   if (!componentLibraries) {
-    const rootPath =
-      appDefinition.appRootPath === ""
-        ? ""
-        : "/" + trimSlash(appDefinition.appRootPath)
+    
     const componentLibraryUrl = lib => rootPath + "/" + trimSlash(lib)
     componentLibraries = {}
 
@@ -38,20 +42,30 @@ export const loadBudibase = async ({
     }
   }
 
-  if (!props) {
-    props = appDefinition.props
+  componentLibraries[builtinLibName] = builtins(window)
+
+  if (!page) {
+    page = appDefinition.page
   }
 
-  const app = createApp(
+  if (!screens) {
+    screens = appDefinition.screens
+  }
+
+  const initialisePage = createApp(
     window.document,
     componentLibraries,
     appDefinition,
     user,
-    uiFunctions || {}
+    uiFunctions || {},
+    screens
   )
-  app.hydrateChildren([props], window.document.body)
 
-  return app
+  const route = window.location 
+                ? window.location.pathname.replace(rootPath, "")
+                : "";
+
+  return initialisePage(page, window.document.body, route)
 }
 
 if (window) {

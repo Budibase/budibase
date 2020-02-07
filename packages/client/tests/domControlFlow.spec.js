@@ -1,12 +1,14 @@
-import { load } from "./testAppDef"
+import { load, makePage } from "./testAppDef"
 
 describe("controlFlow", () => {
   it("should display simple div, with always true render function", async () => {
-    const { dom } = await load({
-      _component: "testlib/div",
-      className: "my-test-class",
-      _id: "always_render",
-    })
+    const { dom } = await load(
+      makePage({
+        _component: "testlib/div",
+        className: "my-test-class",
+        _id: "always_render",
+      })
+    )
 
     expect(dom.window.document.body.children.length).toBe(1)
     const child = dom.window.document.body.children[0]
@@ -14,21 +16,25 @@ describe("controlFlow", () => {
   })
 
   it("should not display div, with always false render function", async () => {
-    const { dom } = await load({
-      _component: "testlib/div",
-      className: "my-test-class",
-      _id: "never_render",
-    })
+    const { dom } = await load(
+      makePage({
+        _component: "testlib/div",
+        className: "my-test-class",
+        _id: "never_render",
+      })
+    )
 
     expect(dom.window.document.body.children.length).toBe(0)
   })
 
   it("should display 3 divs in a looped render function", async () => {
-    const { dom } = await load({
-      _component: "testlib/div",
-      className: "my-test-class",
-      _id: "three_clones",
-    })
+    const { dom } = await load(
+      makePage({
+        _component: "testlib/div",
+        className: "my-test-class",
+        _id: "three_clones",
+      })
+    )
 
     expect(dom.window.document.body.children.length).toBe(3)
 
@@ -43,16 +49,18 @@ describe("controlFlow", () => {
   })
 
   it("should display 3 div, in a looped render, as children", async () => {
-    const { dom } = await load({
-      _component: "testlib/div",
-      _children: [
-        {
-          _component: "testlib/div",
-          className: "my-test-class",
-          _id: "three_clones",
-        },
-      ],
-    })
+    const { dom } = await load(
+      makePage({
+        _component: "testlib/div",
+        _children: [
+          {
+            _component: "testlib/div",
+            className: "my-test-class",
+            _id: "three_clones",
+          },
+        ],
+      })
+    )
 
     expect(dom.window.document.body.children.length).toBe(1)
 
