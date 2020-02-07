@@ -11,6 +11,7 @@ export default async () => {
   const appDef = { hierarchy: {}, actions: {} }
   const user = { name: "yeo", permissions: [] }
 
-  var app = createApp(componentLibraries, appDef, user)
+  var app = createApp(window.document, componentLibraries, appDef, user, {})
+
   return app
 }

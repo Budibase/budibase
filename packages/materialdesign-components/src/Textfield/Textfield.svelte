@@ -1,109 +1,172 @@
 <script>
-  import { setContext } from "svelte"
-  import ClassBuilder from "../ClassBuilder.js"
-  import NotchedOutline from "../Common/NotchedOutline.svelte"
-  import FloatingLabel from "../Common/FloatingLabel.svelte"
-  import Icon from "../Icon.svelte"
+  import { setContext, onMount } from "svelte";
+  import { MDCTextField } from "@material/textfield";
+  import { MDCLineRipple } from "@material/line-ripple";
 
-  const cb = new ClassBuilder("text-field")
+  import ClassBuilder from "../ClassBuilder.js";
+  import NotchedOutline from "../Common/NotchedOutline.svelte";
+  import FloatingLabel from "../Common/FloatingLabel.svelte";
+  import Icon from "../Icon.svelte";
 
-  export let label = ""
-  export let variant = "outlined" //outlined | filled | disabled
-  export let type = "text" //text or password
-  export let required = false
-  export let minLength = 0
-  export let maxLength = 100
-  export let useCharCounter = true
-  export let helperText = ""
-  export let errorText = ""
-  export let placeholder = ""
-  export let icon = ""
-  export let trailingIcon = false
-  export let multiLine = false
-  export let textArea = false
-  export let rows = 8
-  export let cols = 40
+  const cb = new ClassBuilder("text-field", ["primary", "medium"]);
 
-  /*   
-NOTE: Do not use mdc-text-field--outlined to style a full width text field. 
-How is this to be a worry if full-width is a variant?
+  let tf = null;
+  let tfInstance = null;
 
+  onMount(() => {
+    if (!!tf) tfInstance = new MDCTextField(tf);
+    return () => {
+      !!tfInstance && tf.tfInstance.destroy();
+      tf = null;
+    };
+  });
 
-NOTE: Do not use mdc-line-ripple inside of mdc-text-field if you plan on using mdc-text-field--outlined. Line Ripple should not be included as part of the DOM structure of an outlined text field.
-*/
+  export let label = "";
+  export let variant = "standard"; //outlined | filled | standard
+  export let disabled = false;
+  export let fullwidth = false;
+  export let colour = "primary";
+  export let size = "medium";
+  export let type = "text"; //text or password
+  export let required = false;
+  export let minLength = 0;
+  export let maxLength = 100;
+  export let useCharCounter = false;
+  export let helperText = "";
+  export let errorText = "";
+  export let placeholder = "";
+  export let icon = "";
+  export let trailingIcon = false;
+  export let textarea = false;
+  export let rows = 4;
+  export let cols = 40;
+  export let validation = false;
+  export let persistent = false;
 
-  //Does svelte make this unique in the same way it does classes?
-  let id = `${label}-${variant}`
+  let id = `${label}-${variant}`;
+  let helperClasses = `${cb.block}-helper-text`;
 
-  let modifiers = [variant]
-  if (!label) modifiers.push("no-label")
+  let modifiers = [];
+  let customs = { colour };
 
-  const blockClasses = cb.blocks({ modifiers })
-  const inputClasses = cb.elements("input")
-
-  // NOTE: Do not use mdc-floating-label within mdc-text-field--fullwidth. Labels should not be included as part of the DOM structure of a full width text field.
-  let useLabel = !!label && !variant !== "fullwidth"
-  $: useNotchedOutline = variant !== "filled" || variant !== "fullwidth"
-
-  $: if (icon) {
-    setContext("BBMD:icon:context", "text-field")
+  if (variant == "standard" || fullwidth) {
+    customs = { ...customs, variant };
+  } else {
+    modifiers.push(variant);
   }
 
-  $: renderLeadingIcon = !!icon && !trailingIcon
-  $: renderTrailingIcon = !!icon && trailingIcon
+  if (!textarea && size !== "medium") {
+    customs = { ...customs, size };
+  }
+
+  if (!label || fullwidth) {
+    modifiers.push("no-label");
+  }
+
+  //TODO: Refactor - this could be handled better using an object as modifier instead of an array
+  if (fullwidth) modifiers.push("fullwidth");
+  if (disabled) modifiers.push("disabled");
+  if (textarea) modifiers.push("textarea");
+  if (persistent) helperClasses += ` ${cb.block}-helper-text--persistent`;
+  if (validation) helperClasses += ` ${cb.block}-helper-text--validation`;
+
+  let useLabel = !!label && (!fullwidth || (fullwidth && textarea));
+
+  $: useNotchedOutline = variant == "outlined" || textarea;
+
+  if (icon) {
+    setContext("BBMD:icon:context", "text-field");
+    trailingIcon
+      ? modifiers.push("with-trailing-icon")
+      : modifiers.push("with-leading-icon");
+  }
+
+  $: renderLeadingIcon = !!icon && !trailingIcon;
+  $: renderTrailingIcon = !!icon && trailingIcon;
+
+  const blockClasses = cb.blocks({ modifiers, customs });
+  const inputClasses = cb.elements("input");
+
+  let renderMaxLength = !!maxLength ? `0 / ${maxLength}` : "0";
+
+  function focus(event) {
+    tfInstance.focus();
+  }
 </script>
 
+<style>
+  .textfield-container {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    width: 227px;
+  }
+
+  .fullwidth {
+    width: 100%;
+  }
+</style>
+
 <!-- 
-TODO: Test multi-lining of textfields and implement in component
-TODO: Implement line ripple
+TODO:Needs error handling - this will depend on how Budibase handles errors
  -->
 
-<div class={blockClasses}>
-  {#if textArea}
-    {#if useCharCounter}
-      <div class="mdc-text-field-character-counter">{`0 / ${maxLength}`}</div>
-    {/if}
-    <textarea
-      {id}
-      class={inputClasses}
-      {rows}
-      {cols}
-      {required}
-      {placeholder}
-      {minLength}
-      {maxLength} />
-  {:else}
-    {#if renderLeadingIcon}
-      <Icon {icon} />
-    {/if}
-    <input
-      {id}
-      class={inputClasses}
-      {type}
-      {required}
-      {placeholder}
-      {minLength}
-      {maxLength}
-      aria-label={`Textfield ${variant}`} />
-    {#if renderTrailingIcon}
-      <Icon {icon} />
-    {/if}
-  {/if}
-  {#if useNotchedOutline}
-    <NotchedOutline {useLabel}>
-      {#if useLabel}
-        <FloatingLabel forInput={id} text={label} />
+<div class="textfield-container" class:fullwidth>
+  <div bind:this={tf} class={blockClasses}>
+    {#if textarea}
+      {#if useCharCounter}
+        <div class="mdc-text-field-character-counter">{renderMaxLength}</div>
       {/if}
-    </NotchedOutline>
-  {:else if useLabel}
-    <FloatingLabel forInput={id} text={label} />
-  {/if}
-</div>
-<div class="mdc-text-field-helper-line">
-  {#if useCharCounter && !textArea}
-    <div class="mdc-text-field-character-counter">{`0 / ${maxLength}`}</div>
-  {/if}
-  <div class="mdc-text-field-helper-text">
-    {!!errorText ? errorText : helperText}
+      <textarea
+        {id}
+        class={inputClasses}
+        class:fullwidth
+        {disabled}
+        {rows}
+        {cols}
+        {required}
+        {placeholder}
+        {minLength}
+        {maxLength}
+        on:change />
+    {:else}
+      {#if renderLeadingIcon}
+        <Icon {icon} />
+      {/if}
+      <input
+        {id}
+        {disabled}
+        on:focus={focus}
+        class={inputClasses}
+        {type}
+        {required}
+        placeholder={!!label && fullwidth ? label : placeholder}
+        {minLength}
+        {maxLength}
+        aria-label={`Textfield ${variant}`}
+        on:change />
+      {#if renderTrailingIcon}
+        <Icon {icon} />
+      {/if}
+      {#if variant !== 'outlined'}
+        <div class="mdc-line-ripple" />
+      {/if}
+    {/if}
+    {#if useNotchedOutline}
+      <NotchedOutline {useLabel}>
+        {#if useLabel}
+          <FloatingLabel forInput={id} text={label} />
+        {/if}
+      </NotchedOutline>
+    {:else if useLabel}
+      <FloatingLabel forInput={id} text={label} />
+    {/if}
+  </div>
+  <!-- TODO: Split to own component? -->
+  <div class="mdc-text-field-helper-line">
+    <div class={helperClasses}>{!!errorText ? errorText : helperText}</div>
+    {#if useCharCounter && !textarea}
+      <div class="mdc-text-field-character-counter">{renderMaxLength}</div>
+    {/if}
   </div>
 </div>

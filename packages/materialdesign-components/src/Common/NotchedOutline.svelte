@@ -1,7 +1,5 @@
 <script>
-  //   import ClassBuilder from "../ClassBuilder.js"
-
-  //   const cb = new ClassBuilder("notched-outline")
+  import "@material/notched-outline/mdc-notched-outline.scss"
   export let useLabel = true
 </script>
 

@@ -25,10 +25,13 @@ export const props = {
     icon: ""
   },
   textfield: {
-    _component: getComponent("textfield"),
+    _component: "@budibase/materialdesign-components/textfield",
     _children: [],
     label: "Surname",
-    helperText: "Please add your surname"
+    icon: "alarm_on",
+    variant: "outlined",
+    helperText: "Add Surname",
+    useCharCounter: true
   }
 };
 

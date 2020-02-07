@@ -1,4 +1,5 @@
 <script>
+  import "@material/floating-label/mdc-floating-label.scss"
   export let forInput = ""
   export let text = ""
 </script>
