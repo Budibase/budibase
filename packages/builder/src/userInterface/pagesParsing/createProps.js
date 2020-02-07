@@ -4,7 +4,7 @@ import {
 } from "lodash/fp"
 import { types } from "./types"
 import { assign } from "lodash"
-import { uuid } from "./uuid"
+import { uuid } from "../../builderStore/uuid"
 
 
 export const getNewScreen = (components, rootComponentName, name) => {
@@ -25,7 +25,6 @@ export const createProps = (componentDefinition, derivedFromProps) => {
     _styles: { position: {}, layout: {} },
     _id: uuid(),
   }
-  
 
   const errors = []
 
