@@ -1,0 +1,9 @@
+{
+	"title": "Test App",
+	"favicon": "./_shared/favicon.png",
+	"stylesheets": [],
+	"componentLibraries": ["@budibase/standard-components"],
+	"props" : {
+		"_component": "@budibase/standard-components/div"
+	}
+}
