@@ -5,6 +5,15 @@
 
   let iframe
 
+  function transform_component(comp) {
+    const props = comp.props || comp
+    if (props._children.length) {
+      props._children = props._children.map(transform_component)
+    }
+
+    return props
+  }
+
   $: iframe &&
     console.log(
       iframe.contentDocument.head.insertAdjacentHTML(
@@ -22,15 +31,16 @@
 
   $: appDefinition = {
     componentLibraries: $store.loadLibraryUrls(),
-    page: $store.pages[$store.currentPageName],
-    screens: $store.pages[$store.currentPageName]._screens,
+    props:
+      $store.currentPreviewItem &&
+      transform_component($store.currentPreviewItem, true),
     hierarchy: $store.hierarchy,
     appRootPath: "",
   }
 </script>
 
 <div class="component-container">
-  {#if hasComponent}
+  {#if hasComponent && $store.currentPreviewItem}
     <iframe
       style="height: 100%; width: 100%"
       title="componentPreview"
@@ -38,6 +48,7 @@
       srcdoc={`<html>
   <head>
     ${stylesheetLinks}
+    <style>${styles}<\/style>
     <\script>
         window["##BUDIBASE_APPDEFINITION##"] = ${JSON.stringify(appDefinition)};
         window["##BUDIBASE_UIFUNCTIONS"] = ${$store.currentScreenFunctions};

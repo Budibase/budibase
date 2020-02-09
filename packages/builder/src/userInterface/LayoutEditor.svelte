@@ -2,7 +2,7 @@
   import InputGroup from "../common/Inputs/InputGroup.svelte"
 
   export let onStyleChanged = () => {}
-  export let componentInfo
+  export let component
 
   const tbrl = [
     { placeholder: "T" },
@@ -16,8 +16,8 @@
   const single = [{ placeholder: "" }]
 
   $: layout = {
-    ...componentInfo._styles.position,
-    ...componentInfo._styles.layout,
+    ...component._styles.position,
+    ...component._styles.layout,
   }
 
   $: layouts = {

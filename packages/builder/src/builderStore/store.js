@@ -28,8 +28,6 @@ import {
 } from "../userInterface/pagesParsing/searchComponents"
 import { rename } from "../userInterface/pagesParsing/renameScreen"
 import {
-  getNewComponentInfo,
-  getScreenInfo,
   getNewScreen,
   createProps,
 } from "../userInterface/pagesParsing/createProps"
@@ -141,8 +139,8 @@ const initialise = (store, initial) => async () => {
     componentLibraries: ["@budibase/standard-components"],
     main: {
       name: "main",
-      _component: "@budibase/standard-components/div",
       props: {
+        _component: "@budibase/standard-components/div",
         _children: []
       },
       _screens: [], index: {}, appBody: ""
@@ -150,8 +148,8 @@ const initialise = (store, initial) => async () => {
     stylesheets: [],
     unauthenticated: {
       name: "unauthenticated",
-      _component: "@budibase/standard-components/div",
       props: {
+        _component: "@budibase/standard-components/div",
         _children: []
       }, _screens: [], index: {}, appBody: ""
     }
@@ -179,7 +177,7 @@ const initialise = (store, initial) => async () => {
   }
 
   store.set(initial)
-  console.log(initial)
+  // console.log(initial)
   return initial
 }
 
@@ -470,11 +468,11 @@ const _saveScreen = (store, s, screen) => {
     filter(c => c.name !== screen.name),
     concat([screen]),
   ])
-
+  // console.log('saveScreen', screens, screen)
   s.pages[s.currentPageName]._screens = screens
   s.screens = s.pages[s.currentPageName]._screens
-  s.currentPreviewItem = screen
-  s.currentComponentInfo = screen.props
+  // s.currentPreviewItem = screen
+  // s.currentComponentInfo = screen.props
 
   // api
   //   .post(`/_builder/api/${s.appname}/screen`, screen)
@@ -495,12 +493,26 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
       layoutComponentName,
       screenName
     )
+
+    console.log('createScreen', newScreen)
     newScreen.route = route;
-    s.currentPreviewItem = newScreen.component
+    s.currentPreviewItem = newScreen
     s.currentComponentInfo = newScreen.props
     s.currentFrontEndType = "screen"
 
-    return _saveScreen(store, s, newScreen.component)
+    return _saveScreen(store, s, newScreen)
+  })
+}
+
+const setCurrentScreen = store => screenName => {
+  store.update(s => {
+    const screen = getExactComponent(s.screens, screenName)
+    console.log('setCurrentScreen', screen)
+    s.currentPreviewItem = screen
+    s.currentFrontEndType = "screen"
+    s.currentComponentInfo = screen.props;
+    setCurrentScreenFunctions(s)
+    return s
   })
 }
 
@@ -698,16 +710,7 @@ const savePackage = (store, s) => {
   return api.post(`/_builder/api/${s.appname}/appPackage`, data)
 }
 
-const setCurrentScreen = store => screenName => {
-  store.update(s => {
-    const screen = getExactComponent(s.screens, screenName)
-    s.currentPreviewItem = screen
-    s.currentFrontEndType = "screen"
-    s.currentComponentInfo = screen.props;
-    setCurrentScreenFunctions(s)
-    return s
-  })
-}
+
 
 const setCurrentPage = store => pageName => {
 
@@ -728,25 +731,28 @@ const setCurrentPage = store => pageName => {
 
 const addChildComponent = store => componentName => {
   store.update(s => {
+    console.log('addChildComponent', componentName)
 
     const component = s.components.find(c => c.name === componentName);
     const newComponent = createProps(component)
 
-    let children = s.currentComponentInfo._children
+    // let children = s.currentComponentInfo._children
+    console.log(newComponent)
 
-
-    if (children) {
-        s.currentComponentInfo._children = children.concat(newComponent)
-    } else {
-      s.currentComponentInfo._children = [
-        component_definition
-      ]
-    }
+    //if (children) {
+    s.currentComponentInfo._children = s.currentComponentInfo._children.concat(newComponent.props)
+    // } else {
+    //   s.currentComponentInfo._children = [
+    //     newComponent
+    //   ]
+    // }
     if (s.currentFrontEndType !== 'page') {
-      _saveScreen(store, s, s.currentPreviewItem)
+      // _saveScreen(store, s, s.currentPreviewItem)
     } else {
-      s.currentComponentInfo = newComponent;
+      // s.currentComponentInfo = newComponent;
     }
+
+
 
     return s
   })
@@ -776,7 +782,7 @@ const setComponentStyle = store => (type, name, value) => {
     }
     s.currentComponentInfo._styles[type][name] = value
     s.currentPreviewItem._css = generate_screen_css(
-      s.currentPreviewItem.props._children
+      [s.currentPreviewItem.props]
     )
 
     // save without messing with the store
@@ -807,12 +813,11 @@ const setCurrentScreenFunctions = s => {
 
 const setScreenType = store => type => {
   store.update(s => {
-    console.log('boo')
     s.currentFrontEndType = type
-
+    console.log('setPageType', s.pages, s.currentPageName)
     const pageOrScreen = type === 'page' ? s.pages[s.currentPageName] : s.pages[s.currentPageName]._screens[0]
 
-    s.currentComponentInfo = pageOrScreen.props
+    s.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null;
     s.currentPreviewItem = pageOrScreen
     return s;
   })

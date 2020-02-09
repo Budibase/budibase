@@ -25,8 +25,6 @@
   let route = ""
   let saveAttempted = false
 
-
-
   store.subscribe(s => {
     layoutComponents = pipe(
       s.components,
@@ -44,7 +42,6 @@
   })
 
   const save = () => {
-    console.log(!screenNameExists(name), layoutComponent)
     saveAttempted = true
 
     const isValid =

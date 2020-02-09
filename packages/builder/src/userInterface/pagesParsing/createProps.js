@@ -13,7 +13,7 @@ export const getNewScreen = (components, rootComponentName, name) => {
     name: name || "",
     description: "",
     url: "",
-    props: createProps(rootComponent),
+    ...createProps(rootComponent),
   }
 }
 

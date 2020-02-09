@@ -25,8 +25,7 @@
   const lastPartOfName = c =>
     last(c.name ? c.name.split("/") : c._component.split("/"))
 
-  const isComponentSelected = (current, comp) =>
-    current === comp
+  const isComponentSelected = (current, comp) => current === comp
 
   const isFolderSelected = (current, folder) => isInSubfolder(current, folder)
 
@@ -34,8 +33,6 @@
     screens,
     [map(c => ({ component: c, title: lastPartOfName(c) })), sortBy("title")]
   )
-
-  $: console.log(_screens, $store.currentComponentInfo)
 
   const isScreenSelected = component =>
     component.component &&
@@ -48,13 +45,13 @@
   {#each _screens as screen}
     <div
       class="hierarchy-item component"
-      class:selected={$store.currentPreviewItem === screen}
-      on:click|stopPropagation={() => store.setCurrentScreen(screen)}>
+      class:selected={$store.currentPreviewItem.name === screen.title}
+      on:click|stopPropagation={() => store.setCurrentScreen(screen.title)}>
 
       <span
         class="icon"
-        style="transform: rotate({$store.currentPreviewItem === screen ? 0 : -90}deg);">
-        {#if screen.props._children}
+        style="transform: rotate({$store.currentPreviewItem.name === screen.title ? 0 : -90}deg);">
+        {#if screen.component.props._children.length}
           <ArrowDownIcon />
         {/if}
       </span>
@@ -62,11 +59,11 @@
       <span class="title">{screen.title}</span>
     </div>
 
-    {#if $store.currentPreviewItem === screen && screen.props._children}
+    {#if $store.currentPreviewItem.name === screen.title && screen.component.props._children}
       <ComponentsHierarchyChildren
-        components={screen.props._children}
+        components={screen.component.props._children}
         currentComponent={$store.currentComponentInfo}
-        onSelect={$store.selectComponent} />
+        onSelect={store.selectComponent} />
     {/if}
   {/each}
 
