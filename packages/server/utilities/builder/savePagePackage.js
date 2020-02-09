@@ -4,7 +4,7 @@ const buildPage = require("./buildPage")
 
 module.exports = async (config, appname, pageName, pkg) => {
   const appPath = appPackageFolder(config, appname)
-  pkg.pageName = pageName;
+  pkg.pageName = pageName
   await writeJSON(`${appPath}/appDefinition.json`, pkg.appDefinition, {
     spaces: 2,
   })

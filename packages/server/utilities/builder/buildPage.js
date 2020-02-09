@@ -15,12 +15,7 @@ const sqrl = require("squirrelly")
 module.exports = async (config, appname, pkg) => {
   const appPath = appPackageFolder(config, appname)
 
-  await buildClientAppDefinition(
-    config,
-    appname,
-    pkg,
-    appPath
-  )
+  await buildClientAppDefinition(config, appname, pkg, appPath)
 
   await buildIndexHtml(config, appname, appPath, pkg.pageName, pkg.page)
 
@@ -35,15 +30,13 @@ const copyClientLib = async (appPath, pageName) => {
   const sourcepath = require.resolve("@budibase/client")
   const destPath = join(publicPath(appPath, pageName), "budibase-client.js")
 
-  await copyFile(
-    sourcepath, 
-    destPath, 
-    constants.COPYFILE_FICLONE)
+  await copyFile(sourcepath, destPath, constants.COPYFILE_FICLONE)
 
   await copyFile(
     sourcepath + ".map",
     destPath + ".map",
-    constants.COPYFILE_FICLONE)
+    constants.COPYFILE_FICLONE
+  )
 }
 
 const buildIndexHtml = async (config, appname, appPath, pageName, page) => {
@@ -57,8 +50,7 @@ const buildIndexHtml = async (config, appname, appPath, pageName, page) => {
 
   const templateObj = {
     title: page.title || "Budibase App",
-    favicon: `${appRootPath}/${page.favicon ||
-      "/_shared/favicon.png"}`,
+    favicon: `${appRootPath}/${page.favicon || "/_shared/favicon.png"}`,
     stylesheets: (page.stylesheets || []).map(stylesheetUrl),
     appRootPath,
   }
@@ -75,11 +67,7 @@ const buildIndexHtml = async (config, appname, appPath, pageName, page) => {
   await writeFile(indexHtmlPath, indexHtml, { flag: "w+" })
 }
 
-const buildClientAppDefinition = async (
-  config,
-  appname,
-  pkg
-) => {
+const buildClientAppDefinition = async (config, appname, pkg) => {
   const appPath = appPackageFolder(config, appname)
   const appPublicPath = publicPath(appPath, pkg.pageName)
   const appRootPath = rootPath(config, appname)

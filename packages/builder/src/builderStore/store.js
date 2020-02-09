@@ -38,7 +38,7 @@ import {
 } from "./loadComponentLibraries"
 import { buildCodeForScreens } from "./buildCodeForScreens"
 import { generate_screen_css } from "./generate_css"
-import { uuid } from './uuid'
+import { uuid } from "./uuid"
 
 let appname = ""
 
@@ -134,6 +134,19 @@ const initialise = (store, initial) => async () => {
     .get(`/_builder/api/${appname}/appPackage`)
     .then(r => r.json())
 
+
+
+  const [main_screens, unauth_screens] = await Promise.all([
+    api
+      .get(`/_builder/api/${appname}/pages/main/screens`)
+      .then(r => r.json()),
+    api
+      .get(`/_builder/api/${appname}/pages/unauthenticated/screens`)
+      .then(r => r.json())
+  ])
+
+  console.log(main_screens, unauth_screens, Object.values(main_screens))
+
   pkg.pages = {
     componentLibraries: ["@budibase/standard-components"],
     main: {
@@ -144,7 +157,9 @@ const initialise = (store, initial) => async () => {
         _styles: { position: {}, layout: {} },
         _id: uuid(),
       },
-      _screens: [], index: {}, appBody: ""
+      _screens: Object.values(main_screens),
+      index: {},
+      appBody: "",
     },
     stylesheets: [],
     unauthenticated: {
@@ -154,8 +169,11 @@ const initialise = (store, initial) => async () => {
         _children: [],
         _styles: { position: {}, layout: {} },
         _id: uuid(),
-      }, _screens: [], index: {}, appBody: ""
-    }
+      },
+      _screens: [],
+      index: {},
+      appBody: "",
+    },
   }
 
   initial.libraries = await loadLibs(appname, pkg)
@@ -187,14 +205,14 @@ const initialise = (store, initial) => async () => {
 const generatorsArray = generators =>
   pipe(generators, [keys, filter(k => k !== "_lib"), map(k => generators[k])])
 
-const showSettings = store => show => {
+const showSettings = store => () => {
   store.update(s => {
     s.showSettings = !s.showSettings
     return s
   })
 }
 
-const useAnalytics = store => useAnalytics => {
+const useAnalytics = store => () => {
   store.update(s => {
     s.useAnalytics = !s.useAnalytics
     return s
@@ -219,7 +237,7 @@ const newRecord = (store, useRoot) => () => {
   store.update(s => {
     s.currentNodeIsNew = true
     const shadowHierarchy = createShadowHierarchy(s.hierarchy)
-    parent = useRoot
+    const parent = useRoot
       ? shadowHierarchy
       : getNode(shadowHierarchy, s.currentNode.nodeId)
     s.errors = []
@@ -248,7 +266,7 @@ const newIndex = (store, useRoot) => () => {
     s.currentNodeIsNew = true
     s.errors = []
     const shadowHierarchy = createShadowHierarchy(s.hierarchy)
-    parent = useRoot
+    const parent = useRoot
       ? shadowHierarchy
       : getNode(shadowHierarchy, s.currentNode.nodeId)
 
@@ -477,9 +495,9 @@ const _saveScreen = (store, s, screen) => {
   // s.currentPreviewItem = screen
   // s.currentComponentInfo = screen.props
 
-  // api
-  //   .post(`/_builder/api/${s.appname}/screen`, screen)
-  //   .then(() => savePackage(store, s))
+  api
+    .post(`/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`, screen)
+    .then(() => savePackage(store, s))
 
   return s
 }
@@ -497,7 +515,7 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
       screenName
     )
 
-    newScreen.route = route;
+    newScreen.route = route
     s.currentPreviewItem = newScreen
     s.currentComponentInfo = newScreen.props
     s.currentFrontEndType = "screen"
@@ -512,7 +530,7 @@ const setCurrentScreen = store => screenName => {
 
     s.currentPreviewItem = screen
     s.currentFrontEndType = "screen"
-    s.currentComponentInfo = screen.props;
+    s.currentComponentInfo = screen.props
 
     setCurrentScreenFunctions(s)
     return s
@@ -618,12 +636,12 @@ const addComponentLibrary = store => async lib => {
 
   const success = response.status === 200
 
-  const error =
-    response.status === 404
-      ? `Could not find library ${lib}`
-      : success
-        ? ""
-        : response.statusText
+  // const error =
+  //   response.status === 404
+  //     ? `Could not find library ${lib}`
+  //     : success
+  //       ? ""
+  //       : response.statusText
 
   const components = success ? await response.json() : []
 
@@ -710,18 +728,18 @@ const savePackage = (store, s) => {
     pages: s.pages,
   }
 
-  return api.post(`/_builder/api/${s.appname}/appPackage`, data)
+  // return api.post(`/_builder/api/${s.appname}/appPackage`, data)
 }
-
-
 
 const setCurrentPage = store => pageName => {
   store.update(s => {
-    const current_screens = s.pages[pageName]._screens;
+    const current_screens = s.pages[pageName]._screens
 
     s.currentFrontEndType = "page"
     s.currentPageName = pageName
-    s.screens = Array.isArray(current_screens) ? current_screens : Object.values(current_screens);
+    s.screens = Array.isArray(current_screens)
+      ? current_screens
+      : Object.values(current_screens)
     s.currentComponentInfo = s.pages[pageName].props
     s.currentPreviewItem = s.pages[pageName]
 
@@ -732,10 +750,12 @@ const setCurrentPage = store => pageName => {
 
 const addChildComponent = store => componentName => {
   store.update(s => {
-    const component = s.components.find(c => c.name === componentName);
+    const component = s.components.find(c => c.name === componentName)
     const newComponent = createProps(component)
 
-    s.currentComponentInfo._children = s.currentComponentInfo._children.concat(newComponent.props)
+    s.currentComponentInfo._children = s.currentComponentInfo._children.concat(
+      newComponent.props
+    )
 
     return s
   })
@@ -764,9 +784,9 @@ const setComponentStyle = store => (type, name, value) => {
       s.currentComponentInfo._styles = {}
     }
     s.currentComponentInfo._styles[type][name] = value
-    s.currentPreviewItem._css = generate_screen_css(
-      [s.currentPreviewItem.props]
-    )
+    s.currentPreviewItem._css = generate_screen_css([
+      s.currentPreviewItem.props,
+    ])
 
     // save without messing with the store
     // _save(s.appname, s.currentPreviewItem, store, s)
@@ -798,16 +818,13 @@ const setScreenType = store => type => {
   store.update(s => {
     s.currentFrontEndType = type
 
-    const pageOrScreen = type === 'page' ? s.pages[s.currentPageName] : s.pages[s.currentPageName]._screens[0]
+    const pageOrScreen =
+      type === "page"
+        ? s.pages[s.currentPageName]
+        : s.pages[s.currentPageName]._screens[0]
 
-    s.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null;
+    s.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null
     s.currentPreviewItem = pageOrScreen
-    return s;
+    return s
   })
 }
-
-// pages = [{
-//   _props: { _component: "@budibase...", _children: [] }
-//  name: 'Boo',
-//  _screens: []
-// }]

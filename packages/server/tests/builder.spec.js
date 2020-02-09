@@ -19,8 +19,7 @@ beforeAll(async () => {
     "./appPackages/testApp/pages/main/screens/anotherscreen.json"
 
   if (await pathExists(testScreen)) await unlink(testScreen)
-  if (await pathExists(testScreenAfterMove))
-    await unlink(testScreenAfterMove)
+  if (await pathExists(testScreenAfterMove)) await unlink(testScreenAfterMove)
 
   await app.start()
 })
@@ -47,8 +46,8 @@ it("/apppackage should get pages", async () => {
     .get("/_builder/api/testApp/appPackage")
     .expect(statusCodes.OK)
   expect(body.pages).toEqual({
-    main:mainPage, 
-    unauthenticated:unauthenticatedPage
+    main: mainPage,
+    unauthenticated: unauthenticatedPage,
   })
 })
 
@@ -58,7 +57,9 @@ it("/apppackage should get components", async () => {
     .expect(statusCodes.OK)
 
   expect(body.components.components["./customComponents/textbox"]).toBeDefined()
-  expect(body.components.components["./moreCustomComponents/textbox"]).toBeDefined()
+  expect(
+    body.components.components["./moreCustomComponents/textbox"]
+  ).toBeDefined()
 
   expect(body.components.components["./customComponents/textbox"]).toEqual(
     testComponents.textbox
@@ -76,7 +77,7 @@ it("/pages/:pageName/screens should get screens", async () => {
 
   const expectedComponents = {
     screen1: { ...screen1, name: "screen1" },
-    screen2: { ...screen2, name: "screen2" }
+    screen2: { ...screen2, name: "screen2" },
   }
 
   expect(body).toEqual(expectedComponents)
@@ -125,7 +126,7 @@ it("should be able to rename screen", async () => {
     })
     .expect(statusCodes.OK)
 
-  const oldcomponentFile = 
+  const oldcomponentFile =
     "./appPackages/testApp/pages/main/screens/newscreen.json"
   const newcomponentFile =
     "./appPackages/testApp/pages/main/screens/anotherscreen.json"
@@ -152,17 +153,15 @@ it("/savePage should prepare all necessary client files", async () => {
       page: mainPage,
       uiFunctions: "{'1234':() => 'test return'}",
       props: {
-        _component: "@budibase/standard-components/div"
-      }
+        _component: "@budibase/standard-components/div",
+      },
     })
     .expect(statusCodes.OK)
 
   const publicFolderMain = relative =>
     "./appPackages/testApp/public/main" + relative
 
-  expect(
-    await pathExists(publicFolderMain("/index.html")))
-  .toBe(true)
+  expect(await pathExists(publicFolderMain("/index.html"))).toBe(true)
 
   expect(
     await pathExists(publicFolderMain("/lib/customComponents/index.js"))

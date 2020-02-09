@@ -13,7 +13,7 @@ const {
   deleteScreen,
   savePagePackage,
   componentLibraryInfo,
-  listScreens
+  listScreens,
 } = require("../utilities/builder")
 
 const builderPath = resolve(__dirname, "../builder")
@@ -180,18 +180,29 @@ module.exports = (config, app) => {
       ctx.response.status = StatusCodes.OK
     })
     .post("/_builder/api/:appname/pages/:pageName", async ctx => {
-      await savePagePackage(config, ctx.params.appname, ctx.params.pageName, ctx.request.body)
+      await savePagePackage(
+        config,
+        ctx.params.appname,
+        ctx.params.pageName,
+        ctx.request.body
+      )
       ctx.response.status = StatusCodes.OK
     })
     .get("/_builder/api/:appname/pages/:pagename/screens", async ctx => {
       ctx.body = await listScreens(
-        config, 
+        config,
         ctx.params.appname,
-        ctx.params.pagename)
+        ctx.params.pagename
+      )
       ctx.response.status = StatusCodes.OK
     })
     .post("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
-      await saveScreen(config, ctx.params.appname, ctx.params.pagename, ctx.request.body)
+      await saveScreen(
+        config,
+        ctx.params.appname,
+        ctx.params.pagename,
+        ctx.request.body
+      )
       ctx.response.status = StatusCodes.OK
     })
     .patch("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
@@ -211,8 +222,11 @@ module.exports = (config, app) => {
       )
 
       await deleteScreen(
-        config, ctx.params.appname, 
-        ctx.params.pagename, decodeURI(name))
+        config,
+        ctx.params.appname,
+        ctx.params.pagename,
+        decodeURI(name)
+      )
 
       ctx.response.status = StatusCodes.OK
     })

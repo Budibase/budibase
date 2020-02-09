@@ -60,5 +60,5 @@ export const createTreeNode = () => ({
   parentNode: null,
   children: [],
   component: null,
-  unsubscribe: () => { },
+  unsubscribe: () => {},
 })

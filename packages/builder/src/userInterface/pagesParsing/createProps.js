@@ -1,14 +1,10 @@
-import {
-  isString,
-  isUndefined,
-} from "lodash/fp"
+import { isString, isUndefined } from "lodash/fp"
 import { types } from "./types"
 import { assign } from "lodash"
 import { uuid } from "../../builderStore/uuid"
 
-
 export const getNewScreen = (components, rootComponentName, name) => {
-  const rootComponent = components.find(c => c.name === rootComponentName);
+  const rootComponent = components.find(c => c.name === rootComponentName)
   return {
     name: name || "",
     description: "",

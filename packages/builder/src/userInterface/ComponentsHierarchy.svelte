@@ -38,6 +38,8 @@
     component.component &&
     $store.currentPreviewItem &&
     component.component.name === $store.currentPreviewItem.name
+
+  $: console.log(_screens)
 </script>
 
 <div class="root">
