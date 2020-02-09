@@ -1,9 +1,9 @@
 import { JSDOM } from "jsdom"
 import { loadBudibase } from "../src/index"
 
-export const load = async (page, screens = []) => {
+export const load = async (page, screens = [], url = "/") => {
   const dom = new JSDOM("<!DOCTYPE html><html><body></body><html>", {
-    url: "http://test/",
+    url: `http://test${url}`,
   })
   autoAssignIds(page.props)
   for (let s of screens) {

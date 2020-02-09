@@ -11,7 +11,7 @@ export const screenRouter = (screens, onScreenSelected) => {
   function route(url) {
     const _url = url.state || url
     current = routes.findIndex(
-      ([p]) => p !== "*" && new RegExp("^" + p + "$").test(_url)
+      p => p !== "*" && new RegExp("^" + p + "$").test(_url)
     )
 
     const params = {}
@@ -44,9 +44,6 @@ export const screenRouter = (screens, onScreenSelected) => {
 
     !url.state && history.pushState(_url, null, _url)
   }
-
-  const url = window.location.pathname
-  route(url)
 
   function click(e) {
     const x = e.target.closest("a")

@@ -55,10 +55,13 @@ export const createApp = (
   let routeTo
   let currentScreenStore
   let currentScreenUbsubscribe
+  let currentUrl
 
   const onScreenSlotRendered = screenSlotNode => {
     const onScreenSelected = (screen, store, url) => {
-      const { getInitialiseParams, unsubscribe } = initialiseChildrenParams(store)
+      const { getInitialiseParams, unsubscribe } = initialiseChildrenParams(
+        store
+      )
       const initialiseChildParams = getInitialiseParams(true, screenSlotNode)
       initialiseChildren(initialiseChildParams)(
         [screen.props],
@@ -67,9 +70,11 @@ export const createApp = (
       if (currentScreenUbsubscribe) currentScreenUbsubscribe()
       currentScreenUbsubscribe = unsubscribe
       currentScreenStore = store
+      currentUrl = url
     }
 
     routeTo = screenRouter(screens, onScreenSelected)
+    routeTo(currentUrl || window.location.pathname)
   }
 
   const initialiseChildrenParams = store => {
@@ -124,13 +129,13 @@ export const createApp = (
   }
 
   const initialisePage = (page, target, urlPath) => {
+    currentUrl = urlPath
+
     const rootTreeNode = createTreeNode()
     const { getInitialiseParams } = initialiseChildrenParams(pageStore)
     const initChildParams = getInitialiseParams(true, rootTreeNode)
 
     initialiseChildren(initChildParams)([page.props], target)
-
-    if (routeTo && screens && screens.length > 0) routeTo(urlPath)
 
     return rootTreeNode
   }
@@ -139,5 +144,6 @@ export const createApp = (
     initialisePage,
     screenStore: () => currentScreenStore,
     pageStore: () => pageStore,
+    routeTo: () => routeTo,
   }
 }

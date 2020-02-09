@@ -52,7 +52,7 @@ export const loadBudibase = async ({
     screens = appDefinition.screens
   }
 
-  const { initialisePage, screenStore, pageStore } = createApp(
+  const { initialisePage, screenStore, pageStore, routeTo } = createApp(
     window.document,
     componentLibraries,
     appDefinition,
@@ -69,6 +69,7 @@ export const loadBudibase = async ({
     rootNode: initialisePage(page, window.document.body, route),
     screenStore,
     pageStore,
+    routeTo,
   }
 }
 
