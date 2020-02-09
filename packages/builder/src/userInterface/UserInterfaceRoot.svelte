@@ -53,8 +53,9 @@
       <div class="nav-items-container">
         {#if $store.currentFrontEndType === 'page'}
           <ComponentsHierarchyChildren
-            components={$store.currentComponentInfo._children}
+            components={$store.currentPreviewItem.props._children}
             currentComponent={$store.currentComponentInfo}
+            onSelect={store.selectComponent}
             level={-2} />
         {/if}
 

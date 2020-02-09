@@ -38,6 +38,7 @@ import {
 } from "./loadComponentLibraries"
 import { buildCodeForScreens } from "./buildCodeForScreens"
 import { generate_screen_css } from "./generate_css"
+import { uuid } from './uuid'
 
 let appname = ""
 
@@ -141,7 +142,9 @@ const initialise = (store, initial) => async () => {
       name: "main",
       props: {
         _component: "@budibase/standard-components/div",
-        _children: []
+        _children: [],
+        _styles: { position: {}, layout: {} },
+        _id: uuid(),
       },
       _screens: [], index: {}, appBody: ""
     },
@@ -150,7 +153,9 @@ const initialise = (store, initial) => async () => {
       name: "unauthenticated",
       props: {
         _component: "@budibase/standard-components/div",
-        _children: []
+        _children: [],
+        _styles: { position: {}, layout: {} },
+        _id: uuid(),
       }, _screens: [], index: {}, appBody: ""
     }
   }
@@ -713,8 +718,6 @@ const savePackage = (store, s) => {
 
 
 const setCurrentPage = store => pageName => {
-
-
   store.update(s => {
     const current_screens = s.pages[pageName]._screens;
 
@@ -731,28 +734,10 @@ const setCurrentPage = store => pageName => {
 
 const addChildComponent = store => componentName => {
   store.update(s => {
-    console.log('addChildComponent', componentName)
-
     const component = s.components.find(c => c.name === componentName);
     const newComponent = createProps(component)
 
-    // let children = s.currentComponentInfo._children
-    console.log(newComponent)
-
-    //if (children) {
     s.currentComponentInfo._children = s.currentComponentInfo._children.concat(newComponent.props)
-    // } else {
-    //   s.currentComponentInfo._children = [
-    //     newComponent
-    //   ]
-    // }
-    if (s.currentFrontEndType !== 'page') {
-      // _saveScreen(store, s, s.currentPreviewItem)
-    } else {
-      // s.currentComponentInfo = newComponent;
-    }
-
-
 
     return s
   })
@@ -760,6 +745,7 @@ const addChildComponent = store => componentName => {
 
 const selectComponent = store => component => {
   store.update(s => {
+    console.log(component)
     s.currentComponentInfo = component
     return s
   })

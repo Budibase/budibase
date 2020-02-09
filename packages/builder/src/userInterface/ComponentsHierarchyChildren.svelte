@@ -1,19 +1,22 @@
 <script>
   import { last } from "lodash/fp"
   import { pipe } from "../common/core"
+
   export let components = []
   export let currentComponent
   export let onSelect = () => {}
   export let level = 0
+
   const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
   const get_name = s => last(s.split("/"))
+
   const get_capitalised_name = name =>
     pipe(
       name,
       [get_name, capitalise]
     )
 
-  $: console.log(components)
+  // $: console.log(components)
 </script>
 
 <ul>
