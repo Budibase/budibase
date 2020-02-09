@@ -53,7 +53,7 @@ export const createApp = (
   }
 
   let routeTo
-  let currentRoute = "/"
+  let currentScreenStore
   let currentScreenUbsubscribe
 
   const onScreenSlotRendered = screenSlotNode => {
@@ -64,9 +64,9 @@ export const createApp = (
         [screen.props],
         screenSlotNode.rootElement
       )
-      currentRoute = url
       if (currentScreenUbsubscribe) currentScreenUbsubscribe()
       currentScreenUbsubscribe = unsubscribe
+      currentScreenStore = store
     }
 
     routeTo = screenRouter(screens, onScreenSelected)
@@ -132,9 +132,12 @@ export const createApp = (
 
     if (routeTo && screens && screens.length > 0) routeTo(urlPath)
 
-    currentRoute = urlPath
     return rootTreeNode
   }
 
-  return initialisePage
+  return {
+    initialisePage,
+    screenStore: () => currentScreenStore,
+    pageStore: () => pageStore,
+  }
 }

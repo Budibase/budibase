@@ -12,7 +12,7 @@ describe("controlFlow", () => {
 
     expect(dom.window.document.body.children.length).toBe(1)
     const child = dom.window.document.body.children[0]
-    expect(child.className).toBe("my-test-class")
+    expect(child.className.includes("my-test-class")).toBeTruthy()
   })
 
   it("should not display div, with always false render function", async () => {
@@ -39,13 +39,13 @@ describe("controlFlow", () => {
     expect(dom.window.document.body.children.length).toBe(3)
 
     const child0 = dom.window.document.body.children[0]
-    expect(child0.className).toBe("my-test-class")
+    expect(child0.className.includes("my-test-class")).toBeTruthy()
 
     const child1 = dom.window.document.body.children[1]
-    expect(child1.className).toBe("my-test-class")
+    expect(child1.className.includes("my-test-class")).toBeTruthy()
 
     const child2 = dom.window.document.body.children[2]
-    expect(child2.className).toBe("my-test-class")
+    expect(child2.className.includes("my-test-class")).toBeTruthy()
   })
 
   it("should display 3 div, in a looped render, as children", async () => {
@@ -67,8 +67,8 @@ describe("controlFlow", () => {
     const rootDiv = dom.window.document.body.children[0]
     expect(rootDiv.children.length).toBe(3)
 
-    expect(rootDiv.children[0].className).toBe("my-test-class")
-    expect(rootDiv.children[1].className).toBe("my-test-class")
-    expect(rootDiv.children[2].className).toBe("my-test-class")
+    expect(rootDiv.children[0].className.includes("my-test-class")).toBeTruthy()
+    expect(rootDiv.children[1].className.includes("my-test-class")).toBeTruthy()
+    expect(rootDiv.children[2].className.includes("my-test-class")).toBeTruthy()
   })
 })

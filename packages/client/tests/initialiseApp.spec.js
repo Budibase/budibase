@@ -126,8 +126,11 @@ describe("initialiseApp", () => {
     )
 
     const rootDiv = dom.window.document.body.children[0]
+    expect(rootDiv.children.length).toBe(1)
+
     const screenRoot = rootDiv.children[0]
 
+    console.log(screenRoot.children)
     expect(screenRoot.children.length).toBe(1)
     expect(screenRoot.children[0].children.length).toBe(2)
     expect(screenRoot.children[0].children[0].innerText).toBe("header one")

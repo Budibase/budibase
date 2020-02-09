@@ -11,7 +11,7 @@ export const loadBudibase = async ({
   uiFunctions,
 }) => {
   const appDefinition = window["##BUDIBASE_APPDEFINITION##"]
-  const uiFunctionsFromWindow = window["##BUDIBASE_APPDEFINITION##"]
+  const uiFunctionsFromWindow = window["##BUDIBASE_UIFUNCTIONS##"]
   uiFunctions = uiFunctionsFromWindow || uiFunctions
 
   const userFromStorage = localStorage.getItem("budibase:user")
@@ -52,7 +52,7 @@ export const loadBudibase = async ({
     screens = appDefinition.screens
   }
 
-  const initialisePage = createApp(
+  const { initialisePage, screenStore, pageStore } = createApp(
     window.document,
     componentLibraries,
     appDefinition,
@@ -65,7 +65,11 @@ export const loadBudibase = async ({
                 ? window.location.pathname.replace(rootPath, "")
                 : "";
 
-  return initialisePage(page, window.document.body, route)
+  return {
+    rootNode: initialisePage(page, window.document.body, route),
+    screenStore,
+    pageStore,
+  }
 }
 
 if (window) {

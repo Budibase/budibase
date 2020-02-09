@@ -2,7 +2,9 @@ import { JSDOM } from "jsdom"
 import { loadBudibase } from "../src/index"
 
 export const load = async (page, screens = []) => {
-  const dom = new JSDOM(`<!DOCTYPE html><html><body></body><html>`)
+  const dom = new JSDOM("<!DOCTYPE html><html><body></body><html>", {
+    url: "http://test/",
+  })
   autoAssignIds(page.props)
   for (let s of screens) {
     autoAssignIds(s.props)
@@ -21,6 +23,8 @@ export const load = async (page, screens = []) => {
 
 export const makePage = props => ({ props })
 export const makeScreen = (route, props) => ({ props, route })
+
+export const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 // this happens for real by the builder...
 // ..this only assigns _ids when missing
