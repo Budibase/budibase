@@ -44,15 +44,14 @@
   export let persistent = false
 
   let id = `${label}-${variant}`
-  let helperClasses = `${cb.block}-helper-text`
 
-  let modifiers = []
+  let modifiers = { fullwidth, disabled, textarea }
   let customs = { colour }
 
   if (variant == "standard" || fullwidth) {
     customs = { ...customs, variant }
   } else {
-    modifiers.push(variant)
+    modifiers = { ...modifiers, variant }
   }
 
   if (!textarea && size !== "medium") {
@@ -60,15 +59,12 @@
   }
 
   if (!label || fullwidth) {
-    modifiers.push("no-label")
+    modifiers = { ...modifiers, noLabel: "no-label" }
   }
 
-  //TODO: Refactor - this could be handled better using an object as modifier instead of an array
-  if (fullwidth) modifiers.push("fullwidth")
-  if (disabled) modifiers.push("disabled")
-  if (textarea) modifiers.push("textarea")
-  if (persistent) helperClasses += ` ${cb.block}-helper-text--persistent`
-  if (validation) helperClasses += ` ${cb.block}-helper-text--validation`
+  let helperClasses = cb.debase(`${cb.block}-helper-text`, {
+    modifiers: { persistent, validation },
+  })
 
   let useLabel = !!label && (!fullwidth || (fullwidth && textarea))
   let useIcon = !!icon && (!textarea && !fullwidth)
@@ -77,16 +73,16 @@
 
   if (useIcon) {
     setContext("BBMD:icon:context", "text-field")
-    trailingIcon
-      ? modifiers.push("with-trailing-icon")
-      : modifiers.push("with-leading-icon")
+    let iconClass = trailingIcon ? "with-trailing-icon" : "with-leading-icon"
+    modifiers = { ...modifiers, iconClass }
   }
 
   $: renderLeadingIcon = useIcon && !trailingIcon
   $: renderTrailingIcon = useIcon && trailingIcon
 
-  const blockClasses = cb.blocks({ modifiers, customs })
-  const inputClasses = cb.elements("input")
+  let props = { modifiers, customs }
+  const blockClasses = cb.build({ props })
+  const inputClasses = cb.elem("input")
 
   let renderMaxLength = !!maxLength ? `0 / ${maxLength}` : "0"
 

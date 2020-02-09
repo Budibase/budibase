@@ -16,11 +16,12 @@
     &.bbmd-mdc-text-field--colour-secondary {
       &.mdc-text-field--focused {
         .mdc-floating-label--float-above {
-          color: var(--mdc-theme-secondary);
+          @include mdc-floating-label-ink-color(secondary)
+
         }
       }
       .mdc-line-ripple--active {
-        background-color: var(--mdc-theme-secondary);
+        @include mdc-line-ripple-color(secondary);
       }
 
       &.mdc-text-field--outlined,
