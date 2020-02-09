@@ -48,7 +48,12 @@
       srcdoc={`<html>
   <head>
     ${stylesheetLinks}
-    <style>${styles}<\/style>
+    <style>
+      ${styles || ''}
+      body, html {
+        height: 100%!important;
+      }
+    <\/style>
     <\script>
         window["##BUDIBASE_APPDEFINITION##"] = ${JSON.stringify(appDefinition)};
         window["##BUDIBASE_UIFUNCTIONS"] = ${$store.currentScreenFunctions};
