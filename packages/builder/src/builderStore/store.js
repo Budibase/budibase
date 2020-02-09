@@ -134,15 +134,11 @@ const initialise = (store, initial) => async () => {
     .get(`/_builder/api/${appname}/appPackage`)
     .then(r => r.json())
 
-
-
   const [main_screens, unauth_screens] = await Promise.all([
-    api
-      .get(`/_builder/api/${appname}/pages/main/screens`)
-      .then(r => r.json()),
+    api.get(`/_builder/api/${appname}/pages/main/screens`).then(r => r.json()),
     api
       .get(`/_builder/api/${appname}/pages/unauthenticated/screens`)
-      .then(r => r.json())
+      .then(r => r.json()),
   ])
 
   console.log(main_screens, unauth_screens, Object.values(main_screens))
@@ -198,7 +194,7 @@ const initialise = (store, initial) => async () => {
   }
 
   store.set(initial)
-
+  console.log(initial)
   return initial
 }
 
@@ -496,7 +492,10 @@ const _saveScreen = (store, s, screen) => {
   // s.currentComponentInfo = screen.props
 
   api
-    .post(`/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`, screen)
+    .post(
+      `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
+      screen
+    )
     .then(() => savePackage(store, s))
 
   return s
@@ -713,22 +712,16 @@ const refreshComponents = store => async () => {
 }
 
 const savePackage = (store, s) => {
-  const appDefinition = {
-    hierarchy: s.hierarchy,
-    triggers: s.triggers,
-    actions: keyBy("name")(s.actions),
-    page: s.pages[s.currentPageName],
-    screens: s.pages[s.currentPageName]._screens,
-    uiFunctions: buildCodeForScreens(s.screens),
-  }
+  const page = s.pages[s.currentPageName]
 
-  const data = {
-    appDefinition,
-    accessLevels: s.accessLevels,
-    pages: s.pages,
-  }
-
-  // return api.post(`/_builder/api/${s.appname}/appPackage`, data)
+  api
+    .post(`/_builder/api/testApp/pages/${s.currentPageName}`, {
+      appDefinition: {},
+      accessLevels: s.accessLevels,
+      page: page,
+      uiFunctions: "{'1234':() => 'test return'}",
+      props: currentPreviewItem
+    })
 }
 
 const setCurrentPage = store => pageName => {
@@ -789,7 +782,7 @@ const setComponentStyle = store => (type, name, value) => {
     ])
 
     // save without messing with the store
-    // _save(s.appname, s.currentPreviewItem, store, s)
+    _save(s.appname, s.currentPreviewItem, store, s)
 
     return s
   })
@@ -801,7 +794,7 @@ const setComponentCode = store => code => {
 
     setCurrentScreenFunctions(s)
     // save without messing with the store
-    // _save(s.appname, s.currentPreviewItem, store, s)
+    _save(s.appname, s.currentPreviewItem, store, s)
 
     return s
   })
