@@ -8,8 +8,6 @@
   const isSelected = tab => selected === tab
 
   const selectTab = tab => (selected = tab)
-
-  $: console.log($store)
 </script>
 
 <div class="root">

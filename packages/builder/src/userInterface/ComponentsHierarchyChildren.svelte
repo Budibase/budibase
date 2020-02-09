@@ -15,8 +15,6 @@
       name,
       [get_name, capitalise]
     )
-
-  // $: console.log(components)
 </script>
 
 <ul>

@@ -21,8 +21,6 @@
   const settings = () => {
     settingsView.show()
   }
-
-  $: console.log($store)
 </script>
 
 <div class="root">

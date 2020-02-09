@@ -37,7 +37,7 @@
     layoutComponent = layoutComponent
       ? find(c => c.name === layoutComponent.name)(layoutComponents)
       : layoutComponents[0]
-    console.log(s.screens)
+
     screens = s.screens
   })
 
@@ -59,7 +59,6 @@
 
   const screenNameExists = name => {
     return some(s => {
-      console.log(s, screens)
       return s.name.toLowerCase() === name.toLowerCase()
     })(screens)
   }

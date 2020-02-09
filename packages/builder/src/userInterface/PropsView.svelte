@@ -12,7 +12,7 @@
   let errors = []
   let props = {}
   const props_to_ignore = ["_component", "_children", "_styles", "_code", "_id"]
-  $: console.log(component)
+
   $: propDefs =
     component &&
     Object.entries(component).filter(

@@ -134,8 +134,6 @@ const initialise = (store, initial) => async () => {
     .get(`/_builder/api/${appname}/appPackage`)
     .then(r => r.json())
 
-  console.log(pkg)
-
   pkg.pages = {
     componentLibraries: ["@budibase/standard-components"],
     main: {
@@ -182,7 +180,7 @@ const initialise = (store, initial) => async () => {
   }
 
   store.set(initial)
-  // console.log(initial)
+
   return initial
 }
 
@@ -499,7 +497,6 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
       screenName
     )
 
-    console.log('createScreen', newScreen)
     newScreen.route = route;
     s.currentPreviewItem = newScreen
     s.currentComponentInfo = newScreen.props
@@ -512,10 +509,11 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
 const setCurrentScreen = store => screenName => {
   store.update(s => {
     const screen = getExactComponent(s.screens, screenName)
-    console.log('setCurrentScreen', screen)
+
     s.currentPreviewItem = screen
     s.currentFrontEndType = "screen"
     s.currentComponentInfo = screen.props;
+
     setCurrentScreenFunctions(s)
     return s
   })
@@ -745,7 +743,6 @@ const addChildComponent = store => componentName => {
 
 const selectComponent = store => component => {
   store.update(s => {
-    console.log(component)
     s.currentComponentInfo = component
     return s
   })
@@ -800,7 +797,7 @@ const setCurrentScreenFunctions = s => {
 const setScreenType = store => type => {
   store.update(s => {
     s.currentFrontEndType = type
-    console.log('setPageType', s.pages, s.currentPageName)
+
     const pageOrScreen = type === 'page' ? s.pages[s.currentPageName] : s.pages[s.currentPageName]._screens[0]
 
     s.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null;
