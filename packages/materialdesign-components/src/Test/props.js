@@ -1,11 +1,16 @@
-const getComponent = comp => `@budibase//materialdesign-components/${comp}`;
+const getComponent = comp => `@budibase/materialdesign-components/${comp}`;
 
 
 export const props = {
-  justAnH1: {
-    _component: "@budibase/materialdesign-components/h1",
+  h1: {
+    _component: "@budibase/materialdesign-components/H1",
     _children: [],
-    text: "This is a Header",
+    text: "Im a big header",
+  },
+  overline: {
+    _component: getComponent`Overline`,
+    _children: [],
+    text: "A wee Overline",
   },
   button: {
     _component: "@budibase/materialdesign-components/button",
