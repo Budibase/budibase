@@ -37,30 +37,10 @@
     display: flex;
   }
 
-  /* .bound-header {
-    display: flex;
-  } */
-
   .bound-header > div:nth-child(1) {
     flex: 1 0 auto;
     width: 30px;
     color: var(--secondary50);
     padding-left: 5px;
   }
-
-  /* .binding-prop-label {
-    color: var(--secondary50);
-  }
-
-  input {
-    font-size: 12px;
-    font-weight: 700;
-    color: #163057;
-    opacity: 0.7;
-    padding: 5px 10px;
-    box-sizing: border-box;
-    border: 1px solid #dbdbdb;
-    border-radius: 2px;
-    outline: none;
-  } */
 </style>
