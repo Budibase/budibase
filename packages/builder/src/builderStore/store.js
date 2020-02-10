@@ -639,13 +639,6 @@ const addComponentLibrary = store => async lib => {
 
   const success = response.status === 200
 
-  // const error =
-  //   response.status === 404
-  //     ? `Could not find library ${lib}`
-  //     : success
-  //       ? ""
-  //       : response.statusText
-
   const components = success ? await response.json() : []
 
   store.update(s => {
@@ -718,24 +711,18 @@ const refreshComponents = store => async () => {
 const savePackage = async (store, s) => {
   const page = s.pages[s.currentPageName]
 
-  console.log(page)
-
-  const r = await api.post(`/_builder/api/${appname}/pages/${s.currentPageName}`,
-    {
-      appDefinition: {
-        hierarchy: s.hierarchy,
-        actions: s.actions,
-        triggers: s.triggers,
-      },
-      accessLevels: s.accessLevels,
-      page: { componentLibraries: s.pages.componentLibraries, ...page },
-      uiFunctions: "{'1234':() => 'test return'}",
-      props: page.props,
-      screens: page.screens,
-    }
-  )
-
-  console.log(r)
+  await api.post(`/_builder/api/${appname}/pages/${s.currentPageName}`, {
+    appDefinition: {
+      hierarchy: s.hierarchy,
+      actions: s.actions,
+      triggers: s.triggers,
+    },
+    accessLevels: s.accessLevels,
+    page: { componentLibraries: s.pages.componentLibraries, ...page },
+    uiFunctions: "{'1234':() => 'test return'}",
+    props: page.props,
+    screens: page.screens,
+  })
 }
 
 const setCurrentPage = store => pageName => {
@@ -781,7 +768,11 @@ const setComponentProp = store => (name, value) => {
   store.update(s => {
     const current_component = s.currentComponentInfo
     s.currentComponentInfo[name] = value
-    _saveScreen(store, s, s.currentPreviewItem)
+
+    s.currentFrontEndType === "page"
+      ? savePackage(store, s, s.currentPreviewItem)
+      : _saveScreen(store, s, s.currentPreviewItem)
+
     s.currentComponentInfo = current_component
     return s
   })
@@ -798,7 +789,10 @@ const setComponentStyle = store => (type, name, value) => {
     ])
 
     // save without messing with the store
-    _save(s.appname, s.currentPreviewItem, store, s)
+    s.currentFrontEndType === "page"
+      ? savePackage(store, s, s.currentPreviewItem)
+      : _save(s.appname, s.currentPreviewItem, store, s)
+
 
     return s
   })
