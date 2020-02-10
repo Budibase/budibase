@@ -1,5 +1,6 @@
 <script>
   import ComponentsHierarchy from "./ComponentsHierarchy.svelte"
+  import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
   import PagesList from "./PagesList.svelte"
   import { store } from "../builderStore"
   import IconButton from "../common/IconButton.svelte"
@@ -37,29 +38,59 @@
     </div>
 
     <div class="components-list-container">
+
       <div class="nav-group-header">
 
-        <span class="components-nav-header">Screens</span>
-        <div>
-          <button on:click={newComponent}>+</button>
-        </div>
+        <span
+          on:click={() => store.setScreenType('page')}
+          class="components-nav-header"
+          class:active={$store.currentFrontEndType === 'page'}>
+          Page
+        </span>
       </div>
       <div class="nav-items-container">
-        <ComponentsHierarchy components={$store.screens} />
+        {#if $store.currentFrontEndType === 'page'}
+          <ComponentsHierarchyChildren
+            components={$store.currentPreviewItem.props._children}
+            currentComponent={$store.currentComponentInfo}
+            onSelect={store.selectComponent}
+            level={-2} />
+        {/if}
+
+      </div>
+    </div>
+
+    <div class="components-list-container">
+
+      <div class="nav-group-header">
+
+        <span
+          on:click={() => store.setScreenType('screen')}
+          class="components-nav-header"
+          class:active={$store.currentFrontEndType === 'screen'}>
+          Screens
+        </span>
+
+        {#if $store.currentFrontEndType === 'screen'}
+          <div>
+            <button on:click={newComponent}>+</button>
+          </div>
+        {/if}
+      </div>
+      <div class="nav-items-container">
+        {#if $store.currentFrontEndType === 'screen'}
+          <ComponentsHierarchy screens={$store.screens} />
+        {/if}
       </div>
     </div>
 
   </div>
 
   <div class="preview-pane">
-    {#if $store.currentFrontEndType === 'screen'}
-      <CurrentItemPreview />
-    {:else if $store.currentFrontEndType === 'page'}
-      <PageView />
-    {/if}
+    <CurrentItemPreview />
   </div>
 
-  {#if $store.currentFrontEndType === 'screen'}
+  {#if $store.currentFrontEndType === 'screen' || $store.currentFrontEndType === 'page'}
     <div class="components-pane">
       <ComponentsPaneSwitcher />
     </div>
@@ -152,7 +183,7 @@
     margin-right: 5px;
   }
 
-  .nav-group-header > span:nth-child(2) {
+  .nav-group-header > span:nth-child(3) {
     margin-left: 5px;
     vertical-align: bottom;
     grid-column-start: title;
@@ -174,5 +205,9 @@
     text-transform: uppercase;
     font-weight: 400;
     color: #999;
+  }
+
+  .active {
+    color: #333;
   }
 </style>

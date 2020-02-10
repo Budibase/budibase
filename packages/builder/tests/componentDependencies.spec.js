@@ -22,20 +22,7 @@ describe("component dependencies", () => {
     )
   })
 
-  it("should include component that nests", () => {
-    const { components, screens } = componentsAndScreens()
-
-    const result = componentDependencies(
-      {},
-      screens,
-      components,
-      get([...components, ...screens], "budibase-components/Button")
-    )
-
-    expect(contains(result.dependantComponents, "ButtonGroup")).toBe(true)
-  })
-
-  it("should include components n page apbody", () => {
+  it("should include components in page apbody", () => {
     const { components, screens } = componentsAndScreens()
     const pages = {
       main: {

@@ -64,7 +64,8 @@ export const componentsAndScreens = () => ({
     },
 
     {
-      name: "ButtonGroup",
+      name: "Screen 1",
+      route: "",
       props: {
         _component: "budibase-components/div",
         width: 100,
@@ -99,3 +100,9 @@ export const componentsAndScreens = () => ({
     },
   ],
 })
+
+export const stripStandardProps = props => {
+  delete props._code
+  delete props._id
+  delete props._styles
+}

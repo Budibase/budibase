@@ -1,18 +1,39 @@
 import { JSDOM } from "jsdom"
 import { loadBudibase } from "../src/index"
 
-export const load = async props => {
-  const dom = new JSDOM(`<!DOCTYPE html><html><body></body><html>`)
-  autoAssignIds(props)
-  setAppDef(dom.window, props)
+export const load = async (page, screens = [], url = "/") => {
+  const dom = new JSDOM("<!DOCTYPE html><html><body></body><html>", {
+    url: `http://test${url}`,
+  })
+  autoAssignIds(page.props)
+  for (let s of screens) {
+    autoAssignIds(s.props)
+  }
+  setAppDef(dom.window, page, screens)
   const app = await loadBudibase({
     componentLibraries: allLibs(dom.window),
     window: dom.window,
     localStorage: createLocalStorage(),
-    props,
+    page,
+    screens,
     uiFunctions,
   })
   return { dom, app }
+}
+
+export const makePage = props => ({ props })
+export const makeScreen = (route, props) => ({ props, route })
+
+export const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+export const walkComponentTree = (node, action) => {
+  action(node)
+
+  if (node.children) {
+    for (let child of node.children) {
+      walkComponentTree(child, action)
+    }
+  }
 }
 
 // this happens for real by the builder...
@@ -29,10 +50,11 @@ const autoAssignIds = (props, count = 0) => {
   }
 }
 
-const setAppDef = (window, props) => {
+const setAppDef = (window, page, screens) => {
   window["##BUDIBASE_APPDEFINITION##"] = {
     componentLibraries: [],
-    props,
+    page,
+    screens,
     hierarchy: {},
     appRootPath: "",
   }
@@ -79,6 +101,8 @@ const maketestlib = window => ({
       }
     }
 
+    this.$destroy = () => opts.target.removeChild(node)
+
     this.$set = set
     this._element = node
     set(opts.props)
@@ -97,6 +121,8 @@ const maketestlib = window => ({
       }
     }
 
+    this.$destroy = () => opts.target.removeChild(node)
+
     this.$set = set
     this._element = node
     set(opts.props)
@@ -105,13 +131,13 @@ const maketestlib = window => ({
 })
 
 const uiFunctions = {
-  never_render: (render, parentContext) => {},
+  never_render: () => {},
 
-  always_render: (render, parentContext) => {
+  always_render: render => {
     render()
   },
 
-  three_clones: (render, parentContext) => {
+  three_clones: render => {
     for (let i = 0; i < 3; i++) {
       render()
     }

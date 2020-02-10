@@ -1,86 +1,17 @@
-import {
-  isString,
-  isUndefined,
-  find,
-  keys,
-  uniq,
-  some,
-  filter,
-  reduce,
-  cloneDeep,
-  includes,
-  last,
-} from "lodash/fp"
-import { types, expandComponentDefinition } from "./types"
+import { isString, isUndefined } from "lodash/fp"
+import { types } from "./types"
 import { assign } from "lodash"
-import { pipe } from "../../common/core"
-import { isRootComponent } from "./searchComponents"
-import { ensureShardNameIsInShardMap } from "../../../../core/src/indexing/sharding"
+import { uuid } from "../../builderStore/uuid"
 
-export const getInstanceProps = (componentInfo, props) => {
-  const finalProps = cloneDeep(componentInfo.fullProps)
-
-  for (let p in props) {
-    finalProps[p] = props[p]
-  }
-
-  return finalProps
-}
-
-export const getNewComponentInfo = (components, rootComponent, name) => {
-  const component = {
+export const getNewScreen = (components, rootComponentName, name) => {
+  const rootComponent = components.find(c => c.name === rootComponentName)
+  return {
     name: name || "",
     description: "",
-    props: {
-      _component: rootComponent,
-    },
-  }
-  return getComponentInfo(components, component)
-}
-
-export const getScreenInfo = (components, screen) => {
-  return getComponentInfo(components, screen)
-}
-
-export const getComponentInfo = (components, comp) => {
-  const targetComponent = isString(comp)
-    ? find(c => c.name === comp)(components)
-    : comp
-  let component
-  let subComponent
-  if (isRootComponent(targetComponent)) {
-    component = targetComponent
-  } else {
-    subComponent = targetComponent
-    component = find(
-      c =>
-        c.name ===
-        (subComponent.props
-          ? subComponent.props._component
-          : subComponent._component)
-    )(components)
-  }
-
-  const subComponentProps = subComponent ? subComponent.props : {}
-  const p = createProps(component, subComponentProps)
-  const rootProps = createProps(component)
-
-  const unsetProps = pipe(p.props, [
-    keys,
-    filter(k => !includes(k)(keys(subComponentProps)) && k !== "_component"),
-  ])
-
-  const fullProps = cloneDeep(p.props)
-  fullProps._component = targetComponent.name
-
-  return {
-    propsDefinition: expandComponentDefinition(component),
-    rootDefaultProps: rootProps.props,
-    unsetProps,
-    fullProps: fullProps,
-    errors: p.errors,
-    component: targetComponent,
-    rootComponent: component,
+    url: "",
+    _css: "",
+    uiFunctions: "",
+    props: createProps(rootComponent).props,
   }
 }
 
@@ -89,6 +20,9 @@ export const createProps = (componentDefinition, derivedFromProps) => {
 
   const props = {
     _component: componentDefinition.name,
+    _styles: { position: {}, layout: {} },
+    _id: uuid(),
+    _code: "",
   }
 
   const errors = []

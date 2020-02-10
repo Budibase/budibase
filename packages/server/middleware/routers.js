@@ -7,20 +7,19 @@ const send = require("koa-send")
 const {
   getPackageForBuilder,
   getComponents,
-  savePackage,
   getApps,
   saveScreen,
   renameScreen,
   deleteScreen,
+  savePagePackage,
   componentLibraryInfo,
+  listScreens,
 } = require("../utilities/builder")
 
 const builderPath = resolve(__dirname, "../builder")
 
 module.exports = (config, app) => {
   const router = new Router()
-
-  const prependSlash = path => (path.startsWith("/") ? path : `/${path}`)
 
   router
     .use(session(config, app))
@@ -95,7 +94,7 @@ module.exports = (config, app) => {
         await send(ctx, path, { root: builderPath })
       }
     })
-    .post("/:appname/api/authenticate", async (ctx, next) => {
+    .post("/:appname/api/authenticate", async ctx => {
       const user = await ctx.master.authenticate(
         ctx.sessionId,
         ctx.params.appname,
@@ -149,10 +148,6 @@ module.exports = (config, app) => {
       ctx.body = await getPackageForBuilder(config, ctx.params.appname)
       ctx.response.status = StatusCodes.OK
     })
-    .post("/_builder/api/:appname/appPackage", async ctx => {
-      ctx.body = await savePackage(config, ctx.params.appname, ctx.request.body)
-      ctx.response.status = StatusCodes.OK
-    })
     .get("/_builder/api/:appname/components", async ctx => {
       try {
         ctx.body = getComponents(config, ctx.params.appname, ctx.query.lib)
@@ -184,26 +179,55 @@ module.exports = (config, app) => {
       ctx.body = info.generators
       ctx.response.status = StatusCodes.OK
     })
-    .post("/_builder/api/:appname/screen", async ctx => {
-      await saveScreen(config, ctx.params.appname, ctx.request.body)
+    .post("/_builder/api/:appname/pages/:pageName", async ctx => {
+      await savePagePackage(
+        config,
+        ctx.params.appname,
+        ctx.params.pageName,
+        ctx.request.body
+      )
       ctx.response.status = StatusCodes.OK
     })
-    .patch("/_builder/api/:appname/screen", async ctx => {
+    .get("/_builder/api/:appname/pages/:pagename/screens", async ctx => {
+      ctx.body = await listScreens(
+        config,
+        ctx.params.appname,
+        ctx.params.pagename
+      )
+      ctx.response.status = StatusCodes.OK
+    })
+    .post("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
+      await saveScreen(
+        config,
+        ctx.params.appname,
+        ctx.params.pagename,
+        ctx.request.body
+      )
+      ctx.response.status = StatusCodes.OK
+    })
+    .patch("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
       await renameScreen(
         config,
         ctx.params.appname,
+        ctx.params.pagename,
         ctx.request.body.oldname,
         ctx.request.body.newname
       )
       ctx.response.status = StatusCodes.OK
     })
-    .delete("/_builder/api/:appname/screen/*", async ctx => {
+    .delete("/_builder/api/:appname/pages/:pagename/screen/*", async ctx => {
       const name = ctx.request.path.replace(
-        `/_builder/api/${ctx.params.appname}/screen/`,
+        `/_builder/api/${ctx.params.appname}/pages/${ctx.params.pagename}/screen/`,
         ""
       )
 
-      await deleteScreen(config, ctx.params.appname, decodeURI(name))
+      await deleteScreen(
+        config,
+        ctx.params.appname,
+        ctx.params.pagename,
+        decodeURI(name)
+      )
+
       ctx.response.status = StatusCodes.OK
     })
     .get("/:appname", async ctx => {

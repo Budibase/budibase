@@ -18,6 +18,15 @@
     <link rel='stylesheet' href='{{ @this }}'>
     {{ /each }}
 
+    {{ each(options.screenStyles) }}
+    <link rel='stylesheet' href='{{ @this }}'>
+    {{ /each }}
+
+    {{ if(options.pageStyle) }}
+    <link rel='stylesheet' href='{{ pageStyle }}'>
+    {{ /if }}
+
+
     <script src='{{ appRootPath }}/clientAppDefinition.js'></script>
     <script src='{{ appRootPath }}/budibase-client.js'></script>
     <script>

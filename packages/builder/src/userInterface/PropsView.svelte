@@ -5,25 +5,25 @@
   import PropControl from "./PropControl.svelte"
   import IconButton from "../common/IconButton.svelte"
 
-  export let componentInfo
+  export let component
   export let onPropChanged = () => {}
   export let components
 
   let errors = []
   let props = {}
-
   const props_to_ignore = ["_component", "_children", "_styles", "_code", "_id"]
 
   $: propDefs =
-    componentInfo &&
-    Object.entries(componentInfo).filter(
+    component &&
+    Object.entries(component).filter(
       ([name]) => !props_to_ignore.includes(name)
     )
 
   function find_type(prop_name) {
-    if (!componentInfo._component) return
-    return components.find(({ name }) => name === componentInfo._component)
-      .props[prop_name]
+    if (!component._component) return
+    return components.find(({ name }) => name === component._component).props[
+      prop_name
+    ]
   }
 
   let setProp = (name, value) => {
