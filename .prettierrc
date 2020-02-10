@@ -1,6 +1,6 @@
 {
   "tabWidth": 2,
-  "semi": true,
+  "semi": false,
   "singleQuote": false,
   "trailingComma": "es5",
   "plugins": ["prettier-plugin-svelte"],

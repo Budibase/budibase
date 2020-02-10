@@ -33,16 +33,13 @@
     bind(bindingPath, bindingFallbackValue, value);
 
   $: {
-
     const binding = getBinding(value);
-    bindingPath = binding.path
+    bindingPath = binding.path;
     bindingFallbackValue = binding.fallback
-
-    console.log({
-      bindingFallbackValue,
-      bindingPath,
-      value,
-    });
+      ? binding.fallback
+      : typeof value === "object"
+      ? ""
+      : value;
 
     const currentScreen = $store.screens.find(
       ({ name }) => name === $store.currentFrontEndItem.name
@@ -58,6 +55,7 @@
       value={bindingFallbackValue}
       on:change={e => {
         setBindingFallback(e.target.value);
+        onChanged(e.target.value);
       }} />
     <button on:click={() => (isOpen = !isOpen)}>
       <span
@@ -74,7 +72,7 @@
     <ul class="options">
       {#each Object.keys(stateBindings) as stateBinding}
         <li
-          style={`font-weight: ${stateBinding === bindingPath ? 'bold' : 'initial'}`}
+          style={stateBinding === bindingPath && 'font-weight: bold;'}
           on:click={() => {
             setBindingPath(stateBinding === bindingPath ? null : stateBinding);
           }}>
@@ -92,14 +90,6 @@
     border: none;
     border-radius: 5px;
     background: rgba(249, 249, 249, 1);
-
-    width: 30px;
-    height: 30px;
-    padding-bottom: 10px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
 
     font-size: 1.6rem;
     font-weight: 700;
@@ -129,13 +119,13 @@
   }
 
   li {
-    list-style-type: none;
     transition: 0.2s all;
+    list-style-type: none;
   }
 
   li:hover {
     cursor: pointer;
-    font-weight: 600;
+    font-weight: bold;
   }
 
   input {
@@ -144,22 +134,5 @@
     border-radius: 2px;
     opacity: 0.5;
     height: 40px;
-    /* display: block;
-    font-size: 14px;
-    font-family: sans-serif;
-    font-weight: 500;
-    color: #163057;
-    line-height: 1.3;
-    padding: 1em 2.6em 0.9em 1.4em;
-    /* width: 100%; */
-    /* max-width: 100%;
-    box-sizing: border-box;
-    margin: 0;
-    -moz-appearance: none;
-    -webkit-appearance: none;
-    appearance: none;
-    background: #fff;
-    border: 1px solid #ccc;
-    height: 50px; */
   }
 </style>
