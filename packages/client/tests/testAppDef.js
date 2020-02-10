@@ -26,6 +26,16 @@ export const makeScreen = (route, props) => ({ props, route })
 
 export const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
+export const walkComponentTree = (node, action) => {
+  action(node)
+
+  if (node.children) {
+    for (let child of node.children) {
+      walkComponentTree(child, action)
+    }
+  }
+}
+
 // this happens for real by the builder...
 // ..this only assigns _ids when missing
 const autoAssignIds = (props, count = 0) => {
@@ -91,6 +101,8 @@ const maketestlib = window => ({
       }
     }
 
+    this.$destroy = () => opts.target.removeChild(node)
+
     this.$set = set
     this._element = node
     set(opts.props)
@@ -108,6 +120,8 @@ const maketestlib = window => ({
         node.innerText = currentProps.text
       }
     }
+
+    this.$destroy = () => opts.target.removeChild(node)
 
     this.$set = set
     this._element = node

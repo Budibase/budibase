@@ -128,10 +128,12 @@ export const createApp = (
     return { getInitialiseParams, unsubscribe }
   }
 
+  let rootTreeNode
+
   const initialisePage = (page, target, urlPath) => {
     currentUrl = urlPath
 
-    const rootTreeNode = createTreeNode()
+    rootTreeNode = createTreeNode()
     const { getInitialiseParams } = initialiseChildrenParams(pageStore)
     const initChildParams = getInitialiseParams(true, rootTreeNode)
 
@@ -139,11 +141,11 @@ export const createApp = (
 
     return rootTreeNode
   }
-
   return {
     initialisePage,
     screenStore: () => currentScreenStore,
     pageStore: () => pageStore,
     routeTo: () => routeTo,
+    rootNode: () => rootTreeNode,
   }
 }

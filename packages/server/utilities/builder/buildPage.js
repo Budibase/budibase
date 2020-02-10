@@ -11,18 +11,16 @@ const {
 } = require("fs-extra")
 const { join, resolve, dirname } = require("path")
 const sqrl = require("squirrelly")
+const { convertCssToFiles } = require("./convertCssToFiles")
 
 module.exports = async (config, appname, pkg) => {
   const appPath = appPackageFolder(config, appname)
 
-  await buildClientAppDefinition(
-    config,
-    appname,
-    pkg,
-    appPath
-  )
+  await convertCssToFiles(publicPath(appPath, pkg.pageName), pkg)
 
-  await buildIndexHtml(config, appname, appPath, pkg.pageName, pkg.page)
+  await buildIndexHtml(config, appname, appPath, pkg)
+
+  await buildClientAppDefinition(config, appname, pkg, appPath)
 
   await copyClientLib(appPath, pkg.pageName)
 }
@@ -35,19 +33,17 @@ const copyClientLib = async (appPath, pageName) => {
   const sourcepath = require.resolve("@budibase/client")
   const destPath = join(publicPath(appPath, pageName), "budibase-client.js")
 
-  await copyFile(
-    sourcepath, 
-    destPath, 
-    constants.COPYFILE_FICLONE)
+  await copyFile(sourcepath, destPath, constants.COPYFILE_FICLONE)
 
   await copyFile(
     sourcepath + ".map",
     destPath + ".map",
-    constants.COPYFILE_FICLONE)
+    constants.COPYFILE_FICLONE
+  )
 }
 
-const buildIndexHtml = async (config, appname, appPath, pageName, page) => {
-  const appPublicPath = publicPath(appPath, pageName)
+const buildIndexHtml = async (config, appname, appPath, pkg) => {
+  const appPublicPath = publicPath(appPath, pkg.pageName)
   const appRootPath = rootPath(config, appname)
 
   const stylesheetUrl = s =>
@@ -56,10 +52,11 @@ const buildIndexHtml = async (config, appname, appPath, pageName, page) => {
       : `/${rootPath(config, appname)}/${s}`
 
   const templateObj = {
-    title: page.title || "Budibase App",
-    favicon: `${appRootPath}/${page.favicon ||
-      "/_shared/favicon.png"}`,
-    stylesheets: (page.stylesheets || []).map(stylesheetUrl),
+    title: pkg.page.title || "Budibase App",
+    favicon: `${appRootPath}/${pkg.page.favicon || "/_shared/favicon.png"}`,
+    stylesheets: (pkg.page.stylesheets || []).map(stylesheetUrl),
+    screenStyles: pkg.screens.filter(s => s._css).map(s => s._css),
+    pageStyle: pkg.page._css,
     appRootPath,
   }
 
@@ -75,11 +72,7 @@ const buildIndexHtml = async (config, appname, appPath, pageName, page) => {
   await writeFile(indexHtmlPath, indexHtml, { flag: "w+" })
 }
 
-const buildClientAppDefinition = async (
-  config,
-  appname,
-  pkg
-) => {
+const buildClientAppDefinition = async (config, appname, pkg) => {
   const appPath = appPackageFolder(config, appname)
   const appPublicPath = publicPath(appPath, pkg.pageName)
   const appRootPath = rootPath(config, appname)
@@ -118,11 +111,22 @@ const buildClientAppDefinition = async (
 
   const filename = join(appPublicPath, "clientAppDefinition.js")
 
+  if (pkg.page._css) {
+    delete pkg.page._css
+  }
+
+  for (let screen of pkg.screens) {
+    if (screen._css) {
+      delete pkg.page._css
+    }
+  }
+
   const clientAppDefObj = {
     hierarchy: pkg.appDefinition.hierarchy,
     componentLibraries: componentLibraries,
     appRootPath: appRootPath,
-    props: pkg.props,
+    page: pkg.page,
+    screens: pkg.screens,
   }
 
   await writeFile(
