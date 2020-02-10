@@ -29,14 +29,17 @@
     [map(s => `<link rel="stylesheet" href="${s}"/>`), join("\n")]
   )
 
-  $: appDefinition = {
+  $: frontendDefinition = {
     componentLibraries: $store.loadLibraryUrls(),
-    props:
-      $store.currentPreviewItem &&
-      transform_component($store.currentPreviewItem, true),
-    hierarchy: $store.hierarchy,
+    page: $store.currentPreviewItem,
+    screens: [],
     appRootPath: "",
   }
+
+  $: backendDefinition = {
+    hierarchy: $store.hierarchy,
+  }
+
 </script>
 
 <div class="component-container">
@@ -55,8 +58,9 @@
       }
     <\/style>
     <\script>
-        window["##BUDIBASE_APPDEFINITION##"] = ${JSON.stringify(appDefinition)};
-        window["##BUDIBASE_UIFUNCTIONS"] = ${$store.currentScreenFunctions};
+        window["##BUDIBASE_FRONTEND_DEFINITION##"] = ${JSON.stringify(frontendDefinition)};
+        window["##BUDIBASE_BACKEND_DEFINITION##"] = ${JSON.stringify(backendDefinition)};
+        window["##BUDIBASE_FRONTEND_FUNCTIONS##"] = ${$store.currentScreenFunctions};
 
         import('/_builder/budibase-client.esm.mjs')
         .then(module => {

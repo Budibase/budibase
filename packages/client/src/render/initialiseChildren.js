@@ -16,7 +16,7 @@ export const initialiseChildren = initialiseOpts => (
     store,
     componentLibraries,
     treeNode,
-    appDefinition,
+    frontendDefinition,
     hydrate,
     onScreenSlotRendered,
   } = initialiseOpts
@@ -43,7 +43,7 @@ export const initialiseChildren = initialiseOpts => (
       store,
       childProps,
       coreApi,
-      appDefinition.appRootPath
+      frontendDefinition.appRootPath
     )
 
     const componentConstructor = componentLibraries[libName][componentName]

@@ -2,8 +2,60 @@ var app = (function (exports) {
     'use strict';
 
     function noop() { }
+    function run(fn) {
+        return fn();
+    }
+    function run_all(fns) {
+        fns.forEach(run);
+    }
     function safe_not_equal(a, b) {
         return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
+    }
+    function destroy_component(component, detaching) {
+        if (component.$$.fragment) {
+            run_all(component.$$.on_destroy);
+            component.$$.fragment.d(detaching);
+            // TODO null out other refs, including component.$$ (but need to
+            // preserve final state?)
+            component.$$.on_destroy = component.$$.fragment = null;
+            component.$$.ctx = {};
+        }
+    }
+    let SvelteElement;
+    if (typeof HTMLElement !== 'undefined') {
+        SvelteElement = class extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+            }
+            connectedCallback() {
+                // @ts-ignore todo: improve typings
+                for (const key in this.$$.slotted) {
+                    // @ts-ignore todo: improve typings
+                    this.appendChild(this.$$.slotted[key]);
+                }
+            }
+            attributeChangedCallback(attr, _oldValue, newValue) {
+                this[attr] = newValue;
+            }
+            $destroy() {
+                destroy_component(this, 1);
+                this.$destroy = noop;
+            }
+            $on(type, callback) {
+                // TODO should this delegate to addEventListener?
+                const callbacks = (this.$$.callbacks[type] || (this.$$.callbacks[type] = []));
+                callbacks.push(callback);
+                return () => {
+                    const index = callbacks.indexOf(callback);
+                    if (index !== -1)
+                        callbacks.splice(index, 1);
+                };
+            }
+            $set() {
+                // overridden by instance, if it has props
+            }
+        };
     }
 
     const subscriber_queue = [];
@@ -58,13 +110,13 @@ var app = (function (exports) {
         return { set, update, subscribe };
     }
 
-    const createCoreApp = (appDefinition, user) => {
+    const createCoreApp = (backendDefinition, user) => {
       const app = {
         datastore: null,
         crypto: null,
         publish: () => {},
-        hierarchy: appDefinition.hierarchy,
-        actions: appDefinition.actions,
+        hierarchy: backendDefinition.hierarchy,
+        actions: backendDefinition.actions,
         user,
       };
 
@@ -1349,17 +1401,48 @@ var app = (function (exports) {
 
     var randomByteBrowser = randomByte;
 
-    var format_browser = function (random, alphabet, size) {
+    /**
+     * Secure random string generator with custom alphabet.
+     *
+     * Alphabet must contain 256 symbols or less. Otherwise, the generator
+     * will not be secure.
+     *
+     * @param {generator} random The random bytes generator.
+     * @param {string} alphabet Symbols to be used in new random string.
+     * @param {size} size The number of symbols in new random string.
+     *
+     * @return {string} Random string.
+     *
+     * @example
+     * const format = require('nanoid/format')
+     *
+     * function random (size) {
+     *   const result = []
+     *   for (let i = 0; i < size; i++) {
+     *     result.push(randomByte())
+     *   }
+     *   return result
+     * }
+     *
+     * format(random, "abcdef", 5) //=> "fbaef"
+     *
+     * @name format
+     * @function
+     */
+    var format = function (random, alphabet, size) {
       var mask = (2 << Math.log(alphabet.length - 1) / Math.LN2) - 1;
-      var step = -~(1.6 * mask * size / alphabet.length);
-      var id = '';
+      var step = Math.ceil(1.6 * mask * size / alphabet.length);
+      size = +size;
 
+      var id = '';
       while (true) {
-        var i = step;
-        var bytes = random(i);
-        while (i--) {
-          id += alphabet[bytes[i] & mask] || '';
-          if (id.length === +size) return id
+        var bytes = random(step);
+        for (var i = 0; i < step; i++) {
+          var byte = bytes[i] & mask;
+          if (alphabet[byte]) {
+            id += alphabet[byte];
+            if (id.length === size) return id
+          }
         }
       }
     };
@@ -1371,7 +1454,7 @@ var app = (function (exports) {
         var str = '';
 
         while (!done) {
-            str = str + format_browser(randomByteBrowser, alphabet_1.get(), 1);
+            str = str + format(randomByteBrowser, alphabet_1.get(), 1);
             done = number < (Math.pow(16, loopCounter + 1 ) );
             loopCounter++;
         }
@@ -21567,8 +21650,8 @@ var app = (function (exports) {
       return node
     };
 
-    const createCoreApi = (appDefinition, user) => {
-      const app = createCoreApp(appDefinition, user);
+    const createCoreApi = (backendDefinition, user) => {
+      const app = createCoreApp(backendDefinition, user);
 
       return {
         recordApi: {
@@ -22186,10 +22269,46 @@ var app = (function (exports) {
       parentNode: null,
       children: [],
       component: null,
-      unsubscribe: () => { },
+      unsubscribe: () => {},
+      get destroy() {
+        const node = this;
+        return () => {
+          if (node.unsubscribe) node.unsubscribe();
+          if (node.component && node.component.$destroy) node.component.$destroy();
+          if (node.children) {
+            for (let child of node.children) {
+              child.destroy();
+            }
+          }
+        }
+      },
     });
 
-    const _initialiseChildren = initialiseOpts => (
+    const screenSlotComponent = window => {
+      return function(opts) {
+        const node = window.document.createElement("DIV");
+        const $set = props => {
+          props._bb.hydrateChildren(props._children, node);
+        };
+        const $destroy = () => {
+          if (opts.target && node) opts.target.removeChild(node);
+        };
+        this.$set = $set;
+        this.$destroy = $destroy;
+        opts.target.appendChild(node);
+      }
+    };
+
+    const builtinLibName = "##builtin";
+
+    const isScreenSlot = componentName =>
+      componentName === "##builtin/screenslot";
+
+    const builtins = window => ({
+      screenslot: screenSlotComponent(window),
+    });
+
+    const initialiseChildren = initialiseOpts => (
       childrenProps,
       htmlElement,
       anchor = null
@@ -22201,14 +22320,13 @@ var app = (function (exports) {
         store,
         componentLibraries,
         treeNode,
-        appDefinition,
-        document,
+        frontendDefinition,
         hydrate,
+        onScreenSlotRendered,
       } = initialiseOpts;
 
       for (let childNode of treeNode.children) {
-        if (childNode.unsubscribe) childNode.unsubscribe();
-        if (childNode.component) childNode.component.$destroy();
+        childNode.destroy();
       }
 
       if (hydrate) {
@@ -22229,7 +22347,7 @@ var app = (function (exports) {
           store,
           childProps,
           coreApi,
-          appDefinition.appRootPath
+          frontendDefinition.appRootPath
         );
 
         const componentConstructor = componentLibraries[libName][componentName];
@@ -22244,6 +22362,15 @@ var app = (function (exports) {
           initialProps,
           bb,
         });
+
+        if (
+          onScreenSlotRendered &&
+          isScreenSlot(childProps._component) &&
+          renderedComponentsThisIteration.length > 0
+        ) {
+          // assuming there is only ever one screen slot
+          onScreenSlotRendered(renderedComponentsThisIteration[0]);
+        }
 
         for (let comp of renderedComponentsThisIteration) {
           comp.unsubscribe = bind(comp.component);
@@ -22265,29 +22392,123 @@ var app = (function (exports) {
       return { libName, componentName }
     };
 
+    function regexparam (str, loose) {
+    	if (str instanceof RegExp) return { keys:false, pattern:str };
+    	var c, o, tmp, ext, keys=[], pattern='', arr = str.split('/');
+    	arr[0] || arr.shift();
+
+    	while (tmp = arr.shift()) {
+    		c = tmp[0];
+    		if (c === '*') {
+    			keys.push('wild');
+    			pattern += '/(.*)';
+    		} else if (c === ':') {
+    			o = tmp.indexOf('?', 1);
+    			ext = tmp.indexOf('.', 1);
+    			keys.push( tmp.substring(1, !!~o ? o : !!~ext ? ext : tmp.length) );
+    			pattern += !!~o && !~ext ? '(?:/([^/]+?))?' : '/([^/]+?)';
+    			if (!!~ext) pattern += (!!~o ? '?' : '') + '\\' + tmp.substring(ext);
+    		} else {
+    			pattern += '/' + tmp;
+    		}
+    	}
+
+    	return {
+    		keys: keys,
+    		pattern: new RegExp('^' + pattern + (loose ? '(?=$|\/)' : '\/?$'), 'i')
+    	};
+    }
+
+    const screenRouter = (screens, onScreenSelected) => {
+      const routes = screens.map(s => s.route);
+      let fallback = routes.findIndex(([p]) => p === "*");
+      if (fallback < 0) fallback = 0;
+
+      let current;
+
+      function route(url) {
+        const _url = url.state || url;
+        current = routes.findIndex(
+          p => p !== "*" && new RegExp("^" + p + "$").test(_url)
+        );
+
+        const params = {};
+
+        if (current === -1) {
+          routes.forEach(([p], i) => {
+            const pm = regexparam(p);
+            const matches = pm.pattern.exec(_url);
+
+            if (!matches) return
+
+            let j = 0;
+            while (j < pm.keys.length) {
+              params[pm.keys[j]] = matches[++j] || null;
+            }
+
+            current = i;
+          });
+        }
+
+        const storeInitial = {};
+        const store = writable(storeInitial);
+
+        if (current !== -1) {
+          onScreenSelected(screens[current], store, _url);
+        } else if (fallback) {
+          onScreenSelected(screens[fallback], store, _url);
+        }
+
+        !url.state && history.pushState(_url, null, _url);
+      }
+
+      function click(e) {
+        const x = e.target.closest("a");
+        const y = x && x.getAttribute("href");
+
+        if (
+          e.ctrlKey ||
+          e.metaKey ||
+          e.altKey ||
+          e.shiftKey ||
+          e.button ||
+          e.defaultPrevented
+        )
+          return
+
+        if (!y || x.target || x.host !== location.host) return
+
+        e.preventDefault();
+        route(y);
+      }
+
+      addEventListener("popstate", route);
+      addEventListener("pushstate", route);
+      addEventListener("click", click);
+
+      return route
+    };
+
     const createApp = (
       document,
       componentLibraries,
-      appDefinition,
+      frontendDefinition,
+      backendDefinition,
       user,
-      uiFunctions
+      uiFunctions,
+      screens
     ) => {
-      const coreApi = createCoreApi(appDefinition, user);
-      appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(
-        appDefinition.hierarchy
+      const coreApi = createCoreApi(backendDefinition, user);
+      backendDefinition.hierarchy = coreApi.templateApi.constructHierarchy(
+        backendDefinition.hierarchy
       );
-      const store = writable({
+      const pageStore = writable({
         _bbuser: user,
       });
 
-      let globalState = null;
-      store.subscribe(s => {
-        globalState = s;
-      });
-
       const relativeUrl = url =>
-        appDefinition.appRootPath
-          ? appDefinition.appRootPath + "/" + trimSlash(url)
+        frontendDefinition.appRootPath
+          ? frontendDefinition.appRootPath + "/" + trimSlash(url)
           : url;
 
       const apiCall = method => (url, body) =>
@@ -22313,58 +22534,115 @@ var app = (function (exports) {
         if (isFunction(event)) event(context);
       };
 
-      const initialiseChildrenParams = (hydrate, treeNode) => ({
-        bb,
-        coreApi,
-        store,
-        document,
-        componentLibraries,
-        appDefinition,
-        hydrate,
-        uiFunctions,
-        treeNode,
-      });
+      let routeTo;
+      let currentScreenStore;
+      let currentScreenUbsubscribe;
+      let currentUrl;
 
-      const bb = (treeNode, componentProps) => ({
-        hydrateChildren: _initialiseChildren(
-          initialiseChildrenParams(true, treeNode)
-        ),
-        appendChildren: _initialiseChildren(
-          initialiseChildrenParams(false, treeNode)
-        ),
-        insertChildren: (props, htmlElement, anchor) =>
-          _initialiseChildren(initialiseChildrenParams(false, treeNode))(
-            props,
-            htmlElement,
-            anchor
-          ),
-        context: treeNode.context,
-        props: componentProps,
-        call: safeCallEvent,
-        setStateFromBinding: (binding, value) =>
-          setStateFromBinding(store, binding, value),
-        setState: (path, value) => setState(store, path, value),
-        getStateOrValue: (prop, currentContext) =>
-          getStateOrValue(globalState, prop, currentContext),
-        store,
-        relativeUrl,
-        api,
-        isBound,
-        parent,
-      });
+      const onScreenSlotRendered = screenSlotNode => {
+        const onScreenSelected = (screen, store, url) => {
+          const { getInitialiseParams, unsubscribe } = initialiseChildrenParams(
+            store
+          );
+          const initialiseChildParams = getInitialiseParams(true, screenSlotNode);
+          initialiseChildren(initialiseChildParams)(
+            [screen.props],
+            screenSlotNode.rootElement
+          );
+          if (currentScreenUbsubscribe) currentScreenUbsubscribe();
+          currentScreenUbsubscribe = unsubscribe;
+          currentScreenStore = store;
+          currentUrl = url;
+        };
 
-      return bb(createTreeNode())
+        routeTo = screenRouter(screens, onScreenSelected);
+        routeTo(currentUrl || window.location.pathname);
+      };
+
+      const initialiseChildrenParams = store => {
+        let currentState = null;
+        const unsubscribe = store.subscribe(s => {
+          currentState = s;
+        });
+
+        const getInitialiseParams = (hydrate, treeNode) => ({
+          bb: getBbClientApi,
+          coreApi,
+          store,
+          document,
+          componentLibraries,
+          frontendDefinition,
+          hydrate,
+          uiFunctions,
+          treeNode,
+          onScreenSlotRendered,
+        });
+
+        const getBbClientApi = (treeNode, componentProps) => {
+          return {
+            hydrateChildren: initialiseChildren(
+              getInitialiseParams(true, treeNode)
+            ),
+            appendChildren: initialiseChildren(
+              getInitialiseParams(false, treeNode)
+            ),
+            insertChildren: (props, htmlElement, anchor) =>
+              initialiseChildren(getInitialiseParams(false, treeNode))(
+                props,
+                htmlElement,
+                anchor
+              ),
+            context: treeNode.context,
+            props: componentProps,
+            call: safeCallEvent,
+            setStateFromBinding: (binding, value) =>
+              setStateFromBinding(store, binding, value),
+            setState: (path, value) => setState(store, path, value),
+            getStateOrValue: (prop, currentContext) =>
+              getStateOrValue(currentState, prop, currentContext),
+            store,
+            relativeUrl,
+            api,
+            isBound,
+            parent,
+          }
+        };
+        return { getInitialiseParams, unsubscribe }
+      };
+
+      let rootTreeNode;
+
+      const initialisePage = (page, target, urlPath) => {
+        currentUrl = urlPath;
+
+        rootTreeNode = createTreeNode();
+        const { getInitialiseParams } = initialiseChildrenParams(pageStore);
+        const initChildParams = getInitialiseParams(true, rootTreeNode);
+
+        initialiseChildren(initChildParams)([page.props], target);
+
+        return rootTreeNode
+      };
+      return {
+        initialisePage,
+        screenStore: () => currentScreenStore,
+        pageStore: () => pageStore,
+        routeTo: () => routeTo,
+        rootNode: () => rootTreeNode,
+      }
     };
 
     const loadBudibase = async ({
       componentLibraries,
-      props,
+      page,
+      screens,
       window,
       localStorage,
       uiFunctions,
     }) => {
-      const appDefinition = window["##BUDIBASE_APPDEFINITION##"];
-      const uiFunctionsFromWindow = window["##BUDIBASE_APPDEFINITION##"];
+      const backendDefinition = window["##BUDIBASE_BACKEND_DEFINITION##"];
+      const frontendDefinition = window["##BUDIBASE_FRONTEND_DEFINITION##"];
+      const uiFunctionsFromWindow = window["##BUDIBASE_FRONTEND_FUNCTIONS##"];
       uiFunctions = uiFunctionsFromWindow || uiFunctions;
 
       const userFromStorage = localStorage.getItem("budibase:user");
@@ -22378,35 +22656,54 @@ var app = (function (exports) {
             temp: false,
           };
 
+      const rootPath =
+        frontendDefinition.appRootPath === ""
+          ? ""
+          : "/" + trimSlash(frontendDefinition.appRootPath);
+
       if (!componentLibraries) {
-        const rootPath =
-          appDefinition.appRootPath === ""
-            ? ""
-            : "/" + trimSlash(appDefinition.appRootPath);
+        
         const componentLibraryUrl = lib => rootPath + "/" + trimSlash(lib);
         componentLibraries = {};
 
-        for (let lib of appDefinition.componentLibraries) {
+        for (let lib of frontendDefinition.componentLibraries) {
           componentLibraries[lib.libName] = await import(
             componentLibraryUrl(lib.importPath)
           );
         }
       }
 
-      if (!props) {
-        props = appDefinition.props;
+      componentLibraries[builtinLibName] = builtins(window);
+
+      if (!page) {
+        page = frontendDefinition.page;
       }
 
-      const app = createApp(
+      if (!screens) {
+        screens = frontendDefinition.screens;
+      }
+
+      const { initialisePage, screenStore, pageStore, routeTo, rootNode } = createApp(
         window.document,
         componentLibraries,
-        appDefinition,
+        frontendDefinition,
+        backendDefinition,
         user,
-        uiFunctions || {}
+        uiFunctions || {},
+        screens
       );
-      app.hydrateChildren([props], window.document.body);
 
-      return app
+      const route = window.location 
+                    ? window.location.pathname.replace(rootPath, "")
+                    : "";
+
+      return {
+        rootNode: initialisePage(page, window.document.body, route),
+        screenStore,
+        pageStore,
+        routeTo,
+        rootNode
+      }
     };
 
     if (window) {

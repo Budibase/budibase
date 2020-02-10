@@ -110,17 +110,17 @@ var app = (function (exports) {
         return { set, update, subscribe };
     }
 
-    const createCoreApp = (appDefinition, user) => {
-        const app = {
-            datastore: null,
-            crypto:null,
-            publish: () => {},
-            hierarchy: appDefinition.hierarchy,
-            actions: appDefinition.actions,
-            user
-        };
+    const createCoreApp = (backendDefinition, user) => {
+      const app = {
+        datastore: null,
+        crypto: null,
+        publish: () => {},
+        hierarchy: backendDefinition.hierarchy,
+        actions: backendDefinition.actions,
+        user,
+      };
 
-        return app;
+      return app
     };
 
     var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
@@ -18697,16 +18697,13 @@ var app = (function (exports) {
     var lodash_13 = lodash.merge;
     var lodash_14 = lodash.assign;
 
-    const commonPlus = extra => fp_6(['onBegin', 'onComplete', 'onError'])(extra);
+    const commonPlus = extra => fp_6(["onBegin", "onComplete", "onError"])(extra);
 
     const common = () => commonPlus([]);
 
     const _events = {
       recordApi: {
-        save: commonPlus([
-          'onInvalid',
-          'onRecordUpdated',
-          'onRecordCreated']),
+        save: commonPlus(["onInvalid", "onRecordUpdated", "onRecordCreated"]),
         delete: common(),
         getContext: common(),
         getNew: common(),
@@ -18765,80 +18762,77 @@ var app = (function (exports) {
       for (const methodKey in _events[areaKey]) {
         _events[areaKey][methodKey] = fp_7((obj, s) => {
           obj[s] = makeEvent(areaKey, methodKey, s);
-          return obj;
-        },
-        {})(_events[areaKey][methodKey]);
+          return obj
+        }, {})(_events[areaKey][methodKey]);
       }
     }
-
 
     for (const areaKey in _events) {
       for (const methodKey in _events[areaKey]) {
         for (const name in _events[areaKey][methodKey]) {
-          _eventsList.push(
-            _events[areaKey][methodKey][name],
-          );
+          _eventsList.push(_events[areaKey][methodKey][name]);
         }
       }
     }
-
 
     const events = _events;
 
     class BadRequestError extends Error {
-        constructor(message) {
-            super(message);
-            this.httpStatusCode = 400;
-        }
+      constructor(message) {
+        super(message);
+        this.httpStatusCode = 400;
+      }
     }
 
     class UnauthorisedError extends Error {
-        constructor(message) {
-            super(message);
-            this.httpStatusCode = 401;
-        }
+      constructor(message) {
+        super(message);
+        this.httpStatusCode = 401;
+      }
     }
 
-    const apiWrapperSync = (app, eventNamespace, isAuthorized, eventContext, func, ...params) => {
+    const apiWrapperSync = (
+      app,
+      eventNamespace,
+      isAuthorized,
+      eventContext,
+      func,
+      ...params
+    ) => {
       pushCallStack(app, eventNamespace);
 
       if (!isAuthorized(app)) {
         handleNotAuthorized(app, eventContext, eventNamespace);
-        return;
+        return
       }
 
       const startDate = Date.now();
-      const elapsed = () => (Date.now() - startDate);
+      const elapsed = () => Date.now() - startDate;
 
       try {
-        app.publish(
-          eventNamespace.onBegin,
-          eventContext,
-        );
+        app.publish(eventNamespace.onBegin, eventContext);
 
         const result = func(...params);
 
         publishComplete(app, eventContext, eventNamespace, elapsed, result);
-        return result;
+        return result
       } catch (error) {
         publishError(app, eventContext, eventNamespace, elapsed, error);
-        throw error;
+        throw error
       }
     };
 
     const handleNotAuthorized = (app, eventContext, eventNamespace) => {
       const err = new UnauthorisedError(`Unauthorized: ${eventNamespace}`);
       publishError(app, eventContext, eventNamespace, () => 0, err);
-      throw err;
+      throw err
     };
 
     const pushCallStack = (app, eventNamespace, seedCallId) => {
       const callId = shortid_1();
 
       const createCallStack = () => ({
-        seedCallId: !fp_2(seedCallId)
-          ? seedCallId
-          : callId,
+        seedCallId: !fp_2(seedCallId) ? seedCallId : callId,
         threadCallId: callId,
         stack: [],
       });
@@ -18853,34 +18847,40 @@ var app = (function (exports) {
       });
     };
 
-    const popCallStack = (app) => {
+    const popCallStack = app => {
       app.calls.stack.pop();
       if (app.calls.stack.length === 0) {
         delete app.calls;
       }
     };
 
-    const publishError = async (app, eventContext, eventNamespace, elapsed, err) => {
+    const publishError = async (
+      app,
+      eventContext,
+      eventNamespace,
+      elapsed,
+      err
+    ) => {
       const ctx = fp_9(eventContext);
       ctx.error = err;
       ctx.elapsed = elapsed();
-      await app.publish(
-        eventNamespace.onError,
-        ctx,
-      );
+      await app.publish(eventNamespace.onError, ctx);
       popCallStack(app);
     };
 
-    const publishComplete = async (app, eventContext, eventNamespace, elapsed, result) => {
+    const publishComplete = async (
+      app,
+      eventContext,
+      eventNamespace,
+      elapsed,
+      result
+    ) => {
       const endcontext = fp_9(eventContext);
       endcontext.result = result;
       endcontext.elapsed = elapsed();
-      await app.publish(
-        eventNamespace.onComplete,
-        endcontext,
-      );
+      await app.publish(eventNamespace.onComplete, endcontext);
       popCallStack(app);
-      return result;
+      return result
     };
 
     var global$1 = (typeof global !== "undefined" ? global :
@@ -20495,89 +20495,91 @@ var app = (function (exports) {
     // this is the pipe function
     const $ = (arg, funcs) => $$(...funcs)(arg);
 
-    const keySep = '/';
+    const keySep = "/";
     const trimKeySep = str => lodash_10(str, keySep);
     const splitByKeySep = str => fp_3(keySep)(str);
-    const safeKey = key => lodash_12(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
+    const safeKey = key =>
+      lodash_12(`${keySep}${trimKeySep(key)}`, `${keySep}${keySep}`, keySep);
     const joinKey = (...strs) => {
-      const paramsOrArray = strs.length === 1 & fp_11(strs[0])
-        ? strs[0] : strs;
+      const paramsOrArray = (strs.length === 1) & fp_11(strs[0]) ? strs[0] : strs;
       return $(paramsOrArray, [
-        fp_13(s => !fp_2(s) 
-                    && !fp_29(s) 
-                    && s.toString().length > 0),
+        fp_13(s => !fp_2(s) && !fp_29(s) && s.toString().length > 0),
         fp_18(keySep),
-        safeKey
-      ]);
+        safeKey,
+      ])
     };
     const splitKey = $$(trimKeySep, splitByKeySep);
 
     const configFolder = `${keySep}.config`;
-    const fieldDefinitions = joinKey(configFolder, 'fields.json');
-    const templateDefinitions = joinKey(configFolder, 'templates.json');
-    const appDefinitionFile = joinKey(configFolder, 'appDefinition.json');
+    const fieldDefinitions = joinKey(configFolder, "fields.json");
+    const templateDefinitions = joinKey(configFolder, "templates.json");
+    const appDefinitionFile = joinKey(configFolder, "appDefinition.json");
 
     const not = func => val => !func(val);
     const isDefined = not(fp_2);
     const isNonNull = not(fp_29);
     const isNotNaN = not(fp_36);
 
-    const allTrue = (...funcArgs) => val => fp_7(
-      (result, conditionFunc) => (fp_29(result) || result == true) && conditionFunc(val),
-      null)(funcArgs);
+    const allTrue = (...funcArgs) => val =>
+      fp_7(
+        (result, conditionFunc) =>
+          (fp_29(result) || result == true) && conditionFunc(val),
+        null
+      )(funcArgs);
 
     const isSomething = allTrue(isDefined, isNonNull, isNotNaN);
     const isNothing = not(isSomething);
 
     const none = predicate => collection => !fp_10(predicate)(collection);
 
-    const all = predicate => collection => none(v => !predicate(v))(collection);
+    const all = predicate => collection =>
+      none(v => !predicate(v))(collection);
 
     const isNotEmpty = ob => !fp_16(ob);
     const isNonEmptyString = allTrue(fp_27, isNotEmpty);
     const tryOr = failFunc => (func, ...args) => {
       try {
-        return func.apply(null, ...args);
+        return func.apply(null, ...args)
       } catch (_) {
-        return failFunc();
+        return failFunc()
       }
     };
-    const causesException = (func) => {
+    const causesException = func => {
       try {
         func();
-        return false;
+        return false
       } catch (e) {
-        return true;
+        return true
       }
     };
 
     const executesWithoutException = func => !causesException(func);
 
-    const handleErrorWith = returnValInError => tryOr(fp_21(returnValInError));
+    const handleErrorWith = returnValInError =>
+      tryOr(fp_21(returnValInError));
 
     const handleErrorWithUndefined = handleErrorWith(undefined);
 
-    const switchCase = (...cases) => (value) => {
+    const switchCase = (...cases) => value => {
       const nextCase = () => lodash_2(cases)[0](value);
       const nextResult = () => lodash_2(cases)[1](value);
 
-      if (fp_16(cases)) return; // undefined
-      if (nextCase() === true) return nextResult();
-      return switchCase(...lodash_5(cases))(value);
+      if (fp_16(cases)) return // undefined
+      if (nextCase() === true) return nextResult()
+      return switchCase(...lodash_5(cases))(value)
     };
     const isOneOf = (...vals) => val => fp_19(val)(vals);
     const defaultCase = fp_21(true);
 
-    const isSafeInteger = n => fp_37(n)
-        && n <= Number.MAX_SAFE_INTEGER
-        && n >= 0 - Number.MAX_SAFE_INTEGER;
+    const isSafeInteger = n =>
+      fp_37(n) &&
+      n <= Number.MAX_SAFE_INTEGER &&
+      n >= 0 - Number.MAX_SAFE_INTEGER;
 
-    const toDateOrNull = s => (fp_29(s) ? null
-      : fp_32(s) ? s : new Date(s));
-    const toBoolOrNull = s => (fp_29(s) ? null
-      : s === 'true' || s === true);
-    const toNumberOrNull = s => (fp_29(s) ? null
-      : fp_38(s));
+    const toDateOrNull = s =>
+      fp_29(s) ? null : fp_32(s) ? s : new Date(s);
+    const toBoolOrNull = s => (fp_29(s) ? null : s === "true" || s === true);
+    const toNumberOrNull = s => (fp_29(s) ? null : fp_38(s));
 
     const isArrayOfString = opts => fp_11(opts) && all(fp_27)(opts);
 
@@ -20744,128 +20746,178 @@ var app = (function (exports) {
 
     const compileMap = index => compileCode(index.map);
 
-    const indexTypes = { reference: 'reference', ancestor: 'ancestor' };
+    const indexTypes = { reference: "reference", ancestor: "ancestor" };
 
     const indexRuleSet = [
-      makerule('map', 'index has no map function',
-        index => isNonEmptyString(index.map)),
-      makerule('map', "index's map function does not compile",
-        index => !isNonEmptyString(index.map)
-                    || executesWithoutException(() => compileMap(index))),
-      makerule('filter', "index's filter function does not compile",
-        index => !isNonEmptyString(index.filter)
-                    || executesWithoutException(() => compileFilter(index))),
-      makerule('name', 'must declare a name for index',
-        index => isNonEmptyString(index.name)),
-      makerule('name', 'there is a duplicate named index on this node',
-        index => fp_16(index.name)
-                    || fp_17('name')(index.parent().indexes)[index.name] === 1),
-      makerule('indexType', 'reference index may only exist on a record node',
-        index => isRecord(index.parent())
-                      || index.indexType !== indexTypes.reference),
-      makerule('indexType', `index type must be one of: ${fp_18(', ')(fp_14(indexTypes))}`,
-        index => fp_19(index.indexType)(fp_14(indexTypes))),
+      makerule("map", "index has no map function", index =>
+        isNonEmptyString(index.map)
+      ),
+      makerule(
+        "map",
+        "index's map function does not compile",
+        index =>
+          !isNonEmptyString(index.map) ||
+          executesWithoutException(() => compileMap(index))
+      ),
+      makerule(
+        "filter",
+        "index's filter function does not compile",
+        index =>
+          !isNonEmptyString(index.filter) ||
+          executesWithoutException(() => compileFilter(index))
+      ),
+      makerule("name", "must declare a name for index", index =>
+        isNonEmptyString(index.name)
+      ),
+      makerule(
+        "name",
+        "there is a duplicate named index on this node",
+        index =>
+          fp_16(index.name) ||
+          fp_17("name")(index.parent().indexes)[index.name] === 1
+      ),
+      makerule(
+        "indexType",
+        "reference index may only exist on a record node",
+        index =>
+          isRecord(index.parent()) || index.indexType !== indexTypes.reference
+      ),
+      makerule(
+        "indexType",
+        `index type must be one of: ${fp_18(", ")(fp_14(indexTypes))}`,
+        index => fp_19(index.indexType)(fp_14(indexTypes))
+      ),
     ];
 
     const getFlattenedHierarchy = (appHierarchy, useCached = true) => {
-      if (isSomething(appHierarchy.getFlattenedHierarchy) && useCached) { return appHierarchy.getFlattenedHierarchy(); }
+      if (isSomething(appHierarchy.getFlattenedHierarchy) && useCached) {
+        return appHierarchy.getFlattenedHierarchy()
+      }
 
       const flattenHierarchy = (currentNode, flattened) => {
         flattened.push(currentNode);
-        if ((!currentNode.children
-                || currentNode.children.length === 0)
-                && (!currentNode.indexes
-                || currentNode.indexes.length === 0)
-                && (!currentNode.aggregateGroups
-                || currentNode.aggregateGroups.length === 0)) {
-          return flattened;
+        if (
+          (!currentNode.children || currentNode.children.length === 0) &&
+          (!currentNode.indexes || currentNode.indexes.length === 0) &&
+          (!currentNode.aggregateGroups || currentNode.aggregateGroups.length === 0)
+        ) {
+          return flattened
         }
 
         const unionIfAny = l2 => l1 => fp_6(l1)(!l2 ? [] : l2);
 
-        const children = $([], [
-          unionIfAny(currentNode.children),
-          unionIfAny(currentNode.indexes),
-          unionIfAny(currentNode.aggregateGroups),
-        ]);
+        const children = $(
+          [],
+          [
+            unionIfAny(currentNode.children),
+            unionIfAny(currentNode.indexes),
+            unionIfAny(currentNode.aggregateGroups),
+          ]
+        );
 
         for (const child of children) {
           flattenHierarchy(child, flattened);
         }
-        return flattened;
+        return flattened
       };
 
       appHierarchy.getFlattenedHierarchy = () => flattenHierarchy(appHierarchy, []);
-      return appHierarchy.getFlattenedHierarchy();
+      return appHierarchy.getFlattenedHierarchy()
     };
 
-    const getExactNodeForKey = appHierarchy => key => $(appHierarchy, [
-      getFlattenedHierarchy,
-      fp_1(n => new RegExp(`${n.pathRegx()}$`).test(key)),
-    ]);
+    const getExactNodeForKey = appHierarchy => key =>
+      $(appHierarchy, [
+        getFlattenedHierarchy,
+        fp_1(n => new RegExp(`${n.pathRegx()}$`).test(key)),
+      ]);
 
-    const getNodeForCollectionPath = appHierarchy => collectionKey => $(appHierarchy, [
-      getFlattenedHierarchy,
-      fp_1(n => (isCollectionRecord(n)
-                       && new RegExp(`${n.collectionPathRegx()}$`).test(collectionKey))),
-    ]);
+    const getNodeForCollectionPath = appHierarchy => collectionKey =>
+      $(appHierarchy, [
+        getFlattenedHierarchy,
+        fp_1(
+          n =>
+            isCollectionRecord(n) &&
+            new RegExp(`${n.collectionPathRegx()}$`).test(collectionKey)
+        ),
+      ]);
 
-    const getNode = (appHierarchy, nodeKey) => $(appHierarchy, [
-      getFlattenedHierarchy,
-      fp_1(n => n.nodeKey() === nodeKey
-                      || (isCollectionRecord(n)
-                          && n.collectionNodeKey() === nodeKey)),
-    ]);
+    const getNode = (appHierarchy, nodeKey) =>
+      $(appHierarchy, [
+        getFlattenedHierarchy,
+        fp_1(
+          n =>
+            n.nodeKey() === nodeKey ||
+            (isCollectionRecord(n) && n.collectionNodeKey() === nodeKey)
+        ),
+      ]);
 
     const getNodeByKeyOrNodeKey = (appHierarchy, keyOrNodeKey) => {
       const nodeByKey = getExactNodeForKey(appHierarchy)(keyOrNodeKey);
-      return isNothing(nodeByKey)
-        ? getNode(appHierarchy, keyOrNodeKey)
-        : nodeByKey;
+      return isNothing(nodeByKey) ? getNode(appHierarchy, keyOrNodeKey) : nodeByKey
     };
 
-    const isNode = (appHierarchy, key) => isSomething(getExactNodeForKey(appHierarchy)(key));
+    const isNode = (appHierarchy, key) =>
+      isSomething(getExactNodeForKey(appHierarchy)(key));
 
-    const isRecord = node => isSomething(node) && node.type === 'record';
+    const isRecord = node => isSomething(node) && node.type === "record";
     const isSingleRecord = node => isRecord(node) && node.isSingle;
     const isCollectionRecord = node => isRecord(node) && !node.isSingle;
     const isRoot = node => isSomething(node) && node.isRoot();
 
-    const getSafeFieldParser = (tryParse, defaultValueFunctions) => (field, record) => {
+    const getSafeFieldParser = (tryParse, defaultValueFunctions) => (
+      field,
+      record
+    ) => {
       if (fp_25(field.name)(record)) {
-        return getSafeValueParser(tryParse, defaultValueFunctions)(record[field.name]);
+        return getSafeValueParser(
+          tryParse,
+          defaultValueFunctions
+        )(record[field.name])
       }
-      return defaultValueFunctions[field.getUndefinedValue]();
+      return defaultValueFunctions[field.getUndefinedValue]()
     };
 
-    const getSafeValueParser = (tryParse, defaultValueFunctions) => (value) => {
+    const getSafeValueParser = (
+      tryParse,
+      defaultValueFunctions
+    ) => value => {
       const parsed = tryParse(value);
       if (parsed.success) {
-        return parsed.value;
+        return parsed.value
       }
-      return defaultValueFunctions.default();
+      return defaultValueFunctions.default()
     };
 
-    const getNewValue = (tryParse, defaultValueFunctions) => (field) => {
-      const getInitialValue = fp_2(field) || fp_2(field.getInitialValue)
-        ? 'default'
-        : field.getInitialValue;
+    const getNewValue = (tryParse, defaultValueFunctions) => field => {
+      const getInitialValue =
+        fp_2(field) || fp_2(field.getInitialValue)
+          ? "default"
+          : field.getInitialValue;
 
       return fp_25(getInitialValue)(defaultValueFunctions)
         ? defaultValueFunctions[getInitialValue]()
-        : getSafeValueParser(tryParse, defaultValueFunctions)(getInitialValue);
+        : getSafeValueParser(tryParse, defaultValueFunctions)(getInitialValue)
     };
 
-    const typeFunctions = specificFunctions => lodash_13({
-      value: fp_21,
-      null: fp_21(null),
-    }, specificFunctions);
+    const typeFunctions = specificFunctions =>
+      lodash_13(
+        {
+          value: fp_21,
+          null: fp_21(null),
+        },
+        specificFunctions
+      );
 
-    const validateTypeConstraints = validationRules => async (field, record, context) => {
+    const validateTypeConstraints = validationRules => async (
+      field,
+      record,
+      context
+    ) => {
       const fieldValue = record[field.name];
-      const validateRule = async r => (!await r.isValid(fieldValue, field.typeOptions, context)
-        ? r.getMessage(fieldValue, field.typeOptions)
-        : '');
+      const validateRule = async r =>
+        !(await r.isValid(fieldValue, field.typeOptions, context))
+          ? r.getMessage(fieldValue, field.typeOptions)
+          : "";
 
       const errors = [];
       for (const r of validationRules) {
@@ -20873,7 +20925,7 @@ var app = (function (exports) {
         if (isNotEmpty(err)) errors.push(err);
       }
 
-      return errors;
+      return errors
     };
 
     const getDefaultOptions = fp_26(v => v.defaultValue);
@@ -20881,7 +20933,15 @@ var app = (function (exports) {
     const makerule$1 = (isValid, getMessage) => ({ isValid, getMessage });
     const parsedFailed = val => ({ success: false, value: val });
     const parsedSuccess = val => ({ success: true, value: val });
-    const getDefaultExport = (name, tryParse, functions, options, validationRules, sampleValue, stringify) => ({
+    const getDefaultExport = (
+      name,
+      tryParse,
+      functions,
+      options,
+      validationRules,
+      sampleValue,
+      stringify
+    ) => ({
       getNew: getNewValue(tryParse, functions),
       safeParseField: getSafeFieldParser(tryParse, functions),
       safeParseValue: getSafeValueParser(tryParse, functions),
@@ -20891,8 +20951,7 @@ var app = (function (exports) {
       optionDefinitions: options,
       validateTypeConstraints: validateTypeConstraints(validationRules),
       sampleValue,
-      stringify: val => (val === null || val === undefined
-        ? '' : stringify(val)),
+      stringify: val => (val === null || val === undefined ? "" : stringify(val)),
       getDefaultValue: functions.default,
     });
 
@@ -20903,47 +20962,56 @@ var app = (function (exports) {
     const stringTryParse = switchCase(
       [fp_27, parsedSuccess],
       [fp_29, parsedSuccess],
-      [defaultCase, v => parsedSuccess(v.toString())],
+      [defaultCase, v => parsedSuccess(v.toString())]
     );
 
     const options = {
       maxLength: {
         defaultValue: null,
-        isValid: n => n === null || isSafeInteger(n) && n > 0,
-        requirementDescription: 'max length must be null (no limit) or a greater than zero integer',
+        isValid: n => n === null || (isSafeInteger(n) && n > 0),
+        requirementDescription:
+          "max length must be null (no limit) or a greater than zero integer",
         parse: toNumberOrNull,
       },
       values: {
         defaultValue: null,
-        isValid: v => v === null || (isArrayOfString(v) && v.length > 0 && v.length < 10000),
-        requirementDescription: "'values' must be null (no values) or an arry of at least one string",
+        isValid: v =>
+          v === null || (isArrayOfString(v) && v.length > 0 && v.length < 10000),
+        requirementDescription:
+          "'values' must be null (no values) or an arry of at least one string",
         parse: s => s,
       },
       allowDeclaredValuesOnly: {
         defaultValue: false,
         isValid: fp_28,
-        requirementDescription: 'allowDeclaredValuesOnly must be true or false',
+        requirementDescription: "allowDeclaredValuesOnly must be true or false",
         parse: toBoolOrNull,
       },
     };
 
     const typeConstraints = [
-      makerule$1(async (val, opts) => val === null || opts.maxLength === null || val.length <= opts.maxLength,
-        (val, opts) => `value exceeds maximum length of ${opts.maxLength}`),
-      makerule$1(async (val, opts) => val === null
-                               || opts.allowDeclaredValuesOnly === false
-                               || fp_19(val)(opts.values),
-      (val) => `"${val}" does not exist in the list of allowed values`),
+      makerule$1(
+        async (val, opts) =>
+          val === null || opts.maxLength === null || val.length <= opts.maxLength,
+        (val, opts) => `value exceeds maximum length of ${opts.maxLength}`
+      ),
+      makerule$1(
+        async (val, opts) =>
+          val === null ||
+          opts.allowDeclaredValuesOnly === false ||
+          fp_19(val)(opts.values),
+        val => `"${val}" does not exist in the list of allowed values`
+      ),
     ];
 
     var string = getDefaultExport(
-      'string',
+      "string",
       stringTryParse,
       stringFunctions,
       options,
       typeConstraints,
-      'abcde',
-      str => str,
+      "abcde",
+      str => str
     );
 
     const boolFunctions = typeFunctions({
@@ -20953,90 +21021,115 @@ var app = (function (exports) {
     const boolTryParse = switchCase(
       [fp_28, parsedSuccess],
       [fp_29, parsedSuccess],
-      [isOneOf('true', '1', 'yes', 'on'), () => parsedSuccess(true)],
-      [isOneOf('false', '0', 'no', 'off'), () => parsedSuccess(false)],
-      [defaultCase, parsedFailed],
+      [isOneOf("true", "1", "yes", "on"), () => parsedSuccess(true)],
+      [isOneOf("false", "0", "no", "off"), () => parsedSuccess(false)],
+      [defaultCase, parsedFailed]
     );
 
     const options$1 = {
       allowNulls: {
         defaultValue: true,
         isValid: fp_28,
-        requirementDescription: 'must be a true or false',
+        requirementDescription: "must be a true or false",
         parse: toBoolOrNull,
       },
     };
 
     const typeConstraints$1 = [
-      makerule$1(async (val, opts) => opts.allowNulls === true || val !== null,
-        () => 'field cannot be null'),
+      makerule$1(
+        async (val, opts) => opts.allowNulls === true || val !== null,
+        () => "field cannot be null"
+      ),
     ];
 
     var bool = getDefaultExport(
-      'bool', boolTryParse, boolFunctions,
-      options$1, typeConstraints$1, true, JSON.stringify,
+      "bool",
+      boolTryParse,
+      boolFunctions,
+      options$1,
+      typeConstraints$1,
+      true,
+      JSON.stringify
     );
 
     const numberFunctions = typeFunctions({
       default: fp_21(null),
     });
 
-    const parseStringtoNumberOrNull = (s) => {
+    const parseStringtoNumberOrNull = s => {
       const num = Number(s);
-      return isNaN(num) ? parsedFailed(s) : parsedSuccess(num);
+      return isNaN(num) ? parsedFailed(s) : parsedSuccess(num)
     };
 
     const numberTryParse = switchCase(
       [fp_30, parsedSuccess],
       [fp_27, parseStringtoNumberOrNull],
       [fp_29, parsedSuccess],
-      [defaultCase, parsedFailed],
+      [defaultCase, parsedFailed]
     );
 
     const options$2 = {
       maxValue: {
         defaultValue: Number.MAX_SAFE_INTEGER,
         isValid: isSafeInteger,
-        requirementDescription: 'must be a valid integer',
+        requirementDescription: "must be a valid integer",
         parse: toNumberOrNull,
       },
       minValue: {
         defaultValue: 0 - Number.MAX_SAFE_INTEGER,
         isValid: isSafeInteger,
-        requirementDescription: 'must be a valid integer',
+        requirementDescription: "must be a valid integer",
         parse: toNumberOrNull,
       },
       decimalPlaces: {
         defaultValue: 0,
         isValid: n => isSafeInteger(n) && n >= 0,
-        requirementDescription: 'must be a positive integer',
+        requirementDescription: "must be a positive integer",
         parse: toNumberOrNull,
       },
     };
 
-    const getDecimalPlaces = (val) => {
-      const splitDecimal = val.toString().split('.');
-      if (splitDecimal.length === 1) return 0;
-      return splitDecimal[1].length;
+    const getDecimalPlaces = val => {
+      const splitDecimal = val.toString().split(".");
+      if (splitDecimal.length === 1) return 0
+      return splitDecimal[1].length
     };
 
     const typeConstraints$2 = [
-      makerule$1(async (val, opts) => val === null || opts.minValue === null || val >= opts.minValue,
-        (val, opts) => `value (${val.toString()}) must be greater than or equal to ${opts.minValue}`),
-      makerule$1(async (val, opts) => val === null || opts.maxValue === null || val <= opts.maxValue,
-        (val, opts) => `value (${val.toString()}) must be less than or equal to ${opts.minValue} options`),
-      makerule$1(async (val, opts) => val === null || opts.decimalPlaces >= getDecimalPlaces(val),
-        (val, opts) => `value (${val.toString()}) must have ${opts.decimalPlaces} decimal places or less`),
+      makerule$1(
+        async (val, opts) =>
+          val === null || opts.minValue === null || val >= opts.minValue,
+        (val, opts) =>
+          `value (${val.toString()}) must be greater than or equal to ${
+        opts.minValue
+      }`
+      ),
+      makerule$1(
+        async (val, opts) =>
+          val === null || opts.maxValue === null || val <= opts.maxValue,
+        (val, opts) =>
+          `value (${val.toString()}) must be less than or equal to ${
+        opts.minValue
+      } options`
+      ),
+      makerule$1(
+        async (val, opts) =>
+          val === null || opts.decimalPlaces >= getDecimalPlaces(val),
+        (val, opts) =>
+          `value (${val.toString()}) must have ${
+        opts.decimalPlaces
+      } decimal places or less`
+      ),
     ];
 
     var number = getDefaultExport(
-      'number',
+      "number",
       numberTryParse,
       numberFunctions,
       options$2,
       typeConstraints$2,
       1,
-      num => num.toString(),
+      num => num.toString()
     );
 
     const dateFunctions = typeFunctions({
@@ -21046,323 +21139,346 @@ var app = (function (exports) {
 
     const isValidDate = d => d instanceof Date && !isNaN(d);
 
-    const parseStringToDate = s => switchCase(
-      [isValidDate, parsedSuccess],
-      [defaultCase, parsedFailed],
-    )(new Date(s));
-
+    const parseStringToDate = s =>
+      switchCase(
+        [isValidDate, parsedSuccess],
+        [defaultCase, parsedFailed]
+      )(new Date(s));
 
     const dateTryParse = switchCase(
       [fp_32, parsedSuccess],
       [fp_27, parseStringToDate],
       [fp_29, parsedSuccess],
-      [defaultCase, parsedFailed],
+      [defaultCase, parsedFailed]
     );
 
     const options$3 = {
       maxValue: {
         defaultValue: new Date(32503680000000),
         isValid: fp_32,
-        requirementDescription: 'must be a valid date',
+        requirementDescription: "must be a valid date",
         parse: toDateOrNull,
       },
       minValue: {
         defaultValue: new Date(-8520336000000),
         isValid: fp_32,
-        requirementDescription: 'must be a valid date',
+        requirementDescription: "must be a valid date",
         parse: toDateOrNull,
       },
     };
 
     const typeConstraints$3 = [
-      makerule$1(async (val, opts) => val === null || opts.minValue === null || val >= opts.minValue,
-        (val, opts) => `value (${val.toString()}) must be greater than or equal to ${opts.minValue}`),
-      makerule$1(async (val, opts) => val === null || opts.maxValue === null || val <= opts.maxValue,
-        (val, opts) => `value (${val.toString()}) must be less than or equal to ${opts.minValue} options`),
+      makerule$1(
+        async (val, opts) =>
+          val === null || opts.minValue === null || val >= opts.minValue,
+        (val, opts) =>
+          `value (${val.toString()}) must be greater than or equal to ${
+        opts.minValue
+      }`
+      ),
+      makerule$1(
+        async (val, opts) =>
+          val === null || opts.maxValue === null || val <= opts.maxValue,
+        (val, opts) =>
+          `value (${val.toString()}) must be less than or equal to ${
+        opts.minValue
+      } options`
+      ),
     ];
 
     var datetime = getDefaultExport(
-      'datetime',
+      "datetime",
       dateTryParse,
       dateFunctions,
       options$3,
       typeConstraints$3,
       new Date(1984, 4, 1),
-      date => JSON.stringify(date).replace(new RegExp('"', 'g'), ''),
+      date => JSON.stringify(date).replace(new RegExp('"', "g"), "")
     );
 
-    const arrayFunctions = () => typeFunctions({
-      default: fp_21([]),
-    });
+    const arrayFunctions = () =>
+      typeFunctions({
+        default: fp_21([]),
+      });
 
-    const mapToParsedArrary = type => $$(
-      fp_12(i => type.safeParseValue(i)),
-      parsedSuccess,
-    );
+    const mapToParsedArrary = type =>
+      $$(
+        fp_12(i => type.safeParseValue(i)),
+        parsedSuccess
+      );
 
-    const arrayTryParse = type => switchCase(
-      [fp_11, mapToParsedArrary(type)],
-      [defaultCase, parsedFailed],
-    );
+    const arrayTryParse = type =>
+      switchCase([fp_11, mapToParsedArrary(type)], [defaultCase, parsedFailed]);
 
     const typeName = type => `array<${type}>`;
-
 
     const options$4 = {
       maxLength: {
         defaultValue: 10000,
         isValid: isSafeInteger,
-        requirementDescription: 'must be a positive integer',
+        requirementDescription: "must be a positive integer",
         parse: toNumberOrNull,
       },
       minLength: {
         defaultValue: 0,
         isValid: n => isSafeInteger(n) && n >= 0,
-        requirementDescription: 'must be a positive integer',
+        requirementDescription: "must be a positive integer",
         parse: toNumberOrNull,
       },
     };
 
     const typeConstraints$4 = [
-      makerule$1(async (val, opts) => val === null || val.length >= opts.minLength,
-        (val, opts) => `must choose ${opts.minLength} or more options`),
-      makerule$1(async (val, opts) => val === null || val.length <= opts.maxLength,
-        (val, opts) => `cannot choose more than ${opts.maxLength} options`),
+      makerule$1(
+        async (val, opts) => val === null || val.length >= opts.minLength,
+        (val, opts) => `must choose ${opts.minLength} or more options`
+      ),
+      makerule$1(
+        async (val, opts) => val === null || val.length <= opts.maxLength,
+        (val, opts) => `cannot choose more than ${opts.maxLength} options`
+      ),
     ];
 
-    var array = type => getDefaultExport(
-      typeName(type.name),
-      arrayTryParse(type),
-      arrayFunctions(),
-      options$4,
-      typeConstraints$4,
-      [type.sampleValue],
-      JSON.stringify,
-    );
+    var array = type =>
+      getDefaultExport(
+        typeName(type.name),
+        arrayTryParse(type),
+        arrayFunctions(),
+        options$4,
+        typeConstraints$4,
+        [type.sampleValue],
+        JSON.stringify
+      );
 
-    const referenceNothing = () => ({ key: '' });
+    const referenceNothing = () => ({ key: "" });
 
     const referenceFunctions = typeFunctions({
       default: referenceNothing,
     });
 
-    const hasStringValue = (ob, path) => fp_25(path)(ob)
-        && fp_27(ob[path]);
+    const hasStringValue = (ob, path) => fp_25(path)(ob) && fp_27(ob[path]);
 
-    const isObjectWithKey = v => fp_31(v)
-        && hasStringValue(v, 'key');
+    const isObjectWithKey = v => fp_31(v) && hasStringValue(v, "key");
 
     const tryParseFromString = s => {
-
       try {
         const asObj = JSON.parse(s);
-        if(isObjectWithKey) {
-          return parsedSuccess(asObj);
+        if (isObjectWithKey) {
+          return parsedSuccess(asObj)
         }
-      }
-      catch(_) {
+      } catch (_) {
         // EMPTY
       }
 
-      return parsedFailed(s);
+      return parsedFailed(s)
     };
 
-    const referenceTryParse = v => switchCase(
-      [isObjectWithKey, parsedSuccess],
-      [fp_27, tryParseFromString],
-      [fp_29, () => parsedSuccess(referenceNothing())],
-      [defaultCase, parsedFailed],
-    )(v);
+    const referenceTryParse = v =>
+      switchCase(
+        [isObjectWithKey, parsedSuccess],
+        [fp_27, tryParseFromString],
+        [fp_29, () => parsedSuccess(referenceNothing())],
+        [defaultCase, parsedFailed]
+      )(v);
 
     const options$5 = {
       indexNodeKey: {
         defaultValue: null,
         isValid: isNonEmptyString,
-        requirementDescription: 'must be a non-empty string',
+        requirementDescription: "must be a non-empty string",
         parse: s => s,
       },
       displayValue: {
-        defaultValue: '',
+        defaultValue: "",
         isValid: isNonEmptyString,
-        requirementDescription: 'must be a non-empty string',
+        requirementDescription: "must be a non-empty string",
         parse: s => s,
       },
       reverseIndexNodeKeys: {
         defaultValue: null,
         isValid: v => isArrayOfString(v) && v.length > 0,
-        requirementDescription: 'must be a non-empty array of strings',
+        requirementDescription: "must be a non-empty array of strings",
         parse: s => s,
       },
     };
 
     const isEmptyString = s => fp_27(s) && fp_16(s);
 
-    const ensureReferenceExists = async (val, opts, context) => isEmptyString(val.key)
-        || await context.referenceExists(opts, val.key);
+    const ensureReferenceExists = async (val, opts, context) =>
+      isEmptyString(val.key) || (await context.referenceExists(opts, val.key));
 
     const typeConstraints$5 = [
       makerule$1(
         ensureReferenceExists,
-        (val, opts) => `"${val[opts.displayValue]}" does not exist in options list (key: ${val.key})`,
+        (val, opts) =>
+          `"${val[opts.displayValue]}" does not exist in options list (key: ${
+        val.key
+      })`
       ),
     ];
 
     var reference = getDefaultExport(
-      'reference',
+      "reference",
       referenceTryParse,
       referenceFunctions,
       options$5,
       typeConstraints$5,
-      { key: 'key', value: 'value' },
-      JSON.stringify,
+      { key: "key", value: "value" },
+      JSON.stringify
     );
 
-    const illegalCharacters = '*?\\/:<>|\0\b\f\v';
+    const illegalCharacters = "*?\\/:<>|\0\b\f\v";
 
-    const isLegalFilename = (filePath) => {
+    const isLegalFilename = filePath => {
       const fn = fileName(filePath);
-      return fn.length <= 255
-        && fp_23(fn.split(''))(illegalCharacters.split('')).length === 0
-        && none(f => f === '..')(splitKey(filePath));
+      return (
+        fn.length <= 255 &&
+        fp_23(fn.split(""))(illegalCharacters.split("")).length === 0 &&
+        none(f => f === "..")(splitKey(filePath))
+      )
     };
 
-    const fileNothing = () => ({ relativePath: '', size: 0 });
+    const fileNothing = () => ({ relativePath: "", size: 0 });
 
     const fileFunctions = typeFunctions({
       default: fileNothing,
     });
 
-    const fileTryParse = v => switchCase(
-      [isValidFile, parsedSuccess],
-      [fp_29, () => parsedSuccess(fileNothing())],
-      [defaultCase, parsedFailed],
-    )(v);
+    const fileTryParse = v =>
+      switchCase(
+        [isValidFile, parsedSuccess],
+        [fp_29, () => parsedSuccess(fileNothing())],
+        [defaultCase, parsedFailed]
+      )(v);
 
-    const fileName = filePath => $(filePath, [
-      splitKey,
-      fp_5,
-    ]);
+    const fileName = filePath => $(filePath, [splitKey, fp_5]);
 
-    const isValidFile = f => !fp_29(f)
-        && fp_25('relativePath')(f) && fp_25('size')(f)
-        && fp_30(f.size)
-        && fp_27(f.relativePath)
-        && isLegalFilename(f.relativePath);
+    const isValidFile = f =>
+      !fp_29(f) &&
+      fp_25("relativePath")(f) &&
+      fp_25("size")(f) &&
+      fp_30(f.size) &&
+      fp_27(f.relativePath) &&
+      isLegalFilename(f.relativePath);
 
     const options$6 = {};
 
     const typeConstraints$6 = [];
 
     var file = getDefaultExport(
-      'file',
+      "file",
       fileTryParse,
       fileFunctions,
       options$6,
       typeConstraints$6,
-      { relativePath: 'some_file.jpg', size: 1000 },
-      JSON.stringify,
+      { relativePath: "some_file.jpg", size: 1000 },
+      JSON.stringify
     );
 
     const allTypes = () => {
       const basicTypes = {
-        string, number, datetime, bool, reference, file,
+        string,
+        number,
+        datetime,
+        bool,
+        reference,
+        file,
       };
 
       const arrays = $(basicTypes, [
         fp_14,
-        fp_12((k) => {
+        fp_12(k => {
           const kvType = {};
           const concreteArray = array(basicTypes[k]);
           kvType[concreteArray.name] = concreteArray;
-          return kvType;
+          return kvType
         }),
         types => lodash_14({}, ...types),
       ]);
 
-      return lodash_13({}, basicTypes, arrays);
+      return lodash_13({}, basicTypes, arrays)
     };
-
 
     const all$1 = allTypes();
 
-    const getType = (typeName) => {
-      if (!fp_25(typeName)(all$1)) throw new BadRequestError(`Do not recognise type ${typeName}`);
-      return all$1[typeName];
+    const getType = typeName => {
+      if (!fp_25(typeName)(all$1))
+        throw new BadRequestError(`Do not recognise type ${typeName}`)
+      return all$1[typeName]
     };
 
     const getNewFieldValue = field => getType(field.type).getNew(field);
 
-    const AUTH_FOLDER = '/.auth';
-    const USERS_LIST_FILE = joinKey(AUTH_FOLDER, 'users.json');
-    const USERS_LOCK_FILE = joinKey(AUTH_FOLDER, 'users_lock');
-    const ACCESS_LEVELS_FILE = joinKey(AUTH_FOLDER, 'access_levels.json');
-    const ACCESS_LEVELS_LOCK_FILE = joinKey(AUTH_FOLDER, 'access_levels_lock');
+    const AUTH_FOLDER = "/.auth";
+    const USERS_LIST_FILE = joinKey(AUTH_FOLDER, "users.json");
+    const USERS_LOCK_FILE = joinKey(AUTH_FOLDER, "users_lock");
+    const ACCESS_LEVELS_FILE = joinKey(AUTH_FOLDER, "access_levels.json");
+    const ACCESS_LEVELS_LOCK_FILE = joinKey(
+      AUTH_FOLDER,
+      "access_levels_lock"
+    );
 
     const permissionTypes = {
-      CREATE_RECORD: 'create record',
-      UPDATE_RECORD: 'update record',
-      READ_RECORD: 'read record',
-      DELETE_RECORD: 'delete record',
-      READ_INDEX: 'read index',
-      MANAGE_INDEX: 'manage index',
-      MANAGE_COLLECTION: 'manage collection',
-      WRITE_TEMPLATES: 'write templates',
-      CREATE_USER: 'create user',
-      SET_PASSWORD: 'set password',
-      CREATE_TEMPORARY_ACCESS: 'create temporary access',
-      ENABLE_DISABLE_USER: 'enable or disable user',
-      WRITE_ACCESS_LEVELS: 'write access levels',
-      LIST_USERS: 'list users',
-      LIST_ACCESS_LEVELS: 'list access levels',
-      EXECUTE_ACTION: 'execute action',
-      SET_USER_ACCESS_LEVELS: 'set user access levels',
+      CREATE_RECORD: "create record",
+      UPDATE_RECORD: "update record",
+      READ_RECORD: "read record",
+      DELETE_RECORD: "delete record",
+      READ_INDEX: "read index",
+      MANAGE_INDEX: "manage index",
+      MANAGE_COLLECTION: "manage collection",
+      WRITE_TEMPLATES: "write templates",
+      CREATE_USER: "create user",
+      SET_PASSWORD: "set password",
+      CREATE_TEMPORARY_ACCESS: "create temporary access",
+      ENABLE_DISABLE_USER: "enable or disable user",
+      WRITE_ACCESS_LEVELS: "write access levels",
+      LIST_USERS: "list users",
+      LIST_ACCESS_LEVELS: "list access levels",
+      EXECUTE_ACTION: "execute action",
+      SET_USER_ACCESS_LEVELS: "set user access levels",
     };
 
-    const isAuthorized = app => (permissionType, resourceKey) => apiWrapperSync(
-      app,
-      events.authApi.isAuthorized,
-      alwaysAuthorized,
-      { resourceKey, permissionType },
-      _isAuthorized, app, permissionType, resourceKey,
-    );
+    const isAuthorized = app => (permissionType, resourceKey) =>
+      apiWrapperSync(
+        app,
+        events.authApi.isAuthorized,
+        alwaysAuthorized,
+        { resourceKey, permissionType },
+        _isAuthorized,
+        app,
+        permissionType,
+        resourceKey
+      );
 
     const _isAuthorized = (app, permissionType, resourceKey) => {
       if (!app.user) {
-        return false;
+        return false
       }
 
-      const validType = $(permissionTypes, [
-        fp_34,
-        fp_19(permissionType),
-      ]);
+      const validType = $(permissionTypes, [fp_34, fp_19(permissionType)]);
 
       if (!validType) {
-        return false;
+        return false
       }
 
-      const permMatchesResource = (userperm) => {
+      const permMatchesResource = userperm => {
         const nodeKey = isNothing(resourceKey)
           ? null
           : isNode(app.hierarchy, resourceKey)
-            ? getNodeByKeyOrNodeKey(
-              app.hierarchy, resourceKey,
-            ).nodeKey()
-            : resourceKey;
+          ? getNodeByKeyOrNodeKey(app.hierarchy, resourceKey).nodeKey()
+          : resourceKey;
 
-        return (userperm.type === permissionType)
-            && (
-              isNothing(resourceKey)
-                || nodeKey === userperm.nodeKey
-            );
+        return (
+          userperm.type === permissionType &&
+          (isNothing(resourceKey) || nodeKey === userperm.nodeKey)
+        )
       };
 
-      return $(app.user.permissions, [
-        fp_10(permMatchesResource),
-      ]);
+      return $(app.user.permissions, [fp_10(permMatchesResource)])
     };
 
     const nodePermission = type => ({
-      add: (nodeKey, accessLevel) => accessLevel.permissions.push({ type, nodeKey }),
+      add: (nodeKey, accessLevel) =>
+        accessLevel.permissions.push({ type, nodeKey }),
       isAuthorized: resourceKey => app => isAuthorized(app)(type, resourceKey),
       isNode: true,
       get: nodeKey => ({ type, nodeKey }),
@@ -21395,7 +21511,9 @@ var app = (function (exports) {
 
     const manageCollection = staticPermission(permissionTypes.MANAGE_COLLECTION);
 
-    const createTemporaryAccess = staticPermission(permissionTypes.CREATE_TEMPORARY_ACCESS);
+    const createTemporaryAccess = staticPermission(
+      permissionTypes.CREATE_TEMPORARY_ACCESS
+    );
 
     const enableDisableUser = staticPermission(permissionTypes.ENABLE_DISABLE_USER);
 
@@ -21405,7 +21523,9 @@ var app = (function (exports) {
 
     const listAccessLevels = staticPermission(permissionTypes.LIST_ACCESS_LEVELS);
 
-    const setUserAccessLevels = staticPermission(permissionTypes.SET_USER_ACCESS_LEVELS);
+    const setUserAccessLevels = staticPermission(
+      permissionTypes.SET_USER_ACCESS_LEVELS
+    );
 
     const executeAction = nodePermission(permissionTypes.EXECUTE_ACTION);
 
@@ -21433,95 +21553,90 @@ var app = (function (exports) {
 
     const getNew = app => (collectionKey, recordTypeName) => {
       const recordNode = getRecordNode(app, collectionKey);
-      collectionKey=safeKey(collectionKey);
+      collectionKey = safeKey(collectionKey);
       return apiWrapperSync(
         app,
         events.recordApi.getNew,
         permission.createRecord.isAuthorized(recordNode.nodeKey()),
         { collectionKey, recordTypeName },
-        _getNew, recordNode, collectionKey,
-      );
+        _getNew,
+        recordNode,
+        collectionKey
+      )
     };
 
-    const _getNew = (recordNode, collectionKey) => constructRecord(recordNode, getNewFieldValue, collectionKey);
+    const _getNew = (recordNode, collectionKey) =>
+      constructRecord(recordNode, getNewFieldValue, collectionKey);
 
     const getRecordNode = (app, collectionKey) => {
       collectionKey = safeKey(collectionKey);
-      return getNodeForCollectionPath(app.hierarchy)(collectionKey);
+      return getNodeForCollectionPath(app.hierarchy)(collectionKey)
     };
 
-    const getNewChild = app => (recordKey, collectionName, recordTypeName) => 
+    const getNewChild = app => (recordKey, collectionName, recordTypeName) =>
       getNew(app)(joinKey(recordKey, collectionName), recordTypeName);
 
     const constructRecord = (recordNode, getFieldValue, collectionKey) => {
-      const record = $(recordNode.fields, [
-        fp_35('name'),
-        fp_26(getFieldValue),
-      ]);
+      const record = $(recordNode.fields, [fp_35("name"), fp_26(getFieldValue)]);
 
       record.id = `${recordNode.nodeId}-${shortid_1()}`;
       record.key = isSingleRecord(recordNode)
-                   ? joinKey(collectionKey, recordNode.name)
-                   : joinKey(collectionKey, record.id);
+        ? joinKey(collectionKey, recordNode.name)
+        : joinKey(collectionKey, record.id);
       record.isNew = true;
       record.type = recordNode.name;
-      return record;
+      return record
     };
 
-    const pathRegxMaker = node => () => node.nodeKey().replace(/{id}/g, '[a-zA-Z0-9_-]+');
+    const pathRegxMaker = node => () =>
+      node.nodeKey().replace(/{id}/g, "[a-zA-Z0-9_-]+");
 
-    const nodeKeyMaker = node => () => switchCase(
+    const nodeKeyMaker = node => () =>
+      switchCase(
+        [
+          n => isRecord(n) && !isSingleRecord(n),
+          n =>
+            joinKey(
+              node.parent().nodeKey(),
+              node.collectionName,
+              `${n.nodeId}-{id}`
+            ),
+        ],
 
-      [n => isRecord(n) && !isSingleRecord(n),
-        n => joinKey(
-          node.parent().nodeKey(),
-          node.collectionName,
-          `${n.nodeId}-{id}`,
-        )],
+        [isRoot, fp_21("/")],
 
-      [isRoot,
-        fp_21('/')],
+        [defaultCase, n => joinKey(node.parent().nodeKey(), n.name)]
+      )(node);
 
-      [defaultCase,
-        n => joinKey(node.parent().nodeKey(), n.name)],
-
-    )(node);
-
-    const construct = parent => (node) => {
+    const construct = parent => node => {
       node.nodeKey = nodeKeyMaker(node);
       node.pathRegx = pathRegxMaker(node);
       node.parent = fp_21(parent);
-      node.isRoot = () => isNothing(parent)
-                            && node.name === 'root'
-                            && node.type === 'root';
+      node.isRoot = () =>
+        isNothing(parent) && node.name === "root" && node.type === "root";
       if (isCollectionRecord(node)) {
-        node.collectionNodeKey = () => joinKey(
-          parent.nodeKey(), node.collectionName,
-        );
-        node.collectionPathRegx = () => joinKey(
-          parent.pathRegx(), node.collectionName,
-        );
+        node.collectionNodeKey = () =>
+          joinKey(parent.nodeKey(), node.collectionName);
+        node.collectionPathRegx = () =>
+          joinKey(parent.pathRegx(), node.collectionName);
       }
-      return node;
+      return node
     };
 
     const constructHierarchy = (node, parent) => {
       construct(parent)(node);
       if (node.indexes) {
-        lodash_4(node.indexes,
-          child => constructHierarchy(child, node));
+        lodash_4(node.indexes, child => constructHierarchy(child, node));
       }
       if (node.aggregateGroups) {
-        lodash_4(node.aggregateGroups,
-          child => constructHierarchy(child, node));
+        lodash_4(node.aggregateGroups, child => constructHierarchy(child, node));
       }
       if (node.children && node.children.length > 0) {
-        lodash_4(node.children,
-          child => constructHierarchy(child, node));
+        lodash_4(node.children, child => constructHierarchy(child, node));
       }
       if (node.fields) {
-        lodash_4(node.fields,
-          f => lodash_4(f.typeOptions, (val, key) => {
+        lodash_4(node.fields, f =>
+          lodash_4(f.typeOptions, (val, key) => {
             const def = all$1[f.type].optionDefinitions[key];
             if (!def) {
               // unknown typeOption
@@ -21529,820 +21644,1070 @@ var app = (function (exports) {
             } else {
               f.typeOptions[key] = def.parse(val);
             }
-          }));
+          })
+        );
       }
-      return node;
+      return node
     };
 
-    const createCoreApi = (appDefinition, user) => {
-        
-        const app = createCoreApp(appDefinition, user);
+    const createCoreApi = (backendDefinition, user) => {
+      const app = createCoreApp(backendDefinition, user);
 
-        return {
-            recordApi: {
-                getNew: getNew(app),
-                getNewChild: getNewChild(app)
-            },
+      return {
+        recordApi: {
+          getNew: getNew(app),
+          getNewChild: getNewChild(app),
+        },
 
-            templateApi: {
-                constructHierarchy
-            }
-        }
-
+        templateApi: {
+          constructHierarchy,
+        },
+      }
     };
 
     const BB_STATE_BINDINGPATH = "##bbstate";
     const BB_STATE_BINDINGSOURCE = "##bbsource";
     const BB_STATE_FALLBACK = "##bbstatefallback";
 
-    const isBound = (prop) =>
-        prop !== undefined 
-        && prop[BB_STATE_BINDINGPATH] !== undefined;
-        
-    const takeStateFromStore = (prop) => 
-        prop[BB_STATE_BINDINGSOURCE] === undefined 
-        || prop[BB_STATE_BINDINGSOURCE] === "store";
+    const isBound = prop =>
+      prop !== undefined && prop[BB_STATE_BINDINGPATH] !== undefined;
 
-    const takeStateFromContext = (prop) => 
-        prop[BB_STATE_BINDINGSOURCE] === "context";
+    const takeStateFromStore = prop =>
+      prop[BB_STATE_BINDINGSOURCE] === undefined ||
+      prop[BB_STATE_BINDINGSOURCE] === "store";
 
-    const takeStateFromEventParameters = (prop) => 
-        prop[BB_STATE_BINDINGSOURCE] === "event";
+    const takeStateFromContext = prop =>
+      prop[BB_STATE_BINDINGSOURCE] === "context";
+
+    const takeStateFromEventParameters = prop =>
+      prop[BB_STATE_BINDINGSOURCE] === "event";
 
     const getState = (s, path, fallback) => {
+      if (!s) return fallback
+      if (!path || path.length === 0) return fallback
 
-        if(!s) return fallback;
-        if(!path || path.length === 0) return fallback;
+      if (path === "$") return s
 
-        if(path === "$") return s;
+      const pathParts = path.split(".");
+      const safeGetPath = (obj, currentPartIndex = 0) => {
+        const currentKey = pathParts[currentPartIndex];
 
-        const pathParts = path.split(".");
-        const safeGetPath = (obj, currentPartIndex=0) => {
+        if (pathParts.length - 1 == currentPartIndex) {
+          const value = obj[currentKey];
+          if (fp_2(value)) return fallback
+          else return value
+        }
 
-            const currentKey = pathParts[currentPartIndex];
+        if (
+          obj[currentKey] === null ||
+          obj[currentKey] === undefined ||
+          !fp_8(obj[currentKey])
+        ) {
+          return fallback
+        }
 
-            if(pathParts.length - 1 == currentPartIndex) {
-                const value = obj[currentKey];
-                if(fp_2(value))
-                    return fallback;
-                else 
-                    return value;
-            }
+        return safeGetPath(obj[currentKey], currentPartIndex + 1)
+      };
 
-            if(obj[currentKey] === null 
-              || obj[currentKey] === undefined
-              || !fp_8(obj[currentKey])) {
-
-                return fallback;
-            }
-
-            return safeGetPath(obj[currentKey], currentPartIndex + 1);
-
-        };
-
-
-        return safeGetPath(s);
+      return safeGetPath(s)
     };
 
     const getStateOrValue = (globalState, prop, currentContext) => {
-        
-        if(!prop) return prop;
-        
-        if(isBound(prop)) {
+      if (!prop) return prop
 
-            const stateToUse = takeStateFromStore(prop) 
-                            ? globalState
-                            : currentContext;
+      if (isBound(prop)) {
+        const stateToUse = takeStateFromStore(prop) ? globalState : currentContext;
 
-            return getState(stateToUse, prop[BB_STATE_BINDINGPATH], prop[BB_STATE_FALLBACK]);
-        }
+        return getState(
+          stateToUse,
+          prop[BB_STATE_BINDINGPATH],
+          prop[BB_STATE_FALLBACK]
+        )
+      }
 
-        if(prop.path && prop.source) {
-            const stateToUse = prop.source === "store" 
-                            ? globalState
-                            : currentContext;
+      if (prop.path && prop.source) {
+        const stateToUse = prop.source === "store" ? globalState : currentContext;
 
-            return getState(stateToUse, prop.path, prop.fallback);
-        }
+        return getState(stateToUse, prop.path, prop.fallback)
+      }
 
-        return prop;
-        
+      return prop
     };
 
     const setState = (store, path, value) => {
+      if (!path || path.length === 0) return
 
-        if(!path || path.length === 0) return;
+      const pathParts = path.split(".");
+      const safeSetPath = (obj, currentPartIndex = 0) => {
+        const currentKey = pathParts[currentPartIndex];
 
-        const pathParts = path.split(".");
-        const safeSetPath = (obj, currentPartIndex=0) => {
+        if (pathParts.length - 1 == currentPartIndex) {
+          obj[currentKey] = value;
+          return
+        }
 
-            const currentKey = pathParts[currentPartIndex];
+        if (
+          obj[currentKey] === null ||
+          obj[currentKey] === undefined ||
+          !fp_8(obj[currentKey])
+        ) {
+          obj[currentKey] = {};
+        }
 
-            if(pathParts.length - 1 == currentPartIndex) {
-                obj[currentKey] = value;
-                return;
-            }
+        safeSetPath(obj[currentKey], currentPartIndex + 1);
+      };
 
-            if(obj[currentKey] === null 
-              || obj[currentKey] === undefined
-              || !fp_8(obj[currentKey])) {
-
-                obj[currentKey] = {};
-            }
-
-            safeSetPath(obj[currentKey], currentPartIndex + 1);
-
-        };
-
-        store.update(s => {
-            safeSetPath(s);
-            return s;
-        });
+      store.update(s => {
+        safeSetPath(s);
+        return s
+      });
     };
 
-    const setStateFromBinding = (store, binding, value) => 
-        setState(store, binding[BB_STATE_BINDINGPATH], value);
+    const setStateFromBinding = (store, binding, value) =>
+      setState(store, binding[BB_STATE_BINDINGPATH], value);
 
-    const trimSlash = (str) => str.replace(/^\/+|\/+$/g, '');
+    const trimSlash = str => str.replace(/^\/+|\/+$/g, "");
 
     const ERROR = "##error_message";
 
-    const loadRecord = (api) => async ({recordKey, statePath}) => {
+    const loadRecord = api => async ({ recordKey, statePath }) => {
+      if (!recordKey) {
+        api.error("Load Record: record key not set");
+        return
+      }
 
-        if(!recordKey) {
-            api.error("Load Record: record key not set");
-            return;
-        }  
-        
-        if(!statePath) {
-            api.error("Load Record: state path not set");
-            return;
-        } 
+      if (!statePath) {
+        api.error("Load Record: state path not set");
+        return
+      }
 
-        const record = await api.get({
-            url:`/api/record/${trimSlash(recordKey)}`
-        });
+      const record = await api.get({
+        url: `/api/record/${trimSlash(recordKey)}`,
+      });
 
-        if(api.isSuccess(record))
-            api.setState(statePath, record);
+      if (api.isSuccess(record)) api.setState(statePath, record);
     };
 
-    const listRecords = api => async ({indexKey, statePath}) => {
-        if(!indexKey) {
-            api.error("Load Record: record key not set");
-            return;
-        }  
-        
-        if(!statePath) {
-            api.error("Load Record: state path not set");
-            return;
-        } 
+    const listRecords = api => async ({ indexKey, statePath }) => {
+      if (!indexKey) {
+        api.error("Load Record: record key not set");
+        return
+      }
 
-        const records = await api.get({
-            url:`/api/listRecords/${trimSlash(indexKey)}`
-        });
+      if (!statePath) {
+        api.error("Load Record: state path not set");
+        return
+      }
 
-        if(api.isSuccess(records))
-            api.setState(statePath, records);
+      const records = await api.get({
+        url: `/api/listRecords/${trimSlash(indexKey)}`,
+      });
+
+      if (api.isSuccess(records)) api.setState(statePath, records);
     };
 
     const USER_STATE_PATH = "_bbuser";
 
-    const authenticate = (api) => async ({username, password}) => {
+    const authenticate = api => async ({ username, password }) => {
+      if (!username) {
+        api.error("Authenticate: username not set");
+        return
+      }
 
-        if(!username) {
-            api.error("Authenticate: username not set");
-            return;
-        }  
-        
-        if(!password) {
-            api.error("Authenticate: password not set");
-            return;
-        } 
+      if (!password) {
+        api.error("Authenticate: password not set");
+        return
+      }
 
-        const user = await api.post({
-            url:"/api/authenticate",
-            body : {username, password}
-        });
+      const user = await api.post({
+        url: "/api/authenticate",
+        body: { username, password },
+      });
 
-        // set user even if error - so it is defined at least
-        api.setState(USER_STATE_PATH, user);
-        localStorage.setItem("budibase:user", JSON.stringify(user));
+      // set user even if error - so it is defined at least
+      api.setState(USER_STATE_PATH, user);
+      localStorage.setItem("budibase:user", JSON.stringify(user));
     };
 
-    const saveRecord = (api) => async ({statePath}) => {
-        
-        if(!statePath) {
-            api.error("Load Record: state path not set");
-            return;
-        } 
+    const saveRecord = api => async ({ statePath }) => {
+      if (!statePath) {
+        api.error("Load Record: state path not set");
+        return
+      }
 
-        const recordtoSave = api.getState(statePath);
+      const recordtoSave = api.getState(statePath);
 
-        if(!recordtoSave) {
-            api.error(`there is no record in state: ${statePath}`);
-            return;
-        }
+      if (!recordtoSave) {
+        api.error(`there is no record in state: ${statePath}`);
+        return
+      }
 
-        if(!recordtoSave.key) {
-            api.error(`item in state does not appear to be a record - it has no key (${statePath})`);
-            return;
-        }
+      if (!recordtoSave.key) {
+        api.error(
+          `item in state does not appear to be a record - it has no key (${statePath})`
+        );
+        return
+      }
 
-        const savedRecord = await api.post({
-            url:`/api/record/${trimSlash(recordtoSave.key)}`,
-            body: recordtoSave
-        });
+      const savedRecord = await api.post({
+        url: `/api/record/${trimSlash(recordtoSave.key)}`,
+        body: recordtoSave,
+      });
 
-        if(api.isSuccess(savedRecord))
-            api.setState(statePath, savedRecord);
+      if (api.isSuccess(savedRecord)) api.setState(statePath, savedRecord);
     };
 
-    const createApi = ({rootPath, setState, getState}) => {
+    const createApi = ({ rootPath, setState, getState }) => {
+      const apiCall = method => ({
+        url,
+        body,
+        notFound,
+        badRequest,
+        forbidden,
+      }) => {
+        return fetch(`${rootPath}${url}`, {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: body && JSON.stringify(body),
+          credentials: "same-origin",
+        }).then(r => {
+          switch (r.status) {
+            case 200:
+              return r.json()
+            case 404:
+              return error(notFound || `${url} Not found`)
+            case 400:
+              return error(badRequest || `${url} Bad Request`)
+            case 403:
+              return error(forbidden || `${url} Forbidden`)
+            default:
+              if (
+                r.status.toString().startsWith("2") ||
+                r.status.toString().startsWith("3")
+              )
+                return r.json()
+              else return error(`${url} - ${r.statusText}`)
+          }
+        })
+      };
 
-        const apiCall = (method) => ({url, body, notFound, badRequest, forbidden}) => {
-            return fetch(`${rootPath}${url}`, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: body && JSON.stringify(body), 
-                credentials: "same-origin"
-            }).then(r => {
-                switch (r.status) {
-                    case 200:
-                        return r.json();
-                    case 404:
-                        return error(notFound || `${url} Not found`);
-                    case 400:
-                        return error(badRequest || `${url} Bad Request`);
-                    case 403:
-                        return error(forbidden || `${url} Forbidden`);
-                    default:
-                        if(r.status.toString().startsWith("2")
-                            || r.status.toString().startsWith("3"))
-                            return r.json()
-                        else
-                            return error(`${url} - ${r.statusText}`);
-                }
-            });
-        };
+      const post = apiCall("POST");
+      const get = apiCall("GET");
+      const patch = apiCall("PATCH");
+      const del = apiCall("DELETE");
 
-        const post = apiCall("POST");
-        const get = apiCall("GET");
-        const patch = apiCall("PATCH");
-        const del = apiCall("DELETE");
+      const ERROR_MEMBER = "##error";
+      const error = message => {
+        const e = {};
+        e[ERROR_MEMBER] = message;
+        setState(ERROR, message);
+        return e
+      };
 
-        const ERROR_MEMBER = "##error";
-        const error = message => {
-            const e = {};
-            e[ERROR_MEMBER] = message;
-            setState(ERROR, message);
-            return e;
-        };
+      const isSuccess = obj => !obj || !obj[ERROR_MEMBER];
 
-        const isSuccess = obj => !obj || !obj[ERROR_MEMBER];
+      const apiOpts = {
+        rootPath,
+        setState,
+        getState,
+        isSuccess,
+        error,
+        post,
+        get,
+        patch,
+        delete: del,
+      };
 
-        const apiOpts = {
-            rootPath, setState, getState, isSuccess, error,
-            post, get, patch, delete:del
-        };
-
-        return {
-            loadRecord:loadRecord(apiOpts), 
-            listRecords: listRecords(apiOpts),
-            authenticate: authenticate(apiOpts),
-            saveRecord: saveRecord(apiOpts)
-        }
+      return {
+        loadRecord: loadRecord(apiOpts),
+        listRecords: listRecords(apiOpts),
+        authenticate: authenticate(apiOpts),
+        saveRecord: saveRecord(apiOpts),
+      }
     };
 
-    const getNewChildRecordToState = (coreApi, setState) =>
-                ({recordKey, collectionName,childRecordType,statePath}) => {
-        const error = errorHandler(setState);
-        try {
-            if(!recordKey) {
-                error("getNewChild > recordKey not set");
-                return;
-            }
-
-            if(!collectionName) {
-                error("getNewChild > collectionName not set");
-                return;
-            }
-
-            if(!childRecordType) {
-                error("getNewChild > childRecordType not set");
-                return;
-            }
-
-            if(!statePath) {
-                error("getNewChild > statePath not set");
-                return;
-            }
-
-            const rec = coreApi.recordApi.getNewChild(recordKey, collectionName, childRecordType);
-            setState(statePath, rec);
+    const getNewChildRecordToState = (coreApi, setState) => ({
+      recordKey,
+      collectionName,
+      childRecordType,
+      statePath,
+    }) => {
+      const error = errorHandler(setState);
+      try {
+        if (!recordKey) {
+          error("getNewChild > recordKey not set");
+          return
         }
-        catch(e) {
-            error(e.message);
+
+        if (!collectionName) {
+          error("getNewChild > collectionName not set");
+          return
         }
+
+        if (!childRecordType) {
+          error("getNewChild > childRecordType not set");
+          return
+        }
+
+        if (!statePath) {
+          error("getNewChild > statePath not set");
+          return
+        }
+
+        const rec = coreApi.recordApi.getNewChild(
+          recordKey,
+          collectionName,
+          childRecordType
+        );
+        setState(statePath, rec);
+      } catch (e) {
+        error(e.message);
+      }
     };
 
-
-    const getNewRecordToState = (coreApi, setState) =>
-                ({collectionKey,childRecordType,statePath}) => {
-        const error = errorHandler(setState);
-        try {
-            if(!collectionKey) {
-                error("getNewChild > collectionKey not set");
-                return;
-            }
-
-            if(!childRecordType) {
-                error("getNewChild > childRecordType not set");
-                return;
-            }
-
-            if(!statePath) {
-                error("getNewChild > statePath not set");
-                return;
-            }
-
-            const rec = coreApi.recordApi.getNew(collectionKey, childRecordType);
-            setState(statePath, rec);
+    const getNewRecordToState = (coreApi, setState) => ({
+      collectionKey,
+      childRecordType,
+      statePath,
+    }) => {
+      const error = errorHandler(setState);
+      try {
+        if (!collectionKey) {
+          error("getNewChild > collectionKey not set");
+          return
         }
-        catch(e) {
-            error(e.message);
+
+        if (!childRecordType) {
+          error("getNewChild > childRecordType not set");
+          return
         }
+
+        if (!statePath) {
+          error("getNewChild > statePath not set");
+          return
+        }
+
+        const rec = coreApi.recordApi.getNew(collectionKey, childRecordType);
+        setState(statePath, rec);
+      } catch (e) {
+        error(e.message);
+      }
     };
 
     const errorHandler = setState => message => setState(ERROR, message);
 
     const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType";
 
-    const eventHandlers = (store,coreApi,rootPath) => {
-        
-        const handler = (parameters, execute) => ({
-            execute, parameters
-        });
+    const eventHandlers = (store, coreApi, rootPath) => {
+      const handler = (parameters, execute) => ({
+        execute,
+        parameters,
+      });
 
-        const setStateWithStore = (path, value) => setState(store, path, value);
+      const setStateWithStore = (path, value) => setState(store, path, value);
 
-        let currentState;
-        store.subscribe(s => {
-            currentState = s;
-        });
+      let currentState;
+      store.subscribe(s => {
+        currentState = s;
+      });
 
-        const api = createApi({
-            rootPath:rootPath,
-            setState: setStateWithStore,
-            getState: (path, fallback) => getState(currentState, path, fallback)
-        });
+      const api = createApi({
+        rootPath: rootPath,
+        setState: setStateWithStore,
+        getState: (path, fallback) => getState(currentState, path, fallback),
+      });
 
-        const setStateHandler = ({path, value}) => setState(store, path, value);
-        
-        return {
-            "Set State": handler(["path", "value"],  setStateHandler),
-            "Load Record": handler(["recordKey", "statePath"], api.loadRecord),
-            "List Records": handler(["indexKey", "statePath"], api.listRecords),
-            "Save Record": handler(["statePath"], api.saveRecord),
-            
-            "Get New Child Record": handler(
-                ["recordKey", "collectionName", "childRecordType", "statePath"], 
-                getNewChildRecordToState(coreApi, setStateWithStore)),
+      const setStateHandler = ({ path, value }) => setState(store, path, value);
 
-            "Get New Record": handler(
-                ["collectionKey", "childRecordType", "statePath"], 
-                getNewRecordToState(coreApi, setStateWithStore)),
+      return {
+        "Set State": handler(["path", "value"], setStateHandler),
+        "Load Record": handler(["recordKey", "statePath"], api.loadRecord),
+        "List Records": handler(["indexKey", "statePath"], api.listRecords),
+        "Save Record": handler(["statePath"], api.saveRecord),
 
-            "Authenticate": handler(["username", "password"], api.authenticate)
-        };
+        "Get New Child Record": handler(
+          ["recordKey", "collectionName", "childRecordType", "statePath"],
+          getNewChildRecordToState(coreApi, setStateWithStore)
+        ),
+
+        "Get New Record": handler(
+          ["collectionKey", "childRecordType", "statePath"],
+          getNewRecordToState(coreApi, setStateWithStore)
+        ),
+
+        Authenticate: handler(["username", "password"], api.authenticate),
+      }
     };
 
-    const isEventType = prop => 
-        fp_11(prop) 
-        && prop.length > 0
-        && !fp_2(prop[0][EVENT_TYPE_MEMBER_NAME]);
+    const isEventType = prop =>
+      fp_11(prop) &&
+      prop.length > 0 &&
+      !fp_2(prop[0][EVENT_TYPE_MEMBER_NAME]);
 
     const doNothing = () => {};
-    doNothing.isPlaceholder=true;
+    doNothing.isPlaceholder = true;
 
-    const isMetaProp = (propName) => 
-        propName === "_component"
-        || propName === "_children"
-        || propName === "_id"
-        || propName === "_style";
+    const isMetaProp = propName =>
+      propName === "_component" ||
+      propName === "_children" ||
+      propName === "_id" ||
+      propName === "_style";
 
     const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
+      const rootInitialProps = { ...rootProps };
 
-        const rootInitialProps = {...rootProps};
+      const getBindings = (props, initialProps) => {
+        const boundProps = [];
+        const contextBoundProps = [];
+        const componentEventHandlers = [];
 
-        const getBindings = (props, initialProps) => {
+        for (let propName in props) {
+          if (isMetaProp(propName)) continue
 
-            const boundProps = [];
-            const contextBoundProps = [];
-            const componentEventHandlers = [];
+          const val = props[propName];
 
-            for(let propName in props) {
-                
-                if(isMetaProp(propName)) continue;
+          if (isBound(val) && takeStateFromStore(val)) {
+            const binding = BindingPath(val);
+            const source = BindingSource(val);
+            const fallback = BindingFallback(val);
 
-                const val = props[propName];
-                
-                if(isBound(val) && takeStateFromStore(val)) {
-
-                    const binding = BindingPath(val);
-                    const source = BindingSource(val);
-                    const fallback = BindingFallback(val);
-
-                    boundProps.push({ 
-                        path:binding,
-                        fallback, propName, source
-                    });
-
-                    initialProps[propName] = fallback;
-                } else if(isBound(val) && takeStateFromContext(val)) {
-
-                    const binding = BindingPath(val);
-                    const fallback = BindingFallback(val);
-                    const source = BindingSource(val);
-
-                    contextBoundProps.push({ 
-                        path:binding,
-                        fallback, propName, source
-                    });
-
-                    initialProps[propName] = !context 
-                                             ? val 
-                                             : getState(
-                                                    context ,
-                                                    binding,
-                                                    fallback);
-
-                } else if(isEventType(val)) {
-
-                    const handlers = { propName, handlers:[] };
-                    componentEventHandlers.push(handlers);
-                    
-                    for(let e of val) {
-                        handlers.handlers.push({
-                            handlerType: e[EVENT_TYPE_MEMBER_NAME],
-                            parameters: e.parameters
-                        });
-                    }
-                    
-                    initialProps[propName] = doNothing;
-                }             
-            }
-
-            return {contextBoundProps, boundProps, componentEventHandlers, initialProps};
-        };
-
-
-
-        const bind = (rootBindings) => (component) => {
-
-            if(rootBindings.boundProps.length === 0 
-                && rootBindings.componentEventHandlers.length === 0) return;
-
-            const handlerTypes = eventHandlers(store, coreApi, rootPath);
-
-            const unsubscribe = store.subscribe(rootState => {
-               
-
-                const getPropsFromBindings = (s, bindings) => {
-
-                    const {boundProps, componentEventHandlers} = bindings;
-                    const newProps = {...bindings.initialProps};
-                
-                    for(let boundProp of boundProps) {
-                        const val = getState(
-                            s, 
-                            boundProp.path, 
-                            boundProp.fallback);
-
-                        if(val === undefined && newProps[boundProp.propName] !== undefined) {
-                            delete newProps[boundProp.propName];
-                        }
-
-                        if(val !== undefined) {
-                            newProps[boundProp.propName] = val;
-                        }
-                    }
-
-                    for(let boundHandler of componentEventHandlers) {
-
-                        const closuredHandlers = [];
-                        for(let h of boundHandler.handlers) {
-                            const handlerType = handlerTypes[h.handlerType];
-                            closuredHandlers.push((eventContext) => {
-
-                                const parameters = {};
-                                for(let pname in h.parameters) {
-                                    const p = h.parameters[pname];
-                                    parameters[pname] = 
-                                        !isBound(p) ? p 
-                                        : takeStateFromStore(p) ? getState(
-                                            s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                                        : takeStateFromEventParameters(p) ? getState(
-                                            eventContext, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                                        : takeStateFromContext(p) ? getState(
-                                            context, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
-                                        : p[BB_STATE_FALLBACK];
-                                    
-                                }
-                                handlerType.execute(parameters);
-                            });
-                        }
-
-                        newProps[boundHandler.propName] = async (context) => {
-                            for(let runHandler of closuredHandlers) {
-                                await runHandler(context);
-                            }
-                        };
-
-                    }
-
-                    return newProps;
-
-                };
-
-                const rootNewProps = getPropsFromBindings(rootState, rootBindings);
-                
-                component.$set(rootNewProps);
+            boundProps.push({
+              path: binding,
+              fallback,
+              propName,
+              source,
             });
 
-            return unsubscribe;
-        };
+            initialProps[propName] = fallback;
+          } else if (isBound(val) && takeStateFromContext(val)) {
+            const binding = BindingPath(val);
+            const fallback = BindingFallback(val);
+            const source = BindingSource(val);
 
-        const bindings = getBindings(rootProps, rootInitialProps);
+            contextBoundProps.push({
+              path: binding,
+              fallback,
+              propName,
+              source,
+            });
 
-        return {
-            initialProps:rootInitialProps, 
-            bind:bind(bindings), 
-            boundProps:bindings.boundProps,
-            contextBoundProps: bindings.contextBoundProps
-        };
+            initialProps[propName] = !context
+              ? val
+              : getState(context, binding, fallback);
+          } else if (isEventType(val)) {
+            const handlers = { propName, handlers: [] };
+            componentEventHandlers.push(handlers);
 
-    };
-
-    const BindingPath = (prop) => prop[BB_STATE_BINDINGPATH];
-    const BindingFallback = (prop) => prop[BB_STATE_FALLBACK];
-    const BindingSource = (prop) => prop[BB_STATE_BINDINGSOURCE];
-
-    const renderComponent = ({
-        componentConstructor, uiFunctions,
-        htmlElement, anchor, props, 
-        initialProps, bb, 
-        parentNode}) => {
-
-        const func = initialProps._id 
-                     ? uiFunctions[initialProps._id]
-                     : undefined;
-
-        const parentContext = (parentNode && parentNode.context) || {};
-                     
-        let renderedNodes = [];
-        const render = (context) => {
-            
-            let componentContext = parentContext;
-            if(context) {
-                componentContext = {...componentContext};
-                componentContext.$parent = parentContext;
+            for (let e of val) {
+              handlers.handlers.push({
+                handlerType: e[EVENT_TYPE_MEMBER_NAME],
+                parameters: e.parameters,
+              });
             }
 
-            const thisNode = createTreeNode();
-            thisNode.context = componentContext;
-            thisNode.parentNode = parentNode;
-            thisNode.props = props;
-
-            parentNode.children.push(thisNode);
-            renderedNodes.push(thisNode);
-
-            initialProps._bb = bb(thisNode, props);  
-
-            thisNode.component = new componentConstructor({
-                target: htmlElement,
-                props: initialProps,
-                hydrate:false,
-                anchor
-            });       
-
-            thisNode.rootElement = htmlElement.children[
-                htmlElement.children.length - 1];
-            
-            if (initialProps._id) {
-                thisNode.rootElement.classList.add(`pos-${initialProps._id}`);
-            }
-        };
-
-        if(func) {
-            func(render, parentContext);        
-        } else {
-            render();
+            initialProps[propName] = doNothing;
+          }
         }
 
-        return renderedNodes;
+        return {
+          contextBoundProps,
+          boundProps,
+          componentEventHandlers,
+          initialProps,
+        }
+      };
+
+      const bind = rootBindings => component => {
+        if (
+          rootBindings.boundProps.length === 0 &&
+          rootBindings.componentEventHandlers.length === 0
+        )
+          return
+
+        const handlerTypes = eventHandlers(store, coreApi, rootPath);
+
+        const unsubscribe = store.subscribe(rootState => {
+          const getPropsFromBindings = (s, bindings) => {
+            const { boundProps, componentEventHandlers } = bindings;
+            const newProps = { ...bindings.initialProps };
+
+            for (let boundProp of boundProps) {
+              const val = getState(s, boundProp.path, boundProp.fallback);
+
+              if (val === undefined && newProps[boundProp.propName] !== undefined) {
+                delete newProps[boundProp.propName];
+              }
+
+              if (val !== undefined) {
+                newProps[boundProp.propName] = val;
+              }
+            }
+
+            for (let boundHandler of componentEventHandlers) {
+              const closuredHandlers = [];
+              for (let h of boundHandler.handlers) {
+                const handlerType = handlerTypes[h.handlerType];
+                closuredHandlers.push(eventContext => {
+                  const parameters = {};
+                  for (let pname in h.parameters) {
+                    const p = h.parameters[pname];
+                    parameters[pname] = !isBound(p)
+                      ? p
+                      : takeStateFromStore(p)
+                      ? getState(s, p[BB_STATE_BINDINGPATH], p[BB_STATE_FALLBACK])
+                      : takeStateFromEventParameters(p)
+                      ? getState(
+                          eventContext,
+                          p[BB_STATE_BINDINGPATH],
+                          p[BB_STATE_FALLBACK]
+                        )
+                      : takeStateFromContext(p)
+                      ? getState(
+                          context,
+                          p[BB_STATE_BINDINGPATH],
+                          p[BB_STATE_FALLBACK]
+                        )
+                      : p[BB_STATE_FALLBACK];
+                  }
+                  handlerType.execute(parameters);
+                });
+              }
+
+              newProps[boundHandler.propName] = async context => {
+                for (let runHandler of closuredHandlers) {
+                  await runHandler(context);
+                }
+              };
+            }
+
+            return newProps
+          };
+
+          const rootNewProps = getPropsFromBindings(rootState, rootBindings);
+
+          component.$set(rootNewProps);
+        });
+
+        return unsubscribe
+      };
+
+      const bindings = getBindings(rootProps, rootInitialProps);
+
+      return {
+        initialProps: rootInitialProps,
+        bind: bind(bindings),
+        boundProps: bindings.boundProps,
+        contextBoundProps: bindings.contextBoundProps,
+      }
+    };
+
+    const BindingPath = prop => prop[BB_STATE_BINDINGPATH];
+    const BindingFallback = prop => prop[BB_STATE_FALLBACK];
+    const BindingSource = prop => prop[BB_STATE_BINDINGSOURCE];
+
+    const renderComponent = ({
+      componentConstructor,
+      uiFunctions,
+      htmlElement,
+      anchor,
+      props,
+      initialProps,
+      bb,
+      parentNode,
+    }) => {
+      const func = initialProps._id ? uiFunctions[initialProps._id] : undefined;
+
+      const parentContext = (parentNode && parentNode.context) || {};
+
+      let renderedNodes = [];
+      const render = context => {
+        let componentContext = parentContext;
+        if (context) {
+          componentContext = { ...componentContext };
+          componentContext.$parent = parentContext;
+        }
+
+        const thisNode = createTreeNode();
+        thisNode.context = componentContext;
+        thisNode.parentNode = parentNode;
+        thisNode.props = props;
+
+        parentNode.children.push(thisNode);
+        renderedNodes.push(thisNode);
+
+        initialProps._bb = bb(thisNode, props);
+
+        thisNode.component = new componentConstructor({
+          target: htmlElement,
+          props: initialProps,
+          hydrate: false,
+          anchor,
+        });
+
+        thisNode.rootElement = htmlElement.children[htmlElement.children.length - 1];
+
+        if (initialProps._id) {
+          thisNode.rootElement.classList.add(`pos-${initialProps._id}`);
+        }
+      };
+
+      if (func) {
+        func(render, parentContext);
+      } else {
+        render();
+      }
+
+      return renderedNodes
     };
 
     const createTreeNode = () => ({
-        context: {},
-        props: {},
-        rootElement: null,
-        parentNode: null,
-        children: [],
-        component: null,
-        unsubscribe: () => {}
+      context: {},
+      props: {},
+      rootElement: null,
+      parentNode: null,
+      children: [],
+      component: null,
+      unsubscribe: () => {},
+      get destroy() {
+        const node = this;
+        return () => {
+          if (node.unsubscribe) node.unsubscribe();
+          if (node.component && node.component.$destroy) node.component.$destroy();
+          if (node.children) {
+            for (let child of node.children) {
+              child.destroy();
+            }
+          }
+        }
+      },
     });
 
-    const _initialiseChildren = (initialiseOpts) => 
-                                (childrenProps, htmlElement, anchor=null) => {
+    const screenSlotComponent = window => {
+      return function(opts) {
+        const node = window.document.createElement("DIV");
+        const $set = props => {
+          props._bb.hydrateChildren(props._children, node);
+        };
+        const $destroy = () => {
+          if (opts.target && node) opts.target.removeChild(node);
+        };
+        this.$set = $set;
+        this.$destroy = $destroy;
+        opts.target.appendChild(node);
+      }
+    };
 
-        const { uiFunctions, bb, coreApi, 
-            store, componentLibraries, treeNode,
-            appDefinition, document, hydrate } = initialiseOpts;
+    const builtinLibName = "##builtin";
 
-        for(let childNode of treeNode.children) {
-            if(childNode.unsubscribe)
-                childNode.unsubscribe();
-            if(childNode.component)
-                childNode.component.$destroy();
+    const isScreenSlot = componentName =>
+      componentName === "##builtin/screenslot";
+
+    const builtins = window => ({
+      screenslot: screenSlotComponent(window),
+    });
+
+    const initialiseChildren = initialiseOpts => (
+      childrenProps,
+      htmlElement,
+      anchor = null
+    ) => {
+      const {
+        uiFunctions,
+        bb,
+        coreApi,
+        store,
+        componentLibraries,
+        treeNode,
+        frontendDefinition,
+        hydrate,
+        onScreenSlotRendered,
+      } = initialiseOpts;
+
+      for (let childNode of treeNode.children) {
+        childNode.destroy();
+      }
+
+      if (hydrate) {
+        while (htmlElement.firstChild) {
+          htmlElement.removeChild(htmlElement.firstChild);
+        }
+      }
+
+      htmlElement.classList.add(`lay-${treeNode.props._id}`);
+
+      const renderedComponents = [];
+      for (let childProps of childrenProps) {
+        const { componentName, libName } = splitName(childProps._component);
+
+        if (!componentName || !libName) return
+
+        const { initialProps, bind } = setupBinding(
+          store,
+          childProps,
+          coreApi,
+          frontendDefinition.appRootPath
+        );
+
+        const componentConstructor = componentLibraries[libName][componentName];
+
+        const renderedComponentsThisIteration = renderComponent({
+          props: childProps,
+          parentNode: treeNode,
+          componentConstructor,
+          uiFunctions,
+          htmlElement,
+          anchor,
+          initialProps,
+          bb,
+        });
+
+        if (
+          onScreenSlotRendered &&
+          isScreenSlot(childProps._component) &&
+          renderedComponentsThisIteration.length > 0
+        ) {
+          // assuming there is only ever one screen slot
+          onScreenSlotRendered(renderedComponentsThisIteration[0]);
         }
 
-        if(hydrate) {
-            while (htmlElement.firstChild) {
-                htmlElement.removeChild(htmlElement.firstChild);
-            }
+        for (let comp of renderedComponentsThisIteration) {
+          comp.unsubscribe = bind(comp.component);
+          renderedComponents.push(comp);
         }
-        
-        htmlElement.classList.add(`lay-${treeNode.props._id}`);
+      }
 
-        const renderedComponents = [];
-        for(let childProps of childrenProps) {       
-            
-            const {componentName, libName} = splitName(childProps._component);
-
-            if(!componentName || !libName) return;
-            
-            const {initialProps, bind} = setupBinding(
-                    store, childProps, coreApi,  
-                    appDefinition.appRootPath);
-           
-            const componentConstructor = componentLibraries[libName][componentName];
-
-            const renderedComponentsThisIteration = renderComponent({
-                props: childProps,
-                parentNode: treeNode,
-                componentConstructor,uiFunctions, 
-                htmlElement, anchor, initialProps, 
-                bb});
-            
-            for(let comp of renderedComponentsThisIteration) {
-                comp.unsubscribe = bind(comp.component);
-                renderedComponents.push(comp);
-            }   
-        }
-
-        return renderedComponents;
+      return renderedComponents
     };
 
     const splitName = fullname => {
-        const componentName = $(fullname, [
-            fp_3("/"),
-            fp_5
-        ]);
+      const componentName = $(fullname, [fp_3("/"), fp_5]);
 
-        const libName =fullname.substring(
-            0, fullname.length - componentName.length - 1);
+      const libName = fullname.substring(
+        0,
+        fullname.length - componentName.length - 1
+      );
 
-        return {libName, componentName}; 
+      return { libName, componentName }
     };
 
-    const createApp = (document, componentLibraries, appDefinition, user, uiFunctions) => {
-        
-        const coreApi = createCoreApi(appDefinition, user);
-        appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(appDefinition.hierarchy);
-        const store = writable({
-            _bbuser: user
+    function regexparam (str, loose) {
+    	if (str instanceof RegExp) return { keys:false, pattern:str };
+    	var c, o, tmp, ext, keys=[], pattern='', arr = str.split('/');
+    	arr[0] || arr.shift();
+
+    	while (tmp = arr.shift()) {
+    		c = tmp[0];
+    		if (c === '*') {
+    			keys.push('wild');
+    			pattern += '/(.*)';
+    		} else if (c === ':') {
+    			o = tmp.indexOf('?', 1);
+    			ext = tmp.indexOf('.', 1);
+    			keys.push( tmp.substring(1, !!~o ? o : !!~ext ? ext : tmp.length) );
+    			pattern += !!~o && !~ext ? '(?:/([^/]+?))?' : '/([^/]+?)';
+    			if (!!~ext) pattern += (!!~o ? '?' : '') + '\\' + tmp.substring(ext);
+    		} else {
+    			pattern += '/' + tmp;
+    		}
+    	}
+
+    	return {
+    		keys: keys,
+    		pattern: new RegExp('^' + pattern + (loose ? '(?=$|\/)' : '\/?$'), 'i')
+    	};
+    }
+
+    const screenRouter = (screens, onScreenSelected) => {
+      const routes = screens.map(s => s.route);
+      let fallback = routes.findIndex(([p]) => p === "*");
+      if (fallback < 0) fallback = 0;
+
+      let current;
+
+      function route(url) {
+        const _url = url.state || url;
+        current = routes.findIndex(
+          p => p !== "*" && new RegExp("^" + p + "$").test(_url)
+        );
+
+        const params = {};
+
+        if (current === -1) {
+          routes.forEach(([p], i) => {
+            const pm = regexparam(p);
+            const matches = pm.pattern.exec(_url);
+
+            if (!matches) return
+
+            let j = 0;
+            while (j < pm.keys.length) {
+              params[pm.keys[j]] = matches[++j] || null;
+            }
+
+            current = i;
+          });
+        }
+
+        const storeInitial = {};
+        const store = writable(storeInitial);
+
+        if (current !== -1) {
+          onScreenSelected(screens[current], store, _url);
+        } else if (fallback) {
+          onScreenSelected(screens[fallback], store, _url);
+        }
+
+        !url.state && history.pushState(_url, null, _url);
+      }
+
+      function click(e) {
+        const x = e.target.closest("a");
+        const y = x && x.getAttribute("href");
+
+        if (
+          e.ctrlKey ||
+          e.metaKey ||
+          e.altKey ||
+          e.shiftKey ||
+          e.button ||
+          e.defaultPrevented
+        )
+          return
+
+        if (!y || x.target || x.host !== location.host) return
+
+        e.preventDefault();
+        route(y);
+      }
+
+      addEventListener("popstate", route);
+      addEventListener("pushstate", route);
+      addEventListener("click", click);
+
+      return route
+    };
+
+    const createApp = (
+      document,
+      componentLibraries,
+      frontendDefinition,
+      backendDefinition,
+      user,
+      uiFunctions,
+      screens
+    ) => {
+      const coreApi = createCoreApi(backendDefinition, user);
+      backendDefinition.hierarchy = coreApi.templateApi.constructHierarchy(
+        backendDefinition.hierarchy
+      );
+      const pageStore = writable({
+        _bbuser: user,
+      });
+
+      const relativeUrl = url =>
+        frontendDefinition.appRootPath
+          ? frontendDefinition.appRootPath + "/" + trimSlash(url)
+          : url;
+
+      const apiCall = method => (url, body) =>
+        fetch(relativeUrl(url), {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: body && JSON.stringify(body),
         });
 
+      const api = {
+        post: apiCall("POST"),
+        get: apiCall("GET"),
+        patch: apiCall("PATCH"),
+        delete: apiCall("DELETE"),
+      };
 
-        let globalState = null;
-        store.subscribe(s => {
-            globalState = s;
-        });
+      const safeCallEvent = (event, context) => {
+        const isFunction = obj =>
+          !!(obj && obj.constructor && obj.call && obj.apply);
 
-        const relativeUrl = (url) =>  
-            appDefinition.appRootPath 
-            ? appDefinition.appRootPath + "/" + trimSlash(url)
-            : url;
+        if (isFunction(event)) event(context);
+      };
 
+      let routeTo;
+      let currentScreenStore;
+      let currentScreenUbsubscribe;
+      let currentUrl;
 
-        const apiCall = (method) => (url, body) => 
-            fetch(relativeUrl(url), {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: body && JSON.stringify(body), 
-            });
-
-        const api = {
-            post: apiCall("POST"),
-            get: apiCall("GET"),
-            patch: apiCall("PATCH"),
-            delete: apiCall("DELETE")
+      const onScreenSlotRendered = screenSlotNode => {
+        const onScreenSelected = (screen, store, url) => {
+          const { getInitialiseParams, unsubscribe } = initialiseChildrenParams(
+            store
+          );
+          const initialiseChildParams = getInitialiseParams(true, screenSlotNode);
+          initialiseChildren(initialiseChildParams)(
+            [screen.props],
+            screenSlotNode.rootElement
+          );
+          if (currentScreenUbsubscribe) currentScreenUbsubscribe();
+          currentScreenUbsubscribe = unsubscribe;
+          currentScreenStore = store;
+          currentUrl = url;
         };
 
-        const safeCallEvent = (event, context) => {
-            
-            const isFunction = (obj) =>
-                !!(obj && obj.constructor && obj.call && obj.apply);
+        routeTo = screenRouter(screens, onScreenSelected);
+        routeTo(currentUrl || window.location.pathname);
+      };
 
-            if(isFunction(event)) event(context);
-        };
-
-        const initialiseChildrenParams = (hydrate, treeNode) =>  ({
-            bb, coreApi, store, document,
-            componentLibraries, appDefinition, 
-            hydrate, uiFunctions, treeNode
+      const initialiseChildrenParams = store => {
+        let currentState = null;
+        const unsubscribe = store.subscribe(s => {
+          currentState = s;
         });
 
-        const bb = (treeNode, componentProps) => ({
-            hydrateChildren: _initialiseChildren(initialiseChildrenParams(true, treeNode)), 
-            appendChildren: _initialiseChildren(initialiseChildrenParams(false, treeNode)), 
-            insertChildren: (props, htmlElement, anchor) => 
-                _initialiseChildren(initialiseChildrenParams(false, treeNode))
-                                    (props, htmlElement, anchor), 
+        const getInitialiseParams = (hydrate, treeNode) => ({
+          bb: getBbClientApi,
+          coreApi,
+          store,
+          document,
+          componentLibraries,
+          frontendDefinition,
+          hydrate,
+          uiFunctions,
+          treeNode,
+          onScreenSlotRendered,
+        });
+
+        const getBbClientApi = (treeNode, componentProps) => {
+          return {
+            hydrateChildren: initialiseChildren(
+              getInitialiseParams(true, treeNode)
+            ),
+            appendChildren: initialiseChildren(
+              getInitialiseParams(false, treeNode)
+            ),
+            insertChildren: (props, htmlElement, anchor) =>
+              initialiseChildren(getInitialiseParams(false, treeNode))(
+                props,
+                htmlElement,
+                anchor
+              ),
             context: treeNode.context,
             props: componentProps,
-            call:safeCallEvent,
-            setStateFromBinding: (binding, value) => setStateFromBinding(store, binding, value),
+            call: safeCallEvent,
+            setStateFromBinding: (binding, value) =>
+              setStateFromBinding(store, binding, value),
             setState: (path, value) => setState(store, path, value),
-            getStateOrValue: (prop, currentContext) => 
-                getStateOrValue(globalState, prop, currentContext),
+            getStateOrValue: (prop, currentContext) =>
+              getStateOrValue(currentState, prop, currentContext),
             store,
             relativeUrl,
             api,
             isBound,
-            parent
-        });
+            parent,
+          }
+        };
+        return { getInitialiseParams, unsubscribe }
+      };
 
-        return bb(createTreeNode());
+      let rootTreeNode;
 
+      const initialisePage = (page, target, urlPath) => {
+        currentUrl = urlPath;
+
+        rootTreeNode = createTreeNode();
+        const { getInitialiseParams } = initialiseChildrenParams(pageStore);
+        const initChildParams = getInitialiseParams(true, rootTreeNode);
+
+        initialiseChildren(initChildParams)([page.props], target);
+
+        return rootTreeNode
+      };
+      return {
+        initialisePage,
+        screenStore: () => currentScreenStore,
+        pageStore: () => pageStore,
+        routeTo: () => routeTo,
+        rootNode: () => rootTreeNode,
+      }
     };
 
     const loadBudibase = async ({
-        componentLibraries, props, 
-        window, localStorage, uiFunctions }) => {
+      componentLibraries,
+      page,
+      screens,
+      window,
+      localStorage,
+      uiFunctions,
+    }) => {
+      const backendDefinition = window["##BUDIBASE_BACKEND_DEFINITION##"];
+      const frontendDefinition = window["##BUDIBASE_FRONTEND_DEFINITION##"];
+      const uiFunctionsFromWindow = window["##BUDIBASE_FRONTEND_FUNCTIONS##"];
+      uiFunctions = uiFunctionsFromWindow || uiFunctions;
 
-        const appDefinition = window["##BUDIBASE_APPDEFINITION##"];
-        const uiFunctionsFromWindow = window["##BUDIBASE_APPDEFINITION##"];
-        uiFunctions = uiFunctionsFromWindow || uiFunctions;
+      const userFromStorage = localStorage.getItem("budibase:user");
 
-        const userFromStorage = localStorage.getItem("budibase:user");
-
-        const user = userFromStorage ? JSON.parse(userFromStorage) : {
+      const user = userFromStorage
+        ? JSON.parse(userFromStorage)
+        : {
             name: "annonymous",
-            permissions : [],
-            isUser:false,
-            temp:false
-        };
+            permissions: [],
+            isUser: false,
+            temp: false,
+          };
 
-        if(!componentLibraries) {
+      const rootPath =
+        frontendDefinition.appRootPath === ""
+          ? ""
+          : "/" + trimSlash(frontendDefinition.appRootPath);
 
-            const rootPath = appDefinition.appRootPath === "" 
-                             ? "" 
-                             : "/" + trimSlash(appDefinition.appRootPath);
-            const componentLibraryUrl = (lib) =>  rootPath + "/" + trimSlash(lib);
-            componentLibraries = {};
+      if (!componentLibraries) {
+        
+        const componentLibraryUrl = lib => rootPath + "/" + trimSlash(lib);
+        componentLibraries = {};
 
-            for(let lib of appDefinition.componentLibraries) {
-                componentLibraries[lib.libName] = await import(
-                    componentLibraryUrl(lib.importPath)); 
-            }
-
+        for (let lib of frontendDefinition.componentLibraries) {
+          componentLibraries[lib.libName] = await import(
+            componentLibraryUrl(lib.importPath)
+          );
         }
+      }
 
-        if(!props) {
-            props = appDefinition.props;
-        }
+      componentLibraries[builtinLibName] = builtins(window);
 
-        const app = createApp(
-            window.document,
-            componentLibraries, 
-            appDefinition,  
-            user, 
-            uiFunctions || {});
-        app.hydrateChildren(
-            [props],
-            window.document.body);
+      if (!page) {
+        page = frontendDefinition.page;
+      }
 
-        return app;
+      if (!screens) {
+        screens = frontendDefinition.screens;
+      }
+
+      const { initialisePage, screenStore, pageStore, routeTo, rootNode } = createApp(
+        window.document,
+        componentLibraries,
+        frontendDefinition,
+        backendDefinition,
+        user,
+        uiFunctions || {},
+        screens
+      );
+
+      const route = window.location 
+                    ? window.location.pathname.replace(rootPath, "")
+                    : "";
+
+      return {
+        rootNode: initialisePage(page, window.document.body, route),
+        screenStore,
+        pageStore,
+        routeTo,
+        rootNode
+      }
     };
 
-    if(window) {
-        window.loadBudibase = loadBudibase;
+    if (window) {
+      window.loadBudibase = loadBudibase;
     }
 
     exports.loadBudibase = loadBudibase;

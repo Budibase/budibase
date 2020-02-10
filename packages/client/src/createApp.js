@@ -11,22 +11,23 @@ import { screenRouter } from "./render/screenRouter"
 export const createApp = (
   document,
   componentLibraries,
-  appDefinition,
+  frontendDefinition,
+  backendDefinition,
   user,
   uiFunctions,
   screens
 ) => {
-  const coreApi = createCoreApi(appDefinition, user)
-  appDefinition.hierarchy = coreApi.templateApi.constructHierarchy(
-    appDefinition.hierarchy
+  const coreApi = createCoreApi(backendDefinition, user)
+  backendDefinition.hierarchy = coreApi.templateApi.constructHierarchy(
+    backendDefinition.hierarchy
   )
   const pageStore = writable({
     _bbuser: user,
   })
 
   const relativeUrl = url =>
-    appDefinition.appRootPath
-      ? appDefinition.appRootPath + "/" + trimSlash(url)
+    frontendDefinition.appRootPath
+      ? frontendDefinition.appRootPath + "/" + trimSlash(url)
       : url
 
   const apiCall = method => (url, body) =>
@@ -89,7 +90,7 @@ export const createApp = (
       store,
       document,
       componentLibraries,
-      appDefinition,
+      frontendDefinition,
       hydrate,
       uiFunctions,
       treeNode,

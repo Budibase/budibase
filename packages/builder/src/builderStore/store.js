@@ -295,7 +295,7 @@ const saveCurrentNode = store => () => {
 
     s.currentNodeIsNew = false
 
-    savePackage(store, s)
+    saveBackend(s)
 
     return s
   })
@@ -331,7 +331,7 @@ const deleteCurrentNode = store => () => {
       )(nodeToDelete.parent().indexes)
     }
     s.errors = []
-    savePackage(store, s)
+    saveBackend(s)
     return s
   })
 }
@@ -370,7 +370,7 @@ const saveAction = store => (newAction, isNew, oldAction = null) => {
     } else {
       s.actions.push(newAction)
     }
-    savePackage(store, s)
+    saveBackend(s)
     return s
   })
 }
@@ -378,7 +378,7 @@ const saveAction = store => (newAction, isNew, oldAction = null) => {
 const deleteAction = store => action => {
   store.update(s => {
     s.actions = filter(a => a.name !== action.name)(s.actions)
-    savePackage(store, s)
+    saveBackend(s)
     return s
   })
 }
@@ -396,7 +396,7 @@ const saveTrigger = store => (newTrigger, isNew, oldTrigger = null) => {
     } else {
       s.triggers.push(newTrigger)
     }
-    savePackage(store, s)
+    saveBackend(s)
     return s
   })
 }
@@ -429,7 +429,7 @@ const saveLevel = store => (newLevel, isNew, oldLevel = null) => {
 
     incrementAccessLevelsVersion(s)
 
-    savePackage(store, s)
+    saveBackend(s)
     return s
   })
 }
@@ -440,7 +440,7 @@ const deleteLevel = store => level => {
       s.accessLevels.levels
     )
     incrementAccessLevelsVersion(s)
-    savePackage(store, s)
+    saveBackend(s)
     return s
   })
 }
@@ -477,18 +477,18 @@ const _saveScreen = (store, s, screen) => {
       `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
       screen
     )
-    .then(() => savePackage(store, s))
+    .then(() => _savePage(s))
 
   return s
 }
 
-const _save = (appname, screen, store, s) =>
+const _saveScreenApi = (screen, s) =>
   api
     .post(
       `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
       screen
     )
-    .then(() => savePackage(store, s))
+    .then(() => _savePage(s))
 
 const createScreen = store => (screenName, route, layoutComponentName) => {
   store.update(s => {
@@ -530,7 +530,7 @@ const createGeneratedComponents = store => components => {
         await api.post(`/_builder/api/${s.appname}/screen`, c)
       }
 
-      await savePackage(store, s)
+      await _savePage(s)
     }
 
     doCreate()
@@ -591,7 +591,7 @@ const renameScreen = store => (oldname, newname) => {
       })
       .then(() => saveAllChanged())
       .then(() => {
-        savePackage(store, s)
+        _savePage(s)
       })
 
     return s
@@ -605,7 +605,7 @@ const savePage = store => async page => {
     }
 
     s.pages[s.currentPageName] = page
-    savePackage(store, s)
+    _savePage(s)
     return s
   })
 }
@@ -634,7 +634,7 @@ const addComponentLibrary = store => async lib => {
       ])
 
       s.pages.componentLibraries.push(lib)
-      savePackage(store, s)
+      _savePage(s)
     }
 
     return s
@@ -646,7 +646,7 @@ const removeComponentLibrary = store => lib => {
     s.pages.componentLibraries = filter(l => l !== lib)(
       s.pages.componentLibraries
     )
-    savePackage(store, s)
+    _savePage(s)
 
     return s
   })
@@ -655,7 +655,7 @@ const removeComponentLibrary = store => lib => {
 const addStylesheet = store => stylesheet => {
   store.update(s => {
     s.pages.stylesheets.push(stylesheet)
-    savePackage(store, s)
+    _savePage(s)
     return s
   })
 }
@@ -663,14 +663,14 @@ const addStylesheet = store => stylesheet => {
 const removeStylesheet = store => stylesheet => {
   store.update(s => {
     s.pages.stylesheets = filter(s => s !== stylesheet)(s.pages.stylesheets)
-    savePackage(store, s)
+    _savePage(s)
     return s
   })
 }
 
 const refreshComponents = store => async () => {
   const componentsAndGenerators = await api
-    .get(`/_builder/api/${db.appname}/components`)
+    .get(`/_builder/api/${appname}/components`)
     .then(r => r.json())
 
   const components = pipe(componentsAndGenerators.components, [
@@ -688,20 +688,24 @@ const refreshComponents = store => async () => {
   })
 }
 
-const savePackage = async (store, s) => {
+const _savePage = async s => {
   const page = s.pages[s.currentPageName]
 
   await api.post(`/_builder/api/${appname}/pages/${s.currentPageName}`, {
+    page: { componentLibraries: s.pages.componentLibraries, ...page },
+    uiFunctions: "{'1234':() => 'test return'}",
+    screens: page.screens,
+  })
+}
+
+const saveBackend = async s => {
+  await api.post(`/_builder/api/${appname}/backend`, {
     appDefinition: {
       hierarchy: s.hierarchy,
       actions: s.actions,
       triggers: s.triggers,
     },
     accessLevels: s.accessLevels,
-    page: { componentLibraries: s.pages.componentLibraries, ...page },
-    uiFunctions: "{'1234':() => 'test return'}",
-    props: page.props,
-    screens: page.screens,
   })
 }
 
@@ -731,7 +735,7 @@ const addChildComponent = store => componentName => {
       newComponent.props
     )
 
-    savePackage(store, s)
+    _savePage(s)
 
     return s
   })
@@ -750,7 +754,7 @@ const setComponentProp = store => (name, value) => {
     s.currentComponentInfo[name] = value
 
     s.currentFrontEndType === "page"
-      ? savePackage(store, s, s.currentPreviewItem)
+      ? _savePage(s, s.currentPreviewItem)
       : _saveScreen(store, s, s.currentPreviewItem)
 
     s.currentComponentInfo = current_component
@@ -770,8 +774,8 @@ const setComponentStyle = store => (type, name, value) => {
 
     // save without messing with the store
     s.currentFrontEndType === "page"
-      ? savePackage(store, s, s.currentPreviewItem)
-      : _save(s.appname, s.currentPreviewItem, store, s)
+      ? _savePage(s)
+      : _saveScreenApi(s.currentPreviewItem, s)
     return s
   })
 }
@@ -782,7 +786,7 @@ const setComponentCode = store => code => {
 
     setCurrentScreenFunctions(s)
     // save without messing with the store
-    _save(s.appname, s.currentPreviewItem, store, s)
+    _saveScreenApi(s.currentPreviewItem, s)
 
     return s
   })
