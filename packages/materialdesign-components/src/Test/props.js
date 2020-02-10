@@ -1,5 +1,6 @@
 const getComponent = comp => `@budibase//materialdesign-components/${comp}`;
 
+
 export const props = {
   justAnH1: {
     _component: "@budibase/materialdesign-components/h1",
@@ -27,11 +28,11 @@ export const props = {
   textfield: {
     _component: "@budibase/materialdesign-components/textfield",
     _children: [],
-    label: "Surname",
-    icon: "alarm_on",
-    variant: "outlined",
-    helperText: "Add Surname",
+    label: "First",
+    colour: "secondary",
     textarea: true,
+    fullwidth:true,
+    helperText: "Add Surname",
     useCharCounter: true
   }
 };
