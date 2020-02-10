@@ -146,7 +146,6 @@ export const setupBinding = (store, rootProps, coreApi, context, rootPath) => {
           }
 
           newProps[boundHandler.propName] = async context => {
-            console.log(closuredHandlers);
             for (let runHandler of closuredHandlers) {
               await runHandler(context)
             }

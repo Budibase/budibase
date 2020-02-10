@@ -28,11 +28,7 @@
       {/each}
     </select>
   {:else}
-    <PropertyCascader 
-      {onChanged}
-      {type}
-      on:change={ev => onChanged(ev.target.value)} 
-    />
+    <PropertyCascader {onChanged} {value} />
   {/if}
 </div>
 
