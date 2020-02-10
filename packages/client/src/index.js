@@ -10,8 +10,9 @@ export const loadBudibase = async ({
   localStorage,
   uiFunctions,
 }) => {
-  const appDefinition = window["##BUDIBASE_APPDEFINITION##"]
-  const uiFunctionsFromWindow = window["##BUDIBASE_UIFUNCTIONS##"]
+  const backendDefinition = window["##BUDIBASE_BACKEND_DEFINITION##"]
+  const frontendDefinition = window["##BUDIBASE_FRONTEND_DEFINITION##"]
+  const uiFunctionsFromWindow = window["##BUDIBASE_FRONTEND_FUNCTIONS##"]
   uiFunctions = uiFunctionsFromWindow || uiFunctions
 
   const userFromStorage = localStorage.getItem("budibase:user")
@@ -26,16 +27,16 @@ export const loadBudibase = async ({
       }
 
   const rootPath =
-    appDefinition.appRootPath === ""
+    frontendDefinition.appRootPath === ""
       ? ""
-      : "/" + trimSlash(appDefinition.appRootPath)
+      : "/" + trimSlash(frontendDefinition.appRootPath)
 
   if (!componentLibraries) {
     
     const componentLibraryUrl = lib => rootPath + "/" + trimSlash(lib)
     componentLibraries = {}
 
-    for (let lib of appDefinition.componentLibraries) {
+    for (let lib of frontendDefinition.componentLibraries) {
       componentLibraries[lib.libName] = await import(
         componentLibraryUrl(lib.importPath)
       )
@@ -45,17 +46,18 @@ export const loadBudibase = async ({
   componentLibraries[builtinLibName] = builtins(window)
 
   if (!page) {
-    page = appDefinition.page
+    page = frontendDefinition.page
   }
 
   if (!screens) {
-    screens = appDefinition.screens
+    screens = frontendDefinition.screens
   }
 
   const { initialisePage, screenStore, pageStore, routeTo, rootNode } = createApp(
     window.document,
     componentLibraries,
-    appDefinition,
+    frontendDefinition,
+    backendDefinition,
     user,
     uiFunctions || {},
     screens

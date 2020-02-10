@@ -51,12 +51,15 @@ const autoAssignIds = (props, count = 0) => {
 }
 
 const setAppDef = (window, page, screens) => {
-  window["##BUDIBASE_APPDEFINITION##"] = {
+  window["##BUDIBASE_FRONTEND_DEFINITION##"] = {
     componentLibraries: [],
     page,
     screens,
-    hierarchy: {},
     appRootPath: "",
+  }
+
+  window["##BUDIBASE_BACKEND_DEFINITION##"] = {
+    hierarchy: {},
   }
 }
 
