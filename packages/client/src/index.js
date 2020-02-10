@@ -1,15 +1,17 @@
 import { createApp } from "./createApp"
 import { trimSlash } from "./common/trimSlash"
+import { builtins, builtinLibName } from "./render/builtinComponents"
 
 export const loadBudibase = async ({
   componentLibraries,
-  props,
+  page,
+  screens,
   window,
   localStorage,
   uiFunctions,
 }) => {
   const appDefinition = window["##BUDIBASE_APPDEFINITION##"]
-  const uiFunctionsFromWindow = window["##BUDIBASE_APPDEFINITION##"]
+  const uiFunctionsFromWindow = window["##BUDIBASE_UIFUNCTIONS##"]
   uiFunctions = uiFunctionsFromWindow || uiFunctions
 
   const userFromStorage = localStorage.getItem("budibase:user")
@@ -23,11 +25,13 @@ export const loadBudibase = async ({
         temp: false,
       }
 
+  const rootPath =
+    appDefinition.appRootPath === ""
+      ? ""
+      : "/" + trimSlash(appDefinition.appRootPath)
+
   if (!componentLibraries) {
-    const rootPath =
-      appDefinition.appRootPath === ""
-        ? ""
-        : "/" + trimSlash(appDefinition.appRootPath)
+    
     const componentLibraryUrl = lib => rootPath + "/" + trimSlash(lib)
     componentLibraries = {}
 
@@ -38,20 +42,36 @@ export const loadBudibase = async ({
     }
   }
 
-  if (!props) {
-    props = appDefinition.props
+  componentLibraries[builtinLibName] = builtins(window)
+
+  if (!page) {
+    page = appDefinition.page
   }
 
-  const app = createApp(
+  if (!screens) {
+    screens = appDefinition.screens
+  }
+
+  const { initialisePage, screenStore, pageStore, routeTo, rootNode } = createApp(
     window.document,
     componentLibraries,
     appDefinition,
     user,
-    uiFunctions || {}
+    uiFunctions || {},
+    screens
   )
-  app.hydrateChildren([props], window.document.body)
 
-  return app
+  const route = window.location 
+                ? window.location.pathname.replace(rootPath, "")
+                : "";
+
+  return {
+    rootNode: initialisePage(page, window.document.body, route),
+    screenStore,
+    pageStore,
+    routeTo,
+    rootNode
+  }
 }
 
 if (window) {

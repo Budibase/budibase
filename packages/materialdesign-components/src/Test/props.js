@@ -23,12 +23,12 @@ export const props = {
     trailingIcon: true,
     fullwidth: false,
     text: "I am button",
-    disabled: false
+    disabled: false,
   },
   icon: {
     _component: "@budibase/materialdesign-components/icon",
     _children: [],
-    icon: ""
+    icon: "",
   },
   textfield: {
     _component: "@budibase/materialdesign-components/textfield",
@@ -39,6 +39,4 @@ export const props = {
     fullwidth:true,
     helperText: "Add Surname",
     useCharCounter: true
-  }
-};
-
+}

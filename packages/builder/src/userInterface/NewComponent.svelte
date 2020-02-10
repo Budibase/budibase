@@ -25,13 +25,14 @@
   let route = ""
   let saveAttempted = false
 
-
-
   store.subscribe(s => {
-    layoutComponents = pipe(s.components, [
-      filter(c => c.container),
-      map(c => ({ name: c.name, ...splitName(c.name) })),
-    ])
+    layoutComponents = pipe(
+      s.components,
+      [
+        filter(c => c.container),
+        map(c => ({ name: c.name, ...splitName(c.name) })),
+      ]
+    )
 
     layoutComponent = layoutComponent
       ? find(c => c.name === layoutComponent.name)(layoutComponents)
@@ -56,8 +57,11 @@
     UIkit.modal(componentSelectorModal).hide()
   }
 
-  const screenNameExists = name =>
-    some(s => s.name.toLowerCase() === name.toLowerCase())(screens)
+  const screenNameExists = name => {
+    return some(s => {
+      return s.name.toLowerCase() === name.toLowerCase()
+    })(screens)
+  }
 </script>
 
 <div bind:this={componentSelectorModal} id="new-component-modal" uk-modal>
