@@ -1,43 +1,70 @@
 export default class ClassBuilder {
-  constructor(block, customDefaults) {
+  constructor(block, defaultIgnoreList) {
     this.block = `mdc-${block}`;
-    this.customDefaults = customDefaults; //will be ignored when building custom classes
+    this.defaultIgnoreList = defaultIgnoreList; //will be ignored when building custom classes
   }
 
-  // classParams: {modifiers:[] (mdc), custom:[] (bbmd), extra:[] (any)}
-  blocks(classParams) {
-    let base = this.block;
-    if (classParams == undefined) return base;
-    return this.buildClass(base, classParams);
+  /* 
+  handles both blocks and elementss (BEM MD Notation) 
+  params = {elementName: string, props: {modifiers{}, customs:{}, extras: []}}
+  All are optional 
+  */
+  build(params) {
+    if (!params) return this.block; //return block if nothing passed
+    const { props, elementName } = params;
+    let base = !!elementName ? `${this.block}__${elementName}` : this.block;
+    if (!props) return base;
+    return this._handleProps(base, props);
   }
 
-  //elementName: string, classParams: {}
-  elements(elementName, classParams) {
-    let base = `${this.block}__${elementName}`;
-    if (classParams == undefined) return base;
-    return this.buildClass(base, classParams);
+  //Easily grab a simple element class
+  elem(elementName) {
+    return this.build({ elementName });
   }
 
-  //TODO: Classparams modifier and custom could take an object. Booleans or numbers use key value for classes, strings use property value for classes. Extras to stay as is
-  buildClass(base, classParams) {
+  //use if a different base is needed than whats defined by this.block
+  debase(base, elementProps) {
+    if (!elementProps) return base;
+    return this._handleProps(base, elementProps);
+  }
+
+  //proxies bindProps and checks for which elementProps exist before binding
+  _handleProps(base, elementProps) {
     let cls = base;
-    const { modifiers, customs, extras } = classParams;
-    if (!!modifiers)
-      cls += modifiers.map(m => (!!m ? ` ${base}--${m}` : "")).join(" ");
-    if (!!customs)
-      cls += Object.entries(customs)
-        .map(([property, value]) => {
-          //disregard falsy and values set by customDefaults constructor param
-          if (
-            !!value &&
-            (!this.customDefaults || !this.customDefaults.includes(value))
-          ) {
-            //custom scss name convention = bbmd-[block | element]--[property]-[value]
-            return ` bbmd-${base}--${property}-${value}`;
-          }
-        })
-        .join("");
+    const { modifiers, customs, extras } = elementProps;
+    if (!!modifiers) cls += this._bindProps(modifiers, base);
+    if (!!customs) cls += this._bindProps(customs, base, true);
     if (!!extras) cls += ` ${extras.join(" ")}`;
     return cls.trim();
+  }
+
+  /* 
+  Handles both modifiers and customs. Use property, value or both depending 
+  on whether it is passsed props for custom or modifiers
+  if custom uses the following convention for scss mixins:
+  bbmd-{this.block}--{property}-{value}
+  bbmd-mdc-button--size-large
+   */
+  _bindProps(elementProps, base, isCustom = false) {
+    return Object.entries(elementProps)
+      .map(([property, value]) => {
+        //disregard falsy and values set by defaultIgnoreList constructor param
+        if (
+          !!value &&
+          (!this.defaultIgnoreList || !this.defaultIgnoreList.includes(value))
+        ) {
+          let classBase = isCustom ? `bbmd-${base}` : `${base}`;
+          let valueType = typeof value;
+
+          if (valueType == "string" || valueType == "number") {
+            return isCustom
+              ? ` ${classBase}--${property}-${value}`
+              : ` ${classBase}--${value}`;
+          } else if (valueType == "boolean") {
+            return ` ${classBase}--${property}`;
+          }
+        }
+      })
+      .join("");
   }
 }
