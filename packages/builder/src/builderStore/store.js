@@ -504,7 +504,10 @@ const _saveScreen = (store, s, screen) => {
 
 const _save = (appname, screen, store, s) =>
   api
-    .post(`/_builder/api/${appname}/screen`, screen)
+    .post(
+      `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
+      screen
+    )
     .then(() => savePackage(store, s))
 
 const createScreen = store => (screenName, route, layoutComponentName) => {
