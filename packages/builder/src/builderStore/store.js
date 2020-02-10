@@ -37,7 +37,7 @@ import {
 } from "./loadComponentLibraries"
 import { buildCodeForScreens } from "./buildCodeForScreens"
 import { generate_screen_css } from "./generate_css"
-import { uuid } from "./uuid"
+// import { uuid } from "./uuid"
 
 let appname = ""
 
@@ -146,30 +146,12 @@ const initialise = (store, initial) => async () => {
     componentLibraries: ["@budibase/standard-components"],
     stylesheets: [],
     main: {
-      name: "main",
-      props: {
-        _component: "@budibase/standard-components/div",
-        _children: [],
-        _styles: { position: {}, layout: {} },
-        _id: uuid(),
-      },
+      ...pkg.pages.main,
       _screens: Object.values(main_screens),
-      index: {},
-      appBody: "",
     },
     unauthenticated: {
-      name: "unauthenticated",
-      // componentLibraries: { "@budibase/standard-components": {} },
-      stylesheets: [],
-      props: {
-        _component: "@budibase/standard-components/div",
-        _children: [],
-        _styles: { position: {}, layout: {} },
-        _id: uuid(),
-      },
-      _screens: [],
-      index: {},
-      appBody: "",
+      ...pkg.pages.unauthenticated,
+      _screens: Object.values(main_screens),
     },
   }
 
@@ -792,8 +774,6 @@ const setComponentStyle = store => (type, name, value) => {
     s.currentFrontEndType === "page"
       ? savePackage(store, s, s.currentPreviewItem)
       : _save(s.appname, s.currentPreviewItem, store, s)
-
-
     return s
   })
 }

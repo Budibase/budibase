@@ -7,7 +7,7 @@
 
   function transform_component(comp) {
     const props = comp.props || comp
-    if (props._children.length) {
+    if (props && props._children && props._children.length) {
       props._children = props._children.map(transform_component)
     }
 
