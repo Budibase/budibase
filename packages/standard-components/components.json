@@ -63,6 +63,7 @@
 		"name": "Input",
 		"description": "An HTML input",
 		"props" : {
+			"onChange": "event",
 			"value": "string",
 			"type": {
 				"type":"options", 
