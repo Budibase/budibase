@@ -3,43 +3,17 @@
   import { store } from "../builderStore";
   import { isBinding, getBinding, setBinding } from "../common/binding";
 
-  export let value = "";
   export let onChanged = () => {};
-  export let type = "";
+  export let value = "";
 
   let isOpen = false;
   let stateBindings = [];
 
-  let isBound = false;
   let bindingPath = "";
   let bindingFallbackValue = "";
   let bindingSource = "store";
-  let isExpanded = false;
-  let forceIsBound = false;
-  let canOnlyBind = false;
 
-  $: {
-    canOnlyBind = type === "state";
-    if (!forceIsBound && canOnlyBind) forceIsBound = true;
-
-    isBound = forceIsBound || isBinding(value);
-
-    if (isBound) {
-      const binding = getBinding(value);
-      bindingPath = binding.path;
-      bindingFallbackValue = binding.fallback;
-      bindingSource = binding.source || "store";
-    } else {
-      bindingPath = "";
-      bindingFallbackValue = "";
-      bindingSource = "store";
-    }
-  }
-
-  const clearBinding = () => {
-    forceIsBound = false;
-    onChanged("");
-  };
+  const clearBinding = () => onChanged("");
 
   const bind = (path, fallback, source) => {
     if (!path) {
@@ -50,10 +24,8 @@
     onChanged(binding);
   };
 
-  const setBindingPath = value => {
-    forceIsBound = canOnlyBind;
+  const setBindingPath = value =>
     bind(value, bindingFallbackValue, bindingSource);
-  };
 
   const setBindingFallback = value => bind(bindingPath, value, bindingSource);
 
@@ -61,10 +33,15 @@
     bind(bindingPath, bindingFallbackValue, value);
 
   $: {
+
+    const binding = getBinding(value);
+    bindingPath = binding.path
+    bindingFallbackValue = binding.fallback
+
     console.log({
       bindingFallbackValue,
       bindingPath,
-      value
+      value,
     });
 
     const currentScreen = $store.screens.find(
@@ -79,9 +56,9 @@
     <input
       class="uk-input uk-form-small"
       value={bindingFallbackValue}
-      on:change={e => { 
-        setBindingFallback(e.target.value)
-      }}/>
+      on:change={e => {
+        setBindingFallback(e.target.value);
+      }} />
     <button on:click={() => (isOpen = !isOpen)}>
       <span
         class="icon"
