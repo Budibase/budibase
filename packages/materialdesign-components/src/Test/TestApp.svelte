@@ -7,15 +7,13 @@
   const _appPromise = createApp()
   _appPromise.then(a => (_bb = a))
 
-  const testProps = props.justAnH1
-  const button = props.button
-  const textfield = props.textfield
+  const { h1, overline, button, textfield } = props
 
   let currentComponent
 
   $: {
     if (_bb && currentComponent) {
-      _bb.hydrateChildren([testProps, button, textfield], currentComponent)
+      _bb.hydrateChildren([h1, overline, button, textfield], currentComponent)
     }
   }
 </script>
