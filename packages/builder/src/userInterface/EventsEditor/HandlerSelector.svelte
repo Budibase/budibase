@@ -71,9 +71,9 @@
     handlerChanged(handlerType.name, defaultParams)
   }
 
-  const onParameterChanged = index => value => {
+  const onParameterChanged = index => e => {
     const newParams = [...parameters]
-    newParams[index].value = value
+    newParams[index].value = e.target.value
     handlerChanged(handlerType, newParams)
   }
 </script>
@@ -93,9 +93,10 @@
       {#each parameters as param, idx}
         <div class="handler-option">
           <span>{param.name}</span>
-          <StateBindingControl
-            onChanged={onParameterChanged(idx)}
-            value={param.value} />
+          <input 
+            on:change={onParameterChanged(idx)}
+            value={param.value}
+          >
         </div>
       {/each}
     {/if}
