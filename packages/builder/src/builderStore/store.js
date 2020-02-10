@@ -7,7 +7,6 @@ import {
   last,
   keys,
   concat,
-  keyBy,
   find,
   isEmpty,
   values,
@@ -145,6 +144,7 @@ const initialise = (store, initial) => async () => {
 
   pkg.pages = {
     componentLibraries: ["@budibase/standard-components"],
+    stylesheets: [],
     main: {
       name: "main",
       props: {
@@ -157,9 +157,10 @@ const initialise = (store, initial) => async () => {
       index: {},
       appBody: "",
     },
-    stylesheets: [],
     unauthenticated: {
       name: "unauthenticated",
+      // componentLibraries: { "@budibase/standard-components": {} },
+      stylesheets: [],
       props: {
         _component: "@budibase/standard-components/div",
         _children: [],
@@ -711,17 +712,27 @@ const refreshComponents = store => async () => {
   })
 }
 
-const savePackage = (store, s) => {
+const savePackage = async (store, s) => {
   const page = s.pages[s.currentPageName]
 
-  api
-    .post(`/_builder/api/testApp/pages/${s.currentPageName}`, {
-      appDefinition: {},
+  console.log(page)
+
+  const r = await api.post(`/_builder/api/${appname}/pages/${s.currentPageName}`,
+    {
+      appDefinition: {
+        hierarchy: s.hierarchy,
+        actions: s.actions,
+        triggers: s.triggers,
+      },
       accessLevels: s.accessLevels,
-      page: page,
+      page: { componentLibraries: s.pages.componentLibraries, ...page },
       uiFunctions: "{'1234':() => 'test return'}",
-      props: currentPreviewItem
-    })
+      props: page.props,
+      screens: page.screens,
+    }
+  )
+
+  console.log(r)
 }
 
 const setCurrentPage = store => pageName => {
@@ -749,6 +760,8 @@ const addChildComponent = store => componentName => {
     s.currentComponentInfo._children = s.currentComponentInfo._children.concat(
       newComponent.props
     )
+
+    savePackage(store, s)
 
     return s
   })
