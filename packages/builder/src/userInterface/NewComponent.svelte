@@ -25,8 +25,6 @@
   let route = ""
   let saveAttempted = false
 
-
-
   store.subscribe(s => {
     layoutComponents = pipe(
       s.components,
@@ -39,12 +37,11 @@
     layoutComponent = layoutComponent
       ? find(c => c.name === layoutComponent.name)(layoutComponents)
       : layoutComponents[0]
-    console.log(s.screens)
+
     screens = s.screens
   })
 
   const save = () => {
-    console.log(!screenNameExists(name), layoutComponent)
     saveAttempted = true
 
     const isValid =
@@ -62,7 +59,6 @@
 
   const screenNameExists = name => {
     return some(s => {
-      console.log(s, screens)
       return s.name.toLowerCase() === name.toLowerCase()
     })(screens)
   }

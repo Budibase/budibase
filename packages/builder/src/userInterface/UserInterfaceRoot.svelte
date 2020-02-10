@@ -21,8 +21,6 @@
   const settings = () => {
     settingsView.show()
   }
-
-  $: console.log($store)
 </script>
 
 <div class="root">
@@ -53,8 +51,9 @@
       <div class="nav-items-container">
         {#if $store.currentFrontEndType === 'page'}
           <ComponentsHierarchyChildren
-            components={$store.currentComponentInfo.props._children}
+            components={$store.currentPreviewItem.props._children}
             currentComponent={$store.currentComponentInfo}
+            onSelect={store.selectComponent}
             level={-2} />
         {/if}
 
@@ -80,7 +79,7 @@
       </div>
       <div class="nav-items-container">
         {#if $store.currentFrontEndType === 'screen'}
-          <ComponentsHierarchy components={$store.screens} />
+          <ComponentsHierarchy screens={$store.screens} />
         {/if}
       </div>
     </div>
@@ -88,11 +87,7 @@
   </div>
 
   <div class="preview-pane">
-    <!-- {#if $store.currentFrontEndType === 'screen'} -->
-    <!-- <CurrentItemPreview /> -->
-    <!-- {:else if $store.currentFrontEndType === 'page'} -->
-    <!-- <PageView /> -->
-    <!-- {/if} -->
+    <CurrentItemPreview />
   </div>
 
   {#if $store.currentFrontEndType === 'screen' || $store.currentFrontEndType === 'page'}

@@ -1,7 +1,7 @@
 import { isString, isUndefined } from "lodash/fp"
 import { types } from "./types"
 import { assign } from "lodash"
-import { uuid } from "./uuid"
+import { uuid } from "../../builderStore/uuid"
 
 export const getNewScreen = (components, rootComponentName, name) => {
   const rootComponent = components.find(c => c.name === rootComponentName)
@@ -9,7 +9,9 @@ export const getNewScreen = (components, rootComponentName, name) => {
     name: name || "",
     description: "",
     url: "",
-    props: createProps(rootComponent),
+    _css: "",
+    uiFunctions: "",
+    props: createProps(rootComponent).props,
   }
 }
 
@@ -20,6 +22,7 @@ export const createProps = (componentDefinition, derivedFromProps) => {
     _component: componentDefinition.name,
     _styles: { position: {}, layout: {} },
     _id: uuid(),
+    _code: "",
   }
 
   const errors = []

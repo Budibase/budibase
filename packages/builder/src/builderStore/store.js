@@ -7,7 +7,6 @@ import {
   last,
   keys,
   concat,
-  keyBy,
   find,
   isEmpty,
   values,
@@ -28,8 +27,6 @@ import {
 } from "../userInterface/pagesParsing/searchComponents"
 import { rename } from "../userInterface/pagesParsing/renameScreen"
 import {
-  getNewComponentInfo,
-  getScreenInfo,
   getNewScreen,
   createProps,
 } from "../userInterface/pagesParsing/createProps"
@@ -40,6 +37,7 @@ import {
 } from "./loadComponentLibraries"
 import { buildCodeForScreens } from "./buildCodeForScreens"
 import { generate_screen_css } from "./generate_css"
+// import { uuid } from "./uuid"
 
 let appname = ""
 
@@ -135,26 +133,24 @@ const initialise = (store, initial) => async () => {
     .get(`/_builder/api/${appname}/appPackage`)
     .then(r => r.json())
 
-  console.log(pkg)
+  const [main_screens, unauth_screens] = await Promise.all([
+    api.get(`/_builder/api/${appname}/pages/main/screens`).then(r => r.json()),
+    api
+      .get(`/_builder/api/${appname}/pages/unauthenticated/screens`)
+      .then(r => r.json()),
+  ])
 
   pkg.pages = {
     componentLibraries: ["@budibase/standard-components"],
-    main: {
-      name: "main",
-      _component: "@budibase/standard-components/div",
-      props: {
-        _children: []
-      },
-      _screens: [], index: {}, appBody: ""
-    },
     stylesheets: [],
+    main: {
+      ...pkg.pages.main,
+      _screens: Object.values(main_screens),
+    },
     unauthenticated: {
-      name: "unauthenticated",
-      _component: "@budibase/standard-components/div",
-      props: {
-        _children: []
-      }, _screens: [], index: {}, appBody: ""
-    }
+      ...pkg.pages.unauthenticated,
+      _screens: Object.values(unauth_screens),
+    },
   }
 
   initial.libraries = await loadLibs(appname, pkg)
@@ -179,21 +175,21 @@ const initialise = (store, initial) => async () => {
   }
 
   store.set(initial)
-  console.log(initial)
+
   return initial
 }
 
 const generatorsArray = generators =>
   pipe(generators, [keys, filter(k => k !== "_lib"), map(k => generators[k])])
 
-const showSettings = store => show => {
+const showSettings = store => () => {
   store.update(s => {
     s.showSettings = !s.showSettings
     return s
   })
 }
 
-const useAnalytics = store => useAnalytics => {
+const useAnalytics = store => () => {
   store.update(s => {
     s.useAnalytics = !s.useAnalytics
     return s
@@ -218,7 +214,7 @@ const newRecord = (store, useRoot) => () => {
   store.update(s => {
     s.currentNodeIsNew = true
     const shadowHierarchy = createShadowHierarchy(s.hierarchy)
-    parent = useRoot
+    const parent = useRoot
       ? shadowHierarchy
       : getNode(shadowHierarchy, s.currentNode.nodeId)
     s.errors = []
@@ -247,7 +243,7 @@ const newIndex = (store, useRoot) => () => {
     s.currentNodeIsNew = true
     s.errors = []
     const shadowHierarchy = createShadowHierarchy(s.hierarchy)
-    parent = useRoot
+    const parent = useRoot
       ? shadowHierarchy
       : getNode(shadowHierarchy, s.currentNode.nodeId)
 
@@ -470,22 +466,28 @@ const _saveScreen = (store, s, screen) => {
     filter(c => c.name !== screen.name),
     concat([screen]),
   ])
-
+  // console.log('saveScreen', screens, screen)
   s.pages[s.currentPageName]._screens = screens
   s.screens = s.pages[s.currentPageName]._screens
-  s.currentPreviewItem = screen
-  s.currentComponentInfo = screen.props
+  // s.currentPreviewItem = screen
+  // s.currentComponentInfo = screen.props
 
-  // api
-  //   .post(`/_builder/api/${s.appname}/screen`, screen)
-  //   .then(() => savePackage(store, s))
+  api
+    .post(
+      `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
+      screen
+    )
+    .then(() => savePackage(store, s))
 
   return s
 }
 
 const _save = (appname, screen, store, s) =>
   api
-    .post(`/_builder/api/${appname}/screen`, screen)
+    .post(
+      `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
+      screen
+    )
     .then(() => savePackage(store, s))
 
 const createScreen = store => (screenName, route, layoutComponentName) => {
@@ -495,12 +497,26 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
       layoutComponentName,
       screenName
     )
-    newScreen.route = route;
-    s.currentPreviewItem = newScreen.component
+
+    newScreen.route = route
+    s.currentPreviewItem = newScreen
     s.currentComponentInfo = newScreen.props
     s.currentFrontEndType = "screen"
 
-    return _saveScreen(store, s, newScreen.component)
+    return _saveScreen(store, s, newScreen)
+  })
+}
+
+const setCurrentScreen = store => screenName => {
+  store.update(s => {
+    const screen = getExactComponent(s.screens, screenName)
+
+    s.currentPreviewItem = screen
+    s.currentFrontEndType = "screen"
+    s.currentComponentInfo = screen.props
+
+    setCurrentScreenFunctions(s)
+    return s
   })
 }
 
@@ -603,13 +619,6 @@ const addComponentLibrary = store => async lib => {
 
   const success = response.status === 200
 
-  const error =
-    response.status === 404
-      ? `Could not find library ${lib}`
-      : success
-        ? ""
-        : response.statusText
-
   const components = success ? await response.json() : []
 
   store.update(s => {
@@ -679,45 +688,32 @@ const refreshComponents = store => async () => {
   })
 }
 
-const savePackage = (store, s) => {
-  const appDefinition = {
-    hierarchy: s.hierarchy,
-    triggers: s.triggers,
-    actions: keyBy("name")(s.actions),
-    page: s.pages[s.currentPageName],
-    screens: s.pages[s.currentPageName]._screens,
-    uiFunctions: buildCodeForScreens(s.screens),
-  }
+const savePackage = async (store, s) => {
+  const page = s.pages[s.currentPageName]
 
-  const data = {
-    appDefinition,
+  await api.post(`/_builder/api/${appname}/pages/${s.currentPageName}`, {
+    appDefinition: {
+      hierarchy: s.hierarchy,
+      actions: s.actions,
+      triggers: s.triggers,
+    },
     accessLevels: s.accessLevels,
-    pages: s.pages,
-  }
-
-  return api.post(`/_builder/api/${s.appname}/appPackage`, data)
-}
-
-const setCurrentScreen = store => screenName => {
-  store.update(s => {
-    const screen = getExactComponent(s.screens, screenName)
-    s.currentPreviewItem = screen
-    s.currentFrontEndType = "screen"
-    s.currentComponentInfo = screen.props;
-    setCurrentScreenFunctions(s)
-    return s
+    page: { componentLibraries: s.pages.componentLibraries, ...page },
+    uiFunctions: "{'1234':() => 'test return'}",
+    props: page.props,
+    screens: page.screens,
   })
 }
 
 const setCurrentPage = store => pageName => {
-
-
   store.update(s => {
-    const current_screens = s.pages[pageName]._screens;
+    const current_screens = s.pages[pageName]._screens
 
     s.currentFrontEndType = "page"
     s.currentPageName = pageName
-    s.screens = Array.isArray(current_screens) ? current_screens : Object.values(current_screens);
+    s.screens = Array.isArray(current_screens)
+      ? current_screens
+      : Object.values(current_screens)
     s.currentComponentInfo = s.pages[pageName].props
     s.currentPreviewItem = s.pages[pageName]
 
@@ -728,25 +724,14 @@ const setCurrentPage = store => pageName => {
 
 const addChildComponent = store => componentName => {
   store.update(s => {
-
-    const component = s.components.find(c => c.name === componentName);
+    const component = s.components.find(c => c.name === componentName)
     const newComponent = createProps(component)
 
-    let children = s.currentComponentInfo._children
+    s.currentComponentInfo._children = s.currentComponentInfo._children.concat(
+      newComponent.props
+    )
 
-
-    if (children) {
-        s.currentComponentInfo._children = children.concat(newComponent)
-    } else {
-      s.currentComponentInfo._children = [
-        component_definition
-      ]
-    }
-    if (s.currentFrontEndType !== 'page') {
-      _saveScreen(store, s, s.currentPreviewItem)
-    } else {
-      s.currentComponentInfo = newComponent;
-    }
+    savePackage(store, s)
 
     return s
   })
@@ -763,7 +748,11 @@ const setComponentProp = store => (name, value) => {
   store.update(s => {
     const current_component = s.currentComponentInfo
     s.currentComponentInfo[name] = value
-    _saveScreen(store, s, s.currentPreviewItem)
+
+    s.currentFrontEndType === "page"
+      ? savePackage(store, s, s.currentPreviewItem)
+      : _saveScreen(store, s, s.currentPreviewItem)
+
     s.currentComponentInfo = current_component
     return s
   })
@@ -775,13 +764,14 @@ const setComponentStyle = store => (type, name, value) => {
       s.currentComponentInfo._styles = {}
     }
     s.currentComponentInfo._styles[type][name] = value
-    s.currentPreviewItem._css = generate_screen_css(
-      s.currentPreviewItem.props._children
-    )
+    s.currentPreviewItem._css = generate_screen_css([
+      s.currentPreviewItem.props,
+    ])
 
     // save without messing with the store
-    // _save(s.appname, s.currentPreviewItem, store, s)
-
+    s.currentFrontEndType === "page"
+      ? savePackage(store, s, s.currentPreviewItem)
+      : _save(s.appname, s.currentPreviewItem, store, s)
     return s
   })
 }
@@ -792,7 +782,7 @@ const setComponentCode = store => code => {
 
     setCurrentScreenFunctions(s)
     // save without messing with the store
-    // _save(s.appname, s.currentPreviewItem, store, s)
+    _save(s.appname, s.currentPreviewItem, store, s)
 
     return s
   })
@@ -807,19 +797,15 @@ const setCurrentScreenFunctions = s => {
 
 const setScreenType = store => type => {
   store.update(s => {
-    console.log('boo')
     s.currentFrontEndType = type
 
-    const pageOrScreen = type === 'page' ? s.pages[s.currentPageName] : s.pages[s.currentPageName]._screens[0]
+    const pageOrScreen =
+      type === "page"
+        ? s.pages[s.currentPageName]
+        : s.pages[s.currentPageName]._screens[0]
 
-    s.currentComponentInfo = pageOrScreen.props
+    s.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null
     s.currentPreviewItem = pageOrScreen
-    return s;
+    return s
   })
 }
-
-// pages = [{
-//   _props: { _component: "@budibase...", _children: [] }
-//  name: 'Boo',
-//  _screens: []
-// }]

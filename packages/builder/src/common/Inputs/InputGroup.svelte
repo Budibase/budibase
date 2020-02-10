@@ -1,4 +1,6 @@
 <script>
+  import { onMount } from "svelte"
+
   export let meta = []
   export let size = ""
   export let values = []

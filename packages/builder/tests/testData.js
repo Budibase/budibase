@@ -100,3 +100,9 @@ export const componentsAndScreens = () => ({
     },
   ],
 })
+
+export const stripStandardProps = props => {
+  delete props._code
+  delete props._id
+  delete props._styles
+}
