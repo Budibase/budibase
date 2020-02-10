@@ -1,25 +1,26 @@
 const testAppDef = require("../appPackages/testApp/appDefinition.json")
 const testAccessLevels = require("../appPackages/testApp/access_levels.json")
-const testPages = require("../appPackages/testApp/pages.json")
+const mainPage = require("../appPackages/testApp/pages/main/page.json")
+const unauthenticatedPage = require("../appPackages/testApp/pages/unauthenticated/page.json")
 const testComponents = require("../appPackages/testApp/customComponents/components.json")
 const testMoreComponents = require("../appPackages/testApp/moreCustomComponents/components.json")
 const statusCodes = require("../utilities/statusCodes")
-const screen1 = require("../appPackages/testApp/components/myTextBox.json")
-const screen2 = require("../appPackages/testApp/components/subfolder/otherTextBox.json")
-const { readJSON, pathExists, unlink } = require("fs-extra")
+const screen1 = require("../appPackages/testApp/pages/main/screens/screen1.json")
+const screen2 = require("../appPackages/testApp/pages/main/screens/screen2.json")
+const { readJSON, pathExists, unlink, readFile } = require("fs-extra")
+const { getHashedCssPaths } = require("../utilities/builder/convertCssToFiles")
 
 const app = require("./testApp")()
 testComponents.textbox.name = `./customComponents/textbox`
 testMoreComponents.textbox.name = `./moreCustomComponents/textbox`
 
 beforeAll(async () => {
-  const testComponent = "./appPackages/testApp/components/newTextBox.json"
-  const testComponentAfterMove =
-    "./appPackages/testApp/components/anotherSubFolder/newTextBox.json"
+  const testScreen = "./appPackages/testApp/pages/main/screens/newscreen.json"
+  const testScreenAfterMove =
+    "./appPackages/testApp/pages/main/screens/anotherscreen.json"
 
-  if (await pathExists(testComponent)) await unlink(testComponent)
-  if (await pathExists(testComponentAfterMove))
-    await unlink(testComponentAfterMove)
+  if (await pathExists(testScreen)) await unlink(testScreen)
+  if (await pathExists(testScreenAfterMove)) await unlink(testScreenAfterMove)
 
   await app.start()
 })
@@ -45,7 +46,10 @@ it("/apppackage should get pages", async () => {
   const { body } = await app
     .get("/_builder/api/testApp/appPackage")
     .expect(statusCodes.OK)
-  expect(body.pages).toEqual(testPages)
+  expect(body.pages).toEqual({
+    main: mainPage,
+    unauthenticated: unauthenticatedPage,
+  })
 })
 
 it("/apppackage should get components", async () => {
@@ -53,122 +57,126 @@ it("/apppackage should get components", async () => {
     .get("/_builder/api/testApp/appPackage")
     .expect(statusCodes.OK)
 
-  expect(body.components["./customComponents/textbox"]).toBeDefined()
-  expect(body.components["./moreCustomComponents/textbox"]).toBeDefined()
+  expect(body.components.components["./customComponents/textbox"]).toBeDefined()
+  expect(
+    body.components.components["./moreCustomComponents/textbox"]
+  ).toBeDefined()
 
-  expect(body.components["./customComponents/textbox"]).toEqual(
+  expect(body.components.components["./customComponents/textbox"]).toEqual(
     testComponents.textbox
   )
 
-  expect(body.components["./moreCustomComponents/textbox"]).toEqual(
+  expect(body.components.components["./moreCustomComponents/textbox"]).toEqual(
     testMoreComponents.textbox
   )
 })
 
-it("/apppackage should get screens", async () => {
+it("/pages/:pageName/screens should get screens", async () => {
   const { body } = await app
-    .get("/_builder/api/testApp/appPackage")
+    .get("/_builder/api/testApp/pages/main/screens")
     .expect(statusCodes.OK)
 
   const expectedComponents = {
-    myTextBox: { ...screen1, name: "myTextBox" },
-    "subfolder/otherTextBox": { ...screen2, name: "subfolder/otherTextBox" },
+    screen1: { ...screen1, name: "screen1" },
+    screen2: { ...screen2, name: "screen2" },
   }
 
-  expect(body.screens).toEqual(expectedComponents)
+  expect(body).toEqual(expectedComponents)
 })
 
-it("should be able to create new derived component", async () => {
+it("should be able to create new screen", async () => {
   const newscreen = {
-    name: "newTextBox",
-    inherits: "./customComponents/textbox",
+    name: "newscreen",
     props: {
-      label: "something",
+      _component: "@budibase/standard-component/div",
+      className: "something",
     },
   }
 
   await app
-    .post("/_builder/api/testApp/screen", newscreen)
+    .post("/_builder/api/testApp/pages/main/screen", newscreen)
     .expect(statusCodes.OK)
 
-  const componentFile = "./appPackages/testApp/components/newTextBox.json"
-  expect(await pathExists(componentFile)).toBe(true)
-  expect(await readJSON(componentFile)).toEqual(newscreen)
+  const screenFile = "./appPackages/testApp/pages/main/screens/newscreen.json"
+  expect(await pathExists(screenFile)).toBe(true)
+  expect(await readJSON(screenFile)).toEqual(newscreen)
 })
 
-it("should be able to update derived component", async () => {
+it("should be able to update screen", async () => {
   const updatedscreen = {
-    name: "newTextBox",
-    inherits: "./customComponents/textbox",
+    name: "newscreen",
     props: {
-      label: "something else",
+      _component: "@budibase/standard-component/div",
+      className: "something else",
     },
   }
 
   await app
-    .post("/_builder/api/testApp/screen", updatedscreen)
+    .post("/_builder/api/testApp/pages/main/screen", updatedscreen)
     .expect(statusCodes.OK)
 
-  const componentFile = "./appPackages/testApp/components/newTextBox.json"
-  expect(await readJSON(componentFile)).toEqual(updatedscreen)
+  const screenFile = "./appPackages/testApp/pages/main/screens/newscreen.json"
+  expect(await readJSON(screenFile)).toEqual(updatedscreen)
 })
 
-it("should be able to rename derived component", async () => {
+it("should be able to rename screen", async () => {
   await app
-    .patch("/_builder/api/testApp/screen", {
-      oldname: "newTextBox",
-      newname: "anotherSubFolder/newTextBox",
+    .patch("/_builder/api/testApp/pages/main/screen", {
+      oldname: "newscreen",
+      newname: "anotherscreen",
     })
     .expect(statusCodes.OK)
 
-  const oldcomponentFile = "./appPackages/testApp/components/newTextBox.json"
+  const oldcomponentFile =
+    "./appPackages/testApp/pages/main/screens/newscreen.json"
   const newcomponentFile =
-    "./appPackages/testApp/components/anotherSubFolder/newTextBox.json"
+    "./appPackages/testApp/pages/main/screens/anotherscreen.json"
+
   expect(await pathExists(oldcomponentFile)).toBe(false)
   expect(await pathExists(newcomponentFile)).toBe(true)
 })
 
-it("should be able to delete derived component", async () => {
+it("should be able to delete screen", async () => {
   await app
-    .delete("/_builder/api/testApp/screen/anotherSubFolder/newTextBox")
+    .delete("/_builder/api/testApp/pages/main/screen/anotherscreen")
     .expect(statusCodes.OK)
 
   const componentFile =
-    "./appPackages/testApp/components/anotherSubFolder/newTextBox.json"
-  const componentDir = "./appPackages/testApp/components/anotherSubFolder"
+    "./appPackages/testApp/pages/main/screens/anotherscreen.json"
   expect(await pathExists(componentFile)).toBe(false)
-  expect(await pathExists(componentDir)).toBe(false)
 })
 
-it("/savePackage should prepare all necessary client files", async () => {
+it("/savePage should prepare all necessary client files", async () => {
+  const mainCss = "/*main page css*/"
+  mainPage._css = mainCss
+  const screen1Css = "/*screen1 css*/"
+  screen1._css = screen1Css
+  const screen2Css = "/*screen2 css*/"
+  screen2._css = screen2Css
+
   await app
-    .post("/_builder/api/testApp/appPackage", {
+    .post("/_builder/api/testApp/pages/main", {
       appDefinition: testAppDef,
       accessLevels: testAccessLevels,
-      pages: testPages,
+      page: mainPage,
+      uiFunctions: "{'1234':() => 'test return'}",
+      screens: [screen1, screen2],
     })
     .expect(statusCodes.OK)
 
   const publicFolderMain = relative =>
     "./appPackages/testApp/public/main" + relative
-  const publicFolderUnauth = relative =>
-    "./appPackages/testApp/public/unauthenticated" + relative
+
+  const cssDir = publicFolderMain("/css")
 
   expect(await pathExists(publicFolderMain("/index.html"))).toBe(true)
-  expect(await pathExists(publicFolderUnauth("/index.html"))).toBe(true)
 
   expect(
     await pathExists(publicFolderMain("/lib/customComponents/index.js"))
   ).toBe(true)
-  expect(
-    await pathExists(publicFolderUnauth("/lib/customComponents/index.js"))
-  ).toBe(true)
 
   expect(
     await pathExists(publicFolderMain("/lib/moreCustomComponents/index.js"))
-  ).toBe(true)
-  expect(
-    await pathExists(publicFolderUnauth("/lib/moreCustomComponents/index.js"))
   ).toBe(true)
 
   expect(
@@ -178,16 +186,34 @@ it("/savePackage should prepare all necessary client files", async () => {
       )
     )
   ).toBe(true)
-  expect(
-    await pathExists(
-      publicFolderUnauth(
-        "/lib/node_modules/@budibase/standard-components/dist/index.js"
-      )
-    )
-  ).toBe(true)
 
-  expect(await pathExists(publicFolderUnauth("/budibase-client.js"))).toBe(true)
-  expect(await pathExists(publicFolderUnauth("/clientAppDefinition.js"))).toBe(
-    true
+  const indexHtmlMain = await readFile(publicFolderMain("/index.html"), "utf8")
+
+  const pageCssPaths = getHashedCssPaths(cssDir, mainCss)
+  const screen1CssPaths = getHashedCssPaths(cssDir, screen1Css)
+  const screen2CssPaths = getHashedCssPaths(cssDir, screen2Css)
+
+  expect(await pathExists(publicFolderMain(pageCssPaths.url))).toBe(true)
+  const savedPageCss = await readFile(
+    publicFolderMain(pageCssPaths.url),
+    "utf8"
   )
+  expect(savedPageCss).toEqual(mainCss)
+  expect(indexHtmlMain.includes(pageCssPaths.url)).toBe(true)
+
+  expect(await pathExists(publicFolderMain(screen1CssPaths.url))).toBe(true)
+  const savedScreen1Css = await readFile(
+    publicFolderMain(screen1CssPaths.url),
+    "utf8"
+  )
+  expect(savedScreen1Css).toEqual(screen1Css)
+  expect(indexHtmlMain.includes(screen1CssPaths.url)).toBe(true)
+
+  expect(await pathExists(publicFolderMain(screen2CssPaths.url))).toBe(true)
+  const savedScreen2Css = await readFile(
+    publicFolderMain(screen2CssPaths.url),
+    "utf8"
+  )
+  expect(savedScreen2Css).toEqual(screen2Css)
+  expect(indexHtmlMain.includes(screen2CssPaths.url)).toBe(true)
 })

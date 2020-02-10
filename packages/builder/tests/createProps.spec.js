@@ -1,6 +1,7 @@
 import { createProps } from "../src/userInterface/pagesParsing/createProps"
 import { keys, some } from "lodash/fp"
 import { BB_STATE_BINDINGPATH } from "@budibase/client/src/state/isState"
+import { stripStandardProps } from "./testData"
 
 describe("createDefaultProps", () => {
   const getcomponent = () => ({
@@ -16,6 +17,7 @@ describe("createDefaultProps", () => {
     expect(errors).toEqual([])
     expect(props.fieldName).toBeDefined()
     expect(props.fieldName).toBe("something")
+    stripStandardProps(props)
     expect(keys(props).length).toBe(3)
   })
 
@@ -190,11 +192,6 @@ describe("createDefaultProps", () => {
   })
 
   it("should merge in derived props", () => {
-    const propDef = {
-      fieldName: "string",
-      fieldLength: { type: "number", default: 500 },
-    }
-
     const comp = getcomponent()
     comp.props.fieldName = "string"
     comp.props.fieldLength = { type: "number", default: 500 }
@@ -208,5 +205,14 @@ describe("createDefaultProps", () => {
     expect(errors.length).toBe(0)
     expect(props.fieldName).toBe("surname")
     expect(props.fieldLength).toBe(500)
+  })
+  
+  it("should create standard props", () => {
+    const comp = getcomponent()
+    comp.props.fieldName = { type: "string", default: 1 }
+    const { props } = createProps(comp)
+    expect(props._code).toBeDefined()
+    expect(props._styles).toBeDefined()
+    expect(props._code).toBeDefined()
   })
 })

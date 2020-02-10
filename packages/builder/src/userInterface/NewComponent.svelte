@@ -22,13 +22,17 @@
   let layoutComponent
   let screens
   let name = ""
+  let route = ""
   let saveAttempted = false
 
   store.subscribe(s => {
-    layoutComponents = pipe(s.components, [
-      filter(c => c.container),
-      map(c => ({ name: c.name, ...splitName(c.name) })),
-    ])
+    layoutComponents = pipe(
+      s.components,
+      [
+        filter(c => c.container),
+        map(c => ({ name: c.name, ...splitName(c.name) })),
+      ]
+    )
 
     layoutComponent = layoutComponent
       ? find(c => c.name === layoutComponent.name)(layoutComponents)
@@ -45,7 +49,7 @@
 
     if (!isValid) return
 
-    store.createScreen(name, layoutComponent.name)
+    store.createScreen(name, route, layoutComponent.name)
     UIkit.modal(componentSelectorModal).hide()
   }
 
@@ -53,8 +57,11 @@
     UIkit.modal(componentSelectorModal).hide()
   }
 
-  const screenNameExists = name =>
-    some(s => s.name.toLowerCase() === name.toLowerCase())(screens)
+  const screenNameExists = name => {
+    return some(s => {
+      return s.name.toLowerCase() === name.toLowerCase()
+    })(screens)
+  }
 </script>
 
 <div bind:this={componentSelectorModal} id="new-component-modal" uk-modal>
@@ -72,6 +79,14 @@
             class="uk-input uk-form-small"
             class:uk-form-danger={saveAttempted && (name.length === 0 || screenNameExists(name))}
             bind:value={name} />
+        </div>
+
+        <label class="uk-form-label">Route (Url)</label>
+        <div class="uk-form-controls">
+          <input
+            class="uk-input uk-form-small"
+            class:uk-form-danger={saveAttempted && route.length === 0}
+            bind:value={route} />
         </div>
       </div>
 

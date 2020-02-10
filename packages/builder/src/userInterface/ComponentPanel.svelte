@@ -20,7 +20,6 @@
   $: originalName = component.name
   $: name = component.name
   $: description = component.description
-  $: componentInfo = $store.currentComponentInfo
   $: components = $store.components
 
   const onPropChanged = store.setComponentProp
@@ -47,7 +46,7 @@
       <button
         class:selected={current_view === 'code'}
         on:click={() => codeEditor && codeEditor.show()}>
-        {#if componentInfo._code && componentInfo._code.trim().length > 0}
+        {#if component._code && component._code.trim().length > 0}
           <div class="button-indicator">
             <CircleIndicator />
           </div>
@@ -63,27 +62,26 @@
       </button>
     </li>
   </ul>
+  {$store.currentFrontEndType}
 
-  {#if !componentInfo.component}
-    <div class="component-props-container">
+  <div class="component-props-container">
 
-      {#if current_view === 'props'}
-        <PropsView {componentInfo} {components} {onPropChanged} />
-      {:else if current_view === 'layout'}
-        <LayoutEditor {onStyleChanged} {componentInfo} />
-      {:else if current_view === 'events'}
-        <EventsEditor {componentInfo} {components} {onPropChanged} />
-      {/if}
+    {#if current_view === 'props'}
+      <PropsView {component} {components} {onPropChanged} />
+    {:else if current_view === 'layout'}
+      <LayoutEditor {onStyleChanged} {component} />
+    {:else if current_view === 'events'}
+      <EventsEditor {component} {components} {onPropChanged} />
+    {/if}
 
-      <CodeEditor
-        bind:this={codeEditor}
-        code={$store.currentComponentInfo._code}
-        onCodeChanged={store.setComponentCode} />
+    <CodeEditor
+      bind:this={codeEditor}
+      code={component._code}
+      onCodeChanged={store.setComponentCode} />
 
-    </div>
-  {:else}
-    <h1>This is a screen, this will be dealt with later</h1>
-  {/if}
+  </div>
+
+  
 
 </div>
 

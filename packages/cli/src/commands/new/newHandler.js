@@ -54,7 +54,8 @@ const createEmptyAppPackage = async opts => {
     await remove(join(destinationFolder, ...args, "placeholder"))
   }
 
-  await removePlaceholder("components")
+  await removePlaceholder("pages", "main", "screens")
+  await removePlaceholder("pages", "unauthenticated", "screens")
   await removePlaceholder("public", "shared")
   await removePlaceholder("public", "main")
   await removePlaceholder("public", "unauthenticated")

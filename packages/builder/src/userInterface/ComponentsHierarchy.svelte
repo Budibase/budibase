@@ -7,69 +7,65 @@
   import { store } from "../builderStore"
   import { ArrowDownIcon } from "../common/Icons/"
 
-  export let components = []
+  export let screens = []
 
   const joinPath = join("/")
 
   const normalizedName = name =>
-    pipe(name, [
-      trimCharsStart("./"),
-      trimCharsStart("~/"),
-      trimCharsStart("../"),
-      trimChars(" "),
-    ])
+    pipe(
+      name,
+      [
+        trimCharsStart("./"),
+        trimCharsStart("~/"),
+        trimCharsStart("../"),
+        trimChars(" "),
+      ]
+    )
 
   const lastPartOfName = c =>
     last(c.name ? c.name.split("/") : c._component.split("/"))
 
-  const isComponentSelected = (current, comp) =>
-    current &&
-    current.component &&
-    comp.component &&
-    current.component.name === comp.component.name
+  const isComponentSelected = (current, comp) => current === comp
 
   const isFolderSelected = (current, folder) => isInSubfolder(current, folder)
 
-  $: _components = pipe(components, [
-    map(c => ({ component: c, title: lastPartOfName(c) })),
-    sortBy("title"),
-  ])
-
-  function select_component(screen, component) {
-    store.setCurrentScreen(screen)
-    store.selectComponent(component)
-  }
+  $: _screens = pipe(
+    screens,
+    [map(c => ({ component: c, title: lastPartOfName(c) })), sortBy("title")]
+  )
 
   const isScreenSelected = component =>
     component.component &&
-    $store.currentFrontEndItem &&
-    component.component.name === $store.currentFrontEndItem.name
+    $store.currentPreviewItem &&
+    component.component.name === $store.currentPreviewItem.name
+
+  $: console.log(_screens)
 </script>
 
 <div class="root">
 
-  {#each _components as component}
+  {#each _screens as screen}
     <div
       class="hierarchy-item component"
-      class:selected={isComponentSelected($store.currentComponentInfo, component)}
-      on:click|stopPropagation={() => store.setCurrentScreen(component.component.name)}>
+      class:selected={$store.currentPreviewItem.name === screen.title}
+      on:click|stopPropagation={() => store.setCurrentScreen(screen.title)}>
 
       <span
         class="icon"
-        style="transform: rotate({isScreenSelected(component) ? 0 : -90}deg);">
-        {#if component.component.props && component.component.props._children}
+        style="transform: rotate({$store.currentPreviewItem.name === screen.title ? 0 : -90}deg);">
+        {#if screen.component.props._children.length}
           <ArrowDownIcon />
         {/if}
       </span>
 
-      <span class="title">{component.title}</span>
+      <span class="title">{screen.title}</span>
     </div>
 
-    {#if isScreenSelected(component) && component.component.props && component.component.props._children}
+    {#if $store.currentPreviewItem.name === screen.title && screen.component.props._children}
       <ComponentsHierarchyChildren
-        components={component.component.props._children}
+        components={screen.component.props._children}
         currentComponent={$store.currentComponentInfo}
-        onSelect={child => select_component(component.component.name, child)} />
+        onSelect={store.selectComponent} />
     {/if}
   {/each}
 

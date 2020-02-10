@@ -2,8 +2,9 @@ import { setupBinding } from "../state/stateBinding"
 import { split, last } from "lodash/fp"
 import { $ } from "../core/common"
 import { renderComponent } from "./renderComponent"
+import { isScreenSlot } from "./builtinComponents"
 
-export const _initialiseChildren = initialiseOpts => (
+export const initialiseChildren = initialiseOpts => (
   childrenProps,
   htmlElement,
   anchor = null
@@ -16,13 +17,12 @@ export const _initialiseChildren = initialiseOpts => (
     componentLibraries,
     treeNode,
     appDefinition,
-    document,
     hydrate,
+    onScreenSlotRendered,
   } = initialiseOpts
 
   for (let childNode of treeNode.children) {
-    if (childNode.unsubscribe) childNode.unsubscribe()
-    if (childNode.component) childNode.component.$destroy()
+    childNode.destroy()
   }
 
   if (hydrate) {
@@ -58,6 +58,15 @@ export const _initialiseChildren = initialiseOpts => (
       initialProps,
       bb,
     })
+
+    if (
+      onScreenSlotRendered &&
+      isScreenSlot(childProps._component) &&
+      renderedComponentsThisIteration.length > 0
+    ) {
+      // assuming there is only ever one screen slot
+      onScreenSlotRendered(renderedComponentsThisIteration[0])
+    }
 
     for (let comp of renderedComponentsThisIteration) {
       comp.unsubscribe = bind(comp.component)
