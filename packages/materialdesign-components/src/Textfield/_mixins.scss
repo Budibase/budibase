@@ -1,0 +1,46 @@
+@import "@material/feature-targeting/_functions.scss";
+@import "@material/feature-targeting/_mixins.scss";
+
+@mixin bbmd-textfield-styles($query: mdc-feature-all()) {
+  $feat-structure: mdc-feature-create-target($query, structure);
+
+  .mdc-text-field {
+    &.bbmd-mdc-text-field--size-small {
+      @include mdc-text-field-height(48px);
+    }
+
+    &.bbmd-mdc-text-field--size-large {
+      @include mdc-text-field-height(64px);
+    }
+
+    &.bbmd-mdc-text-field--colour-secondary {
+      &.mdc-text-field--focused {
+        .mdc-floating-label--float-above {
+          @include mdc-floating-label-ink-color(secondary)
+
+        }
+      }
+      .mdc-line-ripple--active {
+        @include mdc-line-ripple-color(secondary);
+      }
+
+      &.mdc-text-field--outlined,
+      &.mdc-text-field--textarea {
+        @include mdc-text-field-focused-outline-color(secondary);
+      }
+    }
+
+    &.bbmd-mdc-text-field--variant-standard {
+      @include mdc-text-field-fill-color(transparent);
+      &:before {
+        background-color: transparent;
+      }
+    }
+    + .mdc-text-field-helper-line {
+      @include mdc-feature-targets($feat-structure) {
+        padding-right: 0px;
+        padding-left: 0px;
+      }
+    }
+  }
+}

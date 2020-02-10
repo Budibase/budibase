@@ -5,14 +5,30 @@ import livereload from "rollup-plugin-livereload"
 import { terser } from "rollup-plugin-terser"
 import json from "rollup-plugin-json"
 import alias from "rollup-plugin-alias"
+import postcss from "rollup-plugin-postcss";
 import path from "path"
 
 const aliases = {
   resolve: [".js", ".svelte"],
   entries: [
-    { find: "@BBMD", replacement: path.resolve(__dirname, "dist/index.js") },
+    // { find: "@BBMD", replacement: path.resolve(__dirname, "dist/index.js") },
+    { find: "@BBMD", replacement: path.resolve(__dirname, "src/index.js") },
   ],
 }
+
+const postcssOptions = () => ({
+  extensions: [".scss", ".sass"],
+  extract: false,
+  minimize: true,
+  use: [
+    [
+      "sass",
+      {
+        includePaths: ["./node_modules"],
+      },
+    ],
+  ],
+})
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -142,6 +158,7 @@ export default {
     // If we're building for production (npm run build
     // instead of npm run dev), minify
     production && terser(),
+    postcss(postcssOptions()),
   ],
   watch: {
     clearScreen: false,
