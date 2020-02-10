@@ -11,9 +11,10 @@ const {
   saveScreen,
   renameScreen,
   deleteScreen,
-  savePagePackage,
+  buildPage,
   componentLibraryInfo,
   listScreens,
+  saveBackend,
 } = require("../utilities/builder")
 
 const builderPath = resolve(__dirname, "../builder")
@@ -179,8 +180,17 @@ module.exports = (config, app) => {
       ctx.body = info.generators
       ctx.response.status = StatusCodes.OK
     })
+    .post("/_builder/api/:appname/backend", async ctx => {
+      await saveBackend(
+        config,
+        ctx.params.appname,
+        ctx.request.body.appDefinition,
+        ctx.request.body.accessLevels
+      )
+      ctx.response.status = StatusCodes.OK
+    })
     .post("/_builder/api/:appname/pages/:pageName", async ctx => {
-      await savePagePackage(
+      await buildPage(
         config,
         ctx.params.appname,
         ctx.params.pageName,

@@ -3,7 +3,6 @@ const {
   readJSON,
   writeJSON,
   readdir,
-  stat,
   ensureDir,
   rename,
   unlink,
@@ -11,14 +10,18 @@ const {
 } = require("fs-extra")
 const { join, dirname } = require("path")
 const { $ } = require("@budibase/core").common
-const { keyBy, intersection, map, values, flatten } = require("lodash/fp")
+const { intersection, map, values, flatten } = require("lodash/fp")
 const { merge } = require("lodash")
 
 const { componentLibraryInfo } = require("./componentLibraryInfo")
-const savePagePackage = require("./savePagePackage")
 const buildPage = require("./buildPage")
+const getPages = require("./getPages")
+const listScreens = require("./listScreens")
+const saveBackend = require("./saveBackend")
 
-module.exports.savePagePackage = savePagePackage
+module.exports.buildPage = buildPage
+module.exports.listScreens = listScreens
+module.exports.saveBackend = saveBackend
 
 const getAppDefinition = async appPath =>
   await readJSON(`${appPath}/appDefinition.json`)
@@ -45,30 +48,8 @@ module.exports.getApps = async (config, master) => {
   return $(master.listApplications(), [map(a => a.name), intersection(dirs)])
 }
 
-const getPages = async appPath => {
-  const pages = {}
-
-  const pageFolders = await readdir(join(appPath, "pages"))
-  for (let pageFolder of pageFolders) {
-    try {
-      pages[pageFolder] = await readJSON(
-        join(appPath, "pages", pageFolder, "page.json")
-      )
-    } catch (_) {
-      // ignore error
-    }
-  }
-
-  return pages
-}
-
 const screenPath = (appPath, pageName, name) =>
   join(appPath, "pages", pageName, "screens", name + ".json")
-
-module.exports.listScreens = async (config, appname, pagename) => {
-  const appPath = appPackageFolder(config, appname)
-  return keyBy("name")(await fetchscreens(appPath, pagename))
-}
 
 module.exports.saveScreen = async (config, appname, pagename, screen) => {
   const appPath = appPackageFolder(config, appname)
@@ -156,45 +137,6 @@ const getComponents = async (appPath, pages, lib) => {
   if (components._generators) delete components._generators
 
   return { components, generators }
-}
-
-const fetchscreens = async (appPath, pagename, relativePath = "") => {
-  const currentDir = join(appPath, "pages", pagename, "screens", relativePath)
-
-  const contents = await readdir(currentDir)
-
-  const screens = []
-
-  for (let item of contents) {
-    const itemRelativePath = join(relativePath, item)
-    const itemFullPath = join(currentDir, item)
-    const stats = await stat(itemFullPath)
-
-    if (stats.isFile()) {
-      if (!item.endsWith(".json")) continue
-
-      const component = await readJSON(itemFullPath)
-
-      component.name = itemRelativePath
-        .substring(0, itemRelativePath.length - 5)
-        .replace(/\\/g, "/")
-
-      component.props = component.props || {}
-
-      screens.push(component)
-    } else {
-      const childComponents = await fetchscreens(
-        appPath,
-        join(relativePath, item)
-      )
-
-      for (let c of childComponents) {
-        screens.push(c)
-      }
-    }
-  }
-
-  return screens
 }
 
 module.exports.getComponents = getComponents

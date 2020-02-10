@@ -1,10 +1,10 @@
-export const createCoreApp = (appDefinition, user) => {
+export const createCoreApp = (backendDefinition, user) => {
   const app = {
     datastore: null,
     crypto: null,
     publish: () => {},
-    hierarchy: appDefinition.hierarchy,
-    actions: appDefinition.actions,
+    hierarchy: backendDefinition.hierarchy,
+    actions: backendDefinition.actions,
     user,
   }
 

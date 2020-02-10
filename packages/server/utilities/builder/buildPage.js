@@ -8,24 +8,27 @@ const {
   copyFile,
   writeFile,
   readFile,
+  writeJSON,
 } = require("fs-extra")
 const { join, resolve, dirname } = require("path")
 const sqrl = require("squirrelly")
 const { convertCssToFiles } = require("./convertCssToFiles")
+const publicPath = require("./publicPath")
 
-module.exports = async (config, appname, pkg) => {
+module.exports = async (config, appname, pageName, pkg) => {
   const appPath = appPackageFolder(config, appname)
 
-  await convertCssToFiles(publicPath(appPath, pkg.pageName), pkg)
+  await convertCssToFiles(publicPath(appPath, pageName), pkg)
 
-  await buildIndexHtml(config, appname, appPath, pkg)
+  await buildIndexHtml(config, appname, pageName, appPath, pkg)
 
-  await buildClientAppDefinition(config, appname, pkg, appPath)
+  await buildFrontendAppDefinition(config, appname, pageName, pkg, appPath)
 
-  await copyClientLib(appPath, pkg.pageName)
+  await copyClientLib(appPath, pageName)
+
+  await savePageJson(appPath, pageName, pkg)
 }
 
-const publicPath = (appPath, pageName) => join(appPath, "public", pageName)
 const rootPath = (config, appname) =>
   config.useAppRootPath ? `/${appname}` : ""
 
@@ -42,8 +45,8 @@ const copyClientLib = async (appPath, pageName) => {
   )
 }
 
-const buildIndexHtml = async (config, appname, appPath, pkg) => {
-  const appPublicPath = publicPath(appPath, pkg.pageName)
+const buildIndexHtml = async (config, appname, pageName, appPath, pkg) => {
+  const appPublicPath = publicPath(appPath, pageName)
   const appRootPath = rootPath(config, appname)
 
   const stylesheetUrl = s =>
@@ -72,9 +75,9 @@ const buildIndexHtml = async (config, appname, appPath, pkg) => {
   await writeFile(indexHtmlPath, indexHtml, { flag: "w+" })
 }
 
-const buildClientAppDefinition = async (config, appname, pkg) => {
+const buildFrontendAppDefinition = async (config, appname, pageName, pkg) => {
   const appPath = appPackageFolder(config, appname)
-  const appPublicPath = publicPath(appPath, pkg.pageName)
+  const appPublicPath = publicPath(appPath, pageName)
   const appRootPath = rootPath(config, appname)
 
   const componentLibraries = []
@@ -109,7 +112,7 @@ const buildClientAppDefinition = async (config, appname, pkg) => {
     }
   }
 
-  const filename = join(appPublicPath, "clientAppDefinition.js")
+  const filename = join(appPublicPath, "clientFrontendDefinition.js")
 
   if (pkg.page._css) {
     delete pkg.page._css
@@ -121,17 +124,32 @@ const buildClientAppDefinition = async (config, appname, pkg) => {
     }
   }
 
-  const clientAppDefObj = {
-    hierarchy: pkg.appDefinition.hierarchy,
+  const clientUiDefinition = JSON.stringify({
     componentLibraries: componentLibraries,
     appRootPath: appRootPath,
     page: pkg.page,
     screens: pkg.screens,
-  }
+  })
 
   await writeFile(
     filename,
-    `window['##BUDIBASE_APPDEFINITION##'] = ${JSON.stringify(clientAppDefObj)};
-window['##BUDIBASE_UIFUNCTIONS##'] = ${pkg.uiFunctions}`
+    `window['##BUDIBASE_FRONTEND_DEINITION##'] = ${clientUiDefinition};
+window['##BUDIBASE_FRONTEND_FUNCTIONS##'] = ${pkg.uiFunctions}`
   )
+}
+
+const savePageJson = async (appPath, pageName, pkg) => {
+  const pageFile = join(appPath, "pages", pageName, "page.json")
+
+  if (pkg.page._css) {
+    delete pkg.page._css
+  }
+
+  if (pkg.page.name) {
+    delete pkg.page.name
+  }
+
+  await writeJSON(pageFile, pkg.page, {
+    spaces: 2,
+  })
 }
