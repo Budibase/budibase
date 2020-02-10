@@ -10,6 +10,7 @@ export const getNewScreen = (components, rootComponentName, name) => {
     description: "",
     url: "",
     _css: "",
+    uiFunctions: "",
     ...createProps(rootComponent),
   }
 }
@@ -21,6 +22,7 @@ export const createProps = (componentDefinition, derivedFromProps) => {
     _component: componentDefinition.name,
     _styles: { position: {}, layout: {} },
     _id: uuid(),
+    _code: "",
   }
 
   const errors = []

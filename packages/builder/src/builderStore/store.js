@@ -140,8 +140,6 @@ const initialise = (store, initial) => async () => {
       .then(r => r.json()),
   ])
 
-  console.log(main_screens, unauth_screens, Object.values(main_screens))
-
   pkg.pages = {
     componentLibraries: ["@budibase/standard-components"],
     stylesheets: [],
@@ -151,7 +149,7 @@ const initialise = (store, initial) => async () => {
     },
     unauthenticated: {
       ...pkg.pages.unauthenticated,
-      _screens: Object.values(main_screens),
+      _screens: Object.values(unauth_screens),
     },
   }
 
@@ -177,7 +175,7 @@ const initialise = (store, initial) => async () => {
   }
 
   store.set(initial)
-  console.log(initial)
+
   return initial
 }
 

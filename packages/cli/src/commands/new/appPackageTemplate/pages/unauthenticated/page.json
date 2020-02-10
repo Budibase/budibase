@@ -10,7 +10,9 @@
 		"_styles": {
 			"layout": {},
 			"positions": {}
-		}
+		},
+		"_code": ""
 	},
-	"_css": ""
+	"_css": "",
+	"uiFunctions": ""
 }
