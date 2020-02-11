@@ -462,14 +462,13 @@ const saveScreen = store => screen => {
 }
 
 const _saveScreen = (store, s, screen) => {
-  s.currentFrontEndItem = screen
-  s.currentComponentInfo = getScreenInfo(s.components, screen)
+  const currentPageScreens = s.pages[s.currentPageName]._screens
 
   api
-    .post(`/_builder/api/${s.appname}/screen`, screen)
+    .post(`/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`, screen)
     .then(async savedScreen => {
       const updatedScreen = await savedScreen.json();
-      const screens = [...s.screens.filter(storeScreen => storeScreen.name !== updatedScreen.name), updatedScreen];
+      const screens = [...currentPageScreens.filter(storeScreen => storeScreen.name !== updatedScreen.name), updatedScreen];
       s.pages[s.currentPageName]._screens = screens
       s.screens = screens
       _savePage(s);
