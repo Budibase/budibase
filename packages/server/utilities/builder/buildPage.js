@@ -17,6 +17,8 @@ const publicPath = require("./publicPath")
 
 module.exports = async (config, appname, pageName, pkg) => {
   const appPath = appPackageFolder(config, appname)
+  
+  pkg.screens = pkg.screens || []
 
   await convertCssToFiles(publicPath(appPath, pageName), pkg)
 
