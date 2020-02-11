@@ -462,22 +462,18 @@ const saveScreen = store => screen => {
 }
 
 const _saveScreen = (store, s, screen) => {
-  const screens = pipe(s.pages[s.currentPageName]._screens, [
-    filter(c => c.name !== screen.name),
-    concat([screen]),
-  ])
-  // console.log('saveScreen', screens, screen)
-  s.pages[s.currentPageName]._screens = screens
-  s.screens = s.pages[s.currentPageName]._screens
-  // s.currentPreviewItem = screen
-  // s.currentComponentInfo = screen.props
+  s.currentFrontEndItem = screen
+  s.currentComponentInfo = getScreenInfo(s.components, screen)
 
   api
-    .post(
-      `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
-      screen
-    )
-    .then(() => _savePage(s))
+    .post(`/_builder/api/${s.appname}/screen`, screen)
+    .then(async savedScreen => {
+      const updatedScreen = await savedScreen.json();
+      const screens = [...s.screens.filter(storeScreen => storeScreen.name !== updatedScreen.name), updatedScreen];
+      s.pages[s.currentPageName]._screens = screens
+      s.screens = screens
+      _savePage(s);
+    });
 
   return s
 }
@@ -580,7 +576,7 @@ const renameScreen = store => (oldname, newname) => {
     const saveAllChanged = async () => {
       for (let screenName of changedScreens) {
         const changedScreen = getExactComponent(screens, screenName)
-        await api.post(`/_builder/api/${s.appname}/screen`, changedScreen)
+        const updatedScreen = await api.post(`/_builder/api/${s.appname}/screen`, changedScreen)
       }
     }
 

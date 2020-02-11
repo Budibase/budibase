@@ -63,6 +63,8 @@ module.exports.saveScreen = async (config, appname, pagename, screen) => {
     flag: "w",
     spaces: 2,
   })
+  component.stateOrigins = buildStateOrigins(component);
+  return component;
 }
 
 module.exports.renameScreen = async (
@@ -166,6 +168,8 @@ const buildStateOrigins = screenDefinition => {
 
   return origins;
 };
+
+module.exports.buildStateOrigins = buildStateOrigins;
 
 const fetchscreens = async (appPath, relativePath = "") => {
   const currentDir = join(appPath, "components", relativePath)
