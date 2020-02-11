@@ -61,7 +61,7 @@
       <span
         class="icon"
         style={`
-        transform: rotate(${isOpen ? 0 : 90}deg);
+        transform: rotate(${isOpen ? 180 : -90}deg);
         color: ${bindingPath ? 'rgba(0, 85, 255, 0.8)' : 'inherit'}
       `}>
         <ArrowDownIcon size={36} />
@@ -119,7 +119,6 @@
   }
 
   li {
-    transition: 0.2s all;
     list-style-type: none;
   }
 
