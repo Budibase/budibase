@@ -34,13 +34,14 @@
 
   $: {
     const binding = getBinding(value);
+    if (bindingPath !== binding.path) isOpen = false; 
     bindingPath = binding.path;
     bindingFallbackValue = binding.fallback
       ? binding.fallback
       : typeof value === "object"
       ? ""
       : value;
-
+    
     const currentScreen = $store.screens.find(
       ({ name }) => name === $store.currentPreviewItem.name
     );
