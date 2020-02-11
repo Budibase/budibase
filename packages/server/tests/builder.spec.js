@@ -9,6 +9,7 @@ const screen1 = require("../appPackages/testApp/pages/main/screens/screen1.json"
 const screen2 = require("../appPackages/testApp/pages/main/screens/screen2.json")
 const { readJSON, pathExists, unlink, readFile } = require("fs-extra")
 const { getHashedCssPaths } = require("../utilities/builder/convertCssToFiles")
+const listScreens = require("../utilities/builder/listScreens");
 
 const app = require("./testApp")()
 testComponents.textbox.name = `./customComponents/textbox`
@@ -217,3 +218,35 @@ it("/savePage should prepare all necessary client files", async () => {
   expect(savedScreen2Css).toEqual(screen2Css)
   expect(indexHtmlMain.includes(screen2CssPaths.url)).toBe(true)
 })
+
+it("builds the correct stateOrigins object from a screen definition with no handlers", () => {
+  expect(listScreens.buildStateOrigins(screen1)).toEqual({});
+});
+
+it("builds the correct stateOrigins object from a screen definition with handlers", () => {
+  expect(listScreens.buildStateOrigins({
+    "name": "screen1",
+    "description": "",
+    "props": {
+    "_component": "@budibase/standard-components/div",
+      "className": "",
+      "onClick": [
+        {
+          "##eventHandlerType": "Set State",
+          "parameters": {
+            "path": "testKey",
+            "value": "value"
+          }
+        }
+      ]
+    }
+  })).toEqual({
+    "testKey": {
+      "##eventHandlerType": "Set State",
+      "parameters": {
+        "path": "testKey",
+        "value": "value"
+      }
+    }
+  });
+});

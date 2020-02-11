@@ -58,14 +58,14 @@
         onChanged(e.target.value);
       }} />
     <button on:click={() => (isOpen = !isOpen)}>
-      <span
+      <div
         class="icon"
         style={`
-        transform: rotate(${isOpen ? 180 : -90}deg);
-        color: ${bindingPath ? 'rgba(0, 85, 255, 0.8)' : 'inherit'}
+        transform: rotate(${isOpen ? 0 : 90}deg);
+        color: ${bindingPath ? 'rgba(0, 85, 255, 0.8);' : 'inherit;'}
       `}>
         <ArrowDownIcon size={36} />
-      </span>
+      </div>
     </button>
   </div>
   {#if isOpen}
