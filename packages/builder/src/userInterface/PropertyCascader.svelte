@@ -42,7 +42,7 @@
       : value;
 
     const currentScreen = $store.screens.find(
-      ({ name }) => name === $store.currentFrontEndItem.name
+      ({ name }) => name === $store.currentPreviewItem.name
     );
     stateBindings = currentScreen ? currentScreen.stateOrigins : [];
   }
