@@ -99,7 +99,7 @@
     <Textbox label="Name:" bind:text={record.name} on:change={nameChanged} />
     {#if !record.isSingle}
       <Textbox label="Collection Name:" bind:text={record.collectionName} />
-      <Textbox label="Shard Factor:" bind:text={record.allidsShardFactor} />
+      <Textbox label="Estimated Record Count:" bind:text={record.estimatedRecordCount} />
     {/if}
     <div class="recordkey">{record.nodeKey()}</div>
 
