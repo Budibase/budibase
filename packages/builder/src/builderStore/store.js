@@ -467,11 +467,11 @@ const _saveScreen = (store, s, screen) => {
   api
     .post(`/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`, screen)
     .then(async savedScreen => {
+      _savePage(s);
       const updatedScreen = await savedScreen.json();
       const screens = [...currentPageScreens.filter(storeScreen => storeScreen.name !== updatedScreen.name), updatedScreen];
       s.pages[s.currentPageName]._screens = screens
       s.screens = screens
-      _savePage(s);
     });
 
   return s
