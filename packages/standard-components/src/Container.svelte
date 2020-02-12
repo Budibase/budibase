@@ -7,7 +7,7 @@
   let hasLoaded;
   let currentChildren;
 
-  $: rootDiv && _bb.initialiseChildren(rootDiv)
+  $: rootDiv && _bb.attachChildren(rootDiv)
 
 </script>
 

@@ -111,12 +111,12 @@ const maketestlib = window => ({
           for (let c of childNodes) {
             node.removeChild(c)
           }
-          const components = currentProps._bb.initialiseChildren(node, {
+          const components = currentProps._bb.attachChildren(node, {
             hydrate: false,
           })
           childNodes = components.map(c => c.component._element)
         } else {
-          currentProps._bb.initialiseChildren(node)
+          currentProps._bb.attachChildren(node)
         }
       }
     }

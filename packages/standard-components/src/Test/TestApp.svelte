@@ -13,7 +13,7 @@
 
   $: {
     if (_bb && currentComponent) {
-      _bb.initialiseChildren(currentComponent)
+      _bb.attachChildren(currentComponent)
     }
   }
 </script>

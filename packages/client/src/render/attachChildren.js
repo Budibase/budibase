@@ -4,7 +4,7 @@ import { $ } from "../core/common"
 import { renderComponent } from "./renderComponent"
 import { isScreenSlot } from "./builtinComponents"
 
-export const initialiseChildren = initialiseOpts => (htmlElement, options) => {
+export const attachChildren = initialiseOpts => (htmlElement, options) => {
   const {
     uiFunctions,
     bb,

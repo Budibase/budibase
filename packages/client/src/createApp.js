@@ -4,7 +4,7 @@ import { getStateOrValue } from "./state/getState"
 import { setState, setStateFromBinding } from "./state/setState"
 import { trimSlash } from "./common/trimSlash"
 import { isBound } from "./state/isState"
-import { initialiseChildren } from "./render/initialiseChildren"
+import { attachChildren } from "./render/attachChildren"
 import { createTreeNode } from "./render/renderComponent"
 import { screenRouter } from "./render/screenRouter"
 
@@ -59,12 +59,12 @@ export const createApp = (
 
   const onScreenSlotRendered = screenSlotNode => {
     const onScreenSelected = (screen, store, url) => {
-      const { getInitialiseParams, unsubscribe } = initialiseChildrenParams(
+      const { getInitialiseParams, unsubscribe } = attachChildrenParams(
         store
       )
       screenSlotNode.props._children = [screen.props]
       const initialiseChildParams = getInitialiseParams(screenSlotNode)
-      initialiseChildren(initialiseChildParams)(screenSlotNode.rootElement, {
+      attachChildren(initialiseChildParams)(screenSlotNode.rootElement, {
         hydrate: true,
         force: true,
       })
@@ -78,7 +78,7 @@ export const createApp = (
     routeTo(currentUrl || window.location.pathname)
   }
 
-  const initialiseChildrenParams = store => {
+  const attachChildrenParams = store => {
     let currentState = null
     const unsubscribe = store.subscribe(s => {
       currentState = s
@@ -98,7 +98,7 @@ export const createApp = (
 
     const getBbClientApi = (treeNode, componentProps) => {
       return {
-        initialiseChildren: initialiseChildren(getInitialiseParams(treeNode)),
+        attachChildren: attachChildren(getInitialiseParams(treeNode)),
         context: treeNode.context,
         props: componentProps,
         call: safeCallEvent,
@@ -124,10 +124,10 @@ export const createApp = (
 
     rootTreeNode = createTreeNode()
     rootTreeNode.props = { _children: [page.props] }
-    const { getInitialiseParams } = initialiseChildrenParams(pageStore)
+    const { getInitialiseParams } = attachChildrenParams(pageStore)
     const initChildParams = getInitialiseParams(rootTreeNode)
 
-    initialiseChildren(initChildParams)(target, {
+    attachChildren(initChildParams)(target, {
       hydrate: true,
       force: true,
     })
