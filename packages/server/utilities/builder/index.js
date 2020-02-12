@@ -63,7 +63,6 @@ module.exports.saveScreen = async (config, appname, pagename, screen) => {
     flag: "w",
     spaces: 2,
   })
-  screen.stateOrigins = listScreens.buildStateOrigins(screen);
   return screen;
 }
 
