@@ -1,5 +1,3 @@
-const getComponent = comp => `@budibase/materialdesign-components/${comp}`;
-
 
 export const props = {
   h1: {
@@ -8,9 +6,9 @@ export const props = {
     text: "Im a big header",
   },
   overline: {
-    _component: getComponent`Overline`,
+    _component: "@budibase/materialdesign-components/Overline",
     _children: [],
-    text: "A wee Overline",
+    text: "Im a wee overline",
   },
   button: {
     _component: "@budibase/materialdesign-components/button",
@@ -36,7 +34,14 @@ export const props = {
     label: "First",
     colour: "secondary",
     textarea: true,
-    fullwidth:true,
+    fullwidth: true,
     helperText: "Add Surname",
-    useCharCounter: true
+    useCharCounter: true,
+  },
+  checkbox: {
+    _component: "@budibase/materialdesign-components/checkbox",
+    _children: [],
+    id: "test-check",
+    label: "Check Yo Self",
+  }
 }
