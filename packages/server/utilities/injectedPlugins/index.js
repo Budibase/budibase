@@ -40,24 +40,24 @@ const createTriggers = appPackage => {
 
 const createActions = appPackage => {
   const appDef = appPackage.appDefinition
-  appDef.actions.createUser = {
+  appDef.actions.push({
     name: "createUser",
     behaviourSource: "_injected",
     behaviourName: "createUser",
     initialOptions: {},
-  }
-  appDef.actions.enableUser = {
+  })
+  appDef.actions.push({
     name: "enableUser",
     behaviourSource: "_injected",
     behaviourName: "enableUser",
     initialOptions: {},
-  }
-  appDef.actions.disableUser = {
+  })
+  appDef.actions.push({
     name: "disableUser",
     behaviourSource: "_injected",
     behaviourName: "disableUser",
     initialOptions: {},
-  }
+  })
 }
 
 const constructPlugin = async (masterAppInternal, appName, instanceKey) => {

@@ -22,7 +22,7 @@ module.exports = async (config, appname, appDefinition, accessLevels) => {
     const appDefString = JSON.stringify(appDefinition)
     await writeFile(
       filename,
-      `window['##BUDIBASE_FRONTEND_DEINITION##'] = ${appDefString};`
+      `window['##BUDIBASE_BACKEND_DEFINITION##'] = ${appDefString};`
     )
   }
 }

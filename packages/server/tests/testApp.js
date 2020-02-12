@@ -22,12 +22,12 @@ const extraMasterPlugins = {
 }
 
 const customizeMaster = appDefinition => {
-  appDefinition.actions.outputToFile = {
+  appDefinition.actions.push({
     name: "outputToFile",
     behaviourSource: "test_plugins",
     behaviourName: "outputToFile",
     initialOptions: {},
-  }
+  })
 
   appDefinition.triggers.push({
     actionName: "outputToFile",

@@ -7,7 +7,7 @@ module.exports.convertCssToFiles = async (publicPagePath, pkg) => {
   await ensureDir(cssDir)
   await emptyDir(cssDir)
 
-  for (let screen of pkg.screens) {
+  for (let screen of pkg.screens || []) {
     if (!screen._css) continue
     if (screen._css.trim().length === 0) {
       delete screen._css
