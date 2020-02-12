@@ -1,6 +1,7 @@
 const { readdir, stat, copyFile } = require("fs-extra")
 const { constants } = require("fs")
 const { join, basename } = require("path")
+const serverConfig = require("../../server/config")()
 
 const packagesFolder = ".."
 
@@ -9,7 +10,11 @@ const jsMapFile = dir => join(dir, "budibase-client.js.map")
 const sourceJs = jsFile("dist")
 const sourceJsMap = jsMapFile("dist")
 
-const appPackages = join(packagesFolder, "server", "appPackages")
+const appPackages = join(
+  packagesFolder,
+  "server",
+  serverConfig.latestPackagesFolder
+)
 
 const publicMain = appName => join(appPackages, appName, "public", "main")
 const publicUnauth = appName =>
@@ -34,10 +39,11 @@ const nodeModules = appName =>
   const copySourceJsMap = copySource(sourceJsMap)
 
   for (let app of apps) {
+    if (app === ".data") continue
     if (!(await stat(join(appPackages, app))).isDirectory()) continue
 
-    await copySourceJs(nodeModules(app))
-    await copySourceJsMap(nodeModules(app))
+    //await copySourceJs(nodeModules(app))
+    //await copySourceJsMap(nodeModules(app))
 
     await copySourceJs(publicMain(app))
     await copySourceJsMap(publicMain(app))
