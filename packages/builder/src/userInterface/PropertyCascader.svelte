@@ -12,12 +12,11 @@
   let bindingPath = "";
   let bindingFallbackValue = "";
   let bindingSource = "store";
-
-  const clearBinding = () => onChanged("");
+  let bindingValue = "";
 
   const bind = (path, fallback, source) => {
     if (!path) {
-      clearBinding("");
+      onChanged(fallback);
       return;
     }
     const binding = setBinding({ path, fallback, source });
@@ -34,14 +33,11 @@
 
   $: {
     const binding = getBinding(value);
-    if (bindingPath !== binding.path) isOpen = false; 
+    if (bindingPath !== binding.path) isOpen = false;
     bindingPath = binding.path;
-    bindingFallbackValue = binding.fallback
-      ? binding.fallback
-      : typeof value === "object"
-      ? ""
-      : value;
-    
+    bindingValue = typeof value === "object" ? "" : value;
+    bindingFallbackValue = binding.fallback || bindingValue;
+
     const currentScreen = $store.screens.find(
       ({ name }) => name === $store.currentPreviewItem.name
     );
@@ -52,8 +48,9 @@
 <div class="cascader">
   <div class="input-box">
     <input
+      class:bold={!bindingFallbackValue && bindingPath}
       class="uk-input uk-form-small"
-      value={bindingFallbackValue}
+      value={bindingFallbackValue || bindingPath}
       on:change={e => {
         setBindingFallback(e.target.value);
         onChanged(e.target.value);
@@ -61,10 +58,8 @@
     <button on:click={() => (isOpen = !isOpen)}>
       <div
         class="icon"
-        style={`
-        transform: rotate(${isOpen ? 0 : 90}deg);
-        color: ${bindingPath ? 'rgba(0, 85, 255, 0.8);' : 'inherit;'}
-      `}>
+        class:highlighted={bindingPath}
+        style={`transform: rotate(${isOpen ? 0 : 90}deg);`}>
         <ArrowDownIcon size={36} />
       </div>
     </button>
@@ -73,7 +68,7 @@
     <ul class="options">
       {#each Object.keys(stateBindings) as stateBinding}
         <li
-          style={stateBinding === bindingPath && 'font-weight: bold;'}
+          class:bold={stateBinding === bindingPath}
           on:click={() => {
             setBindingPath(stateBinding === bindingPath ? null : stateBinding);
           }}>
@@ -85,6 +80,14 @@
 </div>
 
 <style>
+  .bold {
+    font-weight: bold;
+  }
+
+  .highlighted {
+    color: rgba(0, 85, 255, 0.8);
+  }
+
   button {
     cursor: pointer;
     outline: none;

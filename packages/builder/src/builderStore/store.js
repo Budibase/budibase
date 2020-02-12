@@ -461,10 +461,10 @@ const saveScreen = store => screen => {
   })
 }
 
-const _saveScreen = (store, s, screen) => {
+const _saveScreen = async (store, s, screen) => {
   const currentPageScreens = s.pages[s.currentPageName]._screens
 
-  api
+  await api
     .post(`/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`, screen)
     .then(async savedScreen => {
       _savePage(s);
