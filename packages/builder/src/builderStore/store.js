@@ -694,7 +694,7 @@ const _savePage = async s => {
   await api.post(`/_builder/api/${appname}/pages/${s.currentPageName}`, {
     page: { componentLibraries: s.pages.componentLibraries, ...page },
     uiFunctions: "{'1234':() => 'test return'}",
-    screens: page.screens,
+    screens: page._screens,
   })
 }
 
