@@ -2,20 +2,20 @@ import { createApp } from "./createApp"
 import { trimSlash } from "./common/trimSlash"
 import { builtins, builtinLibName } from "./render/builtinComponents"
 
-export const loadBudibase = async ({
-  componentLibraries,
-  page,
-  screens,
-  window,
-  localStorage,
-  uiFunctions,
-}) => {
-  const backendDefinition = window["##BUDIBASE_BACKEND_DEFINITION##"]
-  const frontendDefinition = window["##BUDIBASE_FRONTEND_DEFINITION##"]
-  const uiFunctionsFromWindow = window["##BUDIBASE_FRONTEND_FUNCTIONS##"]
-  uiFunctions = uiFunctionsFromWindow || uiFunctions
+export const loadBudibase = async (opts) => {
 
-  const userFromStorage = localStorage.getItem("budibase:user")
+  let componentLibraries = opts && opts.componentLibraries
+  let page = opts && opts.page
+  let screens = opts && opts.screens
+  const _window = window || (opts && opts.window)
+  const _localStorage = localStorage || (opts && opts.localStorage)
+
+  const backendDefinition = _window["##BUDIBASE_BACKEND_DEFINITION##"]
+  const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
+  const uiFunctionsFromWindow = _window["##BUDIBASE_FRONTEND_FUNCTIONS##"]
+  const uiFunctions = uiFunctionsFromWindow || (opts && opts.uiFunctions)
+
+  const userFromStorage = _localStorage.getItem("budibase:user")
 
   const user = userFromStorage
     ? JSON.parse(userFromStorage)
@@ -43,7 +43,7 @@ export const loadBudibase = async ({
     }
   }
 
-  componentLibraries[builtinLibName] = builtins(window)
+  componentLibraries[builtinLibName] = builtins(_window)
 
   if (!page) {
     page = frontendDefinition.page
@@ -54,7 +54,7 @@ export const loadBudibase = async ({
   }
 
   const { initialisePage, screenStore, pageStore, routeTo, rootNode } = createApp(
-    window.document,
+    _window.document,
     componentLibraries,
     frontendDefinition,
     backendDefinition,
@@ -63,12 +63,12 @@ export const loadBudibase = async ({
     screens
   )
 
-  const route = window.location 
-                ? window.location.pathname.replace(rootPath, "")
+  const route = _window.location 
+                ? _window.location.pathname.replace(rootPath, "")
                 : "";
 
   return {
-    rootNode: initialisePage(page, window.document.body, route),
+    rootNode: initialisePage(page, _window.document.body, route),
     screenStore,
     pageStore,
     routeTo,
