@@ -25,7 +25,7 @@
 
   export const EVENT_TYPE = "event"
 
-  export let componentInfo
+  export let component
   export let onPropChanged = () => {}
   export let components
 
@@ -33,15 +33,16 @@
   let events = []
   let selectedEvent = null
 
+
   $: {
-    events = Object.keys(componentInfo)
+    events = Object.keys(component)
       .filter(key => findType(key) === EVENT_TYPE)
-      .map(key => ({ name: key, handlers: componentInfo[key] }))
+      .map(key => ({ name: key, handlers: component[key] }))
   }
 
   function findType(propName) {
-    if (!componentInfo._component) return
-    return components.find(({ name }) => name === componentInfo._component)
+    if (!component._component) return
+    return components.find(({ name }) => name === component._component)
       .props[propName]
   }
 

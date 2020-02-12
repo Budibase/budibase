@@ -1,137 +1,39 @@
 <script>
   import IconButton from "../common/IconButton.svelte"
   import Input from "../common/Input.svelte"
+  import PropertyCascader from "./PropertyCascader.svelte"
   import { isBinding, getBinding, setBinding } from "../common/binding"
 
   export let value = ""
   export let onChanged = () => {}
   export let type = ""
   export let options = []
-
-  let isBound = false
-  let bindingPath = ""
-  let bindingFallbackValue = ""
-  let bindingSource = "store"
-  let isExpanded = false
-  let forceIsBound = false
-  let canOnlyBind = false
-
-  $: {
-    canOnlyBind = type === "state"
-    if (!forceIsBound && canOnlyBind) forceIsBound = true
-
-    isBound = forceIsBound || isBinding(value)
-
-    if (isBound) {
-      const binding = getBinding(value)
-      bindingPath = binding.path
-      bindingFallbackValue = binding.fallback
-      bindingSource = binding.source || "store"
-    } else {
-      bindingPath = ""
-      bindingFallbackValue = ""
-      bindingSource = "store"
-    }
-  }
-
-  const clearBinding = () => {
-    forceIsBound = false
-    onChanged("")
-  }
-
-  const bind = (path, fallback, source) => {
-    if (!path) {
-      clearBinding("")
-      return
-    }
-    const binding = setBinding({ path, fallback, source })
-    onChanged(binding)
-  }
-
-  const setBindingPath = ev => {
-    forceIsBound = canOnlyBind
-    bind(ev.target.value, bindingFallbackValue, bindingSource)
-  }
-
-  const setBindingFallback = ev => {
-    bind(bindingPath, ev.target.value, bindingSource)
-  }
-
-  const setBindingSource = ev => {
-    bind(bindingPath, bindingFallbackValue, ev.target.value)
-  }
 </script>
 
-{#if isBound}
-  <div>
-    <div class="bound-header">
-      <div>{isExpanded ? '' : bindingPath}</div>
+<div class="unbound-container">
+  {#if type === 'bool'}
+    <div>
       <IconButton
-        icon={isExpanded ? 'chevron-up' : 'chevron-down'}
-        size="12"
-        on:click={() => (isExpanded = !isExpanded)} />
-      {#if !canOnlyBind}
-        <IconButton icon="trash" size="12" on:click={clearBinding} />
-      {/if}
+        icon={value == true ? 'check-square' : 'square'}
+        size="19"
+        on:click={() => onChanged(!value)} />
     </div>
-    {#if isExpanded}
-      <div>
-        <div class="binding-prop-label">Binding Path</div>
-        <input
-          class="uk-input uk-form-small"
-          value={bindingPath}
-          on:change={setBindingPath} />
-        <div class="binding-prop-label">Fallback Value</div>
-        <input
-          class="uk-input uk-form-small"
-          value={bindingFallbackValue}
-          on:change={setBindingFallback} />
-        <div class="binding-prop-label">Binding Source</div>
-        <select
-          class="uk-select uk-form-small"
-          value={bindingSource}
-          on:change={setBindingSource}>
-
-          <option>store</option>
-          <option>context</option>
-
-        </select>
-      </div>
-    {/if}
-
-  </div>
-{:else}
-  <div class="unbound-container">
-
-    {#if type === 'bool'}
-      <div>
-        <IconButton
-          icon={value == true ? 'check-square' : 'square'}
-          size="19"
-          on:click={() => onChanged(!value)} />
-      </div>
-    {:else if type === 'options'}
-      <select
-        class="uk-select uk-form-small"
-        {value}
-        on:change={ev => onChanged(ev.target.value)}>
-        {#each options as option}
-          <option value={option}>{option}</option>
-        {/each}
-      </select>
-    {:else}
-      <Input on:change={ev => onChanged(ev.target.value)} bind:value />
-    {/if}
-
-  </div>
-{/if}
+  {:else if type === 'options'}
+    <select
+      class="uk-select uk-form-small"
+      {value}
+      on:change={ev => onChanged(ev.target.value)}>
+      {#each options as option}
+        <option value={option}>{option}</option>
+      {/each}
+    </select>
+  {:else}
+    <PropertyCascader {onChanged} {value} />
+  {/if}
+</div>
 
 <style>
   .unbound-container {
-    display: flex;
-  }
-
-  .bound-header {
     display: flex;
   }
 
@@ -140,21 +42,5 @@
     width: 30px;
     color: var(--secondary50);
     padding-left: 5px;
-  }
-
-  .binding-prop-label {
-    color: var(--secondary50);
-  }
-
-  input {
-    font-size: 12px;
-    font-weight: 700;
-    color: #163057;
-    opacity: 0.7;
-    padding: 5px 10px;
-    box-sizing: border-box;
-    border: 1px solid #dbdbdb;
-    border-radius: 2px;
-    outline: none;
   }
 </style>

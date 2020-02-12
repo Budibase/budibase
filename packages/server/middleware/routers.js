@@ -207,7 +207,7 @@ module.exports = (config, app) => {
       ctx.response.status = StatusCodes.OK
     })
     .post("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
-      await saveScreen(
+      ctx.body = await saveScreen(
         config,
         ctx.params.appname,
         ctx.params.pagename,
