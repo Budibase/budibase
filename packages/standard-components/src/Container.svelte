@@ -7,7 +7,7 @@
   let hasLoaded;
   let currentChildren;
 
-  $: rootDiv && _bb.hydrateChildren(rootDiv)
+  $: rootDiv && _bb.initialiseChildren(rootDiv)
 
 </script>
 

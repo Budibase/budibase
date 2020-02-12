@@ -63,12 +63,11 @@ export const createApp = (
         store
       )
       screenSlotNode.props._children = [screen.props]
-      const initialiseChildParams = getInitialiseParams(true, screenSlotNode)
-      initialiseChildren(initialiseChildParams)(
-        screenSlotNode.rootElement,
-        null,
-        true
-      )
+      const initialiseChildParams = getInitialiseParams(screenSlotNode)
+      initialiseChildren(initialiseChildParams)(screenSlotNode.rootElement, {
+        hydrate: true,
+        force: true,
+      })
       if (currentScreenUbsubscribe) currentScreenUbsubscribe()
       currentScreenUbsubscribe = unsubscribe
       currentScreenStore = store
@@ -85,14 +84,13 @@ export const createApp = (
       currentState = s
     })
 
-    const getInitialiseParams = (hydrate, treeNode) => ({
+    const getInitialiseParams = treeNode => ({
       bb: getBbClientApi,
       coreApi,
       store,
       document,
       componentLibraries,
       frontendDefinition,
-      hydrate,
       uiFunctions,
       treeNode,
       onScreenSlotRendered,
@@ -100,17 +98,7 @@ export const createApp = (
 
     const getBbClientApi = (treeNode, componentProps) => {
       return {
-        hydrateChildren: initialiseChildren(
-          getInitialiseParams(true, treeNode)
-        ),
-        appendChildren: initialiseChildren(
-          getInitialiseParams(false, treeNode)
-        ),
-        insertChildren: (htmlElement, anchor) =>
-          initialiseChildren(getInitialiseParams(false, treeNode))(
-            htmlElement,
-            anchor
-          ),
+        initialiseChildren: initialiseChildren(getInitialiseParams(treeNode)),
         context: treeNode.context,
         props: componentProps,
         call: safeCallEvent,
@@ -137,9 +125,12 @@ export const createApp = (
     rootTreeNode = createTreeNode()
     rootTreeNode.props = { _children: [page.props] }
     const { getInitialiseParams } = initialiseChildrenParams(pageStore)
-    const initChildParams = getInitialiseParams(true, rootTreeNode)
+    const initChildParams = getInitialiseParams(rootTreeNode)
 
-    initialiseChildren(initChildParams)(target)
+    initialiseChildren(initChildParams)(target, {
+      hydrate: true,
+      force: true,
+    })
 
     return rootTreeNode
   }

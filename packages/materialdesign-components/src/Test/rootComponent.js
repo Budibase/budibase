@@ -2,7 +2,7 @@ export const rootComponent = window => {
   return function(opts) {
     const node = window.document.createElement("DIV")
     const $set = props => {
-      props._bb.hydrateChildren(node)
+      props._bb.initialiseChildren(node)
     }
     const $destroy = () => {
       if (opts.target && node) opts.target.removeChild(node)

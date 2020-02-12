@@ -13,7 +13,7 @@
 
   $: {
     if (_bb && currentComponent) {
-      _bb.hydrateChildren(currentComponent)
+      _bb.initialiseChildren(currentComponent)
     }
   }
 </script>

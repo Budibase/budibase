@@ -37,7 +37,7 @@
 
   $: {
     if (_bb && theButton && _children && _children.length)
-      _bb.hydrateChildren(theButton)
+      _bb.initialiseChildren(theButton)
   }
 
   $: {
