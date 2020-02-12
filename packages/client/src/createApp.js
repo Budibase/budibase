@@ -62,11 +62,9 @@ export const createApp = (
       const { getInitialiseParams, unsubscribe } = initialiseChildrenParams(
         store
       )
+      screenSlotNode.props._children = [screen.props]
       const initialiseChildParams = getInitialiseParams(true, screenSlotNode)
-      initialiseChildren(initialiseChildParams)(
-        [screen.props],
-        screenSlotNode.rootElement
-      )
+      initialiseChildren(initialiseChildParams)(screenSlotNode.rootElement)
       if (currentScreenUbsubscribe) currentScreenUbsubscribe()
       currentScreenUbsubscribe = unsubscribe
       currentScreenStore = store
@@ -104,9 +102,8 @@ export const createApp = (
         appendChildren: initialiseChildren(
           getInitialiseParams(false, treeNode)
         ),
-        insertChildren: (props, htmlElement, anchor) =>
+        insertChildren: (htmlElement, anchor) =>
           initialiseChildren(getInitialiseParams(false, treeNode))(
-            props,
             htmlElement,
             anchor
           ),
@@ -134,10 +131,11 @@ export const createApp = (
     currentUrl = urlPath
 
     rootTreeNode = createTreeNode()
+    rootTreeNode.props = { _children: [page.props] }
     const { getInitialiseParams } = initialiseChildrenParams(pageStore)
     const initChildParams = getInitialiseParams(true, rootTreeNode)
 
-    initialiseChildren(initChildParams)([page.props], target)
+    initialiseChildren(initChildParams)(target)
 
     return rootTreeNode
   }

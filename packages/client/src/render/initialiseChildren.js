@@ -5,7 +5,6 @@ import { renderComponent } from "./renderComponent"
 import { isScreenSlot } from "./builtinComponents"
 
 export const initialiseChildren = initialiseOpts => (
-  childrenProps,
   htmlElement,
   anchor = null
 ) => {
@@ -34,7 +33,7 @@ export const initialiseChildren = initialiseOpts => (
   htmlElement.classList.add(`lay-${treeNode.props._id}`)
 
   const renderedComponents = []
-  for (let childProps of childrenProps) {
+  for (let childProps of treeNode.props._children) {
     const { componentName, libName } = splitName(childProps._component)
 
     if (!componentName || !libName) return
