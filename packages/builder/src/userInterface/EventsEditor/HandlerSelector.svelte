@@ -1,27 +1,28 @@
 <script>
-  import IconButton from "../../common/IconButton.svelte"
-  import PlusButton from "../../common/PlusButton.svelte"
-  import Select from "../../common/Select.svelte"
-  import StateBindingControl from "../StateBindingControl.svelte"
-  import { find, map, keys, reduce, keyBy } from "lodash/fp"
-  import { pipe, userWithFullAccess } from "../../common/core"
+  import IconButton from "../../common/IconButton.svelte";
+  import PlusButton from "../../common/PlusButton.svelte";
+  import Select from "../../common/Select.svelte";
+  import Input from "../../common/Input.svelte";
+  import StateBindingControl from "../StateBindingControl.svelte";
+  import { find, map, keys, reduce, keyBy } from "lodash/fp";
+  import { pipe, userWithFullAccess } from "../../common/core";
   import {
     EVENT_TYPE_MEMBER_NAME,
     allHandlers,
-  } from "../../common/eventHandlers"
-  import { store } from "../../builderStore"
+  } from "../../common/eventHandlers";
+  import { store } from "../../builderStore";
 
-  export let handler
-  export let onCreate
-  export let onChanged
-  export let onRemoved
+  export let handler;
+  export let onCreate;
+  export let onChanged;
+  export let onRemoved;
 
-  export let index
-  export let newHandler
+  export let index;
+  export let newHandler;
 
-  let eventOptions
-  let handlerType
-  let parameters = []
+  let eventOptions;
+  let handlerType;
+  let parameters = [];
 
   $: eventOptions = allHandlers(
     { hierarchy: $store.hierarchy },
@@ -29,53 +30,53 @@
       hierarchy: $store.hierarchy,
       actions: keyBy("name")($store.actions),
     })
-  )
+  );
 
   $: {
     if (handler) {
-      handlerType = handler[EVENT_TYPE_MEMBER_NAME]
+      handlerType = handler[EVENT_TYPE_MEMBER_NAME];
       parameters = Object.entries(handler.parameters).map(([name, value]) => ({
         name,
         value,
-      }))
+      }));
     } else {
       // Empty Handler
-      handlerType = ""
-      parameters = []
+      handlerType = "";
+      parameters = [];
     }
   }
 
   const handlerChanged = (type, params) => {
-    const handlerParams = {}
+    const handlerParams = {};
     for (let param of params) {
-      handlerParams[param.name] = param.value
+      handlerParams[param.name] = param.value;
     }
 
     const updatedHandler = {
       [EVENT_TYPE_MEMBER_NAME]: type,
       parameters: handlerParams,
-    }
+    };
 
-    onChanged(updatedHandler, index)
-  }
+    onChanged(updatedHandler, index);
+  };
 
   const handlerTypeChanged = e => {
     const handlerType = eventOptions.find(
       handler => handler.name === e.target.value
-    )
+    );
     const defaultParams = handlerType.parameters.map(param => ({
       name: param,
       value: "",
-    }))
+    }));
 
-    handlerChanged(handlerType.name, defaultParams)
-  }
+    handlerChanged(handlerType.name, defaultParams);
+  };
 
-  const onParameterChanged = index => value => {
-    const newParams = [...parameters]
-    newParams[index].value = value
-    handlerChanged(handlerType, newParams)
-  }
+  const onParameterChanged = index => e => {
+    const newParams = [...parameters];
+    newParams[index].value = e.target.value;
+    handlerChanged(handlerType, newParams);
+  };
 </script>
 
 <div class="type-selector-container {newHandler && 'new-handler'}">
@@ -93,9 +94,7 @@
       {#each parameters as param, idx}
         <div class="handler-option">
           <span>{param.name}</span>
-          <StateBindingControl
-            onChanged={onParameterChanged(idx)}
-            value={param.value} />
+          <Input on:change={onParameterChanged(idx)} value={param.value} />
         </div>
       {/each}
     {/if}
