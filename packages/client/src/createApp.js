@@ -14,8 +14,7 @@ export const createApp = (
   frontendDefinition,
   backendDefinition,
   user,
-  uiFunctions,
-  screens
+  uiFunctions
 ) => {
   const coreApi = createCoreApi(backendDefinition, user)
   backendDefinition.hierarchy = coreApi.templateApi.constructHierarchy(
@@ -74,7 +73,7 @@ export const createApp = (
       currentUrl = url
     }
 
-    routeTo = screenRouter(screens, onScreenSelected)
+    routeTo = screenRouter(frontendDefinition.screens, onScreenSelected)
     routeTo(currentUrl || window.location.pathname)
   }
 

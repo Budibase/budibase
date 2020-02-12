@@ -5,16 +5,13 @@ import { builtins, builtinLibName } from "./render/builtinComponents"
 export const loadBudibase = async (opts) => {
 
   let componentLibraries = opts && opts.componentLibraries
-  let page = opts && opts.page
-  let screens = opts && opts.screens
-  const _window = window || (opts && opts.window)
-  const _localStorage = localStorage || (opts && opts.localStorage)
+  const _window = (opts && opts.window) || window
+  const _localStorage = (opts && opts.localStorage) || localStorage 
 
   const backendDefinition = _window["##BUDIBASE_BACKEND_DEFINITION##"]
   const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
-  const uiFunctionsFromWindow = _window["##BUDIBASE_FRONTEND_FUNCTIONS##"]
-  const uiFunctions = uiFunctionsFromWindow || (opts && opts.uiFunctions)
-
+  const uiFunctions = _window["##BUDIBASE_FRONTEND_FUNCTIONS##"]
+  
   const userFromStorage = _localStorage.getItem("budibase:user")
 
   const user = userFromStorage
@@ -45,22 +42,13 @@ export const loadBudibase = async (opts) => {
 
   componentLibraries[builtinLibName] = builtins(_window)
 
-  if (!page) {
-    page = frontendDefinition.page
-  }
-
-  if (!screens) {
-    screens = frontendDefinition.screens
-  }
-
   const { initialisePage, screenStore, pageStore, routeTo, rootNode } = createApp(
     _window.document,
     componentLibraries,
     frontendDefinition,
     backendDefinition,
     user,
-    uiFunctions || {},
-    screens
+    uiFunctions || {}
   )
 
   const route = _window.location 
@@ -68,7 +56,7 @@ export const loadBudibase = async (opts) => {
                 : "";
 
   return {
-    rootNode: initialisePage(page, _window.document.body, route),
+    rootNode: initialisePage(frontendDefinition.page, _window.document.body, route),
     screenStore,
     pageStore,
     routeTo,
