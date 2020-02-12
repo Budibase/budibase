@@ -17,7 +17,7 @@ const publicPath = require("./publicPath")
 
 module.exports = async (config, appname, pageName, pkg) => {
   const appPath = appPackageFolder(config, appname)
-  
+
   pkg.screens = pkg.screens || []
 
   await convertCssToFiles(publicPath(appPath, pageName), pkg)
@@ -135,7 +135,7 @@ const buildFrontendAppDefinition = async (config, appname, pageName, pkg) => {
 
   await writeFile(
     filename,
-    `window['##BUDIBASE_FRONTEND_DEINITION##'] = ${clientUiDefinition};
+    `window['##BUDIBASE_FRONTEND_DEFINITION##'] = ${clientUiDefinition};
 window['##BUDIBASE_FRONTEND_FUNCTIONS##'] = ${pkg.uiFunctions}`
   )
 }
