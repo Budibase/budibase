@@ -6,7 +6,8 @@ import { isScreenSlot } from "./builtinComponents"
 
 export const initialiseChildren = initialiseOpts => (
   htmlElement,
-  anchor = null
+  anchor = null,
+  force = false
 ) => {
   const {
     uiFunctions,
@@ -19,6 +20,8 @@ export const initialiseChildren = initialiseOpts => (
     hydrate,
     onScreenSlotRendered,
   } = initialiseOpts
+
+  if (!force && treeNode.children.length > 0) return treeNode.children
 
   for (let childNode of treeNode.children) {
     childNode.destroy()

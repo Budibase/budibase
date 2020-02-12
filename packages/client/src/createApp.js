@@ -64,7 +64,11 @@ export const createApp = (
       )
       screenSlotNode.props._children = [screen.props]
       const initialiseChildParams = getInitialiseParams(true, screenSlotNode)
-      initialiseChildren(initialiseChildParams)(screenSlotNode.rootElement)
+      initialiseChildren(initialiseChildParams)(
+        screenSlotNode.rootElement,
+        null,
+        true
+      )
       if (currentScreenUbsubscribe) currentScreenUbsubscribe()
       currentScreenUbsubscribe = unsubscribe
       currentScreenStore = store
