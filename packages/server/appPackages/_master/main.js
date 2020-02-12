@@ -1,7 +1,7 @@
 const { tmpdir } = require("os")
 const { join } = require("path")
 const uuid = require("uuid/v1")
-const { take, takeRight, last } = require("lodash/fp")
+const { take } = require("lodash/fp")
 const { splitKey, $, joinKey } = require("@budibase/core").common
 const {
   unzipTarGzPackageToRuntime,
