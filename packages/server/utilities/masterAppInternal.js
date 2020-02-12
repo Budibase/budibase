@@ -88,9 +88,7 @@ module.exports = async context => {
 
   const createAppUser = async (appname, instance, user, password) => {
     if (isMaster(appname)) {
-      throw new Exception(
-        "This method is for creating app users - not on master!"
-      )
+      throw new Error("This method is for creating app users - not on master!")
     }
 
     const versionId = determineVersionId(instance.version)

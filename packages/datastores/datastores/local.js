@@ -1,26 +1,28 @@
-const { promisify } = require("util")
-const fs = require("fs")
+const {
+  access,
+  mkdir,
+  remove,
+  unlink,
+  readdir,
+  rename,
+  stat,
+  readFile,
+  writeFile,
+} = require("fs-extra")
 const { join } = require("path")
+const { createReadStream, createWriteStream } = require("fs")
 
-const readFile = promisify(fs.readFile)
-const writeFile = (path, content, overwrite) =>
-  promisify(fs.writeFile)(path, content, {
+const _writeFile = (path, content, overwrite) =>
+  writeFile(path, content, {
     encoding: "utf8",
     flag: overwrite ? "w" : "wx",
   })
-const access = promisify(fs.access)
-const mkdir = promisify(fs.mkdir)
-const rmdir = promisify(fs.rmdir)
-const unlink = promisify(fs.unlink)
-const readdir = promisify(fs.readdir)
-const rename = promisify(fs.rename)
-const stat = promisify(fs.stat)
 
 const updateFile = root => async (path, file) =>
-  await writeFile(join(root, path), file, true)
+  await _writeFile(join(root, path), file, true)
 
 const createFile = root => async (path, file) =>
-  await writeFile(join(root, path), file, false)
+  await _writeFile(join(root, path), file, false)
 
 const loadFile = root => async path => await readFile(join(root, path), "utf8")
 
@@ -39,14 +41,14 @@ const deleteFile = root => async path => await unlink(join(root, path))
 
 module.exports.deleteFile = deleteFile
 
-const deleteFolder = root => async path => await rmdir(join(root, path))
+const deleteFolder = root => async path => await remove(join(root, path))
 
 const readableFileStream = root => async path =>
-  fs.createReadStream(join(root, path))
+  createReadStream(join(root, path))
 
 const writableFileStream = root => path =>
   new Promise((resolve, reject) => {
-    const stream = fs.createWriteStream(join(root, path), "utf8")
+    const stream = createWriteStream(join(root, path), "utf8")
     stream.on("open", () => resolve(stream))
     stream.on("error", reject)
   })
@@ -72,7 +74,8 @@ const getDatastoreConfig = rootConfig => (applicationId, instanceId) =>
   join(rootConfig.rootPath, datastoreFolder(applicationId, instanceId))
 
 const getMasterDbRootConfig = rootConfig => () => rootConfig.rootPath
-const getInstanceDbRootConfig = rootConfig => (applicationId, instanceId) =>
+// eslint-disable-next-line no-unused-vars
+const getInstanceDbRootConfig = rootConfig => (_applicationId, _instanceId) =>
   rootConfig.rootPath
 const getDbRootConfig = (rootConfig, applicationId, instanceId) =>
   applicationId === "master"

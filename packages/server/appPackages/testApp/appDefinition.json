@@ -73,14 +73,14 @@
       "condition": ""
     }
   ],
-  "actions": {
-    "output_to_file": {
+  "actions": [
+    {
       "name": "output_to_file",
       "behaviourSource": "main",
       "behaviourName": "outputToFile",
       "initialOptions": {}
     }
-  },
+  ],
   "props": {
     "main": {
       "_component": "some_component"
