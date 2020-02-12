@@ -1,6 +1,7 @@
 <script>
   import { ArrowDownIcon } from "../common/Icons/";
   import { store } from "../builderStore";
+  import { buildStateOrigins } from "../builderStore/buildStateOrigins";
   import { isBinding, getBinding, setBinding } from "../common/binding";
 
   export let onChanged = () => {};
@@ -41,7 +42,7 @@
     const currentScreen = $store.screens.find(
       ({ name }) => name === $store.currentPreviewItem.name
     );
-    stateBindings = currentScreen ? currentScreen.stateOrigins : [];
+    stateBindings = currentScreen ? Object.keys(buildStateOrigins(currentScreen)) : [];
   }
 </script>
 
@@ -66,7 +67,7 @@
   </div>
   {#if isOpen}
     <ul class="options">
-      {#each Object.keys(stateBindings) as stateBinding}
+      {#each stateBindings as stateBinding}
         <li
           class:bold={stateBinding === bindingPath}
           on:click={() => {
