@@ -63,6 +63,7 @@ module.exports.saveScreen = async (config, appname, pagename, screen) => {
     flag: "w",
     spaces: 2,
   })
+  return screen;
 }
 
 module.exports.renameScreen = async (
