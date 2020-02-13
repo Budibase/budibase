@@ -7,6 +7,7 @@
 		"_component": "@budibase/standard-components/container",
 		"_children": [],
 		"_id": 0,
+		"type": "div",
 		"_styles": {
 			"layout": {},
 			"position": {}

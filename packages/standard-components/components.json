@@ -137,27 +137,6 @@
 		},
 		"tags": ["div", "container"]
 	},
-	"table": {
-		"name": "Table",
-		"description": "An HTML table",
-		"props" : {
-			"data": "state",
-			"columns": {
-				"type": "array",
-				"elementDefinition" : {
-					"title": "string",
-					"value": "string"
-				}
-			},
-			"onRowClick":"event",
-			"tableClass": {"type":"string", "default":"table-default"},
-			"theadClass": {"type":"string", "default":"thead-default"},
-			"tbodyClass": {"type":"string", "default":"tbody-default"},
-			"trClass": {"type":"string", "default":"tr-default"},
-			"thClass": {"type":"string", "default":"th-default"}
-		},
-		"tags": ["table"]
-	},
 	"container": {
 		"name": "Container",
 		"description": "An element that contains and lays out other elements. e.g. <div>, <header> etc",
@@ -191,7 +170,6 @@
 		"name": "Heading",
 		"description": "An HTML H1 - H6 tag",
 		"props" : {
-			"text": "string",
 			"className":"string",
 			"type": {
 				"type": "options",

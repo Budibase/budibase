@@ -3,6 +3,7 @@
   "description": "",
   "props": {
     "_component": "@budibase/standard-components/container",
-    "className": ""
+    "className": "",
+		"type": "div",
   }
 }

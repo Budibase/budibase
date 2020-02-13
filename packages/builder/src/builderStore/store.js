@@ -30,6 +30,7 @@ import {
   getNewScreen,
   createProps,
 } from "../userInterface/pagesParsing/createProps"
+import { expandComponentDefinition } from "../userInterface/pagesParsing/types"
 import {
   loadLibs,
   loadLibUrls,
@@ -163,7 +164,9 @@ const initialise = (store, initial) => async () => {
   initial.accessLevels = pkg.accessLevels
   initial.screens = values(pkg.screens)
   initial.generators = generatorsArray(pkg.components.generators)
-  initial.components = values(pkg.components.components)
+  initial.components = values(pkg.components.components).map(
+    expandComponentDefinition
+  )
   initial.actions = values(pkg.appDefinition.actions)
   initial.triggers = pkg.appDefinition.triggers
 
@@ -465,14 +468,22 @@ const _saveScreen = async (store, s, screen) => {
   const currentPageScreens = s.pages[s.currentPageName]._screens
 
   await api
-    .post(`/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`, screen)
+    .post(
+      `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
+      screen
+    )
     .then(async savedScreen => {
-      const updatedScreen = await savedScreen.json();
-      const screens = [...currentPageScreens.filter(storeScreen => storeScreen.name !== updatedScreen.name), updatedScreen];
+      const updatedScreen = await savedScreen.json()
+      const screens = [
+        ...currentPageScreens.filter(
+          storeScreen => storeScreen.name !== updatedScreen.name
+        ),
+        updatedScreen,
+      ]
       s.pages[s.currentPageName]._screens = screens
       s.screens = screens
-      _savePage(s);
-    });
+      _savePage(s)
+    })
 
   return s
 }
@@ -508,7 +519,11 @@ const setCurrentScreen = store => screenName => {
 
     s.currentPreviewItem = screen
     s.currentFrontEndType = "screen"
-    s.currentComponentInfo = screen.props
+
+    s.currentComponentInfo = createProps(
+      getContainerComponent(s.components),
+      screen.props
+    ).props
 
     setCurrentScreenFunctions(s)
     return s
@@ -575,7 +590,7 @@ const renameScreen = store => (oldname, newname) => {
     const saveAllChanged = async () => {
       for (let screenName of changedScreens) {
         const changedScreen = getExactComponent(screens, screenName)
-        const updatedScreen = await api.post(`/_builder/api/${s.appname}/screen`, changedScreen)
+        await api.post(`/_builder/api/${s.appname}/screen`, changedScreen)
       }
     }
 
@@ -620,7 +635,7 @@ const addComponentLibrary = store => async lib => {
     if (success) {
       const componentsArray = []
       for (let c in components) {
-        componentsArray.push(components[c])
+        componentsArray.push(expandComponentDefinition(components[c]))
       }
 
       s.components = pipe(s.components, [
@@ -671,6 +686,7 @@ const refreshComponents = store => async () => {
   const components = pipe(componentsAndGenerators.components, [
     keys,
     map(k => ({ ...componentsAndGenerators[k], name: k })),
+    map(c => expandComponentDefinition(c)),
   ])
 
   store.update(s => {
@@ -713,13 +729,19 @@ const setCurrentPage = store => pageName => {
     s.screens = Array.isArray(current_screens)
       ? current_screens
       : Object.values(current_screens)
-    s.currentComponentInfo = s.pages[pageName].props
+    s.currentComponentInfo = createProps(
+      getContainerComponent(s.components),
+      s.pages[pageName].props
+    ).props
     s.currentPreviewItem = s.pages[pageName]
 
     setCurrentScreenFunctions(s)
     return s
   })
 }
+
+const getContainerComponent = components =>
+  components.find(c => c.name === "@budibase/standard-components/container")
 
 const addChildComponent = store => componentName => {
   store.update(s => {
@@ -738,7 +760,8 @@ const addChildComponent = store => componentName => {
 
 const selectComponent = store => component => {
   store.update(s => {
-    s.currentComponentInfo = component
+    const componentDef = s.components.find(c => c.name === component._component)
+    s.currentComponentInfo = createProps(componentDef, component).props
     return s
   })
 }

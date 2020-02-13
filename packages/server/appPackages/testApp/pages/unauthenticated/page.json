@@ -4,6 +4,7 @@
 	"stylesheets": ["my-styles.css"],
 	"componentLibraries": ["./customComponents","./moreCustomComponents"],
 	"props" : {
-		"_component": "@budibase/standard-components/container"
+		"_component": "@budibase/standard-components/container",
+		"type": "div",
 	}
 }
