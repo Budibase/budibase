@@ -10,7 +10,7 @@ export const formName = record => `${record.name}/${record.name} Form`
 const root = record => ({
   name: formName(record),
   description: `Control for creating/updating '${record.nodeKey()}' `,
-  inherits: "@budibase/standard-components/div",
+  inherits: "@budibase/standard-components/container",
   props: {
     className: "p-1",
     children: [
@@ -117,7 +117,7 @@ const saveCancelButtons = record => ({
 
 const paddedPanelForButton = button => ({
   control: {
-    _component: "@budibase/standard-components/div",
+    _component: "@budibase/standard-components/container",
     className: "btn-group",
     children: [
       {

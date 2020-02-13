@@ -12,7 +12,6 @@
   export let hoverColor
   export let hoverBackground
   export let hoverBorder
-  export let _children
 
   export let _bb
   let theButton
@@ -35,10 +34,7 @@
     return all
   }
 
-  $: {
-    if (_bb && theButton && _children && _children.length)
-      _bb.attachChildren(theButton)
-  }
+  $: if(_bb.props._children.length > 0) theButton && _bb.attachChildren(theButton)
 
   $: {
     cssVariables = {
@@ -77,7 +73,7 @@
   disabled={disabled || false}
   on:click={clickHandler}
   style={buttonStyles}>
-  {#if !_children || _children.length === 0}{contentText}{/if}
+  {#if _bb.props_children.length === 0}{contentText}{/if}
 </button>
 
 <style>

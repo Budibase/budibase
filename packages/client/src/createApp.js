@@ -59,9 +59,7 @@ export const createApp = (
 
   const onScreenSlotRendered = screenSlotNode => {
     const onScreenSelected = (screen, store, url) => {
-      const { getInitialiseParams, unsubscribe } = attachChildrenParams(
-        store
-      )
+      const { getInitialiseParams, unsubscribe } = attachChildrenParams(store)
       screenSlotNode.props._children = [screen.props]
       const initialiseChildParams = getInitialiseParams(screenSlotNode)
       attachChildren(initialiseChildParams)(screenSlotNode.rootElement, {
@@ -123,7 +121,10 @@ export const createApp = (
     currentUrl = urlPath
 
     rootTreeNode = createTreeNode()
-    rootTreeNode.props = { _children: [page.props] }
+    rootTreeNode.props = {
+      _children: [page.props],
+    }
+    rootTreeNode.rootElement = target
     const { getInitialiseParams } = attachChildrenParams(pageStore)
     const initChildParams = getInitialiseParams(rootTreeNode)
 
