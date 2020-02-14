@@ -35,8 +35,8 @@ export const props = {
     label: "First",
     colour: "secondary",
     fullwidth: true,
+    maxLength: 500,
     helperText: "Add Surname",
-    useCharCounter: true,
     onChange: text => console.log("Text: ", text),
   },
   checkbox: {
