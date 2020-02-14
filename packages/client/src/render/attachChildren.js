@@ -4,11 +4,7 @@ import { $ } from "../core/common"
 import { renderComponent } from "./renderComponent"
 import { isScreenSlot } from "./builtinComponents"
 
-export const initialiseChildren = initialiseOpts => (
-  childrenProps,
-  htmlElement,
-  anchor = null
-) => {
+export const attachChildren = initialiseOpts => (htmlElement, options) => {
   const {
     uiFunctions,
     bb,
@@ -17,9 +13,14 @@ export const initialiseChildren = initialiseOpts => (
     componentLibraries,
     treeNode,
     frontendDefinition,
-    hydrate,
     onScreenSlotRendered,
   } = initialiseOpts
+
+  const anchor = options && options.anchor ? options.anchor : null
+  const force = options ? options.force : false
+  const hydrate = options ? options.hydrate : true
+
+  if (!force && treeNode.children.length > 0) return treeNode.children
 
   for (let childNode of treeNode.children) {
     childNode.destroy()
@@ -34,7 +35,7 @@ export const initialiseChildren = initialiseOpts => (
   htmlElement.classList.add(`lay-${treeNode.props._id}`)
 
   const renderedComponents = []
-  for (let childProps of childrenProps) {
+  for (let childProps of treeNode.props._children) {
     const { componentName, libName } = splitName(childProps._component)
 
     if (!componentName || !libName) return
@@ -73,6 +74,8 @@ export const initialiseChildren = initialiseOpts => (
       renderedComponents.push(comp)
     }
   }
+
+  treeNode.children = renderedComponents
 
   return renderedComponents
 }

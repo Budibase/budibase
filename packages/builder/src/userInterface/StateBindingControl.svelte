@@ -23,7 +23,7 @@
       class="uk-select uk-form-small"
       {value}
       on:change={ev => onChanged(ev.target.value)}>
-      {#each options as option}
+      {#each (options || []) as option}
         <option value={option}>{option}</option>
       {/each}
     </select>

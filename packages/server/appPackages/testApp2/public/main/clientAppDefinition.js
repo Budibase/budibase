@@ -213,7 +213,7 @@ window["##BUDIBASE_APPDEFINITION##"] = {
           _component: "@budibase/standard-components/if",
           condition: "$store.isEditingcustomer",
           thenComponent: {
-            _component: "@budibase/standard-components/div",
+            _component: "@budibase/standard-components/container",
             children: [
               {
                 _component: "children#array_element#",
@@ -285,7 +285,7 @@ window["##BUDIBASE_APPDEFINITION##"] = {
                     {
                       _component: "children#array_element#",
                       control: {
-                        _component: "@budibase/standard-components/div",
+                        _component: "@budibase/standard-components/container",
                         children: [
                           {
                             _component: "children#array_element#",
@@ -329,7 +329,7 @@ window["##BUDIBASE_APPDEFINITION##"] = {
                     {
                       _component: "children#array_element#",
                       control: {
-                        _component: "@budibase/standard-components/div",
+                        _component: "@budibase/standard-components/container",
                         children: [
                           {
                             _component: "children#array_element#",
@@ -384,17 +384,17 @@ window["##BUDIBASE_APPDEFINITION##"] = {
             onLoad: [],
           },
           elseComponent: {
-            _component: "@budibase/standard-components/div",
+            _component: "@budibase/standard-components/container",
             children: [
               {
                 _component: "children#array_element#",
                 component: {
-                  _component: "@budibase/standard-components/div",
+                  _component: "@budibase/standard-components/container",
                   children: [
                     {
                       _component: "children#array_element#",
                       component: {
-                        _component: "@budibase/standard-components/div",
+                        _component: "@budibase/standard-components/container",
                         children: [
                           {
                             _component: "children#array_element#",
@@ -475,7 +475,7 @@ window["##BUDIBASE_APPDEFINITION##"] = {
                         condition:
                           "$store.selectedrow_all_customers && $store.selectedrow_all_customers.length > 0",
                         thenComponent: {
-                          _component: "@budibase/standard-components/div",
+                          _component: "@budibase/standard-components/container",
                           children: [
                             {
                               _component: "children#array_element#",
@@ -632,7 +632,7 @@ window["##BUDIBASE_APPDEFINITION##"] = {
           _component: "@budibase/standard-components/if",
           condition: "$store.isEditingContact",
           thenComponent: {
-            _component: "@budibase/standard-components/div",
+            _component: "@budibase/standard-components/container",
             children: [
               {
                 _component: "children#array_element#",
@@ -688,7 +688,7 @@ window["##BUDIBASE_APPDEFINITION##"] = {
                     {
                       _component: "children#array_element#",
                       control: {
-                        _component: "@budibase/standard-components/div",
+                        _component: "@budibase/standard-components/container",
                         children: [
                           {
                             _component: "children#array_element#",
@@ -732,7 +732,7 @@ window["##BUDIBASE_APPDEFINITION##"] = {
                     {
                       _component: "children#array_element#",
                       control: {
-                        _component: "@budibase/standard-components/div",
+                        _component: "@budibase/standard-components/container",
                         children: [
                           {
                             _component: "children#array_element#",
@@ -787,17 +787,17 @@ window["##BUDIBASE_APPDEFINITION##"] = {
             onLoad: [],
           },
           elseComponent: {
-            _component: "@budibase/standard-components/div",
+            _component: "@budibase/standard-components/container",
             children: [
               {
                 _component: "children#array_element#",
                 component: {
-                  _component: "@budibase/standard-components/div",
+                  _component: "@budibase/standard-components/container",
                   children: [
                     {
                       _component: "children#array_element#",
                       component: {
-                        _component: "@budibase/standard-components/div",
+                        _component: "@budibase/standard-components/container",
                         children: [
                           {
                             _component: "children#array_element#",
@@ -878,7 +878,7 @@ window["##BUDIBASE_APPDEFINITION##"] = {
                         condition:
                           "$store.selectedrow_all_contacts && $store.selectedrow_all_contacts.length > 0",
                         thenComponent: {
-                          _component: "@budibase/standard-components/div",
+                          _component: "@budibase/standard-components/container",
                           children: [
                             {
                               _component: "children#array_element#",

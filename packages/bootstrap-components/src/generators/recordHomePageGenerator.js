@@ -36,7 +36,7 @@ export const homepageComponentName = record =>
   `${record.name}/${record.name} homepage`
 
 const component = ({ record, index }) => ({
-  inherits: "@budibase/standard-components/div",
+  inherits: "@budibase/standard-components/container",
   name: homepageComponentName(record),
   props: {
     className: "d-flex flex-column h-100",
@@ -73,14 +73,14 @@ const component = ({ record, index }) => ({
 })
 
 const homePageButtons = ({ index, record }) => ({
-  inherits: "@budibase/standard-components/div",
+  inherits: "@budibase/standard-components/container",
   name: `${record.name}/homepage buttons`,
   props: {
     className: "btn-toolbar mt-4 mb-2",
     children: [
       {
         component: {
-          _component: "@budibase/standard-components/div",
+          _component: "@budibase/standard-components/container",
           className: "btn-group mr-3",
           children: [
             {
@@ -129,7 +129,7 @@ const homePageButtons = ({ index, record }) => ({
           _component: "@budibase/standard-components/if",
           condition: `$store.selectedrow_${index.name} && $store.selectedrow_${index.name}.length > 0`,
           thenComponent: {
-            _component: "@budibase/standard-components/div",
+            _component: "@budibase/standard-components/container",
             className: "btn-group",
             children: [
               {
