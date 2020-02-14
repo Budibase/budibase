@@ -29,6 +29,7 @@ import { rename } from "../userInterface/pagesParsing/renameScreen"
 import {
   getNewScreen,
   createProps,
+  makePropsSafe,
 } from "../userInterface/pagesParsing/createProps"
 import { expandComponentDefinition } from "../userInterface/pagesParsing/types"
 import {
@@ -520,10 +521,10 @@ const setCurrentScreen = store => screenName => {
     s.currentPreviewItem = screen
     s.currentFrontEndType = "screen"
 
-    s.currentComponentInfo = createProps(
+    s.currentComponentInfo = makePropsSafe(
       getContainerComponent(s.components),
       screen.props
-    ).props
+    )
 
     setCurrentScreenFunctions(s)
     return s
@@ -729,10 +730,10 @@ const setCurrentPage = store => pageName => {
     s.screens = Array.isArray(current_screens)
       ? current_screens
       : Object.values(current_screens)
-    s.currentComponentInfo = createProps(
+    s.currentComponentInfo = makePropsSafe(
       getContainerComponent(s.components),
       s.pages[pageName].props
-    ).props
+    )
     s.currentPreviewItem = s.pages[pageName]
 
     setCurrentScreenFunctions(s)
@@ -761,7 +762,7 @@ const addChildComponent = store => componentName => {
 const selectComponent = store => component => {
   store.update(s => {
     const componentDef = s.components.find(c => c.name === component._component)
-    s.currentComponentInfo = createProps(componentDef, component).props
+    s.currentComponentInfo = makePropsSafe(componentDef, component)
     return s
   })
 }
@@ -771,9 +772,11 @@ const setComponentProp = store => (name, value) => {
     const current_component = s.currentComponentInfo
     s.currentComponentInfo[name] = value
 
-    s.currentFrontEndType === "page"
-      ? _savePage(s, s.currentPreviewItem)
-      : _saveScreen(store, s, s.currentPreviewItem)
+    if (s.currentFrontEndType) {
+      _savePage(s)
+    } else {
+      _saveScreen(store, s, s.currentPreviewItem)
+    }
 
     s.currentComponentInfo = current_component
     return s

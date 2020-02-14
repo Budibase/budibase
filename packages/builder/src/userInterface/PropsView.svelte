@@ -11,13 +11,12 @@
 
   let errors = []
   const props_to_ignore = ["_component", "_children", "_styles", "_code", "_id"]
-  let componentDef;
-  $: {
-    componentDef = 
+  
+  $: componentDef = 
       component && components &&
       components.find(({ name }) => name === component._component)
-    console.log(componentDef.props)
-  }
+
+  
 
   let setProp = (name, value) => {
     onPropChanged(name, value)
@@ -36,7 +35,7 @@
           {setProp}
           {prop_name}
           prop_value={component[prop_name]}
-          prop_type={prop_def.type}
+          prop_definition={prop_def}
           {index}
           disabled={false} />
 
