@@ -2,7 +2,17 @@
   import createApp from "./createApp"
   import { props } from "./props"
   let _bb
-  const { h1, overline, button, textfield, checkbox } = props
+  const {
+    h1,
+    overline,
+    button,
+    textfield,
+    checkbox,
+    checkboxgroup,
+    radiobutton,
+    radiobuttongroup,
+  } = props
+
   let currentComponent
   let _appPromise
   $: {
@@ -11,11 +21,20 @@
       const page = {
         props: {
           _component: "testcomponents/rootComponent",
-          _children: [h1, overline, button, textfield, checkbox],
+          _children: [
+            h1,
+            overline,
+            button,
+            textfield,
+            checkbox,
+            checkboxgroup,
+            radiobutton,
+            radiobuttongroup,
+          ],
         },
       }
       _appPromise.then(initialise => {
-        initialise(page, window.document.body, "")
+        initialise(page, currentComponent, "")
       })
     }
   }
