@@ -5,11 +5,14 @@
   import ClassBuilder from "../ClassBuilder.js";
   import { MDCCheckbox } from "@material/checkbox";
 
+  export let onClick = item => {};
+
   export let id = "";
   export let label = "";
   export let disabled = false;
   export let alignEnd = false;
   export let indeterminate = false;
+  export let checked = false;
 
   let instance = null;
   let checkbox = null;
@@ -34,7 +37,13 @@
 
 <Formfield {label} {id} {alignEnd}>
   <div bind:this={checkbox} class={blockClass}>
-    <input type="checkbox" class={cb.elem`native-control`} {id} {disabled} />
+    <input
+      type="checkbox"
+      class={cb.elem`native-control`}
+      {id}
+      {disabled}
+      {checked}
+      on:click={onClick} />
     <div class={cb.elem`background`}>
       <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
         <path
