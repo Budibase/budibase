@@ -6,6 +6,8 @@
   import ClassBuilder from "../ClassBuilder.js"
   import NotchedOutline from "../Common/NotchedOutline.svelte"
   import FloatingLabel from "../Common/FloatingLabel.svelte"
+  import HelperText from "./HelperText.svelte"
+  import CharacterCounter from "./CharacterCounter.svelte"
   import Icon from "../Icon.svelte"
 
   const cb = new ClassBuilder("text-field", ["primary", "medium"])
@@ -31,9 +33,8 @@
   export let size = "medium"
   export let type = "text" //text or password
   export let required = false
-  export let minLength = 0
-  export let maxLength = 100
-  export let useCharCounter = false
+  export let minLength = null
+  export let maxLength = null
   export let helperText = ""
   export let errorText = ""
   export let placeholder = ""
@@ -64,14 +65,8 @@
     modifiers = { ...modifiers, noLabel: "no-label" }
   }
 
-  let helperClasses = cb.debase(`${cb.block}-helper-text`, {
-    modifiers: { persistent, validation },
-  })
-
   let useLabel = !!label && (!fullwidth || (fullwidth && textarea))
   let useIcon = !!icon && (!textarea && !fullwidth)
-
-  $: useNotchedOutline = variant == "outlined" || textarea
 
   if (useIcon) {
     setContext("BBMD:icon:context", "text-field")
@@ -79,6 +74,7 @@
     modifiers = { ...modifiers, iconClass }
   }
 
+  $: useNotchedOutline = variant == "outlined" || textarea
   $: renderLeadingIcon = useIcon && !trailingIcon
   $: renderTrailingIcon = useIcon && trailingIcon
 
@@ -100,9 +96,7 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
 <div class="textfield-container" class:fullwidth>
   <div bind:this={tf} class={blockClasses}>
     {#if textarea}
-      {#if useCharCounter}
-        <div class="mdc-text-field-character-counter">{renderMaxLength}</div>
-      {/if}
+      <CharacterCounter />
       <textarea
         {id}
         class={inputClasses}
@@ -148,13 +142,12 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
       <FloatingLabel forInput={id} text={label} />
     {/if}
   </div>
-  <!-- TODO: Split to own component? -->
-  <div class="mdc-text-field-helper-line">
-    <div class={helperClasses}>{!!errorText ? errorText : helperText}</div>
-    {#if useCharCounter && !textarea}
-      <div class="mdc-text-field-character-counter">{renderMaxLength}</div>
-    {/if}
-  </div>
+  <HelperText
+    {persistent}
+    {validation}
+    {errorText}
+    {helperText}
+    useCharCounter={!!maxLength && !textarea} />
 </div>
 
 <style>
