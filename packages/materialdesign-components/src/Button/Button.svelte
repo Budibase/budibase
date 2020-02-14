@@ -1,49 +1,45 @@
 <script>
-  import { setContext, getContext } from "svelte";
-  import Icon from "../Icon.svelte";
-  import ripple from "../Ripple.js";
-  import ClassBuilder from "../ClassBuilder.js";
+  import { setContext, getContext } from "svelte"
+  import Icon from "../Icon.svelte"
+  import ripple from "../Ripple.js"
+  import ClassBuilder from "../ClassBuilder.js"
 
-  const cb = new ClassBuilder("button", ["primary", "medium"]);
+  const cb = new ClassBuilder("button", ["primary", "medium"])
 
-  export let variant = "raised";
-  export let colour = "primary";
-  export let size = "medium";
+  export let onClick = () => {}
 
-  export let href = "";
-  export let icon = "";
-  export let trailingIcon = false;
-  export let fullwidth = false;
+  export let variant = "raised"
+  export let colour = "primary"
+  export let size = "medium"
 
-  export let text = "";
-  export let disabled = false;
+  export let href = ""
+  export let icon = ""
+  export let trailingIcon = false
+  export let fullwidth = false
 
-  let modifiers = {};
-  let customs = { size, colour };
+  export let text = ""
+  export let disabled = false
 
-  if (!href) modifiers = { variant };
+  let modifiers = {}
+  let customs = { size, colour }
 
-  let props = { modifiers, customs };
+  if (!href) modifiers = { variant }
 
-  let blockClasses = cb.build({ props });
-  const labelClass = cb.elem("label");
+  let props = { modifiers, customs }
+
+  let blockClasses = cb.build({ props })
+  const labelClass = cb.elem("label")
 
   $: if (icon) {
-    setContext("BBMD:icon:context", "button");
+    setContext("BBMD:icon:context", "button")
   }
 
-  $: renderLeadingIcon = !!icon && !trailingIcon;
-  $: renderTrailingIcon = !!icon && trailingIcon;
+  $: renderLeadingIcon = !!icon && !trailingIcon
+  $: renderTrailingIcon = !!icon && trailingIcon
 </script>
 
-<style>
-  .fullwidth {
-    width: 100%;
-  }
-</style>
-
 {#if href}
-  <a class={blockClasses} {href} on:click>
+  <a class={blockClasses} {href} on:click={onClick}>
     <span class={labelClass}>{text}</span>
   </a>
 {:else}
@@ -52,7 +48,7 @@
     class={blockClasses}
     class:fullwidth
     {disabled}
-    on:click>
+    on:click={onClick}>
     {#if renderLeadingIcon}
       <Icon {icon} />
     {/if}
@@ -62,3 +58,9 @@
     {/if}
   </button>
 {/if}
+
+<style>
+  .fullwidth {
+    width: 100%;
+  }
+</style>

@@ -21,6 +21,8 @@
     }
   })
 
+  export let onChange = text => {}
+
   export let label = ""
   export let variant = "standard" //outlined | filled | standard
   export let disabled = false
@@ -112,7 +114,7 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         {placeholder}
         {minLength}
         {maxLength}
-        on:change />
+        on:change={e => onChange(e.target.value)} />
     {:else}
       {#if renderLeadingIcon}
         <Icon {icon} />
@@ -120,7 +122,6 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
       <input
         {id}
         {disabled}
-        on:focus={focus}
         class={inputClasses}
         {type}
         {required}
@@ -128,7 +129,8 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         {minLength}
         {maxLength}
         aria-label={`Textfield ${variant}`}
-        on:change />
+        on:focus={focus}
+        on:change={e => onChange(e.target.value)} />
       {#if renderTrailingIcon}
         <Icon {icon} />
       {/if}
