@@ -79,28 +79,28 @@
 		"tags": ["form"]
 	},
 	"select" : {
-		"name": "Input",
-		"description": "An HTML input",
+		"name": "Select",
+		"description": "An HTML <select> (dropdown)",
+		"props" : {
+			"value": "string",
+			"className": "string"
+		}
+	},
+	"option" : {
+		"name": "Option",
+		"description": "An HTML <option>, to be used with <select>",
 		"children": false,
 		"props" : {
 			"value": "string",
-			"options": {
-				"type" : "array",
-				"elementDefinition" : {
-					"id":"string",
-					"value":"string"
-				}
-			},
-			"className": "string"
-		},
-		"tags": ["form"]
+			"text": "string"
+		}
 	},
 	"text": {
 		"name": "Text",
 		"description": "stylable block of text",
 		"children": false,
 		"props" : {
-			"value": "string",
+			"text": "string",
 			"font": "string",
 			"color": "string",
 			"textAlign": {
@@ -116,116 +116,66 @@
 				"options": [
 					"top", "middle", "bottom"
 				]
+			},
+			"formattingTag": {
+				"type": "options", 
+				"default":"none", 
+				"options": [
+					"none",
+					"<b> - bold",
+					"<strong> - important",
+					"<i> - italic",
+					"<em> - emphasized",
+					"<mark> - marked text",
+					"<small> - small",
+					"<del> - deleted",
+					"<ins> - inserted",
+					"<sub> - subscript",
+					"<sup> - superscript"
+				]
 			}
 		},
 		"tags": ["div", "container"]
 	},
-	"nav": {
-		"name": "Nav",
-		"description": "A nav - a side bar of buttons that control the currently active component",
-		"props" : {
-			"navBarBackground": {"type" :"string", "default":"silver"},
-			"navBarBorder": "string",
-			"navBarColor": {"type" :"string", "default":"black"},
-			"selectedItemBackground": {"type" :"string", "default":"white"},
-			"selectedItemColor": {"type" :"string", "default":"black"},
-			"selectedItemBorder": "string",
-			"itemHoverBackground": {"type" :"string", "default":"gainsboro"},
-			"itemHoverColor": {"type" :"string", "default":"black"},
-			"selectedItem":"string",
-			"hideNavBar":"bool"
-
-		},
-		"tags": ["nav", "navigation", "sidebar"]
-	},
-	"table": {
-		"name": "Table",
-		"description": "An HTML table",
-		"props" : {
-			"data": "state",
-			"columns": {
-				"type": "array",
-				"elementDefinition" : {
-					"title": "string",
-					"value": "string"
-				}
-			},
-			"onRowClick":"event",
-			"tableClass": {"type":"string", "default":"table-default"},
-			"theadClass": {"type":"string", "default":"thead-default"},
-			"tbodyClass": {"type":"string", "default":"tbody-default"},
-			"trClass": {"type":"string", "default":"tr-default"},
-			"thClass": {"type":"string", "default":"th-default"}
-		},
-		"tags": ["table"]
-	},
-	"div": {
-		"name": "Div",
-		"description": "An HTML div tag",
+	"container": {
+		"name": "Container",
+		"description": "An element that contains and lays out other elements. e.g. <div>, <header> etc",
 		"props" : {
 			"className":"string",
-			"onLoad": "event"
+			"onLoad": "event",
+			"type": {
+				"type": "options", 
+				"options": [
+					"article",
+					"aside",
+					"details",
+					"div",
+					"firgure",
+					"figcaption",
+					"footer",
+					"header",
+					"main",
+					"mark",
+					"nav",
+					"paragraph",
+					"summary"
+				],
+				"default": "div"
+			}
 		},
 		"container": true,
 		"tags": ["div", "container", "layout"]
 	},
-	"h1": {
-		"importPath": "h1",
-		"name": "H1",
-		"description": "An HTML H1 tag",
+	"heading": {
+		"name": "Heading",
+		"description": "An HTML H1 - H6 tag",
 		"props" : {
-			"text": "string",
-			"className":"string"
-		},
-		"tags": []
-	},
-	"h2": {
-		"importPath": "h2",
-		"name": "H2",
-		"description": "An HTML H2 tag",
-		"props" : {
-			"text": "string",
-			"className":"string"
-		},
-		"tags": []
-	},
-	"h3": {
-		"importPath": "h3",
-		"name": "H3",
-		"description": "An HTML H3 tag",
-		"props" : {
-			"text": "string",
-			"className":"string"
-		},
-		"tags": []
-	},
-	"h4": {
-		"importPath": "h4",
-		"name": "H4",
-		"description": "An HTML H4 tag",
-		"props" : {
-			"text": "string",
-			"className":"string"
-		},
-		"tags": []
-	},
-	"h5": {
-		"importPath": "h5",
-		"name": "H5",
-		"description": "An HTML H5 tag",
-		"props" : {
-			"text": "string",
-			"className":"string"
-		},
-		"tags": ["div", "container", "layout"]
-	},
-	"h6": {
-		"importPath": "h6",
-		"name": "H6",
-		"description": "An HTML H6 tag",
-		"props" : {
-			"text": "string",
-			"className":"string"
+			"className":"string",
+			"type": {
+				"type": "options",
+				"default": "h1",
+				"options": ["h1","h2","h3","h4","h5","h6"]
+			}
 		},
 		"tags": []
 	}

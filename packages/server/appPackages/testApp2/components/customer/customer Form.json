@@ -1,7 +1,7 @@
 {
   "name": "customer/customer Form",
   "description": "Control for creating/updating '/customers/1-{id}' ",
-  "inherits": "@budibase/standard-components/div",
+  "inherits": "@budibase/standard-components/container",
   "props": {
     "className": "p-1",
     "children": [
@@ -62,7 +62,7 @@
           "children": [
             {
               "control": {
-                "_component": "@budibase/standard-components/div",
+                "_component": "@budibase/standard-components/container",
                 "className": "btn-group",
                 "children": [
                   {
@@ -91,7 +91,7 @@
             },
             {
               "control": {
-                "_component": "@budibase/standard-components/div",
+                "_component": "@budibase/standard-components/container",
                 "className": "btn-group",
                 "children": [
                   {
