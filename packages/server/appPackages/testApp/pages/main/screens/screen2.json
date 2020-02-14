@@ -2,7 +2,8 @@
   "name": "screen2",
   "description": "",
   "props": {
-    "_component": "@budibase/standard-components/div",
-    "className": ""
+    "_component": "@budibase/standard-components/container",
+    "className": "",
+		"type": "div",
   }
 }

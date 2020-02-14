@@ -1,12 +1,12 @@
 {
-  "inherits": "@budibase/standard-components/div",
+  "inherits": "@budibase/standard-components/container",
   "name": "customer/homepage buttons",
   "props": {
     "className": "btn-toolbar mt-4 mb-2",
     "children": [
       {
         "component": {
-          "_component": "@budibase/standard-components/div",
+          "_component": "@budibase/standard-components/container",
           "className": "btn-group mr-3",
           "children": [
             {
@@ -55,7 +55,7 @@
           "_component": "@budibase/standard-components/if",
           "condition": "$store.selectedrow_all_customers && $store.selectedrow_all_customers.length > 0",
           "thenComponent": {
-            "_component": "@budibase/standard-components/div",
+            "_component": "@budibase/standard-components/container",
             "className": "btn-group",
             "children": [
               {
