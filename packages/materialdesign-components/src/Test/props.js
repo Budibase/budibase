@@ -22,6 +22,7 @@ export const props = {
     fullwidth: false,
     text: "I am button",
     disabled: false,
+    onClick: () => alert`Button Clicked`,
   },
   icon: {
     _component: "@budibase/materialdesign-components/icon",
@@ -33,10 +34,10 @@ export const props = {
     _children: [],
     label: "First",
     colour: "secondary",
-    textarea: true,
     fullwidth: true,
     helperText: "Add Surname",
     useCharCounter: true,
+    onChange: text => console.log("Text: ", text),
   },
   checkbox: {
     _component: "@budibase/materialdesign-components/checkbox",
