@@ -1,19 +1,18 @@
-export const renderComponent = ({
+export const prepareRenderComponent = ({
   componentConstructor,
   uiFunctions,
   htmlElement,
   anchor,
   props,
-  initialProps,
   bb,
   parentNode,
 }) => {
-  const func = initialProps._id ? uiFunctions[initialProps._id] : undefined
+  const func = props._id ? uiFunctions[props._id] : undefined
 
   const parentContext = (parentNode && parentNode.context) || {}
 
   let renderedNodes = []
-  const render = context => {
+  const createNodeAndRender = context => {
     let componentContext = parentContext
     if (context) {
       componentContext = { ...componentContext }
@@ -24,30 +23,29 @@ export const renderComponent = ({
     thisNode.context = componentContext
     thisNode.parentNode = parentNode
     thisNode.props = props
-
-    parentNode.children.push(thisNode)
     renderedNodes.push(thisNode)
 
-    initialProps._bb = bb(thisNode, props)
+    thisNode.render = initialProps => {
+      initialProps._bb = bb(thisNode, props)
+      thisNode.component = new componentConstructor({
+        target: htmlElement,
+        props: initialProps,
+        hydrate: false,
+        anchor,
+      })
+      thisNode.rootElement =
+        htmlElement.children[htmlElement.children.length - 1]
 
-    thisNode.component = new componentConstructor({
-      target: htmlElement,
-      props: initialProps,
-      hydrate: false,
-      anchor,
-    })
-
-    thisNode.rootElement = htmlElement.children[htmlElement.children.length - 1]
-
-    if (initialProps._id && thisNode.rootElement) {
-      thisNode.rootElement.classList.add(`pos-${initialProps._id}`)
+      if (props._id && thisNode.rootElement) {
+        thisNode.rootElement.classList.add(`pos-${props._id}`)
+      }
     }
   }
 
   if (func) {
-    func(render, parentContext)
+    func(createNodeAndRender, parentContext)
   } else {
-    render()
+    createNodeAndRender()
   }
 
   return renderedNodes
@@ -61,6 +59,7 @@ export const createTreeNode = () => ({
   children: [],
   component: null,
   unsubscribe: () => {},
+  render: () => {},
   get destroy() {
     const node = this
     return () => {

@@ -5,24 +5,22 @@ import { setState, setStateFromBinding } from "./state/setState"
 import { trimSlash } from "./common/trimSlash"
 import { isBound } from "./state/isState"
 import { attachChildren } from "./render/attachChildren"
-import { createTreeNode } from "./render/renderComponent"
+import { createTreeNode } from "./render/prepareRenderComponent"
 import { screenRouter } from "./render/screenRouter"
+import { createStateManager } from "./state/stateManager"
 
 export const createApp = (
-  document,
   componentLibraries,
   frontendDefinition,
   backendDefinition,
   user,
-  uiFunctions
+  uiFunctions,
+  window
 ) => {
   const coreApi = createCoreApi(backendDefinition, user)
   backendDefinition.hierarchy = coreApi.templateApi.constructHierarchy(
     backendDefinition.hierarchy
   )
-  const pageStore = writable({
-    _bbuser: user,
-  })
 
   const relativeUrl = url =>
     frontendDefinition.appRootPath
@@ -53,22 +51,25 @@ export const createApp = (
   }
 
   let routeTo
-  let currentScreenStore
-  let currentScreenUbsubscribe
   let currentUrl
+  let screenStateManager
 
   const onScreenSlotRendered = screenSlotNode => {
     const onScreenSelected = (screen, store, url) => {
-      const { getInitialiseParams, unsubscribe } = attachChildrenParams(store)
+      const stateManager = createStateManager(
+        store,
+        coreApi,
+        frontendDefinition.appRootPath
+      )
+      const getAttchChildrenParams = attachChildrenParams(stateManager)
       screenSlotNode.props._children = [screen.props]
-      const initialiseChildParams = getInitialiseParams(screenSlotNode)
+      const initialiseChildParams = getAttchChildrenParams(screenSlotNode)
       attachChildren(initialiseChildParams)(screenSlotNode.rootElement, {
         hydrate: true,
         force: true,
       })
-      if (currentScreenUbsubscribe) currentScreenUbsubscribe()
-      currentScreenUbsubscribe = unsubscribe
-      currentScreenStore = store
+      if (screenStateManager) screenStateManager.destroy()
+      screenStateManager = stateManager
       currentUrl = url
     }
 
@@ -76,22 +77,14 @@ export const createApp = (
     routeTo(currentUrl || window.location.pathname)
   }
 
-  const attachChildrenParams = store => {
-    let currentState = null
-    const unsubscribe = store.subscribe(s => {
-      currentState = s
-    })
-
+  const attachChildrenParams = stateManager => {
     const getInitialiseParams = treeNode => ({
       bb: getBbClientApi,
-      coreApi,
-      store,
-      document,
       componentLibraries,
-      frontendDefinition,
       uiFunctions,
       treeNode,
       onScreenSlotRendered,
+      stateManager,
     })
 
     const getBbClientApi = (treeNode, componentProps) => {
@@ -101,21 +94,26 @@ export const createApp = (
         props: componentProps,
         call: safeCallEvent,
         setStateFromBinding: (binding, value) =>
-          setStateFromBinding(store, binding, value),
-        setState: (path, value) => setState(store, path, value),
+          setStateFromBinding(stateManager.store, binding, value),
+        setState: (path, value) => setState(stateManager.store, path, value),
         getStateOrValue: (prop, currentContext) =>
-          getStateOrValue(currentState, prop, currentContext),
-        store,
+          getStateOrValue(stateManager.getCurrentState(), prop, currentContext),
+        store: stateManager.store,
         relativeUrl,
         api,
         isBound,
         parent,
       }
     }
-    return { getInitialiseParams, unsubscribe }
+    return getInitialiseParams
   }
 
   let rootTreeNode
+  const pageStateManager = createStateManager(
+    writable({ _bbuser: user }),
+    coreApi,
+    frontendDefinition.appRootPath
+  )
 
   const initialisePage = (page, target, urlPath) => {
     currentUrl = urlPath
@@ -125,7 +123,7 @@ export const createApp = (
       _children: [page.props],
     }
     rootTreeNode.rootElement = target
-    const { getInitialiseParams } = attachChildrenParams(pageStore)
+    const getInitialiseParams = attachChildrenParams(pageStateManager)
     const initChildParams = getInitialiseParams(rootTreeNode)
 
     attachChildren(initChildParams)(target, {
@@ -137,8 +135,8 @@ export const createApp = (
   }
   return {
     initialisePage,
-    screenStore: () => currentScreenStore,
-    pageStore: () => pageStore,
+    screenStore: () => screenStateManager.store,
+    pageStore: () => pageStateManager.store,
     routeTo: () => routeTo,
     rootNode: () => rootTreeNode,
   }
