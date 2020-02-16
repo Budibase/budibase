@@ -32,7 +32,7 @@ export const createStateManager = (store, coreApi, rootPath) => {
   let storeBindings = []
   const unsubscribe = store.subscribe(s => {
     currentState = s
-    for (let binding in storeBindings) {
+    for (let binding of storeBindings) {
       setNodeState(currentState, binding)
     }
   })
