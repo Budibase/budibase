@@ -15,7 +15,7 @@ export const prepareRenderComponent = ({
   const createNodeAndRender = context => {
     let componentContext = parentContext
     if (context) {
-      componentContext = { ...componentContext }
+      componentContext = { ...context }
       componentContext.$parent = parentContext
     }
 

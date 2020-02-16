@@ -123,17 +123,14 @@ const setup = (handlerTypes, getCurrentState, registerBindings) => node => {
           if (!isBound(paramValue)) {
             resolvedParams[paramName] = () => paramValue
             continue
-          }
-          if (takeStateFromContext(paramValue)) {
+          } else if (takeStateFromContext(paramValue)) {
             const val = getState(
               context,
               paramValue[BB_STATE_BINDINGPATH],
               paramValue[BB_STATE_FALLBACK]
             )
             resolvedParams[paramName] = () => val
-            continue
-          }
-          if (takeStateFromStore(paramValue)) {
+          } else if (takeStateFromStore(paramValue)) {
             resolvedParams[paramName] = () =>
               getState(
                 getCurrentState(),
@@ -141,8 +138,7 @@ const setup = (handlerTypes, getCurrentState, registerBindings) => node => {
                 paramValue[BB_STATE_FALLBACK]
               )
             continue
-          }
-          if (takeStateFromEventParameters(paramValue)) {
+          } else if (takeStateFromEventParameters(paramValue)) {
             resolvedParams[paramName] = eventContext => {
               getState(
                 eventContext,
@@ -153,12 +149,13 @@ const setup = (handlerTypes, getCurrentState, registerBindings) => node => {
           }
         }
 
+        handlerInfo.parameters = resolvedParams
         handlersInfos.push(handlerInfo)
       }
 
       if (handlersInfos.length === 0) initialProps[propName] = doNothing
       else {
-        async context => {
+        initialProps[propName] = async context => {
           for (let handlerInfo of handlersInfos) {
             const handler = makeHandler(handlerTypes, handlerInfo)
             await handler(context)

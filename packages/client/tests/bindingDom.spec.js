@@ -1,4 +1,5 @@
-import { load, makePage, makeScreen } from "./testAppDef"
+import { load, makePage, makeScreen, timeout } from "./testAppDef"
+import { EVENT_TYPE_MEMBER_NAME } from "../src/state/eventHandlers"
 
 describe("initialiseApp (binding)", () => {
   it("should populate root element prop from store value", async () => {
@@ -169,4 +170,102 @@ describe("initialiseApp (binding)", () => {
       "header 2 - new val"
     )
   })
+
+  it("should fire events", async () => {
+    const { dom, app } = await load(
+      makePage({
+        _component: "testlib/button",
+        onClick: [
+          event("Set State", {
+            path: "address",
+            value: "123 Main Street",
+          }),
+        ],
+      })
+    )
+
+    const button = dom.window.document.body.children[0]
+    expect(button.tagName).toBe("BUTTON")
+
+    let storeAddress
+    app.pageStore().subscribe(s => {
+      storeAddress = s.address
+    })
+    button.dispatchEvent(new dom.window.Event("click"))
+    expect(storeAddress).toBe("123 Main Street")
+  })
+
+  it("should alter event parameters based on store values", async () => {
+    const { dom, app } = await load(
+      makePage({
+        _component: "testlib/button",
+        onClick: [
+          event("Set State", {
+            path: "address",
+            value: {
+              "##bbstate": "sourceaddress",
+              "##bbsource": "store",
+              "##bbstatefallback": "fallback address",
+            },
+          }),
+        ],
+      })
+    )
+
+    const button = dom.window.document.body.children[0]
+    expect(button.tagName).toBe("BUTTON")
+
+    let storeAddress
+    app.pageStore().subscribe(s => {
+      storeAddress = s.address
+    })
+
+    button.dispatchEvent(new dom.window.Event("click"))
+    expect(storeAddress).toBe("fallback address")
+
+    app.pageStore().update(s => {
+      s.sourceaddress = "new address"
+      return s
+    })
+
+    button.dispatchEvent(new dom.window.Event("click"))
+    expect(storeAddress).toBe("new address")
+  })
+
+  it("should take event parameters from context values", async () => {
+    const { dom, app } = await load(
+      makePage({
+        _component: "testlib/button",
+        _id: "with_context",
+        onClick: [
+          event("Set State", {
+            path: "address",
+            value: {
+              "##bbstate": "testKey",
+              "##bbsource": "context",
+              "##bbstatefallback": "fallback address",
+            },
+          }),
+        ],
+      })
+    )
+
+    const button = dom.window.document.body.children[0]
+    expect(button.tagName).toBe("BUTTON")
+
+    let storeAddress
+    app.pageStore().subscribe(s => {
+      storeAddress = s.address
+    })
+
+    button.dispatchEvent(new dom.window.Event("click"))
+    expect(storeAddress).toBe("test value")
+  })
 })
+
+const event = (handlerType, parameters) => {
+  const e = {}
+  e[EVENT_TYPE_MEMBER_NAME] = handlerType
+  e.parameters = parameters
+  return e
+}

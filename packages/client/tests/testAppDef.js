@@ -148,6 +148,29 @@ const maketestlib = window => ({
     set(opts.props)
     opts.target.appendChild(node)
   },
+
+  button: function(opts) {
+    const node = window.document.createElement("BUTTON")
+
+    let currentProps = { ...opts.props }
+
+    const set = props => {
+      currentProps = Object.assign(currentProps, props)
+      if (currentProps.onClick) {
+        node.addEventListener("click", () => {
+          const testText = currentProps.testText || "hello"
+          currentProps._bb.call(props.onClick, { testText })
+        })
+      }
+    }
+
+    this.$destroy = () => opts.target.removeChild(node)
+
+    this.$set = set
+    this._element = node
+    set(opts.props)
+    opts.target.appendChild(node)
+  },
 })
 
 const uiFunctions = {
@@ -161,5 +184,9 @@ const uiFunctions = {
     for (let i = 0; i < 3; i++) {
       render()
     }
+  },
+
+  with_context: render => {
+    render({ testKey: "test value" })
   },
 }
