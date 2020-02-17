@@ -34,7 +34,8 @@
     return all
   }
 
-  $: if(_bb.props._children.length > 0) theButton && _bb.attachChildren(theButton)
+  $: if(_bb.props._children && _bb.props._children.length > 0) 
+    theButton && _bb.attachChildren(theButton)
 
   $: {
     cssVariables = {
@@ -73,7 +74,7 @@
   disabled={disabled || false}
   on:click={clickHandler}
   style={buttonStyles}>
-  {#if _bb.props_children.length === 0}{contentText}{/if}
+  {#if !_bb.props_children || _bb.props_children.length === 0}{contentText}{/if}
 </button>
 
 <style>
