@@ -1,20 +1,183 @@
 {
   "_lib": "./dist/index.js",
-  "h1": {
-    "name": "H1",
-    "description": "An HTML H1 tag",
+  "_generators": {},
+  "body1": {
+    "name": "body1",
+    "description": "Sets the font properties as Roboto Body 1",
     "props": {
-      "text": "string",
-      "className": "string"
-    },
+      "text": "string"
+    }, 
+    "tags": []
+  },
+  "body2": {
+    "name": "body2",
+    "description": "Sets the font properties as Roboto Body 2",
+    "props": {
+      "text": "string"
+    }, 
     "tags": []
   },
   "button": {
-    "name": "Button",
-    "description": "A button",
+    "name": "button",
+    "description": "A Material Design button with different variations. It renders as an anchor if href is passed to it.",
     "props": {
-      "raised": "bool"
+      "onClick": "event",
+      "variant": "string",
+      "colour": "string",
+      "size": "string",
+      "href": "string",
+      "icon": "string",
+      "trailingIcon": "bool",
+      "fullwidth": "bool",
+      "text": "string",
+      "disabled": "bool"
+    },
+    "tags": []
+  },
+  "caption": {
+    "name": "caption",
+    "description": "Sets the font properties as Roboto Caption",
+    "props": {
+      "text": "string"
+    }, 
+    "tags": []
+  },
+  "checkbox": {
+    "name": "checkbox",
+    "description": "A Material Design checkbox. Supports aligning label before or after checkbox.",
+    "props": {
+      "onClick": "event",
+      "id": "string",
+      "label": "string",
+      "disabled": "bool",
+      "alignEnd": "bool",
+      "indeterminate": "bool",
+      "checked": "bool"
+    },
+    "tags": []
+  },
+  "h1": {
+    "name": "h1",
+    "description": "Sets the font properties as Roboto Headline1",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "h2": {
+    "name": "h2",
+    "description": "Sets the font properties as Roboto Headline2",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "h3": {
+    "name": "h3",
+    "description": "Sets the font properties as Roboto Headline3",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "h4": {
+    "name": "h4",
+    "description": "Sets the font properties as Roboto Headline4",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "h5": {
+    "name": "h5",
+    "description": "Sets the font properties as Roboto Headline5",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "h6": {
+    "name": "h6",
+    "description": "Sets the font properties as Roboto Headline6",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "label": {
+    "name": "label",
+    "description": "A simple label component that displays its text in the standard Roboto Material Design font",
+    "props": {
+      "bold": "bool"
+    },
+    "tags": []
+  },
+  "overline": {
+    "name": "overline",
+    "description": "Sets the font properties as Roboto Overline",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "radiobutton": {
+    "name": "radiobutton",
+    "description": "A Material Design radiobutton. Supports aligning label before or after radiobutton.",
+    "props": {
+      "onClick": "event",
+      "id": "string",
+      "label": "string",
+      "names": "string",
+      "name": "string",
+      "checked": "bool",
+      "disabled": "bool",
+      "alignEnd": "bool"
+    },
+    "tags": []
+  },
+  "sub1": {
+    "name": "sub1",
+    "description": "Sets the font properties as Roboto Subtitle1",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "sub2": {
+    "name": "sub2",
+    "description": "Sets the font properties as Roboto Subtitle2",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "textfield": {
+    "name": "textfield",
+    "description": "A Material Design textfield with multiple variants. Can also be converted to a text area / multine text field.",
+    "props": {
+      "onChange": "event",
+      "label": "string",
+      "variant": "string",
+      "disabled": "bool",
+      "fullwidth": "bool",
+      "colour":"string",
+      "size":"string",
+      "type": "string",
+      "required": "bool",
+      "minLength": "number",
+      "maxLength": "number",
+      "helperText": "string",
+      "errorText": "string",
+      "placeholder": "string",
+      "icon": "string",
+      "trailingIcon": "bool",
+      "textarea": "bool",
+      "rows": "number",
+      "cols": "number",
+      "validation": "bool",
+      "persistent": "bool"
     },
     "tags": []
   }
 }
+
