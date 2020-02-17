@@ -1,12 +1,12 @@
 
 export const props = {
   h1: {
-    _component: "@budibase/materialdesign-components/H1",
+    _component: "@budibase/materialdesign-components/h1",
     _children: [],
     text: "Im a big header",
   },
   overline: {
-    _component: "@budibase/materialdesign-components/Overline",
+    _component: "@budibase/materialdesign-components/overline",
     _children: [],
     text: "Im a wee overline",
   },
