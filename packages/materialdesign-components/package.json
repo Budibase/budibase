@@ -41,6 +41,7 @@
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072",
   "dependencies": {
     "@material/checkbox": "^4.0.0",
+    "@material/data-table": "^5.0.0",
     "@material/form-field": "^4.0.0",
     "@material/radio": "^4.0.0",
     "@material/textfield": "^4.0.0"
