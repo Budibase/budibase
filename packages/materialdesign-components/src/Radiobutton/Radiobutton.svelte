@@ -8,7 +8,7 @@
 
   export let id = ""
   export let label = ""
-  export let names = "radios"
+  export let name = "radios"
   export let checked = false
   export let disabled = false
   export let alignEnd = false
@@ -37,7 +37,7 @@
       {id}
       class={cb.elem`native-control`}
       type="radio"
-      {names}
+      {name}
       {checked}
       {disabled}
       on:click={onClick} />
