@@ -39,7 +39,7 @@ module.exports.getPackageForBuilder = async (config, appname) => {
 
     pages,
 
-    components: await getComponents(appPath, pages),
+    components: await getComponentDefinitions(appPath, pages),
   }
 }
 
@@ -112,36 +112,39 @@ module.exports.savePage = async (config, appname, pagename, page) => {
   await buildPage(config, appname, appDefinition, pagename, page)
 }
 
-module.exports.componentLibraryInfo = async (config, appname, lib) => {
+module.exports.componentLibraryInfo = async (config, appname, componentLibrary) => {
   const appPath = appPackageFolder(config, appname)
-  return await componentLibraryInfo(appPath, lib)
+  return await componentLibraryInfo(appPath, componentLibrary)
 }
 
-const getComponents = async (appPath, pages, lib) => {
-  let libs
-  if (!lib) {
+/**
+ * @param {string} appPath - path to a budibase application
+ * @param {Array} pages - a list of budibase application pages 
+ * @param {string} componentLibrary - component library to fetch components for
+ * @returns {object} - an object containing component definitions namespaced by their component library
+ */
+const getComponentDefinitions = async (appPath, pages, componentLibrary) => {
+  let componentLibraries
+  if (!componentLibrary) {
     pages = pages || (await getPages(appPath))
 
     if (!pages) return []
 
-    libs = $(pages, [values, map(p => p.componentLibraries), flatten])
+    componentLibraries = $(pages, [values, map(p => p.componentLibraries), flatten])
   } else {
-    libs = [lib]
+    componentLibraries = [componentLibrary]
   }
 
   const components = {}
-  const generators = {}
 
-  for (let l of libs) {
-    const info = await componentLibraryInfo(appPath, l)
+  for (let library of componentLibraries) {
+    const info = await componentLibraryInfo(appPath, library)
     merge(components, info.components)
-    merge(generators, info.generators)
   }
 
   if (components._lib) delete components._lib
-  if (components._generators) delete components._generators
 
-  return { components, generators }
+  return { components }
 }
 
-module.exports.getComponents = getComponents
+module.exports.getComponentDefinitions = getComponentDefinitions

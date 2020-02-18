@@ -1,24 +1,5 @@
 {
 	"_lib": "./dist/index.js",
-	"_generators": {
-		"_lib": "./dist/generators.js",
-		"app": {
-			"name": "App",
-			"description": "Generate app based on your backend"
-		},
-		"forms": {
-			"name": "Forms",
-			"description": "Generate forms, based on your records"
-		},
-		"indexTables": {
-			"name": "Index Tables",
-			"description": "Generate a table based on an index"
-		},
-		"recordHomepages": {
-			"name": "Record Homepage",
-			"description": "Generates a 'homepage' based on your record types, including a create/edit form. Selecting a nav item will display a root content"
-		}
-	},
 	"form" : {
 		"importPath": "Form",
 		"name": "Form",

@@ -6,7 +6,7 @@ const { resolve } = require("path")
 const send = require("koa-send")
 const {
   getPackageForBuilder,
-  getComponents,
+  getComponentDefinitions,
   getApps,
   saveScreen,
   renameScreen,
@@ -69,16 +69,6 @@ module.exports = (config, app) => {
         ctx.query.lib
       )
       await send(ctx, info.components._lib || "index.js", { root: info.libDir })
-    })
-    .get("/_builder/:appname/componentLibraryGenerators", async ctx => {
-      const info = await componentLibraryInfo(
-        config,
-        ctx.params.appname,
-        ctx.query.lib
-      )
-      await send(ctx, info.generators._lib || "generators.js", {
-        root: info.libDir,
-      })
     })
     .get("/_builder/*", async (ctx, next) => {
       if (!config.dev) {
@@ -151,7 +141,7 @@ module.exports = (config, app) => {
     })
     .get("/_builder/api/:appname/components", async ctx => {
       try {
-        ctx.body = getComponents(config, ctx.params.appname, ctx.query.lib)
+        ctx.body = getComponentDefinitions(config, ctx.params.appname, ctx.query.lib)
         ctx.response.status = StatusCodes.OK
       } catch (e) {
         if (e.status) {
@@ -169,15 +159,6 @@ module.exports = (config, app) => {
         ctx.query.lib ? decodeURI(ctx.query.lib) : ""
       )
       ctx.body = info.components
-      ctx.response.status = StatusCodes.OK
-    })
-    .get("/_builder/api/:appname/generators", async ctx => {
-      const info = await componentLibraryInfo(
-        config,
-        ctx.params.appname,
-        ctx.query.lib ? decodeURI(ctx.query.lib) : ""
-      )
-      ctx.body = info.generators
       ctx.response.status = StatusCodes.OK
     })
     .post("/_builder/api/:appname/backend", async ctx => {

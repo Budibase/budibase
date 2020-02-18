@@ -3,25 +3,27 @@
   import { store } from "../builderStore"
   import { find, sortBy } from "lodash/fp"
   import { ImageIcon, InputIcon, LayoutIcon } from "../common/Icons/"
+  import Select from "../common/Select.svelte"
+  import PlusButton from "../common/PlusButton.svelte"
 
   let componentLibraries = []
   let current_view = "text"
+  let selectedComponent = null
 
-  const addRootComponent = (c, all) => {
-    const { libName } = splitName(c.name)
-    let group = find(r => r.libName === libName)(all)
+  const addRootComponent = (component, allComponents) => {
+    const { libName } = splitName(component.name)
+    let group = find(r => r.libName === libName)(allComponents)
 
     if (!group) {
       group = {
         libName,
         components: [],
-        generators: [],
       }
 
-      all.push(group)
+      allComponents.push(group)
     }
 
-    group.components.push(c)
+    group.components.push(component)
   }
 
   const onComponentChosen = store.addChildComponent
@@ -38,9 +40,14 @@
 </script>
 
 <div class="root">
-  {#each componentLibraries as lib}
-    <div class="library-header">{lib.libName}</div>
-
+  <Select>
+    {#each componentLibraries as componentLibrary}
+      <option value={componentLibrary.libName}>
+        {componentLibrary.libName}
+      </option>
+    {/each}
+  </Select>
+  {#each componentLibraries as componentLibrary}
     <div class="library-container">
       <ul>
         <li>
@@ -66,11 +73,34 @@
         </li>
       </ul>
 
-      {#each $store.builtins.concat(lib.components.filter(_ => true)) as component}
-        <div
-          class="component"
-          on:click={() => onComponentChosen(component.name)}>
-          <div class="name">{splitName(component.name).componentName}</div>
+      {#each $store.builtins.concat(componentLibrary.components) as component}
+        <div class="component-container">
+          <div
+            class="component"
+            on:click={() => onComponentChosen(component.name)}>
+            <div class="name">{splitName(component.name).componentName}</div>
+            {#if component.presets && component.name === selectedComponent}
+              <ul class="preset-menu">
+                <span>{splitName(component.name).componentName} Presets</span>
+                {#each Object.keys(component.presets) as preset}
+                  <li on:click|stopPropagation={() => onComponentChosen(component.name, preset)}>
+                    {preset}
+                  </li>
+                {/each}
+              </ul>
+            {/if}
+          </div>
+          {#if component.presets}
+            <PlusButton 
+              on:click={() => {
+                selectedComponent = selectedComponent ? null : component.name;
+              }} 
+            >
+            <span class="open-presets" class:open={selectedComponent === component.name}>
+              ...
+            </span>
+            </PlusButton>
+          {/if}
         </div>
       {/each}
 
@@ -85,26 +115,22 @@
     flex-direction: column;
   }
 
-  .library-header {
-    font-size: 1.1em;
-    border-color: var(--primary25);
-    border-width: 1px 0px;
-    border-style: solid;
-    background-color: var(--primary10);
-    padding: 5px 0;
-    flex: 0 0 auto;
-  }
-
   .library-container {
     padding: 0 0 10px 10px;
     flex: 1 1 auto;
     min-height: 0px;
   }
 
+  .component-container {
+    display: flex;
+    align-items: center;
+  }
+
   .component {
+    position: relative;
     padding: 0 15px;
     cursor: pointer;
-    border: 1px solid #ccc;
+    border: 1px solid #ebebeb;
     border-radius: 2px;
     margin: 10px 0;
     height: 40px;
@@ -112,6 +138,8 @@
     color: #163057;
     display: flex;
     align-items: center;
+    flex: 1;
+    margin-right: 5px;
   }
 
   .component:hover {
@@ -132,12 +160,38 @@
     padding: 0;
   }
 
+  .preset-menu {
+    flex-direction: column;
+    position: absolute;
+    top: 25px;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    background: #fafafa;
+    padding: 10px;
+    border-radius: 2px;
+    color: rgba(22, 48, 87, 0.6);
+  }
+
+  .preset-menu > span {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .preset-menu li {
+    font-size: 14px;
+    margin-top: 13px;
+  }
+
+  .preset-menu li:hover {
+    font-weight: bold;
+  }
+
   li {
     margin-right: 20px;
     background: none;
     border-radius: 5px;
-    width: 48px;
-    height: 48px;
   }
 
   li button {
