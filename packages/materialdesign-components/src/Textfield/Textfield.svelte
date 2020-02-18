@@ -8,7 +8,7 @@
   import FloatingLabel from "../Common/FloatingLabel.svelte"
   import HelperText from "./HelperText.svelte"
   import CharacterCounter from "./CharacterCounter.svelte"
-  import Icon from "../Icon.svelte"
+  import Icon from "../Common/Icon.svelte"
 
   const cb = new ClassBuilder("text-field", ["primary", "medium"])
 

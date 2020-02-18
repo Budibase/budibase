@@ -1,4 +1,4 @@
 import "./_style.scss";
-export { default as checkbox } from "./Checkbox.svelte";
-export { default as checkboxgroup } from "./CheckboxGroup.svelte";
+export { default as Checkbox } from "./Checkbox.svelte";
+export { default as Checkboxgroup } from "./CheckboxGroup.svelte";
 

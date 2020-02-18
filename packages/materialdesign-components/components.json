@@ -1,24 +1,24 @@
 {
   "_lib": "./dist/index.js",
   "_generators": {},
-  "body1": {
-    "name": "body1",
+  "Body1": {
+    "name": "Body1",
     "description": "Sets the font properties as Roboto Body 1",
     "props": {
       "text": "string"
     }, 
     "tags": []
   },
-  "body2": {
-    "name": "body2",
+  "Body2": {
+    "name": "Body2",
     "description": "Sets the font properties as Roboto Body 2",
     "props": {
       "text": "string"
     }, 
     "tags": []
   },
-  "button": {
-    "name": "button",
+  "Button": {
+    "name": "Button",
     "description": "A Material Design button with different variations. It renders as an anchor if href is passed to it.",
     "props": {
       "onClick": "event",
@@ -34,16 +34,16 @@
     },
     "tags": []
   },
-  "caption": {
-    "name": "caption",
+  "Caption": {
+    "name": "Caption",
     "description": "Sets the font properties as Roboto Caption",
     "props": {
       "text": "string"
     }, 
     "tags": []
   },
-  "checkbox": {
-    "name": "checkbox",
+  "Checkbox": {
+    "name": "Checkbox",
     "description": "A Material Design checkbox. Supports aligning label before or after checkbox.",
     "props": {
       "onClick": "event",
@@ -56,72 +56,78 @@
     },
     "tags": []
   },
-  "h1": {
-    "name": "h1",
+  "Datatable": {
+    "name": "Datatable",
+    "description": "A Material Design component to represent tabular data.",
+    "props": {},
+    "tags": []
+  },
+  "H1": {
+    "name": "H1",
     "description": "Sets the font properties as Roboto Headline1",
     "props": {
       "text": "string"
     },
     "tags": []
   },
-  "h2": {
-    "name": "h2",
+  "H2": {
+    "name": "H2",
     "description": "Sets the font properties as Roboto Headline2",
     "props": {
       "text": "string"
     },
     "tags": []
   },
-  "h3": {
-    "name": "h3",
+  "H3": {
+    "name": "H3",
     "description": "Sets the font properties as Roboto Headline3",
     "props": {
       "text": "string"
     },
     "tags": []
   },
-  "h4": {
-    "name": "h4",
+  "H4": {
+    "name": "H4",
     "description": "Sets the font properties as Roboto Headline4",
     "props": {
       "text": "string"
     },
     "tags": []
   },
-  "h5": {
-    "name": "h5",
+  "H5": {
+    "name": "H5",
     "description": "Sets the font properties as Roboto Headline5",
     "props": {
       "text": "string"
     },
     "tags": []
   },
-  "h6": {
-    "name": "h6",
+  "H6": {
+    "name": "H6",
     "description": "Sets the font properties as Roboto Headline6",
     "props": {
       "text": "string"
     },
     "tags": []
   },
-  "label": {
-    "name": "label",
+  "Label": {
+    "name": "Label",
     "description": "A simple label component that displays its text in the standard Roboto Material Design font",
     "props": {
       "bold": "bool"
     },
     "tags": []
   },
-  "overline": {
-    "name": "overline",
+  "Overline": {
+    "name": "Overline",
     "description": "Sets the font properties as Roboto Overline",
     "props": {
       "text": "string"
     },
     "tags": []
   },
-  "radiobutton": {
-    "name": "radiobutton",
+  "Radiobutton": {
+    "name": "Radiobutton",
     "description": "A Material Design radiobutton. Supports aligning label before or after radiobutton.",
     "props": {
       "onClick": "event",
@@ -135,24 +141,24 @@
     },
     "tags": []
   },
-  "sub1": {
-    "name": "sub1",
+  "Sub1": {
+    "name": "Sub1",
     "description": "Sets the font properties as Roboto Subtitle1",
     "props": {
       "text": "string"
     },
     "tags": []
   },
-  "sub2": {
-    "name": "sub2",
+  "Sub2": {
+    "name": "Sub2",
     "description": "Sets the font properties as Roboto Subtitle2",
     "props": {
       "text": "string"
     },
     "tags": []
   },
-  "textfield": {
-    "name": "textfield",
+  "Textfield": {
+    "name": "Textfield",
     "description": "A Material Design textfield with multiple variants. Can also be converted to a text area / multine text field.",
     "props": {
       "onChange": "event",
