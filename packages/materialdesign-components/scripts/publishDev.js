@@ -6,12 +6,10 @@ const serverConfig = require("../../server/config")()
 const packagesFolder = ".."
 
 const jsFile = dir => join(dir, "index.js")
-const generatorsFile = dir => join(dir, "generators.js")
 const jsMapFile = dir => join(dir, "index.js.map")
 const sourceJs = jsFile("dist")
 const sourceJsMap = jsMapFile("dist")
 const componentsFile = "components.json"
-const sourceGenerators = generatorsFile("dist")
 
 const appPackages = join(
   packagesFolder,
@@ -68,7 +66,6 @@ const nodeModules = appName =>
 
   const copySourceJs = copySource(sourceJs)
   const copySourceJsMap = copySource(sourceJsMap)
-  const copyGenerators = copySource(sourceGenerators)
   const copyComponentsJson = copySource(componentsFile)
 
   for (let app of apps) {
@@ -77,16 +74,13 @@ const nodeModules = appName =>
 
     await copySourceJs(nodeModulesDist(app))
     await copySourceJsMap(nodeModulesDist(app))
-    await copyGenerators(nodeModulesDist(app))
 
     await copyComponentsJson(nodeModules(app))
 
     await copySourceJs(join(publicMain(app), "dist"))
     await copySourceJsMap(join(publicMain(app), "dist"))
-    await copyGenerators(join(publicMain(app), "dist"))
 
     await copySourceJs(join(publicUnauth(app), "dist"))
     await copySourceJsMap(join(publicUnauth(app), "dist"))
-    await copyGenerators(join(publicUnauth(app), "dist"))
   }
 })()

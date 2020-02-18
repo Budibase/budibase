@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "scripts": {
-    "build": "rollup -c && rollup -c rollup.generatorsconfig.js",
+    "build": "rollup -c",
     "prepublishOnly": "npm run build",
     "testbuild": "rollup -w -c rollup.testconfig.js",
     "dev": "run-p start:dev testbuild",

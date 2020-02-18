@@ -24,8 +24,13 @@ export const getNewScreen = (components, rootComponentName, name) => {
   }
 }
 
+/**
+ * @param {object} componentDefinition - component definition from a component library
+ * @param {object} derivedFromProps - extra props derived from a components given props.
+ * @return {object} the fully created properties for the component, and any property parsing errors
+ */
 export const createProps = (componentDefinition, derivedFromProps) => {
-  const error = (propName, error) => errors.push({ propName, error })
+  const errorOccurred = (propName, error) => errors.push({ propName, error })
 
   const props = {
     _component: componentDefinition.name,
@@ -37,12 +42,12 @@ export const createProps = (componentDefinition, derivedFromProps) => {
   const errors = []
 
   if (!componentDefinition.name)
-    error("_component", "Component name not supplied")
+    errorOccurred("_component", "Component name not supplied")
 
   const propsDef = componentDefinition.props
   for (let propDef in propsDef) {
     const parsedPropDef = parsePropDef(propsDef[propDef])
-    if (parsedPropDef.error) error(propDef, parsedPropDef.error)
+    if (parsedPropDef.error) errorOccurred(propDef, parsedPropDef.error)
     else props[propDef] = parsedPropDef
   }
 

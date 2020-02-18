@@ -1,5 +1,4 @@
 <script>
-  import ComponentSelector from "./ComponentSelector.svelte"
   import { store } from "../builderStore"
   import PropsView from "./PropsView.svelte"
   import Textbox from "../common/Textbox.svelte"
