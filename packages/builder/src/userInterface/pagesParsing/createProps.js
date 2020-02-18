@@ -3,6 +3,15 @@ import { types } from "./types"
 import { assign } from "lodash"
 import { uuid } from "../../builderStore/uuid"
 
+export const getBuiltin = name => {
+  const { props } = createProps({ name })
+
+  return {
+    name,
+    props,
+  }
+}
+
 export const getNewScreen = (components, rootComponentName, name) => {
   const rootComponent = components.find(c => c.name === rootComponentName)
   return {
