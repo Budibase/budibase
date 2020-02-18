@@ -66,7 +66,7 @@
         </li>
       </ul>
 
-      {#each lib.components.filter(_ => true) as component}
+      {#each $store.builtins.concat(lib.components.filter(_ => true)) as component}
         <div
           class="component"
           on:click={() => onComponentChosen(component.name)}>
