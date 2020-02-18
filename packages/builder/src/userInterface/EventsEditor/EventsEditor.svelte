@@ -33,17 +33,11 @@
   let events = []
   let selectedEvent = null
 
-
   $: {
-    events = Object.keys(component)
-      .filter(key => findType(key) === EVENT_TYPE)
-      .map(key => ({ name: key, handlers: component[key] }))
-  }
-
-  function findType(propName) {
-    if (!component._component) return
-    return components.find(({ name }) => name === component._component)
-      .props[propName]
+    const componentDefinition = components.find(c => c.name === component._component)
+    events = Object.keys(componentDefinition.props)
+      .filter(propName => componentDefinition.props[propName].type === EVENT_TYPE)
+      .map(propName => ({ name: propName, handlers: (component[propName] || []) }))
   }
 
   const openModal = event => {

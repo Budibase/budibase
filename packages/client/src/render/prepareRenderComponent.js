@@ -1,22 +1,21 @@
-export const renderComponent = ({
+export const prepareRenderComponent = ({
   componentConstructor,
   uiFunctions,
   htmlElement,
   anchor,
   props,
-  initialProps,
-  bb,
   parentNode,
+  getCurrentState,
 }) => {
-  const func = initialProps._id ? uiFunctions[initialProps._id] : undefined
+  const func = props._id ? uiFunctions[props._id] : undefined
 
   const parentContext = (parentNode && parentNode.context) || {}
 
-  let renderedNodes = []
-  const render = context => {
+  let nodesToRender = []
+  const createNodeAndRender = context => {
     let componentContext = parentContext
     if (context) {
-      componentContext = { ...componentContext }
+      componentContext = { ...context }
       componentContext.$parent = parentContext
     }
 
@@ -24,33 +23,31 @@ export const renderComponent = ({
     thisNode.context = componentContext
     thisNode.parentNode = parentNode
     thisNode.props = props
+    nodesToRender.push(thisNode)
 
-    parentNode.children.push(thisNode)
-    renderedNodes.push(thisNode)
+    thisNode.render = initialProps => {
+      thisNode.component = new componentConstructor({
+        target: htmlElement,
+        props: initialProps,
+        hydrate: false,
+        anchor,
+      })
+      thisNode.rootElement =
+        htmlElement.children[htmlElement.children.length - 1]
 
-    initialProps._bb = bb(thisNode, props)
-
-    thisNode.component = new componentConstructor({
-      target: htmlElement,
-      props: initialProps,
-      hydrate: false,
-      anchor,
-    })
-
-    thisNode.rootElement = htmlElement.children[htmlElement.children.length - 1]
-
-    if (initialProps._id && thisNode.rootElement) {
-      thisNode.rootElement.classList.add(`pos-${initialProps._id}`)
+      if (props._id && thisNode.rootElement) {
+        thisNode.rootElement.classList.add(`pos-${props._id}`)
+      }
     }
   }
 
   if (func) {
-    func(render, parentContext)
+    func(createNodeAndRender, parentContext, getCurrentState())
   } else {
-    render()
+    createNodeAndRender()
   }
 
-  return renderedNodes
+  return nodesToRender
 }
 
 export const createTreeNode = () => ({
@@ -59,8 +56,10 @@ export const createTreeNode = () => ({
   rootElement: null,
   parentNode: null,
   children: [],
+  bindings: [],
   component: null,
   unsubscribe: () => {},
+  render: () => {},
   get destroy() {
     const node = this
     return () => {
@@ -71,6 +70,10 @@ export const createTreeNode = () => ({
           child.destroy()
         }
       }
+      for (let onDestroyItem of node.onDestroy) {
+        onDestroyItem()
+      }
     }
   },
+  onDestroy: [],
 })
