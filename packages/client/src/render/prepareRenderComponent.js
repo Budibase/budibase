@@ -4,14 +4,14 @@ export const prepareRenderComponent = ({
   htmlElement,
   anchor,
   props,
-  bb,
   parentNode,
+  getCurrentState,
 }) => {
   const func = props._id ? uiFunctions[props._id] : undefined
 
   const parentContext = (parentNode && parentNode.context) || {}
 
-  let renderedNodes = []
+  let nodesToRender = []
   const createNodeAndRender = context => {
     let componentContext = parentContext
     if (context) {
@@ -23,10 +23,9 @@ export const prepareRenderComponent = ({
     thisNode.context = componentContext
     thisNode.parentNode = parentNode
     thisNode.props = props
-    renderedNodes.push(thisNode)
+    nodesToRender.push(thisNode)
 
     thisNode.render = initialProps => {
-      initialProps._bb = bb(thisNode, props)
       thisNode.component = new componentConstructor({
         target: htmlElement,
         props: initialProps,
@@ -43,12 +42,12 @@ export const prepareRenderComponent = ({
   }
 
   if (func) {
-    func(createNodeAndRender, parentContext)
+    func(createNodeAndRender, parentContext, getCurrentState())
   } else {
     createNodeAndRender()
   }
 
-  return renderedNodes
+  return nodesToRender
 }
 
 export const createTreeNode = () => ({
@@ -57,6 +56,7 @@ export const createTreeNode = () => ({
   rootElement: null,
   parentNode: null,
   children: [],
+  bindings: [],
   component: null,
   unsubscribe: () => {},
   render: () => {},
@@ -70,6 +70,10 @@ export const createTreeNode = () => ({
           child.destroy()
         }
       }
+      for (let onDestroyItem of node.onDestroy) {
+        onDestroyItem()
+      }
     }
   },
+  onDestroy: [],
 })

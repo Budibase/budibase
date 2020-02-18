@@ -7,11 +7,11 @@ import deepEqual from "deep-equal"
 export const attachChildren = initialiseOpts => (htmlElement, options) => {
   const {
     uiFunctions,
-    bb,
     componentLibraries,
     treeNode,
     onScreenSlotRendered,
-    stateManager,
+    setupState,
+    getCurrentState,
   } = initialiseOpts
 
   const anchor = options && options.anchor ? options.anchor : null
@@ -47,7 +47,7 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
       uiFunctions,
       htmlElement,
       anchor,
-      bb,
+      getCurrentState
     })
 
     for (let childNode of childNodesThisIteration) {
@@ -58,7 +58,7 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
   if (areTreeNodesEqual(treeNode.children, childNodes)) return treeNode.children
 
   for (let node of childNodes) {
-    const initialProps = stateManager.setup(node)
+    const initialProps = setupState(node)
     node.render(initialProps)
   }
 

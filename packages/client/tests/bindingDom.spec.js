@@ -1,4 +1,4 @@
-import { load, makePage, makeScreen, timeout } from "./testAppDef"
+import { load, makePage, makeScreen } from "./testAppDef"
 import { EVENT_TYPE_MEMBER_NAME } from "../src/state/eventHandlers"
 
 describe("initialiseApp (binding)", () => {
@@ -261,6 +261,81 @@ describe("initialiseApp (binding)", () => {
     button.dispatchEvent(new dom.window.Event("click"))
     expect(storeAddress).toBe("test value")
   })
+})
+
+it("should rerender components when their code is bound to the store ", async () => {
+  const { dom, app } = await load(
+    makePage({
+      _component: "testlib/div",
+      _children: [
+        {
+          _component: "testlib/div",
+          _id: "n_clones_based_on_store",
+          className: "child_div",
+        },
+      ],
+    })
+  )
+
+  const rootDiv = dom.window.document.body.children[0]
+  expect(rootDiv.tagName).toBe("DIV")
+  expect(rootDiv.children.length).toBe(0)
+
+  app.pageStore().update(s => {
+    s.componentCount = 3
+    return s
+  })
+
+  expect(rootDiv.children.length).toBe(3)
+  expect(rootDiv.children[0].className.includes("child_div")).toBe(true)
+
+  app.pageStore().update(s => {
+    s.componentCount = 5
+    return s
+  })
+
+  expect(rootDiv.children.length).toBe(5)
+  expect(rootDiv.children[0].className.includes("child_div")).toBe(true)
+
+  app.pageStore().update(s => {
+    s.componentCount = 0
+    return s
+  })
+
+  expect(rootDiv.children.length).toBe(0)
+})
+
+it("should be able to read value from context, passed fromm parent, through code", async () => {
+  const { dom, app } = await load(
+    makePage({
+      _component: "testlib/div",
+      _children: [
+        {
+          _component: "testlib/div",
+          _id: "n_clones_based_on_store",
+          className: {
+            "##bbstate": "index",
+            "##bbsource": "context",
+            "##bbstatefallback": "nothing",
+          },
+        },
+      ],
+    })
+  )
+
+  const rootDiv = dom.window.document.body.children[0]
+  expect(rootDiv.tagName).toBe("DIV")
+  expect(rootDiv.children.length).toBe(0)
+
+  app.pageStore().update(s => {
+    s.componentCount = 3
+    return s
+  })
+
+  expect(rootDiv.children.length).toBe(3)
+  expect(rootDiv.children[0].className.includes("index_0")).toBe(true)
+  expect(rootDiv.children[1].className.includes("index_1")).toBe(true)
+  expect(rootDiv.children[2].className.includes("index_2")).toBe(true)
 })
 
 const event = (handlerType, parameters) => {

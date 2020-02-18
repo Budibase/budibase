@@ -15,6 +15,7 @@ export const load = async (page, screens = [], url = "/") => {
     actions: [],
     triggers: [],
   })
+  setComponentCodeMeta(page, screens)
   const app = await loadBudibase({
     componentLibraries: allLibs(dom.window),
     window: dom.window,
@@ -47,8 +48,11 @@ export const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 export const walkComponentTree = (node, action) => {
   action(node)
 
-  if (node.children) {
-    for (let child of node.children) {
+  // works for nodes or props
+  const children = node.children || node._children
+
+  if (children) {
+    for (let child of children) {
       walkComponentTree(child, action)
     }
   }
@@ -65,6 +69,22 @@ const autoAssignIds = (props, count = 0) => {
       count += 1
       autoAssignIds(child, count)
     }
+  }
+}
+
+// any component with an id that include "based_on_store" is
+// assumed to have code that depends on store value
+const setComponentCodeMeta = (page, screens) => {
+  const setComponentCodeMeta_single = props => {
+    walkComponentTree(props, c => {
+      if (c._id.indexOf("based_on_store") >= 0) {
+        c._codeMeta = { dependsOnStore: true }
+      }
+    })
+  }
+  setComponentCodeMeta_single(page.props)
+  for (let s of screens || []) {
+    setComponentCodeMeta_single(s.props)
   }
 }
 
@@ -188,5 +208,12 @@ const uiFunctions = {
 
   with_context: render => {
     render({ testKey: "test value" })
+  },
+
+  n_clones_based_on_store: (render, _, state) => {
+    const n = state.componentCount || 0
+    for (let i = 0; i < n; i++) {
+      render({ index: `index_${i}` })
+    }
   },
 }
