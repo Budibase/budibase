@@ -1,19 +1,17 @@
-import { setupBinding } from "../state/stateBinding"
 import { split, last } from "lodash/fp"
 import { $ } from "../core/common"
-import { renderComponent } from "./renderComponent"
+import { prepareRenderComponent } from "./prepareRenderComponent"
 import { isScreenSlot } from "./builtinComponents"
+import deepEqual from "deep-equal"
 
 export const attachChildren = initialiseOpts => (htmlElement, options) => {
   const {
     uiFunctions,
-    bb,
-    coreApi,
-    store,
     componentLibraries,
     treeNode,
-    frontendDefinition,
     onScreenSlotRendered,
+    setupState,
+    getCurrentState,
   } = initialiseOpts
 
   const anchor = options && options.anchor ? options.anchor : null
@@ -34,50 +32,46 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
 
   htmlElement.classList.add(`lay-${treeNode.props._id}`)
 
-  const renderedComponents = []
+  const childNodes = []
   for (let childProps of treeNode.props._children) {
     const { componentName, libName } = splitName(childProps._component)
 
     if (!componentName || !libName) return
 
-    const { initialProps, bind } = setupBinding(
-      store,
-      childProps,
-      coreApi,
-      frontendDefinition.appRootPath
-    )
-
     const componentConstructor = componentLibraries[libName][componentName]
 
-    const renderedComponentsThisIteration = renderComponent({
+    const childNodesThisIteration = prepareRenderComponent({
       props: childProps,
       parentNode: treeNode,
       componentConstructor,
       uiFunctions,
       htmlElement,
       anchor,
-      initialProps,
-      bb,
+      getCurrentState
     })
 
-    if (
-      onScreenSlotRendered &&
-      isScreenSlot(childProps._component) &&
-      renderedComponentsThisIteration.length > 0
-    ) {
-      // assuming there is only ever one screen slot
-      onScreenSlotRendered(renderedComponentsThisIteration[0])
-    }
-
-    for (let comp of renderedComponentsThisIteration) {
-      comp.unsubscribe = bind(comp.component)
-      renderedComponents.push(comp)
+    for (let childNode of childNodesThisIteration) {
+      childNodes.push(childNode)
     }
   }
 
-  treeNode.children = renderedComponents
+  if (areTreeNodesEqual(treeNode.children, childNodes)) return treeNode.children
 
-  return renderedComponents
+  for (let node of childNodes) {
+    const initialProps = setupState(node)
+    node.render(initialProps)
+  }
+
+  const screenSlot = childNodes.find(n => isScreenSlot(n.props._component))
+
+  if (onScreenSlotRendered && screenSlot) {
+    // assuming there is only ever one screen slot
+    onScreenSlotRendered(screenSlot)
+  }
+
+  treeNode.children = childNodes
+
+  return childNodes
 }
 
 const splitName = fullname => {
@@ -89,4 +83,20 @@ const splitName = fullname => {
   )
 
   return { libName, componentName }
+}
+
+const areTreeNodesEqual = (children1, children2) => {
+  if (children1.length !== children2.length) return false
+  if (children1 === children2) return true
+
+  let isEqual = false
+  for (let i = 0; i < children1.length; i++) {
+    isEqual = deepEqual(children1[i].context, children2[i].context)
+    if (!isEqual) return false
+    if (isScreenSlot(children1[i].parentNode.props._component)) {
+      isEqual = deepEqual(children1[i].props, children2[i].props)
+    }
+    if (!isEqual) return false
+  }
+  return true
 }

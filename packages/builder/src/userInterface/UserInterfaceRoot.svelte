@@ -10,8 +10,12 @@
   import SettingsView from "./SettingsView.svelte"
   import PageView from "./PageView.svelte"
   import ComponentsPaneSwitcher from "./ComponentsPaneSwitcher.svelte"
+  import ConfirmDialog from "../common/ConfirmDialog.svelte"
+  import { last } from "lodash/fp"
 
   let newComponentPicker
+  let confirmDeleteDialog
+  let componentToDelete = ""
 
   const newComponent = () => {
     newComponentPicker.show()
@@ -21,6 +25,14 @@
   const settings = () => {
     settingsView.show()
   }
+
+  const confirmDeleteComponent = component => {
+    componentToDelete = component
+    confirmDeleteDialog.show()
+  }
+  
+  const lastPartOfName = c => c ? c.split("/") : ""
+  
 </script>
 
 <div class="root">
@@ -53,6 +65,7 @@
           <ComponentsHierarchyChildren
             components={$store.currentPreviewItem.props._children}
             currentComponent={$store.currentComponentInfo}
+            onDeleteComponent={confirmDeleteComponent}
             onSelect={store.selectComponent}
             level={-2} />
         {/if}
@@ -100,6 +113,13 @@
 
 <NewComponent bind:this={newComponentPicker} />
 <SettingsView bind:this={settingsView} />
+
+<ConfirmDialog 
+  bind:this={confirmDeleteDialog} 
+  title="Confirm Delete" 
+  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete._component)}' component`}
+  okText="Delete Component"
+  onOk={() => store.deleteComponent(componentToDelete)}/>
 
 <style>
   button {

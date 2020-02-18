@@ -36,6 +36,7 @@
   "dependencies": {
     "@nx-js/compiler-util": "^2.0.0",
     "bcryptjs": "^2.4.3",
+    "deep-equal": "^2.0.1",
     "lodash": "^4.17.15",
     "lunr": "^2.3.5",
     "regexparam": "^1.3.0",
