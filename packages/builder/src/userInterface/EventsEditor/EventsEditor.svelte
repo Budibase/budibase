@@ -32,7 +32,6 @@
   let modalOpen = false
   let events = []
   let selectedEvent = null
-  $: console.log(component)
 
   $: {
     events = Object.keys(component)
