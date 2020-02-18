@@ -1,18 +1,26 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext } from "svelte";
 
-  export let isHeader = false
-  let selected = false
+  export let onSelect = () => {};
+  export let isHeader = false;
+  let row = null;
+  let selected = false;
 
-  const cb = getContext("BBMD:data-table:cb")
+  const cb = getContext("BBMD:data-table:cb");
 
-  let elementName = isHeader ? "header-row" : "row"
-  let modifiers = { selected }
-  let props = { modifiers }
+  let elementName = isHeader ? "header-row" : "row";
+  let modifiers = {};
 
-  let rowClass = cb.build({ elementName, props })
+  $: modifiers = { selected };
+  $: props = { modifiers };
+  $: rowClass = cb.build({ elementName, props });
+
+  function rowSelected() {
+    selected = !selected;
+    onSelect();
+  }
 </script>
 
-<tr class={rowClass} on:click={() => (selected = !selected)}>
+<tr bind:this={row} class={rowClass} on:click={rowSelected}>
   <slot />
 </tr>
