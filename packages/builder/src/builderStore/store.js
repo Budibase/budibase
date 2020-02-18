@@ -182,6 +182,7 @@ const initialise = (store, initial) => async () => {
   }
 
   store.set(initial)
+  console.log(initial)
   return initial
 }
 
@@ -743,6 +744,7 @@ const setCurrentPage = store => pageName => {
   })
 }
 
+
 const getContainerComponent = components =>
   components.find(c => c.name === "@budibase/standard-components/container")
 
@@ -758,14 +760,16 @@ const addChildComponent = store => componentName => {
     )
 
     _savePage(s)
-
+      //console.log(JSON.stringify(s.screens[0].props._children))
     return s
   })
 }
 
 const selectComponent = store => component => {
   store.update(s => {
-    const componentDef = s.components.find(c => c.name === component._component)
+    const componentDef = component._component.startsWith("##")
+      ? component
+      : s.components.find(c => c.name === component._component)
     s.currentComponentInfo = makePropsSafe(componentDef, component)
     return s
   })
