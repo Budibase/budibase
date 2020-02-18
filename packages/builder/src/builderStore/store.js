@@ -5,7 +5,6 @@ import {
   sortBy,
   map,
   last,
-  keys,
   concat,
   find,
   isEmpty,
@@ -21,10 +20,7 @@ import {
 import { writable } from "svelte/store"
 import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
 import api from "./api"
-import {
-  isRootComponent,
-  getExactComponent,
-} from "../userInterface/pagesParsing/searchComponents"
+import { getExactComponent } from "../userInterface/pagesParsing/searchComponents"
 import { rename } from "../userInterface/pagesParsing/renameScreen"
 import {
   getNewScreen,
@@ -33,12 +29,10 @@ import {
   getBuiltin,
 } from "../userInterface/pagesParsing/createProps"
 import { expandComponentDefinition } from "../userInterface/pagesParsing/types"
-import {
-  loadLibs,
-  loadLibUrls
-} from "./loadComponentLibraries"
+import { loadLibs, loadLibUrls } from "./loadComponentLibraries"
 import { buildCodeForScreens } from "./buildCodeForScreens"
 import { generate_screen_css } from "./generate_css"
+import { insertCodeMetadata } from "./insertCodeMetadata"
 
 let appname = ""
 
@@ -714,7 +708,6 @@ const setCurrentPage = store => pageName => {
   })
 }
 
-
 const getContainerComponent = components =>
   components.find(c => c.name === "@budibase/standard-components/container")
 
@@ -727,8 +720,8 @@ const addChildComponent = store => (componentToAdd, presetName) => {
     const component = componentToAdd.startsWith("##")
       ? getBuiltin(componentToAdd)
       : state.components.find(({ name }) => name === componentToAdd)
-    const presetProps = presetName ? component.presets[presetName] : {}; 
-    const newComponent = createProps(component, presetProps);
+    const presetProps = presetName ? component.presets[presetName] : {}
+    const newComponent = createProps(component, presetProps)
 
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       newComponent.props
