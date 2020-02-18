@@ -4,7 +4,7 @@
   import { find, sortBy } from "lodash/fp"
   import { ImageIcon, InputIcon, LayoutIcon } from "../common/Icons/"
   import Select from "../common/Select.svelte"
-  import PlusButton from "../common/PlusButton.svelte"
+  import Button from "../common/PlusButton.svelte"
 
   let componentLibraries = []
   let current_view = "text"
@@ -83,7 +83,8 @@
               <ul class="preset-menu">
                 <span>{splitName(component.name).componentName} Presets</span>
                 {#each Object.keys(component.presets) as preset}
-                  <li on:click|stopPropagation={() => onComponentChosen(component.name, preset)}>
+                  <li
+                    on:click|stopPropagation={() => onComponentChosen(component.name, preset)}>
                     {preset}
                   </li>
                 {/each}
@@ -91,15 +92,16 @@
             {/if}
           </div>
           {#if component.presets}
-            <PlusButton 
+            <Button
               on:click={() => {
-                selectedComponent = selectedComponent ? null : component.name;
-              }} 
-            >
-            <span class="open-presets" class:open={selectedComponent === component.name}>
-              ...
-            </span>
-            </PlusButton>
+                selectedComponent = selectedComponent ? null : component.name
+              }}>
+              <span
+                class="open-presets"
+                class:open={selectedComponent === component.name}>
+                ...
+              </span>
+            </Button>
           {/if}
         </div>
       {/each}
@@ -208,5 +210,9 @@
   .selected {
     color: var(--button-text);
     background: var(--background-button) !important;
+  }
+
+  .open {
+    color: rgba(0, 85, 255, 1);
   }
 </style>
