@@ -182,7 +182,6 @@ const initialise = (store, initial) => async () => {
   }
 
   store.set(initial)
-  console.log(initial)
   return initial
 }
 
@@ -760,7 +759,6 @@ const addChildComponent = store => componentName => {
     )
 
     _savePage(s)
-      //console.log(JSON.stringify(s.screens[0].props._children))
     return s
   })
 }
