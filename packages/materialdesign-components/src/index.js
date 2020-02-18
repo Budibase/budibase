@@ -1,10 +1,11 @@
 import "@material/theme/mdc-theme.scss";
 
-export { button } from "./Button"
-export { default as icon } from "./Icon.svelte"
-export { textfield } from "./Textfield"
+export { Button } from "./Button"
+export { default as Icon } from "./Common/Icon.svelte"
+export { Textfield } from "./Textfield"
 export * from "./Typography"
-export { checkbox, checkboxgroup } from "./Checkbox"
-export { radiobutton, radiobuttongroup } from "./Radiobutton"
-export { label } from "./Common/Label.svelte"
+export { Checkbox, Checkboxgroup } from "./Checkbox"
+export { Radiobutton, Radiobuttongroup } from "./Radiobutton"
+export { default as Label } from "./Common/Label.svelte"
+export { Datatable } from "./Datatable"
 
