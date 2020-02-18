@@ -50,7 +50,7 @@
             _children: [{
               _component:"@budibase/standard-components/text",
               _styles: { "position": {}, "layout": {} },
-              _id: "__screenslot__text",
+              _id: "__screenslot__text_2",
               _code: "",
               text: "content",
               font: "",
@@ -81,11 +81,26 @@
       srcdoc={`<html>
   <head>
     ${stylesheetLinks}
+
     <style>
       ${styles || ''}
       body, html {
         height: 100%!important;
       }
+      .lay-__screenslot__text {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 20px 0;
+          border: dashed 2px #ccc;
+          font-family: sans-serif;
+          font-size: 1.2rem;
+          color: #999;
+          text-transform: uppercase;
+          font-weight: bold;
+        }
     <\/style>
     <\script>
         window["##BUDIBASE_FRONTEND_DEFINITION##"] = ${JSON.stringify(frontendDefinition)};
