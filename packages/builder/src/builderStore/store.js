@@ -30,6 +30,7 @@ import {
   getNewScreen,
   createProps,
   makePropsSafe,
+  getBuiltin,
 } from "../userInterface/pagesParsing/createProps"
 import { expandComponentDefinition } from "../userInterface/pagesParsing/types"
 import {
@@ -158,6 +159,7 @@ const initialise = (store, initial) => async () => {
   }
 
   initial.libraries = await loadLibs(appname, pkg)
+
   initial.generatorLibraries = await loadGeneratorLibs(appname, pkg)
   initial.loadLibraryUrls = () => loadLibUrls(appname, pkg)
   initial.appname = appname
@@ -170,6 +172,7 @@ const initialise = (store, initial) => async () => {
   initial.components = values(pkg.components.components).map(
     expandComponentDefinition
   )
+  initial.builtins = [getBuiltin("##builtin/screenslot")]
   initial.actions = values(pkg.appDefinition.actions)
   initial.triggers = pkg.appDefinition.triggers
 
@@ -181,7 +184,6 @@ const initialise = (store, initial) => async () => {
   }
 
   store.set(initial)
-
   return initial
 }
 
@@ -743,12 +745,15 @@ const setCurrentPage = store => pageName => {
   })
 }
 
+
 const getContainerComponent = components =>
   components.find(c => c.name === "@budibase/standard-components/container")
 
 const addChildComponent = store => componentName => {
   store.update(s => {
-    const component = s.components.find(c => c.name === componentName)
+    const component = componentName.startsWith("##")
+      ? getBuiltin(componentName)
+      : s.components.find(c => c.name === componentName)
     const newComponent = createProps(component)
 
     s.currentComponentInfo._children = s.currentComponentInfo._children.concat(
@@ -756,14 +761,15 @@ const addChildComponent = store => componentName => {
     )
 
     _savePage(s)
-
     return s
   })
 }
 
 const selectComponent = store => component => {
   store.update(s => {
-    const componentDef = s.components.find(c => c.name === component._component)
+    const componentDef = component._component.startsWith("##")
+      ? component
+      : s.components.find(c => c.name === component._component)
     s.currentComponentInfo = makePropsSafe(componentDef, component)
     return s
   })
