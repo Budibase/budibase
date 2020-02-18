@@ -1,4 +1,4 @@
-export const insertCodeMetaData = props => {
+export const insertCodeMetadata = props => {
   if (props._code && props._code.length > 0) {
     props._codeMeta = codeMetaData(props._code)
   }
@@ -6,7 +6,7 @@ export const insertCodeMetaData = props => {
   if (!props._children || props._children.length === 0) return
 
   for (let child of props._children) {
-    insertCodeMetaData(child)
+    insertCodeMetadata(child)
   }
 }
 
