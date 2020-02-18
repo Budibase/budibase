@@ -2,12 +2,15 @@
   import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
 
   import { last, sortBy, map, trimCharsStart, trimChars, join } from "lodash/fp"
-
+  import ConfirmDialog from "../common/ConfirmDialog.svelte"
   import { pipe } from "../common/core"
   import { store } from "../builderStore"
   import { ArrowDownIcon } from "../common/Icons/"
 
   export let screens = []
+
+  let confirmDeleteDialog
+  let componentToDelete = ""
 
   const joinPath = join("/")
 
@@ -23,6 +26,7 @@
     )
 
   const lastPartOfName = c =>
+    c && 
     last(c.name ? c.name.split("/") : c._component.split("/"))
 
   const isComponentSelected = (current, comp) => current === comp
@@ -38,6 +42,12 @@
     component.component &&
     $store.currentPreviewItem &&
     component.component.name === $store.currentPreviewItem.name
+
+  const confirmDeleteComponent = component => {
+    componentToDelete = component
+    confirmDeleteDialog.show()
+  }
+
 </script>
 
 <div class="root">
@@ -63,11 +73,19 @@
       <ComponentsHierarchyChildren
         components={screen.component.props._children}
         currentComponent={$store.currentComponentInfo}
-        onSelect={store.selectComponent} />
+        onSelect={store.selectComponent} 
+        onDeleteComponent={confirmDeleteComponent}/>
     {/if}
   {/each}
 
 </div>
+
+<ConfirmDialog 
+  bind:this={confirmDeleteDialog} 
+  title="Confirm Delete" 
+  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete._component)}' component`}
+  okText="Delete Component"
+  onOk={() => store.deleteComponent(componentToDelete)}/>
 
 <style>
   .root {

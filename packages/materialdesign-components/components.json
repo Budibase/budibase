@@ -1,20 +1,189 @@
 {
   "_lib": "./dist/index.js",
-  "h1": {
-    "name": "H1",
-    "description": "An HTML H1 tag",
+  "_generators": {},
+  "Body1": {
+    "name": "Body1",
+    "description": "Sets the font properties as Roboto Body 1",
     "props": {
+      "text": "string"
+    }, 
+    "tags": []
+  },
+  "Body2": {
+    "name": "Body2",
+    "description": "Sets the font properties as Roboto Body 2",
+    "props": {
+      "text": "string"
+    }, 
+    "tags": []
+  },
+  "Button": {
+    "name": "Button",
+    "description": "A Material Design button with different variations. It renders as an anchor if href is passed to it.",
+    "props": {
+      "onClick": "event",
+      "variant": "string",
+      "colour": "string",
+      "size": "string",
+      "href": "string",
+      "icon": "string",
+      "trailingIcon": "bool",
+      "fullwidth": "bool",
       "text": "string",
-      "className": "string"
+      "disabled": "bool"
     },
     "tags": []
   },
-  "button": {
-    "name": "Button",
-    "description": "A button",
+  "Caption": {
+    "name": "Caption",
+    "description": "Sets the font properties as Roboto Caption",
     "props": {
-      "raised": "bool"
+      "text": "string"
+    }, 
+    "tags": []
+  },
+  "Checkbox": {
+    "name": "Checkbox",
+    "description": "A Material Design checkbox. Supports aligning label before or after checkbox.",
+    "props": {
+      "onClick": "event",
+      "id": "string",
+      "label": "string",
+      "disabled": "bool",
+      "alignEnd": "bool",
+      "indeterminate": "bool",
+      "checked": "bool"
+    },
+    "tags": []
+  },
+  "Datatable": {
+    "name": "Datatable",
+    "description": "A Material Design component to represent tabular data.",
+    "props": {},
+    "tags": []
+  },
+  "H1": {
+    "name": "H1",
+    "description": "Sets the font properties as Roboto Headline1",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "H2": {
+    "name": "H2",
+    "description": "Sets the font properties as Roboto Headline2",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "H3": {
+    "name": "H3",
+    "description": "Sets the font properties as Roboto Headline3",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "H4": {
+    "name": "H4",
+    "description": "Sets the font properties as Roboto Headline4",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "H5": {
+    "name": "H5",
+    "description": "Sets the font properties as Roboto Headline5",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "H6": {
+    "name": "H6",
+    "description": "Sets the font properties as Roboto Headline6",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "Label": {
+    "name": "Label",
+    "description": "A simple label component that displays its text in the standard Roboto Material Design font",
+    "props": {
+      "bold": "bool"
+    },
+    "tags": []
+  },
+  "Overline": {
+    "name": "Overline",
+    "description": "Sets the font properties as Roboto Overline",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "Radiobutton": {
+    "name": "Radiobutton",
+    "description": "A Material Design radiobutton. Supports aligning label before or after radiobutton.",
+    "props": {
+      "onClick": "event",
+      "id": "string",
+      "label": "string",
+      "names": "string",
+      "name": "string",
+      "checked": "bool",
+      "disabled": "bool",
+      "alignEnd": "bool"
+    },
+    "tags": []
+  },
+  "Sub1": {
+    "name": "Sub1",
+    "description": "Sets the font properties as Roboto Subtitle1",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "Sub2": {
+    "name": "Sub2",
+    "description": "Sets the font properties as Roboto Subtitle2",
+    "props": {
+      "text": "string"
+    },
+    "tags": []
+  },
+  "Textfield": {
+    "name": "Textfield",
+    "description": "A Material Design textfield with multiple variants. Can also be converted to a text area / multine text field.",
+    "props": {
+      "onChange": "event",
+      "label": "string",
+      "variant": "string",
+      "disabled": "bool",
+      "fullwidth": "bool",
+      "colour":"string",
+      "size":"string",
+      "type": "string",
+      "required": "bool",
+      "minLength": "number",
+      "maxLength": "number",
+      "helperText": "string",
+      "errorText": "string",
+      "placeholder": "string",
+      "icon": "string",
+      "trailingIcon": "bool",
+      "textarea": "bool",
+      "rows": "number",
+      "cols": "number",
+      "validation": "bool",
+      "persistent": "bool"
     },
     "tags": []
   }
 }
+
