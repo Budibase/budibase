@@ -39,7 +39,7 @@ export const screenRouter = (screens, onScreenSelected) => {
 
     if (current !== -1) {
       onScreenSelected(screens[current], store, _url)
-    } else if (fallback) {
+    } else {
       onScreenSelected(screens[fallback], store, _url)
     }
 
