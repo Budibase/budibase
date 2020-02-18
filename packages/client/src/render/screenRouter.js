@@ -9,6 +9,7 @@ export const screenRouter = (screens, onScreenSelected) => {
   let current
 
   function route(url) {
+
     const _url = url.state || url
     current = routes.findIndex(
       p => p !== "*" && new RegExp("^" + p + "$").test(_url)
@@ -42,7 +43,11 @@ export const screenRouter = (screens, onScreenSelected) => {
       onScreenSelected(screens[fallback], store, _url)
     }
 
-    !url.state && history.pushState(_url, null, _url)
+    try {
+      !url.state && history.pushState(_url, null, _url)
+    } catch (_) {
+      // ignoring an exception here as the builder runs an iframe, which does not like this
+    }
   }
 
   function click(e) {

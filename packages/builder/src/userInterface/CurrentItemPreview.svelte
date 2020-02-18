@@ -32,7 +32,37 @@
   $: frontendDefinition = {
     componentLibraries: $store.loadLibraryUrls(),
     page: $store.currentPreviewItem,
-    screens: [],
+    screens: [{
+      name: "Screen Placeholder",
+      route: "*",
+      props: {
+        _component: "@budibase/standard-components/container",
+        type: "div",
+        _children: [
+          {
+            _component: "@budibase/standard-components/container",
+            _styles: { "position": {},"layout": {} },
+            _id: "__screenslot__text",
+            _code: "",
+            className: "",
+            onLoad: [],
+            type: "div",
+            _children: [{
+              _component:"@budibase/standard-components/text",
+              _styles: { "position": {}, "layout": {} },
+              _id: "__screenslot__text",
+              _code: "",
+              text: "content",
+              font: "",
+              color: "",
+              textAlign: "inline",
+              verticalAlign: "inline",
+              formattingTag: "none"
+            }]
+          }
+        ]
+      }
+    }],
     appRootPath: "",
   }
 

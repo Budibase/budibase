@@ -32,7 +32,7 @@
   let modalOpen = false
   let events = []
   let selectedEvent = null
-
+  $: console.log(component)
 
   $: {
     events = Object.keys(component)
@@ -42,8 +42,9 @@
 
   function findType(propName) {
     if (!component._component) return
-    return components.find(({ name }) => name === component._component)
-      .props[propName]
+    return components.find(({ name }) => name === component._component).props[
+      propName
+    ]
   }
 
   const openModal = event => {
