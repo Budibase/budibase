@@ -1,7 +1,6 @@
 <script>
   import PropsView from "./PropsView.svelte"
   import { store } from "../builderStore"
-  import IconButton from "../common/IconButton.svelte"
   import Textbox from "../common/Textbox.svelte"
   import Button from "../common/Button.svelte"
   import { LayoutIcon, PaintIcon, TerminalIcon } from "../common/Icons/"

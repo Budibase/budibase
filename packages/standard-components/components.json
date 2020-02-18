@@ -1,32 +1,5 @@
 {
 	"_lib": "./dist/index.js",
-	"_generators": {
-		"_lib": "./dist/generators.js",
-		"app": {
-			"name": "App",
-			"description": "Generate app based on your backend"
-		},
-		"forms": {
-			"name": "Forms",
-			"description": "Generate forms, based on your records"
-		},
-		"buttons": {
-			"name": "Buttons",
-			"description": "Generate some styled buttons"
-		},
-		"headers": {
-			"name": "Headers",
-			"description": "Generate some styled headings"
-		},
-		"nav": {
-			"name": "Nav bar",
-			"description": "Generate a nav bar, based n your root records"
-		},
-		"indexTables": {
-			"name": "Nav bar",
-			"description": "Generate a table based on an index"
-		}
-	},
 	"button" : {
 		"name": "Button",
 		"description": "an html <button />",
@@ -43,7 +16,28 @@
 			"hoverBackground": "string",
 			"hoverBorder": "string"
 		},
-		"tags": ["layout"]
+		"tags": ["layout"],
+		"presets": {
+			"primary": {
+				"contentText": "Primary Button Preset",
+				"color": "papayawhip", 
+				"padding": "20px",
+				"background": "blue"
+			},
+			"secondary": {
+				"contentText": "Secondary Button Preset",
+				"color": "rebeccapurple", 
+				"padding": "10px",
+				"background": "#fff",
+				"border": "1px solid red"
+			},
+			"error": {
+				"contentText": "ERROR",
+				"color": "red", 
+				"padding": "10px",
+				"border": "1px solid red"
+			}
+		} 
 	}, 
 	"login" : {
 		"name": "Login Control",

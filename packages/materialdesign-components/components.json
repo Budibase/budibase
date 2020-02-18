@@ -1,6 +1,5 @@
 {
   "_lib": "./dist/index.js",
-  "_generators": {},
   "Body1": {
     "name": "Body1",
     "description": "Sets the font properties as Roboto Body 1",

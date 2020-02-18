@@ -19,8 +19,7 @@ const _builderProxy = proxy("/_builder", {
 const apiProxy = proxy(
   [
     "/_builder/api/**",
-    "/_builder/**/componentlibrary",
-    "/_builder/**/componentlibraryGenerators",
+    "/_builder/**/componentlibrary"
   ],
   {
     target,
