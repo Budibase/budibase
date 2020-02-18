@@ -115,6 +115,7 @@ export const getStore = () => {
   store.setComponentStyle = setComponentStyle(store)
   store.setComponentCode = setComponentCode(store)
   store.setScreenType = setScreenType(store)
+  store.deleteComponent = deleteComponent(store)
   return store
 }
 
@@ -836,4 +837,40 @@ const setScreenType = store => type => {
     s.currentPreviewItem = pageOrScreen
     return s
   })
+}
+
+const deleteComponent = store => component => {
+  store.update(s => {
+    let parent
+    walkProps(s.currentPreviewItem.props, (p, breakWalk) => {
+      if (p._children.includes(component)) {
+        parent = p
+        breakWalk()
+      }
+    })
+
+    if (parent) {
+      parent._children = parent._children.filter(c => c !== component)
+    }
+
+    s.currentFrontEndType === "page"
+      ? _savePage(s)
+      : _saveScreenApi(s.currentPreviewItem, s)
+
+    return s
+  })
+}
+
+const walkProps = (props, action, cancelToken = null) => {
+  cancelToken = cancelToken || { cancelled: false }
+  action(props, () => {
+    cancelToken.cancelled = true
+  })
+
+  if (props._children) {
+    for (let child of props._children) {
+      if (cancelToken.cancelled) return
+      walkProps(child, action, cancelToken)
+    }
+  }
 }
