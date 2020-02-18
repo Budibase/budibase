@@ -27513,7 +27513,7 @@ var app = (function (crypto$1) {
     var main = "dist/index.js";
     var module = "dist/index.js";
     var scripts = {
-    	build: "rollup -c && rollup -c rollup.generatorsconfig.js",
+    	build: "rollup -c",
     	prepublishOnly: "npm run build",
     	testbuild: "rollup -w -c rollup.testconfig.js",
     	dev: "run-p start:dev testbuild",

@@ -35,13 +35,10 @@ import {
 import { expandComponentDefinition } from "../userInterface/pagesParsing/types"
 import {
   loadLibs,
-  loadLibUrls,
-  loadGeneratorLibs,
+  loadLibUrls
 } from "./loadComponentLibraries"
 import { buildCodeForScreens } from "./buildCodeForScreens"
 import { generate_screen_css } from "./generate_css"
-import { insertCodeMetadata } from "./insertCodeMetadata"
-// import { uuid } from "./uuid"
 
 let appname = ""
 
@@ -94,7 +91,6 @@ export const getStore = () => {
   store.deleteLevel = deleteLevel(store)
   store.setActiveNav = setActiveNav(store)
   store.saveScreen = saveScreen(store)
-  store.refreshComponents = refreshComponents(store)
   store.addComponentLibrary = addComponentLibrary(store)
   store.renameScreen = renameScreen(store)
   store.deleteScreen = deleteScreen(store)
@@ -159,8 +155,6 @@ const initialise = (store, initial) => async () => {
   }
 
   initial.libraries = await loadLibs(appname, pkg)
-
-  initial.generatorLibraries = await loadGeneratorLibs(appname, pkg)
   initial.loadLibraryUrls = () => loadLibUrls(appname, pkg)
   initial.appname = appname
   initial.pages = pkg.pages
@@ -168,7 +162,6 @@ const initialise = (store, initial) => async () => {
   initial.hierarchy = pkg.appDefinition.hierarchy
   initial.accessLevels = pkg.accessLevels
   initial.screens = values(pkg.screens)
-  initial.generators = generatorsArray(pkg.components.generators)
   initial.components = values(pkg.components.components).map(
     expandComponentDefinition
   )
@@ -186,9 +179,6 @@ const initialise = (store, initial) => async () => {
   store.set(initial)
   return initial
 }
-
-const generatorsArray = generators =>
-  pipe(generators, [keys, filter(k => k !== "_lib"), map(k => generators[k])])
 
 const showSettings = store => () => {
   store.update(s => {
@@ -683,27 +673,6 @@ const removeStylesheet = store => stylesheet => {
   })
 }
 
-const refreshComponents = store => async () => {
-  const componentsAndGenerators = await api
-    .get(`/_builder/api/${appname}/components`)
-    .then(r => r.json())
-
-  const components = pipe(componentsAndGenerators.components, [
-    keys,
-    map(k => ({ ...componentsAndGenerators[k], name: k })),
-    map(c => expandComponentDefinition(c)),
-  ])
-
-  store.update(s => {
-    s.components = pipe(s.components, [
-      filter(c => !isRootComponent(c)),
-      concat(components),
-    ])
-    s.generators = componentsAndGenerators.generators
-    return s
-  })
-}
-
 const _savePage = async s => {
   const page = s.pages[s.currentPageName]
 
@@ -749,19 +718,25 @@ const setCurrentPage = store => pageName => {
 const getContainerComponent = components =>
   components.find(c => c.name === "@budibase/standard-components/container")
 
-const addChildComponent = store => componentName => {
-  store.update(s => {
-    const component = componentName.startsWith("##")
-      ? getBuiltin(componentName)
-      : s.components.find(c => c.name === componentName)
-    const newComponent = createProps(component)
+/**
+ * @param  {string} componentToAdd - name of the component to add to the application
+ * @param  {string} presetName - name of the component preset if defined
+ */
+const addChildComponent = store => (componentToAdd, presetName) => {
+  store.update(state => {
+    const component = componentToAdd.startsWith("##")
+      ? getBuiltin(componentToAdd)
+      : state.components.find(({ name }) => name === componentToAdd)
+    const presetProps = presetName ? component.presets[presetName] : {}; 
+    const newComponent = createProps(component, presetProps);
 
-    s.currentComponentInfo._children = s.currentComponentInfo._children.concat(
+    state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       newComponent.props
     )
 
-    _savePage(s)
-    return s
+    _savePage(state)
+
+    return state
   })
 }
 

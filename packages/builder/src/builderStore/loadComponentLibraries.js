@@ -1,5 +1,3 @@
-import { map } from "lodash/fp"
-
 export const loadLibs = async (appName, appPackage) => {
   const allLibraries = {}
   for (let lib of appPackage.pages.componentLibraries) {
@@ -8,16 +6,6 @@ export const loadLibs = async (appName, appPackage) => {
   }
 
   return allLibraries
-}
-
-export const loadGeneratorLibs = async (appName, appPackage) => {
-  const allGeneratorLibs = {}
-  for (let lib of appPackage.pages.componentLibraries) {
-    const generatorModule = await import(makeGeneratorLibraryUrl(appName, lib))
-    allGeneratorLibs[lib] = generatorModule
-  }
-
-  return allGeneratorLibs
 }
 
 export const loadLibUrls = (appName, appPackage) => {
@@ -35,13 +23,5 @@ export const loadLib = async (appName, lib, allLibs) => {
   return allLibs
 }
 
-export const loadGeneratorLib = async (appName, lib, allGeneratorLibs) => {
-  allGeneratorLibs[lib] = await import(makeGeneratorLibraryUrl(appName, lib))
-  return allGeneratorLibs
-}
-
 export const makeLibraryUrl = (appName, lib) =>
   `/_builder/${appName}/componentlibrary?lib=${encodeURI(lib)}`
-
-export const makeGeneratorLibraryUrl = (appName, lib) =>
-  `/_builder/${appName}/componentlibraryGenerators?lib=${encodeURI(lib)}`

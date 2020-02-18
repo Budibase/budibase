@@ -1,48 +1,50 @@
 <script>
-  import { ArrowDownIcon } from "../common/Icons/";
-  import { store } from "../builderStore";
-  import { buildStateOrigins } from "../builderStore/buildStateOrigins";
-  import { isBinding, getBinding, setBinding } from "../common/binding";
+  import { ArrowDownIcon } from "../common/Icons/"
+  import { store } from "../builderStore"
+  import { buildStateOrigins } from "../builderStore/buildStateOrigins"
+  import { isBinding, getBinding, setBinding } from "../common/binding"
 
-  export let onChanged = () => {};
-  export let value = "";
+  export let onChanged = () => {}
+  export let value = ""
 
-  let isOpen = false;
-  let stateBindings = [];
+  let isOpen = false
+  let stateBindings = []
 
-  let bindingPath = "";
-  let bindingFallbackValue = "";
-  let bindingSource = "store";
-  let bindingValue = "";
+  let bindingPath = ""
+  let bindingFallbackValue = ""
+  let bindingSource = "store"
+  let bindingValue = ""
 
   const bind = (path, fallback, source) => {
     if (!path) {
-      onChanged(fallback);
-      return;
+      onChanged(fallback)
+      return
     }
-    const binding = setBinding({ path, fallback, source });
-    onChanged(binding);
-  };
+    const binding = setBinding({ path, fallback, source })
+    onChanged(binding)
+  }
 
   const setBindingPath = value =>
-    bind(value, bindingFallbackValue, bindingSource);
+    bind(value, bindingFallbackValue, bindingSource)
 
-  const setBindingFallback = value => bind(bindingPath, value, bindingSource);
+  const setBindingFallback = value => bind(bindingPath, value, bindingSource)
 
   const setBindingSource = value =>
-    bind(bindingPath, bindingFallbackValue, value);
+    bind(bindingPath, bindingFallbackValue, value)
 
   $: {
-    const binding = getBinding(value);
-    if (bindingPath !== binding.path) isOpen = false;
-    bindingPath = binding.path;
-    bindingValue = typeof value === "object" ? "" : value;
-    bindingFallbackValue = binding.fallback || bindingValue;
+    const binding = getBinding(value)
+    if (bindingPath !== binding.path) isOpen = false
+    bindingPath = binding.path
+    bindingValue = typeof value === "object" ? "" : value
+    bindingFallbackValue = binding.fallback || bindingValue
 
     const currentScreen = $store.screens.find(
       ({ name }) => name === $store.currentPreviewItem.name
-    );
-    stateBindings = currentScreen ? Object.keys(buildStateOrigins(currentScreen)) : [];
+    )
+    stateBindings = currentScreen
+      ? Object.keys(buildStateOrigins(currentScreen))
+      : []
   }
 </script>
 
@@ -53,17 +55,19 @@
       class="uk-input uk-form-small"
       value={bindingFallbackValue || bindingPath}
       on:change={e => {
-        setBindingFallback(e.target.value);
-        onChanged(e.target.value);
+        setBindingFallback(e.target.value)
+        onChanged(e.target.value)
       }} />
-    <button on:click={() => (isOpen = !isOpen)}>
-      <div
-        class="icon"
-        class:highlighted={bindingPath}
-        style={`transform: rotate(${isOpen ? 0 : 90}deg);`}>
-        <ArrowDownIcon size={36} />
-      </div>
-    </button>
+    {#if stateBindings.length}
+      <button on:click={() => (isOpen = !isOpen)}>
+        <div
+          class="icon"
+          class:highlighted={bindingPath}
+          style={`transform: rotate(${isOpen ? 0 : 90}deg);`}>
+          <ArrowDownIcon size={36} />
+        </div>
+      </button>
+    {/if}
   </div>
   {#if isOpen}
     <ul class="options">
@@ -71,7 +75,7 @@
         <li
           class:bold={stateBinding === bindingPath}
           on:click={() => {
-            setBindingPath(stateBinding === bindingPath ? null : stateBinding);
+            setBindingPath(stateBinding === bindingPath ? null : stateBinding)
           }}>
           {stateBinding}
         </li>

@@ -1,4 +1,8 @@
-<button on:click>+</button>
+<button on:click>
+  <slot>
+    +
+  </slot>
+</button>
 
 <style>
   button {
@@ -9,7 +13,6 @@
     background: rgba(249, 249, 249, 1);
 
     width: 1.8rem;
-    height: 1.8rem;
     padding-bottom: 10px;
 
     display: flex;

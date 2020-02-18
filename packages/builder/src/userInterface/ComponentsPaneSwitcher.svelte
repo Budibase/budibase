@@ -1,7 +1,7 @@
 <script>
   import { store } from "../builderStore/"
-  import ComponentPanel from "./ComponentPanel.svelte"
-  import ComponentsList from "./ComponentsList.svelte"
+  import ComponentPropertiesPanel from "./ComponentPropertiesPanel.svelte"
+  import ComponentSelectionList from "./ComponentSelectionList.svelte"
 
   let selected = "properties"
 
@@ -30,11 +30,11 @@
 
     <div class="panel">
       {#if selected === 'properties'}
-        <ComponentPanel />
+        <ComponentPropertiesPanel />
       {/if}
 
       {#if selected === 'components'}
-        <ComponentsList />
+        <ComponentSelectionList />
       {/if}
 
     </div>
