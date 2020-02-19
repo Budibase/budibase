@@ -111,6 +111,7 @@ export const getStore = () => {
   store.moveUpComponent = moveUpComponent(store)
   store.moveDownComponent = moveDownComponent(store)
   store.copyComponent = copyComponent(store)
+  store.addTemplatedComponent = addTemplatedComponent(store)
   return store
 }
 
@@ -161,6 +162,7 @@ const initialise = (store, initial) => async () => {
   initial.components = values(pkg.components.components).map(
     expandComponentDefinition
   )
+  initial.templates = pkg.components.templates
   initial.builtins = [getBuiltin("##builtin/screenslot")]
   initial.actions = values(pkg.appDefinition.actions)
   initial.triggers = pkg.appDefinition.triggers
@@ -727,6 +729,24 @@ const addChildComponent = store => (componentToAdd, presetName) => {
 
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       newComponent.props
+    )
+
+    _savePage(state)
+
+    return state
+  })
+}
+
+/**
+ * @param  {string} props - props to add, as child of current component
+ */
+const addTemplatedComponent = store => props => {
+  store.update(state => {
+    walkProps(props, p => {
+      p._id = uuid()
+    })
+    state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
+      props
     )
 
     _savePage(state)
