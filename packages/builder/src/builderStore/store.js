@@ -33,6 +33,7 @@ import { loadLibs, loadLibUrls } from "./loadComponentLibraries"
 import { buildCodeForScreens } from "./buildCodeForScreens"
 import { generate_screen_css } from "./generate_css"
 import { insertCodeMetadata } from "./insertCodeMetadata"
+import { uuid } from "./uuid"
 
 let appname = ""
 
@@ -107,6 +108,9 @@ export const getStore = () => {
   store.setComponentCode = setComponentCode(store)
   store.setScreenType = setScreenType(store)
   store.deleteComponent = deleteComponent(store)
+  store.moveUpComponent = moveUpComponent(store)
+  store.moveDownComponent = moveDownComponent(store)
+  store.copyComponent = copyComponent(store)
   return store
 }
 
@@ -815,13 +819,7 @@ const setScreenType = store => type => {
 
 const deleteComponent = store => component => {
   store.update(s => {
-    let parent
-    walkProps(s.currentPreviewItem.props, (p, breakWalk) => {
-      if (p._children.includes(component)) {
-        parent = p
-        breakWalk()
-      }
-    })
+    const parent = getParent(s.currentPreviewItem.props, component)
 
     if (parent) {
       parent._children = parent._children.filter(c => c !== component)
@@ -833,6 +831,76 @@ const deleteComponent = store => component => {
 
     return s
   })
+}
+
+const moveUpComponent = store => component => {
+  store.update(s => {
+    const parent = getParent(s.currentPreviewItem.props, component)
+
+    if (parent) {
+      const currentIndex = parent._children.indexOf(component)
+      if (currentIndex === 0) return s
+
+      const newChildren = parent._children.filter(c => c !== component)
+      newChildren.splice(currentIndex - 1, 0, component)
+      parent._children = newChildren
+    }
+    s.currentComponentInfo = component
+    s.currentFrontEndType === "page"
+      ? _savePage(s)
+      : _saveScreenApi(s.currentPreviewItem, s)
+
+    return s
+  })
+}
+
+const moveDownComponent = store => component => {
+  store.update(s => {
+    const parent = getParent(s.currentPreviewItem.props, component)
+
+    if (parent) {
+      const currentIndex = parent._children.indexOf(component)
+      if (currentIndex === parent._children.length - 1) return s
+
+      const newChildren = parent._children.filter(c => c !== component)
+      newChildren.splice(currentIndex + 1, 0, component)
+      parent._children = newChildren
+    }
+    s.currentComponentInfo = component
+    s.currentFrontEndType === "page"
+      ? _savePage(s)
+      : _saveScreenApi(s.currentPreviewItem, s)
+
+    return s
+  })
+}
+
+const copyComponent = store => component => {
+  store.update(s => {
+    const parent = getParent(s.currentPreviewItem.props, component)
+    const copiedComponent = cloneDeep(component)
+    walkProps(copiedComponent, p => {
+      p._id = uuid()
+    })
+    parent._children = [...parent._children, copiedComponent]
+    s.curren
+    s.currentFrontEndType === "page"
+      ? _savePage(s)
+      : _saveScreenApi(s.currentPreviewItem, s)
+    s.currentComponentInfo = copiedComponent
+    return s
+  })
+}
+
+const getParent = (rootProps, child) => {
+  let parent
+  walkProps(rootProps, (p, breakWalk) => {
+    if (p._children.includes(child)) {
+      parent = p
+      breakWalk()
+    }
+  })
+  return parent
 }
 
 const walkProps = (props, action, cancelToken = null) => {

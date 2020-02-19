@@ -74,7 +74,10 @@
         components={screen.component.props._children}
         currentComponent={$store.currentComponentInfo}
         onSelect={store.selectComponent} 
-        onDeleteComponent={confirmDeleteComponent}/>
+        onDeleteComponent={confirmDeleteComponent}
+        onMoveUpComponent={store.moveUpComponent}
+        onMoveDownComponent={store.moveDownComponent}
+        onCopyComponent={store.copyComponent}/>
     {/if}
   {/each}
 

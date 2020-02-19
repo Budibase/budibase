@@ -31,7 +31,7 @@
     confirmDeleteDialog.show()
   }
   
-  const lastPartOfName = c => c ? c.split("/") : ""
+  const lastPartOfName = c => c ? last(c.split("/")) : ""
   
 </script>
 
@@ -67,6 +67,9 @@
             currentComponent={$store.currentComponentInfo}
             onDeleteComponent={confirmDeleteComponent}
             onSelect={store.selectComponent}
+            onMoveUpComponent={store.moveUpComponent}
+            onMoveDownComponent={store.moveDownComponent}
+            onCopyComponent={store.copyComponent}
             level={-2} />
         {/if}
 
