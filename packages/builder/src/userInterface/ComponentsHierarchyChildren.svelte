@@ -1,13 +1,16 @@
 <script>
   import { last } from "lodash/fp"
   import { pipe } from "../common/core"
-  import { XCircleIcon } from "../common/Icons"
+  import { XCircleIcon, ChevronUpIcon, ChevronDownIcon, CopyIcon } from "../common/Icons"
 
   export let components = []
   export let currentComponent
   export let onSelect = () => {}
   export let level = 0
   export let onDeleteComponent
+  export let onMoveUpComponent
+  export let onMoveDownComponent
+  export let onCopyComponent
 
   
   const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
@@ -19,22 +22,43 @@
       [get_name, capitalise]
     )
 
+  const moveDownComponent = component  => {
+    const c = component
+    return () => {
+      return onMoveDownComponent(c)
+    }
+  }
+
 </script>
 
 <ul>
-  {#each components as component}
+  {#each components as component, index (component._id)}
     <li on:click|stopPropagation={() => onSelect(component)}>
-      <span
+      <div
         class="item"
         class:selected={currentComponent === component}
         style="padding-left: {level * 20 + 67}px">
         <span class="item-name">{get_capitalised_name(component._component)}</span>
+        <div class="reorder-buttons">
+          {#if index > 0}
+          <button on:click|stopPropagation={() => onMoveUpComponent(component)}>
+            <ChevronUpIcon />
+          </button>
+          {/if}
+          {#if index < (components.length - 1)}
+          <button on:click|stopPropagation={moveDownComponent(component)}>
+            <ChevronDownIcon />
+          </button>
+          {/if}
+        </div>
+        <button on:click|stopPropagation={() => onCopyComponent(component)}>
+            <CopyIcon />
+        </button>
         <button 
-          class="delete-component"
-          on:click={() => onDeleteComponent(component)}>
+          on:click|stopPropagation={() => onDeleteComponent(component)}>
           <XCircleIcon />
         </button>
-      </span>
+      </div>
 
       {#if component._children}
         <svelte:self
@@ -42,7 +66,10 @@
           {currentComponent}
           {onSelect}
           level={level + 1}
-          {onDeleteComponent} />
+          {onDeleteComponent}
+          {onMoveUpComponent}
+          {onMoveDownComponent}
+          {onCopyComponent} />
       {/if}
     </li>
   {/each}
@@ -54,11 +81,19 @@
     padding-left: 0;
     margin: 0;
   }
+
+  li {
+    background: #fafafa;
+  }
+
   .item {
     display: flex;
     flex-direction: row;
-    padding: 11px 5px 11px 67px;
+    padding: 0px 5px 0px 67px;
+    margin: auto 0px;
     border-radius: 3px;
+    height: 43px;
+    align-items: center;
   }
 
   .item > span {
@@ -66,25 +101,25 @@
     flex: 1 1 auto;
   }
 
-  .item > button {
+  .item button {
     display: none;
     height: 20px;
-    color: var(--slate)
+    color: var(--slate);
+    padding: 0px 5px;
   }
 
   .item:hover {
-
     background: #fafafa;
     cursor: pointer;
   }
-  .item:hover > button {
+  .item:hover button {
     border-style: none;
     background: rgba(0,0,0,0);
     display: block;
     cursor: pointer;
   }
 
-  .item:hover > button:hover {
+  .item:hover button:hover {
     color: var(--button-text);
   }
 
@@ -92,4 +127,16 @@
     color: var(--button-text);
     background: var(--background-button) !important;
   }
+
+  .reorder-buttons {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .reorder-buttons > button {
+    flex: 1 1 auto;
+    height: 17px
+  }
+
 </style>
