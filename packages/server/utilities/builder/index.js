@@ -130,21 +130,28 @@ const getComponentDefinitions = async (appPath, pages, componentLibrary) => {
 
     if (!pages) return []
 
-    componentLibraries = $(pages, [values, map(p => p.componentLibraries), flatten])
+    componentLibraries = $(pages, [
+      values,
+      map(p => p.componentLibraries),
+      flatten,
+    ])
   } else {
     componentLibraries = [componentLibrary]
   }
 
   const components = {}
+  const templates = {}
 
   for (let library of componentLibraries) {
     const info = await componentLibraryInfo(appPath, library)
     merge(components, info.components)
+    merge(templates, info.templates)
   }
 
   if (components._lib) delete components._lib
+  if (templates._lib) delete templates._lib
 
-  return { components }
+  return { components, templates }
 }
 
 module.exports.getComponentDefinitions = getComponentDefinitions

@@ -1,14 +1,24 @@
 <script>
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
   import { store } from "../builderStore"
-  import { find, sortBy } from "lodash/fp"
+  import { find, sortBy, groupBy } from "lodash/fp"
   import { ImageIcon, InputIcon, LayoutIcon } from "../common/Icons/"
   import Select from "../common/Select.svelte"
   import Button from "../common/PlusButton.svelte"
+  import ConfirmDialog from "../common/ConfirmDialog.svelte"
+  import { getRecordNodes, getIndexNodes, getIndexSchema } from "../common/core"
 
   let componentLibraries = []
   let current_view = "text"
   let selectedComponent = null
+  let selectedLib
+  let selectTemplateDialog
+  let templateInstances = []
+  let selectedTemplateInstance
+
+  $: templatesByComponent = groupBy(t => t.component)($store.templates)
+  $: hierarchy = $store.hierarchy
+  $: libraryModules = $store.libraries
 
   const addRootComponent = (component, allComponents) => {
     const { libName } = splitName(component.name)
@@ -28,6 +38,28 @@
 
   const onComponentChosen = store.addChildComponent
 
+  const onTemplateChosen = template => {
+    selectedComponent = null
+    const { componentName, libName } = splitName(template.name)
+    const templateOptions = {
+      records: getRecordNodes(hierarchy),
+      indexes: getIndexNodes(hierarchy),
+      helpers: {
+        indexSchema: getIndexSchema(hierarchy)
+      }
+    }
+    templateInstances = libraryModules[libName][componentName](templateOptions)
+    if(!templateInstances || templateInstances.length === 0) return
+    selectedTemplateInstance = templateInstances[0].name
+    selectTemplateDialog.show()
+  }
+
+  const onTemplateInstanceChosen = () => {
+    selectedComponent = null
+    const instance = templateInstances.find(i => i.name === selectedTemplateInstance)
+    store.addTemplatedComponent(instance.props)
+  }
+
   $: {
     const newComponentLibraries = []
 
@@ -36,58 +68,74 @@
     }
 
     componentLibraries = newComponentLibraries
+    if (!selectedLib) selectedLib = newComponentLibraries[0].libName
   }
+
+  $: componentLibrary = componentLibraries.find(l => l.libName === selectedLib)
+
 </script>
 
 <div class="root">
-  <Select>
-    {#each componentLibraries as componentLibrary}
-      <option value={componentLibrary.libName}>
-        {componentLibrary.libName}
+  <Select on:change={e => selectedLib = e.target.value}>
+    {#each componentLibraries as lib}
+      <option value={lib.libName}>
+        {lib.libName}
       </option>
     {/each}
   </Select>
-  {#each componentLibraries as componentLibrary}
-    <div class="library-container">
-      <ul>
-        <li>
-          <button
-            class:selected={current_view === 'text'}
-            on:click={() => (current_view = 'text')}>
-            <InputIcon />
-          </button>
-        </li>
-        <li>
-          <button
-            class:selected={current_view === 'layout'}
-            on:click={() => (current_view = 'layout')}>
-            <LayoutIcon />
-          </button>
-        </li>
-        <li>
-          <button
-            class:selected={current_view === 'media'}
-            on:click={() => (current_view = 'media')}>
-            <ImageIcon />
-          </button>
-        </li>
-      </ul>
 
+  <div class="library-container">
+    <ul>
+      <li>
+        <button
+          class:selected={current_view === 'text'}
+          on:click={() => (current_view = 'text')}>
+          <InputIcon />
+        </button>
+      </li>
+      <li>
+        <button
+          class:selected={current_view === 'layout'}
+          on:click={() => (current_view = 'layout')}>
+          <LayoutIcon />
+        </button>
+      </li>
+      <li>
+        <button
+          class:selected={current_view === 'media'}
+          on:click={() => (current_view = 'media')}>
+          <ImageIcon />
+        </button>
+      </li>
+    </ul>
+
+    {#if componentLibrary}
       {#each $store.builtins.concat(componentLibrary.components) as component}
         <div class="component-container">
           <div
             class="component"
             on:click={() => onComponentChosen(component.name)}>
             <div class="name">{splitName(component.name).componentName}</div>
-            {#if component.presets && component.name === selectedComponent}
+            {#if (component.presets || templatesByComponent[component.name]) && component.name === selectedComponent}
               <ul class="preset-menu">
-                <span>{splitName(component.name).componentName} Presets</span>
-                {#each Object.keys(component.presets) as preset}
-                  <li
-                    on:click|stopPropagation={() => onComponentChosen(component.name, preset)}>
-                    {preset}
-                  </li>
-                {/each}
+                {#if component.presets}
+                  <span>{splitName(component.name).componentName} Presets</span>
+                  {#each Object.keys(component.presets) as preset}
+                    <li
+                      on:click|stopPropagation={() => onComponentChosen(component.name, preset)}>
+                      {preset}
+                    </li>
+                  {/each}
+                {/if}
+                {#if templatesByComponent[component.name]}
+                  <span>{splitName(component.name).componentName} Templates</span>
+                  {#each templatesByComponent[component.name] as template}
+                    <li
+                      on:click|stopPropagation={() => onTemplateChosen(template)}>
+                      {template.description}
+                    </li>
+                  {/each}
+                {/if}
               </ul>
             {/if}
           </div>
@@ -105,11 +153,26 @@
           {/if}
         </div>
       {/each}
+    {/if}
+  </div>
 
-    </div>
-  {/each}
 
 </div>
+
+<ConfirmDialog 
+  bind:this={selectTemplateDialog}
+  title="Choose Template"
+  onCancel={() => selectedComponent = null}
+  onOk={onTemplateInstanceChosen}>
+  {#each templateInstances.map(i => i.name) as instance}
+    <div class="uk-margin uk-grid-small uk-child-width-auto uk-grid">
+      <label>
+        <input class="uk-radio" type="radio" bind:group={selectedTemplateInstance} value={instance}>
+        <span class="template-instance-label">{instance}</span>
+      </label>
+    </div>
+  {/each}
+</ConfirmDialog>
 
 <style>
   .root {
@@ -179,6 +242,7 @@
     font-size: 12px;
     font-weight: bold;
     text-transform: uppercase;
+    margin-top: 5px;
   }
 
   .preset-menu li {
@@ -215,4 +279,9 @@
   .open {
     color: rgba(0, 85, 255, 1);
   }
+
+  .template-instance-label {
+    margin-left: 20px;
+  }
+
 </style>

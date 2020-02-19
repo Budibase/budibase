@@ -31,7 +31,7 @@ module.exports.componentLibraryInfo = async (appPath, libname) => {
   const libDir = getLibDir(appPath, libname)
   const componentsPath = getComponentsFilepath(libDir)
 
-  const componentDefinitionExists = await exists(componentsPath); 
+  const componentDefinitionExists = await exists(componentsPath)
 
   if (!componentDefinitionExists) {
     const e = new Error(
@@ -41,18 +41,32 @@ module.exports.componentLibraryInfo = async (appPath, libname) => {
     throw e
   }
 
+  const addNamespace = name => `${libname}/${name}`
+
   try {
     const componentDefinitions = await readJSON(componentsPath)
     const namespacedComponents = { _lib: componentDefinitions._lib }
     for (let componentKey in componentDefinitions) {
-      if (componentKey === "_lib") continue
-      const namespacedName = `${libname}/${componentKey}`
+      if (componentKey === "_lib" || componentKey === "_templates") continue
+      const namespacedName = addNamespace(componentKey)
       componentDefinitions[componentKey].name = namespacedName
       namespacedComponents[namespacedName] = componentDefinitions[componentKey]
     }
 
+    const namespacedTemplates = { _lib: componentDefinitions._lib }
+    for (let templateKey in componentDefinitions._templates || {}) {
+      const template = componentDefinitions._templates[templateKey]
+      if (template.component)
+        template.component = addNamespace(template.component)
+      const namespacedName = addNamespace(templateKey)
+      template.name = namespacedName
+      namespacedTemplates[namespacedName] =
+        componentDefinitions._templates[templateKey]
+    }
+
     return {
       components: namespacedComponents,
+      templates: namespacedTemplates,
       libDir,
       componentsPath,
     }

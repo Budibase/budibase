@@ -1,5 +1,11 @@
 {
 	"_lib": "./dist/index.js",
+	"_templates" : {
+		"saveRecordButton" : {
+			"description": "Save record button",
+			"component": "button"
+		}
+	},
 	"button" : {
 		"name": "Button",
 		"description": "an html <button />",
