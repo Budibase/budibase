@@ -140,8 +140,6 @@ const initialise = (store, initial) => async () => {
   ])
 
   pkg.pages = {
-    componentLibraries: ["@budibase/standard-components"],
-    stylesheets: [],
     main: {
       ...pkg.pages.main,
       _screens: Object.values(main_screens),

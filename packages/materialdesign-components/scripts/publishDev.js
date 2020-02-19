@@ -26,7 +26,7 @@ const publicMain = appName =>
     "lib",
     "node_modules",
     "@budibase",
-    "standard-components"
+    "materialdesign-components"
   )
 const publicUnauth = appName =>
   join(
@@ -37,7 +37,7 @@ const publicUnauth = appName =>
     "lib",
     "node_modules",
     "@budibase",
-    "standard-components"
+    "materialdesign-components"
   )
 const nodeModulesDist = appName =>
   join(
@@ -45,11 +45,18 @@ const nodeModulesDist = appName =>
     appName,
     "node_modules",
     "@budibase",
-    "standard-components",
+    "materialdesign-components",
     "dist"
   )
+
 const nodeModules = appName =>
-  join(appPackages, appName, "node_modules", "@budibase", "standard-components")
+  join(
+    appPackages,
+    appName,
+    "node_modules",
+    "@budibase",
+    "materialdesign-components"
+  )
 
 ;(async () => {
   const apps = await readdir(appPackages)
