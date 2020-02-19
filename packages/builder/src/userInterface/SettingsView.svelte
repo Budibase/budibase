@@ -5,7 +5,7 @@
   import IconButton from "../common/IconButton.svelte"
   import { libraryDependencies } from "./pagesParsing/findDependencies"
   import UIkit from "uikit"
-
+  import { libsFromPages } from "../builderStore/loadComponentLibraries"
   let addNewLib = ""
   let addNewStylesheet = ""
   let modalElement
@@ -61,7 +61,7 @@
             <Button color="primary-outline" on:click={addLib}>Add</Button>
           </span>
         </p>
-        {#each $store.pages.componentLibraries as lib}
+        {#each $store.pages[$store.currentPageName].componentLibraries as lib}
           <div>
             <span class="row-text">{lib}</span>
             <IconButton icon="x" on:click={() => removeLibrary(lib)} />
@@ -79,7 +79,7 @@
             </Button>
           </span>
         </p>
-        {#each $store.pages.stylesheets as stylesheet}
+        {#each $store.pages[$store.currentPageName].stylesheets as stylesheet}
           <div>
             <span class="row-text">{stylesheet}</span>
             <IconButton
