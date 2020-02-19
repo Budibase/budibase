@@ -1,6 +1,11 @@
+import { flatten, values, uniq, map } from "lodash/fp"
+import { pipe } from "../common/core"
+
 export const loadLibs = async (appName, appPackage) => {
   const allLibraries = {}
-  for (let lib of appPackage.pages.componentLibraries) {
+
+  for (let lib of libsFromPages(appPackage.pages)) {
+    
     const libModule = await import(makeLibraryUrl(appName, lib))
     allLibraries[lib] = libModule
   }
@@ -10,7 +15,7 @@ export const loadLibs = async (appName, appPackage) => {
 
 export const loadLibUrls = (appName, appPackage) => {
   const allLibraries = []
-  for (let lib of appPackage.pages.componentLibraries) {
+  for (let lib of libsFromPages(appPackage.pages)) {
     const libUrl = makeLibraryUrl(appName, lib)
     allLibraries.push({ libName: lib, importPath: libUrl })
   }
@@ -25,3 +30,11 @@ export const loadLib = async (appName, lib, allLibs) => {
 
 export const makeLibraryUrl = (appName, lib) =>
   `/_builder/${appName}/componentlibrary?lib=${encodeURI(lib)}`
+
+export const libsFromPages = pages => pipe(pages, [
+  values,
+  map(p => p.componentLibraries),
+  flatten,
+  uniq
+])
+
