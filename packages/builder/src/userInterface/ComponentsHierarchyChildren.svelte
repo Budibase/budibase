@@ -38,7 +38,7 @@
         class="item"
         class:selected={currentComponent === component}
         style="padding-left: {level * 20 + 67}px">
-        <span class="item-name">{get_capitalised_name(component._component)}</span>
+        <div>{get_capitalised_name(component._component)}</div>
         <div class="reorder-buttons">
           {#if index > 0}
           <button on:click|stopPropagation={() => onMoveUpComponent(component)}>
@@ -87,8 +87,8 @@
   }
 
   .item {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
     padding: 0px 5px 0px 67px;
     margin: auto 0px;
     border-radius: 3px;
@@ -96,14 +96,10 @@
     align-items: center;
   }
 
-  .item > span {
-    width: 1px;
-    flex: 1 1 auto;
-  }
-
   .item button {
     display: none;
     height: 20px;
+    width: 30px;
     color: var(--slate);
     padding: 0px 5px;
   }
@@ -136,7 +132,8 @@
 
   .reorder-buttons > button {
     flex: 1 1 auto;
-    height: 17px
+    height: 17px;
+    width: 30px;
   }
 
 </style>
