@@ -74,6 +74,7 @@
 					"tel", "time", "week"],
 				"default":"text"
 			},
+			"onChange": "event",
 			"className": "string"
 		},
 		"tags": ["form"]

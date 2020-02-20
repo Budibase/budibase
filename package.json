@@ -5,12 +5,11 @@
     "eslint": "^6.8.0",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-svelte3": "^2.7.3",
-    "lerna": "^3.14.1",
+    "lerna": "^3.20.2",
     "prettier": "^1.19.1",
     "prettier-plugin-svelte": "^0.7.0",
     "svelte": "^3.18.1"
   },
-  "dependencies": {},
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
@@ -20,6 +19,7 @@
     "test": "lerna run test",
     "lint": "eslint packages",
     "lint:fix": "eslint --fix packages",
-    "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\""
+    "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\"",
+    "publish-components": "lerna run publishdev"
   }
 }
