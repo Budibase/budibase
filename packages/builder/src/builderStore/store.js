@@ -721,9 +721,27 @@ const getContainerComponent = components =>
  */
 const addChildComponent = store => (componentToAdd, presetName) => {
   store.update(state => {
+    function findSlot(component_array) {
+      for (let i = 0; i < component_array.length; i += 1) {
+        if (component_array[i]._component === "##builtin/screenslot")
+          return true
+        if (component_array[i]._children) findSlot(component_array[i])
+      }
+
+      return false
+    }
+
+    if (
+      componentToAdd.startsWith("##") &&
+      findSlot(state.pages[state.currentPageName].props._children)
+    ) {
+      return state
+    }
+
     const component = componentToAdd.startsWith("##")
       ? getBuiltin(componentToAdd)
       : state.components.find(({ name }) => name === componentToAdd)
+
     const presetProps = presetName ? component.presets[presetName] : {}
     const newComponent = createProps(component, presetProps)
 
@@ -731,7 +749,9 @@ const addChildComponent = store => (componentToAdd, presetName) => {
       newComponent.props
     )
 
-    _savePage(state)
+    state.currentFrontEndType === "page"
+      ? _savePage(state)
+      : _saveScreenApi(state.currentPreviewItem, state)
 
     return state
   })
