@@ -25,8 +25,12 @@
       ]
     )
 
-  const lastPartOfName = c =>
-    c && last(c.name ? c.name.split("/") : c._component.split("/"))
+  const lastPartOfName = c => {
+    if (!c) return ""
+    const name = c.name ? c.name : c._component ? c._component : c
+    return last(name.split("/"))
+  }
+
 
   const isComponentSelected = (current, comp) => current === comp
 

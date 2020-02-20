@@ -116,7 +116,6 @@
     </ul>
 
     {#if componentLibrary}
-      {#each $store.builtins.concat(componentLibrary.components) as component}
       {#each generate_components_list(componentLibrary.components) as component}
         <div class="component-container">
           <div
