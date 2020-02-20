@@ -749,7 +749,7 @@ const addTemplatedComponent = store => props => {
       props
     )
 
-    _savePage(state)
+    _saveCurrentPreviewItem(state)
 
     return state
   })
@@ -792,9 +792,7 @@ const setComponentStyle = store => (type, name, value) => {
     ])
 
     // save without messing with the store
-    s.currentFrontEndType === "page"
-      ? _savePage(s)
-      : _saveScreenApi(s.currentPreviewItem, s)
+    _saveCurrentPreviewItem(s)
     return s
   })
 }
@@ -843,9 +841,7 @@ const deleteComponent = store => component => {
       parent._children = parent._children.filter(c => c !== component)
     }
 
-    s.currentFrontEndType === "page"
-      ? _savePage(s)
-      : _saveScreenApi(s.currentPreviewItem, s)
+    _saveCurrentPreviewItem(s)
 
     return s
   })
@@ -864,9 +860,7 @@ const moveUpComponent = store => component => {
       parent._children = newChildren
     }
     s.currentComponentInfo = component
-    s.currentFrontEndType === "page"
-      ? _savePage(s)
-      : _saveScreenApi(s.currentPreviewItem, s)
+    _saveCurrentPreviewItem(s)
 
     return s
   })
@@ -885,9 +879,7 @@ const moveDownComponent = store => component => {
       parent._children = newChildren
     }
     s.currentComponentInfo = component
-    s.currentFrontEndType === "page"
-      ? _savePage(s)
-      : _saveScreenApi(s.currentPreviewItem, s)
+    _saveCurrentPreviewItem(s)
 
     return s
   })
@@ -902,9 +894,7 @@ const copyComponent = store => component => {
     })
     parent._children = [...parent._children, copiedComponent]
     s.curren
-    s.currentFrontEndType === "page"
-      ? _savePage(s)
-      : _saveScreenApi(s.currentPreviewItem, s)
+    _saveCurrentPreviewItem(s)
     s.currentComponentInfo = copiedComponent
     return s
   })
@@ -913,7 +903,7 @@ const copyComponent = store => component => {
 const getParent = (rootProps, child) => {
   let parent
   walkProps(rootProps, (p, breakWalk) => {
-    if (p._children.includes(child)) {
+    if (p._children && p._children.includes(child)) {
       parent = p
       breakWalk()
     }
@@ -934,3 +924,8 @@ const walkProps = (props, action, cancelToken = null) => {
     }
   }
 }
+
+const _saveCurrentPreviewItem = s =>
+  s.currentFrontEndType === "page"
+    ? _savePage(s)
+    : _saveScreenApi(s.currentPreviewItem, s)
