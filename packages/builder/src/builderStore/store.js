@@ -741,6 +741,7 @@ const addChildComponent = store => (componentToAdd, presetName) => {
     const component = componentToAdd.startsWith("##")
       ? getBuiltin(componentToAdd)
       : state.components.find(({ name }) => name === componentToAdd)
+
     const presetProps = presetName ? component.presets[presetName] : {}
     const newComponent = createProps(component, presetProps)
 
@@ -748,7 +749,9 @@ const addChildComponent = store => (componentToAdd, presetName) => {
       newComponent.props
     )
 
-    _savePage(state)
+    state.currentFrontEndType === "page"
+      ? _savePage(state)
+      : _saveScreenApi(state.currentPreviewItem, state)
 
     return state
   })
