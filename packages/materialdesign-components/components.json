@@ -1,5 +1,11 @@
 {
   "_lib": "./dist/index.js",
+  "_templates": {
+    "indexDatatable": {
+      "description": "Datatable based on an Index",
+      "component": "Datatable"
+    }
+  },
   "Body1": {
     "name": "Body1",
     "description": "Sets the font properties as Roboto Body 1",
@@ -60,6 +66,26 @@
     "description": "A Material Design component to represent tabular data.",
     "props": {},
     "tags": []
+  },
+  "DatatableHead": {
+    "name": "DatatableHead",
+    "description": "Material Design <thead>.",
+    "props": {}
+  },
+  "DatatableCell": {
+    "name": "DatatableCell",
+    "description": "Material Design <td>.",
+    "props": {}
+  },
+  "DatatableBody": {
+    "name": "DatatableBody",
+    "description": "Material Design <tbody>.",
+    "props": {}
+  },
+  "DatatableRow": {
+    "name": "DatatableRow",
+    "description": "Material Design <tr>.",
+    "props": {}
   },
   "H1": {
     "name": "H1",

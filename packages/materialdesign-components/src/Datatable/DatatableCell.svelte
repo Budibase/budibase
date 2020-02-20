@@ -3,6 +3,7 @@
 
   export let isHeader = false
   export let numeric = false
+  export let _bb
 
   const cb = getContext("BBMD:data-table:cb")
 
@@ -10,14 +11,18 @@
   let modifiers = { numeric }
   let props = { modifiers }
   let cellClass = cb.build({ elementName, props })
+  let element
+
+  $: element && _bb.attachChildren(element)
+
 </script>
 
 {#if isHeader}
-  <th class={cellClass} role="columnheader" scope="col">
+  <th class={cellClass} role="columnheader" scope="col" bind:this={element}>
     <slot />
   </th>
 {:else}
-  <td class={cellClass}>
+  <td class={cellClass} bind:this={element}>
     <slot />
   </td>
 {/if}

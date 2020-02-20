@@ -1,25 +1,3 @@
-import {
-  H1,
-  Overline,
-  Button,
-  Icon,
-  Textfield,
-  Checkbox,
-  Checkboxgroup,
-  Radiobutton,
-  Radiobuttongroup,
-  Datatable,
-} from "@BBMD"
+import * as components from "@BBMD"
 
-export default {
-  H1,
-  Overline,
-  Button,
-  Icon,
-  Textfield,
-  Checkbox,
-  Checkboxgroup,
-  Radiobutton,
-  Radiobuttongroup,
-  Datatable,
-}
+export default components
