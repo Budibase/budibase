@@ -137,6 +137,24 @@
 		},
 		"tags": ["div", "container"]
 	},
+	"link": {
+		"description": "an HTML anchor <a> tag",
+		"props": {
+			"url": "string",
+			"openInNewTab": "bool",
+			"text": "string"
+		}
+	},
+	"image": {
+		"description": "an HTML <img> tag",
+		"props": {
+			"url": "string",
+			"className": "string",
+			"description": "string",
+			"height": "string",
+			"width": "string"
+		}
+	},
 	"container": {
 		"name": "Container",
 		"description": "An element that contains and lays out other elements. e.g. <div>, <header> etc",
@@ -178,5 +196,19 @@
 			}
 		},
 		"tags": []
+	},
+	"thead": {
+		"name": "TableHead",
+		"description": "an HTML <thead> tab",
+		"props" : {
+			"className":"string"
+		}
+	},
+	"tbody": {
+		"name": "TableBody",
+		"description": "an HTML <tbody> tab",
+		"props" : {
+			"className":"string"
+		}
 	}
 }

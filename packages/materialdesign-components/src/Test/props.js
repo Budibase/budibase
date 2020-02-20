@@ -1,3 +1,24 @@
+import indexDatatable from "../Templates/indexDatatable"
+
+const templateOptions = {
+  indexes: [
+    {
+      name: "customers",
+    },
+  ],
+  helpers: {
+    indexSchema: index => {
+      const field = name => ({ name })
+      if (index.name === "customers")
+        return [
+          field("id"),
+          field("surname"),
+          field("forname"),
+          field("address"),
+        ]
+    },
+  },
+}
 
 export const props = {
   H1: {
@@ -80,4 +101,6 @@ export const props = {
     _component: "@budibase/materialdesign-components/Datatable",
     _children: [],
   },
+
+  CustomersIndexTable: indexDatatable(templateOptions)[0].props,
 }

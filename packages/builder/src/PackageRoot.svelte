@@ -55,7 +55,7 @@
     flex: 0 0 auto;
     height: 48px;
     background: white;
-    padding: 0px 15px;
+    padding: 0px 15px 0 1.8rem;
     width: 100%;
     display: flex;
     align-items: center;
@@ -104,7 +104,7 @@
     cursor: pointer;
     outline: none;
     height: 40px;
-    padding: 8px 10px;
+    padding: 8px 10px 8px 0;
   }
 
   .home-logo:hover {

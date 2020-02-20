@@ -1,7 +1,12 @@
 <script>
   import { last } from "lodash/fp"
   import { pipe } from "../common/core"
-  import { XCircleIcon, ChevronUpIcon, ChevronDownIcon, CopyIcon } from "../common/Icons"
+  import {
+    XCircleIcon,
+    ChevronUpIcon,
+    ChevronDownIcon,
+    CopyIcon,
+  } from "../common/Icons"
 
   export let components = []
   export let currentComponent
@@ -12,9 +17,8 @@
   export let onMoveDownComponent
   export let onCopyComponent
 
-  
   const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
-  const get_name = s => !s ? "" : last(s.split("/"))
+  const get_name = s => (!s ? "" : last(s.split("/")))
 
   const get_capitalised_name = name =>
     pipe(
@@ -22,13 +26,12 @@
       [get_name, capitalise]
     )
 
-  const moveDownComponent = component  => {
+  const moveDownComponent = component => {
     const c = component
     return () => {
       return onMoveDownComponent(c)
     }
   }
-
 </script>
 
 <ul>
@@ -37,25 +40,25 @@
       <div
         class="item"
         class:selected={currentComponent === component}
-        style="padding-left: {level * 20 + 67}px">
+        style="padding-left: {level * 20 + 15}px">
         <div>{get_capitalised_name(component._component)}</div>
         <div class="reorder-buttons">
           {#if index > 0}
-          <button on:click|stopPropagation={() => onMoveUpComponent(component)}>
-            <ChevronUpIcon />
-          </button>
+            <button
+              on:click|stopPropagation={() => onMoveUpComponent(component)}>
+              <ChevronUpIcon />
+            </button>
           {/if}
-          {#if index < (components.length - 1)}
-          <button on:click|stopPropagation={moveDownComponent(component)}>
-            <ChevronDownIcon />
-          </button>
+          {#if index < components.length - 1}
+            <button on:click|stopPropagation={moveDownComponent(component)}>
+              <ChevronDownIcon />
+            </button>
           {/if}
         </div>
         <button on:click|stopPropagation={() => onCopyComponent(component)}>
-            <CopyIcon />
+          <CopyIcon />
         </button>
-        <button 
-          on:click|stopPropagation={() => onDeleteComponent(component)}>
+        <button on:click|stopPropagation={() => onDeleteComponent(component)}>
           <XCircleIcon />
         </button>
       </div>
@@ -82,18 +85,16 @@
     margin: 0;
   }
 
-  li {
-    background: #fafafa;
-  }
-
   .item {
     display: grid;
     grid-template-columns: 1fr auto auto auto;
-    padding: 0px 5px 0px 67px;
+    padding: 0px 5px 0px 15px;
     margin: auto 0px;
     border-radius: 3px;
-    height: 43px;
+    height: 35px;
     align-items: center;
+    font-size: 0.8rem;
+    font-weight: normal;
   }
 
   .item button {
@@ -110,7 +111,7 @@
   }
   .item:hover button {
     border-style: none;
-    background: rgba(0,0,0,0);
+    background: rgba(0, 0, 0, 0);
     display: block;
     cursor: pointer;
   }
@@ -122,6 +123,7 @@
   .selected {
     color: var(--button-text);
     background: var(--background-button) !important;
+    font-weight: 500;
   }
 
   .reorder-buttons {
@@ -135,5 +137,4 @@
     height: 17px;
     width: 30px;
   }
-
 </style>

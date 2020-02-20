@@ -60,6 +60,12 @@
     store.addTemplatedComponent(instance.props)
   }
 
+  function generate_components_list(components) {
+    return $store.currentFrontEndType === "page"
+      ? $store.builtins.concat(components)
+      : components
+  }
+
   $: {
     const newComponentLibraries = []
 
@@ -110,7 +116,7 @@
     </ul>
 
     {#if componentLibrary}
-      {#each $store.builtins.concat(componentLibrary.components) as component}
+      {#each generate_components_list(componentLibrary.components) as component}
         <div class="component-container">
           <div
             class="component"
@@ -139,7 +145,7 @@
               </ul>
             {/if}
           </div>
-          {#if component.presets}
+          {#if component.presets || templatesByComponent[component.name]}
             <Button
               on:click={() => {
                 selectedComponent = selectedComponent ? null : component.name
@@ -159,7 +165,7 @@
 
 </div>
 
-<ConfirmDialog 
+<ConfirmDialog
   bind:this={selectTemplateDialog}
   title="Choose Template"
   onCancel={() => selectedComponent = null}

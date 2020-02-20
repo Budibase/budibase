@@ -1,6 +1,7 @@
 <script>
   import ComponentsHierarchy from "./ComponentsHierarchy.svelte"
   import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
+  import MasterLayout from "./MasterLayout.svelte"
   import PagesList from "./PagesList.svelte"
   import { store } from "../builderStore"
   import IconButton from "../common/IconButton.svelte"
@@ -12,6 +13,7 @@
   import ComponentsPaneSwitcher from "./ComponentsPaneSwitcher.svelte"
   import ConfirmDialog from "../common/ConfirmDialog.svelte"
   import { last } from "lodash/fp"
+  import { AddIcon } from "../common/Icons"
 
   let newComponentPicker
   let confirmDeleteDialog
@@ -30,9 +32,8 @@
     componentToDelete = component
     confirmDeleteDialog.show()
   }
-  
-  const lastPartOfName = c => c ? last(c.split("/")) : ""
-  
+
+  const lastPartOfName = c => (c ? last(c.split("/")) : "")
 </script>
 
 <div class="root">
@@ -40,63 +41,32 @@
   <div class="ui-nav">
 
     <div class="pages-list-container">
-      <div class="nav-group-header">
-
+      <div class="nav-header">
         <span class="navigator-title">Navigator</span>
+        <span class="components-nav-header">Pages</span>
       </div>
+
       <div class="nav-items-container">
         <PagesList />
       </div>
     </div>
 
-    <div class="components-list-container">
-
-      <div class="nav-group-header">
-
-        <span
-          on:click={() => store.setScreenType('page')}
-          class="components-nav-header"
-          class:active={$store.currentFrontEndType === 'page'}>
-          Page
-        </span>
-      </div>
-      <div class="nav-items-container">
-        {#if $store.currentFrontEndType === 'page'}
-          <ComponentsHierarchyChildren
-            components={$store.currentPreviewItem.props._children}
-            currentComponent={$store.currentComponentInfo}
-            onDeleteComponent={confirmDeleteComponent}
-            onSelect={store.selectComponent}
-            onMoveUpComponent={store.moveUpComponent}
-            onMoveDownComponent={store.moveDownComponent}
-            onCopyComponent={store.copyComponent}
-            level={-2} />
-        {/if}
-
-      </div>
-    </div>
+    <div class="border-line" />
 
     <div class="components-list-container">
-
       <div class="nav-group-header">
-
-        <span
-          on:click={() => store.setScreenType('screen')}
-          class="components-nav-header"
-          class:active={$store.currentFrontEndType === 'screen'}>
+        <span class="components-nav-header" style="margin-top: 0;">
           Screens
         </span>
-
-        {#if $store.currentFrontEndType === 'screen'}
-          <div>
-            <button on:click={newComponent}>+</button>
-          </div>
-        {/if}
+        <div>
+          <button on:click={newComponent}>
+            <AddIcon />
+          </button>
+        </div>
       </div>
       <div class="nav-items-container">
-        {#if $store.currentFrontEndType === 'screen'}
-          <ComponentsHierarchy screens={$store.screens} />
-        {/if}
+        <MasterLayout layout={$store.pages[$store.currentPageName]} />
+        <ComponentsHierarchy screens={$store.screens} />
       </div>
     </div>
 
@@ -117,12 +87,12 @@
 <NewComponent bind:this={newComponentPicker} />
 <SettingsView bind:this={settingsView} />
 
-<ConfirmDialog 
-  bind:this={confirmDeleteDialog} 
-  title="Confirm Delete" 
-  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete._component)}' component`}
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  title="Confirm Delete"
+  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component`}
   okText="Delete Component"
-  onOk={() => store.deleteComponent(componentToDelete)}/>
+  onOk={() => store.deleteComponent(componentToDelete)} />
 
 <style>
   button {
@@ -130,19 +100,12 @@
     outline: none;
     border: none;
     border-radius: 5px;
-    background: var(--background-button);
-
-    width: 1.8rem;
-    height: 1.8rem;
+    width: 20px;
     padding-bottom: 10px;
-
     display: flex;
     justify-content: center;
     align-items: center;
-
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--button-text);
+    padding: 0;
   }
 
   .root {
@@ -157,7 +120,7 @@
     grid-column: 1;
     background-color: var(--secondary5);
     height: 100%;
-    padding: 0 1.5rem 0rem 1.5rem;
+    padding: 0 1.5rem 0rem 0;
   }
 
   .preview-pane {
@@ -179,11 +142,20 @@
     font-size: 0.75rem;
     color: #999;
     text-transform: uppercase;
+    margin-top: 1rem;
+    font-weight: 500;
   }
 
   .nav-group-header {
     font-size: 0.9rem;
     padding-left: 1rem;
+  }
+
+  .nav-header {
+    display: flex;
+    flex-direction: column;
+    margin-top: 1.5rem;
+    padding: 0 1.8rem;
   }
 
   .nav-items-container {
@@ -192,7 +164,7 @@
 
   .nav-group-header {
     display: flex;
-    padding: 2rem 0 0 0;
+    padding: 1.5rem 0 0 1.8rem;
     font-size: 0.9rem;
     font-weight: bold;
     justify-content: space-between;
@@ -228,9 +200,12 @@
     text-transform: uppercase;
     font-weight: 400;
     color: #999;
+    font-size: 0.9rem;
   }
 
-  .active {
-    color: #333;
+  .border-line {
+    border-bottom: 1px solid #ddd;
+    margin-top: 1.5rem;
+    width: calc(100% + 1.5rem);
   }
 </style>
