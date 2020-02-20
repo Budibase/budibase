@@ -1,6 +1,7 @@
 <script>
   import ComponentsHierarchy from "./ComponentsHierarchy.svelte"
   import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
+  import MasterLayout from "./MasterLayout.svelte"
   import PagesList from "./PagesList.svelte"
   import { store } from "../builderStore"
   import IconButton from "../common/IconButton.svelte"
@@ -64,6 +65,7 @@
         </div>
       </div>
       <div class="nav-items-container">
+        <MasterLayout layout={$store.pages[$store.currentPageName]} />
         <ComponentsHierarchy screens={$store.screens} />
       </div>
     </div>
@@ -88,7 +90,7 @@
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Delete"
-  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete._component)}' component`}
+  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component`}
   okText="Delete Component"
   onOk={() => store.deleteComponent(componentToDelete)} />
 
