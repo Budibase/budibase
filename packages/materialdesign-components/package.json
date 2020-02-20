@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@budibase/client": "^0.0.16",
+    "@budibase/standard-components": "^0.0.16",
     "@material/button": "^4.0.0",
     "@nx-js/compiler-util": "^2.0.0",
     "bcryptjs": "^2.4.3",

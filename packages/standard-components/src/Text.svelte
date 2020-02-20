@@ -29,7 +29,7 @@
 </script>
 
 {#if isTag("none")}
-{text}
+<span>{text}</span>
 {:else if isTag("<b>")}
 <b class={className} {style}>{text}</b>
 {:else if isTag("<strong>")}

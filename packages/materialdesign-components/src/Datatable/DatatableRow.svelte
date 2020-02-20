@@ -3,6 +3,9 @@
 
   export let onSelect = () => {};
   export let isHeader = false;
+
+  export let _bb
+
   let row = null;
   let selected = false;
 
@@ -14,7 +17,8 @@
   $: modifiers = { selected };
   $: props = { modifiers };
   $: rowClass = cb.build({ elementName, props });
-
+  $: row && _bb.attachChildren(row)
+  
   function rowSelected() {
     selected = !selected;
     onSelect();

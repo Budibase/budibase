@@ -4,22 +4,29 @@ import { pipe } from "../common/core"
 const self = n => n
 const join_with = delimiter => a => a.join(delimiter)
 const empty_string_to_unset = s => (s.length ? s : "0")
-const add_suffix = suffix => s => s + suffix
+const add_suffix_if_number = suffix => s => {
+  try {
+    if (isNaN(s) || isNaN(parseFloat(s))) return s
+  } catch (_) {
+    return s
+  }
+  return s + suffix
+}
 
 export const make_margin = values =>
   pipe(values, [
     map(empty_string_to_unset),
-    map(add_suffix("px")),
+    map(add_suffix_if_number("px")),
     join_with(" "),
   ])
 
 const css_map = {
   templaterows: {
-    name: "grid-template-columns",
+    name: "grid-template-rows",
     generate: self,
   },
   templatecolumns: {
-    name: "grid-template-rows",
+    name: "grid-template-columns",
     generate: self,
   },
   gridarea: {
@@ -56,6 +63,14 @@ const css_map = {
   },
   zindex: {
     name: "z-index",
+    generate: self,
+  },
+  height: {
+    name: "height",
+    generate: self,
+  },
+  width: {
+    name: "width",
     generate: self,
   },
 }
@@ -97,10 +112,11 @@ const apply_class = (id, name, styles) => `.${name}-${id} {\n${styles}\n}`
 
 export const generate_screen_css = component_array => {
   let styles = ""
+  let emptyStyles = { layout: {}, position: {} }
 
   for (let i = 0; i < component_array.length; i += 1) {
     const { _styles, _id, _children } = component_array[i]
-    const { layout, position } = generate_css(_styles)
+    const { layout, position } = generate_css(_styles || emptyStyles)
 
     styles += apply_class(_id, "pos", position) + "\n"
     styles += apply_class(_id, "lay", layout) + "\n"

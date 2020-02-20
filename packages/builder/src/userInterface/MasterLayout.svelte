@@ -1,13 +1,14 @@
 <script>
+  // import { tick } from "svelte"
   import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
 
   import { last, sortBy, map, trimCharsStart, trimChars, join } from "lodash/fp"
   import ConfirmDialog from "../common/ConfirmDialog.svelte"
   import { pipe } from "../common/core"
   import { store } from "../builderStore"
-  import { ArrowDownIcon, ShapeIcon } from "../common/Icons/"
+  import { ArrowDownIcon, GridIcon } from "../common/Icons/"
 
-  export let screens = []
+  export let layout
 
   let confirmDeleteDialog
   let componentToDelete = ""
@@ -25,20 +26,16 @@
       ]
     )
 
-  const lastPartOfName = c => {
-    if (!c) return ""
-    const name = c.name ? c.name : c._component ? c._component : c
-    return last(name.split("/"))
-  }
-
+  const lastPartOfName = c =>
+    c && last(c.name ? c.name.split("/") : c._component.split("/"))
 
   const isComponentSelected = (current, comp) => current === comp
 
   const isFolderSelected = (current, folder) => isInSubfolder(current, folder)
 
-  $: _screens = pipe(
-    screens,
-    [map(c => ({ component: c, title: lastPartOfName(c) })), sortBy("title")]
+  $: _layout = pipe(
+    layout,
+    [c => ({ component: c, title: lastPartOfName(c) })]
   )
 
   const isScreenSelected = component =>
@@ -46,47 +43,45 @@
     $store.currentPreviewItem &&
     component.component.name === $store.currentPreviewItem.name
 
-  const confirmDeleteComponent = component => {
+  const confirmDeleteComponent = async component => {
+    console.log(component)
     componentToDelete = component
+    // await tick()
     confirmDeleteDialog.show()
   }
 </script>
 
 <div class="root">
+  <div
+    class="hierarchy-item component"
+    class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
+    on:click|stopPropagation={() => store.setScreenType('page')}>
 
-  {#each _screens as screen}
-    <div
-      class="hierarchy-item component"
-      class:selected={$store.currentComponentInfo._id === screen.component.props._id}
-      on:click|stopPropagation={() => store.setCurrentScreen(screen.title)}>
+    <span
+      class="icon"
+      class:rotate={$store.currentPreviewItem.name !== _layout.title}>
+      {#if _layout.component.props._children.length}
+        <ArrowDownIcon />
+      {/if}
+    </span>
 
-      <span
-        class="icon"
-        class:rotate={$store.currentPreviewItem.name !== screen.title}>
-        {#if screen.component.props._children.length}
-          <ArrowDownIcon />
-        {/if}
-      </span>
+    <span class="icon">
+      <GridIcon />
+    </span>
 
-      <span class="icon">
-        <ShapeIcon />
-      </span>
+    <span class="title">Master Layout</span>
+  </div>
 
-      <span class="title">{screen.title}</span>
-    </div>
-
-    {#if $store.currentPreviewItem.name === screen.title && screen.component.props._children}
-      <ComponentsHierarchyChildren
-        components={screen.component.props._children}
-        currentComponent={$store.currentComponentInfo}
-        onSelect={store.selectComponent}
-        onDeleteComponent={confirmDeleteComponent}
-        onMoveUpComponent={store.moveUpComponent}
-        onMoveDownComponent={store.moveDownComponent}
-        onCopyComponent={store.copyComponent} />
-    {/if}
-  {/each}
-
+  {#if $store.currentPreviewItem.name === _layout.title && _layout.component.props._children}
+    <ComponentsHierarchyChildren
+      components={_layout.component.props._children}
+      currentComponent={$store.currentComponentInfo}
+      onSelect={store.selectComponent}
+      onDeleteComponent={confirmDeleteComponent}
+      onMoveUpComponent={store.moveUpComponent}
+      onMoveDownComponent={store.moveDownComponent}
+      onCopyComponent={store.copyComponent} />
+  {/if}
 </div>
 
 <ConfirmDialog

@@ -77,6 +77,10 @@ export const makePropsSafe = (componentDefinition, props) => {
     }
   }
 
+  if (!props._styles) {
+    props._styles = { layout: {}, position: {} }
+  }
+
   return props
 }
 

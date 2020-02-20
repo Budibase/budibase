@@ -1,4 +1,4 @@
-import "@material/theme/mdc-theme.scss";
+import "@material/theme/mdc-theme.scss"
 
 export { Button } from "./Button"
 export { default as Icon } from "./Common/Icon.svelte"
@@ -7,5 +7,11 @@ export * from "./Typography"
 export { Checkbox, Checkboxgroup } from "./Checkbox"
 export { Radiobutton, Radiobuttongroup } from "./Radiobutton"
 export { default as Label } from "./Common/Label.svelte"
-export { Datatable } from "./Datatable"
-
+export {
+  Datatable,
+  DatatableHead,
+  DatatableBody,
+  DatatableCell,
+  DatatableRow,
+} from "./Datatable"
+export { default as indexDatatable } from "./Templates/indexDatatable"
