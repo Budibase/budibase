@@ -35,6 +35,11 @@
     padding: ["Padding", tbrl, "small"],
   }
 
+  $: size = {
+    height: ["Height", single],
+    width: ["Width", single],
+  }
+
   $: zindex = {
     zindex: ["Z-Index", single],
   }
@@ -81,6 +86,22 @@
       <InputGroup
         onStyleChanged={_value => onStyleChanged('position', key, _value)}
         values={layout[key] || newValue(meta.length)}
+        {meta}
+        {size}
+        type="text" />
+    </div>
+  {/each}
+</div>
+
+<h4>Size</h4>
+<div class="layout-layer">
+  {#each Object.entries(size) as [key, [name, meta, size]] (component._id + key)}
+    <div class="grid">
+      <h5>{name}:</h5>
+      <InputGroup
+        onStyleChanged={_value => onStyleChanged('position', key, _value)}
+        values={layout[key] || newValue(meta.length)}
+        type="text"
         {meta}
         {size} />
     </div>
