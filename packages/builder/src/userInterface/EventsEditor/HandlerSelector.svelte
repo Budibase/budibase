@@ -1,28 +1,28 @@
 <script>
-  import IconButton from "../../common/IconButton.svelte";
-  import PlusButton from "../../common/PlusButton.svelte";
-  import Select from "../../common/Select.svelte";
-  import Input from "../../common/Input.svelte";
-  import StateBindingControl from "../StateBindingControl.svelte";
-  import { find, map, keys, reduce, keyBy } from "lodash/fp";
-  import { pipe, userWithFullAccess } from "../../common/core";
+  import IconButton from "../../common/IconButton.svelte"
+  import PlusButton from "../../common/PlusButton.svelte"
+  import Select from "../../common/Select.svelte"
+  import StateBindingCascader from "./StateBindingCascader.svelte"
+  import StateBindingControl from "../StateBindingControl.svelte"
+  import { find, map, keys, reduce, keyBy } from "lodash/fp"
+  import { pipe, userWithFullAccess } from "../../common/core"
   import {
     EVENT_TYPE_MEMBER_NAME,
     allHandlers,
-  } from "../../common/eventHandlers";
-  import { store } from "../../builderStore";
+  } from "../../common/eventHandlers"
+  import { store } from "../../builderStore"
 
-  export let handler;
-  export let onCreate;
-  export let onChanged;
-  export let onRemoved;
+  export let handler
+  export let onCreate
+  export let onChanged
+  export let onRemoved
 
-  export let index;
-  export let newHandler;
+  export let index
+  export let newHandler
 
-  let eventOptions;
-  let handlerType;
-  let parameters = [];
+  let eventOptions
+  let handlerType
+  let parameters = []
 
   $: eventOptions = allHandlers(
     { hierarchy: $store.hierarchy },
@@ -30,53 +30,77 @@
       hierarchy: $store.hierarchy,
       actions: keyBy("name")($store.actions),
     })
-  );
+  )
 
   $: {
     if (handler) {
-      handlerType = handler[EVENT_TYPE_MEMBER_NAME];
+      handlerType = handler[EVENT_TYPE_MEMBER_NAME]
       parameters = Object.entries(handler.parameters).map(([name, value]) => ({
         name,
         value,
-      }));
+      }))
     } else {
       // Empty Handler
-      handlerType = "";
-      parameters = [];
+      handlerType = ""
+      parameters = []
     }
   }
 
   const handlerChanged = (type, params) => {
-    const handlerParams = {};
+    const handlerParams = {}
     for (let param of params) {
-      handlerParams[param.name] = param.value;
+      handlerParams[param.name] = param.value
+
+      if (param.value.startsWith("context")) {
+        const [_, contextKey] = param.value.split(".");
+
+        handlerParams[param.name] = {
+          "##bbstate": contextKey,
+          "##bbsource": "context",
+          "##bbstatefallback": "balls to that",
+        }
+        console.log("Param starts with context", param.value);
+      };
+
+      if (param.value.startsWith("event")) {
+        const [_, eventKey] = param.value.split(".");
+        handlerParams[param.name] = {
+          "##bbstate": eventKey,
+          "##bbsource": "event",
+          "##bbstatefallback": "balls to that",
+        }
+      };
+
     }
+
+    console.log(type, params, handlerParams);
 
     const updatedHandler = {
       [EVENT_TYPE_MEMBER_NAME]: type,
       parameters: handlerParams,
-    };
+    }
 
-    onChanged(updatedHandler, index);
-  };
+    onChanged(updatedHandler, index)
+  }
 
   const handlerTypeChanged = e => {
     const handlerType = eventOptions.find(
       handler => handler.name === e.target.value
-    );
+    )
     const defaultParams = handlerType.parameters.map(param => ({
       name: param,
       value: "",
-    }));
+    }))
 
-    handlerChanged(handlerType.name, defaultParams);
-  };
+    handlerChanged(handlerType.name, defaultParams)
+  }
 
   const onParameterChanged = index => e => {
-    const newParams = [...parameters];
-    newParams[index].value = e.target.value;
-    handlerChanged(handlerType, newParams);
-  };
+    const value = e.target.value
+    const newParams = [...parameters]
+    newParams[index].value = e.target.value
+    handlerChanged(handlerType, newParams)
+  }
 </script>
 
 <div class="type-selector-container {newHandler && 'new-handler'}">
@@ -91,11 +115,8 @@
       </Select>
     </div>
     {#if parameters}
-      {#each parameters as param, idx}
-        <div class="handler-option">
-          <span>{param.name}</span>
-          <Input on:change={onParameterChanged(idx)} value={param.value} />
-        </div>
+      {#each parameters as parameter, idx}
+        <StateBindingCascader on:change={onParameterChanged(idx)} {parameter} />
       {/each}
     {/if}
   </div>
