@@ -28,7 +28,6 @@
       return onMoveDownComponent(c)
     }
   }
-
 </script>
 
 <ul>
@@ -37,7 +36,7 @@
       <div
         class="item"
         class:selected={currentComponent === component}
-        style="padding-left: {level * 20 + 67}px">
+        style="padding-left: {level * 20 + 15}px">
         <div>{get_capitalised_name(component._component)}</div>
         <div class="reorder-buttons">
           {#if index > 0}
@@ -89,7 +88,7 @@
   .item {
     display: grid;
     grid-template-columns: 1fr auto auto auto;
-    padding: 0px 5px 0px 67px;
+    padding: 0px 5px 0px 15px;
     margin: auto 0px;
     border-radius: 3px;
     height: 43px;
