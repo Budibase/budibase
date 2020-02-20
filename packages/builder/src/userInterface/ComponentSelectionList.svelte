@@ -139,7 +139,7 @@
               </ul>
             {/if}
           </div>
-          {#if component.presets}
+          {#if component.presets || templatesByComponent[component.name]}
             <Button
               on:click={() => {
                 selectedComponent = selectedComponent ? null : component.name
