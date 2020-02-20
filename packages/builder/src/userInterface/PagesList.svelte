@@ -1,6 +1,7 @@
 <script>
   import { store } from "../builderStore"
   import getIcon from "../common/icon"
+  import { CheckIcon } from "../common/Icons"
 
   const getPage = (s, name) => {
     const props = s.pages[name]
@@ -22,19 +23,23 @@
 </script>
 
 <div class="root">
-  <select
-    id="page"
-    name="select"
-    on:change={({ target }) => store.setCurrentPage(target.value)}>
-
+  <ul>
     {#each pages as { title, id }}
-      <option value={id}>Page: {title}</option>
-    {/each}
+      <li>
+        <span class="icon">
+          {#if id === $store.currentPageName}
+            <CheckIcon />
+          {/if}
+        </span>
 
-  </select>
-  <span class="arrow">
-    {@html getIcon('chevron-down', '24')}
-  </span>
+        <button
+          class:active={id === $store.currentPageName}
+          on:click={() => store.setCurrentPage(id)}>
+          {title}
+        </button>
+      </li>
+    {/each}
+  </ul>
 </div>
 
 <style>
@@ -44,37 +49,36 @@
     color: var(--secondary50);
     font-weight: bold;
     position: relative;
+    padding-left: 1.8rem;
   }
 
-  select {
-    display: block;
-    font-size: 16px;
-    font-family: sans-serif;
-    font-weight: 700;
-    color: #444;
-    line-height: 1.3;
-    padding: 1em 2.6em 0.9em 1.4em;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
+  ul {
     margin: 0;
-    border: none;
-    border-radius: 0.5em;
-    -moz-appearance: none;
-    -webkit-appearance: none;
-    appearance: none;
-    background-color: #fafafa;
+    padding: 0;
+    list-style: none;
   }
 
-  .arrow {
-    position: absolute;
-    right: 10px;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-    width: 30px;
-    height: 30px;
-    pointer-events: none;
-    color: var(--primary100);
+  li {
+    margin: 0.5rem 0;
+  }
+
+  button {
+    margin: 0 0 0 6px;
+    padding: 0;
+    border: none;
+    font-family: Roboto;
+    font-size: 0.8rem;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .active {
+    font-weight: 500;
+  }
+
+  .icon {
+    display: inline-block;
+    width: 14px;
+    color: #333;
   }
 </style>
