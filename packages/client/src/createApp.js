@@ -45,7 +45,11 @@ export const createApp = (
       currentUrl = url
     }
 
-    routeTo = screenRouter(frontendDefinition.screens, onScreenSelected)
+    routeTo = screenRouter(
+      frontendDefinition.screens,
+      onScreenSelected,
+      frontendDefinition.appRootPath
+    )
     routeTo(currentUrl || window.location.pathname)
   }
 

@@ -23,14 +23,14 @@ export const loadBudibase = async (opts) => {
         temp: false,
       }
 
-  const rootPath =
+  frontendDefinition.appRootPath =
     frontendDefinition.appRootPath === ""
       ? ""
       : "/" + trimSlash(frontendDefinition.appRootPath)
 
   if (!componentLibraries) {
     
-    const componentLibraryUrl = lib => rootPath + "/" + trimSlash(lib)
+    const componentLibraryUrl = lib => frontendDefinition.appRootPath + "/" + trimSlash(lib)
     componentLibraries = {}
 
     for (let lib of frontendDefinition.componentLibraries) {
@@ -52,7 +52,7 @@ export const loadBudibase = async (opts) => {
   )
 
   const route = _window.location 
-                ? _window.location.pathname.replace(rootPath, "")
+                ? _window.location.pathname.replace(frontendDefinition.appRootPath, "")
                 : "";
 
   return {

@@ -1,7 +1,10 @@
 import { JSDOM } from "jsdom"
 import { loadBudibase } from "../src/index"
 
-export const load = async (page, screens = [], url = "/") => {
+export const load = async (page, screens, url, appRootPath) => {
+  screens = screens || []
+  url = url || "/"
+  appRootPath = appRootPath || ""
   const dom = new JSDOM("<!DOCTYPE html><html><body></body><html>", {
     url: `http://test${url}`,
   })
@@ -10,7 +13,7 @@ export const load = async (page, screens = [], url = "/") => {
     autoAssignIds(s.props)
   }
   setAppDef(dom.window, page, screens)
-  addWindowGlobals(dom.window, page, screens, uiFunctions, {
+  addWindowGlobals(dom.window, page, screens, appRootPath, uiFunctions, {
     hierarchy: {},
     actions: [],
     triggers: [],
@@ -28,6 +31,7 @@ const addWindowGlobals = (
   window,
   page,
   screens,
+  appRootPath,
   uiFunctions,
   appDefinition
 ) => {
@@ -35,7 +39,7 @@ const addWindowGlobals = (
   window["##BUDIBASE_FRONTEND_DEFINITION##"] = {
     page,
     screens,
-    appRootPath: "",
+    appRootPath,
   }
   window["##BUDIBASE_FRONTEND_FUNCTIONS##"] = uiFunctions
 }
