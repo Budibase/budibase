@@ -44,7 +44,7 @@ const checkbox = (record, f) => ({
   checked: fieldValueBinding(record, f),
 })
 
-const fieldValueBinding = (record, f) => `store.${record.name}.${f.name}`
+const fieldValueBinding = (record, f) => `state.${record.name}.${f.name}`
 
 const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1)
 
