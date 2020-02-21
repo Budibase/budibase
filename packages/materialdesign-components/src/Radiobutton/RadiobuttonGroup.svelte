@@ -37,7 +37,7 @@
           {name}
           {alignEnd}
           label={item.label}
-          checked={item.checked}
+          checked={item.checked || false}
           onClick={() => handleOnClick(item)} />
       </div>
     {/each}
