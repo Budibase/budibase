@@ -16,22 +16,50 @@
   let instance = null
   let radiobtn = null
 
+  let context = getContext("BBMD:input:context")
+
   onMount(() => {
     if (!!radiobtn) {
       instance = new MDCRadio(radiobtn)
-      let fieldStore = getContext("BBMD:field-element")
-      fieldStore.setInput(instance)
+      if (context !== "list-item") {
+        let fieldStore = getContext("BBMD:field-element")
+        fieldStore.setInput(instance)
+      }
     }
   })
 
+  let extras = null
+
+  if (context === "list-item") {
+    extras = ["mdc-list-item__meta"]
+  }
+
   const cb = new ClassBuilder("radio")
   let modifiers = { disabled }
-  let props = { modifiers }
+  let props = { modifiers, extras }
 
   const blockClass = cb.build({ props })
 </script>
 
-<Formfield {id} {label} {alignEnd}>
+{#if context !== 'list-item'}
+  <Formfield {id} {label} {alignEnd}>
+    <div class={blockClass}>
+      <input
+        {id}
+        class={cb.elem`native-control`}
+        type="radio"
+        {name}
+        {checked}
+        {disabled}
+        on:click={onClick} />
+      <div class={cb.elem`background`}>
+        <div class={cb.elem`outer-circle`} />
+        <div class={cb.elem`inner-circle`} />
+      </div>
+      <div class={cb.elem`ripple`} />
+    </div>
+  </Formfield>
+{:else}
   <div class={blockClass}>
     <input
       {id}
@@ -47,4 +75,4 @@
     </div>
     <div class={cb.elem`ripple`} />
   </div>
-</Formfield>
+{/if}

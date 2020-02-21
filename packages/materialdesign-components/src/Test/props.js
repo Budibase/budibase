@@ -103,4 +103,23 @@ export const props = {
   },
 
   CustomersIndexTable: indexDatatable(templateOptions)[0].props,
+  List: {
+    _component: "@budibase/materialdesign-components/List",
+    _children: [],
+    variant: "two-line",
+    singleSelection: true,
+    items: [
+      {
+        text: { primary: "Curry", secondary: "Chicken or Beef" },
+        value: 0,
+        divider: true,
+      },
+      {
+        text: { primary: "Pastie", secondary: "Bap with Mayo" },
+        value: 1,
+      },
+      { text: { primary: "Fish", secondary: "Salmon or Cod" }, value: 2 },
+    ],
+    onSelect: selected => console.log(selected),
+  },
 }

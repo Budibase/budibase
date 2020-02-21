@@ -4,11 +4,11 @@
   import ripple from "../Common/Ripple.js"
   import ClassBuilder from "../ClassBuilder.js"
 
-  const cb = new ClassBuilder("button", ["primary", "medium"])
+  const cb = new ClassBuilder("button", ["primary", "medium", "text"])
 
   export let onClick = () => {}
 
-  export let variant = "raised"
+  export let variant = "text"
   export let colour = "primary"
   export let size = "medium"
 
