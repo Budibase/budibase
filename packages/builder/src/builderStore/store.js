@@ -792,11 +792,7 @@ const setComponentProp = store => (name, value) => {
     const current_component = s.currentComponentInfo
     s.currentComponentInfo[name] = value
 
-    if (s.currentFrontEndType) {
-      _savePage(s)
-    } else {
-      _saveScreen(store, s, s.currentPreviewItem)
-    }
+    _saveCurrentPreviewItem(s)
 
     s.currentComponentInfo = current_component
     return s
