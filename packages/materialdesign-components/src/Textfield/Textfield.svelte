@@ -45,6 +45,8 @@
   export let cols = 40
   export let validation = false
   export let persistent = false
+  export let value
+  export let _bb
 
   let id = `${label}-${variant}`
 
@@ -87,6 +89,13 @@
   function focus(event) {
     tfInstance.focus()
   }
+
+  function changed(e) {
+    if (_bb.isBound(_bb.props.value)) {
+      _bb.setStateFromBinding(_bb.props.value, e.target.value)
+    }
+    _bb.call(onChange, e.target.value)
+  }
 </script>
 
 <!-- 
@@ -108,7 +117,8 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         {placeholder}
         {minLength}
         {maxLength}
-        on:change={e => onChange(e.target.value)} />
+        value={value}
+        on:change={changed} />
     {:else}
       {#if renderLeadingIcon}
         <Icon {icon} />
@@ -122,9 +132,10 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         placeholder={!!label && fullwidth ? label : placeholder}
         {minLength}
         {maxLength}
+        value={value}
         aria-label={`Textfield ${variant}`}
         on:focus={focus}
-        on:change={e => onChange(e.target.value)} />
+        on:change={changed} />
       {#if renderTrailingIcon}
         <Icon {icon} />
       {/if}
