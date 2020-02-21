@@ -13,6 +13,7 @@
     Radiobuttongroup,
     Datatable,
     CustomersIndexTable,
+    List,
   } = props
 
   let currentComponent
@@ -33,7 +34,8 @@
             Radiobutton,
             Radiobuttongroup,
             Datatable,
-            CustomersIndexTable
+            CustomersIndexTable,
+            List,
           ],
         },
       }
