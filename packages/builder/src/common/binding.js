@@ -4,13 +4,11 @@ import {
   BB_STATE_BINDINGPATH,
   BB_STATE_FALLBACK,
   BB_STATE_BINDINGSOURCE,
-} from "@budibase/client/src/state/isState"
+  isBound,
+  parseBinding,
+} from "@budibase/client/src/state/parseBinding"
 
-export const isBinding = value =>
-  !isString(value) &&
-  value &&
-  isString(value[BB_STATE_BINDINGPATH]) &&
-  value[BB_STATE_BINDINGPATH].length > 0
+export const isBinding = isBound
 
 export const setBinding = ({ path, fallback, source }, binding = {}) => {
   if (isNonEmptyString(path)) binding[BB_STATE_BINDINGPATH] = path
@@ -19,10 +17,15 @@ export const setBinding = ({ path, fallback, source }, binding = {}) => {
   return binding
 }
 
-export const getBinding = binding => ({
-  path: binding[BB_STATE_BINDINGPATH] || "",
-  fallback: binding[BB_STATE_FALLBACK] || "",
-  source: binding[BB_STATE_BINDINGSOURCE] || "store",
-})
+export const getBinding = val => {
+  const binding = parseBinding(val)
+  return binding
+    ? binding
+    : {
+        path: "",
+        source: "store",
+        fallback: "",
+      }
+}
 
 const isNonEmptyString = s => isString(s) && s.length > 0

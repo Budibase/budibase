@@ -1,10 +1,5 @@
 import { isUndefined, isObject } from "lodash/fp"
-import {
-  isBound,
-  BB_STATE_BINDINGPATH,
-  BB_STATE_FALLBACK,
-  takeStateFromStore,
-} from "./isState"
+import { parseBinding, isStoreBinding } from "./parseBinding"
 
 export const getState = (s, path, fallback) => {
   if (!s) return fallback
@@ -39,20 +34,12 @@ export const getState = (s, path, fallback) => {
 export const getStateOrValue = (globalState, prop, currentContext) => {
   if (!prop) return prop
 
-  if (isBound(prop)) {
-    const stateToUse = takeStateFromStore(prop) ? globalState : currentContext
+  const binding = parseBinding(prop)
 
-    return getState(
-      stateToUse,
-      prop[BB_STATE_BINDINGPATH],
-      prop[BB_STATE_FALLBACK]
-    )
-  }
+  if (binding) {
+    const stateToUse = isStoreBinding(binding) ? globalState : currentContext
 
-  if (prop.path && prop.source) {
-    const stateToUse = prop.source === "store" ? globalState : currentContext
-
-    return getState(stateToUse, prop.path, prop.fallback)
+    return getState(stateToUse, binding.path, binding.fallback)
   }
 
   return prop

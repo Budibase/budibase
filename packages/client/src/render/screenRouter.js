@@ -1,16 +1,17 @@
 import regexparam from "regexparam"
 import { writable } from "svelte/store"
 
-export const screenRouter = (screens, onScreenSelected) => {
-  const routes = screens.map(s => s.route)
+export const screenRouter = (screens, onScreenSelected, appRootPath) => {
+  const makeRootedPath = url => (appRootPath ? `${appRootPath}/${url}` : url)
+
+  const routes = screens.map(s => makeRootedPath(s.route))
   let fallback = routes.findIndex(([p]) => p === "*")
   if (fallback < 0) fallback = 0
 
   let current
 
   function route(url) {
-
-    const _url = url.state || url
+    const _url = makeRootedPath(url.state || url)
     current = routes.findIndex(
       p => p !== "*" && new RegExp("^" + p + "$").test(_url)
     )

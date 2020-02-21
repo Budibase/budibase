@@ -14,7 +14,7 @@ import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
 import {
   isBound,
   BB_STATE_BINDINGPATH,
-} from "@budibase/client/src/state/isState"
+} from "@budibase/client/src/state/parseBinding"
 
 const defaultDef = typeName => () => ({
   type: typeName,
