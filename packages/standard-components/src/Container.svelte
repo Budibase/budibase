@@ -1,49 +1,88 @@
 <script>
-  export let className = ""
-  export let onLoad
-  export let type
-  export let _bb
+import { cssVars, createClasses } from "./cssVars"
 
-  let containerElement
-  let hasLoaded;
-  let currentChildren;
+export let className = ""
+export let onLoad
+export let type
+export let backgroundColor
+export let color
+export let borderWidth
+export let borderColor
+export let borderStyle
+export let _bb
 
-  $: {
-    if(containerElement) {
-       _bb.attachChildren(containerElement)
-       if (!hasLoaded) {
-         _bb.call(onLoad)
-         hasLoaded = true
-       }
+let containerElement
+let hasLoaded;
+let currentChildren;
+
+$: cssVariables = {
+  backgroundColor, color,
+  borderWidth, borderColor,
+  borderStyle
+}
+$: classes = `${createClasses(cssVariables)} ${className}`
+
+$: {
+  if(containerElement) {
+    _bb.attachChildren(containerElement)
+    if (!hasLoaded) {
+      _bb.call(onLoad)
+      hasLoaded = true
     }
   }
+}
 
 </script>
 
 {#if type === "div"}
-<div class={className} bind:this={containerElement} />
+<div class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "header"}
-<header class={className} bind:this={containerElement} />
+<header class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "main"}
-<main class={className} bind:this={containerElement} />
+<main class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "footer"}
-<footer class={className} bind:this={containerElement} />
+<footer class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "aside"}
-<aside class={className} bind:this={containerElement} />
+<aside class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "summary"}
-<summary class={className} bind:this={containerElement} />
+<summary class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "details"}
-<details class={className} bind:this={containerElement} />
+<details class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "article"}
-<article class={className} bind:this={containerElement} />
+<article class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "nav"}
-<nav class={className} bind:this={containerElement} />
+<nav class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "mark"}
-<mark class={className} bind:this={containerElement} />
+<mark class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "figure"}
-<figure class={className} bind:this={containerElement} />
+<figure class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "figcaption"}
-<figcaption class={className} bind:this={containerElement} />
+<figcaption class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {:else if type === "paragraph"}
-<p class={className} bind:this={containerElement} />
+<p class={classes} bind:this={containerElement} use:cssVars={cssVariables} />
 {/if}
+
+
+<style>
+
+.backgroundColor {
+  background-color: var(--backgroundColor)
+}
+
+.color {
+  color: var(--color)
+}
+
+.borderColor {
+  border-color: var(--borderColor)
+}
+
+.borderWidth {
+  border-width: var(--borderWidth)
+}
+
+.borderStyle {
+  border-style: var(--borderStyle)
+}
+
+</style>

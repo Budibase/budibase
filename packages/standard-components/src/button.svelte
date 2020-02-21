@@ -1,5 +1,5 @@
 <script>
-  import cssVars from "./cssVars"
+  import { cssVars, createClasses } from "./cssVars"
   import { buildStyle } from "./buildStyle"
   export let className = "default"
   export let disabled = false
@@ -23,16 +23,6 @@
   let customHoverBackClass
 
   let customClasses = ""
-
-  const createClasses = classes => {
-    let all = ""
-    for (let cls in classes) {
-      if (classes[cls]) {
-        all = all + " " + cls
-      }
-    }
-    return all
-  }
 
   $: if(_bb.props._children && _bb.props._children.length > 0) 
     theButton && _bb.attachChildren(theButton)

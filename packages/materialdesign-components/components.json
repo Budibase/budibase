@@ -24,6 +24,7 @@
   },
   "Button": {
     "name": "Button",
+    "children": false,
     "description": "A Material Design button with different variations. It renders as an anchor if href is passed to it.",
     "props": {
       "onClick": "event",

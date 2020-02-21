@@ -142,7 +142,11 @@
 		"props": {
 			"url": "string",
 			"openInNewTab": "bool",
-			"text": "string"
+			"text": "string",
+			"color": "string",
+			"hoverColor": "string",
+			"underline": "bool",
+			"fontSize": "string"
 		}
 	},
 	"image": {
@@ -179,7 +183,27 @@
 					"summary"
 				],
 				"default": "div"
+			},
+			"backgroundColor": "string",
+			"color": "string",
+			"borderWidth": "string",
+			"borderColor": "string",
+			"borderStyle": {
+				"type":"options",
+				"options": [
+					"none",
+					"solid",
+					"dotted",
+					"dashed",
+					"double",
+					"groove",
+					"ridge",
+					"inset",
+					"outset"
+				],
+				"default": "none"
 			}
+
 		},
 		"container": true,
 		"tags": ["div", "container", "layout"]
