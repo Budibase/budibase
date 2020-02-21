@@ -112,11 +112,11 @@ export const props = {
       {
         text: { primary: "Curry", secondary: "Chicken or Beef" },
         value: 0,
+        divider: true,
       },
       {
         text: { primary: "Pastie", secondary: "Bap with Mayo" },
         value: 1,
-        selected: true,
       },
       { text: { primary: "Fish", secondary: "Salmon or Cod" }, value: 2 },
     ],
