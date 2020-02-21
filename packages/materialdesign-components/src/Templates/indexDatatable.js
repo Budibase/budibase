@@ -65,7 +65,7 @@ const dataCells = (index, indexSchema) =>
   }))
 
 const dataItem = index => `${index.name}_item`
-const dataCollection = index => `store.${index.name}`
+const dataCollection = index => `state.${index.name}`
 const rowCode = index =>
   `
 if (!${dataCollection(index)}) return
