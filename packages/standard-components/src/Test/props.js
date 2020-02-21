@@ -21,6 +21,11 @@ export const form = {
     {
       _component: "@budibase/standard-components/container",
       type: "paragraph",
+      backgroundColor: "red",
+      color: "white",
+      borderStyle: "solid",
+      borderWidth: "3px",
+      borderColor: "blue",
       _children: [
         {
           _component: "@budibase/standard-components/text",

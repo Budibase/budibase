@@ -1,6 +1,6 @@
 // https://github.com/kaisermann/svelte-css-vars
 
-export default (node, props) => {
+export const cssVars = (node, props) => {
   Object.entries(props).forEach(([key, value]) => {
     node.style.setProperty(`--${key}`, value)
   })
@@ -17,3 +17,15 @@ export default (node, props) => {
     },
   }
 }
+
+export const createClasses = classes => {
+  let all = ""
+  for (let cls in classes) {
+    if (classes[cls]) {
+      all = all + " " + cls
+    }
+  }
+  return all
+}
+
+export default cssVars
