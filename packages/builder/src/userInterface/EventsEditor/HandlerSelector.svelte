@@ -50,30 +50,7 @@
     const handlerParams = {}
     for (let param of params) {
       handlerParams[param.name] = param.value
-
-      if (param.value.startsWith("context")) {
-        const [_, contextKey] = param.value.split(".");
-
-        handlerParams[param.name] = {
-          "##bbstate": contextKey,
-          "##bbsource": "context",
-          "##bbstatefallback": "balls to that",
-        }
-        console.log("Param starts with context", param.value);
-      };
-
-      if (param.value.startsWith("event")) {
-        const [_, eventKey] = param.value.split(".");
-        handlerParams[param.name] = {
-          "##bbstate": eventKey,
-          "##bbsource": "event",
-          "##bbstatefallback": "balls to that",
-        }
-      };
-
     }
-
-    console.log(type, params, handlerParams);
 
     const updatedHandler = {
       [EVENT_TYPE_MEMBER_NAME]: type,
@@ -96,9 +73,9 @@
   }
 
   const onParameterChanged = index => e => {
-    const value = e.target.value
+    const value = e.target ? e.target.value : e
     const newParams = [...parameters]
-    newParams[index].value = e.target.value
+    newParams[index].value = value
     handlerChanged(handlerType, newParams)
   }
 </script>
@@ -116,7 +93,7 @@
     </div>
     {#if parameters}
       {#each parameters as parameter, idx}
-        <StateBindingCascader on:change={onParameterChanged(idx)} {parameter} />
+        <StateBindingCascader onChange={onParameterChanged(idx)} {parameter} />
       {/each}
     {/if}
   </div>
