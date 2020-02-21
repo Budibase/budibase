@@ -50,7 +50,11 @@ export const createApp = (
       onScreenSelected,
       frontendDefinition.appRootPath
     )
-    routeTo(currentUrl || window.location.pathname)
+    const fallbackPath = window.location.pathname.replace(
+      frontendDefinition.appRootPath,
+      ""
+    )
+    routeTo(currentUrl || fallbackPath)
   }
 
   const attachChildrenParams = stateManager => {
