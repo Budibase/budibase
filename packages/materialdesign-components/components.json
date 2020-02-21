@@ -28,9 +28,21 @@
     "description": "A Material Design button with different variations. It renders as an anchor if href is passed to it.",
     "props": {
       "onClick": "event",
-      "variant": "string",
-      "colour": "string",
-      "size": "string",
+      "variant": {
+        "type": "options",
+        "options": ["text", "raised", "unelevated", "outlined"],
+        "default": "text"
+      },
+      "colour": {
+        "type": "options",
+        "options": ["primary", "secondary"],
+        "default": "primary"
+      },
+      "size": {
+        "type": "options",
+        "options": ["small", "medium", "large"],
+        "default": "medium"
+      },            
       "href": "string",
       "icon": "string",
       "trailingIcon": "bool",
@@ -158,8 +170,7 @@
     "props": {
       "onClick": "event",
       "id": "string",
-      "label": "string",
-      "names": "string",
+      "label": "string",      
       "name": "string",
       "checked": "bool",
       "disabled": "bool",
@@ -189,12 +200,28 @@
     "props": {
       "onChange": "event",
       "label": "string",
-      "variant": "string",
+      "variant": {
+        "type": "options",
+        "options": ["standard", "outlined", "filled"],
+        "default": "standard"
+      },
       "disabled": "bool",
       "fullwidth": "bool",
-      "colour":"string",
-      "size":"string",
-      "type": "string",
+      "colour": {
+        "type": "options",
+        "options": ["primary", "secondary"],
+        "default": "primary"
+      },
+      "size":{
+        "type": "options",
+        "options": ["small", "medium", "large"],
+        "default": "medium"
+      },
+      "type": {
+        "type": "options",
+        "options": ["text", "password"],
+        "default": "text"
+      },
       "required": "bool",
       "minLength": "number",
       "maxLength": "number",
