@@ -42,7 +42,9 @@ export const prepareRenderComponent = ({
   }
 
   if (func) {
-    func(createNodeAndRender, parentContext, getCurrentState())
+    const state = getCurrentState()
+    const routeParams = state["##routeParams"]
+    func(createNodeAndRender, parentContext, getCurrentState(), routeParams)
   } else {
     createNodeAndRender()
   }
