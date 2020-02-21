@@ -1,12 +1,12 @@
 <script>
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
   import { store } from "../builderStore"
-  import { find, sortBy, groupBy } from "lodash/fp"
+  import { find, sortBy, groupBy, values, filter, map, uniqBy, flatten } from "lodash/fp"
   import { ImageIcon, InputIcon, LayoutIcon } from "../common/Icons/"
   import Select from "../common/Select.svelte"
   import Button from "../common/PlusButton.svelte"
   import ConfirmDialog from "../common/ConfirmDialog.svelte"
-  import { getRecordNodes, getIndexNodes, getIndexSchema } from "../common/core"
+  import { getRecordNodes, getIndexNodes, getIndexSchema, pipe } from "../common/core"
 
   let componentLibraries = []
   let current_view = "text"
@@ -19,6 +19,13 @@
   $: templatesByComponent = groupBy(t => t.component)($store.templates)
   $: hierarchy = $store.hierarchy
   $: libraryModules = $store.libraries
+  $: standaloneTemplates = pipe(templatesByComponent, [
+    values,
+    flatten,
+    filter(t => !$store.components.some(c => c.name === t.component)),
+    map(t => ({ name: splitName(t.component), template: t })),
+    uniqBy(t => t.name)
+  ])
 
   const addRootComponent = (component, allComponents) => {
     const { libName } = splitName(component.name)
@@ -36,7 +43,13 @@
     group.components.push(component)
   }
 
-  const onComponentChosen = store.addChildComponent
+  const onComponentChosen = component => {
+    if (component.template) {
+      onTemplateChosen(component.template)
+    } else {
+      store.addChildComponent(component)
+    }
+  }
 
   const onTemplateChosen = template => {
     selectedComponent = null
@@ -61,9 +74,9 @@
   }
 
   function generate_components_list(components) {
-    return $store.currentFrontEndType === "page"
+    return ($store.currentFrontEndType === "page"
       ? $store.builtins.concat(components)
-      : components
+      : components).concat(standaloneTemplates)
   }
 
   $: {
