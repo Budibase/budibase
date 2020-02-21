@@ -4,6 +4,10 @@
     "indexDatatable": {
       "description": "Datatable based on an Index",
       "component": "Datatable"
+    },
+    "recordForm": {
+      "description": "Form for saving a record",
+      "component": "Form"
     }
   },
   "Body1": {
@@ -77,7 +81,9 @@
   "Datatable": {
     "name": "Datatable",
     "description": "A Material Design component to represent tabular data.",
-    "props": {},
+    "props": {
+      "onLoad":"event"
+    },
     "tags": []
   },
   "DatatableHead": {

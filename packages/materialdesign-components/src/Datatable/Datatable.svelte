@@ -7,6 +7,7 @@
   import ClassBuilder from "../ClassBuilder.js"
 
   export let _bb
+  export let onLoad
 
   const cb = new ClassBuilder("data-table")
   setContext("BBMD:data-table:cb", cb)
@@ -23,6 +24,7 @@
         instance = new MDCDataTable(datatable)
         initialied = true
       }
+      _bb.call(onLoad)
     }
   }
 
