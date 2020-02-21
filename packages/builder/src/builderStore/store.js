@@ -509,7 +509,7 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
 const setCurrentScreen = store => screenName => {
   store.update(s => {
     const screen = getExactComponent(s.screens, screenName)
-
+    screen._css = generate_screen_css([screen.props])
     s.currentPreviewItem = screen
     s.currentFrontEndType = "screen"
 
@@ -517,7 +517,6 @@ const setCurrentScreen = store => screenName => {
       getContainerComponent(s.components),
       screen.props
     )
-
     setCurrentScreenFunctions(s)
     return s
   })
@@ -706,6 +705,9 @@ const setCurrentPage = store => pageName => {
       s.pages[pageName].props
     )
     s.currentPreviewItem = s.pages[pageName]
+    s.currentPreviewItem._css = generate_screen_css([
+      s.currentPreviewItem.props,
+    ])
 
     setCurrentScreenFunctions(s)
     return s
