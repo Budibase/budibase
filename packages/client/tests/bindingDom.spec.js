@@ -39,6 +39,23 @@ describe("initialiseApp (binding)", () => {
     expect(rootDiv.className.includes("newvalue")).toBe(true)
   })
 
+  it("should update root element from store, using binding expression", async () => {
+    const { dom, app } = await load(
+      makePage({
+        _component: "testlib/div",
+        className: "store.divClassName",
+      })
+    )
+
+    app.pageStore().update(s => {
+      s.divClassName = "newvalue"
+      return s
+    })
+
+    const rootDiv = dom.window.document.body.children[0]
+    expect(rootDiv.className.includes("newvalue")).toBe(true)
+  })
+
   it("should populate child component with store value", async () => {
     const { dom } = await load(
       makePage({

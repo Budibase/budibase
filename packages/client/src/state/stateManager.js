@@ -7,15 +7,7 @@ import { bbFactory } from "./bbComponentApi"
 import { getState } from "./getState"
 import { attachChildren } from "../render/attachChildren"
 
-import {
-  isBound,
-  takeStateFromStore,
-  takeStateFromContext,
-  takeStateFromEventParameters,
-  BB_STATE_FALLBACK,
-  BB_STATE_BINDINGPATH,
-  BB_STATE_BINDINGSOURCE,
-} from "./isState"
+import { parseBinding } from "./parseBinding"
 
 const doNothing = () => {}
 doNothing.isPlaceholder = true
@@ -36,8 +28,9 @@ export const createStateManager = ({
   componentLibraries,
   uiFunctions,
   onScreenSlotRendered,
+  routeTo,
 }) => {
-  let handlerTypes = eventHandlers(store, coreApi, rootPath)
+  let handlerTypes = eventHandlers(store, coreApi, rootPath, routeTo)
   let currentState
 
   // any nodes that have props that are bound to the store
@@ -180,35 +173,25 @@ const _setup = (
 
     const val = props[propName]
 
-    if (isBound(val) && takeStateFromStore(val)) {
-      const path = BindingPath(val)
-      const source = BindingSource(val)
-      const fallback = BindingFallback(val)
+    const binding = parseBinding(val)
+    const isBound = !!binding
+    if (isBound) binding.propName = propName
 
-      storeBoundProps.push({
-        path,
-        fallback,
-        propName,
-        source,
-      })
+    if (isBound && binding.source === "store") {
+      storeBoundProps.push(binding)
 
       initialProps[propName] = !currentStoreState
-        ? fallback
+        ? binding.fallback
         : getState(
             currentStoreState,
-            BindingPath(val),
-            BindingFallback(val),
-            BindingSource(val)
+            binding.path,
+            binding.fallback,
+            binding.source
           )
-    } else if (isBound(val) && takeStateFromContext(val)) {
+    } else if (isBound && binding.source === "context") {
       initialProps[propName] = !context
         ? val
-        : getState(
-            context,
-            BindingPath(val),
-            BindingFallback(val),
-            BindingSource(val)
-          )
+        : getState(context, binding.path, binding.fallback, binding.source)
     } else if (isEventType(val)) {
       const handlersInfos = []
       for (let e of val) {
@@ -219,31 +202,28 @@ const _setup = (
         const resolvedParams = {}
         for (let paramName in handlerInfo.parameters) {
           const paramValue = handlerInfo.parameters[paramName]
-          if (!isBound(paramValue)) {
+          const paramBinding = parseBinding(paramValue)
+          if (!paramBinding) {
             resolvedParams[paramName] = () => paramValue
             continue
-          } else if (takeStateFromContext(paramValue)) {
+          } else if (paramBinding.source === "context") {
             const val = getState(
               context,
-              paramValue[BB_STATE_BINDINGPATH],
-              paramValue[BB_STATE_FALLBACK]
+              paramBinding.path,
+              paramBinding.fallback
             )
             resolvedParams[paramName] = () => val
-          } else if (takeStateFromStore(paramValue)) {
+          } else if (paramBinding.source === "store") {
             resolvedParams[paramName] = () =>
               getState(
                 getCurrentState(),
-                paramValue[BB_STATE_BINDINGPATH],
-                paramValue[BB_STATE_FALLBACK]
+                paramBinding.path,
+                paramBinding.fallback
               )
             continue
-          } else if (takeStateFromEventParameters(paramValue)) {
+          } else if (paramBinding.source === "event") {
             resolvedParams[paramName] = eventContext => {
-              getState(
-                eventContext,
-                paramValue[BB_STATE_BINDINGPATH],
-                paramValue[BB_STATE_FALLBACK]
-              )
+              getState(eventContext, paramBinding.path, paramBinding.fallback)
             }
           }
         }
@@ -282,7 +262,3 @@ const makeHandler = (handlerTypes, handlerInfo) => {
     handlerType.execute(parameters)
   }
 }
-
-const BindingPath = prop => prop[BB_STATE_BINDINGPATH]
-const BindingFallback = prop => prop[BB_STATE_FALLBACK]
-const BindingSource = prop => prop[BB_STATE_BINDINGSOURCE]

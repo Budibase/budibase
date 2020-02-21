@@ -1,7 +1,7 @@
 import { getStateOrValue } from "./getState"
 import { setState, setStateFromBinding } from "./setState"
 import { trimSlash } from "../common/trimSlash"
-import { isBound } from "./isState"
+import { isBound } from "./parseBinding"
 import { attachChildren } from "../render/attachChildren"
 
 export const bbFactory = ({
