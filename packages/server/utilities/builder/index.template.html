@@ -11,6 +11,8 @@
         html, body {
             height: 100%;
             width: 100%;
+            margin: 0px;
+            padding: 0px;
         }
     </style>
 
@@ -19,11 +21,11 @@
     {{ /each }}
 
     {{ each(options.screenStyles) }}
-    <link rel='stylesheet' href='{{ @this }}'>
+    <link rel='stylesheet' href='{{ appRootPath }}{{ @this }}'>
     {{ /each }}
 
     {{ if(options.pageStyle) }}
-    <link rel='stylesheet' href='{{ pageStyle }}'>
+    <link rel='stylesheet' href='{{ appRootPath }}{{ pageStyle }}'>
     {{ /if }}
 
 
