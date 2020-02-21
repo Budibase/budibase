@@ -70,7 +70,7 @@
     hierarchy: $store.hierarchy,
   }
 
-  $: selectedComponentId = $store.currentComponentInfo._id
+  $: selectedComponentId = $store.currentComponentInfo ? $store.currentComponentInfo._id : ""
 </script>
 
 <div class="component-container">
