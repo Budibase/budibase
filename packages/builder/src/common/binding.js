@@ -17,6 +17,15 @@ export const setBinding = ({ path, fallback, source }, binding = {}) => {
   return binding
 }
 
-export const getBinding = parseBinding
+export const getBinding = val => {
+  const binding = parseBinding(val)
+  return binding
+    ? binding
+    : {
+        path: "",
+        source: "store",
+        fallback: "",
+      }
+}
 
 const isNonEmptyString = s => isString(s) && s.length > 0
