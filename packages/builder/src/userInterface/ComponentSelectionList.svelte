@@ -23,7 +23,7 @@
     values,
     flatten,
     filter(t => !$store.components.some(c => c.name === t.component)),
-    map(t => ({ name: splitName(t.component), template: t })),
+    map(t => ({ name: splitName(t.component).componentName, template: t })),
     uniqBy(t => t.name)
   ])
 
@@ -47,7 +47,7 @@
     if (component.template) {
       onTemplateChosen(component.template)
     } else {
-      store.addChildComponent(component)
+      store.addChildComponent(component.name)
     }
   }
 
@@ -133,7 +133,7 @@
         <div class="component-container">
           <div
             class="component"
-            on:click={() => onComponentChosen(component.name)}>
+            on:click={() => onComponentChosen(component)}>
             <div class="name">{splitName(component.name).componentName}</div>
             {#if (component.presets || templatesByComponent[component.name]) && component.name === selectedComponent}
               <ul class="preset-menu">
@@ -141,7 +141,7 @@
                   <span>{splitName(component.name).componentName} Presets</span>
                   {#each Object.keys(component.presets) as preset}
                     <li
-                      on:click|stopPropagation={() => onComponentChosen(component.name, preset)}>
+                      on:click|stopPropagation={() => onComponentChosen(component, preset)}>
                       {preset}
                     </li>
                   {/each}
