@@ -188,6 +188,7 @@
     "description": "A Material Design textfield with multiple variants. Can also be converted to a text area / multine text field.",
     "props": {
       "onChange": "event",
+      "value": "string",
       "label": "string",
       "variant": "string",
       "disabled": "bool",
