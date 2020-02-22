@@ -15,6 +15,7 @@
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
     "initialise": "lerna run initialise",
+    "publishdev": "lerna run publishdev",
     "clean": "lerna clean",
     "dev": "lerna run --parallel --stream dev:builder",
     "test": "lerna run test",
