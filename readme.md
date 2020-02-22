@@ -67,6 +67,13 @@ cd packages/server
 yarn run budi new your-app-name
 ```
 
+now build and publish the latest budibase libs, to your new app 
+
+```
+# from root of repo
+yarn run publishdev
+```
+
 then 
 
 `yarn run budi` and to run the budibase server
