@@ -1,4 +1,4 @@
-const { readdir, stat, copyFile } = require("fs-extra")
+const { readdir, stat, copyFile, ensureDir } = require("fs-extra")
 const { constants } = require("fs")
 const { join, basename } = require("path")
 const serverConfig = require("../../server/config")()
@@ -26,6 +26,7 @@ const nodeModules = appName =>
   const apps = await readdir(appPackages)
 
   const copySource = file => async toDir => {
+    await ensureDir(toDir)
     const dest = join(toDir, basename(file))
     try {
       await copyFile(file, dest, constants.COPYFILE_FICLONE)
