@@ -43,7 +43,15 @@ export const props = {
     fullwidth: false,
     text: "I am button",
     disabled: false,
-    onClick: () => alert`Button Clicked`,
+    onClick: [
+      {
+        "##eventHandlerType": "Set State",
+        parameters: {
+          path: "surname",
+          value: "hi",
+        },
+      },
+    ],
   },
   Icon: {
     _component: "@budibase/materialdesign-components/Icon",
@@ -58,7 +66,11 @@ export const props = {
     fullwidth: true,
     maxLength: 500,
     helperText: "Add Surname",
-    onChange: text => console.log("Text: ", text),
+    value: "store.surname",
+  },
+  BodyBoundToStore: {
+    _component: "@budibase/materialdesign-components/Body1",
+    text: "store.surname",
   },
   Checkbox: {
     _component: "@budibase/materialdesign-components/Checkbox",

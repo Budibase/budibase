@@ -6,7 +6,7 @@
 
   const cb = new ClassBuilder("button", ["primary", "medium", "text"])
 
-  export let onClick = () => {}
+  export let onClick
 
   export let variant = "text"
   export let colour = "primary"
@@ -20,6 +20,8 @@
   export let text = ""
   export let disabled = false
 
+  export let _bb
+
   let modifiers = {}
   let customs = { size, colour }
 
@@ -30,6 +32,8 @@
   let blockClasses = cb.build({ props })
   const labelClass = cb.elem("label")
 
+  const clicked = () => _bb.call(onClick)
+
   $: if (icon) {
     setContext("BBMD:icon:context", "button")
   }
@@ -39,7 +43,7 @@
 </script>
 
 {#if href}
-  <a class={blockClasses} {href} on:click={onClick}>
+  <a class={blockClasses} {href} on:click={clicked}>
     <span class={labelClass}>{text}</span>
   </a>
 {:else}
@@ -48,7 +52,7 @@
     class={blockClasses}
     class:fullwidth
     {disabled}
-    on:click={onClick}>
+    on:click={clicked}>
     {#if renderLeadingIcon}
       <Icon {icon} />
     {/if}
