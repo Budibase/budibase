@@ -5,6 +5,6 @@
 	"componentLibraries": ["./customComponents","./moreCustomComponents"],
 	"props" : {
 		"_component": "@budibase/standard-components/container",
-		"type": "div",
+		"type": "div"
 	}
 }
