@@ -1,7 +1,7 @@
 <script>
   import IconButton from "../common/IconButton.svelte"
   import Input from "../common/Input.svelte"
-  import PropertyCascader from "./PropertyCascader.svelte"
+  import PropertyCascader from "./PropertyCascader"
   import { isBinding, getBinding, setBinding } from "../common/binding"
 
   export let value = ""
