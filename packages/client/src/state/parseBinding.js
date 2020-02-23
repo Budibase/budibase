@@ -4,8 +4,14 @@ export const BB_STATE_FALLBACK = "##bbstatefallback"
 
 export const isBound = prop => !!parseBinding(prop)
 
+/**
+ * 
+ * @param {object|string|number} prop - component property to parse for a dynamic state binding
+ * @returns {object|boolean}  
+ */
 export const parseBinding = prop => {
   if (!prop) return false
+
   if (isBindingExpression(prop)) {
     return parseBindingExpression(prop)
   }
@@ -38,21 +44,22 @@ const isAlreadyBinding = prop => typeof prop === "object" && prop.path
 
 const isBindingExpression = prop =>
   typeof prop === "string" &&
-  (prop.startsWith("store.") ||
+  (prop.startsWith("state.") ||
     prop.startsWith("context.") ||
     prop.startsWith("event.") ||
     prop.startsWith("route."))
 
 const parseBindingExpression = prop => {
-  let source = prop.split(".")[0]
-  let path = prop.replace(`${source}.`, "")
+  let [source, ...rest] = prop.split(".");
+  let path = rest.join(".") 
+
   if (source === "route") {
-    source = "store"
+    source = "state"
     path = `##routeParams.${path}`
   }
-  const fallback = ""
+
   return {
-    fallback,
+    fallback: "", // TODO: provide fallback support 
     source,
     path,
   }
