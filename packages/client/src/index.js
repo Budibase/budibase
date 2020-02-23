@@ -2,6 +2,10 @@ import { createApp } from "./createApp"
 import { trimSlash } from "./common/trimSlash"
 import { builtins, builtinLibName } from "./render/builtinComponents"
 
+/**
+ * create a web application from static budibase definition files.
+ * @param  {object} opts - configuration options for budibase client libary
+ */
 export const loadBudibase = async (opts) => {
 
   let componentLibraries = opts && opts.componentLibraries

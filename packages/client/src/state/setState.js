@@ -5,28 +5,29 @@ export const setState = (store, path, value) => {
   if (!path || path.length === 0) return
 
   const pathParts = path.split(".")
-  const safeSetPath = (obj, currentPartIndex = 0) => {
+
+  const safeSetPath = (state, currentPartIndex = 0) => {
     const currentKey = pathParts[currentPartIndex]
 
     if (pathParts.length - 1 == currentPartIndex) {
-      obj[currentKey] = value
+      state[currentKey] = value
       return
     }
 
     if (
-      obj[currentKey] === null ||
-      obj[currentKey] === undefined ||
+      state[currentKey] === null ||
+      state[currentKey] === undefined ||
       !isObject(obj[currentKey])
     ) {
-      obj[currentKey] = {}
+      state[currentKey] = {}
     }
 
-    safeSetPath(obj[currentKey], currentPartIndex + 1)
+    safeSetPath(state[currentKey], currentPartIndex + 1)
   }
 
-  store.update(s => {
-    safeSetPath(s)
-    return s
+  store.update(state => {
+    safeSetPath(state)
+    return state
   })
 }
 

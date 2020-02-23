@@ -4,7 +4,7 @@ import { listRecords } from "./listRecords"
 import { authenticate } from "./authenticate"
 import { saveRecord } from "./saveRecord"
 
-export const createApi = ({ rootPath, setState, getState }) => {
+export const createApi = ({ rootPath = "", setState, getState }) => {
   const apiCall = method => ({
     url,
     body,

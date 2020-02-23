@@ -22,6 +22,6 @@
     appearance: none;
     background: #fff;
     border: 1px solid #ccc;
-    height: 50px;
+    height: 35px;
   }
 </style>
