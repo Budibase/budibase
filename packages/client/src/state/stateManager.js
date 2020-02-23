@@ -189,14 +189,14 @@ const _setup = (
             binding.fallback,
             binding.source
           )
-    } 
-    
+    }
+
     if (isBound && binding.source === "context") {
       initialProps[propName] = !context
         ? propValue
         : getState(context, binding.path, binding.fallback, binding.source)
-    } 
-    
+    }
+
     if (isEventType(propValue)) {
       const handlersInfos = []
       for (let event of propValue) {
@@ -211,20 +211,18 @@ const _setup = (
           if (!paramBinding) {
             resolvedParams[paramName] = () => paramValue
             continue
-          } 
+          }
 
-          let paramValueSource;
+          let paramValueSource
 
-          if (paramBinding.source === "context") paramValueSource = context;
-          if (paramBinding.source === "state") paramValueSource = getCurrentState();
-          if (paramBinding.source === "context") paramValueSource = context;
+          if (paramBinding.source === "context") paramValueSource = context
+          if (paramBinding.source === "state")
+            paramValueSource = getCurrentState()
+          if (paramBinding.source === "context") paramValueSource = context
 
           // The new dynamic event parameter bound to the relevant source
-          resolvedParams[paramName] = () => getState(
-            paramValueSource,
-            paramBinding.path,
-            paramBinding.fallback
-          );
+          resolvedParams[paramName] = () =>
+            getState(paramValueSource, paramBinding.path, paramBinding.fallback)
         }
 
         handlerInfo.parameters = resolvedParams
