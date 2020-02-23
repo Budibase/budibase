@@ -8,7 +8,7 @@ describe("initialiseApp (binding)", () => {
         _component: "testlib/div",
         className: {
           "##bbstate": "divClassName",
-          "##bbsource": "store",
+          "##bbsource": "state",
           "##bbstatefallback": "default",
         },
       })
@@ -24,7 +24,7 @@ describe("initialiseApp (binding)", () => {
         _component: "testlib/div",
         className: {
           "##bbstate": "divClassName",
-          "##bbsource": "store",
+          "##bbsource": "state",
           "##bbstatefallback": "default",
         },
       })
@@ -43,7 +43,7 @@ describe("initialiseApp (binding)", () => {
     const { dom, app } = await load(
       makePage({
         _component: "testlib/div",
-        className: "store.divClassName",
+        className: "state.divClassName",
       })
     )
 
@@ -65,7 +65,7 @@ describe("initialiseApp (binding)", () => {
             _component: "testlib/h1",
             text: {
               "##bbstate": "headerOneText",
-              "##bbsource": "store",
+              "##bbsource": "state",
               "##bbstatefallback": "header one",
             },
           },
@@ -73,7 +73,7 @@ describe("initialiseApp (binding)", () => {
             _component: "testlib/h1",
             text: {
               "##bbstate": "headerTwoText",
-              "##bbsource": "store",
+              "##bbsource": "state",
               "##bbstatefallback": "header two",
             },
           },
@@ -99,7 +99,7 @@ describe("initialiseApp (binding)", () => {
             _component: "testlib/h1",
             text: {
               "##bbstate": "headerOneText",
-              "##bbsource": "store",
+              "##bbsource": "state",
               "##bbstatefallback": "header one",
             },
           },
@@ -107,7 +107,7 @@ describe("initialiseApp (binding)", () => {
             _component: "testlib/h1",
             text: {
               "##bbstate": "headerTwoText",
-              "##bbsource": "store",
+              "##bbsource": "state",
               "##bbstatefallback": "header two",
             },
           },
@@ -150,7 +150,7 @@ describe("initialiseApp (binding)", () => {
               _component: "testlib/h1",
               text: {
                 "##bbstate": "headerOneText",
-                "##bbsource": "store",
+                "##bbsource": "state",
                 "##bbstatefallback": "header one",
               },
             },
@@ -158,7 +158,7 @@ describe("initialiseApp (binding)", () => {
               _component: "testlib/h1",
               text: {
                 "##bbstate": "headerTwoText",
-                "##bbsource": "store",
+                "##bbsource": "state",
                 "##bbstatefallback": "header two",
               },
             },
@@ -221,7 +221,7 @@ describe("initialiseApp (binding)", () => {
             path: "address",
             value: {
               "##bbstate": "sourceaddress",
-              "##bbsource": "store",
+              "##bbsource": "state",
               "##bbstatefallback": "fallback address",
             },
           }),
