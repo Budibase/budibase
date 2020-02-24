@@ -1,12 +1,11 @@
 <script>
   import { getContext } from "svelte"
-  import ClassBuilder from "../ClassBuilder.js"
-  
+
   export let isHeader = false
   export let numeric = false
   export let _bb
 
-  const cb = new ClassBuilder("data-table")
+  const cb =  _bb.getContext("BBMD:data-table:cb")
 
   let elementName = isHeader ? "header-cell" : "cell"
   let modifiers = { numeric }

@@ -1,7 +1,6 @@
 <script>
   import { getContext } from "svelte";
-  import ClassBuilder from "../ClassBuilder.js"
-  
+
   export let onSelect = () => {};
   export let isHeader = false;
 
@@ -10,7 +9,7 @@
   let row = null;
   let selected = false;
 
-  const cb = new ClassBuilder("data-table")
+  const cb =  _bb.getContext("BBMD:data-table:cb")
 
   let elementName = isHeader ? "header-row" : "row";
   let modifiers = {};
