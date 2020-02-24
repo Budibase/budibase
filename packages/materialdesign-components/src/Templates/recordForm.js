@@ -33,7 +33,7 @@ const textField = (record, f) => ({
   disabled: false,
   fullwidth: false,
   colour: "primary",
-  maxLength: f.typeOptions && f.typeOptions.maxLength ? f.typeOptions : 0,
+  maxLength: f.typeOptions && f.typeOptions.maxLength ? f.typeOptions.maxLength : 0,
   placeholder: f.label,
   value: fieldValueBinding(record, f),
 })
