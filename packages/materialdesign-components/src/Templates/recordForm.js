@@ -7,8 +7,17 @@ export default ({ records }) =>
 const outerContainer = record => ({
   _component: "@budibase/standard-components/container",
   _code: "",
-  onLoad: [],
   type: "div",
+  onLoad: [
+    {
+      "##eventHandlerType": "Get New Record",
+      parameters: {
+        collectionKey: record.collectionKey,
+        childRecordType: record.name,
+        statePath: record.name,
+      },
+    },
+  ],
   _children: [
     heading(record),
     ...record.fields.map(f => field(record, f)),
@@ -33,7 +42,8 @@ const textField = (record, f) => ({
   disabled: false,
   fullwidth: false,
   colour: "primary",
-  maxLength: f.typeOptions && f.typeOptions.maxLength ? f.typeOptions.maxLength : 0,
+  maxLength:
+    f.typeOptions && f.typeOptions.maxLength ? f.typeOptions.maxLength : 0,
   placeholder: f.label,
   value: fieldValueBinding(record, f),
 })
@@ -57,15 +67,15 @@ const buttons = record => ({
     position: {
       column: ["", ""],
       row: ["", ""],
-      margin: ["","","",""],
-      padding: ["30px","","",""],
+      margin: ["", "", "", ""],
+      padding: ["30px", "", "", ""],
       height: [""],
       width: [""],
-      zindex: [""]
+      zindex: [""],
     },
     layout: {
       templaterows: [""],
-      templatecolumns: [""]
+      templatecolumns: [""],
     },
   },
   _children: [

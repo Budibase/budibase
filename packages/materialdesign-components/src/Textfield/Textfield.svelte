@@ -18,7 +18,7 @@
   onMount(() => {
     if (!!tf) tfInstance = new MDCTextField(tf)
     return () => {
-      !!tfInstance && tf.tfInstance.destroy()
+      !!tfInstance && tf.tfInstance && tf.tfInstance.destroy()
       tf = null
     }
   })
@@ -79,6 +79,7 @@
   $: useNotchedOutline = variant == "outlined" || textarea
   $: renderLeadingIcon = useIcon && !trailingIcon
   $: renderTrailingIcon = useIcon && trailingIcon
+  $: safeMaxLength = maxLength <= 0 ? undefined : maxLength
 
   let props = { modifiers, customs }
   const blockClasses = cb.build({ props })
@@ -91,10 +92,12 @@
   }
 
   function changed(e) {
+    const val = e.target.value
+    value = val
     if (_bb.isBound(_bb.props.value)) {
-      _bb.setStateFromBinding(_bb.props.value, e.target.value)
+      _bb.setStateFromBinding(_bb.props.value, val)
     }
-    _bb.call(onChange, e.target.value)
+    _bb.call(onChange, val)
   }
 </script>
 
@@ -116,7 +119,7 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         {required}
         {placeholder}
         {minLength}
-        {maxLength}
+        maxLength={safeMaxLength}
         value={value}
         on:change={changed} />
     {:else}
@@ -131,11 +134,11 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         {required}
         placeholder={!!label && fullwidth ? label : placeholder}
         {minLength}
-        {maxLength}
+        maxLength={safeMaxLength}
         value={value}
         aria-label={`Textfield ${variant}`}
         on:focus={focus}
-        on:change={changed} />
+        on:input={changed} />
       {#if renderTrailingIcon}
         <Icon {icon} />
       {/if}
