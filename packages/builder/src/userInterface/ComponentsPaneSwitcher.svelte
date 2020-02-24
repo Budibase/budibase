@@ -15,15 +15,15 @@
     <div class="switcher">
 
       <button
-        class:selected={selected === 'properties'}
-        on:click={() => selectTab('properties')}>
-        Properties
-      </button>
-
-      <button
         class:selected={selected === 'components'}
         on:click={() => selectTab('components')}>
         Components
+      </button>
+
+      <button
+        class:selected={selected === 'properties'}
+        on:click={() => selectTab('properties')}>
+        Properties
       </button>
 
     </div>
