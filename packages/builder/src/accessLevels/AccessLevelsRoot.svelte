@@ -82,7 +82,11 @@
     </table>
   {:else}(no actions added){/if}
 
-  <Modal bind:isOpen={isEditing}>
+  <Modal 
+    onClosed={() => isEditing = false}
+    bind:isOpen={isEditing}
+    title={isEditing ? "Edit Access Level" : "Create Access Level"}
+  >
     {#if isEditing}
       <AccessLevelView
         level={editingLevel}

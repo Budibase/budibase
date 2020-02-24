@@ -38,15 +38,17 @@
     </div>
   {/if}
 
-  <Modal bind:isOpen={confirmDelete}>
-    <div class="actions-modal-body">
-      Are you sure you want to delete {$store.currentNode.name} ?
-    </div>
+  <Modal onClosed={() => (confirmDelete = false)} bind:isOpen={confirmDelete}>
+    <span>
+      Are you sure you want to delete {$store.currentNode.name}?
+    </span>
     <div class="uk-modal-footer uk-text-right">
-      <ActionButton alert on:click={deleteCurrentNode}>Yes</ActionButton>
-      <ActionButton primary on:click={() => (confirmDelete = false)}>
-        No
-      </ActionButton>
+      <ButtonGroup>
+        <ActionButton alert on:click={deleteCurrentNode}>Yes</ActionButton>
+        <ActionButton primary on:click={() => (confirmDelete = false)}>
+          No
+        </ActionButton>
+      </ButtonGroup>
     </div>
   </Modal>
 </div>

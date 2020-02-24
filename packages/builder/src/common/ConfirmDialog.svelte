@@ -36,15 +36,15 @@
   <div class="uk-modal-dialog">
     <button class="uk-modal-close-default" type="button" uk-close />
     <div class="uk-modal-header">
-      <h2 class="uk-modal-title">{title}</h2>
+      <h4 class="budibase__title--4">{title}</h4>
     </div>
     <div class="uk-modal-body">
       <slot>{body}</slot>
     </div>
     <div class="uk-modal-footer">
       <ButtonGroup>
-        <ActionButton primary on:click={ok}>{okText}</ActionButton>
-        <ActionButton error on:click={cancel}>{cancelText}</ActionButton>
+        <ActionButton alert on:click={ok}>{okText}</ActionButton>
+        <ActionButton primary on:click={cancel}>{cancelText}</ActionButton>
       </ButtonGroup>
     </div>
   </div>

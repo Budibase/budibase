@@ -33,7 +33,7 @@
     font-weight: bold;
     border-radius: 5px;
     border: none;
-    width: 120px;
+    min-width: 120px;
     height: 45px;
   }
 

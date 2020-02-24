@@ -150,6 +150,7 @@
 
   {#if editingField}
     <Modal
+      title="Manage Index Fields"
       bind:isOpen={editingField}
       onClosed={() => onFinishedFieldEdit(false)}>
       <FieldView

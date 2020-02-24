@@ -142,8 +142,6 @@
   .hierarchy {
     display: flex;
     flex-direction: column;
-    flex: 1 0 auto;
-    height: 100px;
   }
 
   .hierarchy-items-container {

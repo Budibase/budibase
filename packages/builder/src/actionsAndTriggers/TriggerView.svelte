@@ -14,7 +14,6 @@
   export let onFinished = action => {}
   export let allTriggers
   export let allActions
-  export let isNew = true
 
   let clonedTrigger = cloneDeep(trigger)
   let errors = []
@@ -55,10 +54,12 @@
       options={['', ...actionNames]}
       bind:selected={clonedTrigger.actionName} />
     <CodeArea
-      label="Condition (javascript)"
+      label="Condition"
+      javascript
       bind:text={clonedTrigger.condition} />
     <CodeArea
-      label="Action Options Creator (javascript)"
+      label="Action Options Creator"
+      javascript
       bind:text={clonedTrigger.optionsCreator} />
 
   </form>
