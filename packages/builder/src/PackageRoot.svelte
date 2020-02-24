@@ -56,7 +56,6 @@
     height: 48px;
     background: white;
     padding: 0px 15px 0 1.8rem;
-    width: 100%;
     display: flex;
     align-items: center;
     border-bottom: 1px solid #ddd;
