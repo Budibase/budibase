@@ -709,6 +709,10 @@ const setCurrentPage = store => pageName => {
       s.currentPreviewItem.props,
     ])
 
+    for (let screen of s.screens) {
+      screen._css = generate_screen_css([screen.props])
+    }
+
     setCurrentScreenFunctions(s)
     return s
   })
