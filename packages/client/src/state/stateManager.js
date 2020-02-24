@@ -251,11 +251,11 @@ const _setup = (
 
 const makeHandler = (handlerTypes, handlerInfo) => {
   const handlerType = handlerTypes[handlerInfo.handlerType]
-  return context => {
+  return async context => {
     const parameters = {}
     for (let paramName in handlerInfo.parameters) {
       parameters[paramName] = handlerInfo.parameters[paramName](context)
     }
-    handlerType.execute(parameters)
+    await handlerType.execute(parameters)
   }
 }
