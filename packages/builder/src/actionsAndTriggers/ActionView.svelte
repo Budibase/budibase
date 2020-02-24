@@ -1,6 +1,7 @@
 <script>
   import Textbox from "../common/Textbox.svelte"
   import Button from "../common/Button.svelte"
+  import ActionButton from "../common/ActionButton.svelte"
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import { cloneDeep, filter, keys, map, isUndefined } from "lodash/fp"
   import ErrorsBox from "../common/ErrorsBox.svelte"
@@ -10,16 +11,15 @@
   export let action
   export let onFinished = action => {}
   export let allActions
-  export let isNew = true
 
   let optKey = ""
   let optValue = ""
 
   let clonedAction = cloneDeep(action)
-  let initialOptions = pipe(action.initialOptions, [
-    keys,
-    map(k => ({ key: k, value: action.initialOptions[k] })),
-  ])
+  let initialOptions = pipe(
+    action.initialOptions,
+    [keys, map(k => ({ key: k, value: action.initialOptions[k] }))]
+  )
   let errors = []
 
   const addNewOption = () => {
@@ -44,17 +44,26 @@
   const removeOption = opt => {
     if (opt) {
       delete clonedAction.initialOptions[opt.key]
-      initialOptions = pipe(initialOptions, [filter(o => o.key !== opt.key)])
+      initialOptions = pipe(
+        initialOptions,
+        [filter(o => o.key !== opt.key)]
+      )
     }
   }
 
   const save = () => {
     const newActionsList = [
-      ...pipe(allActions, [filter(a => a !== action)]),
+      ...pipe(
+        allActions,
+        [filter(a => a !== action)]
+      ),
       clonedAction,
     ]
 
-    errors = pipe(newActionsList, [validateActions, map(e => e.error)])
+    errors = pipe(
+      newActionsList,
+      [validateActions, map(e => e.error)]
+    )
 
     if (errors.length === 0) onFinished(clonedAction)
   }
@@ -89,9 +98,7 @@
         class="uk-input uk-width-1-4 uk-margin-right"
         placeholder="value"
         bind:value={optValue} />
-      <Button color="primary-outline uk-width-1-4" on:click={addNewOption}>
-        Add
-      </Button>
+      <ActionButton primary on:click={addNewOption}>Add</ActionButton>
     </div>
     <div style="margin-top: 10px">
       {#each initialOptions as option}
@@ -107,11 +114,12 @@
     </div>
   </div>
 
-  <ButtonGroup>
-    <Button color="secondary" grouped on:click={save}>Save</Button>
-    <Button color="tertiary" grouped on:click={cancel}>Cancel</Button>
-  </ButtonGroup>
-
+  <div class="uk-modal-footer uk-text-right">
+    <ButtonGroup>
+      <ActionButton primary grouped on:click={save}>Save</ActionButton>
+      <ActionButton alert grouped on:click={cancel}>Cancel</ActionButton>
+    </ButtonGroup>
+  </div>
 </div>
 
 <style>

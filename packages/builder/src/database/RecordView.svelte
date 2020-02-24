@@ -94,7 +94,7 @@
 <div class="root">
 
   <form class="uk-form-horizontal">
-    <h3 class="settings-title">Settings</h3>
+    <h3 class="budibase__title--3">Settings</h3>
 
     <Textbox label="Name:" bind:text={record.name} on:change={nameChanged} />
     {#if !record.isSingle}
@@ -104,7 +104,7 @@
     <div class="recordkey">{record.nodeKey()}</div>
 
   </form>
-  <h3 class="title">
+  <h3 class="budibase__title--3">
     Fields
     <span class="add-field-button" on:click={newField}>
       {@html getIcon('plus')}
@@ -160,7 +160,7 @@
     </Modal>
   {/if}
 
-  <h3 class="title">Indexes</h3>
+  <h3 class="budibase__title--3">Indexes</h3>
 
   {#each record.indexes as index}
     <div class="index-container">
@@ -197,15 +197,6 @@
   .root {
     height: 100%;
     padding: 2rem;
-  }
-
-  .settings-title {
-    font-weight: 700;
-  }
-
-  .title {
-    margin: 3rem 0rem 0rem 0rem;
-    font-weight: 700;
   }
 
   .recordkey {

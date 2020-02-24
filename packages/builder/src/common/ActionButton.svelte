@@ -29,12 +29,12 @@
   }
 
   .button {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
     border-radius: 5px;
     border: none;
-    width: 167px;
-    height: 64px;
+    width: 120px;
+    height: 45px;
   }
 
   .button:hover {

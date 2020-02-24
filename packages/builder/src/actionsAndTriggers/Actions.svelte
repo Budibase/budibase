@@ -43,7 +43,7 @@
   }
 </script>
 
-<h3 class="title">Actions</h3>
+<h3 class="budibase__title--3">Actions</h3>
 
 {#if actionsArray}
   <table class="fields-table uk-table uk-table-small uk-table-striped">
@@ -97,11 +97,6 @@
 
   tr:hover .edit-button {
     color: var(--secondary75);
-  }
-
-  .title {
-    margin: 3rem 0rem 0rem 0rem;
-    font-weight: 700;
   }
 
   .table-content {

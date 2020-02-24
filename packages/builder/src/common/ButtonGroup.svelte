@@ -8,18 +8,9 @@
 
 <style>
   .root {
-    display: flex;
-  }
-
-  .root:last-child {
-    border-radius: 0 var(--borderradius) var(--borderradius) 0;
-  }
-
-  .root:first-child {
-    border-radius: var(--borderradius) 0 0 var(--borderradius);
-  }
-
-  .root:not(:first-child):not(:last-child) {
-    border-radius: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-gap: 5px;
+    width: 10%;
   }
 </style>
