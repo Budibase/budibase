@@ -27,7 +27,7 @@
     font-family: sans-serif;
     font-weight: 500;
     color: #163057;
-    padding: 1em 2.6em 0.9em 1.4em;
+    padding: 0 2.6em 0em 1.4em;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
