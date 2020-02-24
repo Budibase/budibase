@@ -14,15 +14,18 @@
 
   store.subscribe($store => {
     index = $store.currentNode
-    indexableRecords = pipe($store.hierarchy, [
-      hierarchyFunctions.getFlattenedHierarchy,
-      filter(hierarchyFunctions.isDecendant(index.parent())),
-      filter(hierarchyFunctions.isRecord),
-      map(n => ({
-        node: n,
-        isallowed: some(id => n.nodeId === id)(index.allowedRecordNodeIds),
-      })),
-    ])
+    indexableRecords = pipe(
+      $store.hierarchy,
+      [
+        hierarchyFunctions.getFlattenedHierarchy,
+        filter(hierarchyFunctions.isDecendant(index.parent())),
+        filter(hierarchyFunctions.isRecord),
+        map(n => ({
+          node: n,
+          isallowed: some(id => n.nodeId === id)(index.allowedRecordNodeIds),
+        })),
+      ]
+    )
   })
 
   const toggleAllowedRecord = record => {
@@ -40,7 +43,7 @@
   <Textbox bind:text={index.name} label="Name" />
 
   <div class="allowed-records">
-    <div>Records to Index</div>
+    <div class="index-label">Records to Index</div>
     {#each indexableRecords as rec}
       <input
         type="checkbox"
@@ -55,11 +58,9 @@
     bind:selected={index.indexType}
     options={['ancestor', 'reference']} />
 
-  <CodeArea bind:text={index.map} label="Map (javascript)" />
-  <CodeArea bind:text={index.filter} label="Filter (javascript expression)" />
-  <CodeArea
-    bind:text={index.getShardName}
-    label="Shard Name (javascript expression)" />
+  <CodeArea bind:text={index.map} javascript label="Map" />
+  <CodeArea bind:text={index.filter} javascript label="Filter" />
+  <CodeArea javascript bind:text={index.getShardName} label="Shard Name" />
 
 </form>
 
@@ -75,5 +76,10 @@
 
   .allowed-records > span {
     margin-right: 30px;
+  }
+
+  .index-label {
+    color: #333;
+    font-size: 0.875rem;
   }
 </style>
