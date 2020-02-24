@@ -121,7 +121,7 @@
   </Select>
 
   <div class="library-container">
-    <ul>
+    <!-- <ul>
       <li>
         <button
           class:selected={current_view === 'text'}
@@ -143,7 +143,7 @@
           <ImageIcon />
         </button>
       </li>
-    </ul>
+    </ul> -->
 
     {#if componentLibrary}
       {#each generate_components_list(componentLibrary.components) as component}
@@ -223,6 +223,7 @@
     padding: 0 0 10px 0;
     flex: 1 1 auto;
     min-height: 0px;
+    margin-top: 20px;
   }
 
   .component-container {
@@ -299,7 +300,7 @@
     border-radius: 5px;
   }
 
-  li button {
+  /* li button {
     width: 100%;
     height: 100%;
     background: none;
@@ -308,12 +309,12 @@
     padding: 12px;
     outline: none;
     cursor: pointer;
-  }
+  } */
 
-  .selected {
+  /* .selected {
     color: var(--button-text);
     background: var(--background-button) !important;
-  }
+  } */
 
   .open {
     color: rgba(0, 85, 255, 1);
