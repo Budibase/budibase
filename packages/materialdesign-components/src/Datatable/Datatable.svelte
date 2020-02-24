@@ -1,5 +1,5 @@
 <script>
-  import { onMount, setContext } from "svelte"
+  import { onMount } from "svelte"
   import { MDCDataTable } from "@material/data-table"
   import Row from "./DatatableRow.svelte"
   import Cell from "./DatatableCell.svelte"
@@ -10,12 +10,13 @@
   export let onLoad
 
   const cb = new ClassBuilder("data-table")
-  setContext("BBMD:data-table:cb", cb)
 
   let datatable = null
   let instance = null
   let tableElement
   let initialied = false
+
+  
 
   $: {
     if(tableElement && datatable && !initialied) {
