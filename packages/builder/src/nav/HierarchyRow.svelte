@@ -16,11 +16,12 @@
   })
 </script>
 
-<div
-  class="budibase__nav-item"
-  on:click={() => store.selectExistingNode(node.nodeId)}
-  class:selected={navActive}>
-  <div style="padding-left: {20 + level * 20}px">
+<div>
+  <div
+    on:click={() => store.selectExistingNode(node.nodeId)}
+    class="budibase__nav-item"
+    style="padding-left: {20 + level * 20}px"
+    class:selected={navActive}>
     {@html getIcon(icon, 12)}
     <span style="margin-left: 1rem">{node.name}</span>
   </div>
