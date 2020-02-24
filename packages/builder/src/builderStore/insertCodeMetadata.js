@@ -12,6 +12,6 @@ export const insertCodeMetadata = props => {
 
 const codeMetaData = code => {
   return {
-    dependsOnStore: RegExp(/(store.)/g).test(code),
+    dependsOnStore: RegExp(/(state.)/g).test(code),
   }
 }

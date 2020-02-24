@@ -23,7 +23,7 @@ export const buildCodeForScreens = screens => {
     allfunctions += buildCodeForSingleScreen(screen)
   }
 
-  return `return ({ ${allfunctions} });`
+  return `({ ${allfunctions} });`
 }
 
 const buildComponentCode = componentProps =>
