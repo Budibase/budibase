@@ -49,9 +49,9 @@
 
   {#if inputElement}
     {#if inputElement === 'radiobutton'}
-      <Radiobutton checked={item.selected} />
+      <Radiobutton checked={item.selected} disabled={item.disabled} />
     {:else if inputElement === 'checkbox'}
-      <Checkbox checked={item.selected} />
+      <Checkbox checked={item.selected} disabled={item.disabled} />
     {/if}
   {:else if item.trailingIcon}
     <!-- TODO: Adapt label to accept class prop to handle this. Context is insufficient -->
