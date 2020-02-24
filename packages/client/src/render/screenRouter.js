@@ -25,7 +25,7 @@ export const screenRouter = (screens, onScreenSelected, appRootPath) => {
     const params = {}
 
     if (current === -1) {
-      routes.forEach(([p], i) => {
+      routes.forEach((p, i) => {
         const pm = regexparam(p)
         const matches = pm.pattern.exec(_url)
 
