@@ -19,20 +19,26 @@
 
   let actionsArray = []
   store.subscribe(s => {
-    actionsArray = pipe(s.actions, [keys, map(k => s.actions[k])])
+    actionsArray = pipe(
+      s.actions,
+      [keys, map(k => s.actions[k])]
+    )
   })
 
   let getDefaultOptionsHtml = defaultOptions =>
-    pipe(defaultOptions, [
-      keys,
-      map(
-        k =>
-          `<span style="color:var(--slate)">${k}: </span>${JSON.stringify(
-            defaultOptions[k]
-          )}`
-      ),
-      join("<br>"),
-    ])
+    pipe(
+      defaultOptions,
+      [
+        keys,
+        map(
+          k =>
+            `<span style="color:var(--slate)">${k}: </span>${JSON.stringify(
+              defaultOptions[k]
+            )}`
+        ),
+        join("<br>"),
+      ]
+    )
 
   let actionEditingFinished = action => {
     if (action) {
@@ -79,7 +85,9 @@
   </table>
 {:else}(no actions added){/if}
 
-<Modal bind:isOpen={isEditing}>
+<Modal
+  title={editingActionIsNew ? 'Create Action' : 'Edit Action'}
+  bind:isOpen={isEditing}>
   {#if isEditing}
     <ActionView
       action={editingAction}

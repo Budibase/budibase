@@ -115,6 +115,7 @@
     grid-template-columns: repeat(2, 1fr);
     border: 2px solid #f9f9f9;
     height: 80px;
+    width: 100%;
   }
 
   .event-name {

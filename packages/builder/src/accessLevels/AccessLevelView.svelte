@@ -67,8 +67,9 @@
 
     <Textbox label="Access Level Name" bind:text={clonedLevel.name} />
 
+    <h4 class="budibase__title--4">Permissions</h4>
     {#each permissionMatrix as permission}
-      <div>
+      <div class="permission-container">
         <Checkbox
           label={getPermissionName(permission.permission)}
           checked={permission.hasPermission}
@@ -78,15 +79,19 @@
 
   </form>
 
-  <ButtonGroup style="margin-top: 10px">
-    <ActionButton primary grouped on:click={save}>Save</ActionButton>
-    <ActionButton alert grouped on:click={() => onFinished()}>
-      Cancel
-    </ActionButton>
-  </ButtonGroup>
+  <div class="uk-modal-footer uk-text-right">
+    <ButtonGroup>
+      <ActionButton primary grouped on:click={save}>Save</ActionButton>
+      <ActionButton alert grouped on:click={() => onFinished()}>
+        Cancel
+      </ActionButton>
+    </ButtonGroup>
+  </div>
 
 </div>
 
 <style>
-
+  .permission-container {
+    margin-bottom: 10px;
+  }
 </style>

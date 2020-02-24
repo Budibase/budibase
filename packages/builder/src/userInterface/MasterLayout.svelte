@@ -87,7 +87,7 @@
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Delete"
-  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component`}
+  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component?`}
   okText="Delete Component"
   onOk={() => store.deleteComponent(componentToDelete)} />
 

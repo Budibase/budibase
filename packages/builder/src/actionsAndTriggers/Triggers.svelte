@@ -57,7 +57,10 @@
   </table>
 {:else}(no triggers added){/if}
 
-<Modal bind:isOpen={isEditing}>
+<Modal
+  title={editingTriggerIsNew ? 'Create Trigger' : 'Edit Trigger'}
+  onClosed={() => (isEditing = false)}
+  bind:isOpen={isEditing}>
   {#if isEditing}
     <TriggerView
       trigger={editingTrigger}
