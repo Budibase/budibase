@@ -17,7 +17,7 @@
     class="dropdown-content"
     style="display: {isDroppedDown ? 'inline-block' : 'none'}">
     {#each actions as action}
-      <div class="action-row" on:click={action.onclick}>{action.label}</div>
+      <div class="budibase__nav-item" on:click={action.onclick}>{action.label}</div>
     {/each}
   </div>
 
