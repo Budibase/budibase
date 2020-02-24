@@ -49,13 +49,14 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 2rem 1.5rem 2rem 1.5rem;
+    padding: 2rem 0;
   }
 
   .switcher {
     display: flex;
     justify-content: space-between;
     margin-bottom: 25px;
+    padding: 0 1.5rem;
   }
 
   .switcher > button {
@@ -79,5 +80,6 @@
     flex: 1 1 auto;
     height: 0px;
     overflow-y: auto;
+    padding: 0 1.5rem 1.5rem 1.5rem;
   }
 </style>
