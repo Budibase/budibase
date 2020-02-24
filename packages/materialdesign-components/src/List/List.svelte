@@ -32,19 +32,21 @@
   })
 
   function handleSelectedItem(item) {
-    if (singleSelection || inputElement === "radiobutton") {
-      items.forEach(i => {
-        if (i.selected) i.selected = false
-      })
-    }
+    if (!item.disabled) {
+      if (singleSelection || inputElement === "radiobutton") {
+        items.forEach(i => {
+          if (i.selected) i.selected = false
+        })
+      }
 
-    let idx = items.indexOf(item)
-    if (!!item.selected) {
-      items[idx].selected = !item.selected
-    } else {
-      items[idx].selected = true
+      let idx = items.indexOf(item)
+      if (!!item.selected) {
+        items[idx].selected = !item.selected
+      } else {
+        items[idx].selected = true
+      }
+      onSelect(items.filter(item => item.selected))
     }
-    onSelect(items.filter(item => item.selected))
   }
 
   $: useDoubleLine =
