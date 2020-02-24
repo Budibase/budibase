@@ -19,20 +19,26 @@
 
   let actionsArray = []
   store.subscribe(s => {
-    actionsArray = pipe(s.actions, [keys, map(k => s.actions[k])])
+    actionsArray = pipe(
+      s.actions,
+      [keys, map(k => s.actions[k])]
+    )
   })
 
   let getDefaultOptionsHtml = defaultOptions =>
-    pipe(defaultOptions, [
-      keys,
-      map(
-        k =>
-          `<span style="color:var(--slate)">${k}: </span>${JSON.stringify(
-            defaultOptions[k]
-          )}`
-      ),
-      join("<br>"),
-    ])
+    pipe(
+      defaultOptions,
+      [
+        keys,
+        map(
+          k =>
+            `<span style="color:var(--slate)">${k}: </span>${JSON.stringify(
+              defaultOptions[k]
+            )}`
+        ),
+        join("<br>"),
+      ]
+    )
 
   let actionEditingFinished = action => {
     if (action) {
@@ -43,7 +49,7 @@
   }
 </script>
 
-<h3 class="title">Actions</h3>
+<h3 class="budibase__title--3">Actions</h3>
 
 {#if actionsArray}
   <table class="fields-table uk-table uk-table-small uk-table-striped">
@@ -79,7 +85,9 @@
   </table>
 {:else}(no actions added){/if}
 
-<Modal bind:isOpen={isEditing}>
+<Modal
+  title={editingActionIsNew ? 'Create Action' : 'Edit Action'}
+  bind:isOpen={isEditing}>
   {#if isEditing}
     <ActionView
       action={editingAction}
@@ -97,11 +105,6 @@
 
   tr:hover .edit-button {
     color: var(--secondary75);
-  }
-
-  .title {
-    margin: 3rem 0rem 0rem 0rem;
-    font-weight: 700;
   }
 
   .table-content {

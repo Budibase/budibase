@@ -51,12 +51,12 @@
   }
 </script>
 
-<div class="root">
-  <div
-    class="hierarchy-item component"
-    class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
-    on:click|stopPropagation={() => store.setScreenType('page')}>
+<div
+  class="budibase__nav-item"
+  class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
+  on:click|stopPropagation={() => store.setScreenType('page')}>
 
+  <div class="component">
     <span
       class="icon"
       class:rotate={$store.currentPreviewItem.name !== _layout.title}>
@@ -87,37 +87,11 @@
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Delete"
-  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component`}
+  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component?`}
   okText="Delete Component"
   onOk={() => store.deleteComponent(componentToDelete)} />
 
 <style>
-  .root {
-    font-weight: 400;
-    font-size: 0.8rem;
-    color: #333;
-  }
-
-  .hierarchy-item {
-    cursor: pointer;
-    padding: 0 7px 0 3px;
-    height: 35px;
-    margin: 5px 0;
-    border-radius: 0 5px 5px 0;
-    display: flex;
-    align-items: center;
-    font-weight: 500;
-  }
-
-  .hierarchy-item:hover {
-    background: #fafafa;
-  }
-
-  .selected {
-    color: var(--button-text);
-    background: var(--background-button) !important;
-  }
-
   .title {
     margin-left: 10px;
     margin-top: 2px;

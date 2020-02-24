@@ -13,7 +13,7 @@
   <label class="uk-form-label">{label}</label>
   <div class="uk-form-controls">
     <input
-      class="uk-input uk-form-width-{width} uk-form-{size}"
+      class="budibase__input"
       class:uk-form-danger={hasError}
       on:change
       bind:value={text}

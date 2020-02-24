@@ -2,6 +2,7 @@
   import getIcon from "../common/icon"
   import { store } from "../builderStore"
   import Button from "../common/Button.svelte"
+  import ActionButton from "../common/ActionButton.svelte"
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import Actions from "./Actions.svelte"
   import Triggers from "./Triggers.svelte"
@@ -83,12 +84,12 @@
 <div class="root">
   <div class="actions-header">
     <ButtonGroup>
-      <Button color="secondary" grouped on:click={newAction}>
+      <ActionButton color="secondary" grouped on:click={newAction}>
         Create New Action
-      </Button>
-      <Button color="tertiary" grouped on:click={newTrigger}>
+      </ActionButton>
+      <ActionButton color="tertiary" grouped on:click={newTrigger}>
         Create New Trigger
-      </Button>
+      </ActionButton>
     </ButtonGroup>
   </div>
 
@@ -121,6 +122,7 @@
 
   .actions-header {
     flex: 0 1 auto;
+    margin-bottom: 10px;
   }
 
   .node-view {

@@ -1,57 +1,51 @@
 <script>
-import Button from "./Button.svelte"
-import ButtonGroup from "./ButtonGroup.svelte"
-import UIkit from "uikit"
+  import Button from "./Button.svelte"
+  import ActionButton from "./ActionButton.svelte"
+  import ButtonGroup from "./ButtonGroup.svelte"
+  import UIkit from "uikit"
 
-export let title=""
-export let body=""
-export let okText = "OK"
-export let cancelText = "Cancel"
-export let onOk = ()=> {}
-export let onCancel = ()=> {}
+  export let title = ""
+  export let body = ""
+  export let okText = "OK"
+  export let cancelText = "Cancel"
+  export let onOk = () => {}
+  export let onCancel = () => {}
 
-export const show = () => {
-  UIkit.modal(theModal).show()
-}
+  export const show = () => {
+    UIkit.modal(theModal).show()
+  }
 
-export const hide = () => {
-  UIkit.modal(theModal).hide()
-}
+  export const hide = () => {
+    UIkit.modal(theModal).hide()
+  }
 
-let theModal;
+  let theModal
 
-const cancel = () => {
-  hide()
-  onCancel()
-}
+  const cancel = () => {
+    hide()
+    onCancel()
+  }
 
-const ok = () => {
-  hide()
-  onOk()
-}
-
+  const ok = () => {
+    hide()
+    onOk()
+  }
 </script>
-
 
 <div id="my-id" uk-modal bind:this={theModal}>
   <div class="uk-modal-dialog">
-    <button class="uk-modal-close-default" type="button" uk-close></button>
+    <button class="uk-modal-close-default" type="button" uk-close />
     <div class="uk-modal-header">
-      <h2 class="uk-modal-title">{title}</h2>
+      <h4 class="budibase__title--4">{title}</h4>
     </div>
     <div class="uk-modal-body">
       <slot>{body}</slot>
     </div>
     <div class="uk-modal-footer">
       <ButtonGroup>
-        <Button grouped color="primary" on:click={ok}>
-          {okText}
-        </Button>
-        <Button grouped color="secondary" on:click={cancel}>
-          {cancelText}
-        </Button>
-    </ButtonGroup>
+        <ActionButton alert on:click={ok}>{okText}</ActionButton>
+        <ActionButton primary on:click={cancel}>{cancelText}</ActionButton>
+      </ButtonGroup>
     </div>
   </div>
 </div>
-
