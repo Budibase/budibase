@@ -36,7 +36,6 @@
     appearance: none;
     background: #fff;
     border: 1px solid #ccc;
-    height: 35px;
   }
 
   .arrow {
