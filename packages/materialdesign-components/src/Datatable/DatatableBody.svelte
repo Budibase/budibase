@@ -4,7 +4,7 @@ import ClassBuilder from "../ClassBuilder.js"
 
 export let _bb
 
-const cb = getContext("BBMD:data-table:cb")
+const cb = new ClassBuilder("data-table")
 
 let tbody
 
