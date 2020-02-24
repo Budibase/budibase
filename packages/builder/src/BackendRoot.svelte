@@ -15,7 +15,7 @@
   <div class="nav">
     <BackendNav />
   </div>
-  <div class="content" style="width: calc(100% - {navWidth}); left: {navWidth}">
+  <div class="content">
     {#if $store.activeNav === 'database'}
       <Database />
     {:else if $store.activeNav === 'actions'}
@@ -37,9 +37,12 @@
     height: 100%;
     background-color: var(--white);
     margin: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .nav {
+    overflow: auto;
     flex: 0 1 auto;
     width: 300px;
     height: 100%;
