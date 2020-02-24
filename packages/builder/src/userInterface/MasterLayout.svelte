@@ -44,19 +44,17 @@
     component.component.name === $store.currentPreviewItem.name
 
   const confirmDeleteComponent = async component => {
-    console.log(component)
     componentToDelete = component
     // await tick()
     confirmDeleteDialog.show()
   }
 </script>
 
-<div
-  class="budibase__nav-item"
-  class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
-  on:click|stopPropagation={() => store.setScreenType('page')}>
-
-  <div class="component">
+<div>
+  <div
+    class="budibase__nav-item"
+    class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
+    on:click|stopPropagation={() => store.setScreenType('page')}>
     <span
       class="icon"
       class:rotate={$store.currentPreviewItem.name !== _layout.title}>

@@ -758,6 +758,8 @@ const addChildComponent = store => (componentToAdd, presetName) => {
     state.currentFrontEndType === "page"
       ? _savePage(state)
       : _saveScreenApi(state.currentPreviewItem, state)
+      
+    state.currentComponentInfo = newComponent.props
 
     return state
   })
@@ -782,24 +784,24 @@ const addTemplatedComponent = store => props => {
 }
 
 const selectComponent = store => component => {
-  store.update(s => {
+  store.update(state => {
     const componentDef = component._component.startsWith("##")
       ? component
-      : s.components.find(c => c.name === component._component)
-    s.currentComponentInfo = makePropsSafe(componentDef, component)
-    return s
+      : state.components.find(c => c.name === component._component)
+    state.currentComponentInfo = makePropsSafe(componentDef, component)
+    return state
   })
 }
 
 const setComponentProp = store => (name, value) => {
-  store.update(s => {
-    const current_component = s.currentComponentInfo
-    s.currentComponentInfo[name] = value
+  store.update(state => {
+    const current_component = state.currentComponentInfo
+    state.currentComponentInfo[name] = value
 
-    _saveCurrentPreviewItem(s)
+    _saveCurrentPreviewItem(state)
 
-    s.currentComponentInfo = current_component
-    return s
+    state.currentComponentInfo = current_component
+    return state
   })
 }
 
