@@ -1,5 +1,6 @@
 <script>
   import Button from "../common/Button.svelte"
+  import ActionButton from "../common/ActionButton.svelte"
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import { store } from "../builderStore"
   import Modal from "../common/Modal.svelte"
@@ -20,14 +21,14 @@
 <div class="root" style="left: {left}">
 
   <ButtonGroup>
-    <Button color="secondary" grouped on:click={store.saveCurrentNode}>
+    <ActionButton color="secondary" grouped on:click={store.saveCurrentNode}>
       {#if $store.currentNodeIsNew}Create{:else}Update{/if}
-    </Button>
+    </ActionButton>
 
     {#if !$store.currentNodeIsNew}
-      <Button color="tertiary" grouped on:click={openConfirmDelete}>
+      <ActionButton alert grouped on:click={openConfirmDelete}>
         Delete
-      </Button>
+      </ActionButton>
     {/if}
   </ButtonGroup>
 
@@ -38,14 +39,14 @@
   {/if}
 
   <Modal bind:isOpen={confirmDelete}>
-    <div style="margin: 10px 0px 20px 0px">
+    <div class="actions-modal-body">
       Are you sure you want to delete {$store.currentNode.name} ?
     </div>
-    <div style="float:right">
-      <Button color="primary" on:click={deleteCurrentNode}>Yes</Button>
-      <Button color="secondary" on:click={() => (confirmDelete = false)}>
+    <div class="uk-modal-footer uk-text-right">
+      <ActionButton alert on:click={deleteCurrentNode}>Yes</ActionButton>
+      <ActionButton primary on:click={() => (confirmDelete = false)}>
         No
-      </Button>
+      </ActionButton>
     </div>
   </Modal>
 </div>
@@ -55,5 +56,12 @@
     padding: 1.5rem;
     width: 100%;
     align-items: right;
+  }
+
+  .actions-modal-body {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>

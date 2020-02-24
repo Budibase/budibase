@@ -5,6 +5,7 @@
   import { store, initialise } from "./builderStore"
   import { onMount } from "svelte"
   import IconButton from "./common/IconButton.svelte"
+  import Spinner from "./common/Spinner.svelte"
 
   let init = initialise()
 </script>
@@ -12,9 +13,9 @@
 <main>
 
   {#await init}
-
-    <h1>loading</h1>
-
+    <div class="spinner-container">
+      <Spinner />
+    </div>
   {:then result}
 
     {#if $store.hasAppPackage}
@@ -52,4 +53,13 @@
     bottom: 25px;
     right: 25px;
   }
+
+  .spinner-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
 </style>

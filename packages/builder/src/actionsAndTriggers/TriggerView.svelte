@@ -1,6 +1,7 @@
 <script>
   import Textbox from "../common/Textbox.svelte"
   import Button from "../common/Button.svelte"
+  import ActionButton from "../common/ActionButton.svelte"
   import Dropdown from "../common/Dropdown.svelte"
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import CodeArea from "../common/CodeArea.svelte"
@@ -22,7 +23,10 @@
   let cancel = () => onFinished()
   let save = () => {
     const newTriggersList = [
-      ...pipe(allTriggers, [filter(t => t !== trigger)]),
+      ...pipe(
+        allTriggers,
+        [filter(t => t !== trigger)]
+      ),
       clonedTrigger,
     ]
 
@@ -59,11 +63,12 @@
 
   </form>
 
-  <ButtonGroup>
-    <Button color="primary" grouped on:click={save}>Save</Button>
-    <Button color="tertiary" grouped on:click={cancel}>Cancel</Button>
-  </ButtonGroup>
-
+  <div class="uk-modal-footer uk-text-right">
+    <ButtonGroup>
+      <ActionButton primary on:click={save}>Save</ActionButton>
+      <ActionButton alert on:click={cancel}>Cancel</ActionButton>
+    </ButtonGroup>
+  </div>
 </div>
 
 <style>

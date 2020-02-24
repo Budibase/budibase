@@ -1,6 +1,7 @@
 <script>
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import Button from "../common/Button.svelte"
+  import ActionButton from "../common/ActionButton.svelte"
   import { store } from "../builderStore"
   import { generateFullPermissions, getNewAccessLevel } from "../common/core"
   import getIcon from "../common/icon"
@@ -47,11 +48,10 @@
 </script>
 
 <div class="root">
-
   <ButtonGroup>
-    <Button grouped color="secondary" on:click={createNewLevel}>
+    <ActionButton primary on:click={createNewLevel}>
       Create New Access Level
-    </Button>
+    </ActionButton>
   </ButtonGroup>
 
   {#if $store.accessLevels}

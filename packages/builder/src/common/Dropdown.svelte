@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
+  import Select from "../common/Select.svelte";
 
   export let selected
   export let label
@@ -17,7 +18,7 @@
   <label class="uk-form-label">{label}</label>
   <div class="uk-form-controls">
     {#if multiple}
-      <select
+      <Select
         class="uk-select uk-form-width-{width} uk-form-{size}"
         multiple
         bind:value={selected}
@@ -27,9 +28,9 @@
             {!textMember ? option : textMember(option)}
           </option>
         {/each}
-      </select>
+      </Select>
     {:else}
-      <select
+      <Select
         class="uk-select uk-form-width-{width} uk-form-{size}"
         bind:value={selected}
         on:change>
@@ -38,7 +39,7 @@
             {!textMember ? option : textMember(option)}
           </option>
         {/each}
-      </select>
+      </Select>
     {/if}
   </div>
 </div>
