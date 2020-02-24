@@ -10,6 +10,7 @@
   export let onLoad
 
   const cb = new ClassBuilder("data-table")
+  _bb.setContext("BBMD:data-table:cb", cb)
 
   let datatable = null
   let instance = null

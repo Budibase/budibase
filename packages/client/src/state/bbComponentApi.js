@@ -3,6 +3,7 @@ import { setState, setStateFromBinding } from "./setState"
 import { trimSlash } from "../common/trimSlash"
 import { isBound } from "./parseBinding"
 import { attachChildren } from "../render/attachChildren"
+import { getContext, setContext } from "./getSetContext"
 
 export const bbFactory = ({
   store,
@@ -60,6 +61,8 @@ export const bbFactory = ({
       setState: (path, value) => setState(store, path, value),
       getStateOrValue: (prop, currentContext) =>
         getStateOrValue(getCurrentState(), prop, currentContext),
+      getContext: getContext(treeNode),
+      setContext: setContext(treeNode),
       store: store,
       relativeUrl,
       api,
