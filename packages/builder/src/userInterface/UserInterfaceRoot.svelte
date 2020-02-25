@@ -6,7 +6,7 @@
   import { store } from "../builderStore"
   import IconButton from "../common/IconButton.svelte"
   import Modal from "../common/Modal.svelte"
-  import NewComponent from "./NewComponent.svelte"
+  import NewScreen from "./NewScreen.svelte"
   import CurrentItemPreview from "./CurrentItemPreview.svelte"
   import SettingsView from "./SettingsView.svelte"
   import PageView from "./PageView.svelte"
@@ -15,12 +15,12 @@
   import { last } from "lodash/fp"
   import { AddIcon } from "../common/Icons"
 
-  let newComponentPicker
+  let newScreenPicker
   let confirmDeleteDialog
   let componentToDelete = ""
 
-  const newComponent = () => {
-    newComponentPicker.show()
+  const newScreen = () => {
+    newScreenPicker.show()
   }
 
   let settingsView
@@ -59,7 +59,7 @@
           Screens
         </span>
         <div>
-          <button on:click={newComponent}>
+          <button on:click={newScreen}>
             <AddIcon />
           </button>
         </div>
@@ -84,7 +84,7 @@
 
 </div>
 
-<NewComponent bind:this={newComponentPicker} />
+<NewScreen bind:this={newScreenPicker} />
 <SettingsView bind:this={settingsView} />
 
 <ConfirmDialog
