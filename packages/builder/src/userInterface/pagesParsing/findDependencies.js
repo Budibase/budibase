@@ -5,7 +5,7 @@ import { isRootComponent } from "./searchComponents"
 export const libraryDependencies = (components, lib) => {
   const componentDependsOnLibrary = comp => {
     if (isRootComponent(comp)) {
-      const { libName } = splitName(component.name)
+      const { libName } = splitName(comp.name)
       return libName === lib
     }
     return componentDependsOnLibrary(

@@ -55,9 +55,7 @@
   const onSelectItem = index => () => {
     selectedIndex = index
     if (!components[index]) {
-      const comp = _bb.attachChildren(
-        componentElements[index]
-      )
+      const comp = _bb.attachChildren(componentElements[index])
       components[index] = comp
     }
   }

@@ -5,11 +5,13 @@
     "jest": true,
     "node": true
   },
+  "parser": "babel-eslint",
   "parserOptions": {
     "ecmaVersion": 2019,
-    "sourceType": "module"
+    "sourceType": "module",
+    "allowImportExportEverywhere": true
   },
-  "ignorePatterns": ["node_modules", "dist", "public"],
+  "ignorePatterns": ["node_modules", "dist", "public", "*.spec.js", "bundle.js"],
   "plugins": ["prettier", "svelte3"],
   "extends": ["eslint:recommended"],
   "overrides": [

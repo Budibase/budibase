@@ -1,6 +1,6 @@
 const fs = require("fs")
 
-module.exports = config => ({
+module.exports = () => ({
   main: {
     outputToFile: async ({ filename, content }) => {
       await new Promise((resolve, reject) => {

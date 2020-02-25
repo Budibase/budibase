@@ -4,7 +4,7 @@ import {
   getTemplateApi,
   getAuthApi,
 } from "../../../core/src"
-import { find, filter, includes, keyBy, some, flatten, map } from "lodash/fp"
+import { find, filter, keyBy, flatten, map } from "lodash/fp"
 
 import { generateSchema } from "../../../core/src/indexing/indexSchemaCreator"
 

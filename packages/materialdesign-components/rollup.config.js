@@ -1,7 +1,6 @@
 import svelte from "rollup-plugin-svelte"
 import postcss from "rollup-plugin-postcss"
 import resolve from "rollup-plugin-node-resolve"
-import path from "path"
 
 const postcssOptions = () => ({
   extensions: [".scss", ".sass"],

@@ -20,8 +20,8 @@
   let draftEventHandler = { parameters: [] }
 
   $: eventData = event || { handlers: [] }
-  $: if (!eventOptions.includes(eventType) && eventOptions.length > 0) 
-      eventType = eventOptions[0].name
+  $: if (!eventOptions.includes(eventType) && eventOptions.length > 0)
+    eventType = eventOptions[0].name
 
   const closeModal = () => {
     onClose()

@@ -1,5 +1,5 @@
-import { action, iterateActionTimes, iterateCollection } from "./helpers"
-import { isUndefined, union, takeRight } from "lodash"
+import { action, iterateActionTimes } from "./helpers"
+import { isUndefined, union } from "lodash"
 
 const createClient = (apis, getState) => async i => {
   const client = apis.recordApi.getNew("/clients", "client")
@@ -20,16 +20,6 @@ const createClient = (apis, getState) => async i => {
   return client.key()
 }
 
-const getClient = (apis, getState) => async k => {
-  const state = getState()
-  if (isUndefined(state.clients)) state.clients = []
-
-  const client = await apis.recordApi.load(k)
-  state.clients.push(client)
-
-  return `key: ${k} , add1: ${client.Address1} , count: ${state.clients.length}`
-}
-
 const listClients = (apis, getState) => async () => {
   const clients = await apis.viewApi.listItems("/clients/default")
   const state = getState()
@@ -41,12 +31,6 @@ const listClients = (apis, getState) => async () => {
         clients.length.toString()
     )
   }
-}
-
-const deleteClient = (apis, getState) => async k => {
-  await apis.recordApi.delete(k)
-  const state = getState()
-  state.clientKeys = state.clientKeys.filter(key => key !== k)
 }
 
 export default apis => {
@@ -64,9 +48,6 @@ export default apis => {
       iterateActionTimes(recordsPerIteration)
     ),
 
-    /*action("Get client", getClient(apis, getState), 
-                             iterateCollection(() => takeRight(getState().clientKeys, recordsPerIteration))),*/
-
     action("List Clients", listClients(apis, getState)),
   ]
 
@@ -75,14 +56,6 @@ export default apis => {
     actions = union(actions, actionsInOneIteration())
   }
 
-  /*
-    for (let index = 0; index < noOfIterations; index++) {
-        actions.push(
-            action("Delete Clients", deleteClient(apis, getState),
-                    iterateCollection(() => takeRight(getState().clientKeys, recordsPerIteration))),
-            action("List Clients", listClients(apis, getState))
-        );
-    }*/
   let actionIndex = 0
 
   return () => {

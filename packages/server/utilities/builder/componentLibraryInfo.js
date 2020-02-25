@@ -4,7 +4,7 @@ const { resolve, join, dirname } = require("path")
 /**
  * @param {string} appPath - budibase application name
  * @param {string} libname - component library name
- * @returns {string} directory name of component definitions for a specific budibase application. 
+ * @returns {string} directory name of component definitions for a specific budibase application.
  */
 const getLibDir = (appPath, libname) => {
   try {
@@ -25,7 +25,7 @@ module.exports.componentsFilepath = (appPath, libname) =>
 /**
  * @param {string} appPath - the path to a budibase application
  * @param {string} libname - the name of the component libary to use for namespacing
- * @returns {object} tree of components namespaced by their component library name. 
+ * @returns {object} tree of components namespaced by their component library name.
  */
 module.exports.componentLibraryInfo = async (appPath, libname) => {
   const libDir = getLibDir(appPath, libname)

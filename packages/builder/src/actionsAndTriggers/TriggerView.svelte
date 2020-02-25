@@ -22,10 +22,7 @@
   let cancel = () => onFinished()
   let save = () => {
     const newTriggersList = [
-      ...pipe(
-        allTriggers,
-        [filter(t => t !== trigger)]
-      ),
+      ...pipe(allTriggers, [filter(t => t !== trigger)]),
       clonedTrigger,
     ]
 

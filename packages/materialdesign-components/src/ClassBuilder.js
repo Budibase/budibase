@@ -1,7 +1,7 @@
 export default class ClassBuilder {
   constructor(block, defaultIgnoreList) {
-    this.block = `mdc-${block}`;
-    this.defaultIgnoreList = defaultIgnoreList; //will be ignored when building custom classes
+    this.block = `mdc-${block}`
+    this.defaultIgnoreList = defaultIgnoreList //will be ignored when building custom classes
   }
 
   /* 
@@ -10,32 +10,32 @@ export default class ClassBuilder {
   All are optional 
   */
   build(params) {
-    if (!params) return this.block; //return block if nothing passed
-    const { props, elementName } = params;
-    let base = !!elementName ? `${this.block}__${elementName}` : this.block;
-    if (!props) return base;
-    return this._handleProps(base, props);
+    if (!params) return this.block //return block if nothing passed
+    const { props, elementName } = params
+    let base = elementName ? `${this.block}__${elementName}` : this.block
+    if (!props) return base
+    return this._handleProps(base, props)
   }
 
   //Easily grab a simple element class
   elem(elementName) {
-    return this.build({ elementName });
+    return this.build({ elementName })
   }
 
   //use if a different base is needed than whats defined by this.block
   debase(base, elementProps) {
-    if (!elementProps) return base;
-    return this._handleProps(base, elementProps);
+    if (!elementProps) return base
+    return this._handleProps(base, elementProps)
   }
 
   //proxies bindProps and checks for which elementProps exist before binding
   _handleProps(base, elementProps) {
-    let cls = base;
-    const { modifiers, customs, extras } = elementProps;
-    if (!!modifiers) cls += this._bindProps(modifiers, base);
-    if (!!customs) cls += this._bindProps(customs, base, true);
-    if (!!extras) cls += ` ${extras.join(" ")}`;
-    return cls.trim();
+    let cls = base
+    const { modifiers, customs, extras } = elementProps
+    if (modifiers) cls += this._bindProps(modifiers, base)
+    if (customs) cls += this._bindProps(customs, base, true)
+    if (extras) cls += ` ${extras.join(" ")}`
+    return cls.trim()
   }
 
   /* 
@@ -53,22 +53,22 @@ export default class ClassBuilder {
           !!value &&
           (!this.defaultIgnoreList || !this.defaultIgnoreList.includes(value))
         ) {
-          let classBase = isCustom ? `bbmd-${base}` : `${base}`;
-          let valueType = typeof value;
+          let classBase = isCustom ? `bbmd-${base}` : `${base}`
+          let valueType = typeof value
 
           if (valueType == "string" || valueType == "number") {
             return isCustom
               ? ` ${classBase}--${this._convertCamel(property)}-${value}`
-              : ` ${classBase}--${value}`;
+              : ` ${classBase}--${value}`
           } else if (valueType == "boolean") {
-            return ` ${classBase}--${this._convertCamel(property)}`;
+            return ` ${classBase}--${this._convertCamel(property)}`
           }
         }
       })
-      .join("");
+      .join("")
   }
 
   _convertCamel(str) {
-    return str.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`);
+    return str.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`)
   }
 }

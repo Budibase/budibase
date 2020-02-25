@@ -25,6 +25,7 @@ beforeAll(async () => {
 
   await app.start()
 })
+
 afterAll(async () => await app.destroy())
 
 it("/apppackage should get appDefinition", async () => {

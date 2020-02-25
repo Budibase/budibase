@@ -11,36 +11,34 @@
 
   let errors = []
   const props_to_ignore = ["_component", "_children", "_styles", "_code", "_id"]
-  
-  $: componentDef = 
-      component && components &&
-      components.find(({ name }) => name === component._component)
 
-  
+  $: componentDef =
+    component &&
+    components &&
+    components.find(({ name }) => name === component._component)
 
   let setProp = (name, value) => {
     onPropChanged(name, value)
   }
-
 </script>
 
 <div class="root">
 
   <form class="uk-form-stacked form-root">
     {#if componentDef}
-    {#each Object.entries(componentDef.props) as [prop_name, prop_def], index}
-      <div class="prop-container">
+      {#each Object.entries(componentDef.props) as [prop_name, prop_def], index}
+        <div class="prop-container">
 
-        <PropControl
-          {setProp}
-          {prop_name}
-          prop_value={component[prop_name]}
-          prop_definition={prop_def}
-          {index}
-          disabled={false} />
+          <PropControl
+            {setProp}
+            {prop_name}
+            prop_value={component[prop_name]}
+            prop_definition={prop_def}
+            {index}
+            disabled={false} />
 
-      </div>
-    {/each}
+        </div>
+      {/each}
     {/if}
   </form>
 
