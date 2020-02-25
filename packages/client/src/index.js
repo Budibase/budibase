@@ -45,7 +45,7 @@ export const loadBudibase = async opts => {
 
   componentLibraries[builtinLibName] = builtins(_window)
 
-  const { initialisePage, screenStore, pageStore, routeTo } = createApp(
+  const { initialisePage, screenStore, pageStore, routeTo, rootNode } = createApp(
     componentLibraries,
     frontendDefinition,
     backendDefinition,
@@ -68,6 +68,7 @@ export const loadBudibase = async opts => {
     screenStore,
     pageStore,
     routeTo,
+    rootNode
   }
 }
 
