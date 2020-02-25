@@ -1,30 +1,39 @@
 <script>
-  import { setContext } from "svelte"
-  import { Radiobutton } from "../Radiobutton"
-  import { Checkbox } from "../Checkbox"
-  import ClassBuilder from "../ClassBuilder.js"
+  import { onMount, getContext } from "svelte";
+  import { Radiobutton } from "../Radiobutton";
+  import { Checkbox } from "../Checkbox";
+  import ClassBuilder from "../ClassBuilder.js";
 
-  const cb = new ClassBuilder("list-item")
+  const cb = new ClassBuilder("list-item");
 
-  export let onClick = item => {}
+  export let onClick = item => {};
 
-  export let item = null
-  export let useDoubleLine = false
-  export let inputElement = null //radiobutton or checkbox
+  export let item = null;
+  export let useDoubleLine = false;
+  export let inputElement = null; //radiobutton or checkbox
+
+  let role = "option";
+
+  onMount(() => {
+    let context = getContext("BBMD:list:context");
+    if (context === "menu") {
+      role = "menuitem";
+    }
+  });
 
   $: if (!!inputElement) {
-    setContext("BBMD:input:context", "list-item")
+    setContext("BBMD:input:context", "list-item");
   }
 
   $: modifiers = {
     selected: !inputElement ? item.selected : null,
-    disabled: item.disabled,
-  }
-  $: props = { modifiers }
-  $: listItemClass = cb.build({ props })
+    disabled: item.disabled
+  };
+  $: props = { modifiers };
+  $: listItemClass = cb.build({ props });
 
   $: useSecondaryText =
-    typeof item.text === "object" && "secondary" in item.text
+    typeof item.text === "object" && "secondary" in item.text;
 </script>
 
 <li
