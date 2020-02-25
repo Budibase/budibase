@@ -41,7 +41,7 @@ export const screenRouter = (screens, onScreenSelected, appRootPath) => {
     }
 
     const storeInitial = {}
-    storeInitial["##routeParams"]
+    storeInitial["##routeParams"] = params
     const store = writable(storeInitial)
 
     if (current !== -1) {
