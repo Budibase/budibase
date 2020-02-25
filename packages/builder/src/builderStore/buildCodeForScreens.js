@@ -27,7 +27,7 @@ export const buildCodeForScreens = screens => {
 }
 
 const buildComponentCode = componentProps =>
-  `"${componentProps._id}" : (render, context, state, routeParams) => {
+  `"${componentProps._id}" : (render, context, state, route) => {
 ${componentProps._code}
 },
 `
