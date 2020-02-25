@@ -5,6 +5,7 @@
     "my-styles.css"
   ],
   "componentLibraries": [
+    "@budibase/standard-components",
     "./customComponents",
     "./moreCustomComponents"
   ],
