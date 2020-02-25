@@ -61,7 +61,7 @@
     display: flex;
     flex-direction: column;
   }
-  
+
   .handler-input {
     position: relative;
     display: flex;

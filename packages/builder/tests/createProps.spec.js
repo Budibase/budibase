@@ -206,7 +206,7 @@ describe("createDefaultProps", () => {
     expect(props.fieldName).toBe("surname")
     expect(props.fieldLength).toBe(500)
   })
-  
+
   it("should create standard props", () => {
     const comp = getcomponent()
     comp.props.fieldName = { type: "string", default: 1 }

@@ -9,7 +9,7 @@ import {
 } from "@azure/storage-blob"
 
 export const createFile = ({ containerUrl }) => async (key, content) => {
-  const blobURL = BlobURL.fromContainerURL(containerURL, key)
+  const blobURL = BlobURL.fromContainerURL(containerUrl, key)
   const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL)
   await blockBlobURL.upload(Aborter.none, content, content.length)
 }
@@ -17,7 +17,7 @@ export const createFile = ({ containerUrl }) => async (key, content) => {
 export const updateFile = opts => async (path, content) =>
   createFile(opts)(path, content)
 
-export const loadFile = ({ containerUrl }) => async key => {
+export const loadFile = ({ containerUrl }) => async (key, content) => {
   const blobURL = BlobURL.fromContainerURL(containerUrl, key)
 
   const downloadBlockBlobResponse = await blobURL.download(Aborter.none, 0)
@@ -27,8 +27,8 @@ export const loadFile = ({ containerUrl }) => async key => {
     .toString()
 }
 
-export const exists = ({ containerURL }) => async key => {
-  const blobURL = BlobURL.fromContainerURL(containerURL, key)
+export const exists = ({ containerUrl }) => async key => {
+  const blobURL = BlobURL.fromContainerURL(containerUrl, key)
   const getPropsResponse = await blobURL.getProperties()
   return getPropsResponse._response.StatusCode === 200
 }
@@ -53,7 +53,7 @@ const initialise = opts => {
   const pipeline = StorageURL.newPipeline(sharedKeyCredential)
 
   const serviceURL = new ServiceURL(
-    `https://${account}.blob.core.windows.net`,
+    `https://${opts.account}.blob.core.windows.net`,
     pipeline
   )
 
@@ -77,6 +77,5 @@ export default opts => {
 
     datastoreType: "azure-blob-storage",
     datastoreDescription: "",
-    data,
   }
 }

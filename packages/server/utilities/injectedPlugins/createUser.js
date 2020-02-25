@@ -16,4 +16,4 @@ module.exports = ({ masterAppInternal, instanceKey, app }) => async ({
   await bbMaster.recordApi.save(masterUser)
 }
 
-const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
+exports.timeout = ms => new Promise(resolve => setTimeout(resolve, ms))

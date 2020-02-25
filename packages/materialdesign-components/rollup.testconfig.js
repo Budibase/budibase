@@ -5,7 +5,7 @@ import livereload from "rollup-plugin-livereload"
 import { terser } from "rollup-plugin-terser"
 import json from "rollup-plugin-json"
 import alias from "rollup-plugin-alias"
-import postcss from "rollup-plugin-postcss";
+import postcss from "rollup-plugin-postcss"
 import path from "path"
 
 const aliases = {

@@ -5,7 +5,7 @@ import {
   isSingleRecord,
   getNodeForCollectionPath,
 } from "../templateApi/hierarchy"
-import { reduce, find, filter, take } from "lodash/fp"
+import { reduce, find, filter } from "lodash/fp"
 import { $, getFileFromKey, joinKey, safeKey, keySep } from "../common"
 import { folderStructureArray, allIdChars } from "../indexing/allIds"
 

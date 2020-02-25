@@ -2,7 +2,6 @@ import resolve from "rollup-plugin-node-resolve"
 import commonjs from "rollup-plugin-commonjs"
 import builtins from "rollup-plugin-node-builtins"
 import nodeglobals from "rollup-plugin-node-globals"
-import { terser } from "rollup-plugin-terser"
 
 const lodash_fp_exports = [
   "find",

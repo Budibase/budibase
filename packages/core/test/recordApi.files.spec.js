@@ -31,7 +31,7 @@ describe("recordApi > files", () => {
     const { recordApi } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields
     )
-    const { file, stream, content } = getFile()
+    const { file, stream } = getFile()
     file.size = file.size - 1
     const record = recordApi.getNew("/customers", "customer")
     record.surname = "Ledog"
@@ -46,7 +46,7 @@ describe("recordApi > files", () => {
     const { recordApi } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields
     )
-    const { file, stream, content } = getFile()
+    const { file, stream } = getFile()
     const record = recordApi.getNew("/customers", "customer")
     record.surname = "Ledog"
     record.profilepic = file
@@ -80,7 +80,7 @@ describe("recordApi > files", () => {
     const { recordApi } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields
     )
-    const { file, stream, content } = getFile()
+    const { file, stream } = getFile()
     const record = recordApi.getNew("/customers", "customer")
     record.surname = "Ledog"
     record.profilepic = file
@@ -98,7 +98,7 @@ describe("recordApi > files", () => {
     const { recordApi } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields
     )
-    const { file, stream, content } = getFile()
+    const { file, stream } = getFile()
     const record = recordApi.getNew("/customers", "customer")
     record.surname = "Ledog"
     record.profilepic = file

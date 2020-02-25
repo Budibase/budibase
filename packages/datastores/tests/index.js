@@ -16,7 +16,6 @@ const iterateActions = async (apis, getIterator) => {
         limit(() => result.action.run(i))
       )
 
-      let n = 1
       await Promise.all(runPromises)
       result = iterator()
     } catch (e) {

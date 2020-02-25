@@ -5,17 +5,17 @@
   let currentComponent
   let _appPromise
 
-const autoAssignIds = (props, count = 0) => {
-  if (!props._id) {
-    props._id = `auto_id_${count}`
-  }
-  if (props._children) {
-    for (let child of props._children) {
-      count += 1
-      autoAssignIds(child, count)
+  const autoAssignIds = (props, count = 0) => {
+    if (!props._id) {
+      props._id = `auto_id_${count}`
+    }
+    if (props._children) {
+      for (let child of props._children) {
+        count += 1
+        autoAssignIds(child, count)
+      }
     }
   }
-}
 
   $: {
     if (currentComponent) {

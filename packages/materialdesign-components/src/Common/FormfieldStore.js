@@ -1,19 +1,19 @@
-import { writable } from "svelte/store";
+import { writable } from "svelte/store"
 
 function store() {
-  const { set, update, subscribe } = writable({});
+  const { set, update, subscribe } = writable({})
 
   function setInput(inp) {
     update(n => {
-      n.input = inp;
-    });
+      n.input = inp
+    })
   }
 
   return {
     subscribe,
     set,
-    setInput
-  };
+    setInput,
+  }
 }
 
-export const fieldStore = store();
+export const fieldStore = store()
