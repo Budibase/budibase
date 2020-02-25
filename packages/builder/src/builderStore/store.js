@@ -473,9 +473,12 @@ const _saveScreen = async (store, s, screen) => {
         ),
         updatedScreen,
       ]
-      s.pages[s.currentPageName]._screens = screens
-      s.screens = screens
-      _savePage(s)
+      store.update(innerState => {
+        innerState.pages[s.currentPageName]._screens = screens
+        innerState.screens = screens
+        _savePage(innerState)
+        return innerState
+      })
     })
 
   return s
@@ -502,7 +505,9 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
     s.currentComponentInfo = newScreen.props
     s.currentFrontEndType = "screen"
 
-    return _saveScreen(store, s, newScreen)
+    _saveScreen(store, s, newScreen)
+
+    return s
   })
 }
 
