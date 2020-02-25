@@ -5,7 +5,7 @@
   export let numeric = false
   export let _bb
 
-  const cb =  _bb.getContext("BBMD:data-table:cb")
+  const cb = _bb.getContext("BBMD:data-table:cb")
 
   let elementName = isHeader ? "header-cell" : "cell"
   let modifiers = { numeric }
@@ -14,7 +14,6 @@
   let element
 
   $: element && _bb.attachChildren(element)
-
 </script>
 
 {#if isHeader}

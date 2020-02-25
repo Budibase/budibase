@@ -5,7 +5,7 @@ const fs = require("fs")
 const tar = require("tar-fs")
 const zlib = require("zlib")
 const { join, dirname, sep } = require("path")
-const { exists, mkdir, unlink, stat } = require("fs-extra")
+const { exists, mkdir, unlink, remove, stat } = require("fs-extra")
 const {
   getRuntimePackageDirectory,
   getRuntimeAppsDirectory,
@@ -58,7 +58,7 @@ module.exports.unzipTarGzPackageToRuntime = async (
 const compress = (src, dest) =>
   new Promise((resolve, reject) => {
     // ensure opts
-    opts = { src, dest }
+    let opts = { src, dest }
     opts.tar = {
       ignore: name =>
         dirname(name)
@@ -96,7 +96,7 @@ const compress = (src, dest) =>
 const decompress = (src, dest) =>
   new Promise((resolve, reject) => {
     // ensure opts
-    opts = { src, dest }
+    let opts = { src, dest }
     opts.tar = opts.tar || {}
     opts.gz = opts.gz || {}
 

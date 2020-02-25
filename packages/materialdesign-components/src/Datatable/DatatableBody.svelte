@@ -1,14 +1,13 @@
 <script>
-import { getContext } from "svelte"
+  import { getContext } from "svelte"
 
-export let _bb
+  export let _bb
 
-const cb =  _bb.getContext("BBMD:data-table:cb")
+  const cb = _bb.getContext("BBMD:data-table:cb")
 
-let tbody
+  let tbody
 
-$: tbody && _bb.attachChildren(tbody)
-
+  $: tbody && _bb.attachChildren(tbody)
 </script>
 
-<tbody bind:this={tbody} class={cb.elem`content`}></tbody>
+<tbody bind:this={tbody} class={cb.elem`content`} />

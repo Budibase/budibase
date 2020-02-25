@@ -1,0 +1,5 @@
+packages/builder/src/userInterface/CurrentItemPreview.svelte
+public
+dist
+packages/server/builder
+**/*.spec.js

@@ -68,7 +68,7 @@
   }
 
   let useLabel = !!label && (!fullwidth || (fullwidth && textarea))
-  let useIcon = !!icon && (!textarea && !fullwidth)
+  let useIcon = !!icon && !textarea && !fullwidth
 
   if (useIcon) {
     setContext("BBMD:icon:context", "text-field")
@@ -120,7 +120,7 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         {placeholder}
         {minLength}
         maxLength={safeMaxLength}
-        value={value}
+        {value}
         on:change={changed} />
     {:else}
       {#if renderLeadingIcon}
@@ -135,7 +135,7 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         placeholder={!!label && fullwidth ? label : placeholder}
         {minLength}
         maxLength={safeMaxLength}
-        value={value}
+        {value}
         aria-label={`Textfield ${variant}`}
         on:focus={focus}
         on:input={changed} />
