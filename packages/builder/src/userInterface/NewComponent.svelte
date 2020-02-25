@@ -79,7 +79,9 @@
             class:uk-form-danger={saveAttempted && (name.length === 0 || screenNameExists(name))}
             bind:value={name} />
         </div>
+      </div>
 
+      <div class="uk-margin">
         <label class="uk-form-label">Route (Url)</label>
         <div class="uk-form-controls">
           <input
