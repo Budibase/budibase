@@ -45,6 +45,7 @@
     "@material/data-table": "4.0.0",
     "@material/form-field": "^4.0.0",
     "@material/list": "4.0.0",
+    "@material/menu": "4.0.0",
     "@material/radio": "^4.0.0",
     "@material/textfield": "^4.0.0"
   }
