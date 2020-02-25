@@ -51,8 +51,8 @@
       onTemplateChosen(component.template)
     } else {
       store.addChildComponent(component.name)
+      toggleTab()
     }
-    toggleTab();
   }
 
   const onTemplateChosen = template => {
@@ -75,6 +75,7 @@
     selectedComponent = null
     const instance = templateInstances.find(i => i.name === selectedTemplateInstance)
     store.addTemplatedComponent(instance.props)
+    toggleTab()
   }
 
   function generate_components_list(components) {
