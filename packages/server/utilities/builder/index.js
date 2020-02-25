@@ -112,14 +112,18 @@ module.exports.savePage = async (config, appname, pagename, page) => {
   await buildPage(config, appname, appDefinition, pagename, page)
 }
 
-module.exports.componentLibraryInfo = async (config, appname, componentLibrary) => {
+module.exports.componentLibraryInfo = async (
+  config,
+  appname,
+  componentLibrary
+) => {
   const appPath = appPackageFolder(config, appname)
   return await componentLibraryInfo(appPath, componentLibrary)
 }
 
 /**
  * @param {string} appPath - path to a budibase application
- * @param {Array} pages - a list of budibase application pages 
+ * @param {Array} pages - a list of budibase application pages
  * @param {string} componentLibrary - component library to fetch components for
  * @returns {object} - an object containing component definitions namespaced by their component library
  */

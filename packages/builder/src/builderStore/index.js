@@ -1,9 +1,6 @@
-import { createPackage } from "./createPackage"
 import getStore from "./store"
 
 export const store = getStore()
-
-export const createNewPackage = () => createPackage(packageInfo, store)
 
 export const initialise = async () => {
   try {
@@ -17,8 +14,7 @@ export const initialise = async () => {
 const setupRouter = writable => {
   const pushState = history.pushState
   history.pushState = () => {
-    pushState.apply(history, arguments)
-    //fireEvents('pushState', arguments);
+    pushState.apply(history, [writable])
     writable.initialise()
   }
   window.addEventListener("hashchange", () => {

@@ -4,7 +4,7 @@ import packageJson from "../../package.json"
 import { rootComponent } from "./rootComponent"
 import * as standardcomponents from "@budibase/standard-components/src/index"
 
-export default async props => {
+export default async () => {
   delete components._lib
   const componentLibraries = {}
   componentLibraries[packageJson.name] = components

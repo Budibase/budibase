@@ -1,13 +1,26 @@
 <script>
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
   import { store } from "../builderStore"
-  import { find, sortBy, groupBy, values, filter, map, uniqBy, flatten } from "lodash/fp"
+  import {
+    find,
+    sortBy,
+    groupBy,
+    values,
+    filter,
+    map,
+    uniqBy,
+    flatten,
+  } from "lodash/fp"
   import { ImageIcon, InputIcon, LayoutIcon } from "../common/Icons/"
   import Select from "../common/Select.svelte"
   import Button from "../common/PlusButton.svelte"
   import ConfirmDialog from "../common/ConfirmDialog.svelte"
-  import { getRecordNodes, getIndexNodes, getIndexSchema, pipe } from "../common/core"
-
+  import {
+    getRecordNodes,
+    getIndexNodes,
+    getIndexSchema,
+    pipe,
+  } from "../common/core"
 
   export let toggleTab
 
@@ -27,7 +40,7 @@
     flatten,
     filter(t => !$store.components.some(c => c.name === t.component)),
     map(t => ({ name: splitName(t.component).componentName, template: t })),
-    uniqBy(t => t.name)
+    uniqBy(t => t.name),
   ])
 
   const addRootComponent = (component, allComponents) => {
@@ -62,18 +75,20 @@
       records: getRecordNodes(hierarchy),
       indexes: getIndexNodes(hierarchy),
       helpers: {
-        indexSchema: getIndexSchema(hierarchy)
-      }
+        indexSchema: getIndexSchema(hierarchy),
+      },
     }
     templateInstances = libraryModules[libName][componentName](templateOptions)
-    if(!templateInstances || templateInstances.length === 0) return
+    if (!templateInstances || templateInstances.length === 0) return
     selectedTemplateInstance = templateInstances[0].name
     selectTemplateDialog.show()
   }
 
   const onTemplateInstanceChosen = () => {
     selectedComponent = null
-    const instance = templateInstances.find(i => i.name === selectedTemplateInstance)
+    const instance = templateInstances.find(
+      i => i.name === selectedTemplateInstance
+    )
     store.addTemplatedComponent(instance.props)
     toggleTab()
   }
@@ -81,7 +96,8 @@
   function generate_components_list(components) {
     return ($store.currentFrontEndType === "page"
       ? $store.builtins.concat(components)
-      : components).concat(standaloneTemplates)
+      : components
+    ).concat(standaloneTemplates)
   }
 
   $: {
@@ -96,15 +112,12 @@
   }
 
   $: componentLibrary = componentLibraries.find(l => l.libName === selectedLib)
-
 </script>
 
 <div class="root">
-  <Select on:change={e => selectedLib = e.target.value}>
+  <Select on:change={e => (selectedLib = e.target.value)}>
     {#each componentLibraries as lib}
-      <option value={lib.libName}>
-        {lib.libName}
-      </option>
+      <option value={lib.libName}>{lib.libName}</option>
     {/each}
   </Select>
 
@@ -136,9 +149,7 @@
     {#if componentLibrary}
       {#each generate_components_list(componentLibrary.components) as component}
         <div class="component-container">
-          <div
-            class="component"
-            on:click={() => onComponentChosen(component)}>
+          <div class="component" on:click={() => onComponentChosen(component)}>
             <div class="name">{splitName(component.name).componentName}</div>
             {#if (component.presets || templatesByComponent[component.name]) && component.name === selectedComponent}
               <ul class="preset-menu">
@@ -152,7 +163,9 @@
                   {/each}
                 {/if}
                 {#if templatesByComponent[component.name]}
-                  <span>{splitName(component.name).componentName} Templates</span>
+                  <span>
+                    {splitName(component.name).componentName} Templates
+                  </span>
                   {#each templatesByComponent[component.name] as template}
                     <li
                       on:click|stopPropagation={() => onTemplateChosen(template)}>
@@ -180,18 +193,21 @@
     {/if}
   </div>
 
-
 </div>
 
 <ConfirmDialog
   bind:this={selectTemplateDialog}
   title="Choose Template"
-  onCancel={() => selectedComponent = null}
+  onCancel={() => (selectedComponent = null)}
   onOk={onTemplateInstanceChosen}>
   {#each templateInstances.map(i => i.name) as instance}
     <div class="uk-margin uk-grid-small uk-child-width-auto uk-grid">
       <label>
-        <input class="uk-radio" type="radio" bind:group={selectedTemplateInstance} value={instance}>
+        <input
+          class="uk-radio"
+          type="radio"
+          bind:group={selectedTemplateInstance}
+          value={instance} />
         <span class="template-instance-label">{instance}</span>
       </label>
     </div>
@@ -307,5 +323,4 @@
   .template-instance-label {
     margin-left: 20px;
   }
-
 </style>

@@ -33,7 +33,7 @@ describe("authApi > authenticate", () => {
   })
 
   it("should return null when non existing user", async () => {
-    const { authApi, app } = await setupApphierarchy(
+    const { authApi } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields
     )
     const result = await authApi.authenticate("nobody", "password")

@@ -47,7 +47,7 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
       uiFunctions,
       htmlElement,
       anchor,
-      getCurrentState
+      getCurrentState,
     })
 
     for (let childNode of childNodesThisIteration) {
