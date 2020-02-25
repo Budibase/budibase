@@ -45,7 +45,13 @@ export const loadBudibase = async opts => {
 
   componentLibraries[builtinLibName] = builtins(_window)
 
-  const { initialisePage, screenStore, pageStore, routeTo, rootNode } = createApp(
+  const {
+    initialisePage,
+    screenStore,
+    pageStore,
+    routeTo,
+    rootNode,
+  } = createApp(
     componentLibraries,
     frontendDefinition,
     backendDefinition,
@@ -59,16 +65,13 @@ export const loadBudibase = async opts => {
     ? _window.location.pathname.replace(frontendDefinition.appRootPath, "")
     : ""
 
+  initialisePage(frontendDefinition.page, _window.document.body, route)
+
   return {
-    rootNode: initialisePage(
-      frontendDefinition.page,
-      _window.document.body,
-      route
-    ),
     screenStore,
     pageStore,
     routeTo,
-    rootNode
+    rootNode,
   }
 }
 
