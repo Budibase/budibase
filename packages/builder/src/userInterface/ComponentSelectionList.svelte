@@ -8,6 +8,9 @@
   import ConfirmDialog from "../common/ConfirmDialog.svelte"
   import { getRecordNodes, getIndexNodes, getIndexSchema, pipe } from "../common/core"
 
+
+  export let toggleTab
+
   let componentLibraries = []
   let current_view = "text"
   let selectedComponent = null
@@ -49,6 +52,7 @@
     } else {
       store.addChildComponent(component.name)
     }
+    toggleTab();
   }
 
   const onTemplateChosen = template => {
