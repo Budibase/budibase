@@ -15,6 +15,7 @@
     Datatable,
     CustomersIndexTable,
     List,
+    Icon,
   } = props
 
   let currentComponent
@@ -35,6 +36,7 @@
             Checkboxgroup,
             Radiobutton,
             Radiobuttongroup,
+            Icon,
             Datatable,
             CustomersIndexTable,
             List,
