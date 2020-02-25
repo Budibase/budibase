@@ -19,8 +19,6 @@ const appPackages = join(
 const publicMain = appName => join(appPackages, appName, "public", "main")
 const publicUnauth = appName =>
   join(appPackages, appName, "public", "unauthenticated")
-const nodeModules = appName =>
-  join(appPackages, appName, "node_modules", "@budibase", "client", "dist")
 
 ;(async () => {
   const apps = await readdir(appPackages)

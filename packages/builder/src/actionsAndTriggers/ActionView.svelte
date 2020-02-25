@@ -16,10 +16,10 @@
   let optValue = ""
 
   let clonedAction = cloneDeep(action)
-  let initialOptions = pipe(
-    action.initialOptions,
-    [keys, map(k => ({ key: k, value: action.initialOptions[k] }))]
-  )
+  let initialOptions = pipe(action.initialOptions, [
+    keys,
+    map(k => ({ key: k, value: action.initialOptions[k] })),
+  ])
   let errors = []
 
   const addNewOption = () => {
@@ -44,26 +44,17 @@
   const removeOption = opt => {
     if (opt) {
       delete clonedAction.initialOptions[opt.key]
-      initialOptions = pipe(
-        initialOptions,
-        [filter(o => o.key !== opt.key)]
-      )
+      initialOptions = pipe(initialOptions, [filter(o => o.key !== opt.key)])
     }
   }
 
   const save = () => {
     const newActionsList = [
-      ...pipe(
-        allActions,
-        [filter(a => a !== action)]
-      ),
+      ...pipe(allActions, [filter(a => a !== action)]),
       clonedAction,
     ]
 
-    errors = pipe(
-      newActionsList,
-      [validateActions, map(e => e.error)]
-    )
+    errors = pipe(newActionsList, [validateActions, map(e => e.error)])
 
     if (errors.length === 0) onFinished(clonedAction)
   }

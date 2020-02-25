@@ -1,4 +1,4 @@
-const { resolve, join } = require("path")
+const { resolve } = require("path")
 const { cwd } = require("process")
 const buildAppContext = require("@budibase/server/initialise/buildAppContext")
 

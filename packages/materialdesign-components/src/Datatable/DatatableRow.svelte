@@ -1,27 +1,27 @@
 <script>
-  import { getContext } from "svelte";
+  import { getContext } from "svelte"
 
-  export let onSelect = () => {};
-  export let isHeader = false;
+  export let onSelect = () => {}
+  export let isHeader = false
 
   export let _bb
 
-  let row = null;
-  let selected = false;
+  let row = null
+  let selected = false
 
-  const cb =  _bb.getContext("BBMD:data-table:cb")
+  const cb = _bb.getContext("BBMD:data-table:cb")
 
-  let elementName = isHeader ? "header-row" : "row";
-  let modifiers = {};
+  let elementName = isHeader ? "header-row" : "row"
+  let modifiers = {}
 
-  $: modifiers = { selected };
-  $: props = { modifiers };
-  $: rowClass = cb.build({ elementName, props });
+  $: modifiers = { selected }
+  $: props = { modifiers }
+  $: rowClass = cb.build({ elementName, props })
   $: row && _bb.attachChildren(row)
-  
+
   function rowSelected() {
-    selected = !selected;
-    onSelect();
+    selected = !selected
+    onSelect()
   }
 </script>
 

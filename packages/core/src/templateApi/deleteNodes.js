@@ -1,6 +1,6 @@
 import {} from "../templateApi/heirarchy"
 
-export const canDelete = (app, node) => {
+export const canDelete = () => {
   /*
     it must not exist on any index.allowedRecordNodeIds
     it must not exist on and reference type fields

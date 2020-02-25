@@ -13,6 +13,7 @@ import "uikit/dist/js/uikit.min.js"
 import "codemirror/lib/codemirror.css"
 import "codemirror/theme/monokai.css"
 
+/* eslint-disable */
 const app = new App({
   target: document.getElementById("app"),
 })

@@ -14,18 +14,15 @@
 
   store.subscribe($store => {
     index = $store.currentNode
-    indexableRecords = pipe(
-      $store.hierarchy,
-      [
-        hierarchyFunctions.getFlattenedHierarchy,
-        filter(hierarchyFunctions.isDecendant(index.parent())),
-        filter(hierarchyFunctions.isRecord),
-        map(n => ({
-          node: n,
-          isallowed: some(id => n.nodeId === id)(index.allowedRecordNodeIds),
-        })),
-      ]
-    )
+    indexableRecords = pipe($store.hierarchy, [
+      hierarchyFunctions.getFlattenedHierarchy,
+      filter(hierarchyFunctions.isDecendant(index.parent())),
+      filter(hierarchyFunctions.isRecord),
+      map(n => ({
+        node: n,
+        isallowed: some(id => n.nodeId === id)(index.allowedRecordNodeIds),
+      })),
+    ])
   })
 
   const toggleAllowedRecord = record => {

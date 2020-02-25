@@ -3,7 +3,7 @@
   import { store } from "../../builderStore"
   import { buildStateOrigins } from "../../builderStore/buildStateOrigins"
   import { isBinding, getBinding, setBinding } from "../../common/binding"
-  import StateBindingOptions from "./StateBindingOptions.svelte";
+  import StateBindingOptions from "./StateBindingOptions.svelte"
 
   export let onChanged = () => {}
   export let value = ""
@@ -28,7 +28,8 @@
   const setBindingPath = value =>
     bindValueToSource(value, bindingFallbackValue, bindingSource)
 
-  const setBindingFallback = value => bindValueToSource(bindingPath, value, bindingSource)
+  const setBindingFallback = value =>
+    bindValueToSource(bindingPath, value, bindingSource)
 
   const setBindingSource = source =>
     bindValueToSource(bindingPath, bindingFallbackValue, source)
@@ -69,10 +70,11 @@
     </button>
   </div>
   {#if isOpen}
-    <StateBindingOptions onSelect={option => { 
-      onChanged(option);
-      isOpen = false;
-    }} />
+    <StateBindingOptions
+      onSelect={option => {
+        onChanged(option)
+        isOpen = false
+      }} />
   {/if}
 </div>
 

@@ -15,15 +15,12 @@
   const joinPath = join("/")
 
   const normalizedName = name =>
-    pipe(
-      name,
-      [
-        trimCharsStart("./"),
-        trimCharsStart("~/"),
-        trimCharsStart("../"),
-        trimChars(" "),
-      ]
-    )
+    pipe(name, [
+      trimCharsStart("./"),
+      trimCharsStart("~/"),
+      trimCharsStart("../"),
+      trimChars(" "),
+    ])
 
   const lastPartOfName = c => {
     if (!c) return ""
@@ -31,15 +28,14 @@
     return last(name.split("/"))
   }
 
-
   const isComponentSelected = (current, comp) => current === comp
 
   const isFolderSelected = (current, folder) => isInSubfolder(current, folder)
 
-  $: _screens = pipe(
-    screens,
-    [map(c => ({ component: c, title: lastPartOfName(c) })), sortBy("title")]
-  )
+  $: _screens = pipe(screens, [
+    map(c => ({ component: c, title: lastPartOfName(c) })),
+    sortBy("title"),
+  ])
 
   const isScreenSelected = component =>
     component.component &&

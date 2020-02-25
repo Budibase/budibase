@@ -141,9 +141,7 @@ const getRequest = (server, url) =>
     .set("Accept", "application/json")
 
 const reInitialize = async () => {
-  try {
-    await remove(config.datastoreConfig.rootPath)
-  } catch (_) {}
+  await remove(config.datastoreConfig.rootPath)
 
   await mkdir(config.datastoreConfig.rootPath)
 

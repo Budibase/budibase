@@ -763,7 +763,7 @@ const addChildComponent = store => (componentToAdd, presetName) => {
     state.currentFrontEndType === "page"
       ? _savePage(state)
       : _saveScreenApi(state.currentPreviewItem, state)
-      
+
     state.currentComponentInfo = newComponent.props
 
     return state

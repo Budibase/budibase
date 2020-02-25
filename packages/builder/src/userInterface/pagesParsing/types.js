@@ -3,10 +3,8 @@ import {
   isBoolean,
   isNumber,
   isArray,
-  isObjectLike,
   isPlainObject,
   every,
-  isUndefined,
 } from "lodash/fp"
 
 import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
@@ -61,7 +59,6 @@ export const expandComponentDefinition = componentDefinition => {
   return expandedComponent
 }
 
-const isComponent = isObjectLike
 const isEvent = e =>
   isPlainObject(e) &&
   isString(e[EVENT_TYPE_MEMBER_NAME]) &&
