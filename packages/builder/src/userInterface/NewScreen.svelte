@@ -21,20 +21,17 @@
   let layoutComponent
   let screens
   let name = ""
-  
+
   let saveAttempted = false
 
-  $: layoutComponents = pipe(
-      $store.components,
-      [
-        filter(c => c.container),
-        map(c => ({ name: c.name, ...splitName(c.name) })),
-      ]
-    )
+  $: layoutComponents = pipe($store.components, [
+    filter(c => c.container),
+    map(c => ({ name: c.name, ...splitName(c.name) })),
+  ])
 
   $: layoutComponent = layoutComponent
-      ? find(c => c.name === layoutComponent.name)(layoutComponents)
-      : layoutComponents[0]
+    ? find(c => c.name === layoutComponent.name)(layoutComponents)
+    : layoutComponents[0]
 
   $: screens = $store.screens
   $: route = !route && screens.length === 0 ? "*" : route
@@ -43,9 +40,11 @@
     saveAttempted = true
 
     const isValid =
-      name.length > 0 && !screenNameExists(name) 
-      && route.length > 0 && !routeNameExists(route) 
-      && layoutComponent
+      name.length > 0 &&
+      !screenNameExists(name) &&
+      route.length > 0 &&
+      !routeNameExists(route) &&
+      layoutComponent
 
     if (!isValid) return
 
@@ -101,8 +100,8 @@
           <input
             class="uk-input uk-form-small"
             class:uk-form-danger={saveAttempted && (route.length === 0 || routeNameExists(route))}
-            bind:value={route} 
-            on:change={routeChanged}/>
+            bind:value={route}
+            on:change={routeChanged} />
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import Select from "../common/Select.svelte";
+  import Select from "../common/Select.svelte"
 
   export let selected
   export let label

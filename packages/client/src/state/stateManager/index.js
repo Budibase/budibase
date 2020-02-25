@@ -160,41 +160,46 @@ const setNodeState = (storeState, node) => {
  * Bind a components event handler parameters to state, context or the event itself.
  * @param {Array} eventHandlerProp - event handler array from component definition
  */
-function bindComponentEventHandlers(eventHandlerProp) {
-    const boundEventHandlers = []
-    for (let event of eventHandlerProp) {
-      const boundEventHandler = {
-        handlerType: event[EVENT_TYPE_MEMBER_NAME],
-        parameters: event.parameters,
+function bindComponentEventHandlers(
+  eventHandlerProp,
+  context,
+  getCurrentState
+) {
+  const boundEventHandlers = []
+  for (let event of eventHandlerProp) {
+    const boundEventHandler = {
+      handlerType: event[EVENT_TYPE_MEMBER_NAME],
+      parameters: event.parameters,
+    }
+
+    const boundParameters = {}
+    for (let paramName in boundEventHandler.parameters) {
+      const paramValue = boundEventHandler.parameters[paramName]
+      const paramBinding = parseBinding(paramValue)
+      if (!paramBinding) {
+        boundParameters[paramName] = () => paramValue
+        continue
       }
 
-      const boundParameters = {}
-      for (let paramName in boundEventHandler.parameters) {
-        const paramValue = boundEventHandler.parameters[paramName]
-        const paramBinding = parseBinding(paramValue)
-        if (!paramBinding) {
-          boundParameters[paramName] = () => paramValue
-          continue
-        } 
+      let paramValueSource
 
-        let paramValueSource;
+      if (paramBinding.source === "context") paramValueSource = context
+      if (paramBinding.source === "state") paramValueSource = getCurrentState()
 
-        if (paramBinding.source === "context") paramValueSource = context;
-        if (paramBinding.source === "state") paramValueSource = getCurrentState();
-
-        // The new dynamic event parameter bound to the relevant source
-        boundParameters[paramName] = eventContext => getState(
+      // The new dynamic event parameter bound to the relevant source
+      boundParameters[paramName] = eventContext =>
+        getState(
           paramBinding.source === "event" ? eventContext : paramValueSource,
           paramBinding.path,
           paramBinding.fallback
-        );
-      }
-
-      boundEventHandler.parameters = boundParameters
-      boundEventHandlers.push(boundEventHandlers)
-
-      return boundEventHandlers;
+        )
     }
+
+    boundEventHandler.parameters = boundParameters
+    boundEventHandlers.push(boundEventHandlers)
+
+    return boundEventHandlers
+  }
 }
 
 const _setup = (
@@ -230,22 +235,26 @@ const _setup = (
             binding.fallback,
             binding.source
           )
-    } 
-    
+    }
+
     if (isBound && binding.source === "context") {
       initialProps[propName] = !context
         ? propValue
         : getState(context, binding.path, binding.fallback, binding.source)
-    } 
-    
-    if (isEventType(propValue)) { 
-      const boundEventHandlers = bindComponentEventHandlers(propValue); 
+    }
 
-      if (boundEventHandlers.length === 0) { 
+    if (isEventType(propValue)) {
+      const boundEventHandlers = bindComponentEventHandlers(
+        propValue,
+        context,
+        getCurrentState
+      )
+
+      if (boundEventHandlers.length === 0) {
         initialProps[propName] = doNothing
       } else {
         initialProps[propName] = async context => {
-          for (let handlerInfo of handlersInfos) {
+          for (let handlerInfo of boundEventHandlers) {
             const handler = makeHandler(handlerTypes, handlerInfo)
             await handler(context)
           }

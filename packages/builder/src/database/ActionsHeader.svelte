@@ -39,9 +39,7 @@
   {/if}
 
   <Modal onClosed={() => (confirmDelete = false)} bind:isOpen={confirmDelete}>
-    <span>
-      Are you sure you want to delete {$store.currentNode.name}?
-    </span>
+    <span>Are you sure you want to delete {$store.currentNode.name}?</span>
     <div class="uk-modal-footer uk-text-right">
       <ButtonGroup>
         <ActionButton alert on:click={deleteCurrentNode}>Yes</ActionButton>

@@ -2,7 +2,7 @@ import { isString, keys, flatten, isArray, map, filter } from "lodash/fp"
 import { common } from "../../../../core/src"
 const pipe = common.$
 
-export const validatePage = (page, getComponent) => {
+export const validatePage = page => {
   const errors = []
   const error = message => errors.push(message)
 

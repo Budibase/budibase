@@ -3,16 +3,18 @@
   import ComponentPropertiesPanel from "./ComponentPropertiesPanel.svelte"
   import ComponentSelectionList from "./ComponentSelectionList.svelte"
 
-  const PROPERTIES_TAB = "properties";
-  const COMPONENT_SELECTION_TAB = "components";
+  const PROPERTIES_TAB = "properties"
+  const COMPONENT_SELECTION_TAB = "components"
 
-  let selected = PROPERTIES_TAB 
+  let selected = PROPERTIES_TAB
 
   const isSelected = tab => selected === tab
 
   const selectTab = tab => (selected = tab)
 
-  const toggleTab = () => selected = selected === PROPERTIES_TAB ? COMPONENT_SELECTION_TAB : PROPERTIES_TAB;
+  const toggleTab = () =>
+    (selected =
+      selected === PROPERTIES_TAB ? COMPONENT_SELECTION_TAB : PROPERTIES_TAB)
 </script>
 
 <div class="root">

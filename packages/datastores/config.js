@@ -4,7 +4,6 @@ import { promisify } from "es6-promisify"
 import _rimraf from "rimraf"
 
 const mkdir = promisify(fs.mkdir)
-const rmdir = promisify(fs.rmdir)
 const rimraf = promisify(_rimraf)
 
 const getConfig = async () => {
