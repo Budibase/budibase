@@ -3,11 +3,16 @@
   import ComponentPropertiesPanel from "./ComponentPropertiesPanel.svelte"
   import ComponentSelectionList from "./ComponentSelectionList.svelte"
 
-  let selected = "properties"
+  const PROPERTIES_TAB = "properties";
+  const COMPONENT_SELECTION_TAB = "components";
+
+  let selected = PROPERTIES_TAB 
 
   const isSelected = tab => selected === tab
 
   const selectTab = tab => (selected = tab)
+
+  const toggleTab = () => selected = selected === PROPERTIES_TAB ? COMPONENT_SELECTION_TAB : PROPERTIES_TAB;
 </script>
 
 <div class="root">
@@ -15,26 +20,26 @@
     <div class="switcher">
 
       <button
-        class:selected={selected === 'properties'}
-        on:click={() => selectTab('properties')}>
+        class:selected={selected === PROPERTIES_TAB}
+        on:click={() => selectTab(PROPERTIES_TAB)}>
         Properties
       </button>
 
       <button
-        class:selected={selected === 'components'}
-        on:click={() => selectTab('components')}>
+        class:selected={selected === COMPONENT_SELECTION_TAB}
+        on:click={() => selectTab(COMPONENT_SELECTION_TAB)}>
         Components
       </button>
 
     </div>
 
     <div class="panel">
-      {#if selected === 'properties'}
-        <ComponentPropertiesPanel />
+      {#if selected === PROPERTIES_TAB}
+        <ComponentPropertiesPanel {toggleTab} />
       {/if}
 
-      {#if selected === 'components'}
-        <ComponentSelectionList />
+      {#if selected === COMPONENT_SELECTION_TAB}
+        <ComponentSelectionList {toggleTab} />
       {/if}
 
     </div>
