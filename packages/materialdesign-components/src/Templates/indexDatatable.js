@@ -67,4 +67,4 @@ const rowCode = index =>
 if (!${dataCollection(index)}) return
 
 for (let ${dataItem(index)} of ${dataCollection(index)}) 
-  render( { ${dataItem(index)}) }`
+  render( { ${dataItem(index)} } )`
