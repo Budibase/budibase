@@ -56,4 +56,8 @@ describe("buildCodeForScreen", () => {
   })
 })
 
-const getFunctions = screen => new Function(buildCodeForScreens([screen]))()
+const getFunctions = screen => {
+  const code = buildCodeForScreens([screen])
+  const func = new Function(`return ${code}`)()
+  return func
+}
