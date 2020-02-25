@@ -1,71 +1,73 @@
 <script>
-  import { onMount, getContext } from "svelte";
-  import { Radiobutton } from "../Radiobutton";
-  import { Checkbox } from "../Checkbox";
-  import ClassBuilder from "../ClassBuilder.js";
+  import { onMount, getContext } from "svelte"
+  import { Radiobutton } from "../Radiobutton"
+  import { Checkbox } from "../Checkbox"
+  import ClassBuilder from "../ClassBuilder.js"
 
-  const cb = new ClassBuilder("list-item");
+  const cb = new ClassBuilder("list-item")
 
-  export let onClick = item => {};
+  export let onClick = item => {}
 
-  export let item = null;
-  export let useDoubleLine = false;
-  export let inputElement = null; //radiobutton or checkbox
+  export let text = ""
+  export let secondaryText = ""
+  export let variant = "two-line"
+  export let inputElement = null
+  export let leadingIcon = ""
+  export let trailingIcon = ""
+  export let selected = false
+  export let disabled = false
 
-  let role = "option";
+  let role = "option"
 
   onMount(() => {
-    let context = getContext("BBMD:list:context");
+    let context = getContext("BBMD:list:context")
     if (context === "menu") {
-      role = "menuitem";
+      role = "menuitem"
     }
-  });
+  })
 
   $: if (!!inputElement) {
-    setContext("BBMD:input:context", "list-item");
+    setContext("BBMD:input:context", "list-item")
   }
 
   $: modifiers = {
-    selected: !inputElement ? item.selected : null,
-    disabled: item.disabled
-  };
-  $: props = { modifiers };
-  $: listItemClass = cb.build({ props });
+    selected,
+    disabled,
+  }
+  $: props = { modifiers }
+  $: listItemClass = cb.build({ props })
 
-  $: useSecondaryText =
-    typeof item.text === "object" && "secondary" in item.text;
+  $: useTwoLine = variant === "two-line" && !!secondaryText
 </script>
 
 <li
   class={listItemClass}
   role="option"
-  aria-selected={item.selected}
+  aria-selected={selected}
   tabindex="0"
   on:click={onClick}>
-  {#if item.leadingIcon}
+  {#if leadingIcon}
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">
-      {item.leadingIcon}
+      {leadingIcon}
     </span>
   {/if}
   <span class={cb.elem`text`}>
-    {#if useDoubleLine}
-      <span class={cb.elem`primary-text`}>{item.text.primary}</span>
-      {#if useSecondaryText}
-        <span class={cb.elem`secondary-text`}>{item.text.secondary}</span>
-      {/if}
-    {:else}{item.text}{/if}
+    {#if useTwoLine}
+      <span class={cb.elem`primary-text`}>{text}</span>
+      <span class={cb.elem`secondary-text`}>{secondaryText}</span>
+    {:else}{text}{/if}
   </span>
 
   {#if inputElement}
     {#if inputElement === 'radiobutton'}
-      <Radiobutton checked={item.selected} disabled={item.disabled} />
+      <Radiobutton checked={selected} {disabled} />
     {:else if inputElement === 'checkbox'}
-      <Checkbox checked={item.selected} disabled={item.disabled} />
+      <Checkbox checked={selected} {disabled} />
     {/if}
-  {:else if item.trailingIcon}
+  {:else if trailingIcon}
     <!-- TODO: Adapt label to accept class prop to handle this. Context is insufficient -->
     <span class="mdc-list-item__meta material-icons" aria-hidden="true">
-      {item.trailingIcon}
+      {trailingIcon}
     </span>
   {/if}
 </li>
