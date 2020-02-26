@@ -1,6 +1,6 @@
 {
   "name": "@budibase/core",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "core javascript library for budibase",
   "main": "dist/budibase-core.umd.js",
   "module": "dist/budibase-core.esm.js",
