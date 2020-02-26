@@ -2,6 +2,7 @@
   "name": "@budibase/builder",
   "version": "0.0.17",
   "license": "AGPL-3.0",
+  "private": true,
   "scripts": {
     "build": "rollup -c",
     "start": "rollup -c -w",
