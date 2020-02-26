@@ -2,3 +2,4 @@ myapps/
 config.js
 /builder/*
 !/builder/assets/
+public/
