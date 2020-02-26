@@ -1,5 +1,6 @@
 <script>
   import PropsView from "./PropsView.svelte"
+  import StateBindingControl from "./StateBindingControl.svelte"
   import { store } from "../builderStore"
   import IconButton from "../common/IconButton.svelte"
   import {
@@ -18,12 +19,24 @@
 
   $: component = $store.currentComponentInfo
   $: originalName = component.name
-  $: name = component.name
+  $: name =
+    $store.currentView === "detail"
+      ? $store.currentPreviewItem.name
+      : component._component
   $: description = component.description
   $: components = $store.components
-
+  $: screen_props =
+    $store.currentFrontEndType === "page"
+      ? getProps($store.currentPreviewItem, ["name", "favicon"])
+      : getProps($store.currentPreviewItem, ["name", "description", "url"])
+  $: console.log(screen_props)
   const onPropChanged = store.setComponentProp
   const onStyleChanged = store.setComponentStyle
+
+  function getProps(obj, keys) {
+    return keys.map((k, i) => [k, obj[k], obj.props._id + i])
+  }
+  $: console.log($store, component)
 </script>
 
 <div class="root">
@@ -64,11 +77,23 @@
       </li>
     {/if}
   </ul>
-  {$store.currentFrontEndType}
   <div class="component-props-container">
 
     {#if current_view === 'props'}
-      <PropsView {component} {components} {onPropChanged} />
+      {#if $store.currentView === 'detail'}
+        {#each screen_props as [k, v, id] (id)}
+          <div class="detail-prop" for={k}>
+            <label>{k}:</label>
+            <input
+              id={k}
+              value={v}
+              on:input={({ target }) => store.setDetailProp(k, target.value)} />
+          </div>
+        {/each}
+        <PropsView {component} {components} {onPropChanged} />
+      {:else}
+        <PropsView {component} {components} {onPropChanged} />
+      {/if}
     {:else if current_view === 'layout'}
       <LayoutEditor {onStyleChanged} {component} />
     {:else if current_view === 'events'}
@@ -85,6 +110,41 @@
 </div>
 
 <style>
+  .detail-prop {
+    height: 40px;
+    margin-bottom: 15px;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 70px 1fr;
+    grid-gap: 10px;
+  }
+
+  .detail-prop label {
+    word-wrap: break-word;
+    font-size: 12px;
+    font-weight: 700;
+    color: #163057;
+    opacity: 0.6;
+    padding-top: 12px;
+    margin-bottom: 0;
+  }
+
+  input {
+    height: 30px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border: 1px solid #dbdbdb;
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+
+  input:focus {
+    outline: 0;
+    background-color: #fff;
+    color: #666;
+    border-color: #1e87f0;
+  }
+
   .root {
     height: 100%;
     display: flex;
