@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -35,7 +35,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/client": "^0.0.20",
+    "@budibase/client": "^0.0.21",
     "@nx-js/compiler-util": "^2.0.0",
     "codemirror": "^5.51.0",
     "date-fns": "^1.29.0",
