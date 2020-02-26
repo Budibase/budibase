@@ -36,7 +36,6 @@
   function getProps(obj, keys) {
     return keys.map((k, i) => [k, obj[k], obj.props._id + i])
   }
-  $: console.log($store, component)
 </script>
 
 <div class="root">
@@ -87,7 +86,7 @@
             <input
               id={k}
               value={v}
-              on:input={({ target }) => store.setDetailProp(k, target.value)} />
+              on:input={({ target }) => store.setMetadataProp(k, target.value)} />
           </div>
         {/each}
         <PropsView {component} {components} {onPropChanged} />

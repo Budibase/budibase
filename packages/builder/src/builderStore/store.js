@@ -112,7 +112,7 @@ export const getStore = () => {
   store.moveDownComponent = moveDownComponent(store)
   store.copyComponent = copyComponent(store)
   store.addTemplatedComponent = addTemplatedComponent(store)
-  store.setDetailProp = setDetailProp(store)
+  store.setMetadataProp = setMetadataProp(store)
   return store
 }
 
@@ -956,7 +956,7 @@ const walkProps = (props, action, cancelToken = null) => {
   }
 }
 
-const setDetailProp = store => (name, prop) => {
+const setMetadataProp = store => (name, prop) => {
   store.update(s => {
     s.currentPreviewItem[name] = prop
     return s
