@@ -1,7 +1,7 @@
 <script>
   import { store } from "../builderStore/store"
   import UIkit from "uikit"
-  import Button from "../common/Button.svelte"
+  import ActionButton from "../common/ActionButton.svelte"
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import CodeMirror from "codemirror"
   import "codemirror/mode/javascript/javascript.js"
@@ -74,10 +74,12 @@
       </div>
     </div>
 
-    <ButtonGroup style="float: right;">
-      <Button color="primary" grouped on:click={save}>Save</Button>
-      <Button color="tertiary" grouped on:click={cancel}>Close</Button>
-    </ButtonGroup>
+    <div class="uk-modal-footer">
+      <ButtonGroup>
+        <ActionButton primary on:click={save}>Save</ActionButton>
+        <ActionButton alert on:click={cancel}>Close</ActionButton>
+      </ButtonGroup>
+    </div>
   </div>
 </div>
 

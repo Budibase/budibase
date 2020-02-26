@@ -9,10 +9,11 @@
   let navActive = ""
   $: icon = type === "index" ? "list" : "file"
 
-  store.subscribe(s => {
-    if (s.currentNode)
+  store.subscribe(state => {
+    if (state.currentNode) {
       navActive =
-        s.activeNav === "database" && node.nodeId === s.currentNode.nodeId
+        state.activeNav === "database" && node.nodeId === state.currentNode.nodeId
+    }
   })
 </script>
 

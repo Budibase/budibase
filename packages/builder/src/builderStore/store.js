@@ -274,13 +274,13 @@ const saveCurrentNode = store => () => {
     const cloned = cloneDeep(s.currentNode)
     templateApi(s.hierarchy).constructNode(parentNode, cloned)
 
-    const newIndexOfchild = child => {
+    const newIndexOfChild = child => {
       if (child === cloned) return index
       const currentIndex = parentNode.children.indexOf(child)
       return currentIndex >= index ? currentIndex + 1 : currentIndex
     }
 
-    parentNode.children = pipe(parentNode.children, [sortBy(newIndexOfchild)])
+    parentNode.children = pipe(parentNode.children, [sortBy(newIndexOfChild)])
 
     if (!existingNode && s.currentNode.type === "record") {
       const defaultIndex = templateApi(s.hierarchy).getNewIndexTemplate(
