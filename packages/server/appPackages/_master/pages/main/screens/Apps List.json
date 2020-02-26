@@ -1,0 +1,131 @@
+{
+  "name": "Apps List",
+  "description": "",
+  "url": "",
+  "uiFunctions": "",
+  "props": {
+    "_component": "@budibase/standard-components/container",
+    "_styles": {
+      "position": {},
+      "layout": {}
+    },
+    "_id": "dc9992bb-fd7a-4f9e-ae49-d36073bf5047",
+    "_code": "",
+    "className": "",
+    "onLoad": [
+      {
+        "##eventHandlerType": "List Records",
+        "parameters": {
+          "indexKey": "/all_applications",
+          "statePath": "all_applications"
+        }
+      }
+    ],
+    "type": "div",
+    "backgroundColor": "",
+    "color": "",
+    "borderWidth": "",
+    "borderColor": "",
+    "borderStyle": "none",
+    "_children": [
+      {
+        "_component": "@budibase/materialdesign-components/H4",
+        "_styles": {
+          "position": {},
+          "layout": {}
+        },
+        "_id": "3a36045a-a9e5-43fc-8e54-0ba69eab2270",
+        "_code": "",
+        "text": "Applications",
+        "_children": []
+      },
+      {
+        "_component": "@budibase/standard-components/container",
+        "_styles": {
+          "position": {
+            "column": [
+              "",
+              ""
+            ],
+            "row": [
+              "",
+              ""
+            ],
+            "margin": [
+              "",
+              "",
+              "",
+              ""
+            ],
+            "padding": [
+              "10px",
+              "10px",
+              "10px",
+              "10px"
+            ],
+            "height": [
+              ""
+            ],
+            "width": [
+              ""
+            ],
+            "zindex": [
+              ""
+            ]
+          },
+          "layout": {
+            "templaterows": [
+              ""
+            ],
+            "templatecolumns": [
+              ""
+            ]
+          }
+        },
+        "_id": "8036b218-133e-4403-920d-19b79425bc8a",
+        "_code": "if (!state.all_applications) return\n\nfor (let application of state.all_applications) {\n  const newcontext = {\n    screenUrl: `/application/${application.id}`,\n    application\n  }\n  render(newcontext)\n}",
+        "className": "",
+        "onLoad": [],
+        "type": "div",
+        "backgroundColor": "",
+        "color": "",
+        "borderWidth": "",
+        "borderColor": "",
+        "borderStyle": "none",
+        "_children": [
+          {
+            "_component": "@budibase/materialdesign-components/Body2",
+            "_styles": {
+              "position": {},
+              "layout": {}
+            },
+            "_id": "2b8521fd-329f-49e1-80e5-0bea3e4e6513",
+            "_code": "",
+            "text": "context.application.name",
+            "_children": []
+          },
+          {
+            "_component": "@budibase/materialdesign-components/Button",
+            "_styles": {
+              "position": {},
+              "layout": {}
+            },
+            "_id": "9bd8e4d7-3f65-4490-8178-31d39a47aad1",
+            "_code": "",
+            "onClick": [],
+            "variant": "text",
+            "colour": "primary",
+            "size": "medium",
+            "href": "context.screenUrl",
+            "icon": "",
+            "trailingIcon": false,
+            "fullwidth": false,
+            "text": "Manage",
+            "disabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "route": "*"
+}
