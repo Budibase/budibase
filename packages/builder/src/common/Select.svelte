@@ -4,7 +4,7 @@
 </script>
 
 <div class="select-container">
-  <select on:change bind:value={value}>
+  <select on:change bind:value>
     <slot />
   </select>
   <span class="arrow">

@@ -38,10 +38,10 @@ const tableProps = (index, indexSchema) => ({
       "##eventHandlerType": "List Records",
       parameters: {
         indexKey: "/all_contacts",
-        statePath: "all_contacts"
-      }
-    }
-  ]
+        statePath: "all_contacts",
+      },
+    },
+  ],
 })
 
 const columnHeaders = indexSchema =>

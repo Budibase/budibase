@@ -309,26 +309,20 @@ module.exports = (config, app) => {
     })
     .post("/:appname/api/listRecords/*", async ctx => {
       const indexkey = getRecordKey(ctx.params.appname, ctx.request.path)
-      ctx.body = await ctx.instance.indexApi.listItems(
-        indexkey,
-        {
-          rangeStartParams: ctx.request.body.rangeStartParams,
-          rangeEndParams: ctx.request.body.rangeEndParams,
-          searchPhrase: ctx.request.body.searchPhrase,
-        }
-      )
+      ctx.body = await ctx.instance.indexApi.listItems(indexkey, {
+        rangeStartParams: ctx.request.body.rangeStartParams,
+        rangeEndParams: ctx.request.body.rangeEndParams,
+        searchPhrase: ctx.request.body.searchPhrase,
+      })
       ctx.response.status = StatusCodes.OK
     })
     .post("/:appname/api/aggregates/*", async ctx => {
       const indexkey = getRecordKey(ctx.params.appname, ctx.request.path)
-      ctx.body = await ctx.instance.indexApi.aggregates(
-        indexkey,
-        {
-          rangeStartParams: ctx.request.body.rangeStartParams,
-          rangeEndParams: ctx.request.body.rangeEndParams,
-          searchPhrase: ctx.request.body.searchPhrase,
-        }
-      )
+      ctx.body = await ctx.instance.indexApi.aggregates(indexkey, {
+        rangeStartParams: ctx.request.body.rangeStartParams,
+        rangeEndParams: ctx.request.body.rangeEndParams,
+        searchPhrase: ctx.request.body.searchPhrase,
+      })
       ctx.response.status = StatusCodes.OK
     })
     .post("/:appname/api/files/*", async ctx => {
