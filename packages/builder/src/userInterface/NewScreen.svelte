@@ -3,6 +3,7 @@
   import PropsView from "./PropsView.svelte"
   import Textbox from "../common/Textbox.svelte"
   import Button from "../common/Button.svelte"
+  import ActionButton from "../common/ActionButton.svelte"
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import { pipe } from "../common/core"
   import UIkit from "uikit"
@@ -122,8 +123,8 @@
       </div>
 
       <ButtonGroup style="float: right;">
-        <Button color="primary" grouped on:click={save}>Create Screen</Button>
-        <Button color="tertiary" grouped on:click={cancel}>Cancel</Button>
+        <ActionButton primary on:click={save}>Create Screen</ActionButton>
+        <ActionButton alert on:click={cancel}>Cancel</ActionButton>
       </ButtonGroup>
     </div>
   </div>
