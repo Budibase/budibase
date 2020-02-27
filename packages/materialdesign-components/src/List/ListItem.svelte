@@ -3,7 +3,7 @@
   import { Radiobutton } from "../Radiobutton"
   import { Checkbox } from "../Checkbox"
   import ClassBuilder from "../ClassBuilder.js"
-  import shortid from "shortid"
+  import { generate } from "shortid"
 
   const cb = new ClassBuilder("list-item")
 
@@ -28,7 +28,7 @@
   let role = "option"
 
   onMount(() => {
-    _id = shortid.generate()
+    _id = generate()
 
     selectedItems = _bb.getContext("BBMD:list:selectItemStore")
 
