@@ -18,18 +18,16 @@
 
   let instance = null
   let checkbox = null
-  let context = null
+  let context = _bb.getContext("BBMD:input:context")
 
   onMount(() => {
-    context = _bb.getContext("BBMD:input:context")
-
     if (!!checkbox) {
       instance = new MDCCheckbox(checkbox)
       instance.indeterminate = indeterminate
       if (context !== "list-item") {
         //TODO: Fix this connected to Formfield context issue
-        // let fieldStore = _bb.getContext("BBMD:field-element")
-        // fieldStore.setInput(instance)
+        let fieldStore = _bb.getContext("BBMD:field-element")
+        fieldStore.setInput(instance)
       }
     }
   })

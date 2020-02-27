@@ -23,9 +23,8 @@
     if (!!radiobtn) {
       instance = new MDCRadio(radiobtn)
       if (context !== "list-item") {
-        //TODO: Fix this connected to Formfield context issue, _bb not binding properly
-        // let fieldStore = _bb.getContext("BBMD:field-element")
-        // fieldStore.setInput(instance)
+        let fieldStore = _bb.getContext("BBMD:field-element")
+        fieldStore.setInput(instance)
       }
     }
   })
