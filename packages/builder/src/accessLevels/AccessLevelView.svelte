@@ -62,6 +62,7 @@
         clonedLevel.permissions
       )
     }
+    allPermissions = allPermissions
   }
 </script>
 
