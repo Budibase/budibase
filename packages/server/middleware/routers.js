@@ -302,13 +302,15 @@ module.exports = (config, app) => {
       ctx.body = await ctx.instance.authApi.getAccessLevels()
       ctx.response.status = StatusCodes.OK
     })
-    .get("/:appname/api/listRecords/:indexkey", async ctx => {
-      ctx.body = await ctx.instance.indexApi.listItems(ctx.params.indexkey)
+    .get("/:appname/api/listRecords/*", async ctx => {
+      const indexkey = getRecordKey(ctx.params.appname, ctx.request.path)
+      ctx.body = await ctx.instance.indexApi.listItems(indexkey)
       ctx.response.status = StatusCodes.OK
     })
-    .post("/:appname/api/listRecords/:indexkey", async ctx => {
+    .post("/:appname/api/listRecords/*", async ctx => {
+      const indexkey = getRecordKey(ctx.params.appname, ctx.request.path)
       ctx.body = await ctx.instance.indexApi.listItems(
-        ctx.request.body.indexKey,
+        indexkey,
         {
           rangeStartParams: ctx.request.body.rangeStartParams,
           rangeEndParams: ctx.request.body.rangeEndParams,
@@ -317,9 +319,10 @@ module.exports = (config, app) => {
       )
       ctx.response.status = StatusCodes.OK
     })
-    .post("/:appname/api/aggregates/:indexkey", async ctx => {
+    .post("/:appname/api/aggregates/*", async ctx => {
+      const indexkey = getRecordKey(ctx.params.appname, ctx.request.path)
       ctx.body = await ctx.instance.indexApi.aggregates(
-        ctx.request.body.indexKey,
+        indexkey,
         {
           rangeStartParams: ctx.request.body.rangeStartParams,
           rangeEndParams: ctx.request.body.rangeEndParams,
@@ -394,6 +397,8 @@ module.exports = (config, app) => {
       .replace(`/${appname}/api/files/`, "")
       .replace(`/${appname}/api/lookup_field/`, "")
       .replace(`/${appname}/api/record/`, "")
+      .replace(`/${appname}/api/listRecords/`, "")
+      .replace(`/${appname}/api/aggregates/`, "")
 
   return router
 }
