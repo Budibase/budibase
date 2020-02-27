@@ -30,7 +30,10 @@ module.exports.appsFolder = config => appPackageFolder(config, "")
 
 module.exports.masterAppPackage = context => {
   const { config } = context
-  const standardPackage = createAppPackage(context, `${__dirname}/../appPackages/_master`)
+  const standardPackage = createAppPackage(
+    context,
+    `${__dirname}/../appPackages/_master`
+  )
 
   const customizeMaster =
     config && config.customizeMaster ? config.customizeMaster : a => a
