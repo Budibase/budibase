@@ -27,7 +27,8 @@
       if (context !== "list-item") {
         //TODO: Fix this connected to Formfield context issue
         let fieldStore = _bb.getContext("BBMD:field-element")
-        fieldStore.setInput(instance)
+        if(fieldStore)
+          fieldStore.setInput(instance)
       }
     }
   })
@@ -43,6 +44,14 @@
   let props = { modifiers, extras }
 
   const blockClass = cb.build({ props })
+
+  function changed(e) {
+    const val = e.target.checked
+    checked = val
+    if (_bb.isBound(_bb.props.checked)) {
+      _bb.setStateFromBinding(_bb.props.checked, val)
+    }
+  }
 </script>
 
 <!-- TODO: Customizing Colour and Density - What level of customization for these things does Budibase need here? -->
@@ -56,7 +65,8 @@
         {id}
         {disabled}
         {checked}
-        on:click={onClick} />
+        on:click={onClick}
+        on:change={changed} />
       <div class={cb.elem`background`}>
         <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
           <path
@@ -77,6 +87,7 @@
       {id}
       {disabled}
       {checked}
+      on:change={changed}
       on:click={onClick} />
     <div class={cb.elem`background`}>
       <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
