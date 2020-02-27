@@ -13,19 +13,40 @@
 
   export let onSelect = selectedItems => {}
 
-  export let variant = "one-line"
-  //items: [{text: string | {primary: string, secondary: string}, value: any, selected: bool}...n]
-  export let items = []
   export let singleSelection = false
+  export let variant = "two-line"
   export let inputElement = null
+
+  let selectedItems = []
+
+  //TODO: Try managing selected list items with a store that is passed into context. This way can check within the component whether list item is selected to not selecteds instead of managing from internal state which is not feasible 
+  function handleSelected(item) {
+    let idx = selectedItems.findIndex(i => i._id === item._id)
+    if (idx > -1) {
+      selectedItems.splice(idx, 1)
+      selectedItems = selectedItems
+    } else {
+      if (singleSelection) {
+        selectedItems = [item]
+      } else {
+        selectedItems = [...selectedItems, item]
+      }
+    }
+  }
+
+  //See todo above
+  _bb.setContext("BBMD:list:selectItem", handleSelected)
 
   let role = "listbox"
 
   onMount(() => {
+    _bb.setContext("BBMD:list:props", { inputElement, variant })
     if (!!list) {
       instance = new MDCList(list)
       instance.singleSelection = singleSelection
-      instance.listElements.map(element => new MDCRipple(element))
+      if (!inputElement) {
+        instance.listElements.map(element => new MDCRipple(element))
+      }
     }
 
     let context = getContext("BBMD:list:context")
@@ -38,28 +59,6 @@
       instance = null
     }
   })
-
-  function handleSelectedItem(item) {
-    if (!item.disabled) {
-      if (singleSelection || inputElement === "radiobutton") {
-        items.forEach(i => {
-          if (i.selected) i.selected = false
-        })
-      }
-
-      let idx = items.indexOf(item)
-      if (!!item.selected) {
-        items[idx].selected = !item.selected
-      } else {
-        items[idx].selected = true
-      }
-      onSelect(items.filter(item => item.selected))
-    }
-  }
-
-  $: useDoubleLine =
-    variant == "two-line" &&
-    items.every(i => typeof i.text == "object" && "primary" in i.text)
 
   $: list && _bb.attachChildren(list)
 
