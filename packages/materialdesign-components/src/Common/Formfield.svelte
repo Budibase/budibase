@@ -3,13 +3,14 @@
   import ClassBuilder from "../ClassBuilder.js"
   import { fieldStore } from "./FormfieldStore.js"
   import { MDCFormField } from "@material/form-field"
-  import { onMount, onDestroy, setContext } from "svelte"
+  import { onMount, onDestroy } from "svelte"
 
   const cb = new ClassBuilder("form-field")
 
   let store
   const unsubscribe = fieldStore.subscribe(s => (store = s))
 
+  export let _bb
   export let id = ""
   export let label = ""
   export let alignEnd = false
@@ -23,7 +24,8 @@
 
   onMount(() => {
     if (!!formField) fieldStore.set(new MDCFormField(formField))
-    setContext("BBMD:field-element", fieldStore)
+    //TODO: Fix this, _bb is coming back undefined
+    // _bb.setContext("BBMD:field-element", fieldStore)
   })
 
   onDestroy(unsubscribe)
