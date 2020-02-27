@@ -16,7 +16,7 @@ const _builderProxy = proxy("/_builder", {
   pathRewrite: { "^/_builder": "" },
 })
 
-const apiProxy = proxy(["/_builder/api/**", "/_builder/**/componentlibrary"], {
+const apiProxy = proxy(["/_builder/assets/**", "/_builder/api/**", "/_builder/**/componentlibrary"], {
   target,
   logLevel: "debug",
   changeOrigin: true,

@@ -19,9 +19,11 @@
 </script>
 
 <div class="root" style="left: {left}">
-
   <ButtonGroup>
-    <ActionButton color="secondary" grouped on:click={store.saveCurrentNode}>
+    <ActionButton
+      color="secondary"
+      grouped
+      on:click={store.saveCurrentNode}>
       {#if $store.currentNodeIsNew}Create{:else}Update{/if}
     </ActionButton>
 

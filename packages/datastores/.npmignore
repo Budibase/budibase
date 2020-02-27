@@ -1,0 +1,5 @@
+*
+!datastores/*
+!index.js
+!config.js
+!config.template.js
