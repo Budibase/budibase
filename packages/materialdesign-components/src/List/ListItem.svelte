@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, getContext } from "svelte"
   import { Radiobutton } from "../Radiobutton"
   import { Checkbox } from "../Checkbox"
   import ClassBuilder from "../ClassBuilder.js"
@@ -11,6 +11,8 @@
 
   let _id
   let listProps = null
+
+  let selectedItems
 
   export let _bb
 
@@ -25,23 +27,10 @@
 
   let role = "option"
 
-  function handleClick() {
-    if (!disabled) {
-      const selectItem = _bb.getContext("BBMD:list:selectItem")
-      selected = !selected
-      selectItem({
-        _id,
-        value,
-        text,
-        secondaryText,
-        selected,
-        disabled,
-      })
-    }
-  }
-
   onMount(() => {
     _id = shortid.generate()
+
+    selectedItems = _bb.getContext("BBMD:list:selectItemStore")
 
     listProps = _bb.getContext("BBMD:list:props")
 
@@ -51,15 +40,41 @@
     }
   })
 
+  function handleClick() {
+    let item = {
+      _id,
+      value,
+      text,
+      secondaryText,
+      selected,
+      disabled,
+    }
+    if (!disabled) {
+      if (
+        listProps.singleSelection ||
+        listProps.inputElement === "radiobutton"
+      ) {
+        selectedItems.addSingleItem(item)
+      } else {
+        let idx = selectedItems.getItemIdx($selectedItems, _id)
+        if (idx > -1) {
+          selectedItems.removeItem(_id)
+        } else {
+          selectedItems.addItem(item)
+        }
+      }
+    }
+  }
+
   $: if (listProps && !!listProps.inputElement) {
     _bb.setContext("BBMD:input:context", "list-item")
   }
 
-  $: shouldSel = selected && !listProps
-  $: console.log("Should Select", selected)
+  $: isSelected =
+    $selectedItems && selectedItems.getItemIdx($selectedItems, _id) > -1
 
   $: modifiers = {
-    selected: selected && (!listProps || !listProps.inputElement),
+    selected: isSelected && (!listProps || !listProps.inputElement),
     disabled,
   }
   $: props = { modifiers }
@@ -84,9 +99,9 @@
 
   {#if listProps}
     {#if listProps.inputElement === 'radiobutton'}
-      <Radiobutton checked={selected} {disabled} {_bb} />
+      <Radiobutton checked={isSelected} {disabled} {_bb} />
     {:else if listProps.inputElement === 'checkbox'}
-      <Checkbox checked={selected} {disabled} {_bb} />
+      <Checkbox checked={isSelected} {disabled} {_bb} />
     {/if}
   {:else if trailingIcon}
     <!-- TODO: Adapt label to accept class prop to handle this. Context is insufficient -->

@@ -118,8 +118,7 @@ export const props = {
   List: {
     _component: "@budibase/materialdesign-components/List",
     variant: "two-line",
-    inputElement: "radiobutton",
-    singleSelection: true,
+    singleSelection: false,
     onSelect: selected => console.log(selected),
     _children: [
       {
