@@ -1,9 +1,12 @@
 <script>
-  import { onMount, getContext } from "svelte"
+  import { onMount, getContext, setContext } from "svelte"
   import { MDCList } from "@material/list"
+  import createItemsStore from "../Common/ItemStore.js"
   import { MDCRipple } from "@material/ripple"
   import ListItem from "./ListItem.svelte"
   import ClassBuilder from "../ClassBuilder.js"
+
+  let selectedItems
 
   export let _bb
   const cb = new ClassBuilder("list", ["one-line"])
@@ -13,19 +16,38 @@
 
   export let onSelect = selectedItems => {}
 
-  export let variant = "one-line"
-  //items: [{text: string | {primary: string, secondary: string}, value: any, selected: bool}...n]
-  export let items = []
   export let singleSelection = false
+  export let variant = "two-line"
   export let inputElement = null
+
+  let selectedItemsStore
 
   let role = "listbox"
 
+  function createOrAcceptItemStore() {
+    let store = _bb.getContext("BBMD:list:selectItemStore")
+    if (!!store) {
+      selectedItemsStore = store
+    } else {
+      selectedItemsStore = createItemsStore(() => onSelect($selectedItemsStore))
+      _bb.setContext("BBMD:list:selectItemStore", selectedItemsStore)
+    }
+  }
+
   onMount(() => {
+    createOrAcceptItemStore()
+
+    _bb.setContext("BBMD:list:props", {
+      inputElement,
+      variant,
+      singleSelection,
+    })
     if (!!list) {
-      instance = new MDCList(list)
-      instance.singleSelection = singleSelection
-      instance.listElements.map(element => new MDCRipple(element))
+      if (!inputElement) {
+        instance = new MDCList(list)
+        instance.singleSelection = singleSelection
+        instance.listElements.map(element => new MDCRipple(element))
+      }
     }
 
     let context = getContext("BBMD:list:context")
@@ -38,28 +60,6 @@
       instance = null
     }
   })
-
-  function handleSelectedItem(item) {
-    if (!item.disabled) {
-      if (singleSelection || inputElement === "radiobutton") {
-        items.forEach(i => {
-          if (i.selected) i.selected = false
-        })
-      }
-
-      let idx = items.indexOf(item)
-      if (!!item.selected) {
-        items[idx].selected = !item.selected
-      } else {
-        items[idx].selected = true
-      }
-      onSelect(items.filter(item => item.selected))
-    }
-  }
-
-  $: useDoubleLine =
-    variant == "two-line" &&
-    items.every(i => typeof i.text == "object" && "primary" in i.text)
 
   $: list && _bb.attachChildren(list)
 
