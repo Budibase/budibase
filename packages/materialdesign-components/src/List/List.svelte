@@ -17,11 +17,21 @@
   //items: [{text: string | {primary: string, secondary: string}, value: any, selected: bool}...n]
   export let items = []
   export let singleSelection = false
+
   export let inputElement = null
 
   let role = "listbox"
 
   onMount(() => {
+    createOrAcceptItemStore()
+
+    if (!_bb.getContext("BBMD:list:props")) {
+      _bb.setContext("BBMD:list:props", {
+        inputElement,
+        variant,
+        singleSelection,
+      })
+    }
     if (!!list) {
       instance = new MDCList(list)
       instance.singleSelection = singleSelection
