@@ -45,8 +45,6 @@
     }
     setContext("BBMD:list:context", "menu")
   })
-
-  $: menu && _bb.attachChildren(menu)
 </script>
 
 {#if useFixedPosition || useAbsolutePosition}

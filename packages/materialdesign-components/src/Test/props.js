@@ -152,4 +152,27 @@ export const props = {
     singleSelection: true,
     onSelect: selected => console.log(selected),
   },
+  Menu: {
+    _component: "@budibase/materialdesign-components/Menu",
+    _children: [
+      {
+        _component: "@budibase/materialdesign-components/ListItem",
+        _children: [],
+        text: "Settings",
+        value: 0,
+      },
+      {
+        _component: "@budibase/materialdesign-components/ListItem",
+        _children: [],
+        text: "Account",
+        value: 1,
+      },
+      {
+        _component: "@budibase/materialdesign-components/ListItem",
+        _children: [],
+        text: "Profile",
+        value: 2,
+      },
+    ],
+  }
 }
