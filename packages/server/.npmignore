@@ -1,0 +1,8 @@
+myapps/
+config.js
+public/
+.vscode/
+node_modules/
+runtime_apps/
+tests/
+appPackages/testApp*

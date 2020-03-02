@@ -117,12 +117,13 @@ export const props = {
   CustomersIndexTable: indexDatatable(templateOptions)[0].props,
   List: {
     _component: "@budibase/materialdesign-components/List",
+    variant: "two-line",
+    singleSelection: false,
+    onSelect: selected => console.log(selected),
     _children: [
       {
         _component: "@budibase/materialdesign-components/ListItem",
         _children: [],
-        variant: "two-line",
-        singleSelection: true,
         text: "Curry",
         secondaryText: "Chicken or Beef",
         value: 0,
@@ -131,8 +132,6 @@ export const props = {
       {
         _component: "@budibase/materialdesign-components/ListItem",
         _children: [],
-        variant: "two-line",
-        singleSelection: true,
         text: "Pastie",
         secondaryText: "Bap with Mayo",
         value: 1,
@@ -141,16 +140,11 @@ export const props = {
       {
         _component: "@budibase/materialdesign-components/ListItem",
         _children: [],
-        variant: "two-line",
-        singleSelection: true,
         text: "Fish",
         secondaryText: "Salmon or Cod",
         value: 2,
       },
-    ],
-    variant: "two-line",
-    singleSelection: true,
-    onSelect: selected => console.log(selected),
+    ]
   },
   Menu: {
     _component: "@budibase/materialdesign-components/Menu",

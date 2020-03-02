@@ -24,6 +24,8 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
     childNode.destroy()
   }
 
+  if (!htmlElement) return
+
   if (hydrate) {
     while (htmlElement.firstChild) {
       htmlElement.removeChild(htmlElement.firstChild)
