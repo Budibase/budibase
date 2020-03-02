@@ -8,7 +8,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@budibase/standard-components": "^0.0.3",
-    "@budibase/materialdesign-components": "^0.0.16"
+    "@budibase/standard-components": "0.x",
+    "@budibase/materialdesign-components": "0.x"
   }
 }

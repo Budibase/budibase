@@ -13,10 +13,14 @@ export const bbFactory = ({
   uiFunctions,
   onScreenSlotRendered,
 }) => {
-  const relativeUrl = url =>
-    frontendDefinition.appRootPath
-      ? frontendDefinition.appRootPath + "/" + trimSlash(url)
-      : url
+  const relativeUrl = url => {
+    if (!frontendDefinition.appRootPath) return url
+    if (url.startsWith("http:") 
+        || url.startsWith("https:") 
+        || url.startsWith("./")) return url
+
+    return frontendDefinition.appRootPath + "/" + trimSlash(url)
+  }
 
   const apiCall = method => (url, body) =>
     fetch(relativeUrl(url), {

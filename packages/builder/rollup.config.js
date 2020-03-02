@@ -16,17 +16,20 @@ const _builderProxy = proxy("/_builder", {
   pathRewrite: { "^/_builder": "" },
 })
 
-const apiProxy = proxy(["/_builder/api/**", "/_builder/**/componentlibrary"], {
-  target,
-  logLevel: "debug",
-  changeOrigin: true,
-  cookieDomainRewrite: true,
-  onProxyReq(proxyReq) {
-    if (proxyReq.getHeader("origin")) {
-      proxyReq.setHeader("origin", target)
-    }
-  },
-})
+const apiProxy = proxy(
+  ["/_builder/assets/**", "/_builder/api/**", "/_builder/**/componentlibrary"],
+  {
+    target,
+    logLevel: "debug",
+    changeOrigin: true,
+    cookieDomainRewrite: true,
+    onProxyReq(proxyReq) {
+      if (proxyReq.getHeader("origin")) {
+        proxyReq.setHeader("origin", target)
+      }
+    },
+  }
+)
 
 const production = !process.env.ROLLUP_WATCH
 

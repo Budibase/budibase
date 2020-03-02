@@ -1,15 +1,14 @@
 {
-  "name": "budibase-master",
+  "name": "masterui",
   "version": "1.0.0",
   "description": "",
-  "main": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "GPL-3.0",
+  "license": "ISC",
   "dependencies": {
-    "@budibase/client": "file:../../../client",
-    "@budibase/standard-components": "file:../../../standard-components"
+    "@budibase/standard-components": "^0.0.19",
+    "@budibase/materialdesign-components": "^0.0.19"
   }
 }
