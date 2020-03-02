@@ -17,3 +17,4 @@ export {
 export { default as indexDatatable } from "./Templates/indexDatatable"
 export { default as recordForm } from "./Templates/recordForm"
 export { List, ListItem } from "./List"
+export {Menu} from "./Menu"

@@ -7,8 +7,6 @@
 
   const cb = new ClassBuilder("list-item")
 
-  export let onClick = item => {}
-
   let _id
   let listProps = null
 
@@ -24,6 +22,7 @@
   export let trailingIcon = ""
   export let selected = false
   export let disabled = false
+  export let dividerAfter = false
 
   let role = "option"
 
@@ -110,3 +109,6 @@
     </span>
   {/if}
 </li>
+{#if dividerAfter}
+  <li class="mdc-list-divider" role="separator" />
+{/if}
