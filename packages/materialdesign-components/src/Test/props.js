@@ -144,29 +144,31 @@ export const props = {
         secondaryText: "Salmon or Cod",
         value: 2,
       },
-    ]
+    ],
   },
-  Menu: {
-    _component: "@budibase/materialdesign-components/Menu",
-    onSelect: items => console.log("MENU SELECT", items),
+  Select: {
+    _component: "@budibase/materialdesign-components/Select",
+    label: "Choose a Milkshake",
+    helperText: "Choose a flavour",
+    onSelect: selectedItem => console.log("SELECT ITEM", selectedItem),
     _children: [
       {
         _component: "@budibase/materialdesign-components/ListItem",
         _children: [],
-        text: "Settings",
+        text: "Orange",
         value: 0,
       },
       {
         _component: "@budibase/materialdesign-components/ListItem",
         _children: [],
-        text: "Account",
+        text: "Apple",
         value: 1,
       },
       {
         _component: "@budibase/materialdesign-components/ListItem",
         _children: [],
-        text: "Profile",
-        value: 2,
+        text: "Berry",
+        value: 0,
       },
     ],
   },

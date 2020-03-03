@@ -2,6 +2,7 @@
   import { onMount, getContext } from "svelte"
   import { Radiobutton } from "../Radiobutton"
   import { Checkbox } from "../Checkbox"
+  import Icon from "../Common/Icon.svelte"
   import ClassBuilder from "../ClassBuilder.js"
   import { generate } from "shortid"
 
@@ -14,7 +15,7 @@
 
   export let _bb
 
-  export let value = null
+  export let value = ""
   export let text = ""
   export let secondaryText = ""
 
@@ -83,7 +84,13 @@
     listProps && listProps.variant === "two-line" && !!secondaryText
 </script>
 
-<li class={listItemClass} role="option" tabindex="0" on:click={handleClick}>
+<li
+  class={listItemClass}
+  role="option"
+  tabindex="0"
+  on:click={handleClick}
+  data-value={value}
+  aria-selected={isSelected}>
   {#if leadingIcon}
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">
       {leadingIcon}
@@ -103,10 +110,7 @@
       <Checkbox checked={isSelected} {disabled} {_bb} />
     {/if}
   {:else if trailingIcon}
-    <!-- TODO: Adapt label to accept class prop to handle this. Context is insufficient -->
-    <span class="mdc-list-item__meta material-icons" aria-hidden="true">
-      {trailingIcon}
-    </span>
+    <Icon context="list-item__meta" icon={trailingIcon} />
   {/if}
 </li>
 {#if dividerAfter}
