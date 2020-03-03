@@ -34,10 +34,6 @@
 
   const clicked = () => _bb.call(onClick)
 
-  $: if (icon) {
-    setContext("BBMD:icon:context", "button")
-  }
-
   $: renderLeadingIcon = !!icon && !trailingIcon
   $: renderTrailingIcon = !!icon && trailingIcon
 </script>
@@ -54,11 +50,11 @@
     {disabled}
     on:click={clicked}>
     {#if renderLeadingIcon}
-      <Icon {icon} />
+      <Icon context="button" {icon} />
     {/if}
     <span class={labelClass}>{text}</span>
     {#if renderTrailingIcon}
-      <Icon {icon} />
+      <Icon context="button" {icon} />
     {/if}
   </button>
 {/if}
