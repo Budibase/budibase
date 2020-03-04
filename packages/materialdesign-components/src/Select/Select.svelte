@@ -28,18 +28,30 @@
   export let label = ""
   export let helperText = ""
   export let persistent = false
+  export let value = ""
 
   onMount(() => {
     _bb.setContext("BBMD:list:props", { singleSelection: true })
 
-    selectedItemsStore = createItemsStore(() => onSelect($selectedItemsStore))
+    const setValue = v => {
+      _bb.setStateFromBinding(_bb.props.value, v)
+      value = v
+    }
+    selectedItemsStore = createItemsStore(() => {
+
+      if($selectedItemsStore && $selectedItemsStore.length > 0) 
+        setValue($selectedItemsStore[0].value)
+      else 
+        setValue("")
+      
+      _bb.call(onSelect, $selectedItemsStore)
+    })
     _bb.setContext("BBMD:list:selectItemStore", selectedItemsStore)
 
     _helperId = generate()
 
     if (!!select) {
       instance = new MDCSelect(select)
-      debugger
       return () => {
         instance && instance.destroy()
         instance = null
@@ -53,6 +65,9 @@
   $: modifiers = { variant, disabled, required, noLabel: !label }
   $: props = { modifiers }
   $: selectClass = cb.build({ props })
+  $: if (value !== undefined && selectedItemsStore) {
+    selectedItemsStore.addSingleItem(value)
+  }
 </script>
 
 <div bind:this={select} id={_helperId} class={selectClass}>
