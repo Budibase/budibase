@@ -827,6 +827,7 @@ const addTemplatedComponent = store => props => {
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       props
     )
+    state.currentPreviewItem._css = generate_screen_css([state.currentPreviewItem.props])
 
     _saveCurrentPreviewItem(state)
 
