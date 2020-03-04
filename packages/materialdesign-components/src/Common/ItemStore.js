@@ -38,7 +38,7 @@ function createItemsStore(componentOnSelect) {
     }
 
     function getItemIdx(items, itemId) {
-        return items.findIndex(i => i._id === itemId);
+        return items.findIndex(i => i && i._id === itemId);
     }
 
     return {
