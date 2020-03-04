@@ -15,8 +15,8 @@
     Datatable,
     CustomersIndexTable,
     Icon,
-    Menu,
     List,
+    Select,
   } = props
 
   let currentComponent
@@ -36,8 +36,8 @@
             Icon,
             Datatable,
             CustomersIndexTable,
-            Menu,
             List,
+            Select,
           ],
         },
       }
