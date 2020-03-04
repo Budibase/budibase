@@ -466,8 +466,33 @@ const _saveScreen = async (store, s, screen) => {
       `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
       screen
     )
-    .then(async savedScreen => {
-      const updatedScreen = await savedScreen.json()
+    .then(() => {
+
+      if(currentPageScreens.includes(screen)) return
+
+      const screens = [
+        ...currentPageScreens,
+        screen,
+      ]
+
+      store.update(innerState => {
+        innerState.pages[s.currentPageName]._screens = screens
+        innerState.screens = screens
+        innerState.currentPreviewItem = screen
+        const safeProps = makePropsSafe(
+          getComponentDefinition(innerState.components, screen.props._component), 
+          screen.props
+        )
+        innerState.currentComponentInfo = safeProps
+        screen.props = safeProps
+        
+        _savePage(innerState)
+        return innerState
+      })
+      
+      
+
+      /*const updatedScreen = await savedScreen.json()
       const screens = [
         ...currentPageScreens.filter(
           storeScreen => storeScreen.name !== updatedScreen.name
@@ -477,9 +502,20 @@ const _saveScreen = async (store, s, screen) => {
       store.update(innerState => {
         innerState.pages[s.currentPageName]._screens = screens
         innerState.screens = screens
+        
+        let curentComponentId
+        walkProps(screen.props, p => {
+          if(p === innerState.currentComponentInfo)
+            currentComponentId = p._id
+        })
+
+        innerState.currentPreviewItem = updatedScreen
+        innerState.currentComponentInfo = makePropsSafe(componentDef, component)
+        
         _savePage(innerState)
         return innerState
       })
+      */
     })
 
   return s
@@ -520,10 +556,12 @@ const setCurrentScreen = store => screenName => {
     s.currentFrontEndType = "screen"
     s.currentView = "detail"
 
-    s.currentComponentInfo = makePropsSafe(
-      getContainerComponent(s.components),
+    const safeProps = makePropsSafe(
+      getComponentDefinition(s.components, screen.props._component),
       screen.props
     )
+    screen.props = safeProps
+    s.currentComponentInfo = safeProps
     setCurrentPageFunctions(s)
     return s
   })
@@ -707,10 +745,12 @@ const setCurrentPage = store => pageName => {
     s.screens = Array.isArray(current_screens)
       ? current_screens
       : Object.values(current_screens)
-    s.currentComponentInfo = makePropsSafe(
-      getContainerComponent(s.components),
+    const safeProps = makePropsSafe(
+      getComponentDefinition(s.components, s.pages[pageName].props._component),
       s.pages[pageName].props
     )
+    s.currentComponentInfo = safeProps
+    s.pages[pageName].props = safeProps
     s.currentPreviewItem = s.pages[pageName]
     s.currentPreviewItem._css = generate_screen_css([
       s.currentPreviewItem.props,
@@ -726,7 +766,10 @@ const setCurrentPage = store => pageName => {
 }
 
 const getContainerComponent = components =>
-  components.find(c => c.name === "@budibase/standard-components/container")
+  getComponentDefinition(components, "@budibase/standard-components/container")
+
+const getComponentDefinition = (components, name) => 
+  components.find(c => c.name === name)
 
 /**
  * @param  {string} componentToAdd - name of the component to add to the application
