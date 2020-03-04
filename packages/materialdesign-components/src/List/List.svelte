@@ -6,8 +6,6 @@
   import ListItem from "./ListItem.svelte"
   import ClassBuilder from "../ClassBuilder.js"
 
-  let selectedItems
-
   export let _bb
   const cb = new ClassBuilder("list", ["one-line"])
 
