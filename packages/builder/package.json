@@ -42,6 +42,7 @@
     "feather-icons": "^4.21.0",
     "flatpickr": "^4.5.7",
     "lodash": "^4.17.13",
+    "logrocket": "^1.0.6",
     "lunr": "^2.3.5",
     "safe-buffer": "^5.1.2",
     "shortid": "^2.2.8",
