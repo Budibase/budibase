@@ -37,8 +37,8 @@ const tableProps = (index, indexSchema) => ({
     {
       "##eventHandlerType": "List Records",
       parameters: {
-        indexKey: "/all_contacts",
-        statePath: "all_contacts",
+        indexKey:index.nodeKey(),
+        statePath: index.name,
       },
     },
   ],
