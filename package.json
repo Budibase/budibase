@@ -9,6 +9,7 @@
     "lerna": "3.14.1",
     "prettier": "^1.19.1",
     "prettier-plugin-svelte": "^0.7.0",
+    "rollup-plugin-replace": "^2.2.0",
     "svelte": "^3.18.1"
   },
   "scripts": {
@@ -22,5 +23,8 @@
     "lint": "eslint packages",
     "lint:fix": "eslint --fix packages",
     "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\""
+  },
+  "dependencies": {
+    "logrocket": "^1.0.6"
   }
 }
