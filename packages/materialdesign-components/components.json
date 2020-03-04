@@ -26,6 +26,40 @@
     }, 
     "tags": []
   },
+  "Select": {
+    "name": "Select",
+    "description": "A material design select (aka Dropdown, aka Combobox)",
+    "props": {
+      "onSelect": "event",
+      "value": "string",
+      "width": "string",
+      "variant": {
+        "type": "options",
+        "options": [
+          "filled", "outlined"
+        ]
+      },
+      "disabled": "bool",
+      "required": "bool",
+      "label": "string",
+      "helperText": "string",
+      "persistent": "bool"
+    }
+  },
+  "ListItem": {
+    "name": "ListItem",
+    "description": "Use as item in a 'List' or 'Select' component",
+    "props": {
+      "value": "string",
+      "text": "string",
+      "secondaryText": "string",
+      "leadingIcon": "string",
+      "trailingIcon": "string",
+      "selected": "bool",
+      "disabled": "bool",
+      "divideAfter": "bool"
+    }
+  },
   "Button": {
     "name": "Button",
     "children": false,
