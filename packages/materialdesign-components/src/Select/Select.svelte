@@ -27,6 +27,7 @@
   export let required = false
   export let label = ""
   export let helperText = ""
+  export let persistent = false
 
   onMount(() => {
     _bb.setContext("BBMD:list:props", { singleSelection: true })
@@ -84,4 +85,4 @@
 
   </div>
 </div>
-<HelperText id={_helperId} text={helperText} />
+<HelperText id={_helperId} text={helperText} {persistent} />

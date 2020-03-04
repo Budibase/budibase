@@ -150,6 +150,7 @@ export const props = {
     _component: "@budibase/materialdesign-components/Select",
     label: "Choose a Milkshake",
     helperText: "Choose a flavour",
+    persistent: true,
     onSelect: selectedItem => console.log("SELECT ITEM", selectedItem),
     _children: [
       {

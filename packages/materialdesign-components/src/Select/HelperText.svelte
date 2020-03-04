@@ -28,4 +28,4 @@
   $: helperClass = cb.build({ props })
 </script>
 
-<p bind:this={helperText} {id} class={helperClass}>{text}</p>
+<p bind:this={helperText} {id} class={helperClass} aria-hidden="true">{text}</p>
