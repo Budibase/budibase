@@ -16,8 +16,8 @@
   let select
   let selectList
   let instance
-
   let _helperId = ""
+  let listItems = []
 
   export let _bb
   export let onSelect = items => {}
@@ -32,19 +32,18 @@
 
   onMount(() => {
     _bb.setContext("BBMD:list:props", { singleSelection: true })
+    _bb.setContext("BBMD:list:addItem", i => listItems = [...listItems, i])
 
-    const setValue = v => {
-      _bb.setStateFromBinding(_bb.props.value, v)
-      value = v
-    }
     selectedItemsStore = createItemsStore(() => {
 
-      if($selectedItemsStore && $selectedItemsStore.length > 0) 
-        setValue($selectedItemsStore[0].value)
-      else 
-        setValue("")
+      const v = $selectedItemsStore && $selectedItemsStore.length > 0
+                ? $selectedItemsStore[0].value
+                : "";
+
+      value = v
+      _bb.setStateFromBinding(_bb.props.value, v)
+      _bb.call(onSelect, v)
       
-      _bb.call(onSelect, $selectedItemsStore)
     })
     _bb.setContext("BBMD:list:selectItemStore", selectedItemsStore)
 
@@ -59,15 +58,19 @@
     }
   })
 
+
   $: useNotchedOutline = variant === "outlined"
   $: selectList && _bb.attachChildren(selectList)
+  
 
   $: modifiers = { variant, disabled, required, noLabel: !label }
   $: props = { modifiers }
   $: selectClass = cb.build({ props })
-  $: if (value !== undefined && selectedItemsStore) {
-    selectedItemsStore.addSingleItem(value)
+  $: if (value !== undefined && instance && listItems.length > 0) {
+    instance.selectedIndex = listItems.findIndex(i => i.value === value)
   }
+  
+
 </script>
 
 <div bind:this={select} id={_helperId} class={selectClass}>

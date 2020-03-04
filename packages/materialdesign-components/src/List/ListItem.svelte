@@ -27,6 +27,15 @@
 
   let role = "option"
 
+  const itemData = () => ({
+    _id,
+    value,
+    text,
+    secondaryText,
+    selected,
+    disabled,
+  })
+
   onMount(() => {
     _id = generate()
 
@@ -35,20 +44,19 @@
     listProps = _bb.getContext("BBMD:list:props")
 
     let context = _bb.getContext("BBMD:list:context")
+    const _addItem = _bb.getContext("BBMD:list:addItem")
+
     if (context === "menu") {
       role = "menuitem"
+    }
+
+    if (_addItem) {
+      _addItem(itemData())
     }
   })
 
   function handleClick() {
-    let item = {
-      _id,
-      value,
-      text,
-      secondaryText,
-      selected,
-      disabled,
-    }
+    let item =  itemData()
     if (!disabled) {
       if (
         listProps.singleSelection ||
