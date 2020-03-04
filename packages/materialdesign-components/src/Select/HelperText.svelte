@@ -1,5 +1,5 @@
 <script>
-  import "@material/select/helper-text/mdc-select-helper-text"
+  import "@material/select/helper-text/mdc-select-helper-text.scss"
   import { onMount } from "svelte"
   import { MDCSelectHelperText } from "@material/select/helper-text"
   import ClassBuilder from "../ClassBuilder.js"
