@@ -96,19 +96,33 @@ export const props = {
     _children: [],
     label: "Hi radio",
     alignEnd: true,
-    onClick: () => alert`Roger That`,
+    onClick: item => console.log(item),
   },
   Radiobuttongroup: {
     _component: "@budibase/materialdesign-components/Radiobuttongroup",
-    _children: [],
     label: "Preferred method of contact: ",
     orientation: "column",
-    items: [
-      { label: "Email", value: 1 },
-      { label: "Phone", value: 2 },
-      { label: "Social Media", value: 3 },
+    onChange: selected => console.log("Radiobutton Group", selected),
+    _children: [
+      {
+        _component: "@budibase/materialdesign-components/Radiobutton",
+        _children: [],
+        label: "Email",
+        value: 1,
+      },
+      {
+        _component: "@budibase/materialdesign-components/Radiobutton",
+        _children: [],
+        label: "Phone",
+        value: 2,
+      },
+      {
+        _component: "@budibase/materialdesign-components/Radiobutton",
+        _children: [],
+        label: "Social Media",
+        value: 3,
+      },
     ],
-    onChange: selected => console.log(selected),
   },
   Datatable: {
     _component: "@budibase/materialdesign-components/Datatable",
