@@ -17,31 +17,25 @@
   export let onSelect = selectedItems => {}
 
   export let singleSelection = false
-  export let variant = "two-line"
+  export let variant = "one-line"
   export let inputElement = null
 
   let selectedItemsStore
 
   let role = "listbox"
 
-  function createOrAcceptItemStore() {
-    let store = _bb.getContext("BBMD:list:selectItemStore")
-    if (!!store) {
-      selectedItemsStore = store
-    } else {
-      selectedItemsStore = createItemsStore(() => onSelect($selectedItemsStore))
-      _bb.setContext("BBMD:list:selectItemStore", selectedItemsStore)
-    }
-  }
-
   onMount(() => {
-    createOrAcceptItemStore()
+    let ctx = getContext("BBMD:list:context")
+
+    selectedItemsStore = createItemsStore(() => onSelect($selectedItemsStore))
+    _bb.setContext("BBMD:list:selectItemStore", selectedItemsStore)
 
     _bb.setContext("BBMD:list:props", {
       inputElement,
       variant,
       singleSelection,
     })
+
     if (!!list) {
       if (!inputElement) {
         instance = new MDCList(list)
