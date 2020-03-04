@@ -24,7 +24,5 @@
     "lint:fix": "eslint --fix packages",
     "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\""
   },
-  "dependencies": {
-    "logrocket": "^1.0.6"
-  }
+  "dependencies": {}
 }
