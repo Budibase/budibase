@@ -12,8 +12,8 @@
     "publishdev": "yarn build && node ./scripts/publishDev.js"
   },
   "devDependencies": {
-    "@budibase/client": "^0.0.26",
-    "@budibase/standard-components": "^0.0.26",
+    "@budibase/client": "^0.0.27",
+    "@budibase/standard-components": "^0.0.27",
     "@material/button": "^4.0.0",
     "@material/checkbox": "^4.0.0",
     "@material/data-table": "4.0.0",
@@ -44,9 +44,9 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.0.26",
+  "version": "0.0.27",
   "license": "MIT",
-  "gitHead": "fcd2e6253c2f549f72d0f094c8644607518febab",
+  "gitHead": "3e57732380deea94c6471f3e5b9793ab70219291",
   "dependencies": {
     "@material/select": "4.0.0"
   }
