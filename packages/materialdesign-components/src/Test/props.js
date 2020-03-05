@@ -77,12 +77,15 @@ export const props = {
     _component: "@budibase/materialdesign-components/Checkbox",
     _children: [],
     id: "test-check",
+    alignEnd: true,
     label: "Check Yo Self",
     onClick: () => alert`Before ya reck yo'self`,
   },
   Checkboxgroup: {
     _component: "@budibase/materialdesign-components/Checkboxgroup",
     label: "Whats your favourite?",
+    disabled: true,
+    alignEnd: true,
     onChange: selectedItems => console.log(selectedItems),
     _children: [
       {
@@ -114,6 +117,8 @@ export const props = {
     _component: "@budibase/materialdesign-components/Radiobuttongroup",
     label: "Preferred method of contact: ",
     orientation: "column",
+    disabled: true,
+    alignEnd: true,
     onChange: selected => console.log("Radiobutton Group", selected),
     _children: [
       {

@@ -22,6 +22,7 @@
   let instance = null
   let checkbox = null
   let selectedItems
+  let checkProps
 
   let context = _bb.getContext("BBMD:input:context")
 
@@ -39,6 +40,7 @@
 
     if (context === "checkboxgroup") {
       selectedItems = _bb.getContext("BBMD:checkbox:selectedItemsStore")
+      checkProps = _bb.getContext("BBMD:checkbox:props")
     }
   })
 
@@ -80,18 +82,24 @@
     context === "checkboxgroup"
       ? $selectedItems && $selectedItems.findIndex(i => i._id === _id) > -1
       : checked
+
+  $: isAlignedEnd =
+    context === "checkboxgroup" && !!checkProps ? checkProps.alignEnd : alignEnd
+
+  $: isDisabled =
+    context === "checkboxgroup" && !!checkProps ? checkProps.disabled : disabled
 </script>
 
 <!-- TODO: Customizing Colour and Density - What level of customization for these things does Budibase need here? -->
 
 {#if context !== 'list-item'}
-  <Formfield {label} {id} {alignEnd}>
+  <Formfield {label} {_bb} {id} alignEnd={isAlignedEnd}>
     <div bind:this={checkbox} class={blockClass}>
       <input
         type="checkbox"
         class={cb.elem`native-control`}
         {id}
-        {disabled}
+        disabled={isDisabled}
         {isChecked}
         on:click={handleOnClick}
         on:change={changed} />
@@ -113,7 +121,7 @@
       type="checkbox"
       class={cb.elem`native-control`}
       {id}
-      {disabled}
+      disabled={isDisabled}
       {isChecked}
       on:change={changed}
       on:click={handleOnClick} />
