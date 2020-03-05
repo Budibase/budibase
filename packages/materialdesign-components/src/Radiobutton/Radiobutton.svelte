@@ -45,7 +45,6 @@
     if (context === "radiobuttongroup") {
       selectedItems.addSingleItem(item)
     } else {
-      debugger
       onClick(item)
     }
   }

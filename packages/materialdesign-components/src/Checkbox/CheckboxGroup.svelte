@@ -1,26 +1,29 @@
 <script>
+  import { onMount } from "svelte"
   import Checkbox from "./Checkbox.svelte"
   import Label from "../Common/Label.svelte"
+  import createItemsStore from "../Common/ItemStore.js"
 
+  let selectedItemsStore
+  let checkItems
+
+  export let _bb
   export let label = ""
   export let orientation = "row"
   export let fullwidth = false
   export let onChange = selectedItems => {}
 
-  export let items = []
-
   export let disabled = false
   export let alignEnd = false
   let selectedItems = []
 
-  function handleonChange(item) {
-    if (!!item.checked) {
-      item.checked = !item.checked
-    } else {
-      item.checked = true
-    }
-    onChange(items.filter(i => i.checked))
-  }
+  onMount(() => {
+    _bb.setContext("BBMD:input:context", "checkboxgroup")
+    selectedItemsStore = createItemsStore(() => onChange($selectedItemsStore))
+    _bb.setContext("BBMD:checkbox:selectedItemsStore", selectedItemsStore)
+  })
+
+  $: checkItems && _bb.attachChildren(checkItems)
 </script>
 
 <div class="checkbox-group">
@@ -28,18 +31,7 @@
     <Label text={label} bold />
   </div>
   <div class={`checkbox-group__boxes ${orientation}`}>
-    {#each items as item, i}
-      <div class:fullwidth>
-        <Checkbox
-          id={`${item.label}-${i}`}
-          {disabled}
-          {alignEnd}
-          indeterminate={item.indeterminate || false}
-          label={item.label}
-          checked={item.checked || false}
-          onClick={() => handleonChange(item)} />
-      </div>
-    {/each}
+    <div bind:this={checkItems} class:fullwidth />
   </div>
 </div>
 
