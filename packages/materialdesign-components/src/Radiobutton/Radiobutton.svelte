@@ -20,6 +20,7 @@
   let instance = null
   let radiobtn = null
   let selectedItems
+  let radioProps
 
   let context = _bb.getContext("BBMD:input:context")
 
@@ -35,8 +36,8 @@
     }
     if (context === "radiobuttongroup") {
       selectedItems = _bb.getContext("BBMD:radiobutton:selectedItemsStore")
-      let props = _bb.getContext("BBMD:radiobutton:props")
-      name = props.name
+      radioProps = _bb.getContext("BBMD:radiobutton:props")
+      name = radioProps.name
     }
   })
 
@@ -45,7 +46,6 @@
     if (context === "radiobuttongroup") {
       selectedItems.addSingleItem(item)
     } else {
-      debugger
       onClick(item)
     }
   }
@@ -57,19 +57,30 @@
   }
 
   const cb = new ClassBuilder("radio")
-  let modifiers = { disabled }
-  let props = { modifiers, extras }
-
-  const blockClass = cb.build({ props })
 
   $: isChecked =
     context === "radiobuttongroup"
       ? $selectedItems && $selectedItems.findIndex(i => i._id === _id) > -1
       : checked
+
+  $: isAlignedEnd =
+    context === "radiobuttongroup" && !!radioProps
+      ? radioProps.alignEnd
+      : alignEnd
+
+  $: isDisabled =
+    context === "radiobuttongroup" && !!radioProps
+      ? radioProps.disabled
+      : disabled
+
+  $: modifiers = { disabled: isDisabled }
+  $: props = { modifiers, extras }
+
+  $: blockClass = cb.build({ props })
 </script>
 
 {#if context !== 'list-item'}
-  <Formfield {id} {label} {alignEnd}>
+  <Formfield {id} {_bb} {label} alignEnd={isAlignedEnd}>
     <div class={blockClass}>
       <input
         {id}
@@ -77,7 +88,7 @@
         type="radio"
         {name}
         {checked}
-        {disabled}
+        disabled={isDisabled}
         on:click={handleOnClick} />
       <div class={cb.elem`background`}>
         <div class={cb.elem`outer-circle`} />
@@ -94,7 +105,7 @@
       type="radio"
       {name}
       {checked}
-      {disabled}
+      disabled={isDisabled}
       on:click={onClick} />
     <div class={cb.elem`background`}>
       <div class={cb.elem`outer-circle`} />
