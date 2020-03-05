@@ -1,6 +1,6 @@
 {
   "name": "@budibase/server",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Budibase Web Server",
   "main": "index.js",
   "scripts": {
@@ -16,8 +16,8 @@
   "author": "Michael Shanks",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/client": "^0.0.25",
-    "@budibase/core": "^0.0.25",
+    "@budibase/client": "^0.0.26",
+    "@budibase/core": "^0.0.26",
     "@koa/router": "^8.0.0",
     "fs-extra": "^8.1.0",
     "koa": "^2.7.0",
@@ -41,5 +41,5 @@
   "jest": {
     "testEnvironment": "node"
   },
-  "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
+  "gitHead": "fcd2e6253c2f549f72d0f094c8644607518febab"
 }
