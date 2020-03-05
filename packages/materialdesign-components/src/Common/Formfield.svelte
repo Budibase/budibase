@@ -17,15 +17,14 @@
 
   let formField = null
 
-  let modifiers = { alignEnd }
-  let props = { modifiers }
+  $: modifiers = { alignEnd }
+  $: props = { modifiers }
 
-  let blockClasses = cb.build({ props })
+  $: blockClasses = cb.build({ props })
 
   onMount(() => {
     if (!!formField) fieldStore.set(new MDCFormField(formField))
-    //TODO: Fix this, _bb is coming back undefined
-    // _bb.setContext("BBMD:field-element", fieldStore)
+    _bb.setContext("BBMD:field-element", fieldStore)
   })
 
   onDestroy(unsubscribe)
