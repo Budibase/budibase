@@ -12,6 +12,7 @@
   export let orientation = "row"
   export let fullwidth = false
   export let alignEnd = false
+  export let disabled = false
 
   let selectedItemsStore
   let selected = null
@@ -20,17 +21,9 @@
   onMount(() => {
     _bb.setContext("BBMD:input:context", "radiobuttongroup")
     selectedItemsStore = createItemStore(() => onChange($selectedItemsStore))
-    _bb.setContext("BBMD:radiobutton:props", { name })
+    _bb.setContext("BBMD:radiobutton:props", { name, disabled, alignEnd })
     _bb.setContext("BBMD:radiobutton:selectedItemsStore", selectedItemsStore)
   })
-
-  // function handleOnClick(item) {
-  //   if (!!selected) selected.checked = false
-  //   item.checked = true
-  //   selected = item
-  //   items = items
-  //   onChange(selected)
-  // }
 
   $: alignRight = orientation === "column" && alignEnd
   $: radioItems && _bb.attachChildren(radioItems)

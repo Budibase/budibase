@@ -77,19 +77,34 @@ export const props = {
     _component: "@budibase/materialdesign-components/Checkbox",
     _children: [],
     id: "test-check",
+    alignEnd: true,
     label: "Check Yo Self",
     onClick: () => alert`Before ya reck yo'self`,
   },
   Checkboxgroup: {
     _component: "@budibase/materialdesign-components/Checkboxgroup",
-    _children: [],
     label: "Whats your favourite?",
-    items: [
-      { label: "Currys", indeterminate: true },
-      { label: "Chips", checked: true },
-      { label: "Pasties" },
-    ],
+    disabled: true,
+    alignEnd: true,
     onChange: selectedItems => console.log(selectedItems),
+    _children: [
+      {
+        _component: "@budibase/materialdesign-components/Checkbox",
+        _children: [],
+        label: "Currys",
+        indeterminate: true,
+      },
+      {
+        _component: "@budibase/materialdesign-components/Checkbox",
+        _children: [],
+        label: "Chips",
+      },
+      {
+        _component: "@budibase/materialdesign-components/Checkbox",
+        _children: [],
+        label: "Pasties",
+      },
+    ],
   },
   Radiobutton: {
     _component: "@budibase/materialdesign-components/Radiobutton",
@@ -102,6 +117,8 @@ export const props = {
     _component: "@budibase/materialdesign-components/Radiobuttongroup",
     label: "Preferred method of contact: ",
     orientation: "column",
+    disabled: true,
+    alignEnd: true,
     onChange: selected => console.log("Radiobutton Group", selected),
     _children: [
       {
@@ -188,5 +205,5 @@ export const props = {
         value: "2",
       },
     ],
-  },
+  }
 }

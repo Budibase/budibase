@@ -4,32 +4,43 @@
   import { fieldStore } from "../Common/FormfieldStore.js"
   import ClassBuilder from "../ClassBuilder.js"
   import { MDCCheckbox } from "@material/checkbox"
+  import { generate } from "shortid"
 
   export let onClick = item => {}
 
   export let _bb
 
   export let id = ""
+  export let value = null
   export let label = ""
   export let disabled = false
   export let alignEnd = false
   export let indeterminate = false
   export let checked = false
 
+  let _id
   let instance = null
   let checkbox = null
+  let selectedItems
+  let checkProps
+
   let context = _bb.getContext("BBMD:input:context")
 
   onMount(() => {
+    _id = generate()
+
     if (!!checkbox) {
       instance = new MDCCheckbox(checkbox)
       instance.indeterminate = indeterminate
       if (context !== "list-item") {
-        //TODO: Fix this connected to Formfield context issue
         let fieldStore = _bb.getContext("BBMD:field-element")
-        if(fieldStore)
-          fieldStore.setInput(instance)
+        if (fieldStore) fieldStore.setInput(instance)
       }
+    }
+
+    if (context === "checkboxgroup") {
+      selectedItems = _bb.getContext("BBMD:checkbox:selectedItemsStore")
+      checkProps = _bb.getContext("BBMD:checkbox:props")
     }
   })
 
@@ -52,20 +63,45 @@
       _bb.setStateFromBinding(_bb.props.checked, val)
     }
   }
+
+  function handleOnClick() {
+    let item = { _id, label, value }
+    if (context === "checkboxgroup") {
+      let idx = selectedItems.getItemIdx($selectedItems, _id)
+      if (idx > -1) {
+        selectedItems.removeItem(_id)
+      } else {
+        selectedItems.addItem(item)
+      }
+    } else {
+      onClick(item)
+    }
+  }
+
+  $: isChecked =
+    context === "checkboxgroup"
+      ? $selectedItems && $selectedItems.findIndex(i => i._id === _id) > -1
+      : checked
+
+  $: isAlignedEnd =
+    context === "checkboxgroup" && !!checkProps ? checkProps.alignEnd : alignEnd
+
+  $: isDisabled =
+    context === "checkboxgroup" && !!checkProps ? checkProps.disabled : disabled
 </script>
 
 <!-- TODO: Customizing Colour and Density - What level of customization for these things does Budibase need here? -->
 
 {#if context !== 'list-item'}
-  <Formfield {label} {id} {alignEnd}>
+  <Formfield {label} {_bb} {id} alignEnd={isAlignedEnd}>
     <div bind:this={checkbox} class={blockClass}>
       <input
         type="checkbox"
         class={cb.elem`native-control`}
         {id}
-        {disabled}
-        {checked}
-        on:click={onClick}
+        disabled={isDisabled}
+        {isChecked}
+        on:click={handleOnClick}
         on:change={changed} />
       <div class={cb.elem`background`}>
         <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
@@ -85,10 +121,10 @@
       type="checkbox"
       class={cb.elem`native-control`}
       {id}
-      {disabled}
-      {checked}
+      disabled={isDisabled}
+      {isChecked}
       on:change={changed}
-      on:click={onClick} />
+      on:click={handleOnClick} />
     <div class={cb.elem`background`}>
       <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
         <path
