@@ -32,10 +32,13 @@ const heading = record => ({
 
 const field = (record, f) => {
   if (f.type === "bool") return checkbox(record, f)
-  if (f.type === "string" 
-      && f.typeOptions 
-      && f.typeOptions.values 
-      && f.typeOptions.values.length > 0) return select(record, f) 
+  if (
+    f.type === "string" &&
+    f.typeOptions &&
+    f.typeOptions.values &&
+    f.typeOptions.values.length > 0
+  )
+    return select(record, f)
   return textField(record, f)
 }
 
@@ -64,8 +67,8 @@ const select = (record, f) => ({
   _children: f.typeOptions.values.map(val => ({
     _component: "@budibase/materialdesign-components/ListItem",
     value: val,
-    text: val
-  }))
+    text: val,
+  })),
 })
 
 const fieldValueBinding = (record, f) => `state.${record.name}.${f.name}`
