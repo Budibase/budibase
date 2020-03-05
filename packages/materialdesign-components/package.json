@@ -21,6 +21,7 @@
     "@material/list": "4.0.0",
     "@material/menu": "4.0.0",
     "@material/radio": "^4.0.0",
+    "@material/select": "4.0.0",
     "@material/textfield": "^4.0.0",
     "@nx-js/compiler-util": "^2.0.0",
     "bcryptjs": "^2.4.3",
@@ -47,7 +48,5 @@
   "version": "0.0.27",
   "license": "MIT",
   "gitHead": "72a77a035eb7c1443b079bf93c29b3e5fe02094e",
-  "dependencies": {
-    "@material/select": "4.0.0"
-  }
+  "dependencies": {}
 }
