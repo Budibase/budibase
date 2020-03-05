@@ -43,8 +43,8 @@
     </div>
     <div class="uk-modal-footer">
       <ButtonGroup>
-        <ActionButton alert on:click={ok}>{okText}</ActionButton>
-        <ActionButton primary on:click={cancel}>{cancelText}</ActionButton>
+        <ActionButton primary on:click={ok}>{okText}</ActionButton>
+        <ActionButton alert on:click={cancel}>{cancelText}</ActionButton>
       </ButtonGroup>
     </div>
   </div>
