@@ -12,7 +12,7 @@
     "publishdev": "yarn build && node ./scripts/publishDev.js"
   },
   "devDependencies": {
-    "@budibase/client": "^0.0.25",
+    "@budibase/client": "^0.0.26",
     "@nx-js/compiler-util": "^2.0.0",
     "bcryptjs": "2.4.3",
     "fs-extra": "^8.1.0",
@@ -32,7 +32,7 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.0.25",
+  "version": "0.0.26",
   "license": "MIT",
-  "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
+  "gitHead": "fcd2e6253c2f549f72d0f094c8644607518febab"
 }
