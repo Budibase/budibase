@@ -12,14 +12,16 @@
   export let onCancel = () => {}
 
   export const show = () => {
-    UIkit.modal(theModal).show()
+    uiKitModal.hide()
+    uiKitModal.show()
   }
 
   export const hide = () => {
-    UIkit.modal(theModal).hide()
+    uiKitModal.hide()
   }
 
   let theModal
+  $: uiKitModal = theModal && UIkit.modal(theModal)
 
   const cancel = () => {
     hide()
@@ -32,7 +34,7 @@
   }
 </script>
 
-<div id="my-id" uk-modal bind:this={theModal}>
+<div id={title} uk-modal bind:this={theModal}>
   <div class="uk-modal-dialog">
     <button class="uk-modal-close-default" type="button" uk-close />
     <div class="uk-modal-header">
