@@ -29,7 +29,7 @@
   //   item.checked = true
   //   selected = item
   //   items = items
-  //   onChange(selected)
+  //   onChange(selected)w
   // }
 
   $: alignRight = orientation === "column" && alignEnd
