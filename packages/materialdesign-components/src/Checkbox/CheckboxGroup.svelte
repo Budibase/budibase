@@ -15,12 +15,12 @@
 
   export let disabled = false
   export let alignEnd = false
-  let selectedItems = []
 
   onMount(() => {
     _bb.setContext("BBMD:input:context", "checkboxgroup")
     selectedItemsStore = createItemsStore(() => onChange($selectedItemsStore))
     _bb.setContext("BBMD:checkbox:selectedItemsStore", selectedItemsStore)
+    _bb.setContext("BBMD:checkbox:props", { alignEnd, disabled })
   })
 
   $: checkItems && _bb.attachChildren(checkItems)
