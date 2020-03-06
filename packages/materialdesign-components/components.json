@@ -46,6 +46,19 @@
       "persistent": "bool"
     }
   },
+  "List": {
+    "name": "List",
+    "description": "A Material Design List Component.",
+    "props": {
+      "onSelect": "event",
+      "singleSelection": "bool",
+      "variant": {
+        "type": "options",
+        "options": ["one-line", "two-line"],
+        "default": "one-line"
+      }
+    }
+  },
   "ListItem": {
     "name": "ListItem",
     "description": "Use as item in a 'List' or 'Select' component",
@@ -111,6 +124,22 @@
       "checked": "bool"
     },
     "tags": []
+  },
+  "Checkboxgroup": {
+    "name": "Checkboxgroup",
+    "description": "A group of material design checkboxes. Supports row and column orientation.",
+    "props": {
+      "onChange": "event",
+      "label":"string",
+      "orientation": {
+        "type": "options",
+        "options": ["row", "column"],
+        "default": "row"
+      },
+      "fullwidth": "bool",
+      "disabled": "bool",
+      "alignEnd": "bool"
+    }
   },
   "Datatable": {
     "name": "Datatable",
@@ -196,6 +225,18 @@
     },
     "tags": []
   },
+  "Menu": {
+    "name": "Menu",
+    "description": "A Material Design menu component. Anchor to other components to create a pop-out menu.",
+    "props": {
+      "onSelect": "event",
+      "width": "string",
+      "open": "bool",
+      "useFixedPosition": "bool",
+      "absolutePositionX": "number",
+      "absolutePositionY": "number"
+    }
+  },
   "Overline": {
     "name": "Overline",
     "description": "Sets the font properties as Roboto Overline",
@@ -217,6 +258,22 @@
       "alignEnd": "bool"
     },
     "tags": []
+  },
+  "Radiobuttongroup": {
+    "name": "Radiobuttongroup",
+    "description": "A Material Design Radiobutton group. Supports row and column orientation.",
+    "props": {
+      "onChange": "event",
+      "name": "string",
+      "orientation": {
+        "type": "options",
+        "options": ["row", "column"],
+        "default": "row"
+      },
+      "fullwidth": "bool",
+      "alignEnd": "bool",
+      "disabled": "bool"
+    }
   },
   "Sub1": {
     "name": "Sub1",
