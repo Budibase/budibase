@@ -65,7 +65,7 @@
         class="icon"
         class:highlighted={bindingPath}
         style={`transform: rotate(${isOpen ? 0 : 90}deg);`}>
-        <ArrowDownIcon size={36} />
+        <ArrowDownIcon size={24} />
       </div>
     </button>
   </div>
@@ -92,8 +92,6 @@
     outline: none;
     border: none;
     border-radius: 5px;
-    background: rgba(249, 249, 249, 1);
-
     font-size: 1.6rem;
     font-weight: 700;
     color: rgba(22, 48, 87, 1);

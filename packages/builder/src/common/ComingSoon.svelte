@@ -3,11 +3,11 @@
 </script>
 
 <div>
-  <h4>Coming Sometime: {name}</h4>
+  <h4 class="h4-coming">Coming Sometime: {name}</h4>
 </div>
 
 <style>
-  h4 {
+  .h4-coming {
     margin-top: 20px;
   }
 </style>

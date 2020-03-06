@@ -23,6 +23,9 @@
 
 <style>
   .backend-nav-item {
-    padding-left: 25px;
+    padding-left: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 0.4;
   }
 </style>

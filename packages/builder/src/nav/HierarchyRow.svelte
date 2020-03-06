@@ -12,7 +12,7 @@
   store.subscribe(state => {
     if (state.currentNode) {
       navActive =
-        state.activeNav === "database" && node.nodeId === state.currentNode.nodeId
+        state.activeNav === "database" && node.nodeId === state.currentNode.nodeId 
     }
   })
 </script>
@@ -24,7 +24,7 @@
     style="padding-left: {20 + level * 20}px"
     class:selected={navActive}>
     {@html getIcon(icon, 12)}
-    <span style="margin-left: 1rem">{node.name}</span>
+    <span style="margin: 5px">{node.name}</span>
   </div>
   {#if node.children}
     {#each node.children as child}
@@ -37,3 +37,6 @@
     {/each}
   {/if}
 </div>
+
+
+

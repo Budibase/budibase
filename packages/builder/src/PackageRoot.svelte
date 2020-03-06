@@ -19,13 +19,25 @@
       class:active={$store.isBackend}
       class="topnavitem"
       on:click={store.showBackend}>
-      Backend
+      Data
     </span>
     <span
       class:active={!$store.isBackend}
       class="topnavitem"
       on:click={store.showFrontend}>
-      Frontend
+      Design
+    </span>
+      <span
+      class:active={!$store.isBackend}
+      class="topnavitem"
+      on:click={store.showWorkflow}>
+      Workflow
+    </span>
+      <span
+      class:active={!$store.isBackend}
+      class="topnavitem"
+      on:click={store.showDeploy}>
+      Deploy
     </span>
   </div>
 
@@ -54,7 +66,7 @@
   .top-nav {
     flex: 0 0 auto;
     height: 48px;
-    background: white;
+    background: #0d203b;
     padding: 0px 15px 0 1.8rem;
     display: flex;
     align-items: center;
@@ -76,7 +88,7 @@
 
   .topnavitem {
     cursor: pointer;
-    color: var(--secondary50);
+    color: rgb(255, 255, 255, 0.6);
     margin: 0px 15px;
     padding-top: 4px;
     font-weight: 600;
@@ -88,12 +100,12 @@
   }
 
   .topnavitem:hover {
-    color: var(--secondary75);
+    color: rgb(255, 255, 255, 0.8);
     font-weight: 600;
   }
 
   .active {
-    color: var(--primary100);
+    color: white;
     font-weight: 600;
     border-bottom: 2px solid var(--primary100);
     border-top: 2px solid transparent;

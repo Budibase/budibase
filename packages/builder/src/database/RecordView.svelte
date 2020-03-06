@@ -3,7 +3,7 @@
   import Button from "../common/Button.svelte"
   import getIcon from "../common/icon"
   import FieldView from "./FieldView.svelte"
-  import Modal from "../common/Modal.svelte"
+  import Modal from "../common/SmallModal.svelte"
   import { map, join, filter, some, find, keys, isDate } from "lodash/fp"
   import { store } from "../builderStore"
   import { common, hierarchy as h } from "../../../core/src"
@@ -92,24 +92,61 @@
 </script>
 
 <div class="root">
+  <div class="main">
+          <div class="hero">
+          <div class="col">
+            <div class="hero-content">
+              <h1 class="budibase__title--2">Records</h1>
+              <p class="hero-para">
+                Your database is the brains of your web application. Databases
+                store, organize, and process information in a way that makes it
+                easy for us to go back and find what we’re looking for.
+              </p>
+              <a class="hero-cta" href="https://docs.budibase.com/">
+                Learn how to build your database with Budibase
+              </a>
+            </div>
+          </div>
+          <div class="col">
+            <img
+              src="/_builder/assets/database.png"
+              class="hero-img"
+              alt="budibase logo" />
+          </div>
+        </div>
+    <div class="content">
+      <div class="header-row">
+        <h2 class="budibase__title--2">Create new record</h2>
+        <button class="button-cancel">Cancel</button>
+        <button class="button-record">Save</button>
+        </div>
 
-  <form class="uk-form-horizontal">
-    <h3 class="budibase__title--3">Settings</h3>
 
-    <Textbox label="Name:" bind:text={record.name} on:change={nameChanged} />
-    {#if !record.isSingle}
-      <Textbox label="Collection Name:" bind:text={record.collectionName} />
-      <Textbox
-        label="Estimated Record Count:"
-        bind:text={record.estimatedRecordCount} />
-    {/if}
-    <div class="recordkey">{record.nodeKey()}</div>
+    <h3 class="budibase__label--medium">Settings</h3>
+      <div class="form-main">
+        <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
+        <!--
+        {#if !record.isSingle}
+          <Textbox label="Collection Name:" bind:text={record.collectionName} />
+          <Textbox
+            label="Estimated Record Count:"
+            bind:text={record.estimatedRecordCount} />
+        {/if}
+        -->
+        <div class="recordkeycontainer">
+          <div class="label">Record Key</div>
+          <div class="recordkeybox">
+            <div class="recordkey">{record.nodeKey()}</div>
+          </div>
+        </div>
+      </div>
+      
 
-  </form>
+
   <h3 class="budibase__title--3">
     Fields
     <span class="add-field-button" on:click={newField}>
-      {@html getIcon('plus')}
+      Add new field
     </span>
   </h3>
 
@@ -119,23 +156,16 @@
         <tr>
           <th>Name</th>
           <th>Type</th>
-          <th>Options</th>
-          <th />
+          <th>Values</th>
+          <th>Edit</th>
         </tr>
       </thead>
       <tbody>
         {#each record.fields as field}
           <tr>
-            <td>
-              <div class="field-label">{field.label}</div>
-              <div style="font-size: 0.8em; color: var(--slate)">
-                {field.name}
-              </div>
-            </td>
+            <td>{field.name}</td>
             <td>{field.type}</td>
-            <td>
-              {@html getTypeOptions(field.typeOptions)}
-            </td>
+            <td>{field.values}</td>
             <td>
               <span class="edit-button" on:click={() => editField(field)}>
                 {@html getIcon('edit')}
@@ -152,7 +182,7 @@
 
   {#if editingField}
     <Modal
-      title="Manage Index Fields"
+      title="Add new field"
       bind:isOpen={editingField}
       onClosed={() => onFinishedFieldEdit(false)}>
       <FieldView
@@ -195,17 +225,121 @@
   {/each}
 
 </div>
+  </div>
+</div>
 
 <style>
-  .root {
-    height: 100%;
-    padding: 2rem;
+  .main {
+    margin: 40px auto 40px auto;
+    width: 1000px;
+  }
+
+  .hero {
+    padding: 20px 0px 20px 20px;
+    background: white;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .hero .col {
+    width: 50%;
+  }
+
+  .hero-content {
+    padding: 40px;
+  }
+
+  .hero-para {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.6;
+    line-height: 1.5lh;
+  }
+
+  .hero-cta {
+    color: #0055ff;
+    font-weight: 500;
+    font-size: 14px;
+    text-decoration: none;
+  }
+
+  .hero-img {
+    display: block;
+    width: auto;
+    max-height: 250px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .content {
+    max-width: 800px;
+    margin: 100px;
+  }
+
+  .header-row {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+    grid-gap: 20px;
+  }
+
+  .budibase__title--3 {
+    grid-column: 1 / 2;
+  }
+
+  .button-record {
+    grid-column: 5 / 6;
+    background: #0055ff;
+    color: #fff;
+    font-weight: 600;
+    font-size: 18px;
+    padding: 5px 0px 5px 0px;
+    border-radius: 4px;
+    border-color: transparent;
+    height: 50px;
+    max-width: 200px;
+  }
+
+  .button-cancel {
+    grid-column: 4 / 5;
+    background: transparent;
+    color: rgb(23, 49, 87, 0.6);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 5px 0px 5px 0px;
+    border-radius: 4px;
+    border-color: transparent;
+    height: 50px;
+    max-width: 200px;
+  }
+
+  .form-main {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .recordkeycontainer {
+    margin-left: 40px;
+    flex-direction: column;
+    width: 505px;
+  }
+
+  .recordkeybox {
+    flex: 1;
+    background: white;
+    border: 1px solid #DBDBDB;
+    height: 40px;
+    margin-top: 5px;
+    border-radius: 5px;
   }
 
   .recordkey {
-    font-size: 14px;
-    font-weight: 600;
+    margin-top: 5px;
+    font-size: 16px;
     color: var(--primary100);
+    align-items: center;
+    padding: 5px 5px 5px 10px;
   }
 
   .fields-table {
@@ -215,6 +349,10 @@
 
   .add-field-button {
     cursor: pointer;
+    float: right;
+    font-size: 14px;
+    color: #0055ff;
+    font-weight: 500;
   }
 
   .edit-button {
@@ -234,11 +372,6 @@
   td {
     padding: 1rem 5rem 1rem 0rem;
     margin: 0;
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  .field-label {
     font-size: 14px;
     font-weight: 500;
   }

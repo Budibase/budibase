@@ -34,8 +34,7 @@
 
 <style>
   .unbound-container {
-    display: flex;
-  }
+flex:1;  }
 
   .bound-header > div:nth-child(1) {
     flex: 1 0 auto;

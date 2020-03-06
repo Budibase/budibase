@@ -9,24 +9,31 @@
   export let disabled = false
 </script>
 
-<div class:uk-margin={margin}>
-  <label class="uk-form-label">{label}</label>
-  <div class="uk-form-controls">
-    <input
-      class="budibase__input"
-      class:uk-form-danger={hasError}
-      on:change
-      bind:value={text}
-      {disabled} />
-  </div>
-  {#if infoText}
-    <div class="info-text">{infoText}</div>
-  {/if}
-</div>
+  <form class="uk-form-stacked">
+    <div class="uk-form-row form">
+      <label class="label" for="">{label}</label>
+        <input
+          class="budibase__input"
+          class:uk-form-danger={hasError}
+          on:change
+          bind:value={text}
+          {disabled} />
+      {#if infoText}
+        <div class="info-text">{infoText}</div>
+      {/if}
+      </div>
+    </form>
 
 <style>
   .info-text {
     font-size: 0.7rem;
     color: var(--secondary50);
   }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 40px;
+  }
+
 </style>

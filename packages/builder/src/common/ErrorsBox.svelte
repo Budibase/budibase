@@ -17,10 +17,9 @@
 <style>
   .error-container {
     padding: 10px;
-    border-style: solid;
-    border-color: var(--deletion100);
     border-radius: var(--borderradiusall);
     background: var(--deletion75);
+    color: white;
   }
 
   .error-row {

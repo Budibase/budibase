@@ -13,9 +13,18 @@
   let numberText = value === null || value === undefined ? "" : value.toString()
 </script>
 
-<div class="uk-margin">
-  <label class="uk-form-label">{label}</label>
+<div class="form">
+  <label class="label">{label}</label>
   <div class="uk-form-controls">
     <input class="budibase__input" {value} on:change={inputChanged} />
   </div>
 </div>
+
+<style>
+  .form {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+</style>

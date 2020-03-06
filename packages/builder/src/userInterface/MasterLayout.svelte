@@ -87,6 +87,7 @@
   .title {
     margin-left: 10px;
     margin-top: 2px;
+    font-size: 14px;
   }
 
   .icon {

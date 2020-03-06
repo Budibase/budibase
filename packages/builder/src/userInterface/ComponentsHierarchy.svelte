@@ -95,7 +95,6 @@
 <style>
   .root {
     font-weight: 400;
-    color: #333;
   }
 
   .title {

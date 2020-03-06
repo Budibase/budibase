@@ -115,5 +115,6 @@
   .root {
     height: 100%;
     width: 100%;
+    font-size: 14px;
   }
 </style>

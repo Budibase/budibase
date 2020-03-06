@@ -28,7 +28,7 @@ export const getNewField = type => ({
 const fieldRules = allFields => [
   makerule("name", "field name is not set", f => isNonEmptyString(f.name)),
   makerule("type", "field type is not set", f => isNonEmptyString(f.type)),
-  makerule("label", "field label is not set", f => isNonEmptyString(f.label)),
+  //makerule("label", "field label is not set", f => isNonEmptyString(f.label)),
   makerule("getInitialValue", "getInitialValue function is not set", f =>
     isNonEmptyString(f.getInitialValue)
   ),

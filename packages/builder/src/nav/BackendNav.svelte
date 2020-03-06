@@ -68,14 +68,15 @@
 <div class="items-root">
   <div class="hierarchy">
     <div class="components-list-container">
-      <div class="nav-group-header">
-        <div>
-          {@html getIcon('database', '18')}
+      <div class="nav-label budibase__label--medium">Backend</div>
+        <div class="nav-group-header">
+          <div>
+            {@html getIcon('database', '16')}
+          </div>
+          <div class="hierarchy-title">Database</div>
+          <DropdownButton iconName="plus" actions={newChildActions} />
         </div>
-        <div class="hierarchy-title">Database</div>
-        <DropdownButton iconName="plus" actions={newChildActions} />
       </div>
-    </div>
 
     <div class="hierarchy-items-container">
       {#each $store.hierarchy.children as record}
@@ -99,25 +100,25 @@
     flex-direction: column;
     max-height: 100%;
     height: 100%;
-    background-color: var(--secondary5);
+  }
+
+  .nav-label {
+    margin: 20px 0px 10px 20px;
   }
 
   .nav-group-header {
     display: grid;
     grid-template-columns: [icon] auto [title] 1fr [button] auto;
-    padding: 2rem 1rem 1rem 1rem;
-    font-size: 0.9rem;
+    padding: 0px 20px 10px 20px ;
   }
 
   .nav-group-header > div:nth-child(1) {
     padding: 0rem 0.7rem 0rem 0rem;
     vertical-align: bottom;
     grid-column-start: icon;
-    margin-right: 5px;
   }
 
   .nav-group-header > div:nth-child(2) {
-    margin-left: 5px;
     vertical-align: bottom;
     grid-column-start: title;
     margin-top: auto;
@@ -136,7 +137,7 @@
 
   .hierarchy-title {
     flex: auto 1 1;
-    text-transform: uppercase;
+    font-size: 12px;
   }
 
   .hierarchy {
@@ -147,5 +148,7 @@
   .hierarchy-items-container {
     flex: 1 1 auto;
     overflow-y: auto;
+    font-size: 12px;
+    padding-right: 20px;
   }
 </style>

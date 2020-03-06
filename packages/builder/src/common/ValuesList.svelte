@@ -15,8 +15,8 @@
   $: valuesText = join("\n")(values)
 </script>
 
-<div class="uk-margin">
-  <label class="uk-form-label">{label}</label>
+<div class="values-main">
+  <label class="label">{label}</label>
   <div class="uk-form-controls">
     <textarea value={valuesText} on:change={inputChanged} />
   </div>
@@ -24,7 +24,12 @@
 
 <style>
   textarea {
-    width: 300px;
-    height: 200px;
+    width: 95%;
+    height: 100px;
+    border-radius: 3px;
+    border-color: #DBDBDB;
+    font-size: 14px;
+    padding: 10px;
+    margin-top: 5px;
   }
 </style>

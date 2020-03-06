@@ -110,7 +110,7 @@
 
   .root {
     display: grid;
-    grid-template-columns: 290px 1fr 350px;
+    grid-template-columns: 275px 1fr 300px;
     height: 100%;
     width: 100%;
     background: #fafafa;
@@ -128,7 +128,7 @@
 
   .preview-pane {
     grid-column: 2;
-    margin: 80px 60px;
+    margin: 40px 40px;
     background: #fff;
     border-radius: 5px;
     box-shadow: 0 0px 6px rgba(0, 0, 0, 0.05);

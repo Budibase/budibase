@@ -137,6 +137,7 @@
 
   .component-container iframe {
     border: 0;
+    font-size: 14px;
     height: 100%;
     left: 0;
     position: absolute;

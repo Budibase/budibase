@@ -185,7 +185,6 @@
     background: none;
     border: none;
     border-radius: 5px;
-    padding: 12px;
     outline: none;
     cursor: pointer;
     position: relative;

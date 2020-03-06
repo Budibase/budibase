@@ -1,5 +1,6 @@
 <script>
   import BackendNav from "./nav/BackendNav.svelte"
+  import BackendRightNav from "./nav/BackendRightNav.svelte"
   import Database from "./database/DatabaseRoot.svelte"
   import UserInterface from "./userInterface/UserInterfaceRoot.svelte"
   import ActionsAndTriggers from "./actionsAndTriggers/ActionsAndTriggersRoot.svelte"
@@ -24,7 +25,12 @@
       <AccessLevels />
     {/if}
   </div>
+  <div class="right-nav">
+    <BackendRightNav />
+  </div>
 </div>
+
+
 
 <style>
   .root {
@@ -35,7 +41,7 @@
   .content {
     flex: 1 1 auto;
     height: 100%;
-    background-color: var(--white);
+    background-color: #fafafa;
     margin: 0;
     overflow-y: auto;
     overflow-x: hidden;
@@ -44,7 +50,14 @@
   .nav {
     overflow: auto;
     flex: 0 1 auto;
-    width: 300px;
+    width: 275px;
+    height: 100%;
+  }
+
+  .right-nav {
+    overflow: auto;
+    flex: 0 auto 1;
+    width: 275px;
     height: 100%;
   }
 </style>

@@ -67,7 +67,8 @@
     padding: 0;
     border: none;
     font-family: Roboto;
-    font-size: 0.8rem;
+    color: #173157;
+    font-size: 14px;
     outline: none;
     cursor: pointer;
   }

@@ -1,12 +1,10 @@
-@import "./budibase.css";
-
 :root {
-    --primary100: #173157FF;
-    --primary75: #454CA0BF;
-    --primary50: #454CA080;
-    --primary25: #454CA040;
-    --primary10: #454CA01A;
-    --primary5: #454ca00c;
+    --primary100: #173157;
+    --primary80: rgba(23, 49, 87, 0.8);
+    --primary60: rgba(23, 49, 87, 0.6);
+    --primary40: rgba(23, 49, 87, 0.4);
+    --primary20: rgba(23, 49, 87, 0.2);
+    --primary10: rgba(23, 49, 87, 0.1);
     --primarydark: #3F448A;
 
     --secondary100:#828fa5;
@@ -47,13 +45,13 @@
     --fontnormal: "Roboto";
     --fontlight: "Roboto Light";
 
-    --bodytext: var(--fontnormal) "regular" var(--secondary100) 16pt;
-    --bigbodytext: var(--fontnormal) "regular" var(--secondary100) 20pt;
-    --smallbodytext: var(--fontnormal) "regular" var(--secondary100) 12pt;
+    --bodytext: var(--fontnormal) "regular" var(--primary100) 12pt;
+    --bigbodytext: var(--fontnormal) "regular" var(--primary100) 20pt;
+    --smallbodytext: var(--fontnormal) "regular" var(--primary100) 12pt;
     --lightbodytext: "regular" "normal" 16pt  var(--fontnormal);
-    --heavybodytext: var(--fontbold) "regular" var(--secondary100) 16pt;
+    --heavybodytext: var(--fontbold) "regular" var(--primary100) 16pt;
     --quotation: var(--fontnormal) "italics" var(--darkslate) 16pt;
-    --smallheavybodytext: var(--fontbold) "regular" var(--secondary100) 14pt;
+    --smallheavybodytext: var(--fontbold) "regular" var(--primary100) 12pt;
 
     --background-button: #e6eeff;
     --button-text: #0055ff;
@@ -61,7 +59,7 @@
 
 html, body {
     font-family: var(--fontnormal);
-    color: var(--secondary100);
+    color: var(--primary100);
     padding: 0;
     margin: 0;
     height:100%;

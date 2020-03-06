@@ -1,5 +1,6 @@
 import App from "./App.svelte"
 import "./global.css"
+import "./budibase.css"
 import "./fonts.css"
 import "/assets/roboto-v20-latin-ext_latin-300"
 import "/assets/roboto-v20-latin-ext_latin-400"

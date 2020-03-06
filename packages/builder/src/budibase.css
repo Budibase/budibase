@@ -1,7 +1,7 @@
 /* Budibase Component Styles */
 .header {
     font-size: 0.75rem;
-    color: #999;
+    color: #173157;
     text-transform: uppercase;
     margin-top: 1rem;
     font-weight: 500;
@@ -10,21 +10,25 @@
 .budibase__title {
     font-weight: 900;
     font-size: 42px;
+    color:#173157;
 }
 
 .budibase__title--2 {
     font-weight: 700;
     font-size: 32px;
+    color: #173157;
 }
 
 .budibase__title--3 {
     font-weight: 700;
     font-size: 24px;
+    color: #173157;
 }
 
 .budibase__title--4 {
     font-weight: 700;
     font-size: 18px;
+    color: #173157;
 }
 
 .budibase__label--big {
@@ -35,10 +39,11 @@
 }
 
 .budibase__label--medium {
-    font-weight: 500;
+    font-weight: 700;
     font-size: 12px;
-    opacity: 0.6;
+    opacity: 0.4;
     text-transform: uppercase;
+    color: #173157;
 }
 
 .budibase__label--small {
@@ -56,35 +61,49 @@
 
 .budibase__nav-item {
     cursor: pointer;
-    padding: 0 7px 0 3px;
-    height: 35px;
-    margin: 5px 0;
+    padding: 0 5px 0 5px;
+    height: 30px;
     border-radius: 0 5px 5px 0;
     display: flex;
     align-items: center;
-    font-weight: 500;
-    font-size: 0.8em;
+    font-weight: 400;
+    font-size: 12px;
 }
 
 .budibase__nav-item.selected {
     color: var(--button-text);
-    background: var(--background-button) !important;
+    background: #fafafa;
 }
 
 .budibase__nav-item:hover {
     background: #fafafa;
+    cursor: pointer;
 }
 
 .budibase__input {
-    width: 250px;
-    height: 35px;
+    width: 240px;
+    height: 40px;
     border-radius: 3px;
     border: 1px solid #DBDBDB;
     text-align: left;
     letter-spacing: 0.7px;
     color: #163057;
     font-size: 16px;
-    padding-left: 5px;
+    padding-left: 10px;
+    margin-top: 5px;
+}
+
+.budibase__input-wide {
+    justify-content: stretch;
+    height: 50px;
+    border-radius: 3px;
+    border: 1px solid #DBDBDB;
+    text-align: left;
+    letter-spacing: 0.7px;
+    color: #163057;
+    font-size: 16px;
+    padding-left: 10px;
+    margin-top: 5px;
 }
 
 .uk-text-right {

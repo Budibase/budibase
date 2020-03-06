@@ -1,6 +1,6 @@
 <script>
-  import Dropdown from "../common/Dropdown.svelte"
-  import Textbox from "../common/Textbox.svelte"
+  import Dropdown from "../common/DropdownModal.svelte"
+  import Textbox from "../common/TextboxWide.svelte"
   import Button from "../common/Button.svelte"
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import NumberBox from "../common/NumberBox.svelte"
@@ -65,11 +65,8 @@
 </script>
 
 <div class="root">
-
   <ErrorsBox {errors} />
-
-  <form class="uk-form-horizontal">
-
+  <form class="form-main">
     <Dropdown
       label="Type"
       bind:selected={clonedField.type}
@@ -77,17 +74,14 @@
       on:change={typeChanged} />
 
     {#if isNew}
-      <Textbox label="Field Name" bind:text={clonedField.name} />
+      <Textbox label="Name" bind:text={clonedField.name} />
     {:else}
       <div style="font-weight: bold">{clonedField.name}</div>
     {/if}
-
+    <!--
     <Textbox label="Label" bind:text={clonedField.label} />
-
+    -->
     {#if clonedField.type === 'string'}
-      <NumberBox
-        label="Max Length"
-        bind:value={clonedField.typeOptions.maxLength} />
       <ValuesList
         label="Values (options)"
         bind:values={clonedField.typeOptions.values} />
@@ -98,6 +92,7 @@
       <Checkbox
         label="Allow Null"
         bind:checked={clonedField.typeOptions.allowNulls} />
+        <!--
     {:else if clonedField.type === 'datetime'}
       <DatePicker
         label="Min Value"
@@ -105,7 +100,9 @@
       <DatePicker
         label="Max Value"
         bind:value={clonedField.typeOptions.maxValue} />
-    {:else if clonedField.type === 'number'}
+         -->
+      <!--
+      {:else if clonedField.type === 'number'}
       <NumberBox
         label="Min Value"
         bind:value={clonedField.typeOptions.minValue} />
@@ -115,6 +112,8 @@
       <NumberBox
         label="Decimal Places"
         bind:value={clonedField.typeOptions.decimalPlaces} />
+        -->
+
     {:else if clonedField.type === 'reference'}
       <Dropdown
         label="Lookup Index"
@@ -122,7 +121,6 @@
         valueMember={n => n.nodeKey()}
         textMember={n => n.name}
         bind:selected={clonedField.typeOptions.indexNodeKey} />
-
       <Dropdown
         label="Reverse Reference Index"
         options={possibleReverseReferenceIndexes}
@@ -130,26 +128,43 @@
         valueMember={n => n.nodeKey()}
         textMember={n => n.name}
         bind:selected={clonedField.typeOptions.reverseIndexNodeKeys} />
-
       <Textbox
         label="Display Value"
         bind:text={clonedField.typeOptions.displayValue} />
-    {:else if clonedField.type.startsWith('array')}
-      <NumberBox
-        label="Min Length"
-        bind:value={clonedField.typeOptions.minLength} />
-      <NumberBox
-        label="Max Length"
-        bind:value={clonedField.typeOptions.maxLength} />
-    {/if}
-  </form>
+      <!--
+      {:else if clonedField.type.startsWith('array')}
+        <NumberBox
+          label="Min Length"
+          bind:value={clonedField.typeOptions.minLength} />
+        <NumberBox
+          label="Max Length"
+          bind:value={clonedField.typeOptions.maxLength} />
+        -->
+      {/if}
+   
+      </form>
+        <ButtonGroup>
+          <ActionButton cancel on:click={() => onFinished(false)}>Delete</ActionButton>
+          <ActionButton primary on:click={save}>Save</ActionButton>
+        </ButtonGroup>
+    </div>
 
-  <div class="uk-modal-footer uk-text-right">
-    <ButtonGroup>
-      <ActionButton primary on:click={save}>Save</ActionButton>
-      <ActionButton alert on:click={() => onFinished(false)}>
-        Cancel
-      </ActionButton>
-    </ButtonGroup>
-  </div>
-</div>
+
+<style>
+
+.form-main {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 100%;
+  justify-content: stretch;
+  margin: 20px 0px 20px 0px;
+}
+
+.footer {
+  margin-top:20px;
+  border-top: 1px;
+  border-color: #d8d8d8;
+}
+
+</style>
