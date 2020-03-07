@@ -16,3 +16,6 @@ export { default as GridIcon } from "./Grid.svelte"
 export { default as ShapeIcon } from "./Shape.svelte"
 export { default as AddIcon } from "./Add.svelte"
 export { default as JavaScriptIcon } from "./JavaScript.svelte"
+export { default as PreviewIcon } from "./Preview.svelte"
+export { default as SettingsIcon } from "./Settings.svelte"
+
