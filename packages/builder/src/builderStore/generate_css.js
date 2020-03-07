@@ -102,12 +102,6 @@ const handle_grid = (acc, [name, value]) => {
   return acc.concat([[name, value]])
 }
 
-// const handleFlex = (acc, [name, value]) => {
-//   if (name === "align-items" || name === "justify-content") {
-//     return acc.concat([name, value])
-//   }
-// };
-
 const object_to_css_string = [
   toPairs,
   reduce(handle_grid, []),
