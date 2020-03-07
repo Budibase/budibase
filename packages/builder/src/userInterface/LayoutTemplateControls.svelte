@@ -13,19 +13,19 @@
 
   const PROPERTY_OPTIONS = {
     Direction: {
-      vertical: ["column", "ri-layout-column-line"],
-      horizontal: ["row", "ri-layout-row-line"],
+      vertical: ["column", "ri-arrow-up-down-line"],
+      horizontal: ["row", "ri-arrow-left-right-line"],
     },
     Align: {
-      left: ["flex-start", "ri-align-left"],
-      center: ["center", "ri-align-center"],
-      right: ["flex-end", "ri-align-right"],
+      left: ["flex-start", "ri-layout-bottom-line"],
+      center: ["center", "ri-layout-row-line"],
+      right: ["flex-end", "ri-layout-top-line"],
       space: ["space-between", "ri-space"],
     },
     Justify: {
-      left: ["flex-start", "ri-align-left"],
-      center: ["center", "ri-align-center"],
-      right: ["flex-end", "ri-align-right"],
+      left: ["flex-start", "ri-layout-left-line"],
+      center: ["center", "ri-layout-column-line"],
+      right: ["flex-end", "ri-layout-right-line"],
       space: ["space-between", "ri-space"],
     },
   }
@@ -61,16 +61,15 @@
     border-radius: 5px;
     background: rgba(249, 249, 249, 1);
 
-    min-width: 1.8rem;
-    min-height: 1.8rem;
-    padding-bottom: 10px;
+    min-width: 1.6rem;
+    min-height: 1.6rem;
 
     display: flex;
     justify-content: center;
     align-items: center;
 
     font-size: 1.2rem;
-    font-weight: 700;
+    font-weight: 500;
     color: rgba(22, 48, 87, 1);
   }
 
