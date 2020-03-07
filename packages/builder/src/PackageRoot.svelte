@@ -74,7 +74,7 @@
     flex: 0 0 auto;
     height: 48px;
     background: #0d203b;
-    padding: 0px 15px 0 1.8rem;
+    padding: 0px 20px 0 20px;
     display: flex;
     box-sizing: border-box;
     justify-content: space-between;
