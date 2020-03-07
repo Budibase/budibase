@@ -7,9 +7,9 @@
   export let propertyName
   export let onStyleChanged = () => {}
 
-  let _values = values.map(v => v)
+  let selectedLayoutValues = values.map(v => v)
 
-  $: onStyleChanged(_values)
+  $: onStyleChanged(selectedLayoutValues)
 
   const PROPERTY_OPTIONS = {
     Direction: {
@@ -37,10 +37,10 @@
   {#each meta as { placeholder }, i}
     {#each propertyChoices as [displayName, [cssPropValue, icon]]}
       <button
-        class:selected={cssPropValue === _values[i]}
+        class:selected={cssPropValue === selectedLayoutValues[i]}
         on:click={() => {
-          const newPropertyValue = cssPropValue === _values[i] ? '' : cssPropValue
-          _values[i] = newPropertyValue
+          const newPropertyValue = cssPropValue === selectedLayoutValues[i] ? '' : cssPropValue
+          selectedLayoutValues[i] = newPropertyValue
         }}>
         <i class={icon} />
       </button>
