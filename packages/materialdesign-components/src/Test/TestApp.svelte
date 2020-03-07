@@ -17,6 +17,7 @@
     Icon,
     List,
     Select,
+    DatePicker,
   } = props
 
   let currentComponent
@@ -28,6 +29,7 @@
         props: {
           _component: "testcomponents/rootComponent",
           _children: [
+            DatePicker,
             Button,
             BodyBoundToStore,
             Textfield,
