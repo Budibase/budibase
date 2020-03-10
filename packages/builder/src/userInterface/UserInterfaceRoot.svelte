@@ -126,7 +126,6 @@
     flex-direction: column;
   }
 
-<<<<<<< HEAD
   .preview-pane {
     grid-column: 2;
     margin: 40px;
@@ -135,8 +134,6 @@
     box-shadow: 0 0px 6px rgba(0, 0, 0, 0.05);
   }
 
-=======
->>>>>>> new backend beginnings
   .components-pane {
     grid-column: 3;
     background-color: var(--secondary5);
