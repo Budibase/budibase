@@ -20,13 +20,13 @@
     <BackendNav />
   </div>
   <div class="content">
-    {#if activeNav === 'database'}
+    <!-- {#if activeNav === 'database'} -->
       <Database />
-    {:else if activeNav === 'actions'}
+    <!-- {:else if activeNav === 'actions'}
       <ActionsAndTriggers />
     {:else if activeNav === 'access levels'}
       <AccessLevels />
-    {/if}
+    {/if} -->
   </div>
   <div class="nav">
     <SchemaManagementDrawer />
@@ -43,9 +43,6 @@
   .content {
     flex: 1 1 auto;
     margin: 80px 60px;
-    background: #fff;
-    border-radius: 5px;
-    box-shadow: 0 0px 6px rgba(0, 0, 0, 0.05);
   }
 
   .nav {

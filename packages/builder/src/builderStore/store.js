@@ -55,7 +55,6 @@ export const getStore = () => {
     currentComponentProps: null,
     currentNodeIsNew: false,
     errors: [],
-    isBackend: true,
     hasAppPackage: false,
     accessLevels: { version: 0, levels: [] },
     currentNode: null,
@@ -65,6 +64,61 @@ export const getStore = () => {
   }
 
   const store = writable(initial)
+
+  // store.api = {
+  //   appDefinition: {
+  //     create: () => {},
+  //   },
+  //   records: {
+  //     create: () => {},
+  //     update: () => {},
+  //     delete: () => {},
+  //   },
+  //   indexes: {
+  //     create: () => {},
+  //     update: () => {},
+  //     delete: () => {},
+  //   },
+  //   pages: {
+  //     create: () => {},
+  //     update: () => {},
+  //     delete: () => {},
+  //   },
+  //   screens: {
+  //     create: () => {},
+  //     select: () => {},
+  //     rename: () => {}
+  //   },
+  //   accessLevels: {
+  //     create: () => {},
+  //     update: () => {},
+  //     delete: () => {},
+  //   },
+  //   users: {
+  //     create: () => {},
+  //     update: () => {},
+  //     delete: () => {},
+  //   },
+  //   actions: {
+  //     update: () => {},
+  //     delete: () => {}
+  //   },
+  //   triggers: {
+  //     create: () => {},
+  //     update: () => {},
+  //     delete: () => {},
+  //   },
+  //   stylesheets: {
+  //     create: () => {},
+  //     update: () => {},
+  //     delete: () => {},
+  //   },
+  //   components: {
+  //     create: () => {},
+  //     update: () => {},
+  //     delete: () => {},
+  //   }
+  // }
 
   store.initialise = initialise(store, initial)
   store.newChildRecord = newRecord(store, false)
@@ -94,8 +148,8 @@ export const getStore = () => {
   store.addStylesheet = addStylesheet(store)
   store.removeStylesheet = removeStylesheet(store)
   store.savePage = savePage(store)
-  store.showFrontend = showFrontend(store)
-  store.showBackend = showBackend(store)
+  // store.showFrontend = showFrontend(store)
+  // store.showBackend = showBackend(store)
   store.showSettings = showSettings(store)
   store.useAnalytics = useAnalytics(store)
   store.createGeneratedComponents = createGeneratedComponents(store)
@@ -172,6 +226,7 @@ const initialise = (store, initial) => async () => {
   initial.builtins = [getBuiltin("##builtin/screenslot")]
   initial.actions = values(pkg.appDefinition.actions)
   initial.triggers = pkg.appDefinition.triggers
+  initial.appInstances = pkg.application.instances
 
   if (!!initial.hierarchy && !isEmpty(initial.hierarchy)) {
     initial.hierarchy = constructHierarchy(initial.hierarchy)
@@ -185,29 +240,15 @@ const initialise = (store, initial) => async () => {
 }
 
 const showSettings = store => () => {
-  store.update(s => {
-    s.showSettings = !s.showSettings
-    return s
+  store.update(state => {
+    state.showSettings = !state.showSettings
+    return state
   })
 }
 
 const useAnalytics = store => () => {
   store.update(s => {
     s.useAnalytics = !s.useAnalytics
-    return s
-  })
-}
-
-const showBackend = store => () => {
-  store.update(s => {
-    s.isBackend = true
-    return s
-  })
-}
-
-const showFrontend = store => () => {
-  store.update(s => {
-    s.isBackend = false
     return s
   })
 }
@@ -377,10 +418,10 @@ const saveAction = store => (newAction, isNew, oldAction = null) => {
 }
 
 const deleteAction = store => action => {
-  store.update(s => {
-    s.actions = filter(a => a.name !== action.name)(s.actions)
-    saveBackend(s)
-    return s
+  store.update(state => {
+    state.actions = state.actions.filter(a => a.name !== action.name);
+    saveBackend(state);
+    return state;
   })
 }
 
