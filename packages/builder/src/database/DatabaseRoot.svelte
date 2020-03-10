@@ -2,6 +2,7 @@
   import HierarchyRow from "./HierarchyRow.svelte"
   import RecordView from "./RecordView.svelte"
   import IndexView from "./IndexView.svelte"
+  import ModelDataTable from "./ModelDataTable"
   import ActionsHeader from "./ActionsHeader.svelte"
   import { store } from "../builderStore"
   import getIcon from "../common/icon"
@@ -59,7 +60,7 @@
   </div>
   <div class="node-view">
     {#if !$store.currentNode}
-      <h1 style="margin-left: 100px">:)</h1>
+      <ModelDataTable />
     {:else if $store.currentNode.type === 'record'}
       <RecordView />
     {:else}
