@@ -29,7 +29,7 @@
     $store.currentFrontEndType === "page"
       ? getProps($store.currentPreviewItem, ["name", "favicon"])
       : getProps($store.currentPreviewItem, ["name", "description", "route"])
-  $: console.log(screen_props)
+
   const onPropChanged = store.setComponentProp
   const onStyleChanged = store.setComponentStyle
 
