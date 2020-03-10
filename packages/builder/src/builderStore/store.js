@@ -55,7 +55,6 @@ export const getStore = () => {
     currentComponentProps: null,
     currentNodeIsNew: false,
     errors: [],
-    activeNav: "database",
     isBackend: true,
     hasAppPackage: false,
     accessLevels: { version: 0, levels: [] },
@@ -84,7 +83,6 @@ export const getStore = () => {
   store.deleteTrigger = deleteTrigger(store)
   store.saveLevel = saveLevel(store)
   store.deleteLevel = deleteLevel(store)
-  store.setActiveNav = setActiveNav(store)
   store.saveScreen = saveScreen(store)
   store.addComponentLibrary = addComponentLibrary(store)
   store.renameScreen = renameScreen(store)
@@ -237,7 +235,6 @@ const selectExistingNode = store => nodeId => {
     s.currentNode = getNode(shadowHierarchy, nodeId)
     s.currentNodeIsNew = false
     s.errors = []
-    s.activeNav = "database"
     return s
   })
 }
@@ -445,13 +442,6 @@ const deleteLevel = store => level => {
     )
     incrementAccessLevelsVersion(s)
     saveBackend(s)
-    return s
-  })
-}
-
-const setActiveNav = store => navName => {
-  store.update(s => {
-    s.activeNav = navName
     return s
   })
 }

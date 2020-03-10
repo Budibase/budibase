@@ -1,5 +1,6 @@
 <script>
   import BackendNav from "./nav/BackendNav.svelte"
+  import SchemaManagementDrawer from "./nav/SchemaManagementDrawer.svelte"
   import Database from "./database/DatabaseRoot.svelte"
   import UserInterface from "./userInterface/UserInterfaceRoot.svelte"
   import ActionsAndTriggers from "./actionsAndTriggers/ActionsAndTriggersRoot.svelte"
@@ -7,8 +8,11 @@
   import ComingSoon from "./common/ComingSoon.svelte"
 
   import { store } from "./builderStore"
+  import { setContext } from 'svelte';
 
-  export let navWidth = "50px"
+  let activeNav = "database";
+
+  setContext("activeNav", activeNav);
 </script>
 
 <div class="root">
@@ -16,13 +20,16 @@
     <BackendNav />
   </div>
   <div class="content">
-    {#if $store.activeNav === 'database'}
+    {#if activeNav === 'database'}
       <Database />
-    {:else if $store.activeNav === 'actions'}
+    {:else if activeNav === 'actions'}
       <ActionsAndTriggers />
-    {:else if $store.activeNav === 'access levels'}
+    {:else if activeNav === 'access levels'}
       <AccessLevels />
     {/if}
+  </div>
+  <div class="nav">
+    <SchemaManagementDrawer />
   </div>
 </div>
 
@@ -30,15 +37,15 @@
   .root {
     height: 100%;
     display: flex;
+    background: #fafafa;
   }
 
   .content {
     flex: 1 1 auto;
-    height: 100%;
-    background-color: var(--white);
-    margin: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    margin: 80px 60px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0px 6px rgba(0, 0, 0, 0.05);
   }
 
   .nav {
