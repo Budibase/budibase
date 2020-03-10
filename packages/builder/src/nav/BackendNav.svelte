@@ -1,44 +1,41 @@
 <script>
-  import { setContext } from "svelte";
+  import { setContext } from "svelte"
   import { store } from "../builderStore"
   import HierarchyRow from "./HierarchyRow.svelte"
+  import DatabasesList from "./DatabasesList.svelte"
   import DropdownButton from "../common/DropdownButton.svelte"
   import { hierarchy as hierarchyFunctions } from "../../../core/src"
   import NavItem from "./NavItem.svelte"
   import getIcon from "../common/icon"
 
-  // top level store modifiers 
-  const newRootRecord = () => store.newRootRecord();
-  const newChildIndex = () => store.newChildIndex();
-  const newRootIndex = () => store.newRootIndex();
+  // top level store modifiers
+  const newRootRecord = () => store.newRootRecord()
+  const newChildIndex = () => store.newChildIndex()
+  const newRootIndex = () => store.newRootIndex()
   const newUser = () => {
-    store.update(state => { 
-
-    });
+    store.update(state => {})
   }
   const newDatabase = () => {
-    store.update(state => { 
-
-    });
+    store.update(state => {})
   }
 
   const userManagementActions = [
     {
       label: "New User",
-      onclick: newUser
-    }
-  ];
+      onclick: newUser,
+    },
+  ]
 
-  const databaseManagementActions  = [
+  const databaseManagementActions = [
     {
       label: "New Database",
-      onclick: newDatabase
-    }
-  ];
+      onclick: newDatabase,
+    },
+  ]
 
   // let newChildActions = defaultNewChildActions
 
-  const setActiveNav = name => () => setContext("activeNav", name);
+  const setActiveNav = name => () => setContext("activeNav", name)
 
   // store.subscribe(db => {
   //   if (!db.currentNode || hierarchyFunctions.isIndex(db.currentNode)) {
