@@ -14,12 +14,12 @@
 
 <style>
   .select-container {
-    padding-bottom: 10px;
     font-size: 0.9rem;
     color: var(--secondary50);
     font-weight: bold;
     position: relative;
     max-width: 300px;
+    min-width: 200px;
   }
 
   select {
@@ -43,7 +43,6 @@
   .arrow {
     position: absolute;
     right: 10px;
-    top: 0;
     bottom: 0;
     margin: auto;
     width: 30px;

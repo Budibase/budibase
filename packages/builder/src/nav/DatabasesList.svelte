@@ -3,30 +3,12 @@
   import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
 
-  const getPage = (s, name) => {
-    const props = s.pages[name]
-    return { name, props }
-  }
-
-  $: databases = $store.app
-
-  const pages = [
-    {
-      title: "Main",
-      id: "main",
-    },
-    {
-      title: "Login",
-      id: "unauthenticated",
-    },
-  ]
-
-  store.setCurrentPage("main")
+  $: instances = $store.appInstances
 </script>
 
 <div class="root">
   <ul>
-    {#each pages as { title, id }}
+    {#each $store.appInstances as { id, name }}
       <li>
         <span class="icon">
           {#if id === $store.currentPageName}
@@ -37,7 +19,7 @@
         <button
           class:active={id === $store.currentPageName}
           on:click={() => store.setCurrentPage(id)}>
-          {title}
+          {name}
         </button>
       </li>
     {/each}

@@ -98,6 +98,7 @@
   .nav-group-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 2rem 1rem 1rem 1rem;
   }
 

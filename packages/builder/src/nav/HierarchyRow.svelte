@@ -25,7 +25,8 @@
 <div>
   <div
     on:click={() => store.selectExistingNode(node.nodeId)}
-    class="budibase__nav-item"
+    class="budibase__nav-item hierarchy-item"
+    class:capitalized={type === "record"}
     style="padding-left: {20 + level * 20}px"
     class:selected={navActive}>
     <i class={ICON_MAP[type]} />
@@ -42,3 +43,14 @@
     {/each}
   {/if}
 </div>
+
+<style>
+.hierarchy-item {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.capitalized {
+  text-transform: capitalize;
+}
+</style>

@@ -3,7 +3,7 @@
   import { store } from "../builderStore"
   import HierarchyRow from "./HierarchyRow.svelte"
   import DatabasesList from "./DatabasesList.svelte"
-  import DropdownButton from "../common/DropdownButton.svelte"
+  import UsersList from "./UsersList.svelte"
   import { hierarchy as hierarchyFunctions } from "../../../core/src"
   import NavItem from "./NavItem.svelte"
   import getIcon from "../common/icon"
@@ -68,7 +68,7 @@
     <div class="components-list-container">
       <div class="nav-group-header">
         <div class="hierarchy-title">Databases</div>
-        <DropdownButton iconName="plus" actions={databaseManagementActions} />
+        <i class="ri-add-line" />
       </div>
     </div>
 
@@ -89,11 +89,12 @@
     <div class="components-list-container">
       <div class="nav-group-header">
         <div class="hierarchy-title">Users</div>
-        <DropdownButton iconName="plus" actions={userManagementActions} />
+        <i class="ri-add-line" />
       </div>
     </div>
 
     <div class="hierarchy-items-container">
+      <UsersList />
       <!-- {#each $store.hierarchy.children as record}
         <HierarchyRow node={record} type="record" />
       {/each} -->
