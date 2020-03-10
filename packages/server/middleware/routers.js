@@ -1,9 +1,10 @@
 const Router = require("@koa/router")
 const session = require("./session")
 const StatusCodes = require("../utilities/statusCodes")
-const fs = require("fs")
 const { resolve } = require("path")
 const send = require("koa-send")
+const routeHandlers = require("./routeHandlers")
+
 const {
   getPackageForBuilder,
   getComponentDefinitions,
@@ -38,6 +39,25 @@ module.exports = (config, app) => {
       ctx.set("x-bbappname", appname)
 
       if (appname === "_builder") {
+        if (!config.dev) {
+          ctx.response.status = StatusCodes.FORBIDDEN
+          ctx.body = "run in dev mode to access builder"
+          return
+        }
+
+        if (ctx.path.startsWith("/_builder/instance/_master")) {
+          ctx.instance = ctx.master.getFullAccessApiForMaster()
+          ctx.isAuthenticated = !!ctx.instance
+        } else if (ctx.path.startsWith("/_builder/instance")) {
+          const builderAppName = pathParts[3]
+          const instanceId = pathParts[4]
+          ctx.instance = ctx.master.getFullAccessApiForInstanceId(
+            builderAppName,
+            instanceId
+          ).bbInstance
+          ctx.isAuthenticated = !!ctx.instance
+        }
+
         await next()
       } else {
         const instance = await ctx.master.getInstanceApiForSession(
@@ -54,12 +74,6 @@ module.exports = (config, app) => {
       }
     })
     .get("/_builder", async ctx => {
-      if (!config.dev) {
-        ctx.response.status = StatusCodes.FORBIDDEN
-        ctx.body = "run in dev mode to access builder"
-        return
-      }
-
       await send(ctx, "/index.html", { root: builderPath })
     })
     .get("/_builder/:appname/componentlibrary", async ctx => {
@@ -71,12 +85,6 @@ module.exports = (config, app) => {
       await send(ctx, info.components._lib || "index.js", { root: info.libDir })
     })
     .get("/_builder/*", async (ctx, next) => {
-      if (!config.dev) {
-        ctx.response.status = StatusCodes.FORBIDDEN
-        ctx.body = "run in dev mode to access builder"
-        return
-      }
-
       const path = ctx.path.replace("/_builder", "")
 
       if (path.startsWith("/api/")) {
@@ -85,58 +93,36 @@ module.exports = (config, app) => {
         await send(ctx, path, { root: builderPath })
       }
     })
-    .post("/:appname/api/authenticate", async ctx => {
-      const user = await ctx.master.authenticate(
-        ctx.sessionId,
-        ctx.params.appname,
-        ctx.request.body.username,
-        ctx.request.body.password
-      )
-      if (!user) {
-        ctx.throw(StatusCodes.UNAUTHORIZED, "invalid username or password")
-      }
-      ctx.body = user.user_json
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/setPasswordFromTemporaryCode", async ctx => {
-      const instanceApi = await ctx.master.getFullAccessInstanceApiForUsername(
-        ctx.params.appname,
-        ctx.request.body.username
-      )
-
-      if (!instanceApi) {
-        ctx.request.status = StatusCodes.OK
-        return
-      }
-
-      await instanceApi.authApi.setPasswordFromTemporaryCode(
-        ctx.request.body.tempCode,
-        ctx.request.body.newPassword
-      )
-
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/createTemporaryAccess", async ctx => {
-      const instanceApi = await ctx.master.getFullAccessInstanceApiForUsername(
-        ctx.params.appname,
-        ctx.request.body.username
-      )
-
-      if (!instanceApi) {
-        ctx.request.status = StatusCodes.OK
-        return
-      }
-
-      await instanceApi.authApi.createTemporaryAccess(ctx.request.body.username)
-
-      ctx.response.status = StatusCodes.OK
-    })
+    .post("/:appname/api/authenticate", routeHandlers.authenticate)
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/authenticate",
+      routeHandlers.authenticate
+    )
+    .post(
+      "/:appname/api/setPasswordFromTemporaryCode",
+      routeHandlers.setPasswordFromTemporaryCode
+    )
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/setPasswordFromTemporaryCode",
+      routeHandlers.setPasswordFromTemporaryCode
+    )
+    .post(
+      "/:appname/api/createTemporaryAccess",
+      routeHandlers.createTemporaryAccess
+    )
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/createTemporaryAccess",
+      routeHandlers.createTemporaryAccess
+    )
     .get("/_builder/api/apps", async ctx => {
       ctx.body = await getApps(config, ctx.master)
       ctx.response.status = StatusCodes.OK
     })
     .get("/_builder/api/:appname/appPackage", async ctx => {
-      ctx.body = await getPackageForBuilder(config, ctx.params.appname)
+      const application = await ctx.master.getApplicationWithInstances(
+        ctx.params.appname
+      )
+      ctx.body = await getPackageForBuilder(config, application)
       ctx.response.status = StatusCodes.OK
     })
     .get("/_builder/api/:appname/components", async ctx => {
@@ -228,23 +214,9 @@ module.exports = (config, app) => {
     .get("/:appname", async ctx => {
       await send(ctx, "/index.html", { root: ctx.publicPath })
     })
-    .get("/:appname/*", async (ctx, next) => {
-      const path = ctx.path.replace(`/${ctx.params.appname}`, "")
-
-      if (path.startsWith("/api/")) {
-        await next()
-      } else if (path.startsWith("/_shared/")) {
-        await send(ctx, path.replace(`/_shared/`, ""), { root: ctx.sharedPath })
-      } else if (
-        path.endsWith(".js") ||
-        path.endsWith(".map") ||
-        path.endsWith(".css")
-      ) {
-        await send(ctx, path, { root: ctx.publicPath })
-      } else {
-        await send(ctx, "/index.html", { root: ctx.publicPath })
-      }
-    })
+    .get("/:appname/*", routeHandlers.appDefault)
+    .get("/_builder/instance/:appname/:instanceid/*", routeHandlers.appDefault)
+    // EVERYTHING BELOW HERE REQUIRES AUTHENTICATION
     .use(async (ctx, next) => {
       if (ctx.isAuthenticated) {
         await next()
@@ -252,147 +224,85 @@ module.exports = (config, app) => {
         ctx.response.status = StatusCodes.UNAUTHORIZED
       }
     })
-    .post("/:appname/api/changeMyPassword", async ctx => {
-      await ctx.instance.authApi.changeMyPassword(
-        ctx.request.body.currentPassword,
-        ctx.request.body.newPassword
-      )
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/changeMyPassword", async ctx => {
-      await ctx.instance.authApi.changeMyPassword(
-        ctx.request.body.currentPassword,
-        ctx.request.body.newPassword
-      )
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/executeAction/:actionname", async ctx => {
-      ctx.body = await ctx.instance.actionApi.execute(
-        ctx.request.body.actionname,
-        ctx.request.body.parameters
-      )
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/createUser", async ctx => {
-      await ctx.instance.authApi.createUser(
-        ctx.request.body.user,
-        ctx.request.body.password
-      )
-
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/enableUser", async ctx => {
-      await ctx.instance.authApi.enableUser(ctx.request.body.username)
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/disableUser", async ctx => {
-      await ctx.instance.authApi.disableUser(ctx.request.body.username)
-
-      await ctx.master.removeSessionsForUser(
-        ctx.params.appname,
-        ctx.request.body.username
-      )
-      ctx.response.status = StatusCodes.OK
-    })
-    .get("/:appname/api/users", async ctx => {
-      ctx.body = await ctx.instance.authApi.getUsers()
-      ctx.response.status = StatusCodes.OK
-    })
-    .get("/:appname/api/accessLevels", async ctx => {
-      ctx.body = await ctx.instance.authApi.getAccessLevels()
-      ctx.response.status = StatusCodes.OK
-    })
-    .get("/:appname/api/listRecords/*", async ctx => {
-      const indexkey = getRecordKey(ctx.params.appname, ctx.request.path)
-      ctx.body = await ctx.instance.indexApi.listItems(indexkey)
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/listRecords/*", async ctx => {
-      const indexkey = getRecordKey(ctx.params.appname, ctx.request.path)
-      ctx.body = await ctx.instance.indexApi.listItems(indexkey, {
-        rangeStartParams: ctx.request.body.rangeStartParams,
-        rangeEndParams: ctx.request.body.rangeEndParams,
-        searchPhrase: ctx.request.body.searchPhrase,
-      })
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/aggregates/*", async ctx => {
-      const indexkey = getRecordKey(ctx.params.appname, ctx.request.path)
-      ctx.body = await ctx.instance.indexApi.aggregates(indexkey, {
-        rangeStartParams: ctx.request.body.rangeStartParams,
-        rangeEndParams: ctx.request.body.rangeEndParams,
-        searchPhrase: ctx.request.body.searchPhrase,
-      })
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/files/*", async ctx => {
-      const file = ctx.request.files.file
-      ctx.body = await ctx.instance.recordApi.uploadFile(
-        getRecordKey(ctx.params.appname, ctx.request.path),
-        fs.createReadStream(file.path),
-        file.name
-      )
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/record/*", async ctx => {
-      ctx.body = await ctx.instance.recordApi.save(ctx.request.body)
-      ctx.response.status = StatusCodes.OK
-    })
-    .get("/:appname/api/lookup_field/*", async ctx => {
-      const recordKey = getRecordKey(ctx.params.appname, ctx.request.path)
-      const fields = ctx.query.fields.split(",")
-      const recordContext = await ctx.instance.recordApi.getContext(recordKey)
-      const allContext = []
-      for (let field of fields) {
-        allContext.push(await recordContext.referenceOptions(field))
-      }
-      ctx.body = allContext
-      ctx.response.status = StatusCodes.OK
-    })
-    .get("/:appname/api/record/*", async ctx => {
-      try {
-        ctx.body = await ctx.instance.recordApi.load(
-          getRecordKey(ctx.params.appname, ctx.request.path)
-        )
-        ctx.response.status = StatusCodes.OK
-      } catch (e) {
-        // need to be catching for 404s here
-        ctx.response.status = StatusCodes.INTERAL_ERROR
-        ctx.response.body = e.message
-      }
-    })
-    .del("/:appname/api/record/*", async ctx => {
-      await ctx.instance.recordApi.delete(
-        getRecordKey(ctx.params.appname, ctx.request.path)
-      )
-      ctx.response.status = StatusCodes.OK
-    })
-    .post("/:appname/api/apphierarchy", async ctx => {
-      ctx.body = await ctx.instance.templateApi.saveApplicationHierarchy(
-        ctx.body
-      )
-      ctx.response.status = StatusCodes.OK
-    })
-  /*.post("/:appname/api/actionsAndTriggers", async (ctx) => {
-        ctx.body = await ctx.instance.templateApi.saveApplicationHierarchy(
-            ctx.body
-        );
-        ctx.response.status = StatusCodes.OK;
-    })
-    .get("/:appname/api/appDefinition", async (ctx) => {
-        ctx.body = await ctx.instance.templateApi.saveActionsAndTriggers(
-            ctx.body
-        );
-        ctx.response.status = StatusCodes.OK;
-    })*/
-
-  const getRecordKey = (appname, wholePath) =>
-    wholePath
-      .replace(`/${appname}/api/files/`, "")
-      .replace(`/${appname}/api/lookup_field/`, "")
-      .replace(`/${appname}/api/record/`, "")
-      .replace(`/${appname}/api/listRecords/`, "")
-      .replace(`/${appname}/api/aggregates/`, "")
+    .post("/:appname/api/changeMyPassword", routeHandlers.changeMyPassword)
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/changeMyPassword",
+      routeHandlers.changeMyPassword
+    )
+    .post(
+      "/:appname/api/executeAction/:actionname",
+      routeHandlers.executeAction
+    )
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/executeAction/:actionname",
+      routeHandlers.executeAction
+    )
+    .post("/:appname/api/createUser", routeHandlers.createUser)
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/createUser",
+      routeHandlers.createUser
+    )
+    .post("/:appname/api/enableUser", routeHandlers.enableUser)
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/enableUser",
+      routeHandlers.enableUser
+    )
+    .post("/:appname/api/disableUser", routeHandlers.disableUser)
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/disableUser",
+      routeHandlers.disableUser
+    )
+    .get("/:appname/api/users", routeHandlers.getUsers)
+    .get(
+      "/_builder/instance/:appname/:instanceid/api/users",
+      routeHandlers.getUsers
+    )
+    .get("/:appname/api/accessLevels", routeHandlers.getAccessLevels)
+    .get(
+      "/_builder/instance/:appname/:instanceid/api/accessLevels",
+      routeHandlers.getAccessLevels
+    )
+    .get("/:appname/api/listRecords/*", routeHandlers.listRecordsGet)
+    .get(
+      "/_builder/instance/:appname/:instanceid/api/listRecords/*",
+      routeHandlers.listRecordsGet
+    )
+    .post("/:appname/api/listRecords/*", routeHandlers.listRecordsPost)
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/listRecords/*",
+      routeHandlers.listRecordsPost
+    )
+    .post("/:appname/api/aggregates/*", routeHandlers.aggregatesPost)
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/aggregates/*",
+      routeHandlers.aggregatesPost
+    )
+    .post("/:appname/api/files/*", routeHandlers.postFiles)
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/files/*",
+      routeHandlers.postFiles
+    )
+    .post("/:appname/api/record/*", routeHandlers.saveRecord)
+    .post(
+      "/_builder/instance/:appname/:instanceid/api/record/*",
+      routeHandlers.saveRecord
+    )
+    .get("/:appname/api/lookup_field/*", routeHandlers.lookupField)
+    .get(
+      "/_builder/instance/:appname/:instanceid/api/lookup_field/*",
+      routeHandlers.lookupField
+    )
+    .get("/:appname/api/record/*", routeHandlers.getRecord)
+    .get(
+      "/_builder/instance/:appname/:instanceid/api/record/*",
+      routeHandlers.getRecord
+    )
+    .del("/:appname/api/record/*", routeHandlers.deleteRecord)
+    .del(
+      "/_builder/instance/:appname/:instanceid/api/record/*",
+      routeHandlers.deleteRecord
+    )
+    .post("/:appname/api/apphierarchy", routeHandlers.saveAppHierarchy)
 
   return router
 }
