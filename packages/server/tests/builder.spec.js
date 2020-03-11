@@ -10,10 +10,18 @@ const screen2 = require("../appPackages/testApp/pages/main/screens/screen2.json"
 const { readJSON, pathExists, unlink, readFile } = require("fs-extra")
 const { getHashedCssPaths } = require("../utilities/builder/convertCssToFiles")
 const listScreens = require("../utilities/builder/listScreens")
+const { getApisWithFullAccess } = require("../utilities/budibaseApi")
 
 const app = require("./testApp")()
 testComponents.textbox.name = `./customComponents/textbox`
 testMoreComponents.textbox.name = `./moreCustomComponents/textbox`
+
+let _master
+const getmaster = async () => {
+  if (!_master)
+    _master = await getApisWithFullAccess({}, app.masterAppPackage)
+  return _master
+}
 
 beforeAll(async () => {
   const testScreen = "./appPackages/testApp/pages/main/screens/newscreen.json"
@@ -24,6 +32,23 @@ beforeAll(async () => {
   if (await pathExists(testScreenAfterMove)) await unlink(testScreenAfterMove)
 
   await app.start()
+
+  const response = await app
+      .post(`/_master/api/authenticate`, {
+        username: app.credentials.masterOwner.username,
+        password: app.credentials.masterOwner.password,
+      })
+      .expect(statusCodes.OK)
+
+  app.credentials.masterOwner.cookie = response.header["set-cookie"]
+
+  const master = await getmaster()
+  const newApp = master.recordApi.getNew("/applications", "application")
+  newApp.name = "testApp"
+  await app
+    .post(`/_master/api/record/${newApp.key}`, newApp)
+    .set("cookie", app.credentials.masterOwner.cookie)
+    .expect(statusCodes.OK)
 })
 
 afterAll(async () => await app.destroy())
