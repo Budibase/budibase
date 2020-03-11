@@ -207,7 +207,8 @@ export const props = {
     ],
   },
   DatePicker: {
-    _component: "@budibase/materialdesign-components/ListItem",
+    _component: "@budibase/materialdesign-components/DatePicker",
     _children: [],
+    open: true,
   },
 }
