@@ -128,7 +128,7 @@
 
   .preview-pane {
     grid-column: 2;
-    margin: 80px 60px;
+    margin: 40px;
     background: #fff;
     border-radius: 5px;
     box-shadow: 0 0px 6px rgba(0, 0, 0, 0.05);

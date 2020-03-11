@@ -4,29 +4,48 @@
   import UserInterfaceRoot from "./userInterface/UserInterfaceRoot.svelte"
   import BackendRoot from "./BackendRoot.svelte"
   import { fade } from "svelte/transition"
+  import { SettingsIcon, PreviewIcon, HelpIcon } from "./common/Icons/"
+
 </script>
 
 <div class="root">
 
   <div class="top-nav">
+    <div class="topleftnav">
     <button class="home-logo">
-      <img src="/_builder/assets/budibase-logo-only.png" />
-    </button>
-    <!-- <IconButton icon="home"
-                    color="var(--slate)"
-                    hoverColor="var(--secondary75)"/> -->
-    <span
-      class:active={$store.isBackend}
-      class="topnavitem"
-      on:click={store.showBackend}>
-      Backend
-    </span>
-    <span
-      class:active={!$store.isBackend}
-      class="topnavitem"
-      on:click={store.showFrontend}>
-      Frontend
-    </span>
+      <img src="/_builder/assets/budibase-emblem-white.svg" />
+      </button>
+      <!-- <IconButton icon="home"
+                      color="var(--slate)"
+                      hoverColor="var(--secondary75)"/> -->
+      <span
+        class:active={$store.isBackend}
+        class="topnavitem"
+        on:click={store.showBackend}>
+        Backend
+      </span>
+      <span
+        class:active={!$store.isBackend}
+        class="topnavitem"
+        on:click={store.showFrontend}>
+        Frontend
+      </span>
+    </div>
+
+    <div class="toprightnav">
+      <span
+        class:active={!$store.isBackend}
+        class="topnavitemright"
+        on:click={store.showFrontend}>
+        <SettingsIcon /> 
+      </span>
+      <span
+        class:active={!$store.isBackend}
+        class="topnavitemright"
+        on:click={store.showFrontend}>
+        <PreviewIcon />      
+      </span>
+    </div>
   </div>
 
   <div class="content">
@@ -54,12 +73,12 @@
   .top-nav {
     flex: 0 0 auto;
     height: 48px;
-    background: white;
-    padding: 0px 15px 0 1.8rem;
+    background: #0d203b;
+    padding: 0px 20px 0 20px;
     display: flex;
-    align-items: center;
-    border-bottom: 1px solid #ddd;
     box-sizing: border-box;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .content {
@@ -74,29 +93,54 @@
     width: 100%;
   }
 
+  .toprightnav {
+    display: flex;
+  }
+
+  .topleftnav {
+    display: flex;
+    align-items: center;
+  }
+
   .topnavitem {
     cursor: pointer;
-    color: var(--secondary50);
-    margin: 0px 15px;
+    color: rgb(255, 255, 255, 0.6);
+    margin: 0px 10px;
     padding-top: 4px;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 1rem;
     height: 100%;
-    display: flex;
     align-items: center;
     box-sizing: border-box;
   }
 
   .topnavitem:hover {
-    color: var(--secondary75);
-    font-weight: 600;
+    color: rgb(255, 255, 255, 0.8);
+    font-weight: 500;
   }
 
   .active {
-    color: var(--primary100);
+    color: white;
     font-weight: 600;
-    border-bottom: 2px solid var(--primary100);
-    border-top: 2px solid transparent;
+  }
+
+  .topnavitemright {
+    cursor: pointer;
+    color: rgb(255, 255, 255, 0.6);
+    margin: 0px 5px;
+    padding-top: 4px;
+    font-weight: 500;
+    font-size: 1rem;
+    height: 100%;
+    display: flex;
+    flex:1;
+    align-items: center;
+    box-sizing: border-box;
+  }
+
+  .topnavitemright:hover {
+    color: rgb(255, 255, 255, 0.8);
+    font-weight: 500;
   }
 
   .home-logo {

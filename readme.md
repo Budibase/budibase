@@ -70,19 +70,17 @@ yarn run budi new your-app-name
 now build and publish the latest budibase libs, to your new app 
 
 ```
-# from root of repo
+cd ../..
+# now back in the root of the repository
 yarn run publishdev
 ```
 
 then 
 
-`yarn run budi` and to run the budibase server
+run the budibase server and builder in dev mode (i.e. with hot reloading):
 
-if you then want to run the builder in dev mode (i.e. with hot reloading):
-
-... keep the server running, and..
 1. Open a new console
-2. `yarn dev`
+2. `yarn dev` (from root)
 3. Access the builder on http://localhost:3000
 
 This will enable watch mode for both the client AND the server.
