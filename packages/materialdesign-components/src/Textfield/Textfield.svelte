@@ -13,6 +13,7 @@
   const cb = new ClassBuilder("text-field", ["primary", "medium"])
 
   let tf = null
+  export let tfHeight = null
   let tfInstance = null
 
   onMount(() => {
@@ -105,7 +106,7 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
  -->
 
 <div class="textfield-container" class:fullwidth>
-  <div bind:this={tf} class={blockClasses}>
+  <div bind:this={tf} bind:clientHeight={tfHeight} class={blockClasses}>
     {#if textarea}
       <CharacterCounter />
       <textarea
