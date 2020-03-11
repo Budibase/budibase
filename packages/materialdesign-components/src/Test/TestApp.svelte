@@ -29,13 +29,13 @@
         props: {
           _component: "testcomponents/rootComponent",
           _children: [
-            DatePicker,
             Button,
             BodyBoundToStore,
             Textfield,
             Select,
             Radiobutton,
             Radiobuttongroup,
+            DatePicker,
           ],
         },
       }
