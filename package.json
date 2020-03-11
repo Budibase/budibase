@@ -24,5 +24,8 @@
     "lint:fix": "eslint --fix packages",
     "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\""
   },
-  "dependencies": {}
+  "dependencies": {
+    "@material/icon-button": "4.0.0",
+    "date-fns": "^2.10.0"
+  }
 }

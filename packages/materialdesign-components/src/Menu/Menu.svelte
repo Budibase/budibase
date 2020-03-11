@@ -39,7 +39,6 @@
   })
 
   $: menuList && _bb.attachChildren(menuList)
-  debugger
 </script>
 
 {#if useFixedPosition || useAbsolutePosition}

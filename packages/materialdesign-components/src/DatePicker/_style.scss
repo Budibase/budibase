@@ -1,0 +1,15 @@
+@import "@material/ripple/mdc-ripple.scss";
+@import "@material/theme/mixins";
+
+.bbmd-day {
+  transition: background-color 0.5s ease-in;
+  display: flex;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.selected {
+  @include mdc-theme-prop(background-color, primary);
+  @include mdc-theme-prop(color, on-primary);
+}
