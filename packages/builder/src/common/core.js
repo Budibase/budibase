@@ -4,9 +4,10 @@ import {
   getTemplateApi,
   getAuthApi,
 } from "../../../core/src"
+import { _getNew } from "../../../core/src/recordApi/getNew"
 import { find, filter, keyBy, flatten, map } from "lodash/fp"
-
 import { generateSchema } from "../../../core/src/indexing/indexSchemaCreator"
+import { generate } from "shortid"
 
 export { userWithFullAccess } from "../../../core/src/index"
 
@@ -106,3 +107,18 @@ export const getRecordNodes = hierarchy =>
 
 export const getIndexSchema = hierarchy => index =>
   generateSchema(hierarchy, index)
+
+export const getNewRecord = _getNew
+
+export const getNewInstance = (appId, name) => {
+  const id = `2-${generate()}`
+  return {
+    key: `/applications/${appId}/instances/${id}`,
+    active: true,
+    version: { key: "" },
+    isNew: true,
+    type: "instance",
+    id,
+    name,
+  }
+}
