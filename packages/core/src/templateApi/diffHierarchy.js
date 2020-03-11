@@ -1,4 +1,4 @@
-import { getFlattenedHierarchy, isRecord, isIndex } from "./hierarchy"
+import { getFlattenedHierarchy, isRecord, isIndex, isAncestor } from "./hierarchy"
 import { $, none } from "../common"
 import { map, filter, some, find } from "lodash/fp"
 
@@ -17,15 +17,18 @@ export const diffHierarchy = (oldHierarchy, newHierarchy) => {
   const oldHierarchyFlat = getFlattenedHierarchy(oldHierarchy)
   const newHierarchyFlat = getFlattenedHierarchy(newHierarchy)
 
+  const createdRecords = findCreatedRecords(oldHierarchyFlat, newHierarchyFlat)
+  const deletedRecords = findDeletedRecords(oldHierarchyFlat, newHierarchyFlat)
+  
   return [
-    ...createdRecords(oldHierarchyFlat, newHierarchyFlat),
-    ...deletedRecords(oldHierarchyFlat, newHierarchyFlat),
-    ...renamedRecords(oldHierarchyFlat, newHierarchyFlat),
-    ...recordsWithFieldsChanged(oldHierarchyFlat, newHierarchyFlat),
-    ...recordsWithEstimatedRecordTypeChanged(oldHierarchyFlat, newHierarchyFlat),
-    ...createdIndexes(oldHierarchyFlat, newHierarchyFlat),
-    ...deletedIndexes(oldHierarchyFlat, newHierarchyFlat),
-    ...updatedIndexes(oldHierarchyFlat, newHierarchyFlat),
+    ...createdRecords,
+    ...deletedRecords,
+    ...findRenamedRecords(oldHierarchyFlat, newHierarchyFlat),
+    ...findRecordsWithFieldsChanged(oldHierarchyFlat, newHierarchyFlat),
+    ...findRecordsWithEstimatedRecordTypeChanged(oldHierarchyFlat, newHierarchyFlat),
+    ...findCreatedIndexes(oldHierarchyFlat, newHierarchyFlat, createdRecords),
+    ...findDeletedIndexes(oldHierarchyFlat, newHierarchyFlat, deletedRecords),
+    ...findUpdatedIndexes(oldHierarchyFlat, newHierarchyFlat),
   ]
 }
 
@@ -33,33 +36,43 @@ const changeItem = (type, oldNode, newNode) => ({
   type, oldNode, newNode,
 })
 
-const createdRecords = (oldHierarchyFlat, newHierarchyFlat) => 
-  $(newHierarchyFlat, [
+const findCreatedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
+  const allCreated = $(newHierarchyFlat, [
     filter(isRecord),
     filter(nodeDoesNotExistIn(oldHierarchyFlat)),
     map(n => changeItem(HierarchyChangeTypes.recordCreated, null, n))
   ])
 
-const deletedRecords = (oldHierarchyFlat, newHierarchyFlat) => 
-  $(oldHierarchyFlat, [
+  return $(allCreated, [
+    filter(r => none(r2 => isAncestor(r.newNode)(r2.newNode))(allCreated))
+  ])
+}
+
+const findDeletedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
+  const allDeleted = $(oldHierarchyFlat, [
     filter(isRecord),
     filter(nodeDoesNotExistIn(newHierarchyFlat)),
     map(n => changeItem(HierarchyChangeTypes.recordDeleted, n, null))
   ])
 
-const renamedRecords = (oldHierarchyFlat, newHierarchyFlat) => 
+  return $(allDeleted, [
+    filter(r => none(r2 => isAncestor(r.oldNode)(r2.oldNode))(allDeleted))
+  ])
+}
+
+const findRenamedRecords = (oldHierarchyFlat, newHierarchyFlat) => 
   $(oldHierarchyFlat, [
     filter(isRecord),
     filter(nodeExistsIn(newHierarchyFlat)),
     filter(nodeChanged(newHierarchyFlat, (_new,old) =>_new.collectionKey !== old.collectionKey )),
     map(n => changeItem(
-      HierarchyChangeTypes.recordDeleted, 
+      HierarchyChangeTypes.recordRenamed, 
       n, 
       findNodeIn(n, newHierarchyFlat))
     )
   ])
 
-const recordsWithFieldsChanged = (oldHierarchyFlat, newHierarchyFlat) => 
+const findRecordsWithFieldsChanged = (oldHierarchyFlat, newHierarchyFlat) => 
   $(oldHierarchyFlat, [
     filter(isRecord),
     filter(nodeExistsIn(newHierarchyFlat)),
@@ -71,7 +84,7 @@ const recordsWithFieldsChanged = (oldHierarchyFlat, newHierarchyFlat) =>
     )
   ])
 
-const recordsWithEstimatedRecordTypeChanged = (oldHierarchyFlat, newHierarchyFlat) => 
+const findRecordsWithEstimatedRecordTypeChanged = (oldHierarchyFlat, newHierarchyFlat) => 
   $(oldHierarchyFlat, [
     filter(isRecord),
     filter(nodeExistsIn(newHierarchyFlat)),
@@ -83,22 +96,32 @@ const recordsWithEstimatedRecordTypeChanged = (oldHierarchyFlat, newHierarchyFla
     )
   ])
 
-const createdIndexes =  (oldHierarchyFlat, newHierarchyFlat) => 
-  $(newHierarchyFlat, [
+const findCreatedIndexes =  (oldHierarchyFlat, newHierarchyFlat, createdRecords) => { 
+  const allCreated = $(newHierarchyFlat, [
     filter(isIndex),
     filter(nodeDoesNotExistIn(oldHierarchyFlat)),
     map(n => changeItem(HierarchyChangeTypes.indexCreated, null, n))
   ])
 
-const deletedIndexes = (oldHierarchyFlat, newHierarchyFlat) => 
-  $(oldHierarchyFlat, [
+  return $(allCreated, [
+    filter(r => none(r2 => isAncestor(r.newNode)(r2.newNode))(createdRecords))
+  ])
+}
+
+const findDeletedIndexes = (oldHierarchyFlat, newHierarchyFlat, deletedRecords) => {
+  const allDeleted = $(oldHierarchyFlat, [
     filter(isIndex),
     filter(nodeDoesNotExistIn(newHierarchyFlat)),
     map(n => changeItem(HierarchyChangeTypes.indexDeleted, n, null))
   ])
 
+  return $(allDeleted, [
+    filter(r => none(r2 => isAncestor(r.oldNode)(r2.oldNode))(deletedRecords))
+  ])
+}
 
-const updatedIndexes = (oldHierarchyFlat, newHierarchyFlat) => 
+
+const findUpdatedIndexes = (oldHierarchyFlat, newHierarchyFlat) => 
   $(oldHierarchyFlat, [
     filter(isRecord),
     filter(nodeExistsIn(newHierarchyFlat)),
@@ -114,7 +137,7 @@ const hasDifferentFields = otherFlatHierarchy => record1 => {
 
   const record2 = findNodeIn(record1, otherFlatHierarchy)
 
-  if(record1.fields.length !== record2.fields.length) return false
+  if(record1.fields.length !== record2.fields.length) return true
 
   for(let f1 of record1.fields) {
     if (none(isFieldSame(f1))(record2.fields)) return true
