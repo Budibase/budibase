@@ -18,7 +18,12 @@ const _builderProxy = proxy("/_builder", {
 })
 
 const apiProxy = proxy(
-  ["/_builder/assets/**", "/_builder/api/**", "/_builder/**/componentlibrary"],
+  [
+    "/_builder/assets/**",
+    "/_builder/api/**",
+    "/_builder/**/componentlibrary",
+    "/_builder/instance/**",
+  ],
   {
     target,
     logLevel: "debug",
