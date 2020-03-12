@@ -24,11 +24,14 @@
     record = $store.currentNode
     const flattened = h.getFlattenedHierarchy($store.hierarchy)
     getIndexAllowedRecords = index =>
-      pipe(index.allowedRecordNodeIds, [
-        filter(id => some(n => n.nodeId === id)(flattened)),
-        map(id => find(n => n.nodeId === id)(flattened).name),
-        join(", "),
-      ])
+      pipe(
+        index.allowedRecordNodeIds,
+        [
+          filter(id => some(n => n.nodeId === id)(flattened)),
+          map(id => find(n => n.nodeId === id)(flattened).name),
+          join(", "),
+        ]
+      )
 
     newField = () => {
       isNewField = true
@@ -72,16 +75,19 @@
   }
 
   let getTypeOptions = typeOptions =>
-    pipe(typeOptions, [
-      keys,
-      map(
-        k =>
-          `<span style="color:var(--slate)">${k}: </span>${getTypeOptionsValueText(
-            typeOptions[k]
-          )}`
-      ),
-      join("<br>"),
-    ])
+    pipe(
+      typeOptions,
+      [
+        keys,
+        map(
+          k =>
+            `<span style="color:var(--slate)">${k}: </span>${getTypeOptionsValueText(
+              typeOptions[k]
+            )}`
+        ),
+        join("<br>"),
+      ]
+    )
 
   const nameChanged = ev => {
     const pluralName = n => `${n}s`
@@ -93,68 +99,78 @@
 
 <div class="root">
 
-  <form class="uk-form-horizontal">
-    <h3 class="budibase__title--3">Settings</h3>
+  <form class="uk-form-stacked">
+    <h3 class="budibase__title--3">
+      <i class="ri-list-settings-line" />
+      Create / Edit Model
+    </h3>
 
-    <Textbox label="Name:" bind:text={record.name} on:change={nameChanged} />
+    <h3 class="budibase__label--big">Settings</h3>
+
+    <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
     {#if !record.isSingle}
-      <Textbox label="Collection Name:" bind:text={record.collectionName} />
+      <Textbox label="Collection Name" bind:text={record.collectionName} />
       <Textbox
-        label="Estimated Record Count:"
+        label="Estimated Record Count"
         bind:text={record.estimatedRecordCount} />
     {/if}
     <div class="recordkey">{record.nodeKey()}</div>
 
   </form>
-  <h3 class="budibase__title--3">
+  <div class="table-controls">
+    <span class="budibase__label--big">Fields</span>
+    <h4 class="hoverable" on:click={newField}>Add new field</h4>
+  </div>
+  <!-- <h3 class="budibase__label--big">
     Fields
     <span class="add-field-button" on:click={newField}>
       {@html getIcon('plus')}
     </span>
-  </h3>
+  </h3> -->
 
-  {#if record.fields.length > 0}
-    <table class="fields-table uk-table">
-      <thead>
+  <table class="fields-table uk-table budibase__table">
+    <thead>
+      <tr>
+        <th>Edit</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Values</th>
+        <th />
+      </tr>
+    </thead>
+    <tbody>
+      {#each record.fields as field}
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Options</th>
-          <th />
+          <td>
+            <i class="ri-more-line" on:click={() => editField(field)} />
+          </td>
+          <td>
+            <div>{field.name}</div>
+          </td>
+          <td>{field.type}</td>
+          <td>({console.log(field.typeOptions)}) {field.typeOptions.values}</td>
+          <td>
+            <!-- <span class="edit-button" on:click={() => editField(field)}>
+              {@html getIcon('edit')}
+            </span> -->
+            <span class="edit-button" on:click={() => deleteField(field)}>
+              {@html getIcon('trash')}
+            </span>
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        {#each record.fields as field}
-          <tr>
-            <td>
-              <div class="field-label">{field.label}</div>
-              <div style="font-size: 0.8em; color: var(--slate)">
-                {field.name}
-              </div>
-            </td>
-            <td>{field.type}</td>
-            <td>
-              {@html getTypeOptions(field.typeOptions)}
-            </td>
-            <td>
-              <span class="edit-button" on:click={() => editField(field)}>
-                {@html getIcon('edit')}
-              </span>
-              <span class="edit-button" on:click={() => deleteField(field)}>
-                {@html getIcon('trash')}
-              </span>
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-  {:else}(no fields added){/if}
+      {/each}
+    </tbody>
+  </table>
 
   {#if editingField}
     <Modal
-      title="Manage Index Fields"
       bind:isOpen={editingField}
       onClosed={() => onFinishedFieldEdit(false)}>
+
+      <h3 class="budibase__title--3">
+        <i class="ri-file-list-line" />
+        Create / Edit Field
+      </h3>
       <FieldView
         field={fieldToEdit}
         onFinished={onFinishedFieldEdit}
@@ -163,9 +179,9 @@
     </Modal>
   {/if}
 
-  <h3 class="budibase__title--3">Indexes</h3>
+  <!-- <h3 class="budibase__title--3">Indexes</h3> -->
 
-  {#each record.indexes as index}
+  <!-- {#each record.indexes as index}
     <div class="index-container">
       <div class="index-name">
         {index.name}
@@ -192,7 +208,7 @@
     </div>
   {:else}
     <div class="no-indexes">No indexes added.</div>
-  {/each}
+  {/each} -->
 
 </div>
 
@@ -213,10 +229,6 @@
     border-collapse: collapse;
   }
 
-  .add-field-button {
-    cursor: pointer;
-  }
-
   .edit-button {
     cursor: pointer;
     color: var(--secondary25);
@@ -227,35 +239,6 @@
     color: var(--secondary75);
   }
 
-  th {
-    text-align: left;
-  }
-
-  td {
-    padding: 1rem 5rem 1rem 0rem;
-    margin: 0;
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  .field-label {
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  thead > tr {
-    border-width: 0px 0px 1px 0px;
-    border-style: solid;
-    border-color: var(--secondary75);
-    margin-bottom: 20px;
-  }
-
-  tbody > tr {
-    border-width: 0px 0px 1px 0px;
-    border-style: solid;
-    border-color: var(--primary10);
-  }
-
   tbody > tr:hover {
     background-color: var(--primary10);
   }
@@ -264,38 +247,17 @@
     color: var(--secondary75);
   }
 
-  .index-container {
-    border-style: solid;
-    border-width: 0 0 1px 0;
-    border-color: var(--secondary25);
-    padding: 10px;
-    margin-bottom: 5px;
+  .table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .index-label {
-    color: var(--slate);
+  .ri-more-line:hover {
+    cursor: pointer;
   }
 
-  .index-name {
-    font-weight: bold;
-    color: var(--primary100);
-  }
-
-  .index-container code {
+  h4 {
     margin: 0;
-    display: inline;
-    background-color: var(--primary10);
-    color: var(--secondary100);
-    padding: 3px;
-  }
-
-  .index-field-row {
-    margin: 1rem 0rem 0rem 0rem;
-  }
-
-  .no-indexes {
-    margin: 1rem 0rem 0rem 0rem;
-    font-family: var(--fontnormal);
-    font-size: 14px;
   }
 </style>

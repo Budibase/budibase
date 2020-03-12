@@ -70,7 +70,19 @@
     <div class="components-list-container">
       <div class="nav-group-header">
         <div class="hierarchy-title">Schema</div>
-        <DropdownButton iconName="plus" actions={newChildActions} />
+        <div class="uk-inline">
+          <i class="ri-add-line" />
+          <div uk-dropdown="mode: click">
+            <ul class="uk-nav uk-dropdown-nav">
+              <li>
+                Model
+              </li>
+              <li>
+                View
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
 

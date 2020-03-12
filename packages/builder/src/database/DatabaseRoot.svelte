@@ -1,12 +1,13 @@
 <script>
   import HierarchyRow from "./HierarchyRow.svelte"
-  import RecordView from "./RecordView.svelte"
+  import ModelView from "./ModelView.svelte"
   import IndexView from "./IndexView.svelte"
   import ModelDataTable from "./ModelDataTable"
   import ActionsHeader from "./ActionsHeader.svelte"
   import { store } from "../builderStore"
   import getIcon from "../common/icon"
   import DropdownButton from "../common/DropdownButton.svelte"
+  import Modal from "../common/Modal.svelte"
   import { hierarchy as hierarchyFunctions } from "../../../core/src"
 
   const hierarchyWidth = "200px"
@@ -53,18 +54,24 @@
 </script>
 
 <div class="root">
-  <div class="actions-header">
+  <!-- <div class="actions-header">
     {#if $store.currentNode}
-      <ActionsHeader left={hierarchyWidth} />
+      <ActionsHeader />
     {/if}
-  </div>
+  </div> -->
   <div class="node-view">
-    {#if !$store.currentNode}
-      <ModelDataTable />
-    {:else if $store.currentNode.type === 'record'}
-      <RecordView />
-    {:else}
-      <IndexView />
+    <div class="breadcrumbs">{$store.currentlySelectedDatabase}</div>
+    <ModelDataTable />
+    {#if $store.currentNode}
+      <Modal isOpen={$store.currentNode}>
+        {#if $store.currentNode.type === 'record'}
+          <ModelView />
+          <ActionsHeader />
+        {:else}
+          <IndexView />
+          <ActionsHeader />
+        {/if}
+      </Modal>
     {/if}
   </div>
 </div>

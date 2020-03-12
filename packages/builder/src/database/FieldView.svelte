@@ -68,19 +68,13 @@
 
   <ErrorsBox {errors} />
 
-  <form class="uk-form-horizontal">
-
+  <form class="uk-form-stacked">
+    <Textbox label="Name" bind:text={clonedField.name} />
     <Dropdown
       label="Type"
       bind:selected={clonedField.type}
       options={keys(allTypes)}
       on:change={typeChanged} />
-
-    {#if isNew}
-      <Textbox label="Field Name" bind:text={clonedField.name} />
-    {:else}
-      <div style="font-weight: bold">{clonedField.name}</div>
-    {/if}
 
     <Textbox label="Label" bind:text={clonedField.label} />
 
@@ -89,7 +83,7 @@
         label="Max Length"
         bind:value={clonedField.typeOptions.maxLength} />
       <ValuesList
-        label="Values (options)"
+        label="Categories"
         bind:values={clonedField.typeOptions.values} />
       <Checkbox
         label="Declared Values Only"
