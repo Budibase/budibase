@@ -32,3 +32,24 @@ export const makeLibraryUrl = (appName, lib) =>
 
 export const libsFromPages = pages =>
   pipe(pages, [values, map(p => p.componentLibraries), flatten, uniq])
+
+export const libUrlsForPreview = (appPackage, pageName) => {
+  const resolve = path => {
+    let file = appPackage.components.libraryPaths[path]
+    if (file.startsWith("./")) file = file.substring(2)
+    if (file.startsWith("/")) file = file.substring(1)
+
+    let newPath = path
+
+    if (!newPath.startsWith("./") && !newPath.startsWith("/")) {
+      newPath = `/node_modules/${path}`
+    }
+
+    return {
+      importPath: `/lib${newPath}/${file}`,
+      libName: path,
+    }
+  }
+
+  return pipe([appPackage.pages[pageName]], [libsFromPages, map(resolve)])
+}
