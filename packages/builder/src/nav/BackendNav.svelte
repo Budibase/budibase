@@ -1,5 +1,5 @@
 <script>
-  import { setContext } from "svelte"
+  import { getContext } from "svelte"
   import { store } from "../builderStore"
   import HierarchyRow from "./HierarchyRow.svelte"
   import DatabasesList from "./DatabasesList.svelte"
@@ -35,7 +35,7 @@
 
   // let newChildActions = defaultNewChildActions
 
-  const setActiveNav = name => () => setContext("activeNav", name)
+  const setActiveNav = name => () => getContext("navigation").setActiveNav(name);
 
   // store.subscribe(db => {
   //   if (!db.currentNode || hierarchyFunctions.isIndex(db.currentNode)) {

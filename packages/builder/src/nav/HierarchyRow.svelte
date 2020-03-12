@@ -16,8 +16,7 @@
 
   store.subscribe(state => {
     if (state.currentNode) {
-      navActive =
-        getContext("activeNav") === "database" && node.nodeId === state.currentNode.nodeId
+      navActive = node.nodeId === state.currentNode.nodeId
     }
   })
 </script>

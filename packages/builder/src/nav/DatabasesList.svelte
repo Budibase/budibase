@@ -1,9 +1,18 @@
 <script>
+  import { navigate } from "svelte-routing"
   import { store } from "../builderStore"
   import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
 
   $: instances = $store.appInstances
+
+  function selectDatabase(databaseId) {
+    store.update(state => {
+      state.currentlySelectedDatabase = databaseId
+      return state
+    })
+    navigate("/database", { replace: true })
+  }
 </script>
 
 <div class="root">
@@ -11,14 +20,14 @@
     {#each $store.appInstances as { id, name }}
       <li>
         <span class="icon">
-          {#if id === $store.currentPageName}
+          {#if id === $store.currentlySelectedDatabase}
             <CheckIcon />
           {/if}
         </span>
 
         <button
-          class:active={id === $store.currentPageName}
-          on:click={() => store.setCurrentPage(id)}>
+          class:active={id === $store.currentlySelectedDatabase}
+          on:click={() => selectDatabase(id)}>
           {name}
         </button>
       </li>

@@ -8,11 +8,9 @@
   import ComingSoon from "./common/ComingSoon.svelte"
 
   import { store } from "./builderStore"
-  import { setContext } from 'svelte';
+  import { setContext } from "svelte"
 
-  let activeNav = "database";
-
-  setContext("activeNav", activeNav);
+  let activeNav = "database"
 </script>
 
 <div class="root">
@@ -20,14 +18,13 @@
     <BackendNav />
   </div>
   <div class="content">
-    <!-- {#if activeNav === 'database'} -->
-      <Database />
-    <!-- {:else if activeNav === 'actions'}
+    <Database />
+  </div>
+  <!-- {:else if activeNav === 'actions'}
       <ActionsAndTriggers />
     {:else if activeNav === 'access levels'}
       <AccessLevels />
     {/if} -->
-  </div>
   <div class="nav">
     <SchemaManagementDrawer />
   </div>

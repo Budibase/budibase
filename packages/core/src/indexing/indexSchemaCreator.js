@@ -44,7 +44,7 @@ export const generateSchema = (hierarchy, indexNode) => {
     keys,
     map(k => ({ name: k, type: schema[k].name })),
     filter(s => s.name !== "sortKey"),
-    orderBy("name", ["desc"]), // reverse aplha
+    orderBy("name", ["desc"]), // reverse alpha
     concat([{ name: "sortKey", type: all.string.name }]), // sortKey on end
     reverse, // sortKey first, then rest are alphabetical
   ])

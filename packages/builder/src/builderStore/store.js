@@ -148,8 +148,6 @@ export const getStore = () => {
   store.addStylesheet = addStylesheet(store)
   store.removeStylesheet = removeStylesheet(store)
   store.savePage = savePage(store)
-  // store.showFrontend = showFrontend(store)
-  // store.showBackend = showBackend(store)
   store.showSettings = showSettings(store)
   store.useAnalytics = useAnalytics(store)
   store.createGeneratedComponents = createGeneratedComponents(store)
