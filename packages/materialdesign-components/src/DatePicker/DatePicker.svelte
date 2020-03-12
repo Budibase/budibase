@@ -17,21 +17,22 @@
   import { Body1, Body2, Caption } from "../Typography"
   import { IconButton } from "../IconButton"
 
-  let textFieldHeight = null
   let menu
   let instance
+  let textfieldValue = ""
 
   let daysArr = []
   let navDate = new Date()
   const weekdayMap = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
   export let date = new Date()
-  export let open = true
+  export let label = ""
+  export let onSelect = selectedDate => {}
 
   onMount(() => {
     if (!!menu) {
       instance = new MDCMenu(menu)
-      instance.open = true
+      instance.open = false
       instance.setFixedPostion = true
     }
   })
@@ -40,6 +41,7 @@
     let month = getMonth(navDate)
     let year = getYear(navDate)
     date = new Date(year, month, dayOfMonth)
+    onSelect(date)
   }
 
   function addMonth() {
@@ -50,8 +52,21 @@
     navDate = subMonths(navDate, 1)
   }
 
-  function openCalendar() {
-    instance.open = true
+  function openCalendar(isOpen) {
+    instance.open = isOpen === undefined ? !instance.open : isOpen
+  }
+
+  function textFieldChange(value) {
+    const isDate = /^\d{1,2}\/\d{1,2}\/\d{4}$/
+    if (isDate.test(value)) {
+      const [year, month, day] = value.split("/").reverse()
+      if (month > 0 && month <= 12 && (day > 0 && day <= 31)) {
+        date = new Date(year, month - 1, day)
+        navDate = date
+        openCalendar(true)
+        onSelect(date)
+      }
+    }
   }
 
   $: dateMonthEnds = endOfMonth(navDate).getDate()
@@ -71,23 +86,17 @@
     dateMonthBegins > 5 && daysArr[daysArr.length - 1] > 30 ? 6 : 5
   $: sameMonthAndYear =
     getMonth(date) === getMonth(navDate) && getYear(date) === getYear(navDate)
-  $: console.log(textFieldHeight)
 </script>
 
-<!-- 
-  TODO: Add transition effects to toggling of calendar
-  TODO: Bug - August 2020 has too many rows. find out why
-  TODO: Bug - make out transition of date bg colour instantaneous
- -->
 <div class="mdc-menu-surface--anchor">
   <Textfield
-    bind:tfHeight={textFieldHeight}
+    {label}
+    onChange={textFieldChange}
     value={selectedDate}
     trailingIcon={true}
     useIconButton={true}
     iconButtonClick={openCalendar}
-    icon="calendar_today"
-    label="Select Date" />
+    icon="calendar_today" />
 
   <div
     bind:this={menu}
@@ -118,20 +127,16 @@
         {#each daysArr as day, i}
           <div
             use:ripple
+            style={i === 0 ? `grid-column-start: ${dayStart}` : ``}
             on:click={() => selectDate(day)}
             class={`bbmd-day ${dayOfSelectedDate === day && sameMonthAndYear ? 'selected' : ''}`}>
-            {#if i === 0}
-              <div style={`grid-column-start: ${dateMonthBegins}`}>
-                <Body2 text={day} />
-              </div>
-            {:else}
-              <Body2 text={day} />
-            {/if}
+            <Body2 text={day} />
           </div>
         {/each}
       </div>
     </div>
 
+    <!-- Superfluous but necessary to keep the menu instance sweet -->
     <ul class="mdc-list" role="menu" />
   </div>
 </div>
@@ -157,10 +162,6 @@
     grid-gap: 5px;
   }
 
-  .calendar-container > div {
-    /* border: 1px solid red; */
-  }
-
   .week-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -173,9 +174,5 @@
 
   .centreText {
     text-align: center;
-  }
-
-  span {
-    margin: auto;
   }
 </style>

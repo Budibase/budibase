@@ -15,7 +15,6 @@
 
   let tf = null
   export let tfHeight = null
-  $: console.log("TF", tfHeight)
   let tfInstance = null
 
   onMount(() => {
@@ -98,10 +97,11 @@
   function changed(e) {
     const val = e.target.value
     value = val
-    if (_bb.isBound(_bb.props.value)) {
-      _bb.setStateFromBinding(_bb.props.value, val)
-    }
-    _bb.call(onChange, val)
+    onChange(value)
+    // if (_bb.isBound(_bb.props.value)) {
+    //   _bb.setStateFromBinding(_bb.props.value, val)
+    // }
+    // _bb.call(onChange, val)
   }
 </script>
 
