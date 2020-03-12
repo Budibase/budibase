@@ -205,5 +205,16 @@ export const props = {
         value: "2",
       },
     ],
-  }
+  },
+  DatePicker: {
+    _component: "@budibase/materialdesign-components/DatePicker",
+    _children: [],
+    label: "Date of Admission",
+    onSelect: date => console.log("SELECTED DATE", date)
+  },
+  IconButton: {
+    _component: "@budibase/materialdesign-components/IconButton",
+    _children: [],
+    icon: "calendar_today",
+  },
 }
