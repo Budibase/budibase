@@ -71,13 +71,13 @@
       <div class="nav-group-header">
         <div class="hierarchy-title">Schema</div>
         <div class="uk-inline">
-          <i class="ri-add-line" />
+          <i class="ri-add-line hoverable" />
           <div uk-dropdown="mode: click">
             <ul class="uk-nav uk-dropdown-nav">
-              <li>
+              <li class="hoverable" on:click={() => {}}>
                 Model
               </li>
-              <li>
+              <li class="hoverable" on:click={() => {}}>
                 View
               </li>
             </ul>

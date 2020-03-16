@@ -1,8 +1,7 @@
-import { hierarchy as hierarchyFunctions } from "../../../core/src"
 import {
   filter,
   cloneDeep,
-  sortBy,
+  // sortBy,
   map,
   last,
   concat,
@@ -13,27 +12,28 @@ import {
 import {
   pipe,
   getNode,
-  validate,
+  // validate,
   constructHierarchy,
-  templateApi,
-} from "../common/core"
+  // templateApi,
+} from "../../common/core"
+import * as backendStoreActions from "./backend";
 import { writable } from "svelte/store"
-import { defaultPagesObject } from "../userInterface/pagesParsing/defaultPagesObject"
-import api from "./api"
-import { getExactComponent } from "../userInterface/pagesParsing/searchComponents"
-import { rename } from "../userInterface/pagesParsing/renameScreen"
+import { defaultPagesObject } from "../../userInterface/pagesParsing/defaultPagesObject"
+import api from "../api"
+import { getExactComponent } from "../../userInterface/pagesParsing/searchComponents"
+import { rename } from "../../userInterface/pagesParsing/renameScreen"
 import {
   getNewScreen,
   createProps,
   makePropsSafe,
   getBuiltin,
-} from "../userInterface/pagesParsing/createProps"
-import { expandComponentDefinition } from "../userInterface/pagesParsing/types"
-import { loadLibs, libUrlsForPreview } from "./loadComponentLibraries"
-import { buildCodeForScreens } from "./buildCodeForScreens"
-import { generate_screen_css } from "./generate_css"
-import { insertCodeMetadata } from "./insertCodeMetadata"
-import { uuid } from "./uuid"
+} from "../../userInterface/pagesParsing/createProps"
+import { expandComponentDefinition } from "../../userInterface/pagesParsing/types"
+import { loadLibs, libUrlsForPreview } from "../loadComponentLibraries"
+import { buildCodeForScreens } from "../buildCodeForScreens"
+import { generate_screen_css } from "../generate_css"
+import { insertCodeMetadata } from "../insertCodeMetadata"
+import { uuid } from "../uuid"
 
 let appname = ""
 
@@ -121,16 +121,18 @@ export const getStore = () => {
   // }
 
   store.initialise = initialise(store, initial)
-  store.newChildRecord = newRecord(store, false)
-  store.newRootRecord = newRecord(store, true)
-  store.selectExistingNode = selectExistingNode(store)
-  store.newChildIndex = newIndex(store, false)
-  store.newRootIndex = newIndex(store, true)
-  store.saveCurrentNode = saveCurrentNode(store)
+
+  store.newChildRecord = backendStoreActions.newRecord(store, false)
+  store.newRootRecord = backendStoreActions.newRecord(store, true)
+  store.selectExistingNode = backendStoreActions.selectExistingNode(store)
+  store.newChildIndex = backendStoreActions.newIndex(store, false)
+  store.newRootIndex = backendStoreActions.newIndex(store, true)
+  store.saveCurrentNode = backendStoreActions.saveCurrentNode(store)
+  store.deleteCurrentNode = backendStoreActions.deleteCurrentNode(store)
+  store.saveField = backendStoreActions.saveField(store)
+  store.deleteField = backendStoreActions.deleteField(store)
   store.importAppDefinition = importAppDefinition(store)
-  store.deleteCurrentNode = deleteCurrentNode(store)
-  store.saveField = saveField(store)
-  store.deleteField = deleteField(store)
+
   store.saveAction = saveAction(store)
   store.deleteAction = deleteAction(store)
   store.saveTrigger = saveTrigger(store)
@@ -245,101 +247,12 @@ const showSettings = store => () => {
 }
 
 const useAnalytics = store => () => {
-  store.update(s => {
-    s.useAnalytics = !s.useAnalytics
-    return s
+  store.update(state => {
+    state.useAnalytics = !s.useAnalytics
+    return state
   })
 }
 
-const newRecord = (store, useRoot) => () => {
-  store.update(s => {
-    s.currentNodeIsNew = true
-    const shadowHierarchy = createShadowHierarchy(s.hierarchy)
-    const parent = useRoot
-      ? shadowHierarchy
-      : getNode(shadowHierarchy, s.currentNode.nodeId)
-    s.errors = []
-    s.currentNode = templateApi(shadowHierarchy).getNewRecordTemplate(
-      parent,
-      "",
-      true
-    )
-    return s
-  })
-}
-
-const selectExistingNode = store => nodeId => {
-  store.update(s => {
-    const shadowHierarchy = createShadowHierarchy(s.hierarchy)
-    s.currentNode = getNode(shadowHierarchy, nodeId)
-    s.currentNodeIsNew = false
-    s.errors = []
-    return s
-  })
-}
-
-const newIndex = (store, useRoot) => () => {
-  store.update(s => {
-    s.currentNodeIsNew = true
-    s.errors = []
-    const shadowHierarchy = createShadowHierarchy(s.hierarchy)
-    const parent = useRoot
-      ? shadowHierarchy
-      : getNode(shadowHierarchy, s.currentNode.nodeId)
-
-    s.currentNode = templateApi(shadowHierarchy).getNewIndexTemplate(parent)
-    return s
-  })
-}
-
-const saveCurrentNode = store => () => {
-  store.update(s => {
-    const errors = validate.node(s.currentNode)
-    s.errors = errors
-    if (errors.length > 0) {
-      return s
-    }
-
-    const parentNode = getNode(s.hierarchy, s.currentNode.parent().nodeId)
-
-    const existingNode = getNode(s.hierarchy, s.currentNode.nodeId)
-
-    let index = parentNode.children.length
-    if (existingNode) {
-      // remove existing
-      index = existingNode.parent().children.indexOf(existingNode)
-      existingNode.parent().children = pipe(existingNode.parent().children, [
-        filter(c => c.nodeId !== existingNode.nodeId),
-      ])
-    }
-
-    // should add node into existing hierarchy
-    const cloned = cloneDeep(s.currentNode)
-    templateApi(s.hierarchy).constructNode(parentNode, cloned)
-
-    const newIndexOfChild = child => {
-      if (child === cloned) return index
-      const currentIndex = parentNode.children.indexOf(child)
-      return currentIndex >= index ? currentIndex + 1 : currentIndex
-    }
-
-    parentNode.children = pipe(parentNode.children, [sortBy(newIndexOfChild)])
-
-    if (!existingNode && s.currentNode.type === "record") {
-      const defaultIndex = templateApi(s.hierarchy).getNewIndexTemplate(
-        cloned.parent()
-      )
-      defaultIndex.name = `all_${cloned.collectionName}`
-      defaultIndex.allowedRecordNodeIds = [cloned.nodeId]
-    }
-
-    s.currentNodeIsNew = false
-
-    saveBackend(s)
-
-    return s
-  })
-}
 
 const importAppDefinition = store => appDefinition => {
   store.update(s => {
@@ -352,48 +265,6 @@ const importAppDefinition = store => appDefinition => {
     s.triggers = appDefinition.triggers
     s.currentNodeIsNew = false
     return s
-  })
-}
-
-const deleteCurrentNode = store => () => {
-  store.update(s => {
-    const nodeToDelete = getNode(s.hierarchy, s.currentNode.nodeId)
-    s.currentNode = hierarchyFunctions.isRoot(nodeToDelete.parent())
-      ? find(n => n != s.currentNode)(s.hierarchy.children)
-      : nodeToDelete.parent()
-    if (hierarchyFunctions.isRecord(nodeToDelete)) {
-      nodeToDelete.parent().children = filter(
-        c => c.nodeId !== nodeToDelete.nodeId
-      )(nodeToDelete.parent().children)
-    } else {
-      nodeToDelete.parent().indexes = filter(
-        c => c.nodeId !== nodeToDelete.nodeId
-      )(nodeToDelete.parent().indexes)
-    }
-    s.errors = []
-    saveBackend(s)
-    return s
-  })
-}
-
-const saveField = databaseStore => field => {
-  databaseStore.update(db => {
-    db.currentNode.fields = filter(f => f.name !== field.name)(
-      db.currentNode.fields
-    )
-
-    templateApi(db.hierarchy).addField(db.currentNode, field)
-    return db
-  })
-}
-
-const deleteField = databaseStore => field => {
-  databaseStore.update(db => {
-    db.currentNode.fields = filter(f => f.name !== field.name)(
-      db.currentNode.fields
-    )
-
-    return db
   })
 }
 
@@ -526,32 +397,6 @@ const _saveScreen = async (store, s, screen) => {
         return innerState
       })
       
-      
-
-      /*const updatedScreen = await savedScreen.json()
-      const screens = [
-        ...currentPageScreens.filter(
-          storeScreen => storeScreen.name !== updatedScreen.name
-        ),
-        updatedScreen,
-      ]
-      store.update(innerState => {
-        innerState.pages[s.currentPageName]._screens = screens
-        innerState.screens = screens
-        
-        let curentComponentId
-        walkProps(screen.props, p => {
-          if(p === innerState.currentComponentInfo)
-            currentComponentId = p._id
-        })
-
-        innerState.currentPreviewItem = updatedScreen
-        innerState.currentComponentInfo = makePropsSafe(componentDef, component)
-        
-        _savePage(innerState)
-        return innerState
-      })
-      */
     })
 
   return s
@@ -761,17 +606,6 @@ const _savePage = async s => {
   })
 }
 
-const saveBackend = async state => {
-  await api.post(`/_builder/api/${appname}/backend`, {
-    appDefinition: {
-      hierarchy: state.hierarchy,
-      actions: state.actions,
-      triggers: state.triggers,
-    },
-    accessLevels: state.accessLevels,
-  })
-}
-
 const setCurrentPage = store => pageName => {
   store.update(s => {
     const current_screens = s.pages[pageName]._screens
@@ -800,9 +634,6 @@ const setCurrentPage = store => pageName => {
     return s
   })
 }
-
-const getContainerComponent = components =>
-  getComponentDefinition(components, "@budibase/standard-components/container")
 
 const getComponentDefinition = (components, name) => 
   components.find(c => c.name === name)

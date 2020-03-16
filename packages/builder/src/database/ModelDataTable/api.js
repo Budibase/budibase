@@ -1,24 +1,26 @@
   import api from "../../builderStore/api";
+  import { getNewRecord } from "../../common/core"
 
-  export async function deleteRecord(appName, appInstanceId, record) {
-    const DELETE_RECORDS_URL = `/_builder/instance/${appName}/${appInstanceId}/api/record/${record.name}/${record.id}`
+  export async function deleteRecord(record, { appname, instanceId }) {
+    const DELETE_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record/${record.name}/${record.id}`
     const response = await api.delete({
       url: DELETE_RECORDS_URL
     });
+    return response;
   }
 
-  export async function createNewRecord(record) {
-    console.log(record);
+  export async function saveRecord(record, { appname, instanceId }) {
+    const SAVE_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record`
+    const updatedRecord = getNewRecord(record, "")
+    const response = await api.post(SAVE_RECORDS_URL, updatedRecord)
+    return response
   }
 
-  export async function fetchDataForView(viewName) {
-    console.log(viewName);
-    // const FETCH_RECORDS_URL = `/_builder/instance/${}/${}/api/listRecords/`
+  export async function fetchDataForView(viewName, { appname, instanceId }) {
+    const FETCH_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/listRecords/${viewName}`;
 
-    // const response = await api.get({ url: FETCH_RECORDS_URL });
-
-    // console.log(response);
-
-    // GET /_builder/instance/:appname/:instanceid/api/listRecords/contacts/abcd1234/all_deals
+    // TODO: Error handling
+    const response = await api.get(FETCH_RECORDS_URL);
+    return await response.json();
 
   }

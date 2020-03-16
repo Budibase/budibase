@@ -1,60 +1,84 @@
 <script>
+  import { onMount } from "svelte"
+  import { store } from "../../../builderStore"
   import Modal from "../../../common/Modal.svelte"
   import ActionButton from "../../../common/ActionButton.svelte"
+  import Select from "../../../common/Select.svelte"
   import * as api from "../api"
 
   export let modalOpen = false
-  export let model = {}
+  export let record
+
+  let selectedModel
+
+  $: currentAppInfo = {
+    instanceId: $store.currentInstanceId,
+    appname: $store.appname,
+  }
+  $: recordFields = record ? Object.keys(record) : []
+  $: models = $store.hierarchy.children
+  $: modelFields = selectedModel
+    ? selectedModel.fields.map(({ name }) => name)
+    : []
 
   const onClosed = () => (modalOpen = false)
 </script>
 
-<Modal {onClosed} bind:isOpen={modalOpen} title={'Record'}>
+<Modal {onClosed} isOpen={modalOpen}>
   <h4 class="budibase__title--4">Create / Edit Record</h4>
   <div class="actions">
-    <form>
-      <div class="uk-margin">
-        <label class="uk-form-label" for="form-stacked-text">Text</label>
-        <div class="uk-form-controls">
-          <input
-            class="uk-input"
-            id="form-stacked-text"
-            type="text"
-            placeholder="Some text..." />
+    {console.log('record', record)}
+    {console.log('selectedModel', selectedModel)}
+    {console.log('recordFields', recordFields)}
+    <form class="uk-form-stacked">
+      {#if !record}
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-stacked-text">Model</label>
+          <Select bind:value={selectedModel}>
+            {#each models as model}
+              <option value={model}>{model.name}</option>
+            {/each}
+          </Select>
         </div>
-      </div>
-
-      <div class="uk-margin">
-        <label class="uk-form-label" for="form-stacked-select">Select</label>
-        <div class="uk-form-controls">
-          <select class="uk-select" id="form-stacked-select">
-            <option>Option 01</option>
-            <option>Option 02</option>
-          </select>
+      {/if}
+      {#each modelFields as field}
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-stacked-text">{field}</label>
+          <div class="uk-form-controls">
+            <input
+              class="uk-input"
+              id="form-stacked-text"
+              type="text"
+              bind:value={selectedModel[field]} />
+          </div>
         </div>
-      </div>
-
-      <div class="uk-margin">
-        <div class="uk-form-label">Radio</div>
-        <div class="uk-form-controls">
-          <label>
-            <input class="uk-radio" type="radio" name="radio1" />
-            Option 01
-          </label>
-          <br />
-          <label>
-            <input class="uk-radio" type="radio" name="radio1" />
-            Option 02
-          </label>
+      {/each}
+      {#each recordFields as field}
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-stacked-text">{field}</label>
+          <div class="uk-form-controls">
+            <input
+              class="uk-input"
+              id="form-stacked-text"
+              type="text"
+              bind:value={record[field]} />
+          </div>
         </div>
-      </div>
-
+      {/each}
     </form>
-    <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
-    <ActionButton
-      disabled={false}
-      on:click={() => api.createNewRecord(recordInfo)}>
-      Save
-    </ActionButton>
+    <div class="actions">
+      <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
+      <ActionButton
+        disabled={false}
+        on:click={() => api.saveRecord(record || selectedModel, currentAppInfo)}>
+        Save
+      </ActionButton>
+    </div>
   </div>
 </Modal>
+
+<style>
+  .actions {
+    position: absolute;
+  }
+</style>

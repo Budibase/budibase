@@ -139,7 +139,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each record.fields as field}
+      {#each record ? record.fields : []  as field}
         <tr>
           <td>
             <i class="ri-more-line" on:click={() => editField(field)} />
@@ -150,9 +150,6 @@
           <td>{field.type}</td>
           <td>({console.log(field.typeOptions)}) {field.typeOptions.values}</td>
           <td>
-            <!-- <span class="edit-button" on:click={() => editField(field)}>
-              {@html getIcon('edit')}
-            </span> -->
             <span class="edit-button" on:click={() => deleteField(field)}>
               {@html getIcon('trash')}
             </span>

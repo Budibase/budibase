@@ -1,43 +1,53 @@
 <script>
+  import { onMount } from "svelte"
   import { store } from "../../builderStore"
   import Select from "../../common/Select.svelte"
-  import { CreateEditRecordModal, DeleteRecordModal } from "./modals"
+  import { getIndexSchema } from "../../common/core"
   import ActionButton from "../../common/ActionButton.svelte"
   import TablePagination from "./TablePagination.svelte"
+  import { DeleteRecordModal } from "./modals"
   import * as api from "./api"
-  import { getIndexSchema } from "../../common/core"
+
+  export let selectRecord
 
   let pages = [1, 2, 3]
-
-  export let data = [
-    { name: "Joe", inStock: true },
-    { name: "Mike", inStock: false },
-    { name: "Martin", inStock: true },
-  ]
-  export let headers = ["name", "inStock"]
-  // export let pageSize = 10
-
   let selectedView = ""
   let modalOpen = false
   let deleteRecordModal = false
+  let data = []
+  let headers = []
+  let selectedRecord
 
-  $: indexes = $store.hierarchy.indexes
+  $: views = $store.hierarchy.indexes
+  $: currentAppInfo = {
+    appname: $store.appname,
+    instanceId: $store.currentInstanceId 
+  }
 
   const getSchema = getIndexSchema($store.hierarchy)
+
+  async function fetchRecordsForView(viewName) {
+    const recordsForIndex = await api.fetchDataForView(viewName, currentAppInfo)
+    data = recordsForIndex
+    headers = Object.keys(data[0])
+  }
+
+  onMount(async () => {
+    await fetchRecordsForView(views[0].name, currentAppInfo)
+  })
 </script>
 
-<CreateEditRecordModal bind:modalOpen />
-<DeleteRecordModal modalOpen={deleteRecordModal} />
+<DeleteRecordModal modalOpen={deleteRecordModal} record={selectedRecord} />
 
 <section>
   <div class="table-controls">
     <h4 class="budibase__title--3">Shoe database</h4>
     <Select
       icon="ri-eye-line"
-      on:change={e => api.fetchDataForView(e.target.value)}>
-      {#each indexes as index}
-        ({console.log(getSchema(index))})
-        <option value={index.name}>{index.name}</option>
+      on:change={e => fetchRecordsForView(e.target.value)}>
+      {#each views as view}
+        <!-- ({console.log(getSchema(view))}) ({console.log(view)}) -->
+        <option value={view.name}>{view.name}</option>
       {/each}
     </Select>
   </div>
@@ -61,11 +71,18 @@
                   <li>
                     <div>View</div>
                   </li>
-                  <li>
-                    <div on:click={() => (modalOpen = true)}>Edit</div>
+                  <li
+                    on:click={() => selectRecord(row)}>
+                    <div>Edit</div>
                   </li>
                   <li>
-                    <div on:click={() => (deleteRecordModal = true)}>Delete</div>
+                    <div
+                      on:click={() => {
+                        deleteRecordModal = true
+                        selectedRecord = row
+                      }}>
+                      Delete
+                    </div>
                   </li>
                   <li>
                     <div>Duplicate</div>
@@ -111,7 +128,8 @@
     align-items: center;
   }
 
-  .ri-more-line:hover, .uk-dropdown-nav li:hover{
+  .ri-more-line:hover,
+  .uk-dropdown-nav li:hover {
     cursor: pointer;
   }
 </style>

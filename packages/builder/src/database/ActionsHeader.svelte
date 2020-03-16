@@ -14,19 +14,22 @@
     confirmDelete = true
   }
 
+  // const deleteCurrentNode = () => {
+  //   confirmDelete = false
+  //   store.deleteCurrentNode()
+  // }
+
+  // TODO: COMPLETELY REFACTOR THIS SHIT
   const deleteCurrentNode = () => {
     confirmDelete = false
     store.deleteCurrentNode()
   }
 </script>
 
-<div class="root" style="left: {left}">
+<div class="root">
   <ButtonGroup>
-    <ActionButton
-      color="secondary"
-      grouped
-      on:click={store.saveCurrentNode}>
-      {#if $store.currentNodeIsNew}Create{:else}Update{/if}
+    <ActionButton color="secondary" grouped on:click={store.saveCurrentNode}>
+      Save
     </ActionButton>
 
     {#if !$store.currentNodeIsNew}
