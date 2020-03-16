@@ -11,7 +11,7 @@
 </script>
 
 <Modal {onClosed} bind:isOpen={modalOpen} title={'Record'}>
-  <h4 class="budibase__title--4">Create / Edit Record</h4>
+  <h4 class="budibase__title--4">Create / Edit Model</h4>
   <div class="actions">
     <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
     <ActionButton

@@ -110,11 +110,6 @@
     margin-right: 30px;
   }
 
-  .index-label {
-    color: #333;
-    font-size: 0.875rem;
-  }
-
   .snippet-selector__heading {
     margin-right: 20px;
     opacity: 0.7;

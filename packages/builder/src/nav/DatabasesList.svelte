@@ -1,5 +1,4 @@
 <script>
-  import { navigate } from "svelte-routing"
   import { store } from "../builderStore"
   import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
@@ -11,7 +10,6 @@
       state.currentlySelectedDatabase = databaseId
       return state
     })
-    navigate("/database", { replace: true })
   }
 </script>
 
