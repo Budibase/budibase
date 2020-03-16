@@ -46,7 +46,7 @@
 
     </div>
   {/if}
-
+ 
 </div>
 
 <style>
@@ -85,6 +85,6 @@
     flex: 1 1 auto;
     height: 0px;
     overflow-y: auto;
-    padding: 0 1.5rem 1.5rem 1.5rem;
+    padding: 0 20px 40px 20px;
   }
 </style>
