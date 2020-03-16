@@ -136,7 +136,8 @@
     text-transform: uppercase;
     font-size: 12px;
     font-weight: 700;
-    color: #8997ab;
+    color: #000333;
+    opacity: 0.6;
     margin-bottom: 10px;
   }
 
@@ -144,16 +145,16 @@
     text-transform: uppercase;
     font-size: 10px;
     font-weight: 700;
-    color: #163057;
-    opacity: 0.3;
+    color: #000333;
+    opacity: 0.4;
     margin-bottom: 15px;
   }
 
   h5 {
     font-size: 12px;
-    font-weight: 700;
-    color: #163057;
-    opacity: 0.6;
+    font-weight: 400;
+    color: #000333;
+    opacity: 0.8;
     padding-top: 12px;
     margin-bottom: 0;
   }
