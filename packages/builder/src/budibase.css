@@ -1,7 +1,8 @@
 /* Budibase Component Styles */
 .header {
     font-size: 0.75rem;
-    color: #999;
+    color: #000333;
+    opacity: 0.4;
     text-transform: uppercase;
     margin-top: 1rem;
     font-weight: 500;
@@ -68,7 +69,7 @@
 
 .budibase__nav-item.selected {
     color: var(--button-text);
-    background: var(--background-button) !important;
+    background: #fafafa !important;
 }
 
 .budibase__nav-item:hover {
@@ -82,7 +83,7 @@
     border: 1px solid #DBDBDB;
     text-align: left;
     letter-spacing: 0.7px;
-    color: #163057;
+    color: #000333;
     font-size: 16px;
     padding-left: 5px;
 }
