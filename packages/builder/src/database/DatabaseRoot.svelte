@@ -9,7 +9,11 @@
   import DropdownButton from "../common/DropdownButton.svelte"
   import ActionButton from "../common/ActionButton.svelte"
   import Modal from "../common/Modal.svelte"
-  import { CreateEditRecordModal } from "./ModelDataTable/modals"
+  import {
+    CreateEditRecordModal,
+    CreateEditModelModal,
+    CreateEditViewModal,
+  } from "./ModelDataTable/modals"
 
   let modalOpen
   let selectedRecord
@@ -18,10 +22,14 @@
     selectedRecord = record
     modalOpen = true
   }
+
+  $: recordOpen = $store.currentNode && $store.currentNode.type === 'record'
+  $: viewOpen = $store.currentNode && $store.currentNode.type === 'index'
 </script>
 
 <CreateEditRecordModal bind:modalOpen record={selectedRecord} />
-<!-- <DeleteRecordModal modalOpen={deleteRecordModal} record={selectedRecord} /> -->
+<CreateEditModelModal modalOpen={recordOpen} />
+<CreateEditViewModal modalOpen={viewOpen} />
 
 <div class="root">
   <div class="node-view">
@@ -35,17 +43,6 @@
       Create new record
     </ActionButton>
     <ModelDataTable {selectRecord} />
-    {#if $store.currentNode}
-      <Modal isOpen={$store.currentNode}>
-        {#if $store.currentNode.type === 'record'}
-          <ModelView />
-          <ActionsHeader />
-        {:else}
-          <IndexView />
-          <ActionsHeader />
-        {/if}
-      </Modal>
-    {/if}
   </div>
 </div>
 

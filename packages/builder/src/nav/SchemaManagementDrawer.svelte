@@ -74,10 +74,10 @@
           <i class="ri-add-line hoverable" />
           <div uk-dropdown="mode: click">
             <ul class="uk-nav uk-dropdown-nav">
-              <li class="hoverable" on:click={() => {}}>
+              <li class="hoverable" on:click={newRootRecord}>
                 Model
               </li>
-              <li class="hoverable" on:click={() => {}}>
+              <li class="hoverable" on:click={newRootIndex}>
                 View
               </li>
             </ul>
