@@ -54,14 +54,15 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 2rem 0;
+    padding: 20px 0;
   }
 
   .switcher {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 25px;
-    padding: 0 1.5rem;
+    margin-bottom: 20px;
+    padding: 0 20px 20px;
+    border-bottom: 1px solid #d8d8d8;
   }
 
   .switcher > button {
@@ -70,15 +71,15 @@
     margin: 0;
     padding: 0;
     cursor: pointer;
-    font-weight: 600;
     font-size: 0.85rem;
+    font-weight: 400;
     text-transform: uppercase;
-    color: #999;
-    background-color: rgba(0, 0, 0, 0);
+    color: var(--secondary60);
   }
 
   .switcher > .selected {
-    color: #333;
+    color: var(--secondary100);
+    font-weight: 500;
   }
 
   .panel {
