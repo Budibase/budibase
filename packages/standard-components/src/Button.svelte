@@ -78,13 +78,12 @@
     box-sizing: border-box;
     border: 1px solid #ccc;
     border-radius: 2px;
-    color: #333;
-    background-color: #f4f4f4;
+    color: #000333;
     outline: none;
   }
 
   .default:active {
-    background-color: #ddd;
+    background-color: #f9f9f9;
   }
 
   .default:focus {
