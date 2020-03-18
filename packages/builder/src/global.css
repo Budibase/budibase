@@ -36,8 +36,8 @@
 
     --white: #FFFFFF;
     --darkslate: #1a202c;
-    --slate: #a0aec0;
-    --lightslate: #f7fafc;
+    --slate: #d8d8d8;
+    --lightslate: #f9f9f9;
 
     --borderradius: 2px;
     --borderradiusall: 2px 2px 2px 2px;
@@ -56,7 +56,7 @@
     --quotation: var(--fontnormal) "italics" var(--darkslate) 16pt;
     --smallheavybodytext: var(--fontbold) "regular" var(--secondary100) 14pt;
 
-    --background-button: #e6eeff;
+    --background-button: #f9f9f9;
     --button-text: #0055ff;
 }
 
