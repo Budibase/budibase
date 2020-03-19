@@ -1,13 +1,14 @@
 @import "./budibase.css";
 
 :root {
-    --primary100: #173157FF;
-    --primary75: #454CA0BF;
-    --primary50: #454CA080;
-    --primary25: #454CA040;
-    --primary10: #454CA01A;
-    --primary5: #454ca00c;
-    --primarydark: #3F448A;
+    --primary100: #0055ff;
+    --primary80: rgba(0, 85, 255, 0.8);
+    --primary60: #rgba(0, 85, 255, 0.6);
+    --primary40: #rgba(0, 85, 255, 0.4);
+    --primary20: #rgba(0, 85, 255, 0.2);
+    --primary10: #rgba(0, 85, 255, 0.1);
+    --primary5: #rgba(0, 85, 255, 0.05);
+    --primarydark: #0044cc;
 
     --secondary100:#000333;
     --secondary80: rgba(0, 3, 51, 0.8);
@@ -16,7 +17,7 @@
     --secondary20: rgba(0, 3, 51, 0.2);
     --secondary10: rgba(0, 3, 51, 0.1);
     --secondary5: rgba(0, 3, 51, 0.05);
-    --secondarydark: #3F448A;
+    --secondarydark: #00021a;
 
     --tertiary: #F2F5F7;
 
