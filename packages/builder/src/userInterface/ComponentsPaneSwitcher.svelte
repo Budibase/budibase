@@ -71,7 +71,7 @@
     margin: 0;
     padding: 0;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 14px;
     font-weight: 400;
     text-transform: uppercase;
     color: var(--secondary60);
