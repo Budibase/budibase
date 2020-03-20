@@ -218,28 +218,23 @@ export const props = {
     icon: "calendar_today",
   },
   Card: {
+    _id: "card",
+    width: "400",
     _component: "@budibase/materialdesign-components/Card",
     _children: [
       {
+        _id: "cardbody",
         _component: "@budibase/materialdesign-components/CardBody",
+        onClick: () => alert`Hi`,
         _children: [
           {
+            _id: "cardimage1",
             _component: "@budibase/materialdesign-components/CardImage",
             _children: [],
-            displayHorizontal: false,
+            displayHorizontal: true,
             url: "https://picsum.photos/350",
             title: "Our New World",
             subtitle: "Out now in cinemas",
-          },
-          {
-            _component: "@budibase/materialdesign-components/H6",
-            _children: [],
-            text: "Movie Of The Year",
-          },
-          {
-            _component: "@budibase/materialdesign-components/Body2",
-            _children: [],
-            text: "The most epic movie of the year has just arrived in cinemas",
           },
         ],
       },

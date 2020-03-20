@@ -7,7 +7,6 @@
   export let icon = ""
 
   $: useIcon = !!icon
-
   $: useSubtitle = !!subtitle
 </script>
 

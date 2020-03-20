@@ -21,18 +21,22 @@
   $: props = { modifiers }
   $: cardClass = cb.build({ props })
 
+  $: safeWidth = width !== "auto" && !/px$/.test(width) ? `${width}px` : width
+  $: safeHeight =
+    height !== "auto" && !/px$/.test(height) ? `${width}px` : height
+
   $: card && _bb.attachChildren(card)
 </script>
 
 <div
   bind:this={card}
-  style={`width: ${width}; height: ${height}`}
+  style={`width: ${safeWidth}; height: ${safeHeight}`}
   class={cardClass} />
 
 <!-- <CardHeader title="Eyeoo" subtitle="efe wfew rregreg" />
   <CardBody isPrimaryAction>
     <CardImage url="https://picsum.photos/350/200" />
-    <H6 text="Body Header" horizontalMargin={10} />
+    <H6 text="Body Header" horizontalMargin={10} /> 
     <Body2 text="something something mc something" horizontalMargin={10} />
   </CardBody>
   <CardFooter>

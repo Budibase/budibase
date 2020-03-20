@@ -111,6 +111,52 @@
     }, 
     "tags": []
   },
+  "Card": {
+    "name": "Card",
+    "description": "A Material Card container. Accepts CardHeader, CardBody and CardFooter as possible children",
+    "props": {
+      "width": "string",
+      "height": "string",
+      "variant": {
+        "type": "options",
+        "options": ["standard", "outlined"],
+        "default": "standard"
+      }
+    }
+  },
+  "CardBody": {
+    "name": "CardBody",
+    "description": "A Material CardBody component. Contains the main content of a Material Card component",
+    "props": {
+      "onClick": "event"
+    }
+  },
+  "CardImage": {
+    "name": "CardImage",
+    "description": "An image component for the Material Card component",
+    "props": {
+      "displayHorizontal": "bool",
+      "url": "string",
+      "title": "string",
+      "subtitle": "string"
+    }
+  },
+  "CardHeader": {
+    "name": "CardHeader",
+    "description": "Displays a icon, title and subtitle above main body of the Material Card component",
+    "props": {
+      "title": "string",
+      "subtitle": "string",
+      "icon": "string"
+    }
+  },
+  "CardFooter": {
+    "name": "CardFooter",
+    "description": "Displays buttons / icon buttons as actions for the Material Card component",
+    "props": {
+      "padding": "string"
+    }
+  },
   "Checkbox": {
     "name": "Checkbox",
     "description": "A Material Design checkbox. Supports aligning label before or after checkbox.",
