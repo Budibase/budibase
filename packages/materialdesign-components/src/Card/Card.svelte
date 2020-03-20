@@ -32,18 +32,3 @@
   bind:this={card}
   style={`width: ${safeWidth}; height: ${safeHeight}`}
   class={cardClass} />
-
-<!-- <CardHeader title="Eyeoo" subtitle="efe wfew rregreg" />
-  <CardBody isPrimaryAction>
-    <CardImage url="https://picsum.photos/350/200" />
-    <H6 text="Body Header" horizontalMargin={10} /> 
-    <Body2 text="something something mc something" horizontalMargin={10} />
-  </CardBody>
-  <CardFooter>
-    <Button {_bb} text="Save" />
-    <Button {_bb} text="Cancel" />
-    <IconButton icon="3d_rotation" />
-    <IconButton icon="accessibility" />
-    <IconButton icon="alarm" />
-
-  </CardFooter> -->
