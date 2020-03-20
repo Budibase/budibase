@@ -191,6 +191,22 @@ export const getAllowedRecordNodesForIndex = (appHierarchy, indexNode) => {
   }
 }
 
+export const getDependantIndexes = (hierarchy, recordNode) => {
+  const allIndexes = $(hierarchy, [ getFlattenedHierarchy, filter(isIndex)])
+  
+  const allowedAncestors = $(allIndexes, [
+    filter(isAncestorIndex),
+    filter(i => recordNodeIsAllowed(i)(recordNode)),
+  ])
+
+  const allowedReference = $(allIndexes, [
+    filter(isReferenceIndex),
+    filter(i => some(fieldReversesReferenceToIndex(i))(recordNode.fields))
+  ])
+
+  return [...allowedAncestors, ...allowedReference]
+}
+
 export const getNodeFromNodeKeyHash = hierarchy => hash =>
   $(hierarchy, [
     getFlattenedHierarchy,
@@ -206,13 +222,19 @@ export const isaggregateGroup = node =>
 export const isShardedIndex = node =>
   isIndex(node) && isNonEmptyString(node.getShardName)
 export const isRoot = node => isSomething(node) && node.isRoot()
+export const findRoot = node => isRoot(node) ? node : findRoot(node.parent())
 export const isDecendantOfARecord = hasMatchingAncestor(isRecord)
 export const isGlobalIndex = node => isIndex(node) && isRoot(node.parent())
 export const isReferenceIndex = node =>
   isIndex(node) && node.indexType === indexTypes.reference
 export const isAncestorIndex = node =>
   isIndex(node) && node.indexType === indexTypes.ancestor
-
+export const isTopLevelRecord = node => isRoot(node.parent()) && isRecord(node)
+export const isTopLevelIndex = node => isRoot(node.parent()) && isIndex(node)
+export const getCollectionKey = recordKey => $(recordKey, [
+  splitKey,
+  parts => joinKey(parts.slice(0, parts.length - 1))
+])
 export const fieldReversesReferenceToNode = node => field =>
   field.type === "reference" &&
   intersection(field.typeOptions.reverseIndexNodeKeys)(

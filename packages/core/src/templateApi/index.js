@@ -28,6 +28,7 @@ import { saveApplicationHierarchy } from "./saveApplicationHierarchy"
 import { saveActionsAndTriggers } from "./saveActionsAndTriggers"
 import { all } from "../types"
 import { getBehaviourSources } from "./getBehaviourSources"
+import { upgradeData } from "./upgradeData"
 
 const api = app => ({
   getApplicationDefinition: getApplicationDefinition(app.datastore),
@@ -57,6 +58,7 @@ const api = app => ({
   validateNode,
   validateAll,
   validateTriggers,
+  upgradeData: upgradeData(app)
 })
 
 export const getTemplateApi = app => api(app)
