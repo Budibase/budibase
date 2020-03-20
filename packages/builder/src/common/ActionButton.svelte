@@ -2,6 +2,7 @@
   export let disabled = false
   export let hidden = false
   export let primary = true
+  export let cancel = false
   export let alert = false
   export let warning = false
 </script>
@@ -12,6 +13,7 @@
   class:hidden
   class:primary
   class:alert
+  class:cancel
   class:warning
   {disabled}>
   <slot />
@@ -19,8 +21,8 @@
 
 <style>
   .primary {
-    color: #0055ff;
-    background: rgb(54, 133, 249, 0.1);
+    color: #ffffff;
+    background: #0055ff;
   }
 
   .alert {
@@ -28,17 +30,23 @@
     background: rgba(255, 0, 31, 0.1);
   }
 
+  .cancel {
+    color: var(--secondary40);
+    background: none;
+  }
+
   .button {
     font-size: 14px;
-    font-weight: bold;
+    font-weight: 600;
     border-radius: 5px;
     border: none;
-    min-width: 120px;
+    padding: 10px 20px;
     height: 45px;
   }
 
   .button:hover {
     cursor: pointer;
+    font-weight: 700;
   }
 
   .button:disabled {

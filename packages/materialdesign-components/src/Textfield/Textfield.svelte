@@ -9,10 +9,12 @@
   import HelperText from "./HelperText.svelte"
   import CharacterCounter from "./CharacterCounter.svelte"
   import Icon from "../Common/Icon.svelte"
+  import { IconButton } from "../IconButton"
 
   const cb = new ClassBuilder("text-field", ["primary", "medium"])
 
   let tf = null
+  export let tfHeight = null
   let tfInstance = null
 
   onMount(() => {
@@ -40,6 +42,8 @@
   export let placeholder = ""
   export let icon = ""
   export let trailingIcon = false
+  export let useIconButton = false
+  export let iconButtonClick = () => {}
   export let textarea = false
   export let rows = 4
   export let cols = 40
@@ -93,10 +97,11 @@
   function changed(e) {
     const val = e.target.value
     value = val
-    if (_bb.isBound(_bb.props.value)) {
-      _bb.setStateFromBinding(_bb.props.value, val)
-    }
-    _bb.call(onChange, val)
+    onChange(value)
+    // if (_bb.isBound(_bb.props.value)) {
+    //   _bb.setStateFromBinding(_bb.props.value, val)
+    // }
+    // _bb.call(onChange, val)
   }
 </script>
 
@@ -105,7 +110,7 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
  -->
 
 <div class="textfield-container" class:fullwidth>
-  <div bind:this={tf} class={blockClasses}>
+  <div bind:this={tf} bind:clientHeight={tfHeight} class={blockClasses}>
     {#if textarea}
       <CharacterCounter />
       <textarea
@@ -123,7 +128,14 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         on:change={changed} />
     {:else}
       {#if renderLeadingIcon}
-        <Icon context="text-field" {icon} />
+        {#if useIconButton}
+          <IconButton
+            {icon}
+            context="mdc-text-field__icon mdc-text-field__icon--leading"
+            onClick={iconButtonClick} />
+        {:else}
+          <Icon context="text-field" {icon} />
+        {/if}
       {/if}
       <input
         {id}
@@ -139,7 +151,14 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         on:focus={focus}
         on:input={changed} />
       {#if renderTrailingIcon}
-        <Icon context="text-field" {icon} />
+        {#if useIconButton}
+          <IconButton
+            {icon}
+            context="mdc-text-field__icon mdc-text-field__icon--trailing"
+            onClick={iconButtonClick} />
+        {:else}
+          <Icon context="text-field" {icon} />
+        {/if}
       {/if}
       {#if variant !== 'outlined'}
         <div class="mdc-line-ripple" />
