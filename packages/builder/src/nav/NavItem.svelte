@@ -1,17 +1,13 @@
 <script>
-  import { getContext, setContext } from "svelte"; 
   import getIcon from "../common/icon"
+  import { backendUiStore } from "../builderStore";
 
   export let name = ""
   export let label = ""
 
-  $: navActive = getContext("activeNav") === name 
+  $: navActive = $backendUiStore.leftNavItem === name 
 
-  // store.subscribe(db => {
-  //   navActive = db.activeNav === name
-  // })
-
-  const setActive = () => setContext("activeNav", name);
+  const setActive = () => backendUiStore.actions.navigate(name)
 </script>
 
 <div

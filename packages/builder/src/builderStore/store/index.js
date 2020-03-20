@@ -65,61 +65,6 @@ export const getStore = () => {
 
   const store = writable(initial)
 
-  // store.api = {
-  //   appDefinition: {
-  //     create: () => {},
-  //   },
-  //   records: {
-  //     create: () => {},
-  //     update: () => {},
-  //     delete: () => {},
-  //   },
-  //   indexes: {
-  //     create: () => {},
-  //     update: () => {},
-  //     delete: () => {},
-  //   },
-  //   pages: {
-  //     create: () => {},
-  //     update: () => {},
-  //     delete: () => {},
-  //   },
-  //   screens: {
-  //     create: () => {},
-  //     select: () => {},
-  //     rename: () => {}
-  //   },
-  //   accessLevels: {
-  //     create: () => {},
-  //     update: () => {},
-  //     delete: () => {},
-  //   },
-  //   users: {
-  //     create: () => {},
-  //     update: () => {},
-  //     delete: () => {},
-  //   },
-  //   actions: {
-  //     update: () => {},
-  //     delete: () => {}
-  //   },
-  //   triggers: {
-  //     create: () => {},
-  //     update: () => {},
-  //     delete: () => {},
-  //   },
-  //   stylesheets: {
-  //     create: () => {},
-  //     update: () => {},
-  //     delete: () => {},
-  //   },
-  //   components: {
-  //     create: () => {},
-  //     update: () => {},
-  //     delete: () => {},
-  //   }
-  // }
-
   store.initialise = initialise(store, initial)
 
   store.newChildRecord = backendStoreActions.newRecord(store, false)
@@ -131,14 +76,14 @@ export const getStore = () => {
   store.deleteCurrentNode = backendStoreActions.deleteCurrentNode(store)
   store.saveField = backendStoreActions.saveField(store)
   store.deleteField = backendStoreActions.deleteField(store)
+  store.saveLevel = backendStoreActions.saveLevel(store)
+  store.deleteLevel = backendStoreActions.deleteLevel(store)
   store.importAppDefinition = importAppDefinition(store)
 
   store.saveAction = saveAction(store)
   store.deleteAction = deleteAction(store)
   store.saveTrigger = saveTrigger(store)
   store.deleteTrigger = deleteTrigger(store)
-  store.saveLevel = saveLevel(store)
-  store.deleteLevel = deleteLevel(store)
   store.saveScreen = saveScreen(store)
   store.addComponentLibrary = addComponentLibrary(store)
   store.renameScreen = renameScreen(store)
@@ -315,43 +260,6 @@ const saveTrigger = store => (newTrigger, isNew, oldTrigger = null) => {
 const deleteTrigger = store => trigger => {
   store.update(s => {
     s.triggers = filter(t => t.name !== trigger.name)(s.triggers)
-    return s
-  })
-}
-
-const incrementAccessLevelsVersion = s =>
-  (s.accessLevels.version = (s.accessLevels.version || 0) + 1)
-
-const saveLevel = store => (newLevel, isNew, oldLevel = null) => {
-  store.update(s => {
-    const levels = s.accessLevels.levels
-
-    const existingLevel = isNew
-      ? null
-      : find(a => a.name === oldLevel.name)(levels)
-
-    if (existingLevel) {
-      s.accessLevels.levels = pipe(levels, [
-        map(a => (a === existingLevel ? newLevel : a)),
-      ])
-    } else {
-      s.accessLevels.levels.push(newLevel)
-    }
-
-    incrementAccessLevelsVersion(s)
-
-    saveBackend(s)
-    return s
-  })
-}
-
-const deleteLevel = store => level => {
-  store.update(s => {
-    s.accessLevels.levels = filter(t => t.name !== level.name)(
-      s.accessLevels.levels
-    )
-    incrementAccessLevelsVersion(s)
-    saveBackend(s)
     return s
   })
 }

@@ -1,5 +1,7 @@
 <script>
-  export let data = []
+  import { backendUiStore } from "../../builderStore"
+
+  $: data = $backendUiStore.selectedView.records
 </script>
 
 <div class="pagination">

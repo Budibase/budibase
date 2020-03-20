@@ -1,32 +1,30 @@
 <script>
-  import { store } from "../builderStore"
+  import { store, backendUiStore } from "../builderStore"
   import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
 
   $: instances = $store.appInstances
 
-  function selectDatabase(databaseId) {
-    store.update(state => {
-      state.currentlySelectedDatabase = databaseId
-      return state
-    })
+  function selectDatabase(database) {
+    backendUiStore.actions.database.select(database)
+    backendUiStore.actions.navigate("DATABASE")
   }
 </script>
 
 <div class="root">
   <ul>
-    {#each $store.appInstances as { id, name }}
+    {#each $store.appInstances as database}
       <li>
         <span class="icon">
-          {#if id === $store.currentlySelectedDatabase}
+          {#if database.id === $backendUiStore.selectedDatabase.id}
             <CheckIcon />
           {/if}
         </span>
 
         <button
-          class:active={id === $store.currentlySelectedDatabase}
-          on:click={() => selectDatabase(id)}>
-          {name}
+          class:active={database.id === $backendUiStore.selectedDatabase.id}
+          on:click={() => selectDatabase(database)}>
+          {database.name}
         </button>
       </li>
     {/each}

@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { store } from "../builderStore"
+  import { store, backendUiStore } from "../builderStore"
   import HierarchyRow from "./HierarchyRow.svelte"
   import DatabasesList from "./DatabasesList.svelte"
   import UsersList from "./UsersList.svelte"
@@ -8,23 +8,9 @@
   import NavItem from "./NavItem.svelte"
   import getIcon from "../common/icon"
 
-  // top level store modifiers
-  const newRootRecord = () => store.newRootRecord()
-  const newChildIndex = () => store.newChildIndex()
-  const newRootIndex = () => store.newRootIndex()
-  const newUser = () => {
-    store.update(state => {})
-  }
   const newDatabase = () => {
     store.update(state => {})
   }
-
-  const userManagementActions = [
-    {
-      label: "New User",
-      onclick: newUser,
-    },
-  ]
 
   const databaseManagementActions = [
     {
@@ -32,35 +18,6 @@
       onclick: newDatabase,
     },
   ]
-
-  // let newChildActions = defaultNewChildActions
-
-  const setActiveNav = name => () => getContext("navigation").setActiveNav(name);
-
-  // store.subscribe(db => {
-  //   if (!db.currentNode || hierarchyFunctions.isIndex(db.currentNode)) {
-  //     newChildActions = defaultNewChildActions
-  //   } else {
-  //     newChildActions = [
-  //       {
-  //         label: "New Root Record",
-  //         onclick: newRootRecord,
-  //       },
-  //       {
-  //         label: "New Root Index",
-  //         onclick: newRootIndex,
-  //       },
-  //       {
-  //         label: `New Child Record of ${db.currentNode.name}`,
-  //         onclick: newChildRecord,
-  //       },
-  //       {
-  //         label: `New Index on ${db.currentNode.name}`,
-  //         onclick: newChildIndex,
-  //       },
-  //     ]
-  //   }
-  // })
 </script>
 
 <div class="items-root">
@@ -68,20 +25,12 @@
     <div class="components-list-container">
       <div class="nav-group-header">
         <div class="hierarchy-title">Databases</div>
-        <i class="ri-add-line" />
+        <i class="ri-add-line hoverable" on:click={() => backendUiStore.actions.modals.show("DATABASE")} />
       </div>
     </div>
 
     <div class="hierarchy-items-container">
       <DatabasesList />
-
-      <!-- {#each $store.hierarchy.children as record}
-        <HierarchyRow node={record} type="record" />
-      {/each}
-
-      {#each $store.hierarchy.indexes as index}
-        <HierarchyRow node={index} type="index" />
-      {/each} -->
     </div>
   </div>
   <hr />
@@ -95,10 +44,9 @@
 
     <div class="hierarchy-items-container">
       <UsersList />
-      <!-- {#each $store.hierarchy.children as record}
-        <HierarchyRow node={record} type="record" />
-      {/each} -->
     </div>
+
+    <NavItem name="ACCESS_LEVELS" label="User Levels" />
   </div>
 </div>
 

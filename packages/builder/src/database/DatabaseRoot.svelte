@@ -1,10 +1,9 @@
 <script>
-  import HierarchyRow from "./HierarchyRow.svelte"
   import ModelView from "./ModelView.svelte"
   import IndexView from "./IndexView.svelte"
   import ModelDataTable from "./ModelDataTable"
   import ActionsHeader from "./ActionsHeader.svelte"
-  import { store } from "../builderStore"
+  import { store, backendUiStore } from "../builderStore"
   import getIcon from "../common/icon"
   import DropdownButton from "../common/DropdownButton.svelte"
   import ActionButton from "../common/ActionButton.svelte"
@@ -13,35 +12,53 @@
     CreateEditRecordModal,
     CreateEditModelModal,
     CreateEditViewModal,
+    CreateDatabaseModal
   } from "./ModelDataTable/modals"
 
-  let modalOpen
   let selectedRecord
 
   function selectRecord(record) {
     selectedRecord = record
-    modalOpen = true
+    backendUiStore.actions.modals.show("RECORD")
   }
 
-  $: recordOpen = $store.currentNode && $store.currentNode.type === 'record'
-  $: viewOpen = $store.currentNode && $store.currentNode.type === 'index'
+  function onClosed() {
+    // backendUiStore.actions.modals.hide()
+  }
+
+  $: recordOpen = $backendUiStore.visibleModal === "RECORD"
+  $: modelOpen = $backendUiStore.visibleModal === "MODEL"
+  $: viewOpen = $backendUiStore.visibleModal === "VIEW"
+  $: databaseOpen = $backendUiStore.visibleModal === "DATABASE"
+  // $: recordOpen = $store.currentNode && $store.currentNode.type === 'record'
+  // $: viewOpen = $store.currentNode && $store.currentNode.type === 'index'
 </script>
 
-<CreateEditRecordModal bind:modalOpen record={selectedRecord} />
-<CreateEditModelModal modalOpen={recordOpen} />
-<CreateEditViewModal modalOpen={viewOpen} />
+({ console.log($backendUiStore.visibleModal) })
+
+<CreateEditRecordModal modalOpen={recordOpen} record={selectedRecord} {onClosed} />
+<CreateEditModelModal modalOpen={modelOpen} {onClosed} />
+<CreateEditViewModal modalOpen={viewOpen} {onClosed} />
+<CreateDatabaseModal modalOpen={databaseOpen} {onClosed} />
+
 
 <div class="root">
   <div class="node-view">
-    <div class="breadcrumbs">{$store.currentlySelectedDatabase}</div>
-    <ActionButton
-      primary
-      on:click={() => {
-        selectedRecord = null
-        modalOpen = true
-      }}>
-      Create new record
-    </ActionButton>
+    <div class="database-actions">
+      <div class="budibase__label--big">
+        {#if $backendUiStore.selectedDatabase.name}
+          {$backendUiStore.selectedDatabase.name} / {$store.currentNode}
+        {/if}
+        </div>
+      <ActionButton
+        primary
+        on:click={() => {
+          selectedRecord = null
+          backendUiStore.actions.modals.show("RECORD")
+        }}>
+        Create new record
+      </ActionButton>
+    </div>
     <ModelDataTable {selectRecord} />
   </div>
 </div>
@@ -55,5 +72,10 @@
   .node-view {
     overflow-y: auto;
     flex: 1 1 auto;
+  }
+
+  .database-actions {
+    display: flex;
+    justify-content: space-between;
   }
 </style>

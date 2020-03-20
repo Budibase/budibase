@@ -1,35 +1,19 @@
 <script>
-  import { store } from "../builderStore"
+  import { store, backendUiStore } from "../builderStore"
   import HierarchyRow from "./HierarchyRow.svelte"
   import DropdownButton from "../common/DropdownButton.svelte"
   import { hierarchy as hierarchyFunctions } from "../../../core/src"
   import NavItem from "./NavItem.svelte"
   import getIcon from "../common/icon"
 
-  const newRootRecord = () => {
-    store.newRootRecord()
-  }
-
-  const newRootIndex = () => {
-    store.newRootIndex()
-  }
-
-  const newChildRecord = () => {
-    store.newChildRecord()
-  }
-
-  const newChildIndex = () => {
-    store.newChildIndex()
-  }
-
   const defaultNewChildActions = [
     {
       label: "New Root Record",
-      onclick: newRootRecord,
+      onclick: store.newRootRecord,
     },
     {
       label: "New Root Index",
-      onclick: newRootIndex,
+      onclick: store.newRootIndex,
     },
   ]
 
@@ -46,19 +30,19 @@
       newChildActions = [
         {
           label: "New Root Record",
-          onclick: newRootRecord,
+          onclick: store.newRootRecord,
         },
         {
           label: "New Root Index",
-          onclick: newRootIndex,
+          onclick: store.newRootIndex,
         },
         {
           label: `New Child Record of ${db.currentNode.name}`,
-          onclick: newChildRecord,
+          onclick: store.newChildRecord,
         },
         {
           label: `New Index on ${db.currentNode.name}`,
-          onclick: newChildIndex,
+          onclick: store.newChildIndex,
         },
       ]
     }
@@ -72,12 +56,22 @@
         <div class="hierarchy-title">Schema</div>
         <div class="uk-inline">
           <i class="ri-add-line hoverable" />
-          <div uk-dropdown="mode: click">
+          <div uk-dropdown="mode: click;">
             <ul class="uk-nav uk-dropdown-nav">
-              <li class="hoverable" on:click={newRootRecord}>
+              <li
+                class="hoverable"
+                on:click={() => {
+                  store.newRootRecord()
+                  backendUiStore.actions.modals.show('MODEL')
+                }}>
                 Model
               </li>
-              <li class="hoverable" on:click={newRootIndex}>
+              <li
+                class="hoverable"
+                on:click={() => {
+                  store.newRootIndex()
+                  backendUiStore.actions.modals.show('VIEW')
+                }}>
                 View
               </li>
             </ul>

@@ -1,13 +1,15 @@
 <script>
   import { onMount } from "svelte"
-  import { store } from "../../../builderStore"
+  import { store, backendUiStore } from "../../../builderStore"
   import Modal from "../../../common/Modal.svelte"
   import ActionButton from "../../../common/ActionButton.svelte"
   import Select from "../../../common/Select.svelte"
+  import { getNewRecord } from "../../../common/core"
   import * as api from "../api"
 
   export let modalOpen = false
   export let record
+  export let onClosed
 
   let selectedModel
 
@@ -20,16 +22,12 @@
   $: modelFields = selectedModel
     ? selectedModel.fields.map(({ name }) => name)
     : []
-
-  const onClosed = () => (modalOpen = false)
+  
 </script>
 
 <Modal {onClosed} isOpen={modalOpen}>
   <h4 class="budibase__title--4">Create / Edit Record</h4>
   <div class="actions">
-    {console.log('record', record)}
-    {console.log('selectedModel', selectedModel)}
-    {console.log('recordFields', recordFields)}
     <form class="uk-form-stacked">
       {#if !record}
         <div class="uk-margin">
@@ -70,7 +68,14 @@
       <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
       <ActionButton
         disabled={false}
-        on:click={() => api.saveRecord(record || selectedModel, currentAppInfo)}>
+        on:click={async () => {
+          const recordResponse = await api.saveRecord(record || selectedModel, currentAppInfo)
+          backendUiStore.update(state => {
+            state.selectedView.records.push(recordResponse)
+            return state
+          })
+          onClosed()
+        }}>
         Save
       </ActionButton>
     </div>

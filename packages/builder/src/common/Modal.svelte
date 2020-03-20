@@ -3,7 +3,7 @@
   import ActionButton from "../common/ActionButton.svelte"
 
   export let isOpen = false
-  export let onClosed = () => {}
+  export let onClosed
   export let id = ""
   export let title
 
@@ -27,19 +27,21 @@
 </script>
 
 <div bind:this={ukModal} uk-modal {id}>
-  <div class="uk-modal-dialog" uk-overflow-auto>
-    {#if title}
-      <div class="uk-modal-header">
-        <h4 class="budibase__title--4">{title}</h4>
-      </div>
-    {/if}
-    <div class="uk-modal-body">
-      {#if onClosed}
-        <button class="uk-modal-close-default" type="button" uk-close />
+  {#if isOpen}
+    <div class="uk-modal-dialog" uk-overflow-auto>
+      {#if title}
+        <div class="uk-modal-header">
+          <h4 class="budibase__title--4">{title}</h4>
+        </div>
       {/if}
-      <slot />
+      <div class="uk-modal-body">
+        {#if onClosed}
+          <button class="uk-modal-close-default" type="button" uk-close />
+        {/if}
+        <slot />
+      </div>
     </div>
-  </div>
+  {/if}
 </div>
 
 <style>

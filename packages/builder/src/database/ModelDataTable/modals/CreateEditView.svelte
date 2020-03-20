@@ -1,23 +1,25 @@
 <script>
-  import Modal from "../../common/Modal.svelte"
-  import ActionButton from "../../common/ActionButton.svelte"
-  import * as api from "./api"
+  import Modal from "../../../common/Modal.svelte"
+  import ActionButton from "../../../common/ActionButton.svelte"
+  import IndexView from "../../IndexView.svelte"
+  import ActionsHeader from "../../ActionsHeader.svelte"
+  import * as api from "../api"
 
   export let modalOpen = false
+  export let onClosed
 
   let recordInfo = {}
 
-  const onClosed = () => (modalOpen = false)
 </script>
 
-<Modal {onClosed} bind:isOpen={modalOpen} title={'Record'}>
+<Modal {onClosed} isOpen={modalOpen}>
+  <IndexView />
+  <ActionsHeader />
 
-  <div class="actions">
+  <!-- <div class="actions">
     <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
-    <ActionButton
-      disabled={false}
-      on:click={() => api.createNewRecord(recordInfo)}>
+    <ActionButton disabled={false} on:click={() => api.saveRecord(recordInfo)}>
       Save
     </ActionButton>
-  </div>
+  </div> -->
 </Modal>
