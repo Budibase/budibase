@@ -103,6 +103,7 @@ const lodash_fp_exports = [
   "toNumber",
   "takeRight",
   "toPairs",
+  "remove"
 ]
 
 const lodash_exports = [

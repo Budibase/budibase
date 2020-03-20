@@ -7,10 +7,7 @@
   import AccessLevels from "./accessLevels/AccessLevelsRoot.svelte"
   import ComingSoon from "./common/ComingSoon.svelte"
 
-  import { store } from "./builderStore"
-  import { setContext } from "svelte"
-
-  let activeNav = "database"
+  import { store, backendUiStore } from "./builderStore"
 </script>
 
 <div class="root">
@@ -18,13 +15,14 @@
     <BackendNav />
   </div>
   <div class="content">
-    <Database />
-  </div>
-  <!-- {:else if activeNav === 'actions'}
+    {#if $backendUiStore.leftNavItem === 'DATABASE'}
+      <Database />
+    {:else if $backendUiStore.leftNavItem === 'ACTIONS'}
       <ActionsAndTriggers />
-    {:else if activeNav === 'access levels'}
+    {:else if $backendUiStore.leftNavItem === 'ACCESS_LEVELS'}
       <AccessLevels />
-    {/if} -->
+    {/if}
+  </div>
   <div class="nav">
     <SchemaManagementDrawer />
   </div>

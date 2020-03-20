@@ -1,6 +1,6 @@
 <script>
-  import { getContext } from "svelte";
-  import { store } from "../builderStore"
+  import { getContext } from "svelte"
+  import { store, backendUiStore } from "../builderStore"
   import { cloneDeep } from "lodash/fp"
   import getIcon from "../common/icon"
   export let level = 0
@@ -10,8 +10,8 @@
   let navActive = ""
 
   const ICON_MAP = {
-    index: "ri-equalizer-line",
-    record: "ri-list-settings-line"
+    index: "ri-eye-line",
+    record: "ri-list-settings-line",
   }
 
   store.subscribe(state => {
@@ -19,13 +19,19 @@
       navActive = node.nodeId === state.currentNode.nodeId
     }
   })
+
+  function selectHierarchyItem(node) {
+    store.selectExistingNode(node.nodeId)
+    const modalType = node.type === "index" ? "VIEW" : "MODEL"
+    backendUiStore.actions.modals.show(modalType)
+  }
 </script>
 
 <div>
   <div
-    on:click={() => store.selectExistingNode(node.nodeId)}
+    on:click={() => selectHierarchyItem(node)}
     class="budibase__nav-item hierarchy-item"
-    class:capitalized={type === "record"}
+    class:capitalized={type === 'record'}
     style="padding-left: {20 + level * 20}px"
     class:selected={navActive}>
     <i class={ICON_MAP[type]} />
@@ -44,12 +50,12 @@
 </div>
 
 <style>
-.hierarchy-item {
-  font-size: 14px;
-  font-weight: 400;
-}
+  .hierarchy-item {
+    font-size: 14px;
+    font-weight: 400;
+  }
 
-.capitalized {
-  text-transform: capitalize;
-}
+  .capitalized {
+    text-transform: capitalize;
+  }
 </style>

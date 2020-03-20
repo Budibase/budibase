@@ -1,7 +1,9 @@
-import getStore from "./store"
+import { getStore } from "./store"
+import { getBackendUiStore } from "./store/backend"
 import LogRocket from "logrocket";
 
 export const store = getStore()
+export const backendUiStore = getBackendUiStore()
 
 export const initialise = async () => {
   try {

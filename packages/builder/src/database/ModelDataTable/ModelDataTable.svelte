@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { store } from "../../builderStore"
+  import { store, backendUiStore } from "../../builderStore"
   import Select from "../../common/Select.svelte"
   import { getIndexSchema } from "../../common/core"
   import ActionButton from "../../common/ActionButton.svelte"
@@ -13,8 +13,6 @@
   let pages = [1, 2, 3]
   let selectedView = ""
   let modalOpen = false
-  let deleteRecordModal = false
-  let data = []
   let headers = []
   let selectedRecord
 
@@ -23,13 +21,20 @@
     appname: $store.appname,
     instanceId: $store.currentInstanceId 
   }
+  $: data = $backendUiStore.selectedView.records
+  $: deleteRecordModal = $backendUiStore.visibleModal === "DELETE_RECORD"
 
   const getSchema = getIndexSchema($store.hierarchy)
 
   async function fetchRecordsForView(viewName) {
     const recordsForIndex = await api.fetchDataForView(viewName, currentAppInfo)
-    data = recordsForIndex
-    headers = Object.keys(data[0])
+    backendUiStore.update(state => {
+      state.selectedView.records = recordsForIndex
+      if (state.selectedView.records.length > 0) {
+        headers = Object.keys(recordsForIndex[0])
+      }
+      return state
+    })
   }
 
   onMount(async () => {
@@ -37,7 +42,10 @@
   })
 </script>
 
-<DeleteRecordModal modalOpen={deleteRecordModal} record={selectedRecord} />
+<DeleteRecordModal 
+  modalOpen={deleteRecordModal} 
+  record={selectedRecord} 
+/>
 
 <section>
   <div class="table-controls">
@@ -46,7 +54,6 @@
       icon="ri-eye-line"
       on:change={e => fetchRecordsForView(e.target.value)}>
       {#each views as view}
-        <!-- ({console.log(getSchema(view))}) ({console.log(view)}) -->
         <option value={view.name}>{view.name}</option>
       {/each}
     </Select>
@@ -62,7 +69,7 @@
     </thead>
     <tbody>
       {#each data as row}
-        <tr>
+        <tr class="hoverable">
           <td>
             <div class="uk-inline">
               <i class="ri-more-line" />
@@ -78,8 +85,8 @@
                   <li>
                     <div
                       on:click={() => {
-                        deleteRecordModal = true
                         selectedRecord = row
+                        backendUiStore.actions.modals.show("DELETE_RECORD")
                       }}>
                       Delete
                     </div>
@@ -98,7 +105,7 @@
       {/each}
     </tbody>
   </table>
-  <TablePagination {data} />
+  <TablePagination />
 </section>
 
 <style>
@@ -118,8 +125,13 @@
     font-weight: 500;
   }
 
-  tr {
+  tbody tr {
     border-bottom: 1px solid #ccc;
+    transition: 0.3s background-color;
+  }
+
+  tbody tr:hover {
+    background: #fafafa;
   }
 
   .table-controls {

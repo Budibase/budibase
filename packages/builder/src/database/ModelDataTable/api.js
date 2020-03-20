@@ -2,18 +2,27 @@
   import { getNewRecord } from "../../common/core"
 
   export async function deleteRecord(record, { appname, instanceId }) {
-    const DELETE_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record/${record.name}/${record.id}`
-    const response = await api.delete({
-      url: DELETE_RECORDS_URL
-    });
+    const DELETE_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record${record.key}`
+    const response = await api.delete(DELETE_RECORDS_URL);
     return response;
   }
 
   export async function saveRecord(record, { appname, instanceId }) {
-    const SAVE_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record`
-    const updatedRecord = getNewRecord(record, "")
-    const response = await api.post(SAVE_RECORDS_URL, updatedRecord)
-    return response
+    let recordBase = { ...record }
+
+    // brand new record
+    if (record.collectionName) {
+      const collectionKey = `/${record.collectionName}`
+      recordBase = getNewRecord(recordBase, collectionKey)
+      // overwrite the new record template values 
+      for (let key in recordBase) {
+        if (record[key]) recordBase[key] = record[key]
+      }
+    }
+
+    const SAVE_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record/`
+    const response = await api.post(SAVE_RECORDS_URL, recordBase)
+    return await response.json()
   }
 
   export async function fetchDataForView(viewName, { appname, instanceId }) {

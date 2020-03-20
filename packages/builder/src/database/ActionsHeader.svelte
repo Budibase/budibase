@@ -6,20 +6,12 @@
   import Modal from "../common/Modal.svelte"
   import ErrorsBox from "../common/ErrorsBox.svelte"
 
-  export let left
-
   let confirmDelete = false
 
   const openConfirmDelete = () => {
     confirmDelete = true
   }
 
-  // const deleteCurrentNode = () => {
-  //   confirmDelete = false
-  //   store.deleteCurrentNode()
-  // }
-
-  // TODO: COMPLETELY REFACTOR THIS SHIT
   const deleteCurrentNode = () => {
     confirmDelete = false
     store.deleteCurrentNode()
@@ -39,10 +31,8 @@
     {/if}
   </ButtonGroup>
 
-  {#if !!$store.errors && $store.errors.length > 0}
-    <div style="width: 500px">
-      <ErrorsBox errors={$store.errors} />
-    </div>
+  {#if $store.errors && $store.errors.length > 0}
+    <ErrorsBox errors={$store.errors} />
   {/if}
 
   <Modal onClosed={() => (confirmDelete = false)} bind:isOpen={confirmDelete}>

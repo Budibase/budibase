@@ -10,7 +10,7 @@
   const onClosed = () => (modalOpen = false)
 </script>
 
-<Modal {onClosed} bind:isOpen={modalOpen} title={"Create / Edit Field"}>
+<Modal {onClosed} isOpen={modalOpen}>
 
   <div class="actions">
     <ActionButton alert on:click={onClosed}>Cancel</ActionButton>

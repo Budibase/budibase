@@ -1,6 +1,7 @@
 <script>
   import Textbox from "../common/Textbox.svelte"
   import Button from "../common/Button.svelte"
+  import Select from "../common/Select.svelte"
   import getIcon from "../common/icon"
   import FieldView from "./FieldView.svelte"
   import Modal from "../common/Modal.svelte"
@@ -19,6 +20,9 @@
   let deleteField
   let onFinishedFieldEdit
   let editIndex
+  let parentRecord
+
+  $: models = $store.hierarchy.children
 
   store.subscribe($store => {
     record = $store.currentNode
@@ -98,16 +102,20 @@
 </script>
 
 <div class="root">
-
   <form class="uk-form-stacked">
-    <h3 class="budibase__title--3">
-      <i class="ri-list-settings-line" />
-      Create / Edit Model
-    </h3>
-
     <h3 class="budibase__label--big">Settings</h3>
 
     <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
+    <label class="uk-form-label">Parent</label>
+    <div class="uk-form-controls">
+      <Select
+        value={parentRecord}
+        on:change={e => (parentRecord = e.target.value)}>
+        {#each models as model}
+          <option value={model}>{model.name}</option>
+        {/each}
+      </Select>
+    </div>
     {#if !record.isSingle}
       <Textbox label="Collection Name" bind:text={record.collectionName} />
       <Textbox
@@ -121,12 +129,6 @@
     <span class="budibase__label--big">Fields</span>
     <h4 class="hoverable" on:click={newField}>Add new field</h4>
   </div>
-  <!-- <h3 class="budibase__label--big">
-    Fields
-    <span class="add-field-button" on:click={newField}>
-      {@html getIcon('plus')}
-    </span>
-  </h3> -->
 
   <table class="fields-table uk-table budibase__table">
     <thead>
@@ -139,7 +141,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each record ? record.fields : []  as field}
+      {#each record ? record.fields : [] as field}
         <tr>
           <td>
             <i class="ri-more-line" on:click={() => editField(field)} />
@@ -148,7 +150,7 @@
             <div>{field.name}</div>
           </td>
           <td>{field.type}</td>
-          <td>({console.log(field.typeOptions)}) {field.typeOptions.values}</td>
+          <td>{field.typeOptions.values}</td>
           <td>
             <span class="edit-button" on:click={() => deleteField(field)}>
               {@html getIcon('trash')}

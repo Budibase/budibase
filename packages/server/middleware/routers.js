@@ -237,6 +237,7 @@ module.exports = (config, app) => {
       } else {
         ctx.response.status = StatusCodes.UNAUTHORIZED
       }
+      next()
     })
     .post("/:appname/api/changeMyPassword", routeHandlers.changeMyPassword)
     .post(
@@ -320,7 +321,3 @@ module.exports = (config, app) => {
 
   return router
 }
-
-/*
-front end get authenticateTemporaryAccess {}
-*/
