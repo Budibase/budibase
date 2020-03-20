@@ -210,11 +210,64 @@ export const props = {
     _component: "@budibase/materialdesign-components/DatePicker",
     _children: [],
     label: "Date of Admission",
-    onSelect: date => console.log("SELECTED DATE", date)
+    onSelect: date => console.log("SELECTED DATE", date),
   },
   IconButton: {
     _component: "@budibase/materialdesign-components/IconButton",
     _children: [],
     icon: "calendar_today",
+  },
+  Card: {
+    _component: "@budibase/materialdesign-components/Card",
+    _children: [
+      {
+        _component: "@budibase/materialdesign-components/CardBody",
+        _children: [
+          {
+            _component: "@budibase/materialdesign-components/CardImage",
+            _children: [],
+            displayHorizontal: false,
+            url: "https://picsum.photos/350",
+            title: "Our New World",
+            subtitle: "Out now in cinemas",
+          },
+          {
+            _component: "@budibase/materialdesign-components/H6",
+            _children: [],
+            text: "Movie Of The Year",
+          },
+          {
+            _component: "@budibase/materialdesign-components/Body2",
+            _children: [],
+            text: "The most epic movie of the year has just arrived in cinemas",
+          },
+        ],
+      },
+      {
+        _component: "@budibase/materialdesign-components/CardFooter",
+        _children: [
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Save",
+          },
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Cancel",
+          },
+          {
+            _component: "@budibase/materialdesign-components/IconButton",
+            icon: "3d_rotation",
+          },
+          {
+            _component: "@budibase/materialdesign-components/IconButton",
+            icon: "accessibility",
+          },
+          {
+            _component: "@budibase/materialdesign-components/IconButton",
+            icon: "alarm_on",
+          },
+        ],
+      },
+    ],
   },
 }

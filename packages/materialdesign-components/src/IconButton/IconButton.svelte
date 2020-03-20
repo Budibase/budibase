@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte"
   import ripple from "../Common/Ripple.js"
   import ClassBuilder from "../ClassBuilder.js"
 
@@ -14,6 +15,14 @@
   export let icon = ""
   export let onIcon = "" //on state icon for toggle button
   export let size = "medium"
+
+  onMount(() => {
+    let ctx = !!_bb ? _bb.getContext("BBMD:icon-button:context") : ""
+    //It isn't possible to use context within nested components as they do not have their own _bb instance (has to be passed down from parent component). This allows context to be passed as props
+    if (!context && !!ctx) {
+      context = ctx
+    }
+  })
 
   function onButtonClick() {
     open = !open
