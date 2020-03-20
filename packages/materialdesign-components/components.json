@@ -169,6 +169,16 @@
     "description": "Material Design <tr>.",
     "props": {}
   },
+  "DatePicker": {
+    "name": "DatePicker",
+    "description": "Material Design DatePicker",
+    "props": {
+      "date": "string",
+      "label": "string",
+      "onSelect": "event"
+    },
+    "tags": []
+  },
   "H1": {
     "name": "H1",
     "description": "Sets the font properties as Roboto Headline1",
@@ -214,6 +224,18 @@
     "description": "Sets the font properties as Roboto Headline6",
     "props": {
       "text": "string"
+    },
+    "tags": []
+  },
+  "IconButton": {
+    "onClick": "event",
+    "disabled": "bool",
+    "href": "string",
+    "icon": "string",
+    "size": {
+      "type":"options",
+      "options": ["small", "medium", "large"],
+      "default": "medium"
     },
     "tags": []
   },
