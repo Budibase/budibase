@@ -1,21 +1,23 @@
 @import "./budibase.css";
 
 :root {
-    --primary100: #173157FF;
-    --primary75: #454CA0BF;
-    --primary50: #454CA080;
-    --primary25: #454CA040;
-    --primary10: #454CA01A;
-    --primary5: #454ca00c;
-    --primarydark: #3F448A;
+    --primary100: #0055ff;
+    --primary80: rgba(0, 85, 255, 0.8);
+    --primary60: #rgba(0, 85, 255, 0.6);
+    --primary40: #rgba(0, 85, 255, 0.4);
+    --primary20: #rgba(0, 85, 255, 0.2);
+    --primary10: #rgba(0, 85, 255, 0.1);
+    --primary5: #rgba(0, 85, 255, 0.05);
+    --primarydark: #0044cc;
 
-    --secondary100:#828fa5;
-    --secondary75: #162B4DBF;
-    --secondary50: #162B4D80;
-    --secondary25: #162B4D40;
-    --secondary10: #162B4D1A;
-    --secondary5:#fff;
-    --secondarydark: #3F448A;
+    --secondary100:#000333;
+    --secondary80: rgba(0, 3, 51, 0.8);
+    --secondary60: rgba(0, 3, 51, 0.6);
+    --secondary40: rgba(0, 3, 51, 0.4);
+    --secondary20: rgba(0, 3, 51, 0.2);
+    --secondary10: rgba(0, 3, 51, 0.1);
+    --secondary5: rgba(0, 3, 51, 0.05);
+    --secondarydark: #00021a;
 
     --tertiary: #F2F5F7;
 
@@ -35,8 +37,8 @@
 
     --white: #FFFFFF;
     --darkslate: #1a202c;
-    --slate: #a0aec0;
-    --lightslate: #f7fafc;
+    --slate: #d8d8d8;
+    --lightslate: #f9f9f9;
 
     --borderradius: 2px;
     --borderradiusall: 2px 2px 2px 2px;
@@ -55,13 +57,13 @@
     --quotation: var(--fontnormal) "italics" var(--darkslate) 16pt;
     --smallheavybodytext: var(--fontbold) "regular" var(--secondary100) 14pt;
 
-    --background-button: #e6eeff;
+    --background-button: #f9f9f9;
     --button-text: #0055ff;
 }
 
 html, body {
     font-family: var(--fontnormal);
-    color: var(--secondary100);
+    color: var(--secondary80);
     padding: 0;
     margin: 0;
     height:100%;
@@ -83,7 +85,7 @@ h2 {
 h3 {
     font-family: var(--fontbold);
     font-size: 24pt;
-    color: var(--darkslate);
+    color: var(--secondary60);
 }
 
 h4 {

@@ -14,8 +14,10 @@ export const cleanup = async app => {
   const lock = await getTransactionLock(app)
   if (isNolock(lock)) return
 
-  try {
+  const _cleanupBatch = async () => {
+    let processed = 0
     const transactions = await retrieve(app)
+    let i = 1
     if (transactions.length > 0) {
       await executeTransactions(app)(transactions)
 
@@ -34,10 +36,21 @@ export const cleanup = async app => {
       ])
 
       await Promise.all(deleteFiles)
+
+      processed = transactions.length
+    }
+    return processed
+  }
+
+  try {
+    let count = -1
+    while (count !== 0) {
+      count = await _cleanupBatch()
     }
   } finally {
     await releaseLock(app, lock)
   }
+  
 }
 
 const getTransactionLock = async app =>

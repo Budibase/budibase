@@ -155,16 +155,15 @@
     box-sizing: border-box;
     border: 1px solid #ccc;
     border-radius: 2px;
-    color: #333;
-    background-color: #f4f4f4;
+    color: #000333;
     outline: none;
   }
 
   .default-button:active {
-    background-color: #ddd;
+    background-color: #f9f9f9;
   }
 
   .default-button:focus {
-    border-color: #666;
+    border-color: #f9f9f9;
   }
 </style>

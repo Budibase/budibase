@@ -46,7 +46,7 @@
   .root {
     padding-bottom: 10px;
     font-size: 0.9rem;
-    color: var(--secondary50);
+    color: #000333;
     font-weight: bold;
     position: relative;
     padding-left: 1.8rem;
@@ -79,6 +79,6 @@
   .icon {
     display: inline-block;
     width: 14px;
-    color: #333;
+    color: #000333;
   }
 </style>
