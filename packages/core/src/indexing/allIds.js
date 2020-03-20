@@ -2,6 +2,7 @@ import { flatten, orderBy, filter, isUndefined } from "lodash/fp"
 import {
   getFlattenedHierarchy,
   getCollectionNodeByKeyOrNodeKey,
+  getNodeByKeyOrNodeKey,
   isCollectionRecord,
   isAncestor,
 } from "../templateApi/hierarchy"
@@ -60,7 +61,7 @@ export const getAllIdsIterator = app => async collection_Key_or_NodeKey => {
   const recordNode = getCollectionNodeByKeyOrNodeKey(
     app.hierarchy,
     collection_Key_or_NodeKey
-  )
+  ) || getNodeByKeyOrNodeKey(app.hierarchy, collection_Key_or_NodeKey)
 
   const getAllIdsIteratorForCollectionKey = async (
     recordNode,

@@ -162,38 +162,49 @@
   .component-props-container {
     margin-top: 10px;
     flex: 1 1 auto;
-    overflow-y: auto;
   }
 
   ul {
     list-style: none;
     display: flex;
+    justify-content: space-between;
     padding: 0;
   }
 
   li {
-    margin-right: 20px;
     background: none;
-    border-radius: 5px;
+    border-radius: 3px;
     width: 48px;
     height: 48px;
   }
 
+
+
   li button {
-    width: 100%;
-    height: 100%;
+    width: 48px;
+    height: 48px;
     background: none;
     border: none;
-    border-radius: 5px;
-    padding: 12px;
+    border-radius: 3px;
+    padding: 7px;
     outline: none;
     cursor: pointer;
     position: relative;
   }
 
+  li:nth-last-child(1) {
+    margin-right: 0px;
+    background: none;
+    border-radius: 3px;
+    width: 48px;
+    height: 48px;
+  }
+
   .selected {
     color: var(--button-text);
-    background: var(--background-button) !important;
+    background: #f9f9f9 !important;
+    width: 48px;
+    height: 48px;
   }
 
   .button-indicator {

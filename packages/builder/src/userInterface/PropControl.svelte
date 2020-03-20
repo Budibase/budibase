@@ -34,14 +34,15 @@
     grid-template-rows: 1fr;
     grid-template-columns: 70px 1fr;
     grid-gap: 10px;
+    align-items: baseline;
   }
 
   h5 {
     word-wrap: break-word;
     font-size: 12px;
-    font-weight: 700;
-    color: #163057;
-    opacity: 0.6;
+    font-weight: 400;
+    color: #000333;
+    opacity: 0.8;
     padding-top: 12px;
     margin-bottom: 0;
   }
