@@ -50,5 +50,7 @@
   "version": "0.0.27",
   "license": "MIT",
   "gitHead": "72a77a035eb7c1443b079bf93c29b3e5fe02094e",
-  "dependencies": {}
+  "dependencies": {
+    "@material/card": "4.0.0"
+  }
 }

@@ -210,11 +210,59 @@ export const props = {
     _component: "@budibase/materialdesign-components/DatePicker",
     _children: [],
     label: "Date of Admission",
-    onSelect: date => console.log("SELECTED DATE", date)
+    onSelect: date => console.log("SELECTED DATE", date),
   },
   IconButton: {
     _component: "@budibase/materialdesign-components/IconButton",
     _children: [],
     icon: "calendar_today",
+  },
+  Card: {
+    _id: "card",
+    width: "400",
+    _component: "@budibase/materialdesign-components/Card",
+    _children: [
+      {
+        _id: "cardbody",
+        _component: "@budibase/materialdesign-components/CardBody",
+        onClick: () => alert`Hi`,
+        _children: [
+          {
+            _id: "cardimage1",
+            _component: "@budibase/materialdesign-components/CardImage",
+            _children: [],
+            displayHorizontal: true,
+            url: "https://picsum.photos/350",
+            title: "Our New World",
+            subtitle: "Out now in cinemas",
+          },
+        ],
+      },
+      {
+        _component: "@budibase/materialdesign-components/CardFooter",
+        _children: [
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Save",
+          },
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Cancel",
+          },
+          {
+            _component: "@budibase/materialdesign-components/IconButton",
+            icon: "3d_rotation",
+          },
+          {
+            _component: "@budibase/materialdesign-components/IconButton",
+            icon: "accessibility",
+          },
+          {
+            _component: "@budibase/materialdesign-components/IconButton",
+            icon: "alarm_on",
+          },
+        ],
+      },
+    ],
   },
 }
