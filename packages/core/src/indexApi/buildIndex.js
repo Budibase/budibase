@@ -6,8 +6,10 @@ import {
   getNode,
   isIndex,
   isRecord,
+  getActualKeyOfParent,
   getAllowedRecordNodesForIndex,
   fieldReversesReferenceToIndex,
+  isTopLevelIndex,
 } from "../templateApi/hierarchy"
 import { joinKey, apiWrapper, events, $ } from "../common"
 import {
@@ -16,6 +18,8 @@ import {
 } from "../transactions/create"
 import { permission } from "../authApi/permissions"
 import { BadRequestError } from "../common/errors"
+import { initialiseIndex } from "../indexing/initialiseIndex"
+import { getRecordInfo } from "../recordApi/recordInfo"
 
 /** rebuilds an index
  * @param {object} app - the application container
@@ -32,7 +36,7 @@ export const buildIndex = app => async indexNodeKey =>
     indexNodeKey
   )
 
-const _buildIndex = async (app, indexNodeKey) => {
+export const _buildIndex = async (app, indexNodeKey) => {
   const indexNode = getNode(app.hierarchy, indexNodeKey)
 
   await createBuildIndexFolder(app.datastore, indexNodeKey)
@@ -89,12 +93,6 @@ const buildReverseReferenceIndex = async (app, indexNode) => {
   }
 }
 
-/*
-const getAllowedParentCollectionNodes = (hierarchy, indexNode) => $(getAllowedRecordNodesForIndex(hierarchy, indexNode), [
-  map(n => n.parent()),
-]);
-*/
-
 const buildHeirarchalIndex = async (app, indexNode) => {
   let recordCount = 0
 
@@ -127,7 +125,7 @@ const buildHeirarchalIndex = async (app, indexNode) => {
     )
 
     let allIds = await allIdsIterator()
-    while (allIds.done === false) {
+    while (allIds.done === false) { 
       await createTransactionsForIds(
         allIds.result.collectionKey,
         allIds.result.ids
@@ -139,77 +137,8 @@ const buildHeirarchalIndex = async (app, indexNode) => {
   return recordCount
 }
 
-// const chooseChildRecordNodeByKey = (collectionNode, recordId) => find(c => recordId.startsWith(c.nodeId))(collectionNode.children);
-
 const recordNodeApplies = indexNode => recordNode =>
   includes(recordNode.nodeId)(indexNode.allowedRecordNodeIds)
 
-/*
-const hasApplicableDecendant = (hierarchy, ancestorNode, indexNode) => $(hierarchy, [
-  getFlattenedHierarchy,
-  filter(
-    allTrue(
-      isRecord,
-      isDecendant(ancestorNode),
-      recordNodeApplies(indexNode),
-    ),
-  ),
-]);
-*/
-
-/*
-const applyAllDecendantRecords = async (app, collection_Key_or_NodeKey,
-  indexNode, indexKey, currentIndexedData,
-  currentIndexedDataKey, recordCount = 0) => {
-  const collectionNode = getCollectionNodeByKeyOrNodeKey(
-    app.hierarchy,
-    collection_Key_or_NodeKey,
-  );
-
-  const allIdsIterator = await getAllIdsIterator(app)(collection_Key_or_NodeKey);
-
-
-  const createTransactionsForIds = async (collectionKey, allIds) => {
-    for (const recordId of allIds) {
-      const recordKey = joinKey(collectionKey, recordId);
-
-      const recordNode = chooseChildRecordNodeByKey(
-        collectionNode,
-        recordId,
-      );
-
-      if (recordNodeApplies(indexNode)(recordNode)) {
-        await transactionForBuildIndex(
-          app, indexNode.nodeKey(),
-          recordKey, recordCount,
-        );
-        recordCount++;
-      }
-
-      if (hasApplicableDecendant(app.hierarchy, recordNode, indexNode)) {
-        for (const childCollectionNode of recordNode.children) {
-          recordCount = await applyAllDecendantRecords(
-            app,
-            joinKey(recordKey, childCollectionNode.collectionName),
-            indexNode, indexKey, currentIndexedData,
-            currentIndexedDataKey, recordCount,
-          );
-        }
-      }
-    }
-  };
-
-  let allIds = await allIdsIterator();
-  while (allIds.done === false) {
-    await createTransactionsForIds(
-      allIds.result.collectionKey,
-      allIds.result.ids,
-    );
-    allIds = await allIdsIterator();
-  }
-
-  return recordCount;
-};
-*/
 
 export default buildIndex
