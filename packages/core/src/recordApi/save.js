@@ -1,5 +1,4 @@
 import { cloneDeep, take, takeRight, flatten, map, filter } from "lodash/fp"
-import { initialiseChildCollections } from "../collectionApi/initialise"
 import { validate } from "./validate"
 import { _loadFromInfo } from "./load"
 import { apiWrapper, events, $, joinKey } from "../common"
@@ -17,6 +16,7 @@ import { permission } from "../authApi/permissions"
 import { initialiseIndex } from "../indexing/initialiseIndex"
 import { BadRequestError } from "../common/errors"
 import { getRecordInfo } from "./recordInfo"
+import { initialiseChildren } from "./initialiseChildren"
 
 export const save = app => async (record, context) =>
   apiWrapper(
@@ -59,9 +59,7 @@ export const _save = async (app, record, context, skipValidation = false) => {
     await createRecordFolderPath(app.datastore, pathInfo)
     await app.datastore.createFolder(files)
     await app.datastore.createJson(recordJson, recordClone)
-    await initialiseReverseReferenceIndexes(app, recordInfo)
-    await initialiseAncestorIndexes(app, recordInfo)
-    await initialiseChildCollections(app, recordInfo)
+    await initialiseChildren(app, recordInfo)
     await app.publish(events.recordApi.save.onRecordCreated, {
       record: recordClone,
     })
@@ -86,42 +84,6 @@ export const _save = async (app, record, context, skipValidation = false) => {
   returnedClone.isNew = false
   return returnedClone
 }
-
-const initialiseAncestorIndexes = async (app, recordInfo) => {
-  for (const index of recordInfo.recordNode.indexes) {
-    const indexKey = recordInfo.child(index.name)
-    if (!(await app.datastore.exists(indexKey))) {
-      await initialiseIndex(app.datastore, recordInfo.dir, index)
-    }
-  }
-}
-
-const initialiseReverseReferenceIndexes = async (app, recordInfo) => {
-  const indexNodes = $(
-    fieldsThatReferenceThisRecord(app, recordInfo.recordNode),
-    [
-      map(f =>
-        $(f.typeOptions.reverseIndexNodeKeys, [
-          map(n => getNode(app.hierarchy, n)),
-        ])
-      ),
-      flatten,
-    ]
-  )
-
-  for (const indexNode of indexNodes) {
-    await initialiseIndex(app.datastore, recordInfo.dir, indexNode)
-  }
-}
-
-const fieldsThatReferenceThisRecord = (app, recordNode) =>
-  $(app.hierarchy, [
-    getFlattenedHierarchy,
-    filter(isRecord),
-    map(n => n.fields),
-    flatten,
-    filter(fieldReversesReferenceToNode(recordNode)),
-  ])
 
 const createRecordFolderPath = async (datastore, pathInfo) => {
   const recursiveCreateFolder = async (
