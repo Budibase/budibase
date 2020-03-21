@@ -5,12 +5,9 @@
   import ModelView from "../../ModelView.svelte"
   import ActionsHeader from "../../ActionsHeader.svelte"
   import * as api from "../api"
-
-  export let modalOpen = false
-  export let onClosed
 </script>
 
-<Modal {onClosed} isOpen={modalOpen}>
+<section>
   <h4 class="budibase__title--4">
     <i class="ri-list-settings-line" />
     Create / Edit Model
@@ -19,4 +16,4 @@
     <ModelView />
     <ActionsHeader />
   </div>
-</Modal>
+</section>

@@ -12,34 +12,46 @@
     CreateEditRecordModal,
     CreateEditModelModal,
     CreateEditViewModal,
-    CreateDatabaseModal
+    CreateDatabaseModal,
+    DeleteRecordModal
   } from "./ModelDataTable/modals"
 
   let selectedRecord
 
   function selectRecord(record) {
     selectedRecord = record
-    backendUiStore.actions.modals.show("RECORD")
   }
 
   function onClosed() {
-    // backendUiStore.actions.modals.hide()
+    backendUiStore.actions.modals.hide()
   }
 
   $: recordOpen = $backendUiStore.visibleModal === "RECORD"
   $: modelOpen = $backendUiStore.visibleModal === "MODEL"
   $: viewOpen = $backendUiStore.visibleModal === "VIEW"
   $: databaseOpen = $backendUiStore.visibleModal === "DATABASE"
+  $: deleteRecordOpen = $backendUiStore.visibleModal === "DELETE_RECORD"
   // $: recordOpen = $store.currentNode && $store.currentNode.type === 'record'
   // $: viewOpen = $store.currentNode && $store.currentNode.type === 'index'
 </script>
 
-({ console.log($backendUiStore.visibleModal) })
-
-<CreateEditRecordModal modalOpen={recordOpen} record={selectedRecord} {onClosed} />
-<CreateEditModelModal modalOpen={modelOpen} {onClosed} />
-<CreateEditViewModal modalOpen={viewOpen} {onClosed} />
-<CreateDatabaseModal modalOpen={databaseOpen} {onClosed} />
+<Modal isOpen={!!$backendUiStore.visibleModal} {onClosed}>
+  {#if recordOpen}
+    <CreateEditRecordModal record={selectedRecord} {onClosed} />
+  {/if}
+  {#if modelOpen}
+    <CreateEditModelModal {onClosed} />
+  {/if}
+  {#if viewOpen}
+    <CreateEditViewModal {onClosed} />
+  {/if}
+  {#if databaseOpen}
+    <CreateDatabaseModal {onClosed} />
+  {/if}
+  {#if deleteRecordOpen}
+    <DeleteRecordModal record={selectedRecord} />
+  {/if}
+</Modal>
 
 
 <div class="root">

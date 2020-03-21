@@ -38,14 +38,11 @@
   }
 
   onMount(async () => {
-    await fetchRecordsForView(views[0].name, currentAppInfo)
+    if (views.length > 0) {
+      await fetchRecordsForView(views[0].name, currentAppInfo)
+    }
   })
 </script>
-
-<DeleteRecordModal 
-  modalOpen={deleteRecordModal} 
-  record={selectedRecord} 
-/>
 
 <section>
   <div class="table-controls">
@@ -79,13 +76,16 @@
                     <div>View</div>
                   </li>
                   <li
-                    on:click={() => selectRecord(row)}>
+                    on:click={() => { 
+                      selectRecord(row)
+                      backendUiStore.actions.modals.show("RECORD")
+                    }}>
                     <div>Edit</div>
                   </li>
                   <li>
                     <div
                       on:click={() => {
-                        selectedRecord = row
+                        selectRecord(row)
                         backendUiStore.actions.modals.show("DELETE_RECORD")
                       }}>
                       Delete
@@ -112,7 +112,8 @@
   table {
     border: 1px solid #ccc;
     background: #fff;
-    border-radius: 2px;
+    border-radius: 3px;
+    border-collapse: separate;
   }
 
   thead {
@@ -128,6 +129,7 @@
   tbody tr {
     border-bottom: 1px solid #ccc;
     transition: 0.3s background-color;
+    color: var(--darkslate);
   }
 
   tbody tr:hover {

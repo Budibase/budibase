@@ -15,22 +15,22 @@
   function onClosed() {
     backendUiStore.actions.modals.hide()
   }
-
 </script>
 
-<Modal {onClosed} isOpen={modalOpen}>
+<section>
   <h4 class="budibase__title--4">Delete Record</h4>
-  Are you sure you want to delete this record? All of your data will be permanently removed. This action cannot be undone.
+  Are you sure you want to delete this record? All of your data will be
+  permanently removed. This action cannot be undone.
   <div class="modal-actions">
     <ActionButton on:click={onClosed}>Cancel</ActionButton>
     <ActionButton
       alert
-      on:click={async () => { 
+      on:click={async () => {
         await api.deleteRecord(record, currentAppInfo)
         backendUiStore.actions.records.delete(record)
-        onClosed();
+        onClosed()
       }}>
       Delete
     </ActionButton>
   </div>
-</Modal>
+</section>

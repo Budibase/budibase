@@ -3,11 +3,15 @@
   import { store, backendUiStore } from "../builderStore"
   import { cloneDeep } from "lodash/fp"
   import getIcon from "../common/icon"
+
   export let level = 0
   export let node
   export let type
 
   let navActive = ""
+  let expanded = false
+
+  $: hasChildren = (node.children || node.indexes) && (node.children.length || node.indexes.length)
 
   const ICON_MAP = {
     index: "ri-eye-line",
@@ -34,18 +38,26 @@
     class:capitalized={type === 'record'}
     style="padding-left: {20 + level * 20}px"
     class:selected={navActive}>
+    {#if hasChildren}
+      <i 
+        class={`ri-arrow-${expanded ? "down" : "right"}-s-line`} 
+        on:click={() => expanded = !expanded}
+      />
+    {/if}
     <i class={ICON_MAP[type]} />
     <span style="margin-left: 1rem">{node.name}</span>
   </div>
-  {#if node.children}
-    {#each node.children as child}
-      <svelte:self node={child} level={level + 1} type="record" />
-    {/each}
-  {/if}
-  {#if node.indexes}
-    {#each node.indexes as index}
-      <svelte:self node={index} level={level + 1} type="index" />
-    {/each}
+  {#if expanded}
+    {#if node.children}
+      {#each node.children as child}
+        <svelte:self node={child} level={level + 1} type="record" />
+      {/each}
+    {/if}
+    {#if node.indexes}
+      {#each node.indexes as index}
+        <svelte:self node={index} level={level + 1} type="index" />
+      {/each}
+    {/if}
   {/if}
 </div>
 
