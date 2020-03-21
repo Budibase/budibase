@@ -1,7 +1,6 @@
 import {
   filter,
   cloneDeep,
-  // sortBy,
   map,
   last,
   concat,
@@ -12,9 +11,7 @@ import {
 import {
   pipe,
   getNode,
-  // validate,
   constructHierarchy,
-  // templateApi,
 } from "../../common/core"
 import * as backendStoreActions from "./backend";
 import { writable } from "svelte/store"
@@ -78,6 +75,7 @@ export const getStore = () => {
   store.deleteField = backendStoreActions.deleteField(store)
   store.saveLevel = backendStoreActions.saveLevel(store)
   store.deleteLevel = backendStoreActions.deleteLevel(store)
+  store.createDatabaseForApp = backendStoreActions.createDatabaseForApp(store)
   store.importAppDefinition = importAppDefinition(store)
 
   store.saveAction = saveAction(store)

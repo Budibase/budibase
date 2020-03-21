@@ -1,5 +1,12 @@
   import api from "../../builderStore/api";
-  import { getNewRecord } from "../../common/core"
+  import { getNewRecord, getNewInstance } from "../../common/core"
+
+  export async function createDatabase(appname, instanceName) {
+    const CREATE_DATABASE_URL = `/_builder/instance/_master/0/api/record`
+    const database = getNewInstance(appname, instanceName);
+    const response = await api.post(CREATE_DATABASE_URL, database);
+    return await response.json()
+  }
 
   export async function deleteRecord(record, { appname, instanceId }) {
     const DELETE_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record${record.key}`

@@ -110,7 +110,7 @@
     <div class="uk-form-controls">
       <Select
         value={parentRecord}
-        on:change={e => (parentRecord = e.target.value)}>
+        on:change={e => store.newChildRecord()}>
         {#each models as model}
           <option value={model}>{model.name}</option>
         {/each}

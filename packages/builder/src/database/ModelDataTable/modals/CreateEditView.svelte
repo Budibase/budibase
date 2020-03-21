@@ -12,7 +12,7 @@
 
 </script>
 
-<Modal {onClosed} isOpen={modalOpen}>
+<section>
   <IndexView />
   <ActionsHeader />
 
@@ -22,4 +22,4 @@
       Save
     </ActionButton>
   </div> -->
-</Modal>
+</section>

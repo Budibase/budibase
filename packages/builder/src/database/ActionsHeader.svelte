@@ -19,39 +19,32 @@
 </script>
 
 <div class="root">
-  <ButtonGroup>
-    <ActionButton color="secondary" grouped on:click={store.saveCurrentNode}>
-      Save
-    </ActionButton>
-
+  <div class="button-container">
     {#if !$store.currentNodeIsNew}
-      <ActionButton alert grouped on:click={openConfirmDelete}>
+      <ActionButton alert on:click={deleteCurrentNode}>
         Delete
       </ActionButton>
     {/if}
-  </ButtonGroup>
+
+    <ActionButton color="secondary" on:click={store.saveCurrentNode}>
+      Save
+    </ActionButton>
+  </div>
 
   {#if $store.errors && $store.errors.length > 0}
     <ErrorsBox errors={$store.errors} />
   {/if}
-
-  <Modal onClosed={() => (confirmDelete = false)} bind:isOpen={confirmDelete}>
-    <span>Are you sure you want to delete {$store.currentNode.name}?</span>
-    <div class="uk-modal-footer uk-text-right">
-      <ButtonGroup>
-        <ActionButton alert on:click={deleteCurrentNode}>Yes</ActionButton>
-        <ActionButton primary on:click={() => (confirmDelete = false)}>
-          No
-        </ActionButton>
-      </ButtonGroup>
-    </div>
-  </Modal>
 </div>
 
 <style>
   .root {
-    padding: 1.5rem;
+    display: flex;
+    background: #fafafa;
     width: 100%;
-    align-items: right;
+    border-top: 1px solid #ccc;
+  }
+
+  .button-container {
+    padding: 20px;
   }
 </style>

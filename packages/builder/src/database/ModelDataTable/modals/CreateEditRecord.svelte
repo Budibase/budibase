@@ -7,7 +7,6 @@
   import { getNewRecord } from "../../../common/core"
   import * as api from "../api"
 
-  export let modalOpen = false
   export let record
   export let onClosed
 
@@ -22,10 +21,9 @@
   $: modelFields = selectedModel
     ? selectedModel.fields.map(({ name }) => name)
     : []
-  
 </script>
 
-<Modal {onClosed} isOpen={modalOpen}>
+<div>
   <h4 class="budibase__title--4">Create / Edit Record</h4>
   <div class="actions">
     <form class="uk-form-stacked">
@@ -80,10 +78,10 @@
       </ActionButton>
     </div>
   </div>
-</Modal>
+</div>
 
 <style>
   .actions {
-    position: absolute;
+    /* position: absolute; */
   }
 </style>
