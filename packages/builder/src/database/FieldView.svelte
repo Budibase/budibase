@@ -138,12 +138,19 @@
     {/if}
   </form>
 
-  <div class="uk-modal-footer uk-text-right">
-    <ButtonGroup>
-      <ActionButton primary on:click={save}>Save</ActionButton>
-      <ActionButton alert on:click={() => onFinished(false)}>
-        Cancel
-      </ActionButton>
-    </ButtonGroup>
-  </div>
+  <footer>
+    <ActionButton primary on:click={save}>Save</ActionButton>
+    <ActionButton alert on:click={() => onFinished(false)}>Cancel</ActionButton>
+  </footer>
 </div>
+
+<style>
+  footer {
+    position: absolute;
+    padding: 20px;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    background: #fafafa;
+  }
+</style>

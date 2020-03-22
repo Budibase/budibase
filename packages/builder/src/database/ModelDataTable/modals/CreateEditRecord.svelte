@@ -63,7 +63,7 @@
         </div>
       {/each}
     </form>
-    <div class="actions">
+    <footer>
       <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
       <ActionButton
         on:click={async () => {
@@ -79,6 +79,17 @@
         }}>
         Save
       </ActionButton>
-    </div>
+    </footer>
   </div>
 </div>
+
+<style>
+  footer {
+    position: absolute;
+    padding: 20px;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    background: #fafafa;
+  }
+</style>

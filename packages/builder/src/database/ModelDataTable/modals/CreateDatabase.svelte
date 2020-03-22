@@ -18,8 +18,21 @@
 <section>
   Database Name
   <input class="uk-input" type="text" bind:value={databaseName} />
-  <div class="actions">
+  <footer>
     <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
-    <ActionButton disabled={!databaseName} on:click={createDatabase}>Save</ActionButton>
-  </div>
+    <ActionButton disabled={!databaseName} on:click={createDatabase}>
+      Save
+    </ActionButton>
+  </footer>
 </section>
+
+<style>
+  footer {
+    position: absolute;
+    padding: 20px;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    background: #fafafa;
+  }
+</style>
