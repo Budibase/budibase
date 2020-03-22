@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { store, backendUiStore } from "../../../builderStore"
+  import { findIndex } from "lodash/fp"
   import Modal from "../../../common/Modal.svelte"
   import ActionButton from "../../../common/ActionButton.svelte"
   import Select from "../../../common/Select.svelte"
@@ -69,7 +70,10 @@
         on:click={async () => {
           const recordResponse = await api.saveRecord(record || selectedModel, currentAppInfo)
           backendUiStore.update(state => {
-            state.selectedView.records.push(recordResponse)
+            const idx = findIndex(state.selectedView.records, {
+              id: recordResponse.id
+            })
+            state.selectedView.records.splice(idx, 1, recordResponse)
             return state
           })
           onClosed()

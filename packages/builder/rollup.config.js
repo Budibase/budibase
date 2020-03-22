@@ -103,7 +103,9 @@ const lodash_fp_exports = [
   "toNumber",
   "takeRight",
   "toPairs",
-  "remove"
+  "remove",
+  "findIndex",
+  "compose"
 ]
 
 const lodash_exports = [

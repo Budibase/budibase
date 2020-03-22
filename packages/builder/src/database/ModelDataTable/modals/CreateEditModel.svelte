@@ -8,12 +8,5 @@
 </script>
 
 <section>
-  <h4 class="budibase__title--4">
-    <i class="ri-list-settings-line" />
-    Create / Edit Model
-  </h4>
-  <div class="actions">
-    <ModelView />
-    <ActionsHeader />
-  </div>
+  <ModelView />
 </section>

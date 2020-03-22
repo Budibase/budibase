@@ -38,7 +38,7 @@ export const getBackendUiStore = () => {
     },
     records: {
       delete: record => store.update(state => { 
-        state.selectedView.records = remove(state.selectedView.records, { key: record.key });
+        state.selectedView.records = remove(state.selectedView.records, { id: record.id });
         return state
       }),
     },
@@ -125,7 +125,6 @@ export const saveCurrentNode = store => () => {
     if (errors.length > 0) {
       return state
     }
-
     const parentNode = getNode(state.hierarchy, state.currentNode.parent().nodeId)
 
     const existingNode = getNode(state.hierarchy, state.currentNode.nodeId)
@@ -134,10 +133,7 @@ export const saveCurrentNode = store => () => {
     if (existingNode) {
       // remove existing
       index = existingNode.parent().children.indexOf(existingNode)
-      existingNode.parent().children = existingNode.parent().children.filter(c => c.nodeId !== existingNode.nodeId);
-      // existingNode.parent().children = pipe(existingNode.parent().children, [
-      //   filter(c => c.nodeId !== existingNode.nodeId),
-      // ])
+      existingNode.parent().children = existingNode.parent().children.filter(node => node.nodeId !== existingNode.nodeId);
     }
 
     // should add node into existing hierarchy
@@ -172,7 +168,7 @@ export const deleteCurrentNode = store => () => {
   store.update(state => {
     const nodeToDelete = getNode(state.hierarchy, state.currentNode.nodeId)
     state.currentNode = hierarchyFunctions.isRoot(nodeToDelete.parent())
-      ? find(n => n !== state.currentNode)(state.hierarchy.children)
+      ? state.hierarchy.children.find(node => node !== state.currentNode)
       : nodeToDelete.parent()
 
     const recordOrIndexKey = hierarchyFunctions.isRecord(nodeToDelete) ? "children" : "indexes";
@@ -212,10 +208,7 @@ export const saveField = databaseStore => field => {
 
 export const deleteField = databaseStore => field => {
   databaseStore.update(db => {
-    db.currentNode.fields = filter(f => f.name !== field.name)(
-      db.currentNode.fields
-    )
-
+    db.currentNode.fields = db.currentNode.fields.filter(f => f.name !== field.name)
     return db
   })
 }
