@@ -31,8 +31,6 @@
   $: viewOpen = $backendUiStore.visibleModal === "VIEW"
   $: databaseOpen = $backendUiStore.visibleModal === "DATABASE"
   $: deleteRecordOpen = $backendUiStore.visibleModal === "DELETE_RECORD"
-  // $: recordOpen = $store.currentNode && $store.currentNode.type === 'record'
-  // $: viewOpen = $store.currentNode && $store.currentNode.type === 'index'
 </script>
 
 <Modal isOpen={!!$backendUiStore.visibleModal} {onClosed}>

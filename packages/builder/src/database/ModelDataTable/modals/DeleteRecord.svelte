@@ -4,7 +4,6 @@
   import { store, backendUiStore } from "../../../builderStore"
   import * as api from "../api"
 
-  export let modalOpen = false
   export let record
 
   $: currentAppInfo = {
@@ -18,9 +17,14 @@
 </script>
 
 <section>
-  <h4 class="budibase__title--4">Delete Record</h4>
-  Are you sure you want to delete this record? All of your data will be
-  permanently removed. This action cannot be undone.
+  <heading>
+    <i class="ri-information-line alert" />
+    <h4 class="budibase__title--4">Delete Record</h4>
+  </heading>
+  <p>
+    Are you sure you want to delete this record? All of your data will be
+    permanently removed. This action cannot be undone.
+  </p>
   <div class="modal-actions">
     <ActionButton on:click={onClosed}>Cancel</ActionButton>
     <ActionButton
@@ -34,3 +38,28 @@
     </ActionButton>
   </div>
 </section>
+
+<style>
+  .alert {
+    color: rgba(255, 0, 31, 1);
+    background: #fafafa;
+    padding: 5px;
+  }
+  
+  .modal-actions {
+    position: absolute;
+    bottom: 0;
+    background: #fafafa;
+    border-top: 1px solid #ccc;
+    width: 100%;
+  }
+
+  heading {
+    display: flex;
+    align-items: center;
+  }
+
+  h4 {
+    margin: 0 0 0 10px; 
+  }
+</style>

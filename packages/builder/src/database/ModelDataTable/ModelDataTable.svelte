@@ -10,19 +10,23 @@
 
   export let selectRecord
 
-  let pages = [1, 2, 3]
+  const ITEMS_PER_PAGE = 2 
+
   let selectedView = ""
   let modalOpen = false
   let headers = []
   let selectedRecord
+  let currentPage = 0
 
   $: views = $store.hierarchy.indexes
   $: currentAppInfo = {
     appname: $store.appname,
-    instanceId: $store.currentInstanceId 
+    instanceId: $store.currentInstanceId,
   }
-  $: data = $backendUiStore.selectedView.records
-  $: deleteRecordModal = $backendUiStore.visibleModal === "DELETE_RECORD"
+  $: data = $backendUiStore.selectedView.records.slice(
+    currentPage * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  )
 
   const getSchema = getIndexSchema($store.hierarchy)
 
@@ -44,76 +48,86 @@
   })
 </script>
 
-<section>
-  <div class="table-controls">
-    <h4 class="budibase__title--3">Shoe database</h4>
-    <Select
-      icon="ri-eye-line"
-      on:change={e => fetchRecordsForView(e.target.value)}>
-      {#each views as view}
-        <option value={view.name}>{view.name}</option>
-      {/each}
-    </Select>
-  </div>
-  <table class="uk-table">
-    <thead>
-      <tr>
-        <th>Edit</th>
-        {#each headers as header}
-          <th>{header}</th>
+{#if views.length > 0} 
+  <section>
+    <div class="table-controls">
+      <h4 class="budibase__title--3">{$backendUiStore.selectedDatabase.name || ""}</h4>
+      <Select
+        icon="ri-eye-line"
+        on:change={e => fetchRecordsForView(e.target.value)}>
+        {#each views as view}
+          <option value={view.name}>{view.name}</option>
         {/each}
-      </tr>
-    </thead>
-    <tbody>
-      {#each data as row}
-        <tr class="hoverable">
-          <td>
-            <div class="uk-inline">
-              <i class="ri-more-line" />
-              <div uk-dropdown="mode: click">
-                <ul class="uk-nav uk-dropdown-nav">
-                  <li>
-                    <div>View</div>
-                  </li>
-                  <li
-                    on:click={() => { 
-                      selectRecord(row)
-                      backendUiStore.actions.modals.show("RECORD")
-                    }}>
-                    <div>Edit</div>
-                  </li>
-                  <li>
-                    <div
-                      on:click={() => {
-                        selectRecord(row)
-                        backendUiStore.actions.modals.show("DELETE_RECORD")
-                      }}>
-                      Delete
-                    </div>
-                  </li>
-                  <li>
-                    <div>Duplicate</div>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </td>
+      </Select>
+    </div>
+    <table class="uk-table">
+      <thead>
+        <tr>
+          <th>Edit</th>
           {#each headers as header}
-            <td>{row[header]}</td>
+            <th>{header}</th>
           {/each}
         </tr>
-      {/each}
-    </tbody>
-  </table>
-  <TablePagination />
-</section>
+      </thead>
+      <tbody>
+        {#if data.length === 0}
+          <div class="no-data">No Data.</div>
+        {/if}
+        {#each data as row}
+          <tr class="hoverable">
+            <td>
+              <div class="uk-inline">
+                <i class="ri-more-line" />
+                <div uk-dropdown="mode: click">
+                  <ul class="uk-nav uk-dropdown-nav">
+                    <li
+                      on:click={() => {
+                        selectRecord(row)
+                        backendUiStore.actions.modals.show('RECORD')
+                      }}>
+                      <div>Edit</div>
+                    </li>
+                    <li>
+                      <div
+                        on:click={() => {
+                          selectRecord(row)
+                          backendUiStore.actions.modals.show('DELETE_RECORD')
+                        }}>
+                        Delete
+                      </div>
+                    </li>
+                    <li>
+                      <div
+                        on:click={() => {
+                          console.log("DUPLICATION")
+                        }}>
+                        Duplicate
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </td>
+            {#each headers as header}
+              <td>{row[header]}</td>
+            {/each}
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+    <TablePagination bind:currentPage pageItemCount={data.length} {ITEMS_PER_PAGE} />
+  </section>
+{:else}
+  Please create a model to get started.
+{/if}
+
 
 <style>
   table {
     border: 1px solid #ccc;
     background: #fff;
     border-radius: 3px;
-    border-collapse: separate;
+    border-collapse: collapse;
   }
 
   thead {
@@ -145,5 +159,9 @@
   .ri-more-line:hover,
   .uk-dropdown-nav li:hover {
     cursor: pointer;
+  }
+
+  .no-data {
+    padding: 20px;
   }
 </style>

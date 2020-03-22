@@ -4,6 +4,8 @@
   import ActionButton from "../../../common/ActionButton.svelte"
   import * as api from "../api"
 
+  export let onClosed
+
   let databaseName
 
   async function createDatabase() {
@@ -14,8 +16,8 @@
 </script>
 
 <section>
-  CREATE A NEW DATABASE FROM HERE
-  <input type="text" bind:value={databaseName} />
+  Database Name
+  <input class="uk-input" type="text" bind:value={databaseName} />
   <div class="actions">
     <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
     <ActionButton disabled={!databaseName} on:click={createDatabase}>Save</ActionButton>

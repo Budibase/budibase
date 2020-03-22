@@ -7,8 +7,9 @@
   import Modal from "../common/Modal.svelte"
   import { map, join, filter, some, find, keys, isDate } from "lodash/fp"
   import { store } from "../builderStore"
-  import { common, hierarchy as h } from "../../../core/src"
+  import { common, hierarchy } from "../../../core/src"
   import { templateApi, pipe, validate } from "../common/core"
+  import ActionsHeader from "./ActionsHeader.svelte"
 
   let record
   let getIndexAllowedRecords
@@ -26,7 +27,7 @@
 
   store.subscribe($store => {
     record = $store.currentNode
-    const flattened = h.getFlattenedHierarchy($store.hierarchy)
+    const flattened = hierarchy.getFlattenedHierarchy($store.hierarchy)
     getIndexAllowedRecords = index =>
       pipe(
         index.allowedRecordNodeIds,
@@ -78,21 +79,6 @@
     return value
   }
 
-  let getTypeOptions = typeOptions =>
-    pipe(
-      typeOptions,
-      [
-        keys,
-        map(
-          k =>
-            `<span style="color:var(--slate)">${k}: </span>${getTypeOptionsValueText(
-              typeOptions[k]
-            )}`
-        ),
-        join("<br>"),
-      ]
-    )
-
   const nameChanged = ev => {
     const pluralName = n => `${n}s`
     if (record.collectionName === "") {
@@ -102,113 +88,79 @@
 </script>
 
 <div class="root">
-  <form class="uk-form-stacked">
-    <h3 class="budibase__label--big">Settings</h3>
-
-    <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
-    <label class="uk-form-label">Parent</label>
-    <div class="uk-form-controls">
-      <Select
-        value={parentRecord}
-        on:change={e => store.newChildRecord()}>
-        {#each models as model}
-          <option value={model}>{model.name}</option>
-        {/each}
-      </Select>
-    </div>
-    {#if !record.isSingle}
-      <Textbox label="Collection Name" bind:text={record.collectionName} />
-      <Textbox
-        label="Estimated Record Count"
-        bind:text={record.estimatedRecordCount} />
+  <heading>
+    {#if !editingField}
+      <i class="ri-list-settings-line button--toggled" />
+      <h4 class="budibase__title--3">Create / Edit Model</h4>
+    {:else}
+      <i class="ri-file-list-line button--toggled" />
+      <h4 class="budibase__title--3">Create / Edit Field</h4>
     {/if}
-    <div class="recordkey">{record.nodeKey()}</div>
+  </heading>
+  {#if !editingField}
+    <form class="uk-form-stacked">
+      <h3 class="budibase__label--big">Settings</h3>
 
-  </form>
-  <div class="table-controls">
-    <span class="budibase__label--big">Fields</span>
-    <h4 class="hoverable" on:click={newField}>Add new field</h4>
-  </div>
+      <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
 
-  <table class="fields-table uk-table budibase__table">
-    <thead>
-      <tr>
-        <th>Edit</th>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Values</th>
-        <th />
-      </tr>
-    </thead>
-    <tbody>
-      {#each record ? record.fields : [] as field}
-        <tr>
-          <td>
-            <i class="ri-more-line" on:click={() => editField(field)} />
-          </td>
-          <td>
-            <div>{field.name}</div>
-          </td>
-          <td>{field.type}</td>
-          <td>{field.typeOptions.values}</td>
-          <td>
-            <span class="edit-button" on:click={() => deleteField(field)}>
-              {@html getIcon('trash')}
-            </span>
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-
-  {#if editingField}
-    <Modal
-      bind:isOpen={editingField}
-      onClosed={() => onFinishedFieldEdit(false)}>
-
-      <h3 class="budibase__title--3">
-        <i class="ri-file-list-line" />
-        Create / Edit Field
-      </h3>
-      <FieldView
-        field={fieldToEdit}
-        onFinished={onFinishedFieldEdit}
-        allFields={record.fields}
-        store={$store} />
-    </Modal>
-  {/if}
-
-  <!-- <h3 class="budibase__title--3">Indexes</h3> -->
-
-  <!-- {#each record.indexes as index}
-    <div class="index-container">
-      <div class="index-name">
-        {index.name}
-        <span style="margin-left: 7px" on:click={() => editIndex(index)}>
-          {@html getIcon('edit')}
-        </span>
-      </div>
-      <div class="index-field-row">
-        <span class="index-label">records indexed:</span>
-        <span>{getIndexAllowedRecords(index)}</span>
-        <span class="index-label" style="margin-left: 15px">type:</span>
-        <span>{index.indexType}</span>
-      </div>
-      <div class="index-field-row">
-        <span class="index-label">map:</span>
-        <code class="index-mapfilter">{index.map}</code>
-      </div>
-      {#if index.filter}
-        <div class="index-field-row">
-          <span class="index-label">filter:</span>
-          <code class="index-mapfilter">{index.filter}</code>
+      <div class="horizontal-stack">
+        {#if !record.isSingle}
+          <Textbox label="Collection Name" bind:text={record.collectionName} />
+        {/if}
+        <div>
+          <label class="uk-form-label">Parent</label>
+          <div class="uk-form-controls">
+            <Select
+              value={parentRecord}
+              on:change={e => {
+                store.selectExistingNode(record)
+                store.newChildRecord()
+              }}>
+              {#each models as model}
+                <option value={model}>{model.name}</option>
+              {/each}
+            </Select>
+          </div>
         </div>
-      {/if}
-    </div>
-  {:else}
-    <div class="no-indexes">No indexes added.</div>
-  {/each} -->
+    </form>
 
+    <div class="table-controls">
+      <span class="budibase__label--big">Fields</span>
+      <h4 class="hoverable new-field" on:click={newField}>Add new field</h4>
+    </div>
+
+    <table class="uk-table fields-table budibase__table">
+      <thead>
+        <tr>
+          <th>Edit</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Values</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each record ? record.fields : [] as field}
+          <tr>
+            <td>
+              <i class="ri-more-line" on:click={() => editField(field)} />
+            </td>
+            <td>
+              <div>{field.name}</div>
+            </td>
+            <td>{field.type}</td>
+            <td>{field.typeOptions.values}</td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+    <ActionsHeader />
+  {:else}
+    <FieldView
+      field={fieldToEdit}
+      onFinished={onFinishedFieldEdit}
+      allFields={record.fields}
+      store={$store} />
+  {/if}
 </div>
 
 <style>
@@ -217,10 +169,15 @@
     padding: 2rem;
   }
 
-  .recordkey {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--primary100);
+  .horizontal-stack {
+    display: flex;
+    justify-content: space-between
+  }
+
+  .new-field {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--button-text);
   }
 
   .fields-table {
@@ -228,22 +185,8 @@
     border-collapse: collapse;
   }
 
-  .edit-button {
-    cursor: pointer;
-    color: var(--secondary25);
-  }
-
-  .edit-button:hover {
-    cursor: pointer;
-    color: var(--secondary75);
-  }
-
   tbody > tr:hover {
     background-color: var(--primary10);
-  }
-
-  tbody > tr:hover .edit-button {
-    color: var(--secondary75);
   }
 
   .table-controls {
@@ -256,7 +199,12 @@
     cursor: pointer;
   }
 
+  heading {
+    display: flex;
+    align-items: center;
+  }
+
   h4 {
-    margin: 0;
+    margin: 0 0 0 10px;
   }
 </style>

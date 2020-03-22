@@ -107,7 +107,7 @@
 }
 
 .budibase__table thead {
-    background: var(--background-button);
+    background: #fafafa;
 }
 
 .budibase__table th {
@@ -118,4 +118,10 @@
 
 .budibase__table tr {
     border-bottom: 1px solid #ccc;
+}
+
+.button--toggled {
+    background: #fafafa;
+    color: var(--button-text);
+    padding: 10px;
 }
