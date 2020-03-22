@@ -15,13 +15,28 @@
 
   $: currentAppInfo = {
     appname: $store.appname,
-    instanceId: $backendUiStore.selectedDatabase.id
+    instanceId: $backendUiStore.selectedDatabase.id,
   }
   $: recordFields = record ? Object.keys(record) : []
   $: models = $store.hierarchy.children
   $: modelFields = selectedModel
     ? selectedModel.fields.map(({ name }) => name)
     : []
+
+  async function saveRecord() {
+    const recordResponse = await api.saveRecord(
+      record || selectedModel,
+      currentAppInfo
+    )
+    backendUiStore.update(state => {
+      const idx = findIndex(state.selectedView.records, {
+        id: recordResponse.id,
+      })
+      state.selectedView.records.splice(idx, 1, recordResponse)
+      return state
+    })
+    onClosed()
+  }
 </script>
 
 <div>
@@ -66,17 +81,7 @@
     <footer>
       <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
       <ActionButton
-        on:click={async () => {
-          const recordResponse = await api.saveRecord(record || selectedModel, currentAppInfo)
-          backendUiStore.update(state => {
-            const idx = findIndex(state.selectedView.records, {
-              id: recordResponse.id
-            })
-            state.selectedView.records.splice(idx, 1, recordResponse)
-            return state
-          })
-          onClosed()
-        }}>
+        on:click={saveRecord}>
         Save
       </ActionButton>
     </footer>
