@@ -34,7 +34,7 @@ export const getBackendUiStore = () => {
   store.actions = {
     navigate: name => store.update(state => ({ ...state, leftNavItem: name })),
     database: {
-      select: state => store.update(state => ({ ...state, selectedDatabase: state })),
+      select: db => store.update(state => ({ ...state, selectedDatabase: db })),
     },
     records: {
       delete: record => store.update(state => { 
