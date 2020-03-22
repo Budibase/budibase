@@ -10,7 +10,7 @@
 
   export let selectRecord
 
-  const ITEMS_PER_PAGE = 2 
+  const ITEMS_PER_PAGE = 10
 
   let selectedView = ""
   let modalOpen = false
@@ -21,12 +21,13 @@
   $: views = $store.hierarchy.indexes
   $: currentAppInfo = {
     appname: $store.appname,
-    instanceId: $store.currentInstanceId,
+    instanceId: $backendUiStore.selectedDatabase.id
   }
   $: data = $backendUiStore.selectedView.records.slice(
     currentPage * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
   )
+  $: showTable = currentAppInfo.instanceId && views.length > 0
 
   const getSchema = getIndexSchema($store.hierarchy)
 
@@ -42,13 +43,13 @@
   }
 
   onMount(async () => {
-    if (views.length > 0) {
+    if (showTable) {
       await fetchRecordsForView(views[0].name, currentAppInfo)
     }
   })
 </script>
 
-{#if views.length > 0} 
+{#if showTable} 
   <section>
     <div class="table-controls">
       <h4 class="budibase__title--3">{$backendUiStore.selectedDatabase.name || ""}</h4>
@@ -80,6 +81,14 @@
                 <i class="ri-more-line" />
                 <div uk-dropdown="mode: click">
                   <ul class="uk-nav uk-dropdown-nav">
+                    <li>
+                      <div
+                        on:click={async () => {
+                            // fetch the child records for that particular row
+                        }}>
+                        View
+                      </div>
+                    </li>
                     <li
                       on:click={() => {
                         selectRecord(row)
@@ -98,8 +107,8 @@
                     </li>
                     <li>
                       <div
-                        on:click={() => {
-                          console.log("DUPLICATION")
+                        on:click={async () => {
+                          const response = await api.saveRecord(row)
                         }}>
                         Duplicate
                       </div>
@@ -118,7 +127,7 @@
     <TablePagination bind:currentPage pageItemCount={data.length} {ITEMS_PER_PAGE} />
   </section>
 {:else}
-  Please create a model to get started.
+  Please select a database.
 {/if}
 
 

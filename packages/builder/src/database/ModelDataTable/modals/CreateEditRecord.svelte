@@ -14,8 +14,8 @@
   let selectedModel
 
   $: currentAppInfo = {
-    instanceId: $store.currentInstanceId,
     appname: $store.appname,
+    instanceId: $backendUiStore.selectedDatabase.id
   }
   $: recordFields = record ? Object.keys(record) : []
   $: models = $store.hierarchy.children
@@ -66,7 +66,6 @@
     <div class="actions">
       <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
       <ActionButton
-        disabled={false}
         on:click={async () => {
           const recordResponse = await api.saveRecord(record || selectedModel, currentAppInfo)
           backendUiStore.update(state => {

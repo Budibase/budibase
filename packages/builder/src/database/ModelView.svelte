@@ -91,15 +91,15 @@
   <heading>
     {#if !editingField}
       <i class="ri-list-settings-line button--toggled" />
-      <h4 class="budibase__title--3">Create / Edit Model</h4>
+      <h3 class="budibase__title--3">Create / Edit Model</h3>
     {:else}
       <i class="ri-file-list-line button--toggled" />
-      <h4 class="budibase__title--3">Create / Edit Field</h4>
+      <h3 class="budibase__title--3">Create / Edit Field</h3>
     {/if}
   </heading>
   {#if !editingField}
+    <h4 class="budibase__label--big">Settings</h4>
     <form class="uk-form-stacked">
-      <h3 class="budibase__label--big">Settings</h3>
 
       <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
 
@@ -204,7 +204,7 @@
     align-items: center;
   }
 
-  h4 {
+  h3 {
     margin: 0 0 0 10px;
   }
 </style>

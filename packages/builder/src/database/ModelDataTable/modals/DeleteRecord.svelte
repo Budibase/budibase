@@ -7,8 +7,8 @@
   export let record
 
   $: currentAppInfo = {
-    instanceId: $store.currentInstanceId,
     appname: $store.appname,
+    instanceId: $backendUiStore.selectedDatabase.id
   }
 
   function onClosed() {
