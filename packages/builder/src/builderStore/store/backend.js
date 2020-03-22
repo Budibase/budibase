@@ -1,16 +1,13 @@
 import { writable } from "svelte/store";
 import api from "../api"
 import {
-  filter,
   cloneDeep,
   sortBy,
-  map,
   find,
   remove
 } from "lodash/fp"
 import { hierarchy as hierarchyFunctions } from "../../../../core/src"
 import {
-  pipe,
   getNode,
   validate,
   constructHierarchy,
@@ -228,9 +225,7 @@ export const saveLevel = store => (newLevel, isNew, oldLevel = null) => {
 
 export const deleteLevel = store => level => {
   store.update(state => {
-    state.accessLevelstate.levels = filter(t => t.name !== level.name)(
-      state.accessLevelstate.levels
-    )
+    state.accessLevels.levels = state.accessLevels.levels.filter(t => t.name !== level.name)
     incrementAccessLevelsVersion(s)
     saveBackend(state)
     return state
@@ -265,12 +260,10 @@ export const saveTrigger = store => (newTrigger, isNew, oldTrigger = null) => {
   store.update(s => {
     const existingTrigger = isNew
       ? null
-      : find(a => a.name === oldTrigger.name)(s.triggers)
+      : s.triggers.find(a => a.name === oldTrigger.name)
 
     if (existingTrigger) {
-      s.triggers = pipe(s.triggers, [
-        map(a => (a === existingTrigger ? newTrigger : a)),
-      ])
+      s.triggers = s.triggers.map(a => (a === existingTrigger ? newTrigger : a))
     } else {
       s.triggers.push(newTrigger)
     }
@@ -281,7 +274,7 @@ export const saveTrigger = store => (newTrigger, isNew, oldTrigger = null) => {
 
 export const deleteTrigger = store => trigger => {
   store.update(s => {
-    s.triggers = filter(t => t.name !== trigger.name)(s.triggers)
+    s.triggers = s.triggers.filter(t => t.name !== trigger.name)
     return s
   })
 }
