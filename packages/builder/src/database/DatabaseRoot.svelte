@@ -14,6 +14,7 @@
     CreateEditViewModal,
     CreateDatabaseModal,
     DeleteRecordModal,
+    CreateUserModal
   } from "./ModelDataTable/modals"
 
   let selectedRecord
@@ -31,6 +32,7 @@
   $: viewOpen = $backendUiStore.visibleModal === "VIEW"
   $: databaseOpen = $backendUiStore.visibleModal === "DATABASE"
   $: deleteRecordOpen = $backendUiStore.visibleModal === "DELETE_RECORD"
+  $: userOpen = $backendUiStore.visibleModal === "USER"
   $: breadcrumbs = $store.currentNode
 </script>
 
@@ -49,6 +51,9 @@
   {/if}
   {#if deleteRecordOpen}
     <DeleteRecordModal record={selectedRecord} {onClosed} />
+  {/if}
+  {#if userOpen}
+    <CreateUserModal {onClosed} />
   {/if}
 </Modal>
 

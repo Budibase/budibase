@@ -4,11 +4,9 @@
   import ActionButton from "../../../common/ActionButton.svelte"
   import * as api from "../api"
 
-  export let modalOpen = false
+  export let onClosed
 
   let userName
-
-  const onClosed = () => (modalOpen = false)
 
   async function createUser() {
     const response = await api.createUser($store.appname, userName)
@@ -17,11 +15,24 @@
   }
 </script>
 
-<Modal {onClosed} isOpen={modalOpen}>
-  CREATE A NEW user FROM HERE
-  <input type="text" bind:value={userName} />
-  <div class="actions">
+<section>
+  User Name
+  <input class="uk-input" type="text" bind:value={userName} />
+  <footer>
     <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
-    <ActionButton disabled={!userName} on:click={createUser}>Save</ActionButton>
-  </div>
-</Modal>
+    <ActionButton disabled={!userName} on:click={createUser}>
+      Save
+    </ActionButton>
+  </footer>
+</section>
+
+<style>
+  footer {
+    position: absolute;
+    padding: 20px;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    background: #fafafa;
+  }
+</style>
