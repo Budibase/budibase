@@ -166,7 +166,6 @@
 <style>
   .root {
     height: 100%;
-    padding: 2rem;
   }
 
   .horizontal-stack {

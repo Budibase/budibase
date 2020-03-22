@@ -41,6 +41,9 @@
         {/if}
         <slot />
       </div>
+      <div class="uk-modal-footer">
+        <slot name="footer" />
+      </div>
     </div>
   {/if}
 </div>
@@ -52,5 +55,6 @@
     height: 80vh;
     display: flex;
     flex-direction: column;
+    padding: 0;
   }
 </style>

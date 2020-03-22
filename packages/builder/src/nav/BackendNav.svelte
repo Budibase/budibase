@@ -25,7 +25,9 @@
     <div class="components-list-container">
       <div class="nav-group-header">
         <div class="hierarchy-title">Databases</div>
-        <i class="ri-add-line hoverable" on:click={() => backendUiStore.actions.modals.show("DATABASE")} />
+        <i
+          class="ri-add-line hoverable"
+          on:click={() => backendUiStore.actions.modals.show('DATABASE')} />
       </div>
     </div>
 
@@ -34,20 +36,22 @@
     </div>
   </div>
   <hr />
-  <div class="hierarchy">
-    <div class="components-list-container">
-      <div class="nav-group-header">
-        <div class="hierarchy-title">Users</div>
-        <i class="ri-add-line" />
+  {#if $backendUiStore.selectedDatabase.id}
+    <div class="hierarchy">
+      <div class="components-list-container">
+        <div class="nav-group-header">
+          <div class="hierarchy-title">Users</div>
+          <i class="ri-add-line" />
+        </div>
       </div>
-    </div>
 
-    <div class="hierarchy-items-container">
-      <UsersList />
-    </div>
+      <div class="hierarchy-items-container">
+        <UsersList />
+      </div>
 
-    <NavItem name="ACCESS_LEVELS" label="User Levels" />
-  </div>
+      <NavItem name="ACCESS_LEVELS" label="User Levels" />
+    </div>
+  {/if}
 </div>
 
 <style>
