@@ -27,9 +27,9 @@
         hierarchyFunctions.getFlattenedHierarchy,
         filter(hierarchyFunctions.isDecendant(index.parent())),
         filter(hierarchyFunctions.isRecord),
-        map(n => ({
-          node: n,
-          isallowed: some(id => n.nodeId === id)(index.allowedRecordNodeIds),
+        map(node => ({
+          node,
+          isallowed: index.allowedRecordNodeIds.some(id => node.nodeId === id),
         })),
       ]
     )
@@ -37,19 +37,17 @@
 
   const toggleAllowedRecord = record => {
     if (record.isallowed) {
-      index.allowedRecordNodeIds = filter(id => id !== record.node.nodeId)(
-        index.allowedRecordNodeIds
-      )
+      index.allowedRecordNodeIds = index.allowedRecordNodeIds.filter(id => id !== record.node.nodeId)
     } else {
       index.allowedRecordNodeIds.push(record.node.nodeId)
     }
   }
 </script>
 
-<h3 class="budibase__title--3">
-  <i class="ri-eye-line" />
-  Create / Edit View
-</h3>
+<heading>
+  <i class="ri-eye-line button--toggled" />
+  <h3 class="budibase__title--3">Create / Edit View</h3>
+</heading>
 <form class="uk-form-stacked root">
   <h4 class="budibase__label--big">Settings</h4>
   <div class="uk-grid-small" uk-grid>
@@ -70,10 +68,11 @@
     </div>
     {#each indexableRecords as rec}
       <input
+        class="uk-checkbox"
         type="checkbox"
         checked={rec.isallowed}
         on:change={() => toggleAllowedRecord(rec)} />
-      <span>{rec.node.name}</span>
+      <span class="checkbox-model-label">{rec.node.name}</span>
     {/each}
   </div>
 
@@ -117,5 +116,18 @@
 
   .highlighted {
     opacity: 1;
+  }
+
+  .checkbox-model-label {
+    text-transform: capitalize;
+  }
+
+  h3 {
+    margin: 0 0 0 10px;
+  }
+
+  heading {
+    display: flex;
+    align-items: center;
   }
 </style>

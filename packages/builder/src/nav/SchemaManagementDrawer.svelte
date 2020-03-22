@@ -6,47 +6,19 @@
   import NavItem from "./NavItem.svelte"
   import getIcon from "../common/icon"
 
-  const defaultNewChildActions = [
-    {
-      label: "New Root Record",
-      onclick: store.newRootRecord,
-    },
-    {
-      label: "New Root Index",
-      onclick: store.newRootIndex,
-    },
-  ]
-
-  let newChildActions = defaultNewChildActions
-
-  const setActiveNav = name => () => {
-    store.setActiveNav(name)
+  function newModel() {
+    if ($store.currentNode) {
+      store.newChildRecord()
+    } else {
+      store.newRootRecord()
+    }
+    backendUiStore.actions.modals.show("MODEL")
   }
 
-  store.subscribe(db => {
-    if (!db.currentNode || hierarchyFunctions.isIndex(db.currentNode)) {
-      newChildActions = defaultNewChildActions
-    } else {
-      newChildActions = [
-        {
-          label: "New Root Record",
-          onclick: store.newRootRecord,
-        },
-        {
-          label: "New Root Index",
-          onclick: store.newRootIndex,
-        },
-        {
-          label: `New Child Record of ${db.currentNode.name}`,
-          onclick: store.newChildRecord,
-        },
-        {
-          label: `New Index on ${db.currentNode.name}`,
-          onclick: store.newChildIndex,
-        },
-      ]
-    }
-  })
+  function newView() {
+    store.newRootIndex()
+    backendUiStore.actions.modals.show("VIEW")
+  }
 </script>
 
 <div class="items-root">
@@ -60,18 +32,12 @@
             <ul class="uk-nav uk-dropdown-nav">
               <li
                 class="hoverable"
-                on:click={() => {
-                  store.newRootRecord()
-                  backendUiStore.actions.modals.show('MODEL')
-                }}>
+                on:click={newModel}>
                 Model
               </li>
               <li
                 class="hoverable"
-                on:click={() => {
-                  store.newRootIndex()
-                  backendUiStore.actions.modals.show('VIEW')
-                }}>
+                on:click={newView}>
                 View
               </li>
             </ul>

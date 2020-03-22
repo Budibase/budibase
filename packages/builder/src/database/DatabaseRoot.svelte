@@ -31,6 +31,7 @@
   $: viewOpen = $backendUiStore.visibleModal === "VIEW"
   $: databaseOpen = $backendUiStore.visibleModal === "DATABASE"
   $: deleteRecordOpen = $backendUiStore.visibleModal === "DELETE_RECORD"
+  $: breadcrumbs = $store.currentNode
 </script>
 
 <Modal isOpen={!!$backendUiStore.visibleModal} {onClosed}>
@@ -47,7 +48,7 @@
     <CreateDatabaseModal {onClosed} />
   {/if}
   {#if deleteRecordOpen}
-    <DeleteRecordModal record={selectedRecord} />
+    <DeleteRecordModal record={selectedRecord} {onClosed} />
   {/if}
 </Modal>
 
@@ -57,17 +58,19 @@
     <div class="database-actions">
       <div class="budibase__label--big">
         {#if $backendUiStore.selectedDatabase.name}
-          {$backendUiStore.selectedDatabase.name} / {$store.currentNode}
+          {$backendUiStore.selectedDatabase.name} {breadcrumbs} 
         {/if}
         </div>
-      <ActionButton
-        primary
-        on:click={() => {
-          selectedRecord = null
-          backendUiStore.actions.modals.show("RECORD")
-        }}>
-        Create new record
-      </ActionButton>
+      {#if $backendUiStore.selectedDatabase.id}
+        <ActionButton
+          primary
+          on:click={() => {
+            selectedRecord = null
+            backendUiStore.actions.modals.show("RECORD")
+          }}>
+          Create new record
+        </ActionButton>
+      {/if}
     </div>
     <ModelDataTable {selectRecord} />
   </div>

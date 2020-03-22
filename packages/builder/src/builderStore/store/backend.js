@@ -34,7 +34,7 @@ export const getBackendUiStore = () => {
   store.actions = {
     navigate: name => store.update(state => ({ ...state, leftNavItem: name })),
     database: {
-      select: db => store.update(state => ({ ...state, selectedDatabase: db })),
+      select: state => store.update(state => ({ ...state, selectedDatabase: state })),
     },
     records: {
       delete: record => store.update(state => { 
@@ -96,8 +96,7 @@ export const newRecord = (store, useRoot) => () => {
 
 export const selectExistingNode = store => nodeId => {
   store.update(state => {
-    const shadowHierarchy = createShadowHierarchy(state.hierarchy)
-    state.currentNode = getNode(shadowHierarchy, nodeId)
+    state.currentNode = getNode(state.hierarchy, nodeId)
     state.currentNodeIsNew = false
     state.errors = []
     return state
@@ -179,42 +178,32 @@ export const deleteCurrentNode = store => () => {
       node => node.nodeId === nodeToDelete.nodeId
     )
 
-    // if (hierarchyFunctions.isRecord(nodeToDelete)) {
-    //   nodeToDelete.parent().children = filter(
-    //     c => c.nodeId !== nodeToDelete.nodeId
-    //   )(nodeToDelete.parent().children)
-    // } else {
-    //   nodeToDelete.parent().indexes = remove(
-    //     nodeToDelete.parent().indexes,
-    //     node => node.nodeId === nodeToDelete.nodeId
-    //   ) 
-    // }
     state.errors = []
     saveBackend(state)
     return state
   })
 }
 
-export const saveField = databaseStore => field => {
-  databaseStore.update(db => {
-    db.currentNode.fields = filter(f => f.name !== field.name)(
-      db.currentNode.fields
-    )
+export const saveField = store => field => {
+  store.update(state => {
+    state.currentNode.fields = state.currentNode.fields.filter(f => f.name !== field.name)
 
-    templateApi(db.hierarchy).addField(db.currentNode, field)
-    return db
+    templateApi(state.hierarchy).addField(state.currentNode, field)
+    return state
   })
 }
 
-export const deleteField = databaseStore => field => {
-  databaseStore.update(db => {
-    db.currentNode.fields = db.currentNode.fields.filter(f => f.name !== field.name)
-    return db
+export const deleteField = store => field => {
+  store.update(state => {
+    state.currentNode.fields = state.currentNode.fields.filter(f => f.name !== field.name)
+    return state
   })
 }
 
-const incrementAccessLevelsVersion = state =>
-  (state.accessLevels.version = (state.accessLevels.version || 0) + 1)
+const incrementAccessLevelsVersion = state => {
+  state.accessLevels.version = state.accessLevels.version ? state.accessLevels.version + 1 : 1
+  return state
+}
 
 export const saveLevel = store => (newLevel, isNew, oldLevel = null) => {
   store.update(state => {
@@ -245,5 +234,54 @@ export const deleteLevel = store => level => {
     incrementAccessLevelsVersion(s)
     saveBackend(state)
     return state
+  })
+}
+
+export const saveAction = store => (newAction, isNew, oldAction = null) => {
+  store.update(s => {
+    const existingAction = isNew
+      ? null
+      : find(a => a.name === oldAction.name)(s.actions)
+
+    if (existingAction) {
+      s.actions = s.actions.map(action => action === existingAction ? newAction : action)
+    } else {
+      s.actions.push(newAction)
+    }
+    saveBackend(s)
+    return s
+  })
+}
+
+export const deleteAction = store => action => {
+  store.update(state => {
+    state.actions = state.actions.filter(a => a.name !== action.name);
+    saveBackend(state);
+    return state;
+  })
+}
+
+export const saveTrigger = store => (newTrigger, isNew, oldTrigger = null) => {
+  store.update(s => {
+    const existingTrigger = isNew
+      ? null
+      : find(a => a.name === oldTrigger.name)(s.triggers)
+
+    if (existingTrigger) {
+      s.triggers = pipe(s.triggers, [
+        map(a => (a === existingTrigger ? newTrigger : a)),
+      ])
+    } else {
+      s.triggers.push(newTrigger)
+    }
+    saveBackend(s)
+    return s
+  })
+}
+
+export const deleteTrigger = store => trigger => {
+  store.update(s => {
+    s.triggers = filter(t => t.name !== trigger.name)(s.triggers)
+    return s
   })
 }

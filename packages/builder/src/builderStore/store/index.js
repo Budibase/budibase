@@ -1,10 +1,8 @@
 import {
   filter,
   cloneDeep,
-  map,
   last,
   concat,
-  find,
   isEmpty,
   values,
 } from "lodash/fp"
@@ -76,12 +74,12 @@ export const getStore = () => {
   store.saveLevel = backendStoreActions.saveLevel(store)
   store.deleteLevel = backendStoreActions.deleteLevel(store)
   store.createDatabaseForApp = backendStoreActions.createDatabaseForApp(store)
+  store.saveAction = backendStoreActions.saveAction(store)
+  store.deleteAction = backendStoreActions.deleteAction(store)
+  store.saveTrigger = backendStoreActions.saveTrigger(store)
+  store.deleteTrigger = backendStoreActions.deleteTrigger(store)
   store.importAppDefinition = importAppDefinition(store)
 
-  store.saveAction = saveAction(store)
-  store.deleteAction = deleteAction(store)
-  store.saveTrigger = saveTrigger(store)
-  store.deleteTrigger = deleteTrigger(store)
   store.saveScreen = saveScreen(store)
   store.addComponentLibrary = addComponentLibrary(store)
   store.renameScreen = renameScreen(store)
@@ -154,10 +152,6 @@ const initialise = (store, initial) => async () => {
   }
   initial.appname = appname
   initial.pages = pkg.pages
-  initial.currentInstanceId =
-    pkg.application.instances && pkg.application.instances.length > 0
-      ? pkg.application.instances[0].id
-      : ""
   initial.hasAppPackage = true
   initial.hierarchy = pkg.appDefinition.hierarchy
   initial.accessLevels = pkg.accessLevels
@@ -174,8 +168,9 @@ const initialise = (store, initial) => async () => {
   if (!!initial.hierarchy && !isEmpty(initial.hierarchy)) {
     initial.hierarchy = constructHierarchy(initial.hierarchy)
     const shadowHierarchy = createShadowHierarchy(initial.hierarchy)
-    if (initial.currentNode !== null)
+    if (initial.currentNode !== null) {
       initial.currentNode = getNode(shadowHierarchy, initial.currentNode.nodeId)
+    }
   }
 
   store.set(initial)
@@ -191,7 +186,7 @@ const showSettings = store => () => {
 
 const useAnalytics = store => () => {
   store.update(state => {
-    state.useAnalytics = !s.useAnalytics
+    state.useAnalytics = !state.useAnalytics
     return state
   })
 }
@@ -211,56 +206,6 @@ const importAppDefinition = store => appDefinition => {
   })
 }
 
-const saveAction = store => (newAction, isNew, oldAction = null) => {
-  store.update(s => {
-    const existingAction = isNew
-      ? null
-      : find(a => a.name === oldAction.name)(s.actions)
-
-    if (existingAction) {
-      s.actions = pipe(s.actions, [
-        map(a => (a === existingAction ? newAction : a)),
-      ])
-    } else {
-      s.actions.push(newAction)
-    }
-    saveBackend(s)
-    return s
-  })
-}
-
-const deleteAction = store => action => {
-  store.update(state => {
-    state.actions = state.actions.filter(a => a.name !== action.name);
-    saveBackend(state);
-    return state;
-  })
-}
-
-const saveTrigger = store => (newTrigger, isNew, oldTrigger = null) => {
-  store.update(s => {
-    const existingTrigger = isNew
-      ? null
-      : find(a => a.name === oldTrigger.name)(s.triggers)
-
-    if (existingTrigger) {
-      s.triggers = pipe(s.triggers, [
-        map(a => (a === existingTrigger ? newTrigger : a)),
-      ])
-    } else {
-      s.triggers.push(newTrigger)
-    }
-    saveBackend(s)
-    return s
-  })
-}
-
-const deleteTrigger = store => trigger => {
-  store.update(s => {
-    s.triggers = filter(t => t.name !== trigger.name)(s.triggers)
-    return s
-  })
-}
 
 const createShadowHierarchy = hierarchy =>
   constructHierarchy(JSON.parse(JSON.stringify(hierarchy)))
