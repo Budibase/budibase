@@ -39,9 +39,12 @@
 <style>
   .root {
     display: flex;
-    background: #fafafa;
     width: 100%;
     border-top: 1px solid #ccc;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background: #fafafa;
   }
 
   .button-container {

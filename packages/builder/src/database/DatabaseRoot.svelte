@@ -13,7 +13,7 @@
     CreateEditModelModal,
     CreateEditViewModal,
     CreateDatabaseModal,
-    DeleteRecordModal
+    DeleteRecordModal,
   } from "./ModelDataTable/modals"
 
   let selectedRecord
@@ -52,21 +52,20 @@
   {/if}
 </Modal>
 
-
 <div class="root">
   <div class="node-view">
     <div class="database-actions">
       <div class="budibase__label--big">
         {#if $backendUiStore.selectedDatabase.name}
-          {$backendUiStore.selectedDatabase.name} {breadcrumbs} 
+          {$backendUiStore.selectedDatabase.name} {breadcrumbs}
         {/if}
-        </div>
+      </div>
       {#if $backendUiStore.selectedDatabase.id}
         <ActionButton
           primary
           on:click={() => {
             selectedRecord = null
-            backendUiStore.actions.modals.show("RECORD")
+            backendUiStore.actions.modals.show('RECORD')
           }}>
           Create new record
         </ActionButton>

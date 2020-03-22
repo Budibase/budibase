@@ -1,5 +1,7 @@
 <script>
-  import { store } from "../builderStore"
+  import { onMount } from "svelte"
+  import { store, backendUiStore } from "../builderStore"
+  import api from "../builderStore/api";
   import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
 
@@ -8,34 +10,28 @@
     return { name, props }
   }
 
-  const pages = [
-    {
-      title: "Joe",
-      id: "joe",
-    },
-    {
-      title: "Mike",
-      id: "mike",
-    },
-    {
-      title: "Martin",
-      id: "martin",
-    },
-  ]
+  let users = []
 
-  store.setCurrentPage("main")
+  $: currentAppInfo = {
+    appname: $store.appname,
+    instanceId: $backendUiStore.selectedDatabase.id
+  }
+
+  async function fetchUsers() {
+    const DELETE_RECORDS_URL = `/_builder/instance/${currentAppInfo.appname}/${currentAppInfo.instanceId}/api/users`
+    const response = await api.get(DELETE_RECORDS_URL);
+    users = await response.json()
+  }
+
+  onMount(fetchUsers)
 </script>
 
 <div class="root">
   <ul>
-    {#each pages as { title, id }}
+    {#each users as user}
       <li>
         <i class="ri-user-4-line" />
-        <button
-          class:active={id === $store.currentPageName}
-          on:click={() => store.setCurrentPage(id)}>
-          {title}
-        </button>
+        <button class:active={user.id === $store.currentUserId}>{user.name}</button>
       </li>
     {/each}
   </ul>

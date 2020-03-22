@@ -110,7 +110,7 @@
     background: #fafafa;
 }
 
-.budibase__table th {
+.budibase__table thead > tr > th {
     color: var(--button-text);
     text-transform: capitalize;
     font-weight: 500;

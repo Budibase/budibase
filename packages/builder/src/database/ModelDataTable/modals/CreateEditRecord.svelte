@@ -82,9 +82,3 @@
     </div>
   </div>
 </div>
-
-<style>
-  .actions {
-    /* position: absolute; */
-  }
-</style>
