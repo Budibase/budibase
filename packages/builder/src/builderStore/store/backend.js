@@ -21,6 +21,7 @@ export const getBackendUiStore = () => {
       records: [],
       name: ""
     },
+    breadcrumbs: [],
     selectedRecord: {},
     selectedDatabase: {},
     selectedModel: {},
@@ -31,11 +32,19 @@ export const getBackendUiStore = () => {
   store.actions = {
     navigate: name => store.update(state => ({ ...state, leftNavItem: name })),
     database: {
-      select: db => store.update(state => ({ ...state, selectedDatabase: db })),
+      select: db => store.update(state => {  
+          state.selectedDatabase = db
+          state.breadcrumbs = [db.name]
+          return state
+      })
     },
     records: {
       delete: record => store.update(state => { 
-        state.selectedView.records = remove(state.selectedView.records, { id: record.id });
+        state.selectedView.records = state.selectedView.records.filter(({ id }) => id !== record.id)
+        return state
+      }),
+      view: record => store.update(state => { 
+        state.breadcrumbs = [state.selectedDatabase.name, record.id]
         return state
       }),
     },

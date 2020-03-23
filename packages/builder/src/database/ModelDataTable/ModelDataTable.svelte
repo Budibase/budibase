@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { store, backendUiStore } from "../../builderStore"
+  import { last } from "lodash/fp";
   import Select from "../../common/Select.svelte"
   import { getIndexSchema } from "../../common/core"
   import ActionButton from "../../common/ActionButton.svelte"
@@ -36,8 +37,17 @@
     backendUiStore.update(state => {
       state.selectedView.records = recordsForIndex
       if (state.selectedView.records.length > 0) {
-        headers = Object.keys(recordsForIndex[0])
+        headers = Object.keys(recordsForIndex[0]) 
       }
+      return state
+    })
+  }
+
+  function drillIntoRecord(record) {
+    backendUiStore.update(state => {
+      state.selectedRecord = record 
+      state.breadcrumbs = [state.selectedDatabase.name, record.id]
+      // Update the dropdown with the child indexes for that record
       return state
     })
   }
@@ -52,7 +62,7 @@
 <section>
   <div class="table-controls">
     <h4 class="budibase__title--3">
-      {$backendUiStore.selectedDatabase.name || ''}
+      {last($backendUiStore.breadcrumbs)}
     </h4>
     <Select
       icon="ri-eye-line"
@@ -83,7 +93,7 @@
               <div uk-dropdown="mode: click">
                 <ul class="uk-nav uk-dropdown-nav">
                   <li>
-                    <div on:click={async () => {}}>View</div>
+                    <div on:click={() => drillIntoRecord(row)}>View</div>
                   </li>
                   <li
                     on:click={() => {
@@ -99,14 +109,6 @@
                         backendUiStore.actions.modals.show('DELETE_RECORD')
                       }}>
                       Delete
-                    </div>
-                  </li>
-                  <li>
-                    <div
-                      on:click={async () => {
-                        const response = await api.saveRecord(row)
-                      }}>
-                      Duplicate
                     </div>
                   </li>
                 </ul>

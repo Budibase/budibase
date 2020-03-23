@@ -7,17 +7,6 @@
   import { hierarchy as hierarchyFunctions } from "../../../core/src"
   import NavItem from "./NavItem.svelte"
   import getIcon from "../common/icon"
-
-  const newDatabase = () => {
-    store.update(state => {})
-  }
-
-  const databaseManagementActions = [
-    {
-      label: "New Database",
-      onclick: newDatabase,
-    },
-  ]
 </script>
 
 <div class="items-root">

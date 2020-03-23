@@ -164,6 +164,7 @@ const initialise = (store, initial) => async () => {
   initial.actions = values(pkg.appDefinition.actions)
   initial.triggers = pkg.appDefinition.triggers
   initial.appInstances = pkg.application.instances
+  initial.appId = pkg.application.id
 
   if (!!initial.hierarchy && !isEmpty(initial.hierarchy)) {
     initial.hierarchy = constructHierarchy(initial.hierarchy)
