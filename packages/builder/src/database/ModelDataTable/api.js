@@ -2,7 +2,7 @@
   import { getNewRecord, getNewInstance } from "../../common/core"
 
   export async function createDatabase(appname, instanceName) {
-    const CREATE_DATABASE_URL = `/_builder/instance/_master/0/api/record`
+    const CREATE_DATABASE_URL = `/_builder/instance/_master/0/api/record/`
     const database = getNewInstance(appname, instanceName);
     const response = await api.post(CREATE_DATABASE_URL, database);
     return await response.json()
