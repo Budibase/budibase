@@ -4,7 +4,7 @@
   import UserInterfaceRoot from "./userInterface/UserInterfaceRoot.svelte"
   import BackendRoot from "./BackendRoot.svelte"
   import { fade } from "svelte/transition"
-  import { SettingsIcon, PreviewIcon, HelpIcon } from "./common/Icons/"
+  import { SettingsIcon, PreviewIcon } from "./common/Icons/"
 
 </script>
 
