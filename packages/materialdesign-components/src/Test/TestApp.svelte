@@ -21,6 +21,7 @@
     IconButton,
     Card,
     Dialog,
+    Switch,
   } = props
 
   let currentComponent
@@ -39,7 +40,7 @@
             Radiobuttongroup,
             DatePicker,
             IconButton,
-            Dialog,
+            Switch,
           ],
         },
       }
