@@ -1,5 +1,11 @@
 <script>
   export let text = ""
+  export let verticalMargin = 5
+  export let horizontalMargin = 0
 </script>
 
-<h2 class="mdc-typography--headline2">{text}</h2>
+<h2
+  style={`margin: ${verticalMargin}px ${horizontalMargin}px`}
+  class="mdc-typography--headline2">
+  {text}
+</h2>
