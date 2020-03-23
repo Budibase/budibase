@@ -33,15 +33,16 @@
 
   if (!href) modifiers = { variant }
 
-  let props = { modifiers, customs, extras }
+  $: props = { modifiers, customs, extras }
 
-  let blockClasses = cb.build({ props })
+  $: blockClasses = cb.build({ props })
   const labelClass = cb.elem("label")
 
   const clicked = () => _bb.call(onClick)
 
   $: renderLeadingIcon = !!icon && !trailingIcon
   $: renderTrailingIcon = !!icon && trailingIcon
+  $: console.log(blockClasses)
 </script>
 
 {#if href}

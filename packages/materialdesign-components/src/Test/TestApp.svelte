@@ -20,6 +20,7 @@
     DatePicker,
     IconButton,
     Card,
+    Dialog,
   } = props
 
   let currentComponent
@@ -31,7 +32,6 @@
         props: {
           _component: "testcomponents/rootComponent",
           _children: [
-            Button,
             BodyBoundToStore,
             Textfield,
             Select,
@@ -39,7 +39,7 @@
             Radiobuttongroup,
             DatePicker,
             IconButton,
-            Card,
+            Dialog,
           ],
         },
       }
