@@ -24,6 +24,7 @@
     "@material/menu": "4.0.0",
     "@material/radio": "^4.0.0",
     "@material/select": "4.0.0",
+    "@material/switch": "4.0.0",
     "@material/textfield": "^4.0.0",
     "@nx-js/compiler-util": "^2.0.0",
     "bcryptjs": "^2.4.3",
