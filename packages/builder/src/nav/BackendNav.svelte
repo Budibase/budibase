@@ -49,9 +49,9 @@
         <UsersList />
       </div>
 
-      <NavItem name="ACCESS_LEVELS" label="User Levels" />
     </div>
   {/if}
+  <NavItem name="ACCESS_LEVELS" label="User Levels" />
 </div>
 
 <style>

@@ -21,7 +21,7 @@
   $: views = $store.hierarchy.indexes
   $: currentAppInfo = {
     appname: $store.appname,
-    instanceId: $backendUiStore.selectedDatabase.id
+    instanceId: $backendUiStore.selectedDatabase.id,
   }
   $: data = $backendUiStore.selectedView.records.slice(
     currentPage * ITEMS_PER_PAGE,
@@ -43,93 +43,88 @@
   }
 
   onMount(async () => {
-    if (showTable) {
+    if (views.length > 0) {
       await fetchRecordsForView(views[0].name, currentAppInfo)
     }
   })
 </script>
 
-{#if showTable} 
-  <section>
-    <div class="table-controls">
-      <h4 class="budibase__title--3">{$backendUiStore.selectedDatabase.name || ""}</h4>
-      <Select
-        icon="ri-eye-line"
-        on:change={e => fetchRecordsForView(e.target.value)}>
-        {#each views as view}
-          <option value={view.name}>{view.name}</option>
+<section>
+  <div class="table-controls">
+    <h4 class="budibase__title--3">
+      {$backendUiStore.selectedDatabase.name || ''}
+    </h4>
+    <Select
+      icon="ri-eye-line"
+      on:change={e => fetchRecordsForView(e.target.value)}>
+      {#each views as view}
+        <option value={view.name}>{view.name}</option>
+      {/each}
+    </Select>
+  </div>
+  <table class="uk-table">
+    <thead>
+      <tr>
+        <th>Edit</th>
+        {#each headers as header}
+          <th>{header}</th>
         {/each}
-      </Select>
-    </div>
-    <table class="uk-table">
-      <thead>
-        <tr>
-          <th>Edit</th>
-          {#each headers as header}
-            <th>{header}</th>
-          {/each}
-        </tr>
-      </thead>
-      <tbody>
-        {#if data.length === 0}
-          <div class="no-data">No Data.</div>
-        {/if}
-        {#each data as row}
-          <tr class="hoverable">
-            <td>
-              <div class="uk-inline">
-                <i class="ri-more-line" />
-                <div uk-dropdown="mode: click">
-                  <ul class="uk-nav uk-dropdown-nav">
-                    <li>
-                      <div
-                        on:click={async () => {
-                            // fetch the child records for that particular row
-                        }}>
-                        View
-                      </div>
-                    </li>
-                    <li
+      </tr>
+    </thead>
+    <tbody>
+      {#if data.length === 0}
+        <div class="no-data">No Data.</div>
+      {/if}
+      {#each data as row}
+        <tr class="hoverable">
+          <td>
+            <div class="uk-inline">
+              <i class="ri-more-line" />
+              <div uk-dropdown="mode: click">
+                <ul class="uk-nav uk-dropdown-nav">
+                  <li>
+                    <div on:click={async () => {}}>View</div>
+                  </li>
+                  <li
+                    on:click={() => {
+                      selectRecord(row)
+                      backendUiStore.actions.modals.show('RECORD')
+                    }}>
+                    <div>Edit</div>
+                  </li>
+                  <li>
+                    <div
                       on:click={() => {
                         selectRecord(row)
-                        backendUiStore.actions.modals.show('RECORD')
+                        backendUiStore.actions.modals.show('DELETE_RECORD')
                       }}>
-                      <div>Edit</div>
-                    </li>
-                    <li>
-                      <div
-                        on:click={() => {
-                          selectRecord(row)
-                          backendUiStore.actions.modals.show('DELETE_RECORD')
-                        }}>
-                        Delete
-                      </div>
-                    </li>
-                    <li>
-                      <div
-                        on:click={async () => {
-                          const response = await api.saveRecord(row)
-                        }}>
-                        Duplicate
-                      </div>
-                    </li>
-                  </ul>
-                </div>
+                      Delete
+                    </div>
+                  </li>
+                  <li>
+                    <div
+                      on:click={async () => {
+                        const response = await api.saveRecord(row)
+                      }}>
+                      Duplicate
+                    </div>
+                  </li>
+                </ul>
               </div>
-            </td>
-            {#each headers as header}
-              <td>{row[header]}</td>
-            {/each}
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-    <TablePagination bind:currentPage pageItemCount={data.length} {ITEMS_PER_PAGE} />
-  </section>
-{:else}
-  Please select a database.
-{/if}
-
+            </div>
+          </td>
+          {#each headers as header}
+            <td>{row[header]}</td>
+          {/each}
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+  <TablePagination
+    bind:currentPage
+    pageItemCount={data.length}
+    {ITEMS_PER_PAGE} />
+</section>
 
 <style>
   table {
