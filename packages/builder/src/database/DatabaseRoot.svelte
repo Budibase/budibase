@@ -76,7 +76,11 @@
         </ActionButton>
       {/if}
     </div>
-    <ModelDataTable {selectRecord} />
+    {#if $backendUiStore.selectedDatabase.id}
+      <ModelDataTable {selectRecord} />
+    {:else}
+      Please select a database
+    {/if}
   </div>
 </div>
 
