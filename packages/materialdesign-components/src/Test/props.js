@@ -307,4 +307,11 @@ export const props = {
       },
     ],
   },
+  Switch: {
+    _component: "@budibase/materialdesign-components/Switch",
+    label: "On / Off",
+    checked: true,
+    onChange: () => console.log("Switch Changed"),
+    _children: [],
+  }
 }
