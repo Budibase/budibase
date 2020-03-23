@@ -118,6 +118,7 @@ export const getNewInstance = (appId, name) => {
     version: { key: "" },
     isNew: true,
     type: "instance",
+    datastoreconfig: "",
     id,
     name,
   }

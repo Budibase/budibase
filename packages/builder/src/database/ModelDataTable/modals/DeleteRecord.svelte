@@ -47,8 +47,10 @@
   }
   
   .modal-actions {
+    padding: 10px;
     position: absolute;
     bottom: 0;
+    left: 0;
     background: #fafafa;
     border-top: 1px solid #ccc;
     width: 100%;

@@ -2,7 +2,7 @@
   import { getNewRecord, getNewInstance } from "../../common/core"
 
   export async function createDatabase(appname, instanceName) {
-    const CREATE_DATABASE_URL = `/_builder/instance/_master/0/api/record`
+    const CREATE_DATABASE_URL = `/_builder/instance/_master/0/api/record/`
     const database = getNewInstance(appname, instanceName);
     const response = await api.post(CREATE_DATABASE_URL, database);
     return await response.json()
@@ -23,19 +23,6 @@
       recordBase = getNewRecord(recordBase, collectionKey)
       recordBase = overwritePresentProperties(recordBase, record)
     }
-
-    const SAVE_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record/`
-    const response = await api.post(SAVE_RECORDS_URL, recordBase)
-    return await response.json()
-  }
-
-  export async function duplicateRecord(record, { appname, instanceId }) {
-    let recordBase = { ...record }
-
-    delete recordBase.id
-
-    recordBase = getNewRecord(recordBase, recordBase.key)
-    recordBase = overwritePresentProperties(recordBase, record)
 
     const SAVE_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record/`
     const response = await api.post(SAVE_RECORDS_URL, recordBase)

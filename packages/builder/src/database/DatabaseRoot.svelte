@@ -33,7 +33,7 @@
   $: databaseOpen = $backendUiStore.visibleModal === "DATABASE"
   $: deleteRecordOpen = $backendUiStore.visibleModal === "DELETE_RECORD"
   $: userOpen = $backendUiStore.visibleModal === "USER"
-  $: breadcrumbs = $store.currentNode
+  $: breadcrumbs = $backendUiStore.breadcrumbs.join(" / ")
 </script>
 
 <Modal isOpen={!!$backendUiStore.visibleModal} {onClosed}>
@@ -61,9 +61,7 @@
   <div class="node-view">
     <div class="database-actions">
       <div class="budibase__label--big">
-        {#if $backendUiStore.selectedDatabase.name}
-          {$backendUiStore.selectedDatabase.name} {breadcrumbs}
-        {/if}
+        {breadcrumbs}
       </div>
       {#if $backendUiStore.selectedDatabase.id}
         <ActionButton
