@@ -26,5 +26,5 @@ export { CardHeader } from "./Card"
 export { CardImage } from "./Card"
 export { CardBody } from "./Card"
 export { CardFooter } from "./Card"
-
+export { Dialog, DialogHeader, DialogContent, DialogActions } from "./Dialog"
 

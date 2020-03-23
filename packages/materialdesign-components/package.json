@@ -17,6 +17,7 @@
     "@material/button": "^4.0.0",
     "@material/checkbox": "^4.0.0",
     "@material/data-table": "4.0.0",
+    "@material/dialog": "4.0.0",
     "@material/form-field": "^4.0.0",
     "@material/icon-button": "4.0.0",
     "@material/list": "4.0.0",

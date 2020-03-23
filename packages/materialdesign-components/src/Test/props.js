@@ -265,4 +265,46 @@ export const props = {
       },
     ],
   },
+  Dialog: {
+    _component: "@budibase/materialdesign-components/Dialog",
+    _children: [
+      {
+        _component: "@budibase/materialdesign-components/DialogHeader",
+        title: "Important Message",
+        _children: [],
+      },
+      {
+        _component: "@budibase/materialdesign-components/DialogContent",
+        _children: [
+          {
+            _component: "@budibase/materialdesign-components/H3",
+            text: "An announcement from your service provider",
+            _children: [],
+          },
+          {
+            _component: "@budibase/materialdesign-components/Body2",
+            text:
+              "All non-essential services will be shut down as of tomorrow. Please acknowledge that you have seen this message by confirming below.",
+            _children: [],
+          },
+        ],
+      },
+      {
+        _component: "@budibase/materialdesign-components/DialogActions",
+        _children: [
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Confirm",
+            variant: "unelevated",
+            _children: [],
+          },
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Cancel",
+            _children: [],
+          },
+        ],
+      },
+    ],
+  },
 }
