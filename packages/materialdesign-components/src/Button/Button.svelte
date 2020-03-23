@@ -42,7 +42,6 @@
 
   $: renderLeadingIcon = !!icon && !trailingIcon
   $: renderTrailingIcon = !!icon && trailingIcon
-  $: console.log(blockClasses)
 </script>
 
 {#if href}
