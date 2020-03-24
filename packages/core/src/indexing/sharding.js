@@ -1,4 +1,4 @@
-import { compileCode } from "@nx-js/compiler-util"
+import { compileCode } from "../common/compileCode"
 import { filter, includes, map, last } from "lodash/fp"
 import {
   getActualKeyOfParent,
