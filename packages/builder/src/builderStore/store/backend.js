@@ -57,11 +57,6 @@ export const getBackendUiStore = () => {
     modals: {
       show: modal => store.update(state => ({ ...state, visibleModal: modal })),
       hide: () => store.update(state => ({ ...state, visibleModal: null }))
-    },
-    nodes: {
-      select: () => {},
-      update: () => {},
-      delete: () => {},
     }
   }
 
