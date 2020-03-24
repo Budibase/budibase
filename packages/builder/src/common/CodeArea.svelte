@@ -11,20 +11,11 @@
     padding: 10px;
     margin-top: 5px;
     margin-bottom: 10px;
-    background: var(--primary100);
+    background: var(--secondary80);
     color: var(--white);
     font-family: "Courier New", Courier, monospace;
     width: 95%;
     height: 100px;
     border-radius: 5px;
-  }
-
-  span {
-    margin-left: 5px;
-  }
-
-  .header {
-    display: flex;
-    align-items: center;
   }
 </style>
