@@ -8,7 +8,7 @@
     "build": "cd appPackages/_master && yarn && cd ../testApp && yarn && cd ../testApp2 && yarn",
     "initialise": "node ./initialise/initialiseBudibase init -d ./myapps -c contributors -u admin -p admin",
     "budi": "node ../cli/bin/budi",
-    "dev:builder": "node index"
+    "dev:builder": "node index --enable-source-maps"
   },
   "keywords": [
     "budibase"

@@ -24,20 +24,23 @@ import { cloneApp } from "../appInitialise/cloneApp"
 import { initialiseData } from "../appInitialise/initialiseData"
 import { initialiseChildrenForNode } from "../recordApi/initialiseChildren"
 import { initialiseNewIndex } from "./initialiseNewIndex"
-import { saveApplicationHierarchy } from "../templateApi/saveApplicationHierarchy"
+import { _saveApplicationHierarchy } from "../templateApi/saveApplicationHierarchy"
+import { getApplicationDefinition } from "../templateApi/getApplicationDefinition"
 
 export const upgradeData = app => async newHierarchy => {
+  const currentAppDef = await getApplicationDefinition(app.datastore)()
+  app.hierarchy = currentAppDef.hierarchy
+  newHierarchy = constructHierarchy(newHierarchy)
   const diff = diffHierarchy(app.hierarchy, newHierarchy)
   const changeActions = gatherChangeActions(diff)
 
   if (changeActions.length === 0) return
 
-  newHierarchy = constructHierarchy(newHierarchy)
   const newApp = newHierarchy && cloneApp(app, {
      hierarchy: newHierarchy 
   })
   await doUpgrade(app, newApp, changeActions)
-  await saveApplicationHierarchy(newApp)(newHierarchy)
+  await _saveApplicationHierarchy(newApp.datastore, newHierarchy)
 }
 
 const gatherChangeActions = (diff) => 

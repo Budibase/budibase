@@ -155,7 +155,6 @@ module.exports = (config, app) => {
         }
       }
     })
-
     .get("/_builder/api/:appname/componentlibrary", async ctx => {
       const info = await componentLibraryInfo(
         config,
