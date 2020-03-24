@@ -2,15 +2,15 @@
   import Modal from "../../../common/Modal.svelte"
   import { store } from "../../../builderStore"
   import ActionButton from "../../../common/ActionButton.svelte"
-  import * as api from "../api"
+  // import * as api from "../api"
 
   export let onClosed
 
   let userName
 
   async function createUser() {
-    const response = await api.createUser($store.appname, userName)
-    store.createUserForInstance(response)
+    // const response = await api.createUser($store.appname, userName)
+    // store.createUserForInstance(response)
     onClosed()
   }
 </script>
