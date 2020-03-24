@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { store, backendUiStore } from "../../builderStore"
-  import { last } from "lodash/fp";
+  import { tap, get, find, last, compose, flatten, map } from "lodash/fp"
   import Select from "../../common/Select.svelte"
   import { getIndexSchema } from "../../common/core"
   import ActionButton from "../../common/ActionButton.svelte"
@@ -15,58 +15,70 @@
 
   let selectedView = ""
   let modalOpen = false
+  let data = []
   let headers = []
-  let selectedRecord
+  let views = []
   let currentPage = 0
 
-  $: views = $store.hierarchy.indexes
+  $: views = $backendUiStore.selectedRecord
+    ? childViewsForRecord($store.hierarchy)
+    : $store.hierarchy.indexes
+
   $: currentAppInfo = {
     appname: $store.appname,
     instanceId: $backendUiStore.selectedDatabase.id,
   }
-  $: data = $backendUiStore.selectedView.records.slice(
-    currentPage * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  // $: data =
+  //   $backendUiStore.selectedDatabase &&
+  //   $backendUiStore.selectedView.records.slice(
+  //     currentPage * ITEMS_PER_PAGE,
+  //     currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  //   )
+
+  $: fetchRecordsForView(
+    $backendUiStore.selectedView,
+    $backendUiStore.selectedDatabase
+  ).then(records => {
+    data = records
+    headers = getSchema($backendUiStore.selectedView).map(get("name"))
+  })
+
+  const childViewsForRecord = compose(
+    flatten,
+    map("indexes"),
+    get("children")
   )
-  $: showTable = currentAppInfo.instanceId && views.length > 0
 
   const getSchema = getIndexSchema($store.hierarchy)
 
-  async function fetchRecordsForView(viewName) {
-    const recordsForIndex = await api.fetchDataForView(viewName, currentAppInfo)
-    backendUiStore.update(state => {
-      state.selectedView.records = recordsForIndex
-      if (state.selectedView.records.length > 0) {
-        headers = Object.keys(recordsForIndex[0]) 
-      }
-      return state
+  async function fetchRecordsForView(view, instance) {
+    const viewName = $backendUiStore.selectedRecord
+      ? `${$backendUiStore.selectedRecord.type}/`
+      : view.name
+    return await api.fetchDataForView(view.name, {
+      appname: $store.appname,
+      instanceId: instance.id,
     })
   }
 
   function drillIntoRecord(record) {
     backendUiStore.update(state => {
-      state.selectedRecord = record 
+      state.selectedRecord = record
       state.breadcrumbs = [state.selectedDatabase.name, record.id]
-      // Update the dropdown with the child indexes for that record
       return state
     })
   }
-
-  onMount(async () => {
-    if (views.length > 0) {
-      await fetchRecordsForView(views[0].name, currentAppInfo)
-    }
-  })
 </script>
 
 <section>
   <div class="table-controls">
-    <h4 class="budibase__title--3">
-      {last($backendUiStore.breadcrumbs)}
-    </h4>
+    <h4 class="budibase__title--3">{last($backendUiStore.breadcrumbs)}</h4>
     <Select
       icon="ri-eye-line"
-      on:change={e => fetchRecordsForView(e.target.value)}>
+      on:change={e => {
+        const view = e.target.value
+        backendUiStore.actions.views.select(view)
+      }}>
       {#each views as view}
         <option value={view.name}>{view.name}</option>
       {/each}
