@@ -1,3 +1,4 @@
+import HMR from "@sveltech/routify/hmr"
 import App from "./App.svelte"
 import "./global.css"
 import "./fonts.css"
@@ -14,6 +15,6 @@ import "codemirror/lib/codemirror.css"
 import "codemirror/theme/monokai.css"
 
 /* eslint-disable */
-const app = new App({
-  target: document.getElementById("app"),
-})
+const app = HMR(App, { target: document.getElementById("app") }, "routify-app")
+
+export default app

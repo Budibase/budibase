@@ -1,0 +1,65 @@
+{
+    /******************
+    *** PRPL CONFIG ***
+    ******************/
+
+    /* Dynamic imports. 
+    ** If enabled, layouts and pages are split into smaller bundles. */
+    // dynamicImports: true
+
+    /* Server side rendering. (Greatly improves SEO.)
+    ** If enabled, the server renders the the initial page for the client. */
+    ssr: true,
+
+    /* Prerender static pages.
+    ** If enabled, the build process prerenders all static pages. */
+    prerender: true,
+
+    /*********************
+    *** FILE STRUCTURE ***
+    **********************/
+
+    /* Distributable folder (Also known as public). Automatically generated.
+    ** All processed files will be output to this folder. This is your built app. */
+    distDir: "dist",
+
+    /* Static files, such as your HTML template and images go in here.
+    ** Files in this folder will not be processed. They are instead copied directly
+    to your distDir */
+    staticDir: "static",
+
+    /* Source folder for all files that need processing.
+    ** Files such as .svelte, .css, .js */
+    sourceDir: "src",
+
+    /* Scripts folder
+    ** This folder contains your scripts, such as build and deployment scripts. */
+    scriptsDir: "scripts",
+
+    /* Pages folder.
+    ** Folder for layouts and pages. The pages structure defines your routes. */
+    pages: "src/pages",
+
+    /* File extensions.
+    ** These files are picked up by Routify. */
+    extensions: "html,svelte,md",
+
+    /* Ignored files and folders */
+    ignore: [],
+    
+    /*****************
+    *** APP CONFIG ***
+    *****************/
+
+    /* Scroll behavior
+    ** Enable for automatic scrolling to hashtag IDs.
+    ** Options: false|auto|smooth|initial|inherit */
+    scroll: false,
+
+    /********************
+    *** SYSTEM CONFIG ***
+    ********************/
+
+    /* Run task after routes have been generated (only in watch  mode) */
+    childProcess: "rollup -c -w"
+}

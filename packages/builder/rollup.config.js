@@ -10,6 +10,7 @@ import copy from "rollup-plugin-copy"
 import browsersync from "rollup-plugin-browsersync"
 import proxy from "http-proxy-middleware"
 import replace from "rollup-plugin-replace"
+import { config } from "@sveltech/routify"
 
 const target = "http://localhost:4001"
 const _builderProxy = proxy("/_builder", {
@@ -38,6 +39,11 @@ const apiProxy = proxy(
 )
 
 const production = !process.env.ROLLUP_WATCH
+const { distDir, staticDir, sourceDir, dynamicImports: split } = config
+const buildDir = distDir
+const template = staticDir + (split ? "/__dynamic.html" : "/__bundled.html")
+
+console.log("Dirs: ", distDir, staticDir, sourceDir)
 
 const lodash_fp_exports = [
   "union",
@@ -125,8 +131,6 @@ const lodash_exports = [
   "union",
 ]
 
-const outputpath = "../server/builder"
-
 const coreExternal = [
   "lodash",
   "lodash/fp",
@@ -135,42 +139,42 @@ const coreExternal = [
   "safe-buffer",
   "shortid",
   "@nx-js/compiler-util",
+  "@sveltech/routify",
 ]
 
 export default {
-  input: "src/main.js",
-  output: {
-    sourcemap: true,
-    format: "iife",
-    name: "app",
-    file: `${outputpath}/bundle.js`,
-  },
+  input: `${sourceDir}/main.js`,
+  output: [
+    {
+      sourcemap: true,
+      name: "app",
+      format: split ? "esm" : "iife",
+      [split ? "dir" : "file"]: split ? `${buildDir}` : `${buildDir}/bundle.js`,
+    },
+  ],
   plugins: [
     copy({
       targets: [
-        { src: "src/index.html", dest: outputpath },
-        { src: "src/favicon.png", dest: outputpath },
-        { src: "src/assets", dest: outputpath },
-        {
-          src: "node_modules/@budibase/client/dist/budibase-client.esm.mjs",
-          dest: outputpath,
-        },
+        { src: staticDir + "/*", dest: distDir },
+        { src: template, dest: distDir, rename: "__app.html" },
       ],
+      copyOnce: true,
     }),
-
-    replace({
-      "process.env.NODE_ENV": JSON.stringify(production ? "production" : "development")
-    }),
-
     svelte({
       // enable run-time checks when not in production
       dev: !production,
-      include: "src/**/*.svelte",
+      hydratable: true,
       // we'll extract any component CSS out into
       // a separate file — better for performance
       css: css => {
-        css.write(`${outputpath}/bundle.css`)
+        css.write(`${buildDir}/bundle.css`)
       },
+    }),
+
+    replace({
+      "process.env.NODE_ENV": JSON.stringify(
+        production ? "production" : "development"
+      ),
     }),
 
     resolve({
@@ -207,10 +211,10 @@ export default {
 
     // Watch the `dist` directory and refresh the
     // browser on changes when not in production
-    !production && livereload(outputpath),
+    !production && livereload(distDir),
     !production &&
       browsersync({
-        server: outputpath,
+        server: distDir,
         middleware: [apiProxy, _builderProxy],
       }),
 
