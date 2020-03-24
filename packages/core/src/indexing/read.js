@@ -3,6 +3,9 @@ import { promiseReadableStream } from "./promiseReadableStream"
 import { createIndexFile } from "./sharding"
 import { generateSchema } from "./indexSchemaCreator"
 import { getIndexReader, CONTINUE_READING_RECORDS } from "./serializer"
+import { getAllowedRecordNodesForIndex, getRecordNodeId } from "../templateApi/hierarchy"
+import { $ } from "../common"
+import { filter, includes, find } from "lodash/fp"
 
 export const readIndex = async (
   hierarchy,
@@ -11,8 +14,10 @@ export const readIndex = async (
   indexedDataKey
 ) => {
   const records = []
+  const getType = typeLoader(index, hierarchy)
   const doRead = iterateIndex(
     async item => {
+      item.type = getType(item.key)
       records.push(item)
       return CONTINUE_READING_RECORDS
     },
@@ -31,8 +36,10 @@ export const searchIndex = async (
 ) => {
   const records = []
   const schema = generateSchema(hierarchy, index)
+  const getType = typeLoader(index, hierarchy)
   const doRead = iterateIndex(
     async item => {
+      item.type = getType(item.key)
       const idx = lunr(function() {
         this.ref("key")
         for (const field of schema) {
@@ -75,4 +82,9 @@ export const iterateIndex = (onGetItem, getFinalResult) => async (
     }
     return []
   }
+}
+
+const typeLoader = (index, hierarchy) => {
+  const allowedNodes = getAllowedRecordNodesForIndex(hierarchy, index)
+  return key => find(n => getRecordNodeId(key) === n.nodeId)(allowedNodes).name
 }

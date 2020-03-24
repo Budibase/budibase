@@ -49,7 +49,7 @@
     flex-direction: column;
     max-height: 100%;
     height: 100%;
-    background-color: var(--secondary5);
+    background-color: var(--white);
   }
 
   .nav-group-header {

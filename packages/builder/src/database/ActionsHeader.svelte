@@ -41,6 +41,7 @@
     display: flex;
     width: 100%;
     border-top: 1px solid #ccc;
+    box-sizing: border-box;
     position: absolute;
     bottom: 0;
     left: 0;

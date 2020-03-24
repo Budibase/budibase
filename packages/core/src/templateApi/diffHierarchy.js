@@ -1,6 +1,6 @@
 import { getFlattenedHierarchy, isRecord, isIndex, isAncestor } from "./hierarchy"
 import { $, none } from "../common"
-import { map, filter, some, find } from "lodash/fp"
+import { map, filter, some, find, difference } from "lodash/fp"
 
 export const HierarchyChangeTypes = {
   recordCreated: "Record Created",
@@ -10,7 +10,7 @@ export const HierarchyChangeTypes = {
   recordEstimatedRecordTypeChanged: "Record's Estimated Record Count Changed",
   indexCreated: "Index Created",
   indexDeleted: "Index Deleted",
-  indexChanged: "index Changed",
+  indexChanged: "Index Changed",
 }
 
 export const diffHierarchy = (oldHierarchy, newHierarchy) => {
@@ -123,7 +123,7 @@ const findDeletedIndexes = (oldHierarchyFlat, newHierarchyFlat, deletedRecords) 
 
 const findUpdatedIndexes = (oldHierarchyFlat, newHierarchyFlat) => 
   $(oldHierarchyFlat, [
-    filter(isRecord),
+    filter(isIndex),
     filter(nodeExistsIn(newHierarchyFlat)),
     filter(nodeChanged(newHierarchyFlat, indexHasChanged)),
     map(n => changeItem(
@@ -150,6 +150,7 @@ const indexHasChanged = (_new, old) =>
   _new.map !== old.map 
   || _new.filter !== old.filter
   || _new.getShardName !== old.getShardName
+  || difference(_new.allowedRecordNodeIds)(old.allowedRecordNodeIds).length > 0
 
 const isFieldSame = f1 => f2 => 
   f1.name === f2.name && f1.type === f2.type
