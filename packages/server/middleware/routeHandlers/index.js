@@ -18,7 +18,7 @@ const lookupField = require("./lookupField")
 const getRecord = require("./getRecord")
 const deleteRecord = require("./deleteRecord")
 const saveAppHierarchy = require("./saveAppHierarchy")
-const upgradeData = require("./saveAppHierarchy")
+const upgradeData = require("./upgradeData")
 
 module.exports = {
   authenticate,
