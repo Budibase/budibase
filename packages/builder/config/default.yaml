@@ -7,11 +7,11 @@
 
 # Server side rendering. (Greatly improves SEO.)
 # If enabled, the server renders the the initial page for the client.
-ssr: true
+ssr: false
 
 # Prerender static pages.
 # If enabled, the build process prerenders all static pages.
-prerender: true
+prerender: false
 
 ##### FILE STRUCTURE #####
 ##########################

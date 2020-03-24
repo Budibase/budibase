@@ -39,11 +39,9 @@ const apiProxy = proxy(
 )
 
 const production = !process.env.ROLLUP_WATCH
-const { distDir, staticDir, sourceDir, dynamicImports: split } = config
+const { distDir, staticDir, sourceDir } = config
 const buildDir = distDir
-const template = staticDir + (split ? "/__dynamic.html" : "/__bundled.html")
-
-console.log("Dirs: ", distDir, staticDir, sourceDir)
+const template = staticDir + "/__bundled.html"
 
 const lodash_fp_exports = [
   "union",
@@ -148,8 +146,7 @@ export default {
     {
       sourcemap: true,
       name: "app",
-      format: split ? "esm" : "iife",
-      [split ? "dir" : "file"]: split ? `${buildDir}` : `${buildDir}/bundle.js`,
+      format: "esm",
     },
   ],
   plugins: [

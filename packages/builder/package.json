@@ -4,12 +4,11 @@
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
-    "dev": "routify",
+    "dev:builder": "routify",
     "build": "rollup -c",
     "start": "rollup -c -w",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "dev:builder": "rollup -c -w",
     "rollup": "rollup -cw"
   },
   "jest": {
