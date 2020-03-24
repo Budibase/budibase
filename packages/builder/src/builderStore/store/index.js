@@ -192,7 +192,6 @@ const useAnalytics = store => () => {
   })
 }
 
-
 const importAppDefinition = store => appDefinition => {
   store.update(s => {
     s.hierarchy = appDefinition.hierarchy
@@ -206,7 +205,6 @@ const importAppDefinition = store => appDefinition => {
     return s
   })
 }
-
 
 const createShadowHierarchy = hierarchy =>
   constructHierarchy(JSON.parse(JSON.stringify(hierarchy)))

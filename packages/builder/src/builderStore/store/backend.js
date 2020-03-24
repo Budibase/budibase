@@ -12,6 +12,7 @@ import {
   validate,
   constructHierarchy,
   templateApi,
+  isIndex,
 } from "../../common/core"
 
 export const getBackendUiStore = () => {
@@ -81,6 +82,20 @@ export const saveBackend = async state => {
     },
     accessLevels: state.accessLevels,
   })
+
+  const instances_currentFirst = state.selectedDatabase
+    ? [
+        state.appInstances.find(i => i.id === state.selectedDatabase.id),
+        ...state.appInstances.filter(i => i.id !== state.selectedDatabase.id),
+      ]
+    : state.appInstances
+
+  for (let instance of instances_currentFirst) {
+    await api.post(
+      `/_builder/instance/${state.appname}/${instance.id}/api/upgradeData`,
+      { newHierarchy: state.hierarchy }
+    )
+  }
 }
 
 export const newRecord = (store, useRoot) => () => {
@@ -111,14 +126,16 @@ export const selectExistingNode = store => nodeId => {
 
 export const newIndex = (store, useRoot) => () => {
   store.update(state => {
-    const shadowHierarchy = createShadowHierarchy(state.hierarchy)
+    state.shadowHierarchy = createShadowHierarchy(state.hierarchy)
     state.currentNodeIsNew = true
     state.errors = []
     const parent = useRoot
-      ? state.hierarchy
-      : getNode(state.hierarchy, state.currentNode.nodeId)
+      ? state.shadowHierarchy
+      : getNode(state.shadowHierarchy, state.currentNode.nodeId)
 
-    state.currentNode = templateApi(shadowHierarchy).getNewIndexTemplate(parent)
+    state.currentNode = templateApi(state.shadowHierarchy).getNewIndexTemplate(
+      parent
+    )
     return state
   })
 }
@@ -130,7 +147,10 @@ export const saveCurrentNode = store => () => {
     if (errors.length > 0) {
       return state
     }
-    const parentNode = getNode(state.hierarchy, state.currentNode.parent().nodeId)
+    const parentNode = getNode(
+      state.hierarchy,
+      state.currentNode.parent().nodeId
+    )
 
     const existingNode = getNode(state.hierarchy, state.currentNode.nodeId)
 
@@ -138,20 +158,26 @@ export const saveCurrentNode = store => () => {
     if (existingNode) {
       // remove existing
       index = existingNode.parent().children.indexOf(existingNode)
-      existingNode.parent().children = existingNode.parent().children.filter(node => node.nodeId !== existingNode.nodeId);
+      if (isIndex(existingNode)) {
+        parentNode.indexes = parentNode.indexes.filter(
+          node => node.nodeId !== existingNode.nodeId
+        )
+      } else {
+        parentNode.children = parentNode.children.filter(
+          node => node.nodeId !== existingNode.nodeId
+        )
+      }
     }
 
     // should add node into existing hierarchy
     const cloned = cloneDeep(state.currentNode)
     templateApi(state.hierarchy).constructNode(parentNode, cloned)
 
-    const newIndexOfChild = child => {
-      if (child === cloned) return index
-      const currentIndex = parentNode.children.indexOf(child)
-      return currentIndex >= index ? currentIndex + 1 : currentIndex
+    if (isIndex(existingNode)) {
+      parentNode.children = sortBy("name", parentNode.children)
+    } else {
+      parentNode.indexes = sortBy("name", parentNode.indexes)
     }
-
-    parentNode.children = sortBy(newIndexOfChild, parentNode.children)
 
     if (!existingNode && state.currentNode.type === "record") {
       const defaultIndex = templateApi(state.hierarchy).getNewIndexTemplate(
