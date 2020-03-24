@@ -94,7 +94,7 @@
     border-radius: 3px;
     height: 35px;
     align-items: center;
-    font-weight: normal;
+    font-weight: 400;
   }
 
   .item button {

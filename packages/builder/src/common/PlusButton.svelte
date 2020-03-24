@@ -8,8 +8,6 @@
     outline: none;
     border: none;
     border-radius: 5px;
-    background: rgba(249, 249, 249, 1);
-
     min-width: 1.8rem;
     min-height: 1.8rem;
     padding-bottom: 10px;
@@ -20,6 +18,6 @@
 
     font-size: 1.2rem;
     font-weight: 700;
-    color: rgba(22, 48, 87, 1);
+    color: var(--secondary100);
   }
 </style>

@@ -1,18 +1,20 @@
 import { joinKey, keySep, getHashCode } from "../common"
 import { getLastPartInKey } from "../templateApi/hierarchy"
+import { includes } from "lodash/fp"
 
 export const TRANSACTIONS_FOLDER = `${keySep}.transactions`
 export const LOCK_FILENAME = "lock"
 export const LOCK_FILE_KEY = joinKey(TRANSACTIONS_FOLDER, LOCK_FILENAME)
 export const idSep = "$"
 
-const isOfType = typ => trans => trans.transactionType === typ
+const isOfType = (...typ) => trans => includes(trans.transactionType)(typ)
 
 export const CREATE_RECORD_TRANSACTION = "create"
 export const UPDATE_RECORD_TRANSACTION = "update"
 export const DELETE_RECORD_TRANSACTION = "delete"
 export const BUILD_INDEX_TRANSACTION = "build"
 
+export const isUpdate_Or_Rebuild = isOfType(UPDATE_RECORD_TRANSACTION, BUILD_INDEX_TRANSACTION)
 export const isUpdate = isOfType(UPDATE_RECORD_TRANSACTION)
 export const isDelete = isOfType(DELETE_RECORD_TRANSACTION)
 export const isCreate = isOfType(CREATE_RECORD_TRANSACTION)

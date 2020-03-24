@@ -21,22 +21,29 @@ export const initialiseData = async (
   applicationDefinition,
   accessLevels
 ) => {
-  await datastore.createFolder(configFolder)
-  await datastore.createJson(appDefinitionFile, applicationDefinition)
+  if (!await datastore.exists(configFolder))
+    await datastore.createFolder(configFolder)
+
+  if (!await datastore.exists(appDefinitionFile))
+    await datastore.createJson(appDefinitionFile, applicationDefinition)
 
   await initialiseRootCollections(datastore, applicationDefinition.hierarchy)
   await initialiseRootIndexes(datastore, applicationDefinition.hierarchy)
 
-  await datastore.createFolder(TRANSACTIONS_FOLDER)
+  if (!await datastore.exists(TRANSACTIONS_FOLDER))
+    await datastore.createFolder(TRANSACTIONS_FOLDER)
 
-  await datastore.createFolder(AUTH_FOLDER)
+  if (!await datastore.exists(AUTH_FOLDER))
+    await datastore.createFolder(AUTH_FOLDER)
 
-  await datastore.createJson(USERS_LIST_FILE, [])
+  if (!await datastore.exists(USERS_LIST_FILE))
+    await datastore.createJson(USERS_LIST_FILE, [])
 
-  await datastore.createJson(
-    ACCESS_LEVELS_FILE,
-    accessLevels ? accessLevels : { version: 0, levels: [] }
-  )
+  if (!await datastore.exists(ACCESS_LEVELS_FILE))
+    await datastore.createJson(
+      ACCESS_LEVELS_FILE,
+      accessLevels ? accessLevels : { version: 0, levels: [] }
+    )
 
   await initialiseRootSingleRecords(datastore, applicationDefinition.hierarchy)
 }
@@ -64,6 +71,7 @@ const initialiseRootSingleRecords = async (datastore, hierarchy) => {
   const singleRecords = $(flathierarchy, [filter(isSingleRecord)])
 
   for (let record of singleRecords) {
+    if (await datastore.exists(record.nodeKey())) continue
     await datastore.createFolder(record.nodeKey())
     const result = _getNew(record, "")
     await _save(app, result)
