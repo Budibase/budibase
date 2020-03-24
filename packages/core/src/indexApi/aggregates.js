@@ -1,5 +1,5 @@
 import { has, isNumber, isUndefined } from "lodash/fp"
-import { compileExpression, compileCode } from "@nx-js/compiler-util"
+import { compileCode } from "../common/compileCode"
 import { safeKey, apiWrapper, events, isNonEmptyString } from "../common"
 import { iterateIndex } from "../indexing/read"
 import {
@@ -147,7 +147,7 @@ const applyItemToAggregateResult = (indexNode, result, item) => {
     const thisGroupResult = result[aggGroup.name]
 
     if (isNonEmptyString(aggGroup.condition)) {
-      if (!compileExpression(aggGroup.condition)({ record: item })) {
+      if (!compileCode(aggGroup.condition)({ record: item })) {
         continue
       }
     }
