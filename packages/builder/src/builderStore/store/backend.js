@@ -183,7 +183,7 @@ export const saveCurrentNode = store => () => {
       const defaultIndex = templateApi(state.hierarchy).getNewIndexTemplate(
         cloned.parent()
       )
-      defaultIndex.name = `all_${cloned.collectionName}`
+      defaultIndex.name = `all_${cloned.name}`
       defaultIndex.allowedRecordNodeIds = [cloned.nodeId]
     }
 
