@@ -1,7 +1,17 @@
 <script>
   import { onMount } from "svelte"
   import { store, backendUiStore } from "../../builderStore"
-  import { tap, get, find, last, compose, flatten, map } from "lodash/fp"
+  import {
+    tap,
+    get,
+    find,
+    last,
+    compose,
+    flatten,
+    map,
+    remove,
+    keys
+  } from "lodash/fp"
   import Select from "../../common/Select.svelte"
   import { getIndexSchema } from "../../common/core"
   import ActionButton from "../../common/ActionButton.svelte"
@@ -12,6 +22,14 @@
   export let selectRecord
 
   const ITEMS_PER_PAGE = 10
+  // Internal headers we want to hide from the user
+  const INTERNAL_HEADERS = [
+    "key",
+    "sortKey",
+    "type",
+    "id",
+    "isNew"
+  ]
 
   let modalOpen = false
   let data = []
@@ -33,7 +51,7 @@
     $backendUiStore.selectedDatabase
   ).then(records => {
     data = records || []
-    headers = getSchema($backendUiStore.selectedView).map(get("name"))
+    headers = hideInternalHeaders($backendUiStore.selectedView)
   })
 
   $: paginatedData = data.slice(
@@ -41,13 +59,19 @@
     currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
   )
 
+  const getSchema = getIndexSchema($store.hierarchy)
+
   const childViewsForRecord = compose(
     flatten,
     map("indexes"),
     get("children")
   )
 
-  const getSchema = getIndexSchema($store.hierarchy)
+  const hideInternalHeaders = compose(
+    remove(headerName => INTERNAL_HEADERS.includes(headerName)),
+    map(get("name")),
+    getSchema
+  )
 
   async function fetchRecordsForView(view, instance) {
     if (!view.name) return
@@ -66,8 +90,13 @@
     backendUiStore.update(state => {
       state.selectedRecord = record
       state.breadcrumbs = [state.selectedDatabase.name, record.id]
+      state.selectedView = childViewsForRecord($store.hierarchy)[0]
       return state
     })
+  }
+
+  $: {
+    console.log($backendUiStore.selectedView)
   }
 
   onMount(() => {
@@ -140,8 +169,7 @@
     {data}
     bind:currentPage
     pageItemCount={data.length}
-    {ITEMS_PER_PAGE} 
-  />
+    {ITEMS_PER_PAGE} />
 </section>
 
 <style>

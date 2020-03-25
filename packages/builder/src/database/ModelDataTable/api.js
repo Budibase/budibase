@@ -24,6 +24,7 @@ export async function saveRecord(record, { appname, instanceId }) {
   let recordBase = { ...record }
 
   // brand new record
+  // car-model-id or name/specific-car-id/manus
   if (record.collectionName) {
     const collectionKey = `/${record.collectionName}`
     recordBase = getNewRecord(recordBase, collectionKey)
