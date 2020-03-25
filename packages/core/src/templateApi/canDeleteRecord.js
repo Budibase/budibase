@@ -27,7 +27,7 @@ export const canDeleteRecord = recordNode => {
       filter(i => isAncestorIndex(i) 
                 && belongsToAncestor(i) 
                 && includes(node.nodeId)(i.allowedRecordNodeIds)),
-      map(i => `index ${i.name} indexes this record. Please remove the record from allowedRecordIds, or delete the index`)
+      map(i => `index "${i.name}" indexes this record. Please remove the record from the index, or delete the index`)
     ])
 
     for (let child of node.children) {

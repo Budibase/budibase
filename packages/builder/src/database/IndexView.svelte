@@ -6,7 +6,8 @@
   import { store } from "../builderStore"
   import { filter, some, map, compose } from "lodash/fp"
   import { hierarchy as hierarchyFunctions, common } from "../../../core/src"
-
+  import ErrorsBox from "../common/ErrorsBox.svelte"
+  
   const SNIPPET_EDITORS = {
     MAP: "Map",
     FILTER: "Filter",
@@ -49,6 +50,9 @@
 </heading>
 <form class="uk-form-stacked root">
   <h4 class="budibase__label--big">Settings</h4>
+  {#if $store.errors && $store.errors.length > 0}
+    <ErrorsBox errors={$store.errors} />
+  {/if}
   <div class="uk-grid-small" uk-grid>
     <div class="uk-width-1-2@s">
       <Textbox bind:text={index.name} label="Name" />
