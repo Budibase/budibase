@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { store, backendUiStore } from "../../../builderStore"
-  import { findIndex } from "lodash/fp"
+  import { compose, map, get, flatten } from "lodash/fp"
   import Modal from "../../../common/Modal.svelte"
   import ActionButton from "../../../common/ActionButton.svelte"
   import Select from "../../../common/Select.svelte"
@@ -13,12 +13,20 @@
 
   let selectedModel
 
+  const childModelsForModel = compose(
+    flatten,
+    map("children"),
+    get("children")
+  )
+
   $: currentAppInfo = {
     appname: $store.appname,
     instanceId: $backendUiStore.selectedDatabase.id,
   }
   $: recordFields = record ? Object.keys(record) : []
-  $: models = $store.hierarchy.children
+  $: models = $backendUiStore.selectedRecord
+    ? childModelsForModel($store.hierarchy)
+    : $store.hierarchy.children
   $: modelFields = selectedModel
     ? selectedModel.fields.map(({ name }) => name)
     : []
@@ -77,10 +85,7 @@
     </form>
     <footer>
       <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
-      <ActionButton
-        on:click={saveRecord}>
-        Save
-      </ActionButton>
+      <ActionButton on:click={saveRecord}>Save</ActionButton>
     </footer>
   </div>
 </div>

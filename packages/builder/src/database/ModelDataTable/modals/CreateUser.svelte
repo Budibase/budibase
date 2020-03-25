@@ -17,16 +17,18 @@
   }
 
   async function createUser() {
+    const user = {
+      name: username,
+      accessLevels,
+      enabled: true,
+      temporaryAccessId: "",
+    }
     const response = await api.createUser(
       password,
-      {
-        name:username,
-        accessLevels,
-        enabled: true,
-        temporaryAccessId: ""
-      },
+      user,
       currentAppInfo
     )
+    backendUiStore.actions.users.save(user)
     onClosed()
   }
 </script>

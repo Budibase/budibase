@@ -7,7 +7,7 @@
   import { filter, some, map, compose } from "lodash/fp"
   import { hierarchy as hierarchyFunctions, common } from "../../../core/src"
   import ErrorsBox from "../common/ErrorsBox.svelte"
-  
+
   const SNIPPET_EDITORS = {
     MAP: "Map",
     FILTER: "Filter",
@@ -21,7 +21,9 @@
   const indexableRecordsFromIndex = compose(
     map(node => ({
       node,
-      isallowed: index.allowedRecordNodeIds.some(id => node.nodeId === id),
+      isallowed:
+        index.allowedRecordNodeIds &&
+        index.allowedRecordNodeIds.some(id => node.nodeId === id),
     })),
     filter(hierarchyFunctions.isRecord),
     filter(hierarchyFunctions.isDecendant($store.currentNode.parent())),
