@@ -13,6 +13,8 @@ import {
   constructHierarchy,
   templateApi,
   isIndex,
+  canDeleteIndex,
+  canDeleteRecord
 } from "../../common/core"
 
 export const getBackendUiStore = () => {
@@ -183,7 +185,7 @@ export const saveCurrentNode = store => () => {
       const defaultIndex = templateApi(state.hierarchy).getNewIndexTemplate(
         cloned.parent()
       )
-      defaultIndex.name = `all_${cloned.collectionName}`
+      defaultIndex.name = `all_${cloned.name}s`
       defaultIndex.allowedRecordNodeIds = [cloned.nodeId]
     }
 
@@ -202,13 +204,26 @@ export const deleteCurrentNode = store => () => {
       ? state.hierarchy.children.find(node => node !== state.currentNode)
       : nodeToDelete.parent()
 
-    const recordOrIndexKey = hierarchyFunctions.isRecord(nodeToDelete) ? "children" : "indexes";
+    const isRecord = hierarchyFunctions.isRecord(nodeToDelete)
+
+    const check = isRecord
+      ? canDeleteRecord(nodeToDelete)
+      : canDeleteIndex(nodeToDelete)
+
+    if (!check.canDelete) {
+      state.errors = check.errors.map(e => ({ error: e }))
+      return state
+    }
+
+    const recordOrIndexKey = isRecord ? "children" : "indexes"
 
     // remove the selected record or index
-    nodeToDelete.parent()[recordOrIndexKey] = remove(
-      nodeToDelete.parent()[recordOrIndexKey],
-      node => node.nodeId === nodeToDelete.nodeId
+    const newCollection = remove(
+      node => node.nodeId === nodeToDelete.nodeId,
+      nodeToDelete.parent()[recordOrIndexKey]
     )
+
+    nodeToDelete.parent()[recordOrIndexKey] = newCollection
 
     state.errors = []
     saveBackend(state)

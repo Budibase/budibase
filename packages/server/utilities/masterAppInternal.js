@@ -11,8 +11,9 @@ const {
   masterAppPackage,
   applictionVersionPackage,
   applictionVersionPublicPaths,
+  deleteCachedPackage,
 } = require("../utilities/createAppPackage")
-const { determineVersionId } = require("./runtimePackages")
+const { determineVersionId, LATEST_VERSIONID } = require("./runtimePackages")
 
 const isMaster = appname => appname === "_master"
 
@@ -345,6 +346,10 @@ module.exports = async context => {
     await bb.recordApi.save(userInMaster)
   }
 
+  const deleteLatestPackageFromCache = (appname) => {
+    deleteCachedPackage(context, appname, LATEST_VERSIONID)
+  }
+
   const listApplications = () => values(applications)
 
   return {
@@ -364,5 +369,6 @@ module.exports = async context => {
     getFullAccessApiForInstanceId,
     getFullAccessApiForMaster,
     getApplicationWithInstances,
+    deleteLatestPackageFromCache,
   }
 }

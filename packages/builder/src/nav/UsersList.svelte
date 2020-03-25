@@ -65,6 +65,7 @@
     font-size: 0.8rem;
     outline: none;
     cursor: pointer;
+    background: rgba(0,0,0,0);
   }
 
   .active {

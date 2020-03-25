@@ -75,6 +75,7 @@
     font-weight: 400;
     text-transform: uppercase;
     color: var(--secondary60);
+    background: rgba(0,0,0,0);
   }
 
   .switcher > .selected {

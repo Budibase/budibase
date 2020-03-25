@@ -1,5 +1,5 @@
 import { map, reduce, filter, isEmpty, flatten, each } from "lodash/fp"
-import { compileExpression } from "@nx-js/compiler-util"
+import { compileCode } from "../common/compileCode"
 import _ from "lodash"
 import { getExactNodeForKey } from "../templateApi/hierarchy"
 import { validateFieldParse, validateTypeConstraints } from "../types"
@@ -35,7 +35,7 @@ const validateAllTypeConstraints = async (record, recordNode, context) => {
 
 const runRecordValidationRules = (record, recordNode) => {
   const runValidationRule = rule => {
-    const isValid = compileExpression(rule.expressionWhenValid)
+    const isValid = compileCode(rule.expressionWhenValid)
     const expressionContext = { record, _ }
     return isValid(expressionContext)
       ? { valid: true }
