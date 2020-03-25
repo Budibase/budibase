@@ -4,10 +4,8 @@
   import Button from "../common/Button.svelte"
   import Dropdown from "../common/Dropdown.svelte"
   import { store } from "../builderStore"
-  import { filter, some, map } from "lodash/fp"
+  import { filter, some, map, compose } from "lodash/fp"
   import { hierarchy as hierarchyFunctions, common } from "../../../core/src"
-
-  const pipe = common.$
 
   const SNIPPET_EDITORS = {
     MAP: "Map",
@@ -19,25 +17,26 @@
   let indexableRecords = []
   let currentSnippetEditor = SNIPPET_EDITORS.MAP
 
+  const indexableRecordsFromIndex = compose(
+    map(node => ({
+      node,
+      isallowed: index.allowedRecordNodeIds.some(id => node.nodeId === id),
+    })),
+    filter(hierarchyFunctions.isRecord),
+    filter(hierarchyFunctions.isDecendant(index.parent())),
+    hierarchyFunctions.getFlattenedHierarchy
+  )
+
   store.subscribe($store => {
     index = $store.currentNode
-    indexableRecords = pipe(
-      $store.hierarchy,
-      [
-        hierarchyFunctions.getFlattenedHierarchy,
-        filter(hierarchyFunctions.isDecendant(index.parent())),
-        filter(hierarchyFunctions.isRecord),
-        map(node => ({
-          node,
-          isallowed: index.allowedRecordNodeIds.some(id => node.nodeId === id),
-        })),
-      ]
-    )
+    indexableRecords = indexableRecordsFromIndex($store.hierarchy)
   })
 
   const toggleAllowedRecord = record => {
     if (record.isallowed) {
-      index.allowedRecordNodeIds = index.allowedRecordNodeIds.filter(id => id !== record.node.nodeId)
+      index.allowedRecordNodeIds = index.allowedRecordNodeIds.filter(
+        id => id !== record.node.nodeId
+      )
     } else {
       index.allowedRecordNodeIds.push(record.node.nodeId)
     }

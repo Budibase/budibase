@@ -23,7 +23,6 @@ export const getBackendUiStore = () => {
       name: ""
     },
     breadcrumbs: [],
-    selectedRecord: {},
     selectedDatabase: {},
     selectedModel: {},
   }
@@ -49,14 +48,15 @@ export const getBackendUiStore = () => {
         return state
       }),
     },
+    views: {
+      select: view => store.update(state => { 
+        state.selectedView = { ...state.selectedView, ...view }
+        return state
+      })
+    },
     modals: {
       show: modal => store.update(state => ({ ...state, visibleModal: modal })),
       hide: () => store.update(state => ({ ...state, visibleModal: null }))
-    },
-    nodes: {
-      select: () => {},
-      update: () => {},
-      delete: () => {},
     }
   }
 

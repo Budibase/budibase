@@ -30,7 +30,10 @@
       <div class="components-list-container">
         <div class="nav-group-header">
           <div class="hierarchy-title">Users</div>
-          <i class="ri-add-line" />
+          <i 
+            class="ri-add-line hoverable" 
+            on:click={() => backendUiStore.actions.modals.show('USER')} 
+          />
         </div>
       </div>
 
