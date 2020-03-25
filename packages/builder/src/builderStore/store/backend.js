@@ -39,8 +39,8 @@ export const getBackendUiStore = () => {
       })
     },
     records: {
-      delete: record => store.update(state => { 
-        state.selectedView.records = state.selectedView.records.filter(({ id }) => id !== record.id)
+      delete: () => store.update(state => { 
+        state.selectedView = state.selectedView 
         return state
       }),
       view: record => store.update(state => { 
