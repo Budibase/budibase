@@ -105,7 +105,9 @@ const lodash_fp_exports = [
   "toPairs",
   "remove",
   "findIndex",
-  "compose"
+  "compose",
+  "get",
+  "tap"
 ]
 
 const lodash_exports = [
