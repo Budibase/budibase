@@ -20,8 +20,7 @@ export const canDeleteRecord = recordNode => {
   ])
 
   const belongsToAncestor = i => 
-    ancestors.includes(i.parent())
-  
+    ancestors.includes(i.parent())  
   
   const errorsForNode = node => {
     const errorsThisNode = $(flatHierarchy, [
@@ -40,5 +39,7 @@ export const canDeleteRecord = recordNode => {
     return errorsThisNode    
   }
 
-  return errorsForNode(recordNode)
+  const errors =  errorsForNode(recordNode)
+
+  return { errors, canDelete: errors.length === 0 }
 }
