@@ -18,11 +18,12 @@
 
   async function createUser() {
     const response = await api.createUser(
+      password,
       {
         username,
-        password,
         accessLevels,
         enabled: true,
+        temporaryAccessId: ""
       },
       currentAppInfo
     )
