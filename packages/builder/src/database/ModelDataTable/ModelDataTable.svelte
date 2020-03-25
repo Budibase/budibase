@@ -95,10 +95,6 @@
     })
   }
 
-  $: {
-    console.log($backendUiStore.selectedView)
-  }
-
   onMount(() => {
     if (views.length) {
       backendUiStore.actions.views.select(views[0])
