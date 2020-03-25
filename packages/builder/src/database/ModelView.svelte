@@ -10,6 +10,7 @@
   import { common, hierarchy } from "../../../core/src"
   import { templateApi, pipe, validate } from "../common/core"
   import ActionsHeader from "./ActionsHeader.svelte"
+  import ErrorsBox from "../common/ErrorsBox.svelte"
 
   let record
   let getIndexAllowedRecords
@@ -99,14 +100,15 @@
   </heading>
   {#if !editingField}
     <h4 class="budibase__label--big">Settings</h4>
+
+    {#if $store.errors && $store.errors.length > 0}
+      <ErrorsBox errors={$store.errors} />
+    {/if}
+
     <form class="uk-form-stacked">
 
-      <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
-
       <div class="horizontal-stack">
-        {#if !record.isSingle}
-          <Textbox label="Collection Name" bind:text={record.collectionName} />
-        {/if}
+        <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
         <div>
           <label class="uk-form-label">Parent</label>
           <div class="uk-form-controls">

@@ -1,5 +1,5 @@
-import { compileExpression, compileCode } from "@nx-js/compiler-util"
-import { isUndefined, keys, cloneDeep, isFunction } from "lodash/fp"
+import { compileCode } from "../common/compileCode"
+import { isUndefined, keys, cloneDeep, isFunction, includes } from "lodash/fp"
 import { defineError } from "../common"
 
 export const filterEval = "FILTER_EVALUATE"
@@ -16,7 +16,7 @@ const getEvaluateResult = () => ({
   result: null,
 })
 
-export const compileFilter = index => compileExpression(index.filter)
+export const compileFilter = index => compileCode(index.filter)
 
 export const compileMap = index => compileCode(index.map)
 
@@ -45,6 +45,9 @@ export const mapRecord = (record, index) => {
     mapped[key] = isUndefined(mapped[key]) ? null : mapped[key]
     if (isFunction(mapped[key])) {
       delete mapped[key]
+    }
+    if (key === "IsNew") {
+      delete mapped.IsNew
     }
   }
 

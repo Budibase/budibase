@@ -20,7 +20,7 @@
     const response = await api.createUser(
       password,
       {
-        username,
+        name:username,
         accessLevels,
         enabled: true,
         temporaryAccessId: ""
