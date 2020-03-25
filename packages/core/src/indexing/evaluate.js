@@ -46,6 +46,9 @@ export const mapRecord = (record, index) => {
     if (isFunction(mapped[key])) {
       delete mapped[key]
     }
+    if (key === "IsNew") {
+      delete mapped.IsNew
+    }
   }
 
   mapped.key = record.key
