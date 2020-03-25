@@ -13,7 +13,6 @@
 
   const ITEMS_PER_PAGE = 10
 
-  let selectedView = ""
   let modalOpen = false
   let data = []
   let headers = []
@@ -28,20 +27,19 @@
     appname: $store.appname,
     instanceId: $backendUiStore.selectedDatabase.id,
   }
-  // $: data =
-  //   $backendUiStore.selectedDatabase &&
-  //   $backendUiStore.selectedView.records.slice(
-  //     currentPage * ITEMS_PER_PAGE,
-  //     currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-  //   )
 
   $: fetchRecordsForView(
     $backendUiStore.selectedView,
     $backendUiStore.selectedDatabase
   ).then(records => {
-    data = records
+    data = records || []
     headers = getSchema($backendUiStore.selectedView).map(get("name"))
   })
+
+  $: paginatedData = data.slice(
+    currentPage * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  )
 
   const childViewsForRecord = compose(
     flatten,
@@ -52,10 +50,13 @@
   const getSchema = getIndexSchema($store.hierarchy)
 
   async function fetchRecordsForView(view, instance) {
+    if (!view.name) return
+
     const viewName = $backendUiStore.selectedRecord
-      ? `${$backendUiStore.selectedRecord.type}/`
+      ? `${$backendUiStore.selectedRecord.type}/${$backendUiStore.selectedRecord.id}/${view.name}`
       : view.name
-    return await api.fetchDataForView(view.name, {
+
+    return await api.fetchDataForView(viewName, {
       appname: $store.appname,
       instanceId: instance.id,
     })
@@ -68,19 +69,20 @@
       return state
     })
   }
+
+  onMount(() => {
+    if (views.length) {
+      backendUiStore.actions.views.select(views[0])
+    }
+  })
 </script>
 
 <section>
   <div class="table-controls">
     <h4 class="budibase__title--3">{last($backendUiStore.breadcrumbs)}</h4>
-    <Select
-      icon="ri-eye-line"
-      on:change={e => {
-        const view = e.target.value
-        backendUiStore.actions.views.select(view)
-      }}>
+    <Select icon="ri-eye-line" bind:value={$backendUiStore.selectedView}>
       {#each views as view}
-        <option value={view.name}>{view.name}</option>
+        <option value={view}>{view.name}</option>
       {/each}
     </Select>
   </div>
@@ -94,10 +96,10 @@
       </tr>
     </thead>
     <tbody>
-      {#if data.length === 0}
+      {#if paginatedData.length === 0}
         <div class="no-data">No Data.</div>
       {/if}
-      {#each data as row}
+      {#each paginatedData as row}
         <tr class="hoverable">
           <td>
             <div class="uk-inline">
@@ -135,9 +137,11 @@
     </tbody>
   </table>
   <TablePagination
+    {data}
     bind:currentPage
     pageItemCount={data.length}
-    {ITEMS_PER_PAGE} />
+    {ITEMS_PER_PAGE} 
+  />
 </section>
 
 <style>

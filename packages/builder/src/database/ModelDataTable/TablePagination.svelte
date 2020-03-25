@@ -1,13 +1,13 @@
 <script>
   import { backendUiStore } from "../../builderStore"
 
+  export let data
   export let currentPage
   export let pageItemCount
   export let ITEMS_PER_PAGE
 
   let numPages = 0
 
-  $: data = $backendUiStore.selectedView.records
   $: numPages = Math.ceil(data.length / ITEMS_PER_PAGE)
 
   const next = () => {
