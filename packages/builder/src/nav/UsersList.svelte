@@ -21,6 +21,10 @@
     const FETCH_USERS_URL = `/_builder/instance/${currentAppInfo.appname}/${currentAppInfo.instanceId}/api/users`
     const response = await api.get(FETCH_USERS_URL);
     users = await response.json()
+    backendUiStore.update(state => {
+      state.users = users
+      return state
+    })
   }
 
   onMount(fetchUsers)

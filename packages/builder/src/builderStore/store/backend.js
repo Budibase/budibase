@@ -49,6 +49,10 @@ export const getBackendUiStore = () => {
         state.breadcrumbs = [state.selectedDatabase.name, record.id]
         return state
       }),
+      select: record => store.update(state => {
+        state.selectedRecord = record
+        return state
+      })
     },
     views: {
       select: view => store.update(state => { 
@@ -59,6 +63,13 @@ export const getBackendUiStore = () => {
     modals: {
       show: modal => store.update(state => ({ ...state, visibleModal: modal })),
       hide: () => store.update(state => ({ ...state, visibleModal: null }))
+    },
+    users: {
+      create: user => store.update(state => {
+        state.users.push(user)
+        state.users = state.users
+        return state
+      })
     }
   }
 

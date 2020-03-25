@@ -7,6 +7,7 @@
 
   function selectDatabase(database) {
     backendUiStore.actions.database.select(database)
+    backendUiStore.actions.records.select(null)
     backendUiStore.actions.navigate("DATABASE")
   }
 </script>

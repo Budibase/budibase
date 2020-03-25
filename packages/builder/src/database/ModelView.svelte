@@ -2,12 +2,14 @@
   import Textbox from "../common/Textbox.svelte"
   import Button from "../common/Button.svelte"
   import Select from "../common/Select.svelte"
+  import ActionButton from "../common/ActionButton.svelte"
   import getIcon from "../common/icon"
   import FieldView from "./FieldView.svelte"
   import Modal from "../common/Modal.svelte"
   import { map, join, filter, some, find, keys, isDate } from "lodash/fp"
   import { store } from "../builderStore"
   import { common, hierarchy } from "../../../core/src"
+  import { getNode } from "../common/core"
   import { templateApi, pipe, validate } from "../common/core"
   import ActionsHeader from "./ActionsHeader.svelte"
   import ErrorsBox from "../common/ErrorsBox.svelte"
@@ -22,9 +24,11 @@
   let deleteField
   let onFinishedFieldEdit
   let editIndex
-  let parentRecord
 
   $: models = $store.hierarchy.children
+  $: parent = record && record.parent()
+  $: isChildModel = parent.name !== "root"
+  $: modelExistsInHierarchy = getNode($store.hierarchy, $store.currentNode.nodeId)
 
   store.subscribe($store => {
     record = $store.currentNode
@@ -107,23 +111,13 @@
 
     <form class="uk-form-stacked">
 
-      <div class="horizontal-stack">
-        <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
+      <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
+      {#if isChildModel}
         <div>
           <label class="uk-form-label">Parent</label>
-          <div class="uk-form-controls">
-            <Select
-              value={parentRecord}
-              on:change={e => {
-                store.selectExistingNode(record)
-                store.newChildRecord()
-              }}>
-              {#each models as model}
-                <option value={model}>{model.name}</option>
-              {/each}
-            </Select>
-          </div>
+          <div class="uk-form-controls parent-name">{parent.name}</div>
         </div>
+      {/if}
     </form>
 
     <div class="table-controls">
@@ -155,7 +149,13 @@
         {/each}
       </tbody>
     </table>
-    <ActionsHeader />
+    <ActionsHeader>
+      {#if modelExistsInHierarchy}
+      <ActionButton color="primary" on:click={store.newChildRecord}>
+        Create Child Model on {record.name}
+      </ActionButton>
+      {/if}
+    </ActionsHeader>
   {:else}
     <FieldView
       field={fieldToEdit}
@@ -168,11 +168,6 @@
 <style>
   .root {
     height: 100%;
-  }
-
-  .horizontal-stack {
-    display: flex;
-    justify-content: space-between
   }
 
   .new-field {
@@ -207,5 +202,9 @@
 
   h3 {
     margin: 0 0 0 10px;
+  }
+
+  .parent-name {
+    font-weight: bold;
   }
 </style>

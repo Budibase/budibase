@@ -29,6 +29,8 @@
     <ActionButton color="secondary" on:click={store.saveCurrentNode}>
       Save
     </ActionButton>
+
+    <slot />
   </div>
 
 </div>
