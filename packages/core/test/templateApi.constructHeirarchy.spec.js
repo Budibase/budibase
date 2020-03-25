@@ -25,7 +25,7 @@ describe("hierarchy node creation", () => {
     expect(record.validationRules).toEqual([])
     expect(record.indexes).toEqual([])
     expect(record.parent()).toBe(root)
-    expect(record.collectionName).toBe("")
+    expect(record.collectionName).toBe(record.nodeId.toString())
     expect(record.estimatedRecordCount).toBe(1000000)
     expect(record.isSingle).toBe(false)
 
