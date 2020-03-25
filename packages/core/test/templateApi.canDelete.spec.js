@@ -2,6 +2,7 @@ import {
   setupApphierarchy,
   basicAppHierarchyCreator_WithFields,
   stubEventHandler,
+  basicAppHierarchyCreator_WithFields_AndIndexes,
 } from "./specHelpers"
 import { canDeleteIndex } from "../src/templateApi/canDeleteIndex"
 import { canDeleteRecord } from "../src/templateApi/canDeleteRecord"
@@ -49,15 +50,37 @@ describe("canDeleteIndex", () => {
 
 
 describe("canDeleteRecord", () => {
-  it("should return no errors when deletion is valid", () => {
+  it("should return no errors when deletion is valid", async () => {
     const { appHierarchy } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields
     )
 
-    appHierarchy.root.
-    const result = canDeleteIndex(appHierarchy.customerRecord)
+    appHierarchy.root.indexes = appHierarchy.root.indexes.filter(i => !i.allowedRecordNodeIds.includes(appHierarchy.customerRecord.nodeId))
+    const result = canDeleteRecord(appHierarchy.customerRecord)
 
     expect(result.canDelete).toBe(true)
     expect(result.errors).toEqual([])
+  })
+
+  it("should return errors when record is referenced by hierarchal index", async () => {
+    const { appHierarchy } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields
+    )
+
+    const result = canDeleteRecord(appHierarchy.customerRecord)
+
+    expect(result.canDelete).toBe(false)
+    expect(result.errors.some(e => e.includes("customer_index"))).toBe(true)
+  })
+
+  it("should return errors when record has a child which cannot be deleted", async () => {
+    const { appHierarchy } = await setupApphierarchy(
+      basicAppHierarchyCreator_WithFields_AndIndexes
+    )
+
+    const result = canDeleteRecord(appHierarchy.customerRecord)
+
+    expect(result.canDelete).toBe(false)
+    expect(result.errors.some(e => e.includes("Outstanding Invoices"))).toBe(true)
   })
 })
