@@ -1,9 +1,9 @@
 import api from "../../builderStore/api"
 import { getNewRecord, getNewInstance } from "../../common/core"
 
-export async function createUser(user, { appname, instanceId }) {
+export async function createUser(password, user, { appname, instanceId }) {
   const CREATE_USER_URL = `/_builder/instance/${appname}/${instanceId}/api/createUser`
-  const response = await api.post(CREATE_USER_URL, user)
+  const response = await api.post(CREATE_USER_URL, { user, password })
   return await response.json()
 }
 

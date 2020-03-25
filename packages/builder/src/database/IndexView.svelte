@@ -23,7 +23,7 @@
       isallowed: index.allowedRecordNodeIds.some(id => node.nodeId === id),
     })),
     filter(hierarchyFunctions.isRecord),
-    filter(hierarchyFunctions.isDecendant(index.parent())),
+    filter(hierarchyFunctions.isDecendant($store.currentNode.parent())),
     hierarchyFunctions.getFlattenedHierarchy
   )
 
