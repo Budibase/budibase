@@ -29,15 +29,7 @@
       currentAppInfo
     )
     backendUiStore.update(state => {
-      const idx = findIndex(state.selectedView.records, {
-        id: recordResponse.id
-      })
-
-      if (idx > 0) {
-        state.selectedView.records.splice(idx, 1, recordResponse)
-      } else {
-        state.selectedView.records.push(recordResponse)
-      }
+      state.selectedView = state.selectedView
       return state
     })
     onClosed()
