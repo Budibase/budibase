@@ -9,6 +9,8 @@ import { find, filter, keyBy, flatten, map } from "lodash/fp"
 import { generateSchema } from "../../../core/src/indexing/indexSchemaCreator"
 import { generate } from "shortid"
 
+export { canDeleteIndex } from "../../../core/src/templateApi/canDeleteIndex"
+export { canDeleteRecord } from "../../../core/src/templateApi/canDeleteRecord"
 export { userWithFullAccess } from "../../../core/src/index"
 
 export const pipe = common.$

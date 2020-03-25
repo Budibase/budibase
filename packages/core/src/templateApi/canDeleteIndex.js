@@ -23,7 +23,7 @@ export const canDeleteIndex = indexNode => {
       }
       return obj
     },[]),
-    map(f => `field ${f.name} on record ${f.record.name} uses this index as a reference`)
+    map(f => `field "${f.name}" on record "${f.record.name}" uses this index as a reference`)
   ])
 
   const lookupIndexes = $(flatHierarchy,[
@@ -37,7 +37,7 @@ export const canDeleteIndex = indexNode => {
       }
       return obj
     },[]),
-    map(f => `field ${f.name} on record ${f.record.name} uses this index as a lookup`)
+    map(f => `field "${f.name}" on record "${f.record.name}" uses this index as a lookup`)
   ])
 
   const errors = [
