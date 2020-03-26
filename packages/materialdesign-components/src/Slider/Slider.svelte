@@ -10,10 +10,10 @@
 
   export let variant = "continuous" //or discrete
   export let showTicks = false
-  export let min = "0"
-  export let max = "100"
-  export let value = "1"
-  export let step = "1"
+  export let min = 0
+  export let max = 100
+  export let value = 1
+  export let step = 1
   export let label = ""
   export let disabled = false
 
