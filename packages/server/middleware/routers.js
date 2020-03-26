@@ -101,10 +101,14 @@ module.exports = (config, app) => {
     .get("/_builder/*", async (ctx, next) => {
       const path = ctx.path.replace("/_builder", "")
 
+      const isFile = new RegExp(/(.+\..{1,5})/g).test(path)
+
       if (path.startsWith("/api/") || path.startsWith("/instance/")) {
         await next()
-      } else {
+      } else if (isFile) {
         await send(ctx, path, { root: builderPath })
+      } else {
+        await send(ctx, "/index.html", { root: builderPath })
       }
     })
     .post("/:appname/api/authenticate", routeHandlers.authenticate)
