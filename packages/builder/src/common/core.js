@@ -13,7 +13,7 @@ export { canDeleteIndex } from "../../../core/src/templateApi/canDeleteIndex"
 export { canDeleteRecord } from "../../../core/src/templateApi/canDeleteRecord"
 export { userWithFullAccess } from "../../../core/src/index"
 export { joinKey } from "../../../core/src/common"
-
+export { getExactNodeForKey } from "../../../core/src/templateApi/hierarchy"
 export const pipe = common.$
 
 export const events = common.eventsList

@@ -77,7 +77,7 @@
     if (!view.name) return
 
     const viewName = $backendUiStore.selectedRecord
-      ? `${$backendUiStore.selectedRecord.type}/${$backendUiStore.selectedRecord.id}/${view.name}`
+      ? `${$backendUiStore.selectedRecord.key}/${view.name}`
       : view.name
 
     return await api.fetchDataForView(viewName, {
