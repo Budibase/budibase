@@ -11,7 +11,6 @@
   import DatePicker from "../common/DatePicker.svelte"
   import {
     cloneDeep,
-    assign,
     keys,
     isNumber,
     includes,
@@ -60,7 +59,7 @@
     errors = validate.field(allFields)(clonedField)
     if (errors.length > 0) return
     field.typeOptions = cloneDeep(clonedField.typeOptions)
-    onFinished(assign(field)(clonedField))
+    onFinished({ ...clonedField, ...field })
   }
 </script>
 

@@ -7,7 +7,17 @@
   import getIcon from "../common/icon"
   import FieldView from "./FieldView.svelte"
   import Modal from "../common/Modal.svelte"
-  import { map, join, filter, some, find, keys, isDate } from "lodash/fp"
+  import {
+    get,
+    compose,
+    map,
+    join,
+    filter,
+    some,
+    find,
+    keys,
+    isDate,
+  } from "lodash/fp"
   import { store, backendUiStore } from "../builderStore"
   import { common, hierarchy } from "../../../core/src"
   import { getNode } from "../common/core"
@@ -37,15 +47,13 @@
   store.subscribe($store => {
     record = $store.currentNode
     const flattened = hierarchy.getFlattenedHierarchy($store.hierarchy)
-    getIndexAllowedRecords = index =>
-      pipe(
-        index.allowedRecordNodeIds,
-        [
-          filter(id => some(n => n.nodeId === id)(flattened)),
-          map(id => find(n => n.nodeId === id)(flattened).name),
-          join(", "),
-        ]
-      )
+
+    getIndexAllowedRecords = compose(
+      join(", "),
+      map(id => flattened.find(n => n.nodeId === id).name),
+      filter(id => flattened.some(n => n.nodeId === id)),
+      get("allowedRecordNodeIds")
+    )
 
     newField = () => {
       isNewField = true
