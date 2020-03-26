@@ -22,6 +22,7 @@
     Card,
     Dialog,
     Switch,
+    Slider,
   } = props
 
   let currentComponent
@@ -41,6 +42,7 @@
             DatePicker,
             IconButton,
             Switch,
+            Slider,
           ],
         },
       }

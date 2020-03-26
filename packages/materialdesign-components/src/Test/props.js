@@ -313,5 +313,9 @@ export const props = {
     checked: true,
     onChange: () => console.log("Switch Changed"),
     _children: [],
-  }
+  },
+  Slider: {
+    _component: "@budibase/materialdesign-components/Slider",
+    _children: [],
+  },
 }
