@@ -1,14 +1,17 @@
 <script>
+  import { tick } from "svelte";
   import { store, backendUiStore } from "../builderStore"
   import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
 
   $: instances = $store.appInstances
+  $: views = $store.hierarchy.indexes
 
-  function selectDatabase(database) {
-    backendUiStore.actions.database.select(database)
-    backendUiStore.actions.records.select(null)
+  async function selectDatabase(database) {
     backendUiStore.actions.navigate("DATABASE")
+    backendUiStore.actions.records.select(null)
+    backendUiStore.actions.views.select(views[0])
+    backendUiStore.actions.database.select(database)
   }
 </script>
 

@@ -59,4 +59,10 @@
     left: 0;
     background: #fafafa;
   }
+  select {
+    width: 100%;
+  }
+  option {
+    padding: 10px;
+  }
 </style>

@@ -29,7 +29,10 @@
   $: models = $store.hierarchy.children
   $: parent = record && record.parent()
   $: isChildModel = parent.name !== "root"
-  $: modelExistsInHierarchy = getNode($store.hierarchy, $store.currentNode.nodeId)
+  $: modelExistsInHierarchy = getNode(
+    $store.hierarchy,
+    $store.currentNode.nodeId
+  )
 
   store.subscribe($store => {
     record = $store.currentNode
@@ -112,7 +115,7 @@
 
     <form class="uk-form-stacked">
 
-    <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
+      <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
       {#if isChildModel}
         <div>
           <label class="uk-form-label">Parent</label>
@@ -133,6 +136,7 @@
           <th>Name</th>
           <th>Type</th>
           <th>Values</th>
+          <th />
         </tr>
       </thead>
       <tbody>
@@ -146,24 +150,32 @@
             </td>
             <td>{field.type}</td>
             <td>{field.typeOptions.values}</td>
+            <td>
+              <i
+                class="ri-delete-bin-6-line hoverable"
+                on:click={() => deleteField(field)} />
+            </td>
           </tr>
         {/each}
       </tbody>
     </table>
-    <ActionsHeader>
-      {#if modelExistsInHierarchy}
+    {#if modelExistsInHierarchy}
+      <div class="uk-margin">
         <ActionButton color="primary" on:click={store.newChildRecord}>
           Create Child Model on {record.name}
         </ActionButton>
-        <ActionButton color="primary" on:click={async () => {
-          backendUiStore.actions.modals.show("VIEW")
-          await tick()
-          store.newChildIndex()
-        }}>
+        <ActionButton
+          color="primary"
+          on:click={async () => {
+            backendUiStore.actions.modals.show('VIEW')
+            await tick()
+            store.newChildIndex()
+          }}>
           Create Child View on {record.name}
         </ActionButton>
-      {/if}
-    </ActionsHeader>
+      </div>
+    {/if}
+    <ActionsHeader />
   {:else}
     <FieldView
       field={fieldToEdit}

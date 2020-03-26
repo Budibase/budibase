@@ -74,7 +74,7 @@
   )
 
   async function fetchRecordsForView(view, instance) {
-    if (!view.name) return
+    if (!view || !view.name) return
 
     const viewName = $backendUiStore.selectedRecord
       ? `${$backendUiStore.selectedRecord.key}/${view.name}`

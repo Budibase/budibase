@@ -56,7 +56,7 @@ export const getBackendUiStore = () => {
     },
     views: {
       select: view => store.update(state => { 
-        state.selectedView = { ...state.selectedView, ...view }
+        state.selectedView = view 
         return state
       })
     },
