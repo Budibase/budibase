@@ -5,13 +5,11 @@
   import Modal from "../../../common/Modal.svelte"
   import ActionButton from "../../../common/ActionButton.svelte"
   import Select from "../../../common/Select.svelte"
-  import { getNewRecord } from "../../../common/core"
+  import { getNewRecord, joinKey } from "../../../common/core"
   import * as api from "../api"
 
   export let record
   export let onClosed
-
-  let selectedModel
 
   const childModelsForModel = compose(
     flatten,
@@ -23,24 +21,38 @@
     appname: $store.appname,
     instanceId: $backendUiStore.selectedDatabase.id,
   }
-  $: recordFields = record ? Object.keys(record) : []
   $: models = $backendUiStore.selectedRecord
     ? childModelsForModel($store.hierarchy)
     : $store.hierarchy.children
+
+  $: selectedModel = selectedModel || models[0]
+  
   $: modelFields = selectedModel
     ? selectedModel.fields.map(({ name }) => name)
     : []
 
+  $: currentCollectionKey = 
+    $store.selectedRecord
+    ? joinKey($store.selectedRecord.key, selectedModel.collectionName)
+    : joinKey(selectedModel.collectionName)
+
+  $: editingRecord = editingRecord || record || getNewRecord(selectedModel, currentCollectionKey)
+
+  function closed() {
+    editingRecord = null
+    onClosed()
+  }
+
   async function saveRecord() {
     const recordResponse = await api.saveRecord(
-      record || selectedModel,
+      editingRecord,
       currentAppInfo
     )
     backendUiStore.update(state => {
       state.selectedView = state.selectedView
       return state
     })
-    onClosed()
+    closed()
   }
 </script>
 
@@ -66,19 +78,7 @@
               class="uk-input"
               id="form-stacked-text"
               type="text"
-              bind:value={selectedModel[field]} />
-          </div>
-        </div>
-      {/each}
-      {#each recordFields as field}
-        <div class="uk-margin">
-          <label class="uk-form-label" for="form-stacked-text">{field}</label>
-          <div class="uk-form-controls">
-            <input
-              class="uk-input"
-              id="form-stacked-text"
-              type="text"
-              bind:value={record[field]} />
+              bind:value={editingRecord[field]} />
           </div>
         </div>
       {/each}
