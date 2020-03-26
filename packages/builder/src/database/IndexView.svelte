@@ -4,6 +4,7 @@
   import Button from "../common/Button.svelte"
   import Dropdown from "../common/Dropdown.svelte"
   import { store } from "../builderStore"
+  import ActionsHeader from "./ActionsHeader.svelte"
   import { filter, some, map, compose } from "lodash/fp"
   import { hierarchy as hierarchyFunctions, common } from "../../../core/src"
   import ErrorsBox from "../common/ErrorsBox.svelte"
@@ -98,6 +99,7 @@
     <CodeArea bind:text={index.getShardName} label="Shard Name" />
   {/if}
 
+  <ActionsHeader />
 </form>
 
 <style>
