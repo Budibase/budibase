@@ -403,6 +403,37 @@
       "persistent": "bool"
     },
     "tags": []
+  },
+  "Switch": {
+    "name": "Switch",
+    "description": "A material design switch component",
+    "props": {
+      "alignEnd": "bool",
+      "disabled": "bool",
+      "checked": "bool",
+      "label": "string",
+      "id": "string"
+    },
+    "tags": []
+  },
+  "Slider": {
+    "name": "Slider",
+    "description": "A material design slider component",
+    "props": {
+      "variant": {
+        "type": "options",
+        "options": ["continuous", "discrete"],
+        "default": "continuous"
+      },
+      "showTicks": "bool",
+      "min": "number",
+      "max": "number",
+      "value": "number",
+      "step": "number",
+      "label": "string",
+      "disabled": "bool"
+    },
+    "tags": []
   }
 }
 
