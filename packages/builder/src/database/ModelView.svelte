@@ -1,4 +1,5 @@
 <script>
+  import { tick } from "svelte"
   import Textbox from "../common/Textbox.svelte"
   import Button from "../common/Button.svelte"
   import Select from "../common/Select.svelte"
@@ -7,7 +8,7 @@
   import FieldView from "./FieldView.svelte"
   import Modal from "../common/Modal.svelte"
   import { map, join, filter, some, find, keys, isDate } from "lodash/fp"
-  import { store } from "../builderStore"
+  import { store, backendUiStore } from "../builderStore"
   import { common, hierarchy } from "../../../core/src"
   import { getNode } from "../common/core"
   import { templateApi, pipe, validate } from "../common/core"
@@ -111,7 +112,7 @@
 
     <form class="uk-form-stacked">
 
-      <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
+    <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
       {#if isChildModel}
         <div>
           <label class="uk-form-label">Parent</label>
@@ -151,9 +152,16 @@
     </table>
     <ActionsHeader>
       {#if modelExistsInHierarchy}
-      <ActionButton color="primary" on:click={store.newChildRecord}>
-        Create Child Model on {record.name}
-      </ActionButton>
+        <ActionButton color="primary" on:click={store.newChildRecord}>
+          Create Child Model on {record.name}
+        </ActionButton>
+        <ActionButton color="primary" on:click={async () => {
+          backendUiStore.actions.modals.show("VIEW")
+          await tick()
+          store.newChildIndex()
+        }}>
+          Create Child View on {record.name}
+        </ActionButton>
       {/if}
     </ActionsHeader>
   {:else}
