@@ -193,5 +193,5 @@ const runInitialiseRoot = async (_, newApp) => {
 }
 
 const runInitialiseChildRecord = async (_, newApp, diff) => {
-  await initialiseChildrenForNode(newApp.datastore, diff.newNode)
+  await initialiseChildrenForNode(newApp, diff.newNode)
 } 
