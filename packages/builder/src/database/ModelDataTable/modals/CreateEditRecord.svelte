@@ -31,12 +31,14 @@
     ? selectedModel.fields.map(({ name }) => name)
     : []
 
-  $: currentCollectionKey = 
-    $store.selectedRecord
-    ? joinKey($store.selectedRecord.key, selectedModel.collectionName)
+  
+  function getCurrentCollectionKey(selectedRecord) {
+    return selectedRecord
+    ? joinKey(selectedRecord.key, selectedModel.collectionName)
     : joinKey(selectedModel.collectionName)
+  }
 
-  $: editingRecord = editingRecord || record || getNewRecord(selectedModel, currentCollectionKey)
+  $: editingRecord = editingRecord || record || getNewRecord(selectedModel, getCurrentCollectionKey($backendUiStore.selectedRecord))
 
   function closed() {
     editingRecord = null
