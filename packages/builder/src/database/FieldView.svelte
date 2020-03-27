@@ -59,7 +59,7 @@
     errors = validate.field(allFields)(clonedField)
     if (errors.length > 0) return
     field.typeOptions = cloneDeep(clonedField.typeOptions)
-    onFinished({ ...clonedField, ...field })
+    onFinished({ ...field, ...clonedField })
   }
 </script>
 
