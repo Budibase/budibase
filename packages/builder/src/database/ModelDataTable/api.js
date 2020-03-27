@@ -20,6 +20,12 @@ export async function deleteRecord(record, { appname, instanceId }) {
   return response
 }
 
+export async function loadRecord(key, { appname, instanceId }) {
+  const LOAD_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record${key}`
+  const response = await api.get(LOAD_RECORDS_URL)
+  return await response.json()
+}
+
 export async function saveRecord(record, { appname, instanceId }) {
   let recordBase = { ...record }
 
