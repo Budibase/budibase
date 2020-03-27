@@ -2,7 +2,7 @@
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import Button from "../common/Button.svelte"
   import ActionButton from "../common/ActionButton.svelte"
-  import { store } from "../builderStore"
+  import { store, backendUiStore } from "../builderStore"
   import { generateFullPermissions, getNewAccessLevel } from "../common/core"
   import getIcon from "../common/icon"
   import AccessLevelView from "./AccessLevelView.svelte"
@@ -10,7 +10,12 @@
 
   let editingLevel = null
   let editingLevelIsNew = false
-  $: isEditing = editingLevel !== null
+  $: { 
+    if (editingLevel !== null) {
+      backendUiStore.actions.modals.show("ACCESS_LEVELS")
+    }
+  }
+  $: modalOpen = $backendUiStore.visibleModal === 'ACCESS_LEVELS'
 
   let allPermissions = []
   store.subscribe(db => {
@@ -40,6 +45,7 @@
       store.saveLevel(level, editingLevelIsNew, editingLevel)
     }
     editingLevel = null
+    backendUiStore.actions.modals.hide()
   }
 
   const getPermissionsString = perms => {
@@ -83,10 +89,9 @@
   {:else}(no actions added){/if}
 
   <Modal
-    onClosed={() => (isEditing = false)}
-    bind:isOpen={isEditing}
-    title={isEditing ? 'Edit Access Level' : 'Create Access Level'}>
-    {#if isEditing}
+    onClosed={backendUiStore.actions.modals.hide}
+    bind:isOpen={modalOpen}
+    title={modalOpen ? 'Edit Access Level' : 'Create Access Level'}>
       <AccessLevelView
         level={editingLevel}
         {allPermissions}
@@ -94,8 +99,8 @@
         isNew={editingLevelIsNew}
         allLevels={$store.accessLevels.levels}
         hierarchy={$store.hierarchy}
-        actions={$store.actions} />
-    {/if}
+        actions={$store.actions} 
+      />
   </Modal>
 
 </div>
@@ -105,14 +110,5 @@
     height: 100%;
     position: relative;
     padding: 1.5rem;
-  }
-
-  .actions-header {
-    flex: 0 1 auto;
-  }
-
-  .node-view {
-    overflow-y: auto;
-    flex: 1 1 auto;
   }
 </style>
