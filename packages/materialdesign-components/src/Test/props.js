@@ -210,11 +210,112 @@ export const props = {
     _component: "@budibase/materialdesign-components/DatePicker",
     _children: [],
     label: "Date of Admission",
-    onSelect: date => console.log("SELECTED DATE", date)
+    onSelect: date => console.log("SELECTED DATE", date),
   },
   IconButton: {
     _component: "@budibase/materialdesign-components/IconButton",
     _children: [],
     icon: "calendar_today",
+  },
+  Card: {
+    _id: "card",
+    width: "400",
+    _component: "@budibase/materialdesign-components/Card",
+    _children: [
+      {
+        _id: "cardbody",
+        _component: "@budibase/materialdesign-components/CardBody",
+        onClick: () => alert`Hi`,
+        _children: [
+          {
+            _id: "cardimage1",
+            _component: "@budibase/materialdesign-components/CardImage",
+            _children: [],
+            displayHorizontal: true,
+            url: "https://picsum.photos/350",
+            title: "Our New World",
+            subtitle: "Out now in cinemas",
+          },
+        ],
+      },
+      {
+        _component: "@budibase/materialdesign-components/CardFooter",
+        _children: [
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Save",
+          },
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Cancel",
+          },
+          {
+            _component: "@budibase/materialdesign-components/IconButton",
+            icon: "3d_rotation",
+          },
+          {
+            _component: "@budibase/materialdesign-components/IconButton",
+            icon: "accessibility",
+          },
+          {
+            _component: "@budibase/materialdesign-components/IconButton",
+            icon: "alarm_on",
+          },
+        ],
+      },
+    ],
+  },
+  Dialog: {
+    _component: "@budibase/materialdesign-components/Dialog",
+    _children: [
+      {
+        _component: "@budibase/materialdesign-components/DialogHeader",
+        title: "Important Message",
+        _children: [],
+      },
+      {
+        _component: "@budibase/materialdesign-components/DialogContent",
+        _children: [
+          {
+            _component: "@budibase/materialdesign-components/H3",
+            text: "An announcement from your service provider",
+            _children: [],
+          },
+          {
+            _component: "@budibase/materialdesign-components/Body2",
+            text:
+              "All non-essential services will be shut down as of tomorrow. Please acknowledge that you have seen this message by confirming below.",
+            _children: [],
+          },
+        ],
+      },
+      {
+        _component: "@budibase/materialdesign-components/DialogActions",
+        _children: [
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Confirm",
+            variant: "unelevated",
+            _children: [],
+          },
+          {
+            _component: "@budibase/materialdesign-components/Button",
+            text: "Cancel",
+            _children: [],
+          },
+        ],
+      },
+    ],
+  },
+  Switch: {
+    _component: "@budibase/materialdesign-components/Switch",
+    label: "On / Off",
+    checked: true,
+    onChange: () => console.log("Switch Changed"),
+    _children: [],
+  },
+  Slider: {
+    _component: "@budibase/materialdesign-components/Slider",
+    _children: [],
   },
 }

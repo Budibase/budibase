@@ -17,12 +17,15 @@
     "@material/button": "^4.0.0",
     "@material/checkbox": "^4.0.0",
     "@material/data-table": "4.0.0",
+    "@material/dialog": "4.0.0",
     "@material/form-field": "^4.0.0",
     "@material/icon-button": "4.0.0",
     "@material/list": "4.0.0",
     "@material/menu": "4.0.0",
     "@material/radio": "^4.0.0",
     "@material/select": "4.0.0",
+    "@material/slider": "4.0.0",
+    "@material/switch": "4.0.0",
     "@material/textfield": "^4.0.0",
     "@nx-js/compiler-util": "^2.0.0",
     "bcryptjs": "^2.4.3",
@@ -50,5 +53,7 @@
   "version": "0.0.27",
   "license": "MIT",
   "gitHead": "72a77a035eb7c1443b079bf93c29b3e5fe02094e",
-  "dependencies": {}
+  "dependencies": {
+    "@material/card": "4.0.0"
+  }
 }
