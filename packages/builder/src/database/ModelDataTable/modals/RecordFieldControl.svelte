@@ -1,41 +1,38 @@
 <script>
-import Select from "../../../common/Select.svelte"
+  import Select from "../../../common/Select.svelte"
 
-export let record
-export let field
-export let errors
+  export let record
+  export let field
+  export let errors
 
-$: isDropdown = 
-    field.type === "string" 
-    && field.typeOptions.values 
-    && field.typeOptions.values.length > 0
+  $: isDropdown =
+    field.type === "string" &&
+    field.typeOptions.values &&
+    field.typeOptions.values.length > 0
 
-$: isNumber = field.type === "number"
+  $: isNumber = field.type === "number"
 
-$: isText = 
-  field.type === "string" 
-  && !isDropdown
+  $: isText = field.type === "string" && !isDropdown
 
-$: isCheckbox = field.type === "bool"
+  $: isCheckbox = field.type === "bool"
 
-$: isError = errors && errors.some(e => e.field && e.field === field.name)
+  $: isError = errors && errors.some(e => e.field && e.field === field.name)
 
-$: isDatetime = field.type === "datetime"
-
+  $: isDatetime = field.type === "datetime"
 </script>
 
 <div class="uk-margin">
   {#if !isCheckbox}
-  <label class="uk-form-label" for={field.name}>{field.label}</label>
+    <label class="uk-form-label" for={field.name}>{field.label}</label>
   {/if}
   <div class="uk-form-controls">
     {#if isDropdown}
       <Select bind:value={record[field.name]}>
-        <option value=""></option>
+        <option value="" />
         {#each field.typeOptions.values as val}
           <option value={val}>{val}</option>
         {/each}
-      </Select>   
+      </Select>
     {:else if isText}
       <input
         class="uk-input"
@@ -61,8 +58,8 @@ $: isDatetime = field.type === "datetime"
           class="uk-checkbox"
           class:uk-form-danger={isError}
           type="checkbox"
-          bind:checked={record[field.name]} >
-          {field.label}
+          bind:checked={record[field.name]} />
+        {field.label}
       </label>
     {/if}
   </div>

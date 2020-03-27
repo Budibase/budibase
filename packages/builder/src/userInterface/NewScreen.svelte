@@ -115,9 +115,7 @@
           bind:value={layoutComponent}
           class:uk-form-danger={saveAttempted && !layoutComponent}>
           {#each layoutComponents as comp}
-            <option value={comp}>
-              {comp.componentName} - {comp.libName}
-            </option>
+            <option value={comp}>{comp.componentName} - {comp.libName}</option>
           {/each}
         </select>
       </div>
@@ -127,35 +125,32 @@
 </ConfirmDialog>
 
 <style>
+  .uk-margin {
+    display: flex;
+    flex-direction: column;
+  }
 
-.uk-margin {
-  display: flex;
-  flex-direction: column;
-}
+  .uk-form-controls {
+    margin-left: 0 !important;
+  }
 
-.uk-form-controls {
-  margin-left: 0 !important;
-}
+  .uk-form-label {
+    padding-bottom: 10px;
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--secondary80);
+  }
 
-.uk-form-label {
-  padding-bottom: 10px;
-  font-weight: 500;
-  font-size: 16px;
-  color: var(--secondary80);
-}
+  .uk-input {
+    height: 40px !important;
+    border-radius: 3px;
+  }
 
-.uk-input {
-  height: 40px !important;
-  border-radius: 3px;
-}
-
-.uk-select {
-  height: 40px !important;
-  font-weight: 500px;
-  color: var(--secondary60);
-  border: 1px solid var(--slate);
-  border-radius: 3px;
-}
-
+  .uk-select {
+    height: 40px !important;
+    font-weight: 500px;
+    color: var(--secondary60);
+    border: 1px solid var(--slate);
+    border-radius: 3px;
+  }
 </style>
-

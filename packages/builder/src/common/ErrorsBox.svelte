@@ -7,12 +7,7 @@
 {#if hasErrors}
   <div uk-alert class="uk-alert-danger">
     {#each errors as error}
-      <div>
-        {error.field ? `${error.field}: ` : ''}{error.error}
-      </div>
+      <div>{error.field ? `${error.field}: ` : ''}{error.error}</div>
     {/each}
-</div>
-
-
+  </div>
 {/if}
-

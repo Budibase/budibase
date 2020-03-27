@@ -11,16 +11,15 @@
     FRONTEND: "frontend",
   }
 
-  let selectedTab = TABS.BACKEND 
-
+  let selectedTab = TABS.BACKEND
 </script>
 
 <div class="root">
 
   <div class="top-nav">
     <div class="topleftnav">
-    <button class="home-logo">
-      <img src="/_builder/assets/budibase-emblem-white.svg" />
+      <button class="home-logo">
+        <img src="/_builder/assets/budibase-emblem-white.svg" />
       </button>
       <!-- <IconButton icon="home"
                       color="var(--slate)"
@@ -28,13 +27,13 @@
       <span
         class:active={selectedTab === TABS.BACKEND}
         class="topnavitem"
-        on:click={() => selectedTab = TABS.BACKEND}>
+        on:click={() => (selectedTab = TABS.BACKEND)}>
         Backend
       </span>
       <span
         class:active={selectedTab === TABS.FRONTEND}
         class="topnavitem"
-        on:click={() => selectedTab = TABS.FRONTEND}>
+        on:click={() => (selectedTab = TABS.FRONTEND)}>
         Frontend
       </span>
     </div>
@@ -44,13 +43,13 @@
         class:active={selectedTab === TABS.FRONTEND}
         class="topnavitemright"
         on:click={() => selectedTab === TABS.FRONTEND}>
-        <SettingsIcon /> 
+        <SettingsIcon />
       </span>
       <span
         class:active={selectedTab === TABS.FRONTEND}
         class="topnavitemright"
         on:click={() => selectedTab === TABS.FRONTEND}>
-        <PreviewIcon />      
+        <PreviewIcon />
       </span>
     </div>
   </div>
@@ -140,7 +139,7 @@
     font-size: 1rem;
     height: 100%;
     display: flex;
-    flex:1;
+    flex: 1;
     align-items: center;
     box-sizing: border-box;
   }

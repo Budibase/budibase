@@ -1,5 +1,5 @@
 <script>
-  import { tick } from "svelte";
+  import { tick } from "svelte"
   import { store, backendUiStore } from "../builderStore"
   import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
@@ -63,7 +63,7 @@
     font-size: 0.8rem;
     outline: none;
     cursor: pointer;
-    background: rgba(0,0,0,0);
+    background: rgba(0, 0, 0, 0);
   }
 
   .active {

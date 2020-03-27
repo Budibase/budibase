@@ -10,12 +10,12 @@
 
   let editingLevel = null
   let editingLevelIsNew = false
-  $: { 
+  $: {
     if (editingLevel !== null) {
       backendUiStore.actions.modals.show("ACCESS_LEVELS")
     }
   }
-  $: modalOpen = $backendUiStore.visibleModal === 'ACCESS_LEVELS'
+  $: modalOpen = $backendUiStore.visibleModal === "ACCESS_LEVELS"
 
   let allPermissions = []
   store.subscribe(db => {
@@ -92,15 +92,14 @@
     onClosed={backendUiStore.actions.modals.hide}
     bind:isOpen={modalOpen}
     title={modalOpen ? 'Edit Access Level' : 'Create Access Level'}>
-      <AccessLevelView
-        level={editingLevel}
-        {allPermissions}
-        onFinished={onEditingFinished}
-        isNew={editingLevelIsNew}
-        allLevels={$store.accessLevels.levels}
-        hierarchy={$store.hierarchy}
-        actions={$store.actions} 
-      />
+    <AccessLevelView
+      level={editingLevel}
+      {allPermissions}
+      onFinished={onEditingFinished}
+      isNew={editingLevelIsNew}
+      allLevels={$store.accessLevels.levels}
+      hierarchy={$store.hierarchy}
+      actions={$store.actions} />
   </Modal>
 
 </div>

@@ -14,29 +14,28 @@ import { getRecordInfo } from "./recordInfo"
 import { getAllIdsIterator } from "../indexing/allIds"
 
 export const initialiseChildren = async (app, recordInfoOrKey) => {
-  const recordInfo = isString(recordInfoOrKey) 
-        ?  getRecordInfo(app.hierarchy, recordInfoOrKey)
-        : recordInfoOrKey
+  const recordInfo = isString(recordInfoOrKey)
+    ? getRecordInfo(app.hierarchy, recordInfoOrKey)
+    : recordInfoOrKey
   await initialiseReverseReferenceIndexes(app, recordInfo)
   await initialiseAncestorIndexes(app, recordInfo)
   await initialiseChildCollections(app, recordInfo)
 }
 
 export const initialiseChildrenForNode = async (app, recordNode) => {
-
   if (isTopLevelRecord(recordNode)) {
-    await initialiseChildren(
-      app, recordNode.nodeKey())
+    await initialiseChildren(app, recordNode.nodeKey())
     return
   }
 
-  const iterate = await getAllIdsIterator(app)(recordNode.parent().collectionNodeKey())
+  const iterate = await getAllIdsIterator(app)(
+    recordNode.parent().collectionNodeKey()
+  )
   let iterateResult = await iterate()
   while (!iterateResult.done) {
     const { result } = iterateResult
     for (const id of result.ids) {
-      const initialisingRecordKey = joinKey(
-        result.collectionKey, id)
+      const initialisingRecordKey = joinKey(result.collectionKey, id)
       await initialiseChildren(app, initialisingRecordKey)
     }
     iterateResult = await iterate()
@@ -78,5 +77,3 @@ const fieldsThatReferenceThisRecord = (app, recordNode) =>
     flatten,
     filter(fieldReversesReferenceToNode(recordNode)),
   ])
-
-

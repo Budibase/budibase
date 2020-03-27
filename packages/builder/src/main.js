@@ -15,5 +15,5 @@ import "codemirror/theme/monokai.css"
 
 /* eslint-disable */
 const app = new App({
-  target: document.getElementById("app")
+  target: document.getElementById("app"),
 })

@@ -346,7 +346,7 @@ module.exports = async context => {
     await bb.recordApi.save(userInMaster)
   }
 
-  const deleteLatestPackageFromCache = (appname) => {
+  const deleteLatestPackageFromCache = appname => {
     deleteCachedPackage(context, appname, LATEST_VERSIONID)
   }
 

@@ -11,12 +11,12 @@
   $: numPages = Math.ceil(data.length / ITEMS_PER_PAGE)
 
   const next = () => {
-    if (currentPage + 1 === numPages) return;
+    if (currentPage + 1 === numPages) return
     currentPage = currentPage + 1
   }
 
   const previous = () => {
-    if (currentPage == 0) return;
+    if (currentPage == 0) return
     currentPage = currentPage - 1
   }
 

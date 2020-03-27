@@ -21,9 +21,7 @@
 <div class="root">
   <div class="button-container">
     {#if !$store.currentNodeIsNew}
-      <ActionButton alert on:click={deleteCurrentNode}>
-        Delete
-      </ActionButton>
+      <ActionButton alert on:click={deleteCurrentNode}>Delete</ActionButton>
     {/if}
 
     <ActionButton color="secondary" on:click={store.saveCurrentNode}>

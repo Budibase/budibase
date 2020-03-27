@@ -40,7 +40,7 @@ import {
   fieldReversesReferenceToIndex,
   isReferenceIndex,
   getExactNodeForKey,
-  getParentKey
+  getParentKey,
 } from "../templateApi/hierarchy"
 import { getRecordInfo } from "../recordApi/recordInfo"
 import { getIndexDir } from "../indexApi/getIndexDir"
@@ -52,7 +52,7 @@ export const executeTransactions = app => async transactions => {
   for (const shard of keys(recordsByShard)) {
     if (recordsByShard[shard].isRebuild)
       await initialiseIndex(
-        app.datastore, 
+        app.datastore,
         getParentKey(recordsByShard[shard].indexDir),
         recordsByShard[shard].indexNode
       )
@@ -87,8 +87,9 @@ const mappedRecordsByIndexShard = (hierarchy, transactions) => {
       transByShard[t.indexShardKey] = {
         writes: [],
         removes: [],
-        isRebuild: some(i => i.indexShardKey === t.indexShardKey)(indexBuild.toWrite)
-                   || some(i => i.indexShardKey === t.indexShardKey)(indexBuild.toRemove),
+        isRebuild:
+          some(i => i.indexShardKey === t.indexShardKey)(indexBuild.toWrite) ||
+          some(i => i.indexShardKey === t.indexShardKey)(indexBuild.toRemove),
         indexDir: t.indexDir,
         indexNodeKey: t.indexNode.nodeKey(),
         indexNode: t.indexNode,
@@ -219,7 +220,7 @@ const getUpdateTransactionsByShard = (hierarchy, transactions) => {
 
 const getBuildIndexTransactionsByShard = (hierarchy, transactions) => {
   const buildTransactions = $(transactions, [filter(isBuildIndex)])
-  if (!isNonEmptyArray(buildTransactions)) return { toWrite:[], toRemove:[] }
+  if (!isNonEmptyArray(buildTransactions)) return { toWrite: [], toRemove: [] }
   const indexNode = transactions.indexNode
 
   const getIndexDirs = t => {
@@ -259,7 +260,7 @@ const getBuildIndexTransactionsByShard = (hierarchy, transactions) => {
 
   return $(buildTransactions, [
     map(t => {
-      const mappedRecord = evaluate(t.record)(indexNode) 
+      const mappedRecord = evaluate(t.record)(indexNode)
       mappedRecord.result = mappedRecord.result || t.record
       const indexDirs = getIndexDirs(t)
       return $(indexDirs, [
@@ -274,16 +275,16 @@ const getBuildIndexTransactionsByShard = (hierarchy, transactions) => {
           ),
         })),
       ])
-      
     }),
     flatten,
-    reduce((obj, res) => {
-      if (res.mappedRecord.passedFilter)
-        obj.toWrite.push(res)
-      else 
-        obj.toRemove.push(res)
-      return obj
-    }, { toWrite: [], toRemove: [] })
+    reduce(
+      (obj, res) => {
+        if (res.mappedRecord.passedFilter) obj.toWrite.push(res)
+        else obj.toRemove.push(res)
+        return obj
+      },
+      { toWrite: [], toRemove: [] }
+    ),
   ])
 }
 

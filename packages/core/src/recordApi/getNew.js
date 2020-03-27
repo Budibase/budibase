@@ -24,7 +24,7 @@ export const getNew = app => (collectionKey, recordTypeName) => {
 
 /**
  * Constructs a record object that can be saved to the backend.
- * @param {*} recordNode - record  
+ * @param {*} recordNode - record
  * @param {*} collectionKey - nested collection key that the record will be saved to.
  */
 export const _getNew = (recordNode, collectionKey) =>

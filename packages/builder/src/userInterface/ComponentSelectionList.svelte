@@ -35,16 +35,13 @@
   $: templatesByComponent = groupBy(t => t.component)($store.templates)
   $: hierarchy = $store.hierarchy
   $: libraryModules = $store.libraries
-  $: standaloneTemplates = pipe(
-    templatesByComponent,
-    [
-      values,
-      flatten,
-      filter(t => !$store.components.some(c => c.name === t.component)),
-      map(t => ({ name: splitName(t.component).componentName, template: t })),
-      uniqBy(t => t.name),
-    ]
-  )
+  $: standaloneTemplates = pipe(templatesByComponent, [
+    values,
+    flatten,
+    filter(t => !$store.components.some(c => c.name === t.component)),
+    map(t => ({ name: splitName(t.component).componentName, template: t })),
+    uniqBy(t => t.name),
+  ])
 
   const addRootComponent = (component, allComponents) => {
     const { libName } = splitName(component.name)
@@ -278,7 +275,7 @@
     background: #fafafa;
     padding: 10px;
     border-radius: 2px;
-    color:var(--secondary80);
+    color: var(--secondary80);
   }
 
   .preset-menu > span {

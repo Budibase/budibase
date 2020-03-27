@@ -30,16 +30,8 @@
           <i class="ri-add-line hoverable" />
           <div uk-dropdown="mode: click;">
             <ul class="uk-nav uk-dropdown-nav">
-              <li
-                class="hoverable"
-                on:click={newModel}>
-                Model
-              </li>
-              <li
-                class="hoverable"
-                on:click={newView}>
-                View
-              </li>
+              <li class="hoverable" on:click={newModel}>Model</li>
+              <li class="hoverable" on:click={newView}>View</li>
             </ul>
           </div>
         </div>

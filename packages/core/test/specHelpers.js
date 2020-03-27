@@ -39,7 +39,7 @@ export const testTemplatesPath = testAreaName =>
   path.join(testFileArea(testAreaName), templateDefinitions)
 
 export const getMemoryStore = () => setupDatastore(memory({}))
-export const getMemoryTemplateApi = (store) => {
+export const getMemoryTemplateApi = store => {
   const app = {
     datastore: store || getMemoryStore(),
     publish: () => {},

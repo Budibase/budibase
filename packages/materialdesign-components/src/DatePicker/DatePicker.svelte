@@ -61,7 +61,7 @@
     const isDate = /^\d{1,2}\/\d{1,2}\/\d{4}$/
     if (isDate.test(value)) {
       const [year, month, day] = value.split("/").reverse()
-      if (month > 0 && month <= 12 && (day > 0 && day <= 31)) {
+      if (month > 0 && month <= 12 && day > 0 && day <= 31) {
         date = new Date(year, month - 1, day)
         navDate = date
         openCalendar(true)

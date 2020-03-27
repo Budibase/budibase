@@ -107,7 +107,7 @@ const lodash_fp_exports = [
   "findIndex",
   "compose",
   "get",
-  "tap"
+  "tap",
 ]
 
 const lodash_exports = [
@@ -164,7 +164,9 @@ export default {
     }),
 
     replace({
-      "process.env.NODE_ENV": JSON.stringify(production ? "production" : "development")
+      "process.env.NODE_ENV": JSON.stringify(
+        production ? "production" : "development"
+      ),
     }),
 
     svelte({
