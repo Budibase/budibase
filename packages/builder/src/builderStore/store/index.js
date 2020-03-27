@@ -546,6 +546,7 @@ const addTemplatedComponent = store => props => {
     )
     state.currentPreviewItem._css = generate_screen_css([state.currentPreviewItem.props])
 
+    setCurrentPageFunctions(state)
     _saveCurrentPreviewItem(state)
 
     return state
