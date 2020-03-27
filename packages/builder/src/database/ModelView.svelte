@@ -38,8 +38,8 @@
 
   $: models = $store.hierarchy.children
   $: parent = record && record.parent()
-  $: isChildModel = parent.name !== "root"
-  $: modelExistsInHierarchy = getNode(
+  $: isChildModel = parent && parent.name !== "root"
+  $: modelExistsInHierarchy = $store.currentNode && getNode(
     $store.hierarchy,
     $store.currentNode.nodeId
   )

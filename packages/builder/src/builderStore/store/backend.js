@@ -244,7 +244,7 @@ export const deleteCurrentNode = store => () => {
 
 export const saveField = store => field => {
   store.update(state => {
-    state.currentNode.fields = state.currentNode.fields.filter(f => f.name !== field.name)
+    state.currentNode.fields = state.currentNode.fields.filter(f => f.id !== field.id)
 
     templateApi(state.hierarchy).addField(state.currentNode, field)
     return state
