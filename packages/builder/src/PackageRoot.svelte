@@ -4,52 +4,58 @@
   import UserInterfaceRoot from "./userInterface/UserInterfaceRoot.svelte"
   import BackendRoot from "./BackendRoot.svelte"
   import { fade } from "svelte/transition"
-  import { SettingsIcon, PreviewIcon, HelpIcon } from "./common/Icons/"
+  import { SettingsIcon, PreviewIcon } from "./common/Icons/"
 
+  const TABS = {
+    BACKEND: "backend",
+    FRONTEND: "frontend",
+  }
+
+  let selectedTab = TABS.BACKEND
 </script>
 
 <div class="root">
 
   <div class="top-nav">
     <div class="topleftnav">
-    <button class="home-logo">
-      <img src="/_builder/assets/budibase-emblem-white.svg" />
+      <button class="home-logo">
+        <img src="/_builder/assets/budibase-emblem-white.svg" />
       </button>
       <!-- <IconButton icon="home"
                       color="var(--slate)"
                       hoverColor="var(--secondary75)"/> -->
       <span
-        class:active={$store.isBackend}
+        class:active={selectedTab === TABS.BACKEND}
         class="topnavitem"
-        on:click={store.showBackend}>
+        on:click={() => (selectedTab = TABS.BACKEND)}>
         Backend
       </span>
       <span
-        class:active={!$store.isBackend}
+        class:active={selectedTab === TABS.FRONTEND}
         class="topnavitem"
-        on:click={store.showFrontend}>
+        on:click={() => (selectedTab = TABS.FRONTEND)}>
         Frontend
       </span>
     </div>
 
     <div class="toprightnav">
       <span
-        class:active={!$store.isBackend}
+        class:active={selectedTab === TABS.FRONTEND}
         class="topnavitemright"
-        on:click={store.showFrontend}>
-        <SettingsIcon /> 
+        on:click={() => selectedTab === TABS.FRONTEND}>
+        <SettingsIcon />
       </span>
       <span
-        class:active={!$store.isBackend}
+        class:active={selectedTab === TABS.FRONTEND}
         class="topnavitemright"
-        on:click={store.showFrontend}>
-        <PreviewIcon />      
+        on:click={() => selectedTab === TABS.FRONTEND}>
+        <PreviewIcon />
       </span>
     </div>
   </div>
 
   <div class="content">
-    {#if $store.isBackend}
+    {#if selectedTab === TABS.BACKEND}
       <div in:fade out:fade>
         <BackendRoot />
       </div>
@@ -133,7 +139,7 @@
     font-size: 1rem;
     height: 100%;
     display: flex;
-    flex:1;
+    flex: 1;
     align-items: center;
     box-sizing: border-box;
   }

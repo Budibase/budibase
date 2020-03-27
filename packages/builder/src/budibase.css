@@ -92,3 +92,37 @@
     display: flex;
     justify-content: flex-start;
 }
+
+.preview-pane {
+    grid-column: 2;
+    margin: 80px 60px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0px 6px rgba(0, 0, 0, 0.05);
+}
+
+.budibase__table {
+    border: 1px solid #ccc;
+    background: #fff;
+    border-radius: 2px;
+}
+
+.budibase__table thead {
+    background: #fafafa;
+}
+
+.budibase__table thead > tr > th {
+    color: var(--button-text);
+    text-transform: capitalize;
+    font-weight: 500;
+}
+
+.budibase__table tr {
+    border-bottom: 1px solid #ccc;
+}
+
+.button--toggled {
+    background: #fafafa;
+    color: var(--button-text);
+    padding: 10px;
+}

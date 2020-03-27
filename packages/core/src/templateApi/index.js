@@ -58,7 +58,7 @@ const api = app => ({
   validateNode,
   validateAll,
   validateTriggers,
-  upgradeData: upgradeData(app)
+  upgradeData: upgradeData(app),
 })
 
 export const getTemplateApi = app => api(app)

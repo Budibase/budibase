@@ -5,12 +5,16 @@ const { getRuntimePackageDirectory } = require("../utilities/runtimePackages")
 const injectPlugins = require("./injectedPlugins")
 const { cwd } = require("process")
 
+const appDefinitionPath = appPath => join(appPath, "appDefinition.json")
+const pluginsPath = appPath => join(appPath, "plugins.js")
+const accessLevelsPath = appPath => join(appPath, "access_levels.json")
+
 const createAppPackage = (context, appPath) => {
-  const appDefModule = require(join(appPath, "appDefinition.json"))
+  const appDefModule = require(appDefinitionPath(appPath))
 
-  const pluginsModule = require(join(appPath, "plugins.js"))
+  const pluginsModule = require(pluginsPath(appPath))
 
-  const accessLevels = require(join(appPath, "access_levels.json"))
+  const accessLevels = require(accessLevelsPath(appPath))
 
   return {
     appDefinition: appDefModule,
@@ -86,4 +90,12 @@ module.exports.applictionVersionPackage = async (
   pkg.appDefinition = constructHierarchy(pkg.appDefinition)
   await injectPlugins(pkg, context.master, appname, instanceKey)
   return pkg
+}
+
+module.exports.deleteCachedPackage = (context, appname, versionId) => {
+  const appPath = applictionVersionPath(context, appname, versionId)
+
+  delete require.cache[resolve(appDefinitionPath(appPath))]
+  delete require.cache[resolve(pluginsPath(appPath))]
+  delete require.cache[resolve(accessLevelsPath(appPath))]
 }

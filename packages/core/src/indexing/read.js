@@ -3,7 +3,10 @@ import { promiseReadableStream } from "./promiseReadableStream"
 import { createIndexFile } from "./sharding"
 import { generateSchema } from "./indexSchemaCreator"
 import { getIndexReader, CONTINUE_READING_RECORDS } from "./serializer"
-import { getAllowedRecordNodesForIndex, getRecordNodeId } from "../templateApi/hierarchy"
+import {
+  getAllowedRecordNodesForIndex,
+  getRecordNodeId,
+} from "../templateApi/hierarchy"
 import { $ } from "../common"
 import { filter, includes, find } from "lodash/fp"
 

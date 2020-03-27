@@ -1,5 +1,5 @@
 import { flatten, map, isEmpty } from "lodash/fp"
-import { compileCode } from "@nx-js/compiler-util"
+import { compileCode } from "../common/compileCode"
 import { isNonEmptyString, executesWithoutException, $ } from "../common"
 import { applyRuleSet, makerule } from "../common/validationCommon"
 

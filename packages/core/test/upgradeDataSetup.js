@@ -2,7 +2,7 @@ import { getMemoryTemplateApi, appFromTempalteApi } from "./specHelpers"
 import { getFlattenedHierarchy } from "../src/templateApi/hierarchy"
 import { initialiseData } from "../src/appInitialise/initialiseData"
 
-export const setup = async (store) => {
+export const setup = async store => {
   const { templateApi } = await getMemoryTemplateApi(store)
   const root = templateApi.getNewRootLevel()
   const contact = templateApi.getNewRecordTemplate(root, "contact", true)
@@ -21,10 +21,10 @@ export const setup = async (store) => {
   const deal = templateApi.getNewRecordTemplate(contact, "deal", true)
   deal.collectionName = "deals"
 
-  templateApi.addField(deal, {...nameField})
-  templateApi.addField(deal, {...statusField})
+  templateApi.addField(deal, { ...nameField })
+  templateApi.addField(deal, { ...statusField })
 
-  templateApi.addField(lead, {...nameField})
+  templateApi.addField(lead, { ...nameField })
 
   getFlattenedHierarchy(root)
 
@@ -38,8 +38,13 @@ export const setup = async (store) => {
   app.hierarchy = root
 
   return {
-    root, contact, lead, app,
-    deal, templateApi, store: templateApi._storeHandle,
+    root,
+    contact,
+    lead,
+    app,
+    deal,
+    templateApi,
+    store: templateApi._storeHandle,
     all_contacts: root.indexes[0],
     all_leads: root.indexes[1],
     deals_for_contacts: contact.indexes[0],

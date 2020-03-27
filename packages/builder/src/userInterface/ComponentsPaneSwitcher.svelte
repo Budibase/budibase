@@ -46,7 +46,7 @@
 
     </div>
   {/if}
- 
+
 </div>
 
 <style>
@@ -59,6 +59,7 @@
 
   .switcher {
     display: flex;
+    justify-content: space-between;
     margin-bottom: 20px;
     padding: 0 20px 20px;
     border-bottom: 1px solid #d8d8d8;
@@ -72,6 +73,8 @@
     padding: 0;
     cursor: pointer;
     font-size: 14px;
+    text-transform: uppercase;
+    background: rgba(0, 0, 0, 0);
     font-weight: 500;
     color: var(--secondary40);
     margin-right: 20px;
