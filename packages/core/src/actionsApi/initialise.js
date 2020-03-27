@@ -9,7 +9,7 @@ import {
   reduce,
   find,
 } from "lodash/fp"
-import { compileExpression, compileCode } from "../common/compileCode"
+import { compileCode } from "../common/compileCode"
 import { $ } from "../common"
 import { _executeAction } from "./execute"
 import { BadRequestError, NotFoundError } from "../common/errors"
@@ -49,7 +49,7 @@ const subscribeTriggers = (
 
   const shouldRunTrigger = (trigger, eventContext) => {
     if (!trigger.condition) return true
-    const shouldRun = compileExpression(trigger.condition)
+    const shouldRun = compileCode(trigger.condition)
     return shouldRun({ context: eventContext })
   }
 

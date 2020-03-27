@@ -6,8 +6,8 @@
   import Modal from "../common/Modal.svelte"
   import ErrorsBox from "../common/ErrorsBox.svelte"
 
-  export let left
   let confirmDelete = false
+
   const openConfirmDelete = () => {
     confirmDelete = true
   }
@@ -18,53 +18,34 @@
   }
 </script>
 
-<div class="root" style="left: {left}">
-  <ButtonGroup>
-    <ActionButton
-      color="secondary"
-      grouped
-      on:click={store.saveCurrentNode}>
-      {#if $store.currentNodeIsNew}Create{:else}Update{/if}
+<div class="root">
+  <div class="button-container">
+    {#if !$store.currentNodeIsNew}
+      <ActionButton alert on:click={deleteCurrentNode}>Delete</ActionButton>
+    {/if}
+
+    <ActionButton color="secondary" on:click={store.saveCurrentNode}>
+      Save
     </ActionButton>
 
-    {#if !$store.currentNodeIsNew}
-      <ActionButton alert grouped on:click={openConfirmDelete}>
-        Delete
-      </ActionButton>
-    {/if}
-  </ButtonGroup>
+    <slot />
+  </div>
 
-  {#if !!$store.errors && $store.errors.length > 0}
-    <div style="width: 500px">
-      <ErrorsBox errors={$store.errors} />
-    </div>
-  {/if}
-
-  <Modal onClosed={() => (confirmDelete = false)} bind:isOpen={confirmDelete}>
-    <span>Are you sure you want to delete {$store.currentNode.name}?</span>
-    <div class="uk-modal-footer uk-text-right">
-      <ButtonGroup>
-        <ActionButton alert on:click={deleteCurrentNode}>Yes</ActionButton>
-        <ActionButton primary on:click={() => (confirmDelete = false)}>
-          No
-        </ActionButton>
-      </ButtonGroup>
-    </div>
-  </Modal>
 </div>
 
 <style>
   .root {
-    padding: 1.5rem;
+    display: flex;
     width: 100%;
-    align-items: right;
+    border-top: 1px solid #ccc;
     box-sizing: border-box;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background: #fafafa;
   }
 
-  .actions-modal-body {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .button-container {
+    padding: 20px;
   }
 </style>

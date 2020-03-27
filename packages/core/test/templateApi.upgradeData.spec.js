@@ -8,6 +8,7 @@ import { $, splitKey } from "../src/common"
 import { keys, filter } from "lodash/fp"
 import { _listItems } from "../src/indexApi/listItems"
 import { _save } from "../src/recordApi/save"
+import { _getNew } from "../src/recordApi/getNew"
 
 describe("upgradeData", () => {
 
@@ -189,6 +190,52 @@ describe("upgradeData", () => {
 
     expect(itemsInNewIndex.length).toBe(1)
 
+  })
+
+  it("should initialise a new root record", async () => {
+    const { oldSetup, newSetup } = await configure()
+    const invoice = newSetup.templateApi.getNewRecordTemplate(newSetup.root, "invoice", true)
+    invoice.collectionName = "invoices"
+
+    const nameField = newSetup.templateApi.getNewField("string")
+    nameField.name = "name"
+    newSetup.templateApi.addField(invoice, nameField)
+
+    await upgradeData(oldSetup.app)(newSetup.root)
+
+    let itemsInNewIndex = await _listItems(newSetup.app, "/invoice_index")
+
+    expect(itemsInNewIndex.length).toBe(0)
+
+    const newInvoice  = _getNew(invoice, "/invoices")
+    await _save(newSetup.app, newInvoice)
+
+    itemsInNewIndex = await _listItems(newSetup.app, "/invoice_index")
+
+    expect(itemsInNewIndex.length).toBe(1)
+  })
+
+  it("should initialise a new child record", async () => {
+    const { oldSetup, newSetup, records } = await configure()
+    const invoice = newSetup.templateApi.getNewRecordTemplate(newSetup.contact, "invoice", true)
+    invoice.collectionName = "invoices"
+
+    const nameField = newSetup.templateApi.getNewField("string")
+    nameField.name = "name"
+    newSetup.templateApi.addField(invoice, nameField)
+
+    await upgradeData(oldSetup.app)(newSetup.root)
+
+    let itemsInNewIndex = await _listItems(newSetup.app, `${records.contact1.key}/invoice_index`)
+
+    expect(itemsInNewIndex.length).toBe(0)
+
+    const newInvoice  = _getNew(invoice, `${records.contact1.key}/invoices`)
+    await _save(newSetup.app, newInvoice)
+
+    itemsInNewIndex = await _listItems(newSetup.app, `${records.contact1.key}/invoice_index`)
+
+    expect(itemsInNewIndex.length).toBe(1)
   })
 
 })

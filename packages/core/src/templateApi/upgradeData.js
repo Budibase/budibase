@@ -1,19 +1,19 @@
 import { diffHierarchy, HierarchyChangeTypes } from "./diffHierarchy"
 import { $, switchCase } from "../common"
-import { 
-  differenceBy, 
-  isEqual, 
-  some, 
-  map, 
+import {
+  differenceBy,
+  isEqual,
+  some,
+  map,
   filter,
   uniqBy,
-  flatten
+  flatten,
 } from "lodash/fp"
-import { 
-  findRoot, 
-  getDependantIndexes, 
-  isTopLevelRecord, 
-  isAncestorIndex 
+import {
+  findRoot,
+  getDependantIndexes,
+  isTopLevelRecord,
+  isAncestorIndex,
 } from "./hierarchy"
 import { generateSchema } from "../indexing/indexSchemaCreator"
 import { _buildIndex } from "../indexApi/buildIndex"
@@ -24,130 +24,142 @@ import { cloneApp } from "../appInitialise/cloneApp"
 import { initialiseData } from "../appInitialise/initialiseData"
 import { initialiseChildrenForNode } from "../recordApi/initialiseChildren"
 import { initialiseNewIndex } from "./initialiseNewIndex"
-import { saveApplicationHierarchy } from "../templateApi/saveApplicationHierarchy"
+import { _saveApplicationHierarchy } from "../templateApi/saveApplicationHierarchy"
+import { getApplicationDefinition } from "../templateApi/getApplicationDefinition"
 
 export const upgradeData = app => async newHierarchy => {
+  const currentAppDef = await getApplicationDefinition(app.datastore)()
+  app.hierarchy = currentAppDef.hierarchy
+  newHierarchy = constructHierarchy(newHierarchy)
   const diff = diffHierarchy(app.hierarchy, newHierarchy)
   const changeActions = gatherChangeActions(diff)
 
   if (changeActions.length === 0) return
 
-  newHierarchy = constructHierarchy(newHierarchy)
-  const newApp = newHierarchy && cloneApp(app, {
-     hierarchy: newHierarchy 
-  })
+  const newApp =
+    newHierarchy &&
+    cloneApp(app, {
+      hierarchy: newHierarchy,
+    })
   await doUpgrade(app, newApp, changeActions)
-  await saveApplicationHierarchy(newApp)(newHierarchy)
+  await _saveApplicationHierarchy(newApp.datastore, newHierarchy)
 }
 
-const gatherChangeActions = (diff) => 
-  $(diff, [
-    map(actionForChange),
-    flatten,
-    uniqBy(a => a.compareKey)
-  ])
+const gatherChangeActions = diff =>
+  $(diff, [map(actionForChange), flatten, uniqBy(a => a.compareKey)])
 
 const doUpgrade = async (oldApp, newApp, changeActions) => {
-  for(let action of changeActions) {
+  for (let action of changeActions) {
     await action.run(oldApp, newApp, action.diff)
   }
 }
 
-const actionForChange = diff => 
+const actionForChange = diff =>
   switchCase(
-
     [isChangeType(HierarchyChangeTypes.recordCreated), recordCreatedAction],
 
     [isChangeType(HierarchyChangeTypes.recordDeleted), deleteRecordsAction],
 
     [
-      isChangeType(HierarchyChangeTypes.recordFieldsChanged), 
-      rebuildAffectedIndexesAction
+      isChangeType(HierarchyChangeTypes.recordFieldsChanged),
+      rebuildAffectedIndexesAction,
     ],
 
     [isChangeType(HierarchyChangeTypes.recordRenamed), renameRecordAction],
 
     [
-      isChangeType(HierarchyChangeTypes.recordEstimatedRecordTypeChanged), 
-      reshardRecordsAction
+      isChangeType(HierarchyChangeTypes.recordEstimatedRecordTypeChanged),
+      reshardRecordsAction,
     ],
 
     [isChangeType(HierarchyChangeTypes.indexCreated), newIndexAction],
 
     [isChangeType(HierarchyChangeTypes.indexDeleted), deleteIndexAction],
 
-    [isChangeType(HierarchyChangeTypes.indexChanged), rebuildIndexAction],
-
+    [isChangeType(HierarchyChangeTypes.indexChanged), rebuildIndexAction]
   )(diff)
 
-
-const isChangeType = changeType => change => 
-  change.type === changeType
+const isChangeType = changeType => change => change.type === changeType
 
 const action = (diff, compareKey, run) => ({
   diff,
-  compareKey, 
+  compareKey,
   run,
 })
 
- 
-const reshardRecordsAction = diff =>
-  [action(diff, `reshardRecords-${diff.oldNode.nodeKey()}`, runReshardRecords)]
+const reshardRecordsAction = diff => [
+  action(diff, `reshardRecords-${diff.oldNode.nodeKey()}`, runReshardRecords),
+]
 
-const rebuildIndexAction = diff =>
-  [action(diff, `rebuildIndex-${diff.newNode.nodeKey()}`, runRebuildIndex)]
+const rebuildIndexAction = diff => [
+  action(diff, `rebuildIndex-${diff.newNode.nodeKey()}`, runRebuildIndex),
+]
 
 const newIndexAction = diff => {
   if (isAncestorIndex(diff.newNode)) {
-    return [action(diff, `rebuildIndex-${diff.newNode.nodeKey()}`, runRebuildIndex)]
+    return [
+      action(diff, `rebuildIndex-${diff.newNode.nodeKey()}`, runRebuildIndex),
+    ]
   } else {
     return [action(diff, `newIndex-${diff.newNode.nodeKey()}`, runNewIndex)]
   }
 }
 
-const deleteIndexAction = diff =>
-  [action(diff, `deleteIndex-${diff.oldNode.nodeKey()}`, runDeleteIndex)]
+const deleteIndexAction = diff => [
+  action(diff, `deleteIndex-${diff.oldNode.nodeKey()}`, runDeleteIndex),
+]
 
-const deleteRecordsAction = diff =>
-  [action(diff, `deleteRecords-${diff.oldNode.nodeKey()}`, runDeleteRecords)]
+const deleteRecordsAction = diff => [
+  action(diff, `deleteRecords-${diff.oldNode.nodeKey()}`, runDeleteRecords),
+]
 
-const renameRecordAction = diff =>
-  [action(diff, `renameRecords-${diff.oldNode.nodeKey()}`, runRenameRecord)]
+const renameRecordAction = diff => [
+  action(diff, `renameRecords-${diff.oldNode.nodeKey()}`, runRenameRecord),
+]
 
 const recordCreatedAction = diff => {
   if (isTopLevelRecord(diff.newNode)) {
     return [action(diff, `initialiseRoot`, runInitialiseRoot)]
   }
 
-  return [action(diff, `initialiseChildRecord-${diff.newNode.nodeKey()}`, runInitialiseChildRecord)]
+  return [
+    action(
+      diff,
+      `initialiseChildRecord-${diff.newNode.nodeKey()}`,
+      runInitialiseChildRecord
+    ),
+  ]
 }
 
-const rebuildAffectedIndexesAction = diff =>{
+const rebuildAffectedIndexesAction = diff => {
   const newHierarchy = findRoot(diff.newNode)
   const oldHierarchy = findRoot(diff.oldNode)
   const indexes = getDependantIndexes(newHierarchy, diff.newNode)
 
   const changedFields = (() => {
-    const addedFields = differenceBy(f => f.name)
-                          (diff.oldNode.fields) 
-                          (diff.newNode.fields)
+    const addedFields = differenceBy(f => f.name)(diff.oldNode.fields)(
+      diff.newNode.fields
+    )
 
-    const removedFields = differenceBy(f => f.name)
-                            (diff.newNode.fields) 
-                            (diff.oldNode.fields)
-    
+    const removedFields = differenceBy(f => f.name)(diff.newNode.fields)(
+      diff.oldNode.fields
+    )
+
     return map(f => f.name)([...addedFields, ...removedFields])
   })()
 
   const isIndexAffected = i => {
-    if (!isEqual(
-      generateSchema(oldHierarchy, i),
-      generateSchema(newHierarchy, i))) return true
-    
+    if (
+      !isEqual(generateSchema(oldHierarchy, i), generateSchema(newHierarchy, i))
+    )
+      return true
+
     if (some(f => indexes.filter.indexOf(`record.${f}`) > -1)(changedFields))
       return true
 
-    if (some(f => indexes.getShardName.indexOf(`record.${f}`) > -1)(changedFields))
+    if (
+      some(f => indexes.getShardName.indexOf(`record.${f}`) > -1)(changedFields)
+    )
       return true
 
     return false
@@ -155,10 +167,12 @@ const rebuildAffectedIndexesAction = diff =>{
 
   return $(indexes, [
     filter(isIndexAffected),
-    map(i => action({ newNode:i }, `rebuildIndex-${i.nodeKey()}`, runRebuildIndex))
+    map(i =>
+      action({ newNode: i }, `rebuildIndex-${i.nodeKey()}`, runRebuildIndex)
+    ),
   ])
 }
- 
+
 const runReshardRecords = async change => {
   throw new Error("Resharding of records is not supported yet")
 }
@@ -167,7 +181,7 @@ const runRebuildIndex = async (_, newApp, diff) => {
   await _buildIndex(newApp, diff.newNode.nodeKey())
 }
 
-const runDeleteIndex = async  (oldApp, _, diff) => {
+const runDeleteIndex = async (oldApp, _, diff) => {
   await deleteAllIndexFilesForNode(oldApp, diff.oldNode)
 }
 
@@ -190,5 +204,5 @@ const runInitialiseRoot = async (_, newApp) => {
 }
 
 const runInitialiseChildRecord = async (_, newApp, diff) => {
-  await initialiseChildrenForNode(newApp.datastore, diff.newNode)
-} 
+  await initialiseChildrenForNode(newApp, diff.newNode)
+}

@@ -53,14 +53,12 @@
 </div>
 
 <style>
+  .uk-modal-footer {
+    background: var(--lightslate);
+  }
 
-.uk-modal-footer {
-  background: var(--lightslate);
-}
-
-.uk-modal-dialog {
-  width: 400px;
-  border-radius: 5px;
-}
-
+  .uk-modal-dialog {
+    width: 400px;
+    border-radius: 5px;
+  }
 </style>

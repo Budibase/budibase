@@ -14,7 +14,10 @@ export const UPDATE_RECORD_TRANSACTION = "update"
 export const DELETE_RECORD_TRANSACTION = "delete"
 export const BUILD_INDEX_TRANSACTION = "build"
 
-export const isUpdate_Or_Rebuild = isOfType(UPDATE_RECORD_TRANSACTION, BUILD_INDEX_TRANSACTION)
+export const isUpdate_Or_Rebuild = isOfType(
+  UPDATE_RECORD_TRANSACTION,
+  BUILD_INDEX_TRANSACTION
+)
 export const isUpdate = isOfType(UPDATE_RECORD_TRANSACTION)
 export const isDelete = isOfType(DELETE_RECORD_TRANSACTION)
 export const isCreate = isOfType(CREATE_RECORD_TRANSACTION)
