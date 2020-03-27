@@ -106,7 +106,7 @@ export const saveBackend = async state => {
   for (let instance of instances_currentFirst) {
     await api.post(
       `/_builder/instance/${state.appname}/${instance.id}/api/upgradeData`,
-      { newHierarchy: state.hierarchy }
+      { newHierarchy: state.hierarchy, accessLevels: state.accessLevels }
     )
   }
 }
