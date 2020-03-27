@@ -5,7 +5,11 @@
   import Modal from "../../../common/Modal.svelte"
   import ActionButton from "../../../common/ActionButton.svelte"
   import Select from "../../../common/Select.svelte"
-  import { getNewRecord, joinKey, getExactNodeForKey } from "../../../common/core"
+  import {
+    getNewRecord,
+    joinKey,
+    getExactNodeForKey,
+  } from "../../../common/core"
   import RecordFieldControl from "./RecordFieldControl.svelte"
   import * as api from "../api"
   import ErrorsBox from "../../../common/ErrorsBox.svelte"
@@ -14,12 +18,8 @@
   export let onClosed
 
   let errors = []
-  
-  const childModelsForModel = compose(
-    flatten,
-    map("children"),
-    get("children")
-  )
+
+  const childModelsForModel = compose(flatten, map("children"), get("children"))
 
   $: currentAppInfo = {
     appname: $store.appname,
@@ -31,24 +31,28 @@
 
   let selectedModel
   $: {
-    if (record) { 
+    if (record) {
       selectedModel = getExactNodeForKey($store.hierarchy)(record.key)
     } else {
       selectedModel = selectedModel || models[0]
     }
   }
-  
-  $: modelFields = selectedModel
-    ? selectedModel.fields
-    : []
-  
+
+  $: modelFields = selectedModel ? selectedModel.fields : []
+
   function getCurrentCollectionKey(selectedRecord) {
     return selectedRecord
-    ? joinKey(selectedRecord.key, selectedModel.collectionName)
-    : joinKey(selectedModel.collectionName)
+      ? joinKey(selectedRecord.key, selectedModel.collectionName)
+      : joinKey(selectedModel.collectionName)
   }
 
-  $: editingRecord = record || editingRecord || getNewRecord(selectedModel, getCurrentCollectionKey($backendUiStore.selectedRecord))
+  $: editingRecord =
+    record ||
+    editingRecord ||
+    getNewRecord(
+      selectedModel,
+      getCurrentCollectionKey($backendUiStore.selectedRecord)
+    )
 
   function closed() {
     editingRecord = null
@@ -56,10 +60,7 @@
   }
 
   async function saveRecord() {
-    const recordResponse = await api.saveRecord(
-      editingRecord,
-      currentAppInfo
-    )
+    const recordResponse = await api.saveRecord(editingRecord, currentAppInfo)
     backendUiStore.update(state => {
       state.selectedView = state.selectedView
       return state
@@ -83,11 +84,8 @@
           </Select>
         </div>
       {/if}
-      {#each (modelFields || []) as field}
-        <RecordFieldControl 
-          record={editingRecord}
-          {field}
-          {errors} />
+      {#each modelFields || [] as field}
+        <RecordFieldControl record={editingRecord} {field} {errors} />
       {/each}
     </form>
     <footer>

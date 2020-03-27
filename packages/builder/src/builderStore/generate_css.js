@@ -39,7 +39,7 @@ const css_map = {
   },
   direction: {
     name: "flex-direction",
-    generate: self
+    generate: self,
   },
   gridarea: {
     name: "grid-area",
@@ -113,7 +113,7 @@ const object_to_css_string = [
 export const generate_css = ({ layout, position }) => {
   let _layout = pipe(layout, object_to_css_string)
   if (_layout.length) {
-    _layout += `\ndisplay: ${_layout.includes("flex") ? "flex" : "grid"};`;
+    _layout += `\ndisplay: ${_layout.includes("flex") ? "flex" : "grid"};`
   }
 
   return {

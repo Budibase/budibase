@@ -1,11 +1,11 @@
 <script>
   import getIcon from "../common/icon"
-  import { backendUiStore } from "../builderStore";
+  import { backendUiStore } from "../builderStore"
 
   export let name = ""
   export let label = ""
 
-  $: navActive = $backendUiStore.leftNavItem === name 
+  $: navActive = $backendUiStore.leftNavItem === name
 
   const setActive = () => backendUiStore.actions.navigate(name)
 </script>

@@ -1,17 +1,6 @@
-import {
-  filter,
-  cloneDeep,
-  last,
-  concat,
-  isEmpty,
-  values,
-} from "lodash/fp"
-import {
-  pipe,
-  getNode,
-  constructHierarchy,
-} from "../../common/core"
-import * as backendStoreActions from "./backend";
+import { filter, cloneDeep, last, concat, isEmpty, values } from "lodash/fp"
+import { pipe, getNode, constructHierarchy } from "../../common/core"
+import * as backendStoreActions from "./backend"
 import { writable } from "svelte/store"
 import { defaultPagesObject } from "../../userInterface/pagesParsing/defaultPagesObject"
 import api from "../api"
@@ -224,29 +213,27 @@ const _saveScreen = async (store, s, screen) => {
       screen
     )
     .then(() => {
+      if (currentPageScreens.includes(screen)) return
 
-      if(currentPageScreens.includes(screen)) return
-
-      const screens = [
-        ...currentPageScreens,
-        screen,
-      ]
+      const screens = [...currentPageScreens, screen]
 
       store.update(innerState => {
         innerState.pages[s.currentPageName]._screens = screens
         innerState.screens = screens
         innerState.currentPreviewItem = screen
         const safeProps = makePropsSafe(
-          getComponentDefinition(innerState.components, screen.props._component), 
+          getComponentDefinition(
+            innerState.components,
+            screen.props._component
+          ),
           screen.props
         )
         innerState.currentComponentInfo = safeProps
         screen.props = safeProps
-        
+
         _savePage(innerState)
         return innerState
       })
-      
     })
 
   return s
@@ -485,7 +472,7 @@ const setCurrentPage = store => pageName => {
   })
 }
 
-const getComponentDefinition = (components, name) => 
+const getComponentDefinition = (components, name) =>
   components.find(c => c.name === name)
 
 /**
@@ -544,7 +531,9 @@ const addTemplatedComponent = store => props => {
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       props
     )
-    state.currentPreviewItem._css = generate_screen_css([state.currentPreviewItem.props])
+    state.currentPreviewItem._css = generate_screen_css([
+      state.currentPreviewItem.props,
+    ])
 
     setCurrentPageFunctions(state)
     _saveCurrentPreviewItem(state)

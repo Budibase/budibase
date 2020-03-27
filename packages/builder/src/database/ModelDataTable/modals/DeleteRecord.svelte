@@ -8,7 +8,7 @@
 
   $: currentAppInfo = {
     appname: $store.appname,
-    instanceId: $backendUiStore.selectedDatabase.id
+    instanceId: $backendUiStore.selectedDatabase.id,
   }
 
   function onClosed() {
@@ -45,7 +45,7 @@
     background: #fafafa;
     padding: 5px;
   }
-  
+
   .modal-actions {
     padding: 10px;
     position: absolute;
@@ -62,6 +62,6 @@
   }
 
   h4 {
-    margin: 0 0 0 10px; 
+    margin: 0 0 0 10px;
   }
 </style>

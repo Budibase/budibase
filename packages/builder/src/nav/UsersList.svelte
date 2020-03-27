@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { store, backendUiStore } from "../builderStore"
-  import api from "../builderStore/api";
+  import api from "../builderStore/api"
   import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
 
@@ -14,12 +14,12 @@
 
   $: currentAppInfo = {
     appname: $store.appname,
-    instanceId: $backendUiStore.selectedDatabase.id
+    instanceId: $backendUiStore.selectedDatabase.id,
   }
 
   async function fetchUsers() {
     const FETCH_USERS_URL = `/_builder/instance/${currentAppInfo.appname}/${currentAppInfo.instanceId}/api/users`
-    const response = await api.get(FETCH_USERS_URL);
+    const response = await api.get(FETCH_USERS_URL)
     users = await response.json()
     backendUiStore.update(state => {
       state.users = users
@@ -35,7 +35,9 @@
     {#each users as user}
       <li>
         <i class="ri-user-4-line" />
-        <button class:active={user.id === $store.currentUserId}>{user.name}</button>
+        <button class:active={user.id === $store.currentUserId}>
+          {user.name}
+        </button>
       </li>
     {/each}
   </ul>
@@ -69,7 +71,7 @@
     font-size: 0.8rem;
     outline: none;
     cursor: pointer;
-    background: rgba(0,0,0,0);
+    background: rgba(0, 0, 0, 0);
   }
 
   .active {

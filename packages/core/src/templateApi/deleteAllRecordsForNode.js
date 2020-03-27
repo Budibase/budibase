@@ -4,10 +4,8 @@ import { isTopLevelRecord, getCollectionKey } from "./hierarchy"
 import { safeKey, joinKey } from "../common"
 
 export const deleteAllRecordsForNode = async (app, recordNode) => {
-
   if (isTopLevelRecord(recordNode)) {
-    await deleteRecordCollection(
-      app, recordNode.collectionName)
+    await deleteRecordCollection(app, recordNode.collectionName)
     return
   }
 
@@ -17,16 +15,19 @@ export const deleteAllRecordsForNode = async (app, recordNode) => {
     const { result } = iterateResult
     for (const id of result.ids) {
       const deletingCollectionKey = joinKey(
-        result.collectionKey, id, recordNode.collectionName)
+        result.collectionKey,
+        id,
+        recordNode.collectionName
+      )
       await deleteRecordCollection(app, deletingCollectionKey)
     }
     iterateResult = await iterate()
   }
-
 }
 
 const deleteRecordCollection = async (app, collectionKey) => {
   collectionKey = safeKey(collectionKey)
   await app.datastore.deleteFolder(
-    getCollectionDir(app.hierarchy, collectionKey))
+    getCollectionDir(app.hierarchy, collectionKey)
+  )
 }

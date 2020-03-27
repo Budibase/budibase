@@ -1,11 +1,6 @@
-import { writable } from "svelte/store";
+import { writable } from "svelte/store"
 import api from "../api"
-import {
-  cloneDeep,
-  sortBy,
-  find,
-  remove
-} from "lodash/fp"
+import { cloneDeep, sortBy, find, remove } from "lodash/fp"
 import { hierarchy as hierarchyFunctions } from "../../../../core/src"
 import {
   getNode,
@@ -14,7 +9,7 @@ import {
   templateApi,
   isIndex,
   canDeleteIndex,
-  canDeleteRecord
+  canDeleteRecord,
 } from "../../common/core"
 
 export const getBackendUiStore = () => {
@@ -22,7 +17,7 @@ export const getBackendUiStore = () => {
     leftNavItem: "DATABASE",
     selectedView: {
       records: [],
-      name: ""
+      name: "",
     },
     breadcrumbs: [],
     selectedDatabase: {},
@@ -34,54 +29,61 @@ export const getBackendUiStore = () => {
   store.actions = {
     navigate: name => store.update(state => ({ ...state, leftNavItem: name })),
     database: {
-      select: db => store.update(state => {  
+      select: db =>
+        store.update(state => {
           state.selectedDatabase = db
           state.breadcrumbs = [db.name]
           return state
-      })
+        }),
     },
     records: {
-      delete: () => store.update(state => { 
-        state.selectedView = state.selectedView 
-        return state
-      }),
-      view: record => store.update(state => { 
-        state.breadcrumbs = [state.selectedDatabase.name, record.id]
-        return state
-      }),
-      select: record => store.update(state => {
-        state.selectedRecord = record
-        return state
-      })
+      delete: () =>
+        store.update(state => {
+          state.selectedView = state.selectedView
+          return state
+        }),
+      view: record =>
+        store.update(state => {
+          state.breadcrumbs = [state.selectedDatabase.name, record.id]
+          return state
+        }),
+      select: record =>
+        store.update(state => {
+          state.selectedRecord = record
+          return state
+        }),
     },
     views: {
-      select: view => store.update(state => { 
-        state.selectedView = view 
-        return state
-      })
+      select: view =>
+        store.update(state => {
+          state.selectedView = view
+          return state
+        }),
     },
     modals: {
       show: modal => store.update(state => ({ ...state, visibleModal: modal })),
-      hide: () => store.update(state => ({ ...state, visibleModal: null }))
+      hide: () => store.update(state => ({ ...state, visibleModal: null })),
     },
     users: {
-      create: user => store.update(state => {
-        state.users.push(user)
-        state.users = state.users
-        return state
-      })
-    }
+      create: user =>
+        store.update(state => {
+          state.users.push(user)
+          state.users = state.users
+          return state
+        }),
+    },
   }
 
   return store
-};
+}
 
 // Store Actions
-export const createShadowHierarchy = hierarchy => constructHierarchy(JSON.parse(JSON.stringify(hierarchy)))
+export const createShadowHierarchy = hierarchy =>
+  constructHierarchy(JSON.parse(JSON.stringify(hierarchy)))
 
 export const createDatabaseForApp = store => appInstance => {
-  store.update(state => { 
-    state.appInstances.push(appInstance) 
+  store.update(state => {
+    state.appInstances.push(appInstance)
     return state
   })
 }
@@ -244,7 +246,9 @@ export const deleteCurrentNode = store => () => {
 
 export const saveField = store => field => {
   store.update(state => {
-    state.currentNode.fields = state.currentNode.fields.filter(f => f.id !== field.id)
+    state.currentNode.fields = state.currentNode.fields.filter(
+      f => f.id !== field.id
+    )
 
     templateApi(state.hierarchy).addField(state.currentNode, field)
     return state
@@ -253,13 +257,17 @@ export const saveField = store => field => {
 
 export const deleteField = store => field => {
   store.update(state => {
-    state.currentNode.fields = state.currentNode.fields.filter(f => f.name !== field.name)
+    state.currentNode.fields = state.currentNode.fields.filter(
+      f => f.name !== field.name
+    )
     return state
   })
 }
 
 const incrementAccessLevelsVersion = state => {
-  state.accessLevels.version = state.accessLevels.version ? state.accessLevels.version + 1 : 1
+  state.accessLevels.version = state.accessLevels.version
+    ? state.accessLevels.version + 1
+    : 1
   return state
 }
 
@@ -272,7 +280,9 @@ export const saveLevel = store => (newLevel, isNew, oldLevel = null) => {
       : find(a => a.name === oldLevel.name)(levels)
 
     if (existingLevel) {
-      state.accessLevels.levels = levels.map(level => level === existingLevel ? newLevel : level) 
+      state.accessLevels.levels = levels.map(level =>
+        level === existingLevel ? newLevel : level
+      )
     } else {
       state.accessLevels.levels.push(newLevel)
     }
@@ -286,7 +296,9 @@ export const saveLevel = store => (newLevel, isNew, oldLevel = null) => {
 
 export const deleteLevel = store => level => {
   store.update(state => {
-    state.accessLevels.levels = state.accessLevels.levels.filter(t => t.name !== level.name)
+    state.accessLevels.levels = state.accessLevels.levels.filter(
+      t => t.name !== level.name
+    )
     incrementAccessLevelsVersion(s)
     saveBackend(state)
     return state
@@ -300,7 +312,9 @@ export const saveAction = store => (newAction, isNew, oldAction = null) => {
       : find(a => a.name === oldAction.name)(s.actions)
 
     if (existingAction) {
-      s.actions = s.actions.map(action => action === existingAction ? newAction : action)
+      s.actions = s.actions.map(action =>
+        action === existingAction ? newAction : action
+      )
     } else {
       s.actions.push(newAction)
     }
@@ -311,9 +325,9 @@ export const saveAction = store => (newAction, isNew, oldAction = null) => {
 
 export const deleteAction = store => action => {
   store.update(state => {
-    state.actions = state.actions.filter(a => a.name !== action.name);
-    saveBackend(state);
-    return state;
+    state.actions = state.actions.filter(a => a.name !== action.name)
+    saveBackend(state)
+    return state
   })
 }
 

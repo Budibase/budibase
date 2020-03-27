@@ -10,7 +10,7 @@
     flatten,
     map,
     remove,
-    keys
+    keys,
   } from "lodash/fp"
   import Select from "../../common/Select.svelte"
   import { getIndexSchema } from "../../common/core"
@@ -23,13 +23,7 @@
 
   const ITEMS_PER_PAGE = 10
   // Internal headers we want to hide from the user
-  const INTERNAL_HEADERS = [
-    "key",
-    "sortKey",
-    "type",
-    "id",
-    "isNew"
-  ]
+  const INTERNAL_HEADERS = ["key", "sortKey", "type", "id", "isNew"]
 
   let modalOpen = false
   let data = []
@@ -61,11 +55,7 @@
 
   const getSchema = getIndexSchema($store.hierarchy)
 
-  const childViewsForRecord = compose(
-    flatten,
-    map("indexes"),
-    get("children")
-  )
+  const childViewsForRecord = compose(flatten, map("indexes"), get("children"))
 
   const hideInternalHeaders = compose(
     remove(headerName => INTERNAL_HEADERS.includes(headerName)),

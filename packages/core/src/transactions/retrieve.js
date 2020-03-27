@@ -31,15 +31,16 @@ export const retrieve = async app => {
         app,
         joinKey(TRANSACTIONS_FOLDER, buildIndexFolder)
       )
-      if(transactions.length === 0) {
+      if (transactions.length === 0) {
         await app.datastore.deleteFolder(
-          joinKey(TRANSACTIONS_FOLDER, buildIndexFolder))
+          joinKey(TRANSACTIONS_FOLDER, buildIndexFolder)
+        )
       } else {
         return transactions
       }
       currentFolderIndex += 1
     }
-  
+
     return []
   }
 
@@ -65,7 +66,7 @@ const retrieveBuildIndexTransactions = async (app, buildIndexFolder) => {
     const files = await app.datastore.getFolderContents(childFolderKey)
 
     if (files.length > 0) {
-      return { childFolderKey, files } 
+      return { childFolderKey, files }
     }
 
     await app.datastore.deleteFolder(childFolderKey)

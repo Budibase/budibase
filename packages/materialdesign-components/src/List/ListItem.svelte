@@ -56,7 +56,7 @@
   })
 
   function handleClick() {
-    let item =  itemData()
+    let item = itemData()
     if (!disabled) {
       if (
         listProps.singleSelection ||

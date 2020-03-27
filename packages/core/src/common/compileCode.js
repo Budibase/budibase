@@ -1,8 +1,5 @@
-import {
-  compileCode as cCode,
-} from "@nx-js/compiler-util"
+import { compileCode as cCode } from "@nx-js/compiler-util"
 import { includes } from "lodash/fp"
-
 
 export const compileCode = code => {
   let func
@@ -12,9 +9,9 @@ export const compileCode = code => {
     safeCode = code
   } else {
     let trimmed = code.trim()
-    trimmed = trimmed.endsWith(";") 
-    ? trimmed.substring(0, trimmed.length - 1)
-    : trimmed
+    trimmed = trimmed.endsWith(";")
+      ? trimmed.substring(0, trimmed.length - 1)
+      : trimmed
     safeCode = `return (${trimmed})`
   }
 

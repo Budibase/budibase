@@ -46,7 +46,7 @@
 
     </div>
   {/if}
- 
+
 </div>
 
 <style>
@@ -74,7 +74,7 @@
     cursor: pointer;
     font-size: 14px;
     text-transform: uppercase;
-    background: rgba(0,0,0,0);
+    background: rgba(0, 0, 0, 0);
     font-weight: 500;
     color: var(--secondary40);
     margin-right: 20px;

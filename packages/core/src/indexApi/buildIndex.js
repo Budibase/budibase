@@ -125,7 +125,7 @@ const buildHeirarchalIndex = async (app, indexNode) => {
     )
 
     let allIds = await allIdsIterator()
-    while (allIds.done === false) { 
+    while (allIds.done === false) {
       await createTransactionsForIds(
         allIds.result.collectionKey,
         allIds.result.ids
@@ -139,6 +139,5 @@ const buildHeirarchalIndex = async (app, indexNode) => {
 
 const recordNodeApplies = indexNode => recordNode =>
   includes(recordNode.nodeId)(indexNode.allowedRecordNodeIds)
-
 
 export default buildIndex

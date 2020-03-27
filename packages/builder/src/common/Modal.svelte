@@ -24,7 +24,6 @@
       }
     }
   }
-
 </script>
 
 <div bind:this={ukModal} uk-modal {id}>

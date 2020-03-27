@@ -1,6 +1,6 @@
 <script>
   import InputGroup from "../common/Inputs/InputGroup.svelte"
-  import LayoutTemplateControls from "./LayoutTemplateControls.svelte";
+  import LayoutTemplateControls from "./LayoutTemplateControls.svelte"
 
   export let onStyleChanged = () => {}
   export let component
@@ -59,14 +59,13 @@
   {#each Object.entries(display) as [key, [name, meta, size]] (component._id + key)}
     <div class="grid">
       <h5>{name}:</h5>
-        <LayoutTemplateControls
-          onStyleChanged={_value => onStyleChanged('layout', key, _value)}
-          values={layout[key] || newValue(meta.length)}
-          propertyName={name}
-          {meta}
-          {size}
-          type="text" 
-        />
+      <LayoutTemplateControls
+        onStyleChanged={_value => onStyleChanged('layout', key, _value)}
+        values={layout[key] || newValue(meta.length)}
+        propertyName={name}
+        {meta}
+        {size}
+        type="text" />
     </div>
   {/each}
 </div>
