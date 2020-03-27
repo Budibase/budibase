@@ -25,6 +25,7 @@
   let navDate = new Date()
   const weekdayMap = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
+  export let _bb
   export let date = new Date()
   export let label = ""
   export let onSelect = selectedDate => {}
@@ -105,13 +106,13 @@
     <div class="calendar-container">
       <div class="month-picker">
         <div>
-          <IconButton icon="chevron_left" onClick={subtractMonth} />
+          <IconButton icon="chevron_left" {_bb} onClick={subtractMonth} />
         </div>
         <div class="centreText">
           <Body1 text={monthAndYear} />
         </div>
         <div>
-          <IconButton icon="chevron_right" onClick={addMonth} />
+          <IconButton icon="chevron_right" {_bb} onClick={addMonth} />
         </div>
       </div>
       <div class="week-days">
