@@ -3,6 +3,8 @@ import { _deleteRecord } from "../recordApi/delete"
 import { getAllIdsIterator } from "../indexing/allIds"
 import { permission } from "../authApi/permissions"
 import { getCollectionDir } from "../recordApi/recordInfo"
+import { ensureCollectionIsInitialised } from "./initialise"
+import { getNodeForCollectionPath } from "../templateApi/hierarchy"
 
 export const deleteCollection = (app, disableCleanup = false) => async key =>
   apiWrapper(
@@ -25,14 +27,19 @@ export const _deleteCollection = async (app, key, disableCleanup) => {
   key = safeKey(key)
   const collectionDir = getCollectionDir(app.hierarchy, key)
   await deleteRecords(app, key)
-  await deleteCollectionFolder(app, collectionDir)
+  await deleteCollectionFolder(app, key, collectionDir)
   if (!disableCleanup) {
     await app.cleanupTransactions()
   }
 }
 
-const deleteCollectionFolder = async (app, dir) =>
+const deleteCollectionFolder = async (app, key, dir) => {
   await app.datastore.deleteFolder(dir)
+  await ensureCollectionIsInitialised(
+    app.datastore,
+    getNodeForCollectionPath(app.hierarchy)(key),
+    dir)
+}
 
 const deleteRecords = async (app, key) => {
   const iterate = await getAllIdsIterator(app)(key)
