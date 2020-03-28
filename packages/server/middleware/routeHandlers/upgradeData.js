@@ -6,5 +6,6 @@ module.exports = async ctx => {
   accessLevels.version = existingAccessLevels.version
   await ctx.instance.authApi.saveAccessLevels(accessLevels)
   await ctx.instance.templateApi.upgradeData(ctx.request.body.newHierarchy)
+  await ctx.master.clearAllSessions(ctx.params.appname)
   ctx.response.status = StatusCodes.OK
 }
