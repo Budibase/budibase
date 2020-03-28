@@ -325,6 +325,15 @@ module.exports = async context => {
     }
   }
 
+  const clearAllSessions = async appname => {
+    if (isMaster(appname)) {
+      await bb.collectionApi.delete("/mastersessions")
+    } else {
+      const app = await getApplication(appname)
+      await bb.collectionApi.delete(`/applications/${app.id}/sessions`)
+    }
+  }
+
   const getApplicationWithInstances = async appname => {
     const app = cloneDeep(await getApplication(appname))
     app.instances = await bb.indexApi.listItems(
@@ -346,7 +355,7 @@ module.exports = async context => {
     await bb.recordApi.save(userInMaster)
   }
 
-  const deleteLatestPackageFromCache = (appname) => {
+  const deleteLatestPackageFromCache = appname => {
     deleteCachedPackage(context, appname, LATEST_VERSIONID)
   }
 
@@ -370,5 +379,6 @@ module.exports = async context => {
     getFullAccessApiForMaster,
     getApplicationWithInstances,
     deleteLatestPackageFromCache,
+    clearAllSessions,
   }
 }
