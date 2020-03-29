@@ -2,7 +2,6 @@
   import ModelView from "./ModelView.svelte"
   import IndexView from "./IndexView.svelte"
   import ModelDataTable from "./ModelDataTable"
-  import ActionsHeader from "./ActionsHeader.svelte"
   import { store, backendUiStore } from "../builderStore"
   import getIcon from "../common/icon"
   import DropdownButton from "../common/DropdownButton.svelte"
