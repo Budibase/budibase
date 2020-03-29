@@ -4,10 +4,10 @@
   import Button from "../common/Button.svelte"
   import Dropdown from "../common/Dropdown.svelte"
   import { store } from "../builderStore"
-  import ActionsHeader from "./ActionsHeader.svelte"
   import { filter, some, map, compose } from "lodash/fp"
   import { hierarchy as hierarchyFunctions, common } from "../../../core/src"
   import ErrorsBox from "../common/ErrorsBox.svelte"
+  import ActionButton from "../common/ActionButton.svelte"
 
   const SNIPPET_EDITORS = {
     MAP: "Map",
@@ -99,7 +99,14 @@
     <CodeArea bind:text={index.getShardName} label="Shard Name" />
   {/if}
 
-  <ActionsHeader />
+  <ActionButton color="secondary" on:click={store.saveCurrentNode}>
+    Save
+  </ActionButton>
+
+  {#if !$store.currentNodeIsNew}
+    <ActionButton alert on:click={store.deleteCurrentNode}>Delete</ActionButton>
+  {/if}
+
 </form>
 
 <style>

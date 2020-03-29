@@ -22,7 +22,6 @@
   import { common, hierarchy } from "../../../core/src"
   import { getNode } from "../common/core"
   import { templateApi, pipe, validate } from "../common/core"
-  import ActionsHeader from "./ActionsHeader.svelte"
   import ErrorsBox from "../common/ErrorsBox.svelte"
 
   let record
@@ -165,23 +164,26 @@
         {/each}
       </tbody>
     </table>
-    {#if modelExistsInHierarchy}
       <div class="uk-margin">
-        <ActionButton color="primary" on:click={store.newChildRecord}>
-          Create Child Model on {record.name}
+        <ActionButton color="secondary" on:click={store.saveCurrentNode}>
+          Save
         </ActionButton>
-        <ActionButton
-          color="primary"
-          on:click={async () => {
-            backendUiStore.actions.modals.show('VIEW')
-            await tick()
-            store.newChildIndex()
-          }}>
-          Create Child View on {record.name}
-        </ActionButton>
+        {#if modelExistsInHierarchy}
+          <ActionButton color="primary" on:click={store.newChildRecord}>
+            Create Child Model on {record.name}
+          </ActionButton>
+          <ActionButton
+            color="primary"
+            on:click={async () => {
+              backendUiStore.actions.modals.show('VIEW')
+              await tick()
+              store.newChildIndex()
+            }}>
+            Create Child View on {record.name}
+          </ActionButton>
+          <ActionButton alert on:click={store.deleteCurrentNode}>Delete</ActionButton>
+        {/if}
       </div>
-    {/if}
-    <ActionsHeader />
   {:else}
     <FieldView
       field={fieldToEdit}
