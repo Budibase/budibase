@@ -155,7 +155,7 @@
               <div>{field.name}</div>
             </td>
             <td>{field.type}</td>
-            <td>{field.typeOptions.values}</td>
+            <td>{field.typeOptions.values || ""}</td>
             <td>
               <i
                 class="ri-delete-bin-6-line hoverable"
