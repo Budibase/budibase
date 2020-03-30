@@ -5,7 +5,6 @@
   import BackendRoot from "./BackendRoot.svelte"
   import { fade } from "svelte/transition"
   import { SettingsIcon, PreviewIcon } from "./common/Icons/"
-  import { showAppNotification } from "./common/AppNotification.svelte"
 
   const TABS = {
     BACKEND: "backend",
