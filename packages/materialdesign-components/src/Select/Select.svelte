@@ -30,21 +30,22 @@
   export let persistent = false
   export let value = ""
 
+  $: safeValue = Array.isArray(value) ? value : [value]
+
   onMount(() => {
     _bb.setContext("BBMD:list:props", { singleSelection: true })
-    _bb.setContext("BBMD:list:addItem", i => listItems = [...listItems, i])
+    _bb.setContext("BBMD:list:addItem", i => (listItems = [...listItems, i]))
 
     selectedItemsStore = createItemsStore(() => {
-
-      const v = $selectedItemsStore && $selectedItemsStore.length > 0
-                ? $selectedItemsStore[0].value
-                : "";
+      const v =
+        $selectedItemsStore && $selectedItemsStore.length > 0
+          ? $selectedItemsStore[0].value
+          : ""
 
       value = v
       _bb.setStateFromBinding(_bb.props.value, v)
       _bb.call(onSelect, v)
-      
-    })
+    }, safeValue)
     _bb.setContext("BBMD:list:selectItemStore", selectedItemsStore)
 
     _helperId = generate()
@@ -58,10 +59,8 @@
     }
   })
 
-
   $: useNotchedOutline = variant === "outlined"
   $: selectList && _bb.attachChildren(selectList)
-  
 
   $: modifiers = { variant, disabled, required, noLabel: !label }
   $: props = { modifiers }
@@ -69,8 +68,6 @@
   $: if (value !== undefined && instance && listItems.length > 0) {
     instance.selectedIndex = listItems.findIndex(i => i.value === value)
   }
-  
-
 </script>
 
 <div bind:this={select} id={_helperId} class={selectClass}>

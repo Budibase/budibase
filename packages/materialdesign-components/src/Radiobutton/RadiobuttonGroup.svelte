@@ -13,6 +13,9 @@
   export let fullwidth = false
   export let alignEnd = false
   export let disabled = false
+  export let value = []
+
+  $: safeValue = Array.isArray(value) ? value : [value]
 
   let selectedItemsStore
   let selected = null
@@ -20,7 +23,13 @@
 
   onMount(() => {
     _bb.setContext("BBMD:input:context", "radiobuttongroup")
-    selectedItemsStore = createItemStore(() => onChange($selectedItemsStore))
+    selectedItemsStore = createItemStore(() => {
+      value = $selectedItemsStore
+      if (_bb.isBound(_bb.props.value)) {
+        _bb.setStateFromBinding(_bb.props.value, value)
+      }
+      _bb.call(onChange, value)
+    }, safeValue)
     _bb.setContext("BBMD:radiobutton:props", { name, disabled, alignEnd })
     _bb.setContext("BBMD:radiobutton:selectedItemsStore", selectedItemsStore)
   })

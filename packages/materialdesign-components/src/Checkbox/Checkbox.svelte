@@ -6,7 +6,7 @@
   import { MDCCheckbox } from "@material/checkbox"
   import { generate } from "shortid"
 
-  export let onClick = item => {}
+  export let onChange = item => {}
 
   export let _bb
 
@@ -59,13 +59,15 @@
   function changed(e) {
     const val = e.target.checked
     checked = val
+    handleOnClick()
     if (_bb.isBound(_bb.props.checked)) {
       _bb.setStateFromBinding(_bb.props.checked, val)
     }
   }
 
   function handleOnClick() {
-    let item = { _id, label, value }
+    let item = { _id, checked, label, value }
+
     if (context === "checkboxgroup") {
       let idx = selectedItems.getItemIdx($selectedItems, _id)
       if (idx > -1) {
@@ -73,9 +75,8 @@
       } else {
         selectedItems.addItem(item)
       }
-    } else {
-      onClick(item)
     }
+    _bb.call(onChange, item)
   }
 
   $: isChecked =
@@ -101,7 +102,6 @@
         {id}
         disabled={isDisabled}
         {isChecked}
-        on:click={handleOnClick}
         on:change={changed} />
       <div class={cb.elem`background`}>
         <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
@@ -123,8 +123,7 @@
       {id}
       disabled={isDisabled}
       {isChecked}
-      on:change={changed}
-      on:click={handleOnClick} />
+      on:change={changed} />
     <div class={cb.elem`background`}>
       <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
         <path
