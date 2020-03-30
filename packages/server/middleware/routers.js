@@ -101,10 +101,14 @@ module.exports = (config, app) => {
     .get("/_builder/*", async (ctx, next) => {
       const path = ctx.path.replace("/_builder", "")
 
+      const isFile = new RegExp(/(.+\..{1,5})/g).test(path)
+
       if (path.startsWith("/api/") || path.startsWith("/instance/")) {
         await next()
-      } else {
+      } else if (isFile) {
         await send(ctx, path, { root: builderPath })
+      } else {
+        await send(ctx, "/index.html", { root: builderPath })
       }
     })
     .post("/:appname/api/authenticate", routeHandlers.authenticate)
@@ -155,7 +159,6 @@ module.exports = (config, app) => {
         }
       }
     })
-
     .get("/_builder/api/:appname/componentlibrary", async ctx => {
       const info = await componentLibraryInfo(
         config,
@@ -172,6 +175,7 @@ module.exports = (config, app) => {
         ctx.request.body.appDefinition,
         ctx.request.body.accessLevels
       )
+      ctx.master.deleteLatestPackageFromCache(ctx.params.appname)
       ctx.response.status = StatusCodes.OK
     })
     .post("/_builder/api/:appname/pages/:pageName", async ctx => {
@@ -324,7 +328,3 @@ module.exports = (config, app) => {
 
   return router
 }
-
-/*
-front end get authenticateTemporaryAccess {}
-*/

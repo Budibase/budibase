@@ -43,7 +43,7 @@
     <div class="pages-list-container">
       <div class="nav-header">
         <span class="navigator-title">Navigator</span>
-          <div class="border-line" />
+        <div class="border-line" />
 
         <span class="components-nav-page">Pages</span>
       </div>
@@ -110,24 +110,23 @@
     padding: 0;
   }
 
-
-.root {
-  display: grid;
-  grid-template-columns: 275px 1fr 275px;
-  height: 100%;
-  width: 100%;
-  background: #fafafa;
-}
-
-@media only screen and (min-width: 1800px) {
   .root {
     display: grid;
-    grid-template-columns: 300px 1fr 300px;
+    grid-template-columns: 275px 1fr 275px;
     height: 100%;
     width: 100%;
     background: #fafafa;
   }
-}
+
+  @media only screen and (min-width: 1800px) {
+    .root {
+      display: grid;
+      grid-template-columns: 300px 1fr 300px;
+      height: 100%;
+      width: 100%;
+      background: #fafafa;
+    }
+  }
 
   .ui-nav {
     grid-column: 1;
@@ -223,10 +222,10 @@
     font-size: 14px;
     color: var(--secondary100);
     font-weight: 600;
+    text-transform: uppercase;
     padding: 0 20px 20px 20px;
     line-height: 1rem !important;
     letter-spacing: 1px;
-    
   }
 
   .border-line {

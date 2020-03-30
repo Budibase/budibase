@@ -9,8 +9,11 @@ import { find, filter, keyBy, flatten, map } from "lodash/fp"
 import { generateSchema } from "../../../core/src/indexing/indexSchemaCreator"
 import { generate } from "shortid"
 
+export { canDeleteIndex } from "../../../core/src/templateApi/canDeleteIndex"
+export { canDeleteRecord } from "../../../core/src/templateApi/canDeleteRecord"
 export { userWithFullAccess } from "../../../core/src/index"
-
+export { joinKey } from "../../../core/src/common"
+export { getExactNodeForKey } from "../../../core/src/templateApi/hierarchy"
 export const pipe = common.$
 
 export const events = common.eventsList
@@ -74,6 +77,9 @@ export const getPotentialReferenceIndexes = (hierarchy, record) =>
     ),
   ])
 
+export const isIndex = hierarchyFunctions.isIndex
+export const isRecord = hierarchyFunctions.isRecord
+
 export const getDefaultTypeOptions = type =>
   !type ? {} : allTypes[type].getDefaultOptions()
 
@@ -118,6 +124,7 @@ export const getNewInstance = (appId, name) => {
     version: { key: "" },
     isNew: true,
     type: "instance",
+    datastoreconfig: "",
     id,
     name,
   }

@@ -46,6 +46,7 @@
       _bb.setStateFromBinding(_bb.props.value, v)
       _bb.call(onSelect, v)
     }, safeValue)
+
     _bb.setContext("BBMD:list:selectItemStore", selectedItemsStore)
 
     _helperId = generate()

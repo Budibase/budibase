@@ -37,7 +37,7 @@ const options = {
     isValid: v =>
       v === null || (isArrayOfString(v) && v.length > 0 && v.length < 10000),
     requirementDescription:
-      "'values' must be null (no values) or an arry of at least one string",
+      "'values' must be null (no values) or an array of at least one string",
     parse: s => s,
   },
   allowDeclaredValuesOnly: {

@@ -29,16 +29,16 @@
   {/await}
 
   <!--
-	<div class="settings">
-		<IconButton icon="settings"
-                on:click={store.showSettings}/>
-	</div>
+    <div class="settings">
+      <IconButton icon="settings"
+                  on:click={store.showSettings}/>
+    </div>
 
 
-	{#if $store.useAnalytics}
-		<iframe src="https://marblekirby.github.io/bb-analytics.html" width="0" height="0" style="visibility:hidden;display:none"/>
-	{/if}
--->
+    {#if $store.useAnalytics}
+      <iframe src="https://marblekirby.github.io/bb-analytics.html" width="0" height="0" style="visibility:hidden;display:none"/>
+    {/if}
+  -->
 </main>
 
 <style>

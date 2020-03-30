@@ -1,17 +1,13 @@
 <script>
-  import { store } from "../builderStore"
   import getIcon from "../common/icon"
+  import { backendUiStore } from "../builderStore"
 
   export let name = ""
   export let label = ""
 
-  let navActive = ""
+  $: navActive = $backendUiStore.leftNavItem === name
 
-  store.subscribe(db => {
-    navActive = db.activeNav === name
-  })
-
-  const setActive = () => store.setActiveNav(name)
+  const setActive = () => backendUiStore.actions.navigate(name)
 </script>
 
 <div
