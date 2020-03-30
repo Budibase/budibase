@@ -6,6 +6,7 @@
 
   const cb = new ClassBuilder("button", ["primary", "medium", "text"])
 
+  export let _bb
   export let onClick
 
   export let variant = "text"
@@ -19,8 +20,6 @@
 
   export let text = ""
   export let disabled = false
-
-  export let _bb
 
   onMount(() => {
     let ctx = _bb.getContext("BBMD:button:context")

@@ -79,7 +79,7 @@ export const props = {
     id: "test-check",
     alignEnd: true,
     label: "Check Yo Self",
-    onClick: () => alert`Before ya reck yo'self`,
+    onChange: item => console.log(item),
   },
   Checkboxgroup: {
     _component: "@budibase/materialdesign-components/Checkboxgroup",

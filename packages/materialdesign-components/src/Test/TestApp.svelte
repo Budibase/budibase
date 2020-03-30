@@ -33,17 +33,7 @@
       const page = {
         props: {
           _component: "testcomponents/rootComponent",
-          _children: [
-            BodyBoundToStore,
-            Textfield,
-            Select,
-            Radiobutton,
-            Radiobuttongroup,
-            DatePicker,
-            IconButton,
-            Switch,
-            Slider,
-          ],
+          _children: [Checkbox],
         },
       }
       _appPromise.then(initialise => {
