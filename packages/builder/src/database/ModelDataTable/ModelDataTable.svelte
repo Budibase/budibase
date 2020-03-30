@@ -11,6 +11,7 @@
     map,
     remove,
     keys,
+    takeRight
   } from "lodash/fp"
   import Select from "../../common/Select.svelte"
   import { getIndexSchema } from "../../common/core"
@@ -78,8 +79,8 @@
 
   function drillIntoRecord(record) {
     backendUiStore.update(state => {
+      state.breadcrumbs = [...state.breadcrumbs, record.type, record.id]
       state.selectedRecord = record
-      state.breadcrumbs = [state.selectedDatabase.name, record.id]
       state.selectedView = childViewsForRecord($store.hierarchy)[0]
       return state
     })
@@ -94,7 +95,7 @@
 
 <section>
   <div class="table-controls">
-    <h4 class="budibase__title--3">{last($backendUiStore.breadcrumbs)}</h4>
+    <h4 class="budibase__title--3">{takeRight(2, $backendUiStore.breadcrumbs).join(" / ")}</h4>
     <Select icon="ri-eye-line" bind:value={$backendUiStore.selectedView}>
       {#each views as view}
         <option value={view}>{view.name}</option>
