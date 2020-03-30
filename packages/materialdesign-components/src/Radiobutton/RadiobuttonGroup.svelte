@@ -24,7 +24,7 @@
   onMount(() => {
     _bb.setContext("BBMD:input:context", "radiobuttongroup")
     selectedItemsStore = createItemStore(() => {
-      value = $selectedItemsStore
+      value = $selectedItemsStore[0]
       if (_bb.isBound(_bb.props.value)) {
         _bb.setStateFromBinding(_bb.props.value, value)
       }

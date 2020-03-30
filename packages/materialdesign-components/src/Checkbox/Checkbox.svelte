@@ -59,6 +59,7 @@
   function changed(e) {
     const val = e.target.checked
     checked = val
+
     handleOnClick()
     if (_bb.isBound(_bb.props.checked)) {
       _bb.setStateFromBinding(_bb.props.checked, val)
@@ -67,7 +68,7 @@
 
   function handleOnClick() {
     let item = { _id, checked, label, value }
-
+    debugger
     if (context === "checkboxgroup") {
       let idx = selectedItems.getItemIdx($selectedItems, _id)
       if (idx > -1) {
