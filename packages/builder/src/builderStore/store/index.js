@@ -44,7 +44,7 @@ export const getStore = () => {
     currentNode: null,
     libraries: null,
     showSettings: false,
-    useAnalytics: true,
+    useAnalytics: true
   }
 
   const store = writable(initial)
