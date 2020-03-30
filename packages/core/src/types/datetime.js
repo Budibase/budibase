@@ -6,7 +6,7 @@ import {
   parsedSuccess,
   getDefaultExport,
 } from "./typeHelpers"
-import { switchCase, defaultCase, toDateOrNull } from "../common"
+import { switchCase, defaultCase, toDateOrNull, isNonEmptyArray } from "../common"
 
 const dateFunctions = typeFunctions({
   default: constant(null),
@@ -21,23 +21,32 @@ const parseStringToDate = s =>
     [defaultCase, parsedFailed]
   )(new Date(s))
 
+const isNullOrEmpty = d => 
+  isNull(d) 
+  || (d || "").toString() === ""
+
+const isDateOrEmpty = d => 
+  isDate(d) 
+  || isNullOrEmpty(d)
+
 const dateTryParse = switchCase(
-  [isDate, parsedSuccess],
+  [isDateOrEmpty, parsedSuccess],
   [isString, parseStringToDate],
-  [isNull, parsedSuccess],
   [defaultCase, parsedFailed]
 )
 
 const options = {
   maxValue: {
-    defaultValue: new Date(32503680000000),
-    isValid: isDate,
+    defaultValue: null,
+    //defaultValue: new Date(32503680000000),
+    isValid: isDateOrEmpty,
     requirementDescription: "must be a valid date",
     parse: toDateOrNull,
   },
   minValue: {
-    defaultValue: new Date(-8520336000000),
-    isValid: isDate,
+    defaultValue: null,
+    //defaultValue: new Date(-8520336000000),
+    isValid: isDateOrEmpty,
     requirementDescription: "must be a valid date",
     parse: toDateOrNull,
   },
@@ -46,7 +55,7 @@ const options = {
 const typeConstraints = [
   makerule(
     async (val, opts) =>
-      val === null || opts.minValue === null || val >= opts.minValue,
+      val === null || isNullOrEmpty(opts.minValue) || val >= opts.minValue,
     (val, opts) =>
       `value (${val.toString()}) must be greater than or equal to ${
         opts.minValue
@@ -54,7 +63,7 @@ const typeConstraints = [
   ),
   makerule(
     async (val, opts) =>
-      val === null || opts.maxValue === null || val <= opts.maxValue,
+      val === null || isNullOrEmpty(opts.maxValue) || val <= opts.maxValue,
     (val, opts) =>
       `value (${val.toString()}) must be less than or equal to ${
         opts.minValue

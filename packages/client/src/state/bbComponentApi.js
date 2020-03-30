@@ -15,9 +15,12 @@ export const bbFactory = ({
 }) => {
   const relativeUrl = url => {
     if (!frontendDefinition.appRootPath) return url
-    if (url.startsWith("http:") 
-        || url.startsWith("https:") 
-        || url.startsWith("./")) return url
+    if (
+      url.startsWith("http:") ||
+      url.startsWith("https:") ||
+      url.startsWith("./")
+    )
+      return url
 
     return frontendDefinition.appRootPath + "/" + trimSlash(url)
   }

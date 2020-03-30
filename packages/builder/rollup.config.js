@@ -103,6 +103,11 @@ const lodash_fp_exports = [
   "toNumber",
   "takeRight",
   "toPairs",
+  "remove",
+  "findIndex",
+  "compose",
+  "get",
+  "tap",
 ]
 
 const lodash_exports = [
@@ -159,13 +164,15 @@ export default {
     }),
 
     replace({
-      "process.env.NODE_ENV": JSON.stringify(production ? "production" : "development")
+      "process.env.NODE_ENV": JSON.stringify(
+        production ? "production" : "development"
+      ),
     }),
 
     svelte({
       // enable run-time checks when not in production
       dev: !production,
-      include: "src/**/*.svelte",
+      include: ["src/**/*.svelte", "node_modules/**/*.svelte"],
       // we'll extract any component CSS out into
       // a separate file — better for performance
       css: css => {
