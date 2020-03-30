@@ -33,7 +33,22 @@
       const page = {
         props: {
           _component: "testcomponents/rootComponent",
-          _children: [Checkbox],
+          _children: [
+            Textfield,
+            Checkboxgroup,
+            Radiobutton,
+            Radiobuttongroup,
+            Datatable,
+            CustomersIndexTable,
+            Icon,
+            List,
+            Select,
+            DatePicker,
+            IconButton,
+            Card,
+            Switch,
+            Slider,
+          ],
         },
       }
       _appPromise.then(initialise => {

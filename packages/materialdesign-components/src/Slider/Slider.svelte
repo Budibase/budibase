@@ -9,6 +9,7 @@
   let instance
 
   export let _bb
+  export let onChange = value => {}
   export let variant = "continuous" //or discrete
   export let showTicks = false
   export let min = 0

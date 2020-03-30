@@ -18,7 +18,6 @@
   let tfInstance = null
 
   onMount(() => {
-    debugger
     if (!!tf) tfInstance = new MDCTextField(tf)
     return () => {
       !!tfInstance && tf.tfInstance && tf.tfInstance.destroy()

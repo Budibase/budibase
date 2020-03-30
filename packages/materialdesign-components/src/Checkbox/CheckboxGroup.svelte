@@ -24,6 +24,7 @@
       if (_bb.isBound(_bb.props.value)) {
         _bb.setStateFromBinding(_bb.props.value, value)
       }
+      debugger
       _bb.call(onChange, value)
     }, value)
     _bb.setContext("BBMD:checkbox:selectedItemsStore", selectedItemsStore)
