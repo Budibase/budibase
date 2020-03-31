@@ -153,7 +153,7 @@ export default {
   plugins: [
     copy({
       targets: [
-        { src: "src/index.html", dest: outputpath },
+        { src: "src/index.html", dest: outputpath, rename: "__app.html" },
         { src: "src/favicon.png", dest: outputpath },
         { src: "src/assets", dest: outputpath },
         {
@@ -214,6 +214,7 @@ export default {
 
     // Watch the `dist` directory and refresh the
     // browser on changes when not in production
+    !production && serve(),
     !production && livereload(outputpath),
     !production &&
       browsersync({
@@ -228,4 +229,21 @@ export default {
   watch: {
     clearScreen: false,
   },
+}
+
+function serve() {
+  let started = false
+
+  return {
+    writeBundle() {
+      if (!started) {
+        started = true
+
+        require("child_process").spawn("npm", ["run", "start"], {
+          stdio: ["ignore", "inherit", "inherit"],
+          shell: true,
+        })
+      }
+    },
+  }
 }
