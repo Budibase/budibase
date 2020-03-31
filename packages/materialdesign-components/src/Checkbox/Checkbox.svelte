@@ -68,7 +68,6 @@
 
   function handleOnClick() {
     let item = { _id, checked, label, value }
-    debugger
     if (context === "checkboxgroup") {
       let idx = selectedItems.getItemIdx($selectedItems, _id)
       if (idx > -1) {
