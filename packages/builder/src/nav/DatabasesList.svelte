@@ -1,6 +1,7 @@
 <script>
   import { tick } from "svelte"
   import { store, backendUiStore } from "../builderStore"
+  import api from "../builderStore/api"
   import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
 
@@ -12,6 +13,17 @@
     backendUiStore.actions.records.select(null)
     backendUiStore.actions.views.select(views[0])
     backendUiStore.actions.database.select(database)
+  }
+
+  async function deleteDatabase(database) {
+    const DELETE_DATABASE_URL = `/_builder/instance/_master/0/api/record/applications/${$store.appId}/instances/${database.id}`
+    const response = await api.delete(DELETE_DATABASE_URL)
+    store.update(state => {
+      state.appInstances = state.appInstances.filter(
+        db => db.id !== database.id
+      )
+      return state
+    })
   }
 </script>
 
@@ -30,6 +42,9 @@
           on:click={() => selectDatabase(database)}>
           {database.name}
         </button>
+        <i
+          class="ri-close-line hoverable uk-margin-small-left"
+          on:click={() => deleteDatabase(database)} />
       </li>
     {/each}
   </ul>
@@ -53,6 +68,8 @@
 
   li {
     margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
   }
 
   button {
