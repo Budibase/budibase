@@ -1,6 +1,6 @@
 <script>
-  import Button from "./common/Button.svelte"
-  import { store } from "./builderStore"
+  import Button from "components/common/Button.svelte"
+  import { store } from "builderStore"
 
   let errors = []
 </script>
