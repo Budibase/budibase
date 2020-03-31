@@ -1,3 +1,4 @@
+node_modules/
 myapps/
 config.js
 /builder/*

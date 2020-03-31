@@ -5,10 +5,11 @@
   "private": true,
   "scripts": {
     "build": "rollup -c",
-    "start": "rollup -c -w",
+    "start": "routify -c rollup",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "dev:builder": "rollup -c -w"
+    "dev:builder": "routify -c rollup",
+    "rollup": "rollup -c -w"
   },
   "jest": {
     "globals": {
@@ -54,6 +55,7 @@
     "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/runtime": "^7.5.5",
+    "@sveltech/routify": "1.5.0-beta.16",
     "babel-jest": "^24.8.0",
     "browser-sync": "^2.26.7",
     "http-proxy-middleware": "^0.19.1",
