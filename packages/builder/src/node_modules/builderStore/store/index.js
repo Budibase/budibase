@@ -1,18 +1,18 @@
 import { filter, cloneDeep, last, concat, isEmpty, values } from "lodash/fp"
-import { pipe, getNode, constructHierarchy } from "../../common/core"
+import { pipe, getNode, constructHierarchy } from "components/common/core"
 import * as backendStoreActions from "./backend"
 import { writable } from "svelte/store"
-import { defaultPagesObject } from "../../userInterface/pagesParsing/defaultPagesObject"
+import { defaultPagesObject } from "components/userInterface/pagesParsing/defaultPagesObject"
 import api from "../api"
-import { getExactComponent } from "../../userInterface/pagesParsing/searchComponents"
-import { rename } from "../../userInterface/pagesParsing/renameScreen"
+import { getExactComponent } from "components/userInterface/pagesParsing/searchComponents"
+import { rename } from "components/userInterface/pagesParsing/renameScreen"
 import {
   getNewScreen,
   createProps,
   makePropsSafe,
   getBuiltin,
-} from "../../userInterface/pagesParsing/createProps"
-import { expandComponentDefinition } from "../../userInterface/pagesParsing/types"
+} from "components/userInterface/pagesParsing/createProps"
+import { expandComponentDefinition } from "components/userInterface/pagesParsing/types"
 import { loadLibs, libUrlsForPreview } from "../loadComponentLibraries"
 import { buildCodeForScreens } from "../buildCodeForScreens"
 import { generate_screen_css } from "../generate_css"

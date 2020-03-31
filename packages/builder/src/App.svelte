@@ -8,7 +8,7 @@
   import Spinner from "components/common/Spinner.svelte"
   import AppNotification, {
     showAppNotification,
-  } from "components/AppNotification.svelte"
+  } from "components/common/AppNotification.svelte"
 
   let init = initialise()
 
