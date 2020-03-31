@@ -6,12 +6,26 @@
   import { onMount } from "svelte"
   import IconButton from "./common/IconButton.svelte"
   import Spinner from "./common/Spinner.svelte"
+  import AppNotification, { showAppNotification } from "./common/AppNotification.svelte"
 
   let init = initialise()
+
+  function showErrorBanner() {
+    showAppNotification({
+      status: "danger",
+      message:
+        "Whoops! Looks like we're having trouble. Please refresh the page.",
+    })
+  }
+
+  onMount(() => {
+    window.addEventListener("error", showErrorBanner)
+    window.addEventListener("unhandledrejection", showErrorBanner)
+  })
 </script>
 
 <main>
-
+  <AppNotification />
   {#await init}
     <div class="spinner-container">
       <Spinner />
