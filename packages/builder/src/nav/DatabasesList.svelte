@@ -36,15 +36,15 @@
             <CheckIcon />
           {/if}
         </span>
-
+        <i
+          class="ri-delete-bin-7-line hoverable uk-margin-small-left"
+          on:click={() => deleteDatabase(database)} />
         <button
           class:active={database.id === $backendUiStore.selectedDatabase.id}
           on:click={() => selectDatabase(database)}>
           {database.name}
         </button>
-        <i
-          class="ri-close-line hoverable uk-margin-small-left"
-          on:click={() => deleteDatabase(database)} />
+
       </li>
     {/each}
   </ul>
