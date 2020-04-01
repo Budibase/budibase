@@ -1,7 +1,7 @@
 import { isString, isUndefined } from "lodash/fp"
 import { types } from "./types"
 import { assign } from "lodash"
-import { uuid } from "builderStore/uuid"
+import { uuid } from "../src/builderStore/uuid"
 
 export const getBuiltin = name => {
   const { props } = createProps({ name })

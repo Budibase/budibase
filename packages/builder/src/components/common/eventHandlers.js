@@ -1,7 +1,7 @@
-import { eventHandlers } from "../../../../../client/src/state/eventHandlers"
+import { eventHandlers } from "../../../../client/src/state/eventHandlers"
 import { writable } from "svelte/store"
-export { EVENT_TYPE_MEMBER_NAME } from "../../../../../client/src/state/eventHandlers"
-import { createCoreApi } from "../../../../../client/src/core"
+export { EVENT_TYPE_MEMBER_NAME } from "../../../../client/src/state/eventHandlers"
+import { createCoreApi } from "../../../../client/src/core"
 
 export const allHandlers = (appDefinition, user) => {
   const coreApi = createCoreApi(appDefinition, user)

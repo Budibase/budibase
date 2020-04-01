@@ -1,5 +1,5 @@
 import { isString, keys, flatten, isArray, map, filter } from "lodash/fp"
-import { common } from "../../../../core/src"
+import { common } from "../../../../../core/src"
 const pipe = common.$
 
 export const validatePage = page => {
