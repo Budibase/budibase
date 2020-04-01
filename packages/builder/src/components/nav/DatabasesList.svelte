@@ -1,5 +1,5 @@
 <script>
-  import { tick } from "svelte"
+  import { tick, onMount } from "svelte"
   import { store, backendUiStore } from "builderStore"
   import api from "builderStore/api"
   import getIcon from "../common/icon"
