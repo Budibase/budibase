@@ -16,7 +16,7 @@
       <div>
         <h4 style="margin-bottom: 20px">Choose an Application</h4>
         {#each $store.apps as app}
-          <a href={`#/${app}`} class="app-link">{app}</a>
+          <a href={`#${app}`} class="app-link">{app}</a>
         {/each}
       </div>
     </div>
