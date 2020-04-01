@@ -8,7 +8,7 @@
   import {
     hierarchy as hierarchyFunctions,
     common,
-  } from "../../../../../core/src/"
+  } from "../../../../core/src/"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
 

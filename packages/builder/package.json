@@ -20,7 +20,9 @@
     "testURL": "http://jest-breaks-if-this-does-not-exist",
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
-      "\\.(css|less|sass|scss)$": "identity-obj-proxy"
+      "\\.(css|less|sass|scss)$": "identity-obj-proxy",
+      "components(.*)$": "<rootDir>/src/components$1",
+      "builderStore(.*)$": "<rootDir>/src/builderStore$1"
     },
     "moduleFileExtensions": [
       "js"
@@ -55,6 +57,7 @@
     "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/runtime": "^7.5.5",
+    "@rollup/plugin-alias": "^3.0.1",
     "@sveltech/routify": "1.5.0-beta.16",
     "babel-jest": "^24.8.0",
     "browser-sync": "^2.26.7",

@@ -3,17 +3,17 @@ import {
   common,
   getTemplateApi,
   getAuthApi,
-} from "../../../../../core/src"
-import { _getNew } from "../../../../../core/src/recordApi/getNew"
+} from "../../../../core/src"
+import { _getNew } from "../../../../core/src/recordApi/getNew"
 import { find, filter, keyBy, flatten, map } from "lodash/fp"
-import { generateSchema } from "../../../../../core/src/indexing/indexSchemaCreator"
+import { generateSchema } from "../../../../core/src/indexing/indexSchemaCreator"
 import { generate } from "shortid"
 
-export { canDeleteIndex } from "../../../../../core/src/templateApi/canDeleteIndex"
-export { canDeleteRecord } from "../../../../../core/src/templateApi/canDeleteRecord"
-export { userWithFullAccess } from "../../../../../core/src/index"
-export { joinKey } from "../../../../../core/src/common"
-export { getExactNodeForKey } from "../../../../../core/src/templateApi/hierarchy"
+export { canDeleteIndex } from "../../../../core/src/templateApi/canDeleteIndex"
+export { canDeleteRecord } from "../../../../core/src/templateApi/canDeleteRecord"
+export { userWithFullAccess } from "../../../../core/src/index"
+export { joinKey } from "../../../../core/src/common"
+export { getExactNodeForKey } from "../../../../core/src/templateApi/hierarchy"
 export const pipe = common.$
 
 export const events = common.eventsList

@@ -1,7 +1,7 @@
 import { writable } from "svelte/store"
 import api from "../api"
 import { cloneDeep, sortBy, find, remove } from "lodash/fp"
-import { hierarchy as hierarchyFunctions } from "../../../../../core/src"
+import { hierarchy as hierarchyFunctions } from "../../../../core/src"
 import {
   getNode,
   validate,
