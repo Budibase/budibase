@@ -1,5 +1,5 @@
 .DS_Store
-node_modules
+/node_modules/
 node_modules_win
 package-lock.json
 yarn.lock
