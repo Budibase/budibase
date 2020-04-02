@@ -57,9 +57,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2rem 1rem 1rem 1rem;
+    padding: 20px 20px 10px 20px;
   }
-
 
   .hierarchy-title {
     align-items: center;
