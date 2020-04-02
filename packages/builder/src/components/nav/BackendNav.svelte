@@ -60,9 +60,15 @@
     padding: 2rem 1rem 1rem 1rem;
   }
 
+
   .hierarchy-title {
+    align-items: center;
     text-transform: uppercase;
-    font-size: 0.85em;
+    font-size: 12px;
+    font-weight: bold;
+    opacity: 0.6;
+    letter-spacing: 1px;
+    text-rendering: optimizeLegibility;
   }
 
   .hierarchy {

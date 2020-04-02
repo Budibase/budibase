@@ -42,15 +42,14 @@
             <CheckIcon />
           {/if}
         </span>
-        <i
-          class="ri-delete-bin-7-line hoverable uk-margin-small-left"
-          on:click={() => deleteDatabase(database)} />
         <button
           class:active={database.id === $backendUiStore.selectedDatabase.id}
           on:click={() => selectDatabase(database)}>
           {database.name}
         </button>
-
+        <i
+          class="ri-delete-bin-7-line hoverable alignment"
+          on:click={() => deleteDatabase(database)} />
       </li>
     {/each}
   </ul>
@@ -58,12 +57,10 @@
 
 <style>
   .root {
-    padding-bottom: 10px;
-    font-size: 0.9rem;
-    color: var(--secondary50);
-    font-weight: bold;
+    font-size: 12px;
+    color: var(--secondary100);
     position: relative;
-    padding-left: 1.8rem;
+    padding-left: 20px;
   }
 
   ul {
@@ -72,8 +69,13 @@
     list-style: none;
   }
 
+  .alignment {
+    margin-left: auto;
+    padding-right: 21.5px;
+  }
+
   li {
-    margin: 0.5rem 0;
+    margin: 0px 0px 10px 0px;
     display: flex;
     align-items: center;
   }
@@ -83,10 +85,11 @@
     padding: 0;
     border: none;
     font-family: Roboto;
-    font-size: 0.8rem;
+    font-size: 12px;
     outline: none;
     cursor: pointer;
     background: rgba(0, 0, 0, 0);
+    text-rendering: optimizeLegibility;
   }
 
   .active {
