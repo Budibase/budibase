@@ -10,20 +10,8 @@ export const initialise = async () => {
     if (process.env.NODE_ENV === "production") {
       LogRocket.init("knlald/budibase")
     }
-    setupRouter(store)
     await store.initialise()
   } catch (err) {
     console.log(err)
   }
-}
-
-const setupRouter = writable => {
-  const pushState = history.pushState
-  history.pushState = () => {
-    pushState.apply(history, [writable])
-    writable.initialise()
-  }
-  window.addEventListener("hashchange", () => {
-    writable.initialise()
-  })
 }

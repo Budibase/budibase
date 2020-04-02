@@ -2,8 +2,8 @@
   import { fade } from "svelte/transition"
   import { isActive, goto, url, context } from "@sveltech/routify"
 
-  import { SettingsIcon, PreviewIcon } from "../../common/Icons/"
-  import IconButton from "../../common/IconButton.svelte"
+  import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
+  import IconButton from "components/common/IconButton.svelte"
 
   $: ({ component } = $context)
   $: list = component.parent.children.filter(child => child.isIndexable)
