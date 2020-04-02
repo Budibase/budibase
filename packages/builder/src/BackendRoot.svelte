@@ -1,13 +1,13 @@
 <script>
-  import BackendNav from "./nav/BackendNav.svelte"
-  import SchemaManagementDrawer from "./nav/SchemaManagementDrawer.svelte"
-  import Database from "./database/DatabaseRoot.svelte"
-  import UserInterface from "./userInterface/UserInterfaceRoot.svelte"
-  import ActionsAndTriggers from "./actionsAndTriggers/ActionsAndTriggersRoot.svelte"
-  import AccessLevels from "./accessLevels/AccessLevelsRoot.svelte"
-  import ComingSoon from "./common/ComingSoon.svelte"
+  import BackendNav from "components/nav/BackendNav.svelte"
+  import SchemaManagementDrawer from "components/nav/SchemaManagementDrawer.svelte"
+  import Database from "components/database/DatabaseRoot.svelte"
+  import UserInterface from "components/userInterface/UserInterfaceRoot.svelte"
+  import ActionsAndTriggers from "components/actionsAndTriggers/ActionsAndTriggersRoot.svelte"
+  import AccessLevels from "components/accessLevels/AccessLevelsRoot.svelte"
+  import ComingSoon from "components/common/ComingSoon.svelte"
 
-  import { store, backendUiStore } from "./builderStore"
+  import { store, backendUiStore } from "builderStore"
 </script>
 
 <div class="root">

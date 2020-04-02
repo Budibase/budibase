@@ -1,4 +1,4 @@
-import { componentDependencies } from "../src/userInterface/pagesParsing/findDependencies"
+import { componentDependencies } from "../src/components/userInterface/pagesParsing/findDependencies"
 import { componentsAndScreens } from "./testData"
 import { some, find } from "lodash/fp"
 

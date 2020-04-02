@@ -1,4 +1,4 @@
-import { getNewScreen } from "../src/userInterface/pagesParsing/createProps"
+import { getNewScreen } from "../src/components/userInterface/pagesParsing/createProps"
 import { componentsAndScreens, stripStandardProps } from "./testData"
 
 describe("geNewScreen", () => {
