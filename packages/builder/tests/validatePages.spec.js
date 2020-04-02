@@ -1,7 +1,7 @@
 import {
   validatePages,
   validatePage,
-} from "../src/userInterface/pagesParsing/validatePages"
+} from "../src/components/userInterface/pagesParsing/validatePages"
 
 const validPages = () => ({
   main: {

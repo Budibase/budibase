@@ -13,6 +13,7 @@ describe("hierarchy node creation", () => {
     expect(root.parent).toBeDefined()
     expect(root.isRoot()).toBeTruthy()
     expect(root.indexes).toEqual([])
+    expect(root.nodeName()).toBe("/")
   })
 
   it("> getNewRecordTemplate > should be initialise with correct members", async () => {
@@ -33,6 +34,7 @@ describe("hierarchy node creation", () => {
     expect(record.collectionNodeKey()).toBe("/records")
     expect(record.collectionPathRegx()).toBe("/records")
     expect(record.nodeKey()).toBe(`/records/${record.nodeId}-{id}`)
+    expect(record.nodeName()).toBe(`/${record.name}`)
     expect(record.pathRegx()).toBe(`/records/${record.nodeId}-[a-zA-Z0-9_\-]+`)
   })
 
@@ -58,6 +60,16 @@ describe("hierarchy node creation", () => {
     const record = templateApi.getNewRecordTemplate(parentRecord)
     expect(parentRecord.children.length).toBe(1)
     expect(parentRecord.children[0]).toBe(record)
+  })
+
+  it("> getNewrecordTemplate > child should get correct nodeName ", async () => {
+    const { templateApi } = await getMemoryTemplateApi()
+    const root = templateApi.getNewRootLevel()
+    const parentRecord = templateApi.getNewRecordTemplate(root)
+    parentRecord.name = "parent"
+    const record = templateApi.getNewRecordTemplate(parentRecord)
+    record.name = "child"
+    expect(record.nodeName()).toBe(`/${parentRecord.name}/${record.name}`)
   })
 
   it("> getNewrecordTemplate > should add itself to parents's default index allowedNodeIds", async () => {

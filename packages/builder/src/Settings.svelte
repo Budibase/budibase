@@ -1,7 +1,7 @@
 <script>
-  import IconButton from "./common/IconButton.svelte"
-  import { store } from "./builderStore"
-  import UserInterfaceRoot from "./userInterface/UserInterfaceRoot.svelte"
+  import IconButton from "components/common/IconButton.svelte"
+  import { store } from "builderStore"
+  import UserInterfaceRoot from "components/userInterface/UserInterfaceRoot.svelte"
   import { fade } from "svelte/transition"
 </script>
 
