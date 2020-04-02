@@ -48,6 +48,11 @@ const nodeKeyMaker = node => () =>
     [defaultCase, n => joinKey(node.parent().nodeKey(), n.name)]
   )(node)
 
+const nodeNameMaker = node => () =>
+    isRoot(node) 
+    ? "/"
+    : joinKey(node.parent().nodeName(), node.name)
+
 const validate = parent => node => {
   if (
     isIndex(node) &&
@@ -71,6 +76,7 @@ const validate = parent => node => {
 
 const construct = parent => node => {
   node.nodeKey = nodeKeyMaker(node)
+  node.nodeName = nodeNameMaker(node)
   node.pathRegx = pathRegxMaker(node)
   node.parent = constant(parent)
   node.isRoot = () =>
