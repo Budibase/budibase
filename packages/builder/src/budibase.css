@@ -62,9 +62,9 @@
     margin: 5px 20px 5px 0px;
     border-radius: 0 5px 5px 0;
     display: flex;
-    align-items: center;
+    align-items: baseline;
     font-weight: 500;
-    font-size: 0.8em;
+    font-size: 12px;
 }
 
 .budibase__nav-item.selected {
