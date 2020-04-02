@@ -10,7 +10,6 @@ export const initialise = async () => {
     if (process.env.NODE_ENV === "production") {
       LogRocket.init("knlald/budibase")
     }
-    await store.initialise()
   } catch (err) {
     console.log(err)
   }
