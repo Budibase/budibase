@@ -3,4 +3,4 @@
   $goto("../database")
 </script>
 
-<!-- routify:options $index=false -->
+<!-- routify:options index=false -->
