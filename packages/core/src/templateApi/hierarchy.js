@@ -279,4 +279,6 @@ export default {
   fieldReversesReferenceToNode,
   fieldReversesReferenceToIndex,
   getFlattenedHierarchy,
+  isTopLevelIndex,
+  isTopLevelRecord,
 }
