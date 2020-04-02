@@ -2,17 +2,18 @@
   import { store } from "builderStore"
 
   import { fade } from "svelte/transition"
-  import { isActive, goto, url, context, params } from "@sveltech/routify"
+  import { isActive, goto, url, context } from "@sveltech/routify"
 
   import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
   import IconButton from "components/common/IconButton.svelte"
 
   // Get Package and set store
+  export let application
 
   let promise = getPackage()
 
   async function getPackage() {
-    const res = await fetch(`/_builder/api/${$params.application}/appPackage`)
+    const res = await fetch(`/_builder/api/${application}/appPackage`)
     const pkg = await res.json()
 
     if (res.ok) {
