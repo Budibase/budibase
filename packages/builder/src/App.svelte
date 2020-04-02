@@ -6,7 +6,9 @@
   import { onMount } from "svelte"
   import IconButton from "./common/IconButton.svelte"
   import Spinner from "./common/Spinner.svelte"
-  import AppNotification, { showAppNotification } from "./common/AppNotification.svelte"
+  import AppNotification, {
+    showAppNotification,
+  } from "./common/AppNotification.svelte"
 
   let init = initialise()
 
