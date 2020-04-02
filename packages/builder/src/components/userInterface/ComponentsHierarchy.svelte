@@ -98,12 +98,13 @@
 <style>
   .root {
     font-weight: 400;
-    color: #333;
+    color: #000333;
   }
 
   .title {
     margin-left: 10px;
     margin-top: 2px;
+    font-size: 13px;
   }
 
   .icon {
