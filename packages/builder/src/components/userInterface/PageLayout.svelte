@@ -52,22 +52,20 @@
 
 <div>
   <div
-    class="budibase__nav-item"
+    class="budibase__nav-item root"
     class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
     on:click|stopPropagation={() => store.setScreenType('page')}>
     <span
       class="icon"
       class:rotate={$store.currentPreviewItem.name !== _layout.title}>
-      {#if _layout.component.props._children.length}
-        <ArrowDownIcon />
-      {/if}
+      <ArrowDownIcon />
     </span>
 
     <span class="icon">
       <GridIcon />
     </span>
 
-    <span class="title">Master Layout</span>
+    <span class="title">Page Layout</span>
   </div>
 
   {#if $store.currentPreviewItem.name === _layout.title && _layout.component.props._children}
@@ -90,6 +88,9 @@
   onOk={() => store.deleteComponent(componentToDelete)} />
 
 <style>
+  .root {
+    
+  }
   .title {
     margin-left: 10px;
     margin-top: 2px;
