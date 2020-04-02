@@ -41,7 +41,7 @@
 
     </div>
   {/if}
-  <NavItem name="ACCESS_LEVELS" label="User Levels" />
+  <NavItem name="ACCESS_LEVELS" label="User Access Levels" />
 </div>
 
 <style>
