@@ -1,3 +1,4 @@
+import alias from "@rollup/plugin-alias"
 import svelte from "rollup-plugin-svelte"
 import resolve from "rollup-plugin-node-resolve"
 import commonjs from "rollup-plugin-commonjs"
@@ -10,6 +11,8 @@ import copy from "rollup-plugin-copy"
 import browsersync from "rollup-plugin-browsersync"
 import proxy from "http-proxy-middleware"
 import replace from "rollup-plugin-replace"
+
+import path from "path"
 
 const target = "http://localhost:4001"
 const _builderProxy = proxy("/_builder", {
@@ -142,6 +145,11 @@ const coreExternal = [
   "@nx-js/compiler-util",
 ]
 
+const customResolver = resolve({
+  extensions: [".mjs", ".js", ".jsx", ".json", ".sass", ".scss", ".svelte"]
+})
+const projectRootDir = path.resolve(__dirname)
+
 export default {
   input: "src/main.js",
   output: {
@@ -151,9 +159,16 @@ export default {
     file: `${outputpath}/bundle.js`,
   },
   plugins: [
+    alias({
+      entries: [
+        { find: "components", replacement: path.resolve(projectRootDir, 'src/components') },
+        { find: "builderStore", replacement: path.resolve(projectRootDir, 'src/builderStore') }
+      ],
+      customResolver
+    }),
     copy({
       targets: [
-        { src: "src/index.html", dest: outputpath },
+        { src: "src/index.html", dest: outputpath, rename: "__app.html" },
         { src: "src/favicon.png", dest: outputpath },
         { src: "src/assets", dest: outputpath },
         {
@@ -216,10 +231,10 @@ export default {
     // browser on changes when not in production
     !production && livereload(outputpath),
     !production &&
-      browsersync({
-        server: outputpath,
-        middleware: [apiProxy, _builderProxy],
-      }),
+    browsersync({
+      server: outputpath,
+      middleware: [apiProxy, _builderProxy],
+    }),
 
     // If we're building for production (npm run build
     // instead of npm run dev), minify
@@ -228,4 +243,21 @@ export default {
   watch: {
     clearScreen: false,
   },
+}
+
+function serve() {
+  let started = false
+
+  return {
+    writeBundle() {
+      if (!started) {
+        started = true
+
+        require("child_process").spawn("npm", ["run", "start"], {
+          stdio: ["ignore", "inherit", "inherit"],
+          shell: true,
+        })
+      }
+    },
+  }
 }

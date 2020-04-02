@@ -2,11 +2,13 @@
   import NoPackage from "./NoPackage.svelte"
   import PackageRoot from "./PackageRoot.svelte"
   import Settings from "./Settings.svelte"
-  import { store, initialise } from "./builderStore"
+  import { store, initialise } from "builderStore"
   import { onMount } from "svelte"
-  import IconButton from "./common/IconButton.svelte"
-  import Spinner from "./common/Spinner.svelte"
-  import AppNotification, { showAppNotification } from "./common/AppNotification.svelte"
+  import IconButton from "components/common/IconButton.svelte"
+  import Spinner from "components/common/Spinner.svelte"
+  import AppNotification, {
+    showAppNotification,
+  } from "components/common/AppNotification.svelte"
 
   let init = initialise()
 
