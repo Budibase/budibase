@@ -1,17 +1,8 @@
 <script>
   import { isActive, url, goto } from "@sveltech/routify"
-  import getIcon from "../common/icon"
-  import { backendUiStore } from "builderStore"
 
-  export let name = ""
   export let label = ""
   export let href
-
-  $: console.log("Active: ", $isActive(href))
-
-  $: navActive = $backendUiStore.leftNavItem === name
-
-  const setActive = () => backendUiStore.actions.navigate(name)
 </script>
 
 <div
