@@ -66,7 +66,8 @@
   </div>
 
   {#await promise}
-    should probably load this in a nicer way
+    <!-- This should probably be some kind of loading state? -->
+    <div />
   {:then}
     <slot />
   {/await}
