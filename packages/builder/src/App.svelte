@@ -7,8 +7,6 @@
     showAppNotification,
   } from "components/common/AppNotification.svelte"
 
-  let init = initialise()
-
   function showErrorBanner() {
     showAppNotification({
       status: "danger",

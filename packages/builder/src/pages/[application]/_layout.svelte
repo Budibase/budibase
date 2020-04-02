@@ -1,10 +1,27 @@
 <script>
+  import { store } from "builderStore"
+
   import { fade } from "svelte/transition"
-  import { isActive, goto, url, context } from "@sveltech/routify"
+  import { isActive, goto, url, context, params } from "@sveltech/routify"
 
   import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
   import IconButton from "components/common/IconButton.svelte"
 
+  // Get Package and set store
+
+  let promise = getPackage()
+
+  async function getPackage() {
+    const res = await fetch(`/_builder/api/${$params.application}/appPackage`)
+    const pkg = await res.json()
+
+    if (res.ok) {
+      await store.setPackage(pkg)
+      return pkg
+    } else {
+      throw new Error(pkg)
+    }
+  }
   $: ({ component } = $context)
   $: list = component.parent.children.filter(child => child.isIndexable)
 </script>
@@ -48,7 +65,11 @@
     </div>
   </div>
 
-  <slot />
+  {#await promise}
+    should probably load this in a nicer way
+  {:then}
+    <slot />
+  {/await}
 
 </div>
 
