@@ -63,7 +63,7 @@
 <div class="root">
   <div class="node-view">
     <div class="database-actions">
-      <div class="budibase__label--big">{breadcrumbs}</div>
+      <div class="breadcrumb">{breadcrumbs}</div>
       {#if $backendUiStore.selectedDatabase.id}
         <ActionButton
           primary
@@ -90,6 +90,13 @@
   .node-view {
     overflow-y: auto;
     flex: 1 1 auto;
+  }
+
+  .breadcrumb {
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--secondary60);
   }
 
   .database-actions {
