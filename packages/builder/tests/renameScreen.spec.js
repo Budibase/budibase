@@ -1,5 +1,5 @@
-import { getExactComponent } from "../src/userInterface/pagesParsing/searchComponents"
-import { rename } from "../src/userInterface/pagesParsing/renameScreen"
+import { getExactComponent } from "../src/components/userInterface/pagesParsing/searchComponents"
+import { rename } from "../src/components/userInterface/pagesParsing/renameScreen"
 import { componentsAndScreens } from "./testData"
 
 describe("rename component", () => {

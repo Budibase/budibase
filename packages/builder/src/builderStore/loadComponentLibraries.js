@@ -1,5 +1,5 @@
 import { flatten, values, uniq, map } from "lodash/fp"
-import { pipe } from "../common/core"
+import { pipe } from "components/common/core"
 
 export const loadLibs = async (appName, appPackage) => {
   const allLibraries = {}

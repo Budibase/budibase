@@ -1,10 +1,10 @@
 <script>
-  import IconButton from "./common/IconButton.svelte"
-  import { store } from "./builderStore"
-  import UserInterfaceRoot from "./userInterface/UserInterfaceRoot.svelte"
+  import IconButton from "components/common/IconButton.svelte"
+  import { store } from "builderStore"
+  import UserInterfaceRoot from "components/userInterface/UserInterfaceRoot.svelte"
   import BackendRoot from "./BackendRoot.svelte"
   import { fade } from "svelte/transition"
-  import { SettingsIcon, PreviewIcon } from "./common/Icons/"
+  import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
 
   const TABS = {
     BACKEND: "backend",
