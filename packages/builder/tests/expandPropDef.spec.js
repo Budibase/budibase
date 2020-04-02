@@ -1,4 +1,4 @@
-import { expandComponentDefinition } from "../src/userInterface/pagesParsing/types"
+import { expandComponentDefinition } from "../src/components/userInterface/pagesParsing/types"
 
 const componentDef = () => ({
   name: "comp",

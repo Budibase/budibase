@@ -10,7 +10,7 @@ import {
   isIndex,
   canDeleteIndex,
   canDeleteRecord,
-} from "../../common/core"
+} from "components/common/core"
 
 export const getBackendUiStore = () => {
   const INITIAL_BACKEND_UI_STATE = {
@@ -100,9 +100,9 @@ export const saveBackend = async state => {
 
   const instances_currentFirst = state.selectedDatabase
     ? [
-        state.appInstances.find(i => i.id === state.selectedDatabase.id),
-        ...state.appInstances.filter(i => i.id !== state.selectedDatabase.id),
-      ]
+      state.appInstances.find(i => i.id === state.selectedDatabase.id),
+      ...state.appInstances.filter(i => i.id !== state.selectedDatabase.id),
+    ]
     : state.appInstances
 
   for (let instance of instances_currentFirst) {
@@ -198,7 +198,10 @@ export const saveCurrentNode = store => () => {
       const defaultIndex = templateApi(state.hierarchy).getNewIndexTemplate(
         cloned.parent()
       )
-      defaultIndex.name = `all_${cloned.name}s`
+      defaultIndex.name = hierarchyFunctions.isTopLevelIndex(cloned)
+        ? `all_${cloned.name}s`
+        : `${cloned.parent().name}_${cloned.name}s`
+
       defaultIndex.allowedRecordNodeIds = [cloned.nodeId]
     }
 
