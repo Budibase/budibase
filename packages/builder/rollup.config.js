@@ -168,7 +168,7 @@ export default {
     }),
     copy({
       targets: [
-        { src: "src/index.html", dest: outputpath, rename: "__app.html" },
+        { src: "src/index.html", dest: outputpath },
         { src: "src/favicon.png", dest: outputpath },
         { src: "src/assets", dest: outputpath },
         {
