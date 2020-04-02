@@ -57,12 +57,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2rem 1rem 1rem 1rem;
+    padding: 20px 20px 10px 20px;
   }
 
   .hierarchy-title {
+    align-items: center;
     text-transform: uppercase;
-    font-size: 0.85em;
+    font-size: 12px;
+    font-weight: bold;
+    opacity: 0.6;
+    letter-spacing: 1px;
+    text-rendering: optimizeLegibility;
   }
 
   .hierarchy {
