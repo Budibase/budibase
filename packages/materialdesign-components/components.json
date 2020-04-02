@@ -14,7 +14,9 @@
     "name": "Body1",
     "description": "Sets the font properties as Roboto Body 1",
     "props": {
-      "text": "string"
+      "text": "string",
+      "verticalMargin": "number",
+      "horizontalMargin": "number"
     }, 
     "tags": []
   },

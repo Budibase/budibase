@@ -35,7 +35,7 @@ export const props = {
   Button: {
     _component: "@budibase/materialdesign-components/Button",
     _children: [],
-    variant: "raised",
+    variant: "text",
     colour: "secondary",
     size: "large",
     href: "",
@@ -64,7 +64,8 @@ export const props = {
     _children: [],
     label: "First",
     colour: "secondary",
-    fullwidth: true,
+    icon: "alarm_on",
+    trailingIcon: true,
     maxLength: 500,
     helperText: "Add Surname",
     value: "store.surname",
