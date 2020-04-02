@@ -71,7 +71,7 @@
 
   .alignment {
     margin-left: auto;
-    padding-right: 21.5px;
+    padding-right: 20px;
   }
 
   li {
