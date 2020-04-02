@@ -244,6 +244,11 @@ export const fieldReversesReferenceToIndex = indexNode => field =>
   intersection(field.typeOptions.reverseIndexNodeKeys)([indexNode.nodeKey()])
     .length > 0
 
+export const nodeNameFromNodeKey = (hierarchy, nodeKey) => {
+  const node = getNode(hierarchy, nodeKey)
+  return node ? node.nodeName() : ""
+}
+
 export default {
   getLastPartInKey,
   getNodesInPath,
@@ -281,4 +286,5 @@ export default {
   getFlattenedHierarchy,
   isTopLevelIndex,
   isTopLevelRecord,
+  nodeNameFromNodeKey,
 }

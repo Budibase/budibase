@@ -5,7 +5,7 @@
   import ButtonGroup from "../common/ButtonGroup.svelte"
   import Button from "../common/Button.svelte"
   import ActionButton from "../common/ActionButton.svelte"
-  import { validateAccessLevels } from "../common/core"
+  import { validateAccessLevels, nodeNameFromNodeKey } from "../common/core"
   import ErrorsBox from "../common/ErrorsBox.svelte"
 
   export let level
@@ -38,7 +38,9 @@
   )
 
   const getPermissionName = perm =>
-    perm.nodeKey ? `${perm.type} - ${perm.nodeKey}` : perm.type
+    perm.nodeKey 
+    ? `${perm.type} - ${nodeNameFromNodeKey(hierarchy, perm.nodeKey)}` 
+    : perm.type
 
   const save = () => {
     const newLevels = isNew
