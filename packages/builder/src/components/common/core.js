@@ -79,6 +79,7 @@ export const getPotentialReferenceIndexes = (hierarchy, record) =>
 
 export const isIndex = hierarchyFunctions.isIndex
 export const isRecord = hierarchyFunctions.isRecord
+export const nodeNameFromNodeKey = hierarchyFunctions.nodeNameFromNodeKey
 
 export const getDefaultTypeOptions = type =>
   !type ? {} : allTypes[type].getDefaultOptions()

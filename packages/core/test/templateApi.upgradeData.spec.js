@@ -240,6 +240,40 @@ describe("upgradeData", () => {
 
 })
 
+it("should rebuild affected index when field is removed", async () => {
+  const { oldSetup, newSetup, records } = await configure()
+  newSetup.contact.fields = newSetup.contact.fields.filter(f => f.name !== "status")
+
+  let itemsInIndex = await _listItems(oldSetup.app, "/contact_index")
+  expect(itemsInIndex.length).toBe(2)
+  expect(itemsInIndex[0].status).toBeDefined()
+  expect(itemsInIndex[0].status).toBe(records.contact1.status)
+
+  await upgradeData(oldSetup.app)(newSetup.root)
+
+  itemsInIndex = await _listItems(newSetup.app, "/contact_index")
+  expect(itemsInIndex.length).toBe(2)
+  expect(itemsInIndex[0].status).toBeUndefined()
+})
+
+it("should rebuild affected index when field is added", async () => {
+  const { oldSetup, newSetup, records } = await configure()
+  
+  const aliveField = newSetup.templateApi.getNewField("string")
+  aliveField.name = "isalive"
+  newSetup.templateApi.addField(newSetup.contact, aliveField)
+
+  let itemsInIndex = await _listItems(oldSetup.app, "/contact_index")
+  expect(itemsInIndex.length).toBe(2)
+  expect(itemsInIndex[0].isalive).toBeUndefined()
+
+  await upgradeData(oldSetup.app)(newSetup.root)
+
+  itemsInIndex = await _listItems(newSetup.app, "/contact_index")
+  expect(itemsInIndex.length).toBe(2)
+  expect(itemsInIndex[0].isalive).toBe(null)
+})
+
 const configure = async () => {
   const oldSetup = await setup()
   
@@ -256,8 +290,10 @@ const configure = async () => {
 const createSomeRecords = async recordApi => {
   const contact1 = recordApi.getNew("/contacts", "contact")
   contact1.name = "bobby"
+  contact1.status = "New"
   const contact2 = recordApi.getNew("/contacts", "contact")
   contact2.name = "poppy"
+  contact2.status = "Complete"
 
   await recordApi.save(contact1)
   await recordApi.save(contact2)
