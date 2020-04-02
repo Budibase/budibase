@@ -160,7 +160,7 @@
 
   a {
     color: rgba(22, 48, 87, 0.6);
-    font-size: 12px;
+    font-size: 13px;
     margin-top: 0;
   }
 </style>

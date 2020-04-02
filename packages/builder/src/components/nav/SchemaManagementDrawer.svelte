@@ -68,7 +68,7 @@
   .hierarchy-title {
     align-items: center;
     text-transform: uppercase;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: bold;
     opacity: 0.6;
     letter-spacing: 1px;

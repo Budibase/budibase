@@ -45,7 +45,7 @@
 
   .name {
     color: rgba(22, 48, 87, 0.6);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: bold;
     text-transform: uppercase;
     margin-top: 5px;

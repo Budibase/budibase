@@ -157,7 +157,7 @@
   }
 
   .components-nav-page {
-    font-size: 12px;
+    font-size: 13px;
     color: #000333;
     text-transform: uppercase;
     padding-left: 20px;
@@ -168,7 +168,7 @@
   }
 
   .components-nav-header {
-    font-size: 12px;
+    font-size: 13px;
     color: #000333;
     text-transform: uppercase;
     margin-top: 20px;

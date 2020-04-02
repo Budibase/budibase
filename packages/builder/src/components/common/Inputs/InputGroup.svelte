@@ -30,7 +30,7 @@
 
   input {
     width: 83px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: #163057;
     opacity: 0.7;
