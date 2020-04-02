@@ -1,4 +1,4 @@
-import { createProps } from "../src/userInterface/pagesParsing/createProps"
+import { createProps } from "../src/components/userInterface/pagesParsing/createProps"
 import { keys, some } from "lodash/fp"
 import { BB_STATE_BINDINGPATH } from "@budibase/client/src/state/parseBinding"
 import { stripStandardProps } from "./testData"

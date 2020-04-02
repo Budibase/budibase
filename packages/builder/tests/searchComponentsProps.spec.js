@@ -2,7 +2,7 @@ import {
   searchAllComponents,
   getExactComponent,
   getAncestorProps,
-} from "../src/userInterface/pagesParsing/searchComponents"
+} from "../src/components/userInterface/pagesParsing/searchComponents"
 import { componentsAndScreens } from "./testData"
 
 describe("searchAllComponents", () => {
