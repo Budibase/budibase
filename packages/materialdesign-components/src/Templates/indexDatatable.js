@@ -1,6 +1,6 @@
 export default ({ indexes, helpers }) =>
   indexes.map(i => ({
-    name: `Table based on index: ${i.name} `,
+    name: `Table based on view: ${i.name} `,
     props: tableProps(
       i,
       helpers.indexSchema(i).filter(c => !excludedColumns.includes(c.name))
