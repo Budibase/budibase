@@ -1,5 +1,5 @@
 const Koa = require("koa")
-const router = require("./middleware/routers")
+const router = require("./middleware/routes/builderRouter")
 const koaBody = require("koa-body")
 const initialiseRuntimePackages = require("./initialise/initialiseRuntimePackages")
 
