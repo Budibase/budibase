@@ -3,7 +3,6 @@
   import { goto } from "@sveltech/routify"
   import { store, backendUiStore } from "builderStore"
   import api from "builderStore/api"
-  import getIcon from "../common/icon"
   import { CheckIcon } from "../common/Icons"
 
   $: instances = $store.appInstances
@@ -30,6 +29,7 @@
   onMount(() => {
     if ($store.appInstances.length > 0) {
       selectDatabase($store.appInstances[0])
+      $goto(`./database/${$backendUiStore.selectedDatabase.id}`)
     }
   })
 </script>
