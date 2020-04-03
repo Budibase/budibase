@@ -68,8 +68,6 @@
   }
 </script>
 
-({ console.log(editingRecord, selectedModel) })
-
 <div>
   <h4 class="budibase__title--4">Create / Edit Record</h4>
   <ErrorsBox {errors} />
