@@ -18,6 +18,7 @@
   export let onClosed
 
   let errors = []
+  let selectedModel
 
   const childModelsForModel = compose(flatten, map("children"), get("children"))
 
@@ -29,7 +30,6 @@
     ? childModelsForModel($store.hierarchy)
     : $store.hierarchy.children
 
-  let selectedModel
   $: {
     if (record) {
       selectedModel = getExactNodeForKey($store.hierarchy)(record.key)
@@ -48,7 +48,6 @@
 
   $: editingRecord =
     record ||
-    editingRecord ||
     getNewRecord(
       selectedModel,
       getCurrentCollectionKey($backendUiStore.selectedRecord)
