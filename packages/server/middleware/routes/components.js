@@ -1,4 +1,4 @@
-const Router = require("koa-router");
+const Router = require("@koa/router");
 const send = require("koa-send")
 const {
   getComponentDefinitions,

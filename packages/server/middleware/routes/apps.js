@@ -2,7 +2,8 @@ const Router = require("@koa/router");
 const {
   getPackageForBuilder,
   getApps,
-} = require("../utilities/builder")
+} = require("../../utilities/builder")
+
 
 const router = Router();
 

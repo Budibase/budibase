@@ -1,9 +1,9 @@
 const Router = require("@koa/router")
-const session = require("./session")
-const StatusCodes = require("../utilities/statusCodes")
+const session = require("../session")
+const StatusCodes = require("../../utilities/statusCodes")
 const { resolve } = require("path")
 const send = require("koa-send")
-const routeHandlers = require("./routeHandlers")
+const routeHandlers = require("../routeHandlers")
 const {
   componentRoutes,
   appsRoutes,
