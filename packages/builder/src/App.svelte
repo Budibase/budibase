@@ -1,4 +1,5 @@
 <script>
+  import Modal from "svelte-simple-modal"
   import { onMount } from "svelte"
   import { Router } from "@sveltech/routify"
   import { routes } from "@sveltech/routify/tmp/routes"
@@ -23,4 +24,6 @@
 
 <AppNotification />
 
-<Router {routes} />
+<Modal>
+  <Router {routes} />
+</Modal>

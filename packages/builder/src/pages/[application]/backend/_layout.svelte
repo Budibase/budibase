@@ -1,4 +1,5 @@
 <script>
+  import { getContext } from "svelte"
   import { store, backendUiStore } from "builderStore"
   import * as api from "components/database/ModelDataTable/api"
 
@@ -35,7 +36,7 @@
   $: userOpen = $backendUiStore.visibleModal === "USER"
 </script>
 
-<Modal isOpen={!!$backendUiStore.visibleModal} {onClosed}>
+<!-- <Modal isOpen={!!$backendUiStore.visibleModal} {onClosed}>
   {#if recordOpen}
     <CreateEditRecordModal record={selectedRecord} {onClosed} />
   {/if}
@@ -54,7 +55,7 @@
   {#if userOpen}
     <CreateUserModal {onClosed} />
   {/if}
-</Modal>
+</Modal> -->
 
 <div class="root">
   <div class="nav">
