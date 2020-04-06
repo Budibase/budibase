@@ -59,7 +59,7 @@ router
 
 router.post("/_builder/api/:appname/pages/:pageName", async ctx => {
   await buildPage(
-    config,
+    ctx.config,
     ctx.params.appname,
     ctx.params.pageName,
     ctx.request.body
