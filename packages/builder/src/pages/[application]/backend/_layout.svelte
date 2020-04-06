@@ -31,9 +31,7 @@
   $: recordOpen = $backendUiStore.visibleModal === "RECORD"
   $: modelOpen = $backendUiStore.visibleModal === "MODEL"
   $: viewOpen = $backendUiStore.visibleModal === "VIEW"
-  $: databaseOpen = $backendUiStore.visibleModal === "DATABASE"
   $: deleteRecordOpen = $backendUiStore.visibleModal === "DELETE_RECORD"
-  $: userOpen = $backendUiStore.visibleModal === "USER"
 </script>
 
 <!-- <Modal isOpen={!!$backendUiStore.visibleModal} {onClosed}>
@@ -46,14 +44,8 @@
   {#if viewOpen}
     <CreateEditViewModal {onClosed} />
   {/if}
-  {#if databaseOpen}
-    <CreateDatabaseModal {onClosed} />
-  {/if}
   {#if deleteRecordOpen}
     <DeleteRecordModal record={selectedRecord} {onClosed} />
-  {/if}
-  {#if userOpen}
-    <CreateUserModal {onClosed} />
   {/if}
 </Modal> -->
 
