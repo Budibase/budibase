@@ -44,11 +44,9 @@ export const screenRouter = (screens, onScreenSelected, appRootPath) => {
     storeInitial["##routeParams"] = params
     const store = writable(storeInitial)
 
-    if (current !== -1) {
-      onScreenSelected(screens[current], store, _url)
-    } else {
-      onScreenSelected(screens[fallback], store, _url)
-    }
+    const screenIndex = current !== -1 ? current : fallback;
+
+    onScreenSelected(screens[screenIndex], store, _url)
 
     try {
       !url.state && history.pushState(_url, null, _url)
