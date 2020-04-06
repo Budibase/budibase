@@ -302,7 +302,7 @@ export const deleteLevel = store => level => {
     state.accessLevels.levels = state.accessLevels.levels.filter(
       t => t.name !== level.name
     )
-    incrementAccessLevelsVersion(s)
+    incrementAccessLevelsVersion(state)
     saveBackend(state)
     return state
   })
