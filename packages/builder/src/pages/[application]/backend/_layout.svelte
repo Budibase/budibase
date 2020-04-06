@@ -28,24 +28,16 @@
     backendUiStore.actions.modals.hide()
   }
 
-  $: recordOpen = $backendUiStore.visibleModal === "RECORD"
   $: modelOpen = $backendUiStore.visibleModal === "MODEL"
   $: viewOpen = $backendUiStore.visibleModal === "VIEW"
-  $: deleteRecordOpen = $backendUiStore.visibleModal === "DELETE_RECORD"
 </script>
 
 <!-- <Modal isOpen={!!$backendUiStore.visibleModal} {onClosed}>
-  {#if recordOpen}
-    <CreateEditRecordModal record={selectedRecord} {onClosed} />
-  {/if}
   {#if modelOpen}
     <CreateEditModelModal {onClosed} />
   {/if}
   {#if viewOpen}
     <CreateEditViewModal {onClosed} />
-  {/if}
-  {#if deleteRecordOpen}
-    <DeleteRecordModal record={selectedRecord} {onClosed} />
   {/if}
 </Modal> -->
 

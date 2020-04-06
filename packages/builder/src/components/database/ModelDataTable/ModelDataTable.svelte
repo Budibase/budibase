@@ -33,6 +33,17 @@
     )
   }
 
+  const deleteRecord = async row => {
+    open(
+      DeleteRecordModal,
+      {
+        onClosed: close,
+        record: await selectRecord(row),
+      },
+      { styleContent: { padding: "0" } }
+    )
+  }
+
   async function selectRecord(record) {
     return await api.loadRecord(record.key, {
       appname: $store.appname,
@@ -154,8 +165,7 @@
                   <li>
                     <div
                       on:click={() => {
-                        selectRecord(row)
-                        backendUiStore.actions.modals.show('DELETE_RECORD')
+                        deleteRecord(row)
                       }}>
                       Delete
                     </div>
