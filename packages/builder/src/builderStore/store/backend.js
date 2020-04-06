@@ -14,7 +14,6 @@ import {
 
 export const getBackendUiStore = () => {
   const INITIAL_BACKEND_UI_STATE = {
-    leftNavItem: "DATABASE",
     selectedView: {
       records: [],
       name: "",
@@ -27,7 +26,6 @@ export const getBackendUiStore = () => {
   const store = writable(INITIAL_BACKEND_UI_STATE)
 
   store.actions = {
-    navigate: name => store.update(state => ({ ...state, leftNavItem: name })),
     database: {
       select: db =>
         store.update(state => {
@@ -59,10 +57,6 @@ export const getBackendUiStore = () => {
           state.selectedView = view
           return state
         }),
-    },
-    modals: {
-      show: modal => store.update(state => ({ ...state, visibleModal: modal })),
-      hide: () => store.update(state => ({ ...state, visibleModal: null })),
     },
     users: {
       create: user =>
