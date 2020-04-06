@@ -1,4 +1,5 @@
 const Router = require("@koa/router");
+const StatusCodes = require("../../utilities/statusCodes")
 const {
   listScreens,
   saveScreen,
@@ -10,7 +11,7 @@ const router = Router()
 
 router.get("/_builder/api/:appname/pages/:pagename/screens", async ctx => {
   ctx.body = await listScreens(
-    config,
+    ctx.config,
     ctx.params.appname,
     ctx.params.pagename
   )
@@ -20,7 +21,7 @@ router.get("/_builder/api/:appname/pages/:pagename/screens", async ctx => {
 router
   .post("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
     ctx.body = await saveScreen(
-      config,
+      ctx.config,
       ctx.params.appname,
       ctx.params.pagename,
       ctx.request.body
@@ -31,7 +32,7 @@ router
 router
   .patch("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
     await renameScreen(
-      config,
+      ctx.config,
       ctx.params.appname,
       ctx.params.pagename,
       ctx.request.body.oldname,
@@ -48,7 +49,7 @@ router
     )
 
     await deleteScreen(
-      config,
+      ctx.config,
       ctx.params.appname,
       ctx.params.pagename,
       decodeURI(name)
