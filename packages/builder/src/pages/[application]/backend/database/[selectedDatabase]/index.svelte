@@ -9,7 +9,6 @@
   const { open, close } = getContext("simple-modal")
 
   const createNewRecord = () => {
-    console.log("TEST")
     selectedRecord = null
     open(
       CreateEditRecordModal,
