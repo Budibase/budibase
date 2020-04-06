@@ -59,7 +59,7 @@
 
 <div class="root">
   <div class="node-view">
-    <slot />
+
   </div>
 </div>
 
@@ -73,4 +73,5 @@
     overflow-y: auto;
     flex: 1 1 auto;
   }
+
 </style>

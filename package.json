@@ -17,6 +17,7 @@
     "build": "lerna run build",
     "initialise": "lerna run initialise",
     "publishdev": "lerna run publishdev",
+    "publishnpm":"yarn build && lerna publish",
     "clean": "lerna clean",
     "dev": "lerna run --parallel --stream dev:builder",
     "test": "lerna run test",

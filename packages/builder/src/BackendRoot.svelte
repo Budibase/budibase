@@ -37,7 +37,7 @@
 
   .content {
     flex: 1 1 auto;
-    margin: 40px 40px;
+    margin: 20px 40px;
   }
 
   .nav {
