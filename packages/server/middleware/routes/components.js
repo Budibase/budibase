@@ -1,5 +1,6 @@
 const Router = require("@koa/router");
 const send = require("koa-send")
+const StatusCodes = require("../../utilities/statusCodes")
 const {
   getComponentDefinitions,
   componentLibraryInfo,
@@ -7,6 +8,15 @@ const {
 
 
 const router = Router();
+
+router.get("/_builder/:appname/componentlibrary", async ctx => {
+  const info = await componentLibraryInfo(
+    ctx.config,
+    ctx.params.appname,
+    ctx.query.lib
+  )
+  await send(ctx, info.components._lib || "index.js", { root: info.libDir })
+})
 
 router.get("/_builder/api/:appname/components", async ctx => {
   try {
@@ -33,15 +43,6 @@ router.get("/_builder/api/:appname/componentlibrary", async ctx => {
   )
   ctx.body = info.components
   ctx.response.status = StatusCodes.OK
-})
-
-router.get("/_builder/:appname/componentlibrary", async ctx => {
-  const info = await componentLibraryInfo(
-    ctx.config,
-    ctx.params.appname,
-    ctx.query.lib
-  )
-  await send(ctx, info.components._lib || "index.js", { root: info.libDir })
 })
 
 module.exports = router

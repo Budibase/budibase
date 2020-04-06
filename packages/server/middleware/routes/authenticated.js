@@ -1,15 +1,18 @@
 const Router = require("@koa/router");
+const StatusCodes = require("../../utilities/statusCodes")
 const routeHandlers = require("../routeHandlers")
 
 const router = Router();
 
-router.use(async (ctx, next) => {
+async function isAuthenticated(ctx, next) {
   if (ctx.isAuthenticated) {
     await next()
   } else {
     ctx.response.status = StatusCodes.UNAUTHORIZED
   }
-})
+}
+
+router.use(isAuthenticated)
 
 router.post(
   "/_builder/instance/:appname/:instanceid/api/upgradeData",
