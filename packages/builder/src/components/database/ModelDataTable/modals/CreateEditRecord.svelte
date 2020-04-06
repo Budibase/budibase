@@ -67,39 +67,37 @@
   }
 </script>
 
-<div>
+<div class="actions">
   <h4 class="budibase__title--4">Create / Edit Record</h4>
   <ErrorsBox {errors} />
-  <div class="actions">
-    <form class="uk-form-stacked">
-      {#if !record}
-        <div class="uk-margin">
-          <label class="uk-form-label" for="form-stacked-text">Model</label>
-          <Select bind:value={selectedModel}>
-            {#each models as model}
-              <option value={model}>{model.name}</option>
-            {/each}
-          </Select>
-        </div>
-      {/if}
-      {#each modelFields || [] as field}
-        <RecordFieldControl record={editingRecord} {field} {errors} />
-      {/each}
-    </form>
-    <footer>
-      <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
-      <ActionButton on:click={saveRecord}>Save</ActionButton>
-    </footer>
-  </div>
+  <form class="uk-form-stacked">
+    {#if !record}
+      <div class="uk-margin">
+        <label class="uk-form-label" for="form-stacked-text">Model</label>
+        <Select bind:value={selectedModel}>
+          {#each models as model}
+            <option value={model}>{model.name}</option>
+          {/each}
+        </Select>
+      </div>
+    {/if}
+    {#each modelFields || [] as field}
+      <RecordFieldControl record={editingRecord} {field} {errors} />
+    {/each}
+  </form>
 </div>
+<footer>
+  <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
+  <ActionButton on:click={saveRecord}>Save</ActionButton>
+</footer>
 
 <style>
+  .actions {
+    padding: 30px;
+  }
   footer {
-    position: absolute;
     padding: 20px;
-    width: 100%;
-    bottom: 0;
-    left: 0;
     background: #fafafa;
+    border-radius: 0.5rem;
   }
 </style>
