@@ -6,14 +6,14 @@ const send = require("koa-send")
 const routeHandlers = require("./routeHandlers")
 const {
   componentLibraryInfo,
-} = require("../../utilities/builder")
+} = require("../utilities/builder")
 const {
   componentRoutes,
   appsRoutes,
   pageRoutes,
   userRoutes,
   authenticatedRoutes
-} = require("./");
+} = require("./routes");
 
 const builderPath = resolve(__dirname, "../../builder")
 
@@ -86,30 +86,32 @@ module.exports = (config, app) => {
         await next()
       }
     })
-    .get("/_builder", async ctx => {
-      await send(ctx, "/index.html", { root: builderPath })
-    })
-    .get("/_builder/:appname/componentlibrary", async ctx => {
-      const info = await componentLibraryInfo(
-        ctx.config,
-        ctx.params.appname,
-        ctx.query.lib
-      )
-      await send(ctx, info.components._lib || "index.js", { root: info.libDir })
-    })
-    .get("/_builder/*", async (ctx, next) => {
-      const path = ctx.path.replace("/_builder", "")
 
-      const isFile = new RegExp(/(.+\..{1,5})/g).test(path)
-
-      if (path.startsWith("/api/") || path.startsWith("/instance/")) {
-        await next()
-      } else if (isFile) {
-        await send(ctx, path, { root: builderPath })
-      } else {
+    router
+      .get("/_builder", async ctx => {
         await send(ctx, "/index.html", { root: builderPath })
-      }
-    })
+      })
+      .get("/_builder/:appname/componentlibrary", async ctx => {
+        const info = await componentLibraryInfo(
+          ctx.config,
+          ctx.params.appname,
+          ctx.query.lib
+        )
+        await send(ctx, info.components._lib || "index.js", { root: info.libDir })
+      })
+      .get("/_builder/*", async (ctx, next) => {
+        const path = ctx.path.replace("/_builder", "")
+
+        const isFile = new RegExp(/(.+\..{1,5})/g).test(path)
+
+        if (path.startsWith("/api/") || path.startsWith("/instance/")) {
+          await next()
+        } else if (isFile) {
+          await send(ctx, path, { root: builderPath })
+        } else {
+          await send(ctx, "/index.html", { root: builderPath })
+        }
+      })
 
   router.use(userRoutes.routes());
   router.use(userRoutes.allowedMethods());
