@@ -35,5 +35,6 @@
   footer {
     padding: 20px;
     background: #fafafa;
+    border-radius: 0.5rem;
   }
 </style>
