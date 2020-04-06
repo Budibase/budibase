@@ -34,9 +34,9 @@ export const createApp = (
         routeTo,
         appRootPath: frontendDefinition.appRootPath,
       })
-      const getAttchChildrenParams = attachChildrenParams(stateManager)
+      const getAttachChildrenParams = attachChildrenParams(stateManager)
       screenSlotNode.props._children = [screen.props]
-      const initialiseChildParams = getAttchChildrenParams(screenSlotNode)
+      const initialiseChildParams = getAttachChildrenParams(screenSlotNode)
       attachChildren(initialiseChildParams)(screenSlotNode.rootElement, {
         hydrate: true,
         force: true,
@@ -102,6 +102,7 @@ export const createApp = (
 
     return rootTreeNode
   }
+
   return {
     initialisePage,
     screenStore: () => screenStateManager.store,

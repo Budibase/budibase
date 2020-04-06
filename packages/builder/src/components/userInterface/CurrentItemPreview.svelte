@@ -29,10 +29,12 @@
     [map(s => `<link rel="stylesheet" href="${s}"/>`), join("\n")]
   )
 
+  $: screensExist = $store.currentPreviewItem._screens && $store.currentPreviewItem._screens.length > 0 
+
   $: frontendDefinition = {
     componentLibraries: $store.loadLibraryUrls($store.currentPageName),
     page: $store.currentPreviewItem,
-    screens: [{
+    screens: screensExist ? $store.currentPreviewItem._screens : [{
       name: "Screen Placeholder",
       route: "*",
       props: {
