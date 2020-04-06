@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, getContext } from "svelte"
   import { store, backendUiStore } from "builderStore"
   import {
     tap,
@@ -17,10 +17,28 @@
   import { getIndexSchema } from "components/common/core"
   import ActionButton from "components/common/ActionButton.svelte"
   import TablePagination from "./TablePagination.svelte"
-  import { DeleteRecordModal } from "./modals"
+  import { DeleteRecordModal, CreateEditRecordModal } from "./modals"
   import * as api from "./api"
 
-  export let selectRecord
+  const { open, close } = getContext("simple-modal")
+
+  const editRecord = async row => {
+    open(
+      CreateEditRecordModal,
+      {
+        onClosed: close,
+        record: await selectRecord(row),
+      },
+      { styleContent: { padding: "0" } }
+    )
+  }
+
+  async function selectRecord(record) {
+    return await api.loadRecord(record.key, {
+      appname: $store.appname,
+      instanceId: $backendUiStore.selectedDatabase.id,
+    })
+  }
 
   const ITEMS_PER_PAGE = 10
   // Internal headers we want to hide from the user
@@ -56,11 +74,7 @@
 
   const getSchema = getIndexSchema($store.hierarchy)
 
-  const childViewsForRecord = compose(
-    flatten,
-    map("indexes"),
-    get("children")
-  )
+  const childViewsForRecord = compose(flatten, map("indexes"), get("children"))
 
   const hideInternalHeaders = compose(
     remove(headerName => INTERNAL_HEADERS.includes(headerName)),
@@ -133,8 +147,7 @@
                   </li>
                   <li
                     on:click={() => {
-                      selectRecord(row)
-                      backendUiStore.actions.modals.show('RECORD')
+                      editRecord(row)
                     }}>
                     <div>Edit</div>
                   </li>
@@ -166,7 +179,6 @@
 </section>
 
 <style>
-
   .title {
     font-size: 24px;
     font-weight: 600;
@@ -194,7 +206,7 @@
     color: var(--button-text);
     text-transform: capitalize;
     font-weight: 500;
-    font-size: 14px;  
+    font-size: 14px;
     text-rendering: optimizeLegibility;
     letter-spacing: 1px;
   }
