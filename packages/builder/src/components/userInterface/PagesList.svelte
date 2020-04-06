@@ -67,7 +67,7 @@
     padding: 0;
     border: none;
     font-family: Roboto;
-    font-size: 0.8rem;
+    font-size: 13px;
     outline: none;
     cursor: pointer;
     background: rgba(0, 0, 0, 0);

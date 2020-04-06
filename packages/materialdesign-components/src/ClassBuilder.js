@@ -1,8 +1,9 @@
 export default class ClassBuilder {
   constructor(block, defaultIgnoreList) {
     this.block = `mdc-${block}`
-    this.defaultIgnoreList = defaultIgnoreList //will be ignored when building custom classes
+    this.defaultIgnoreList = defaultIgnoreList //will be ignored when building custom classes    
   }
+
 
   /* 
   handles both blocks and elementss (BEM MD Notation) 

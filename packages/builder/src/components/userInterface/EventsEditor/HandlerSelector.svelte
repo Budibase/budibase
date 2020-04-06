@@ -139,7 +139,7 @@
   }
 
   span {
-    font-size: 12px;
+    font-size: 13px;
     margin-bottom: 5px;
   }
 </style>

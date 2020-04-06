@@ -37,7 +37,7 @@
 
 .budibase__label--medium {
     font-weight: 500;
-    font-size: 12px;
+    font-size: 13px;
     opacity: 0.6;
     text-transform: uppercase;
 }
@@ -64,7 +64,7 @@
     display: flex;
     align-items: baseline;
     font-weight: 500;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .budibase__nav-item.selected {

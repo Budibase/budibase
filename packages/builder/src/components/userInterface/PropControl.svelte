@@ -39,11 +39,11 @@
 
   h5 {
     word-wrap: break-word;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 400;
     color: #000333;
     opacity: 0.8;
-    padding-top: 12px;
+    padding-top: 13px;
     margin-bottom: 0;
   }
 </style>

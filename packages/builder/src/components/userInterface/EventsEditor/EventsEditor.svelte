@@ -88,7 +88,7 @@
 <style>
   h3 {
     text-transform: uppercase;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: #8997ab;
     margin-bottom: 10px;

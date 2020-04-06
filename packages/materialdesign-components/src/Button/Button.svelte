@@ -65,6 +65,9 @@
 {/if}
 
 <style>
+  .mdc-button:not(.fullwidth) {
+    width: fit-content;
+  }
   .fullwidth {
     width: 100%;
   }

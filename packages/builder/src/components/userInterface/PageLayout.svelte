@@ -50,24 +50,23 @@
   }
 </script>
 
-<div>
+<div class="pagelayoutSection">
+  <div class="components-nav-page">Page Layout</div>
   <div
-    class="budibase__nav-item"
+    class="budibase__nav-item root"
     class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
     on:click|stopPropagation={() => store.setScreenType('page')}>
     <span
       class="icon"
       class:rotate={$store.currentPreviewItem.name !== _layout.title}>
-      {#if _layout.component.props._children.length}
-        <ArrowDownIcon />
-      {/if}
+      <ArrowDownIcon />
     </span>
 
     <span class="icon">
       <GridIcon />
     </span>
 
-    <span class="title">Master Layout</span>
+    <span class="title">Page Layout</span>
   </div>
 
   {#if $store.currentPreviewItem.name === _layout.title && _layout.component.props._children}
@@ -90,9 +89,27 @@
   onOk={() => store.deleteComponent(componentToDelete)} />
 
 <style>
+.components-nav-page {
+  font-size: 13px;
+  color: #000333;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-left: 20px;
+  font-weight: 600;
+  opacity: 0.4;
+  letter-spacing: 1px;
+}
+
+
+.pagelayoutSection {
+  margin: 20px 0px 20px 0px;
+}
+  .root {
+
+  }
   .title {
     margin-left: 10px;
-    margin-top: 2px;
+    font-size: 13px;
   }
 
   .icon {
@@ -100,7 +117,7 @@
     transition: 0.2s;
     width: 20px;
     margin-top: 2px;
-    color: #333;
+    color: #000333;
   }
 
   .icon:nth-of-type(2) {

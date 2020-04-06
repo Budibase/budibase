@@ -85,6 +85,6 @@
     background: none;
     border: none;
     border-radius: 5px;
-    padding: 12px;
+    padding: 13px;
   }
 </style>
