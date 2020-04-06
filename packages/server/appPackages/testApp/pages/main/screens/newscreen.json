@@ -1,7 +1,0 @@
-{
-  "name": "newscreen",
-  "props": {
-    "_component": "@budibase/standard-component/div",
-    "className": "something else"
-  }
-}
