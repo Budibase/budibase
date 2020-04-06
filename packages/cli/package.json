@@ -1,6 +1,6 @@
 {
   "name": "budibase",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "description": "Budibase CLI",
   "repository": "https://github.com/Budibase/Budibase",
   "homepage": "https://budibase.com",
@@ -20,8 +20,8 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/datastores": "^0.0.31",
-    "@budibase/server": "^0.0.31",
+    "@budibase/datastores": "^0.0.32",
+    "@budibase/server": "^0.0.32",
     "@inquirer/password": "^0.0.6-alpha.0",
     "chalk": "^2.4.2",
     "fs-extra": "^8.1.0",
@@ -29,5 +29,5 @@
     "lodash": "^4.17.15",
     "yargs": "^14.2.0"
   },
-  "gitHead": "72a77a035eb7c1443b079bf93c29b3e5fe02094e"
+  "gitHead": "b1f4f90927d9e494e513220ef060af28d2d42455"
 }
