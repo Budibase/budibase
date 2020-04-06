@@ -22,6 +22,7 @@ module.exports = (config, app) => {
     .use(async (ctx, next) => {
       ctx.sessionId = ctx.session._sessCtx.externalKey
       ctx.session.accessed = true
+      ctx.config = config
 
       const pathParts = ctx.path.split("/")
 

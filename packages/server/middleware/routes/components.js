@@ -11,7 +11,7 @@ const router = Router();
 router.get("/_builder/api/:appname/components", async ctx => {
   try {
     ctx.body = getComponentDefinitions(
-      config,
+      ctx.config,
       ctx.params.appname,
       ctx.query.lib
     )
@@ -27,7 +27,7 @@ router.get("/_builder/api/:appname/components", async ctx => {
 
 router.get("/_builder/api/:appname/componentlibrary", async ctx => {
   const info = await componentLibraryInfo(
-    config,
+    ctx.config,
     ctx.params.appname,
     ctx.query.lib ? decodeURI(ctx.query.lib) : ""
   )
@@ -37,7 +37,7 @@ router.get("/_builder/api/:appname/componentlibrary", async ctx => {
 
 router.get("/_builder/:appname/componentlibrary", async ctx => {
   const info = await componentLibraryInfo(
-    config,
+    ctx.config,
     ctx.params.appname,
     ctx.query.lib
   )
