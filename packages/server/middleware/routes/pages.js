@@ -3,11 +3,23 @@ const StatusCodes = require("../../utilities/statusCodes")
 const {
   listScreens,
   saveScreen,
-  buildPage
+  buildPage,
+  renameScreen,
+  deleteScreen
 } = require("../../utilities/builder")
 
 
 const router = Router()
+
+router.post("/_builder/api/:appname/pages/:pageName", async ctx => {
+  await buildPage(
+    ctx.config,
+    ctx.params.appname,
+    ctx.params.pageName,
+    ctx.request.body
+  )
+  ctx.response.status = StatusCodes.OK
+})
 
 router.get("/_builder/api/:appname/pages/:pagename/screens", async ctx => {
   ctx.body = await listScreens(
@@ -56,16 +68,6 @@ router
     )
 
     ctx.response.status = StatusCodes.OK
-})
-
-router.post("/_builder/api/:appname/pages/:pageName", async ctx => {
-  await buildPage(
-    ctx.config,
-    ctx.params.appname,
-    ctx.params.pageName,
-    ctx.request.body
-  )
-  ctx.response.status = StatusCodes.OK
 })
 
 module.exports = router

@@ -15,7 +15,7 @@ const {
   authenticatedRoutes
 } = require("./routes");
 
-const builderPath = resolve(__dirname, "../../builder")
+const builderPath = resolve(__dirname, "../builder")
 
 module.exports = (config, app) => {
   const router = new Router()
