@@ -23,7 +23,7 @@ router.get("/_builder/api/:appname/appPackage", async ctx => {
 router
   .post("/_builder/api/:appname/backend", async ctx => {
     await saveBackend(
-      config,
+      ctx.config,
       ctx.params.appname,
       ctx.request.body.appDefinition,
       ctx.request.body.accessLevels
