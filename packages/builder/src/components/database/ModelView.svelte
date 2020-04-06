@@ -6,7 +6,6 @@
   import ActionButton from "components/common/ActionButton.svelte"
   import getIcon from "components/common/icon"
   import FieldView from "./FieldView.svelte"
-  import Modal from "components/common/Modal.svelte"
   import {
     get,
     compose,

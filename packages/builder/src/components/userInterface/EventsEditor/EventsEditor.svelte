@@ -16,7 +16,6 @@
   import Dropdown from "components/common/Dropdown.svelte"
   import PlusButton from "components/common/PlusButton.svelte"
   import IconButton from "components/common/IconButton.svelte"
-  import Modal from "components/common/Modal.svelte"
   import EventEditorModal from "./EventEditorModal.svelte"
   import HandlerSelector from "./HandlerSelector.svelte"
 

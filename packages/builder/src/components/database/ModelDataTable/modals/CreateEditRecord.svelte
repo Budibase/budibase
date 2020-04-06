@@ -2,7 +2,6 @@
   import { onMount } from "svelte"
   import { store, backendUiStore } from "builderStore"
   import { compose, map, get, flatten } from "lodash/fp"
-  import Modal from "components/common/Modal.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import Select from "components/common/Select.svelte"
   import {
