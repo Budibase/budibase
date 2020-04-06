@@ -6,3 +6,9 @@
 <section>
   <IndexView />
 </section>
+
+<style>
+  section {
+    padding: 30px;
+  }
+</style>
