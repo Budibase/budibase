@@ -17,6 +17,7 @@ const {
 
 const recordRoutes = require("./routes/neo/record");
 const databaseRoutes = require("./routes/neo/database");
+const neoUserRoutes = require("./routes/neo/user");
 
 const builderPath = resolve(__dirname, "../builder")
 
@@ -116,12 +117,19 @@ module.exports = (config, app) => {
         }
       })
   
+  // Neo
+  router.use(neoUserRoutes.routes());
+  router.use(neoUserRoutes.allowedMethods());
 
   router.use(recordRoutes.routes());
   router.use(recordRoutes.allowedMethods());
 
   router.use(databaseRoutes.routes());
   router.use(databaseRoutes.allowedMethods());
+
+  router.use(databaseRoutes.routes());
+  router.use(databaseRoutes.allowedMethods());
+  // end of Neo
 
   router.use(userRoutes.routes());
   router.use(userRoutes.allowedMethods());
