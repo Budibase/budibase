@@ -15,77 +15,80 @@ const {
   authenticatedRoutes
 } = require("./routes");
 
+const recordRoutes = require("./routes/neo/record");
+const databaseRoutes = require("./routes/neo/database");
+
 const builderPath = resolve(__dirname, "../builder")
 
 module.exports = (config, app) => {
   const router = new Router()
 
   router
-    .use(session(config, app))
-    .use(async (ctx, next) => {
-      ctx.sessionId = ctx.session._sessCtx.externalKey
-      ctx.session.accessed = true
-      ctx.config = config
+    .use(session(config, app));
+    // .use(async (ctx, next) => {
+    //   ctx.sessionId = ctx.session._sessCtx.externalKey
+    //   ctx.session.accessed = true
+    //   ctx.config = config
 
-      const pathParts = ctx.path.split("/")
+    //   const pathParts = ctx.path.split("/")
 
-      if (pathParts.length < 2) {
-        ctx.throw(StatusCodes.NOT_FOUND, "App Name not declared")
-      }
+    //   if (pathParts.length < 2) {
+    //     ctx.throw(StatusCodes.NOT_FOUND, "App Name not declared")
+    //   }
 
-      const appname = pathParts[1]
-      ctx.set("x-bbappname", appname)
+    //   const appname = pathParts[1]
+    //   ctx.set("x-bbappname", appname)
 
-      if (appname === "_builder") {
-        if (!config.dev) {
-          ctx.response.status = StatusCodes.FORBIDDEN
-          ctx.body = "run in dev mode to access builder"
-          return
-        }
+    //   if (appname === "_builder") {
+    //     if (!config.dev) {
+    //       ctx.response.status = StatusCodes.FORBIDDEN
+    //       ctx.body = "run in dev mode to access builder"
+    //       return
+    //     }
 
-        // Builder URLs should have admin access to the API 
-        if (ctx.path.startsWith("/_builder/instance/_master")) {
-          const {
-            instance,
-            publicPath,
-            sharedPath,
-          } = await ctx.master.getFullAccessApiForMaster()
-          ctx.instance = instance
-          ctx.publicPath = publicPath
-          ctx.sharedPath = sharedPath
-          ctx.isAuthenticated = !!ctx.instance
-        } else if (ctx.path.startsWith("/_builder/instance")) {
-          const builderAppName = pathParts[3]
-          const instanceId = pathParts[4]
-          const {
-            bbInstance,
-            publicPath,
-            sharedPath,
-          } = await ctx.master.getFullAccessApiForInstanceId(
-            builderAppName,
-            instanceId
-          )
-          ctx.instance = bbInstance
-          ctx.publicPath = publicPath
-          ctx.sharedPath = sharedPath
-          ctx.isAuthenticated = !!ctx.instance
-        }
+    //     // Builder URLs should have admin access to the API 
+    //     if (ctx.path.startsWith("/_builder/instance/_master")) {
+    //       const {
+    //         instance,
+    //         publicPath,
+    //         sharedPath,
+    //       } = await ctx.master.getFullAccessApiForMaster()
+    //       ctx.instance = instance
+    //       ctx.publicPath = publicPath
+    //       ctx.sharedPath = sharedPath
+    //       ctx.isAuthenticated = !!ctx.instance
+    //     } else if (ctx.path.startsWith("/_builder/instance")) {
+    //       const builderAppName = pathParts[3]
+    //       const instanceId = pathParts[4]
+    //       const {
+    //         bbInstance,
+    //         publicPath,
+    //         sharedPath,
+    //       } = await ctx.master.getFullAccessApiForInstanceId(
+    //         builderAppName,
+    //         instanceId
+    //       )
+    //       ctx.instance = bbInstance
+    //       ctx.publicPath = publicPath
+    //       ctx.sharedPath = sharedPath
+    //       ctx.isAuthenticated = !!ctx.instance
+    //     }
 
-        await next()
-      } else {
-        const instance = await ctx.master.getInstanceApiForSession(
-          appname,
-          ctx.sessionId
-        )
+    //     await next()
+    //   } else {
+    //     const instance = await ctx.master.getInstanceApiForSession(
+    //       appname,
+    //       ctx.sessionId
+    //     )
 
-        ctx.instance = instance.instance
-        ctx.publicPath = instance.publicPath
-        ctx.sharedPath = instance.sharedPath
-        ctx.isAuthenticated = !!instance.instance
+    //     ctx.instance = instance.instance
+    //     ctx.publicPath = instance.publicPath
+    //     ctx.sharedPath = instance.sharedPath
+    //     ctx.isAuthenticated = !!instance.instance
 
-        await next()
-      }
-    })
+    //     await next()
+    //   }
+    // })
 
     router
       .get("/_builder", async ctx => {
@@ -112,6 +115,13 @@ module.exports = (config, app) => {
           await send(ctx, "/index.html", { root: builderPath })
         }
       })
+  
+
+  router.use(recordRoutes.routes());
+  router.use(recordRoutes.allowedMethods());
+
+  router.use(databaseRoutes.routes());
+  router.use(databaseRoutes.allowedMethods());
 
   router.use(userRoutes.routes());
   router.use(userRoutes.allowedMethods());
@@ -122,12 +132,13 @@ module.exports = (config, app) => {
   router.use(pageRoutes.routes());
   router.use(pageRoutes.allowedMethods());
 
-  router
-    .get("/:appname", async ctx => {
-      await send(ctx, "/index.html", { root: ctx.publicPath })
-    }) 
-    .get("/:appname/*", routeHandlers.appDefault)
-    .get("/_builder/instance/:appname/:instanceid/*", routeHandlers.appDefault)
+  // router
+  //   .get("/:appname", async ctx => {
+  //     await send(ctx, "/index.html", { root: ctx.publicPath })
+  //   }) 
+  //   .get("/:appname/*", routeHandlers.appDefault)
+  //   .get("/_builder/instance/:appname/:instanceid/*", routeHandlers.appDefault)
+
 
   router.use(authenticatedRoutes.routes());
   router.use(authenticatedRoutes.allowedMethods());
