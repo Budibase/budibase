@@ -4,6 +4,10 @@ const controller = require("../../controllers/schema");
 const router = Router();
 
 router
-  .get("/api/schemas/:appId", controller.fetch)
-  .post("/api/schemas/:appId", controller.save)
-  .delete("/api/schemas/:appId", controller.delete)
+  .get("/api/:clientId/:appId/schemas", controller.fetch)
+  .post("/api/:clientId/:appId/schemas", controller.save)
+  .patch("/api/:clientId/:appId/schemas/apply", controller.apply)
+  .delete("/api/:clientId/:appId/schemas/:schemaId", controller.delete)
+
+
+module.exports = router;
