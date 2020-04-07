@@ -2,7 +2,8 @@ const couchdb = require("../../db");
 
 const controller = {
   create: async ctx => {
-    ctx.body =  await couchdb.db.create(ctx.request.body.appName);
+    const clientDatabase = couchdb.db.use(ctx.params.clientId);
+    ctx.body =  await clientDatabase.create(ctx.request.body.appname);
   }
 }
 
