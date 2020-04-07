@@ -1,7 +1,4 @@
 const Router = require("@koa/router");
-// const StatusCodes = require("../../utilities/statusCodes")
-// const routeHandlers = require("../routeHandlers")
-
 const controller = require("../../controllers/record");
 
 const router = Router();
@@ -9,7 +6,7 @@ const router = Router();
 router
   .get("/api/records/:databaseId", controller.fetch)
   .post("/api/records/:databaseId", controller.save)
-  .delete("/api/records/:databaseId", controller.destroy)
+  .delete("/api/records/:databaseId/:recordId", controller.destroy)
 
 // router.post(
 //   "/_builder/instance/:appname/:instanceid/api/record/*",
