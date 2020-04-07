@@ -3,11 +3,11 @@ const couchdb = require("../../db");
 const controller = {
   fetch: async ctx => {
     const database = couchdb.db.use(ctx.params.databaseId);
-    ctx.body = await database.list({ type: "user" });
+    ctx.body = await database.list({ include_docs: true });
   },
   create: async ctx => {
     const database = couchdb.db.use(ctx.params.databaseId);
-    ctx.body =  await database.create(ctx.request.body.user);
+    ctx.body =  await database.insert(ctx.request.body);
   },
   destroy: async ctx => {
     const database = couchdb.db.use(ctx.params.databaseId);
