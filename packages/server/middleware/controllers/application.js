@@ -2,12 +2,17 @@ const couchdb = require("../../db");
 
 const controller = {
   fetch: async ctx => {
-    const clientDatabase = couchdb.db.use(ctx.params.clientId);
-    ctx.body =  await clientDatabase.list({ type: "app" });
+    const clientDb = couchdb.db.use(`client-${ctx.params.clientId}`);
+    const body = await clientDb.view("client", "by_type", { 
+      include_docs: true,
+      key: ["app"] 
+    });
+
+    ctx.body = body.rows;
   },
   create: async ctx => {
-    const clientDatabase = couchdb.db.use(ctx.params.clientId);
-    ctx.body =  await clientDatabase.insert(ctx.request.body);
+    const clientDb = couchdb.db.use(`client-${ctx.params.clientId}`);
+    ctx.body = await clientDb.insert(ctx.request.body)
   }
 }
 

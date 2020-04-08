@@ -18,6 +18,8 @@ const {
 const recordRoutes = require("./routes/neo/record");
 const databaseRoutes = require("./routes/neo/database");
 const neoUserRoutes = require("./routes/neo/user");
+const clientRoutes = require("./routes/neo/client");
+const applicationRoutes = require("./routes/neo/application");
 
 const builderPath = resolve(__dirname, "../builder")
 
@@ -118,6 +120,25 @@ module.exports = (config, app) => {
       })
   
   // Neo
+  // error handling middleware
+  router.use(async (ctx, next) => {
+    try {
+      await next();
+    } catch (err) {
+      ctx.status = err.status || 500;
+      ctx.body = {
+        message: err.message,
+        status: ctx.status 
+      };
+    }
+  });
+
+  router.use(applicationRoutes.routes());
+  router.use(applicationRoutes.allowedMethods());
+
+  router.use(clientRoutes.routes());
+  router.use(clientRoutes.allowedMethods());
+
   router.use(neoUserRoutes.routes());
   router.use(neoUserRoutes.allowedMethods());
 
