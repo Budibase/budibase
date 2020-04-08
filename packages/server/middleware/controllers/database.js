@@ -5,10 +5,9 @@ const controller = {
 
   },
   create: async ctx => {
-    const databaseName =  ctx.request.body.databaseName;
+    const databaseName =  ctx.request.body.name;
     await couchdb.db.create(databaseName);
-    const db = couchdb.db.use(databaseName)
-    await db.insert({
+    await couchdb.db.use(databaseName).insert({
       views: { 
         by_type: { 
           map: function(doc) { 
@@ -17,8 +16,10 @@ const controller = {
         } 
       }
     }, '_design/database');
+
     ctx.body = {
-      message: `Database ${databaseName} successfully provisioned.`
+      message: `Database ${databaseName} successfully provisioned.`,
+      status: 200
     }
   },
   destroy: async ctx => {

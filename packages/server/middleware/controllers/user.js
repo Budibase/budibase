@@ -3,10 +3,12 @@ const couchdb = require("../../db");
 const controller = {
   fetch: async ctx => {
     const database = couchdb.db.use(ctx.params.databaseId);
-    ctx.body = await database.view("database", "by_type", { 
+    const data = await database.view("database", "by_type", { 
       include_docs: true,
       key: ["user"] 
-    })
+    });
+
+    ctx.body = data.rows
   },
   create: async ctx => {
     const database = couchdb.db.use(ctx.params.databaseId);
