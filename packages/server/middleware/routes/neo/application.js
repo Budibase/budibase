@@ -3,6 +3,8 @@ const controller = require("../../controllers/application");
 
 const router = Router();
 
-router.post("/api/:clientId/applications", controller.create)
+router
+  .get("/api/:clientId/applications", controller.fetch)
+  .post("/api/:clientId/applications", controller.create)
 
 module.exports = router;
