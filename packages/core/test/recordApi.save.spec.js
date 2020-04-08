@@ -48,23 +48,6 @@ describe("recordApi > save then load", () => {
     expect(saved.createddate).toEqual(record.createddate)
   })
 
-  it("loaded record isNew() always return false", async () => {
-    const { recordApi } = await setupApphierarchy(
-      basicAppHierarchyCreator_WithFields
-    )
-    const record = recordApi.getNew("/customers", "customer")
-
-    record.age = 9
-    record.createddate = new Date()
-
-    await recordApi.save(record)
-
-    const saved = await recordApi.load(record.key)
-
-    expect(saved.isNew).toBeDefined()
-    expect(saved.isNew).toBe(false)
-  })
-
   it("loaded record id() and key() should work", async () => {
     const { recordApi } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields
@@ -133,7 +116,7 @@ describe("recordApi > save then load", () => {
     referredByCustomer.age = 9
     ;(referredByCustomer.isalive = true),
       (referredByCustomer.createdDate = new Date())
-    const savedReferredBy = await recordApi.save(referredByCustomer)
+    await recordApi.save(referredByCustomer)
 
     const referredCustomer = recordApi.getNew("/customers", "customer")
     referredCustomer.surname = "Zeecat"
@@ -143,6 +126,7 @@ describe("recordApi > save then load", () => {
     referredCustomer.referredBy = referredByCustomer
     await recordApi.save(referredCustomer)
 
+    const savedReferredBy = recordApi.load(referredByCustomer.key)
     savedReferredBy.surname = "Zeedog"
     await recordApi.save(savedReferredBy)
 
@@ -152,16 +136,6 @@ describe("recordApi > save then load", () => {
 })
 
 describe("save", () => {
-  it("IsNew() should return false after save", async () => {
-    const { recordApi } = await setupApphierarchy(
-      basicAppHierarchyCreator_WithFields
-    )
-    const record = recordApi.getNew("/customers", "customer")
-    record.surname = "Ledog"
-
-    const savedRecord = await recordApi.save(record)
-    expect(savedRecord.isNew).toBe(false)
-  })
 
   it("should publish onbegin and oncomplete events", async () => {
     const { recordApi, subscribe } = await setupApphierarchy(
@@ -197,13 +171,16 @@ describe("save", () => {
     const record = recordApi.getNew("/customers", "customer")
     record.surname = "Ledog"
 
-    const savedRecord = await recordApi.save(record)
+    await recordApi.save(record)
+
     const onCreate = handler.getEvents(events.recordApi.save.onRecordCreated)
     expect(onCreate.length).toBe(1)
     expect(onCreate[0].context.record).toBeDefined()
     expect(onCreate[0].context.record.key).toBe(record.key)
 
+    const savedRecord = await recordApi.load(record.key)
     savedRecord.surname = "Zeecat"
+
     await recordApi.save(savedRecord)
 
     const onUpdate = handler.getEvents(events.recordApi.save.onRecordUpdated)
@@ -214,63 +191,6 @@ describe("save", () => {
     expect(onUpdate[0].context.new).toBeDefined()
     expect(onUpdate[0].context.new.key).toBe(record.key)
     expect(onUpdate[0].context.new.surname).toBe("Zeecat")
-  })
-
-  it("should create folder and index for subcollection", async () => {
-    const { recordApi, appHierarchy } = await setupApphierarchy(
-      basicAppHierarchyCreator_WithFields
-    )
-    const record = recordApi.getNew("/customers", "customer")
-    record.surname = "Ledog"
-
-    await recordApi.save(record)
-    const recordDir = getRecordInfo(appHierarchy.root, record.key).dir
-    expect(
-      await recordApi._storeHandle.exists(
-        `${recordDir}/invoice_index/index.csv`
-      )
-    ).toBeTruthy()
-    expect(
-      await recordApi._storeHandle.exists(`${recordDir}/invoice_index`)
-    ).toBeTruthy()
-    expect(
-      await recordApi._storeHandle.exists(`${recordDir}/invoices`)
-    ).toBeTruthy()
-  })
-
-  it("should create index folder and shardMap for sharded reverse reference index", async () => {
-    const { recordApi, appHierarchy } = await setupApphierarchy(
-      basicAppHierarchyCreator_WithFields
-    )
-    const record = recordApi.getNew("/customers", "customer")
-    record.surname = "Ledog"
-
-    await recordApi.save(record)
-    const recordDir = getRecordInfo(appHierarchy.root, record.key).dir
-    expect(
-      await recordApi._storeHandle.exists(
-        `${recordDir}/referredToCustomers/shardMap.json`
-      )
-    ).toBeTruthy()
-    expect(
-      await recordApi._storeHandle.exists(`${recordDir}/referredToCustomers`)
-    ).toBeTruthy()
-  })
-
-  it("should create folder for record", async () => {
-    const { recordApi, appHierarchy } = await setupApphierarchy(
-      basicAppHierarchyCreator_WithFields
-    )
-    const record = recordApi.getNew("/customers", "customer")
-    record.surname = "Ledog"
-
-    await recordApi.save(record)
-    const recordDir = getRecordInfo(appHierarchy.root, record.key).dir
-
-    expect(await recordApi._storeHandle.exists(`${recordDir}`)).toBeTruthy()
-    expect(
-      await recordApi._storeHandle.exists(`${recordDir}/record.json`)
-    ).toBeTruthy()
   })
 
   it("create should throw error, user user does not have permission", async () => {

@@ -75,7 +75,7 @@ describe("initialiseData", () => {
   })
 
   const getApplicationDefinition = () => {
-    const { templateApi, app } = getMemoryTemplateApi()
+    const { templateApi, app } = await getMemoryTemplateApi()
     const h = basicAppHierarchyCreator_WithFields_AndIndexes(templateApi)
     return {
       appDef: { hierarchy: h.root, actions: [], triggers: [] },
