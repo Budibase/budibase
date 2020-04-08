@@ -1,30 +1,18 @@
-import { cloneDeep, take, takeRight, flatten, map, filter } from "lodash/fp"
+import { cloneDeep } from "lodash/fp"
 import { validate } from "./validate"
-import { _loadFromInfo } from "./load"
-import { apiWrapper, events, $, joinKey } from "../common"
-import {
-  getFlattenedHierarchy,
-  isModel,
-  getNode,
-  fieldReversesReferenceToNode,
-} from "../templateApi/hierarchy"
-import {
-  transactionForCreateRecord,
-  transactionForUpdateRecord,
-} from "../transactions/create"
+import { _load } from "./load"
+import { apiWrapper, events } from "../common"
 import { permission } from "../authApi/permissions"
-import { initialiseIndex } from "../indexing/initialiseIndex"
 import { BadRequestError } from "../common/errors"
-import { getRecordInfo } from "./recordInfo"
-import { initialiseChildren } from "./initialiseChildren"
+import { getExactNodeForKey } from "../templateApi/hierarchy"
 
 export const save = app => async (record, context) =>
   apiWrapper(
     app,
     events.recordApi.save,
-    record.isNew
-      ? permission.createRecord.isAuthorized(record.key)
-      : permission.updateRecord.isAuthorized(record.key),
+    record._rev
+      ? permission.updateRecord.isAuthorized(record.key)
+      : permission.createRecord.isAuthorized(record.key),
     { record },
     _save,
     app,
@@ -48,73 +36,30 @@ export const _save = async (app, record, context, skipValidation = false) => {
     }
   }
 
-  const recordInfo = getRecordInfo(app.hierarchy, record.key)
-  const { recordNode, pathInfo, recordJson, files } = recordInfo
+  const recordNode = getExactNodeForKey(app.hierarchy)(record.key)
 
-  if (recordClone.isNew) {
+  recordClone.nodeKey = recordNode.nodeKey()
+
+  if (!record._rev) {
     if (!recordNode) throw new Error("Cannot find node for " + record.key)
 
-    const transaction = await transactionForCreateRecord(app, recordClone)
-    recordClone.transactionId = transaction.id
-    await createRecordFolderPath(app.datastore, pathInfo)
-    await app.datastore.createFolder(files)
-    await app.datastore.createJson(recordJson, recordClone)
-    await initialiseChildren(app, recordInfo)
+    // FILES
+    // await app.datastore.createFolder(files)
+    await app.datastore.createJson(record.key, recordClone)
     await app.publish(events.recordApi.save.onRecordCreated, {
       record: recordClone,
     })
   } else {
-    const oldRecord = await _loadFromInfo(app, recordInfo)
-    const transaction = await transactionForUpdateRecord(
-      app,
-      oldRecord,
-      recordClone
-    )
-    recordClone.transactionId = transaction.id
-    await app.datastore.updateJson(recordJson, recordClone)
+    const oldRecord = await _load(app, record.key)
+    await app.datastore.updateJson(record.key, recordClone)
     await app.publish(events.recordApi.save.onRecordUpdated, {
       old: oldRecord,
       new: recordClone,
     })
   }
 
-  await app.cleanupTransactions()
-
-  const returnedClone = cloneDeep(recordClone)
-  returnedClone.isNew = false
-  return returnedClone
-}
-
-const createRecordFolderPath = async (datastore, pathInfo) => {
-  const recursiveCreateFolder = async (
-    subdirs,
-    dirsThatNeedCreated = undefined
-  ) => {
-    // iterate backwards through directory hierachy
-    // until we get to a folder that exists, then create the rest
-    // e.g
-    // - some/folder/here
-    // - some/folder
-    // - some
-    const thisFolder = joinKey(pathInfo.base, ...subdirs)
-
-    if (await datastore.exists(thisFolder)) {
-      let creationFolder = thisFolder
-      for (let nextDir of dirsThatNeedCreated || []) {
-        creationFolder = joinKey(creationFolder, nextDir)
-        await datastore.createFolder(creationFolder)
-      }
-    } else if (!dirsThatNeedCreated || dirsThatNeedCreated.length > 0) {
-      dirsThatNeedCreated = !dirsThatNeedCreated ? [] : dirsThatNeedCreated
-
-      await recursiveCreateFolder(take(subdirs.length - 1)(subdirs), [
-        ...takeRight(1)(subdirs),
-        ...dirsThatNeedCreated,
-      ])
-    }
-  }
-
-  await recursiveCreateFolder(pathInfo.subdirs)
-
-  return joinKey(pathInfo.base, ...pathInfo.subdirs)
+  // TODO: use nano.head to get _rev (saves loading whole doc)
+  const savedResult = await app.datastore.loadFile(record.key)
+  recordClone._rev = savedResult._rev
+  return recordClone
 }

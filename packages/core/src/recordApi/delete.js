@@ -21,22 +21,15 @@ export const deleteRecord = (app, disableCleanup = false) => async key => {
 }
 
 // called deleteRecord because delete is a keyword
-export const _deleteRecord = async (app, key, disableCleanup) => {
+export const _deleteRecord = async (app, key) => {
   const recordInfo = getRecordInfo(app.hierarchy, key)
   key = recordInfo.key
   const node = getExactNodeForKey(app.hierarchy)(key)
-
-  const record = await _load(app, key)
-  await transactionForDeleteRecord(app, record)
 
   for (const collectionRecord of node.children) {
     const collectionKey = joinKey(key, collectionRecord.collectionName)
     await _deleteCollection(app, collectionKey, true)
   }
 
-  await app.datastore.deleteFolder(recordInfo.dir)
-
-  if (!disableCleanup) {
-    await app.cleanupTransactions()
-  }
+  await app.datastore.deleteFile(key)
 }

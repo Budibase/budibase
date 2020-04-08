@@ -29,6 +29,10 @@ export const _saveApplicationHierarchy = async (datastore, hierarchy) => {
     )
   }
 
+  if (hierarchy.getFlattenedHierarchy) {
+    delete hierarchy.getFlattenedHierarchy
+  }
+
   if (await datastore.exists(appDefinitionFile)) {
     const appDefinition = await datastore.loadJson(appDefinitionFile)
     appDefinition.hierarchy = hierarchy
