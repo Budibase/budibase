@@ -10,7 +10,7 @@ import {
   isArray,
   has,
 } from "lodash/fp"
-import { $ } from "../../common"
+import { $ } from "../../common/index.mjs"
 import { parsedSuccess } from "./typeHelpers"
 import string from "./string"
 import bool from "./bool"
@@ -19,7 +19,7 @@ import datetime from "./datetime"
 import array from "./array"
 import link from "./link"
 import file from "./file"
-import { BadRequestError } from "../../common/errors"
+import { BadRequestError } from "../../common/errors.mjs"
 
 const allTypes = () => {
   const basicTypes = {
@@ -67,8 +67,8 @@ export const validateFieldParse = (field, record) =>
 
 export const getDefaultOptions = type => getType(type).getDefaultOptions()
 
-export const validateTypeConstraints = async (field, record, context) =>
-  await getType(field.type).validateTypeConstraints(field, record, context)
+export const validateTypeConstraints = async (field, record) =>
+  await getType(field.type).validateTypeConstraints(field, record)
 
 export const detectType = value => {
   if (isString(value)) return string
@@ -76,8 +76,7 @@ export const detectType = value => {
   if (isNumber(value)) return number
   if (isDate(value)) return datetime
   if (isArray(value)) return array(detectType(value[0]))
-  if (isObject(value) && has("key")(value) && has("value")(value))
-    return link
+  if (isObject(value) && has("key")(value) && has("value")(value)) return link
   if (isObject(value) && has("relativePath")(value) && has("size")(value))
     return file
 

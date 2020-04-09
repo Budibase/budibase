@@ -1,95 +1,55 @@
-import {
-  setupApphierarchy,
-  stubEventHandler,
-  basicAppHierarchyCreator_WithFields,
-  basicAppHierarchyCreator_WithFields_AndIndexes,
-  hierarchyFactory,
-  withFields,
-} from "./specHelpers"
-import { find } from "lodash"
 import { addHours } from "date-fns"
 import { events } from "../src/common"
+import { testSchema } from "./testSchema.mjs"
+import { validateRecord } from "../src/records/validateRecord.mjs"
+import { getNewRecord } from "../src/records/getNewRecord.mjs"
 
 describe("recordApi > validate", () => {
-  it("should return errors when any fields do not parse", async () => {
-    const { recordApi } = await setupApphierarchy(
-      basicAppHierarchyCreator_WithFields
-    )
-    const record = recordApi.getNew("/customers", "customer")
+  it("should return errors when any fields do not parse", () => {
+    const schema = testSchema()
+    const record = getNewRecord(schema, "Contact")
 
-    record.surname = "Ledog"
-    record.isalive = "hello"
-    record.age = "nine"
-    record.createddate = "blah"
+    record.Name = "Ledog"
+    record["Is Active"] = "hello"
+    record.Created = "not a date"
 
-    const validationResult = await recordApi.validate(record)
+    const validationResult = validateRecord(schema, record)
 
     expect(validationResult.isValid).toBe(false)
-    expect(validationResult.errors.length).toBe(3)
+    expect(validationResult.errors.length).toBe(2)
   })
 
-  it("should return errors when mandatory field is empty", async () => {
-    const withValidationRule = (hierarchy, templateApi) => {
-      templateApi.addRecordValidationRule(hierarchy.customerRecord)(
-        templateApi.commonRecordValidationRules.fieldNotEmpty("surname")
-      )
-    }
+  it("should return errors when mandatory field is empty", () => {
+    const schema = testSchema()
+    const record = getNewRecord(schema, "Contact")
+    record.Name = ""
 
-    const hierarchyCreator = hierarchyFactory(withFields, withValidationRule)
-    const { recordApi } = await setupApphierarchy(hierarchyCreator)
-
-    const record = recordApi.getNew("/customers", "customer")
-
-    record.surname = ""
-
-    const validationResult = await recordApi.validate(record)
+    const validationResult = validateRecord(schema, record)
 
     expect(validationResult.isValid).toBe(false)
     expect(validationResult.errors.length).toBe(1)
   })
 
-  it("should return error when string field is beyond maxLength", async () => {
-    const withFieldWithMaxLength = hierarchy => {
-      const surname = find(
-        hierarchy.customerRecord.fields,
-        f => f.name === "surname"
-      )
-      surname.typeOptions.maxLength = 5
-    }
+  it("should return error when string field is beyond maxLength", () => {
+    const schema = testSchema()
+    schema.findField("Contact", "Name").typeOptions.maxLength = 5
+    const record = getNewRecord(schema, "Contact")
+    record.name = "more than 5 characters"
 
-    const hierarchyCreator = hierarchyFactory(
-      withFields,
-      withFieldWithMaxLength
-    )
-    const { recordApi } = await setupApphierarchy(hierarchyCreator)
-
-    const record = recordApi.getNew("/customers", "customer")
-    record.surname = "more than 5 chars"
-
-    const validationResult = await recordApi.validate(record)
+    const validationResult = validateRecord(schema, record)
     expect(validationResult.isValid).toBe(false)
     expect(validationResult.errors.length).toBe(1)
   })
 
-  it("should return error when number field is > maxValue", async () => {
-    const withFieldWithMaxLength = hierarchy => {
-      const age = find(hierarchy.customerRecord.fields, f => f.name === "age")
-      age.typeOptions.maxValue = 10
-      age.typeOptions.minValue = 5
-    }
+  it("should return error when number field is > maxValue", () => {
+    const schema = testSchema()
+    schema.findField("Deal", "Estimated Value").typeOptions.maxValue = 5
+    const record = getNewRecord(schema, "Deal")
+    record["Estimated Value"] = 10
 
-    const hierarchyCreator = hierarchyFactory(
-      withFields,
-      withFieldWithMaxLength
-    )
-    const { recordApi } = await setupApphierarchy(hierarchyCreator)
-
-    const tooOldRecord = recordApi.getNew("/customers", "customer")
-    tooOldRecord.age = 11
-
-    const tooOldResult = await recordApi.validate(tooOldRecord)
-    expect(tooOldResult.isValid).toBe(false)
-    expect(tooOldResult.errors.length).toBe(1)
+    const validationResult = recordApi.validate(schema, record)
+    expect(validationResult.isValid).toBe(false)
+    expect(validationResult.errors.length).toBe(1)
   })
 
   it("should return error when number field is < minValue", async () => {

@@ -6,7 +6,7 @@ import {
   parsedSuccess,
   getDefaultExport,
 } from "./typeHelpers"
-import { switchCase, defaultCase, toDateOrNull, isNonEmptyArray } from "../../common"
+import { switchCase, defaultCase, toDateOrNull } from "../../common"
 
 const dateFunctions = typeFunctions({
   default: constant(null),
@@ -21,13 +21,9 @@ const parseStringToDate = s =>
     [defaultCase, parsedFailed]
   )(new Date(s))
 
-const isNullOrEmpty = d => 
-  isNull(d) 
-  || (d || "").toString() === ""
+const isNullOrEmpty = d => isNull(d) || (d || "").toString() === ""
 
-const isDateOrEmpty = d => 
-  isDate(d) 
-  || isNullOrEmpty(d)
+const isDateOrEmpty = d => isDate(d) || isNullOrEmpty(d)
 
 const dateTryParse = switchCase(
   [isDateOrEmpty, parsedSuccess],
