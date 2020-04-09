@@ -2,7 +2,7 @@
   import { store } from "builderStore"
 
   import { fade } from "svelte/transition"
-  import { isActive, goto, url, layout } from "@sveltech/routify"
+  import { isActive, goto, context } from "@sveltech/routify"
 
   import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
   import IconButton from "components/common/IconButton.svelte"
@@ -23,6 +23,8 @@
       throw new Error(pkg)
     }
   }
+  $: ({ component } = $context)
+  $: list = component.parent.children.filter(child => child.isIndexable)
 </script>
 
 <div class="root">
@@ -35,12 +37,12 @@
           alt="budibase icon" />
       </button>
 
-      <!-- List is an array of subfolders in the application folder. -->
-      {#each $layout.children as { path, prettyName, children, meta }}
+      <!-- This gets all indexable subroutes and sticks them in the top nav. -->
+      {#each list as { path, prettyName, children, meta }}
         <span
           class:active={$isActive(path)}
           class="topnavitem"
-          on:click={() => $goto($url(path))}>
+          on:click={() => $goto(path)}>
           {prettyName}
         </span>
       {/each}
@@ -50,9 +52,9 @@
     </div>
     <div class="toprightnav">
       <span
-        class:active={$isActive(`${component.parent.path}/settings`)}
+        class:active={$isActive(`/settings`)}
         class="topnavitemright"
-        on:click={() => $goto(`${component.parent.path}/settings`)}>
+        on:click={() => $goto(`/settings`)}>
         <SettingsIcon />
       </span>
       <span
