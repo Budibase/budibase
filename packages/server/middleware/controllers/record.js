@@ -1,19 +1,15 @@
 const couchdb = require("../../db")
-const { cloneDeep, mapValues, keyBy } = require("lodash/fp")
+const { mapValues, keyBy } = require("lodash/fp")
 const {
   validateRecord,
 } = require("../../../common/src/records/validateRecord.mjs")
 const { events } = require("../../../common/src/common/events.mjs")
 const { $ } = require("../../../common/src/common")
-import { safeParseField } from "../../../common/src/schema/types"
-import {
-  allModelsViewName,
-  allModelsDesignDocName,
-} from "./couchdbNamingConventions"
+const { safeParseField } = require("../../../common/src/schema/types");
 
-async function save(ctx) {
+exports.save = async function(ctx) {
   const db = couchdb.use(ctx.databaseId)
-  const record = cloneDeep(ctx.body)
+  const record = ctx.body
 
   if (!ctx.schema.findModel(record._modelId)) {
     ctx.status = 400
@@ -51,30 +47,30 @@ async function save(ctx) {
   return record
 }
 
-async function fetch(ctx) {
+exports.fetch = function(ctx) {
   const db = couchdb.db.use(ctx.params.databaseId)
   const model = ctx.schema.findModel(ctx.modelName)
   ctx.body = db.viewAsStream(
-    allModelsDesignDocName(model.id),
-    allModelsViewName(model.id),
+    `all_${model.id}`,
+    `all_${model.id}`,
     {
       include_docs: true,
     }
   )
 }
 
-async function find(ctx) {
+exports.find = async function(ctx) {
   const db = couchdb.db.use(ctx.params.databaseId)
-  const { body, status } = await _findRecord(
+  const { body, status } = await _findRecord({
     db,
-    ctx.schema,
-    ctx.params.recordId
-  )
+    schema: ctx.schema,
+    id: ctx.params.recordId
+  })
   ctx.status = status
   ctx.body = body
 }
 
-async function _findRecord(db, schema, id) {
+async function _findRecord({ db, schema, id }) {
   let storedData
   try {
     storedData = await db.get(id)
@@ -84,21 +80,23 @@ async function _findRecord(db, schema, id) {
 
   const model = schema.findModel(storedData._modelId)
 
+  // TODO refactor
   const loadedRecord = $(model.fields, [
     keyBy("name"),
     mapValues(f => safeParseField(f, storedData)),
   ])
+  
 
-  loadedRecord._rev = storedData._rev
-  loadedRecord._id = storedData._id
-  loadedRecord._modelId = storedData._modelId
-  return loadedRecord
+  return {
+    ...loadedRecord,
+    _rev: storedData._rev,
+    _id: storedData._id,
+    _modelId: storedData._modelId
+  }
 }
 
-async function destroy(ctx) {
+exports.destroy = async function(ctx) {
   const databaseId = ctx.params.databaseId;
   const database = couchdb.db.use(databaseId)
   ctx.body = await database.destroy(ctx.params.recordId);
-}
-
-module.exports = { save, fetch, destroy, find }
+};

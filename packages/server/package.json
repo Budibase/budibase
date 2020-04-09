@@ -37,7 +37,6 @@
   "devDependencies": {
     "@jest/test-sequencer": "^24.8.0",
     "jest": "^24.8.0",
-    "mock-couch": "^0.1.11",
     "nodemon": "^2.0.2",
     "server-destroy": "^1.0.1",
     "supertest": "^4.0.2"
