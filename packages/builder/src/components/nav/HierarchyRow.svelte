@@ -3,6 +3,12 @@
   import { store, backendUiStore } from "builderStore"
   import { cloneDeep } from "lodash/fp"
   import getIcon from "../common/icon"
+  import {
+    CreateEditModelModal,
+    CreateEditViewModal,
+  } from "components/database/ModelDataTable/modals"
+
+  const { open, close } = getContext("simple-modal")
 
   export let level = 0
   export let node
@@ -23,8 +29,13 @@
 
   function selectHierarchyItem(node) {
     store.selectExistingNode(node.nodeId)
-    const modalType = node.type === "index" ? "VIEW" : "MODEL"
-    backendUiStore.actions.modals.show(modalType)
+    open(
+      CreateEditViewModal,
+      {
+        onClosed: close,
+      },
+      { styleContent: { padding: "0" } }
+    )
   }
 </script>
 
