@@ -100,17 +100,17 @@
   }
 </script>
 
-<div class="root">
-  <heading>
-    {#if !editingField}
-      <i class="ri-list-settings-line button--toggled" />
-      <h3 class="budibase__title--3">Create / Edit Model</h3>
-    {:else}
-      <i class="ri-file-list-line button--toggled" />
-      <h3 class="budibase__title--3">Create / Edit Field</h3>
-    {/if}
-  </heading>
+<heading>
   {#if !editingField}
+    <i class="ri-list-settings-line button--toggled" />
+    <h3 class="budibase__title--3">Create / Edit Model</h3>
+  {:else}
+    <i class="ri-file-list-line button--toggled" />
+    <h3 class="budibase__title--3">Create / Edit Field</h3>
+  {/if}
+</heading>
+{#if !editingField}
+  <div class="padding">
     <h4 class="budibase__label--big">Settings</h4>
 
     {#if $store.errors && $store.errors.length > 0}
@@ -185,18 +185,18 @@
         </ActionButton>
       {/if}
     </div>
-  {:else}
-    <FieldView
-      field={fieldToEdit}
-      onFinished={onFinishedFieldEdit}
-      allFields={record.fields}
-      store={$store} />
-  {/if}
-</div>
+  </div>
+{:else}
+  <FieldView
+    field={fieldToEdit}
+    onFinished={onFinishedFieldEdit}
+    allFields={record.fields}
+    store={$store} />
+{/if}
 
 <style>
-  .root {
-    height: 100%;
+  .padding {
+    padding: 20px;
   }
 
   .new-field {
@@ -225,6 +225,7 @@
   }
 
   heading {
+    padding: 20px 20px 0 20px;
     display: flex;
     align-items: center;
   }
