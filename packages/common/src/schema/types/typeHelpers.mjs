@@ -46,19 +46,16 @@ export const typeFunctions = specificFunctions =>
     specificFunctions
   )
 
-export const validateTypeConstraints = validationRules => async (
-  field,
-  record
-) => {
+export const validateTypeConstraints = validationRules => (field, record) => {
   const fieldValue = record[field.name]
-  const validateRule = async r =>
-    !(await r.isValid(fieldValue, field.typeOptions))
+  const validateRule = r =>
+    !r.isValid(fieldValue, field.typeOptions)
       ? r.getMessage(fieldValue, field.typeOptions)
       : ""
 
   const errors = []
   for (const r of validationRules) {
-    const err = await validateRule(r)
+    const err = validateRule(r)
     if (isNotEmpty(err)) errors.push(err)
   }
 

@@ -50,7 +50,7 @@ const options = {
 
 const typeConstraints = [
   makerule(
-    async (val, opts) =>
+    (val, opts) =>
       val === null || isNullOrEmpty(opts.minValue) || val >= opts.minValue,
     (val, opts) =>
       `value (${val.toString()}) must be greater than or equal to ${
@@ -58,7 +58,7 @@ const typeConstraints = [
       }`
   ),
   makerule(
-    async (val, opts) =>
+    (val, opts) =>
       val === null || isNullOrEmpty(opts.maxValue) || val <= opts.maxValue,
     (val, opts) =>
       `value (${val.toString()}) must be less than or equal to ${

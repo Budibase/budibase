@@ -58,7 +58,7 @@ const getDecimalPlaces = val => {
 
 const typeConstraints = [
   makerule(
-    async (val, opts) =>
+    (val, opts) =>
       val === null || opts.minValue === null || val >= opts.minValue,
     (val, opts) =>
       `value (${val.toString()}) must be greater than or equal to ${
@@ -66,7 +66,7 @@ const typeConstraints = [
       }`
   ),
   makerule(
-    async (val, opts) =>
+    (val, opts) =>
       val === null || opts.maxValue === null || val <= opts.maxValue,
     (val, opts) =>
       `value (${val.toString()}) must be less than or equal to ${
@@ -74,7 +74,7 @@ const typeConstraints = [
       } options`
   ),
   makerule(
-    async (val, opts) =>
+    (val, opts) =>
       val === null || opts.decimalPlaces >= getDecimalPlaces(val),
     (val, opts) =>
       `value (${val.toString()}) must have ${

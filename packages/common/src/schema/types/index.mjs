@@ -67,8 +67,8 @@ export const validateFieldParse = (field, record) =>
 
 export const getDefaultOptions = type => getType(type).getDefaultOptions()
 
-export const validateTypeConstraints = async (field, record) =>
-  await getType(field.type).validateTypeConstraints(field, record)
+export const validateTypeConstraints = (field, record) =>
+  getType(field.type).validateTypeConstraints(field, record)
 
 export const detectType = value => {
   if (isString(value)) return string

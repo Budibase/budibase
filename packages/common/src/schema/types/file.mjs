@@ -5,7 +5,13 @@ import {
   parsedSuccess,
   getDefaultExport,
 } from "./typeHelpers"
-import { switchCase, defaultCase, none, $, splitKey } from "../../common/index.mjs"
+import {
+  switchCase,
+  defaultCase,
+  none,
+  $,
+  splitKey,
+} from "../../common/index.mjs"
 
 const illegalCharacters = "*?\\/:<>|\0\b\f\v"
 
