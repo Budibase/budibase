@@ -24,13 +24,6 @@
       return state
     })
   }
-
-  onMount(() => {
-    if ($store.appInstances.length > 0) {
-      selectDatabase($store.appInstances[0])
-      $goto(`./database/${$backendUiStore.selectedDatabase.id}`)
-    }
-  })
 </script>
 
 <div class="root">
