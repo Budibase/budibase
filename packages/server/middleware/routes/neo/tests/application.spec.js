@@ -1,0 +1,41 @@
+const couchdb = require("../../../../db");
+const supertest = require("supertest");
+const app = require("../../../../app");
+const { createClientDatabase } = require("./couchTestUtils");
+
+
+const CLIENT_DB_ID = "client-testing";
+
+describe("/applications", () => {
+  let request;
+
+  beforeAll(async () => {
+    const server = await app({
+      config: {
+        port: 3000
+      }
+    });
+    request = supertest(server);
+    createClientDatabase();
+  });
+
+  afterAll(async () => {
+    await couchdb.db.destroy(CLIENT_DB_ID)
+    app.close();
+  })
+
+  describe("create", () => {
+    it("returns a success message when the application is successfully created", done => {
+      request
+        .post("/api/testing/applications")
+        .send({ name: "My App" })
+        .set("Accept", "application/json")
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end((err, res) => {
+            expect(res.body.message).toEqual("Application My App created successfully");            
+            done();
+        });
+      })
+    });
+});

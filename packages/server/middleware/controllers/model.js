@@ -1,11 +1,16 @@
 const couchdb = require("../../db");
 
-const controller = {
-  create: async ctx => {
-    const appDatabase = couchdb.db.use(ctx.params.appId)
-    ctx.body = await appDatabase.insert(ctx.request.body);
-  },
-  apply: async ctx => {} 
+exports.create = async function(ctx) {
+  const db = couchdb.db.use(ctx.params.instanceId)
+  ctx.body = await db.insert(ctx.request.body);
+  // Create the "all" view for that model
+  
 }
 
-module.exports = controller;
+exports.update = async function(ctx) {
+}
+
+exports.destroy = async function(ctx) {
+  const db = couchdb.db.use(ctx.params.instanceId)
+  ctx.body = await db.destroy(ctx.params.modelId, ctx.params.rev);
+}
