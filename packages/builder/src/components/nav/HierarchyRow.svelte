@@ -29,8 +29,10 @@
 
   function selectHierarchyItem(node) {
     store.selectExistingNode(node.nodeId)
+    const modalType =
+      node.type === "index" ? CreateEditViewModal : CreateEditModelModal
     open(
-      CreateEditViewModal,
+      modalType,
       {
         onClosed: close,
       },
