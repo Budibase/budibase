@@ -44,7 +44,7 @@
 </div>
 {#if $backendUiStore.selectedDatabase.id}
   <ModelDataTable {selectRecord} />
-{:else}Please select a database{/if}
+{/if}
 
 <style>
   .database-actions {
