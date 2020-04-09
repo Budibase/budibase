@@ -27,7 +27,7 @@ import {
   includes,
   filter,
 } from "lodash/fp"
-import { events, eventsList } from "./events"
+import { events, eventsList } from "./events.mjs"
 
 // this is the combinator function
 export const $$ = (...funcs) => arg => flow(funcs)(arg)
@@ -241,7 +241,7 @@ export const retry = async (fn, retries, delay, ...args) => {
   }
 }
 
-export { events } from "./events"
+export { events } from "./events.mjs"
 
 export default {
   ifExists,

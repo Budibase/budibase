@@ -1,18 +1,19 @@
 import { map, reduce, filter, isEmpty, flatten, each } from "lodash/fp"
-import { compileCode } from "../common/compileCode"
+import { compileCode } from "../common/compileCode.mjs"
 import _ from "lodash"
-import { getExactNodeForKey } from "../templateApi/hierarchy"
-import { validateFieldParse, validateTypeConstraints } from "../types"
-import { $, isNothing, isNonEmptyString } from "../common"
-import { _getContext } from "./getContext"
+import {
+  validateFieldParse,
+  validateTypeConstraints,
+} from "../schema/types/index.mjs"
+import { $, isNonEmptyString } from "../common/index.mjs"
 
 const fieldParseError = (fieldName, value) => ({
   fields: [fieldName],
   message: `Could not parse field ${fieldName}:${value}`,
 })
 
-const validateAllFieldParse = (record, recordNode) =>
-  $(recordNode.fields, [
+const validateAllFieldParse = (record, model) =>
+  $(model.fields, [
     map(f => ({ name: f.name, parseResult: validateFieldParse(f, record) })),
     reduce((errors, f) => {
       if (f.parseResult.success) return errors
@@ -21,10 +22,10 @@ const validateAllFieldParse = (record, recordNode) =>
     }, []),
   ])
 
-const validateAllTypeConstraints = async (record, recordNode, context) => {
+const validateAllTypeConstraints = async (record, model) => {
   const errors = []
-  for (const field of recordNode.fields) {
-    $(await validateTypeConstraints(field, record, context), [
+  for (const field of model.fields) {
+    $(await validateTypeConstraints(field, record), [
       filter(isNonEmptyString),
       map(m => ({ message: m, fields: [field.name] })),
       each(e => errors.push(e)),
@@ -33,10 +34,10 @@ const validateAllTypeConstraints = async (record, recordNode, context) => {
   return errors
 }
 
-const runRecordValidationRules = (record, recordNode) => {
+const runRecordValidationRules = (record, model) => {
   const runValidationRule = rule => {
     const isValid = compileCode(rule.expressionWhenValid)
-    const expressionContext = { record, _ }
+    const expressionContext = { record }
     return isValid(expressionContext)
       ? { valid: true }
       : {
@@ -46,7 +47,7 @@ const runRecordValidationRules = (record, recordNode) => {
         }
   }
 
-  return $(recordNode.validationRules, [
+  return $(model.validationRules, [
     map(runValidationRule),
     flatten,
     filter(r => r.valid === false),
@@ -54,23 +55,17 @@ const runRecordValidationRules = (record, recordNode) => {
   ])
 }
 
-export const validate = app => async (record, context) => {
-  context = isNothing(context) ? _getContext(app, record.key) : context
-
-  const recordNode = getExactNodeForKey(app.hierarchy)(record.key)
-  const fieldParseFails = validateAllFieldParse(record, recordNode)
+export const validateRecord = async (schema, record) => {
+  const model = schema.findModel(record.modelId)
+  const fieldParseFails = validateAllFieldParse(record, model)
 
   // non parsing would cause further issues - exit here
   if (!isEmpty(fieldParseFails)) {
     return { isValid: false, errors: fieldParseFails }
   }
 
-  const recordValidationRuleFails = runRecordValidationRules(record, recordNode)
-  const typeContraintFails = await validateAllTypeConstraints(
-    record,
-    recordNode,
-    context
-  )
+  const recordValidationRuleFails = runRecordValidationRules(record, model)
+  const typeContraintFails = await validateAllTypeConstraints(record, model)
 
   if (
     isEmpty(fieldParseFails) &&

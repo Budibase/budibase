@@ -1,7 +1,6 @@
-import { isString, isObjectLike, isNull, has, isEmpty } from "lodash/fp"
+import { isString, isObjectLike, isNull, has } from "lodash/fp"
 import {
   typeFunctions,
-  makerule,
   parsedSuccess,
   getDefaultExport,
   parsedFailed,
@@ -11,7 +10,7 @@ import {
   defaultCase,
   isNonEmptyString,
   isArrayOfString,
-} from "../../common"
+} from "../../common/index.mjs"
 
 const linkNothing = () => ({ key: "" })
 
@@ -65,20 +64,7 @@ const options = {
   },
 }
 
-const isEmptyString = s => isString(s) && isEmpty(s)
-
-const ensurelinkExists = async (val, opts, context) =>
-  isEmptyString(val.key) || (await context.linkExists(opts, val.key))
-
-const typeConstraints = [
-  makerule(
-    ensurelinkExists,
-    (val, opts) =>
-      `"${val[opts.displayValue]}" does not exist in options list (key: ${
-        val.key
-      })`
-  ),
-]
+const typeConstraints = []
 
 export default getDefaultExport(
   "link",

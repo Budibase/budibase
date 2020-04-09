@@ -12,7 +12,7 @@ import {
   toNumberOrNull,
   $$,
   isSafeInteger,
-} from "../../common"
+} from "../../common/index.mjs"
 
 const arrayFunctions = () =>
   typeFunctions({

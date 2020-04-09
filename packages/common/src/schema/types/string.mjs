@@ -12,7 +12,7 @@ import {
   toNumberOrNull,
   isSafeInteger,
   isArrayOfString,
-} from "../../common"
+} from "../../common/index.mjs"
 
 const stringFunctions = typeFunctions({
   default: constant(null),

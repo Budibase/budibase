@@ -6,7 +6,7 @@ import {
   parsedSuccess,
   getDefaultExport,
 } from "./typeHelpers"
-import { switchCase, defaultCase, isOneOf, toBoolOrNull } from "../../common"
+import { switchCase, defaultCase, isOneOf, toBoolOrNull } from "../../common/index.mjs"
 
 const boolFunctions = typeFunctions({
   default: constant(null),

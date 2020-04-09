@@ -1,6 +1,6 @@
 import { merge } from "lodash"
 import { constant, isUndefined, has, mapValues, cloneDeep } from "lodash/fp"
-import { isNotEmpty } from "../../common"
+import { isNotEmpty } from "../../common/index.mjs"
 
 export const getSafeFieldParser = (tryParse, defaultValueFunctions) => (
   field,
@@ -48,12 +48,11 @@ export const typeFunctions = specificFunctions =>
 
 export const validateTypeConstraints = validationRules => async (
   field,
-  record,
-  context
+  record
 ) => {
   const fieldValue = record[field.name]
   const validateRule = async r =>
-    !(await r.isValid(fieldValue, field.typeOptions, context))
+    !(await r.isValid(fieldValue, field.typeOptions))
       ? r.getMessage(fieldValue, field.typeOptions)
       : ""
 
