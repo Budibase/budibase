@@ -2,7 +2,7 @@
   import { store } from "builderStore"
 
   import { fade } from "svelte/transition"
-  import { isActive, goto, url, context } from "@sveltech/routify"
+  import { isActive, goto, url, layout } from "@sveltech/routify"
 
   import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
   import IconButton from "components/common/IconButton.svelte"
@@ -23,8 +23,6 @@
       throw new Error(pkg)
     }
   }
-  $: ({ component } = $context)
-  $: list = component.parent.children.filter(child => child.isIndexable)
 </script>
 
 <div class="root">
@@ -38,7 +36,7 @@
       </button>
 
       <!-- List is an array of subfolders in the application folder. -->
-      {#each list as { path, prettyName, children, meta }}
+      {#each $layout.children as { path, prettyName, children, meta }}
         <span
           class:active={$isActive(path)}
           class="topnavitem"
