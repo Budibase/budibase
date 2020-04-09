@@ -6,7 +6,7 @@
 </script>
 
 <div
-  on:click={() => $goto($url(href))}
+  on:click={() => $goto(href)}
   class="budibase__nav-item backend-nav-item"
   class:selected={$isActive(href)}>
   {label}
