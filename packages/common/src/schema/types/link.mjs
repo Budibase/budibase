@@ -1,65 +1,30 @@
-import { isString, isObjectLike, isNull, has } from "lodash/fp"
-import {
-  typeFunctions,
-  parsedSuccess,
-  getDefaultExport,
-  parsedFailed,
-} from "./typeHelpers"
+import { isString, isUndefined, isNull } from "lodash/fp"
+import { typeFunctions, parsedSuccess, getDefaultExport } from "./typeHelpers"
 import {
   switchCase,
   defaultCase,
   isNonEmptyString,
-  isArrayOfString,
 } from "../../common/index.mjs"
 
-const linkNothing = () => ({ key: "" })
+const linkNothing = () => ""
 
 const linkFunctions = typeFunctions({
   default: linkNothing,
 })
 
-const hasStringValue = (ob, path) => has(path)(ob) && isString(ob[path])
-
-const isObjectWithKey = v => isObjectLike(v) && hasStringValue(v, "key")
-
-const tryParseFromString = s => {
-  try {
-    const asObj = JSON.parse(s)
-    if (isObjectWithKey) {
-      return parsedSuccess(asObj)
-    }
-  } catch (_) {
-    // EMPTY
-  }
-
-  return parsedFailed(s)
-}
-
 const linkTryParse = v =>
   switchCase(
-    [isObjectWithKey, parsedSuccess],
-    [isString, tryParseFromString],
+    [isString, s => parsedSuccess(s)],
     [isNull, () => parsedSuccess(linkNothing())],
-    [defaultCase, parsedFailed]
+    [isUndefined, () => parsedSuccess(linkNothing())],
+    [defaultCase, s => parsedSuccess(s.toString())]
   )(v)
 
 const options = {
-  indexNodeKey: {
-    defaultValue: null,
-    isValid: isNonEmptyString,
-    requirementDescription: "must be a non-empty string",
-    parse: s => s,
-  },
-  displayValue: {
+  modelId: {
     defaultValue: "",
     isValid: isNonEmptyString,
-    requirementDescription: "must be a non-empty string",
-    parse: s => s,
-  },
-  reverseIndexNodeKeys: {
-    defaultValue: null,
-    isValid: v => isArrayOfString(v) && v.length > 0,
-    requirementDescription: "must be a non-empty array of strings",
+    requirementDescription: "must choose a model",
     parse: s => s,
   },
 }
@@ -72,6 +37,6 @@ export default getDefaultExport(
   linkFunctions,
   options,
   typeConstraints,
-  { key: "key", value: "value" },
+  "abcd1234",
   JSON.stringify
 )

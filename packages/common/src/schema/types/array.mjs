@@ -47,11 +47,11 @@ const options = {
 
 const typeConstraints = [
   makerule(
-    async (val, opts) => val === null || val.length >= opts.minLength,
+    (val, opts) => val === null || val.length >= opts.minLength,
     (val, opts) => `must choose ${opts.minLength} or more options`
   ),
   makerule(
-    async (val, opts) => val === null || val.length <= opts.maxLength,
+    (val, opts) => val === null || val.length <= opts.maxLength,
     (val, opts) => `cannot choose more than ${opts.maxLength} options`
   ),
 ]

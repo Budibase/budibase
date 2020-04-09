@@ -6,7 +6,12 @@ import {
   parsedSuccess,
   getDefaultExport,
 } from "./typeHelpers"
-import { switchCase, defaultCase, isOneOf, toBoolOrNull } from "../../common/index.mjs"
+import {
+  switchCase,
+  defaultCase,
+  isOneOf,
+  toBoolOrNull,
+} from "../../common/index.mjs"
 
 const boolFunctions = typeFunctions({
   default: constant(null),
@@ -31,7 +36,7 @@ const options = {
 
 const typeConstraints = [
   makerule(
-    async (val, opts) => opts.allowNulls === true || val !== null,
+    (val, opts) => opts.allowNulls === true || val !== null,
     () => "field cannot be null"
   ),
 ]

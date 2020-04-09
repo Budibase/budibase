@@ -15,17 +15,6 @@ const _events = {
     uploadFile: common(),
     downloadFile: common(),
   },
-  indexApi: {
-    buildIndex: common(),
-    listItems: common(),
-    delete: common(),
-    aggregates: common(),
-  },
-  collectionApi: {
-    getAllowedRecordTypes: common(),
-    initialise: common(),
-    delete: common(),
-  },
   authApi: {
     authenticate: common(),
     authenticateTemporaryAccess: common(),

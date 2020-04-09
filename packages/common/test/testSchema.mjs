@@ -2,10 +2,7 @@ import { newModel } from "../src/schema/models.mjs"
 import { newView } from "../src/schema/views.mjs"
 import { getNewField } from "../src/schema/fields.mjs"
 import { fullSchema } from "../src/schema/fullSchema.mjs"
-import {
-  recordValidationRules,
-  commonRecordValidationRules,
-} from "../src/schema/recordValidationRules.mjs"
+import { commonRecordValidationRules } from "../src/records/recordValidationRules.mjs"
 
 export function testSchema() {
   const addFieldToModel = (model, { type, name }) => {
@@ -21,9 +18,10 @@ export function testSchema() {
   addFieldToModel(contactModel, { name: "Name" })
   addFieldToModel(contactModel, { name: "Is Active", type: "bool" })
   addFieldToModel(contactModel, { name: "Created", type: "datetime" })
+  addFieldToModel(contactModel, { name: "Status", type: "string" })
 
   contactModel.validationRules.push(
-    recordValidationRules(commonRecordValidationRules.fieldNotEmpty)
+    commonRecordValidationRules.fieldNotEmpty("Name")
   )
 
   const activeContactsView = newView(contactModel.id)

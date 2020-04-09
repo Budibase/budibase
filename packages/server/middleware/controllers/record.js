@@ -1,11 +1,15 @@
 const couchdb = require("../../db")
-const { cloneDeep, mapValues, keyBy, filter, includes } = require("lodash/fp")
+const { cloneDeep, mapValues, keyBy } = require("lodash/fp")
 const {
   validateRecord,
 } = require("../../../common/src/records/validateRecord.mjs")
 const { events } = require("../../../common/src/common/events.mjs")
-const { $, isNonEmptyString } = require("../../../common/src/common")
+const { $ } = require("../../../common/src/common")
 import { safeParseField } from "../../../common/src/schema/types"
+import {
+  allModelsViewName,
+  allModelsDesignDocName,
+} from "./couchdbNamingConventions"
 
 async function save(ctx) {
   const db = couchdb.use(ctx.databaseId)
@@ -19,7 +23,7 @@ async function save(ctx) {
 
   const validationResult = await validateRecord(ctx.schema, record)
   if (!validationResult.isValid) {
-    await app.publish(events.recordApi.save.onInvalid, {
+    await ctx.publish(events.recordApi.save.onInvalid, {
       record,
       validationResult,
     })
@@ -30,13 +34,13 @@ async function save(ctx) {
 
   if (!record._rev) {
     await db.insert(record)
-    await app.publish(events.recordApi.save.onRecordCreated, {
+    await ctx.publish(events.recordApi.save.onRecordCreated, {
       record: record,
     })
   } else {
     const oldRecord = await _findRecord(db, ctx.schema, record._id)
     await db.insert(record)
-    await app.publish(events.recordApi.save.onRecordUpdated, {
+    await ctx.publish(events.recordApi.save.onRecordUpdated, {
       old: oldRecord,
       new: record,
     })
@@ -49,16 +53,23 @@ async function save(ctx) {
 
 async function fetch(ctx) {
   const db = couchdb.db.use(ctx.params.databaseId)
-
-  ctx.body = await db.view("database", "all_somemodel", { 
-    include_docs: true,
-    key: ["app"] 
-  })
+  const model = ctx.schema.findModel(ctx.modelName)
+  ctx.body = db.viewAsStream(
+    allModelsDesignDocName(model.id),
+    allModelsViewName(model.id),
+    {
+      include_docs: true,
+    }
+  )
 }
 
 async function find(ctx) {
   const db = couchdb.db.use(ctx.params.databaseId)
-  const { body, status } = await _findRecord(db, ctx.schema, ctx.params.id)
+  const { body, status } = await _findRecord(
+    db,
+    ctx.schema,
+    ctx.params.recordId
+  )
   ctx.status = status
   ctx.body = body
 }
@@ -78,28 +89,6 @@ async function _findRecord(db, schema, id) {
     mapValues(f => safeParseField(f, storedData)),
   ])
 
-  const links = $(model.fields, [
-    filter(
-      f => f.type === "reference" && isNonEmptyString(loadedRecord[f.name].key)
-    ),
-    map(f => ({
-      promise: _findRecord(db, schema, loadedRecord[f.name]._id),
-      index: getNode(app.hierarchy, f.typeOptions.indexNodeKey),
-      field: f,
-    })),
-  ])
-
-  if (links.length > 0) {
-    const refRecords = await Promise.all(map(p => p.promise)(links))
-
-    for (const ref of links) {
-      loadedRecord[ref.field.name] = mapRecord(
-        refRecords[links.indexOf(ref)],
-        ref.index
-      )
-    }
-  }
-
   loadedRecord._rev = storedData._rev
   loadedRecord._id = storedData._id
   loadedRecord._modelId = storedData._modelId
@@ -112,4 +101,4 @@ async function destroy(ctx) {
   ctx.body = await database.destroy(ctx.params.recordId);
 }
 
-module.exports = {dave, fetch, destroy, find};
+module.exports = { save, fetch, destroy, find }

@@ -50,12 +50,12 @@ const options = {
 
 const typeConstraints = [
   makerule(
-    async (val, opts) =>
+    (val, opts) =>
       val === null || opts.maxLength === null || val.length <= opts.maxLength,
     (val, opts) => `value exceeds maximum length of ${opts.maxLength}`
   ),
   makerule(
-    async (val, opts) =>
+    (val, opts) =>
       val === null ||
       opts.allowDeclaredValuesOnly === false ||
       includes(val)(opts.values),

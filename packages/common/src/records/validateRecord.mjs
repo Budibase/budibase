@@ -22,10 +22,10 @@ const validateAllFieldParse = (record, model) =>
     }, []),
   ])
 
-const validateAllTypeConstraints = async (record, model) => {
+const validateAllTypeConstraints = (record, model) => {
   const errors = []
   for (const field of model.fields) {
-    $(await validateTypeConstraints(field, record), [
+    $(validateTypeConstraints(field, record), [
       filter(isNonEmptyString),
       map(m => ({ message: m, fields: [field.name] })),
       each(e => errors.push(e)),
@@ -55,8 +55,8 @@ const runRecordValidationRules = (record, model) => {
   ])
 }
 
-export const validateRecord = async (schema, record) => {
-  const model = schema.findModel(record.modelId)
+export const validateRecord = (schema, record) => {
+  const model = schema.findModel(record._modelId)
   const fieldParseFails = validateAllFieldParse(record, model)
 
   // non parsing would cause further issues - exit here
@@ -65,7 +65,7 @@ export const validateRecord = async (schema, record) => {
   }
 
   const recordValidationRuleFails = runRecordValidationRules(record, model)
-  const typeContraintFails = await validateAllTypeConstraints(record, model)
+  const typeContraintFails = validateAllTypeConstraints(record, model)
 
   if (
     isEmpty(fieldParseFails) &&
