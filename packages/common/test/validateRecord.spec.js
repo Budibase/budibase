@@ -1,5 +1,5 @@
 import { testSchema } from "./testSchema.mjs"
-import { validateRecord } from "../src/records/validateRecord.mjs"
+import { validateRecord } from "../src/records/validateRecord.js"
 import { getNewRecord } from "../src/records/getNewRecord.mjs"
 
 describe("validateRecord", () => {

@@ -1,29 +1,68 @@
 const couchdb = require("../../../../db");
 const supertest = require("supertest");
 const app = require("../../../../app");
-const { createInstanceDatabase } = require("./couchTestUtils");
+const { createInstanceDatabase, insertDocument, destroyDatabase } = require("./couchTestUtils");
 
 
 const TEST_INSTANCE_ID = "testing-123";
+const TEST_USER = {
+  name: "Dave"
+}
 
 describe("/users", () => {
   let request;
+  let server;
 
   beforeAll(async () => {
-    const server = await app({
+    server = await app({
       config: {
         port: 3000
       }
     });
     request = supertest(server);
-    createInstanceDatabase(TEST_INSTANCE_ID);
   });
 
   afterAll(async () => {
-    app.close();
+    server.close();
   })
 
+  describe("fetch", () => {
+    beforeEach(async () => {
+      await createInstanceDatabase(TEST_INSTANCE_ID);
+      await insertDocument(TEST_INSTANCE_ID, {
+        id: "cool-user-id",
+        type: "user",
+        name: "Dave"
+      })
+    });
+
+    afterEach(async () => {
+      await destroyDatabase(TEST_INSTANCE_ID);
+    });
+
+    it("returns a list of users from an instance db", done => {
+      request
+        .get(`/api/${TEST_INSTANCE_ID}/users`)
+        .set("Accept", "application/json")
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(async (err, res) => {
+            const createdUser = res.body[0].doc;
+            expect(createdUser.name).toEqual(TEST_USER.name);            
+            done();
+        });
+      })
+    });
+
   describe("create", () => {
+    beforeEach(async () => {
+      await createInstanceDatabase(TEST_INSTANCE_ID);
+    });
+
+    afterEach(async () => {
+      await destroyDatabase(TEST_INSTANCE_ID);
+    });
+
     it("returns a success message when a user is successfully created", done => {
       request
         .post(`/api/${TEST_INSTANCE_ID}/users`)
@@ -32,7 +71,7 @@ describe("/users", () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
-            expect(res.body.message).toEqual("Instance Database testing-123 successfully provisioned.");            
+            expect(res.body.message).toEqual("User created successfully.");            
             done();
         });
       })

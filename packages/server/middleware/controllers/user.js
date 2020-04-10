@@ -12,10 +12,20 @@ exports.fetch = async function(ctx) {
 
 exports.create = async function(ctx) {
   const database = couchdb.db.use(ctx.params.databaseId);
-  ctx.body =  await database.insert(ctx.request.body);
+  const response =  await database.insert(ctx.request.body);
+  ctx.body = {
+    ...response,
+    message: `User created successfully.`,
+    status: 200
+  }
 };
 
 exports.destroy = async function(ctx) {
   const database = couchdb.db.use(ctx.params.databaseId);
-  ctx.body = await database.destroy(ctx.params.userId)
+  const response = await database.destroy(ctx.params.userId)
+  ctx.body = {
+    ...response,
+    message: `User deleted.`,
+    status: 200
+  }
 };
