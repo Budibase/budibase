@@ -2,6 +2,8 @@ const couchdb = require("../../../../db");
 
 const CLIENT_DB_ID = "client-testing";
 
+exports.destroyDatabase = couchdb.db.destroy;
+
 exports.createClientDatabase = async () => {
   await couchdb.db.create(CLIENT_DB_ID);
 

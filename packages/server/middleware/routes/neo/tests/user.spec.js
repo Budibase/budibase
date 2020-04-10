@@ -16,6 +16,7 @@ describe("/users", () => {
       }
     });
     request = supertest(server);
+    createInstanceDatabase(TEST_INSTANCE_ID);
   });
 
   afterAll(async () => {
@@ -23,10 +24,10 @@ describe("/users", () => {
   })
 
   describe("create", () => {
-    it("returns a success message when the instance database is successfully created", done => {
+    it("returns a success message when a user is successfully created", done => {
       request
-        .post(`/api/users`)
-        .send({ name: TEST_INSTANCE_ID })
+        .post(`/api/${TEST_INSTANCE_ID}/users`)
+        .send({ name: "John" })
         .set("Accept", "application/json")
         .expect('Content-Type', /json/)
         .expect(200)
