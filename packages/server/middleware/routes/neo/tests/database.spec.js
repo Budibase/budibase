@@ -1,16 +1,17 @@
 const couchdb = require("../../../../db");
 const supertest = require("supertest");
 const app = require("../../../../app");
-const { createInstanceDatabase } = require("./couchTestUtils");
+const { createInstanceDatabase, destroyDatabase } = require("./couchTestUtils");
 
 
 const TEST_INSTANCE_ID = "testing-123";
 
 describe("/databases", () => {
   let request;
+  let server;
 
   beforeAll(async () => {
-    const server = await app({
+    server = await app({
       config: {
         port: 3000
       }
@@ -19,10 +20,14 @@ describe("/databases", () => {
   });
 
   afterAll(async () => {
-    app.close();
+    server.close();
   })
 
   describe("create", () => {
+    afterEach(async () => {
+      await destroyDatabase(TEST_INSTANCE_ID);
+    });
+
     it("returns a success message when the instance database is successfully created", done => {
       request
         .post(`/api/databases`)
@@ -38,6 +43,10 @@ describe("/databases", () => {
     });
 
   describe("destroy", () => {
+    beforeEach(async () => {
+      await createInstanceDatabase(TEST_INSTANCE_ID);
+    });
+
     it("returns a success message when the instance database is successfully deleted", done => {
       request
         .delete(`/api/databases/${TEST_INSTANCE_ID}`)

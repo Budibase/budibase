@@ -19,7 +19,10 @@ exports.create = async function(ctx) {
 };
 
 exports.destroy = async function(ctx) {
-  const databaseId = ctx.params.databaseId;
-  const database = couchdb.db.use(databaseId)
-  ctx.body = await database.destroy(ctx.params.recordId);
+  const dbId = `client-${ctx.params.clientId}`;
+  await couchdb.db.destroy(dbId);
+  ctx.body = {
+    status: 200,
+    message: `Client Database ${dbId} successfully deleted.`
+  }
 };

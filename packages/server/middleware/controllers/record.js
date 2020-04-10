@@ -2,8 +2,8 @@ const couchdb = require("../../db")
 const { mapValues, keyBy } = require("lodash/fp")
 const {
   validateRecord,
-} = require("../../../common/src/records/validateRecord.mjs")
-const { events } = require("../../../common/src/common/events.mjs")
+} = require("../../../common/src/records/validateRecord")
+const { events } = require("../../../common/src/common/events")
 const { $ } = require("../../../common/src/common")
 const { safeParseField } = require("../../../common/src/schema/types");
 
@@ -13,7 +13,7 @@ exports.save = async function(ctx) {
 
   if (!ctx.schema.findModel(record._modelId)) {
     ctx.status = 400
-    ctx.message = `do not recognise modelId : ${record._modelId}`
+    ctx.message = `Model ${record._modelId} does not exist in schema.`
     return
   }
 
