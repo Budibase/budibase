@@ -31,3 +31,8 @@ exports.createInstanceDatabase = async instanceId => {
     }
   }, '_design/database');
 }
+
+exports.insertDocument = async (databaseId, document) => {
+  const { id, ...documentFields } = document;
+  await couchdb.db.use(databaseId).insert(documentFields, id);
+}
