@@ -67,7 +67,7 @@
 
   <ErrorsBox {errors} />
 
-  <form class="uk-form-stacked">
+  <form on:submit|preventDefault class="uk-form-stacked">
     <Textbox label="Name" bind:text={clonedField.name} />
     <Dropdown
       label="Type"

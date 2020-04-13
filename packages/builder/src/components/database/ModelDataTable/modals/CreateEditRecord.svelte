@@ -70,7 +70,7 @@
 <div class="actions">
   <h4 class="budibase__title--4">Create / Edit Record</h4>
   <ErrorsBox {errors} />
-  <form class="uk-form-stacked">
+  <form on:submit|preventDefault class="uk-form-stacked">
     {#if !record}
       <div class="uk-margin">
         <label class="uk-form-label" for="form-stacked-text">Model</label>

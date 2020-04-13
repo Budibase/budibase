@@ -63,7 +63,7 @@
 </header>
 
 <div class="root">
-  <form class="uk-form-stacked form-root">
+  <form on:submit|preventDefault class="uk-form-stacked form-root">
     {#each events as event, index}
       {#if event.handlers.length > 0}
         <div

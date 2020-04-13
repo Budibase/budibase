@@ -117,7 +117,7 @@
       <ErrorsBox errors={$store.errors} />
     {/if}
 
-    <form class="uk-form-stacked">
+    <form on:submit|preventDefault class="uk-form-stacked">
 
       <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
       {#if isChildModel}

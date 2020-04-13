@@ -35,7 +35,7 @@
 
   <h3>{$store.currentPageName}</h3>
 
-  <form class="uk-form-horizontal">
+  <form on:submit|preventDefault class="uk-form-horizontal">
     <Textbox bind:text={title} label="Title" hasError={!title} />
     <div class="help-text">
       The title of your page, displayed in the bowser tab
