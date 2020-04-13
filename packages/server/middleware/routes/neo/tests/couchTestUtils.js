@@ -16,7 +16,20 @@ exports.createModel = async instanceId => {
         }
     ]
   }
-  const response = await couchdb.db.use(instanceId).insert(model);
+  const db = couchdb.db.use(instanceId);
+  const response = await db.insert(model);
+
+  const designDoc = await db.get("_design/database");
+  designDoc.views = {
+    ...designDoc.views,
+    [`all_${response.id}`]: {
+      map: function(doc) {
+        emit([doc.modelId], doc._id); 
+      }
+    }
+  };
+  await db.insert(designDoc, designDoc._id);
+
   return {
     ...response,
     ...model
