@@ -80,4 +80,29 @@ describe("/models", () => {
         });
       })
     });
+
+  describe("destroy", () => {
+    let testModel;
+
+    beforeEach(async () => {
+      await createInstanceDatabase(TEST_INSTANCE_ID);
+      testModel = await createModel(TEST_INSTANCE_ID);
+    });
+
+    afterEach(async () => {
+      await destroyDatabase(TEST_INSTANCE_ID);
+    });
+
+    it("returns all the models for that instance in the response body", done => {
+      request
+        .delete(`/api/${TEST_INSTANCE_ID}/models/${testModel.id}/${testModel.rev}`)
+        .set("Accept", "application/json")
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(async (_, res) => {
+            expect(res.body.message).toEqual(`Model ${testModel.id} deleted.`);            
+            done();
+        });
+      })
+    });
 });

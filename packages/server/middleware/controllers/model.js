@@ -61,5 +61,9 @@ exports.update = async function(ctx) {
 
 exports.destroy = async function(ctx) {
   const db = couchdb.db.use(ctx.params.instanceId)
-  ctx.body = await db.destroy(ctx.params.modelId, ctx.params.rev);
+  const model = await db.destroy(ctx.params.modelId, ctx.params.revId);
+  ctx.body = {
+    message: `Model ${model.id} deleted.`,
+    status: 200
+  }
 }

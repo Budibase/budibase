@@ -16,8 +16,11 @@ exports.createModel = async instanceId => {
         }
     ]
   }
-  await couchdb.db.use(instanceId).insert(model);
-  return model;
+  const response = await couchdb.db.use(instanceId).insert(model);
+  return {
+    ...response,
+    ...model
+  };
 } 
 
 exports.createClientDatabase = async () => {
