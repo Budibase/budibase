@@ -28,7 +28,7 @@
   }
 </script>
 
-<form class="uk-form-stacked">
+<form on:submit|preventDefault class="uk-form-stacked">
   <div>
     <label class="uk-form-label" for="form-stacked-text">Username</label>
     <input class="uk-input" type="text" bind:value={username} />
