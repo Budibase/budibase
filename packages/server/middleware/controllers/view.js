@@ -24,7 +24,7 @@ const controller = {
     }
   },
   destroy: async ctx => {
-    const database = couchdb.db.use(ctx.params.databaseId);
+    const database = couchdb.db.use(ctx.params.instanceId);
     ctx.body = await database.destroy(ctx.params.userId)
   }
 }
