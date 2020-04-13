@@ -20,6 +20,7 @@ const databaseRoutes = require("./routes/neo/database");
 const neoUserRoutes = require("./routes/neo/user");
 const clientRoutes = require("./routes/neo/client");
 const applicationRoutes = require("./routes/neo/application");
+const modelsRoutes = require("./routes/neo/model");
 
 const builderPath = resolve(__dirname, "../builder")
 
@@ -128,10 +129,13 @@ module.exports = (config, app) => {
       ctx.status = err.status || 500;
       ctx.body = {
         message: err.message,
-        status: ctx.status 
+        status: ctx.status
       };
     }
   });
+
+  router.use(modelsRoutes.routes());
+  router.use(modelsRoutes.allowedMethods());
 
   router.use(applicationRoutes.routes());
   router.use(applicationRoutes.allowedMethods());
