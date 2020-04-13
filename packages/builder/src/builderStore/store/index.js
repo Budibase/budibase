@@ -364,7 +364,7 @@ const savePage = store => async page => {
 
 const addComponentLibrary = store => async lib => {
   const response = await api.get(
-    `/_builder/api/${appname}/componentlibrary?lib=${encodeURI(lib)}`,
+    `/_builder/api/${s.appname}/componentlibrary?lib=${encodeURI(lib)}`,
     undefined,
     false
   )
@@ -423,7 +423,7 @@ const removeStylesheet = store => stylesheet => {
 const _savePage = async s => {
   const page = s.pages[s.currentPageName]
 
-  await api.post(`/_builder/api/${appname}/pages/${s.currentPageName}`, {
+  await api.post(`/_builder/api/${s.appname}/pages/${s.currentPageName}`, {
     page: { componentLibraries: s.pages.componentLibraries, ...page },
     uiFunctions: s.currentPageFunctions,
     screens: page._screens,
