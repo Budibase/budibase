@@ -61,7 +61,21 @@ exports.update = async function(ctx) {
 
 exports.destroy = async function(ctx) {
   const db = couchdb.db.use(ctx.params.instanceId)
+
   const model = await db.destroy(ctx.params.modelId, ctx.params.revId);
+  const modelViewId = `all_${model.id}`
+
+  // Delete all records for that model
+  const records = await db.view("database", modelViewId);
+  await db.bulk({ 
+    docs: records.rows.map(record => ({ id: record.id, _deleted: true })) 
+  });
+
+  // delete the "all" view
+  const designDoc = await db.get("_design/database");
+  delete designDoc.views[modelViewId];
+  await db.insert(designDoc, designDoc._id);
+
   ctx.body = {
     message: `Model ${model.id} deleted.`,
     status: 200

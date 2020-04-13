@@ -93,7 +93,7 @@ describe("/models", () => {
       await destroyDatabase(TEST_INSTANCE_ID);
     });
 
-    it("returns all the models for that instance in the response body", done => {
+    it("returns a success response when a model is deleted.", done => {
       request
         .delete(`/api/${TEST_INSTANCE_ID}/models/${testModel.id}/${testModel.rev}`)
         .set("Accept", "application/json")
