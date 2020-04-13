@@ -7,7 +7,7 @@ router
   .get("/api/:instanceId/models", controller.fetch)
   .post("/api/:instanceId/models", controller.create)
   // .patch("/api/:instanceId/models", controller.update)
-  // .delete("/api/:instanceId/models/:modelId", controller.delete)
+  .delete("/api/:instanceId/models/:modelId/:revId", controller.destroy);
 
 
 module.exports = router;
