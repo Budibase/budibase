@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`/views fetch returns a list of all the views that exist in the instance database 1`] = `
+Object {
+  "by_type": Object {
+    "map": "function (doc) {
+          emit([doc.type], doc._id);
+        }",
+  },
+}
+`;

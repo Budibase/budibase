@@ -21,6 +21,7 @@ const neoUserRoutes = require("./routes/neo/user");
 const clientRoutes = require("./routes/neo/client");
 const applicationRoutes = require("./routes/neo/application");
 const modelsRoutes = require("./routes/neo/model");
+const viewsRoutes = require("./routes/neo/view");
 
 const builderPath = resolve(__dirname, "../builder")
 
@@ -133,6 +134,9 @@ module.exports = (config, app) => {
       };
     }
   });
+
+  router.use(viewsRoutes.routes());
+  router.use(viewsRoutes.allowedMethods());
 
   router.use(modelsRoutes.routes());
   router.use(modelsRoutes.allowedMethods());

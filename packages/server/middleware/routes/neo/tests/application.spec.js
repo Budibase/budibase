@@ -8,20 +8,21 @@ const CLIENT_DB_ID = "client-testing";
 
 describe("/applications", () => {
   let request;
+  let server;
 
   beforeAll(async () => {
-    const server = await app({
+    server = await app({
       config: {
         port: 3000
       }
     });
     request = supertest(server);
-    createClientDatabase();
+    await createClientDatabase();
   });
 
   afterAll(async () => {
     await couchdb.db.destroy(CLIENT_DB_ID)
-    app.close();
+    server.close();
   })
 
   describe("create", () => {
