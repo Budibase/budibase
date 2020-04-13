@@ -5,7 +5,8 @@ const router = Router();
 
 router
   .get("/api/:instanceId/views", controller.fetch)
-  .post("/api/:instanceId/views", controller.create);
   // .patch("/api/:databaseId/views", controller.update);
+  // .delete("/api/:instanceId/views/:viewId/:revId", controller.destroy);
+  .post("/api/:instanceId/views", controller.create);
 
 module.exports = router;

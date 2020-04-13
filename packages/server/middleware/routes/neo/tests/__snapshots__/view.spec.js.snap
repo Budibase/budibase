@@ -2,6 +2,11 @@
 
 exports[`/views fetch returns a list of all the views that exist in the instance database 1`] = `
 Object {
+  "all_89baeed104b7f2e3fd977e9bc2039d5c": Object {
+    "map": "function (doc) {
+        emit([doc.modelId], doc._id);
+      }",
+  },
   "by_type": Object {
     "map": "function (doc) {
           emit([doc.type], doc._id);
