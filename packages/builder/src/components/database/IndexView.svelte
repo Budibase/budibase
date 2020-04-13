@@ -54,7 +54,7 @@
   <i class="ri-eye-line button--toggled" />
   <h3 class="budibase__title--3">Create / Edit View</h3>
 </heading>
-<form class="uk-form-stacked root">
+<form on:submit|preventDefault class="uk-form-stacked root">
   <h4 class="budibase__label--big">Settings</h4>
   {#if $store.errors && $store.errors.length > 0}
     <ErrorsBox errors={$store.errors} />
@@ -144,6 +144,7 @@
   }
 
   heading {
+    padding: 20px 20px 0 20px;
     display: flex;
     align-items: center;
   }

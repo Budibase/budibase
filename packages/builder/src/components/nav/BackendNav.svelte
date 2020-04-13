@@ -6,6 +6,30 @@
   import UsersList from "./UsersList.svelte"
   import NavItem from "./NavItem.svelte"
   import getIcon from "components/common/icon"
+  import {
+    CreateDatabaseModal,
+    CreateUserModal,
+  } from "components/database/ModelDataTable/modals"
+  const { open, close } = getContext("simple-modal")
+
+  const openDatabaseCreator = () => {
+    open(
+      CreateDatabaseModal,
+      {
+        onClosed: close,
+      },
+      { styleContent: { padding: "0" } }
+    )
+  }
+  const openUserCreator = () => {
+    open(
+      CreateUserModal,
+      {
+        onClosed: close,
+      },
+      { styleContent: { padding: "0" } }
+    )
+  }
 </script>
 
 <div class="items-root">
@@ -13,9 +37,7 @@
     <div class="components-list-container">
       <div class="nav-group-header">
         <div class="hierarchy-title">Databases</div>
-        <i
-          class="ri-add-line hoverable"
-          on:click={() => backendUiStore.actions.modals.show('DATABASE')} />
+        <i class="ri-add-line hoverable" on:click={openDatabaseCreator} />
       </div>
     </div>
 
@@ -29,9 +51,7 @@
       <div class="components-list-container">
         <div class="nav-group-header">
           <div class="hierarchy-title">Users</div>
-          <i
-            class="ri-add-line hoverable"
-            on:click={() => backendUiStore.actions.modals.show('USER')} />
+          <i class="ri-add-line hoverable" on:click={openUserCreator} />
         </div>
       </div>
 
@@ -41,7 +61,10 @@
 
     </div>
   {/if}
-  <NavItem name="ACCESS_LEVELS" label="User Access Levels" />
+  <NavItem
+    name="ACCESS_LEVELS"
+    label="User Access Levels"
+    href="./accesslevels" />
 </div>
 
 <style>

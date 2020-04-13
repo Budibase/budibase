@@ -62,6 +62,7 @@
 }
 
 html, body {
+    display: grid;
     font-family: var(--fontnormal);
     color: var(--secondary80);
     padding: 0;
