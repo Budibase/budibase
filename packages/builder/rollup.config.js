@@ -8,8 +8,6 @@ import { terser } from "rollup-plugin-terser"
 import builtins from "rollup-plugin-node-builtins"
 import nodeglobals from "rollup-plugin-node-globals"
 import copy from "rollup-plugin-copy"
-import browsersync from "rollup-plugin-browsersync"
-import proxy from "http-proxy-middleware"
 import replace from "rollup-plugin-replace"
 
 import path from "path"
@@ -209,24 +207,4 @@ export default {
     // instead of npm run dev), minify
     production && terser(),
   ],
-  watch: {
-    clearScreen: false,
-  },
-}
-
-function serve() {
-  let started = false
-
-  return {
-    writeBundle() {
-      if (!started) {
-        started = true
-
-        require("child_process").spawn("npm", ["run", "start"], {
-          stdio: ["ignore", "inherit", "inherit"],
-          shell: true,
-        })
-      }
-    },
-  }
 }
