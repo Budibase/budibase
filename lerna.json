@@ -4,6 +4,7 @@
   "packages": [
     "packages/*"
   ],
+  "useWorkspaces": true,
   "command": {
     "publish": {
       "ignoreChanges": [

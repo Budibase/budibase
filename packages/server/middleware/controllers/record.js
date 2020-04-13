@@ -1,10 +1,9 @@
 const couchdb = require("../../db")
-const { mapValues, keyBy } = require("lodash/fp")
+const { mapValues, keyBy, compose } = require("lodash/fp")
 const {
   validateRecord,
 } = require("../../../common/src/records/validateRecord")
 const { events } = require("../../../common/src/common/events")
-const { $ } = require("../../../common/src/common")
 const { safeParseField } = require("../../../common/src/schema/types");
 
 exports.save = async function(ctx) {
@@ -80,12 +79,12 @@ async function _findRecord({ db, schema, id }) {
 
   const model = schema.findModel(storedData._modelId)
 
-  // TODO refactor
-  const loadedRecord = $(model.fields, [
-    keyBy("name"),
+  const loadRecord = compose(
     mapValues(f => safeParseField(f, storedData)),
-  ])
-  
+    keyBy("name")
+  );
+
+  const loadedRecord = loadRecord(model.fields); 
 
   return {
     ...loadedRecord,

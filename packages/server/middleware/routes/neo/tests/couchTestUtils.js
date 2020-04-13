@@ -4,6 +4,22 @@ const CLIENT_DB_ID = "client-testing";
 
 exports.destroyDatabase = couchdb.db.destroy;
 
+exports.createModel = async instanceId => {
+  const model = {
+    "name": "TestModel",
+    "type": "model",
+    "key": "name",
+    "fields": [
+        {
+          "name": "name",
+          "type": "string"
+        }
+    ]
+  }
+  await couchdb.db.use(instanceId).insert(model);
+  return model;
+} 
+
 exports.createClientDatabase = async () => {
   await couchdb.db.create(CLIENT_DB_ID);
 
@@ -30,6 +46,8 @@ exports.createInstanceDatabase = async instanceId => {
       } 
     }
   }, '_design/database');
+
+  return instanceId;
 }
 
 exports.insertDocument = async (databaseId, document) => {
