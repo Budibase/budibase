@@ -50,6 +50,7 @@
     "safe-buffer": "^5.1.2",
     "shortid": "^2.2.8",
     "string_decoder": "^1.2.0",
+    "svelte-simple-modal": "^0.3.0",
     "uikit": "^3.1.7"
   },
   "devDependencies": {
@@ -58,7 +59,7 @@
     "@babel/preset-env": "^7.5.5",
     "@babel/runtime": "^7.5.5",
     "@rollup/plugin-alias": "^3.0.1",
-    "@sveltech/routify": "1.5.0-beta.16",
+    "@sveltech/routify": "1.5.0-beta.40",
     "babel-jest": "^24.8.0",
     "browser-sync": "^2.26.7",
     "http-proxy-middleware": "^0.19.1",

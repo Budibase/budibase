@@ -6,7 +6,6 @@
   import ActionButton from "components/common/ActionButton.svelte"
   import getIcon from "components/common/icon"
   import FieldView from "./FieldView.svelte"
-  import Modal from "components/common/Modal.svelte"
   import {
     get,
     compose,
@@ -101,24 +100,24 @@
   }
 </script>
 
-<div class="root">
-  <heading>
-    {#if !editingField}
-      <i class="ri-list-settings-line button--toggled" />
-      <h3 class="budibase__title--3">Create / Edit Model</h3>
-    {:else}
-      <i class="ri-file-list-line button--toggled" />
-      <h3 class="budibase__title--3">Create / Edit Field</h3>
-    {/if}
-  </heading>
+<heading>
   {#if !editingField}
+    <i class="ri-list-settings-line button--toggled" />
+    <h3 class="budibase__title--3">Create / Edit Model</h3>
+  {:else}
+    <i class="ri-file-list-line button--toggled" />
+    <h3 class="budibase__title--3">Create / Edit Field</h3>
+  {/if}
+</heading>
+{#if !editingField}
+  <div class="padding">
     <h4 class="budibase__label--big">Settings</h4>
 
     {#if $store.errors && $store.errors.length > 0}
       <ErrorsBox errors={$store.errors} />
     {/if}
 
-    <form class="uk-form-stacked">
+    <form on:submit|preventDefault class="uk-form-stacked">
 
       <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
       {#if isChildModel}
@@ -186,18 +185,18 @@
         </ActionButton>
       {/if}
     </div>
-  {:else}
-    <FieldView
-      field={fieldToEdit}
-      onFinished={onFinishedFieldEdit}
-      allFields={record.fields}
-      store={$store} />
-  {/if}
-</div>
+  </div>
+{:else}
+  <FieldView
+    field={fieldToEdit}
+    onFinished={onFinishedFieldEdit}
+    allFields={record.fields}
+    store={$store} />
+{/if}
 
 <style>
-  .root {
-    height: 100%;
+  .padding {
+    padding: 20px;
   }
 
   .new-field {
@@ -226,6 +225,7 @@
   }
 
   heading {
+    padding: 20px 20px 0 20px;
     display: flex;
     align-items: center;
   }

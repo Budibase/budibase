@@ -8,37 +8,9 @@ import { terser } from "rollup-plugin-terser"
 import builtins from "rollup-plugin-node-builtins"
 import nodeglobals from "rollup-plugin-node-globals"
 import copy from "rollup-plugin-copy"
-import browsersync from "rollup-plugin-browsersync"
-import proxy from "http-proxy-middleware"
 import replace from "rollup-plugin-replace"
 
 import path from "path"
-
-const target = "http://localhost:4001"
-const _builderProxy = proxy("/_builder", {
-  target: "http://localhost:3000",
-  pathRewrite: { "^/_builder": "" },
-})
-
-const apiProxy = proxy(
-  [
-    "/_builder/assets/**",
-    "/_builder/api/**",
-    "/_builder/**/componentlibrary",
-    "/_builder/instance/**",
-  ],
-  {
-    target,
-    logLevel: "debug",
-    changeOrigin: true,
-    cookieDomainRewrite: true,
-    onProxyReq(proxyReq) {
-      if (proxyReq.getHeader("origin")) {
-        proxyReq.setHeader("origin", target)
-      }
-    },
-  }
-)
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -230,34 +202,9 @@ export default {
     // Watch the `dist` directory and refresh the
     // browser on changes when not in production
     !production && livereload(outputpath),
-    !production &&
-    browsersync({
-      server: outputpath,
-      middleware: [apiProxy, _builderProxy],
-    }),
 
     // If we're building for production (npm run build
     // instead of npm run dev), minify
     production && terser(),
   ],
-  watch: {
-    clearScreen: false,
-  },
-}
-
-function serve() {
-  let started = false
-
-  return {
-    writeBundle() {
-      if (!started) {
-        started = true
-
-        require("child_process").spawn("npm", ["run", "start"], {
-          stdio: ["ignore", "inherit", "inherit"],
-          shell: true,
-        })
-      }
-    },
-  }
 }

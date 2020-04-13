@@ -1,3 +1,4 @@
+//
 import { filter, cloneDeep, last, concat, isEmpty, values } from "lodash/fp"
 import { pipe, getNode, constructHierarchy } from "components/common/core"
 import * as backendStoreActions from "./backend"
@@ -49,7 +50,7 @@ export const getStore = () => {
 
   const store = writable(initial)
 
-  store.initialise = initialise(store, initial)
+  store.setPackage = setPackage(store, initial)
 
   store.newChildRecord = backendStoreActions.newRecord(store, false)
   store.newRootRecord = backendStoreActions.newRecord(store, true)
@@ -100,26 +101,12 @@ export const getStore = () => {
 
 export default getStore
 
-const initialise = (store, initial) => async () => {
-  appname = window.location.hash
-    ? last(window.location.hash.substr(1).split("/"))
-    : ""
-
-  if (!appname) {
-    initial.apps = await api.get(`/_builder/api/apps`).then(r => r.json())
-    initial.hasAppPackage = false
-    store.set(initial)
-    return initial
-  }
-
-  const pkg = await api
-    .get(`/_builder/api/${appname}/appPackage`)
-    .then(r => r.json())
+const setPackage = (store, initial) => async (pkg) => {
 
   const [main_screens, unauth_screens] = await Promise.all([
-    api.get(`/_builder/api/${appname}/pages/main/screens`).then(r => r.json()),
+    api.get(`/_builder/api/${pkg.application.name}/pages/main/screens`).then(r => r.json()),
     api
-      .get(`/_builder/api/${appname}/pages/unauthenticated/screens`)
+      .get(`/_builder/api/${pkg.application.name}/pages/unauthenticated/screens`)
       .then(r => r.json()),
   ])
 
@@ -134,12 +121,12 @@ const initialise = (store, initial) => async () => {
     },
   }
 
-  initial.libraries = await loadLibs(appname, pkg)
+  initial.libraries = await loadLibs(pkg.application.name, pkg)
   initial.loadLibraryUrls = pageName => {
     const libs = libUrlsForPreview(pkg, pageName)
     return libs
   }
-  initial.appname = appname
+  initial.appname = pkg.application.name
   initial.pages = pkg.pages
   initial.hasAppPackage = true
   initial.hierarchy = pkg.appDefinition.hierarchy
@@ -377,7 +364,7 @@ const savePage = store => async page => {
 
 const addComponentLibrary = store => async lib => {
   const response = await api.get(
-    `/_builder/api/${appname}/componentlibrary?lib=${encodeURI(lib)}`,
+    `/_builder/api/${s.appname}/componentlibrary?lib=${encodeURI(lib)}`,
     undefined,
     false
   )
@@ -436,7 +423,7 @@ const removeStylesheet = store => stylesheet => {
 const _savePage = async s => {
   const page = s.pages[s.currentPageName]
 
-  await api.post(`/_builder/api/${appname}/pages/${s.currentPageName}`, {
+  await api.post(`/_builder/api/${s.appname}/pages/${s.currentPageName}`, {
     page: { componentLibraries: s.pages.componentLibraries, ...page },
     uiFunctions: s.currentPageFunctions,
     screens: page._screens,

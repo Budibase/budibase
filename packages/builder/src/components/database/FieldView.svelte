@@ -67,7 +67,7 @@
 
   <ErrorsBox {errors} />
 
-  <form class="uk-form-stacked">
+  <form on:submit|preventDefault class="uk-form-stacked">
     <Textbox label="Name" bind:text={clonedField.name} />
     <Dropdown
       label="Type"
@@ -136,18 +136,19 @@
         bind:value={clonedField.typeOptions.maxLength} />
     {/if}
   </form>
-
-  <footer>
-    <ActionButton primary on:click={save}>Save</ActionButton>
-    <ActionButton alert on:click={() => onFinished(false)}>Cancel</ActionButton>
-  </footer>
 </div>
+<footer>
+  <ActionButton primary on:click={save}>Save</ActionButton>
+  <ActionButton alert on:click={() => onFinished(false)}>Cancel</ActionButton>
+</footer>
 
 <style>
+  .root {
+    margin: 20px;
+  }
   footer {
-    position: absolute;
     padding: 20px;
-    width: 100%;
+    border-radius: 0 0 5px 5px;
     bottom: 0;
     left: 0;
     background: #fafafa;
