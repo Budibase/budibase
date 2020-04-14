@@ -107,7 +107,7 @@ export const saveBackend = async state => {
   }
 }
 
-export const newRecord = (store, useRoot) => () => {
+export const newModel = (store, useRoot) => () => {
   store.update(state => {
     state.currentNodeIsNew = true
     const shadowHierarchy = createShadowHierarchy(state.hierarchy)
