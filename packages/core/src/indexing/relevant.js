@@ -65,8 +65,8 @@ export const getRelevantAncestorIndexes = (hierarchy, record) => {
           filter(
             i =>
               i.indexType === indexTypes.ancestor &&
-              (i.allowedRecordNodeIds.length === 0 ||
-                includes(nodeId)(i.allowedRecordNodeIds))
+              (i.allowedModelNodeIds.length === 0 ||
+                includes(nodeId)(i.allowedModelNodeIds))
           ),
         ])
 

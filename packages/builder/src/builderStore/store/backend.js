@@ -196,7 +196,7 @@ export const saveCurrentNode = store => () => {
         ? `all_${cloned.name}s`
         : `${cloned.parent().name}_${cloned.name}s`
 
-      defaultIndex.allowedRecordNodeIds = [cloned.nodeId]
+      defaultIndex.allowedModelNodeIds = [cloned.nodeId]
     }
 
     state.currentNodeIsNew = false

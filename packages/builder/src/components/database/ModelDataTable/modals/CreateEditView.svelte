@@ -26,8 +26,8 @@
     map(node => ({
       node,
       isallowed:
-        index.allowedRecordNodeIds &&
-        index.allowedRecordNodeIds.some(id => node.nodeId === id),
+        index.allowedModelNodeIds &&
+        index.allowedModelNodeIds.some(id => node.nodeId === id),
     })),
     filter(hierarchyFunctions.isRecord),
     filter(hierarchyFunctions.isDecendant($store.currentNode.parent())),
@@ -41,11 +41,11 @@
 
   const toggleAllowedModel = model => {
     if (model.isallowed) {
-      index.allowedRecordNodeIds = index.allowedRecordNodeIds.filter(
+      index.allowedModelNodeIds = index.allowedModelNodeIds.filter(
         id => id !== model.node.nodeId
       )
     } else {
-      index.allowedRecordNodeIds.push(model.node.nodeId)
+      index.allowedModelNodeIds.push(model.node.nodeId)
     }
   }
 </script>

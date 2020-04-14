@@ -22,7 +22,7 @@ export const canDeleteRecord = recordNode => {
         i =>
           isAncestorIndex(i) &&
           belongsToAncestor(i) &&
-          includes(node.nodeId)(i.allowedRecordNodeIds)
+          includes(node.nodeId)(i.allowedModelNodeIds)
       ),
       map(
         i =>

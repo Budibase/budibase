@@ -77,8 +77,8 @@ describe("hierarchy node creation", () => {
     const root = templateApi.getNewRootLevel()
     const parentRecord = templateApi.getNewModelTemplate(root)
     const record = templateApi.getNewModelTemplate(parentRecord)
-    expect(root.indexes[0].allowedRecordNodeIds).toEqual([parentRecord.nodeId])
-    expect(parentRecord.indexes[0].allowedRecordNodeIds).toEqual([
+    expect(root.indexes[0].allowedModelNodeIds).toEqual([parentRecord.nodeId])
+    expect(parentRecord.indexes[0].allowedModelNodeIds).toEqual([
       record.nodeId,
     ])
   })

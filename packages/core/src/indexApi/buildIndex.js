@@ -138,6 +138,6 @@ const buildHeirarchalIndex = async (app, indexNode) => {
 }
 
 const recordNodeApplies = indexNode => recordNode =>
-  includes(recordNode.nodeId)(indexNode.allowedRecordNodeIds)
+  includes(recordNode.nodeId)(indexNode.allowedModelNodeIds)
 
 export default buildIndex
