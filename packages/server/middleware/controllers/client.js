@@ -13,6 +13,7 @@ exports.create = async function(ctx) {
       } 
     }
   }, '_design/client');
+
   ctx.body = {
     message: `Client Database ${clientId} successfully provisioned.`
   }
@@ -20,7 +21,9 @@ exports.create = async function(ctx) {
 
 exports.destroy = async function(ctx) {
   const dbId = `client-${ctx.params.clientId}`;
+
   await couchdb.db.destroy(dbId);
+
   ctx.body = {
     status: 200,
     message: `Client Database ${dbId} successfully deleted.`

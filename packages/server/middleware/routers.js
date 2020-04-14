@@ -22,6 +22,7 @@ const clientRoutes = require("./routes/neo/client");
 const applicationRoutes = require("./routes/neo/application");
 const modelsRoutes = require("./routes/neo/model");
 const viewsRoutes = require("./routes/neo/view");
+const staticRoutes = require("./routes/neo/static");
 
 const builderPath = resolve(__dirname, "../builder")
 
@@ -29,7 +30,13 @@ module.exports = (config, app) => {
   const router = new Router()
 
   router
-    .use(session(config, app));
+    .use(session(config, app))
+    .use(async (ctx, next) => { 
+      // TODO: temp dev middleware
+      ctx.config = config;
+      ctx.isAuthenticated = true;
+      await next();
+    });
     // .use(async (ctx, next) => {
     //   ctx.sessionId = ctx.session._sessCtx.externalKey
     //   ctx.session.accessed = true
@@ -96,9 +103,9 @@ module.exports = (config, app) => {
     // })
 
     router
-      .get("/_builder", async ctx => {
-        await send(ctx, "/index.html", { root: builderPath })
-      })
+      // .get("/_builder", async ctx => {
+      //   await send(ctx, "/index.html", { root: builderPath })
+      // })
       .get("/_builder/:appname/componentlibrary", async ctx => {
         const info = await componentLibraryInfo(
           ctx.config,
@@ -107,19 +114,19 @@ module.exports = (config, app) => {
         )
         await send(ctx, info.components._lib || "index.js", { root: info.libDir })
       })
-      .get("/_builder/*", async (ctx, next) => {
-        const path = ctx.path.replace("/_builder", "")
+      // .get("/_builder/*", async (ctx, next) => {
+      //   const path = ctx.path.replace("/_builder", "")
 
-        const isFile = new RegExp(/(.+\..{1,5})/g).test(path)
+      //   const isFile = new RegExp(/(.+\..{1,5})/g).test(path)
 
-        if (path.startsWith("/api/") || path.startsWith("/instance/")) {
-          await next()
-        } else if (isFile) {
-          await send(ctx, path, { root: builderPath })
-        } else {
-          await send(ctx, "/index.html", { root: builderPath })
-        }
-      })
+      //   if (path.startsWith("/api/") || path.startsWith("/instance/")) {
+      //     await next()
+      //   } else if (isFile) {
+      //     await send(ctx, path, { root: builderPath })
+      //   } else {
+      //     await send(ctx, "/index.html", { root: builderPath })
+      //   }
+      // })
   
   // Neo
   // error handling middleware
@@ -127,6 +134,7 @@ module.exports = (config, app) => {
     try {
       await next();
     } catch (err) {
+      console.trace(err);
       ctx.status = err.status || 500;
       ctx.body = {
         message: err.message,
@@ -134,6 +142,9 @@ module.exports = (config, app) => {
       };
     }
   });
+
+  router.use(staticRoutes.routes());
+  router.use(staticRoutes.allowedMethods());
 
   router.use(viewsRoutes.routes());
   router.use(viewsRoutes.allowedMethods());
@@ -156,8 +167,6 @@ module.exports = (config, app) => {
   router.use(databaseRoutes.routes());
   router.use(databaseRoutes.allowedMethods());
 
-  router.use(databaseRoutes.routes());
-  router.use(databaseRoutes.allowedMethods());
   // end of Neo
 
   router.use(userRoutes.routes());
@@ -170,9 +179,9 @@ module.exports = (config, app) => {
   router.use(pageRoutes.allowedMethods());
 
   // router
-  //   .get("/:appname", async ctx => {
-  //     await send(ctx, "/index.html", { root: ctx.publicPath })
-  //   }) 
+    // .get("/:appname", async ctx => {
+    //   await send(ctx, "/index.html", { root: ctx.publicPath })
+    // }) 
   //   .get("/:appname/*", routeHandlers.appDefault)
   //   .get("/_builder/instance/:appname/:instanceid/*", routeHandlers.appDefault)
 

@@ -4,7 +4,7 @@ import {
   switchCase,
   defaultCase,
   isNonEmptyString,
-} from "../../common/index.mjs"
+} from "../../common/index.js"
 
 const linkNothing = () => ""
 

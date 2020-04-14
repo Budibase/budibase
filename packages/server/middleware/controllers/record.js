@@ -2,9 +2,9 @@ const couchdb = require("../../db")
 const { mapValues, keyBy, compose } = require("lodash/fp")
 const {
   validateRecord,
-} = require("../../../common/src/records/validateRecord")
-const { events } = require("../../../common/src/common/events")
-const { safeParseField } = require("../../../common/src/schema/types");
+  events,
+  safeParseField
+} = require("@budibase/common")
 
 exports.save = async function(ctx) {
   const db = couchdb.use(ctx.databaseId)

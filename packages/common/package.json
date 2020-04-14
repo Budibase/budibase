@@ -2,6 +2,7 @@
   "name": "@budibase/common",
   "version": "0.0.32",
   "description": "core javascript library for budibase",
+  "main": "lib/index.js",
   "files": [
     "dist/**",
     "!dist/node_modules"
@@ -10,7 +11,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "npx babel src --out-dir lib --source-maps"
   },
   "keywords": [
     "budibase"

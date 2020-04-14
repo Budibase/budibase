@@ -11,7 +11,7 @@ import {
   defaultCase,
   toNumberOrNull,
   isSafeInteger,
-} from "../../common/index.mjs"
+} from "../../common/index.js"
 
 const numberFunctions = typeFunctions({
   default: constant(null),

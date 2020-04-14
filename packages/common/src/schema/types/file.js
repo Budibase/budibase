@@ -11,7 +11,7 @@ import {
   none,
   $,
   splitKey,
-} from "../../common/index.mjs"
+} from "../../common/index.js"
 
 const illegalCharacters = "*?\\/:<>|\0\b\f\v"
 

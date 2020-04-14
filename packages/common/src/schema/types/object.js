@@ -5,7 +5,7 @@ import {
   parsedSuccess,
   getDefaultExport,
 } from "./typeHelpers"
-import { switchCase, defaultCase, $ } from "../../common/index.mjs"
+import { switchCase, defaultCase, $ } from "../../common/index.js"
 
 const objectFunctions = (definition, allTypes) =>
   typeFunctions({
