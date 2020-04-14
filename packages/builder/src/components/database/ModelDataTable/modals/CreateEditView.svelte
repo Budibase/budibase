@@ -18,7 +18,7 @@
     SHARD: "Shard Name",
   }
 
-  let index
+  let view
   let indexableModels = []
   let currentSnippetEditor = SNIPPET_EDITORS.MAP
 
@@ -26,8 +26,8 @@
     map(node => ({
       node,
       isallowed:
-        index.allowedModelNodeIds &&
-        index.allowedModelNodeIds.some(id => node.nodeId === id),
+        view.allowedModelNodeIds &&
+        view.allowedModelNodeIds.some(id => node.nodeId === id),
     })),
     filter(hierarchyFunctions.isModel),
     filter(hierarchyFunctions.isDecendant($store.currentNode.parent())),
@@ -35,17 +35,17 @@
   )
 
   store.subscribe($store => {
-    index = $store.currentNode
+    view = $store.currentNode
     indexableModels = indexableModelsFromIndex($store.hierarchy)
   })
 
   const toggleAllowedModel = model => {
     if (model.isallowed) {
-      index.allowedModelNodeIds = index.allowedModelNodeIds.filter(
+      view.allowedModelNodeIds = view.allowedModelNodeIds.filter(
         id => id !== model.node.nodeId
       )
     } else {
-      index.allowedModelNodeIds.push(model.node.nodeId)
+      view.allowedModelNodeIds.push(model.node.nodeId)
     }
   }
 </script>
@@ -61,12 +61,12 @@
   {/if}
   <div class="uk-grid-small" uk-grid>
     <div class="uk-width-1-2@s">
-      <Textbox bind:text={index.name} label="Name" />
+      <Textbox bind:text={view.name} label="Name" />
     </div>
     <div class="uk-width-1-2@s">
       <Dropdown
         label="View Type"
-        bind:selected={index.indexType}
+        bind:selected={view.indexType}
         options={['ancestor', 'reference']} />
     </div>
   </div>
@@ -95,11 +95,11 @@
     </span>
   {/each}
   {#if currentSnippetEditor === SNIPPET_EDITORS.MAP}
-    <CodeArea bind:text={index.map} label="Map" />
+    <CodeArea bind:text={view.map} label="Map" />
   {:else if currentSnippetEditor === SNIPPET_EDITORS.FILTER}
-    <CodeArea bind:text={index.filter} label="Filter" />
+    <CodeArea bind:text={view.filter} label="Filter" />
   {:else if currentSnippetEditor === SNIPPET_EDITORS.SHARD}
-    <CodeArea bind:text={index.getShardName} label="Shard Name" />
+    <CodeArea bind:text={view.getShardName} label="Shard Name" />
   {/if}
 
   <ActionButton color="secondary" on:click={store.saveCurrentNode}>
