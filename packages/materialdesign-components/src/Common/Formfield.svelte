@@ -18,7 +18,7 @@
   let formField = null
 
   $: modifiers = { alignEnd }
-  $: props = { modifiers }
+  $: props = { modifiers, extras: ["bbmd-form-field"] }
 
   $: blockClasses = cb.build({ props })
 
@@ -34,3 +34,9 @@
   <slot />
   <label for={id}>{label}</label>
 </div>
+
+<style>
+  .bbmd-form-field {
+    width: fit-content;
+  }
+</style>

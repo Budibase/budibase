@@ -50,12 +50,13 @@
       role = "menuitem"
     }
 
-    if (_addItem) {
-      _addItem(itemData())
-    }
+    // TODO: Causing first element to be automatically selected. Commenting for now.
+    // if (_addItem) {
+    //   _addItem(itemData())
+    // }
   })
 
-  function handleClick() {
+  function handleChange() {
     let item = itemData()
     if (!disabled) {
       if (
@@ -79,7 +80,8 @@
   }
 
   $: isSelected =
-    $selectedItems && selectedItems.getItemIdx($selectedItems, _id) > -1
+    ($selectedItems && selectedItems.getItemIdx($selectedItems, _id) > -1) ||
+    selected
 
   $: modifiers = {
     selected: isSelected && (!listProps || !listProps.inputElement),
@@ -90,14 +92,16 @@
 
   $: useTwoLine =
     listProps && listProps.variant === "two-line" && !!secondaryText
+
+  $: hasInputElement = listProps && listProps.inputElement !== "None"
 </script>
 
 <li
   class={listItemClass}
   role="option"
   tabindex="0"
-  on:click={handleClick}
-  data-value={value}
+  on:click={handleChange}
+  data-value={value || text}
   aria-selected={isSelected}>
   {#if leadingIcon}
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">
@@ -111,13 +115,13 @@
     {:else}{text}{/if}
   </span>
 
-  {#if listProps}
-    {#if listProps.inputElement === 'radiobutton'}
+  {#if hasInputElement}
+    {#if listProps.inputElement === 'Radiobutton'}
       <Radiobutton checked={isSelected} {disabled} {_bb} />
-    {:else if listProps.inputElement === 'checkbox'}
+    {:else if listProps.inputElement === 'Checkbox'}
       <Checkbox checked={isSelected} {disabled} {_bb} />
     {/if}
-  {:else if trailingIcon}
+  {:else if !!trailingIcon}
     <Icon context="list-item__meta" icon={trailingIcon} />
   {/if}
 </li>

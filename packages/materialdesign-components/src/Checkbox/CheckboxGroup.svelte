@@ -10,7 +10,6 @@
   export let _bb
   export let label = ""
   export let orientation = "row"
-  export let fullwidth = false
   export let onChange = selectedItems => {}
 
   export let disabled = false
@@ -37,15 +36,14 @@
   <div class="checkbox-group__label">
     <Label text={label} bold />
   </div>
-  <div class={`checkbox-group__boxes ${orientation}`}>
-    <div bind:this={checkItems} class:fullwidth />
-  </div>
+  <div bind:this={checkItems} class={`checkbox-group__boxes ${orientation}`} />
 </div>
 
 <style>
   .checkbox-group {
     display: flex;
     flex-direction: column;
+    width: fit-content;
   }
 
   .checkbox-group__boxes.row > div:not(:first-child) {
@@ -67,10 +65,5 @@
     display: flex;
     flex-flow: column wrap;
     align-items: flex-start;
-  }
-
-  .fullwidth {
-    flex: 1;
-    text-align: left;
   }
 </style>

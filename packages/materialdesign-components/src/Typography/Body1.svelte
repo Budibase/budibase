@@ -5,7 +5,7 @@
 </script>
 
 <span
-  style={`margin: ${verticalMargin}px ${horizontalMargin}px`}
+  style={`margin: ${verticalMargin}px ${horizontalMargin}px;`}
   class="mdc-typography--body1">
   {text}
 </span>

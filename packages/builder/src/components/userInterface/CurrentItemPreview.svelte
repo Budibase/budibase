@@ -89,7 +89,7 @@
       ${styles || ''}
 
       .pos-${selectedComponentId} {
-        border: 2px solid #0055ff;
+        border: 2px solid #0055ff; 
       }
 
       body, html {
