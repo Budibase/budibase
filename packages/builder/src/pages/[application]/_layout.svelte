@@ -1,17 +1,30 @@
 <script>
-  import IconButton from "components/common/IconButton.svelte"
   import { store } from "builderStore"
-  import UserInterfaceRoot from "components/userInterface/UserInterfaceRoot.svelte"
-  import BackendRoot from "./BackendRoot.svelte"
+
   import { fade } from "svelte/transition"
+  import { isActive, goto, context } from "@sveltech/routify"
+
   import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
+  import IconButton from "components/common/IconButton.svelte"
 
-  const TABS = {
-    BACKEND: "backend",
-    FRONTEND: "frontend",
+  // Get Package and set store
+  export let application
+
+  let promise = getPackage()
+
+  async function getPackage() {
+    const res = await fetch(`/_builder/api/${application}/appPackage`)
+    const pkg = await res.json()
+
+    if (res.ok) {
+      await store.setPackage(pkg)
+      return pkg
+    } else {
+      throw new Error(pkg)
+    }
   }
-
-  let selectedTab = TABS.BACKEND
+  $: ({ component } = $context)
+  $: list = component.parent.children.filter(child => child.isIndexable)
 </script>
 
 <div class="root">
@@ -19,52 +32,46 @@
   <div class="top-nav">
     <div class="topleftnav">
       <button class="home-logo">
-        <img src="/_builder/assets/budibase-emblem-white.svg" />
+        <img
+          src="/_builder/assets/budibase-emblem-white.svg"
+          alt="budibase icon" />
       </button>
+
+      <!-- This gets all indexable subroutes and sticks them in the top nav. -->
+      {#each list as { path, prettyName, children, meta }}
+        <span
+          class:active={$isActive(path)}
+          class="topnavitem"
+          on:click={() => $goto(path)}>
+          {prettyName}
+        </span>
+      {/each}
       <!-- <IconButton icon="home"
                       color="var(--slate)"
                       hoverColor="var(--secondary75)"/> -->
-      <span
-        class:active={selectedTab === TABS.BACKEND}
-        class="topnavitem"
-        on:click={() => (selectedTab = TABS.BACKEND)}>
-        Backend
-      </span>
-      <span
-        class:active={selectedTab === TABS.FRONTEND}
-        class="topnavitem"
-        on:click={() => (selectedTab = TABS.FRONTEND)}>
-        Frontend
-      </span>
     </div>
-
     <div class="toprightnav">
       <span
-        class:active={selectedTab === TABS.FRONTEND}
+        class:active={$isActive(`/settings`)}
         class="topnavitemright"
-        on:click={() => selectedTab === TABS.FRONTEND}>
+        on:click={() => $goto(`/settings`)}>
         <SettingsIcon />
       </span>
       <span
-        class:active={selectedTab === TABS.FRONTEND}
+        class:active={false}
         class="topnavitemright"
-        on:click={() => selectedTab === TABS.FRONTEND}>
+        on:click={() => console.log}>
         <PreviewIcon />
       </span>
     </div>
   </div>
 
-  <div class="content">
-    {#if selectedTab === TABS.BACKEND}
-      <div in:fade out:fade>
-        <BackendRoot />
-      </div>
-    {:else}
-      <div in:fade out:fade>
-        <UserInterfaceRoot />
-      </div>
-    {/if}
-  </div>
+  {#await promise}
+    <!-- This should probably be some kind of loading state? -->
+    <div />
+  {:then}
+    <slot />
+  {/await}
 
 </div>
 
@@ -168,5 +175,8 @@
 
   .home-logo img {
     height: 100%;
+  }
+  span:first-letter {
+    text-transform: capitalize;
   }
 </style>

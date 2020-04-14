@@ -1,24 +1,20 @@
 <script>
-  import getIcon from "../common/icon"
-  import { backendUiStore } from "builderStore"
+  import { isActive, url, goto } from "@sveltech/routify"
 
-  export let name = ""
   export let label = ""
-
-  $: navActive = $backendUiStore.leftNavItem === name
-
-  const setActive = () => backendUiStore.actions.navigate(name)
+  export let href
 </script>
 
 <div
+  on:click={() => $goto(href)}
   class="budibase__nav-item backend-nav-item"
-  class:selected={navActive}
-  on:click={setActive}>
+  class:selected={$isActive(href)}>
   {label}
 </div>
 
 <style>
   .backend-nav-item {
     padding-left: 25px;
+    cursor: pointer;
   }
 </style>

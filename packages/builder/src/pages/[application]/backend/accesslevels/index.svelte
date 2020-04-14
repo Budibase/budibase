@@ -1,4 +1,7 @@
 <script>
+  import { getContext } from "svelte"
+  const { open, close } = getContext("simple-modal")
+
   import ButtonGroup from "components/common/ButtonGroup.svelte"
   import Button from "components/common/Button.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
@@ -8,39 +11,34 @@
     getNewAccessLevel,
   } from "components/common/core"
   import getIcon from "components/common/icon"
-  import AccessLevelView from "./AccessLevelView.svelte"
-  import Modal from "components/common/Modal.svelte"
+  import AccessLevelView from "components/accessLevels/AccessLevelView.svelte"
 
   let editingLevel = null
   let editingLevelIsNew = false
-  $: {
-    if (editingLevel !== null) {
-      backendUiStore.actions.modals.show("ACCESS_LEVELS")
-    }
-  }
-  $: modalOpen = $backendUiStore.visibleModal === "ACCESS_LEVELS"
-
   let allPermissions = []
   store.subscribe(db => {
     allPermissions = generateFullPermissions(db.hierarchy, db.actions)
   })
 
-  let onLevelEdit = level => {
+  const openModal = (level, newLevel) => {
     editingLevel = level
-    editingLevelIsNew = false
+    editingLevelIsNew = newLevel
+    open(AccessLevelView, {
+      level: editingLevel,
+      allPermissions,
+      onFinished: onEditingFinished,
+      isNew: editingLevelIsNew,
+      allLevels: $store.accessLevels.levels,
+      hierarchy: $store.hierarchy,
+      actions: $store.actions,
+      close: close,
+      title: "Access Level",
+    })
   }
 
-  let onLevelCancel = () => {
+  let cancel = () => {
     editingAction = null
-  }
-
-  let onLevelDelete = level => {
-    store.deleteLevel(level)
-  }
-
-  let createNewLevel = () => {
-    editingLevelIsNew = true
-    editingLevel = getNewAccessLevel()
+    close()
   }
 
   let onEditingFinished = level => {
@@ -48,7 +46,7 @@
       store.saveLevel(level, editingLevelIsNew, editingLevel)
     }
     editingLevel = null
-    backendUiStore.actions.modals.hide()
+    close()
   }
 
   const getPermissionsString = perms => {
@@ -58,7 +56,7 @@
 
 <div class="root">
   <ButtonGroup>
-    <ActionButton primary on:click={createNewLevel}>
+    <ActionButton primary on:click={() => openModal(getNewAccessLevel(), true)}>
       Create New Access Level
     </ActionButton>
   </ButtonGroup>
@@ -78,10 +76,10 @@
             <td>{level.name}</td>
             <td>{getPermissionsString(level.permissions)}</td>
             <td class="edit-button">
-              <span on:click={() => onLevelEdit(level)}>
+              <span on:click={() => openModal(level, false)}>
                 {@html getIcon('edit')}
               </span>
-              <span on:click={() => onLevelDelete(level)}>
+              <span on:click={() => store.deleteLevel(level)}>
                 {@html getIcon('trash')}
               </span>
             </td>
@@ -90,20 +88,6 @@
       </tbody>
     </table>
   {:else}(no actions added){/if}
-
-  <Modal
-    onClosed={backendUiStore.actions.modals.hide}
-    bind:isOpen={modalOpen}
-    title={modalOpen ? 'Edit Access Level' : 'Create Access Level'}>
-    <AccessLevelView
-      level={editingLevel}
-      {allPermissions}
-      onFinished={onEditingFinished}
-      isNew={editingLevelIsNew}
-      allLevels={$store.accessLevels.levels}
-      hierarchy={$store.hierarchy}
-      actions={$store.actions} />
-  </Modal>
 
 </div>
 
