@@ -94,27 +94,29 @@
 <!-- TODO: Customizing Colour and Density - What level of customization for these things does Budibase need here? -->
 
 {#if context !== 'list-item'}
-  <Formfield {label} {_bb} {id} alignEnd={isAlignedEnd}>
-    <div bind:this={checkbox} class={blockClass}>
-      <input
-        type="checkbox"
-        class={cb.elem`native-control`}
-        {id}
-        disabled={isDisabled}
-        {isChecked}
-        on:change={changed} />
-      <div class={cb.elem`background`}>
-        <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
-          <path
-            class={cb.elem`checkmark-path`}
-            fill="none"
-            d="M1.73,12.91 8.1,19.28 22.79,4.59" />
-        </svg>
-        <div class={cb.elem`mixedmark`} />
+  <div class="bbmd-checkbox">
+    <Formfield {label} {_bb} {id} alignEnd={isAlignedEnd}>
+      <div bind:this={checkbox} class={blockClass}>
+        <input
+          type="checkbox"
+          class={cb.elem`native-control`}
+          {id}
+          disabled={isDisabled}
+          checked={isChecked}
+          on:change={changed} />
+        <div class={cb.elem`background`}>
+          <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
+            <path
+              class={cb.elem`checkmark-path`}
+              fill="none"
+              d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+          </svg>
+          <div class={cb.elem`mixedmark`} />
+        </div>
+        <div class={cb.elem`ripple`} />
       </div>
-      <div class={cb.elem`ripple`} />
-    </div>
-  </Formfield>
+    </Formfield>
+  </div>
 {:else}
   <div bind:this={checkbox} class={blockClass}>
     <input
@@ -122,7 +124,7 @@
       class={cb.elem`native-control`}
       {id}
       disabled={isDisabled}
-      {isChecked}
+      checked={isChecked}
       on:change={changed} />
     <div class={cb.elem`background`}>
       <svg class={cb.elem`checkmark`} viewBox="0 0 24 24">
@@ -136,3 +138,9 @@
     <div class={cb.elem`ripple`} />
   </div>
 {/if}
+
+<style>
+  .bbmd-checkbox {
+    width: fit-content;
+  }
+</style>
