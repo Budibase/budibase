@@ -22,13 +22,18 @@
   $: cardClass = cb.build({ props })
 
   $: safeWidth = width !== "auto" && !/px$/.test(width) ? `${width}px` : width
+
   $: safeHeight =
-    height !== "auto" && !/px$/.test(height) ? `${width}px` : height
+    height !== "auto" && !/px$/.test(height) ? `${height}px` : height
 
   $: card && _bb.attachChildren(card)
 </script>
 
-<div
-  bind:this={card}
-  style={`width: ${safeWidth}; height: ${safeHeight}`}
-  class={cardClass} />
+<div bind:this={card} class={`bbmd-card ${cardClass}`} />
+
+<style>
+  .bbmd-card {
+    width: 350px;
+    height: auto;
+  }
+</style>

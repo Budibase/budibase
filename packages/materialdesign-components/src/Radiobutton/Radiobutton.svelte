@@ -87,7 +87,7 @@
         class={cb.elem`native-control`}
         type="radio"
         {name}
-        {checked}
+        checked={isChecked}
         disabled={isDisabled}
         on:click={handleOnClick} />
       <div class={cb.elem`background`}>
@@ -104,7 +104,7 @@
       class={cb.elem`native-control`}
       type="radio"
       {name}
-      {checked}
+      checked={isChecked}
       disabled={isDisabled}
       on:click={handleOnClick} />
     <div class={cb.elem`background`}>
