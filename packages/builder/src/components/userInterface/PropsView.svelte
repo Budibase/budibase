@@ -24,7 +24,7 @@
 
 <div class="root">
 
-  <form class="uk-form-stacked form-root">
+  <form on:submit|preventDefault class="uk-form-stacked form-root">
     {#if componentDef}
       {#each Object.entries(componentDef.props) as [prop_name, prop_def], index}
         <div class="prop-container">

@@ -22,10 +22,7 @@
   let cancel = () => onFinished()
   let save = () => {
     const newTriggersList = [
-      ...pipe(
-        allTriggers,
-        [filter(t => t !== trigger)]
-      ),
+      ...pipe(allTriggers, [filter(t => t !== trigger)]),
       clonedTrigger,
     ]
 
@@ -43,7 +40,7 @@
 
   <ErrorsBox {errors} style="margin-bottom:20px" />
 
-  <form class="uk-form-horizontal">
+  <form on:submit|preventDefault class="uk-form-horizontal">
 
     <Dropdown
       label="Event"

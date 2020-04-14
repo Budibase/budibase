@@ -1,8 +1,6 @@
 <script>
   import Button from "components/common/Button.svelte"
-  import { store } from "builderStore"
-
-  let errors = []
+  export let apps
 </script>
 
 <div class="root">
@@ -12,11 +10,10 @@
       class="logo"
       alt="budibase logo" />
     <div>
-
       <div>
         <h4 style="margin-bottom: 20px">Choose an Application</h4>
-        {#each $store.apps as app}
-          <a href={`#${app}`} class="app-link">{app}</a>
+        {#each apps as app}
+          <a href={`/_builder/${app}`} class="app-link">{app}</a>
         {/each}
       </div>
     </div>

@@ -1,30 +1,28 @@
 <script>
-  import Modal from "components/common/Modal.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import { store, backendUiStore } from "builderStore"
   import * as api from "../api"
 
   export let record
+  export let onClosed
 
   $: currentAppInfo = {
     appname: $store.appname,
     instanceId: $backendUiStore.selectedDatabase.id,
   }
-
-  function onClosed() {
-    backendUiStore.actions.modals.hide()
-  }
 </script>
 
 <section>
-  <heading>
-    <i class="ri-information-line alert" />
-    <h4 class="budibase__title--4">Delete Record</h4>
-  </heading>
-  <p>
-    Are you sure you want to delete this record? All of your data will be
-    permanently removed. This action cannot be undone.
-  </p>
+  <div class="content">
+    <heading>
+      <i class="ri-information-line alert" />
+      <h4 class="budibase__title--4">Delete Record</h4>
+    </heading>
+    <p>
+      Are you sure you want to delete this record? All of your data will be
+      permanently removed. This action cannot be undone.
+    </p>
+  </div>
   <div class="modal-actions">
     <ActionButton on:click={onClosed}>Cancel</ActionButton>
     <ActionButton
@@ -48,17 +46,16 @@
 
   .modal-actions {
     padding: 10px;
-    position: absolute;
-    bottom: 0;
-    left: 0;
     background: #fafafa;
     border-top: 1px solid #ccc;
-    width: 100%;
   }
 
   heading {
     display: flex;
     align-items: center;
+  }
+  .content {
+    padding: 30px;
   }
 
   h4 {

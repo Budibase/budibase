@@ -13,7 +13,7 @@
 
 <div class="root">
 
-  <form class="uk-search uk-search-large">
+  <form on:submit|preventDefault class="uk-search uk-search-large">
     <span uk-search-icon />
     <input
       class="uk-search-input"

@@ -2,7 +2,6 @@
   import { onMount } from "svelte"
   import { store, backendUiStore } from "builderStore"
   import { compose, map, get, flatten } from "lodash/fp"
-  import Modal from "components/common/Modal.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import Select from "components/common/Select.svelte"
   import {
@@ -68,39 +67,37 @@
   }
 </script>
 
-<div>
+<div class="actions">
   <h4 class="budibase__title--4">Create / Edit Record</h4>
   <ErrorsBox {errors} />
-  <div class="actions">
-    <form class="uk-form-stacked">
-      {#if !record}
-        <div class="uk-margin">
-          <label class="uk-form-label" for="form-stacked-text">Model</label>
-          <Select bind:value={selectedModel}>
-            {#each models as model}
-              <option value={model}>{model.name}</option>
-            {/each}
-          </Select>
-        </div>
-      {/if}
-      {#each modelFields || [] as field}
-        <RecordFieldControl record={editingRecord} {field} {errors} />
-      {/each}
-    </form>
-    <footer>
-      <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
-      <ActionButton on:click={saveRecord}>Save</ActionButton>
-    </footer>
-  </div>
+  <form on:submit|preventDefault class="uk-form-stacked">
+    {#if !record}
+      <div class="uk-margin">
+        <label class="uk-form-label" for="form-stacked-text">Model</label>
+        <Select bind:value={selectedModel}>
+          {#each models as model}
+            <option value={model}>{model.name}</option>
+          {/each}
+        </Select>
+      </div>
+    {/if}
+    {#each modelFields || [] as field}
+      <RecordFieldControl record={editingRecord} {field} {errors} />
+    {/each}
+  </form>
 </div>
+<footer>
+  <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
+  <ActionButton on:click={saveRecord}>Save</ActionButton>
+</footer>
 
 <style>
+  .actions {
+    padding: 30px;
+  }
   footer {
-    position: absolute;
     padding: 20px;
-    width: 100%;
-    bottom: 0;
-    left: 0;
     background: #fafafa;
+    border-radius: 0.5rem;
   }
 </style>
