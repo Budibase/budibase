@@ -3,7 +3,6 @@ import createNodes from "../src/templateApi/createNodes"
 import { some } from "lodash"
 import { getNewField, addField } from "../src/templateApi/fields"
 import {
-  getNewRecordValidationRule,
   commonRecordValidationRules,
   addRecordValidationRule,
 } from "../src/templateApi/recordValidationRules"
