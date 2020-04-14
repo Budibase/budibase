@@ -5,7 +5,7 @@
   import Select from "components/common/Select.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import getIcon from "components/common/icon"
-  import FieldView from "./FieldView.svelte"
+  import FieldView from "../../FieldView.svelte"
   import {
     get,
     compose,
@@ -18,7 +18,7 @@
     isDate,
   } from "lodash/fp"
   import { store, backendUiStore } from "builderStore"
-  import { common, hierarchy } from "../../../../core/src/"
+  import { common, hierarchy } from "../../../../../../core/src/"
   import { getNode } from "components/common/core"
   import { templateApi, pipe, validate } from "components/common/core"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
