@@ -9,10 +9,10 @@ import {
 import { $ } from "../common"
 import { map, filter, includes } from "lodash/fp"
 
-export const canDeleteRecord = recordNode => {
-  const flatHierarchy = $(recordNode, [findRoot, getFlattenedHierarchy])
+export const canDeleteModel = modelNode => {
+  const flatHierarchy = $(modelNode, [findRoot, getFlattenedHierarchy])
 
-  const ancestors = $(flatHierarchy, [filter(isAncestor(recordNode))])
+  const ancestors = $(flatHierarchy, [filter(isAncestor(modelNode))])
 
   const belongsToAncestor = i => ancestors.includes(i.parent())
 
@@ -26,7 +26,7 @@ export const canDeleteRecord = recordNode => {
       ),
       map(
         i =>
-          `index "${i.name}" indexes this record. Please remove the record from the index, or delete the index`
+          `index "${i.name}" indexes this model. Please remove the model from the index, or delete the index`
       ),
     ])
 
@@ -39,7 +39,7 @@ export const canDeleteRecord = recordNode => {
     return errorsThisNode
   }
 
-  const errors = errorsForNode(recordNode)
+  const errors = errorsForNode(modelNode)
 
   return { errors, canDelete: errors.length === 0 }
 }

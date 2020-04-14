@@ -10,7 +10,7 @@ import { generateSchema } from "../../../../core/src/indexing/indexSchemaCreator
 import { generate } from "shortid"
 
 export { canDeleteIndex } from "../../../../core/src/templateApi/canDeleteIndex"
-export { canDeleteRecord } from "../../../../core/src/templateApi/canDeleteRecord"
+export { canDeleteModel } from "../../../../core/src/templateApi/canDeleteModel"
 export { userWithFullAccess } from "../../../../core/src/index"
 export { joinKey } from "../../../../core/src/common"
 export { getExactNodeForKey } from "../../../../core/src/templateApi/hierarchy"
