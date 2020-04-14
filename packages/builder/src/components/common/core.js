@@ -65,14 +65,14 @@ export const getPotentialReverseReferenceIndexes = (hierarchy, refIndex) => {
   return res
 }
 
-export const getPotentialReferenceIndexes = (hierarchy, record) =>
+export const getPotentialReferenceIndexes = (hierarchy, model) =>
   pipe(hierarchy, [
     hierarchyFunctions.getFlattenedHierarchy,
     filter(hierarchyFunctions.isAncestorIndex),
     filter(
       i =>
-        hierarchyFunctions.isAncestor(record)(i.parent()) ||
-        i.parent().nodeId === record.parent().nodeId ||
+        hierarchyFunctions.isAncestor(model)(i.parent()) ||
+        i.parent().nodeId === model.parent().nodeId ||
         hierarchyFunctions.isRoot(i.parent())
     ),
   ])
