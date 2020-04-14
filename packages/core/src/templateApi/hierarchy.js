@@ -160,7 +160,7 @@ export const getRecordNodeIdFromId = recordId =>
 export const getRecordNodeById = (hierarchy, recordId) =>
   $(hierarchy, [
     getFlattenedHierarchy,
-    find(n => isRecord(n) && n.nodeId === getRecordNodeIdFromId(recordId)),
+    find(n => isModel(n) && n.nodeId === getRecordNodeIdFromId(recordId)),
   ])
 
 export const recordNodeIdIsAllowed = indexNode => nodeId =>
@@ -171,7 +171,7 @@ export const recordNodeIsAllowed = indexNode => recordNode =>
   recordNodeIdIsAllowed(indexNode)(recordNode.nodeId)
 
 export const getAllowedRecordNodesForIndex = (appHierarchy, indexNode) => {
-  const recordNodes = $(appHierarchy, [getFlattenedHierarchy, filter(isRecord)])
+  const recordNodes = $(appHierarchy, [getFlattenedHierarchy, filter(isModel)])
 
   if (isGlobalIndex(indexNode)) {
     return $(recordNodes, [filter(recordNodeIsAllowed(indexNode))])
@@ -213,9 +213,9 @@ export const getNodeFromNodeKeyHash = hierarchy => hash =>
     find(n => getHashCode(n.nodeKey()) === hash),
   ])
 
-export const isRecord = node => isSomething(node) && node.type === "record"
-export const isSingleRecord = node => isRecord(node) && node.isSingle
-export const isCollectionRecord = node => isRecord(node) && !node.isSingle
+export const isModel = node => isSomething(node) && node.type === "record"
+export const isSingleRecord = node => isModel(node) && node.isSingle
+export const isCollectionRecord = node => isModel(node) && !node.isSingle
 export const isIndex = node => isSomething(node) && node.type === "index"
 export const isaggregateGroup = node =>
   isSomething(node) && node.type === "aggregateGroup"
@@ -223,13 +223,13 @@ export const isShardedIndex = node =>
   isIndex(node) && isNonEmptyString(node.getShardName)
 export const isRoot = node => isSomething(node) && node.isRoot()
 export const findRoot = node => (isRoot(node) ? node : findRoot(node.parent()))
-export const isDecendantOfARecord = hasMatchingAncestor(isRecord)
+export const isDecendantOfARecord = hasMatchingAncestor(isModel)
 export const isGlobalIndex = node => isIndex(node) && isRoot(node.parent())
 export const isReferenceIndex = node =>
   isIndex(node) && node.indexType === indexTypes.reference
 export const isAncestorIndex = node =>
   isIndex(node) && node.indexType === indexTypes.ancestor
-export const isTopLevelRecord = node => isRoot(node.parent()) && isRecord(node)
+export const isTopLevelRecord = node => isRoot(node.parent()) && isModel(node)
 export const isTopLevelIndex = node => isRoot(node.parent()) && isIndex(node)
 export const getCollectionKey = recordKey =>
   $(recordKey, [splitKey, parts => joinKey(parts.slice(0, parts.length - 1))])
@@ -271,7 +271,7 @@ export default {
   recordNodeIsAllowed,
   getAllowedRecordNodesForIndex,
   getNodeFromNodeKeyHash,
-  isRecord,
+  isModel,
   isCollectionRecord,
   isIndex,
   isaggregateGroup,

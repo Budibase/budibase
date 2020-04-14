@@ -13,7 +13,7 @@ import {
   isRoot,
   isSingleRecord,
   isCollectionRecord,
-  isRecord,
+  isModel,
   isaggregateGroup,
   getFlattenedHierarchy,
 } from "./hierarchy"
@@ -34,7 +34,7 @@ const pathRegxMaker = node => () =>
 const nodeKeyMaker = node => () =>
   switchCase(
     [
-      n => isRecord(n) && !isSingleRecord(n),
+      n => isModel(n) && !isSingleRecord(n),
       n =>
         joinKey(
           node.parent().nodeKey(),
@@ -58,7 +58,7 @@ const validate = parent => node => {
     isIndex(node) &&
     isSomething(parent) &&
     !isRoot(parent) &&
-    !isRecord(parent)
+    !isModel(parent)
   ) {
     throw new BadRequestError(createNodeErrors.indexParentMustBeRecordOrRoot)
   }
@@ -103,7 +103,7 @@ const addToParent = obj => {
       parent.children.push(obj)
     }
 
-    if (isRecord(obj)) {
+    if (isModel(obj)) {
       const defaultIndex = find(
         parent.indexes,
         i => i.name === `${parent.name}_index`
@@ -175,7 +175,7 @@ const _getNewModelTemplate = (parent, name, createDefaultIndex, isSingle) => {
     validationRules: [],
     nodeId: nodeId,
     indexes: [],
-    estimatedRecordCount: isRecord(parent) ? 500 : 1000000,
+    estimatedRecordCount: isModel(parent) ? 500 : 1000000,
     collectionName: (nodeId || "").toString(),
     isSingle,
   })
