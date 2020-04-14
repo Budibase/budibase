@@ -29,7 +29,7 @@
         index.allowedModelNodeIds &&
         index.allowedModelNodeIds.some(id => node.nodeId === id),
     })),
-    filter(hierarchyFunctions.isRecord),
+    filter(hierarchyFunctions.isModel),
     filter(hierarchyFunctions.isDecendant($store.currentNode.parent())),
     hierarchyFunctions.getFlattenedHierarchy
   )

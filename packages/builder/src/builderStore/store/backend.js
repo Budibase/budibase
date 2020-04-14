@@ -214,9 +214,9 @@ export const deleteCurrentNode = store => () => {
       ? state.hierarchy.children.find(node => node !== state.currentNode)
       : nodeToDelete.parent()
 
-    const isRecord = hierarchyFunctions.isRecord(nodeToDelete)
+    const isModel = hierarchyFunctions.isModel(nodeToDelete)
 
-    const check = isRecord
+    const check = isModel
       ? canDeleteModel(nodeToDelete)
       : canDeleteIndex(nodeToDelete)
 
@@ -225,7 +225,7 @@ export const deleteCurrentNode = store => () => {
       return state
     }
 
-    const recordOrIndexKey = isRecord ? "children" : "indexes"
+    const recordOrIndexKey = isModel ? "children" : "indexes"
 
     // remove the selected record or index
     const newCollection = remove(

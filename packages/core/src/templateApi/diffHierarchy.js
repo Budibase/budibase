@@ -1,6 +1,6 @@
 import {
   getFlattenedHierarchy,
-  isRecord,
+  isModel,
   isIndex,
   isAncestor,
 } from "./hierarchy"
@@ -48,7 +48,7 @@ const changeItem = (type, oldNode, newNode) => ({
 
 const findCreatedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
   const allCreated = $(newHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeDoesNotExistIn(oldHierarchyFlat)),
     map(n => changeItem(HierarchyChangeTypes.recordCreated, null, n)),
   ])
@@ -60,7 +60,7 @@ const findCreatedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
 
 const findDeletedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
   const allDeleted = $(oldHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeDoesNotExistIn(newHierarchyFlat)),
     map(n => changeItem(HierarchyChangeTypes.recordDeleted, n, null)),
   ])
@@ -72,7 +72,7 @@ const findDeletedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
 
 const findRenamedRecords = (oldHierarchyFlat, newHierarchyFlat) =>
   $(oldHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeExistsIn(newHierarchyFlat)),
     filter(
       nodeChanged(
@@ -91,7 +91,7 @@ const findRenamedRecords = (oldHierarchyFlat, newHierarchyFlat) =>
 
 const findRecordsWithFieldsChanged = (oldHierarchyFlat, newHierarchyFlat) =>
   $(oldHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeExistsIn(newHierarchyFlat)),
     filter(hasDifferentFields(newHierarchyFlat)),
     map(n =>
@@ -108,7 +108,7 @@ const findRecordsWithEstimatedRecordTypeChanged = (
   newHierarchyFlat
 ) =>
   $(oldHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeExistsIn(newHierarchyFlat)),
     filter(
       nodeChanged(

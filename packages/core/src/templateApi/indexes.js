@@ -1,9 +1,9 @@
 import { map, isEmpty, countBy, flatten, includes, join, keys } from "lodash/fp"
-import {} from "lodash"
+import { } from "lodash"
 import { applyRuleSet, makerule } from "../common/validationCommon"
 import { compileFilter, compileMap } from "../indexing/evaluate"
 import { isNonEmptyString, executesWithoutException, $ } from "../common"
-import { isRecord } from "./hierarchy"
+import { isModel } from "./hierarchy"
 
 export const indexTypes = { reference: "reference", ancestor: "ancestor" }
 
@@ -39,7 +39,7 @@ export const indexRuleSet = [
     "indexType",
     "reference index may only exist on a record node",
     index =>
-      isRecord(index.parent()) || index.indexType !== indexTypes.reference
+      isModel(index.parent()) || index.indexType !== indexTypes.reference
   ),
   makerule(
     "indexType",

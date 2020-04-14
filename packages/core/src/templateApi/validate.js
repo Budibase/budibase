@@ -23,7 +23,7 @@ import {
   defaultCase,
 } from "../common"
 import {
-  isRecord,
+  isModel,
   isRoot,
   isaggregateGroup,
   isIndex,
@@ -47,7 +47,7 @@ const commonRules = [
   makerule(
     "type",
     "node type not recognised",
-    anyTrue(isRecord, isRoot, isIndex, isaggregateGroup)
+    anyTrue(isModel, isRoot, isIndex, isaggregateGroup)
   ),
 ]
 
@@ -79,7 +79,7 @@ const aggregateGroupRules = [
 
 const getRuleSet = node =>
   switchCase(
-    [isRecord, ruleSet(commonRules, recordRules)],
+    [isModel, ruleSet(commonRules, recordRules)],
 
     [isIndex, ruleSet(commonRules, indexRuleSet)],
 
@@ -108,7 +108,7 @@ export const validateAll = appHierarchy => {
   ])
 
   const fieldErrors = $(flattened, [
-    filter(isRecord),
+    filter(isModel),
     map(validateAllFields),
     flatten,
   ])
@@ -140,7 +140,7 @@ const actionRules = [
   ),
 ]
 
-const duplicateActionRule = makerule("", "action name must be unique", () => {})
+const duplicateActionRule = makerule("", "action name must be unique", () => { })
 
 const validateAction = action => applyRuleSet(actionRules)(action)
 

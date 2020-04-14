@@ -2,7 +2,7 @@ import {
   findRoot,
   getFlattenedHierarchy,
   fieldReversesReferenceToIndex,
-  isRecord,
+  isModel,
   isAncestorIndex,
   isAncestor,
 } from "./hierarchy"

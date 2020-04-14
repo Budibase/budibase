@@ -78,7 +78,7 @@ export const getPotentialReferenceIndexes = (hierarchy, record) =>
   ])
 
 export const isIndex = hierarchyFunctions.isIndex
-export const isRecord = hierarchyFunctions.isRecord
+export const isModel = hierarchyFunctions.isModel
 export const nodeNameFromNodeKey = hierarchyFunctions.nodeNameFromNodeKey
 
 export const getDefaultTypeOptions = type =>
@@ -109,7 +109,7 @@ export const getIndexNodes = hierarchy =>
 export const getRecordNodes = hierarchy =>
   pipe(hierarchy, [
     hierarchyFunctions.getFlattenedHierarchy,
-    filter(hierarchyFunctions.isRecord),
+    filter(hierarchyFunctions.isModel),
   ])
 
 export const getIndexSchema = hierarchy => index =>

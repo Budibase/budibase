@@ -4,7 +4,7 @@ import { _loadFromInfo } from "./load"
 import { $, joinKey } from "../common"
 import {
   getFlattenedHierarchy,
-  isRecord,
+  isModel,
   getNode,
   isTopLevelRecord,
   fieldReversesReferenceToNode,
@@ -53,7 +53,7 @@ const initialiseAncestorIndexes = async (app, recordInfo) => {
 
 const initialiseReverseReferenceIndexes = async (app, recordInfo) => {
   const indexNodes = $(
-    fieldsThatReferenceThisRecord(app, recordInfo.recordNode),
+    fieldsThatReferenceThisModel(app, recordInfo.recordNode),
     [
       map(f =>
         $(f.typeOptions.reverseIndexNodeKeys, [
@@ -69,10 +69,10 @@ const initialiseReverseReferenceIndexes = async (app, recordInfo) => {
   }
 }
 
-const fieldsThatReferenceThisRecord = (app, recordNode) =>
+const fieldsThatReferenceThisModel = (app, recordNode) =>
   $(app.hierarchy, [
     getFlattenedHierarchy,
-    filter(isRecord),
+    filter(isModel),
     map(n => n.fields),
     flatten,
     filter(fieldReversesReferenceToNode(recordNode)),
