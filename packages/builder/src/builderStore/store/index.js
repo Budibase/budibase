@@ -52,8 +52,8 @@ export const getStore = () => {
 
   store.setPackage = setPackage(store, initial)
 
-  store.newChildModel = backendStoreActions.newRecord(store, false)
-  store.newRootModel = backendStoreActions.newRecord(store, true)
+  store.newChildModel = backendStoreActions.newModel(store, false)
+  store.newRootModel = backendStoreActions.newModel(store, true)
   store.selectExistingNode = backendStoreActions.selectExistingNode(store)
   store.newChildIndex = backendStoreActions.newIndex(store, false)
   store.newRootIndex = backendStoreActions.newIndex(store, true)
