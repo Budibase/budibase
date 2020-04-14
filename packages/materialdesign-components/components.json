@@ -14,9 +14,7 @@
     "name": "Body1",
     "description": "Sets the font properties as Roboto Body 1",
     "props": {
-      "text": "string",
-      "verticalMargin": "number",
-      "horizontalMargin": "number"
+      "text": "string"
     }, 
     "tags": []
   },
@@ -58,6 +56,11 @@
         "type": "options",
         "options": ["one-line", "two-line"],
         "default": "one-line"
+      },
+      "inputElement": {
+        "type": "options",
+        "options": ["None", "Radiobutton", "Checkbox"],
+        "default": "None"
       }
     }
   },
@@ -69,10 +72,9 @@
       "text": "string",
       "secondaryText": "string",
       "leadingIcon": "string",
-      "trailingIcon": "string",
-      "selected": "bool",
+      "trailingIcon": "string",      
       "disabled": "bool",
-      "divideAfter": "bool"
+      "dividerAfter": "bool"
     }
   },
   "Button": {
@@ -117,12 +119,12 @@
     "name": "Card",
     "description": "A Material Card container. Accepts CardHeader, CardBody and CardFooter as possible children",
     "props": {
-      "width": "string",
+      "width": {"type": "string", "default": "350px"},
       "height": "string",
       "variant": {
         "type": "options",
         "options": ["standard", "outlined"],
-        "default": "standard"
+        "default": "outlined"
       }
     }
   },
@@ -183,8 +185,7 @@
         "type": "options",
         "options": ["row", "column"],
         "default": "row"
-      },
-      "fullwidth": "bool",
+      },      
       "disabled": "bool",
       "alignEnd": "bool"
     }
@@ -276,14 +277,18 @@
     "tags": []
   },
   "IconButton": {
-    "onClick": "event",
-    "disabled": "bool",
-    "href": "string",
-    "icon": "string",
-    "size": {
-      "type":"options",
-      "options": ["small", "medium", "large"],
-      "default": "medium"
+    "name": "IconButton",
+    "description": "An icon button component",
+    "props": {
+      "onClick": "event",
+      "disabled": "bool",
+      "href": "string",
+      "icon": "string",
+      "size": {
+        "type":"options",
+        "options": ["small", "medium", "large"],
+        "default": "medium"
+      }
     },
     "tags": []
   },
@@ -291,6 +296,7 @@
     "name": "Label",
     "description": "A simple label component that displays its text in the standard Roboto Material Design font",
     "props": {
+      "text": "string",
       "bold": "bool"
     },
     "tags": []
@@ -322,8 +328,7 @@
       "onClick": "event",
       "id": "string",
       "label": "string",      
-      "name": "string",
-      "checked": "bool",
+      "name": "string",      
       "disabled": "bool",
       "alignEnd": "bool"
     },
@@ -334,6 +339,7 @@
     "description": "A Material Design Radiobutton group. Supports row and column orientation.",
     "props": {
       "onChange": "event",
+      "label": "string",
       "name": "string",
       "orientation": {
         "type": "options",
@@ -394,14 +400,10 @@
       "minLength": "number",
       "maxLength": "number",
       "helperText": "string",
-      "errorText": "string",
       "placeholder": "string",
       "icon": "string",
       "trailingIcon": "bool",
-      "textarea": "bool",
-      "rows": "number",
-      "cols": "number",
-      "validation": "bool",
+      "textarea": "bool",      
       "persistent": "bool"
     },
     "tags": []

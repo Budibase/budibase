@@ -88,7 +88,7 @@ const css_map = {
 }
 
 export const generate_rule = ([name, values]) =>
-  `${css_map[name].name}: ${css_map[name].generate(values)};`
+  `${css_map[name].name}: ${css_map[name].generate(values)} !important;`
 
 const handle_grid = (acc, [name, value]) => {
   let tmp = []
@@ -113,7 +113,9 @@ const object_to_css_string = [
 export const generate_css = ({ layout, position }) => {
   let _layout = pipe(layout, object_to_css_string)
   if (_layout.length) {
-    _layout += `\ndisplay: ${_layout.includes("flex") ? "flex" : "grid"};`
+    _layout += `\ndisplay: ${
+      _layout.includes("flex") ? "flex" : "grid"
+    } !important;`
   }
 
   return {
@@ -134,7 +136,6 @@ export const generate_screen_css = component_array => {
 
     styles += apply_class(_id, "pos", position) + "\n"
     styles += apply_class(_id, "lay", layout) + "\n"
-
     if (_children && _children.length) {
       styles += generate_screen_css(_children) + "\n"
     }
