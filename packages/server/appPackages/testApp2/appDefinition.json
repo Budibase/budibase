@@ -166,7 +166,7 @@
         "getShardName": "",
         "getSortKey": "record.id",
         "aggregateGroups": [],
-        "allowedRecordNodeIds": [
+        "allowedModelNodeIds": [
           1
         ],
         "nodeId": 2
@@ -180,7 +180,7 @@
         "getShardName": "",
         "getSortKey": "record.id",
         "aggregateGroups": [],
-        "allowedRecordNodeIds": [
+        "allowedModelNodeIds": [
           3
         ],
         "nodeId": 4
@@ -194,7 +194,7 @@
         "getShardName": "",
         "getSortKey": "record.id",
         "aggregateGroups": [],
-        "allowedRecordNodeIds": [
+        "allowedModelNodeIds": [
           7
         ],
         "nodeId": 8

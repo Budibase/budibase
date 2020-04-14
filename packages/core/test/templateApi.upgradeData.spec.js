@@ -67,7 +67,7 @@ describe("upgradeData", () => {
     const { oldSetup, newSetup } = await configure()
     const newIndex = newSetup.templateApi.getNewIndexTemplate(newSetup.root)
     newIndex.name = "more_contacts"
-    newIndex.allowedRecordNodeIds = [newSetup.contact.nodeId]
+    newIndex.allowedModelNodeIds = [newSetup.contact.nodeId]
 
     await upgradeData(oldSetup.app)(newSetup.root)
 
@@ -112,7 +112,7 @@ describe("upgradeData", () => {
     const { oldSetup, newSetup, records } = await configure()
     const newIndex = newSetup.templateApi.getNewIndexTemplate(newSetup.contact)
     newIndex.name = "more_deals"
-    newIndex.allowedRecordNodeIds = [newSetup.deal.nodeId]
+    newIndex.allowedModelNodeIds = [newSetup.deal.nodeId]
 
     await upgradeData(oldSetup.app)(newSetup.root)
 
@@ -159,7 +159,7 @@ describe("upgradeData", () => {
     const { oldSetup, newSetup, records, recordApi } = await configure()
     const newIndex = newSetup.templateApi.getNewIndexTemplate(newSetup.lead)
     newIndex.name = "contact_leads"
-    newIndex.allowedRecordNodeIds = [newSetup.lead.nodeId]
+    newIndex.allowedModelNodeIds = [newSetup.lead.nodeId]
     newIndex.indexType = "reference"
 
     const leadField = newSetup.templateApi.getNewField("string")

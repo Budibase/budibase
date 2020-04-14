@@ -164,8 +164,8 @@ export const getRecordNodeById = (hierarchy, recordId) =>
   ])
 
 export const recordNodeIdIsAllowed = indexNode => nodeId =>
-  indexNode.allowedRecordNodeIds.length === 0 ||
-  includes(nodeId)(indexNode.allowedRecordNodeIds)
+  indexNode.allowedModelNodeIds.length === 0 ||
+  includes(nodeId)(indexNode.allowedModelNodeIds)
 
 export const recordNodeIsAllowed = indexNode => recordNode =>
   recordNodeIdIsAllowed(indexNode)(recordNode.nodeId)

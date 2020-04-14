@@ -246,11 +246,11 @@ describe("diffHierarchy", () => {
   }))
 
   it("should detect root index allowedRecordIds changed", testIndexChanged("root", newSetup => {
-    newSetup.root.indexes[0].allowedRecordNodeIds.push(3)
+    newSetup.root.indexes[0].allowedModelNodeIds.push(3)
   }))
 
   it("should detect child index allowedRecordIds changed", testIndexChanged("contact", newSetup => {
-    newSetup.contact.indexes[0].allowedRecordNodeIds.push(3)
+    newSetup.contact.indexes[0].allowedModelNodeIds.push(3)
   }))
 
   it("should detect child index map changed", testIndexChanged("contact", newSetup => {

@@ -109,7 +109,7 @@ const addToParent = obj => {
         i => i.name === `${parent.name}_index`
       )
       if (defaultIndex) {
-        defaultIndex.allowedRecordNodeIds.push(obj.nodeId)
+        defaultIndex.allowedModelNodeIds.push(obj.nodeId)
       }
     }
   }
@@ -183,7 +183,7 @@ const _getNewModelTemplate = (parent, name, createDefaultIndex, isSingle) => {
   if (createDefaultIndex) {
     const defaultIndex = getNewIndexTemplate(parent)
     defaultIndex.name = `${name}_index`
-    defaultIndex.allowedRecordNodeIds.push(node.nodeId)
+    defaultIndex.allowedModelNodeIds.push(node.nodeId)
   }
 
   return node
@@ -208,7 +208,7 @@ export const getNewIndexTemplate = (parent, type = "ancestor") =>
     getShardName: "",
     getSortKey: "record.id",
     aggregateGroups: [],
-    allowedRecordNodeIds: [],
+    allowedModelNodeIds: [],
     nodeId: getNodeId(parent),
   })
 

@@ -187,7 +187,7 @@
                 "getShardName": "",
                 "getSortKey": "record.id",
                 "aggregateGroups": [],
-                "allowedRecordNodeIds": [],
+                "allowedModelNodeIds": [],
                 "nodeId": 15
               }
             ],
@@ -237,7 +237,7 @@
                 "getShardName": "",
                 "getSortKey": "record.id",
                 "aggregateGroups": [],
-                "allowedRecordNodeIds": [],
+                "allowedModelNodeIds": [],
                 "nodeId": 9
               },
               {
@@ -249,7 +249,7 @@
                 "getShardName": "",
                 "getSortKey": "record.id",
                 "aggregateGroups": [],
-                "allowedRecordNodeIds": [],
+                "allowedModelNodeIds": [],
                 "nodeId": 10
               },
               {
@@ -261,7 +261,7 @@
                 "getShardName": "",
                 "getSortKey": "record.id",
                 "aggregateGroups": [],
-                "allowedRecordNodeIds": [],
+                "allowedModelNodeIds": [],
                 "nodeId": 28
               }
             ],
@@ -367,7 +367,7 @@
             "getShardName": "",
             "getSortKey": "record.id",
             "aggregateGroups": [],
-            "allowedRecordNodeIds": [
+            "allowedModelNodeIds": [
               2
             ],
             "nodeId": 23
@@ -381,7 +381,7 @@
             "getShardName": "return record.username.substring(0,2)",
             "getSortKey": "record.id",
             "aggregateGroups": [],
-            "allowedRecordNodeIds": [
+            "allowedModelNodeIds": [
               16
             ],
             "nodeId": 24
@@ -395,7 +395,7 @@
             "getShardName": "return record.name.substring(0,2)",
             "getSortKey": "record.id",
             "aggregateGroups": [],
-            "allowedRecordNodeIds": [
+            "allowedModelNodeIds": [
               8
             ],
             "nodeId": 25
@@ -409,7 +409,7 @@
             "getShardName": "",
             "getSortKey": "record.id",
             "aggregateGroups": [],
-            "allowedRecordNodeIds": [
+            "allowedModelNodeIds": [
               3
             ],
             "nodeId": 26
@@ -468,7 +468,7 @@
         "getShardName": "",
         "getSortKey": "record.id",
         "aggregateGroups": [],
-        "allowedRecordNodeIds": [
+        "allowedModelNodeIds": [
           1
         ],
         "nodeId": 22
@@ -482,7 +482,7 @@
         "getShardName": "return record.username.substring(0,2)",
         "getSortKey": "record.id",
         "aggregateGroups": [],
-        "allowedRecordNodeIds": [
+        "allowedModelNodeIds": [
           17
         ],
         "nodeId": 27

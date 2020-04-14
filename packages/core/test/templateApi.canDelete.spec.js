@@ -55,7 +55,7 @@ describe("canDeleteRecord", () => {
       basicAppHierarchyCreator_WithFields
     )
 
-    appHierarchy.root.indexes = appHierarchy.root.indexes.filter(i => !i.allowedRecordNodeIds.includes(appHierarchy.customerRecord.nodeId))
+    appHierarchy.root.indexes = appHierarchy.root.indexes.filter(i => !i.allowedModelNodeIds.includes(appHierarchy.customerRecord.nodeId))
     const result = canDeleteRecord(appHierarchy.customerRecord)
 
     expect(result.canDelete).toBe(true)

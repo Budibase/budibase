@@ -187,7 +187,7 @@ const indexHasChanged = (_new, old) =>
   _new.map !== old.map ||
   _new.filter !== old.filter ||
   _new.getShardName !== old.getShardName ||
-  difference(_new.allowedRecordNodeIds)(old.allowedRecordNodeIds).length > 0
+  difference(_new.allowedModelNodeIds)(old.allowedModelNodeIds).length > 0
 
 const isFieldSame = f1 => f2 => f1.name === f2.name && f1.type === f2.type
 
