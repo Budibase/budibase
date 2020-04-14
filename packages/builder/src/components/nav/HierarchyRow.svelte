@@ -18,7 +18,7 @@
 
   const ICON_MAP = {
     index: "ri-eye-line",
-    record: "ri-list-settings-line",
+    model: "ri-list-settings-line",
   }
 
   store.subscribe(state => {
@@ -45,7 +45,7 @@
   <div
     on:click={() => selectHierarchyItem(node)}
     class="budibase__nav-item hierarchy-item"
-    class:capitalized={type === 'record'}
+    class:capitalized={type === 'model'}
     style="padding-left: {20 + level * 20}px"
     class:selected={navActive}>
     <i class={ICON_MAP[type]} />
@@ -53,7 +53,7 @@
   </div>
   {#if node.children}
     {#each node.children as child}
-      <svelte:self node={child} level={level + 1} type="record" />
+      <svelte:self node={child} level={level + 1} type="model" />
     {/each}
   {/if}
   {#if node.indexes}
