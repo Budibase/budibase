@@ -14,9 +14,9 @@
 
   function newModel() {
     if ($store.currentNode) {
-      store.newChildRecord()
+      store.newChildModel()
     } else {
-      store.newRootRecord()
+      store.newRootModel()
     }
     open(
       CreateEditModelModal,

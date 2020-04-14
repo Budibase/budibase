@@ -168,7 +168,7 @@
         Save
       </ActionButton>
       {#if modelExistsInHierarchy}
-        <ActionButton color="primary" on:click={store.newChildRecord}>
+        <ActionButton color="primary" on:click={store.newChildModel}>
           Create Child Model on {record.name}
         </ActionButton>
         <ActionButton
