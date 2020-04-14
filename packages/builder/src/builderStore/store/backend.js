@@ -9,7 +9,7 @@ import {
   templateApi,
   isIndex,
   canDeleteIndex,
-  canDeleteRecord,
+  canDeleteModel,
 } from "components/common/core"
 
 export const getBackendUiStore = () => {
@@ -217,7 +217,7 @@ export const deleteCurrentNode = store => () => {
     const isRecord = hierarchyFunctions.isRecord(nodeToDelete)
 
     const check = isRecord
-      ? canDeleteRecord(nodeToDelete)
+      ? canDeleteModel(nodeToDelete)
       : canDeleteIndex(nodeToDelete)
 
     if (!check.canDelete) {

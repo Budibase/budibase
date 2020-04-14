@@ -5,7 +5,7 @@ import {
   basicAppHierarchyCreator_WithFields_AndIndexes,
 } from "./specHelpers"
 import { canDeleteIndex } from "../src/templateApi/canDeleteIndex"
-import { canDeleteRecord } from "../src/templateApi/canDeleteRecord"
+import { canDeleteModel } from "../src/templateApi/canDeleteModel"
 
 describe("canDeleteIndex", () => {
   it("should return no errors if deltion is valid", async () => {
@@ -49,14 +49,14 @@ describe("canDeleteIndex", () => {
 })
 
 
-describe("canDeleteRecord", () => {
+describe("canDeleteModel", () => {
   it("should return no errors when deletion is valid", async () => {
     const { appHierarchy } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields
     )
 
     appHierarchy.root.indexes = appHierarchy.root.indexes.filter(i => !i.allowedModelNodeIds.includes(appHierarchy.customerRecord.nodeId))
-    const result = canDeleteRecord(appHierarchy.customerRecord)
+    const result = canDeleteModel(appHierarchy.customerRecord)
 
     expect(result.canDelete).toBe(true)
     expect(result.errors).toEqual([])
@@ -67,7 +67,7 @@ describe("canDeleteRecord", () => {
       basicAppHierarchyCreator_WithFields
     )
 
-    const result = canDeleteRecord(appHierarchy.customerRecord)
+    const result = canDeleteModel(appHierarchy.customerRecord)
 
     expect(result.canDelete).toBe(false)
     expect(result.errors.some(e => e.includes("customer_index"))).toBe(true)
@@ -78,7 +78,7 @@ describe("canDeleteRecord", () => {
       basicAppHierarchyCreator_WithFields_AndIndexes
     )
 
-    const result = canDeleteRecord(appHierarchy.customerRecord)
+    const result = canDeleteModel(appHierarchy.customerRecord)
 
     expect(result.canDelete).toBe(false)
     expect(result.errors.some(e => e.includes("Outstanding Invoices"))).toBe(true)
