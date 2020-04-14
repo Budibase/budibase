@@ -115,7 +115,7 @@ export const newModel = (store, useRoot) => () => {
       ? shadowHierarchy
       : getNode(shadowHierarchy, state.currentNode.nodeId)
     state.errors = []
-    state.currentNode = templateApi(shadowHierarchy).getNewRecordTemplate(
+    state.currentNode = templateApi(shadowHierarchy).getNewModelTemplate(
       parent,
       "",
       true

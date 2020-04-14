@@ -3,7 +3,7 @@ import { getMemoryTemplateApi } from "./specHelpers"
 import { fieldErrors } from "../src/templateApi/fields"
 
 const getRecordTemplate = templateApi =>
-  $(templateApi.getNewRootLevel(), [templateApi.getNewRecordTemplate])
+  $(templateApi.getNewRootLevel(), [templateApi.getNewModelTemplate])
 
 const getValidField = templateApi => {
   const field = templateApi.getNewField("string")

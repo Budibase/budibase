@@ -13,7 +13,7 @@ describe("diffHierarchy", () => {
   it("should detect root record created", async () => {
     const oldHierarchy = (await setup()).root;
     const newSetup = await setup()
-    const opportunity = newSetup.templateApi.getNewRecordTemplate(newSetup.root, "opportunity", false)
+    const opportunity = newSetup.templateApi.getNewModelTemplate(newSetup.root, "opportunity", false)
     const diff = diffHierarchy(oldHierarchy, newSetup.root)
     expect(diff).toEqual([{
       newNode: opportunity,
@@ -25,8 +25,8 @@ describe("diffHierarchy", () => {
   it("should only detect root record, when newly created root record has children ", async () => {
     const oldHierarchy = (await setup()).root;
     const newSetup = await setup()
-    const opportunity = newSetup.templateApi.getNewRecordTemplate(newSetup.root, "opportunity", false)
-    newSetup.templateApi.getNewRecordTemplate(opportunity, "invoice", true)
+    const opportunity = newSetup.templateApi.getNewModelTemplate(newSetup.root, "opportunity", false)
+    newSetup.templateApi.getNewModelTemplate(opportunity, "invoice", true)
     const diff = diffHierarchy(oldHierarchy, newSetup.root)
     expect(diff).toEqual([{
       newNode: opportunity,
@@ -38,7 +38,7 @@ describe("diffHierarchy", () => {
   it("should detect child record created", async () => {
     const oldHierarchy = (await setup()).root;
     const newSetup = await setup()
-    const opportunity = newSetup.templateApi.getNewRecordTemplate(newSetup.contact, "opportunity", false)
+    const opportunity = newSetup.templateApi.getNewModelTemplate(newSetup.contact, "opportunity", false)
     const diff = diffHierarchy(oldHierarchy, newSetup.root)
     expect(diff).toEqual([{
       newNode: opportunity,
@@ -98,7 +98,7 @@ describe("diffHierarchy", () => {
   it("should detect root record field removed", async () => {
     const oldSetup = await setup()
     const newSetup = await setup()
-    newSetup.contact.fields =  newSetup.contact.fields.filter(f => f.name !== "name")
+    newSetup.contact.fields = newSetup.contact.fields.filter(f => f.name !== "name")
     const diff = diffHierarchy(oldSetup.root, newSetup.root)
     expect(diff).toEqual([{
       newNode: newSetup.contact,
@@ -110,7 +110,7 @@ describe("diffHierarchy", () => {
   it("should detect child record field removed", async () => {
     const oldSetup = await setup()
     const newSetup = await setup()
-    newSetup.deal.fields =  newSetup.deal.fields.filter(f => f.name !== "name")
+    newSetup.deal.fields = newSetup.deal.fields.filter(f => f.name !== "name")
     const diff = diffHierarchy(oldSetup.root, newSetup.root)
     expect(diff).toEqual([{
       newNode: newSetup.deal,
@@ -118,7 +118,7 @@ describe("diffHierarchy", () => {
       type: HierarchyChangeTypes.recordFieldsChanged
     }])
   })
-  
+
   it("should detect record field added", async () => {
     const oldSetup = await setup()
     const newSetup = await setup()
@@ -140,7 +140,7 @@ describe("diffHierarchy", () => {
     const notesField = newSetup.templateApi.getNewField("string")
     notesField.name = "notes"
     newSetup.templateApi.addField(newSetup.contact, notesField)
-    newSetup.contact.fields =  newSetup.contact.fields.filter(f => f.name !== "name")
+    newSetup.contact.fields = newSetup.contact.fields.filter(f => f.name !== "name")
     const diff = diffHierarchy(oldSetup.root, newSetup.root)
     expect(diff).toEqual([{
       newNode: newSetup.contact,
@@ -152,7 +152,7 @@ describe("diffHierarchy", () => {
   it("should detect root record estimated record count changed", async () => {
     const oldSetup = await setup()
     const newSetup = await setup()
-    newSetup.contact.estimatedRecordCount =  987
+    newSetup.contact.estimatedRecordCount = 987
     const diff = diffHierarchy(oldSetup.root, newSetup.root)
     expect(diff).toEqual([{
       newNode: newSetup.contact,
@@ -164,7 +164,7 @@ describe("diffHierarchy", () => {
   it("should detect root record estimated record count changed", async () => {
     const oldSetup = await setup()
     const newSetup = await setup()
-    newSetup.deal.estimatedRecordCount =  987
+    newSetup.deal.estimatedRecordCount = 987
     const diff = diffHierarchy(oldSetup.root, newSetup.root)
     expect(diff).toEqual([{
       newNode: newSetup.deal,
