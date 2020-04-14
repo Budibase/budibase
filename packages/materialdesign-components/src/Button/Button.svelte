@@ -55,11 +55,11 @@
     {disabled}
     on:click={clicked}>
     {#if renderLeadingIcon}
-      <Icon context="button" {icon} />
+      <Icon context="button__icon" {icon} />
     {/if}
     <span class={labelClass}>{text}</span>
     {#if renderTrailingIcon}
-      <Icon context="button" {icon} />
+      <Icon context="button__icon" {icon} />
     {/if}
   </button>
 {/if}

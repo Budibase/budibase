@@ -10,7 +10,7 @@
 
   export let _bb
   export let onChange = value => {}
-  export let variant = "continuous" //or discrete
+  export let variant = "continuous"
   export let showTicks = false
   export let min = 0
   export let max = 100
@@ -28,7 +28,7 @@
   }
 
   onMount(() => {
-    let s = MDCSlider.attachTo(slider)
+    instance = new MDCSlider(slider)
     return () => instance.destroy()
   })
 
@@ -48,17 +48,22 @@
 
 <div
   bind:this={slider}
-  class="mdc-slider mdc-slider--discrete"
+  class={sliderCls}
   tabindex="0"
   role="slider"
-  aria-valuemin="0"
-  aria-valuemax="100"
-  aria-valuenow="0"
-  aria-label="Select Value"
+  data-step={step}
+  aria-valuemin={min}
+  aria-valuemax={max}
+  aria-valuenow={value}
+  aria-label={label}
+  aria-disabled={disabled}
   on:MDCSlider:input={e => handleChange(e.detail.value)}
   on:MDCSlider:change={e => handleChange(e.detail.value)}>
   <div class="mdc-slider__track-container">
     <div class="mdc-slider__track" />
+    {#if displayMarkers}
+      <div class="mdc-slider__track-marker-container" />
+    {/if}
   </div>
   <div class="mdc-slider__thumb-container">
     <div class="mdc-slider__pin">

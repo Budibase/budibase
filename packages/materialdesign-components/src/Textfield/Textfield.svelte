@@ -45,8 +45,6 @@
   export let useIconButton = false
   export let iconButtonClick = () => {}
   export let textarea = false
-  export let rows = 4
-  export let cols = 40
   export let validation = false
   export let persistent = false
   export let value
@@ -88,8 +86,6 @@
   const blockClasses = cb.build({ props })
   const inputClasses = cb.elem("input")
 
-  let renderMaxLength = !!maxLength ? `0 / ${maxLength}` : "0"
-
   function focus(event) {
     tfInstance.focus()
   }
@@ -111,19 +107,21 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
 <div class="textfield-container" class:fullwidth>
   <div bind:this={tf} bind:clientHeight={tfHeight} class={blockClasses}>
     {#if textarea}
-      <CharacterCounter />
+      {#if maxLength}
+        <CharacterCounter />
+      {/if}
       <textarea
         {id}
         class={inputClasses}
         class:fullwidth
         {disabled}
-        {rows}
-        {cols}
+        rows="5"
+        cols="70"
         {required}
         {placeholder}
-        {minLength}
-        maxLength={safeMaxLength}
         {value}
+        {minLength}
+        maxlength={safeMaxLength}
         on:change={changed} />
     {:else}
       {#if renderLeadingIcon}
@@ -134,7 +132,7 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
             context="mdc-text-field__icon mdc-text-field__icon--leading"
             onClick={iconButtonClick} />
         {:else}
-          <Icon context="text-field" {icon} />
+          <Icon context="text-field__icon" {icon} />
         {/if}
       {/if}
       <input
@@ -143,9 +141,9 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
         class={inputClasses}
         {type}
         {required}
-        placeholder={!!label && fullwidth ? label : placeholder}
         {minLength}
         maxLength={safeMaxLength}
+        placeholder={!!label && fullwidth ? label : placeholder}
         {value}
         aria-label={`Textfield ${variant}`}
         on:focus={focus}
@@ -158,7 +156,7 @@ TODO:Needs error handling - this will depend on how Budibase handles errors
             context="mdc-text-field__icon mdc-text-field__icon--trailing"
             onClick={iconButtonClick} />
         {:else}
-          <Icon context="text-field" {icon} />
+          <Icon context="text-field__icon" {icon} />
         {/if}
       {/if}
       {#if variant !== 'outlined'}

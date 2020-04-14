@@ -23,6 +23,7 @@
 
   let daysArr = []
   let navDate = new Date()
+
   const weekdayMap = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
   export let _bb
@@ -50,6 +51,7 @@
     let year = getYear(navDate)
     date = new Date(year, month, dayOfMonth)
     handleSelect(date)
+    openCalendar(false)
   }
 
   function dateFieldChange(value) {
@@ -77,12 +79,13 @@
     instance.open = isOpen === undefined ? !instance.open : isOpen
   }
 
+  $: safeDate = !!date ? date : new Date()
   $: dateMonthEnds = endOfMonth(navDate).getDate()
   $: dateMonthBegins = startOfMonth(navDate).getDay()
   $: dayStart = dateMonthBegins + 1 //1 = sunday
   $: monthAndYear = format(navDate, "MMMM y")
-  $: selectedDate = format(date, "dd/MM/yyyy")
-  $: dayOfSelectedDate = getDate(date)
+  $: selectedDate = format(safeDate, "dd/MM/yyyy")
+  $: dayOfSelectedDate = getDate(safeDate)
   $: for (let d = 1; d <= dateMonthEnds; d++) {
     if (d === 1) {
       daysArr = [d]
@@ -93,7 +96,8 @@
   $: rowRepeater =
     dateMonthBegins > 5 && daysArr[daysArr.length - 1] > 30 ? 6 : 5
   $: sameMonthAndYear =
-    getMonth(date) === getMonth(navDate) && getYear(date) === getYear(navDate)
+    getMonth(safeDate) === getMonth(navDate) &&
+    getYear(safeDate) === getYear(navDate)
 </script>
 
 <div class="mdc-menu-surface--anchor">
@@ -107,10 +111,7 @@
     iconButtonClick={openCalendar}
     icon="calendar_today" />
 
-  <div
-    bind:this={menu}
-    class="mdc-menu mdc-menu-surface bbmd-menu"
-    style={`margin-top: 70px`}>
+  <div bind:this={menu} class="mdc-menu mdc-menu-surface bbmd-menu">
     <div class="calendar-container">
       <div class="month-picker">
         <div>
@@ -155,6 +156,7 @@
     width: 330px;
     height: auto;
     padding: 5px;
+    margin-top: 70px;
   }
 
   .month-picker {

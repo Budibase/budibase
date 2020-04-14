@@ -17,7 +17,7 @@
   let selectList
   let instance
   let _helperId = ""
-  let listItems = []
+  // let listItems = []
 
   export let _bb
   export let onSelect = items => {}
@@ -34,7 +34,9 @@
 
   onMount(() => {
     _bb.setContext("BBMD:list:props", { singleSelection: true })
-    _bb.setContext("BBMD:list:addItem", i => (listItems = [...listItems, i]))
+
+    //May not be necessary as state binds from value below. Commenting for now.
+    // _bb.setContext("BBMD:list:addItem", i => (listItems = [...listItems, i]))
 
     selectedItemsStore = createItemsStore(() => {
       const v =
@@ -66,9 +68,9 @@
   $: modifiers = { variant, disabled, required, noLabel: !label }
   $: props = { modifiers }
   $: selectClass = cb.build({ props })
-  $: if (value !== undefined && instance && listItems.length > 0) {
-    instance.selectedIndex = listItems.findIndex(i => i.value === value)
-  }
+  // $: if (value !== undefined && instance && listItems.length > 0) {
+  //   instance.selectedIndex = listItems.findIndex(i => i.value === value)
+  // }
 </script>
 
 <div bind:this={select} id={_helperId} class={selectClass}>
