@@ -42,7 +42,7 @@ export const getMemoryStore = () => setupDatastore(memory({}))
 export const getMemoryTemplateApi = store => {
   const app = {
     datastore: store || getMemoryStore(),
-    publish: () => {},
+    publish: () => { },
     getEpochTime: async () => new Date().getTime(),
     user: { name: "", permissions: [permission.writeTemplates.get()] },
   }
@@ -78,7 +78,7 @@ export const appFromTempalteApi = async (
   const fullPermissions = generateFullPermissions(app)
   app.user.permissions = fullPermissions
 
-  if (disableCleanupTransactions) setCleanupFunc(app, async () => {})
+  if (disableCleanupTransactions) setCleanupFunc(app, async () => { })
   else setCleanupFunc(app)
 
   return app
@@ -138,15 +138,15 @@ export const hierarchyFactory = (...additionalFeatures) => templateApi => {
   const settingsRecord = templateApi.getNewSingleRecordTemplate(root)
   settingsRecord.name = "settings"
 
-  const customerRecord = templateApi.getNewRecordTemplate(root, "customer")
+  const customerRecord = templateApi.getNewModelTemplate(root, "customer")
   customerRecord.collectionName = "customers"
   findCollectionDefaultIndex(customerRecord).map =
     "return {surname:record.surname, isalive:record.isalive, partner:record.partner};"
 
-  const partnerRecord = templateApi.getNewRecordTemplate(root, "partner")
+  const partnerRecord = templateApi.getNewModelTemplate(root, "partner")
   partnerRecord.collectionName = "partners"
 
-  const partnerInvoiceRecord = templateApi.getNewRecordTemplate(
+  const partnerInvoiceRecord = templateApi.getNewModelTemplate(
     partnerRecord,
     "invoice"
   )
@@ -154,7 +154,7 @@ export const hierarchyFactory = (...additionalFeatures) => templateApi => {
   findCollectionDefaultIndex(partnerInvoiceRecord).name =
     "partnerInvoices_index"
 
-  const invoiceRecord = templateApi.getNewRecordTemplate(
+  const invoiceRecord = templateApi.getNewModelTemplate(
     customerRecord,
     "invoice"
   )
@@ -162,7 +162,7 @@ export const hierarchyFactory = (...additionalFeatures) => templateApi => {
   findCollectionDefaultIndex(invoiceRecord).map =
     "return {createdDate: record.createdDate, totalIncVat: record.totalIncVat};"
 
-  const chargeRecord = templateApi.getNewRecordTemplate(invoiceRecord, "charge")
+  const chargeRecord = templateApi.getNewModelTemplate(invoiceRecord, "charge")
   chargeRecord.collectionName = "charges"
 
   const hierarchy = {

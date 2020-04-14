@@ -16,10 +16,10 @@ describe("hierarchy node creation", () => {
     expect(root.nodeName()).toBe("/")
   })
 
-  it("> getNewRecordTemplate > should be initialise with correct members", async () => {
+  it("> getNewModelTemplate > should be initialise with correct members", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const record = templateApi.getNewRecordTemplate(root)
+    const record = templateApi.getNewModelTemplate(root)
     record.name = "child"
     expect(record.type).toBe("record")
     expect(record.children).toEqual([])
@@ -45,7 +45,7 @@ describe("hierarchy node creation", () => {
     expect(record.isSingle).toBe(true)
   })
 
-  it("> getNewrecordTemplate > should have static pathRegx if is singlerecord", async () => {
+  it("> getNewModelTemplate > should have static pathRegx if is singlerecord", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
     const record = templateApi.getNewSingleRecordTemplate(root)
@@ -53,59 +53,59 @@ describe("hierarchy node creation", () => {
     expect(record.pathRegx()).toBe("/child")
   })
 
-  it("> getNewrecordTemplate > should add itself to parent records's children", async () => {
+  it("> getNewModelTemplate > should add itself to parent records's children", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const parentRecord = templateApi.getNewRecordTemplate(root)
-    const record = templateApi.getNewRecordTemplate(parentRecord)
+    const parentRecord = templateApi.getNewModelTemplate(root)
+    const record = templateApi.getNewModelTemplate(parentRecord)
     expect(parentRecord.children.length).toBe(1)
     expect(parentRecord.children[0]).toBe(record)
   })
 
-  it("> getNewrecordTemplate > child should get correct nodeName ", async () => {
+  it("> getNewModelTemplate > child should get correct nodeName ", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const parentRecord = templateApi.getNewRecordTemplate(root)
+    const parentRecord = templateApi.getNewModelTemplate(root)
     parentRecord.name = "parent"
-    const record = templateApi.getNewRecordTemplate(parentRecord)
+    const record = templateApi.getNewModelTemplate(parentRecord)
     record.name = "child"
     expect(record.nodeName()).toBe(`/${parentRecord.name}/${record.name}`)
   })
 
-  it("> getNewrecordTemplate > should add itself to parents's default index allowedNodeIds", async () => {
+  it("> getNewModelTemplate > should add itself to parents's default index allowedNodeIds", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const parentRecord = templateApi.getNewRecordTemplate(root)
-    const record = templateApi.getNewRecordTemplate(parentRecord)
+    const parentRecord = templateApi.getNewModelTemplate(root)
+    const record = templateApi.getNewModelTemplate(parentRecord)
     expect(root.indexes[0].allowedRecordNodeIds).toEqual([parentRecord.nodeId])
     expect(parentRecord.indexes[0].allowedRecordNodeIds).toEqual([
       record.nodeId,
     ])
   })
 
-  it("> getNewrecordTemplate > should add itself to root's children", async () => {
+  it("> getNewModelTemplate > should add itself to root's children", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const record = templateApi.getNewRecordTemplate(root)
+    const record = templateApi.getNewModelTemplate(root)
     expect(root.children.length).toBe(1)
     expect(root.children[0]).toBe(record)
   })
 
-  it("> getNewrecordTemplate > should have dynamic pathRegx if parent is record", async () => {
+  it("> getNewModelTemplate > should have dynamic pathRegx if parent is record", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const parent = templateApi.getNewRecordTemplate(root)
+    const parent = templateApi.getNewModelTemplate(root)
     parent.collectionName = "customers"
-    const record = templateApi.getNewRecordTemplate(parent)
+    const record = templateApi.getNewModelTemplate(parent)
     record.name = "child"
     expect(record.pathRegx().startsWith("/customers")).toBe(true)
     expect(record.pathRegx().includes("[")).toBe(true)
   })
 
-  it("> getNewrecordTemplate > should add default index", async () => {
+  it("> getNewModelTemplate > should add default index", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const record = templateApi.getNewRecordTemplate(root, "rec")
+    const record = templateApi.getNewModelTemplate(root, "rec")
     expect(root.indexes.length).toBe(1)
     expect(root.indexes[0].name).toBe("rec_index")
   })
@@ -138,7 +138,7 @@ describe("hierarchy node creation", () => {
   it("> getNewIndexTemplate > should add itself to record indexes", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const record = templateApi.getNewRecordTemplate(root)
+    const record = templateApi.getNewModelTemplate(root)
     const index = templateApi.getNewIndexTemplate(record)
     expect(record.indexes.length).toBe(1)
     expect(record.indexes[0]).toBe(index)
@@ -150,7 +150,7 @@ describe("hierarchy node creation", () => {
     expect(() => templateApi.getNewIndexTemplate()).toThrow(
       errors.allNonRootNodesMustHaveParent
     )
-    expect(() => templateApi.getNewRecordTemplate()).toThrow(
+    expect(() => templateApi.getNewModelTemplate()).toThrow(
       errors.allNonRootNodesMustHaveParent
     )
   })
@@ -158,8 +158,8 @@ describe("hierarchy node creation", () => {
   it("> adding node > should just add one (bugfix)", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const parent = templateApi.getNewRecordTemplate(root)
-    templateApi.getNewRecordTemplate(parent)
+    const parent = templateApi.getNewModelTemplate(root)
+    templateApi.getNewModelTemplate(parent)
 
     expect(root.children.length).toBe(1)
     expect(parent.children.length).toBe(1)
@@ -174,7 +174,7 @@ describe("hierarchy node creation", () => {
   it("> getNewAggregateGroupTemplate > should add itself to index aggregateGroups", async () => {
     const { templateApi } = await getMemoryTemplateApi()
     const root = templateApi.getNewRootLevel()
-    const record = templateApi.getNewRecordTemplate(root)
+    const record = templateApi.getNewModelTemplate(root)
     const index = templateApi.getNewIndexTemplate(record)
     const aggregateGroup = templateApi.getNewAggregateGroupTemplate(index)
     expect(index.aggregateGroups.length).toBe(1)

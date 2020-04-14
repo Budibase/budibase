@@ -13,7 +13,7 @@ import { findCollectionDefaultIndex } from "./specHelpers"
 const createValidHierarchy = () => {
   const root = createNodes.getNewRootLevel()
 
-  const customerRecord = createNodes.getNewRecordTemplate(root, "customer")
+  const customerRecord = createNodes.getNewModelTemplate(root, "customer")
   customerRecord.collectionName = "customers"
 
   const customersDefaultIndex = findCollectionDefaultIndex(customerRecord)
@@ -27,7 +27,7 @@ const createValidHierarchy = () => {
   allCustomersOwedFunctions.aggregatedValue = "return record.owed"
   allCustomersOwedFunctions.name = "all customers owed amount"
 
-  const partnerRecord = createNodes.getNewRecordTemplate(root, "partner")
+  const partnerRecord = createNodes.getNewModelTemplate(root, "partner")
   partnerRecord.collectionName = "partners"
   partnerRecord.name = "partner"
   const businessName = getNewField("string")

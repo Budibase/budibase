@@ -49,7 +49,7 @@ const nodeKeyMaker = node => () =>
   )(node)
 
 const nodeNameMaker = node => () =>
-    isRoot(node) 
+  isRoot(node)
     ? "/"
     : joinKey(node.parent().nodeName(), node.name)
 
@@ -165,7 +165,7 @@ export const getNewRootLevel = () =>
     nodeId: 0,
   })
 
-const _getNewRecordTemplate = (parent, name, createDefaultIndex, isSingle) => {
+const _getNewModelTemplate = (parent, name, createDefaultIndex, isSingle) => {
   const nodeId = getNodeId(parent)
   const node = constructNode(parent, {
     name,
@@ -189,14 +189,14 @@ const _getNewRecordTemplate = (parent, name, createDefaultIndex, isSingle) => {
   return node
 }
 
-export const getNewRecordTemplate = (
+export const getNewModelTemplate = (
   parent,
   name = "",
   createDefaultIndex = true
-) => _getNewRecordTemplate(parent, name, createDefaultIndex, false)
+) => _getNewModelTemplate(parent, name, createDefaultIndex, false)
 
 export const getNewSingleRecordTemplate = parent =>
-  _getNewRecordTemplate(parent, "", false, true)
+  _getNewModelTemplate(parent, "", false, true)
 
 export const getNewIndexTemplate = (parent, type = "ancestor") =>
   constructNode(parent, {
@@ -233,7 +233,7 @@ export const getNewAggregateTemplate = set => {
 
 export default {
   getNewRootLevel,
-  getNewRecordTemplate,
+  getNewModelTemplate,
   getNewIndexTemplate,
   createNodeErrors,
   constructHierarchy,

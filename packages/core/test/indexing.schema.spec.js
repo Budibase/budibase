@@ -76,7 +76,7 @@ const setup = includeFish => setupApphierarchy(createApp(includeFish))
 const createApp = includeFish => templateApi => {
   const root = templateApi.getNewRootLevel()
 
-  const dogRecord = templateApi.getNewRecordTemplate(root, "dog")
+  const dogRecord = templateApi.getNewModelTemplate(root, "dog")
 
   const addField = recordNode => (name, type, typeOptions) => {
     const field = templateApi.getNewField(type)
@@ -97,7 +97,7 @@ const createApp = includeFish => templateApi => {
 
   let fishStuff = {}
   if (includeFish) {
-    const fishRecord = templateApi.getNewRecordTemplate(root, "fish")
+    const fishRecord = templateApi.getNewModelTemplate(root, "fish")
     const addFishField = addField(fishRecord)
     addFishField("name", "string")
     addFishField("isAlive", "bool")
