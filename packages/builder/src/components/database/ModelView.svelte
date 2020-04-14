@@ -23,8 +23,7 @@
   import { templateApi, pipe, validate } from "components/common/core"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
 
-  let record
-  let getIndexAllowedRecords
+  let model
   let editingField = false
   let fieldToEdit
   let isNewField = false
@@ -34,22 +33,14 @@
   let onFinishedFieldEdit
   let editIndex
 
-  $: models = $store.hierarchy.children
-  $: parent = record && record.parent()
+  $: parent = model && model.parent()
   $: isChildModel = parent && parent.name !== "root"
   $: modelExistsInHierarchy =
     $store.currentNode && getNode($store.hierarchy, $store.currentNode.nodeId)
 
   store.subscribe($store => {
-    record = $store.currentNode
+    model = $store.currentNode
     const flattened = hierarchy.getFlattenedHierarchy($store.hierarchy)
-
-    getIndexAllowedRecords = compose(
-      join(", "),
-      map(id => flattened.find(n => n.nodeId === id).name),
-      filter(id => flattened.some(n => n.nodeId === id)),
-      get("allowedRecordNodeIds")
-    )
 
     newField = () => {
       isNewField = true
@@ -94,8 +85,8 @@
 
   const nameChanged = ev => {
     const pluralName = n => `${n}s`
-    if (record.collectionName === "") {
-      record.collectionName = pluralName(ev.target.value)
+    if (model.collectionName === "") {
+      model.collectionName = pluralName(ev.target.value)
     }
   }
 </script>
@@ -119,7 +110,7 @@
 
     <form on:submit|preventDefault class="uk-form-stacked">
 
-      <Textbox label="Name" bind:text={record.name} on:change={nameChanged} />
+      <Textbox label="Name" bind:text={model.name} on:change={nameChanged} />
       {#if isChildModel}
         <div>
           <label class="uk-form-label">Parent</label>
@@ -144,7 +135,7 @@
         </tr>
       </thead>
       <tbody>
-        {#each record ? record.fields : [] as field}
+        {#each model ? model.fields : [] as field}
           <tr>
             <td>
               <i class="ri-more-line" on:click={() => editField(field)} />
@@ -169,7 +160,7 @@
       </ActionButton>
       {#if modelExistsInHierarchy}
         <ActionButton color="primary" on:click={store.newChildModel}>
-          Create Child Model on {record.name}
+          Create Child Model on {model.name}
         </ActionButton>
         <ActionButton
           color="primary"
@@ -178,7 +169,7 @@
             await tick()
             store.newChildIndex()
           }}>
-          Create Child View on {record.name}
+          Create Child View on {model.name}
         </ActionButton>
         <ActionButton alert on:click={store.deleteCurrentNode}>
           Delete
@@ -190,7 +181,7 @@
   <FieldView
     field={fieldToEdit}
     onFinished={onFinishedFieldEdit}
-    allFields={record.fields}
+    allFields={model.fields}
     store={$store} />
 {/if}
 
