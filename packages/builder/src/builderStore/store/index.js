@@ -20,8 +20,6 @@ import { generate_screen_css } from "../generate_css"
 import { insertCodeMetadata } from "../insertCodeMetadata"
 import { uuid } from "../uuid"
 
-let appname = ""
-
 export const getStore = () => {
   const initial = {
     apps: [],
