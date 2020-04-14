@@ -10,7 +10,7 @@ import {
   isArray,
   has,
 } from "lodash/fp"
-import { $ } from "../../common/index.mjs"
+import { $ } from "../../common"
 import { parsedSuccess } from "./typeHelpers"
 import string from "./string"
 import bool from "./bool"
@@ -19,7 +19,7 @@ import datetime from "./datetime"
 import array from "./array"
 import link from "./link"
 import file from "./file"
-import { BadRequestError } from "../../common/errors.mjs"
+import { BadRequestError } from "../../common/errors"
 
 const allTypes = () => {
   const basicTypes = {

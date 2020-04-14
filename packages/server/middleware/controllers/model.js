@@ -38,6 +38,7 @@ exports.fetch = async function(ctx) {
 exports.create = async function(ctx) {
   const db = couchdb.db.use(ctx.params.instanceId);
   const newModel = await db.insert(ctx.request.body);
+
   const designDoc = await db.get("_design/database");
   designDoc.views = {
     ...designDoc.views,
@@ -47,8 +48,8 @@ exports.create = async function(ctx) {
       }
     }
   };
-
   await db.insert(designDoc, designDoc._id);
+
   ctx.body = {
     ...newModel,
     message: `Model ${ctx.request.body.name} created successfully.`,

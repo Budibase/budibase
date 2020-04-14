@@ -1,4 +1,3 @@
-//
 import { filter, cloneDeep, last, concat, isEmpty, values } from "lodash/fp"
 import { pipe, getNode, constructHierarchy } from "components/common/core"
 import * as backendStoreActions from "./backend"
@@ -392,13 +391,11 @@ const addComponentLibrary = store => async lib => {
 }
 
 const removeComponentLibrary = store => lib => {
-  store.update(s => {
-    s.pages.componentLibraries = filter(l => l !== lib)(
-      s.pages.componentLibraries
-    )
-    _savePage(s)
+  store.update(state => {
+    state.pages.componentLibraries = state.pages.componentLibraries.filter(l => l !== lib);
+    _savePage(state);
 
-    return s
+    return state;
   })
 }
 
@@ -411,10 +408,10 @@ const addStylesheet = store => stylesheet => {
 }
 
 const removeStylesheet = store => stylesheet => {
-  store.update(s => {
-    s.pages.stylesheets = filter(s => s !== stylesheet)(s.pages.stylesheets)
-    _savePage(s)
-    return s
+  store.update(state => {
+    state.pages.stylesheets = s.pages.stylesheets.filter(s => s !== stylesheet)
+    _savePage(state)
+    return state
   })
 }
 

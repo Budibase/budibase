@@ -11,7 +11,7 @@ import {
   defaultCase,
   isOneOf,
   toBoolOrNull,
-} from "../../common/index.mjs"
+} from "../../common/index.js"
 
 const boolFunctions = typeFunctions({
   default: constant(null),

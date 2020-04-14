@@ -6,7 +6,7 @@ import {
   isNothingOrEmpty,
   isNothing,
 } from "../common"
-import { all, getDefaultOptions } from "./types/index.mjs"
+import { all, getDefaultOptions } from "./types/index.js"
 import { applyRuleSet, makerule } from "../common/validationCommon"
 import { BadRequestError } from "../common/errors"
 import { generate } from "shortid"

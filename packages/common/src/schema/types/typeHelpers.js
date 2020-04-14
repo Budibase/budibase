@@ -1,6 +1,6 @@
 import { merge } from "lodash"
 import { constant, isUndefined, has, mapValues, cloneDeep } from "lodash/fp"
-import { isNotEmpty } from "../../common/index.mjs"
+import { isNotEmpty } from "../../common/index.js"
 
 export const getSafeFieldParser = (tryParse, defaultValueFunctions) => (
   field,

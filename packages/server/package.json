@@ -19,6 +19,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@budibase/client": "^0.0.32",
+    "@budibase/common": "0.0.32",
     "@budibase/core": "^0.0.32",
     "@koa/router": "^8.0.0",
     "fs-extra": "^8.1.0",

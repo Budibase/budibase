@@ -1,11 +1,10 @@
-const { map, reduce, filter, isEmpty, flatten, each, union } = require("lodash/fp");
-const { compileCode } = require("../common/compileCode");
-const { validateFieldParse, validateTypeConstraints } = require("../schema/types");
+import { map, reduce, filter, isEmpty, flatten, each, union } from "lodash/fp";
+import { compileCode } from "../common/compileCode";
 import {
   validateFieldParse,
   validateTypeConstraints,
 } from "../schema/types/index.js"
-import { $, isNonEmptyString } from "../common/index.mjs"
+import { $, isNonEmptyString } from "../common/index.js"
 
 const fieldParseError = (fieldName, value) => ({
   fields: [fieldName],
