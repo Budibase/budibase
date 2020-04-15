@@ -3,7 +3,7 @@ import { permission } from "./permissions"
 import {
   getFlattenedHierarchy,
   isIndex,
-  isRecord,
+  isModel,
 } from "../templateApi/hierarchy"
 import { $ } from "../common"
 
@@ -11,7 +11,7 @@ export const generateFullPermissions = app => {
   const allNodes = getFlattenedHierarchy(app.hierarchy)
   const accessLevel = { permissions: [] }
 
-  const recordNodes = $(allNodes, [filter(isRecord)])
+  const recordNodes = $(allNodes, [filter(isModel)])
 
   for (const n of recordNodes) {
     permission.createRecord.add(n.nodeKey(), accessLevel)

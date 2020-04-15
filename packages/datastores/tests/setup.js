@@ -20,7 +20,7 @@ export default async datastore => {
   const clients = templateApi.getNewCollectionTemplate(root)
   clients.name = "clients"
 
-  const client = templateApi.getNewRecordTemplate(clients)
+  const client = templateApi.getNewModelTemplate(clients)
   client.name = "client"
   addStringField(client, "FamilyName")
   addStringField(client, "Address1")
@@ -33,7 +33,7 @@ export default async datastore => {
   const children = templateApi.getNewCollectionTemplate(client)
   children.name = "children"
 
-  const child = templateApi.getNewRecordTemplate(children)
+  const child = templateApi.getNewModelTemplate(children)
   child.name = "child"
   addStringField(child, "FirstName")
   addStringField(child, "Surname")
@@ -43,7 +43,7 @@ export default async datastore => {
   const contacts = templateApi.getNewCollectionTemplate(client)
   contacts.name = "contacts"
 
-  const contact = templateApi.getNewRecordTemplate(contacts)
+  const contact = templateApi.getNewModelTemplate(contacts)
   contact.name = "contact"
   addStringField(contact, "Name")
   addStringField(contact, "relationship")

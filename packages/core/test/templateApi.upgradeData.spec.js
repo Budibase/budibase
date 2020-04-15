@@ -1,4 +1,4 @@
-import { 
+import {
   getRecordApiFromTemplateApi,
   getIndexApiFromTemplateApi,
 } from "./specHelpers"
@@ -24,7 +24,7 @@ describe("upgradeData", () => {
     ])
 
     expect(remainingKeys.length).toBe(0)
-    
+
   })
 
   it("should not delete other root record types, when root record node deleted", async () => {
@@ -39,7 +39,7 @@ describe("upgradeData", () => {
     ])
 
     expect(remainingKeys.length > 0).toBe(true)
-    
+
   })
 
   it("should delete all child records, when child record node deleted", async () => {
@@ -67,7 +67,7 @@ describe("upgradeData", () => {
     const { oldSetup, newSetup } = await configure()
     const newIndex = newSetup.templateApi.getNewIndexTemplate(newSetup.root)
     newIndex.name = "more_contacts"
-    newIndex.allowedRecordNodeIds = [newSetup.contact.nodeId]
+    newIndex.allowedModelNodeIds = [newSetup.contact.nodeId]
 
     await upgradeData(oldSetup.app)(newSetup.root)
 
@@ -112,7 +112,7 @@ describe("upgradeData", () => {
     const { oldSetup, newSetup, records } = await configure()
     const newIndex = newSetup.templateApi.getNewIndexTemplate(newSetup.contact)
     newIndex.name = "more_deals"
-    newIndex.allowedRecordNodeIds = [newSetup.deal.nodeId]
+    newIndex.allowedModelNodeIds = [newSetup.deal.nodeId]
 
     await upgradeData(oldSetup.app)(newSetup.root)
 
@@ -159,20 +159,20 @@ describe("upgradeData", () => {
     const { oldSetup, newSetup, records, recordApi } = await configure()
     const newIndex = newSetup.templateApi.getNewIndexTemplate(newSetup.lead)
     newIndex.name = "contact_leads"
-    newIndex.allowedRecordNodeIds = [newSetup.lead.nodeId]
+    newIndex.allowedModelNodeIds = [newSetup.lead.nodeId]
     newIndex.indexType = "reference"
 
     const leadField = newSetup.templateApi.getNewField("string")
     leadField.name = "lead"
     leadField.type = "reference"
     leadField.typeOptions = {
-      reverseIndexNodeKeys: [ newIndex.nodeKey() ],
+      reverseIndexNodeKeys: [newIndex.nodeKey()],
       indexNodeKey: "/lead_index",
       displayValue: "name"
     }
 
     newSetup.templateApi.addField(newSetup.contact, leadField)
-    
+
     await upgradeData(oldSetup.app)(newSetup.root)
 
     const indexKey = `${records.lead1.key}/contact_leads`
@@ -194,7 +194,7 @@ describe("upgradeData", () => {
 
   it("should initialise a new root record", async () => {
     const { oldSetup, newSetup } = await configure()
-    const invoice = newSetup.templateApi.getNewRecordTemplate(newSetup.root, "invoice", true)
+    const invoice = newSetup.templateApi.getNewModelTemplate(newSetup.root, "invoice", true)
     invoice.collectionName = "invoices"
 
     const nameField = newSetup.templateApi.getNewField("string")
@@ -207,7 +207,7 @@ describe("upgradeData", () => {
 
     expect(itemsInNewIndex.length).toBe(0)
 
-    const newInvoice  = _getNew(invoice, "/invoices")
+    const newInvoice = _getNew(invoice, "/invoices")
     await _save(newSetup.app, newInvoice)
 
     itemsInNewIndex = await _listItems(newSetup.app, "/invoice_index")
@@ -217,7 +217,7 @@ describe("upgradeData", () => {
 
   it("should initialise a new child record", async () => {
     const { oldSetup, newSetup, records } = await configure()
-    const invoice = newSetup.templateApi.getNewRecordTemplate(newSetup.contact, "invoice", true)
+    const invoice = newSetup.templateApi.getNewModelTemplate(newSetup.contact, "invoice", true)
     invoice.collectionName = "invoices"
 
     const nameField = newSetup.templateApi.getNewField("string")
@@ -230,7 +230,7 @@ describe("upgradeData", () => {
 
     expect(itemsInNewIndex.length).toBe(0)
 
-    const newInvoice  = _getNew(invoice, `${records.contact1.key}/invoices`)
+    const newInvoice = _getNew(invoice, `${records.contact1.key}/invoices`)
     await _save(newSetup.app, newInvoice)
 
     itemsInNewIndex = await _listItems(newSetup.app, `${records.contact1.key}/invoice_index`)
@@ -258,7 +258,7 @@ it("should rebuild affected index when field is removed", async () => {
 
 it("should rebuild affected index when field is added", async () => {
   const { oldSetup, newSetup, records } = await configure()
-  
+
   const aliveField = newSetup.templateApi.getNewField("string")
   aliveField.name = "isalive"
   newSetup.templateApi.addField(newSetup.contact, aliveField)
@@ -276,10 +276,10 @@ it("should rebuild affected index when field is added", async () => {
 
 const configure = async () => {
   const oldSetup = await setup()
-  
+
   const recordApi = await getRecordApiFromTemplateApi(oldSetup.templateApi)
   const indexApi = await getIndexApiFromTemplateApi(oldSetup.templateApi)
-  
+
   const newSetup = await setup(oldSetup.store)
 
   const records = await createSomeRecords(recordApi)

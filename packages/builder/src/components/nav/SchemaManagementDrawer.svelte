@@ -14,9 +14,9 @@
 
   function newModel() {
     if ($store.currentNode) {
-      store.newChildRecord()
+      store.newChildModel()
     } else {
-      store.newRootRecord()
+      store.newRootModel()
     }
     open(
       CreateEditModelModal,
@@ -57,8 +57,8 @@
     </div>
 
     <div class="hierarchy-items-container">
-      {#each $store.hierarchy.children as record}
-        <HierarchyRow node={record} type="record" />
+      {#each $store.hierarchy.children as model}
+        <HierarchyRow node={model} type="model" />
       {/each}
 
       {#each $store.hierarchy.indexes as index}

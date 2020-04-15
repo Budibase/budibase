@@ -5,7 +5,7 @@ import { initialiseData } from "../src/appInitialise/initialiseData"
 export const setup = async store => {
   const { templateApi } = await getMemoryTemplateApi(store)
   const root = templateApi.getNewRootLevel()
-  const contact = templateApi.getNewRecordTemplate(root, "contact", true)
+  const contact = templateApi.getNewModelTemplate(root, "contact", true)
   contact.collectionName = "contacts"
 
   const nameField = templateApi.getNewField("string")
@@ -16,9 +16,9 @@ export const setup = async store => {
   templateApi.addField(contact, nameField)
   templateApi.addField(contact, statusField)
 
-  const lead = templateApi.getNewRecordTemplate(root, "lead", true)
+  const lead = templateApi.getNewModelTemplate(root, "lead", true)
   lead.collectionName = "leads"
-  const deal = templateApi.getNewRecordTemplate(contact, "deal", true)
+  const deal = templateApi.getNewModelTemplate(contact, "deal", true)
   deal.collectionName = "deals"
 
   templateApi.addField(deal, { ...nameField })

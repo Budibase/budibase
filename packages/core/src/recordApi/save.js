@@ -4,7 +4,7 @@ import { _loadFromInfo } from "./load"
 import { apiWrapper, events, $, joinKey } from "../common"
 import {
   getFlattenedHierarchy,
-  isRecord,
+  isModel,
   getNode,
   fieldReversesReferenceToNode,
 } from "../templateApi/hierarchy"

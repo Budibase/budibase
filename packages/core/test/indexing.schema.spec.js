@@ -76,7 +76,7 @@ const setup = includeFish => setupApphierarchy(createApp(includeFish))
 const createApp = includeFish => templateApi => {
   const root = templateApi.getNewRootLevel()
 
-  const dogRecord = templateApi.getNewRecordTemplate(root, "dog")
+  const dogRecord = templateApi.getNewModelTemplate(root, "dog")
 
   const addField = recordNode => (name, type, typeOptions) => {
     const field = templateApi.getNewField(type)
@@ -88,7 +88,7 @@ const createApp = includeFish => templateApi => {
 
   const petsIndex = templateApi.getNewIndexTemplate(root)
   petsIndex.name = "allPets"
-  petsIndex.allowedRecordNodeIds = [dogRecord.nodeId]
+  petsIndex.allowedModelNodeIds = [dogRecord.nodeId]
 
   const addDogField = addField(dogRecord)
   addDogField("name", "string")
@@ -97,7 +97,7 @@ const createApp = includeFish => templateApi => {
 
   let fishStuff = {}
   if (includeFish) {
-    const fishRecord = templateApi.getNewRecordTemplate(root, "fish")
+    const fishRecord = templateApi.getNewModelTemplate(root, "fish")
     const addFishField = addField(fishRecord)
     addFishField("name", "string")
     addFishField("isAlive", "bool")
@@ -105,7 +105,7 @@ const createApp = includeFish => templateApi => {
     fishStuff.fishRecord = fishRecord
     const fishOnlyIndex = templateApi.getNewIndexTemplate(root)
     fishOnlyIndex.name = "fishOnly"
-    fishOnlyIndex.allowedRecordNodeIds = [fishRecord.nodeId]
+    fishOnlyIndex.allowedModelNodeIds = [fishRecord.nodeId]
     fishStuff.fishOnlyIndex = fishOnlyIndex
 
     const dogFriends = templateApi.getNewIndexTemplate(
@@ -115,7 +115,7 @@ const createApp = includeFish => templateApi => {
     dogFriends.name = "dogFriends"
     fishStuff.dogFriends = dogFriends
 
-    petsIndex.allowedRecordNodeIds.push(fishRecord.nodeId)
+    petsIndex.allowedModelNodeIds.push(fishRecord.nodeId)
 
     const favFishField = addDogField("favouriteFish", "reference", {
       indexNodeKey: fishOnlyIndex.nodeKey(),
