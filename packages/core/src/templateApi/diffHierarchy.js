@@ -1,6 +1,6 @@
 import {
   getFlattenedHierarchy,
-  isRecord,
+  isModel,
   isIndex,
   isAncestor,
 } from "./hierarchy"
@@ -48,7 +48,7 @@ const changeItem = (type, oldNode, newNode) => ({
 
 const findCreatedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
   const allCreated = $(newHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeDoesNotExistIn(oldHierarchyFlat)),
     map(n => changeItem(HierarchyChangeTypes.recordCreated, null, n)),
   ])
@@ -60,7 +60,7 @@ const findCreatedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
 
 const findDeletedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
   const allDeleted = $(oldHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeDoesNotExistIn(newHierarchyFlat)),
     map(n => changeItem(HierarchyChangeTypes.recordDeleted, n, null)),
   ])
@@ -72,7 +72,7 @@ const findDeletedRecords = (oldHierarchyFlat, newHierarchyFlat) => {
 
 const findRenamedRecords = (oldHierarchyFlat, newHierarchyFlat) =>
   $(oldHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeExistsIn(newHierarchyFlat)),
     filter(
       nodeChanged(
@@ -91,7 +91,7 @@ const findRenamedRecords = (oldHierarchyFlat, newHierarchyFlat) =>
 
 const findRecordsWithFieldsChanged = (oldHierarchyFlat, newHierarchyFlat) =>
   $(oldHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeExistsIn(newHierarchyFlat)),
     filter(hasDifferentFields(newHierarchyFlat)),
     map(n =>
@@ -108,7 +108,7 @@ const findRecordsWithEstimatedRecordTypeChanged = (
   newHierarchyFlat
 ) =>
   $(oldHierarchyFlat, [
-    filter(isRecord),
+    filter(isModel),
     filter(nodeExistsIn(newHierarchyFlat)),
     filter(
       nodeChanged(
@@ -187,7 +187,7 @@ const indexHasChanged = (_new, old) =>
   _new.map !== old.map ||
   _new.filter !== old.filter ||
   _new.getShardName !== old.getShardName ||
-  difference(_new.allowedRecordNodeIds)(old.allowedRecordNodeIds).length > 0
+  difference(_new.allowedModelNodeIds)(old.allowedModelNodeIds).length > 0
 
 const isFieldSame = f1 => f2 => f1.name === f2.name && f1.type === f2.type
 

@@ -20,8 +20,6 @@ import { generate_screen_css } from "../generate_css"
 import { insertCodeMetadata } from "../insertCodeMetadata"
 import { uuid } from "../uuid"
 
-let appname = ""
-
 export const getStore = () => {
   const initial = {
     apps: [],
@@ -52,8 +50,8 @@ export const getStore = () => {
 
   store.setPackage = setPackage(store, initial)
 
-  store.newChildRecord = backendStoreActions.newRecord(store, false)
-  store.newRootRecord = backendStoreActions.newRecord(store, true)
+  store.newChildModel = backendStoreActions.newModel(store, false)
+  store.newRootModel = backendStoreActions.newModel(store, true)
   store.selectExistingNode = backendStoreActions.selectExistingNode(store)
   store.newChildIndex = backendStoreActions.newIndex(store, false)
   store.newRootIndex = backendStoreActions.newIndex(store, true)

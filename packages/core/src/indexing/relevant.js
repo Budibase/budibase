@@ -23,7 +23,7 @@ import {
   getRecordNodeId,
   getExactNodeForKey,
   recordNodeIdIsAllowed,
-  isRecord,
+  isModel,
   isGlobalIndex,
 } from "../templateApi/hierarchy"
 import { indexTypes } from "../templateApi/indexes"
@@ -57,7 +57,7 @@ export const getRelevantAncestorIndexes = (hierarchy, record) => {
           return acc
         }
 
-        if (!isRecord(nodeMatch) || nodeMatch.indexes.length === 0) {
+        if (!isModel(nodeMatch) || nodeMatch.indexes.length === 0) {
           return acc
         }
 
@@ -65,8 +65,8 @@ export const getRelevantAncestorIndexes = (hierarchy, record) => {
           filter(
             i =>
               i.indexType === indexTypes.ancestor &&
-              (i.allowedRecordNodeIds.length === 0 ||
-                includes(nodeId)(i.allowedRecordNodeIds))
+              (i.allowedModelNodeIds.length === 0 ||
+                includes(nodeId)(i.allowedModelNodeIds))
           ),
         ])
 

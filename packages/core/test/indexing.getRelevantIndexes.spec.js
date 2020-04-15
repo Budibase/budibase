@@ -54,7 +54,7 @@ describe("getRelevantIndexes", () => {
     expect(indexExists("/customersBySurname")).toBeTruthy()
   })
 
-  it("should ignore index when allowedRecordNodeIds does not contain record's node id", async () => {
+  it("should ignore index when allowedModelNodeIds does not contain record's node id", async () => {
     const { recordApi, appHierarchy } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields_AndIndexes
     )
@@ -72,7 +72,7 @@ describe("getRelevantIndexes", () => {
     expect(indexExists("/customersBySurname")).toBeFalsy()
   })
 
-  it("should include index when allowedRecordNodeIds contains record's node id", async () => {
+  it("should include index when allowedModelNodeIds contains record's node id", async () => {
     const { recordApi, appHierarchy } = await setupApphierarchy(
       basicAppHierarchyCreator_WithFields_AndIndexes
     )

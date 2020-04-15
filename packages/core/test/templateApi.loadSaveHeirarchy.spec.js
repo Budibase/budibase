@@ -3,7 +3,7 @@ import { permission } from "../src/authApi/permissions"
 const saveThreeLevelHierarchy = async () => {
   const { templateApi, app } = await getMemoryTemplateApi()
   const root = templateApi.getNewRootLevel()
-  const record = templateApi.getNewRecordTemplate(root)
+  const record = templateApi.getNewModelTemplate(root)
   record.name = "customer"
   const surname = templateApi.getNewField("string")
   surname.name = "surname"
