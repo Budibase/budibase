@@ -60,9 +60,7 @@
   .switcher {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 20px;
-    padding: 0 20px 20px;
-    border-bottom: 1px solid #d8d8d8;
+    margin: 20px;
   }
 
   .switcher > button {
@@ -84,12 +82,5 @@
   .switcher > .selected {
     color: var(--secondary100);
     font-weight: 600;
-  }
-
-  .panel {
-    flex: 1 1 auto;
-    height: 0px;
-    overflow-y: auto;
-    padding: 0 20px 40px 20px;
   }
 </style>

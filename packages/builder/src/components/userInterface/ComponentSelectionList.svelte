@@ -1,4 +1,8 @@
 <script>
+  // This should be fetched from somewhere in the future, rather than be hardcoded.
+  import components from "./temporaryPanelStructure.js"
+  import Tab from "./ComponentTab/Tab.svelte"
+
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
   import { store } from "builderStore"
   import {
@@ -24,6 +28,9 @@
 
   export let toggleTab
 
+  const categories = components.categories
+  let selectedCategory = categories[0]
+
   let componentLibraries = []
   let current_view = "text"
   let selectedComponent = null
@@ -35,16 +42,13 @@
   $: templatesByComponent = groupBy(t => t.component)($store.templates)
   $: hierarchy = $store.hierarchy
   $: libraryModules = $store.libraries
-  $: standaloneTemplates = pipe(
-    templatesByComponent,
-    [
-      values,
-      flatten,
-      filter(t => !$store.components.some(c => c.name === t.component)),
-      map(t => ({ name: splitName(t.component).componentName, template: t })),
-      uniqBy(t => t.name),
-    ]
-  )
+  $: standaloneTemplates = pipe(templatesByComponent, [
+    values,
+    flatten,
+    filter(t => !$store.components.some(c => c.name === t.component)),
+    map(t => ({ name: splitName(t.component).componentName, template: t })),
+    uniqBy(t => t.name),
+  ])
 
   const addRootComponent = (component, allComponents) => {
     const { libName } = splitName(component.name)
@@ -118,84 +122,18 @@
 </script>
 
 <div class="root">
-  <Select on:change={e => (selectedLib = e.target.value)}>
-    {#each componentLibraries as lib}
-      <option value={lib.libName}>{lib.libName}</option>
+  <ul class="tabs">
+    {#each categories as category}
+      <li
+        on:click={() => (selectedCategory = category)}
+        class:active={selectedCategory === category}>
+        {category.name}
+      </li>
     {/each}
-  </Select>
-
-  <div class="library-container">
-    <!-- <ul>
-      <li>
-        <button
-          class:selected={current_view === 'text'}
-          on:click={() => (current_view = 'text')}>
-          <InputIcon />
-        </button>
-      </li>
-      <li>
-        <button
-          class:selected={current_view === 'layout'}
-          on:click={() => (current_view = 'layout')}>
-          <LayoutIcon />
-        </button>
-      </li>
-      <li>
-        <button
-          class:selected={current_view === 'media'}
-          on:click={() => (current_view = 'media')}>
-          <ImageIcon />
-        </button>
-      </li>
-    </ul> -->
-
-    {#if componentLibrary}
-      {#each generate_components_list(componentLibrary.components) as component}
-        <div class="component-container">
-          <div class="component" on:click={() => onComponentChosen(component)}>
-            <div class="name">{splitName(component.name).componentName}</div>
-            {#if (component.presets || templatesByComponent[component.name]) && component.name === selectedComponent}
-              <ul class="preset-menu">
-                {#if component.presets}
-                  <span>{splitName(component.name).componentName} Presets</span>
-                  {#each Object.keys(component.presets) as preset}
-                    <li
-                      on:click|stopPropagation={() => onComponentChosen(component, preset)}>
-                      {preset}
-                    </li>
-                  {/each}
-                {/if}
-                {#if templatesByComponent[component.name]}
-                  <span>
-                    {splitName(component.name).componentName} Templates
-                  </span>
-                  {#each templatesByComponent[component.name] as template}
-                    <li
-                      on:click|stopPropagation={() => onTemplateChosen(template)}>
-                      {template.description}
-                    </li>
-                  {/each}
-                {/if}
-              </ul>
-            {/if}
-          </div>
-          {#if component.presets || templatesByComponent[component.name]}
-            <Button
-              on:click={() => {
-                selectedComponent = selectedComponent ? null : component.name
-              }}>
-              <span
-                class="open-presets"
-                class:open={selectedComponent === component.name}>
-                ...
-              </span>
-            </Button>
-          {/if}
-        </div>
-      {/each}
-    {/if}
+  </ul>
+  <div class="panel">
+    <Tab components={selectedCategory.components} />
   </div>
-
 </div>
 
 <ConfirmDialog
@@ -218,108 +156,33 @@
 </ConfirmDialog>
 
 <style>
-  .root {
+  .tabs {
     display: flex;
-    flex-direction: column;
-  }
-
-  .library-container {
-    padding: 0 0 10px 0;
-    flex: 1 1 auto;
-    min-height: 0px;
-    margin-top: 20px;
-  }
-
-  .component-container {
-    display: flex;
-    align-items: center;
-  }
-
-  .component {
-    position: relative;
-    padding: 0 15px;
-    cursor: pointer;
-    border: 1px solid #d8d8d8;
-    border-radius: 2px;
-    margin: 5px 0;
-    height: 40px;
-    box-sizing: border-box;
-    color: #000333;
-    display: flex;
-    align-items: center;
-    flex: 1;
-    margin-right: 5px;
-  }
-
-  .component:hover {
-    background-color: var(--lightslate);
-  }
-
-  .component > .name {
-    color: #000333;
-    display: inline-block;
-    font-size: 13px;
-    opacity: 0.8;
-  }
-
-  ul {
+    justify-content: center;
     list-style: none;
-    display: flex;
-    padding: 0;
-  }
+    margin: 0 auto;
+    padding: 0 30px;
+    border-bottom: 1px solid #d8d8d8;
 
-  .preset-menu {
-    flex-direction: column;
-    position: absolute;
-    top: 25px;
-    left: 0;
-    right: 0;
-    z-index: 1;
-    background: #fafafa;
-    padding: 10px;
-    border-radius: 2px;
-    color: var(--secondary80);
-  }
-
-  .preset-menu > span {
-    font-size: 13px;
-    text-transform: uppercase;
-    margin-top: 5px;
-  }
-
-  .preset-menu li {
     font-size: 14px;
-    margin-top: 13px;
-  }
-
-  .preset-menu li:hover {
-    font-weight: bold;
+    font-weight: 500;
+    letter-spacing: 0.14px;
   }
 
   li {
-    margin-right: 20px;
-    background: none;
-    border-radius: 5px;
+    color: #808192;
+    margin: 0 5px;
+    padding: 0 8px;
+    cursor: pointer;
   }
 
-  /* li button {
-    width: 100%;
-    height: 100%;
-    background: none;
-    border: none;
-    border-radius: 5px;
-    padding: 13px;
-    outline: none;
-    cursor: pointer;
-  } */
+  .panel {
+    padding: 20px;
+  }
 
-  /* .selected {
-    color: var(--button-text);
-    background: var(--background-button) !important;
-  } */
-
-  .open {
-    color: rgba(0, 85, 255, 1);
+  .active {
+    border-bottom: solid 3px #0055ff;
+    color: #393c44;
   }
 
   .template-instance-label {
