@@ -26,8 +26,8 @@
   }
 
   .component-item:hover {
-    background: #f5f5f5;
-    /* background: #fbfbfb; */
+    /* background: #f5f5f5; */
+    background: #fbfbfb;
     border-radius: 5px;
   }
 
@@ -64,7 +64,7 @@
   }
 
   i {
-    font-size: 28px;
-    /* color: #808192; */
+    font-size: 24px;
+    color: #808192;
   }
 </style>
