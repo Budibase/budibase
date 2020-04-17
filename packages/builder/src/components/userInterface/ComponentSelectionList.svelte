@@ -21,7 +21,8 @@
     getIndexSchema,
     pipe,
   } from "components/common/core"
-
+  import ComponentItem from "./ComponentItem.svelte"
+  import panelStructure from "./temporaryPanelStructure.json"
   export let toggleTab
 
   let componentLibraries = []
@@ -115,86 +116,21 @@
   }
 
   $: componentLibrary = componentLibraries.find(l => l.libName === selectedLib)
+
+  $: componentItems =
+    panelStructure.categories[
+      panelStructure.categories.findIndex(i => i.name === "Basic")
+    ].components
 </script>
 
 <div class="root">
-  <Select on:change={e => (selectedLib = e.target.value)}>
-    {#each componentLibraries as lib}
-      <option value={lib.libName}>{lib.libName}</option>
-    {/each}
-  </Select>
 
-  <div class="library-container">
-    <!-- <ul>
-      <li>
-        <button
-          class:selected={current_view === 'text'}
-          on:click={() => (current_view = 'text')}>
-          <InputIcon />
-        </button>
-      </li>
-      <li>
-        <button
-          class:selected={current_view === 'layout'}
-          on:click={() => (current_view = 'layout')}>
-          <LayoutIcon />
-        </button>
-      </li>
-      <li>
-        <button
-          class:selected={current_view === 'media'}
-          on:click={() => (current_view = 'media')}>
-          <ImageIcon />
-        </button>
-      </li>
-    </ul> -->
-
-    {#if componentLibrary}
-      {#each generate_components_list(componentLibrary.components) as component}
-        <div class="component-container">
-          <div class="component" on:click={() => onComponentChosen(component)}>
-            <div class="name">{splitName(component.name).componentName}</div>
-            {#if (component.presets || templatesByComponent[component.name]) && component.name === selectedComponent}
-              <ul class="preset-menu">
-                {#if component.presets}
-                  <span>{splitName(component.name).componentName} Presets</span>
-                  {#each Object.keys(component.presets) as preset}
-                    <li
-                      on:click|stopPropagation={() => onComponentChosen(component, preset)}>
-                      {preset}
-                    </li>
-                  {/each}
-                {/if}
-                {#if templatesByComponent[component.name]}
-                  <span>
-                    {splitName(component.name).componentName} Templates
-                  </span>
-                  {#each templatesByComponent[component.name] as template}
-                    <li
-                      on:click|stopPropagation={() => onTemplateChosen(template)}>
-                      {template.description}
-                    </li>
-                  {/each}
-                {/if}
-              </ul>
-            {/if}
-          </div>
-          {#if component.presets || templatesByComponent[component.name]}
-            <Button
-              on:click={() => {
-                selectedComponent = selectedComponent ? null : component.name
-              }}>
-              <span
-                class="open-presets"
-                class:open={selectedComponent === component.name}>
-                ...
-              </span>
-            </Button>
-          {/if}
-        </div>
-      {/each}
-    {/if}
-  </div>
+  {#each componentItems as item}
+    <ComponentItem
+      name={item.component}
+      description={item.description}
+      icon={item.icon} />
+  {/each}
 
 </div>
 
