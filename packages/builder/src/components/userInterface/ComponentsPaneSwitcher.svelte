@@ -90,6 +90,6 @@
     flex: 1 1 auto;
     height: 0px;
     overflow-y: auto;
-    padding: 0 20px 40px 20px;
+    padding: 0 5px 40px 10px;
   }
 </style>
