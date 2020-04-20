@@ -1,6 +1,7 @@
 const couchdb = require("../../../../db");
 
 const CLIENT_DB_ID = "client-testing";
+const TEST_APP_ID = "test-app";
 
 exports.destroyDatabase = couchdb.db.destroy;
 
@@ -9,12 +10,9 @@ exports.createModel = async instanceId => {
     "name": "TestModel",
     "type": "model",
     "key": "name",
-    "fields": [
-        {
-          "name": "name",
-          "type": "string"
-        }
-    ]
+    "schema": {
+      "name": { "type": "string" }
+    }
   }
   const db = couchdb.db.use(instanceId);
   const response = await db.insert(model);
@@ -39,7 +37,9 @@ exports.createModel = async instanceId => {
 exports.createClientDatabase = async () => {
   await couchdb.db.create(CLIENT_DB_ID);
 
-  await couchdb.db.use(CLIENT_DB_ID).insert({
+  const db = couchdb.db.use(CLIENT_DB_ID);
+
+  await db.insert({
     views: { 
       by_type: { 
         map: function(doc) { 
@@ -48,12 +48,28 @@ exports.createClientDatabase = async () => {
       } 
     }
   }, '_design/client');
+
+  await db.insert({
+    _id: TEST_APP_ID,
+    type: "app",
+    instances: []
+  });
+
+  return CLIENT_DB_ID;
 }
+
+exports.destroyClientDatabase = async () => await couchdb.db.destroy(CLIENT_DB_ID);
 
 exports.createInstanceDatabase = async instanceId => {
   await couchdb.db.create(instanceId);
 
-  await couchdb.db.use(instanceId).insert({
+  const db = couchdb.db.use(instanceId);
+
+  await db.insert({
+    metadata: {
+      clientId: CLIENT_DB_ID,
+      applicationId: TEST_APP_ID
+    },
     views: { 
       by_type: { 
         map: function(doc) { 

@@ -18,7 +18,7 @@
   }
 
   async function fetchUsers() {
-    const FETCH_USERS_URL = `/_builder/instance/${currentAppInfo.appname}/${currentAppInfo.instanceId}/api/users`
+    const FETCH_USERS_URL = `/api/${currentAppInfo.instanceId}/users`
     const response = await api.get(FETCH_USERS_URL)
     users = await response.json()
     backendUiStore.update(state => {

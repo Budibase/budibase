@@ -1,8 +1,8 @@
-import { newModel } from "../src/schema/models.mjs"
-import { newView } from "../src/schema/views.mjs"
-import { getNewField } from "../src/schema/fields.mjs"
-import { fullSchema } from "../src/schema/fullSchema.mjs"
-import { commonRecordValidationRules } from "../src/records/recordValidationRules.mjs"
+import { newModel } from "../src/schema/models"
+import { newView } from "../src/schema/views"
+import { getNewField } from "../src/schema/fields"
+import { fullSchema } from "../src/schema/fullSchema"
+import { commonRecordValidationRules } from "../src/records/recordValidationRules"
 
 export function testSchema() {
   const addFieldToModel = (model, { type, name }) => {

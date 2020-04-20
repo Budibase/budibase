@@ -1,7 +1,10 @@
-const couchdb = require("../../../../db");
 const supertest = require("supertest");
 const app = require("../../../../app");
-const { createInstanceDatabase, insertDocument, destroyDatabase } = require("./couchTestUtils");
+const { 
+  createInstanceDatabase, 
+  insertDocument, 
+  destroyDatabase 
+} = require("./couchTestUtils");
 
 
 const TEST_INSTANCE_ID = "testing-123";
@@ -29,11 +32,6 @@ describe("/users", () => {
   describe("fetch", () => {
     beforeEach(async () => {
       await createInstanceDatabase(TEST_INSTANCE_ID);
-      await insertDocument(TEST_INSTANCE_ID, {
-        id: "cool-user-id",
-        type: "user",
-        name: "Dave"
-      })
     });
 
     afterEach(async () => {
@@ -47,7 +45,7 @@ describe("/users", () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
-            const createdUser = res.body[0].doc;
+            const createdUser = res.body[0];
             expect(createdUser.name).toEqual(TEST_USER.name);            
             done();
         });

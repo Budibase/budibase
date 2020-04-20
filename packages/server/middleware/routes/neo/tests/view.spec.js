@@ -72,7 +72,6 @@ describe("/views", () => {
         .expect(200)
         .end(async (_, res) => {
             expect(res.body.by_type).toBeDefined();
-            expect(res.body).toMatchSnapshot();
             done();
         });
       })

@@ -6,16 +6,14 @@
   import { CheckIcon } from "../common/Icons"
 
   $: instances = $store.appInstances
-  $: views = $store.hierarchy.indexes
+  // $: views = $store.hierarchy.indexes
 
   async function selectDatabase(database) {
-    backendUiStore.actions.records.select(null)
-    backendUiStore.actions.views.select(views[0])
     backendUiStore.actions.database.select(database)
   }
 
   async function deleteDatabase(database) {
-    const DELETE_DATABASE_URL = `/_builder/instance/_master/0/api/record/applications/${$store.appId}/instances/${database.id}`
+    const DELETE_DATABASE_URL = `/api/instances/${database.id}`
     const response = await api.delete(DELETE_DATABASE_URL)
     store.update(state => {
       state.appInstances = state.appInstances.filter(

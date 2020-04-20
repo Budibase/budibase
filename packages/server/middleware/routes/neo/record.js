@@ -4,9 +4,9 @@ const controller = require("../../controllers/record");
 const router = Router();
 
 router
-  .get("/api/:databaseId/:modelId/records", controller.fetch)
-  .get("/api/:databaseId/records/:recordId", controller.find)
-  .post("/api/:databaseId/records", controller.save)
-  .delete("/api/:databaseId/records/:recordId", controller.destroy)
+  .get("/api/:instanceId/:viewName/records", controller.fetch)
+  .get("/api/:instanceId/records/:recordId", controller.find)
+  .post("/api/:instanceId/:modelId/records", controller.save)
+  .delete("/api/:instanceId/records/:recordId/:revId", controller.destroy);
 
 module.exports = router;

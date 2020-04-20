@@ -1,59 +1,42 @@
 const couchdb = require("../../db");
 
-const MODEL_SCHEMA = {
-  id: "foo",
-  name: "Contact",
-  key: "wutwut",
-  fields: [
-    {
-      name: "name",
-      type: "string",
-      constraints: {
-        min: "",
-        max: ""
-      }
-    },
-    {
-      name: "age",
-      type: "number",
-      constraints: {
-        min: 0,
-        max: 100
-      }
-    }
-  ],
-  validationRules: [
-  ]
-}
-
 exports.fetch = async function(ctx) {
   const db = couchdb.db.use(ctx.params.instanceId);
   const body = await db.view("database", "by_type", { 
     include_docs: true,
     key: ["model"] 
   });
-  ctx.body = body.rows;
+  ctx.body = body.rows.map(row => row.doc);
 }
 
 exports.create = async function(ctx) {
   const db = couchdb.db.use(ctx.params.instanceId);
-  const newModel = await db.insert(ctx.request.body);
+  const newModel = await db.insert({ 
+    type: "model",
+    ...ctx.request.body
+  });
 
   const designDoc = await db.get("_design/database");
   designDoc.views = {
     ...designDoc.views,
     [`all_${newModel.id}`]: {
-      map: function(doc) {
-        emit([doc.modelId], doc._id); 
-      }
+      map: `function(doc) {
+        if (doc.modelId === "${newModel.id}") {
+          emit(doc[doc.key], doc._id); 
+        }
+      }`
     }
   };
   await db.insert(designDoc, designDoc._id);
 
   ctx.body = {
-    ...newModel,
     message: `Model ${ctx.request.body.name} created successfully.`,
     status: 200,
+    model: {
+      _id: newModel.id,
+      _rev: newModel.rev,
+      ...ctx.request.body
+    } 
   }
 }
 

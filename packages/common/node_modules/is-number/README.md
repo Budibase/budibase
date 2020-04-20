@@ -1,8 +1,6 @@
-# is-number [![NPM version](https://img.shields.io/npm/v/is-number.svg?style=flat)](https://www.npmjs.com/package/is-number) [![NPM monthly downloads](https://img.shields.io/npm/dm/is-number.svg?style=flat)](https://npmjs.org/package/is-number) [![NPM total downloads](https://img.shields.io/npm/dt/is-number.svg?style=flat)](https://npmjs.org/package/is-number) [![Linux Build Status](https://img.shields.io/travis/jonschlinkert/is-number.svg?style=flat&label=Travis)](https://travis-ci.org/jonschlinkert/is-number)
+# is-number [![NPM version](https://img.shields.io/npm/v/is-number.svg?style=flat)](https://www.npmjs.com/package/is-number) [![NPM downloads](https://img.shields.io/npm/dm/is-number.svg?style=flat)](https://npmjs.org/package/is-number) [![Build Status](https://img.shields.io/travis/jonschlinkert/is-number.svg?style=flat)](https://travis-ci.org/jonschlinkert/is-number)
 
-> Returns true if the value is a finite number.
-
-Please consider following this project's author, [Jon Schlinkert](https://github.com/jonschlinkert), and consider starring the project to show your :heart: and support.
+> Returns true if the value is a number. comprehensive tests.
 
 ## Install
 
@@ -12,176 +10,106 @@ Install with [npm](https://www.npmjs.com/):
 $ npm install --save is-number
 ```
 
-## Why is this needed?
-
-In JavaScript, it's not always as straightforward as it should be to reliably check if a value is a number. It's common for devs to use `+`, `-`, or `Number()` to cast a string value to a number (for example, when values are returned from user input, regex matches, parsers, etc). But there are many non-intuitive edge cases that yield unexpected results:
-
-```js
-console.log(+[]); //=> 0
-console.log(+''); //=> 0
-console.log(+'   '); //=> 0
-console.log(typeof NaN); //=> 'number'
-```
-
-This library offers a performant way to smooth out edge cases like these.
-
 ## Usage
 
-```js
-const isNumber = require('is-number');
-```
+To understand some of the rationale behind the decisions made in this library (and to learn about some oddities of number evaluation in JavaScript), [see this gist](https://gist.github.com/jonschlinkert/e30c70c713da325d0e81).
 
-See the [tests](./test.js) for more examples.
+```js
+var isNumber = require('is-number');
+```
 
 ### true
 
+See the [tests](./test.js) for more examples.
+
 ```js
-isNumber(5e3);               // true
-isNumber(0xff);              // true
-isNumber(-1.1);              // true
-isNumber(0);                 // true
-isNumber(1);                 // true
-isNumber(1.1);               // true
-isNumber(10);                // true
-isNumber(10.10);             // true
-isNumber(100);               // true
-isNumber('-1.1');            // true
-isNumber('0');               // true
-isNumber('012');             // true
-isNumber('0xff');            // true
-isNumber('1');               // true
-isNumber('1.1');             // true
-isNumber('10');              // true
-isNumber('10.10');           // true
-isNumber('100');             // true
-isNumber('5e3');             // true
-isNumber(parseInt('012'));   // true
-isNumber(parseFloat('012')); // true
+isNumber(5e3)      //=> 'true'
+isNumber(0xff)     //=> 'true'
+isNumber(-1.1)     //=> 'true'
+isNumber(0)        //=> 'true'
+isNumber(1)        //=> 'true'
+isNumber(1.1)      //=> 'true'
+isNumber(10)       //=> 'true'
+isNumber(10.10)    //=> 'true'
+isNumber(100)      //=> 'true'
+isNumber('-1.1')   //=> 'true'
+isNumber('0')      //=> 'true'
+isNumber('012')    //=> 'true'
+isNumber('0xff')   //=> 'true'
+isNumber('1')      //=> 'true'
+isNumber('1.1')    //=> 'true'
+isNumber('10')     //=> 'true'
+isNumber('10.10')  //=> 'true'
+isNumber('100')    //=> 'true'
+isNumber('5e3')    //=> 'true'
+isNumber(parseInt('012'))   //=> 'true'
+isNumber(parseFloat('012')) //=> 'true'
 ```
 
 ### False
 
-Everything else is false, as you would expect:
+See the [tests](./test.js) for more examples.
 
 ```js
-isNumber(Infinity);          // false
-isNumber(NaN);               // false
-isNumber(null);              // false
-isNumber(undefined);         // false
-isNumber('');                // false
-isNumber('   ');             // false
-isNumber('foo');             // false
-isNumber([1]);               // false
-isNumber([]);                // false
-isNumber(function () {});    // false
-isNumber({});                // false
-```
-
-## Release history
-
-### 7.0.0
-
-* Refactor. Now uses `.isFinite` if it exists.
-* Performance is about the same as v6.0 when the value is a string or number. But it's now 3x-4x faster when the value is not a string or number.
-
-### 6.0.0
-
-* Optimizations, thanks to @benaadams.
-
-### 5.0.0
-
-**Breaking changes**
-
-* removed support for `instanceof Number` and `instanceof String`
-
-## Benchmarks
-
-As with all benchmarks, take these with a grain of salt. See the [benchmarks](./benchmark/index.js) for more detail.
-
-```
-# all
-v7.0 x 413,222 ops/sec ±2.02% (86 runs sampled)
-v6.0 x 111,061 ops/sec ±1.29% (85 runs sampled)
-parseFloat x 317,596 ops/sec ±1.36% (86 runs sampled)
-fastest is 'v7.0'
-
-# string
-v7.0 x 3,054,496 ops/sec ±1.05% (89 runs sampled)
-v6.0 x 2,957,781 ops/sec ±0.98% (88 runs sampled)
-parseFloat x 3,071,060 ops/sec ±1.13% (88 runs sampled)
-fastest is 'parseFloat,v7.0'
-
-# number
-v7.0 x 3,146,895 ops/sec ±0.89% (89 runs sampled)
-v6.0 x 3,214,038 ops/sec ±1.07% (89 runs sampled)
-parseFloat x 3,077,588 ops/sec ±1.07% (87 runs sampled)
-fastest is 'v6.0'
+isNumber('foo')             //=> 'false'
+isNumber([1])               //=> 'false'
+isNumber([])                //=> 'false'
+isNumber(function () {})    //=> 'false'
+isNumber(Infinity)          //=> 'false'
+isNumber(NaN)               //=> 'false'
+isNumber(new Array('abc'))  //=> 'false'
+isNumber(new Array(2))      //=> 'false'
+isNumber(new Buffer('abc')) //=> 'false'
+isNumber(null)              //=> 'false'
+isNumber(undefined)         //=> 'false'
+isNumber({abc: 'abc'})      //=> 'false'
 ```
 
 ## About
 
-<details>
-<summary><strong>Contributing</strong></summary>
+### Related projects
+
+* [even](https://www.npmjs.com/package/even): Get the even numbered items from an array. | [homepage](https://github.com/jonschlinkert/even "Get the even numbered items from an array.")
+* [is-even](https://www.npmjs.com/package/is-even): Return true if the given number is even. | [homepage](https://github.com/jonschlinkert/is-even "Return true if the given number is even.")
+* [is-odd](https://www.npmjs.com/package/is-odd): Returns true if the given number is odd. | [homepage](https://github.com/jonschlinkert/is-odd "Returns true if the given number is odd.")
+* [is-primitive](https://www.npmjs.com/package/is-primitive): Returns `true` if the value is a primitive.  | [homepage](https://github.com/jonschlinkert/is-primitive "Returns `true` if the value is a primitive. ")
+* [kind-of](https://www.npmjs.com/package/kind-of): Get the native type of a value. | [homepage](https://github.com/jonschlinkert/kind-of "Get the native type of a value.")
+* [odd](https://www.npmjs.com/package/odd): Get the odd numbered items from an array. | [homepage](https://github.com/jonschlinkert/odd "Get the odd numbered items from an array.")
+
+### Contributing
 
 Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](../../issues/new).
 
-</details>
+### Building docs
 
-<details>
-<summary><strong>Running Tests</strong></summary>
+_(This document was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme) (a [verb](https://github.com/verbose/verb) generator), please don't edit the readme directly. Any changes to the readme must be made in [.verb.md](.verb.md).)_
 
-Running and reviewing unit tests is a great way to get familiarized with a library and its API. You can install dependencies and run tests with the following command:
-
-```sh
-$ npm install && npm test
-```
-
-</details>
-
-<details>
-<summary><strong>Building docs</strong></summary>
-
-_(This project's readme.md is generated by [verb](https://github.com/verbose/verb-generate-readme), please don't edit the readme directly. Any changes to the readme must be made in the [.verb.md](.verb.md) readme template.)_
-
-To generate the readme, run the following command:
+To generate the readme and API documentation with [verb](https://github.com/verbose/verb):
 
 ```sh
-$ npm install -g verbose/verb#dev verb-generate-readme && verb
+$ npm install -g verb verb-generate-readme && verb
 ```
 
-</details>
+### Running tests
 
-### Related projects
+Install dev dependencies:
 
-You might also be interested in these projects:
-
-* [is-plain-object](https://www.npmjs.com/package/is-plain-object): Returns true if an object was created by the `Object` constructor. | [homepage](https://github.com/jonschlinkert/is-plain-object "Returns true if an object was created by the `Object` constructor.")
-* [is-primitive](https://www.npmjs.com/package/is-primitive): Returns `true` if the value is a primitive.  | [homepage](https://github.com/jonschlinkert/is-primitive "Returns `true` if the value is a primitive. ")
-* [isobject](https://www.npmjs.com/package/isobject): Returns true if the value is an object and not an array or null. | [homepage](https://github.com/jonschlinkert/isobject "Returns true if the value is an object and not an array or null.")
-* [kind-of](https://www.npmjs.com/package/kind-of): Get the native type of a value. | [homepage](https://github.com/jonschlinkert/kind-of "Get the native type of a value.")
-
-### Contributors
-
-| **Commits** | **Contributor** | 
-| --- | --- |
-| 49 | [jonschlinkert](https://github.com/jonschlinkert) |
-| 5 | [charlike-old](https://github.com/charlike-old) |
-| 1 | [benaadams](https://github.com/benaadams) |
-| 1 | [realityking](https://github.com/realityking) |
+```sh
+$ npm install -d && npm test
+```
 
 ### Author
 
 **Jon Schlinkert**
 
-* [LinkedIn Profile](https://linkedin.com/in/jonschlinkert)
-* [GitHub Profile](https://github.com/jonschlinkert)
-* [Twitter Profile](https://twitter.com/jonschlinkert)
+* [github/jonschlinkert](https://github.com/jonschlinkert)
+* [twitter/jonschlinkert](http://twitter.com/jonschlinkert)
 
 ### License
 
-Copyright © 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
-Released under the [MIT License](LICENSE).
+Copyright © 2016, [Jon Schlinkert](https://github.com/jonschlinkert).
+Released under the [MIT license](https://github.com/jonschlinkert/is-number/blob/master/LICENSE).
 
 ***
 
-_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.6.0, on June 15, 2018._
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.1.30, on September 10, 2016._

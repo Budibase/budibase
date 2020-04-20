@@ -16,7 +16,7 @@ const {
 } = require("./routes");
 
 const recordRoutes = require("./routes/neo/record");
-const databaseRoutes = require("./routes/neo/database");
+const instanceRoutes = require("./routes/neo/instance");
 const neoUserRoutes = require("./routes/neo/user");
 const clientRoutes = require("./routes/neo/client");
 const applicationRoutes = require("./routes/neo/application");
@@ -30,17 +30,19 @@ module.exports = (config, app) => {
   const router = new Router()
 
   router
-    .use(session(config, app))
+    .use(session(app))
     .use(async (ctx, next) => { 
       // TODO: temp dev middleware
+      // ctx.sessionId = ctx.session._sessCtx.externalKey
+      // ctx.session.accessed = true
       ctx.config = config;
       ctx.isAuthenticated = true;
       await next();
     });
     // .use(async (ctx, next) => {
-    //   ctx.sessionId = ctx.session._sessCtx.externalKey
-    //   ctx.session.accessed = true
-    //   ctx.config = config
+      // ctx.sessionId = ctx.session._sessCtx.externalKey
+      // ctx.session.accessed = true
+      // ctx.config = config
 
     //   const pathParts = ctx.path.split("/")
 
@@ -143,6 +145,17 @@ module.exports = (config, app) => {
     }
   });
 
+  // Legacy Routes
+  router.use(userRoutes.routes());
+  router.use(userRoutes.allowedMethods());
+  router.use(appsRoutes.routes())
+  router.use(appsRoutes.allowedMethods());
+  router.use(componentRoutes.routes());
+  router.use(componentRoutes.allowedMethods());
+  router.use(pageRoutes.routes());
+  router.use(pageRoutes.allowedMethods());
+
+  // Neo Routes
   router.use(staticRoutes.routes());
   router.use(staticRoutes.allowedMethods());
 
@@ -164,19 +177,9 @@ module.exports = (config, app) => {
   router.use(recordRoutes.routes());
   router.use(recordRoutes.allowedMethods());
 
-  router.use(databaseRoutes.routes());
-  router.use(databaseRoutes.allowedMethods());
-
+  router.use(instanceRoutes.routes());
+  router.use(instanceRoutes.allowedMethods());
   // end of Neo
-
-  router.use(userRoutes.routes());
-  router.use(userRoutes.allowedMethods());
-  router.use(appsRoutes.routes())
-  router.use(appsRoutes.allowedMethods());
-  router.use(componentRoutes.routes());
-  router.use(componentRoutes.allowedMethods());
-  router.use(pageRoutes.routes());
-  router.use(pageRoutes.allowedMethods());
 
   // router
     // .get("/:appname", async ctx => {

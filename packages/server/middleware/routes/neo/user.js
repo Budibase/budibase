@@ -4,8 +4,8 @@ const controller = require("../../controllers/user");
 const router = Router();
 
 router
-  .get("/api/:databaseId/users", controller.fetch)
-  .post("/api/:databaseId/users", controller.create)
-  .delete("/api/:databaseId/users/:userId", controller.destroy);
+  .get("/api/:instanceId/users", controller.fetch)
+  .post("/api/:instanceId/users", controller.create)
+  .delete("/api/:instanceId/users/:userId", controller.destroy);
 
 module.exports = router;
