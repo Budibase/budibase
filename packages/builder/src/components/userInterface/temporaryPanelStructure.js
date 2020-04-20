@@ -18,7 +18,7 @@ export default {
           commonProps: {},
           type: [
             {
-              _component: '@budibase/standard-components/header',
+              _component: '@budibase/standard-components/heading',
               name: 'Headline',
               icon: 'headline',
               props: {
@@ -140,6 +140,7 @@ export default {
           description: 'A component that generates a table from your data.',
           icon: 'ri-archive-drawer-fill',
           commonProps: {},
+          modelRequired: true,
           type: []
         },
         {
@@ -147,6 +148,7 @@ export default {
           description: 'A component that generates a form from your data.',
           icon: 'ri-file-edit-fill',
           commonProps: {},
+          modelRequired: true,
           type: []
         }
       ]

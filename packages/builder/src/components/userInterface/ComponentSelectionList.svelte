@@ -2,6 +2,7 @@
   // This should be fetched from somewhere in the future, rather than be hardcoded.
   import components from "./temporaryPanelStructure.js"
   import Tab from "./ComponentTab/Tab.svelte"
+  import { store } from "builderStore"
 
   const categories = components.categories
   let selectedCategory = categories[0]

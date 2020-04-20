@@ -1,13 +1,24 @@
 <script>
   import Item from "./Item.svelte"
+  import { store } from "builderStore"
   export let list
   let category = list
+
+  const onComponentChosen = component => {
+    // if (component.template) {
+    //   onTemplateChosen(component.template)
+    // } else {
+    store.addChildComponent(component._component)
+    // toggleTab()
+    // }
+  }
 
   const handleClick = component => {
     if (component.type && component.type.length > 0) {
       list = component
     } else {
-      console.log("Here be dragons that add the component! 🐉")
+      //console.log("Here be dragons that add the component! 🐉")
+      onComponentChosen(component)
     }
   }
 
@@ -27,7 +38,6 @@
 <style>
   .back-button {
     font-size: 16px;
-
     width: 100%;
     text-align: center;
     height: 40px;
