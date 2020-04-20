@@ -18,7 +18,7 @@
     {/each}
   </ul>
   <div class="panel">
-    <Tab components={selectedCategory.components} />
+    <Tab list={selectedCategory} />
   </div>
 </div>
 
