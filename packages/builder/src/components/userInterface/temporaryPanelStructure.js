@@ -2,7 +2,8 @@ export default {
   categories: [
     {
       name: 'Basic',
-      components: [
+      isCategory: true,
+      type: [
         {
           name: 'Container',
           description: 'This component contains things within itself',
@@ -71,7 +72,8 @@ export default {
     },
     {
       name: 'Form',
-      components: [
+      isCategory: true,
+      type: [
         {
           name: 'Button',
           description: 'A basic html button that is ready for styling',
@@ -104,7 +106,8 @@ export default {
     },
     {
       name: 'Blocks',
-      components: [
+      isCategory: true,
+      type: [
         {
           name: 'Container',
           description: 'This component contains things within itself',
@@ -173,7 +176,8 @@ export default {
     },
     {
       name: 'Data',
-      components: [
+      isCategory: true,
+      type: [
         {
           name: 'Container',
           description: 'This component contains things within itself',

@@ -1,17 +1,15 @@
 <script>
-  export let icon = ""
-  export let name = ""
-  export let description = ""
+  export let component
 </script>
 
-<div class="component-item">
+<div class="component-item" on:click>
   <div class="component-icon">
-    <i class={icon} />
+    <i class={component.icon} />
   </div>
   <div class="component-text">
-    <div class="component-name">{name}</div>
+    <div class="component-name">{component.name}</div>
     <div class="component-description">
-      <p>{description}</p>
+      <p>{component.description}</p>
     </div>
   </div>
 </div>
