@@ -118,7 +118,7 @@ const coreExternal = [
 ]
 
 const customResolver = resolve({
-  extensions: [".mjs", ".js", ".jsx", ".json", ".sass", ".scss", ".svelte"]
+  extensions: [".mjs", ".js", ".jsx", ".json", ".sass", ".scss", ".svelte", ".css"]
 })
 const projectRootDir = path.resolve(__dirname)
 

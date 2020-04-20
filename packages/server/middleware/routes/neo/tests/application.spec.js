@@ -1,7 +1,6 @@
-const couchdb = require("../../../../db");
 const supertest = require("supertest");
 const app = require("../../../../app");
-const { createClientDatabase } = require("./couchTestUtils");
+const { createClientDatabase, destroyDatabase } = require("./couchTestUtils");
 
 
 const CLIENT_DB_ID = "client-testing";
@@ -21,7 +20,7 @@ describe("/applications", () => {
   });
 
   afterAll(async () => {
-    await couchdb.db.destroy(CLIENT_DB_ID)
+    await destroyDatabase(CLIENT_DB_ID)
     server.close();
   })
 

@@ -13,6 +13,12 @@ module.exports = opts => {
   console.log(chalk.green(`Budibase app ${opts.name} created!`))
 }
 
+const run2 = async opts => {
+  // create a brand new app in couch
+  // create an empty app package locally
+  exec(`cd ${join(opts.config.latestPackagesFolder, opts.name)} && npm install`)
+}
+
 const run = async opts => {
   const context = await getAppContext({
     configName: opts.config,
@@ -36,7 +42,10 @@ const createEmptyAppPackage = async opts => {
   const appsFolder = opts.config.latestPackagesFolder || "."
   const destinationFolder = resolve(appsFolder, opts.name)
 
-  if (await exists(destinationFolder)) return
+  if (await exists(destinationFolder)) { 
+    console.log(chalk.red(`App ${opts.name} already exists.`))
+    return 
+  }
 
   await copy(templateFolder, destinationFolder)
 

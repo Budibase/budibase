@@ -42,7 +42,8 @@ export const getStore = () => {
     currentNode: null,
     libraries: null,
     showSettings: false,
-    useAnalytics: true
+    useAnalytics: true,
+    neoAppId: "84a14e3065c5f15ef8410a5e4c000d68"
   }
 
   const store = writable(initial)

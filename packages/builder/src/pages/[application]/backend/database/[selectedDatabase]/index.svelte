@@ -9,12 +9,10 @@
   const { open, close } = getContext("simple-modal")
 
   const createNewRecord = () => {
-    selectedRecord = null
     open(
       CreateEditRecordModal,
       {
-        onClosed: close,
-        record: selectedRecord,
+        onClosed: close
       },
       { styleContent: { padding: "0" } }
     )

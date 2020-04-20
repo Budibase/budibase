@@ -6,10 +6,7 @@
   export let record
   export let onClosed
 
-  $: currentAppInfo = {
-    appname: $store.appname,
-    instanceId: $backendUiStore.selectedDatabase.id,
-  }
+  $: instanceId = $backendUiStore.selectedDatabase.id
 </script>
 
 <section>
@@ -28,7 +25,7 @@
     <ActionButton
       alert
       on:click={async () => {
-        await api.deleteRecord(record, currentAppInfo)
+        await api.deleteRecord(record, instanceId)
         backendUiStore.actions.records.delete(record)
         onClosed()
       }}>

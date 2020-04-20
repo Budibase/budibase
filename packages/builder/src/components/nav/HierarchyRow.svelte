@@ -10,7 +10,7 @@
 
   const { open, close } = getContext("simple-modal")
 
-  export let level = 0
+  // export let level = 0
   export let node
   export let type
 
@@ -27,31 +27,35 @@
     }
   })
 
-  function selectHierarchyItem(node) {
-    store.selectExistingNode(node.nodeId)
-    const modalType =
-      node.type === "index" ? CreateEditViewModal : CreateEditModelModal
-    open(
-      modalType,
-      {
-        onClosed: close,
-      },
-      { styleContent: { padding: "0" } }
-    )
+  function selectModel(model) {
+    backendUiStore.update(state => {
+      state.selectedModel = model
+      state.selectedView = `all_${model._id}`
+      return state;
+    })
+    // store.selectExistingNode(node.nodeId)
+    // const modalType =
+    //   node.type === "index" ? CreateEditViewModal : CreateEditModelModal
+    // open(
+    //   modalType,
+    //   {
+    //     onClosed: close,
+    //   },
+    //   { styleContent: { padding: "0" } }
+    // )
   }
 </script>
 
 <div>
   <div
-    on:click={() => selectHierarchyItem(node)}
+    on:click={() => selectModel(node)}
     class="budibase__nav-item hierarchy-item"
     class:capitalized={type === 'model'}
-    style="padding-left: {20 + level * 20}px"
-    class:selected={navActive}>
+    class:selected={$backendUiStore.selectedModel._id === node._id}>
     <i class={ICON_MAP[type]} />
     <span style="margin-left: 1rem">{node.name}</span>
   </div>
-  {#if node.children}
+  <!-- {#if node.children}
     {#each node.children as child}
       <svelte:self node={child} level={level + 1} type="model" />
     {/each}
@@ -60,7 +64,7 @@
     {#each node.indexes as index}
       <svelte:self node={index} level={level + 1} type="index" />
     {/each}
-  {/if}
+  {/if} -->
 </div>
 
 <style>
@@ -68,6 +72,7 @@
     font-size: 13px;
     font-weight: 400;
     margin-bottom: 10px;
+    padding-left: 20px;
   }
 
   .capitalized {

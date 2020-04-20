@@ -16,7 +16,7 @@ export const validatePage = page => {
     !isString(page.appBody) ||
     !page.appBody.endsWith(".json")
   ) {
-    error("App body must be set toa valid JSON file")
+    error("App body must be set to a valid JSON file")
   }
 
   /* Commenting this for now

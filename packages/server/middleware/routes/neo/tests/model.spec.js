@@ -37,18 +37,16 @@ describe("/models", () => {
         .send({ 
           name: "TestModel",
           key: "name",
-          fields: [
-            {
-              name: "name",
-              type: "string"
-            }
-          ]
+          schema: {
+            name: { type: "string" }
+          }
         })
         .set("Accept", "application/json")
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
             expect(res.body.message).toEqual("Model TestModel created successfully.");            
+            expect(res.body.model.name).toEqual("TestModel");            
             done();
         });
       })
@@ -73,7 +71,7 @@ describe("/models", () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
-            const fetchedModel = res.body[0].doc;
+            const fetchedModel = res.body[0];
             expect(fetchedModel.name).toEqual(testModel.name);            
             expect(fetchedModel.type).toEqual("model");            
             done();

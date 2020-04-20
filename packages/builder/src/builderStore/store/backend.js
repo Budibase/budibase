@@ -19,6 +19,7 @@ export const getBackendUiStore = () => {
       name: "",
     },
     breadcrumbs: [],
+    models: [],
     selectedDatabase: {},
     selectedModel: {},
   }
@@ -27,12 +28,16 @@ export const getBackendUiStore = () => {
 
   store.actions = {
     database: {
-      select: db =>
+      select: async db => {
+        const response = await api.get(`/api/${db.id}/models`)
+        const models = await response.json()
         store.update(state => {
           state.selectedDatabase = db
           state.breadcrumbs = [db.name]
+          state.models = models
           return state
-        }),
+        })
+      }
     },
     records: {
       delete: () =>
@@ -50,6 +55,13 @@ export const getBackendUiStore = () => {
           state.selectedRecord = record
           return state
         }),
+    },
+    models: {
+      create: model => store.update(state => {
+        state.models.push(model)
+        state.models = state.models
+        return state
+      })
     },
     views: {
       select: view =>

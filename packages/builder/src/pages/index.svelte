@@ -7,7 +7,7 @@
   let promise = getApps()
 
   async function getApps() {
-    const res = await fetch(`/_builder/api/apps`)
+    const res = await fetch(`/api/budibase/applications`)
     const json = await res.json()
 
     if (res.ok) {

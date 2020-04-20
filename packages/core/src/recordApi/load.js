@@ -13,6 +13,8 @@ import {
 import { mapRecord } from "../indexing/evaluate"
 import { permission } from "../authApi/permissions"
 
+export const _loadFromInfo = () => {};
+ 
 export const getRecordFileName = key => joinKey(key, "record.json")
 
 export const load = app => async key => {

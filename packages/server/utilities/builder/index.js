@@ -8,7 +8,7 @@ const {
   unlink,
   rmdir,
 } = require("fs-extra")
-const { join, dirname } = require("path")
+const { join, dirname, resolve } = require("path")
 const { $ } = require("@budibase/core").common
 const { intersection, map, values, flatten } = require("lodash/fp")
 const { merge } = require("lodash")
@@ -28,7 +28,7 @@ const getAppDefinition = async appPath =>
   await readJSON(`${appPath}/appDefinition.json`)
 
 module.exports.getPackageForBuilder = async (config, application) => {
-  const appPath = appPackageFolder(config, application.name)
+  const appPath = resolve(process.cwd(), config.latestPackagesFolder, application.name);
 
   const pages = await getPages(appPath)
 

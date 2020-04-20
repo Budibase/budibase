@@ -5,6 +5,7 @@ const router = Router();
 
 router
   .get("/api/:clientId/applications", controller.fetch)
-  .post("/api/:clientId/applications", controller.create)
+  .get("/api/:clientId/:applicationId/appPackage", controller.fetchAppPackage)
+  .post("/api/:clientId/applications", controller.create);
 
 module.exports = router;
