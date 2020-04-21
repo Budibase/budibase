@@ -18,7 +18,6 @@
     if (component.type && component.type.length > 0) {
       list = component
     } else {
-      //console.log("Here be dragons that add the component! 🐉")
       onComponentChosen(component)
     }
   }
