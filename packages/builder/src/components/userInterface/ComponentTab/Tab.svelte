@@ -2,15 +2,16 @@
   import Item from "./Item.svelte"
   import { store } from "builderStore"
   export let list
+  export let onTemplateChosen
   let category = list
 
   const onComponentChosen = component => {
-    // if (component.template) {
-    //   onTemplateChosen(component.template)
-    // } else {
-    store.addChildComponent(component._component)
-    // toggleTab()
-    // }
+    if (component.template) {
+      onTemplateChosen(component.template)
+    } else {
+      store.addChildComponent(component._component)
+      toggleTab()
+    }
   }
 
   const handleClick = component => {

@@ -140,7 +140,6 @@ export default {
           description: 'A component that generates a table from your data.',
           icon: 'ri-archive-drawer-fill',
           commonProps: {},
-          modelRequired: true,
           type: []
         },
         {
@@ -148,7 +147,12 @@ export default {
           description: 'A component that generates a form from your data.',
           icon: 'ri-file-edit-fill',
           commonProps: {},
-          modelRequired: true,
+          component: "@budibase/materialdesign-components/Form",
+          template: {
+            component: "@budibase/materialdesign-components/Form",
+            description: "Form for saving a record",
+            name: "@budibase/materialdesign-components/recordForm",
+          },
           type: []
         }
       ]
