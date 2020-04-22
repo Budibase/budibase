@@ -5,6 +5,7 @@ export default {
       isCategory: true,
       type: [
         {
+          _component: "@budibase/standard-components/container",
           name: 'Container',
           description: 'This component contains things within itself',
           icon: 'ri-layout-row-fill',
@@ -23,14 +24,12 @@ export default {
               icon: 'headline',
               props: {
                 type: {
-                  type: 'options',
-                  options: [
-                    'h1',
-                    'h2'
-                  ],
-                  'default': 'h1'
-                }
-              }
+                  type: "options",
+                  options: ["h1", "h2", "h3", "h4", "h5", "h6"],
+                  default: "h1",
+                },
+                text: "string",
+              },
             },
             {
               _component: '@budibase/standard-components/text',
@@ -41,40 +40,7 @@ export default {
           ]
         },
         {
-          name: 'Button',
-          description: 'A basic html button that is ready for styling',
-          icon: 'ri-radio-button-fill',
-          commonProps: {},
-          type: []
-        },
-        {
-          name: 'Icon',
-          description: 'A basic component for displaying icons',
-          icon: 'ri-sun-fill',
-          commonProps: {},
-          type: []
-        },
-        {
-          name: 'Avatar',
-          description: 'A basic component for rendering an avatar',
-          icon: 'ri-user-smile-fill',
-          commonProps: {},
-          type: []
-        },
-        {
-          name: 'Link',
-          description: 'A basic link component for internal and external links',
-          icon: 'ri-link',
-          commonProps: {},
-          type: []
-        }
-      ]
-    },
-    {
-      name: 'Form',
-      isCategory: true,
-      type: [
-        {
+          _component: "@budibase/standard-components/button",
           name: 'Button',
           description: 'A basic html button that is ready for styling',
           icon: 'ri-radio-button-fill',
@@ -109,6 +75,7 @@ export default {
       isCategory: true,
       type: [
         {
+          _component: "@budibase/materialdesign-components/BasicCard",
           name: 'Card',
           description: 'A basic card component that can contain content and actions.',
           icon: 'ri-layout-bottom-line',

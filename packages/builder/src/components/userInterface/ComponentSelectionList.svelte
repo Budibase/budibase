@@ -86,7 +86,7 @@
     {/each}
   </ul>
   <div class="panel">
-    <Tab list={selectedCategory} {onTemplateChosen} />
+    <Tab list={selectedCategory} {onTemplateChosen} {toggleTab} />
   </div>
 </div>
 
