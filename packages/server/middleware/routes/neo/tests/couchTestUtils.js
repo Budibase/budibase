@@ -5,8 +5,8 @@ const TEST_APP_ID = "test-app";
 
 exports.destroyDatabase = couchdb.db.destroy;
 
-exports.createModel = async instanceId => {
-  const model = {
+exports.createModel = async (instanceId, model) => {
+  model = model || {
     "name": "TestModel",
     "type": "model",
     "key": "name",
@@ -21,9 +21,11 @@ exports.createModel = async instanceId => {
   designDoc.views = {
     ...designDoc.views,
     [`all_${response.id}`]: {
-      map: function(doc) {
-        emit([doc.modelId], doc._id); 
-      }
+      map: `function(doc) {
+        if (doc.modelId === "${response.id}") {
+          emit(doc[doc.key], doc._id); 
+        }
+      }`
     }
   };
   await db.insert(designDoc, designDoc._id);
@@ -85,4 +87,13 @@ exports.createInstanceDatabase = async instanceId => {
 exports.insertDocument = async (databaseId, document) => {
   const { id, ...documentFields } = document;
   await couchdb.db.use(databaseId).insert(documentFields, id);
+}
+
+exports.createSchema = async (request, instanceId, schema) => {
+  for (let model of schema.models) {
+    await request.post(`/api/${instanceId}/models`).send(model)
+  }
+  for (let view of schema.views) {
+    await request.post(`/api/${instanceId}/views`).send(view)
+  }
 }

@@ -137,7 +137,7 @@ module.exports = (config, app) => {
       await next();
     } catch (err) {
       console.trace(err);
-      ctx.status = err.status || 500;
+      ctx.status = err.status || err.statusCode || 500;
       ctx.body = {
         message: err.message,
         status: ctx.status
