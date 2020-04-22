@@ -5,6 +5,10 @@
   import Item from "./Item.svelte"
   import { store } from "builderStore"
   export let list
+
+  export let toggleTab
+  export let onTemplateChosen
+
   let category = list
 
   const handleClick = item => {
