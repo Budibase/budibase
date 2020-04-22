@@ -20,7 +20,7 @@
     pipe,
   } from "components/common/core"
 
-  import Tab from "./ComponentTab/Tab.svelte"
+  import Tab from "./ItemTab/Tab.svelte"
   import { store } from "builderStore"
 
   export let toggleTab
@@ -51,6 +51,15 @@
     selectTemplateDialog.show()
   }
 
+  const onComponentChosen = component => {
+    if (component.template) {
+      onTemplateChosen(component.template)
+    } else {
+      store.addChildComponent(component._component)
+      toggleTab()
+    }
+  }
+
   const onTemplateInstanceChosen = () => {
     selectedComponent = null
     const instance = templateInstances.find(
@@ -63,16 +72,13 @@
   $: templatesByComponent = groupBy(t => t.component)($store.templates)
   $: hierarchy = $store.hierarchy
   $: libraryModules = $store.libraries
-  $: standaloneTemplates = pipe(
-    templatesByComponent,
-    [
-      values,
-      flatten,
-      filter(t => !$store.components.some(c => c.name === t.component)),
-      map(t => ({ name: splitName(t.component).componentName, template: t })),
-      uniqBy(t => t.name),
-    ]
-  )
+  $: standaloneTemplates = pipe(templatesByComponent, [
+    values,
+    flatten,
+    filter(t => !$store.components.some(c => c.name === t.component)),
+    map(t => ({ name: splitName(t.component).componentName, template: t })),
+    uniqBy(t => t.name),
+  ])
 </script>
 
 <div class="root">
@@ -86,7 +92,9 @@
     {/each}
   </ul>
   <div class="panel">
-    <Tab list={selectedCategory} {onTemplateChosen} />
+    <Tab
+      list={selectedCategory}
+      on:selectItem={e => onComponentChosen(e.detail)} />
   </div>
 </div>
 
