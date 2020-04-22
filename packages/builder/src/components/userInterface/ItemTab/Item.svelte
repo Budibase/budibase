@@ -1,21 +1,21 @@
 <script>
-  export let component
+  export let item
 </script>
 
-<div class="component-item" on:click>
-  <div class="component-icon">
-    <i class={component.icon} />
+<div class="item-item" on:click>
+  <div class="item-icon">
+    <i class={item.icon} />
   </div>
-  <div class="component-text">
-    <div class="component-name">{component.name}</div>
-    <div class="component-description">
-      <p>{component.description}</p>
+  <div class="item-text">
+    <div class="item-name">{item.name}</div>
+    <div class="item-description">
+      <p>{item.description}</p>
     </div>
   </div>
 </div>
 
 <style>
-  .component-item {
+  .item-item {
     display: flex;
     flex-direction: row;
     padding: 10px 0px 8px 10px;
@@ -23,13 +23,13 @@
     cursor: pointer;
   }
 
-  .component-item:hover {
+  .item-item:hover {
     /* background: #f5f5f5; */
     background: #fbfbfb;
     border-radius: 5px;
   }
 
-  .component-icon {
+  .item-icon {
     flex: 0 0 40px;
     /* background: #efe9e9; */
     background: #f1f4fc;
@@ -40,19 +40,19 @@
     align-items: center;
   }
 
-  .component-text {
+  .item-text {
     display: flex;
     padding-left: 16px;
     padding-top: 8px;
     flex-direction: column;
   }
 
-  .component-name {
+  .item-name {
     font-size: 14px;
     font-weight: 500;
   }
 
-  .component-description {
+  .item-description {
     font-size: 12px;
     color: #808192;
   }
