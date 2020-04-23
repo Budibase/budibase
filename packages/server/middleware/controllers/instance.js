@@ -16,7 +16,7 @@ exports.create = async function(ctx) {
       by_type: { 
         map: function(doc) { 
           emit([doc.type], doc._id); 
-        } 
+        }.toString() 
       } 
     }
   });

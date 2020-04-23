@@ -1,1 +1,1 @@
-{"version":3,"sources":["../../src/schemaValidation/index.js"],"names":["ajv","Ajv"],"mappings":"4LAAA;;AAEA,IAAMA,GAAG,GAAG,IAAIC,eAAJ,EAAZ,C;;AAEeD,G","sourcesContent":["import Ajv from \"ajv\";\r\n\r\nconst ajv = new Ajv();\r\n\r\nexport default ajv;"],"file":"index.js"}
+{"version":3,"sources":["../../src/schemaValidation/index.js"],"names":["ajv","Ajv"],"mappings":"4LAAA;;AAEA,IAAMA,GAAG,GAAG,IAAIC,eAAJ,EAAZ,C;;AAEeD,G","sourcesContent":["import Ajv from \"ajv\";\n\nconst ajv = new Ajv();\n\nexport default ajv;"],"file":"index.js"}
