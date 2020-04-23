@@ -1,16 +1,32 @@
 {
 	"_lib": "./dist/index.js",
-	"_templates" : {
-		"saveRecordButton" : {
+	"_templates": {
+		"saveRecordButton": {
 			"description": "Save record button",
 			"component": "button"
 		}
 	},
-	"button" : {
+	"Navigation": {
+		"name": "Navigation",
+		"description": "A basic header navigation component",
+		"props": {
+			"logoUrl": "string",
+			"title": "string",
+			"backgroundColor": "string",
+			"color": "string",
+			"borderWidth": "string",
+			"borderColor": "string",
+			"borderStyle": "string"
+		}
+	},
+	"button": {
 		"name": "Button",
 		"description": "an html <button />",
 		"props": {
-			"contentText": { "type": "string", "default": "Button" },
+			"contentText": {
+				"type": "string",
+				"default": "Button"
+			},
 			"className": "string",
 			"disabled": "bool",
 			"onClick": "event",
@@ -22,76 +38,110 @@
 			"hoverBackground": "string",
 			"hoverBorder": "string"
 		},
-		"tags": ["layout"],
+		"tags": [
+			"layout"
+		],
 		"presets": {
 			"primary": {
 				"contentText": "Primary Button Preset",
-				"color": "papayawhip", 
+				"color": "papayawhip",
 				"padding": "20px",
 				"background": "blue"
 			},
 			"secondary": {
 				"contentText": "Secondary Button Preset",
-				"color": "rebeccapurple", 
+				"color": "rebeccapurple",
 				"padding": "10px",
 				"background": "#fff",
 				"border": "1px solid red"
 			},
 			"error": {
 				"contentText": "ERROR",
-				"color": "red", 
+				"color": "red",
 				"padding": "10px",
 				"border": "1px solid red"
 			}
-		} 
-	}, 
-	"login" : {
+		}
+	},
+	"login": {
 		"name": "Login Control",
 		"description": "A control that accepts username, password an also handles password resets",
-		"props" : {
+		"props": {
 			"logo": "asset",
 			"loginRedirect": "string",
-			"usernameLabel": {"type":"string", "default": "Username"},
-			"passwordLabel": {"type":"string", "default": "Password"},
-			"loginButtonLabel": {"type":"string", "default": "Login"},
+			"usernameLabel": {
+				"type": "string",
+				"default": "Username"
+			},
+			"passwordLabel": {
+				"type": "string",
+				"default": "Password"
+			},
+			"loginButtonLabel": {
+				"type": "string",
+				"default": "Login"
+			},
 			"buttonClass": "string",
 			"inputClass": "string"
 		},
-		"tags": ["login", "credentials", "password", "logon"]
+		"tags": [
+			"login",
+			"credentials",
+			"password",
+			"logon"
+		]
 	},
-	"input" : {
+	"input": {
 		"name": "Input",
 		"description": "An HTML input",
-		"props" : {
+		"props": {
 			"value": "string",
 			"type": {
-				"type":"options", 
-				"options":[
-					"text", "password", "checkbox", "color", 
-					"date", "datetime-local", "email", 
-					"file", "hidden", "image", "month", "number",
-					"radio", "range", "reset", "search", "submit",
-					"tel", "time", "week"],
-				"default":"text"
+				"type": "options",
+				"options": [
+					"text",
+					"password",
+					"checkbox",
+					"color",
+					"date",
+					"datetime-local",
+					"email",
+					"file",
+					"hidden",
+					"image",
+					"month",
+					"number",
+					"radio",
+					"range",
+					"reset",
+					"search",
+					"submit",
+					"tel",
+					"time",
+					"week"
+				],
+				"default": "text"
 			},
 			"onChange": "event",
 			"className": "string"
 		},
-		"tags": ["form"]
+		"tags": [
+			"form"
+		]
 	},
-	"select" : {
+	"select": {
 		"name": "Select",
 		"description": "An HTML <select> (dropdown)",
-		"props" : {
+		"props": {
 			"value": "string",
 			"className": "string"
 		}
 	},
-	"option" : {
+	"option": {
 		"name": "Option",
 		"description": "An HTML <option>, to be used with <select>",
 		"children": false,
-		"props" : {
+		"props": {
 			"value": "string",
 			"text": "string"
 		}
@@ -100,27 +150,32 @@
 		"name": "Text",
 		"description": "stylable block of text",
 		"children": false,
-		"props" : {
+		"props": {
 			"text": "string",
 			"font": "string",
+			"fontSize": "string",
 			"color": "string",
 			"textAlign": {
-				"type": "options", 
-				"default":"inline", 
+				"type": "options",
+				"default": "inline",
 				"options": [
-					"left", "center", "right"
+					"left",
+					"center",
+					"right"
 				]
 			},
 			"verticalAlign": {
-				"type": "options", 
-				"default":"inline", 
+				"type": "options",
+				"default": "inline",
 				"options": [
-					"top", "middle", "bottom"
+					"top",
+					"middle",
+					"bottom"
 				]
 			},
 			"formattingTag": {
-				"type": "options", 
-				"default":"none", 
+				"type": "options",
+				"default": "none",
 				"options": [
 					"none",
 					"<b> - bold",
@@ -136,7 +191,46 @@
 				]
 			}
 		},
-		"tags": ["div", "container"]
+		"tags": [
+			"div",
+			"container"
+		]
+	},
+	"textfield": {
+		"name": "Textfield",
+		"description": "A component that allows the user to input text.",
+		"props": {
+			"label": "string",
+			"value": "string",
+			"onchange": "event"
+		}
+	},
+	"checkbox": {
+		"name": "Checkbox",
+		"description": "A selectable checkbox component",
+		"props": {
+			"label": "string",
+			"checked": "bool",
+			"value": "string",
+			"onchange": "event"
+		}
+	},
+	"radiobutton": {
+		"name": "Radiobutton",
+		"description": "A selectable radiobutton component",
+		"props": {
+			"label": "string",
+			"checked": "bool",
+			"value": "string",
+			"onchange": "event"
+		}
+	},
+	"icon": {
+		"description": "A HTML icon tag",
+		"props": {
+			"icon": "string",
+			"fontSize": "string"
+		}
 	},
 	"link": {
 		"description": "an HTML anchor <a> tag",
@@ -163,11 +257,11 @@
 	"container": {
 		"name": "Container",
 		"description": "An element that contains and lays out other elements. e.g. <div>, <header> etc",
-		"props" : {
-			"className":"string",
+		"props": {
+			"className": "string",
 			"onLoad": "event",
 			"type": {
-				"type": "options", 
+				"type": "options",
 				"options": [
 					"article",
 					"aside",
@@ -190,7 +284,7 @@
 			"borderWidth": "string",
 			"borderColor": "string",
 			"borderStyle": {
-				"type":"options",
+				"type": "options",
 				"options": [
 					"none",
 					"solid",
@@ -204,20 +298,31 @@
 				],
 				"default": "none"
 			}
-
 		},
 		"container": true,
-		"tags": ["div", "container", "layout"]
+		"tags": [
+			"div",
+			"container",
+			"layout"
+		]
 	},
 	"heading": {
 		"name": "Heading",
 		"description": "An HTML H1 - H6 tag",
-		"props" : {
-			"className":"string",
+		"props": {
+			"className": "string",
+			"text": "string",
 			"type": {
 				"type": "options",
 				"default": "h1",
-				"options": ["h1","h2","h3","h4","h5","h6"]
+				"options": [
+					"h1",
+					"h2",
+					"h3",
+					"h4",
+					"h5",
+					"h6"
+				]
 			}
 		},
 		"tags": []
@@ -225,15 +330,15 @@
 	"thead": {
 		"name": "TableHead",
 		"description": "an HTML <thead> tab",
-		"props" : {
-			"className":"string"
+		"props": {
+			"className": "string"
 		}
 	},
 	"tbody": {
 		"name": "TableBody",
 		"description": "an HTML <tbody> tab",
-		"props" : {
-			"className":"string"
+		"props": {
+			"className": "string"
 		}
 	}
 }
