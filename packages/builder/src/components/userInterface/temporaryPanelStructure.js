@@ -52,28 +52,28 @@ export default {
               name: "Textfield",
               description: "A textfield component that allows the user to input text.",
               icon: 'ri-edit-box-line',
-              props: {}  
+              props: {}
             },
             {
               _component: "@budibase/standard-components/checkbox",
               name: "Checkbox",
               description: "A selectable checkbox component",
               icon: 'ri-checkbox-line',
-              props: {}  
+              props: {}
             },
             {
               _component: "@budibase/standard-components/radiobutton",
               name: "Radiobutton",
               description: "A selectable radiobutton component",
               icon: 'ri-radio-button-line',
-              props: {}  
+              props: {}
             },
             {
               _component: "@budibase/standard-components/select",
               name: "Select",
               description: "A select component for choosing from different options",
               icon: 'ri-file-list-line',
-              props: {}  
+              props: {}
             }
           ]
         },
@@ -123,9 +123,10 @@ export default {
           children: []
         },
         {
-          name: 'Navbar',
-          description: 'A component for handling the navigation within your app.',
-          icon: 'ri-navigation-fill',
+          name: "Navigation Bar",
+          _component: "@budibase/standard-components/Navigation",
+          description: "A component for handling the navigation within your app.",
+          icon: "ri-navigation-fill",
           commonProps: {},
           children: []
         }
