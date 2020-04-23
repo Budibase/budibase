@@ -1,16 +1,17 @@
 import api from "builderStore/api"
-import { getNewRecord, getNewInstance } from "components/common/core"
 
-export async function createUser(password, user, { appname, instanceId }) {
-  const CREATE_USER_URL = `/_builder/instance/${appname}/${instanceId}/api/createUser`
-  const response = await api.post(CREATE_USER_URL, { user, password })
-  return await response.json()
+export async function createUser(user, instanceId) {
+  const CREATE_USER_URL = `/api/${instanceId}/users`
+  const response = await api.post(CREATE_USER_URL, user)
+  const json = await response.json()
+  return json.user;
 }
 
-export async function createDatabase(appname, instanceName) {
-  const CREATE_DATABASE_URL = `/_builder/instance/_master/0/api/record/`
-  const database = getNewInstance(appname, instanceName)
-  const response = await api.post(CREATE_DATABASE_URL, database)
+export async function createDatabase(clientId, appname, instanceName) {
+  const CREATE_DATABASE_URL = `/api/${clientId}/${appname}/instances`
+  const response = await api.post(CREATE_DATABASE_URL, {
+    name: instanceName
+  })
   return await response.json()
 }
 

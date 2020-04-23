@@ -2,7 +2,6 @@ const supertest = require("supertest");
 const app = require("../../../../app");
 const { 
   createInstanceDatabase, 
-  insertDocument, 
   destroyDatabase 
 } = require("./couchTestUtils");
 

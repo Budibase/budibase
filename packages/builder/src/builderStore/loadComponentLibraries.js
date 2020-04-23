@@ -1,34 +1,34 @@
 import { flatten, values, uniq, map } from "lodash/fp"
 import { pipe } from "components/common/core"
 
-export const loadLibs = async (appName, appPackage) => {
+export const loadLibs = async (appId, appPackage) => {
   const allLibraries = {}
 
   for (let lib of libsFromPages(appPackage.pages)) {
-    const libModule = await import(makeLibraryUrl(appName, lib))
+    const libModule = await import(makeLibraryUrl(appId, lib))
     allLibraries[lib] = libModule
   }
 
   return allLibraries
 }
 
-export const loadLibUrls = (appName, appPackage) => {
+export const loadLibUrls = (appId, appPackage) => {
   const allLibraries = []
   for (let lib of libsFromPages(appPackage.pages)) {
-    const libUrl = makeLibraryUrl(appName, lib)
+    const libUrl = makeLibraryUrl(appId, lib)
     allLibraries.push({ libName: lib, importPath: libUrl })
   }
 
   return allLibraries
 }
 
-export const loadLib = async (appName, lib, allLibs) => {
-  allLibs[lib] = await import(makeLibraryUrl(appName, lib))
+export const loadLib = async (appId, lib, allLibs) => {
+  allLibs[lib] = await import(makeLibraryUrl(appId, lib))
   return allLibs
 }
 
-export const makeLibraryUrl = (appName, lib) =>
-  `/_builder/${appName}/componentlibrary?lib=${encodeURI(lib)}`
+export const makeLibraryUrl = (appId, lib) =>
+  `/_builder/${appId}/componentlibrary?lib=${encodeURI(lib)}`
 
 export const libsFromPages = pages =>
   pipe(pages, [values, map(p => p.componentLibraries), flatten, uniq])

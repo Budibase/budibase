@@ -1,8 +1,8 @@
-const couchdb = require("../../db");
+const CouchDB = require("../../db");
 
 exports.fetch = async function(ctx) {
-  const db = couchdb.db.use(ctx.params.instanceId);
-  const body = await db.view("database", "by_type", { 
+  const db = new CouchDB(ctx.params.instanceId);
+  const body = await db.query("database/by_type", { 
     include_docs: true,
     key: ["model"] 
   });
@@ -10,8 +10,8 @@ exports.fetch = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
-  const db = couchdb.db.use(ctx.params.instanceId);
-  const newModel = await db.insert({ 
+  const db = new CouchDB(ctx.params.instanceId);
+  const newModel = await db.post({ 
     type: "model",
     ...ctx.request.body
   });
@@ -27,7 +27,7 @@ exports.create = async function(ctx) {
       }`
     }
   };
-  await db.insert(designDoc, designDoc._id);
+  await db.put(designDoc);
 
   ctx.body = {
     message: `Model ${ctx.request.body.name} created successfully.`,
@@ -44,21 +44,21 @@ exports.update = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = couchdb.db.use(ctx.params.instanceId)
+  const db = new CouchDB(ctx.params.instanceId)
 
-  const model = await db.destroy(ctx.params.modelId, ctx.params.revId);
+  const model = await db.remove(ctx.params.modelId, ctx.params.revId);
   const modelViewId = `all_${model.id}`
 
   // Delete all records for that model
-  const records = await db.view("database", modelViewId);
-  await db.bulk({ 
-    docs: records.rows.map(record => ({ id: record.id, _deleted: true })) 
-  });
+  const records = await db.query(`database/${modelViewId}`);
+  await db.bulkDocs(
+    records.rows.map(record => ({ id: record.id, _deleted: true }))
+  );
 
   // delete the "all" view
   const designDoc = await db.get("_design/database");
   delete designDoc.views[modelViewId];
-  await db.insert(designDoc, designDoc._id);
+  await db.put(designDoc);
 
   ctx.body = {
     message: `Model ${model.id} deleted.`,

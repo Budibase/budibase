@@ -1,15 +1,9 @@
 import { writable } from "svelte/store"
 import api from "../api"
-import { cloneDeep, sortBy, find, remove } from "lodash/fp"
-import { hierarchy as hierarchyFunctions } from "../../../../core/src"
+import { find } from "lodash/fp"
 import {
   getNode,
-  validate,
   constructHierarchy,
-  templateApi,
-  isIndex,
-  canDeleteIndex,
-  canDeleteModel,
 } from "components/common/core"
 
 export const getBackendUiStore = () => {
@@ -20,6 +14,7 @@ export const getBackendUiStore = () => {
     },
     breadcrumbs: [],
     models: [],
+    users: [],
     selectedDatabase: {},
     selectedModel: {},
   }
@@ -103,38 +98,24 @@ export const saveBackend = async state => {
     },
     accessLevels: state.accessLevels,
   })
-
-  const instances_currentFirst = state.selectedDatabase
-    ? [
-      state.appInstances.find(i => i.id === state.selectedDatabase.id),
-      ...state.appInstances.filter(i => i.id !== state.selectedDatabase.id),
-    ]
-    : state.appInstances
-
-  for (let instance of instances_currentFirst) {
-    await api.post(
-      `/_builder/instance/${state.appname}/${instance.id}/api/upgradeData`,
-      { newHierarchy: state.hierarchy, accessLevels: state.accessLevels }
-    )
-  }
 }
 
-export const newModel = (store, useRoot) => () => {
-  store.update(state => {
-    state.currentNodeIsNew = true
-    const shadowHierarchy = createShadowHierarchy(state.hierarchy)
-    const parent = useRoot
-      ? shadowHierarchy
-      : getNode(shadowHierarchy, state.currentNode.nodeId)
-    state.errors = []
-    state.currentNode = templateApi(shadowHierarchy).getNewModelTemplate(
-      parent,
-      "",
-      true
-    )
-    return state
-  })
-}
+// export const newModel = (store, useRoot) => () => {
+//   store.update(state => {
+//     state.currentNodeIsNew = true
+//     const shadowHierarchy = createShadowHierarchy(state.hierarchy)
+//     const parent = useRoot
+//       ? shadowHierarchy
+//       : getNode(shadowHierarchy, state.currentNode.nodeId)
+//     state.errors = []
+//     state.currentNode = templateApi(shadowHierarchy).getNewModelTemplate(
+//       parent,
+//       "",
+//       true
+//     )
+//     return state
+//   })
+// }
 
 export const selectExistingNode = store => nodeId => {
   store.update(state => {
@@ -145,133 +126,133 @@ export const selectExistingNode = store => nodeId => {
   })
 }
 
-export const newIndex = (store, useRoot) => () => {
-  store.update(state => {
-    state.shadowHierarchy = createShadowHierarchy(state.hierarchy)
-    state.currentNodeIsNew = true
-    state.errors = []
-    const parent = useRoot
-      ? state.shadowHierarchy
-      : getNode(state.shadowHierarchy, state.currentNode.nodeId)
+// export const newIndex = (store, useRoot) => () => {
+//   store.update(state => {
+//     state.shadowHierarchy = createShadowHierarchy(state.hierarchy)
+//     state.currentNodeIsNew = true
+//     state.errors = []
+//     const parent = useRoot
+//       ? state.shadowHierarchy
+//       : getNode(state.shadowHierarchy, state.currentNode.nodeId)
 
-    state.currentNode = templateApi(state.shadowHierarchy).getNewIndexTemplate(
-      parent
-    )
-    return state
-  })
-}
+//     state.currentNode = templateApi(state.shadowHierarchy).getNewIndexTemplate(
+//       parent
+//     )
+//     return state
+//   })
+// }
 
-export const saveCurrentNode = store => () => {
-  store.update(state => {
-    const errors = validate.node(state.currentNode)
-    state.errors = errors
-    if (errors.length > 0) {
-      return state
-    }
-    const parentNode = getNode(
-      state.hierarchy,
-      state.currentNode.parent().nodeId
-    )
+// export const saveCurrentNode = store => () => {
+//   store.update(state => {
+//     const errors = validate.node(state.currentNode)
+//     state.errors = errors
+//     if (errors.length > 0) {
+//       return state
+//     }
+//     const parentNode = getNode(
+//       state.hierarchy,
+//       state.currentNode.parent().nodeId
+//     )
 
-    const existingNode = getNode(state.hierarchy, state.currentNode.nodeId)
+//     const existingNode = getNode(state.hierarchy, state.currentNode.nodeId)
 
-    let index = parentNode.children.length
-    if (existingNode) {
-      // remove existing
-      index = existingNode.parent().children.indexOf(existingNode)
-      if (isIndex(existingNode)) {
-        parentNode.indexes = parentNode.indexes.filter(
-          node => node.nodeId !== existingNode.nodeId
-        )
-      } else {
-        parentNode.children = parentNode.children.filter(
-          node => node.nodeId !== existingNode.nodeId
-        )
-      }
-    }
+//     let index = parentNode.children.length
+//     if (existingNode) {
+//       // remove existing
+//       index = existingNode.parent().children.indexOf(existingNode)
+//       if (isIndex(existingNode)) {
+//         parentNode.indexes = parentNode.indexes.filter(
+//           node => node.nodeId !== existingNode.nodeId
+//         )
+//       } else {
+//         parentNode.children = parentNode.children.filter(
+//           node => node.nodeId !== existingNode.nodeId
+//         )
+//       }
+//     }
 
-    // should add node into existing hierarchy
-    const cloned = cloneDeep(state.currentNode)
-    templateApi(state.hierarchy).constructNode(parentNode, cloned)
+//     // should add node into existing hierarchy
+//     const cloned = cloneDeep(state.currentNode)
+//     templateApi(state.hierarchy).constructNode(parentNode, cloned)
 
-    if (isIndex(existingNode)) {
-      parentNode.children = sortBy("name", parentNode.children)
-    } else {
-      parentNode.indexes = sortBy("name", parentNode.indexes)
-    }
+//     if (isIndex(existingNode)) {
+//       parentNode.children = sortBy("name", parentNode.children)
+//     } else {
+//       parentNode.indexes = sortBy("name", parentNode.indexes)
+//     }
 
-    if (!existingNode && state.currentNode.type === "record") {
-      const defaultIndex = templateApi(state.hierarchy).getNewIndexTemplate(
-        cloned.parent()
-      )
-      defaultIndex.name = hierarchyFunctions.isTopLevelIndex(cloned)
-        ? `all_${cloned.name}s`
-        : `${cloned.parent().name}_${cloned.name}s`
+//     if (!existingNode && state.currentNode.type === "record") {
+//       const defaultIndex = templateApi(state.hierarchy).getNewIndexTemplate(
+//         cloned.parent()
+//       )
+//       defaultIndex.name = hierarchyFunctions.isTopLevelIndex(cloned)
+//         ? `all_${cloned.name}s`
+//         : `${cloned.parent().name}_${cloned.name}s`
 
-      defaultIndex.allowedModelNodeIds = [cloned.nodeId]
-    }
+//       defaultIndex.allowedModelNodeIds = [cloned.nodeId]
+//     }
 
-    state.currentNodeIsNew = false
+//     state.currentNodeIsNew = false
 
-    saveBackend(state)
+//     saveBackend(state)
 
-    return state
-  })
-}
+//     return state
+//   })
+// }
 
-export const deleteCurrentNode = store => () => {
-  store.update(state => {
-    const nodeToDelete = getNode(state.hierarchy, state.currentNode.nodeId)
-    state.currentNode = hierarchyFunctions.isRoot(nodeToDelete.parent())
-      ? state.hierarchy.children.find(node => node !== state.currentNode)
-      : nodeToDelete.parent()
+// export const deleteCurrentNode = store => () => {
+//   store.update(state => {
+//     const nodeToDelete = getNode(state.hierarchy, state.currentNode.nodeId)
+//     state.currentNode = hierarchyFunctions.isRoot(nodeToDelete.parent())
+//       ? state.hierarchy.children.find(node => node !== state.currentNode)
+//       : nodeToDelete.parent()
 
-    const isModel = hierarchyFunctions.isModel(nodeToDelete)
+//     const isModel = hierarchyFunctions.isModel(nodeToDelete)
 
-    const check = isModel
-      ? canDeleteModel(nodeToDelete)
-      : canDeleteIndex(nodeToDelete)
+//     const check = isModel
+//       ? canDeleteModel(nodeToDelete)
+//       : canDeleteIndex(nodeToDelete)
 
-    if (!check.canDelete) {
-      state.errors = check.errors.map(e => ({ error: e }))
-      return state
-    }
+//     if (!check.canDelete) {
+//       state.errors = check.errors.map(e => ({ error: e }))
+//       return state
+//     }
 
-    const recordOrIndexKey = isModel ? "children" : "indexes"
+//     const recordOrIndexKey = isModel ? "children" : "indexes"
 
-    // remove the selected record or index
-    const newCollection = remove(
-      node => node.nodeId === nodeToDelete.nodeId,
-      nodeToDelete.parent()[recordOrIndexKey]
-    )
+//     // remove the selected record or index
+//     const newCollection = remove(
+//       node => node.nodeId === nodeToDelete.nodeId,
+//       nodeToDelete.parent()[recordOrIndexKey]
+//     )
 
-    nodeToDelete.parent()[recordOrIndexKey] = newCollection
+//     nodeToDelete.parent()[recordOrIndexKey] = newCollection
 
-    state.errors = []
-    saveBackend(state)
-    return state
-  })
-}
+//     state.errors = []
+//     saveBackend(state)
+//     return state
+//   })
+// }
 
-export const saveField = store => field => {
-  store.update(state => {
-    state.currentNode.fields = state.currentNode.fields.filter(
-      f => f.id !== field.id
-    )
+// export const saveField = store => field => {
+//   store.update(state => {
+//     state.currentNode.fields = state.currentNode.fields.filter(
+//       f => f.id !== field.id
+//     )
 
-    templateApi(state.hierarchy).addField(state.currentNode, field)
-    return state
-  })
-}
+//     templateApi(state.hierarchy).addField(state.currentNode, field)
+//     return state
+//   })
+// }
 
-export const deleteField = store => field => {
-  store.update(state => {
-    state.currentNode.fields = state.currentNode.fields.filter(
-      f => f.name !== field.name
-    )
-    return state
-  })
-}
+// export const deleteField = store => field => {
+//   store.update(state => {
+//     state.currentNode.fields = state.currentNode.fields.filter(
+//       f => f.name !== field.name
+//     )
+//     return state
+//   })
+// }
 
 const incrementAccessLevelsVersion = state => {
   state.accessLevels.version = state.accessLevels.version

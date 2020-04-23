@@ -1,10 +1,11 @@
-const couchdb = require("../../db");
+const CouchDB = require("../../db");
 
 exports.create = async function(ctx) {
   const clientId =  `client-${ctx.request.body.clientId}`;
-  await couchdb.db.create(clientId);
+  const db = new CouchDB(clientId);
 
-  await couchdb.db.use(clientId).insert({
+  await db.put({
+    _id: "_design/client",
     views: { 
       by_type: { 
         map: function(doc) { 
@@ -12,7 +13,7 @@ exports.create = async function(ctx) {
         } 
       } 
     }
-  }, '_design/client');
+  });
 
   ctx.body = {
     message: `Client Database ${clientId} successfully provisioned.`
@@ -22,7 +23,7 @@ exports.create = async function(ctx) {
 exports.destroy = async function(ctx) {
   const dbId = `client-${ctx.params.clientId}`;
 
-  await couchdb.db.destroy(dbId);
+  await new CouchDB(dbId).destroy();
 
   ctx.body = {
     status: 200,

@@ -1,4 +1,5 @@
 <script>
+  import { store } from "builderStore";
   import AppList from "components/start/AppList.svelte"
   import { onMount } from "svelte"
   import IconButton from "components/common/IconButton.svelte"
@@ -7,7 +8,7 @@
   let promise = getApps()
 
   async function getApps() {
-    const res = await fetch(`/api/budibase/applications`)
+    const res = await fetch(`/api/${$store.clientId}/applications`)
     const json = await res.json()
 
     if (res.ok) {

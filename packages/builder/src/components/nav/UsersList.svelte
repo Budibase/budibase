@@ -10,8 +10,6 @@
     return { name, props }
   }
 
-  let users = []
-
   $: currentAppInfo = {
     appname: $store.appname,
     instanceId: $backendUiStore.selectedDatabase.id,
@@ -20,7 +18,7 @@
   async function fetchUsers() {
     const FETCH_USERS_URL = `/api/${currentAppInfo.instanceId}/users`
     const response = await api.get(FETCH_USERS_URL)
-    users = await response.json()
+    const users = await response.json()
     backendUiStore.update(state => {
       state.users = users
       return state
@@ -32,7 +30,7 @@
 
 <div class="root">
   <ul>
-    {#each users as user}
+    {#each $backendUiStore.users as user}
       <li>
         <i class="ri-user-4-line" />
         <button class:active={user.id === $store.currentUserId}>

@@ -13,7 +13,7 @@
   }
 
   async function deleteDatabase(database) {
-    const DELETE_DATABASE_URL = `/api/instances/${database.id}`
+    const DELETE_DATABASE_URL = `/api/instances/${database.name}`
     const response = await api.delete(DELETE_DATABASE_URL)
     store.update(state => {
       state.appInstances = state.appInstances.filter(

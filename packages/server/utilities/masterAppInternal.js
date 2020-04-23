@@ -336,6 +336,7 @@ module.exports = async context => {
 
   const getApplicationWithInstances = async appname => {
     const app = cloneDeep(await getApplication(appname))
+    
     app.instances = await bb.indexApi.listItems(
       `/applications/${app.id}/allinstances`
     )
