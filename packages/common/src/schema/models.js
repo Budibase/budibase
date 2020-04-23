@@ -1,12 +1,17 @@
 import { generate } from "shortid"
 
 export const newModel = () => ({
-  id: generate(),
+  _id: generate(),
   name: "",
-  fields: [],
-  validationRules: [],
-  primaryField: "",
-  views: [],
+  type: "model",
+  key: "name",
+  schema: {
+    type: "object",
+    properties: {
+      name: { type: "string" },
+    },
+    required: ["name"],
+  },
 })
 
 /**

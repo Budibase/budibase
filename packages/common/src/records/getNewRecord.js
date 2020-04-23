@@ -1,16 +1,15 @@
 import { generate } from "shortid"
-import { getNewFieldValue } from "../schema/types"
 
 export const getNewRecord = (schema, modelName) => {
   const model = schema.findModel(modelName)
 
   const record = {
     _id: generate(),
-    _modelId: model.id,
+    modelId: model._id,
   }
 
-  for (let field of model.fields) {
-    record[field.name] = getNewFieldValue(field)
+  for (let field in model.schema.properties) {
+    record[field] = field.default
   }
 
   return record
