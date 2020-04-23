@@ -1,22 +1,17 @@
 const couchdb = require("../../db")
-const {
-  events,
-  schemaValidator
-} = require("../../../common");
+const { schemaValidator } = require("@budibase/common")
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId);
   const record = ctx.request.body;
 
   // validation with ajv
-  const model = await db.get(ctx.params.modelId);
-  const validate = schemaValidator.compile({ 
-    properties: model.schema
-  });
-  const valid = validate(record);
+  const model = await db.get(record.modelId)
+  const validate = schemaValidator.compile(model.schema)
+  const valid = validate(record)
 
   if (!valid) {
-    ctx.status = 400;
+    ctx.status = 400
     ctx.body = {
       status: 400,
       errors: validate.errors
@@ -33,24 +28,19 @@ exports.save = async function(ctx) {
       status: 200,
       record: response
     }
-    return;
+    return
   }
 
-  const response = await db.post({
-    modelId: ctx.params.modelId,
-    type: "record",
-    ...record
-  })
-
+  record.type = "record"
+  const response = await db.post(record)
+  record._rev = response.rev
   // await ctx.publish(events.recordApi.save.onRecordCreated, {
   //   record: record,
   // })
 
-  ctx.body = {
-    message: "Record created successfully.",
-    status: 200,
-    record: response
-  };
+  ctx.body = record
+  ctx.status = 200
+  ctx.message = `${model.name} ${record._rev ? "updated" : "created"} successfully`
 }
 
 exports.fetch = async function(ctx) {
@@ -65,12 +55,8 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = couchdb.db.use(ctx.params.databaseId)
-
-  const record = await db.get(ctx.params.recordId);
-
-  ctx.body = record;
-  ctx.status = 200;
+  const db = couchdb.db.use(ctx.params.instanceId)
+  ctx.body = await db.get(ctx.params.recordId)
 }
 
 exports.destroy = async function(ctx) {

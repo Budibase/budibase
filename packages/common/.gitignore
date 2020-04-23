@@ -40,4 +40,4 @@ flow-typed/npm/*
 
 .idea
 npm-debug.log.*
-dist
+lib
