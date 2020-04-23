@@ -1,4 +1,4 @@
-const couchdb = require("../../db")
+const CouchDB = require("../../db")
 const { schemaValidator } = require("@budibase/common")
 
 exports.save = async function(ctx) {
@@ -55,7 +55,7 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = couchdb.db.use(ctx.params.instanceId)
+  const db = new CouchDB(ctx.params.instanceId)
   ctx.body = await db.get(ctx.params.recordId)
 }
 
