@@ -39,5 +39,6 @@
     border: solid 1px #e8e8ef;
     background: white;
     margin-bottom: 20px;
+    cursor: pointer;
   }
 </style>
