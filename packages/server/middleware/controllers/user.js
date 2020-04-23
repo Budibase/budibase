@@ -1,8 +1,9 @@
-const couchdb = require("../../db");
+const CouchDB = require("../../db");
+const bcrypt = require("../../utilities/bcrypt");
 
 exports.fetch = async function(ctx) {
-  const database = couchdb.db.use(ctx.params.instanceId);
-  const data = await database.view("database", "by_type", { 
+  const database = new CouchDB(ctx.params.instanceId);
+  const data = await database.query("database/by_type", { 
     include_docs: true,
     key: ["user"] 
   });
@@ -11,20 +12,32 @@ exports.fetch = async function(ctx) {
 };
 
 exports.create = async function(ctx) {
-  const database = couchdb.db.use(ctx.params.instanceId);
-  const response =  await database.insert({ 
-    ...ctx.request.body,
+  const database = new CouchDB(ctx.params.instanceId);
+  const { username, password, name } = ctx.request.body;
+
+  if (!username || !password) ctx.throw(400, "Username and Password Required.");
+
+  const response =  await database.post({ 
+    username,
+    password: await bcrypt.hash(password),
+    name, 
     type: "user"
   });
+
   ctx.body = {
-    ...response,
+    user: {
+      id: response.id,
+      rev: response.rev,
+      username,
+      name
+    },
     message: `User created successfully.`,
     status: 200
   }
 };
 
 exports.destroy = async function(ctx) {
-  const database = couchdb.db.use(ctx.params.instanceId);
+  const database = new CouchDB(ctx.params.instanceId);
   const response = await database.destroy(ctx.params.userId)
   ctx.body = {
     ...response,

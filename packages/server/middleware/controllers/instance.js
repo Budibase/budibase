@@ -1,11 +1,13 @@
-const couchdb = require("../../db");
+const CouchDB = require("../../db");
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name;
-  await couchdb.db.create(instanceName);
+  // await couchdb.db.create(instanceName);
 
   const { clientId, applicationId } = ctx.params;
-  await couchdb.db.use(instanceName).insert({
+  const db = new CouchDB(instanceName);
+  await db.put({
+    _id: "_design/database",
     metadata: {
       clientId,
       applicationId
@@ -17,35 +19,34 @@ exports.create = async function(ctx) {
         } 
       } 
     }
-  }, '_design/database');
+  });
 
   // Add the new instance under the app clientDB
   const clientDatabaseId = `client-${clientId}`
-  const clientDb = await couchdb.db.use(clientDatabaseId);
+  const clientDb = new CouchDB(clientDatabaseId);
   const budibaseApp = await clientDb.get(applicationId);
-  budibaseApp.instances.push({
-    id: instanceName,
-    name: instanceName
-  });
-  await clientDb.insert(budibaseApp, budibaseApp._id);
+  const instance = { id: instanceName, name: instanceName };
+  budibaseApp.instances.push(instance);
+  await clientDb.put(budibaseApp);
 
   ctx.body = {
     message: `Instance Database ${instanceName} successfully provisioned.`,
-    status: 200
+    status: 200,
+    instance
   }
 };
 
 exports.destroy = async function(ctx) {
-  const db = couchdb.db.use(ctx.params.instanceId);
+  const db = new CouchDB(ctx.params.instanceId);
   const designDoc = await db.get("_design/database");
-  await couchdb.db.destroy(ctx.params.instanceId)
+  await db.destroy();
 
   // remove instance from client application document
   const { metadata } = designDoc;
-  const clientDb = await couchdb.db.use(metadata.clientId);
+  const clientDb = new CouchDB(metadata.clientId);
   const budibaseApp = await clientDb.get(metadata.applicationId);
   budibaseApp.instances = budibaseApp.instances.filter(instance => instance !== ctx.params.instanceId);
-  await clientDb.insert(budibaseApp, budibaseApp._id);
+  await clientDb.put(budibaseApp);
 
   ctx.body = {
     message: `Instance Database ${ctx.params.instanceId} successfully destroyed.`,

@@ -1,13 +1,13 @@
-const couchdb = require("../../db");
+const CouchDB = require("../../db");
 
 const controller = {
   fetch: async ctx => {
-    const db = couchdb.db.use(ctx.params.instanceId);
+    const db = new CouchDB(ctx.params.instanceId);
     const designDoc = await db.get("_design/database");
     ctx.body = designDoc.views;
   },
   create: async ctx => {
-    const db = couchdb.db.use(ctx.params.instanceId);
+    const db = new CouchDB(ctx.params.instanceId);
     const { name, ...viewDefinition } = ctx.request.body;
 
     const designDoc = await db.get("_design/database");
@@ -15,7 +15,7 @@ const controller = {
       ...designDoc.views,
       [name]: viewDefinition
     };
-    const newView = await db.insert(designDoc, designDoc._id);
+    const newView = await db.put(designDoc);
 
     ctx.body = {
       ...newView,
@@ -24,8 +24,8 @@ const controller = {
     }
   },
   destroy: async ctx => {
-    const db = couchdb.db.use(ctx.params.instanceId);
-    ctx.body = await database.destroy(ctx.params.userId)
+    const db = new CouchDB(ctx.params.instanceId);
+    ctx.body = await db.destroy(ctx.params.userId)
   }
 }
 

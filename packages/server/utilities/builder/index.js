@@ -28,7 +28,7 @@ const getAppDefinition = async appPath =>
   await readJSON(`${appPath}/appDefinition.json`)
 
 module.exports.getPackageForBuilder = async (config, application) => {
-  const appPath = resolve(process.cwd(), config.latestPackagesFolder, application.name);
+  const appPath = resolve(process.cwd(), config.latestPackagesFolder, application._id);
 
   const pages = await getPages(appPath)
 

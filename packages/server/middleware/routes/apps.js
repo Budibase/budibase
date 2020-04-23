@@ -14,13 +14,13 @@ router.get("/_builder/api/apps", async ctx => {
   ctx.response.status = StatusCodes.OK
 })
 
-router.get("/_builder/api/:appname/appPackage", async ctx => {
-  const application = await ctx.master.getApplicationWithInstances(
-    ctx.params.appname
-  )
-  ctx.body = await getPackageForBuilder(ctx.config, application)
-  ctx.response.status = StatusCodes.OK
-})
+// router.get("/_builder/api/:appname/appPackage", async ctx => {
+//   const application = await ctx.master.getApplicationWithInstances(
+//     ctx.params.appname
+//   )
+//   ctx.body = await getPackageForBuilder(ctx.config, application)
+//   ctx.response.status = StatusCodes.OK
+// })
 
 router
   .post("/_builder/api/:appname/backend", async ctx => {

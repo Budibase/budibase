@@ -2,10 +2,10 @@ const couchdb = require("../../db")
 const {
   events,
   schemaValidator
-} = require("@budibase/common")
+} = require("../../../common");
 
 exports.save = async function(ctx) {
-  const db = couchdb.db.use(ctx.params.instanceId);
+  const db = new CouchDB(ctx.params.instanceId);
   const record = ctx.request.body;
 
   // validation with ajv
@@ -27,7 +27,7 @@ exports.save = async function(ctx) {
   const existingRecord = record._id && await db.get(record._id);
 
   if (existingRecord) {
-    const response = await db.insert(record, existingRecord._id)
+    const response = await db.put({ ...record, _id: existingRecord._id });
     ctx.body = {
       message: "Record updated successfully.",
       status: 200,
@@ -36,7 +36,7 @@ exports.save = async function(ctx) {
     return;
   }
 
-  const response = await db.insert({
+  const response = await db.post({
     modelId: ctx.params.modelId,
     type: "record",
     ...record
@@ -54,10 +54,9 @@ exports.save = async function(ctx) {
 }
 
 exports.fetch = async function(ctx) {
-  const db = couchdb.db.use(ctx.params.instanceId)
-  const response = await db.view(
-    "database",
-    ctx.params.viewName,
+  const db = new CouchDB(ctx.params.instanceId)
+  const response = await db.query(
+    `database/${ctx.params.viewName}`,
     {
       include_docs: true
     }
@@ -76,6 +75,6 @@ exports.find = async function(ctx) {
 
 exports.destroy = async function(ctx) {
   const databaseId = ctx.params.instanceId;
-  const db = couchdb.db.use(databaseId)
+  const db = new CouchDB(databaseId)
   ctx.body = await db.destroy(ctx.params.recordId, ctx.params.revId);
 };
