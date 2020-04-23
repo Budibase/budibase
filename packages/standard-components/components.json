@@ -103,6 +103,7 @@
 		"props" : {
 			"text": "string",
 			"font": "string",
+			"fontSize": "string",
 			"color": "string",
 			"textAlign": {
 				"type": "options", 
@@ -137,6 +138,42 @@
 			}
 		},
 		"tags": ["div", "container"]
+	},
+	"textfield": {
+		"name": "Textfield",
+		"description": "A component that allows the user to input text.",
+		"props": {
+			"label": "string",
+			"value": "string",
+			"onchange": "event"
+		}
+	},
+	"checkbox": {
+		"name": "Checkbox",
+		"description": "A selectable checkbox component",
+		"props": {
+			"label": "string",
+			"checked": "bool",
+			"value": "string",
+			"onchange": "event"
+		}
+	},
+	"radiobutton": {
+		"name": "Radiobutton",
+		"description": "A selectable radiobutton component",
+		"props": {
+			"label": "string",
+			"checked": "bool",
+			"value": "string",
+			"onchange": "event"
+		}	
+	},
+	"icon": {
+		"description": "A HTML icon tag",
+		"props": {
+			"icon": "string",
+			"fontSize": "string" 
+		}
 	},
 	"link": {
 		"description": "an HTML anchor <a> tag",

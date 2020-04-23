@@ -21,7 +21,8 @@ export default {
             {
               _component: '@budibase/standard-components/heading',
               name: 'Headline',
-              icon: 'headline',
+              description: "A component for displaying heading text",
+              icon: "ri-heading",
               props: {
                 type: {
                   type: "options",
@@ -34,8 +35,45 @@ export default {
             {
               _component: '@budibase/standard-components/text',
               name: 'Paragraph',
-              icon: 'paragraph',
+              description: "A component for displaying paragraph text.",
+              icon: 'ri-paragraph',
               props: {}
+            }
+          ]
+        },
+        {
+          name: 'Input',
+          description: "These components handle user input.",
+          icon: 'ri-edit-box-line',
+          commonProps: {},
+          children: [
+            {
+              _component: "@budibase/standard-components/textfield",
+              name: "Textfield",
+              description: "A textfield component that allows the user to input text.",
+              icon: 'ri-edit-box-line',
+              props: {}  
+            },
+            {
+              _component: "@budibase/standard-components/checkbox",
+              name: "Checkbox",
+              description: "A selectable checkbox component",
+              icon: 'ri-checkbox-line',
+              props: {}  
+            },
+            {
+              _component: "@budibase/standard-components/radiobutton",
+              name: "Radiobutton",
+              description: "A selectable radiobutton component",
+              icon: 'ri-radio-button-line',
+              props: {}  
+            },
+            {
+              _component: "@budibase/standard-components/select",
+              name: "Select",
+              description: "A select component for choosing from different options",
+              icon: 'ri-file-list-line',
+              props: {}  
             }
           ]
         },
@@ -48,6 +86,7 @@ export default {
           children: []
         },
         {
+          _component: "@budibase/standard-components/icon",
           name: 'Icon',
           description: 'A basic component for displaying icons',
           icon: 'ri-sun-fill',
@@ -55,13 +94,7 @@ export default {
           children: []
         },
         {
-          name: 'Avatar',
-          description: 'A basic component for rendering an avatar',
-          icon: 'ri-user-smile-fill',
-          commonProps: {},
-          children: []
-        },
-        {
+          _component: "@budibase/standard-components/link",
           name: 'Link',
           description: 'A basic link component for internal and external links',
           icon: 'ri-link',

@@ -95,9 +95,6 @@
     {/each}
   </ul>
   <div class="panel">
-    <!-- <Tab
-      list={selectedCategory}
-      on:selectItem={e => onComponentChosen(e.detail)} /> -->
     <Tab
       list={selectedCategory}
       on:selectItem={e => onComponentChosen(e.detail)}

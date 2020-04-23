@@ -24,14 +24,12 @@
   }
 
   .item-item:hover {
-    /* background: #f5f5f5; */
     background: #fbfbfb;
     border-radius: 5px;
   }
 
   .item-icon {
     flex: 0 0 40px;
-    /* background: #efe9e9; */
     background: #f1f4fc;
     height: 40px;
     border-radius: 5px;
