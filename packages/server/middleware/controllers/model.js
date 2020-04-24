@@ -10,7 +10,7 @@ exports.fetch = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId);
+  const db = new CouchDB(ctx.config)(ctx.params.instanceId);
   const newModel = await db.post({ 
     type: "model",
     ...ctx.request.body
@@ -44,7 +44,7 @@ exports.update = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.config)(ctx.params.instanceId)
 
   const model = await db.remove(ctx.params.modelId, ctx.params.revId);
   const modelViewId = `all_${model.id}`

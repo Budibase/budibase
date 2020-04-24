@@ -2,7 +2,7 @@ const CouchDB = require("../../db");
 const bcrypt = require("../../utilities/bcrypt");
 
 exports.fetch = async function(ctx) {
-  const database = new CouchDB(ctx.params.instanceId);
+  const database = new CouchDB(ctx.config)(ctx.params.instanceId);
   const data = await database.query("database/by_type", { 
     include_docs: true,
     key: ["user"] 
@@ -12,7 +12,7 @@ exports.fetch = async function(ctx) {
 };
 
 exports.create = async function(ctx) {
-  const database = new CouchDB(ctx.params.instanceId);
+  const database = new CouchDB(ctx.config)(ctx.params.instanceId);
   const { username, password, name } = ctx.request.body;
 
   if (!username || !password) ctx.throw(400, "Username and Password Required.");
@@ -37,7 +37,7 @@ exports.create = async function(ctx) {
 };
 
 exports.destroy = async function(ctx) {
-  const database = new CouchDB(ctx.params.instanceId);
+  const database = new CouchDB(ctx.config)(ctx.params.instanceId);
   const response = await database.destroy(ctx.params.userId)
   ctx.body = {
     ...response,
