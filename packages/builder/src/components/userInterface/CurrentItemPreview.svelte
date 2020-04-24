@@ -133,15 +133,13 @@
     grid-column-start: middle;
     position: relative;
     overflow: hidden;
-    padding-top: 56.25%;
     margin: auto;
+    height: 100%;
   }
 
   .component-container iframe {
     border: 0;
-    height: 100%;
     left: 0;
-    position: absolute;
     top: 0;
     width: 100%;
   }
