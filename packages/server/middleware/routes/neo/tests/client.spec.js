@@ -1,5 +1,4 @@
 const supertest = require("supertest");
-const couchdb = require("../../../../db");
 const app = require("../../../../app");
 const { createClientDatabase, destroyDatabase } = require("./couchTestUtils")
 
