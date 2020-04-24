@@ -1,9 +1,9 @@
 const CouchDb = require(".")
 
-module.exports = async clientId => {
-  await CouchDb.db.create(clientId)
+module.exports = async (config, clientId) => {
+  await CouchDb.db.create(`client-${clientId}`)
 
-  const db = CouchDb.db.use(clientId)
+  const db = CouchDb(config).db.use(`client-${clientId}`)
 
   await db.insert(
     {

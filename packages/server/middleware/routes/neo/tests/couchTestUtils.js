@@ -1,5 +1,7 @@
 const couchdb = require("../../../../db")({ database: "couch" })
-const createClientDb = require("../../../../db/createClientDb")
+const createClientDb = require("../../../../db/createClientDb")({
+  database: "couch",
+})
 const CLIENT_DB_ID = "client-testing";
 const TEST_APP_ID = "test-app";
 
