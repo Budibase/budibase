@@ -26,7 +26,7 @@ const staticRoutes = require("./routes/neo/static");
 
 const builderPath = resolve(__dirname, "../builder")
 
-module.exports = (config, app) => {
+module.exports = app => {
   const router = new Router()
 
   router
@@ -35,7 +35,6 @@ module.exports = (config, app) => {
       // TODO: temp dev middleware
       // ctx.sessionId = ctx.session._sessCtx.externalKey
       // ctx.session.accessed = true
-      ctx.config = config;
       ctx.isAuthenticated = true;
       await next();
     });

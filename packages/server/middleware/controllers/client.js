@@ -23,7 +23,7 @@ exports.create = async function(ctx) {
 exports.destroy = async function(ctx) {
   const dbId = `client-${ctx.params.clientId}`;
 
-  await new CouchDB(ctx.config)(dbId).destroy();
+  await new CouchDB(dbId).destroy();
 
   ctx.body = {
     status: 200,

@@ -44,7 +44,7 @@ exports.save = async function(ctx) {
 }
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.config)(ctx.params.instanceId)
+  const db = new CouchDB(ctx.params.instanceId)
   const response = await db.query(
     `database/${ctx.params.modelId}`,
     {
@@ -55,12 +55,12 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.config)(ctx.params.instanceId)
+  const db = new CouchDB(ctx.params.instanceId)
   ctx.body = await db.get(ctx.params.recordId)
 }
 
 exports.destroy = async function(ctx) {
   const databaseId = ctx.params.instanceId;
-  const db = new CouchDB(ctx.config)(databaseId)
+  const db = new CouchDB(databaseId)
   ctx.body = await db.destroy(ctx.params.recordId, ctx.params.revId);
 };

@@ -4,7 +4,7 @@ const {
 } = require("../../utilities/builder")
 
 exports.fetch = async function(ctx) {
-  const clientDb = new CouchDB(ctx.config)(`client-${ctx.params.clientId}`);
+  const clientDb = new CouchDB(`client-${ctx.params.clientId}`);
   const body = await clientDb.query("client/by_type", { 
     include_docs: true,
     key: ["app"] 

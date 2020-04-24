@@ -1,10 +1,13 @@
 const inquirer = require("inquirer")
-const { mkdir, exists, readFile, writeFile } = require("fs-extra")
+const { exists, readFile, writeFile, ensureDir } = require("fs-extra")
 const chalk = require("chalk")
-const { serverFileName, getAppContext } = require("../../common")
-const createClientDb = require("@budibase/server/db/createClientDb")
-const { resolve } = require("path")
-var Sqrl = require("squirrelly")
+const { serverFileName } = require("../../common")
+const { join } = require("path")
+const initialiseClientDb = require("@budibase/server/db/initialiseClientDb")
+const Sqrl = require("squirrelly")
+const uuid = require("uuid")
+const { homedir } = require("os")
+const CouchDb = require("@budibase/server/db/client")
 
 module.exports = opts => {
   run(opts)
@@ -12,14 +15,26 @@ module.exports = opts => {
 
 const run = async opts => {
   try {
+    await ensureAppDir(opts)
     await prompts(opts)
     await createClientDatabse(opts)
-    await createDevConfig(opts)
-    await createAppsDir(opts)
-    await createDataFolder(opts)
+    await createDevEnvFile(opts)
     console.log(chalk.green("Budibase successfully initialised."))
   } catch (error) {
     console.error(`Error initialising Budibase: ${error.message}`)
+  }
+}
+
+const ensureAppDir = async opts => {
+  if (opts.dir.startsWith("~")) {
+    opts.dir = join(homedir(), opts.dir.substring(1))
+  }
+  await ensureDir(opts.dir)
+
+  if (opts.database === "pouch") {
+    const dataDir = join(opts.dir, ".data")
+    await ensureDir(dataDir)
+    process.env.COUCH_DB_URL = dataDir
   }
 }
 
@@ -27,73 +42,61 @@ const prompts = async opts => {
   const questions = [
     {
       type: "input",
-      name: "couchDbConnectionString",
-      message: "CouchDB Connection String (e.g. https://user:password@localhost:5984): ",
+      name: "couchDbUrl",
+      message:
+        "CouchDB Connection String (e.g. https://user:password@localhost:5984): ",
       validate: function(value) {
         return !!value || "Please enter connection string"
       },
     },
   ]
 
-  if (!opts.couchDbConnectionString) {
+  if (opts.database === "couch" && !opts.couchDbUrl) {
     const answers = await inquirer.prompt(questions)
-    opts.couchDbConnectionString = answers.couchDbConnectionString
+    opts.couchDbUrl = answers.couchDbUrl
   }
 }
 
 const createClientDatabse = async opts => {
-
+  const couch = CouchDb()
   if (opts.clientId === "new") {
-    const existing = await CouchDb._add_dbs()
+    const existing = await couch.allDbs()
 
     let i = 0
     let isExisting = true
     while (isExisting) {
       i += 1
-      clientId = i.toString()
-      isExisting = existing.includes(`client-${clientId}`)
+      opts.clientId = i.toString()
+      isExisting = existing.includes(`client-${opts.clientId}`)
     }
   }
 
-  opts.clientId = await createClientDb(opts.clientId)
+  const db = new couch(`client-${opts.clientId}`)
+  await initialiseClientDb(db)
 }
 
-const createAppsDir = async opts => {
-  if (!(await exists(opts.configJson.latestPackagesFolder))) {
-    await mkdir(opts.configJson.latestPackagesFolder)
-  }
-}
-
-const createDataFolder = async opts => {
-  const dataPath = opts.configJson.datastoreConfig.rootPath
-
-  if (await exists(dataPath)) {
-    const err = `The path ${opts.datapath} already exists - has budibase already been initialised? Remove the directory to try again.`
-    throw new Error(err)
-  }
-
-  await mkdir(dataPath)
-}
-
-const createDevConfig = async opts => {
-  const destConfigFile = "./config.js"
+const createDevEnvFile = async opts => {
+  const destConfigFile = join(opts.dir, "./.env")
   let createConfig = !(await exists(destConfigFile))
   if (!createConfig) {
     const answers = await inquirer.prompt([
       {
         type: "input",
         name: "overwrite",
-        message: "config.js already exists - overwrite? (N/y)",
+        message: ".env already exists - overwrite? (N/y)",
       },
     ])
     createConfig = ["Y", "y", "yes"].includes(answers.overwrite)
   }
 
   if (createConfig) {
-    const template = await readFile(serverFileName("config.js.template"))
+    const template = await readFile(serverFileName(".env.template"), {
+      encoding: "utf8",
+    })
+    opts.adminSecret = uuid.v4()
+    opts.cookieKey1 = uuid.v4()
+    opts.cookieKey2 = uuid.v4()
     const config = Sqrl.Render(template, opts)
-    await writeFile(destConfigFile, config)
+    await writeFile(destConfigFile, config, { flag: "w+" })
   }
-
-  opts.configJson = require(resolve("./config.js"))()
 }
