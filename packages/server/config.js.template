@@ -1,0 +1,19 @@
+const database = "{{database}}"
+const adminSecret = "{{adminSecret}}"
+const cookieKey1 = "{{cookieKey1}}"
+const cookieKey2 = "{{cookieKey2}}"
+const clientId = "{{clientId}}"
+const couchDBConnectionString = "{{couchDBConnectionString}}"
+
+module.exports = () => ({
+  database,
+  adminSecret,
+  couchDBConnectionString,
+  clientId,
+  keys: [cookieKey1, cookieKey2],
+  port: 4001,
+  latestPackagesFolder: ".",
+  extraMasterPlugins: {},
+  customizeMaster: appDefinition => appDefinition,
+  useAppRootPath: true,
+})
