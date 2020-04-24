@@ -1,7 +1,7 @@
 const handler = require("./initHandler")
 
 module.exports = {
-  command: "init [dir] [database] [clientId] [couchDbConnectionString]",
+  command: "init [dir] [database] [clientId] [couchDbUrl]",
   desc: "Initialise Budibase. Run this first to setup your local Budibase",
   builder: yargs => {
     yargs.positional("dir", {
@@ -14,7 +14,7 @@ module.exports = {
     yargs.positional("database", {
       type: "string",
       describe: "database to use usually couch for dev",
-      alias: "db",
+      alias: "b",
       default: "pouch",
       choices: ["pouch", "couch"],
     })
@@ -24,7 +24,7 @@ module.exports = {
       alias: "c",
       default: "new",
     })
-    yargs.positional("couchDbConnectionString", {
+    yargs.positional("couchDbUrl", {
       type: "string",
       describe: "connection string for couch db, format: https://username:password@localhost:5984",
       alias: "x",

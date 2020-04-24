@@ -23,7 +23,7 @@ exports.create = async function(ctx) {
 
   // Add the new instance under the app clientDB
   const clientDatabaseId = `client-${clientId}`
-  const clientDb = new CouchDB(ctx.config)(clientDatabaseId);
+  const clientDb = new CouchDB(clientDatabaseId);
   const budibaseApp = await clientDb.get(applicationId);
   const instance = { id: instanceName, name: instanceName };
   budibaseApp.instances.push(instance);
@@ -37,13 +37,13 @@ exports.create = async function(ctx) {
 };
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.config)(ctx.params.instanceId);
+  const db = new CouchDB(ctx.params.instanceId);
   const designDoc = await db.get("_design/database");
   await db.destroy();
 
   // remove instance from client application document
   const { metadata } = designDoc;
-  const clientDb = new CouchDB(ctx.config)(metadata.clientId);
+  const clientDb = new CouchDB(metadata.clientId);
   const budibaseApp = await clientDb.get(metadata.applicationId);
   budibaseApp.instances = budibaseApp.instances.filter(instance => instance !== ctx.params.instanceId);
   await clientDb.put(budibaseApp);

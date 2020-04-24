@@ -1,8 +1,7 @@
-const couchdb = require("../../../../db")({ database: "couch" })
-const createClientDb = require("../../../../db/createClientDb")({
-  database: "couch",
-})
-const CLIENT_DB_ID = "client-testing";
+const couchdb = require("../../../../db")
+const createClientDb = require("../../../../db/initialiseClientDb")
+
+const CLIENT_DB_ID = "client-testing"
 const TEST_APP_ID = "test-app";
 
 exports.destroyDatabase = couchdb.db.destroy;
@@ -39,7 +38,10 @@ exports.createModel = async (instanceId, model) => {
 } 
 
 exports.createClientDatabase = async () =>
-  await createClientDb(CLIENT_DB_ID)
+  await createClientDb({
+    database: "couch",
+    clientId: CLIENT_DB_ID,
+  })
 
 exports.destroyClientDatabase = async () => await couchdb.db.destroy(CLIENT_DB_ID);
 

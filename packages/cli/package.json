@@ -28,6 +28,7 @@
     "inquirer": "^7.0.0",
     "lodash": "^4.17.15",
     "squirrelly": "7",
+    "uuid": "^7.0.3",
     "yargs": "^14.2.0"
   },
   "gitHead": "b1f4f90927d9e494e513220ef060af28d2d42455"
