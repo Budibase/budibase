@@ -135,7 +135,7 @@
     background-color: var(--white);
     height: calc(100vh - 49px);
     padding: 0;
-    overflow: hidden;
+    overflow: scroll;
     display: flex;
     flex-direction: column;
   }
@@ -152,7 +152,7 @@
     grid-column: 3;
     background-color: var(--white);
     min-height: 0px;
-    overflow-y: hidden;
+    overflow-y: scroll;
   }
 
   .components-nav-page {
@@ -235,7 +235,6 @@
   }
 
   .components-list-container {
-    overflow: auto;
     padding: 20px 0px 0 0;
   }
 </style>
