@@ -1,5 +1,5 @@
-const couchdb = require("../../../../db");
-
+const couchdb = require("../../../../db")({ database: "couch" })
+const createClientDb = require("../../../../db/createClientDb")
 const CLIENT_DB_ID = "client-testing";
 const TEST_APP_ID = "test-app";
 
@@ -36,29 +36,8 @@ exports.createModel = async (instanceId, model) => {
   };
 } 
 
-exports.createClientDatabase = async () => {
-  await couchdb.db.create(CLIENT_DB_ID);
-
-  const db = couchdb.db.use(CLIENT_DB_ID);
-
-  await db.insert({
-    views: { 
-      by_type: { 
-        map: function(doc) { 
-          emit([doc.type], doc._id); 
-        } 
-      } 
-    }
-  }, '_design/client');
-
-  await db.insert({
-    _id: TEST_APP_ID,
-    type: "app",
-    instances: []
-  });
-
-  return CLIENT_DB_ID;
-}
+exports.createClientDatabase = async () =>
+  await createClientDb(CLIENT_DB_ID)
 
 exports.destroyClientDatabase = async () => await couchdb.db.destroy(CLIENT_DB_ID);
 
