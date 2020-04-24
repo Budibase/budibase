@@ -1,12 +1,5 @@
-<<<<<<< HEAD
-const couchdb = require("../../../../db")
-const createClientDb = require("../../../../db/initialiseClientDb")
-
-const CLIENT_DB_ID = "client-testing"
-=======
 const CouchDB = require("../../../../db");
 const CLIENT_DB_ID = "client-testing";
->>>>>>> fixing tests
 const TEST_APP_ID = "test-app";
 
 exports.createModel = async (instanceId, model) => {
