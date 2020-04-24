@@ -1,11 +1,10 @@
 const inquirer = require("inquirer")
-const { mkdir, exists, copy } = require("fs-extra")
+const { mkdir, exists, readFile, writeFile } = require("fs-extra")
 const chalk = require("chalk")
 const { serverFileName, getAppContext } = require("../../common")
-const passwordQuestion = require("@inquirer/password")
-const createMasterDb = require("@budibase/server/initialise/createMasterDb")
+const createClientDb = require("@budibase/server/db/createClientDb")
 const { resolve } = require("path")
-const localDatastore = require("@budibase/datastores/datastores/local")
+var Sqrl = require("squirrelly")
 
 module.exports = opts => {
   run(opts)
@@ -14,10 +13,10 @@ module.exports = opts => {
 const run = async opts => {
   try {
     await prompts(opts)
+    await createClientDatabse(opts)
     await createDevConfig(opts)
     await createAppsDir(opts)
     await createDataFolder(opts)
-    await initialiseDatabase(opts)
     console.log(chalk.green("Budibase successfully initialised."))
   } catch (error) {
     console.error(`Error initialising Budibase: ${error.message}`)
@@ -28,33 +27,35 @@ const prompts = async opts => {
   const questions = [
     {
       type: "input",
-      name: "username",
-      message: "Username for Admin: ",
+      name: "couchDbConnectionString",
+      message: "CouchDB Connection String (e.g. https://user:password@localhost:5984): ",
       validate: function(value) {
-        return !!value || "Please enter a username"
+        return !!value || "Please enter connection string"
       },
     },
   ]
 
-  if (!opts.username) {
+  if (!opts.couchDbConnectionString) {
     const answers = await inquirer.prompt(questions)
-    opts.username = answers.username
+    opts.couchDbConnectionString = answers.couchDbConnectionString
+  }
+}
+
+const createClientDatabse = async opts => {
+
+  if (opts.clientId === "new") {
+    const existing = await CouchDb._add_dbs()
+
+    let i = 0
+    let isExisting = true
+    while (isExisting) {
+      i += 1
+      clientId = i.toString()
+      isExisting = existing.includes(`client-${clientId}`)
+    }
   }
 
-  if (!opts.password) {
-    const password = await passwordQuestion({
-      message: "Password for Admin: ",
-      mask: "*",
-    })
-    const passwordConfirm = await passwordQuestion({
-      message: "Confirm Password: ",
-      mask: "*",
-    })
-
-    if (password !== passwordConfirm) throw new Error("Passwords do not match!")
-
-    opts.password = password
-  }
+  opts.clientId = await createClientDb(opts.clientId)
 }
 
 const createAppsDir = async opts => {
@@ -75,24 +76,24 @@ const createDataFolder = async opts => {
 }
 
 const createDevConfig = async opts => {
-  const configTemplateFile = `config.${opts.config}.js`
   const destConfigFile = "./config.js"
-
-  if (await exists(destConfigFile)) {
-    console.log(
-      chalk.yellow(
-        "Config file already exists (config.js) - keeping your existing config"
-      )
-    )
-  } else {
-    const srcConfig = serverFileName(configTemplateFile)
-    await copy(srcConfig, destConfigFile)
+  let createConfig = !(await exists(destConfigFile))
+  if (!createConfig) {
+    const answers = await inquirer.prompt([
+      {
+        type: "input",
+        name: "overwrite",
+        message: "config.js already exists - overwrite? (N/y)",
+      },
+    ])
+    createConfig = ["Y", "y", "yes"].includes(answers.overwrite)
   }
+
+  if (createConfig) {
+    const template = await readFile(serverFileName("config.js.template"))
+    const config = Sqrl.Render(template, opts)
+    await writeFile(destConfigFile, config)
+  }
+
   opts.configJson = require(resolve("./config.js"))()
-}
-
-const initialiseDatabase = async opts => {
-  const appContext = await getAppContext({ masterIsCreated: false })
-
-  await createMasterDb(appContext, localDatastore, opts.username, opts.password)
 }
