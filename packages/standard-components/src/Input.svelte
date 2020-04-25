@@ -1,7 +1,10 @@
 <script>
+  export let id = ""
   export let value = ""
   export let className = ""
   export let type = "text"
+  export let label = ""
+  export let checked = false
 
   export let _bb
 
@@ -14,4 +17,5 @@
   }
 </script>
 
-<input class={className} {type} {value} on:change={onchange} />
+<label for={id}>{label}</label>
+<input {id} class={className} {type} {value} {checked} on:change={onchange} />

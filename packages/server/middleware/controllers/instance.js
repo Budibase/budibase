@@ -5,7 +5,7 @@ exports.create = async function(ctx) {
   // await couchdb.db.create(instanceName);
 
   const { clientId, applicationId } = ctx.params;
-  const db = new CouchDB(ctx.config)(instanceName);
+  const db = new CouchDB(instanceName);
   await db.put({
     _id: "_design/database",
     metadata: {
@@ -17,7 +17,7 @@ exports.create = async function(ctx) {
         map: function(doc) { 
           emit([doc.type], doc._id); 
         }.toString() 
-      } 
+      }
     }
   });
 
@@ -46,7 +46,7 @@ exports.destroy = async function(ctx) {
   const clientDb = new CouchDB(metadata.clientId);
   const budibaseApp = await clientDb.get(metadata.applicationId);
   budibaseApp.instances = budibaseApp.instances.filter(instance => instance !== ctx.params.instanceId);
-  await clientDb.put(budibaseApp);
+  const updatedApp = await clientDb.put(budibaseApp);
 
   ctx.body = {
     message: `Instance Database ${ctx.params.instanceId} successfully destroyed.`,

@@ -115,6 +115,21 @@
     }, 
     "tags": []
   },
+  "BasicCard": {
+    "name": "BasicCard",
+    "description": "This is a basic card",
+    "props": {
+      "heading": "string",
+      "subheading": "string",
+      "content": "string",
+      "imageUrl": "string",
+      "button1Text": "string",
+      "button2Text": "string",
+      "cardClick": "event",
+      "button1Click": "event",
+      "button2Click": "event"      
+    }
+  },
   "Card": {
     "name": "Card",
     "description": "A Material Card container. Accepts CardHeader, CardBody and CardFooter as possible children",

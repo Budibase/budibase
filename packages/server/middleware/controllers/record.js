@@ -24,9 +24,12 @@ exports.save = async function(ctx) {
   if (existingRecord) {
     const response = await db.put({ ...record, _id: existingRecord._id });
     ctx.body = {
-      message: "Record updated successfully.",
+      message: `${model.name} updated successfully.`,
       status: 200,
-      record: response
+      record: {
+        ...record,
+        ...response
+      } 
     }
     return
   }
@@ -40,7 +43,7 @@ exports.save = async function(ctx) {
 
   ctx.body = record
   ctx.status = 200
-  ctx.message = `${model.name} ${record._rev ? "updated" : "created"} successfully`
+  ctx.message = `${model.name} created successfully`
 }
 
 exports.fetch = async function(ctx) {
@@ -62,5 +65,5 @@ exports.find = async function(ctx) {
 exports.destroy = async function(ctx) {
   const databaseId = ctx.params.instanceId;
   const db = new CouchDB(databaseId)
-  ctx.body = await db.destroy(ctx.params.recordId, ctx.params.revId);
+  ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId);
 };
