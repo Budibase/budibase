@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "init",
             "program": "${workspaceFolder}\\bin\\budi",
-            "args": ["init", "-b", "pouch"],
+            "args": ["init", "-b", "remote"],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/sandbox"
         },

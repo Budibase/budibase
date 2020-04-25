@@ -31,10 +31,11 @@ const ensureAppDir = async opts => {
   }
   await ensureDir(opts.dir)
 
-  if (opts.database === "pouch") {
+  if (opts.database === "local") {
     const dataDir = join(opts.dir, ".data")
     await ensureDir(dataDir)
-    process.env.COUCH_DB_URL = dataDir
+    process.env.COUCH_DB_URL =
+      dataDir + (dataDir.endsWith("/") || dataDir.endsWith("\\") ? "" : "/")
   }
 }
 
@@ -51,11 +52,13 @@ const prompts = async opts => {
     },
   ]
 
-  if (opts.database === "couch" && !opts.couchDbUrl) {
+  if (opts.database === "remote" && !opts.couchDbUrl) {
     const answers = await inquirer.prompt(questions)
     opts.couchDbUrl = answers.couchDbUrl
   }
 }
+
+//https://admin:password@localhost:5984
 
 const createClientDatabse = async opts => {
   const couch = CouchDb()
@@ -72,6 +75,7 @@ const createClientDatabse = async opts => {
   }
 
   const db = new couch(`client-${opts.clientId}`)
+  console.log(await db.info())
   await initialiseClientDb(db)
 }
 
