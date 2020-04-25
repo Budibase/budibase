@@ -27,8 +27,8 @@ export async function loadRecord(key, { appname, instanceId }) {
   return await response.json()
 }
 
-export async function saveRecord({ record, instanceId, modelId }) {
-  const SAVE_RECORDS_URL = `/api/${instanceId}/${modelId}/records`
+export async function saveRecord(record, instanceId) {
+  const SAVE_RECORDS_URL = `/api/${instanceId}/records`
   const response = await api.post(SAVE_RECORDS_URL, record)
   return await response.json()
 }
