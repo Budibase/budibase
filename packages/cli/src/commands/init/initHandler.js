@@ -1,12 +1,11 @@
 const inquirer = require("inquirer")
 const { exists, readFile, writeFile, ensureDir } = require("fs-extra")
 const chalk = require("chalk")
-const { serverFileName } = require("../../common")
+const { serverFileName, xPlatHomeDir } = require("../../common")
 const { join } = require("path")
 const initialiseClientDb = require("@budibase/server/db/initialiseClientDb")
 const Sqrl = require("squirrelly")
 const uuid = require("uuid")
-const { homedir } = require("os")
 const CouchDb = require("@budibase/server/db/client")
 
 module.exports = opts => {
@@ -26,9 +25,7 @@ const run = async opts => {
 }
 
 const ensureAppDir = async opts => {
-  if (opts.dir.startsWith("~")) {
-    opts.dir = join(homedir(), opts.dir.substring(1))
-  }
+  opts.dir = xPlatHomeDir(opts.dir)
   await ensureDir(opts.dir)
 
   if (opts.database === "local") {
