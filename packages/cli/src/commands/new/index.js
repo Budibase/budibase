@@ -1,7 +1,7 @@
 const handler = require("./newHandler")
 
 module.exports = {
-  command: "new <name> [config]",
+  command: "new <name> [dir]",
   desc: "Create a new Budibase app",
   builder: yargs => {
     yargs.positional("name", {
@@ -9,11 +9,11 @@ module.exports = {
       describe: "the name of your app",
       alias: "n",
     })
-    yargs.positional("config", {
+    yargs.positional("dir", {
       type: "string",
-      describe: "config file to use - optional, defaults to config.js",
-      alias: "c",
-      default: "config.js",
+      describe: "budibase apps directory",
+      alias: "d",
+      default: "~/budibase",
     })
   },
   handler,

@@ -24,6 +24,7 @@
     "@budibase/server": "^0.0.32",
     "@inquirer/password": "^0.0.6-alpha.0",
     "chalk": "^2.4.2",
+    "dotenv": "^8.2.0",
     "fs-extra": "^8.1.0",
     "inquirer": "^7.0.0",
     "lodash": "^4.17.15",

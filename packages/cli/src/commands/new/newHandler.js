@@ -1,10 +1,9 @@
-const { getAppContext } = require("../../common")
-const {
-  getMasterApisWithFullAccess,
-} = require("@budibase/server/utilities/budibaseApi")
+const { xPlatHomeDir } = require("../../common")
+const dotenv = require("dotenv")
+const createInstance = require("@budibase/server/middleware/controllers/instance").create
+const createApplication = require("@budibase/server/middleware/controllers/application").create
 const { copy, readJSON, writeJSON, remove, exists } = require("fs-extra")
 const { resolve, join } = require("path")
-const thisPackageJson = require("../../../package.json")
 const chalk = require("chalk")
 const { exec } = require("child_process")
 
@@ -13,49 +12,54 @@ module.exports = opts => {
   console.log(chalk.green(`Budibase app ${opts.name} created!`))
 }
 
-const run2 = async opts => {
-  // create a brand new app in couch
-  // create an empty app package locally
-  exec(`cd ${join(opts.config.latestPackagesFolder, opts.name)} && npm install`)
+const run = async opts => {
+  opts.dir = xPlatHomeDir(opts.dir)
+  process.chdir(opts.dir)
+  dotenv.config()
+  await createRecords(opts)
+  await createEmptyAppPackage(opts)
+  exec(`cd ${join(opts.dir, opts.name)} && npm install`)
 }
 
-const run = async opts => {
-  const context = await getAppContext({
-    configName: opts.config,
-    masterIsCreated: true,
+const createRecords = async opts => {
+  const createAppCtx = {
+    params: { clientId: process.env.CLIENT_ID },
+    request: {
+      body: { name: opts.name },
+    },
+    body: {},
+  }
+
+  await createApplication(createAppCtx)
+  opts.applicationId = createAppCtx.body.id
+  await createInstance({
+    params: {
+      clientId: process.env.CLIENT_ID,
+      applicationId: opts.applicationId,
+    },
+    request: {
+      body: { name: `dev-${process.env.CLIENT_ID}` },
+    },
   })
-  opts.config = context.config
-  const bb = await getMasterApisWithFullAccess(context)
-
-  const app = bb.recordApi.getNew("/applications", "application")
-  app.name = opts.name
-
-  await bb.recordApi.save(app)
-  await createEmptyAppPackage(opts)
-
-  exec(`cd ${join(opts.config.latestPackagesFolder, opts.name)} && npm install`)
 }
 
 const createEmptyAppPackage = async opts => {
-  const templateFolder = resolve(__dirname, "appPackageTemplate")
+  const templateFolder = resolve(__dirname, "appDirectoryTemplate")
 
-  const appsFolder = opts.config.latestPackagesFolder || "."
-  const destinationFolder = resolve(appsFolder, opts.name)
+  const appsFolder = opts.dir
+  const destinationFolder = resolve(appsFolder, opts.applicationId)
 
-  if (await exists(destinationFolder)) { 
+  if (await exists(destinationFolder)) {
     console.log(chalk.red(`App ${opts.name} already exists.`))
-    return 
+    return
   }
 
   await copy(templateFolder, destinationFolder)
 
-  const packageJsonPath = join(appsFolder, opts.name, "package.json")
+  const packageJsonPath = join(appsFolder, opts.applicationId, "package.json")
   const packageJson = await readJSON(packageJsonPath)
 
   packageJson.name = opts.name
-  packageJson.dependencies[
-    "@budibase/standard-components"
-  ] = `^${thisPackageJson.version}`
 
   await writeJSON(packageJsonPath, packageJson)
 
