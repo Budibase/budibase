@@ -36,7 +36,22 @@
 			"padding": "string",
 			"hoverColor": "string",
 			"hoverBackground": "string",
-			"hoverBorder": "string"
+			"hoverBorder": "string",
+			"fontFamily": {
+				"type": "options",
+				"default": "initial",
+				"styleBindingProperty": "font-family",
+				"options": [
+					"initial",
+					"Times New Roman",	
+					"Georgia",
+					"Arial",
+					"Arial Black",	
+					"Comic Sans MS",
+					"Impact",	
+					"Lucida Sans Unicode"
+				]
+			}
 		},
 		"tags": [
 			"layout"
@@ -152,7 +167,21 @@
 		"children": false,
 		"props": {
 			"text": "string",
-			"font": "string",
+			"fontFamily": {
+				"type": "options",
+				"default": "initial",
+				"styleBindingProperty": "font-family",
+				"options": [
+					"initial",
+					"Times New Roman",	
+					"Georgia",
+					"Arial",
+					"Arial Black",	
+					"Comic Sans MS",
+					"Impact",	
+					"Lucida Sans Unicode"
+				]
+			},
 			"fontSize": "string",
 			"color": "string",
 			"textAlign": {
@@ -241,7 +270,22 @@
 			"color": "string",
 			"hoverColor": "string",
 			"underline": "bool",
-			"fontSize": "string"
+			"fontSize": "string",
+			"fontFamily": {
+				"type": "options",
+				"default": "initial",
+				"styleBindingProperty": "font-family",
+				"options": [
+					"initial",
+					"Times New Roman",	
+					"Georgia",
+					"Arial",
+					"Arial Black",	
+					"Comic Sans MS",
+					"Impact",	
+					"Lucida Sans Unicode"
+				]
+			}
 		}
 	},
 	"image": {
@@ -312,7 +356,7 @@
 		"props": {
 			"className": "string",
 			"text": "string",
-			"type": {
+		"type": {
 				"type": "options",
 				"default": "h1",
 				"options": [
@@ -322,6 +366,21 @@
 					"h4",
 					"h5",
 					"h6"
+				]
+			},
+			"fontFamily": {
+				"type": "options",
+				"default": "initial",
+				"styleBindingProperty": "font-family",
+				"options": [
+					"initial",
+					"Times New Roman",	
+					"Georgia",
+					"Arial",
+					"Arial Black",	
+					"Comic Sans MS",
+					"Impact",	
+					"Lucida Sans Unicode"
 				]
 			}
 		},
