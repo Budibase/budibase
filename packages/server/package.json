@@ -8,7 +8,7 @@
     "test:integration": "jest neo --runInBand",
     "test:watch": "jest -w",
     "build": "cd appPackages/_master && yarn && cd ../testApp && yarn && cd ../testApp2 && yarn",
-    "initialise": "node ./initialise/initialiseBudibase init -d ./myapps -c contributors -u admin -p admin",
+    "initialise": "node ../cli/bin/budi init ./myapps -b local -q",
     "budi": "node ../cli/bin/budi",
     "dev:builder": "node index --enable-source-maps"
   },
