@@ -12,6 +12,7 @@
   export let hoverColor
   export let hoverBackground
   export let hoverBorder
+  export let fontFamily
 
   export let _bb
   let theButton
@@ -39,6 +40,7 @@
 
     buttonStyles = buildStyle({
       padding,
+      "font-family": fontFamily,
     })
 
     customClasses = createClasses({
