@@ -13,10 +13,10 @@ module.exports = {
     })
     yargs.positional("database", {
       type: "string",
-      describe: "database to use usually couch for dev",
+      describe: "use a local (PouchDB) or remote (CouchDB) database",
       alias: "b",
-      default: "pouch",
-      choices: ["pouch", "couch"],
+      default: "local",
+      choices: ["local", "remote"],
     })
     yargs.positional("clientId", {
       type: "string",
@@ -29,6 +29,12 @@ module.exports = {
       describe: "connection string for couch db, format: https://username:password@localhost:5984",
       alias: "x",
       default: "",
+    })
+    yargs.positional("quiet", {
+      type: "boolean",
+      describe: "flag - if set, then run in quiet mode - use all defaults",
+      alias: "q",
+      default: false,
     })
   },
   handler,
