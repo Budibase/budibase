@@ -78,7 +78,7 @@ const createClientDatabse = async opts => {
 
 const createDevEnvFile = async opts => {
   const destConfigFile = join(opts.dir, "./.env")
-  let createConfig = !(await exists(destConfigFile))
+  let createConfig = !(await exists(destConfigFile)) || opts.quiet
   if (!createConfig) {
     const answers = await inquirer.prompt([
       {
