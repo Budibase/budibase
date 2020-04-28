@@ -22,6 +22,7 @@
       value={prop_value}
       type={prop_definition.type}
       options={prop_definition.options}
+      styleBindingProperty={prop_definition.styleBindingProperty}
       onChanged={v => setProp(prop_name, v)} />
   {/if}
 </div>
