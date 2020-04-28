@@ -118,6 +118,8 @@
   okText="Delete Component"
   onOk={() => store.deleteComponent(componentToDelete)} />
 
+<slot />
+
 <style>
   button {
     cursor: pointer;

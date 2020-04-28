@@ -1,4 +1,5 @@
 <script>
+  import { params } from "@sveltech/routify"
   import { store } from "builderStore"
   import getIcon from "components/common/icon"
   import { CheckIcon } from "components/common/Icons"
@@ -19,7 +20,7 @@
     },
   ]
 
-  store.setCurrentPage("main")
+  store.setCurrentPage($params.page ? $params.page : "main")
 </script>
 
 <div class="root">
