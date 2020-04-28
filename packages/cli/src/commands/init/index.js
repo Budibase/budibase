@@ -8,7 +8,7 @@ module.exports = {
       type: "string",
       describe:
         "your apps directory - directory will be created if it does not exist",
-      default: "~/budibase",
+      default: "~/.budibase",
       alias: "d",
     })
     yargs.positional("database", {

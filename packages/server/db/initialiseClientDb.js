@@ -1,5 +1,5 @@
 module.exports = async db => {
-  await db.put({
+  const doc = await db.put({
     _id: "_design/client",
     views: {
       by_type: {
@@ -8,5 +8,6 @@ module.exports = async db => {
           }`,
       },
     },
-  })
+  });
+  console.log(doc);
 }

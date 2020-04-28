@@ -43,8 +43,7 @@ export const getStore = () => {
     libraries: null,
     showSettings: false,
     useAnalytics: true,
-    appId: "",
-    clientId: "budibase"
+    appId: ""
   }
 
   const store = writable(initial)

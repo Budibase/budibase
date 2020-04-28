@@ -7,7 +7,9 @@ exports.save = async function(ctx) {
 
   // validation with ajv
   const model = await db.get(record.modelId)
-  const validate = schemaValidator.compile(model.schema)
+  const validate = schemaValidator.compile({
+    properties: model.schema
+  });
   const valid = validate(record)
 
   if (!valid) {
@@ -49,7 +51,7 @@ exports.save = async function(ctx) {
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
   const response = await db.query(
-    `database/${ctx.params.modelId}`,
+    `database/${ctx.params.viewName}`,
     {
       include_docs: true
     }

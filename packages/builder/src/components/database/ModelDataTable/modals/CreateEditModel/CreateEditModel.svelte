@@ -89,7 +89,6 @@
               <div>{key}</div>
             </td>
             <td>{meta.type}</td>
-            <!-- <td>{meta.typeOptions.values || ''}</td> -->
             <td>
               <i
                 class="ri-delete-bin-6-line hoverable"

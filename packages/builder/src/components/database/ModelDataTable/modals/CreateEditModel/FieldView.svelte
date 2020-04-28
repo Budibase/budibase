@@ -16,21 +16,18 @@
     getDefaultTypeOptions,
   } from "components/common/core"
 
+  const FIELD_TYPES = ["string", "number", "boolean"]
+
   export let field = { type: "string" }
   export let schema
   export let goBack
-  export let onFinished = () => {}
 
   let errors = []
-  let draftField = cloneDeep(field);
+  let draftField = cloneDeep(field)
 
   const save = () => {
-    // errors = validate.field(allFields)(clonedField)
-    // if (errors.length > 0) return
-    // field.typeOptions = cloneDeep(clonedField.typeOptions)
-    schema[field.name] = draftField;
-    goBack();
-    // onFinished({ ...field, ...clonedField })
+    schema[field.name] = draftField
+    goBack()
   }
 </script>
 
@@ -43,37 +40,23 @@
     <Dropdown
       label="Type"
       bind:selected={draftField.type}
-      options={keys(allTypes)} />
+      options={FIELD_TYPES} />
 
     {#if field.type === 'string'}
-      <NumberBox
-        label="Max Length"
-        bind:value={draftField.maxLength} />
-      <ValuesList
-        label="Categories"
-        bind:values={draftField.values} />
-    {:else if field.type === 'bool'}
-        <!-- TODO: revisit and fix with JSON schema -->
-      <Checkbox
-        label="Allow Null"
-        bind:checked={draftField.allowNulls} />
+      <NumberBox label="Max Length" bind:value={draftField.maxLength} />
+      <ValuesList label="Categories" bind:values={draftField.values} />
+    {:else if field.type === 'boolean'}
+      <!-- TODO: revisit and fix with JSON schema -->
+      <Checkbox label="Allow Null" bind:checked={draftField.allowNulls} />
     {:else if field.format === 'datetime'}
-        <!-- TODO: revisit and fix with JSON schema -->
-      <DatePicker
-        label="Min Value"
-        bind:value={draftField.minValue} />
-      <DatePicker
-        label="Max Value"
-        bind:value={draftField.maxValue} />
+      <!-- TODO: revisit and fix with JSON schema -->
+      <DatePicker label="Min Value" bind:value={draftField.minValue} />
+      <DatePicker label="Max Value" bind:value={draftField.maxValue} />
     {:else if field.type === 'number'}
-      <NumberBox
-        label="Min Value"
-        bind:value={draftField.minimum} />
-      <NumberBox
-        label="Max Value"
-        bind:value={draftField.maximum} />
+      <NumberBox label="Min Value" bind:value={draftField.minimum} />
+      <NumberBox label="Max Value" bind:value={draftField.maximum} />
     {:else if draftField.type.startsWith('array')}
-        <!-- TODO: revisit and fix with JSON schema -->
+      <!-- TODO: revisit and fix with JSON schema -->
       <NumberBox
         label="Min Length"
         bind:value={draftField.typeOptions.minLength} />

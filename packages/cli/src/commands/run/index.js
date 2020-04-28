@@ -10,7 +10,7 @@ module.exports = {
       type: "string",
       describe: "your budibase apps directory",
       alias: "d",
-      default: "~/budibase",
+      default: "~/.budibase",
     })
   },
   handler,

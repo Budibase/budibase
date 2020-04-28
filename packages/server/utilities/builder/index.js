@@ -12,6 +12,7 @@ const { join, dirname, resolve } = require("path")
 const { $ } = require("@budibase/core").common
 const { intersection, map, values, flatten } = require("lodash/fp")
 const { merge } = require("lodash")
+const { homedir } = require("os");
 
 const { componentLibraryInfo } = require("./componentLibraryInfo")
 const buildPage = require("./buildPage")
@@ -28,7 +29,7 @@ const getAppDefinition = async appPath =>
   await readJSON(`${appPath}/appDefinition.json`)
 
 module.exports.getPackageForBuilder = async (config, application) => {
-  const appPath = resolve(process.cwd(), config.latestPackagesFolder, application._id);
+  const appPath = resolve(config.latestPackagesFolder, application._id);
 
   const pages = await getPages(appPath)
 
@@ -42,6 +43,8 @@ module.exports.getPackageForBuilder = async (config, application) => {
     components: await getComponentDefinitions(appPath, pages),
 
     application,
+
+    clientId: process.env.CLIENT_ID
   }
 }
 

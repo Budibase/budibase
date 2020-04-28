@@ -30,11 +30,11 @@ export async function loadRecord(key, { appname, instanceId }) {
 export async function saveRecord(record, instanceId) {
   const SAVE_RECORDS_URL = `/api/${instanceId}/records`
   const response = await api.post(SAVE_RECORDS_URL, record)
+  
   return await response.json()
 }
 
 export async function fetchDataForView(viewName, instanceId) {
-  // const FETCH_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/listRecords/${viewName}`
   const FETCH_RECORDS_URL = `/api/${instanceId}/${viewName}/records`
 
   const response = await api.get(FETCH_RECORDS_URL)

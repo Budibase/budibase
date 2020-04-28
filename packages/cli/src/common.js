@@ -1,7 +1,8 @@
 const { resolve, join } = require("path")
 const { cwd } = require("process")
-const buildAppContext = require("@budibase/server/initialise/buildAppContext")
 const { homedir } = require("os")
+const buildAppContext = require("@budibase/server/initialise/buildAppContext")
+
 module.exports.serverFileName = relativePath =>
   resolve(__dirname, "..", "node_modules", "@budibase", "server", relativePath)
 

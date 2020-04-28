@@ -1,5 +1,9 @@
 const CouchDB = require("../../db");
 
+exports.getClientId = async function(ctx) {
+  ctx.body = process.env.CLIENT_ID;
+};
+
 exports.create = async function(ctx) {
   const clientId =  `client-${ctx.request.body.clientId}`;
   const db = new CouchDB(clientId);

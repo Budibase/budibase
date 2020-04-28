@@ -15,9 +15,9 @@ module.exports.LATEST_VERSIONID = LATEST_VERSIONID
 
 module.exports.runtimePackagesDirectory = runtimePackagesDirectory
 
-module.exports.getRuntimePackageDirectory = (appContext, appName, versionId) =>
+module.exports.getRuntimePackageDirectory = (appId, versionId) =>
   versionId === LATEST_VERSIONID
-    ? getLatestDirectory(appContext, appName)
+    ? getLatestDirectory(appId)
     : join(getRuntimeAppsDirectory(appName), versionId)
 
 module.exports.getRuntimeAppsDirectory = getRuntimeAppsDirectory

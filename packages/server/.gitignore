@@ -4,3 +4,4 @@ myapps/
 /builder/*
 !/builder/assets/
 public/
+db/dev.db/

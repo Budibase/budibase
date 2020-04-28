@@ -1,10 +1,24 @@
 const CouchDB = require("../../db");
 
 const controller = {
+  query: async ctx => {
+
+  },
   fetch: async ctx => {
     const db = new CouchDB(ctx.params.instanceId);
     const designDoc = await db.get("_design/database");
-    ctx.body = designDoc.views;
+    const response = [];
+
+    for (let name in designDoc.views) {
+      if (!name.startsWith("all") && name !== "by_type") {
+        response.push({
+          name,
+          ...designDoc.views[name]
+        })
+      }
+    }
+
+    ctx.body = response
   },
   create: async ctx => {
     const db = new CouchDB(ctx.params.instanceId);
@@ -18,7 +32,10 @@ const controller = {
     const newView = await db.put(designDoc);
 
     ctx.body = {
-      ...newView,
+      view: {
+        ...ctx.request.body,
+        ...newView
+      },
       message: `View ${name} created successfully.`,
       status: 200,
     }

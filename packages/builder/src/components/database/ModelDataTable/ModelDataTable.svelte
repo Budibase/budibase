@@ -77,10 +77,6 @@
     currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
   )
 
-  // async function fetchRecordsForView(view, instance) {
-  //   return await api.fetchDataForView($backendUiStore.selectedView)
-  // }
-
   function drillIntoRecord(record) {
     backendUiStore.update(state => {
       state.breadcrumbs = [...state.breadcrumbs, record.type, record.id]
@@ -100,7 +96,7 @@
 <section>
   <div class="table-controls">
     <h2 class="title">
-      {takeRight(2, $backendUiStore.breadcrumbs).join(' / ')}
+      {$backendUiStore.selectedModel.name}
     </h2>
   </div>
   <table class="uk-table">
