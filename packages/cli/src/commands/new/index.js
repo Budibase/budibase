@@ -13,7 +13,7 @@ module.exports = {
       type: "string",
       describe: "budibase apps directory",
       alias: "d",
-      default: "~/budibase",
+      default: "~/.budibase",
     })
   },
   handler,

@@ -6,7 +6,7 @@ const { join } = require("path")
 const initialiseClientDb = require("@budibase/server/db/initialiseClientDb")
 const Sqrl = require("squirrelly")
 const uuid = require("uuid")
-const CouchDb = require("@budibase/server/db/client")
+const CouchDB = require("@budibase/server/db/client")
 
 module.exports = opts => {
   run(opts)
@@ -16,7 +16,7 @@ const run = async opts => {
   try {
     await ensureAppDir(opts)
     await prompts(opts)
-    await createClientDatabse(opts)
+    await createClientDatabase(opts)
     await createDevEnvFile(opts)
     console.log(chalk.green("Budibase successfully initialised."))
   } catch (error) {
@@ -55,12 +55,9 @@ const prompts = async opts => {
   }
 }
 
-//https://admin:password@localhost:5984
-
-const createClientDatabse = async opts => {
-  const couch = CouchDb()
+const createClientDatabase = async opts => {
   if (opts.clientId === "new") {
-    const existing = await couch.allDbs()
+    const existing = await CouchDB.allDbs()
 
     let i = 0
     let isExisting = true
@@ -71,8 +68,7 @@ const createClientDatabse = async opts => {
     }
   }
 
-  const db = new couch(`client-${opts.clientId}`)
-  console.log(await db.info())
+  const db = new CouchDB(`client-${opts.clientId}`)
   await initialiseClientDb(db)
 }
 

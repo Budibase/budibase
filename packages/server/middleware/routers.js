@@ -2,6 +2,7 @@ const Router = require("@koa/router")
 const session = require("./session")
 const StatusCodes = require("../utilities/statusCodes")
 const { resolve } = require("path")
+const { homedir } = require("os")
 const send = require("koa-send")
 const routeHandlers = require("./routeHandlers")
 const {
@@ -24,18 +25,17 @@ const modelsRoutes = require("./routes/neo/model");
 const viewsRoutes = require("./routes/neo/view");
 const staticRoutes = require("./routes/neo/static");
 
-const builderPath = resolve(__dirname, "../builder")
-
 module.exports = app => {
   const router = new Router()
 
   router
-    .use(session(app))
+    // .use(session(app))
     .use(async (ctx, next) => { 
       // TODO: temp dev middleware
       // ctx.sessionId = ctx.session._sessCtx.externalKey
       // ctx.session.accessed = true
       ctx.isAuthenticated = true;
+      ctx.config = { latestPackagesFolder: resolve(homedir(), ".budibase") }
       await next();
     });
     // .use(async (ctx, next) => {

@@ -13,6 +13,10 @@
   import * as api from "../api"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
 
+  const CLASS_NAME_MAP = {
+    boolean: "uk-checkbox"
+  }
+
   export let record = {}
   export let onClosed
 
@@ -57,16 +61,15 @@
 
     backendUiStore.update(state => {
       state.selectedView = state.selectedView
-      return state
       onClosed();
+      return state
     })
   }
 </script>
 
 <div class="actions">
   <h4 class="budibase__title--4">Create / Edit Record</h4>
-  <!-- <ErrorsBox {errors} /> -->
-  {JSON.stringify(errors)}
+  <ErrorsBox {errors} />
   <form on:submit|preventDefault class="uk-form-stacked">
     {#if !record}
       <div class="uk-margin">
@@ -81,7 +84,7 @@
     {#each modelSchema as [key, meta]}
       <div class="uk-margin">
         <RecordFieldControl
-          {errors}
+          className={CLASS_NAME_MAP[meta.type]}
           type={determineInputType(meta)}
           label={key}
           bind:value={record[key]} />

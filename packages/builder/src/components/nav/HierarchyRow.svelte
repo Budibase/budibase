@@ -7,12 +7,13 @@
     CreateEditModelModal,
     CreateEditViewModal,
   } from "components/database/ModelDataTable/modals"
+  import api from "builderStore/api"
 
   const { open, close } = getContext("simple-modal")
 
-  // export let level = 0
   export let node
   export let type
+  export let onSelect
 
   let navActive = ""
 
@@ -20,51 +21,25 @@
     index: "ri-eye-line",
     model: "ri-list-settings-line",
   }
-
-  store.subscribe(state => {
-    if (state.currentNode) {
-      navActive = node.nodeId === state.currentNode.nodeId
-    }
-  })
-
-  function selectModel(model) {
-    backendUiStore.update(state => {
-      state.selectedModel = model
-      state.selectedView = `all_${model._id}`
-      return state;
-    })
-    // store.selectExistingNode(node.nodeId)
-    // const modalType =
-    //   node.type === "index" ? CreateEditViewModal : CreateEditModelModal
-    // open(
-    //   modalType,
-    //   {
-    //     onClosed: close,
-    //   },
-    //   { styleContent: { padding: "0" } }
-    // )
-  }
 </script>
 
 <div>
   <div
-    on:click={() => selectModel(node)}
+    on:click={() => onSelect(node)}
     class="budibase__nav-item hierarchy-item"
     class:capitalized={type === 'model'}
-    class:selected={$backendUiStore.selectedModel._id === node._id}>
+    class:selected={$backendUiStore.selectedView === `all_${node._id}`}>
     <i class={ICON_MAP[type]} />
     <span style="margin-left: 1rem">{node.name}</span>
+    <!-- <i
+      class="ri-edit-line hoverable"
+      on:click={editModel}
+    />
+    <i
+      class="ri-delete-bin-7-line hoverable"
+      on:click={deleteModel}
+    /> -->
   </div>
-  <!-- {#if node.children}
-    {#each node.children as child}
-      <svelte:self node={child} level={level + 1} type="model" />
-    {/each}
-  {/if}
-  {#if node.indexes}
-    {#each node.indexes as index}
-      <svelte:self node={index} level={level + 1} type="index" />
-    {/each}
-  {/if} -->
 </div>
 
 <style>

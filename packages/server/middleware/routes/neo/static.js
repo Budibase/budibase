@@ -5,7 +5,7 @@ const router = Router();
 
 router
   .param("file", async (file, ctx, next) => {
-    ctx.file = file || "index.html"; 
+    ctx.file = file && file.includes(".") ? file : "index.html";
     await next();
   })
   .get("/_builder/:file*", controller.serveBuilder)

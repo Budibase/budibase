@@ -8,12 +8,9 @@ import {
 
 export const getBackendUiStore = () => {
   const INITIAL_BACKEND_UI_STATE = {
-    selectedView: {
-      records: [],
-      name: "",
-    },
     breadcrumbs: [],
     models: [],
+    views: [],
     users: [],
     selectedDatabase: {},
     selectedModel: {},
@@ -24,12 +21,15 @@ export const getBackendUiStore = () => {
   store.actions = {
     database: {
       select: async db => {
-        const response = await api.get(`/api/${db.id}/models`)
-        const models = await response.json()
+        const modelsResponse = await api.get(`/api/${db.id}/models`)
+        const viewsResponse = await api.get(`/api/${db.id}/views`)
+        const models = await modelsResponse.json()
+        const views = await viewsResponse.json()
         store.update(state => {
           state.selectedDatabase = db
           state.breadcrumbs = [db.name]
           state.models = models
+          state.views = views;
           return state
         })
       }

@@ -5,8 +5,7 @@ var getNewRecord = function getNewRecord(schema, modelName) {
 
   var record = {
     _id: (0, _shortid.generate)(),
-    modelId: model._id 
-  };
+    modelId: model._id };
 
 
   for (var field in model.schema.properties) {

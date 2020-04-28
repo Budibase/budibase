@@ -3,50 +3,39 @@
   import CodeArea from "components/common/CodeArea.svelte"
   import Button from "components/common/Button.svelte"
   import Dropdown from "components/common/Dropdown.svelte"
-  import { store } from "builderStore"
+  import { store, backendUiStore } from "builderStore"
   import { filter, some, map, compose } from "lodash/fp"
-  import {
-    hierarchy as hierarchyFunctions,
-    common,
-  } from "../../../../../../core/src/"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
+  import api from "builderStore/api"
 
   const SNIPPET_EDITORS = {
     MAP: "Map",
     FILTER: "Filter",
-    SHARD: "Shard Name",
+    REDUCE: "Reduce",
   }
 
-  let view
-  let indexableModels = []
+  const COUCHDB_FUNCTION = `function(doc) {
+
+  }`
+
+  export let onClosed
+  export let view = {}
+
   let currentSnippetEditor = SNIPPET_EDITORS.MAP
 
-  const indexableModelsFromIndex = compose(
-    map(node => ({
-      node,
-      isallowed:
-        view.allowedModelNodeIds &&
-        view.allowedModelNodeIds.some(id => node.nodeId === id),
-    })),
-    filter(hierarchyFunctions.isModel),
-    filter(hierarchyFunctions.isDecendant($store.currentNode.parent())),
-    hierarchyFunctions.getFlattenedHierarchy
-  )
+  $: instanceId = $backendUiStore.selectedDatabase.id
 
-  store.subscribe($store => {
-    view = $store.currentNode
-    indexableModels = indexableModelsFromIndex($store.hierarchy)
-  })
+  function deleteView() {}
 
-  const toggleAllowedModel = model => {
-    if (model.isallowed) {
-      view.allowedModelNodeIds = view.allowedModelNodeIds.filter(
-        id => id !== model.node.nodeId
-      )
-    } else {
-      view.allowedModelNodeIds.push(model.node.nodeId)
-    }
+  async function saveView() {
+    const SAVE_VIEW_URL = `/api/${instanceId}/views`
+    const response = await api.post(SAVE_VIEW_URL, view)
+    backendUiStore.update(state => {
+      state.views = [...state.views, response.view]
+      return state
+    })
+    onClosed();
   }
 </script>
 
@@ -63,26 +52,6 @@
     <div class="uk-width-1-2@s">
       <Textbox bind:text={view.name} label="Name" />
     </div>
-    <div class="uk-width-1-2@s">
-      <Dropdown
-        label="View Type"
-        bind:selected={view.indexType}
-        options={['ancestor', 'reference']} />
-    </div>
-  </div>
-
-  <div class="allowed-records">
-    <div class="budibase__label--big">
-      Which models would you like to add to this view?
-    </div>
-    {#each indexableModels as model}
-      <input
-        class="uk-checkbox"
-        type="checkbox"
-        checked={model.isallowed}
-        on:change={() => toggleAllowedModel(model)} />
-      <span class="checkbox-model-label">{model.node.name}</span>
-    {/each}
   </div>
 
   <h4 class="budibase__label--big">Snippets</h4>
@@ -98,32 +67,20 @@
     <CodeArea bind:text={view.map} label="Map" />
   {:else if currentSnippetEditor === SNIPPET_EDITORS.FILTER}
     <CodeArea bind:text={view.filter} label="Filter" />
-  {:else if currentSnippetEditor === SNIPPET_EDITORS.SHARD}
-    <CodeArea bind:text={view.getShardName} label="Shard Name" />
+  {:else if currentSnippetEditor === SNIPPET_EDITORS.REDUCE}
+    <CodeArea bind:text={view.reduce} label="Reduce" />
   {/if}
 
-  <ActionButton color="secondary" on:click={store.saveCurrentNode}>
+  <ActionButton color="secondary" on:click={saveView}>
     Save
   </ActionButton>
-
-  {#if !$store.currentNodeIsNew}
-    <ActionButton alert on:click={store.deleteCurrentNode}>Delete</ActionButton>
-  {/if}
-
+  <ActionButton alert on:click={deleteView}>Delete</ActionButton>
 </form>
 
 <style>
   .root {
     height: 100%;
     padding: 15px;
-  }
-
-  .allowed-records {
-    margin: 20px 0px;
-  }
-
-  .allowed-records > span {
-    margin-right: 30px;
   }
 
   .snippet-selector__heading {
@@ -133,10 +90,6 @@
 
   .highlighted {
     opacity: 1;
-  }
-
-  .checkbox-model-label {
-    text-transform: capitalize;
   }
 
   h3 {

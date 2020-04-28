@@ -5,6 +5,7 @@ const { resolve } = require("path")
 const builderPath = resolve(process.cwd(), "builder")
 
 exports.serveBuilder = async function(ctx) {
+  console.log(ctx.file);
   await send(ctx, ctx.file, { root: builderPath })
 }
 
