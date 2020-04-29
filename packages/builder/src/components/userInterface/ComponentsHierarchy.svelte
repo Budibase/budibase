@@ -53,8 +53,6 @@
     store.setCurrentScreen(screen.title)
     $goto(`./:page/${screen.title}`)
   }
-
-  $: console.log("Params: ", $params)
 </script>
 
 <div class="root">
