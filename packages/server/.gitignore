@@ -3,4 +3,6 @@ myapps/
 config.js
 /builder/*
 !/builder/assets/
+!/builder/pickr.min.js
+!/builder/nano.min.css
 public/
