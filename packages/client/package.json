@@ -34,6 +34,8 @@
     ]
   },
   "dependencies": {
+    "@budibase/materialdesign-components": "^0.0.32",
+    "@budibase/standard-components": "^0.0.32",
     "@nx-js/compiler-util": "^2.0.0",
     "bcryptjs": "^2.4.3",
     "deep-equal": "^2.0.1",

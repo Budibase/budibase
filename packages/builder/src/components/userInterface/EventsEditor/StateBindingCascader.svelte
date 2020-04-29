@@ -5,7 +5,7 @@
   import Input from "components/common/Input.svelte"
   import StateBindingControl from "../StateBindingControl.svelte"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
-  import { pipe, userWithFullAccess } from "components/common/core"
+  import { pipe } from "components/common/core"
   import {
     EVENT_TYPE_MEMBER_NAME,
     allHandlers,

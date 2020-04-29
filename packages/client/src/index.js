@@ -1,6 +1,8 @@
 import { createApp } from "./createApp"
 import { trimSlash } from "./common/trimSlash"
 import { builtins, builtinLibName } from "./render/builtinComponents"
+import * as standardComponents from "@budibase/standard-components";
+import * as materialDesignComponents from "@budibase/materialdesign-components";
 
 /**
  * create a web application from static budibase definition files.
@@ -11,7 +13,6 @@ export const loadBudibase = async opts => {
   const _window = (opts && opts.window) || window
   const _localStorage = (opts && opts.localStorage) || localStorage
 
-  const backendDefinition = _window["##BUDIBASE_BACKEND_DEFINITION##"]
   const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
   const uiFunctions = _window["##BUDIBASE_FRONTEND_FUNCTIONS##"]
 
@@ -26,22 +27,25 @@ export const loadBudibase = async opts => {
         temp: false,
       }
 
-  frontendDefinition.appRootPath =
-    frontendDefinition.appRootPath === ""
-      ? ""
-      : "/" + trimSlash(frontendDefinition.appRootPath)
+  const { appRootPath } = frontendDefinition;
+  appRootPath = appRootPath === "" ? "" : "/" + trimSlash(appRootPath)
 
-  if (!componentLibraries) {
-    const componentLibraryUrl = lib =>
-      frontendDefinition.appRootPath + "/" + trimSlash(lib)
-    componentLibraries = {}
+  // if (!componentLibraries) componentLibraries = {};
 
-    for (let lib of frontendDefinition.componentLibraries) {
-      componentLibraries[lib.libName] = await import(
-        componentLibraryUrl(lib.importPath)
-      )
-    }
-  }
+  componentLibraries = {
+    "@budibase/standard-components": standardComponents,
+    "@budibase/materialdesign-components": materialDesignComponents
+  };
+
+  // if (!componentLibraries) {
+  //   componentLibraries = {}
+
+  //   for (let lib of frontendDefinition.componentLibraries) {
+  //     componentLibraries[lib.libName] = await import(
+  //       `${frontendDefinition.appRootPath}/${trimSlash(lib.importPath)}`
+  //     )
+  //   }
+  // }
 
   componentLibraries[builtinLibName] = builtins(_window)
 

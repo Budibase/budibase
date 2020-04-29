@@ -1,6 +1,4 @@
-import { pipe } from "../../common/core"
-
-import { find, isUndefined, filter, some, includes } from "lodash/fp"
+import { find, isUndefined, filter, some, includes, pipe } from "lodash/fp"
 
 const normalString = s => (s || "").trim().toLowerCase()
 

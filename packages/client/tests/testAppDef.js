@@ -32,10 +32,8 @@ const addWindowGlobals = (
   page,
   screens,
   appRootPath,
-  uiFunctions,
-  appDefinition
+  uiFunctions
 ) => {
-  window["##BUDIBASE_BACKEND_DEFINITION##"] = appDefinition
   window["##BUDIBASE_FRONTEND_DEFINITION##"] = {
     page,
     screens,
@@ -98,10 +96,6 @@ const setAppDef = (window, page, screens) => {
     page,
     screens,
     appRootPath: "",
-  }
-
-  window["##BUDIBASE_BACKEND_DEFINITION##"] = {
-    hierarchy: {},
   }
 }
 

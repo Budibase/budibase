@@ -7,7 +7,6 @@
   import IconButton from "components/common/IconButton.svelte"
   import NewScreen from "./NewScreen.svelte"
   import CurrentItemPreview from "./CurrentItemPreview.svelte"
-  import SettingsView from "./SettingsView.svelte"
   import PageView from "./PageView.svelte"
   import ComponentsPaneSwitcher from "./ComponentsPaneSwitcher.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -20,11 +19,6 @@
 
   const newScreen = () => {
     newScreenPicker.show()
-  }
-
-  let settingsView
-  const settings = () => {
-    settingsView.show()
   }
 
   const confirmDeleteComponent = component => {
@@ -89,7 +83,6 @@
 </div>
 
 <NewScreen bind:this={newScreenPicker} />
-<SettingsView bind:this={settingsView} />
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}

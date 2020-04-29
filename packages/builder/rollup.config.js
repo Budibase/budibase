@@ -17,6 +17,7 @@ import path from "path"
 const production = !process.env.ROLLUP_WATCH
 
 const lodash_fp_exports = [
+  "pipe",
   "union",
   "reduce",
   "isUndefined",

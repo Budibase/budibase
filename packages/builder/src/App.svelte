@@ -36,6 +36,6 @@
 
 {#if $store.clientId}
   <Modal>
-      <Router {routes} />
+    <Router {routes} />
   </Modal>
 {/if}
