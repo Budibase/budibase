@@ -1,7 +1,6 @@
 const { readdir, stat, copyFile, ensureDir } = require("fs-extra")
 const { constants } = require("fs")
 const { join, basename } = require("path")
-const serverConfig = require("../../server/config")()
 
 const packagesFolder = ".."
 

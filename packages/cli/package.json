@@ -26,6 +26,7 @@
     "chalk": "^2.4.2",
     "dotenv": "^8.2.0",
     "fs-extra": "^8.1.0",
+    "glob": "^7.1.6",
     "inquirer": "^7.0.0",
     "lodash": "^4.17.15",
     "squirrelly": "7",

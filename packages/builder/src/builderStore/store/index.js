@@ -24,8 +24,6 @@ export const getStore = () => {
     apps: [],
     appname: "",
     hierarchy: {},
-    actions: [],
-    triggers: [],
     pages: defaultPagesObject(),
     mainUi: {},
     unauthenticatedUi: {},
@@ -35,14 +33,11 @@ export const getStore = () => {
     currentFrontEndType: "none",
     currentPageName: "",
     currentComponentProps: null,
-    currentNodeIsNew: false,
     errors: [],
     hasAppPackage: false,
-    accessLevels: { version: 0, levels: [] },
-    currentNode: null,
+    // accessLevels: { version: 0, levels: [] },
+    // currentNode: null,
     libraries: null,
-    showSettings: false,
-    useAnalytics: true,
     appId: ""
   }
 
@@ -50,28 +45,25 @@ export const getStore = () => {
 
   store.setPackage = setPackage(store, initial)
 
-  store.saveLevel = backendStoreActions.saveLevel(store)
-  store.deleteLevel = backendStoreActions.deleteLevel(store)
+  // store.saveLevel = backendStoreActions.saveLevel(store)
+  // store.deleteLevel = backendStoreActions.deleteLevel(store)
   store.createDatabaseForApp = backendStoreActions.createDatabaseForApp(store)
-  store.saveAction = backendStoreActions.saveAction(store)
-  store.deleteAction = backendStoreActions.deleteAction(store)
-  store.saveTrigger = backendStoreActions.saveTrigger(store)
-  store.deleteTrigger = backendStoreActions.deleteTrigger(store)
+  // store.saveAction = backendStoreActions.saveAction(store)
+  // store.deleteAction = backendStoreActions.deleteAction(store)
+  // store.saveTrigger = backendStoreActions.saveTrigger(store)
+  // store.deleteTrigger = backendStoreActions.deleteTrigger(store)
   store.importAppDefinition = importAppDefinition(store)
 
   store.saveScreen = saveScreen(store)
-  store.addComponentLibrary = addComponentLibrary(store)
   store.renameScreen = renameScreen(store)
   store.deleteScreen = deleteScreen(store)
   store.setCurrentScreen = setCurrentScreen(store)
   store.setCurrentPage = setCurrentPage(store)
   store.createScreen = createScreen(store)
-  store.removeComponentLibrary = removeComponentLibrary(store)
+  // store.removeComponentLibrary = removeComponentLibrary(store)
   store.addStylesheet = addStylesheet(store)
   store.removeStylesheet = removeStylesheet(store)
   store.savePage = savePage(store)
-  store.showSettings = showSettings(store)
-  store.useAnalytics = useAnalytics(store)
   store.createGeneratedComponents = createGeneratedComponents(store)
   store.addChildComponent = addChildComponent(store)
   store.selectComponent = selectComponent(store)
@@ -134,20 +126,6 @@ const setPackage = (store, initial) => async (pkg) => {
 
   store.set(initial)
   return initial
-}
-
-const showSettings = store => () => {
-  store.update(state => {
-    state.showSettings = !state.showSettings
-    return state
-  })
-}
-
-const useAnalytics = store => () => {
-  store.update(state => {
-    state.useAnalytics = !state.useAnalytics
-    return state
-  })
 }
 
 const importAppDefinition = store => appDefinition => {
@@ -341,45 +319,45 @@ const savePage = store => async page => {
   })
 }
 
-const addComponentLibrary = store => async lib => {
-  const response = await api.get(
-    `/_builder/api/${s.appId}/componentlibrary?lib=${encodeURI(lib)}`,
-    undefined,
-    false
-  )
+// const addComponentLibrary = store => async lib => {
+//   const response = await api.get(
+//     `/_builder/api/${s.appId}/componentlibrary?lib=${encodeURI(lib)}`,
+//     undefined,
+//     false
+//   )
 
-  const success = response.status === 200
+//   const success = response.status === 200
 
-  const components = success ? await response.json() : []
+//   const components = success ? await response.json() : []
 
-  store.update(s => {
-    if (success) {
-      const componentsArray = []
-      for (let c in components) {
-        componentsArray.push(expandComponentDefinition(components[c]))
-      }
+//   store.update(s => {
+//     if (success) {
+//       const componentsArray = []
+//       for (let c in components) {
+//         componentsArray.push(expandComponentDefinition(components[c]))
+//       }
 
-      s.components = pipe(s.components, [
-        filter(c => !c.name.startsWith(`${lib}/`)),
-        concat(componentsArray),
-      ])
+//       s.components = pipe(s.components, [
+//         filter(c => !c.name.startsWith(`${lib}/`)),
+//         concat(componentsArray),
+//       ])
 
-      s.pages.componentLibraries.push(lib)
-      _savePage(s)
-    }
+//       s.pages.componentLibraries.push(lib)
+//       _savePage(s)
+//     }
 
-    return s
-  })
-}
+//     return s
+//   })
+// }
 
-const removeComponentLibrary = store => lib => {
-  store.update(state => {
-    state.pages.componentLibraries = state.pages.componentLibraries.filter(l => l !== lib);
-    _savePage(state);
+// const removeComponentLibrary = store => lib => {
+//   store.update(state => {
+//     state.pages.componentLibraries = state.pages.componentLibraries.filter(l => l !== lib);
+//     _savePage(state);
 
-    return state;
-  })
-}
+//     return state;
+//   })
+// }
 
 const addStylesheet = store => stylesheet => {
   store.update(s => {

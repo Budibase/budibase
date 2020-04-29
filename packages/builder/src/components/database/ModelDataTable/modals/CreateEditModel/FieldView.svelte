@@ -13,7 +13,6 @@
   import {
     allTypes,
     validate,
-    getDefaultTypeOptions,
   } from "components/common/core"
 
   const FIELD_TYPES = ["string", "number", "boolean"]

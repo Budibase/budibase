@@ -1,5 +1,4 @@
-import { filter, map, reduce, toPairs } from "lodash/fp"
-import { pipe } from "components/common/core"
+import { filter, map, reduce, toPairs, pipe } from "lodash/fp"
 
 const self = n => n
 const join_with = delimiter => a => a.join(delimiter)

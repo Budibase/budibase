@@ -1,4 +1,4 @@
-const { appPackageFolder, appsFolder } = require("../createAppPackage")
+const { appPackageFolder } = require("../createAppPackage")
 const {
   readJSON,
   writeJSON,
@@ -9,10 +9,8 @@ const {
   rmdir,
 } = require("fs-extra")
 const { join, dirname, resolve } = require("path")
-const { $ } = require("@budibase/core").common
-const { intersection, map, values, flatten } = require("lodash/fp")
+const { compose, map, values, flatten } = require("lodash/fp")
 const { merge } = require("lodash")
-const { homedir } = require("os");
 
 const { componentLibraryInfo } = require("./componentLibraryInfo")
 const buildPage = require("./buildPage")
@@ -34,10 +32,6 @@ module.exports.getPackageForBuilder = async (config, application) => {
   const pages = await getPages(appPath)
 
   return {
-    appDefinition: await getAppDefinition(appPath),
-
-    accessLevels: await readJSON(`${appPath}/access_levels.json`),
-
     pages,
 
     components: await getComponentDefinitions(appPath, pages),
@@ -46,12 +40,6 @@ module.exports.getPackageForBuilder = async (config, application) => {
 
     clientId: process.env.CLIENT_ID
   }
-}
-
-module.exports.getApps = async (config, master) => {
-  const dirs = await readdir(appsFolder(config))
-
-  return $(master.listApplications(), [map(a => a.name), intersection(dirs)])
 }
 
 const screenPath = (appPath, pageName, name) =>
@@ -133,17 +121,16 @@ module.exports.componentLibraryInfo = async (
  * @returns {object} - an object containing component definitions namespaced by their component library
  */
 const getComponentDefinitions = async (appPath, pages, componentLibrary) => {
-  let componentLibraries
+  return {
+    components: []
+  };
+
   if (!componentLibrary) {
     pages = pages || (await getPages(appPath))
 
     if (!pages) return []
+    componentLibraries = compose(flatten, map(p => p.componentLibraries), values)(pages)
 
-    componentLibraries = $(pages, [
-      values,
-      map(p => p.componentLibraries),
-      flatten,
-    ])
   } else {
     componentLibraries = [componentLibrary]
   }

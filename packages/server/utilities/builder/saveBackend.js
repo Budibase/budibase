@@ -1,8 +1,5 @@
-const getPages = require("./getPages")
 const { appPackageFolder } = require("../createAppPackage")
-const { writeJSON, writeFile } = require("fs-extra")
-const { join } = require("path")
-const publicPath = require("./publicPath")
+const { writeJSON } = require("fs-extra")
 
 module.exports = async (config, appname, appDefinition, accessLevels) => {
   const appPath = appPackageFolder(config, appname)
@@ -15,14 +12,14 @@ module.exports = async (config, appname, appDefinition, accessLevels) => {
     spaces: 2,
   })
 
-  const pages = await getPages(appPath)
-  for (let pageName in pages) {
-    const pagePublicPath = publicPath(appPath, pageName)
-    const filename = join(pagePublicPath, "clientBackendDefinition.js")
-    const appDefString = JSON.stringify(appDefinition)
-    await writeFile(
-      filename,
-      `window['##BUDIBASE_BACKEND_DEFINITION##'] = ${appDefString};`
-    )
-  }
+  // const pages = await getPages(appPath)
+  // for (let pageName in pages) {
+  //   const pagePublicPath = publicPath(appPath, pageName)
+  //   const filename = join(pagePublicPath, "clientBackendDefinition.js")
+  //   const appDefString = JSON.stringify(appDefinition)
+  //   await writeFile(
+  //     filename,
+  //     `window['##BUDIBASE_BACKEND_DEFINITION##'] = ${appDefString};`
+  //   )
+  // }
 }

@@ -5,6 +5,7 @@ export const loadLibs = async (appId, appPackage) => {
   const allLibraries = {}
 
   for (let lib of libsFromPages(appPackage.pages)) {
+    console.log(libModule);
     const libModule = await import(makeLibraryUrl(appId, lib))
     allLibraries[lib] = libModule
   }

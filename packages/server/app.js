@@ -1,6 +1,6 @@
 const Koa = require("koa")
 const logger = require("koa-logger");
-const router = require("./middleware/routers")
+const router = require("./api")
 const koaBody = require("koa-body")
 const app = new Koa()
 
