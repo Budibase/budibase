@@ -50,9 +50,6 @@
   }
 
   const lastPartOfName = c => (c ? last(c.split("/")) : "")
-
-  $: console.log("Pages: ", $store.pages[$store.currentPageName])
-  $: console.log("Screens: ", $store.screens)
 </script>
 
 <div class="root">
