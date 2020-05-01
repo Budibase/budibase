@@ -49,7 +49,6 @@
   }
 
   const changeScreen = screen => {
-    console.log("Screen: ", screen)
     store.setCurrentScreen(screen.title)
     $goto(`./:page/${screen.title}`)
   }
@@ -82,7 +81,6 @@
       <ComponentsHierarchyChildren
         components={screen.component.props._children}
         currentComponent={$store.currentComponentInfo}
-        onSelect={store.selectComponent}
         onDeleteComponent={confirmDeleteComponent}
         onMoveUpComponent={store.moveUpComponent}
         onMoveDownComponent={store.moveDownComponent}
