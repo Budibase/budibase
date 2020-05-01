@@ -73,7 +73,6 @@
     <ComponentsHierarchyChildren
       components={_layout.component.props._children}
       currentComponent={$store.currentComponentInfo}
-      onSelect={store.selectComponent}
       onDeleteComponent={confirmDeleteComponent}
       onMoveUpComponent={store.moveUpComponent}
       onMoveDownComponent={store.moveDownComponent}
@@ -102,8 +101,6 @@
 
   .pagelayoutSection {
     margin: 20px 0px 20px 0px;
-  }
-  .root {
   }
   .title {
     margin-left: 10px;
