@@ -14,7 +14,6 @@
     takeRight,
   } from "lodash/fp"
   import Select from "components/common/Select.svelte"
-  import { getIndexSchema } from "components/common/core"
   import ActionButton from "components/common/ActionButton.svelte"
   import TablePagination from "./TablePagination.svelte"
   import { DeleteRecordModal, CreateEditRecordModal } from "./modals"

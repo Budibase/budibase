@@ -4,11 +4,6 @@
   import { compose, map, get, flatten } from "lodash/fp"
   import ActionButton from "components/common/ActionButton.svelte"
   import Select from "components/common/Select.svelte"
-  import {
-    getNewRecord,
-    joinKey,
-    getExactNodeForKey,
-  } from "components/common/core"
   import RecordFieldControl from "./RecordFieldControl.svelte"
   import * as api from "../api"
   import ErrorsBox from "components/common/ErrorsBox.svelte"

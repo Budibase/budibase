@@ -9,6 +9,7 @@ router
     await next();
   })
   .get("/_builder/:file*", controller.serveBuilder)
-  .get("/:appName", controller.serveApp);
+  .get("/_app/:appId", controller.serveApp)
+  .get("/:appId/componentlibrary", controller.serveComponentLibrary);
 
 module.exports = router;

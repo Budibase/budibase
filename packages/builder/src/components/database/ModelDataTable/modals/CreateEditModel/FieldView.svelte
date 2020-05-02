@@ -10,10 +10,6 @@
   import ActionButton from "components/common/ActionButton.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
   import { keys, cloneDeep } from "lodash/fp"
-  import {
-    allTypes,
-    validate,
-  } from "components/common/core"
 
   const FIELD_TYPES = ["string", "number", "boolean"]
 

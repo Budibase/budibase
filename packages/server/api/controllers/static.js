@@ -1,5 +1,6 @@
 const send = require("koa-send");
 const { resolve } = require("path")
+const { homedir } = require("os");
 
 // either serve the builder or serve the actual app index.html
 const builderPath = resolve(process.cwd(), "builder")
@@ -16,5 +17,29 @@ exports.serveApp = async function(ctx) {
 }
 
 exports.serveComponentLibrary = async function(ctx) {
-  await send(ctx, "/index.html", { root: builderPath })
+  // TODO: update to run wherever budi is run
+  const componentLibraryPath = resolve(
+    homedir(), 
+    ".budibase", 
+    ctx.params.appId, 
+    "node_modules", 
+    decodeURI(ctx.query.library),
+    "dist"
+  );
+
+  await send(ctx, "/index.js", { root: componentLibraryPath })
+}
+
+exports.serveComponentDefinitions = async function(ctx) {
+  // TODO: update to run wherever budi is run
+  const componentLibraryPath = resolve(
+    homedir(), 
+    ".budibase", 
+    ctx.params.appId, 
+    "node_modules", 
+    decodeURI(ctx.query.library),
+    "dist"
+  );
+
+  await send(ctx, "/index.js", { root: componentLibraryPath })
 }

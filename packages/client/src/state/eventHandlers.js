@@ -7,7 +7,7 @@ import { getNewChildRecordToState, getNewRecordToState } from "./coreHandlers"
 
 export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType"
 
-export const eventHandlers = (store, coreApi, rootPath, routeTo) => {
+export const eventHandlers = (store, rootPath, routeTo) => {
   const handler = (parameters, execute) => ({
     execute,
     parameters,
@@ -34,15 +34,15 @@ export const eventHandlers = (store, coreApi, rootPath, routeTo) => {
     "List Records": handler(["indexKey", "statePath"], api.listRecords),
     "Save Record": handler(["statePath"], api.saveRecord),
 
-    "Get New Child Record": handler(
-      ["recordKey", "collectionName", "childRecordType", "statePath"],
-      getNewChildRecordToState(coreApi, setStateWithStore)
-    ),
+    // "Get New Child Record": handler(
+    //   ["recordKey", "collectionName", "childRecordType", "statePath"],
+    //   getNewChildRecordToState(coreApi, setStateWithStore)
+    // ),
 
-    "Get New Record": handler(
-      ["collectionKey", "childRecordType", "statePath"],
-      getNewRecordToState(coreApi, setStateWithStore)
-    ),
+    // "Get New Record": handler(
+    //   ["collectionKey", "childRecordType", "statePath"],
+    //   getNewRecordToState(coreApi, setStateWithStore)
+    // ),
 
     "Navigate To": handler(["url"], param => routeTo(param && param.url)),
 

@@ -1,4 +1,5 @@
-import { split, last, pipe } from "lodash/fp"
+import { split, last } from "lodash/fp"
+import { pipe } from "components/common/core";
 
 export const splitName = fullname => {
   const componentName = pipe(fullname, [split("/"), last])

@@ -32,7 +32,7 @@
   $: screensExist = $store.currentPreviewItem._screens && $store.currentPreviewItem._screens.length > 0 
 
   $: frontendDefinition = {
-    componentLibraries: $store.loadLibraryUrls($store.currentPageName),
+    libraries: $store.libraries,
     page: $store.currentPreviewItem,
     screens: screensExist ? $store.currentPreviewItem._screens : [{
       name: "Screen Placeholder",

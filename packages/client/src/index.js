@@ -27,7 +27,7 @@ export const loadBudibase = async opts => {
         temp: false,
       }
 
-  const { appRootPath } = frontendDefinition;
+  let { appRootPath } = frontendDefinition;
   appRootPath = appRootPath === "" ? "" : "/" + trimSlash(appRootPath)
 
   // if (!componentLibraries) componentLibraries = {};
@@ -58,7 +58,6 @@ export const loadBudibase = async opts => {
   } = createApp(
     componentLibraries,
     frontendDefinition,
-    backendDefinition,
     user,
     uiFunctions || {},
     _window,

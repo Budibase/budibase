@@ -22,7 +22,6 @@ const isMetaProp = propName =>
 
 export const createStateManager = ({
   store,
-  coreApi,
   appRootPath,
   frontendDefinition,
   componentLibraries,
@@ -30,7 +29,7 @@ export const createStateManager = ({
   onScreenSlotRendered,
   routeTo,
 }) => {
-  let handlerTypes = eventHandlers(store, coreApi, appRootPath, routeTo)
+  let handlerTypes = eventHandlers(store, appRootPath, routeTo)
   let currentState
 
   // any nodes that have props that are bound to the store

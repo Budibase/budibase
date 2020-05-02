@@ -6,7 +6,6 @@ const { copy, readJSON, writeJSON, remove, exists } = require("fs-extra")
 const { resolve, join } = require("path")
 const chalk = require("chalk")
 const { exec } = require("child_process")
-const glob = require("glob");
 
 module.exports = opts => {
   run(opts)
