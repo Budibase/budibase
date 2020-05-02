@@ -10,6 +10,8 @@
   // Get Package and set store
   export let application
 
+  let ready = false
+
   let promise = getPackage()
 
   async function getPackage() {
@@ -71,6 +73,8 @@
     <div />
   {:then}
     <slot />
+  {:catch error}
+  	<p>Something went wrong: {error.message}</p>
   {/await}
 
 </div>
@@ -92,13 +96,6 @@
     box-sizing: border-box;
     justify-content: space-between;
     align-items: center;
-  }
-
-  .content {
-    flex: 1 1 auto;
-    width: 100%;
-    height: 100px;
-    overflow: hidden;
   }
 
   .content > div {

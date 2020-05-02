@@ -26,15 +26,15 @@ const router = Router();
 //   routeHandlers.changeMyPassword
 // )
 
-router.post(
-  "/:appname/api/executeAction/:actionname",
-  routeHandlers.executeAction
-)
+// router.post(
+//   "/:appname/api/executeAction/:actionname",
+//   routeHandlers.executeAction
+// )
 
-router.post(
-  "/_builder/instance/:appname/:instanceid/api/executeAction/:actionname",
-  routeHandlers.executeAction
-)
+// router.post(
+//   "/_builder/instance/:appname/:instanceid/api/executeAction/:actionname",
+//   routeHandlers.executeAction
+// )
 
 // router.post("/:appname/api/createUser", routeHandlers.createUser)
 

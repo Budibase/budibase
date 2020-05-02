@@ -2,7 +2,6 @@ const statusCodes = require("../utilities/statusCodes")
 const constructHierarchy = require("../utilities/constructHierarchy")
 const { readFile } = require("fs-extra")
 constructHierarchy(require("../appPackages/_master/appDefinition.json"))
-const { getApisWithFullAccess } = require("../utilities/budibaseApi")
 const { createTarGzPackage } = require("../utilities/targzAppPackage")
 
 module.exports = app => {

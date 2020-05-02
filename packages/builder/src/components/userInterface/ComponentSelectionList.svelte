@@ -29,23 +29,6 @@
   const categories = components.categories
   let selectedCategory = categories[0]
 
-  // const onTemplateChosen = template => {
-  //   selectedComponent = null
-  //   const { componentName, libName } = splitName(template.name)
-  //   const templateOptions = {
-  //     records: getRecordNodes(hierarchy),
-  //     indexes: getIndexNodes(hierarchy),
-  //     helpers: {
-  //       indexSchema: getIndexSchema(hierarchy),
-  //     },
-  //   }
-
-  //   templateInstances = libraryModules[libName][componentName](templateOptions)
-  //   if (!templateInstances || templateInstances.length === 0) return
-  //   selectedTemplateInstance = templateInstances[0].name
-  //   selectTemplateDialog.show()
-  // }
-
   const onComponentChosen = component => {
     if (component.template) {
       // onTemplateChosen(component.template)
@@ -55,28 +38,26 @@
     }
   }
 
-  const onTemplateInstanceChosen = () => {
-    selectedComponent = null
-    const instance = templateInstances.find(
-      i => i.name === selectedTemplateInstance
-    )
-    store.addTemplatedComponent(instance.props)
-    toggleTab()
-  }
+  // const onTemplateInstanceChosen = () => {
+  //   selectedComponent = null
+  //   const instance = templateInstances.find(
+  //     i => i.name === selectedTemplateInstance
+  //   )
+  //   store.addTemplatedComponent(instance.props)
+  //   toggleTab()
+  // }
 
-  $: templatesByComponent = groupBy(t => t.component)($store.templates)
-  $: hierarchy = $store.hierarchy
-  $: libraryModules = $store.libraries
-  $: standaloneTemplates = pipe(
-    templatesByComponent,
-    [
-      values,
-      flatten,
-      filter(t => !$store.components.some(c => c.name === t.component)),
-      map(t => ({ name: splitName(t.component).componentName, template: t })),
-      uniqBy(t => t.name),
-    ]
-  )
+  // $: templatesByComponent = groupBy(t => t.component)($store.templates)
+  // $: standaloneTemplates = pipe(
+  //   templatesByComponent,
+  //   [
+  //     values,
+  //     flatten,
+  //     filter(t => !$store.components.some(c => c.name === t.component)),
+  //     map(t => ({ name: splitName(t.component).componentName, template: t })),
+  //     uniqBy(t => t.name),
+  //   ]
+  // )
 </script>
 
 <div class="root">
@@ -93,12 +74,11 @@
     <Tab
       list={selectedCategory}
       on:selectItem={e => onComponentChosen(e.detail)}
-      {onTemplateChosen}
       {toggleTab} />
   </div>
 </div>
 
-<ConfirmDialog
+<!-- <ConfirmDialog
   bind:this={selectTemplateDialog}
   title="Choose Template"
   onCancel={() => (selectedComponent = null)}
@@ -115,7 +95,7 @@
       </label>
     </div>
   {/each}
-</ConfirmDialog>
+</ConfirmDialog> -->
 
 <style>
   .tabs {

@@ -20,7 +20,6 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/datastores": "^0.0.32",
     "@budibase/server": "^0.0.32",
     "@inquirer/password": "^0.0.6-alpha.0",
     "chalk": "^2.4.2",

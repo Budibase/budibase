@@ -9,8 +9,7 @@
   import api from "builderStore/api"
   import { store, backendUiStore } from "builderStore"
   import { common, hierarchy } from "../../../../../../../core/src/"
-  import { getNode } from "components/common/core"
-  import { templateApi, pipe, validate } from "components/common/core"
+  import { pipe } from "components/common/core"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
 
   export let model = { schema: {} }

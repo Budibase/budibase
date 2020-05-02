@@ -1,4 +1,4 @@
-export const defaultPagesObject = () => ({
+export const DEFAULT_PAGES_OBJECT = {
   main: {
     _props: {},
     _screens: {},
@@ -17,4 +17,4 @@ export const defaultPagesObject = () => ({
   },
   componentLibraries: [],
   stylesheets: [],
-})
+}

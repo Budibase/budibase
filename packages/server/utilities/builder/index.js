@@ -18,6 +18,7 @@ const getPages = require("./getPages")
 const listScreens = require("./listScreens")
 const saveBackend = require("./saveBackend")
 const deleteCodeMeta = require("./deleteCodeMeta")
+const componentTree = require("./componentTree");
 
 module.exports.buildPage = buildPage
 module.exports.listScreens = listScreens
@@ -121,9 +122,7 @@ module.exports.componentLibraryInfo = async (
  * @returns {object} - an object containing component definitions namespaced by their component library
  */
 const getComponentDefinitions = async (appPath, pages, componentLibrary) => {
-  return {
-    components: []
-  };
+  return componentTree;
 
   if (!componentLibrary) {
     pages = pages || (await getPages(appPath))

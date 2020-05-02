@@ -1,16 +1,15 @@
 const Router = require("@koa/router")
 const session = require("../middleware/session")
-const StatusCodes = require("../utilities/statusCodes")
+const compress = require("koa-compress");
+const zlib = require("zlib");
 const { resolve } = require("path")
 const { homedir } = require("os")
 const send = require("koa-send")
-const routeHandlers = require("../middleware/routeHandlers")
 const {
   componentLibraryInfo,
 } = require("../utilities/builder")
 const {
-  componentRoutes,
-  appsRoutes,
+  // componentRoutes,
   pageRoutes,
   userRoutes,
   authenticatedRoutes
@@ -24,11 +23,21 @@ const applicationRoutes = require("./routes/neo/application");
 const modelsRoutes = require("./routes/neo/model");
 const viewsRoutes = require("./routes/neo/view");
 const staticRoutes = require("./routes/neo/static");
+const componentRoutes = require("./routes/neo/component");
 
 module.exports = app => {
   const router = new Router()
 
   router
+    .use(compress({
+      threshold: 2048,
+      gzip: {
+        flush: zlib.Z_SYNC_FLUSH
+      },
+      deflate: {
+        flush: zlib.Z_SYNC_FLUSH,
+      }
+    }))
     // .use(session(app))
     .use(async (ctx, next) => { 
       // TODO: temp dev middleware
@@ -107,14 +116,14 @@ module.exports = app => {
       // .get("/_builder", async ctx => {
       //   await send(ctx, "/index.html", { root: builderPath })
       // })
-      .get("/_builder/:appname/componentlibrary", async ctx => {
-        const info = await componentLibraryInfo(
-          ctx.config,
-          ctx.params.appname,
-          ctx.query.lib
-        )
-        await send(ctx, info.components._lib || "index.js", { root: info.libDir })
-      })
+      // .get("/_builder/:appname/componentlibrary", async ctx => {
+      //   const info = await componentLibraryInfo(
+      //     ctx.config,
+      //     ctx.params.appname,
+      //     ctx.query.lib
+      //   )
+      //   await send(ctx, info.components._lib || "index.js", { root: info.libDir })
+      // })
       // .get("/_builder/*", async (ctx, next) => {
       //   const path = ctx.path.replace("/_builder", "")
 
@@ -149,8 +158,8 @@ module.exports = app => {
   router.use(userRoutes.allowedMethods());
   // router.use(appsRoutes.routes())
   // router.use(appsRoutes.allowedMethods());
-  router.use(componentRoutes.routes());
-  router.use(componentRoutes.allowedMethods());
+  // router.use(componentRoutes.routes());
+  // router.use(componentRoutes.allowedMethods());
   router.use(pageRoutes.routes());
   router.use(pageRoutes.allowedMethods());
 
@@ -166,6 +175,9 @@ module.exports = app => {
 
   router.use(applicationRoutes.routes());
   router.use(applicationRoutes.allowedMethods());
+
+  router.use(componentRoutes.routes());
+  router.use(componentRoutes.allowedMethods());
 
   router.use(clientRoutes.routes());
   router.use(clientRoutes.allowedMethods());
@@ -188,8 +200,8 @@ module.exports = app => {
   //   .get("/_builder/instance/:appname/:instanceid/*", routeHandlers.appDefault)
 
 
-  router.use(authenticatedRoutes.routes());
-  router.use(authenticatedRoutes.allowedMethods());
+  // router.use(authenticatedRoutes.routes());
+  // router.use(authenticatedRoutes.allowedMethods());
 
   return router
 }

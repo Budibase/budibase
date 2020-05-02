@@ -33,8 +33,6 @@
 
   const isComponentSelected = (current, comp) => current === comp
 
-  const isFolderSelected = (current, folder) => isInSubfolder(current, folder)
-
   $: _screens = pipe(
     screens,
     [map(c => ({ component: c, title: lastPartOfName(c) })), sortBy("title")]

@@ -2,7 +2,6 @@
   import { getContext, onMount } from "svelte"
   import { store, backendUiStore } from "builderStore"
   import HierarchyRow from "./HierarchyRow.svelte"
-  import DropdownButton from "components/common/DropdownButton.svelte"
   import NavItem from "./NavItem.svelte"
   import getIcon from "components/common/icon"
   import api from "builderStore/api"
