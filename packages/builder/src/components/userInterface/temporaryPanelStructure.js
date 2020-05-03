@@ -5,6 +5,14 @@ export default {
       isCategory: true,
       children: [
         {
+          _component: "##builtin/screenslot",
+          name: 'Screenslot',
+          description: 'This component is a placeholder for the rendering of a screen within a page.',
+          icon: 'ri-crop-2-line',
+          commonProps: {},
+          children: []
+        },
+        {
           _component: "@budibase/standard-components/container",
           name: 'Container',
           description: 'This component contains things within itself',
@@ -116,6 +124,7 @@ export default {
           children: []
         },
         {
+          _component: "@budibase/standard-components/login",
           name: 'Login',
           description: 'A component that automatically generates a login screen for your app.',
           icon: 'ri-login-box-fill',
@@ -144,6 +153,7 @@ export default {
           children: []
         },
         {
+          _component: "@budibase/materialdesign-components/Form",
           name: 'Form',
           description: 'A component that generates a form from your data.',
           icon: 'ri-file-edit-fill',

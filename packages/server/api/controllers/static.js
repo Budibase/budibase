@@ -2,22 +2,32 @@ const send = require("koa-send");
 const { resolve } = require("path")
 const { homedir } = require("os");
 
-// either serve the builder or serve the actual app index.html
-const builderPath = resolve(process.cwd(), "builder")
-
 exports.serveBuilder = async function(ctx) {
-  console.log(ctx.file);
+  const builderPath = resolve(process.cwd(), "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
 
 exports.serveApp = async function(ctx) {
-  // resolve unauthenticated page if so
-  await send(ctx, "/index.html", { root: ctx.publicPath })
+  // TODO: update homedir stuff to wherever budi is run
+  // default to homedir
+  const appPath = resolve(
+    homedir(), 
+    ".budibase", 
+    ctx.params.appId,
+    "public",
+    ctx.isAuthenticated ? "main" : "unauthenticated"
+  );
+
+  // TODO: Hook up to JWT auth in real app
+  // TODO: serve CSS and other assets
+  // resolve unauthenticated page if user not authenticated
   // resolve main page if user authenticated
+  await send(ctx, "/index.html", { root: appPath })
 }
 
 exports.serveComponentLibrary = async function(ctx) {
-  // TODO: update to run wherever budi is run
+  // TODO: update homedir stuff to wherever budi is run
+  // default to homedir
   const componentLibraryPath = resolve(
     homedir(), 
     ".budibase", 
@@ -31,7 +41,8 @@ exports.serveComponentLibrary = async function(ctx) {
 }
 
 exports.serveComponentDefinitions = async function(ctx) {
-  // TODO: update to run wherever budi is run
+  // TODO: update homedir stuff to wherever budi is run
+  // default to homedir
   const componentLibraryPath = resolve(
     homedir(), 
     ".budibase", 

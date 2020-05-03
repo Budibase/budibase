@@ -9,7 +9,6 @@ import {
 import { getExactComponent } from "components/userInterface/pagesParsing/searchComponents"
 import { rename } from "components/userInterface/pagesParsing/renameScreen"
 import {
-  // getNewScreen,
   createProps,
   makePropsSafe,
   getBuiltin,
@@ -353,8 +352,10 @@ const addChildComponent = store => (componentToAdd, presetName) => {
   store.update(state => {
     function findSlot(component_array) {
       for (let i = 0; i < component_array.length; i += 1) {
-        if (component_array[i]._component === "##builtin/screenslot")
+        if (component_array[i]._component === "##builtin/screenslot") {
           return true
+        }
+
         if (component_array[i]._children) findSlot(component_array[i])
       }
 
