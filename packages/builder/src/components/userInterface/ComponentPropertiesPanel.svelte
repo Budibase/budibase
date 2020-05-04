@@ -14,17 +14,33 @@
   import LayoutEditor from "./LayoutEditor.svelte"
   import EventsEditor from "./EventsEditor"
 
-  let current_view = "props"
-  let codeEditor
+  import panelStructure from "./temporaryPanelStructure.js"
+  import CategoryTab from "./CategoryTab.svelte"
+  import DesignView from "./DesignView.svelte"
 
-  $: component = $store.currentComponentInfo
-  $: originalName = component.name
-  $: name =
-    $store.currentView === "detail"
-      ? $store.currentPreviewItem.name
-      : component._component
-  $: description = component.description
+  let current_view = "design"
+  let codeEditor
+  let flattenedPanel = flattenComponents(panelStructure.categories)
+  let categories = [
+    { name: "Design" },
+    { name: "Settings" },
+    { name: "Actions" },
+  ]
+  let selectedCategory = categories[0]
+
   $: components = $store.components
+  $: componentInstance = $store.currentComponentInfo //contains prop values of currently selected component
+  $: componentDefinition = $store.components.find(
+    c => c.name === componentInstance._component
+  )
+
+  $: panelDefinition = flattenedPanel.find(
+    //use for getting controls for each component property
+    c => c._component === componentInstance._component
+  )
+
+  // OLD PROPS =============================================
+
   $: screen_props =
     $store.currentFrontEndType === "page"
       ? getProps($store.currentPreviewItem, ["name", "favicon"])
@@ -33,76 +49,46 @@
   const onPropChanged = store.setComponentProp
   const onStyleChanged = store.setComponentStyle
 
+  //May be able to remove some of the nested components in PropsView, PropsControl and StateBindingControl tree
+
+  function walkProps(component, action) {
+    action(component)
+    if (component.children) {
+      for (let child of component.children) {
+        walkProps(child, action)
+      }
+    }
+  }
+
+  function flattenComponents(props) {
+    const components = []
+    props.forEach(comp =>
+      walkProps(comp, c => {
+        if ("_component" in c) {
+          components.push(c)
+        }
+      })
+    )
+    return components
+  }
+
   function getProps(obj, keys) {
     return keys.map((k, i) => [k, obj[k], obj.props._id + i])
   }
 </script>
 
 <div class="root">
-  <ul>
-    <li>
-      <button
-        class:selected={current_view === 'props'}
-        on:click={() => (current_view = 'props')}>
-        <PaintIcon />
-      </button>
-    </li>
-    <li>
-      <button
-        class:selected={current_view === 'layout'}
-        on:click={() => (current_view = 'layout')}>
-        <LayoutIcon />
-      </button>
-    </li>
-    {#if !component._component.startsWith('##')}
-      <li>
-        <button
-          class:selected={current_view === 'code'}
-          on:click={() => codeEditor && codeEditor.show()}>
-          {#if component._code && component._code.trim().length > 0}
-            <div class="button-indicator">
-              <CircleIndicator />
-            </div>
-          {/if}
-          <TerminalIcon />
-        </button>
-      </li>
-      <li>
-        <button
-          class:selected={current_view === 'events'}
-          on:click={() => (current_view = 'events')}>
-          <EventsIcon />
-        </button>
-      </li>
-    {/if}
-  </ul>
+
+  <CategoryTab
+    onClick={category => (selectedCategory = category)}
+    {categories}
+    {selectedCategory} />
+
   <div class="component-props-container">
-
-    {#if current_view === 'props'}
-      {#if $store.currentView === 'detail'}
-        {#each screen_props as [k, v, id] (id)}
-          <div class="detail-prop" for={k}>
-            <label>{k}:</label>
-            <input
-              id={k}
-              value={v}
-              on:input={({ target }) => store.setMetadataProp(k, target.value)} />
-          </div>
-        {/each}
-        <PropsView {component} {components} {onPropChanged} />
-      {:else}
-        <PropsView {component} {components} {onPropChanged} />
-      {/if}
-    {:else if current_view === 'layout'}
-      <LayoutEditor {onStyleChanged} {component} />
-    {:else if current_view === 'events'}
-      <EventsEditor {component} {components} {onPropChanged} />
+    {#if current_view === 'design'}
+      <!-- <PropsView {component} {components} {onPropChanged} /> -->
+      <DesignView {panelDefinition} {componentInstance} {componentDefinition} />
     {/if}
-
-    <CodeEditor
-      bind:this={codeEditor}
-      code={component._code}
-      onCodeChanged={store.setComponentCode} />
 
   </div>
 
@@ -146,7 +132,6 @@
 
   .root {
     height: 100%;
-    padding: 20px;
     display: flex;
     flex-direction: column;
   }
