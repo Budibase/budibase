@@ -1,5 +1,7 @@
 const CouchDB = require("../../db");
-const { schemaValidator } = require("../../../common/lib");
+const Ajv = require("ajv");
+
+const ajv = new Ajv();
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId);
@@ -7,7 +9,7 @@ exports.save = async function(ctx) {
 
   // validation with ajv
   const model = await db.get(record.modelId)
-  const validate = schemaValidator.compile({
+  const validate = ajv.compile({
     properties: model.schema
   });
   const valid = validate(record)

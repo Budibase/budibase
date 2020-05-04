@@ -10,8 +10,6 @@
   // Get Package and set store
   export let application
 
-  let ready = false
-
   let promise = getPackage()
 
   async function getPackage() {
@@ -62,7 +60,7 @@
       <span
         class:active={false}
         class="topnavitemright"
-        on:click={() => console.log}>
+        on:click={() => location = `/${application}`}>
         <PreviewIcon />
       </span>
     </div>

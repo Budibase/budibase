@@ -113,7 +113,7 @@ const setPackage = (store, initial) => async (pkg) => {
   initial.pages = pkg.pages
   initial.hasAppPackage = true
   initial.screens = values(pkg.screens)
-  initial.templates = pkg.components.templates
+  // initial.templates = pkg.components.templates
   initial.builtins = [getBuiltin("##builtin/screenslot")]
   initial.appInstances = pkg.application.instances
   initial.appId = pkg.application._id

@@ -56,7 +56,7 @@ export default {
           commonProps: {},
           children: [
             {
-              _component: "@budibase/standard-components/textfield",
+              _component: "@budibase/standard-components/input",
               name: "Textfield",
               description: "A textfield component that allows the user to input text.",
               icon: 'ri-edit-box-line',
@@ -147,6 +147,7 @@ export default {
       children: [
         {
           name: 'Table',
+          _component: "@budibase/materialdesign-components/Datatable",
           description: 'A component that generates a table from your data.',
           icon: 'ri-archive-drawer-fill',
           commonProps: {},

@@ -20,9 +20,8 @@ exports.serveApp = async function(ctx) {
 
   // TODO: Hook up to JWT auth in real app
   // TODO: serve CSS and other assets
-  // resolve unauthenticated page if user not authenticated
   // resolve main page if user authenticated
-  await send(ctx, "/index.html", { root: appPath })
+  await send(ctx, ctx.file, { root: appPath })
 }
 
 exports.serveComponentLibrary = async function(ctx) {

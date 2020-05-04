@@ -12,11 +12,6 @@ export const createApp = (
   uiFunctions,
   window
 ) => {
-  // const coreApi = createCoreApi(backendDefinition, user)
-  // backendDefinition.hierarchy = coreApi.templateApi.constructHierarchy(
-  //   backendDefinition.hierarchy
-  // )
-
   let routeTo
   let currentUrl
   let screenStateManager
