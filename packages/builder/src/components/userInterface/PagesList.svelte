@@ -24,7 +24,7 @@
 
   const changePage = id => {
     store.setCurrentPage(id)
-    $goto(`./${id}`)
+    $goto(`./${id}/page-layout`)
   }
 </script>
 
