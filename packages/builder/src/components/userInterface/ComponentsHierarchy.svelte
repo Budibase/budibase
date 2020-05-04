@@ -1,4 +1,5 @@
 <script>
+  import { params, goto } from "@sveltech/routify"
   import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
 
   import { last, sortBy, map, trimCharsStart, trimChars, join } from "lodash/fp"
@@ -15,15 +16,12 @@
   const joinPath = join("/")
 
   const normalizedName = name =>
-    pipe(
-      name,
-      [
-        trimCharsStart("./"),
-        trimCharsStart("~/"),
-        trimCharsStart("../"),
-        trimChars(" "),
-      ]
-    )
+    pipe(name, [
+      trimCharsStart("./"),
+      trimCharsStart("~/"),
+      trimCharsStart("../"),
+      trimChars(" "),
+    ])
 
   const lastPartOfName = c => {
     if (!c) return ""
@@ -47,6 +45,11 @@
     componentToDelete = component
     confirmDeleteDialog.show()
   }
+
+  const changeScreen = screen => {
+    store.setCurrentScreen(screen.title)
+    $goto(`./:page/${screen.title}`)
+  }
 </script>
 
 <div class="root">
@@ -55,7 +58,7 @@
     <div
       class="budibase__nav-item component"
       class:selected={$store.currentComponentInfo._id === screen.component.props._id}
-      on:click|stopPropagation={() => store.setCurrentScreen(screen.title)}>
+      on:click|stopPropagation={() => changeScreen(screen)}>
 
       <span
         class="icon"
@@ -76,7 +79,6 @@
       <ComponentsHierarchyChildren
         components={screen.component.props._children}
         currentComponent={$store.currentComponentInfo}
-        onSelect={store.selectComponent}
         onDeleteComponent={confirmDeleteComponent}
         onMoveUpComponent={store.moveUpComponent}
         onMoveDownComponent={store.moveDownComponent}

@@ -3,5 +3,7 @@ myapps/
 .env
 /builder/*
 !/builder/assets/
+!/builder/pickr.min.js
+!/builder/nano.min.css
 public/
 db/dev.db/

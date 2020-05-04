@@ -1,5 +1,6 @@
 <script>
-  import UserInterfaceRoot from "components/userInterface/UserInterfaceRoot.svelte"
+  import { goto } from "@sveltech/routify"
+  $goto("../main")
 </script>
 
-<UserInterfaceRoot />
+<!-- routify:options index=false -->
