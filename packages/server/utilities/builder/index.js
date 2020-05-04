@@ -9,20 +9,14 @@ const {
   rmdir,
 } = require("fs-extra")
 const { join, dirname, resolve } = require("path")
-const { compose, map, values, flatten } = require("lodash/fp")
-const { merge } = require("lodash")
 
-const { componentLibraryInfo } = require("./componentLibraryInfo")
 const buildPage = require("./buildPage")
 const getPages = require("./getPages")
 const listScreens = require("./listScreens")
-const saveBackend = require("./saveBackend")
 const deleteCodeMeta = require("./deleteCodeMeta")
-const componentTree = require("./componentTree");
 
 module.exports.buildPage = buildPage
 module.exports.listScreens = listScreens
-module.exports.saveBackend = saveBackend
 
 const getAppDefinition = async appPath =>
   await readJSON(`${appPath}/appDefinition.json`)
@@ -34,8 +28,6 @@ module.exports.getPackageForBuilder = async (config, application) => {
 
   return {
     pages,
-
-    components: await getComponentDefinitions(appPath, pages),
 
     application,
 
@@ -105,50 +97,3 @@ module.exports.savePage = async (config, appname, pagename, page) => {
   const appDefinition = await getAppDefinition(appPath)
   await buildPage(config, appname, appDefinition, pagename, page)
 }
-
-module.exports.componentLibraryInfo = async (
-  config,
-  appname,
-  componentLibrary
-) => {
-  const appPath = appPackageFolder(config, appname)
-  return await componentLibraryInfo(appPath, componentLibrary)
-}
-
-/**
- * @param {string} appPath - path to a budibase application
- * @param {Array} pages - a list of budibase application pages
- * @param {string} componentLibrary - component library to fetch components for
- * @returns {object} - an object containing component definitions namespaced by their component library
- */
-const getComponentDefinitions = async (appPath, pages, componentLibrary) => {
-  return componentTree;
-
-  if (!componentLibrary) {
-    pages = pages || (await getPages(appPath))
-
-    if (!pages) return []
-    componentLibraries = compose(flatten, map(p => p.componentLibraries), values)(pages)
-
-  } else {
-    componentLibraries = [componentLibrary]
-  }
-
-  const components = {}
-  const templates = {}
-  const libraryPaths = {}
-
-  for (let library of componentLibraries) {
-    const info = await componentLibraryInfo(appPath, library)
-    merge(components, info.components)
-    merge(templates, info.templates)
-    libraryPaths[library] = components._lib
-  }
-
-  if (components._lib) delete components._lib
-  if (templates._lib) delete templates._lib
-
-  return { components, templates, libraryPaths }
-}
-
-module.exports.getComponentDefinitions = getComponentDefinitions

@@ -1,6 +1,4 @@
 const { resolve, join } = require("path")
-const constructHierarchy = require("./constructHierarchy")
-const { common } = require("@budibase/core")
 const { getRuntimePackageDirectory } = require("../utilities/runtimePackages")
 const injectPlugins = require("./injectedPlugins")
 const { cwd } = require("process")
@@ -31,36 +29,6 @@ const appPackageFolder = (config, appname) =>
 module.exports.appPackageFolder = appPackageFolder
 
 module.exports.appsFolder = config => appPackageFolder(config, "")
-
-module.exports.masterAppPackage = context => {
-  const { config } = context
-  const standardPackage = createAppPackage(
-    context,
-    `${__dirname}/../appPackages/_master`
-  )
-
-  const customizeMaster =
-    config && config.customizeMaster ? config.customizeMaster : a => a
-
-  const appDefinition = common.$(standardPackage.appDefinition, [
-    customizeMaster,
-    constructHierarchy,
-  ])
-
-  const plugins = standardPackage.behaviourSources
-
-  return {
-    appDefinition,
-    behaviourSources:
-      config && config.extraMasterPlugins
-        ? { ...plugins, ...config.extraMasterPlugins }
-        : plugins,
-    appPath: standardPackage.appPath,
-    unauthenticatedUiPath: standardPackage.unauthenticatedUiPath,
-    mainUiPath: standardPackage.mainUiPath,
-    sharedPath: standardPackage.sharedPath,
-  }
-}
 
 const applictionVersionPath = (context, appname, versionId) =>
   join(cwd(), getRuntimePackageDirectory(context, appname, versionId))

@@ -1,32 +1,11 @@
-const Router = require("@koa/router")
+const Router = require("@koa/router");
+const controller = require("../controllers/user");
 
-const router = new Router()
+const router = Router();
 
-// router.post("/:appname/api/authenticate", routeHandlers.authenticate)
+router
+  .get("/api/:instanceId/users", controller.fetch)
+  .post("/api/:instanceId/users", controller.create)
+  .delete("/api/:instanceId/users/:userId", controller.destroy);
 
-// router.post(
-//   "/_builder/instance/:appname/:instanceid/api/authenticate",
-//   routeHandlers.authenticate
-// )
-
-// router.post(
-//   "/_builder/instance/:appname/:instanceid/api/setPasswordFromTemporaryCode",
-//   routeHandlers.setPasswordFromTemporaryCode
-// )
-
-// router.post(
-//   "/_builder/instance/:appname/:instanceid/api/createTemporaryAccess",
-//   routeHandlers.createTemporaryAccess
-// )
-
-// router.post(
-//   "/:appname/api/createTemporaryAccess",
-//   routeHandlers.createTemporaryAccess
-// )
-
-// router.post(
-//   "/:appname/api/setPasswordFromTemporaryCode",
-//   routeHandlers.setPasswordFromTemporaryCode
-// )
-
-module.exports = router
+module.exports = router;

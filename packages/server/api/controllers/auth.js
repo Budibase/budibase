@@ -2,14 +2,6 @@ const jwt = require("jsonwebtoken");
 const CouchDB = require("../../db");
 const bcrypt = require("../../utilities/bcrypt");
 
-exports.forgotPassword = async ctx => {
-};
-
-exports.setPassword = async ctx => { };
-
-exports.changePassword = async ctx => {
-};
-
 exports.authenticate = async ctx => {
   const { username, password } = ctx.request.body;
 
@@ -17,7 +9,7 @@ exports.authenticate = async ctx => {
   if (!password) ctx.throw(400, "Password Required");
 
   // query couch for their username
-  const db = new CouchDB(ctx.params.instanceId);
+  const db = new CouchDB(ctx.params.clientId);
   const dbUser = await db.query("by_username", { 
     include_docs: true,
     key: username

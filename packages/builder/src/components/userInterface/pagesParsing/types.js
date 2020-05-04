@@ -66,7 +66,7 @@ import {
 
 // const isEventList = e => isArray(e) && every(isEvent)(e)
 
-// // const EMPTY_STATE = () => ({ [BB_STATE_BINDINGPATH]: "" });
+// const EMPTY_STATE = () => ({ [BB_STATE_BINDINGPATH]: "" });
 
 // export const types = {
 //   string: propType("", isString, defaultDef("string")),
