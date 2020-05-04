@@ -1,3 +1,5 @@
+import { layout, background } from "./propertyCategories.js"
+
 export default {
   categories: [
     {
@@ -10,7 +12,8 @@ export default {
           description: 'This component contains things within itself',
           icon: 'ri-layout-row-fill',
           commonProps: {},
-          children: []
+          children: [],
+          props: { layout, background },
         },
         {
           name: 'Text',
@@ -24,12 +27,8 @@ export default {
               description: "A component for displaying heading text",
               icon: "ri-heading",
               props: {
-                type: {
-                  type: "options",
-                  options: ["h1", "h2", "h3", "h4", "h5", "h6"],
-                  default: "h1",
-                },
-                text: "string",
+                layout,
+                background,
               },
             },
             {
@@ -82,15 +81,15 @@ export default {
           name: 'Button',
           description: 'A basic html button that is ready for styling',
           icon: 'ri-radio-button-fill',
-          commonProps: {},
-          children: []
+          children: [],
+          props: {},
         },
         {
           _component: "@budibase/standard-components/icon",
           name: 'Icon',
           description: 'A basic component for displaying icons',
           icon: 'ri-sun-fill',
-          commonProps: {},
+          props: {},
           children: []
         },
         {
@@ -98,7 +97,7 @@ export default {
           name: 'Link',
           description: 'A basic link component for internal and external links',
           icon: 'ri-link',
-          commonProps: {},
+          props: {},
           children: []
         }
       ]
@@ -112,14 +111,14 @@ export default {
           name: 'Card',
           description: 'A basic card component that can contain content and actions.',
           icon: 'ri-layout-bottom-line',
-          commonProps: {},
+          props: {},
           children: []
         },
         {
           name: 'Login',
           description: 'A component that automatically generates a login screen for your app.',
           icon: 'ri-login-box-fill',
-          commonProps: {},
+          props: {},
           children: []
         },
         {
@@ -127,7 +126,7 @@ export default {
           _component: "@budibase/standard-components/Navigation",
           description: "A component for handling the navigation within your app.",
           icon: "ri-navigation-fill",
-          commonProps: {},
+          props: {},
           children: []
         }
       ]
@@ -140,15 +139,15 @@ export default {
           name: 'Table',
           description: 'A component that generates a table from your data.',
           icon: 'ri-archive-drawer-fill',
-          commonProps: {},
+          props: {},
           children: []
         },
         {
           name: 'Form',
           description: 'A component that generates a form from your data.',
           icon: 'ri-file-edit-fill',
-          commonProps: {},
-          component: "@budibase/materialdesign-components/Form",
+          props: {},
+          _component: "@budibase/materialdesign-components/Form",
           template: {
             component: "@budibase/materialdesign-components/Form",
             description: "Form for saving a record",
