@@ -2,7 +2,7 @@
 import { filter, cloneDeep, last, concat, isEmpty, values } from "lodash/fp"
 import { pipe, getNode, constructHierarchy } from "components/common/core"
 import * as backendStoreActions from "./backend"
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { defaultPagesObject } from "components/userInterface/pagesParsing/defaultPagesObject"
 import api from "../api"
 import { getExactComponent } from "components/userInterface/pagesParsing/searchComponents"
@@ -92,6 +92,7 @@ export const getStore = () => {
   store.moveUpComponent = moveUpComponent(store)
   store.moveDownComponent = moveDownComponent(store)
   store.copyComponent = copyComponent(store)
+  store.getPathToComponent = getPathToComponent(store)
   store.addTemplatedComponent = addTemplatedComponent(store)
   store.setMetadataProp = setMetadataProp(store)
   return store
@@ -665,6 +666,38 @@ const copyComponent = store => component => {
     s.currentComponentInfo = copiedComponent
     return s
   })
+}
+
+const getPathToComponent = store => component => {
+
+  // Gets all the components to needed to construct a path.
+  const tempStore = get(store)
+  let pathComponents = []
+  let parent = component;
+  let root = false
+  while (!root) {
+    parent = getParent(tempStore.currentPreviewItem.props, parent)
+    if (!parent) {
+      root = true
+    } else {
+      pathComponents.push(parent)
+    }
+  }
+
+  // Remove root entry since it's the screen or page layout.
+  // Reverse array since we need the correct order of the IDs
+  const reversedComponents = pathComponents.reverse().slice(1)
+
+  // Add component
+  const allComponents = [...reversedComponents, component]
+
+  // Map IDs
+  const IdList = allComponents.map(c => c._id)
+
+  // Construct ID Path:
+  const path = IdList.join('/')
+
+  return path
 }
 
 const getParent = (rootProps, child) => {
