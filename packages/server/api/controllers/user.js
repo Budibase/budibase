@@ -24,6 +24,16 @@ exports.create = async function(ctx) {
     type: "user"
   });
 
+  // the clientDB needs to store a map of users against the app
+  const clientDB = new CouchDB(process.env.CLIENT_ID);
+  const app = await clientDB.get(ctx.params.appId);
+
+  app.userInstanceMap = {
+    ...app.userInstanceMap,
+    [response._id]: ctx.params.instanceId
+  }
+  await clientDb.put(app);
+
   ctx.body = {
     user: {
       id: response.id,

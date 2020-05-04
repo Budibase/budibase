@@ -8,8 +8,7 @@
   import PagesList from "components/userInterface/PagesList.svelte"
   import IconButton from "components/common/IconButton.svelte"
   import NewScreen from "components/userInterface/NewScreen.svelte"
-  import CurrentItemPreview from "components/userInterface/CurrentItemPreview.svelte"
-  import SettingsView from "components/userInterface/SettingsView.svelte"
+  import CurrentItemPreview from "components/userInterface/AppPreview"
   import PageView from "components/userInterface/PageView.svelte"
   import ComponentsPaneSwitcher from "components/userInterface/ComponentsPaneSwitcher.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -104,7 +103,6 @@
 </div>
 
 <NewScreen bind:this={newScreenPicker} />
-<SettingsView bind:this={settingsView} />
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}

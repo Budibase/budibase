@@ -24,6 +24,7 @@ exports.create = async function(ctx) {
   const { id, rev } = await clientDb.post({
     type: "app",
     instances: [],
+    userInstanceMap: {},
     componentLibraries: [
       "@budibase/standard-components",
       "@budibase/materialdesign-components"

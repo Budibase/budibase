@@ -1,7 +1,7 @@
 import { filter, cloneDeep, values } from "lodash/fp"
 import { pipe } from "components/common/core"
 import * as backendStoreActions from "./backend"
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import api from "../api"
 import { 
   DEFAULT_PAGES_OBJECT
