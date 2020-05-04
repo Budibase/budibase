@@ -3,6 +3,7 @@
   import Input from "../common/Input.svelte"
   import PropertyCascader from "./PropertyCascader"
   import { isBinding, getBinding, setBinding } from "../common/binding"
+  import Colorpicker from "../common/Colorpicker.svelte"
 
   export let value = ""
   export let onChanged = () => {}
@@ -36,6 +37,8 @@
         {/if}
       {/each}
     </select>
+  {:else if type === 'colour'}
+    <Colorpicker {onChanged} {value} />
   {:else}
     <PropertyCascader {onChanged} {value} />
   {/if}
