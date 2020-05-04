@@ -71,6 +71,7 @@
 
   {#if $store.currentPreviewItem.name === _layout.title && _layout.component.props._children}
     <ComponentsHierarchyChildren
+      thisComponent={_layout.component.props}
       components={_layout.component.props._children}
       currentComponent={$store.currentComponentInfo}
       onDeleteComponent={confirmDeleteComponent}
