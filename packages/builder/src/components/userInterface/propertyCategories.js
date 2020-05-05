@@ -1,4 +1,3 @@
-
 /* 
   TODO: all strings types are really inputs and could be typed as such
   TODO: Options types need option items
@@ -6,52 +5,52 @@
 */
 
 export const layout = {
-  flexDirection: { displayName: "Direction", type: "string" },
-  justifyContent: { displayName: "Justify", type: "string" },
-  alignItems: { displayName: "Align", type: "string" },
-  flexWrap: { displayName: "Wrap", type: "options" },
+  flexDirection: { label: "Direction", control: "string" },
+  justifyContent: { label: "Justify", control: "string" },
+  alignItems: { label: "Align", control: "string" },
+  flexWrap: { label: "Wrap", control: "options" },
 }
 
 export const spacing = {
-  padding: { type: "string" },
-  margin: { type: "string" },
+  padding: { control: "string" },
+  margin: { control: "string" },
 }
 
 export const size = {
-  width: { type: "string" },
-  height: { type: "string" },
-  minWidth: { displayName: "Min W", type: "string" },
-  minHeight: { displayName: "Min H", type: "string" },
-  maxWidth: { displayName: "Max W", type: "string" },
-  maxHeight: { displayName: "Max H", type: "string" },
-  overflow: { type: "string" }, //custom
+  width: { control: "string" },
+  height: { control: "string" },
+  minWidth: { label: "Min W", control: "string" },
+  minHeight: { label: "Min H", control: "string" },
+  maxWidth: { label: "Max W", control: "string" },
+  maxHeight: { label: "Max H", control: "string" },
+  overflow: { control: "string" }, //custom
 }
 
 export const position = {
-  position: { type: "options" },
+  position: { control: "options" },
 }
 
 export const typography = {
-  font: { type: "options" },
-  weight: { type: "options" },
-  size: { type: "string" },
-  lineHeight: { displayName: "Line H", type: "string" },
-  color: { type: "colour" },
-  align: { type: "string" }, //custom
-  transform: { type: "string" }, //custom
-  style: { type: "string" }, //custom
+  font: { control: "options" },
+  weight: { control: "options" },
+  size: { control: "string" },
+  lineHeight: { label: "Line H", control: "string" },
+  color: { control: "colour" },
+  align: { control: "string" }, //custom
+  transform: { control: "string" }, //custom
+  style: { control: "string" }, //custom
 }
 
 export const background = {
-  backgroundColor: { displayName: "Background Color", type: "colour" },
-  image: { type: "string" }, //custom
+  backgroundColor: { label: "Background Color", control: "colour" },
+  image: { control: "string" }, //custom
 }
 
 export const border = {
-  radius: { type: "string" },
-  width: { type: "string" }, //custom
-  color: { type: "colour" },
-  style: { type: "options" },
+  radius: { control: "string" },
+  width: { control: "string" }, //custom
+  color: { control: "colour" },
+  style: { control: "options" },
 }
 
 export const effects = {
@@ -61,9 +60,9 @@ export const effects = {
 }
 
 export const transitions = {
-  property: { type: "options" },
-  duration: { type: "string" },
-  ease: { type: "options" },
+  property: { control: "options" },
+  duration: { control: "string" },
+  ease: { control: "options" },
 }
 
 export function excludeProps(props, propsToExclude) {

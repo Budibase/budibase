@@ -13,7 +13,7 @@ export default {
           icon: 'ri-layout-row-fill',
           commonProps: {},
           children: [],
-          props: { layout, background },
+          properties: { layout, background },
         },
         {
           name: 'Text',
@@ -26,7 +26,7 @@ export default {
               name: 'Headline',
               description: "A component for displaying heading text",
               icon: "ri-heading",
-              props: {
+              properties: {
                 layout,
                 background,
               },
@@ -36,7 +36,7 @@ export default {
               name: 'Paragraph',
               description: "A component for displaying paragraph text.",
               icon: 'ri-paragraph',
-              props: {}
+              properties: {}
             }
           ]
         },
@@ -51,28 +51,28 @@ export default {
               name: "Textfield",
               description: "A textfield component that allows the user to input text.",
               icon: 'ri-edit-box-line',
-              props: {}
+              properties: {}
             },
             {
               _component: "@budibase/standard-components/checkbox",
               name: "Checkbox",
               description: "A selectable checkbox component",
               icon: 'ri-checkbox-line',
-              props: {}
+              properties: {}
             },
             {
               _component: "@budibase/standard-components/radiobutton",
               name: "Radiobutton",
               description: "A selectable radiobutton component",
               icon: 'ri-radio-button-line',
-              props: {}
+              properties: {}
             },
             {
               _component: "@budibase/standard-components/select",
               name: "Select",
               description: "A select component for choosing from different options",
               icon: 'ri-file-list-line',
-              props: {}
+              properties: {}
             }
           ]
         },
@@ -82,14 +82,14 @@ export default {
           description: 'A basic html button that is ready for styling',
           icon: 'ri-radio-button-fill',
           children: [],
-          props: {},
+          properties: {},
         },
         {
           _component: "@budibase/standard-components/icon",
           name: 'Icon',
           description: 'A basic component for displaying icons',
           icon: 'ri-sun-fill',
-          props: {},
+          properties: {},
           children: []
         },
         {
@@ -97,7 +97,7 @@ export default {
           name: 'Link',
           description: 'A basic link component for internal and external links',
           icon: 'ri-link',
-          props: {},
+          properties: {},
           children: []
         }
       ]
@@ -111,14 +111,14 @@ export default {
           name: 'Card',
           description: 'A basic card component that can contain content and actions.',
           icon: 'ri-layout-bottom-line',
-          props: {},
+          properties: {},
           children: []
         },
         {
           name: 'Login',
           description: 'A component that automatically generates a login screen for your app.',
           icon: 'ri-login-box-fill',
-          props: {},
+          properties: {},
           children: []
         },
         {
@@ -126,7 +126,7 @@ export default {
           _component: "@budibase/standard-components/Navigation",
           description: "A component for handling the navigation within your app.",
           icon: "ri-navigation-fill",
-          props: {},
+          properties: {},
           children: []
         }
       ]
@@ -139,14 +139,14 @@ export default {
           name: 'Table',
           description: 'A component that generates a table from your data.',
           icon: 'ri-archive-drawer-fill',
-          props: {},
+          properties: {},
           children: []
         },
         {
           name: 'Form',
           description: 'A component that generates a form from your data.',
           icon: 'ri-file-edit-fill',
-          props: {},
+          properties: {},
           _component: "@budibase/materialdesign-components/Form",
           template: {
             component: "@budibase/materialdesign-components/Form",
