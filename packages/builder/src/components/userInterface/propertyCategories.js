@@ -1,8 +1,15 @@
-/* 
+import ColorPicker from "../common/Colorpicker.svelte"
+import Input from "../common/Input.svelte"
+import TempSelect from "./TempSelect.svelte"
+/*
   TODO: all strings types are really inputs and could be typed as such
   TODO: Options types need option items
   TODO: Allow for default values for all properties
 */
+
+export const general = {
+  text: { control: Input }
+}
 
 export const layout = {
   flexDirection: { label: "Direction", control: "string" },
@@ -42,8 +49,8 @@ export const typography = {
 }
 
 export const background = {
-  backgroundColor: { label: "Background Color", control: "colour" },
-  image: { control: "string" }, //custom
+  backgroundColor: { label: "Background Color", control: ColorPicker },
+  image: { control: Input }, //custom
 }
 
 export const border = {

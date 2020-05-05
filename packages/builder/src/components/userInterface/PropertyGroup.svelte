@@ -1,20 +1,27 @@
 <script>
+  import { excludeProps } from "./propertyCategories.js"
   export let name = ""
   export let properties = {}
   export let componentInstance = {}
   export let componentDefinition = {}
+  export let onPropChanged = () => {}
 
-  let show = false
+  let show = true
 
   const propExistsOnComponentDef = prop => prop in componentDefinition.props
-
   const capitalize = name => name[0].toUpperCase() + name.slice(1)
 
-  $: propertyKeys = Object.keys(properties)
+  function onChange(v) {
+    !!v.target ? onPropChanged(v.target.value) : onPropChanged(v)
+  }
+
+  $: propertyDefinition = Object.entries(properties)
+  $: console.log("props group", properties)
   $: icon = show ? "ri-arrow-down-s-fill" : "ri-arrow-right-s-fill"
 </script>
 
-<div class="property-group-container" on:click={() => (show = !show)}>
+<!-- () => (show = !show) -->
+<div class="property-group-container" on:click={() => {}}>
   <div class="property-group-name">
     <div class="icon">
       <i class={icon} />
@@ -22,13 +29,20 @@
     <div class="name">{capitalize(name)}</div>
   </div>
   <div class="property-panel" class:show>
-    <ul>
-      {#each propertyKeys as key}
-        <!-- {#if propExistsOnComponentDef(key)} -->
-        <li>{properties[key].label || capitalize(key)}</li>
-        <!-- {/if} -->
-      {/each}
-    </ul>
+
+    {#each propertyDefinition as [key, definition]}
+      <div class="property-control">
+        {#if propExistsOnComponentDef(key)}
+          <span>{definition.label || capitalize(key)}</span>
+          <svelte:component
+            this={definition.control}
+            value={componentInstance[key]}
+            on:change={onChange}
+            {onChange}
+            {...excludeProps(definition, ['control'])} />
+        {/if}
+      </div>
+    {/each}
   </div>
 </div>
 
@@ -62,7 +76,11 @@
   .property-panel {
     height: 0px;
     overflow: hidden;
-    /* transition: height 2s ease-in-out; */
+  }
+
+  .property-control {
+    display: flex;
+    flex-flow: row nowrap;
   }
 
   .show {
