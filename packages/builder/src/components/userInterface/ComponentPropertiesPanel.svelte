@@ -86,8 +86,11 @@
 
   <div class="component-props-container">
     {#if current_view === 'design'}
-      <!-- <PropsView {component} {components} {onPropChanged} /> -->
-      <DesignView {panelDefinition} {componentInstance} {componentDefinition} />
+      <DesignView
+        {panelDefinition}
+        {componentInstance}
+        {componentDefinition}
+        {onPropChanged} />
     {/if}
 
   </div>
