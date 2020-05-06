@@ -1,15 +1,14 @@
 import { createApp } from "./createApp"
 import { trimSlash } from "./common/trimSlash"
 import { builtins, builtinLibName } from "./render/builtinComponents"
-import * as standardComponents from "../../standard-components/dist";
-import * as materialDesignComponents from "../../materialdesign-components/dist";
+// import * as standardComponents from "../../standard-components/dist";
+// import * as materialDesignComponents from "../../materialdesign-components/dist";
 
 /**
  * create a web application from static budibase definition files.
  * @param  {object} opts - configuration options for budibase client libary
  */
 export const loadBudibase = async opts => {
-  let componentLibraries = opts && opts.componentLibraries
   const _window = (opts && opts.window) || window
   const _localStorage = (opts && opts.localStorage) || localStorage
 
@@ -30,24 +29,20 @@ export const loadBudibase = async opts => {
   let { appRootPath } = frontendDefinition;
   appRootPath = appRootPath === "" ? "" : "/" + trimSlash(appRootPath)
 
-  // if (!componentLibraries) componentLibraries = {};
 
-  componentLibraries = {
-    "@budibase/standard-components": standardComponents,
-    "@budibase/materialdesign-components": materialDesignComponents
+  const componentLibraryModules = {};
+  const libraries = frontendDefinition.libraries || [
+    "@budibase/standard-components",
+    "@budibase/materialdesign-components",
+  ];
+  for (let library of libraries) {
+    // fetch the JavaScript for the component libraries from the server 
+    componentLibraryModules[library] = await import(
+      `/${frontendDefinition.appId}/componentlibrary?library=${encodeURI(library)}`
+    );
   };
 
-  // if (!componentLibraries) {
-  //   componentLibraries = {}
-
-  //   for (let lib of frontendDefinition.componentLibraries) {
-  //     componentLibraries[lib.libName] = await import(
-  //       `${frontendDefinition.appRootPath}/${trimSlash(lib.importPath)}`
-  //     )
-  //   }
-  // }
-
-  componentLibraries[builtinLibName] = builtins(_window)
+  componentLibraryModules[builtinLibName] = builtins(_window)
 
   const {
     initialisePage,
@@ -56,7 +51,7 @@ export const loadBudibase = async opts => {
     routeTo,
     rootNode,
   } = createApp(
-    componentLibraries,
+    componentLibraryModules,
     frontendDefinition,
     user,
     uiFunctions || {},

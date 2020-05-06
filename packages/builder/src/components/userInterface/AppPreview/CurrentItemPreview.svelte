@@ -42,7 +42,8 @@
   $: screensExist = $store.currentPreviewItem._screens && $store.currentPreviewItem._screens.length > 0 
 
   $: frontendDefinition = {
-    libraries: $store.libraries,
+    appId: $store.appId,
+    libraries: Object.keys($store.libraries),
     page: $store.currentPreviewItem,
     screens: screensExist ? $store.currentPreviewItem._screens : [{
       name: "Screen Placeholder",

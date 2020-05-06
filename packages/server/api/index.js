@@ -40,6 +40,7 @@ module.exports = app => {
         latestPackagesFolder: resolve(homedir(), ".budibase"),
         secret: "foo"
       }
+      ctx.isDev = process.env.NODE_ENV !== "production";
       await next();
     });
   
