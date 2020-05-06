@@ -38,12 +38,13 @@ exports.authenticate = async ctx => {
       instanceId: instanceId
     };
 
-
     const token = jwt.sign(payload, ctx.config.jwtSecret, {
       expiresIn: "1 day"
     });
+
+    const ONE_DAY_FROM_NOW = new Date(Date.now() + (24 * 3600))
     
-    ctx.cookies.set('budibase:token', token);
+    ctx.cookies.set('budibase:token', token, { expires: ONE_DAY_FROM_NOW });
 
     ctx.body = {
       token,
