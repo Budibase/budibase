@@ -26,7 +26,7 @@
 
   const login = async () => {
     loading = true
-    const response = _bb.api.post("/api/authenticate", { username, password });
+    const response = await _bb.api.post("/api/authenticate", { username, password });
 
     if (response.status === 200) {
       const json = await response.json();

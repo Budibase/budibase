@@ -88,11 +88,6 @@ const parsePropDef = propDef => {
   const type = TYPE_MAP[propDef.type]
   if (!type) return error(`Type ${propDef.type} is not recognised.`)
 
-  // if (isUndefined(propDef.default)) return type.default(propDef)
-
-  // if (!type.isOfType(propDef.default))
-  //   return error(`${propDef.default} is not of type ${type}`)
-
   return propDef.default
 }
 

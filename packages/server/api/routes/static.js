@@ -7,7 +7,7 @@ router
   .param("file", async (file, ctx, next) => {
     ctx.file = file && file.includes(".") ? file : "index.html";
 
-    // Serving the latest client library in dev
+    // Serving the client library from your local dir in dev
     if (ctx.isDev && ctx.file.startsWith("budibase-client")) {
       ctx.devPath = "/tmp/.budibase";
     }
