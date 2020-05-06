@@ -31,18 +31,16 @@ module.exports = app => {
         flush: zlib.Z_SYNC_FLUSH,
       }
     }))
-    .use(authenticated)
     .use(async (ctx, next) => { 
       // TODO: temp dev middleware
-      // ctx.sessionId = ctx.session._sessCtx.externalKey
-      // ctx.session.accessed = true
       ctx.config = { 
         latestPackagesFolder: resolve(homedir(), ".budibase"),
-        secret: "foo"
+        jwtSecret: "foo"
       }
       ctx.isDev = process.env.NODE_ENV !== "production";
       await next();
-    });
+    })
+    .use(authenticated);
   
   // error handling middleware
   router.use(async (ctx, next) => {
@@ -61,23 +59,12 @@ module.exports = app => {
   router.use(authRoutes.routes());
   router.use(authRoutes.allowedMethods());
 
-  router.use(pageRoutes.routes());
-  router.use(pageRoutes.allowedMethods());
-
+  // authenticated routes
   router.use(viewRoutes.routes());
   router.use(viewRoutes.allowedMethods());
 
   router.use(modelRoutes.routes());
   router.use(modelRoutes.allowedMethods());
-
-  router.use(applicationRoutes.routes());
-  router.use(applicationRoutes.allowedMethods());
-
-  router.use(componentRoutes.routes());
-  router.use(componentRoutes.allowedMethods());
-
-  router.use(clientRoutes.routes());
-  router.use(clientRoutes.allowedMethods());
 
   router.use(userRoutes.routes());
   router.use(userRoutes.allowedMethods());
@@ -87,6 +74,19 @@ module.exports = app => {
 
   router.use(instanceRoutes.routes());
   router.use(instanceRoutes.allowedMethods());
+  // end auth routes
+
+  router.use(pageRoutes.routes());
+  router.use(pageRoutes.allowedMethods());
+
+  router.use(applicationRoutes.routes());
+  router.use(applicationRoutes.allowedMethods());
+
+  router.use(componentRoutes.routes());
+  router.use(componentRoutes.allowedMethods());
+
+  router.use(clientRoutes.routes());
+  router.use(clientRoutes.allowedMethods());
 
   router.use(staticRoutes.routes());
   router.use(staticRoutes.allowedMethods());

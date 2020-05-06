@@ -265,13 +265,13 @@
 	"datatable": {
 		"description": "an HTML table that fetches data from a model or view and displays it.",
 		"props": {
-			"_viewName": "string",
 			"_instanceId": "string",
 			"model": {
 				"type": "options",
 				"default": "",
 				"options": [
-					"all_6dc86335-83b7-462c-90ca-1fe7feb08942"
+					"all_6dc86335-83b7-462c-90ca-1fe7feb08942",
+					"all_fcd00735-01f0-451c-819e-902a3ea53c26"
 				]
 			}
 		}

@@ -76,7 +76,7 @@
         ]
       }
     }],
-    appRootPath: `/`,
+    appRootPath: ""
   }
 
   $: selectedComponentId = $store.currentComponentInfo ? $store.currentComponentInfo._id : ""

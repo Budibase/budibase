@@ -167,7 +167,6 @@ const _saveScreenApi = (screen, s) =>
 
 const createScreen = store => (screenName, route, layoutComponentName) => {
   store.update(state => {
-    console.log(layoutComponentName);
     const rootComponent = state.components[layoutComponentName]
 
     const newScreen = {

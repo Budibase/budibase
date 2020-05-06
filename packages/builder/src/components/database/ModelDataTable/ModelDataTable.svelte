@@ -118,9 +118,6 @@
               <i class="ri-more-line" />
               <div uk-dropdown="mode: click">
                 <ul class="uk-nav uk-dropdown-nav">
-                  <li>
-                    <div on:click={() => drillIntoRecord(row)}>View</div>
-                  </li>
                   <li
                     on:click={() => {
                       editRecord(row)

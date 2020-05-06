@@ -29,7 +29,6 @@
     : []
 
   function closed() {
-    // editingRecord = null
     onClosed()
   }
 

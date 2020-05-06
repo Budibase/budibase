@@ -5,28 +5,23 @@
 
   export let _bb
   export let onLoad
-  export let _viewName
   export let _instanceId
+  export let model
 
   let cssVariables
   let headers = []
   let data = []
 
   async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/${_instanceId}/${_viewName}/records`;
+    const FETCH_RECORDS_URL = `/api/${_instanceId}/${model}/records`;
     const response = await _bb.api.get(FETCH_RECORDS_URL);
     if (response.status === 200) {
       const json = await response.json();
 
-      if (json.length > 0) {
-        data = json;
-        headers = Object.keys(data[0]);
-      } else {
-        console.log("NO DATA");
-      }
+      data = json;
+      headers = Object.keys(data[0]).filter(key => !key.startsWith("_"));
     } else {
-      throw new Error("Failed to fetch records..");
-      console.log("FAILED");
+      throw new Error("Failed to fetch records.", response);
     }
   }
 

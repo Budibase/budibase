@@ -37,10 +37,14 @@ exports.authenticate = async ctx => {
       accessLevel: "", 
       instanceId: instanceId
     };
-    const token = jwt.sign(payload, ctx.config.secret, {
+
+
+    const token = jwt.sign(payload, ctx.config.jwtSecret, {
       expiresIn: "1 day"
     });
     
+    ctx.cookies.set('budibase:token', token);
+
     ctx.body = {
       token,
       ...dbUser
