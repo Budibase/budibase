@@ -1,8 +1,8 @@
 import { createApp } from "./createApp"
 import { trimSlash } from "./common/trimSlash"
 import { builtins, builtinLibName } from "./render/builtinComponents"
-import * as standardComponents from "@budibase/standard-components";
-import * as materialDesignComponents from "@budibase/materialdesign-components";
+import * as standardComponents from "../../standard-components/dist";
+import * as materialDesignComponents from "../../materialdesign-components/dist";
 
 /**
  * create a web application from static budibase definition files.

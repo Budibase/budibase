@@ -10,10 +10,11 @@
 
   $: valid = username && password
   $: instanceId = $backendUiStore.selectedDatabase.id
+  $: appId = $store.appId
 
   async function createUser() {
     const user = { name: username, username, password }
-    const response = await api.createUser(user, instanceId);
+    const response = await api.createUser(user, appId, instanceId);
     backendUiStore.actions.users.create(response)
     onClosed()
   }

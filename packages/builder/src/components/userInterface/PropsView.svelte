@@ -24,17 +24,18 @@
   <form on:submit|preventDefault class="uk-form-stacked form-root">
     {#if componentDef}
       {#each Object.entries(componentDef.props) as [prop_name, prop_def], index}
-        <div class="prop-container">
+        {#if prop_def !== "event"}
+          <div class="prop-container">
+            <PropControl
+              {setProp}
+              {prop_name}
+              prop_value={component[prop_name]}
+              prop_definition={prop_def}
+              {index}
+              disabled={false} />
 
-          <PropControl
-            {setProp}
-            {prop_name}
-            prop_value={component[prop_name]}
-            prop_definition={prop_def}
-            {index}
-            disabled={false} />
-
-        </div>
+          </div>
+        {/if}
       {/each}
     {/if}
   </form>

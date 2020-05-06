@@ -36,7 +36,10 @@ module.exports = app => {
       // TODO: temp dev middleware
       // ctx.sessionId = ctx.session._sessCtx.externalKey
       // ctx.session.accessed = true
-      ctx.config = { latestPackagesFolder: resolve(homedir(), ".budibase") }
+      ctx.config = { 
+        latestPackagesFolder: resolve(homedir(), ".budibase"),
+        secret: "foo"
+      }
       await next();
     });
   

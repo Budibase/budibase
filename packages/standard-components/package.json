@@ -9,7 +9,7 @@
     "testbuild": "rollup -w -c rollup.testconfig.js",
     "dev": "run-p start:dev testbuild",
     "start:dev": "sirv public --single --dev",
-    "publishdev": "yarn build && node ./scripts/publishDev.js"
+    "dev:builder": "rollup -cw"
   },
   "devDependencies": {
     "@budibase/client": "^0.0.32",

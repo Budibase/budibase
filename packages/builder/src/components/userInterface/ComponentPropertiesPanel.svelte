@@ -34,7 +34,7 @@
   const onStyleChanged = store.setComponentStyle
 
   function getProps(obj, keys) {
-    return keys.map((k, i) => [k, obj[k], obj.props._id + i])
+    return keys.map((key, i) => [key, obj[key], obj.props._id + i])
   }
 </script>
 

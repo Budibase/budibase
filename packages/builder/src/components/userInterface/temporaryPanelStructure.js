@@ -166,7 +166,23 @@ export default {
             name: "@budibase/materialdesign-components/recordForm",
           },
           children: []
-        }
+        },
+        {
+          _component: "@budibase/standard-components/datatable",
+          name: 'DataTable',
+          description: 'A table for displaying data from the backend.',
+          icon: 'ri-archive-drawer-fill',
+          commonProps: {},
+          children: []
+        },
+        {
+          _component: "@budibase/standard-components/dataform",
+          name: 'DataForm',
+          description: 'Form stuff',
+          icon: 'ri-file-edit-fill',
+          commonProps: {},
+          children: []
+        },
       ]
     },
   ]

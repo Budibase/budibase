@@ -262,6 +262,29 @@
 			"color": "colour"
 		}
 	},
+	"datatable": {
+		"description": "Other thingwy",
+		"props": {
+			"_viewName": "string",
+			"_instanceId": "string",
+			"model": {
+				"store": true,
+				"type": "options",
+				"default": "",
+				"options": [
+					"something",
+					"something"
+				]
+			}
+		}
+	},
+	"dataform": {
+		"description": "an HTML table that fetches data from a model or view and displays it.",
+		"props": {
+			"_viewName": "string",
+			"_instanceId": "string"
+		}
+	},
 	"link": {
 		"description": "an HTML anchor <a> tag",
 		"props": {

@@ -1,6 +1,8 @@
 const send = require("koa-send");
-const { resolve } = require("path")
+const { resolve, join } = require("path")
 const { homedir } = require("os");
+
+const isProduction = process.env.NODE_ENV === "production";
 
 exports.serveBuilder = async function(ctx) {
   const builderPath = resolve(process.cwd(), "builder")
@@ -8,6 +10,10 @@ exports.serveBuilder = async function(ctx) {
 }
 
 exports.serveApp = async function(ctx) {
+
+  // ONLY RELEVANT FOR THE CLIENT LIB
+  // const devPath = join("/tmp", ".budibase", ctx.params.appId);
+
   // TODO: update homedir stuff to wherever budi is run
   // default to homedir
   const appPath = resolve(
@@ -18,38 +24,30 @@ exports.serveApp = async function(ctx) {
     ctx.isAuthenticated ? "main" : "unauthenticated"
   );
 
-  // TODO: Hook up to JWT auth in real app
-  // TODO: serve CSS and other assets
-  // resolve main page if user authenticated
   await send(ctx, ctx.file, { root: appPath })
 }
 
 exports.serveComponentLibrary = async function(ctx) {
-  // TODO: update homedir stuff to wherever budi is run
-  // default to homedir
-  const componentLibraryPath = resolve(
-    homedir(), 
-    ".budibase", 
-    ctx.params.appId, 
-    "node_modules", 
+
+  let componentLibraryPath = join(
+    "/tmp", 
+    ".budibase",
     decodeURI(ctx.query.library),
     "dist"
   );
 
-  await send(ctx, "/index.js", { root: componentLibraryPath })
-}
-
-exports.serveComponentDefinitions = async function(ctx) {
-  // TODO: update homedir stuff to wherever budi is run
-  // default to homedir
-  const componentLibraryPath = resolve(
-    homedir(), 
-    ".budibase", 
-    ctx.params.appId, 
-    "node_modules", 
-    decodeURI(ctx.query.library),
-    "dist"
-  );
+  if (isProduction) {
+    // TODO: update homedir stuff to wherever budi is run
+    // default to homedir
+    componentLibraryPath = resolve(
+      homedir(), 
+      ".budibase", 
+      ctx.params.appId, 
+      "node_modules", 
+      decodeURI(ctx.query.library),
+      "dist"
+    );
+  }
 
   await send(ctx, "/index.js", { root: componentLibraryPath })
 }

@@ -8,24 +8,43 @@ exports.authenticate = async ctx => {
   if (!username) ctx.throw(400, "Username Required.");
   if (!password) ctx.throw(400, "Password Required");
 
-  // query couch for their username
-  const db = new CouchDB(ctx.params.clientId);
-  const dbUser = await db.query("by_username", { 
+  // TODO: Don't use this. It can't be relied on
+  const referer = ctx.request.headers.referer.split("/");
+  const appId = referer[3];
+
+  // find the instance that the user is associated with 
+  const db = new CouchDB(`client-${process.env.CLIENT_ID}`);
+  const app = await db.get(appId);
+  const instanceId = app.userInstanceMap[username];
+
+  if (!instanceId) ctx.throw(500, "User is not associated with an instance of app", appId)
+
+  // Check the user exists in the instance DB by username
+  const instanceDb = new CouchDB(instanceId);
+  const { rows } = await instanceDb.query("database/by_username", { 
     include_docs: true,
-    key: username
+    username
   });
-  
+
+  if (rows.length === 0) ctx.throw(500, `User does not exist.`);
+
+  const dbUser = rows[0].doc;
+
+  // authenticate
   if (await bcrypt.compare(password, dbUser.password)) {
     const payload = { 
       userId: dbUser._id, 
       accessLevel: "", 
-      instanceId: ctx.params.instanceId
+      instanceId: instanceId
     };
     const token = jwt.sign(payload, ctx.config.secret, {
       expiresIn: "1 day"
     });
     
-    ctx.body = token;
+    ctx.body = {
+      token,
+      ...dbUser
+    };
   } else {
     ctx.throw(401, "Invalid credentials.");
   }

@@ -2,12 +2,20 @@ const CouchDB = require("../../db");
 const { homedir } = require("os");
 const { resolve, join } = require("path");
 
+const isDev = process.env.NODE_ENV !== "production";
+
 exports.fetchAppComponentDefinitions = async function(ctx) {
   const db = new CouchDB(`client-${ctx.params.clientId}`);
   const app = await db.get(ctx.params.appId)
 
   const componentDefinitions = app.componentLibraries.reduce((acc, componentLibrary) => {
-    const appDirectory = resolve(homedir(), ".budibase", ctx.params.appId, "node_modules");
+
+    let appDirectory = resolve(homedir(), ".budibase", ctx.params.appId, "node_modules");
+
+    if (isDev) {
+      appDirectory = "/tmp/.budibase";
+    }
+
     const componentJson = require(join(appDirectory, componentLibrary, "components.json"));
 
     const result = {};

@@ -10,7 +10,7 @@ const controller = {
     const response = [];
 
     for (let name in designDoc.views) {
-      if (!name.startsWith("all") && name !== "by_type") {
+      if (!name.startsWith("all") && name !== "by_type" && name !== "by_username") {
         response.push({
           name,
           ...designDoc.views[name]

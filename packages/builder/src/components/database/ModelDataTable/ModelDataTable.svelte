@@ -161,10 +161,6 @@
     text-transform: capitalize;
   }
 
-  .select {
-    background: white;
-  }
-
   table {
     border: 1px solid #ccc;
     background: #fff;

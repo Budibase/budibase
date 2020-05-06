@@ -4,8 +4,8 @@
   import iframeTemplate from "./iframeTemplate";
   import { pipe } from "components/common/core"
 
-
   let iframe
+  let styles = ""
 
   function transform_component(comp) {
     const props = comp.props || comp
@@ -24,7 +24,15 @@
       )
     )
   $: hasComponent = !!$store.currentPreviewItem
-  $: styles = hasComponent ? $store.currentPreviewItem._css : ""
+  $: {
+    // Apply the CSS from the currently selected page and its screens 
+    const currentPage = $store.pages[$store.currentPageName];
+    styles += currentPage._css;
+    for (let screen of currentPage._screens) {
+      styles += screen._css;
+    }
+    styles = styles
+  }
 
   $: stylesheetLinks = pipe(
     $store.pages.stylesheets,
@@ -67,7 +75,7 @@
         ]
       }
     }],
-    appRootPath: `/_builder/instance/${$store.appname}/${$backendUiStore.selectedDatabase.id}/`,
+    appRootPath: `/`,
   }
 
   $: selectedComponentId = $store.currentComponentInfo ? $store.currentComponentInfo._id : ""
