@@ -10,7 +10,7 @@
     "build": "",
     "initialise": "node ../cli/bin/budi init ./myapps -b local -q",
     "budi": "node ../cli/bin/budi",
-    "dev:builder": "node index --enable-source-maps"
+    "dev:builder": "nodemon index"
   },
   "keywords": [
     "budibase"
