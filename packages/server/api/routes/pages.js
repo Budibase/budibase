@@ -11,30 +11,30 @@ const {
 
 const router = Router()
 
-router.post("/_builder/api/:appname/pages/:pageName", async ctx => {
+router.post("/_builder/api/:appId/pages/:pageName", async ctx => {
   await buildPage(
     ctx.config,
-    ctx.params.appname,
+    ctx.params.appId,
     ctx.params.pageName,
     ctx.request.body
   )
   ctx.response.status = StatusCodes.OK
 })
 
-router.get("/_builder/api/:appname/pages/:pagename/screens", async ctx => {
+router.get("/_builder/api/:appId/pages/:pagename/screens", async ctx => {
   ctx.body = await listScreens(
     ctx.config,
-    ctx.params.appname,
+    ctx.params.appId,
     ctx.params.pagename
   )
   ctx.response.status = StatusCodes.OK
 })
 
 router
-  .post("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
+  .post("/_builder/api/:appId/pages/:pagename/screen", async ctx => {
     ctx.body = await saveScreen(
       ctx.config,
-      ctx.params.appname,
+      ctx.params.appId,
       ctx.params.pagename,
       ctx.request.body
     )

@@ -2,7 +2,6 @@ const CouchDB = require("../../db");
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name;
-  // await couchdb.db.create(instanceName);
 
   const { clientId, applicationId } = ctx.params;
   const db = new CouchDB(instanceName);
@@ -13,6 +12,13 @@ exports.create = async function(ctx) {
       applicationId
     },
     views: { 
+      by_username: { 
+        map: function(doc) { 
+          if (doc.type === "user") {
+            emit([doc.username], doc._id); 
+          }
+        }.toString() 
+      },
       by_type: { 
         map: function(doc) { 
           emit([doc.type], doc._id); 

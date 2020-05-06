@@ -102,7 +102,6 @@ export default {
     }),
     builtins(),
     nodeglobals(),
-    //terser()
   ],
   watch: {
     clearScreen: false,

@@ -6,7 +6,7 @@ const {
   readFile,
   writeJSON,
 } = require("fs-extra")
-const { join, resolve, dirname } = require("path")
+const { join, resolve } = require("path")
 const sqrl = require("squirrelly")
 const { convertCssToFiles } = require("./convertCssToFiles")
 const publicPath = require("./publicPath")

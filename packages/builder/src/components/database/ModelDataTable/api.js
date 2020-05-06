@@ -1,7 +1,7 @@
 import api from "builderStore/api"
 
-export async function createUser(user, instanceId) {
-  const CREATE_USER_URL = `/api/${instanceId}/users`
+export async function createUser(user, appId, instanceId) {
+  const CREATE_USER_URL = `/api/${appId}/${instanceId}/users`
   const response = await api.post(CREATE_USER_URL, user)
   const json = await response.json()
   return json.user;
@@ -21,11 +21,11 @@ export async function deleteRecord(record, instanceId) {
   return response
 }
 
-export async function loadRecord(key, { appname, instanceId }) {
-  const LOAD_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record${key}`
-  const response = await api.get(LOAD_RECORDS_URL)
-  return await response.json()
-}
+// export async function loadRecord(key, { appname, instanceId }) {
+//   const LOAD_RECORDS_URL = `/_builder/instance/${appname}/${instanceId}/api/record${key}`
+//   const response = await api.get(LOAD_RECORDS_URL)
+//   return await response.json()
+// }
 
 export async function saveRecord(record, instanceId) {
   const SAVE_RECORDS_URL = `/api/${instanceId}/records`
