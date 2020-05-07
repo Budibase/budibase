@@ -1,10 +1,11 @@
-const { getAppContext } = require("../../common")
-const {
-  getMasterApisWithFullAccess,
-} = require("@budibase/server/utilities/budibaseApi")
+const { xPlatHomeDir } = require("../../common")
+const dotenv = require("dotenv")
+const createInstance = require("@budibase/server/api/controllers/instance")
+  .create
+const createApplication = require("@budibase/server/api/controllers/application")
+  .create
 const { copy, readJSON, writeJSON, remove, exists } = require("fs-extra")
 const { resolve, join } = require("path")
-const thisPackageJson = require("../../../package.json")
 const chalk = require("chalk")
 const { exec } = require("child_process")
 
@@ -14,44 +15,63 @@ module.exports = opts => {
 }
 
 const run = async opts => {
-  const context = await getAppContext({
-    configName: opts.config,
-    masterIsCreated: true,
+  console.log(opts)
+  try {
+    opts.dir = xPlatHomeDir(opts.dir)
+    process.chdir(opts.dir)
+    dotenv.config()
+    await createAppInstance(opts)
+    await createEmptyAppPackage(opts)
+    exec(`cd ${join(opts.dir, opts.applicationId)} && npm install`)
+  } catch (error) {
+    console.error(chalk.red("Error creating new app", error))
+  }
+}
+
+const createAppInstance = async opts => {
+  const createAppCtx = {
+    params: { clientId: process.env.CLIENT_ID },
+    request: {
+      body: { name: opts.name },
+    },
+    body: {},
+  }
+
+  await createApplication(createAppCtx)
+  opts.applicationId = createAppCtx.body.id
+  await createInstance({
+    params: {
+      clientId: process.env.CLIENT_ID,
+      applicationId: opts.applicationId,
+    },
+    request: {
+      body: { name: `dev-${process.env.CLIENT_ID}` },
+    },
   })
-  opts.config = context.config
-  const bb = await getMasterApisWithFullAccess(context)
-
-  const app = bb.recordApi.getNew("/applications", "application")
-  app.name = opts.name
-
-  await bb.recordApi.save(app)
-  await createEmptyAppPackage(opts)
-
-  exec(`cd ${join(opts.config.latestPackagesFolder, opts.name)} && npm install`)
 }
 
 const createEmptyAppPackage = async opts => {
-  const templateFolder = resolve(__dirname, "appPackageTemplate")
+  const templateFolder = resolve(__dirname, "appDirectoryTemplate")
 
-  const appsFolder = opts.config.latestPackagesFolder || "."
-  const destinationFolder = resolve(appsFolder, opts.name)
+  const appsFolder = opts.dir
+  const newAppFolder = resolve(appsFolder, opts.applicationId)
 
-  if (await exists(destinationFolder)) return
+  if (await exists(newAppFolder)) {
+    console.log(chalk.red(`App ${opts.name} already exists.`))
+    return
+  }
 
-  await copy(templateFolder, destinationFolder)
+  await copy(templateFolder, newAppFolder)
 
-  const packageJsonPath = join(appsFolder, opts.name, "package.json")
+  const packageJsonPath = join(appsFolder, opts.applicationId, "package.json")
   const packageJson = await readJSON(packageJsonPath)
 
   packageJson.name = opts.name
-  packageJson.dependencies[
-    "@budibase/standard-components"
-  ] = `^${thisPackageJson.version}`
 
   await writeJSON(packageJsonPath, packageJson)
 
   const removePlaceholder = async (...args) => {
-    await remove(join(destinationFolder, ...args, "placeholder"))
+    await remove(join(newAppFolder, ...args, "placeholder"))
   }
 
   await removePlaceholder("pages", "main", "screens")

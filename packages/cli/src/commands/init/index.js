@@ -1,34 +1,41 @@
 const handler = require("./initHandler")
 
 module.exports = {
-  command: "init [dir] [config] [username] [password]",
+  command: "init [dir] [database] [clientId] [couchDbUrl]",
   desc: "Initialise Budibase. Run this first to setup your local Budibase",
   builder: yargs => {
     yargs.positional("dir", {
       type: "string",
       describe:
         "your apps directory - directory will be created if it does not exist",
-      default: ".",
+      default: "~/.budibase",
       alias: "d",
     })
-    yargs.positional("config", {
+    yargs.positional("database", {
       type: "string",
-      describe: "config template file to use - optional, defaults to config.js",
+      describe: "use a local (PouchDB) or remote (CouchDB) database",
+      alias: "b",
+      default: "local",
+      choices: ["local", "remote"],
+    })
+    yargs.positional("clientId", {
+      type: "string",
+      describe: "used to determine the name of the global databse",
       alias: "c",
-      default: "dev",
-      choices: ["dev", "contributors"],
+      default: "new",
     })
-    yargs.positional("username", {
+    yargs.positional("couchDbUrl", {
       type: "string",
-      describe: "username for admin interface",
-      alias: "u",
+      describe:
+        "connection string for couch db, format: https://username:password@localhost:5984",
+      alias: "x",
       default: "",
     })
-    yargs.positional("password", {
-      type: "string",
-      describe: "password for admin interface",
-      alias: "p",
-      default: "",
+    yargs.positional("quiet", {
+      type: "boolean",
+      describe: "flag - if set, then run in quiet mode - use all defaults",
+      alias: "q",
+      default: false,
     })
   },
   handler,

@@ -1,17 +1,16 @@
 import { writable } from "svelte/store"
 
 function createItemsStore(componentOnSelect, initialState = []) {
-    const { subscribe, set, update } = writable(initialState)
+  const { subscribe, set, update } = writable(initialState)
 
-    function addItem(item) {
-        update(items => {
-            return [...items, item]
-        })
-        if (componentOnSelect) {
-            componentOnSelect()
-        }
-
+  function addItem(item) {
+    update(items => {
+      return [...items, item]
+    })
+    if (componentOnSelect) {
+      componentOnSelect()
     }
+  }
 
   function addSingleItem(item) {
     set([item])

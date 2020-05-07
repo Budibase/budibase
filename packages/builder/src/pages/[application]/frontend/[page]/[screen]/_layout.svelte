@@ -8,7 +8,7 @@
 
   // It's a screen, set it to that screen
   if ($params.screen !== "page-layout") {
-    store.setCurrentScreen($params.screen)
+    store.setCurrentScreen(decodeURI($params.screen))
 
     // There are leftover stuff, like IDs, so navigate the components and find the ID and select it.
     if ($leftover) {

@@ -4,7 +4,6 @@
   export let usernameLabel = "Username"
   export let passwordLabel = "Password"
   export let loginButtonLabel = "Login"
-  export let loginRedirect = ""
   export let logo = ""
   export let buttonClass = ""
   export let inputClass = ""
@@ -13,8 +12,8 @@
 
   let username = ""
   let password = ""
-  let busy = false
-  let incorrect = false
+  let loading = false
+  let error = false
   let _logo = ""
   let _buttonClass = ""
   let _inputClass = ""
@@ -25,32 +24,27 @@
     _inputClass = inputClass || "default-input"
   }
 
-  const login = () => {
-    busy = true
-    _bb.api
-      .post("/api/authenticate", { username, password })
-      .then(r => {
-        busy = false
-        if (r.status === 200) {
-          return r.json()
-        } else {
-          incorrect = true
-          return
-        }
-      })
-      .then(user => {
-        if (user) {
-          localStorage.setItem("budibase:user", JSON.stringify(user))
-          location.reload()
-        }
-      })
+  const login = async () => {
+    loading = true
+    const response = await _bb.api.post("/api/authenticate", {
+      username,
+      password,
+    })
+
+    if (response.status === 200) {
+      const json = await response.json()
+      localStorage.setItem("budibase:token", json.token)
+      // TODO: possibly do something with the user information in the response?
+      location.reload()
+    } else {
+      loading = false
+      error = true
+    }
   }
 </script>
 
 <div class="root">
-
   <div class="content">
-
     {#if _logo}
       <div class="logo-container">
         <img src={_logo} alt="logo" />
@@ -69,17 +63,15 @@
     </div>
 
     <div class="login-button-container">
-      <button disabled={busy} on:click={login} class={_buttonClass}>
+      <button disabled={loading} on:click={login} class={_buttonClass}>
         {loginButtonLabel}
       </button>
     </div>
 
-    {#if incorrect}
+    {#if error}
       <div class="incorrect-details-panel">Incorrect username or password</div>
     {/if}
-
   </div>
-
 </div>
 
 <style>

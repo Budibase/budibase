@@ -8,8 +8,7 @@
   import PagesList from "components/userInterface/PagesList.svelte"
   import IconButton from "components/common/IconButton.svelte"
   import NewScreen from "components/userInterface/NewScreen.svelte"
-  import CurrentItemPreview from "components/userInterface/CurrentItemPreview.svelte"
-  import SettingsView from "components/userInterface/SettingsView.svelte"
+  import CurrentItemPreview from "components/userInterface/AppPreview"
   import PageView from "components/userInterface/PageView.svelte"
   import ComponentsPaneSwitcher from "components/userInterface/ComponentsPaneSwitcher.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -17,11 +16,8 @@
   import { AddIcon } from "components/common/Icons"
 
   $: instances = $store.appInstances
-  $: views = $store.hierarchy.indexes
 
   async function selectDatabase(database) {
-    backendUiStore.actions.records.select(null)
-    backendUiStore.actions.views.select(views[0])
     backendUiStore.actions.database.select(database)
   }
 
@@ -106,7 +102,6 @@
 </div>
 
 <NewScreen bind:this={newScreenPicker} />
-<SettingsView bind:this={settingsView} />
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}

@@ -1,4 +1,5 @@
 <script>
+  import { store } from "builderStore"
   import AppList from "components/start/AppList.svelte"
   import { onMount } from "svelte"
   import IconButton from "components/common/IconButton.svelte"
@@ -7,7 +8,7 @@
   let promise = getApps()
 
   async function getApps() {
-    const res = await fetch(`/_builder/api/apps`)
+    const res = await fetch(`/api/${$store.clientId}/applications`)
     const json = await res.json()
 
     if (res.ok) {
@@ -28,18 +29,6 @@
   {:catch err}
     <h1 style="color:red">{err}</h1>
   {/await}
-
-  <!--
-    <div class="settings">
-      <IconButton icon="settings"
-                  on:click={store.showSettings}/>
-    </div>
-
-
-    {#if $store.useAnalytics}
-      <iframe src="https://marblekirby.github.io/bb-analytics.html" width="0" height="0" style="visibility:hidden;display:none"/>
-    {/if}
-  -->
 </main>
 
 <style>
@@ -47,12 +36,6 @@
     height: 100%;
     width: 100%;
     font-family: "Roboto", Helvetica, Arial, sans-serif;
-  }
-
-  .settings {
-    position: absolute;
-    bottom: 25px;
-    right: 25px;
   }
 
   .spinner-container {

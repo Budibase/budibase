@@ -13,7 +13,7 @@
       <div>
         <h4 style="margin-bottom: 20px">Choose an Application</h4>
         {#each apps as app}
-          <a href={`/_builder/${app}`} class="app-link">{app}</a>
+          <a href={`/_builder/${app._id}`} class="app-link">{app.name}</a>
         {/each}
       </div>
     </div>

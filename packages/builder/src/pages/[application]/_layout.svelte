@@ -13,7 +13,7 @@
   let promise = getPackage()
 
   async function getPackage() {
-    const res = await fetch(`/_builder/api/${application}/appPackage`)
+    const res = await fetch(`/api/${$store.clientId}/${application}/appPackage`)
     const pkg = await res.json()
 
     if (res.ok) {
@@ -60,7 +60,7 @@
       <span
         class:active={false}
         class="topnavitemright"
-        on:click={() => console.log}>
+        on:click={() => (location = `/${application}`)}>
         <PreviewIcon />
       </span>
     </div>
@@ -71,6 +71,8 @@
     <div />
   {:then}
     <slot />
+  {:catch error}
+    <p>Something went wrong: {error.message}</p>
   {/await}
 
 </div>
@@ -92,13 +94,6 @@
     box-sizing: border-box;
     justify-content: space-between;
     align-items: center;
-  }
-
-  .content {
-    flex: 1 1 auto;
-    width: 100%;
-    height: 100px;
-    overflow: hidden;
   }
 
   .content > div {

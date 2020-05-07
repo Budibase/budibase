@@ -9,12 +9,10 @@
   const { open, close } = getContext("simple-modal")
 
   const createNewRecord = () => {
-    selectedRecord = null
     open(
       CreateEditRecordModal,
       {
         onClosed: close,
-        record: selectedRecord,
       },
       { styleContent: { padding: "0" } }
     )
@@ -36,7 +34,7 @@
 
 <div class="database-actions">
   <div class="budibase__label--big">{breadcrumbs}</div>
-  {#if $backendUiStore.selectedDatabase.id}
+  {#if $backendUiStore.selectedModel._id}
     <ActionButton primary on:click={createNewRecord}>
       Create new record
     </ActionButton>
