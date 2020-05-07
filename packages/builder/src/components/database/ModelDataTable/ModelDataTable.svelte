@@ -80,15 +80,6 @@
     currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
   )
 
-  function drillIntoRecord(record) {
-    backendUiStore.update(state => {
-      state.breadcrumbs = [...state.breadcrumbs, record.type, record.id]
-      state.selectedRecord = record
-      state.selectedView = childViewsForRecord($store.hierarchy)[0]
-      return state
-    })
-  }
-
   onMount(() => {
     if (views.length) {
       backendUiStore.actions.views.select(views[0])

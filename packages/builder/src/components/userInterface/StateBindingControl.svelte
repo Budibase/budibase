@@ -1,4 +1,5 @@
 <script>
+  import { backendUiStore } from "builderStore";
   import IconButton from "../common/IconButton.svelte"
   import Input from "../common/Input.svelte"
   import PropertyCascader from "./PropertyCascader"
@@ -22,7 +23,16 @@
         size="19"
         on:click={() => onChanged(!value)} />
     </div>
-  {:else if type === 'options'}
+  {:else if type === 'models'}
+    <select
+      class="uk-select uk-form-small"
+      {value}
+      on:change={ev => onChanged(ev.target.value)}>
+      {#each $backendUiStore.models || [] as option}
+        <option value={`all_${option._id}`}>{option.name}</option>
+      {/each}
+    </select>
+  {:else if type === 'options' || type === 'models'}
     <select
       class="uk-select uk-form-small"
       {value}

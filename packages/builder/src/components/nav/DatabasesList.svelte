@@ -6,7 +6,6 @@
   import { CheckIcon } from "../common/Icons"
 
   $: instances = $store.appInstances
-  // $: views = $store.hierarchy.indexes
 
   async function selectDatabase(database) {
     backendUiStore.actions.database.select(database)

@@ -26,12 +26,14 @@ export const createProps = (componentDefinition, derivedFromProps) => {
     _component: componentDefinition._component,
     _styles: { position: {}, layout: {} },
     _code: "",
+    _instanceId: "dev-1" // TODO fix
   }
 
   const errors = []
 
-  if (!componentDefinition.name)
+  if (!componentDefinition._component) {
     errorOccurred("_component", "Component name not supplied")
+  }
 
   for (let propName in componentDefinition.props) {
     const parsedPropDef = parsePropDef(componentDefinition.props[propName])
@@ -93,10 +95,3 @@ const parsePropDef = propDef => {
 
 export const arrayElementComponentName = (parentComponentName, arrayPropName) =>
   `${parentComponentName}:${arrayPropName}`
-
-/*
-Allowed propDefOptions
-- type: string, bool, number, array
-- default: default value, when undefined
-- required: field is required
-*/

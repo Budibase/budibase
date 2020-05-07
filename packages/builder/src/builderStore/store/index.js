@@ -24,7 +24,6 @@ export const getStore = () => {
   const initial = {
     apps: [],
     appname: "",
-    hierarchy: {},
     pages: DEFAULT_PAGES_OBJECT,
     mainUi: {},
     unauthenticatedUi: {},
@@ -44,14 +43,7 @@ export const getStore = () => {
 
   store.setPackage = setPackage(store, initial)
 
-  // store.saveLevel = backendStoreActions.saveLevel(store)
-  // store.deleteLevel = backendStoreActions.deleteLevel(store)
   store.createDatabaseForApp = backendStoreActions.createDatabaseForApp(store)
-  // store.saveAction = backendStoreActions.saveAction(store)
-  // store.deleteAction = backendStoreActions.deleteAction(store)
-  // store.saveTrigger = backendStoreActions.saveTrigger(store)
-  // store.deleteTrigger = backendStoreActions.deleteTrigger(store)
-  // store.importAppDefinition = importAppDefinition(store)
 
   store.saveScreen = saveScreen(store)
   store.renameScreen = renameScreen(store)
@@ -364,7 +356,7 @@ const addChildComponent = store => (componentToAdd, presetName) => {
       : state.components[componentToAdd]
 
     const presetProps = presetName ? component.presets[presetName] : {}
-    const newComponent = createProps(component, presetProps)
+    const newComponent = createProps(component, presetProps, state)
 
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       newComponent.props
