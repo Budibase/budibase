@@ -7,10 +7,10 @@
     "test": "jest apps && jest builder",
     "test:integration": "jest neo --runInBand",
     "test:watch": "jest -w",
-    "build": "",
     "initialise": "node ../cli/bin/budi init ./myapps -b local -q",
     "budi": "node ../cli/bin/budi",
-    "dev:builder": "nodemon index"
+    "dev:builder": "nodemon index",
+    "electron": "electron electron.js"
   },
   "keywords": [
     "budibase"
@@ -44,6 +44,8 @@
   },
   "devDependencies": {
     "@jest/test-sequencer": "^24.8.0",
+    "electron": "^8.2.5",
+    "electron-builder": "^22.6.0",
     "jest": "^24.8.0",
     "nodemon": "^2.0.2",
     "server-destroy": "^1.0.1",
