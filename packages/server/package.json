@@ -2,15 +2,16 @@
   "name": "@budibase/server",
   "version": "0.0.32",
   "description": "Budibase Web Server",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "jest apps && jest builder",
+    "test": "jest",
     "test:integration": "jest neo --runInBand",
     "test:watch": "jest -w",
     "initialise": "node ../cli/bin/budi init ./myapps -b local -q",
     "budi": "node ../cli/bin/budi",
-    "dev:builder": "nodemon index",
-    "electron": "electron electron.js"
+    "dev:builder": "nodemon src/index",
+    "electron": "electron src/electron.js",
+    "lint": "eslint --fix src/"
   },
   "keywords": [
     "budibase"
@@ -46,6 +47,7 @@
     "@jest/test-sequencer": "^24.8.0",
     "electron": "^8.2.5",
     "electron-builder": "^22.6.0",
+    "eslint": "^6.8.0",
     "jest": "^24.8.0",
     "nodemon": "^2.0.2",
     "server-destroy": "^1.0.1",

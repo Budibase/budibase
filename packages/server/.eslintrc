@@ -1,0 +1,12 @@
+{
+  "globals": {
+    "emit": true,
+    "key": true
+  },
+  "env": {
+    "node": true
+  },
+  "extends": ["eslint:recommended"],
+  "rules": {
+  }
+}
