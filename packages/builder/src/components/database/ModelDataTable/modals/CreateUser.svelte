@@ -46,10 +46,4 @@
     background: #fafafa;
     border-radius: 0.5rem;
   }
-  select {
-    width: 100%;
-  }
-  option {
-    padding: 10px;
-  }
 </style>

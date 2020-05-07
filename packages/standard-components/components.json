@@ -276,6 +276,45 @@
 			"model": "models"
 		}
 	},
+	"datalist": {
+		"description": "A configurable data list that attaches to your backend models.",
+		"data": true,
+		"props": {
+			"model": "models",
+			"layout": {
+				"type": "options",
+				"default": "list",
+				"options": [
+					"list",
+					"grid"
+				]
+			}
+		}
+	},
+	"datachart": {
+		"description": "shiny chart",
+		"data": true,
+		"props": {
+			"model": "models",
+			"type": {
+				"type": "options",
+				"default": "column2d",
+				"options": [
+					"column3d",
+					"line",
+					"area2d",
+					"bar2d",
+					"bar3d",
+					"pie2d",
+					"pie3d",
+					"doughnut2d",
+					"doughnut3d",
+					"pareto2d",
+					"pareto3d"
+				]
+			}
+		}
+	},
 	"link": {
 		"description": "an HTML anchor <a> tag",
 		"props": {

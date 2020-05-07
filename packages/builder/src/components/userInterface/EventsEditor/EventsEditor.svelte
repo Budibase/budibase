@@ -25,7 +25,6 @@
   export const EVENT_TYPE = "event"
 
   export let component
-  export let onPropChanged = () => {}
   export let components
 
   let modalOpen = false
@@ -74,7 +73,6 @@
   </form>
 </div>
 <EventEditorModal
-  {onPropChanged}
   open={modalOpen}
   onClose={closeModal}
   eventOptions={events}
