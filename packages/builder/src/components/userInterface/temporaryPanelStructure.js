@@ -1,4 +1,4 @@
-import { general, layout, background } from "./propertyCategories.js"
+import { general, layout, typography, background, all } from "./propertyCategories.js"
 
 export default {
   categories: [
@@ -13,7 +13,7 @@ export default {
           icon: 'ri-layout-row-fill',
           commonProps: {},
           children: [],
-          properties: { background },
+          properties: { ...all },
         },
         {
           name: 'Text',
@@ -29,7 +29,7 @@ export default {
               properties: {
                 general,
                 layout,
-                background,
+                typography,
               },
             },
             {

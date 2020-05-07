@@ -24,13 +24,13 @@
       <button
         class:selected={selected === COMPONENT_SELECTION_TAB}
         on:click={() => selectTab(COMPONENT_SELECTION_TAB)}>
-        Components
+        Add
       </button>
 
       <button
         class:selected={selected === PROPERTIES_TAB}
         on:click={() => selectTab(PROPERTIES_TAB)}>
-        Properties
+        Edit
       </button>
 
     </div>
@@ -55,6 +55,7 @@
     display: flex;
     flex-direction: column;
     padding: 20px 0;
+    border-left: solid 1px #e8e8ef;
   }
 
   .switcher {
