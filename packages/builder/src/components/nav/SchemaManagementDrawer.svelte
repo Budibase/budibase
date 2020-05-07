@@ -1,10 +1,10 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
   import { store, backendUiStore } from "builderStore"
   import HierarchyRow from "./HierarchyRow.svelte"
-  import DropdownButton from "components/common/DropdownButton.svelte"
   import NavItem from "./NavItem.svelte"
   import getIcon from "components/common/icon"
+  import api from "builderStore/api"
   import {
     CreateEditModelModal,
     CreateEditViewModal,
@@ -12,12 +12,18 @@
 
   const { open, close } = getContext("simple-modal")
 
+  function editModel() {
+    open(
+      CreateEditModelModal,
+      {
+        model: node,
+        onClosed: close,
+      },
+      { styleContent: { padding: "0" } }
+    )
+  }
+
   function newModel() {
-    if ($store.currentNode) {
-      store.newChildModel()
-    } else {
-      store.newRootModel()
-    }
     open(
       CreateEditModelModal,
       {
@@ -28,7 +34,6 @@
   }
 
   function newView() {
-    store.newRootIndex()
     open(
       CreateEditViewModal,
       {
@@ -37,32 +42,66 @@
       { styleContent: { padding: "0" } }
     )
   }
+
+  function selectModel(model) {
+    backendUiStore.update(state => {
+      state.selectedModel = model
+      state.selectedView = `all_${model._id}`
+      return state
+    })
+  }
+
+  async function deleteModel(modelToDelete) {
+    const DELETE_MODEL_URL = `/api/${instanceId}/models/${node._id}/${node._rev}`
+    const response = await api.delete(DELETE_MODEL_URL)
+    backendUiStore.update(state => {
+      state.models = state.models.filter(
+        model => model._id !== modelToDelete._id
+      )
+      state.selectedView = {}
+      return state
+    })
+  }
+
+  function selectView(view) {
+    backendUiStore.update(state => {
+      state.selectedView = view.name
+      return state
+    })
+  }
 </script>
 
 <div class="items-root">
   <div class="hierarchy">
     <div class="components-list-container">
       <div class="nav-group-header">
-        <div class="hierarchy-title">Schema</div>
+        <div class="hierarchy-title">Models</div>
         <div class="uk-inline">
-          <i class="ri-add-line hoverable" />
-          <div uk-dropdown="mode: click;">
-            <ul class="uk-nav uk-dropdown-nav">
-              <li class="hoverable" on:click={newModel}>Model</li>
-              <li class="hoverable" on:click={newView}>View</li>
-            </ul>
-          </div>
+          <i class="ri-add-line hoverable" on:click={newModel} />
         </div>
       </div>
     </div>
 
     <div class="hierarchy-items-container">
-      {#each $store.hierarchy.children as model}
-        <HierarchyRow node={model} type="model" />
+      {#each $backendUiStore.models as model}
+        <HierarchyRow onSelect={selectModel} node={model} type="model" />
       {/each}
+    </div>
+  </div>
 
-      {#each $store.hierarchy.indexes as index}
-        <HierarchyRow node={index} type="index" />
+  <div class="hierarchy">
+    <div class="components-list-container">
+      <div class="nav-group-header">
+        <div class="hierarchy-title">Views</div>
+        <div class="uk-inline">
+          <i class="ri-add-line hoverable" on:click={newView} />
+        </div>
+      </div>
+    </div>
+
+    <div class="hierarchy-items-container">
+      {#each $backendUiStore.views as view}
+        <HierarchyRow onSelect={selectView} node={view} type="view" />
       {/each}
     </div>
   </div>

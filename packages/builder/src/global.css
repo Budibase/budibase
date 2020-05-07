@@ -71,6 +71,10 @@ html, body {
     width:100%;
 }
 
+#app {
+    height: 100%;
+}
+
 h1 {
     font-family: var(--fontblack);
     font-size: 36pt;

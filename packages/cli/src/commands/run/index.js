@@ -1,17 +1,16 @@
 const handler = require("./runHandler")
 
 module.exports = {
-  command: "run [config]",
+  command: "run [dir]",
   aliases: ["$0"],
   desc:
     "Start budibase Server. You can access your apps and the builder from here if you have dev=true in your config",
   builder: yargs => {
-    yargs.positional("config", {
+    yargs.positional("dir", {
       type: "string",
-      describe:
-        "config file to use. optional, defaults to config.js. Use 'dev' as shorthand for 'config.dev.js' ",
-      alias: "c",
-      default: "config.js",
+      describe: "your budibase apps directory",
+      alias: "d",
+      default: "~/.budibase",
     })
   },
   handler,

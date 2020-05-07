@@ -4,66 +4,56 @@
   import { compose, map, get, flatten } from "lodash/fp"
   import ActionButton from "components/common/ActionButton.svelte"
   import Select from "components/common/Select.svelte"
-  import {
-    getNewRecord,
-    joinKey,
-    getExactNodeForKey,
-  } from "components/common/core"
   import RecordFieldControl from "./RecordFieldControl.svelte"
   import * as api from "../api"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
 
-  export let record
+  const CLASS_NAME_MAP = {
+    boolean: "uk-checkbox",
+  }
+
+  export let record = {}
   export let onClosed
 
   let errors = []
   let selectedModel
 
-  const childModelsForModel = compose(flatten, map("children"), get("children"))
+  $: instanceId = $backendUiStore.selectedDatabase.id
 
-  $: currentAppInfo = {
-    appname: $store.appname,
-    instanceId: $backendUiStore.selectedDatabase.id,
-  }
-  $: models = $backendUiStore.selectedRecord
-    ? childModelsForModel($store.hierarchy)
-    : $store.hierarchy.children
-
-  $: {
-    if (record) {
-      selectedModel = getExactNodeForKey($store.hierarchy)(record.key)
-    } else {
-      selectedModel = selectedModel || models[0]
-    }
-  }
-
-  $: modelFields = selectedModel ? selectedModel.fields : []
-
-  function getCurrentCollectionKey(selectedRecord) {
-    return selectedRecord
-      ? joinKey(selectedRecord.key, selectedModel.collectionName)
-      : joinKey(selectedModel.collectionName)
-  }
-
-  $: editingRecord =
-    record ||
-    getNewRecord(
-      selectedModel,
-      getCurrentCollectionKey($backendUiStore.selectedRecord)
-    )
+  $: modelSchema = $backendUiStore.selectedModel
+    ? Object.entries($backendUiStore.selectedModel.schema)
+    : []
 
   function closed() {
-    editingRecord = null
     onClosed()
   }
 
+  function determineInputType(meta) {
+    if (meta.type === "datetime") return "date"
+    if (meta.type === "number") return "number"
+    if (meta.type === "boolean") return "checkbox"
+
+    return "text"
+  }
+
   async function saveRecord() {
-    const recordResponse = await api.saveRecord(editingRecord, currentAppInfo)
+    const recordResponse = await api.saveRecord(
+      {
+        ...record,
+        modelId: $backendUiStore.selectedModel._id,
+      },
+      instanceId
+    )
+    if (recordResponse.errors) {
+      errors = recordResponse.errors
+      return
+    }
+
     backendUiStore.update(state => {
       state.selectedView = state.selectedView
+      onClosed()
       return state
     })
-    closed()
   }
 </script>
 
@@ -71,18 +61,14 @@
   <h4 class="budibase__title--4">Create / Edit Record</h4>
   <ErrorsBox {errors} />
   <form on:submit|preventDefault class="uk-form-stacked">
-    {#if !record}
+    {#each modelSchema as [key, meta]}
       <div class="uk-margin">
-        <label class="uk-form-label" for="form-stacked-text">Model</label>
-        <Select bind:value={selectedModel}>
-          {#each models as model}
-            <option value={model}>{model.name}</option>
-          {/each}
-        </Select>
+        <RecordFieldControl
+          className={CLASS_NAME_MAP[meta.type]}
+          type={determineInputType(meta)}
+          label={key}
+          bind:value={record[key]} />
       </div>
-    {/if}
-    {#each modelFields || [] as field}
-      <RecordFieldControl record={editingRecord} {field} {errors} />
     {/each}
   </form>
 </div>

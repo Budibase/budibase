@@ -1,20 +1,20 @@
-//
-import { filter, cloneDeep, last, concat, isEmpty, values } from "lodash/fp"
-import { pipe, getNode, constructHierarchy } from "components/common/core"
+import { cloneDeep, values } from "lodash/fp"
+import { backendUiStore } from "builderStore";
 import * as backendStoreActions from "./backend"
 import { writable, get } from "svelte/store"
-import { defaultPagesObject } from "components/userInterface/pagesParsing/defaultPagesObject"
 import api from "../api"
+import { DEFAULT_PAGES_OBJECT } from "../../constants"
 import { getExactComponent } from "components/userInterface/pagesParsing/searchComponents"
 import { rename } from "components/userInterface/pagesParsing/renameScreen"
 import {
-  getNewScreen,
   createProps,
   makePropsSafe,
   getBuiltin,
 } from "components/userInterface/pagesParsing/createProps"
-import { expandComponentDefinition } from "components/userInterface/pagesParsing/types"
-import { loadLibs, libUrlsForPreview } from "../loadComponentLibraries"
+import {
+  fetchComponentLibModules,
+  fetchComponentLibDefinitions,
+} from "../loadComponentLibraries"
 import { buildCodeForScreens } from "../buildCodeForScreens"
 import { generate_screen_css } from "../generate_css"
 import { insertCodeMetadata } from "../insertCodeMetadata"
@@ -24,10 +24,7 @@ export const getStore = () => {
   const initial = {
     apps: [],
     appname: "",
-    hierarchy: {},
-    actions: [],
-    triggers: [],
-    pages: defaultPagesObject(),
+    pages: DEFAULT_PAGES_OBJECT,
     mainUi: {},
     unauthenticatedUi: {},
     components: [],
@@ -36,52 +33,27 @@ export const getStore = () => {
     currentFrontEndType: "none",
     currentPageName: "",
     currentComponentProps: null,
-    currentNodeIsNew: false,
     errors: [],
     hasAppPackage: false,
-    accessLevels: { version: 0, levels: [] },
-    currentNode: null,
     libraries: null,
-    showSettings: false,
-    useAnalytics: true
+    appId: "",
   }
 
   const store = writable(initial)
 
   store.setPackage = setPackage(store, initial)
 
-  store.newChildModel = backendStoreActions.newModel(store, false)
-  store.newRootModel = backendStoreActions.newModel(store, true)
-  store.selectExistingNode = backendStoreActions.selectExistingNode(store)
-  store.newChildIndex = backendStoreActions.newIndex(store, false)
-  store.newRootIndex = backendStoreActions.newIndex(store, true)
-  store.saveCurrentNode = backendStoreActions.saveCurrentNode(store)
-  store.deleteCurrentNode = backendStoreActions.deleteCurrentNode(store)
-  store.saveField = backendStoreActions.saveField(store)
-  store.deleteField = backendStoreActions.deleteField(store)
-  store.saveLevel = backendStoreActions.saveLevel(store)
-  store.deleteLevel = backendStoreActions.deleteLevel(store)
   store.createDatabaseForApp = backendStoreActions.createDatabaseForApp(store)
-  store.saveAction = backendStoreActions.saveAction(store)
-  store.deleteAction = backendStoreActions.deleteAction(store)
-  store.saveTrigger = backendStoreActions.saveTrigger(store)
-  store.deleteTrigger = backendStoreActions.deleteTrigger(store)
-  store.importAppDefinition = importAppDefinition(store)
 
   store.saveScreen = saveScreen(store)
-  store.addComponentLibrary = addComponentLibrary(store)
   store.renameScreen = renameScreen(store)
   store.deleteScreen = deleteScreen(store)
   store.setCurrentScreen = setCurrentScreen(store)
   store.setCurrentPage = setCurrentPage(store)
   store.createScreen = createScreen(store)
-  store.removeComponentLibrary = removeComponentLibrary(store)
   store.addStylesheet = addStylesheet(store)
   store.removeStylesheet = removeStylesheet(store)
   store.savePage = savePage(store)
-  store.showSettings = showSettings(store)
-  store.useAnalytics = useAnalytics(store)
-  store.createGeneratedComponents = createGeneratedComponents(store)
   store.addChildComponent = addChildComponent(store)
   store.selectComponent = selectComponent(store)
   store.setComponentProp = setComponentProp(store)
@@ -100,12 +72,13 @@ export const getStore = () => {
 
 export default getStore
 
-const setPackage = (store, initial) => async (pkg) => {
-
+const setPackage = (store, initial) => async pkg => {
   const [main_screens, unauth_screens] = await Promise.all([
-    api.get(`/_builder/api/${pkg.application.name}/pages/main/screens`).then(r => r.json()),
     api
-      .get(`/_builder/api/${pkg.application.name}/pages/unauthenticated/screens`)
+      .get(`/_builder/api/${pkg.application._id}/pages/main/screens`)
+      .then(r => r.json()),
+    api
+      .get(`/_builder/api/${pkg.application._id}/pages/unauthenticated/screens`)
       .then(r => r.json()),
   ])
 
@@ -120,73 +93,28 @@ const setPackage = (store, initial) => async (pkg) => {
     },
   }
 
-  initial.libraries = await loadLibs(pkg.application.name, pkg)
-  initial.loadLibraryUrls = pageName => {
-    const libs = libUrlsForPreview(pkg, pageName)
-    return libs
-  }
+  initial.libraries = await fetchComponentLibModules(pkg.application)
+  initial.components = await fetchComponentLibDefinitions(
+    pkg.clientId,
+    pkg.application._id
+  )
   initial.appname = pkg.application.name
+  initial.appId = pkg.application._id
   initial.pages = pkg.pages
   initial.hasAppPackage = true
-  initial.hierarchy = pkg.appDefinition.hierarchy
-  initial.accessLevels = pkg.accessLevels
   initial.screens = values(pkg.screens)
-  initial.components = values(pkg.components.components).map(
-    expandComponentDefinition
-  )
-  initial.templates = pkg.components.templates
   initial.builtins = [getBuiltin("##builtin/screenslot")]
-  initial.actions = values(pkg.appDefinition.actions)
-  initial.triggers = pkg.appDefinition.triggers
   initial.appInstances = pkg.application.instances
-  initial.appId = pkg.application.id
-
-  if (!!initial.hierarchy && !isEmpty(initial.hierarchy)) {
-    initial.hierarchy = constructHierarchy(initial.hierarchy)
-    const shadowHierarchy = createShadowHierarchy(initial.hierarchy)
-    if (initial.currentNode !== null) {
-      initial.currentNode = getNode(shadowHierarchy, initial.currentNode.nodeId)
-    }
-  }
+  initial.appId = pkg.application._id
 
   store.set(initial)
+  console.log(initial)
   return initial
 }
 
-const showSettings = store => () => {
-  store.update(state => {
-    state.showSettings = !state.showSettings
-    return state
-  })
-}
-
-const useAnalytics = store => () => {
-  store.update(state => {
-    state.useAnalytics = !state.useAnalytics
-    return state
-  })
-}
-
-const importAppDefinition = store => appDefinition => {
-  store.update(s => {
-    s.hierarchy = appDefinition.hierarchy
-    s.currentNode =
-      appDefinition.hierarchy.children.length > 0
-        ? appDefinition.hierarchy.children[0]
-        : null
-    s.actions = appDefinition.actions
-    s.triggers = appDefinition.triggers
-    s.currentNodeIsNew = false
-    return s
-  })
-}
-
-const createShadowHierarchy = hierarchy =>
-  constructHierarchy(JSON.parse(JSON.stringify(hierarchy)))
-
 const saveScreen = store => screen => {
-  store.update(s => {
-    return _saveScreen(store, s, screen)
+  store.update(state => {
+    return _saveScreen(store, state, screen)
   })
 }
 
@@ -194,10 +122,7 @@ const _saveScreen = async (store, s, screen) => {
   const currentPageScreens = s.pages[s.currentPageName]._screens
 
   await api
-    .post(
-      `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
-      screen
-    )
+    .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
     .then(() => {
       if (currentPageScreens.includes(screen)) return
 
@@ -208,10 +133,7 @@ const _saveScreen = async (store, s, screen) => {
         innerState.screens = screens
         innerState.currentPreviewItem = screen
         const safeProps = makePropsSafe(
-          getComponentDefinition(
-            innerState.components,
-            screen.props._component
-          ),
+          innerState.components[screen.props._component],
           screen.props
         )
         innerState.currentComponentInfo = safeProps
@@ -227,28 +149,30 @@ const _saveScreen = async (store, s, screen) => {
 
 const _saveScreenApi = (screen, s) =>
   api
-    .post(
-      `/_builder/api/${s.appname}/pages/${s.currentPageName}/screen`,
-      screen
-    )
+    .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
     .then(() => _savePage(s))
 
 const createScreen = store => (screenName, route, layoutComponentName) => {
-  store.update(s => {
-    const newScreen = getNewScreen(
-      s.components,
-      layoutComponentName,
-      screenName
-    )
+  store.update(state => {
+    const rootComponent = state.components[layoutComponentName]
+
+    const newScreen = {
+      name: screenName || "",
+      description: "",
+      url: "",
+      _css: "",
+      uiFunctions: "",
+      props: createProps(rootComponent).props,
+    }
 
     newScreen.route = route
-    s.currentPreviewItem = newScreen
-    s.currentComponentInfo = newScreen.props
-    s.currentFrontEndType = "screen"
+    state.currentPreviewItem = newScreen
+    state.currentComponentInfo = newScreen.props
+    state.currentFrontEndType = "screen"
 
-    _saveScreen(store, s, newScreen)
+    _saveScreen(store, state, newScreen)
 
-    return s
+    return state
   })
 }
 
@@ -261,7 +185,7 @@ const setCurrentScreen = store => screenName => {
     s.currentView = "detail"
 
     const safeProps = makePropsSafe(
-      getComponentDefinition(s.components, screen.props._component),
+      s.components[screen.props._component],
       screen.props
     )
     screen.props = safeProps
@@ -271,30 +195,10 @@ const setCurrentScreen = store => screenName => {
   })
 }
 
-const createGeneratedComponents = store => components => {
-  store.update(s => {
-    s.components = [...s.components, ...components]
-    s.screens = [...s.screens, ...components]
-
-    const doCreate = async () => {
-      for (let c of components) {
-        await api.post(`/_builder/api/${s.appname}/screen`, c)
-      }
-
-      await _savePage(s)
-    }
-
-    doCreate()
-
-    return s
-  })
-}
-
 const deleteScreen = store => name => {
   store.update(s => {
-    const components = pipe(s.components, [filter(c => c.name !== name)])
-
-    const screens = pipe(s.screens, [filter(c => c.name !== name)])
+    const components = s.components.filter(c => c.name !== name)
+    const screens = s.screens.filter(c => c.name !== name);
 
     s.components = components
     s.screens = screens
@@ -303,7 +207,7 @@ const deleteScreen = store => name => {
       s.currentFrontEndType = ""
     }
 
-    api.delete(`/_builder/api/${s.appname}/screen/${name}`)
+    api.delete(`/_builder/api/${s.appId}/screen/${name}`)
 
     return s
   })
@@ -331,12 +235,12 @@ const renameScreen = store => (oldname, newname) => {
     const saveAllChanged = async () => {
       for (let screenName of changedScreens) {
         const changedScreen = getExactComponent(screens, screenName)
-        await api.post(`/_builder/api/${s.appname}/screen`, changedScreen)
+        await api.post(`/_builder/api/${s.appId}/screen`, changedScreen)
       }
     }
 
     api
-      .patch(`/_builder/api/${s.appname}/screen`, {
+      .patch(`/_builder/api/${s.appId}/screen`, {
         oldname,
         newname,
       })
@@ -350,56 +254,14 @@ const renameScreen = store => (oldname, newname) => {
 }
 
 const savePage = store => async page => {
-  store.update(s => {
+  store.update(state => {
     if (s.currentFrontEndType !== "page" || !s.currentPageName) {
-      return s
+      return state
     }
 
     s.pages[s.currentPageName] = page
     _savePage(s)
-    return s
-  })
-}
-
-const addComponentLibrary = store => async lib => {
-  const response = await api.get(
-    `/_builder/api/${s.appname}/componentlibrary?lib=${encodeURI(lib)}`,
-    undefined,
-    false
-  )
-
-  const success = response.status === 200
-
-  const components = success ? await response.json() : []
-
-  store.update(s => {
-    if (success) {
-      const componentsArray = []
-      for (let c in components) {
-        componentsArray.push(expandComponentDefinition(components[c]))
-      }
-
-      s.components = pipe(s.components, [
-        filter(c => !c.name.startsWith(`${lib}/`)),
-        concat(componentsArray),
-      ])
-
-      s.pages.componentLibraries.push(lib)
-      _savePage(s)
-    }
-
-    return s
-  })
-}
-
-const removeComponentLibrary = store => lib => {
-  store.update(s => {
-    s.pages.componentLibraries = filter(l => l !== lib)(
-      s.pages.componentLibraries
-    )
-    _savePage(s)
-
-    return s
+    return state
   })
 }
 
@@ -412,17 +274,17 @@ const addStylesheet = store => stylesheet => {
 }
 
 const removeStylesheet = store => stylesheet => {
-  store.update(s => {
-    s.pages.stylesheets = filter(s => s !== stylesheet)(s.pages.stylesheets)
-    _savePage(s)
-    return s
+  store.update(state => {
+    state.pages.stylesheets = s.pages.stylesheets.filter(s => s !== stylesheet)
+    _savePage(state)
+    return state
   })
 }
 
 const _savePage = async s => {
   const page = s.pages[s.currentPageName]
 
-  await api.post(`/_builder/api/${s.appname}/pages/${s.currentPageName}`, {
+  await api.post(`/_builder/api/${s.appId}/pages/${s.currentPageName}`, {
     page: { componentLibraries: s.pages.componentLibraries, ...page },
     uiFunctions: s.currentPageFunctions,
     screens: page._screens,
@@ -430,36 +292,37 @@ const _savePage = async s => {
 }
 
 const setCurrentPage = store => pageName => {
-  store.update(s => {
-    const current_screens = s.pages[pageName]._screens
+  store.update(state => {
+    const current_screens = state.pages[pageName]._screens
 
-    s.currentFrontEndType = "page"
-    s.currentPageName = pageName
-    s.screens = Array.isArray(current_screens)
+    const currentPage = state.pages[pageName]
+
+    state.currentFrontEndType = "page"
+    state.currentPageName = pageName
+    state.screens = Array.isArray(current_screens)
       ? current_screens
       : Object.values(current_screens)
     const safeProps = makePropsSafe(
-      getComponentDefinition(s.components, s.pages[pageName].props._component),
-      s.pages[pageName].props
+      state.components[currentPage.props._component],
+      currentPage.props
     )
-    s.currentComponentInfo = safeProps
-    s.pages[pageName].props = safeProps
-    s.currentPreviewItem = s.pages[pageName]
-    s.currentPreviewItem._css = generate_screen_css([
-      s.currentPreviewItem.props,
+    state.currentComponentInfo = safeProps
+    currentPage.props = safeProps
+    state.currentPreviewItem = state.pages[pageName]
+    state.currentPreviewItem._css = generate_screen_css([
+      state.currentPreviewItem.props,
     ])
 
-    for (let screen of s.screens) {
+    for (let screen of state.screens) {
       screen._css = generate_screen_css([screen.props])
     }
 
-    setCurrentPageFunctions(s)
-    return s
+    setCurrentPageFunctions(state)
+    return state
   })
 }
 
-const getComponentDefinition = (components, name) =>
-  components.find(c => c.name === name)
+// const getComponentDefinition = (components, name) => components.find(c => c.name === name)
 
 /**
  * @param  {string} componentToAdd - name of the component to add to the application
@@ -469,8 +332,10 @@ const addChildComponent = store => (componentToAdd, presetName) => {
   store.update(state => {
     function findSlot(component_array) {
       for (let i = 0; i < component_array.length; i += 1) {
-        if (component_array[i]._component === "##builtin/screenslot")
+        if (component_array[i]._component === "##builtin/screenslot") {
           return true
+        }
+
         if (component_array[i]._children) findSlot(component_array[i])
       }
 
@@ -486,10 +351,16 @@ const addChildComponent = store => (componentToAdd, presetName) => {
 
     const component = componentToAdd.startsWith("##")
       ? getBuiltin(componentToAdd)
-      : state.components.find(({ name }) => name === componentToAdd)
+      : state.components[componentToAdd]
 
     const presetProps = presetName ? component.presets[presetName] : {}
-    const newComponent = createProps(component, presetProps)
+
+    const instanceId = get(backendUiStore).selectedDatabase.id;
+
+    const newComponent = createProps(component, {
+      ...presetProps,
+      instanceId
+    }, state)
 
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       newComponent.props
@@ -532,7 +403,7 @@ const selectComponent = store => component => {
   store.update(state => {
     const componentDef = component._component.startsWith("##")
       ? component
-      : state.components.find(c => c.name === component._component)
+      : state.components[component._component]
     state.currentComponentInfo = makePropsSafe(componentDef, component)
     state.currentView = "component"
     return state
@@ -552,28 +423,28 @@ const setComponentProp = store => (name, value) => {
 }
 
 const setComponentStyle = store => (type, name, value) => {
-  store.update(s => {
-    if (!s.currentComponentInfo._styles) {
-      s.currentComponentInfo._styles = {}
+  store.update(state => {
+    if (!state.currentComponentInfo._styles) {
+      state.currentComponentInfo._styles = {}
     }
-    s.currentComponentInfo._styles[type][name] = value
-    s.currentPreviewItem._css = generate_screen_css([
-      s.currentPreviewItem.props,
+    state.currentComponentInfo._styles[type][name] = value
+    state.currentPreviewItem._css = generate_screen_css([
+      state.currentPreviewItem.props,
     ])
 
     // save without messing with the store
-    _saveCurrentPreviewItem(s)
-    return s
+    _saveCurrentPreviewItem(state)
+    return state
   })
 }
 
 const setComponentCode = store => code => {
-  store.update(s => {
-    s.currentComponentInfo._code = code
+  store.update(state => {
+    state.currentComponentInfo._code = code
 
-    setCurrentPageFunctions(s)
+    setCurrentPageFunctions(state)
     // save without messing with the store
-    _saveScreenApi(s.currentPreviewItem, s)
+    _saveScreenApi(state.currentPreviewItem, state)
 
     return s
   })
@@ -587,31 +458,33 @@ const setCurrentPageFunctions = s => {
 const buildPageCode = (screens, page) => buildCodeForScreens([page, ...screens])
 
 const setScreenType = store => type => {
-  store.update(s => {
-    s.currentFrontEndType = type
+  store.update(state => {
+    state.currentFrontEndType = type
 
     const pageOrScreen =
       type === "page"
-        ? s.pages[s.currentPageName]
-        : s.pages[s.currentPageName]._screens[0]
+        ? state.pages[state.currentPageName]
+        : state.pages[state.currentPageName]._screens[0]
 
-    s.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null
-    s.currentPreviewItem = pageOrScreen
-    return s
+    state.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null
+    state.currentPreviewItem = pageOrScreen
+    return state
   })
 }
 
-const deleteComponent = store => component => {
-  store.update(s => {
-    const parent = getParent(s.currentPreviewItem.props, component)
+const deleteComponent = store => componentName => {
+  store.update(state => {
+    const parent = getParent(state.currentPreviewItem.props, componentName)
 
     if (parent) {
-      parent._children = parent._children.filter(c => c !== component)
+      parent._children = parent._children.filter(
+        component => component !== componentName
+      )
     }
 
-    _saveCurrentPreviewItem(s)
+    _saveCurrentPreviewItem(state)
 
-    return s
+    return state
   })
 }
 
@@ -669,11 +542,10 @@ const copyComponent = store => component => {
 }
 
 const getPathToComponent = store => component => {
-
   // Gets all the components to needed to construct a path.
   const tempStore = get(store)
   let pathComponents = []
-  let parent = component;
+  let parent = component
   let root = false
   while (!root) {
     parent = getParent(tempStore.currentPreviewItem.props, parent)
@@ -695,7 +567,7 @@ const getPathToComponent = store => component => {
   const IdList = allComponents.map(c => c._id)
 
   // Construct ID Path:
-  const path = IdList.join('/')
+  const path = IdList.join("/")
 
   return path
 }

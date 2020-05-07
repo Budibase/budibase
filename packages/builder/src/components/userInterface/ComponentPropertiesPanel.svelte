@@ -1,6 +1,5 @@
 <script>
   import PropsView from "./PropsView.svelte"
-  import StateBindingControl from "./StateBindingControl.svelte"
   import { store } from "builderStore"
   import IconButton from "components/common/IconButton.svelte"
   import {
@@ -30,11 +29,10 @@
       ? getProps($store.currentPreviewItem, ["name", "favicon"])
       : getProps($store.currentPreviewItem, ["name", "description", "route"])
 
-  const onPropChanged = store.setComponentProp
   const onStyleChanged = store.setComponentStyle
 
   function getProps(obj, keys) {
-    return keys.map((k, i) => [k, obj[k], obj.props._id + i])
+    return keys.map((key, i) => [key, obj[key], obj.props._id + i])
   }
 </script>
 
@@ -89,14 +87,14 @@
               on:input={({ target }) => store.setMetadataProp(k, target.value)} />
           </div>
         {/each}
-        <PropsView {component} {components} {onPropChanged} />
+        <PropsView {component} {components} />
       {:else}
-        <PropsView {component} {components} {onPropChanged} />
+        <PropsView {component} {components} />
       {/if}
     {:else if current_view === 'layout'}
       <LayoutEditor {onStyleChanged} {component} />
     {:else if current_view === 'events'}
-      <EventsEditor {component} {components} {onPropChanged} />
+      <EventsEditor {component} {components} />
     {/if}
 
     <CodeEditor

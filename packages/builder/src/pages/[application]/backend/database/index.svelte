@@ -4,11 +4,8 @@
   import { onMount } from "svelte"
 
   $: instances = $store.appInstances
-  $: views = $store.hierarchy.indexes
 
   async function selectDatabase(database) {
-    backendUiStore.actions.records.select(null)
-    backendUiStore.actions.views.select(views[0])
     backendUiStore.actions.database.select(database)
   }
 

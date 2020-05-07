@@ -3,7 +3,15 @@
   // import { tick } from "svelte"
   import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
 
-  import { last, sortBy, map, trimCharsStart, trimChars, join } from "lodash/fp"
+  import {
+    last,
+    sortBy,
+    map,
+    trimCharsStart,
+    trimChars,
+    join,
+    compose,
+  } from "lodash/fp"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { pipe } from "components/common/core"
   import { store } from "builderStore"
@@ -16,22 +24,15 @@
 
   const joinPath = join("/")
 
-  const normalizedName = name =>
-    pipe(name, [
-      trimCharsStart("./"),
-      trimCharsStart("~/"),
-      trimCharsStart("../"),
-      trimChars(" "),
-    ])
-
   const lastPartOfName = c =>
     c && last(c.name ? c.name.split("/") : c._component.split("/"))
 
   const isComponentSelected = (current, comp) => current === comp
 
-  const isFolderSelected = (current, folder) => isInSubfolder(current, folder)
-
-  $: _layout = pipe(layout, [c => ({ component: c, title: lastPartOfName(c) })])
+  $: _layout = {
+    component: layout,
+    title: lastPartOfName(layout),
+  }
 
   const isScreenSelected = component =>
     component.component &&
@@ -40,7 +41,6 @@
 
   const confirmDeleteComponent = async component => {
     componentToDelete = component
-    // await tick()
     confirmDeleteDialog.show()
   }
 

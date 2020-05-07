@@ -9,14 +9,15 @@ import builtins from "rollup-plugin-node-builtins"
 import nodeglobals from "rollup-plugin-node-globals"
 import copy from "rollup-plugin-copy"
 import replace from "rollup-plugin-replace"
-import json from '@rollup/plugin-json';
-
+import json from "@rollup/plugin-json"
 
 import path from "path"
 
 const production = !process.env.ROLLUP_WATCH
 
 const lodash_fp_exports = [
+  "flow",
+  "pipe",
   "union",
   "reduce",
   "isUndefined",
@@ -120,7 +121,16 @@ const coreExternal = [
 ]
 
 const customResolver = resolve({
-  extensions: [".mjs", ".js", ".jsx", ".json", ".sass", ".scss", ".svelte"]
+  extensions: [
+    ".mjs",
+    ".js",
+    ".jsx",
+    ".json",
+    ".sass",
+    ".scss",
+    ".svelte",
+    ".css",
+  ],
 })
 const projectRootDir = path.resolve(__dirname)
 
@@ -150,7 +160,7 @@ export default {
       targets: [
         { src: "src/index.html", dest: outputpath },
         { src: "src/favicon.png", dest: outputpath },
-        { src: "src/assets", dest: outputpath },
+        { src: "assets", dest: outputpath },
         {
           src: "node_modules/@budibase/client/dist/budibase-client.esm.mjs",
           dest: outputpath,

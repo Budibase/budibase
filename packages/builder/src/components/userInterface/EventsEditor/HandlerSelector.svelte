@@ -3,9 +3,8 @@
   import PlusButton from "components/common/PlusButton.svelte"
   import Select from "components/common/Select.svelte"
   import StateBindingCascader from "./StateBindingCascader.svelte"
-  import StateBindingControl from "../StateBindingControl.svelte"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
-  import { pipe, userWithFullAccess } from "components/common/core"
+  import { pipe } from "components/common/core"
   import {
     EVENT_TYPE_MEMBER_NAME,
     allHandlers,
@@ -24,13 +23,7 @@
   let handlerType
   let parameters = []
 
-  $: eventOptions = allHandlers(
-    { hierarchy: $store.hierarchy },
-    userWithFullAccess({
-      hierarchy: $store.hierarchy,
-      actions: keyBy("name")($store.actions),
-    })
-  )
+  $: eventOptions = allHandlers()
 
   $: {
     if (handler) {
