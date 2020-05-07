@@ -54,7 +54,7 @@ exports.destroy = async function(ctx) {
   budibaseApp.instances = budibaseApp.instances.filter(
     instance => instance !== ctx.params.instanceId
   )
-  const updatedApp = await clientDb.put(budibaseApp)
+  await clientDb.put(budibaseApp)
 
   ctx.body = {
     message: `Instance Database ${ctx.params.instanceId} successfully destroyed.`,
