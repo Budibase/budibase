@@ -29,9 +29,12 @@ export const loadBudibase = async opts => {
   // let { appRootPath } = frontendDefinition;
   // appRootPath = appRootPath === "" ? "" : "/" + trimSlash(appRootPatl)
 
-  const componentLibraryModules = opts.componentLibraries || {}
+  const componentLibraryModules = opts && opts.componentLibraries || {}
 
-  const libraries = frontendDefinition.libraries || []
+  const libraries = frontendDefinition.libraries || [
+    "@budibase/materialdesign-components",
+    "@budibase/standard-components"
+  ]
 
   for (let library of libraries) {
     // fetch the JavaScript for the component libraries from the server

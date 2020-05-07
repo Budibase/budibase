@@ -45,7 +45,10 @@ exports.save = async function(ctx) {
   //   record: record,
   // })
 
-  ctx.body = record
+  ctx.body = {
+    ...record,
+    ...response
+  } 
   ctx.status = 200
   ctx.message = `${model.name} created successfully`
 }

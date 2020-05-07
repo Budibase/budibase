@@ -3,7 +3,6 @@
   import PlusButton from "components/common/PlusButton.svelte"
   import Select from "components/common/Select.svelte"
   import StateBindingCascader from "./StateBindingCascader.svelte"
-  import StateBindingControl from "../StateBindingControl.svelte"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
   import {

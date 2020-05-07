@@ -13,6 +13,7 @@
   export let styleBindingProperty = ""
 
   $: bindOptionToStyle = !!styleBindingProperty
+
 </script>
 
 <div class="unbound-container">
@@ -26,10 +27,12 @@
   {:else if type === 'models'}
     <select
       class="uk-select uk-form-small"
-      {value}
-      on:change={ev => onChanged(ev.target.value)}>
+      bind:value
+      on:change={() => { 
+        onChanged(value)
+      }}>
       {#each $backendUiStore.models || [] as option}
-        <option value={`all_${option._id}`}>{option.name}</option>
+        <option value={option}>{option.name}</option>
       {/each}
     </select>
   {:else if type === 'options' || type === 'models'}

@@ -1,4 +1,5 @@
 <script>
+  import { store } from "builderStore";
   import Modal from "../../common/Modal.svelte"
   import HandlerSelector from "./HandlerSelector.svelte"
   import IconButton from "../../common/IconButton.svelte"
@@ -14,7 +15,6 @@
   export let eventOptions = []
   export let open
   export let onClose
-  export let onPropChanged
 
   let eventType = ""
   let draftEventHandler = { parameters: [] }
@@ -52,12 +52,12 @@
   }
 
   const deleteEvent = () => {
-    onPropChanged(eventType, [])
+    store.setComponentProp(eventType, [])
     closeModal()
   }
 
   const saveEventData = () => {
-    onPropChanged(eventType, eventData.handlers)
+    store.setComponentProp(eventType, eventData.handlers)
     closeModal()
   }
 </script>
