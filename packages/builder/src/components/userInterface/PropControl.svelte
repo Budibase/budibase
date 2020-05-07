@@ -20,7 +20,7 @@
     <h5>{prop_name}</h5>
     <StateBindingControl
       value={prop_value}
-      type={prop_definition.type}
+      type={prop_definition.type || prop_definition}
       options={prop_definition.options}
       styleBindingProperty={prop_definition.styleBindingProperty}
       onChanged={v => setProp(prop_name, v)} />

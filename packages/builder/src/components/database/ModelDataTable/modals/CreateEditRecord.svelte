@@ -20,10 +20,6 @@
 
   $: instanceId = $backendUiStore.selectedDatabase.id
 
-  $: models = $backendUiStore.selectedRecord
-    ? childModelsForModel($store.hierarchy)
-    : $store.hierarchy.children
-
   $: modelSchema = $backendUiStore.selectedModel
     ? Object.entries($backendUiStore.selectedModel.schema)
     : []
@@ -65,16 +61,6 @@
   <h4 class="budibase__title--4">Create / Edit Record</h4>
   <ErrorsBox {errors} />
   <form on:submit|preventDefault class="uk-form-stacked">
-    {#if !record}
-      <div class="uk-margin">
-        <label class="uk-form-label" for="form-stacked-text">Model</label>
-        <Select bind:value={selectedModel}>
-          {#each models as model}
-            <option value={model}>{model.name}</option>
-          {/each}
-        </Select>
-      </div>
-    {/if}
     {#each modelSchema as [key, meta]}
       <div class="uk-margin">
         <RecordFieldControl

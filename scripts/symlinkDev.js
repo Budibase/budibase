@@ -9,29 +9,28 @@
 
 const fs = require("fs")
 const { resolve } = require("path")
+const rimraf = require("rimraf");
 
-const devDir = "/tmp/.budibase/@budibase"
+const devDir = "/tmp/.budibase"
 
-// create the dev directory if it doesn't exist
-if (!fs.existsSync(devDir)) {
-  fs.mkdirSync(devDir, { recursive: true })
-}
+rimraf.sync(devDir);
+fs.mkdirSync(`${devDir}/@budibase`, { recursive: true })
 
 const SYMLINK_PATHS = [
   {
-    symlink: "/tmp/.budibase/@budibase/materialdesign-components",
+    symlink: `${devDir}/@budibase/materialdesign-components`,
     destination: resolve("packages/materialdesign-components"),
   },
   {
-    symlink: "/tmp/.budibase/@budibase/standard-components",
+    symlink: `${devDir}/@budibase/standard-components`,
     destination: resolve("packages/standard-components"),
   },
   {
-    symlink: "/tmp/.budibase/budibase-client.esm.mjs",
+    symlink: `${devDir}/budibase-client.esm.mjs`,
     destination: resolve("packages/client/dist/budibase-client.esm.mjs"),
   },
   {
-    symlink: "/tmp/.budibase/budibase-client.js",
+    symlink: `${devDir}/budibase-client.js`,
     destination: resolve("packages/client/dist/budibase-client.js"),
   },
 ]

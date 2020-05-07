@@ -81,14 +81,3 @@ export const createDatabaseForApp = store => appInstance => {
     return state
   })
 }
-
-export const saveBackend = async state => {
-  await api.post(`/_builder/api/${state.appname}/backend`, {
-    appDefinition: {
-      hierarchy: state.hierarchy,
-      actions: state.actions,
-      triggers: state.triggers,
-    },
-    accessLevels: state.accessLevels,
-  })
-}
