@@ -12,29 +12,12 @@ export const loadBudibase = async opts => {
   const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
   const uiFunctions = _window["##BUDIBASE_FRONTEND_FUNCTIONS##"]
 
-  // TODO: Update
+  // TODO: update
   const user = {}
-
-  // const userFromStorage = _localStorage.getItem("budibase:user")
-
-  // const user = userFromStorage
-  //   ? JSON.parse(userFromStorage)
-  //   : {
-  //       name: "annonymous",
-  //       permissions: [],
-  //       isUser: false,
-  //       temp: false,
-  //     }
-
-  // let { appRootPath } = frontendDefinition;
-  // appRootPath = appRootPath === "" ? "" : "/" + trimSlash(appRootPatl)
 
   const componentLibraryModules = opts && opts.componentLibraries || {}
 
-  const libraries = frontendDefinition.libraries || [
-    "@budibase/materialdesign-components",
-    "@budibase/standard-components"
-  ]
+  const libraries = frontendDefinition.libraries || []
 
   for (let library of libraries) {
     // fetch the JavaScript for the component libraries from the server

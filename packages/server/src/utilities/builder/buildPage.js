@@ -93,6 +93,10 @@ const buildFrontendAppDefinition = async (config, appname, pageName, pkg) => {
     appRootPath: appRootPath,
     page: pkg.page,
     screens: pkg.screens,
+    libraries: [
+      "@budibase/materialdesign-components",
+      "@budibase/standard-components"
+    ]
   })
 
   await writeFile(

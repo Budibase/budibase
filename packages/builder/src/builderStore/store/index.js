@@ -1,5 +1,5 @@
-import { filter, cloneDeep, values } from "lodash/fp"
-import { pipe } from "components/common/core"
+import { cloneDeep, values } from "lodash/fp"
+import { backendUiStore } from "builderStore";
 import * as backendStoreActions from "./backend"
 import { writable, get } from "svelte/store"
 import api from "../api"
@@ -197,9 +197,8 @@ const setCurrentScreen = store => screenName => {
 
 const deleteScreen = store => name => {
   store.update(s => {
-    const components = pipe(s.components, [filter(c => c.name !== name)])
-
-    const screens = pipe(s.screens, [filter(c => c.name !== name)])
+    const components = s.components.filter(c => c.name !== name)
+    const screens = s.screens.filter(c => c.name !== name);
 
     s.components = components
     s.screens = screens
@@ -255,14 +254,14 @@ const renameScreen = store => (oldname, newname) => {
 }
 
 const savePage = store => async page => {
-  store.update(s => {
+  store.update(state => {
     if (s.currentFrontEndType !== "page" || !s.currentPageName) {
-      return s
+      return state
     }
 
     s.pages[s.currentPageName] = page
     _savePage(s)
-    return s
+    return state
   })
 }
 
@@ -330,7 +329,6 @@ const setCurrentPage = store => pageName => {
  * @param  {string} presetName - name of the component preset if defined
  */
 const addChildComponent = store => (componentToAdd, presetName) => {
-  // componentToAdd looks like: @budibase/standard-components/container
   store.update(state => {
     function findSlot(component_array) {
       for (let i = 0; i < component_array.length; i += 1) {
@@ -356,7 +354,13 @@ const addChildComponent = store => (componentToAdd, presetName) => {
       : state.components[componentToAdd]
 
     const presetProps = presetName ? component.presets[presetName] : {}
-    const newComponent = createProps(component, presetProps, state)
+
+    const instanceId = get(backendUiStore).selectedDatabase.id;
+
+    const newComponent = createProps(component, {
+      ...presetProps,
+      instanceId
+    }, state)
 
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       newComponent.props
