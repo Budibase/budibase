@@ -4,7 +4,7 @@ const router = require("./api")
 const koaBody = require("koa-body")
 const app = new Koa()
 
-module.exports = async () => {
+module.exports = () => {
   app.keys = Object.keys(process.env)
     .filter(k => k.startsWith("COOKIE_KEY_"))
     .map(k => process.env[k])

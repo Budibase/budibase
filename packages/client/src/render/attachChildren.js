@@ -1,4 +1,4 @@
-import { split, last } from "lodash/fp"
+import { split, last, compose } from "lodash/fp"
 import { prepareRenderComponent } from "./prepareRenderComponent"
 import { isScreenSlot } from "./builtinComponents"
 import deepEqual from "deep-equal"
