@@ -30,7 +30,6 @@
 
   // Find Component with ID and continue
   function findComponent(ids, children) {
-    console.log(ids, children);
     // Setup stuff
     let componentToSelect
     let currentChildren = children

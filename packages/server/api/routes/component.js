@@ -1,9 +1,11 @@
-const Router = require("@koa/router");
-const controller = require("../controllers/component");
+const Router = require("@koa/router")
+const controller = require("../controllers/component")
 
-const router = Router();
+const router = Router()
 
-router
-  .get("/:clientId/:appId/components/definitions", controller.fetchAppComponentDefinitions);
+router.get(
+  "/:clientId/:appId/components/definitions",
+  controller.fetchAppComponentDefinitions
+)
 
-module.exports = router;
+module.exports = router

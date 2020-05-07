@@ -1,5 +1,5 @@
 <script>
-  import { store } from "builderStore";
+  import { store } from "builderStore"
   import AppList from "components/start/AppList.svelte"
   import { onMount } from "svelte"
   import IconButton from "components/common/IconButton.svelte"

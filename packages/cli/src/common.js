@@ -17,4 +17,5 @@ module.exports.serverFileName = relativePath =>
 //   return await buildAppContext(config, masterIsCreated)
 // }
 
-module.exports.xPlatHomeDir = dir => dir.startsWith("~") ? join(homedir(), dir.substring(1)) : dir;
+module.exports.xPlatHomeDir = dir =>
+  dir.startsWith("~") ? join(homedir(), dir.substring(1)) : dir

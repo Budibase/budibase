@@ -24,7 +24,7 @@
   <form on:submit|preventDefault class="uk-form-stacked form-root">
     {#if componentDef}
       {#each Object.entries(componentDef.props) as [prop_name, prop_def], index}
-        {#if prop_def !== "event"}
+        {#if prop_def !== 'event'}
           <div class="prop-container">
             <PropControl
               {setProp}

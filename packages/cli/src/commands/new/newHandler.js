@@ -1,7 +1,9 @@
 const { xPlatHomeDir } = require("../../common")
 const dotenv = require("dotenv")
-const createInstance = require("@budibase/server/api/controllers/instance").create
-const createApplication = require("@budibase/server/api/controllers/application").create
+const createInstance = require("@budibase/server/api/controllers/instance")
+  .create
+const createApplication = require("@budibase/server/api/controllers/application")
+  .create
 const { copy, readJSON, writeJSON, remove, exists } = require("fs-extra")
 const { resolve, join } = require("path")
 const chalk = require("chalk")
@@ -13,7 +15,7 @@ module.exports = opts => {
 }
 
 const run = async opts => {
-  console.log(opts);
+  console.log(opts)
   try {
     opts.dir = xPlatHomeDir(opts.dir)
     process.chdir(opts.dir)
@@ -22,7 +24,7 @@ const run = async opts => {
     await createEmptyAppPackage(opts)
     exec(`cd ${join(opts.dir, opts.applicationId)} && npm install`)
   } catch (error) {
-    console.error(chalk.red("Error creating new app", error));
+    console.error(chalk.red("Error creating new app", error))
   }
 }
 

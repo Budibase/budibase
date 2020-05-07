@@ -26,10 +26,14 @@
 
   let saveAttempted = false
 
-  $: layoutComponents = Object.values($store.components).filter(componentDefinition => componentDefinition.container)
+  $: layoutComponents = Object.values($store.components).filter(
+    componentDefinition => componentDefinition.container
+  )
 
   $: layoutComponent = layoutComponent
-    ? layoutComponents.find(component => component._component === layoutComponent._component)
+    ? layoutComponents.find(
+        component => component._component === layoutComponent._component
+      )
     : layoutComponents[0]
 
   $: route = !route && $store.screens.length === 0 ? "*" : route
@@ -55,11 +59,15 @@
   }
 
   const screenNameExists = name => {
-    return $store.screens.some(screen => screen.name.toLowerCase() === name.toLowerCase());
+    return $store.screens.some(
+      screen => screen.name.toLowerCase() === name.toLowerCase()
+    )
   }
 
   const routeNameExists = route => {
-    return $store.screens.some(screen => screen.route.toLowerCase() === route.toLowerCase());
+    return $store.screens.some(
+      screen => screen.route.toLowerCase() === route.toLowerCase()
+    )
   }
 
   const routeChanged = event => {

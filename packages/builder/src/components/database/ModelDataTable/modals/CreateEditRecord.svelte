@@ -9,7 +9,7 @@
   import ErrorsBox from "components/common/ErrorsBox.svelte"
 
   const CLASS_NAME_MAP = {
-    boolean: "uk-checkbox"
+    boolean: "uk-checkbox",
   }
 
   export let record = {}
@@ -55,7 +55,7 @@
 
     backendUiStore.update(state => {
       state.selectedView = state.selectedView
-      onClosed();
+      onClosed()
       return state
     })
   }

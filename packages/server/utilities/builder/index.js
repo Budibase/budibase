@@ -22,7 +22,7 @@ const getAppDefinition = async appPath =>
   await readJSON(`${appPath}/appDefinition.json`)
 
 module.exports.getPackageForBuilder = async (config, application) => {
-  const appPath = resolve(config.latestPackagesFolder, application._id);
+  const appPath = resolve(config.latestPackagesFolder, application._id)
 
   const pages = await getPages(appPath)
 
@@ -31,7 +31,7 @@ module.exports.getPackageForBuilder = async (config, application) => {
 
     application,
 
-    clientId: process.env.CLIENT_ID
+    clientId: process.env.CLIENT_ID,
   }
 }
 

@@ -64,10 +64,14 @@
 
   $: {
     if ($backendUiStore.selectedView) {
-      api.fetchDataForView($backendUiStore.selectedView, instanceId).then(records => {
-        data = records || []
-        headers = Object.keys($backendUiStore.selectedModel.schema).filter(key => !INTERNAL_HEADERS.includes(key));
-      })
+      api
+        .fetchDataForView($backendUiStore.selectedView, instanceId)
+        .then(records => {
+          data = records || []
+          headers = Object.keys($backendUiStore.selectedModel.schema).filter(
+            key => !INTERNAL_HEADERS.includes(key)
+          )
+        })
     }
   }
 
@@ -94,9 +98,7 @@
 
 <section>
   <div class="table-controls">
-    <h2 class="title">
-      {$backendUiStore.selectedModel.name}
-    </h2>
+    <h2 class="title">{$backendUiStore.selectedModel.name}</h2>
   </div>
   <table class="uk-table">
     <thead>

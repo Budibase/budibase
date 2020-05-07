@@ -1,6 +1,6 @@
 const session = require("koa-session")
 
-module.exports = (app) => {
+module.exports = app => {
   const sessionConfig = {
     key: "budi:sess" /** (string) cookie key (default is koa:sess) */,
     /** (number || 'session') maxAge in ms (default is 1 days) */

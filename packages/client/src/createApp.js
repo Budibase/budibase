@@ -1,5 +1,4 @@
 import { writable } from "svelte/store"
-import { createCoreApi } from "./core"
 import { attachChildren } from "./render/attachChildren"
 import { createTreeNode } from "./render/prepareRenderComponent"
 import { screenRouter } from "./render/screenRouter"

@@ -1,13 +1,12 @@
-const Router = require("@koa/router");
+const Router = require("@koa/router")
 const StatusCodes = require("../../utilities/statusCodes")
 const {
   listScreens,
   saveScreen,
   buildPage,
   renameScreen,
-  deleteScreen
+  deleteScreen,
 } = require("../../utilities/builder")
-
 
 const router = Router()
 
@@ -30,44 +29,41 @@ router.get("/_builder/api/:appId/pages/:pagename/screens", async ctx => {
   ctx.response.status = StatusCodes.OK
 })
 
-router
-  .post("/_builder/api/:appId/pages/:pagename/screen", async ctx => {
-    ctx.body = await saveScreen(
-      ctx.config,
-      ctx.params.appId,
-      ctx.params.pagename,
-      ctx.request.body
-    )
-    ctx.response.status = StatusCodes.OK
-  })
+router.post("/_builder/api/:appId/pages/:pagename/screen", async ctx => {
+  ctx.body = await saveScreen(
+    ctx.config,
+    ctx.params.appId,
+    ctx.params.pagename,
+    ctx.request.body
+  )
+  ctx.response.status = StatusCodes.OK
+})
 
-router
-  .patch("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
-    await renameScreen(
-      ctx.config,
-      ctx.params.appname,
-      ctx.params.pagename,
-      ctx.request.body.oldname,
-      ctx.request.body.newname
-    )
-    ctx.response.status = StatusCodes.OK
-  })
+router.patch("/_builder/api/:appname/pages/:pagename/screen", async ctx => {
+  await renameScreen(
+    ctx.config,
+    ctx.params.appname,
+    ctx.params.pagename,
+    ctx.request.body.oldname,
+    ctx.request.body.newname
+  )
+  ctx.response.status = StatusCodes.OK
+})
 
-router
-  .delete("/_builder/api/:appname/pages/:pagename/screen/*", async ctx => {
-    const name = ctx.request.path.replace(
-      `/_builder/api/${ctx.params.appname}/pages/${ctx.params.pagename}/screen/`,
-      ""
-    )
+router.delete("/_builder/api/:appname/pages/:pagename/screen/*", async ctx => {
+  const name = ctx.request.path.replace(
+    `/_builder/api/${ctx.params.appname}/pages/${ctx.params.pagename}/screen/`,
+    ""
+  )
 
-    await deleteScreen(
-      ctx.config,
-      ctx.params.appname,
-      ctx.params.pagename,
-      decodeURI(name)
-    )
+  await deleteScreen(
+    ctx.config,
+    ctx.params.appname,
+    ctx.params.pagename,
+    decodeURI(name)
+  )
 
-    ctx.response.status = StatusCodes.OK
+  ctx.response.status = StatusCodes.OK
 })
 
 module.exports = router

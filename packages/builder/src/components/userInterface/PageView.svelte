@@ -11,10 +11,10 @@
 
   $: page = $store.pages[$store.currentPageName]
   $: title = page.index.title
-  $: components = pipe(
-    $store.components,
-    [filter(store => !isRootComponent($store)), concat([notSelectedComponent])]
-  )
+  $: components = pipe($store.components, [
+    filter(store => !isRootComponent($store)),
+    concat([notSelectedComponent]),
+  ])
   $: entryComponent = components[page.appBody] || notSelectedComponent
 
   const save = () => {

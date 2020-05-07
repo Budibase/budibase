@@ -1,39 +1,39 @@
-const CouchDB = require("../../db");
-const Ajv = require("ajv");
+const CouchDB = require("../../db")
+const Ajv = require("ajv")
 
-const ajv = new Ajv();
+const ajv = new Ajv()
 
 exports.save = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId);
-  const record = ctx.request.body;
+  const db = new CouchDB(ctx.params.instanceId)
+  const record = ctx.request.body
 
   // validation with ajv
   const model = await db.get(record.modelId)
   const validate = ajv.compile({
-    properties: model.schema
-  });
+    properties: model.schema,
+  })
   const valid = validate(record)
 
   if (!valid) {
     ctx.status = 400
     ctx.body = {
       status: 400,
-      errors: validate.errors
-    };
-    return;
+      errors: validate.errors,
+    }
+    return
   }
 
-  const existingRecord = record._id && await db.get(record._id);
+  const existingRecord = record._id && (await db.get(record._id))
 
   if (existingRecord) {
-    const response = await db.put({ ...record, _id: existingRecord._id });
+    const response = await db.put({ ...record, _id: existingRecord._id })
     ctx.body = {
       message: `${model.name} updated successfully.`,
       status: 200,
       record: {
         ...record,
-        ...response
-      } 
+        ...response,
+      },
     }
     return
   }
@@ -52,13 +52,10 @@ exports.save = async function(ctx) {
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
-  const response = await db.query(
-    `database/${ctx.params.viewName}`,
-    {
-      include_docs: true
-    }
-  )
-  ctx.body = response.rows.map(row => row.doc);
+  const response = await db.query(`database/${ctx.params.viewName}`, {
+    include_docs: true,
+  })
+  ctx.body = response.rows.map(row => row.doc)
 }
 
 exports.find = async function(ctx) {
@@ -67,7 +64,7 @@ exports.find = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const databaseId = ctx.params.instanceId;
+  const databaseId = ctx.params.instanceId
   const db = new CouchDB(databaseId)
-  ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId);
-};
+  ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
+}

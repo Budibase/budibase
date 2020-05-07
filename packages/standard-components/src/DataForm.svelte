@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount } from "svelte"
 
   export let _bb
   export let _viewName
@@ -7,7 +7,6 @@
 
   let username
   let password
-
 </script>
 
 <form class="uk-form">
@@ -24,4 +23,5 @@
 </form>
 
 <style>
+
 </style>

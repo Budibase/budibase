@@ -33,11 +33,9 @@
   let selectedEvent = null
 
   $: {
-    const componentDefinition = components[component._component];
+    const componentDefinition = components[component._component]
     events = Object.keys(componentDefinition.props)
-      .filter(
-        propName => componentDefinition.props[propName] === EVENT_TYPE
-      )
+      .filter(propName => componentDefinition.props[propName] === EVENT_TYPE)
       .map(propName => ({
         name: propName,
         handlers: component[propName] || [],

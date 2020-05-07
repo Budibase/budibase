@@ -1,9 +1,8 @@
-const Router = require("@koa/router");
-const controller = require("../controllers/auth");
+const Router = require("@koa/router")
+const controller = require("../controllers/auth")
 
-const router = Router();
+const router = Router()
 
-router
-  .post("/api/authenticate", controller.authenticate);
+router.post("/api/authenticate", controller.authenticate)
 
-module.exports = router;
+module.exports = router

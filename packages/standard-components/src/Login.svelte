@@ -26,18 +26,20 @@
 
   const login = async () => {
     loading = true
-    const response = await _bb.api.post("/api/authenticate", { username, password });
+    const response = await _bb.api.post("/api/authenticate", {
+      username,
+      password,
+    })
 
     if (response.status === 200) {
-      const json = await response.json();
-      localStorage.setItem("budibase:token", json.token);
+      const json = await response.json()
+      localStorage.setItem("budibase:token", json.token)
       // TODO: possibly do something with the user information in the response?
       location.reload()
     } else {
       loading = false
       error = true
     }
-
   }
 </script>
 

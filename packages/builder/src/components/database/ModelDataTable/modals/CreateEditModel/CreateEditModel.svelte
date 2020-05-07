@@ -8,7 +8,6 @@
   import FieldView from "./FieldView.svelte"
   import api from "builderStore/api"
   import { store, backendUiStore } from "builderStore"
-  import { common, hierarchy } from "../../../../../../../core/src/"
   import { pipe } from "components/common/core"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
 
@@ -21,24 +20,18 @@
   $: modelFields = model.schema ? Object.entries(model.schema) : []
   $: instanceId = $backendUiStore.selectedDatabase.id
 
-  function editField() {
+  function editField() {}
 
-  }
+  function deleteField() {}
 
-  function deleteField() {
-
-  }
-
-  function onFinishedFieldEdit() {
-
-  }
+  function onFinishedFieldEdit() {}
 
   async function saveModel() {
     const SAVE_MODEL_URL = `/api/${instanceId}/models`
     const response = await api.post(SAVE_MODEL_URL, model)
     const newModel = await response.json()
     backendUiStore.actions.models.create(newModel.model)
-    onClosed();
+    onClosed()
   }
 </script>
 
@@ -98,18 +91,15 @@
       </tbody>
     </table>
     <div class="uk-margin">
-      <ActionButton color="secondary" on:click={saveModel}>
-        Save
-      </ActionButton>
+      <ActionButton color="secondary" on:click={saveModel}>Save</ActionButton>
     </div>
   </div>
 {:else}
   <FieldView
     field={fieldToEdit}
     onFinished={onFinishedFieldEdit}
-    schema={model.schema} 
-    goBack={() => showFieldView = false}
-  />
+    schema={model.schema}
+    goBack={() => (showFieldView = false)} />
 {/if}
 
 <style>
