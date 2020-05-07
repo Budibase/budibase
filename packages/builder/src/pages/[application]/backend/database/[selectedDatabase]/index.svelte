@@ -12,7 +12,7 @@
     open(
       CreateEditRecordModal,
       {
-        onClosed: close
+        onClosed: close,
       },
       { styleContent: { padding: "0" } }
     )

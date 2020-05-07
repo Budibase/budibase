@@ -27,13 +27,7 @@ export const load = async (page, screens, url, appRootPath) => {
   return { dom, app }
 }
 
-const addWindowGlobals = (
-  window,
-  page,
-  screens,
-  appRootPath,
-  uiFunctions
-) => {
+const addWindowGlobals = (window, page, screens, appRootPath, uiFunctions) => {
   window["##BUDIBASE_FRONTEND_DEFINITION##"] = {
     page,
     screens,

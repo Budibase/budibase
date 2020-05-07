@@ -31,10 +31,10 @@
 
   const isComponentSelected = (current, comp) => current === comp
 
-  $: _screens = pipe(
-    screens,
-    [map(c => ({ component: c, title: lastPartOfName(c) })), sortBy("title")]
-  )
+  $: _screens = pipe(screens, [
+    map(c => ({ component: c, title: lastPartOfName(c) })),
+    sortBy("title"),
+  ])
 
   const isScreenSelected = component =>
     component.component &&

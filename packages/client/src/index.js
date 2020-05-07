@@ -1,8 +1,5 @@
 import { createApp } from "./createApp"
-import { trimSlash } from "./common/trimSlash"
 import { builtins, builtinLibName } from "./render/builtinComponents"
-// import * as standardComponents from "../../standard-components/dist";
-// import * as materialDesignComponents from "../../materialdesign-components/dist";
 
 /**
  * create a web application from static budibase definition files.
@@ -10,37 +7,43 @@ import { builtins, builtinLibName } from "./render/builtinComponents"
  */
 export const loadBudibase = async opts => {
   const _window = (opts && opts.window) || window
-  const _localStorage = (opts && opts.localStorage) || localStorage
+  // const _localStorage = (opts && opts.localStorage) || localStorage
 
   const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
   const uiFunctions = _window["##BUDIBASE_FRONTEND_FUNCTIONS##"]
 
-  const userFromStorage = _localStorage.getItem("budibase:user")
+  // TODO: Update
+  const user = {}
 
-  const user = userFromStorage
-    ? JSON.parse(userFromStorage)
-    : {
-        name: "annonymous",
-        permissions: [],
-        isUser: false,
-        temp: false,
-      }
+  // const userFromStorage = _localStorage.getItem("budibase:user")
 
-  let { appRootPath } = frontendDefinition;
-  appRootPath = appRootPath === "" ? "" : "/" + trimSlash(appRootPath)
+  // const user = userFromStorage
+  //   ? JSON.parse(userFromStorage)
+  //   : {
+  //       name: "annonymous",
+  //       permissions: [],
+  //       isUser: false,
+  //       temp: false,
+  //     }
 
+  // let { appRootPath } = frontendDefinition;
+  // appRootPath = appRootPath === "" ? "" : "/" + trimSlash(appRootPatl)
 
-  const componentLibraryModules = {};
+  const componentLibraryModules = {}
+
   const libraries = frontendDefinition.libraries || [
     "@budibase/standard-components",
     "@budibase/materialdesign-components",
-  ];
+  ]
+
   for (let library of libraries) {
-    // fetch the JavaScript for the component libraries from the server 
+    // fetch the JavaScript for the component libraries from the server
     componentLibraryModules[library] = await import(
-      `/${frontendDefinition.appId}/componentlibrary?library=${encodeURI(library)}`
-    );
-  };
+      `/${frontendDefinition.appId}/componentlibrary?library=${encodeURI(
+        library
+      )}`
+    )
+  }
 
   componentLibraryModules[builtinLibName] = builtins(_window)
 

@@ -60,7 +60,7 @@
       <span
         class:active={false}
         class="topnavitemright"
-        on:click={() => location = `/${application}`}>
+        on:click={() => (location = `/${application}`)}>
         <PreviewIcon />
       </span>
     </div>
@@ -72,7 +72,7 @@
   {:then}
     <slot />
   {:catch error}
-  	<p>Something went wrong: {error.message}</p>
+    <p>Something went wrong: {error.message}</p>
   {/await}
 
 </div>

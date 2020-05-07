@@ -36,9 +36,9 @@ export const createProps = (componentDefinition, derivedFromProps) => {
   for (let propName in componentDefinition.props) {
     const parsedPropDef = parsePropDef(componentDefinition.props[propName])
 
-    if (parsedPropDef.error) { 
+    if (parsedPropDef.error) {
       errors.push({ propName, error: parsedPropDef.error })
-    } else { 
+    } else {
       props[propName] = parsedPropDef
     }
   }

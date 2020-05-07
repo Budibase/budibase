@@ -24,10 +24,10 @@ export const getBackendUiStore = () => {
           state.selectedDatabase = db
           state.breadcrumbs = [db.name]
           state.models = models
-          state.views = views;
+          state.views = views
           return state
         })
-      }
+      },
     },
     records: {
       delete: () =>
@@ -47,11 +47,12 @@ export const getBackendUiStore = () => {
         }),
     },
     models: {
-      create: model => store.update(state => {
-        state.models.push(model)
-        state.models = state.models
-        return state
-      })
+      create: model =>
+        store.update(state => {
+          state.models.push(model)
+          state.models = state.models
+          return state
+        }),
     },
     views: {
       select: view =>

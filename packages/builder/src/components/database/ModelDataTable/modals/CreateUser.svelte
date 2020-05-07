@@ -14,7 +14,7 @@
 
   async function createUser() {
     const user = { name: username, username, password }
-    const response = await api.createUser(user, appId, instanceId);
+    const response = await api.createUser(user, appId, instanceId)
     backendUiStore.actions.users.create(response)
     onClosed()
   }

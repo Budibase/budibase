@@ -35,7 +35,7 @@
       state.views = [...state.views, response.view]
       return state
     })
-    onClosed();
+    onClosed()
   }
 </script>
 
@@ -71,9 +71,7 @@
     <CodeArea bind:text={view.reduce} label="Reduce" />
   {/if}
 
-  <ActionButton color="secondary" on:click={saveView}>
-    Save
-  </ActionButton>
+  <ActionButton color="secondary" on:click={saveView}>Save</ActionButton>
   <ActionButton alert on:click={deleteView}>Delete</ActionButton>
 </form>
 

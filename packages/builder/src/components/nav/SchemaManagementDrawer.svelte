@@ -51,12 +51,13 @@
     })
   }
 
-
   async function deleteModel(modelToDelete) {
     const DELETE_MODEL_URL = `/api/${instanceId}/models/${node._id}/${node._rev}`
     const response = await api.delete(DELETE_MODEL_URL)
     backendUiStore.update(state => {
-      state.models = state.models.filter(model => model._id !== modelToDelete._id)
+      state.models = state.models.filter(
+        model => model._id !== modelToDelete._id
+      )
       state.selectedView = {}
       return state
     })
@@ -83,11 +84,7 @@
 
     <div class="hierarchy-items-container">
       {#each $backendUiStore.models as model}
-        <HierarchyRow 
-          onSelect={selectModel}
-          node={model} 
-          type="model" 
-        />
+        <HierarchyRow onSelect={selectModel} node={model} type="model" />
       {/each}
     </div>
   </div>
@@ -104,11 +101,7 @@
 
     <div class="hierarchy-items-container">
       {#each $backendUiStore.views as view}
-        <HierarchyRow 
-          onSelect={selectView}
-          node={view} 
-          type="view" 
-        />
+        <HierarchyRow onSelect={selectView} node={view} type="view" />
       {/each}
     </div>
   </div>

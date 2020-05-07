@@ -26,7 +26,8 @@ module.exports = {
     })
     yargs.positional("couchDbUrl", {
       type: "string",
-      describe: "connection string for couch db, format: https://username:password@localhost:5984",
+      describe:
+        "connection string for couch db, format: https://username:password@localhost:5984",
       alias: "x",
       default: "",
     })

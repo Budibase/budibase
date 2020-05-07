@@ -1,1 +1,1 @@
-export { default } from "./CurrentItemPreview.svelte";
+export { default } from "./CurrentItemPreview.svelte"

@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount } from "svelte"
   // import { cssVars, createClasses } from "./cssVars"
   // import { buildStyle } from "./buildStyle"
 
@@ -13,20 +13,20 @@
   let data = []
 
   async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/${_instanceId}/${model}/records`;
-    const response = await _bb.api.get(FETCH_RECORDS_URL);
+    const FETCH_RECORDS_URL = `/api/${_instanceId}/${model}/records`
+    const response = await _bb.api.get(FETCH_RECORDS_URL)
     if (response.status === 200) {
-      const json = await response.json();
+      const json = await response.json()
 
-      data = json;
-      headers = Object.keys(data[0]).filter(key => !key.startsWith("_"));
+      data = json
+      headers = Object.keys(data[0]).filter(key => !key.startsWith("_"))
     } else {
-      throw new Error("Failed to fetch records.", response);
+      throw new Error("Failed to fetch records.", response)
     }
   }
 
   onMount(async () => {
-    await fetchData();
+    await fetchData()
   })
 </script>
 
@@ -44,18 +44,15 @@
   <tbody>
     {#each data as row}
       <tr>
-      {#each headers as header}
-        {#if row[header]}
-          <td>
-            {row[header]}
-          </td>
-        {/if}
-      {/each}
+        {#each headers as header}
+          {#if row[header]}
+            <td>{row[header]}</td>
+          {/if}
+        {/each}
       </tr>
     {/each}
   </tbody>
 </table>
-
 
 <!-- <button
   bind:this={theButton}

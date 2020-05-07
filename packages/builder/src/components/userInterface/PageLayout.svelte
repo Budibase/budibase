@@ -3,7 +3,15 @@
   // import { tick } from "svelte"
   import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
 
-  import { last, sortBy, map, trimCharsStart, trimChars, join, compose } from "lodash/fp"
+  import {
+    last,
+    sortBy,
+    map,
+    trimCharsStart,
+    trimChars,
+    join,
+    compose,
+  } from "lodash/fp"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { pipe } from "components/common/core"
   import { store } from "builderStore"
@@ -23,7 +31,7 @@
 
   $: _layout = {
     component: layout,
-    title: lastPartOfName(layout)
+    title: lastPartOfName(layout),
   }
 
   const isScreenSelected = component =>

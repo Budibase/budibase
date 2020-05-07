@@ -24,14 +24,7 @@
   let handlerType
   let parameters = []
 
-  $: eventOptions = allHandlers(
-    { hierarchy: $store.hierarchy },
-    {}
-    // userWithFullAccess({
-    //   hierarchy: $store.hierarchy,
-    //   actions: keyBy("name")($store.actions),
-    // })
-  )
+  $: eventOptions = allHandlers()
 
   $: {
     if (handler) {

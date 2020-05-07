@@ -1,5 +1,4 @@
 import { split, last } from "lodash/fp"
-import { $ } from "../core/common"
 import { prepareRenderComponent } from "./prepareRenderComponent"
 import { isScreenSlot } from "./builtinComponents"
 import deepEqual from "deep-equal"
@@ -77,7 +76,9 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
 }
 
 const splitName = fullname => {
-  const componentName = $(fullname, [split("/"), last])
+  const getComponentName = compose(last, split("/"))
+
+  const componentName = getComponentName(fullname)
 
   const libName = fullname.substring(
     0,

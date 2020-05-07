@@ -1,7 +1,7 @@
 <script>
   import { store, backendUiStore } from "builderStore"
   import { map, join } from "lodash/fp"
-  import iframeTemplate from "./iframeTemplate";
+  import iframeTemplate from "./iframeTemplate"
   import { pipe } from "components/common/core"
 
   let iframe
@@ -25,61 +25,71 @@
     )
   $: hasComponent = !!$store.currentPreviewItem
   $: {
-    // Apply the CSS from the currently selected page and its screens 
-    const currentPage = $store.pages[$store.currentPageName];
-    styles += currentPage._css;
+    // Apply the CSS from the currently selected page and its screens
+    const currentPage = $store.pages[$store.currentPageName]
+    styles += currentPage._css
     for (let screen of currentPage._screens) {
-      styles += screen._css;
+      styles += screen._css
     }
     styles = styles
   }
 
-  $: stylesheetLinks = pipe(
-    $store.pages.stylesheets,
-    [map(s => `<link rel="stylesheet" href="${s}"/>`), join("\n")]
-  )
+  $: stylesheetLinks = pipe($store.pages.stylesheets, [
+    map(s => `<link rel="stylesheet" href="${s}"/>`),
+    join("\n"),
+  ])
 
-  $: screensExist = $store.currentPreviewItem._screens && $store.currentPreviewItem._screens.length > 0 
+  $: screensExist =
+    $store.currentPreviewItem._screens &&
+    $store.currentPreviewItem._screens.length > 0
 
   $: frontendDefinition = {
     appId: $store.appId,
     libraries: Object.keys($store.libraries),
     page: $store.currentPreviewItem,
-    screens: screensExist ? $store.currentPreviewItem._screens : [{
-      name: "Screen Placeholder",
-      route: "*",
-      props: {
-        _component: "@budibase/standard-components/container",
-        type: "div",
-        _children: [
+    screens: screensExist
+      ? $store.currentPreviewItem._screens
+      : [
           {
-            _component: "@budibase/standard-components/container",
-            _styles: { "position": {},"layout": {} },
-            _id: "__screenslot__text",
-            _code: "",
-            className: "",
-            onLoad: [],
-            type: "div",
-            _children: [{
-              _component:"@budibase/standard-components/text",
-              _styles: { "position": {}, "layout": {} },
-              _id: "__screenslot__text_2",
-              _code: "",
-              text: "content",
-              font: "",
-              color: "",
-              textAlign: "inline",
-              verticalAlign: "inline",
-              formattingTag: "none"
-            }]
-          }
-        ]
-      }
-    }],
-    appRootPath: ""
+            name: "Screen Placeholder",
+            route: "*",
+            props: {
+              _component: "@budibase/standard-components/container",
+              type: "div",
+              _children: [
+                {
+                  _component: "@budibase/standard-components/container",
+                  _styles: { position: {}, layout: {} },
+                  _id: "__screenslot__text",
+                  _code: "",
+                  className: "",
+                  onLoad: [],
+                  type: "div",
+                  _children: [
+                    {
+                      _component: "@budibase/standard-components/text",
+                      _styles: { position: {}, layout: {} },
+                      _id: "__screenslot__text_2",
+                      _code: "",
+                      text: "content",
+                      font: "",
+                      color: "",
+                      textAlign: "inline",
+                      verticalAlign: "inline",
+                      formattingTag: "none",
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        ],
+    appRootPath: "",
   }
 
-  $: selectedComponentId = $store.currentComponentInfo ? $store.currentComponentInfo._id : ""
+  $: selectedComponentId = $store.currentComponentInfo
+    ? $store.currentComponentInfo._id
+    : ""
 </script>
 
 <div class="component-container">
@@ -93,7 +103,7 @@
         stylesheetLinks,
         selectedComponentId,
         frontendDefinition: JSON.stringify(frontendDefinition),
-        currentPageFunctions: $store.currentPageFunctions
+        currentPageFunctions: $store.currentPageFunctions,
       })} />
   {/if}
 </div>

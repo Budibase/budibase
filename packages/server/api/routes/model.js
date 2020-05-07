@@ -1,13 +1,12 @@
-const Router = require("@koa/router"); 
-const controller = require("../controllers/model");
+const Router = require("@koa/router")
+const controller = require("../controllers/model")
 
-const router = Router();
+const router = Router()
 
 router
   .get("/api/:instanceId/models", controller.fetch)
   .post("/api/:instanceId/models", controller.create)
   // .patch("/api/:instanceId/models", controller.update)
-  .delete("/api/:instanceId/models/:modelId/:revId", controller.destroy);
+  .delete("/api/:instanceId/models/:modelId/:revId", controller.destroy)
 
-
-module.exports = router;
+module.exports = router

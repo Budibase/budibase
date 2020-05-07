@@ -3,9 +3,7 @@ import { pipe } from "components/common/core"
 import * as backendStoreActions from "./backend"
 import { writable, get } from "svelte/store"
 import api from "../api"
-import { 
-  DEFAULT_PAGES_OBJECT
-} from "../../constants";
+import { DEFAULT_PAGES_OBJECT } from "../../constants"
 import { getExactComponent } from "components/userInterface/pagesParsing/searchComponents"
 import { rename } from "components/userInterface/pagesParsing/renameScreen"
 import {
@@ -13,9 +11,9 @@ import {
   makePropsSafe,
   getBuiltin,
 } from "components/userInterface/pagesParsing/createProps"
-import { 
-  fetchComponentLibModules, 
-  fetchComponentLibDefinitions 
+import {
+  fetchComponentLibModules,
+  fetchComponentLibDefinitions,
 } from "../loadComponentLibraries"
 import { buildCodeForScreens } from "../buildCodeForScreens"
 import { generate_screen_css } from "../generate_css"
@@ -39,7 +37,7 @@ export const getStore = () => {
     errors: [],
     hasAppPackage: false,
     libraries: null,
-    appId: ""
+    appId: "",
   }
 
   const store = writable(initial)
@@ -82,10 +80,11 @@ export const getStore = () => {
 
 export default getStore
 
-const setPackage = (store, initial) => async (pkg) => {
-
+const setPackage = (store, initial) => async pkg => {
   const [main_screens, unauth_screens] = await Promise.all([
-    api.get(`/_builder/api/${pkg.application._id}/pages/main/screens`).then(r => r.json()),
+    api
+      .get(`/_builder/api/${pkg.application._id}/pages/main/screens`)
+      .then(r => r.json()),
     api
       .get(`/_builder/api/${pkg.application._id}/pages/unauthenticated/screens`)
       .then(r => r.json()),
@@ -103,8 +102,10 @@ const setPackage = (store, initial) => async (pkg) => {
   }
 
   initial.libraries = await fetchComponentLibModules(pkg.application)
-  // TODO: Rename to componentDefinitions
-  initial.components = await fetchComponentLibDefinitions(pkg.clientId, pkg.application._id); 
+  initial.components = await fetchComponentLibDefinitions(
+    pkg.clientId,
+    pkg.application._id
+  )
   initial.appname = pkg.application.name
   initial.appId = pkg.application._id
   initial.pages = pkg.pages
@@ -129,10 +130,7 @@ const _saveScreen = async (store, s, screen) => {
   const currentPageScreens = s.pages[s.currentPageName]._screens
 
   await api
-    .post(
-      `/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`,
-      screen
-    )
+    .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
     .then(() => {
       if (currentPageScreens.includes(screen)) return
 
@@ -159,10 +157,7 @@ const _saveScreen = async (store, s, screen) => {
 
 const _saveScreenApi = (screen, s) =>
   api
-    .post(
-      `/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`,
-      screen
-    )
+    .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
     .then(() => _savePage(s))
 
 const createScreen = store => (screenName, route, layoutComponentName) => {
@@ -309,7 +304,7 @@ const setCurrentPage = store => pageName => {
   store.update(state => {
     const current_screens = state.pages[pageName]._screens
 
-    const currentPage = state.pages[pageName];
+    const currentPage = state.pages[pageName]
 
     state.currentFrontEndType = "page"
     state.currentPageName = pageName
@@ -486,7 +481,9 @@ const deleteComponent = store => componentName => {
     const parent = getParent(state.currentPreviewItem.props, componentName)
 
     if (parent) {
-      parent._children = parent._children.filter(component => component !== componentName)
+      parent._children = parent._children.filter(
+        component => component !== componentName
+      )
     }
 
     _saveCurrentPreviewItem(state)
@@ -549,11 +546,10 @@ const copyComponent = store => component => {
 }
 
 const getPathToComponent = store => component => {
-
   // Gets all the components to needed to construct a path.
   const tempStore = get(store)
   let pathComponents = []
-  let parent = component;
+  let parent = component
   let root = false
   while (!root) {
     parent = getParent(tempStore.currentPreviewItem.props, parent)
@@ -575,7 +571,7 @@ const getPathToComponent = store => component => {
   const IdList = allComponents.map(c => c._id)
 
   // Construct ID Path:
-  const path = IdList.join('/')
+  const path = IdList.join("/")
 
   return path
 }

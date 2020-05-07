@@ -1,4 +1,4 @@
-import { pipe } from "components/common/core";
+import { pipe } from "components/common/core"
 import { filter, map, reduce, toPairs } from "lodash/fp"
 
 const self = n => n
@@ -88,7 +88,7 @@ const css_map = {
 }
 
 export const generate_rule = ([name, values]) =>
-  `${css_map[name].name}: ${css_map[name].generate(values)} !important;`
+  `${css_map[name].name}: ${css_map[name].generate(values)};`
 
 const handle_grid = (acc, [name, value]) => {
   let tmp = []
@@ -113,9 +113,7 @@ const object_to_css_string = [
 export const generate_css = ({ layout, position }) => {
   let _layout = pipe(layout, object_to_css_string)
   if (_layout.length) {
-    _layout += `\ndisplay: ${
-      _layout.includes("flex") ? "flex" : "grid"
-    } !important;`
+    _layout += `\ndisplay: ${_layout.includes("flex") ? "flex" : "grid"};`
   }
 
   return {

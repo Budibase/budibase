@@ -13,7 +13,7 @@
           </div>
         `,
       status,
-      timeout: 100000
+      timeout: 100000,
     })
   }
 </script>

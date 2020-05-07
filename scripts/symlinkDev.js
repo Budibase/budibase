@@ -7,14 +7,14 @@
   and client library in real time.
 */
 
-const fs = require("fs");
+const fs = require("fs")
 const { resolve } = require("path")
 
-const devDir = "/tmp/.budibase/@budibase";
+const devDir = "/tmp/.budibase/@budibase"
 
 // create the dev directory if it doesn't exist
 if (!fs.existsSync(devDir)) {
-  fs.mkdirSync(devDir, { recursive: true });
+  fs.mkdirSync(devDir, { recursive: true })
 }
 
 const SYMLINK_PATHS = [
@@ -24,20 +24,20 @@ const SYMLINK_PATHS = [
   },
   {
     symlink: "/tmp/.budibase/@budibase/standard-components",
-    destination: resolve("packages/standard-components")
+    destination: resolve("packages/standard-components"),
   },
   {
     symlink: "/tmp/.budibase/budibase-client.esm.mjs",
-    destination: resolve("packages/client/dist/budibase-client.esm.mjs")
+    destination: resolve("packages/client/dist/budibase-client.esm.mjs"),
   },
   {
     symlink: "/tmp/.budibase/budibase-client.js",
     destination: resolve("packages/client/dist/budibase-client.js"),
-  }
+  },
 ]
 
 SYMLINK_PATHS.forEach(sym => {
-  fs.symlinkSync(sym.destination, sym.symlink);
-});
+  fs.symlinkSync(sym.destination, sym.symlink)
+})
 
 console.log("Dev Symlinks Created Successfully.")

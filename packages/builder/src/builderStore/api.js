@@ -1,11 +1,8 @@
 const apiCall = method => async (url, body) => {
-  const jwt = localStorage.getItem("budibase:token");
-
   const response = await fetch(url, {
     method: method,
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwt}`
     },
     body: body && JSON.stringify(body),
   })
@@ -14,7 +11,7 @@ const apiCall = method => async (url, body) => {
   //   throw new Error("Server Error");
   // }
 
-  return response;
+  return response
 }
 
 const post = apiCall("POST")

@@ -3,13 +3,13 @@ export default ({
   stylesheetLinks,
   selectedComponentId,
   frontendDefinition,
-  currentPageFunctions
+  currentPageFunctions,
 }) => `<html>
   <head>
     ${stylesheetLinks}
 
     <style>
-      ${styles || ''}
+      ${styles || ""}
 
       .pos-${selectedComponentId} {
         border: 2px solid #0055ff; 
