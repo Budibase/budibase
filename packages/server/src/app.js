@@ -1,17 +1,15 @@
 const Koa = require("koa")
 const logger = require("koa-logger")
-const router = require("./api")
+const api = require("./api")
 const koaBody = require("koa-body")
+
 const app = new Koa()
 
-module.exports = () => {
-  app.keys = Object.keys(process.env)
-    .filter(k => k.startsWith("COOKIE_KEY_"))
-    .map(k => process.env[k])
+// set up top level koa middleware
+app.use(koaBody({ multipart: true }))
+app.use(logger())
 
-  app.use(koaBody({ multipart: true }))
-  app.use(logger())
-  app.use(router(app).routes())
+// api routes
+app.use(api.routes())
 
-  return app.listen(process.env.PORT || 4001)
-}
+module.exports = app.listen(process.env.PORT || 4001)

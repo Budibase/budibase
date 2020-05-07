@@ -30,34 +30,9 @@
   let selectedCategory = categories[0]
 
   const onComponentChosen = component => {
-    if (component.template) {
-      // onTemplateChosen(component.template)
-    } else {
-      store.addChildComponent(component._component)
-      toggleTab()
-    }
+    store.addChildComponent(component._component)
+    toggleTab()
   }
-
-  // const onTemplateInstanceChosen = () => {
-  //   selectedComponent = null
-  //   const instance = templateInstances.find(
-  //     i => i.name === selectedTemplateInstance
-  //   )
-  //   store.addTemplatedComponent(instance.props)
-  //   toggleTab()
-  // }
-
-  // $: templatesByComponent = groupBy(t => t.component)($store.templates)
-  // $: standaloneTemplates = pipe(
-  //   templatesByComponent,
-  //   [
-  //     values,
-  //     flatten,
-  //     filter(t => !$store.components.some(c => c.name === t.component)),
-  //     map(t => ({ name: splitName(t.component).componentName, template: t })),
-  //     uniqBy(t => t.name),
-  //   ]
-  // )
 </script>
 
 <div class="root">
@@ -77,25 +52,6 @@
       {toggleTab} />
   </div>
 </div>
-
-<!-- <ConfirmDialog
-  bind:this={selectTemplateDialog}
-  title="Choose Template"
-  onCancel={() => (selectedComponent = null)}
-  onOk={onTemplateInstanceChosen}>
-  {#each templateInstances.map(i => i.name) as instance}
-    <div class="uk-margin uk-grid-small uk-child-width-auto uk-grid">
-      <label>
-        <input
-          class="uk-radio"
-          type="radio"
-          bind:group={selectedTemplateInstance}
-          value={instance} />
-        <span class="template-instance-label">{instance}</span>
-      </label>
-    </div>
-  {/each}
-</ConfirmDialog> -->
 
 <style>
   .tabs {
