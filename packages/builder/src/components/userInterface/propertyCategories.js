@@ -1,75 +1,102 @@
-import ColorPicker from "../common/Colorpicker.svelte"
 import Input from "../common/Input.svelte"
-import TempSelect from "./TempSelect.svelte"
+import OptionSelect from "./OptionSelect.svelte"
 /*
-  TODO: all strings types are really inputs and could be typed as such
-  TODO: Options types need option items
   TODO: Allow for default values for all properties
 */
 
 export const general = {
-  text: { control: Input }
+  text: { control: Input },
 }
 
 export const layout = {
-  flexDirection: { label: "Direction", control: "string" },
-  justifyContent: { label: "Justify", control: "string" },
-  alignItems: { label: "Align", control: "string" },
-  flexWrap: { label: "Wrap", control: "options" },
+  flexDirection: {
+    label: "Direction",
+    control: OptionSelect,
+    initialValue: "columnReverse",
+    options: [
+      { label: "row" },
+      { label: "row-reverse", value: "rowReverse" },
+      { label: "column" },
+      { label: "column-reverse", value: "columnReverse" },
+    ],
+  },
+  justifyContent: { label: "Justify", control: Input },
+  alignItems: { label: "Align", control: Input },
+  flexWrap: {
+    label: "Wrap",
+    control: OptionSelect,
+    options: [{ label: "wrap" }, { label: "no wrap", value: "noWrap" }],
+  },
 }
 
 export const spacing = {
-  padding: { control: "string" },
-  margin: { control: "string" },
+  padding: { control: Input },
+  margin: { control: Input },
 }
 
 export const size = {
-  width: { control: "string" },
-  height: { control: "string" },
-  minWidth: { label: "Min W", control: "string" },
-  minHeight: { label: "Min H", control: "string" },
-  maxWidth: { label: "Max W", control: "string" },
-  maxHeight: { label: "Max H", control: "string" },
-  overflow: { control: "string" }, //custom
+  width: { control: Input },
+  height: { control: Input },
+  minWidth: { label: "Min W", control: Input },
+  minHeight: { label: "Min H", control: Input },
+  maxWidth: { label: "Max W", control: Input },
+  maxHeight: { label: "Max H", control: Input },
+  overflow: { control: Input }, //custom
 }
 
 export const position = {
-  position: { control: "options" },
+  position: { control: Input },
 }
 
 export const typography = {
-  font: { control: "options" },
-  weight: { control: "options" },
-  size: { control: "string" },
-  lineHeight: { label: "Line H", control: "string" },
-  color: { control: "colour" },
-  align: { control: "string" }, //custom
-  transform: { control: "string" }, //custom
-  style: { control: "string" }, //custom
+  font: { control: Input },
+  weight: { control: Input },
+  size: { control: Input },
+  lineHeight: { label: "Line H", control: Input },
+  color: {
+    control: OptionSelect,
+    options: [{ label: "red" }, { label: "blue" }, { label: "green" }],
+  },
+  align: { control: Input }, //custom
+  transform: { control: Input }, //custom
+  style: { control: Input }, //custom
 }
 
 export const background = {
-  backgroundColor: { label: "Background Color", control: ColorPicker },
+  backgroundColor: { label: "Background Color", control: Input },
   image: { control: Input }, //custom
 }
 
 export const border = {
-  radius: { control: "string" },
-  width: { control: "string" }, //custom
-  color: { control: "colour" },
-  style: { control: "options" },
+  radius: { control: Input },
+  width: { control: Input }, //custom
+  color: { control: Input },
+  style: { control: Input },
 }
 
 export const effects = {
-  opacity: "string",
-  rotate: "string",
-  shadow: "string",
+  opacity: { control: Input },
+  rotate: { control: Input },
+  shadow: { control: Input },
 }
 
 export const transitions = {
-  property: { control: "options" },
-  duration: { control: "string" },
-  ease: { control: "options" },
+  property: { control: Input },
+  duration: { control: Input },
+  ease: { control: Input },
+}
+
+export const all = {
+  general,
+  layout,
+  spacing,
+  size,
+  position,
+  typography,
+  background,
+  border,
+  effects,
+  transitions,
 }
 
 export function excludeProps(props, propsToExclude) {

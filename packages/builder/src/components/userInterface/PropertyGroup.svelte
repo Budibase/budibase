@@ -1,28 +1,27 @@
 <script>
   import { excludeProps } from "./propertyCategories.js"
+  import PropertyControl from "./PropertyControl.svelte"
   export let name = ""
   export let properties = {}
   export let componentInstance = {}
   export let componentDefinition = {}
   export let onPropChanged = () => {}
 
-  let show = true
+  export let show = false
 
   const propExistsOnComponentDef = prop => prop in componentDefinition.props
   const capitalize = name => name[0].toUpperCase() + name.slice(1)
 
-  function onChange(v) {
-    !!v.target ? onPropChanged(v.target.value) : onPropChanged(v)
+  function onChange(key, v) {
+    !!v.target ? onPropChanged(key, v.target.value) : onPropChanged(key, v)
   }
 
   $: propertyDefinition = Object.entries(properties)
-  $: console.log("props group", properties)
   $: icon = show ? "ri-arrow-down-s-fill" : "ri-arrow-right-s-fill"
 </script>
 
-<!-- () => (show = !show) -->
-<div class="property-group-container" on:click={() => {}}>
-  <div class="property-group-name">
+<div class="property-group-container">
+  <div class="property-group-name" on:click={() => (show = !show)}>
     <div class="icon">
       <i class={icon} />
     </div>
@@ -31,17 +30,14 @@
   <div class="property-panel" class:show>
 
     {#each propertyDefinition as [key, definition]}
-      <div class="property-control">
-        {#if propExistsOnComponentDef(key)}
-          <span>{definition.label || capitalize(key)}</span>
-          <svelte:component
-            this={definition.control}
-            value={componentInstance[key]}
-            on:change={onChange}
-            {onChange}
-            {...excludeProps(definition, ['control'])} />
-        {/if}
-      </div>
+      <!-- {#if propExistsOnComponentDef(key)} -->
+      <PropertyControl
+        label={definition.label || capitalize(key)}
+        control={definition.control}
+        value={componentInstance[key]}
+        onChange={value => onChange(key, value)}
+        props={{ ...excludeProps(definition, ['control']) }} />
+      <!-- {/if} -->
     {/each}
   </div>
 </div>
@@ -63,24 +59,24 @@
     flex-flow: row nowrap;
   }
 
+  .name {
+    flex: 1;
+    text-align: left;
+    padding-top: 2px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.14px;
+    color: #393c44;
+  }
+
   .icon {
     flex: 0 0 20px;
     text-align: center;
   }
 
-  .name {
-    flex: 1;
-    text-align: left;
-  }
-
   .property-panel {
     height: 0px;
     overflow: hidden;
-  }
-
-  .property-control {
-    display: flex;
-    flex-flow: row nowrap;
   }
 
   .show {
