@@ -41,25 +41,76 @@ export const size = {
   minHeight: { label: "Min H", control: Input },
   maxWidth: { label: "Max W", control: Input },
   maxHeight: { label: "Max H", control: Input },
-  overflow: { control: Input }, //custom
+  overflow: {
+    control: OptionSelect,
+    options: [
+      { label: "visible" },
+      { label: "auto" },
+      { label: "hidden" },
+      { label: "auto" },
+      { label: "scroll" },
+    ],
+  }, //custom
 }
 
 export const position = {
-  position: { control: Input },
+  position: {
+    control: OptionSelect,
+    options: [
+      { label: "static" },
+      { label: "relative" },
+      { label: "fixed" },
+      { label: "absolute" },
+      { label: "sticky" },
+    ],
+  },
 }
 
 export const typography = {
-  font: { control: Input },
-  weight: { control: Input },
-  size: { control: Input },
+  fontFamily: {
+    label: "Font",
+    control: OptionSelect,
+    options: [
+      { label: "initial" },
+      { label: "Times New Roman" },
+      { label: "Georgia" },
+      { label: "Arial" },
+      { label: "Arial Black" },
+      { label: "Comic Sans MS" },
+      { label: "Impact" },
+      { label: "Lucida Sans Unicode" },
+    ],
+    styleBindingProperty: "font-family",
+  },
+  fontWeight: {
+    label: "weight",
+    control: OptionSelect,
+    options: [
+      { label: "normal" },
+      { label: "bold" },
+      { label: "bolder" },
+      { label: "lighter" },
+    ],
+  },
+  fontSize: { label: "size", control: Input },
   lineHeight: { label: "Line H", control: Input },
   color: {
     control: OptionSelect,
     options: [{ label: "red" }, { label: "blue" }, { label: "green" }],
   },
-  align: { control: Input }, //custom
-  transform: { control: Input }, //custom
-  style: { control: Input }, //custom
+  textAlign: {
+    label: "align",
+    control: OptionSelect,
+    options: [
+      { label: "initial" },
+      { label: "left" },
+      { label: "right" },
+      { label: "center" },
+      { label: "justify" },
+    ],
+  }, //custom
+  textTransform: { label: "transform", control: Input }, //custom
+  fontStyle: { label: "style", control: Input }, //custom
 }
 
 export const background = {
@@ -68,10 +119,10 @@ export const background = {
 }
 
 export const border = {
-  radius: { control: Input },
-  width: { control: Input }, //custom
-  color: { control: Input },
-  style: { control: Input },
+  borderRadius: { label: "radius", control: Input },
+  borderWidth: { label: "width", control: Input }, //custom
+  borderColor: { label: "color", control: Input },
+  borderStyle: { label: "style", control: Input },
 }
 
 export const effects = {

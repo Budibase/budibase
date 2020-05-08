@@ -4,6 +4,9 @@
   export let onChange = value => {}
   export let options = []
   export let initialValue = ""
+  export let styleBindingProperty = ""
+
+  $: bindOptionToStyle = !!styleBindingProperty
 
   onMount(() => {
     if (!value && !!initialValue) {
@@ -17,6 +20,14 @@
   {value}
   on:change={ev => onChange(ev.target.value)}>
   {#each options as { value, label }}
-    <option value={value || label}>{label}</option>
+    {#if bindOptionToStyle}
+      <option
+        style={`${styleBindingProperty}: ${value || label};`}
+        value={value || label}>
+        {label}
+      </option>
+    {:else}
+      <option value={value || label}>{label}</option>
+    {/if}
   {/each}
 </select>
