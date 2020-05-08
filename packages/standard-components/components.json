@@ -326,6 +326,8 @@
 			},
 			"backgroundColor": "string",
 			"color": "string",
+			"height": "string",
+			"width": "string",
 			"borderWidth": "string",
 			"borderColor": "string",
 			"borderStyle": {
@@ -343,7 +345,7 @@
 				],
 				"default": "none"
 			}
-		},
+		},		
 		"container": true,
 		"tags": [
 			"div",
