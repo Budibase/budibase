@@ -1,4 +1,12 @@
-import { general, layout, typography, background, all } from "./propertyCategories.js"
+import {
+  general,
+  layout,
+  typography,
+  border,
+  size,
+  background,
+  all,
+} from "./propertyCategories.js"
 
 export default {
   categories: [
@@ -13,7 +21,7 @@ export default {
           icon: 'ri-layout-row-fill',
           commonProps: {},
           children: [],
-          properties: { ...all },
+          properties: { background, size },
         },
         {
           name: 'Text',
@@ -27,9 +35,7 @@ export default {
               description: "A component for displaying heading text",
               icon: "ri-heading",
               properties: {
-                general,
-                layout,
-                typography,
+               ...all
               },
             },
             {
@@ -37,7 +43,7 @@ export default {
               name: 'Paragraph',
               description: "A component for displaying paragraph text.",
               icon: 'ri-paragraph',
-              properties: {}
+              properties: { general, typography },
             }
           ]
         },
@@ -83,7 +89,7 @@ export default {
           description: 'A basic html button that is ready for styling',
           icon: 'ri-radio-button-fill',
           children: [],
-          properties: {},
+          properties: { background, typography, border, size },
         },
         {
           _component: "@budibase/standard-components/icon",
@@ -112,8 +118,8 @@ export default {
           name: 'Card',
           description: 'A basic card component that can contain content and actions.',
           icon: 'ri-layout-bottom-line',
-          properties: {},
-          children: []
+          children: [],
+          properties: { size, background, border },
         },
         {
           name: 'Login',

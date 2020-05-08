@@ -29,7 +29,7 @@
   let selectedCategory = categories[0]
 
   $: components = $store.components
-  $: componentInstance = $store.currentComponentInfo //contains prop values of currently selected component
+  $: componentInstance = $store.currentComponentInfo
   $: componentDefinition = $store.components.find(
     c => c.name === componentInstance._component
   )
@@ -39,8 +39,7 @@
     c => c._component === componentInstance._component
   )
 
-  // OLD PROPS =============================================
-
+  // SCREEN PROPS =============================================
   $: screen_props =
     $store.currentFrontEndType === "page"
       ? getProps($store.currentPreviewItem, ["name", "favicon"])

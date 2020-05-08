@@ -96,7 +96,13 @@ export const typography = {
   lineHeight: { label: "Line H", control: Input },
   color: {
     control: OptionSelect,
-    options: [{ label: "red" }, { label: "blue" }, { label: "green" }],
+    options: [
+      { label: "black" },
+      { label: "red" },
+      { label: "white" },
+      { label: "blue" },
+      { label: "green" },
+    ],
   },
   textAlign: {
     label: "align",
@@ -114,7 +120,17 @@ export const typography = {
 }
 
 export const background = {
-  backgroundColor: { label: "Background Color", control: Input },
+  backgroundColor: {
+    label: "Background Color",
+    control: OptionSelect,
+    options: [
+      { label: "white" },
+      { label: "red" },
+      { label: "blue" },
+      { label: "green" },
+      { label: "black" },
+    ],
+  },
   image: { control: Input }, //custom
 }
 

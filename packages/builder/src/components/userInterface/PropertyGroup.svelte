@@ -1,6 +1,7 @@
 <script>
   import { excludeProps } from "./propertyCategories.js"
   import PropertyControl from "./PropertyControl.svelte"
+
   export let name = ""
   export let properties = {}
   export let componentInstance = {}
@@ -8,6 +9,7 @@
   export let onPropChanged = () => {}
 
   export let show = false
+  let showComponentGroup = false
 
   const propExistsOnComponentDef = prop => prop in componentDefinition.props
   const capitalize = name => name[0].toUpperCase() + name.slice(1)
@@ -16,10 +18,22 @@
     !!v.target ? onPropChanged(key, v.target.value) : onPropChanged(key, v)
   }
 
+  $: {
+    let res = false
+    let componentProps = Object.keys(componentDefinition.props)
+    for (let prop in properties) {
+      if (componentProps.includes(prop)) {
+        showComponentGroup = true
+      }
+      if (showComponentGroup) break
+    }
+  }
+
   $: propertyDefinition = Object.entries(properties)
   $: icon = show ? "ri-arrow-down-s-fill" : "ri-arrow-right-s-fill"
 </script>
 
+<!-- {#if showComponentGroup} -->
 <div class="property-group-container">
   <div class="property-group-name" on:click={() => (show = !show)}>
     <div class="icon">
@@ -41,6 +55,7 @@
     {/each}
   </div>
 </div>
+<!-- {/if} -->
 
 <style>
   .property-group-container {
