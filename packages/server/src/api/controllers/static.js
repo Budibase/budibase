@@ -1,6 +1,9 @@
 const send = require("koa-send")
 const { resolve, join } = require("path")
-const { homedir } = require("os")
+const {
+  budibaseAppsDir,
+  budibaseTempDir,
+} = require("../../utilities/budibaseDir")
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(process.cwd(), "builder")
@@ -12,8 +15,7 @@ exports.serveApp = async function(ctx) {
   // TODO: update homedir stuff to wherever budi is run
   // default to homedir
   const appPath = resolve(
-    homedir(),
-    ".budibase",
+    budibaseAppsDir(),
     ctx.params.appId,
     "public",
     ctx.isAuthenticated ? "main" : "unauthenticated"
@@ -26,8 +28,7 @@ exports.serveComponentLibrary = async function(ctx) {
   // TODO: update homedir stuff to wherever budi is run
   // default to homedir
   let componentLibraryPath = resolve(
-    homedir(),
-    ".budibase",
+    budibaseAppsDir(),
     ctx.params.appId,
     "node_modules",
     decodeURI(ctx.query.library),
@@ -36,8 +37,7 @@ exports.serveComponentLibrary = async function(ctx) {
 
   if (ctx.isDev) {
     componentLibraryPath = join(
-      "/tmp",
-      ".budibase",
+      budibaseTempDir(),
       decodeURI(ctx.query.library),
       "dist"
     )
