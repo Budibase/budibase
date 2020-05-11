@@ -3,10 +3,10 @@ const { exists, readFile, writeFile, ensureDir } = require("fs-extra")
 const chalk = require("chalk")
 const { serverFileName, xPlatHomeDir } = require("../../common")
 const { join } = require("path")
-const initialiseClientDb = require("@budibase/server/db/initialiseClientDb")
+const initialiseClientDb = require("@budibase/server/src/db/initialiseClientDb")
 const Sqrl = require("squirrelly")
 const uuid = require("uuid")
-const CouchDB = require("@budibase/server/db/client")
+const CouchDB = require("@budibase/server/src/db/client")
 
 module.exports = opts => {
   run(opts)

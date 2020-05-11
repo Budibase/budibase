@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest",
-    "test:integration": "jest neo --runInBand",
+    "test:integration": "jest routes --runInBand",
     "test:watch": "jest -w",
     "initialise": "node ../cli/bin/budi init ./myapps -b local -q",
     "budi": "node ../cli/bin/budi",

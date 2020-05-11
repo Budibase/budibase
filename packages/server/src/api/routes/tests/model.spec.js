@@ -10,11 +10,7 @@ describe("/models", () => {
   let server;
 
   beforeAll(async () => {
-    server = await app({
-      config: {
-        port: 3000
-      }
-    });
+    server = app;
     request = supertest(server);
   });
 

@@ -1,5 +1,5 @@
 const supertest = require("supertest");
-const app = require("../../../../app");
+const app = require("../../../app");
 const { createInstanceDatabase, createModel } = require("./couchTestUtils");
 
 const TEST_INSTANCE_ID = "testing-123";
@@ -20,11 +20,7 @@ describe("/records", () => {
   let db;
 
   beforeAll(async () => {
-    server = await app({
-      config: {
-        port: 3000
-      }
-    });
+    server = app;
     request = supertest(server);
   });
 
