@@ -1,10 +1,11 @@
 const CouchDB = require("../../db")
+const uuid = require("uuid")
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name
-
+  const instanceId = `app_${ctx.params.applicationId.substring(6)}_inst_${uuid.v4()}`
   const { clientId, applicationId } = ctx.params
-  const db = new CouchDB(instanceName)
+  const db = new CouchDB(instanceId)
   await db.put({
     _id: "_design/database",
     metadata: {
@@ -31,7 +32,7 @@ exports.create = async function(ctx) {
   const clientDatabaseId = `client-${clientId}`
   const clientDb = new CouchDB(clientDatabaseId)
   const budibaseApp = await clientDb.get(applicationId)
-  const instance = { id: instanceName, name: instanceName }
+  const instance = { id: instanceId, name: instanceName }
   budibaseApp.instances.push(instance)
   await clientDb.put(budibaseApp)
 

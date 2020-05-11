@@ -1,5 +1,6 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/static")
+const { budibaseTempDir } = require("../../utilities/budibaseDir")
 
 const router = Router()
 
@@ -9,7 +10,7 @@ router
 
     // Serving the client library from your local dir in dev
     if (ctx.isDev && ctx.file.startsWith("budibase-client")) {
-      ctx.devPath = "/tmp/.budibase"
+      ctx.devPath = budibaseTempDir()
     }
 
     await next()
