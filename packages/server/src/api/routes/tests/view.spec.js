@@ -11,11 +11,7 @@ describe("/views", () => {
   let db;
 
   beforeAll(async () => {
-    server = await app({
-      config: {
-        port: 3000
-      }
-    });
+    server = app;
     request = supertest(server);
   });
 
@@ -29,7 +25,7 @@ describe("/views", () => {
     });
 
     afterEach(async () => {
-      await db.destroy();
+      db && await db.destroy();
     });
 
     it("returns a success message when the view is successfully created", done => {
