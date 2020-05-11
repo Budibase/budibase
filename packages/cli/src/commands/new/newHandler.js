@@ -12,19 +12,17 @@ const { exec } = require("child_process")
 
 module.exports = opts => {
   run(opts)
-  console.log(chalk.green(`Budibase app ${opts.name} created!`))
 }
 
 const run = async opts => {
-  console.log(opts)
   try {
     opts.dir = xPlatHomeDir(opts.dir)
-    console.log(resolve(opts.dir))
     const bbconfig = dotenv.config({ path: resolve(opts.dir, ".env") })
     console.log(bbconfig)
     await createAppInstance(opts)
     await createEmptyAppPackage(opts)
     exec(`cd ${join(opts.dir, opts.applicationId)} && npm install`)
+    console.log(chalk.green(`Budibase app ${opts.name} created!`))
   } catch (error) {
     console.error(chalk.red("Error creating new app", error))
   }
@@ -41,6 +39,7 @@ const createAppInstance = async opts => {
 
   await createApplication(createAppCtx)
   opts.applicationId = createAppCtx.body.id
+  console.log(chalk.green(`Application Created: ${createAppCtx.body.id}`))
   await createInstance({
     params: {
       clientId: process.env.CLIENT_ID,
@@ -50,6 +49,7 @@ const createAppInstance = async opts => {
       body: { name: `dev-${process.env.CLIENT_ID}` },
     },
   })
+  console.log(chalk.green(`Default Instance Created`))
 }
 
 const createEmptyAppPackage = async opts => {
