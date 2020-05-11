@@ -2,8 +2,6 @@ const CouchDB = require("../../db")
 const { homedir } = require("os")
 const { resolve, join } = require("path")
 
-const isDev = process.env.NODE_ENV !== "production"
-
 exports.fetchAppComponentDefinitions = async function(ctx) {
   const db = new CouchDB(`client-${ctx.params.clientId}`)
   const app = await db.get(ctx.params.appId)
@@ -17,7 +15,7 @@ exports.fetchAppComponentDefinitions = async function(ctx) {
         "node_modules"
       )
 
-      if (isDev) {
+      if (ctx.isDev) {
         appDirectory = "/tmp/.budibase"
       }
 
