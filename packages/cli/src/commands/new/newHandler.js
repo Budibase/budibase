@@ -4,6 +4,7 @@ const createInstance = require("@budibase/server/src/api/controllers/instance")
   .create
 const createApplication = require("@budibase/server/src/api/controllers/application")
   .create
+const buildPage = require("@budibase/server/src/utilities/builder/buildPage")
 const { copy, readJSON, writeJSON, remove, exists } = require("fs-extra")
 const { resolve, join } = require("path")
 const chalk = require("chalk")
@@ -70,14 +71,4 @@ const createEmptyAppPackage = async opts => {
   packageJson.name = opts.name
 
   await writeJSON(packageJsonPath, packageJson)
-
-  const removePlaceholder = async (...args) => {
-    await remove(join(newAppFolder, ...args, "placeholder"))
-  }
-
-  await removePlaceholder("pages", "main", "screens")
-  await removePlaceholder("pages", "unauthenticated", "screens")
-  await removePlaceholder("public", "shared")
-  await removePlaceholder("public", "main")
-  await removePlaceholder("public", "unauthenticated")
 }
