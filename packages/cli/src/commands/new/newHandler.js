@@ -18,8 +18,9 @@ const run = async opts => {
   console.log(opts)
   try {
     opts.dir = xPlatHomeDir(opts.dir)
-    process.chdir(opts.dir)
-    dotenv.config()
+    console.log(resolve(opts.dir))
+    const bbconfig = dotenv.config({ path: resolve(opts.dir, ".env") })
+    console.log(bbconfig)
     await createAppInstance(opts)
     await createEmptyAppPackage(opts)
     exec(`cd ${join(opts.dir, opts.applicationId)} && npm install`)
