@@ -108,7 +108,6 @@ const setPackage = (store, initial) => async pkg => {
   initial.appId = pkg.application._id
 
   store.set(initial)
-  console.log(initial)
   return initial
 }
 
@@ -359,7 +358,7 @@ const addChildComponent = store => (componentToAdd, presetName) => {
 
     const newComponent = createProps(component, {
       ...presetProps,
-      instanceId
+      _instanceId: instanceId
     }, state)
 
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(

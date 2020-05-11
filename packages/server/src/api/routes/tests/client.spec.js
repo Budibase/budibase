@@ -1,5 +1,5 @@
 const supertest = require("supertest");
-const app = require("../../../../app");
+const app = require("../../../app");
 const { createClientDatabase, destroyClientDatabase } = require("./couchTestUtils")
 
 
@@ -11,11 +11,7 @@ describe("/clients", () => {
   let db;
 
   beforeAll(async () => {
-    server = await app({
-      config: {
-        port: 3000
-      }
-    });
+    server = app
     request = supertest(server);
   });
 

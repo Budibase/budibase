@@ -291,6 +291,13 @@
 			}
 		}
 	},
+	"datamap": {
+		"description": "shiny chart",
+		"data": true,
+		"props": {
+			"model": "models"
+		}
+	},
 	"datachart": {
 		"description": "shiny chart",
 		"data": true,

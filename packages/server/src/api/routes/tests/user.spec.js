@@ -1,5 +1,5 @@
 const supertest = require("supertest");
-const app = require("../../../../app");
+const app = require("../../../app");
 const { 
   createInstanceDatabase
 } = require("./couchTestUtils");
@@ -15,11 +15,7 @@ describe("/users", () => {
   let server;
 
   beforeAll(async () => {
-    server = await app({
-      config: {
-        port: 3000
-      }
-    });
+    server = app
     request = supertest(server);
   });
 
@@ -45,8 +41,8 @@ describe("/users", () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
-            const createdUser = res.body[0];
-            expect(createdUser.name).toEqual(TEST_USER.name);            
+            const user = res.body[0];
+            expect(user.name).toEqual(TEST_USER.name);            
             done();
         });
       })
