@@ -1,6 +1,8 @@
 const { app, BrowserWindow } = require('electron');
+const { join } = require("path")
+const { homedir } = require("os")
 
-require("dotenv").config()
+require("dotenv").config({ path: join(homedir(), ".budibase", ".env") })
 
 const DEV_URL = "http://localhost:4001";
 

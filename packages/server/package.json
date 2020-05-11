@@ -7,9 +7,9 @@
     "test": "jest",
     "test:integration": "jest routes --runInBand",
     "test:watch": "jest -w",
-    "initialise": "node ../cli/bin/budi init ./myapps -b local -q",
+    "initialise": "node ../cli/bin/budi init -b local -q",
     "budi": "node ../cli/bin/budi",
-    "dev:builder": "nodemon src/index",
+    "dev:builder": "nodemon ../cli/bin/budi run",
     "electron": "electron src/electron.js",
     "lint": "eslint --fix src/"
   },
