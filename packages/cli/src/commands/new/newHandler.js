@@ -1,8 +1,8 @@
 const { xPlatHomeDir } = require("../../common")
 const dotenv = require("dotenv")
-const createInstance = require("@budibase/server/api/controllers/instance")
+const createInstance = require("@budibase/server/src/api/controllers/instance")
   .create
-const createApplication = require("@budibase/server/api/controllers/application")
+const createApplication = require("@budibase/server/src/api/controllers/application")
   .create
 const { copy, readJSON, writeJSON, remove, exists } = require("fs-extra")
 const { resolve, join } = require("path")
