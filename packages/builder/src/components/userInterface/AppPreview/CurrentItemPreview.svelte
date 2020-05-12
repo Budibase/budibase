@@ -25,7 +25,7 @@
     )
   $: hasComponent = !!$store.currentPreviewItem
   $: {
-    style = ""
+    styles = ""
     // Apply the CSS from the currently selected page and its screens
     const currentPage = $store.pages[$store.currentPageName]
     styles += currentPage._css
@@ -35,10 +35,10 @@
     styles = styles
   }
 
-  $: stylesheetLinks = pipe($store.pages.stylesheets, [
-    map(s => `<link rel="stylesheet" href="${s}"/>`),
-    join("\n"),
-  ])
+  $: stylesheetLinks = pipe(
+    $store.pages.stylesheets,
+    [map(s => `<link rel="stylesheet" href="${s}"/>`), join("\n")]
+  )
 
   $: screensExist =
     $store.currentPreviewItem._screens &&

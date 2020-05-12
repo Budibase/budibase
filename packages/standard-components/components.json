@@ -12,10 +12,10 @@
 		"props": {
 			"logoUrl": "string",
 			"title": "string",
-			"backgroundColor": "colour",
-			"color": "colour",
+			"backgroundColor": "string",
+			"color": "string",
 			"borderWidth": "string",
-			"borderColor": "colour",
+			"borderColor": "string",
 			"borderStyle": "string"
 		}
 	},
@@ -30,8 +30,8 @@
 			"className": "string",
 			"disabled": "bool",
 			"onClick": "event",
-			"background": "colour",
-			"color": "colour",
+			"background": "string",
+			"color": "string",
 			"border": "string",
 			"padding": "string",
 			"hoverColor": "string",
@@ -167,7 +167,7 @@
 		"children": false,
 		"props": {
 			"text": "string",
-			"color": "colour",
+			"color": "string",
 			"fontFamily": {
 				"type": "options",
 				"default": "initial",
@@ -259,7 +259,7 @@
 		"props": {
 			"icon": "string",
 			"fontSize": "string",
-			"color": "colour"
+			"color": "string"
 		}
 	},
 	"datatable": {
@@ -328,8 +328,8 @@
 			"url": "string",
 			"openInNewTab": "bool",
 			"text": "string",
-			"color": "colour",
-			"hoverColor": "colour",
+			"color": "string",
+			"hoverColor": "string",
 			"underline": "bool",
 			"fontSize": "string",
 			"fontFamily": {
@@ -416,7 +416,6 @@
 		"description": "An HTML H1 - H6 tag",
 		"props": {
 			"className": "string",
-			"color":"colour",
 			"text": "string",
 		"type": {
 				"type": "options",
