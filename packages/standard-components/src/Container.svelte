@@ -6,6 +6,8 @@
   export let type = "div"
   export let backgroundColor
   export let color
+  export let width
+  export let height
   export let borderWidth
   export let borderColor
   export let borderStyle
@@ -18,6 +20,8 @@
   $: cssVariables = {
     backgroundColor,
     color,
+    height,
+    width,
     borderWidth,
     borderColor,
     borderStyle,
@@ -106,6 +110,14 @@
 
   .color {
     color: var(--color);
+  }
+
+  .height {
+    height: var(--height);
+  }
+
+  .width {
+    width: var(--width);
   }
 
   .borderColor {
