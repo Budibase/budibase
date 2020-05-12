@@ -25,6 +25,7 @@
     )
   $: hasComponent = !!$store.currentPreviewItem
   $: {
+    style = ""
     // Apply the CSS from the currently selected page and its screens
     const currentPage = $store.pages[$store.currentPageName]
     styles += currentPage._css
