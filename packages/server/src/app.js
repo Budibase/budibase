@@ -16,6 +16,7 @@ if (env.LOGGER !== "off") app.use(logger())
 app.use(api.routes())
 
 module.exports = async port => {
+  port = port || env.PORT || 4001
   const server = http.createServer(app.callback())
   return new Promise((resolve, reject) => {
     server.on("error", e => {
