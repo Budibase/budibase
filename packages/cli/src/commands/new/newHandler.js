@@ -1,11 +1,6 @@
 const { xPlatHomeDir } = require("../../common")
 const dotenv = require("dotenv")
-const createInstance = require("@budibase/server/src/api/controllers/instance")
-  .create
-const createApplication = require("@budibase/server/src/api/controllers/application")
-  .create
-const buildPage = require("@budibase/server/src/utilities/builder/buildPage")
-const { copy, readJSON, writeJSON, remove, exists } = require("fs-extra")
+const { copy, readJSON, writeJSON, exists } = require("fs-extra")
 const { resolve, join } = require("path")
 const chalk = require("chalk")
 const { exec } = require("child_process")
@@ -37,10 +32,18 @@ const createAppInstance = async opts => {
     body: {},
   }
 
-  await createApplication(createAppCtx)
-  opts.applicationId = createAppCtx.body.id
-  console.log(chalk.green(`Application Created: ${createAppCtx.body.id}`))
-  await createInstance({
+  // this cannot be a top level require as it will cause
+  // the environment module to be loaded prematurely
+  const appController = require("@budibase/server/src/api/controllers/application")
+  await appController.create(createAppCtx)
+
+  opts.applicationId = createAppCtx.body._id
+  console.log(chalk.green(`Application Created: ${createAppCtx.body._id}`))
+
+  // this cannot be a top level require as it will cause
+  // the environment module to be loaded prematurely
+  const instanceController = require("@budibase/server/src/api/controllers/instance")
+  await instanceController.create({
     params: {
       clientId: process.env.CLIENT_ID,
       applicationId: opts.applicationId,
@@ -49,6 +52,7 @@ const createAppInstance = async opts => {
       body: { name: `dev-${process.env.CLIENT_ID}` },
     },
   })
+
   console.log(chalk.green(`Default Instance Created`))
 }
 
