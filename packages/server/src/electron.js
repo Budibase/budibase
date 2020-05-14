@@ -1,9 +1,11 @@
 const { app, BrowserWindow } = require("electron");
-const { join } = require("path")
-const { homedir } = require("os")
+const { join } = require("path");
+const { homedir } = require("os");
 const isDev = require("electron-is-dev");
+const { autoUpdater } = require("electron-updater");
 
-require("dotenv").config({ path: join(homedir(), ".budibase", ".env") })
+
+require("dotenv").config({ path: join(homedir(), ".budibase", ".env") });
 
 
 const APP_URL = "http://localhost:4001";
@@ -15,7 +17,9 @@ function createWindow() {
   win.setTitle(APP_TITLE);
   win.loadURL(APP_URL);
   if (isDev) {
-    win.webContents.openDevTools()
+    win.webContents.openDevTools();
+  } else {
+    autoUpdater.checkForUpdatesAndNotify();
   }
 }
 

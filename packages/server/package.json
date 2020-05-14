@@ -11,12 +11,14 @@
     "appId": "com.budibase.builder",
     "productName": "Budibase Builder",
     "mac": {
-			"category": "public.app-category.developer-tools"
-		},
-		"linux": {
-			"target": ["AppImage"],
-			"category": "Development"
-		}
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Development"
+    }
   },
   "scripts": {
     "test": "jest",
@@ -27,7 +29,7 @@
     "dev:builder": "nodemon ../cli/bin/budi run",
     "electron": "electron src/electron.js",
     "build:electron": "electron-builder",
-    "build:electron:all": "electron-builder -mwl",
+    "publish:electron": "electron-builder -mwl --publish always",
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint --fix src/"
   },
@@ -44,6 +46,7 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
     "electron-is-dev": "^1.2.0",
+    "electron-updater": "^4.3.1",
     "fs-extra": "^8.1.0",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.7.0",
@@ -66,7 +69,6 @@
     "@jest/test-sequencer": "^24.8.0",
     "electron": "^8.2.5",
     "electron-builder": "^22.6.0",
-    "electron-updater": "^4.3.1",
     "eslint": "^6.8.0",
     "jest": "^24.8.0",
     "nodemon": "^2.0.2",
