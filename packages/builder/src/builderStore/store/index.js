@@ -354,7 +354,7 @@ const addChildComponent = store => (componentToAdd, presetName) => {
 
     const presetProps = presetName ? component.presets[presetName] : {}
 
-    const instanceId = get(backendUiStore).selectedDatabase.id;
+    const instanceId = get(backendUiStore).selectedDatabase._id;
 
     const newComponent = createProps(component, {
       ...presetProps,

@@ -1,10 +1,15 @@
 const CouchDB = require("../../db")
 const uuid = require("uuid")
+const env = require("../../environment")
+
+const clientDatabaseId = clientId => `client-${clientId}`
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name
-  const instanceId = `app_${ctx.params.applicationId.substring(6)}_inst_${uuid.v4()}`
-  const { clientId, applicationId } = ctx.params
+  const uid = uuid.v4().replace(/-/g, "")
+  const instanceId = `${ctx.params.applicationId.substring(0,7)}_${uid}`
+  const { applicationId } = ctx.params
+  const clientId = env.CLIENT_ID
   const db = new CouchDB(instanceId)
   await db.put({
     _id: "_design/database",
@@ -29,18 +34,15 @@ exports.create = async function(ctx) {
   })
 
   // Add the new instance under the app clientDB
-  const clientDatabaseId = `client-${clientId}`
-  const clientDb = new CouchDB(clientDatabaseId)
+  const clientDb = new CouchDB(clientDatabaseId(clientId))
   const budibaseApp = await clientDb.get(applicationId)
-  const instance = { id: instanceId, name: instanceName }
+  const instance = { _id: instanceId, name: instanceName }
   budibaseApp.instances.push(instance)
   await clientDb.put(budibaseApp)
 
-  ctx.body = {
-    message: `Instance Database ${instanceName} successfully provisioned.`,
-    status: 200,
-    instance,
-  }
+  ctx.status = 200
+  ctx.message = `Instance Database ${instanceName} successfully provisioned.`
+  ctx.body = instance
 }
 
 exports.destroy = async function(ctx) {
@@ -50,15 +52,13 @@ exports.destroy = async function(ctx) {
 
   // remove instance from client application document
   const { metadata } = designDoc
-  const clientDb = new CouchDB(metadata.clientId)
+  const clientDb = new CouchDB(clientDatabaseId(metadata.clientId))
   const budibaseApp = await clientDb.get(metadata.applicationId)
   budibaseApp.instances = budibaseApp.instances.filter(
     instance => instance !== ctx.params.instanceId
   )
   await clientDb.put(budibaseApp)
 
-  ctx.body = {
-    message: `Instance Database ${ctx.params.instanceId} successfully destroyed.`,
-    status: 200,
-  }
+  ctx.status = 200
+  ctx.message = `Instance Database ${ctx.params.instanceId} successfully destroyed.`
 }

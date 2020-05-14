@@ -18,6 +18,7 @@ const {
 } = require("./routes")
 
 const router = new Router()
+const env = require("../environment")
 
 router
   .use(
@@ -34,9 +35,9 @@ router
   .use(async (ctx, next) => {
     ctx.config = {
       latestPackagesFolder: budibaseAppsDir(),
-      jwtSecret: process.env.JWT_SECRET,
+      jwtSecret: env.JWT_SECRET,
     }
-    ctx.isDev = process.env.NODE_ENV !== "production"
+    ctx.isDev = env.NODE_ENV !== "production" && env.NODE_ENV !== "jest"
     await next()
   })
   .use(authenticated)
@@ -46,7 +47,7 @@ router.use(async (ctx, next) => {
   try {
     await next()
   } catch (err) {
-    console.trace(err)
+    if (env.LOGGER !== "off") console.trace(err)
     ctx.status = err.status || err.statusCode || 500
     ctx.body = {
       message: err.message,

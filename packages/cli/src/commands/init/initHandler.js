@@ -3,7 +3,7 @@ const { exists, readFile, writeFile, ensureDir } = require("fs-extra")
 const chalk = require("chalk")
 const { serverFileName, xPlatHomeDir } = require("../../common")
 const { join } = require("path")
-const initialiseClientDb = require("@budibase/server/src/db/initialiseClientDb")
+const { create } = require("@budibase/server/src/db/clientDb")
 const Sqrl = require("squirrelly")
 const uuid = require("uuid")
 const CouchDB = require("@budibase/server/src/db/client")
@@ -68,8 +68,7 @@ const createClientDatabase = async opts => {
     }
   }
 
-  const db = new CouchDB(`client-${opts.clientId}`)
-  await initialiseClientDb(db)
+  await create(opts.clientId)
 }
 
 const createDevEnvFile = async opts => {

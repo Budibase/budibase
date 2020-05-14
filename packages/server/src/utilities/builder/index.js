@@ -9,6 +9,7 @@ const {
   rmdir,
 } = require("fs-extra")
 const { join, dirname, resolve } = require("path")
+const env = require("../../environment")
 
 const buildPage = require("./buildPage")
 const getPages = require("./getPages")
@@ -31,7 +32,7 @@ module.exports.getPackageForBuilder = async (config, application) => {
 
     application,
 
-    clientId: process.env.CLIENT_ID,
+    clientId: env.CLIENT_ID,
   }
 }
 

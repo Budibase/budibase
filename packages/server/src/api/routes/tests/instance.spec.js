@@ -1,22 +1,19 @@
-const supertest = require("supertest");
-const app = require("../../../app");
 const { 
-  createInstanceDatabase, 
+  createInstance, 
   createClientDatabase,
-  destroyClientDatabase
+  createApplication,
+  supertest,
+  defaultHeaders
 } = require("./couchTestUtils");
 
-
-const TEST_INSTANCE_ID = "testing-123";
-const TEST_APP_ID = "test-app";
-
 describe("/instances", () => {
-  let request;
-  let server;
-
+  let TEST_APP_ID;
+  let server
+  let request
   beforeAll(async () => {
-    server = app
-    request = supertest(server);
+    ({ request, server } = await supertest())
+    await createClientDatabase(request);
+    TEST_APP_ID = (await createApplication(request))._id
   });
 
   afterAll(async () => {
@@ -25,48 +22,30 @@ describe("/instances", () => {
 
   describe("create", () => {
 
-    beforeEach(async () => {
-      clientDb = await createClientDatabase();
-    });
-
-    afterEach(async () => {
-      await destroyClientDatabase();
-    });
-
-    it("returns a success message when the instance database is successfully created", done => {
-      request
-        .post(`/api/testing/${TEST_APP_ID}/instances`)
-        .send({ name: TEST_INSTANCE_ID })
-        .set("Accept", "application/json")
+    it("returns a success message when the instance database is successfully created", async () => {
+      const res = await request
+        .post(`/api/${TEST_APP_ID}/instances`)
+        .send({ name: "test-instance" })
+        .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(200)
-        .end(async (err, res) => {
-            expect(res.body.message).toEqual("Instance Database testing-123 successfully provisioned.");            
-            done();
-        });
-      })
-    });
+
+      expect(res.res.statusMessage).toEqual("Instance Database test-instance successfully provisioned.");
+      expect(res.body._id).toBeDefined();
+      
+    })
+  });
 
   describe("destroy", () => {
-    beforeEach(async () => {
-      await createClientDatabase();
-      instanceDb = await createInstanceDatabase(TEST_INSTANCE_ID);
-    });
 
-    afterEach(async () => {
-      await destroyClientDatabase();
-    });
-
-    it("returns a success message when the instance database is successfully deleted", done => {
-      request
-        .delete(`/api/instances/${TEST_INSTANCE_ID}`)
-        .set("Accept", "application/json")
-        .expect('Content-Type', /json/)
+    it("returns a success message when the instance database is successfully deleted", async () => {
+      const instance = await createInstance(request, TEST_APP_ID);
+      const res = await request
+        .delete(`/api/instances/${instance._id}`)
+        .set(defaultHeaders)
         .expect(200)
-        .end(async (err, res) => {
-            expect(res.body.message).toEqual("Instance Database testing-123 successfully destroyed.");            
-            done();
-        });
-      })
-    });
+
+      expect(res.res.statusMessage).toEqual(`Instance Database ${instance._id} successfully destroyed.`);
+    })
+  });
 });
