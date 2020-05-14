@@ -9,7 +9,14 @@
   },
   "build": {
     "appId": "com.budibase.builder",
-    "productName": "Budibase Builder"
+    "productName": "Budibase Builder",
+    "mac": {
+			"category": "public.app-category.developer-tools"
+		},
+		"linux": {
+			"target": ["AppImage"],
+			"category": "Development"
+		}
   },
   "scripts": {
     "test": "jest",
