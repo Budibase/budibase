@@ -36,6 +36,7 @@ jobs:
   #         NODE_AUTH_TOKEN: ${{secrets.npm_token}}
 
   publish-electron:
+    needs: [build]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
