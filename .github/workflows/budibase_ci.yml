@@ -27,10 +27,10 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: yarn
-    - run: yarn lint
+    # - run: yarn lint
     - run: yarn bootstrap
     - run: yarn build
-    - run: yarn test
+    # - run: yarn test
       env:
         CI: true
         name: Budibase CI
