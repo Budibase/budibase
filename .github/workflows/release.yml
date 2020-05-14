@@ -1,0 +1,53 @@
+name: Budibase Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        node-version: [10.x]
+        
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: yarn 
+      # - run: yarn lint 
+      - run: yarn bootstrap 
+      - run: yarn build 
+      # - run: yarn test
+
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+
+    - name: Build/release Electron app
+      uses: samuelmeuli/action-electron-builder@v1
+      with:
+        # GitHub token, automatically provided to the action
+        # (No need to define this secret in the repo settings)
+        github_token: ${{ secrets.github_token }}
+
+        # release the app after building
+        package_root: packages/server
+        release: true  
+        # mac_certs: ${{ secrets.mac_certs }}
+        # mac_certs_password: ${{ secrets.mac_certs_password }}
+        # windows_certs: ${{ secrets.windows_certs }}
+        # windows_certs_password: ${{ secrets.windows_certs_password }}
+        # snapcraft_token: ${{ secrets.snapcraft_token }}
