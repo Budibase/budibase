@@ -3,6 +3,10 @@
   "version": "0.0.32",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Budibase/budibase.git"
+  },
   "build": {
     "appId": "com.budibase.builder",
     "productName": "Budibase Builder"
