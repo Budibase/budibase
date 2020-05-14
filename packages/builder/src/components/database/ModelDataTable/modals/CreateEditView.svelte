@@ -24,7 +24,7 @@
 
   let currentSnippetEditor = SNIPPET_EDITORS.MAP
 
-  $: instanceId = $backendUiStore.selectedDatabase.id
+  $: instanceId = $backendUiStore.selectedDatabase._id
 
   function deleteView() {}
 

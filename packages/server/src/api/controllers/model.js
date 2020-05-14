@@ -1,4 +1,5 @@
 const CouchDB = require("../../db")
+const uuid = require("uuid")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
@@ -11,17 +12,21 @@ exports.fetch = async function(ctx) {
 
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
-  const newModel = await db.post({
+  const newModel = {
     type: "model",
     ...ctx.request.body,
-  })
+    _id: uuid.v4().replace(/-/g, ""),
+  }
+
+  const result = await db.post(newModel)
+  newModel._rev = result.rev
 
   const designDoc = await db.get("_design/database")
   designDoc.views = {
     ...designDoc.views,
-    [`all_${newModel.id}`]: {
+    [`all_${newModel._id}`]: {
       map: `function(doc) {
-        if (doc.modelId === "${newModel.id}") {
+        if (doc.modelId === "${newModel._id}") {
           emit(doc[doc.key], doc._id); 
         }
       }`,
@@ -29,15 +34,9 @@ exports.create = async function(ctx) {
   }
   await db.put(designDoc)
 
-  ctx.body = {
-    message: `Model ${ctx.request.body.name} created successfully.`,
-    status: 200,
-    model: {
-      _id: newModel.id,
-      _rev: newModel.rev,
-      ...ctx.request.body,
-    },
-  }
+  ctx.status = 200
+  ctx.message = `Model ${ctx.request.body.name} created successfully.`
+  ctx.body = newModel
 }
 
 exports.update = async function(ctx) {}
@@ -45,8 +44,8 @@ exports.update = async function(ctx) {}
 exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
 
-  const model = await db.remove(ctx.params.modelId, ctx.params.revId)
-  const modelViewId = `all_${model.id}`
+  await db.remove(ctx.params.modelId, ctx.params.revId)
+  const modelViewId = `all_${ctx.params.modelId}`
 
   // Delete all records for that model
   const records = await db.query(`database/${modelViewId}`)
@@ -59,8 +58,6 @@ exports.destroy = async function(ctx) {
   delete designDoc.views[modelViewId]
   await db.put(designDoc)
 
-  ctx.body = {
-    message: `Model ${model.id} deleted.`,
-    status: 200,
-  }
+  ctx.status = 200
+  ctx.message = `Model ${ctx.params.modelId} deleted.`
 }

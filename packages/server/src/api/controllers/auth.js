@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken")
 const CouchDB = require("../../db")
 const bcrypt = require("../../utilities/bcrypt")
+const env = require("../../environment")
 
 exports.authenticate = async ctx => {
   const { username, password } = ctx.request.body
@@ -13,7 +14,7 @@ exports.authenticate = async ctx => {
   const appId = referer[3]
 
   // find the instance that the user is associated with
-  const db = new CouchDB(`client-${process.env.CLIENT_ID}`)
+  const db = new CouchDB(`client-${env.CLIENT_ID}`)
   const app = await db.get(appId)
   const instanceId = app.userInstanceMap[username]
 

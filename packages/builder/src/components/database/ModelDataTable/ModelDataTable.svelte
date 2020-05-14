@@ -46,7 +46,7 @@
   async function selectRecord(record) {
     return await api.loadRecord(record.key, {
       appname: $store.appname,
-      instanceId: $backendUiStore.selectedDatabase.id,
+      instanceId: $backendUiStore.selectedDatabase._id,
     })
   }
 
@@ -60,7 +60,7 @@
   let views = []
   let currentPage = 0
 
-  $: instanceId = $backendUiStore.selectedDatabase.id
+  $: instanceId = $backendUiStore.selectedDatabase._id
 
   $: {
     if ($backendUiStore.selectedView) {

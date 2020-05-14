@@ -1,8 +1,34 @@
 const CouchDB = require("../../../db")
-const CLIENT_DB_ID = "client-testing"
-const TEST_APP_ID = "test-app"
+const supertest = require("supertest")
+const app = require("../../../app")
 
-exports.createModel = async (instanceId, model) => {
+exports.supertest = async () => {
+  let request
+  let port = 4002
+  let started = false
+  let server
+  while (!started && port < 4020) {
+    try {
+      server = await app(port)
+      started = true
+    } catch (e) {
+      if (e.code === "EADDRINUSE") port = port + 1
+      else throw e
+    }
+  }
+
+  if (!started) throw Error("Application failed to start")
+
+  request = supertest(server)
+  return { request, server }
+}
+
+exports.defaultHeaders = {
+  Accept: "application/json",
+  Authorization: "Basic test-admin-secret",
+}
+
+exports.createModel = async (request, instanceId, model) => {
   model = model || {
     name: "TestModel",
     type: "model",
@@ -11,72 +37,60 @@ exports.createModel = async (instanceId, model) => {
       name: { type: "string" },
     },
   }
-  const db = new CouchDB(instanceId)
-  const response = await db.post(model)
 
-  const designDoc = await db.get("_design/database")
-  designDoc.views = {
-    ...designDoc.views,
-    [`all_${response.id}`]: {
-      map: `function(doc) {
-        if (doc.modelId === "${response.id}") {
-          emit(doc[doc.key], doc._id); 
-        }
-      }`,
-    },
-  }
-  await db.put(designDoc)
-
-  return {
-    ...response,
-    ...model,
-  }
+  const res = await request
+    .post(`/api/${instanceId}/models`)
+    .set(exports.defaultHeaders)
+    .send(model)
+  return res.body
 }
 
-exports.createClientDatabase = async () => {
-  const db = new CouchDB(CLIENT_DB_ID)
-
-  await db.put({
-    _id: "_design/client",
-    views: {
-      by_type: {
-        map: function(doc) {
-          emit([doc.type], doc._id)
-        },
-      }.toString(),
-    },
-  })
-
-  await db.put({
-    _id: TEST_APP_ID,
-    type: "app",
-    instances: [],
-  })
-
-  return db
+exports.createClientDatabase = async request => {
+  const res = await request
+    .post("/api/client")
+    .set(exports.defaultHeaders)
+    .send({})
+  return res.body
 }
 
-exports.destroyClientDatabase = async () => new CouchDB(CLIENT_DB_ID).destroy()
+exports.createApplication = async (request, name = "test_application") => {
+  const res = await request
+    .post("/api/applications")
+    .set(exports.defaultHeaders)
+    .send({
+      name,
+    })
+  return res.body
+}
 
-exports.createInstanceDatabase = async instanceId => {
-  const db = new CouchDB(instanceId)
+exports.destroyClientDatabase = async request => {
+  await request
+    .delete(`/api/client`)
+    .set(exports.defaultHeaders)
+    .send({})
+}
 
-  await db.put({
-    _id: "_design/database",
-    metadata: {
-      clientId: CLIENT_DB_ID,
-      applicationId: TEST_APP_ID,
-    },
-    views: {
-      by_type: {
-        map: function(doc) {
-          emit([doc.type], doc._id)
-        }.toString(),
-      },
-    },
-  })
+exports.createInstance = async (request, appId) => {
+  const res = await request
+    .post(`/api/${appId}/instances`)
+    .set(exports.defaultHeaders)
+    .send({
+      name: "test-instance",
+    })
+  return res.body
+}
 
-  return db
+exports.createUser = async (
+  request,
+  instanceId,
+  username = "bill",
+  password = "bills_password"
+) => {
+  const res = await request
+    .post(`/api/${instanceId}/users`)
+    .set(exports.defaultHeaders)
+    .send({ name: "Bill", username, password })
+  return res.body
 }
 
 exports.insertDocument = async (databaseId, document) => {

@@ -12,7 +12,7 @@
 
   $: currentAppInfo = {
     appname: $store.appname,
-    instanceId: $backendUiStore.selectedDatabase.id,
+    instanceId: $backendUiStore.selectedDatabase._id,
   }
 
   async function fetchUsers() {
@@ -33,7 +33,7 @@
     {#each $backendUiStore.users as user}
       <li>
         <i class="ri-user-4-line" />
-        <button class:active={user.id === $store.currentUserId}>
+        <button class:active={user.username === $store.currentUserName}>
           {user.name}
         </button>
       </li>

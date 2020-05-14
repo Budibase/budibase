@@ -24,23 +24,17 @@ const controller = {
   },
   create: async ctx => {
     const db = new CouchDB(ctx.params.instanceId)
-    const { name, ...viewDefinition } = ctx.request.body
+    const newView = ctx.request.body
 
     const designDoc = await db.get("_design/database")
     designDoc.views = {
       ...designDoc.views,
-      [name]: viewDefinition,
+      [newView.name]: newView,
     }
-    const newView = await db.put(designDoc)
+    await db.put(designDoc)
 
-    ctx.body = {
-      view: {
-        ...ctx.request.body,
-        ...newView,
-      },
-      message: `View ${name} created successfully.`,
-      status: 200,
-    }
+    ctx.body = newView
+    ctx.message = `View ${newView.name} created successfully.`
   },
   destroy: async ctx => {
     const db = new CouchDB(ctx.params.instanceId)

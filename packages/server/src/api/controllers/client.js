@@ -1,36 +1,18 @@
-const CouchDB = require("../../db")
+const { create, destroy } = require("../../db/clientDb")
+const env = require("../../environment")
 
 exports.getClientId = async function(ctx) {
-  ctx.body = process.env.CLIENT_ID
+  ctx.body = env.CLIENT_ID
 }
 
 exports.create = async function(ctx) {
-  const clientId = `client-${ctx.request.body.clientId}`
-  const db = new CouchDB(clientId)
-
-  await db.put({
-    _id: "_design/client",
-    views: {
-      by_type: {
-        map: function(doc) {
-          emit([doc.type], doc._id)
-        }.toString(),
-      },
-    },
-  })
-
-  ctx.body = {
-    message: `Client Database ${clientId} successfully provisioned.`,
-  }
+  await create(env.CLIENT_ID)
+  ctx.status = 200
+  ctx.message = `Client Database ${env.CLIENT_ID} successfully provisioned.`
 }
 
 exports.destroy = async function(ctx) {
-  const dbId = `client-${ctx.params.clientId}`
-
-  await new CouchDB(dbId).destroy()
-
-  ctx.body = {
-    status: 200,
-    message: `Client Database ${dbId} successfully deleted.`,
-  }
+  await destroy(env.CLIENT_ID)
+  ctx.status = 200
+  ctx.message = `Client Database ${env.CLIENT_ID} successfully deleted.`
 }

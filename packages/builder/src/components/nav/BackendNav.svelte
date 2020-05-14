@@ -46,7 +46,7 @@
     </div>
   </div>
   <hr />
-  {#if $backendUiStore.selectedDatabase.id}
+  {#if $backendUiStore.selectedDatabase._id}
     <div class="hierarchy">
       <div class="components-list-container">
         <div class="nav-group-header">

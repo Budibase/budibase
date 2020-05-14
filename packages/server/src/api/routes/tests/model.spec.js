@@ -1,17 +1,21 @@
-const supertest = require("supertest");
-const app = require("../../../app");
-const { createInstanceDatabase, createModel } = require("./couchTestUtils");
-
-
-const TEST_INSTANCE_ID = "testing-123";
+const { 
+  createInstance, 
+  createModel, 
+  supertest, 
+  createClientDatabase, 
+  createApplication 
+} = require("./couchTestUtils")
 
 describe("/models", () => {
-  let request;
-  let server;
+  let request
+  let server
+  let app
+  let instance
 
   beforeAll(async () => {
-    server = app;
-    request = supertest(server);
+    ({ request, server } = await supertest())
+    await createClientDatabase(request)
+    app = await createApplication(request)
   });
 
   afterAll(async () => {
@@ -19,19 +23,14 @@ describe("/models", () => {
   })
 
   describe("create", () => {
-    let db;
 
     beforeEach(async () => {
-      db = await createInstanceDatabase(TEST_INSTANCE_ID);
-    });
-
-    afterEach(async () => {
-      await db.destroy();
+      instance = await createInstance(request, app._id);
     });
 
     it("returns a success message when the model is successfully created", done => {
       request
-        .post(`/api/${TEST_INSTANCE_ID}/models`)
+        .post(`/api/${instance._id}/models`)
         .send({ 
           name: "TestModel",
           key: "name",
@@ -43,29 +42,24 @@ describe("/models", () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
-            expect(res.body.message).toEqual("Model TestModel created successfully.");            
-            expect(res.body.model.name).toEqual("TestModel");            
+            expect(res.res.statusMessage).toEqual("Model TestModel created successfully.");            
+            expect(res.body.name).toEqual("TestModel");            
             done();
         });
       })
     });
 
   describe("fetch", () => {
-    let testModel;
-    let db;
+    let testModel
 
     beforeEach(async () => {
-      db = await createInstanceDatabase(TEST_INSTANCE_ID);
-      testModel = await createModel(TEST_INSTANCE_ID);
-    });
-
-    afterEach(async () => {
-      await db.destroy();
+      instance = await createInstance(request, app._id)
+      testModel = await createModel(request, instance._id, testModel)
     });
 
     it("returns all the models for that instance in the response body", done => {
       request
-        .get(`/api/${TEST_INSTANCE_ID}/models`)
+        .get(`/api/${instance._id}/models`)
         .set("Accept", "application/json")
         .expect('Content-Type', /json/)
         .expect(200)
@@ -80,25 +74,20 @@ describe("/models", () => {
 
   describe("destroy", () => {
     let testModel;
-    let db;
 
     beforeEach(async () => {
-      db = await createInstanceDatabase(TEST_INSTANCE_ID);
-      testModel = await createModel(TEST_INSTANCE_ID);
-    });
-
-    afterEach(async () => {
-      await db.destroy();
+      instance = await createInstance(request, app._id)
+      testModel = await createModel(request, instance._id, testModel)
     });
 
     it("returns a success response when a model is deleted.", done => {
       request
-        .delete(`/api/${TEST_INSTANCE_ID}/models/${testModel.id}/${testModel.rev}`)
+        .delete(`/api/${instance._id}/models/${testModel._id}/${testModel._rev}`)
         .set("Accept", "application/json")
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
-            expect(res.body.message).toEqual(`Model ${testModel.id} deleted.`);            
+            expect(res.res.statusMessage).toEqual(`Model ${testModel._id} deleted.`);            
             done();
         });
       })

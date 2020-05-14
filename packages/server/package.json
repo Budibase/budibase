@@ -50,11 +50,13 @@
     "eslint": "^6.8.0",
     "jest": "^24.8.0",
     "nodemon": "^2.0.2",
+    "pouchdb-adapter-memory": "^7.2.1",
     "server-destroy": "^1.0.1",
     "supertest": "^4.0.2"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFiles": ["./scripts/jestSetup.js"]
   },
   "gitHead": "b1f4f90927d9e494e513220ef060af28d2d42455"
 }
