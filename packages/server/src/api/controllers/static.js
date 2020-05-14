@@ -6,7 +6,7 @@ const {
 } = require("../../utilities/budibaseDir")
 
 exports.serveBuilder = async function(ctx) {
-  let builderPath = resolve(process.cwd(), "builder")
+  let builderPath = resolve(__dirname, "../../../builder")
 
   await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
 }
