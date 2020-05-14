@@ -6,11 +6,10 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
         node-version: [10.x]
         
     steps:
@@ -36,6 +35,12 @@ jobs:
   #       env:
   #         NODE_AUTH_TOKEN: ${{secrets.npm_token}}
 
+  publish-electron:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    steps:
     - name: Build/release Electron app
       uses: samuelmeuli/action-electron-builder@v1
       with:
@@ -45,7 +50,7 @@ jobs:
 
         # release the app after building
         package_root: packages/server
-        release: true  
+        release: true
         # mac_certs: ${{ secrets.mac_certs }}
         # mac_certs_password: ${{ secrets.mac_certs_password }}
         # windows_certs: ${{ secrets.windows_certs }}
