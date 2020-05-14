@@ -2,7 +2,11 @@
   "name": "@budibase/server",
   "version": "0.0.32",
   "description": "Budibase Web Server",
-  "main": "src/index.js",
+  "main": "src/electron.js",
+  "build": {
+    "appId": "com.budibase.builder",
+    "productName": "Budibase Builder"
+  },
   "scripts": {
     "test": "jest",
     "test:integration": "jest routes --runInBand",
@@ -11,6 +15,9 @@
     "budi": "node ../cli/bin/budi",
     "dev:builder": "nodemon ../cli/bin/budi run",
     "electron": "electron src/electron.js",
+    "build:electron": "electron-builder",
+    "build:electron:all": "electron-builder -mwl",
+    "postinstall": "electron-builder install-app-deps",
     "lint": "eslint --fix src/"
   },
   "keywords": [
@@ -25,6 +32,7 @@
     "ajv": "^6.12.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
+    "electron-is-dev": "^1.2.0",
     "fs-extra": "^8.1.0",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.7.0",
@@ -47,6 +55,7 @@
     "@jest/test-sequencer": "^24.8.0",
     "electron": "^8.2.5",
     "electron-builder": "^22.6.0",
+    "electron-updater": "^4.3.1",
     "eslint": "^6.8.0",
     "jest": "^24.8.0",
     "nodemon": "^2.0.2",

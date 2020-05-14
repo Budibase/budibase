@@ -21,6 +21,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
@@ -34,3 +35,19 @@ jobs:
         CI: true
         name: Budibase CI
 
+    - name: Build/release Electron app
+      uses: samuelmeuli/action-electron-builder@v1
+      with:
+        # GitHub token, automatically provided to the action
+        # (No need to define this secret in the repo settings)
+        github_token: ${{ secrets.github_token }}
+
+        # If the commit is tagged with a version (e.g. "v1.0.0"),
+        # release the app after building
+        package_root: packages/server
+        # mac_certs: ${{ secrets.mac_certs }}
+        # mac_certs_password: ${{ secrets.mac_certs_password }}
+        # windows_certs: ${{ secrets.windows_certs }}
+        # windows_certs_password: ${{ secrets.windows_certs_password }}
+        # snapcraft_token: ${{ secrets.snapcraft_token }}
+        release: ${{ startsWith(github.ref, 'refs/tags/v') }}
