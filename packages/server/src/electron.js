@@ -8,7 +8,7 @@ const { autoUpdater } = require("electron-updater");
 require("dotenv").config({ path: join(homedir(), ".budibase", ".env") });
 
 
-const APP_URL = "http://localhost:4001";
+const APP_URL = "http://localhost:4001/_builder";
 const APP_TITLE = "Budibase Builder";
 
 function createWindow() {
