@@ -11,11 +11,14 @@ require("dotenv").config({ path: join(homedir(), ".budibase", ".env") });
 const APP_URL = "http://localhost:4001/_builder";
 const APP_TITLE = "Budibase Builder";
 
+let win;
+
 function createWindow() {
   app.server = require("./app");
-  let win = new BrowserWindow({ width: 1920, height: 1080 });
+  win = new BrowserWindow({ width: 1920, height: 1080 });
   win.setTitle(APP_TITLE);
   win.loadURL(APP_URL);
+  win.showInactive();
   if (isDev) {
     win.webContents.openDevTools();
   } else {
