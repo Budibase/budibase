@@ -30,7 +30,7 @@
     "budi": "node ../cli/bin/budi",
     "dev:builder": "nodemon ../cli/bin/budi run",
     "electron": "electron src/electron.js",
-    "build:electron": "electron-builder",
+    "build:electron": "electron-builder --dir",
     "publish:electron": "electron-builder -mwl --publish always",
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint --fix src/"
