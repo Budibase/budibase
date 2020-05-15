@@ -1,8 +1,13 @@
 name: Budibase Release
 
-on:
-  release:
-    types: [created]
+on: 
+ # Trigger the workflow on push,
+ # but only for the release branch
+ push:
+  branches:
+    - master
+  tags:
+    - 'v*'
 
 jobs:
   release:
@@ -36,13 +41,13 @@ jobs:
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1
         with:
+          skip_build: true
+          package_root: packages/server
           # GitHub token, automatically provided to the action
           # (No need to define this secret in the repo settings)
           github_token: ${{ secrets.github_token }}
-
           # release the app after building
-          package_root: packages/server
-          release: true
+          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
           # mac_certs: ${{ secrets.mac_certs }}
           # mac_certs_password: ${{ secrets.mac_certs_password }}
           # windows_certs: ${{ secrets.windows_certs }}
