@@ -10,8 +10,10 @@
   "build": {
     "appId": "com.budibase.builder",
     "productName": "Budibase Builder",
+    "afterSign": "electron-builder-notarize",
     "mac": {
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+			"hardenedRuntime": true
     },
     "linux": {
       "target": [
@@ -69,6 +71,7 @@
     "@jest/test-sequencer": "^24.8.0",
     "electron": "^8.2.5",
     "electron-builder": "^22.6.0",
+    "electron-builder-notarize": "^1.1.2",
     "eslint": "^6.8.0",
     "jest": "^24.8.0",
     "nodemon": "^2.0.2",
