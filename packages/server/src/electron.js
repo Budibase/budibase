@@ -3,22 +3,26 @@ const { join } = require("path");
 const { homedir } = require("os");
 const isDev = require("electron-is-dev");
 const { autoUpdater } = require("electron-updater");
-
+const unhandled = require("electron-unhandled");
 
 require("dotenv").config({ path: join(homedir(), ".budibase", ".env") });
 
+if (isDev) {
+  unhandled({
+    showDialog: true
+  });
+}
 
-const APP_URL = "http://localhost:4001/_builder";
+const APP_URL = "http://localhost:4001";
 const APP_TITLE = "Budibase Builder";
 
-let win;
+let win
 
 function createWindow() {
   app.server = require("./app");
   win = new BrowserWindow({ width: 1920, height: 1080 });
   win.setTitle(APP_TITLE);
   win.loadURL(APP_URL);
-  win.showInactive();
   if (isDev) {
     win.webContents.openDevTools();
   } else {

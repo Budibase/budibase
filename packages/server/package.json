@@ -13,7 +13,7 @@
     "afterSign": "electron-builder-notarize",
     "mac": {
       "category": "public.app-category.developer-tools",
-			"hardenedRuntime": true
+      "hardenedRuntime": true
     },
     "linux": {
       "target": [
@@ -48,6 +48,7 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
     "electron-is-dev": "^1.2.0",
+    "electron-unhandled": "^3.0.2",
     "electron-updater": "^4.3.1",
     "fs-extra": "^8.1.0",
     "jsonwebtoken": "^8.5.1",
