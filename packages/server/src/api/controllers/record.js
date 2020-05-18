@@ -1,6 +1,6 @@
 const CouchDB = require("../../db")
 const Ajv = require("ajv")
-const uuid = require("uuid")
+const newid = require("../../db/newid")
 
 const ajv = new Ajv()
 
@@ -9,7 +9,7 @@ exports.save = async function(ctx) {
   const record = ctx.request.body
 
   if (!record._rev && !record._id) {
-    record._id = uuid.v4().replace(/-/, "")
+    record._id = newid()
   }
 
   // validation with ajv
