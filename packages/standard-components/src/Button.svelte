@@ -3,7 +3,7 @@
   import { buildStyle } from "./buildStyle"
   export let className = "default"
   export let disabled = false
-  export let contentText
+  export let text
   export let onClick
   export let background
   export let color
@@ -66,9 +66,7 @@
   disabled={disabled || false}
   on:click={clickHandler}
   style={buttonStyles}>
-  {#if !_bb.props._children || _bb.props._children.length === 0}
-    {contentText}
-  {/if}
+  {#if !_bb.props._children || _bb.props._children.length === 0}{text}{/if}
 </button>
 
 <style>
