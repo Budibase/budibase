@@ -95,8 +95,8 @@ const buildFrontendAppDefinition = async (config, appId, pageName, pkg) => {
     screens: pkg.screens,
     libraries: [
       "@budibase/materialdesign-components",
-      "@budibase/standard-components"
-    ]
+      "@budibase/standard-components",
+    ],
   })
 
   await writeFile(

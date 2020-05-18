@@ -8,7 +8,7 @@
   let username
   let password
   let newModel = {
-    modelId: model._id
+    modelId: model._id,
   }
   let store = _bb.store
 
@@ -16,16 +16,13 @@
 
   async function save() {
     const SAVE_RECORD_URL = `/api/${_instanceId}/records`
-    const response = await _bb.api.post(SAVE_RECORD_URL, newModel);
-    const json = await response.json();
+    const response = await _bb.api.post(SAVE_RECORD_URL, newModel)
+    const json = await response.json()
 
     store.update(state => {
-      state[model._id] = [
-        ...state[model._id],
-        json
-      ]
+      state[model._id] = [...state[model._id], json]
       return state
-    });
+    })
   }
 
   const handleInput = field => event => {
@@ -54,17 +51,14 @@
     {#each fields as field}
       <div class="uk-margin">
         <label class="form-label" for="form-stacked-text">{field}</label>
-        <input 
-          class="uk-input" 
-          type={model.schema[field].type === "string" ? "text" : model.schema[field].type}
-          on:change={handleInput(field)}
-        />
+        <input
+          class="uk-input"
+          type={model.schema[field].type === 'string' ? 'text' : model.schema[field].type}
+          on:change={handleInput(field)} />
       </div>
     {/each}
   </div>
-  <button on:click={save}>
-    SAVE
-  </button>
+  <button on:click={save}>SAVE</button>
 </form>
 
 <style>

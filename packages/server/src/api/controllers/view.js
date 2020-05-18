@@ -1,7 +1,7 @@
 const CouchDB = require("../../db")
 
 const controller = {
-  query: async ctx => {},
+  query: async () => {},
   fetch: async ctx => {
     const db = new CouchDB(ctx.params.instanceId)
     const designDoc = await db.get("_design/database")

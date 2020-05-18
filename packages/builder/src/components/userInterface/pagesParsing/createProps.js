@@ -25,7 +25,7 @@ export const createProps = (componentDefinition, derivedFromProps) => {
     _id: uuid(),
     _component: componentDefinition._component,
     _styles: { position: {}, layout: {} },
-    _code: ""
+    _code: "",
   }
 
   const errors = []
