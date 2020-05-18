@@ -30,6 +30,7 @@ module.exports = async (ctx, next) => {
   }
 
   try {
+    console.log("YEETY", token, ctx.config.jwtSecret);
     ctx.jwtPayload = jwt.verify(token, ctx.config.jwtSecret)
     ctx.isAuthenticated = true
   } catch (err) {
