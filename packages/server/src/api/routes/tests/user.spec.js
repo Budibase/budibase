@@ -1,75 +1,62 @@
-const supertest = require("supertest");
-const app = require("../../../app");
 const { 
-  createInstanceDatabase
-} = require("./couchTestUtils");
-
-
-const TEST_INSTANCE_ID = "testing-123";
-const TEST_USER = {
-  name: "Dave"
-}
+  createClientDatabase,
+  createApplication,
+  createInstance,
+  supertest,
+  defaultHeaders,
+  createUser,
+} = require("./couchTestUtils")
 
 describe("/users", () => {
-  let request;
-  let server;
+  let request
+  let server
+  let app
+  let instance
 
   beforeAll(async () => {
-    server = app
-    request = supertest(server);
+    ({ request, server } = await supertest(server))
+    await createClientDatabase(request)
+    app = await createApplication(request)
+  });
+
+  beforeEach(async () => {
+    instance = await createInstance(request, app._id)
   });
 
   afterAll(async () => {
     server.close();
   })
 
-  describe("fetch", () => {
-    let db;
+  describe("fetch", () => {    
 
-    beforeEach(async () => {
-      db = await createInstanceDatabase(TEST_INSTANCE_ID);
-    });
-
-    afterEach(async () => {
-      await db.destroy();
-    });
-
-    it("returns a list of users from an instance db", done => {
-      request
-        .get(`/api/${TEST_INSTANCE_ID}/users`)
-        .set("Accept", "application/json")
+    it("returns a list of users from an instance db", async () => {
+      await createUser(request, instance._id, "brenda", "brendas_password")
+      await createUser(request, instance._id, "pam", "pam_password")
+      const res = await request
+        .get(`/api/${instance._id}/users`)
+        .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(200)
-        .end(async (err, res) => {
-            const user = res.body[0];
-            expect(user.name).toEqual(TEST_USER.name);            
-            done();
-        });
-      })
-    });
+      
+      expect(res.body.length).toBe(2)
+      expect(res.body.find(u => u.username === "brenda")).toBeDefined()
+      expect(res.body.find(u => u.username === "pam")).toBeDefined()
+    })
+
+  })
 
   describe("create", () => {
-    let db;
 
-    beforeEach(async () => {
-      db = await createInstanceDatabase(TEST_INSTANCE_ID);
-    });
-
-    afterEach(async () => {
-      await db.destroy();
-    });
-
-    it("returns a success message when a user is successfully created", done => {
-      request
-        .post(`/api/${TEST_INSTANCE_ID}/users`)
-        .send({ name: "Bill", username: "bill1", password: "password" })
-        .set("Accept", "application/json")
-        .expect('Content-Type', /json/)
+    it("returns a success message when a user is successfully created", async () => {
+      const res = await request
+        .post(`/api/${instance._id}/users`)
+        .set(defaultHeaders)
+        .send({ name: "Bill", username: "bill", password: "bills_password" })
         .expect(200)
-        .end(async (err, res) => {
-            expect(res.body.message).toEqual("User created successfully.");            
-            done();
-        });
-      })
-    });
-});
+        .expect('Content-Type', /json/)
+
+      expect(res.res.statusMessage).toEqual("User created successfully."); 
+      expect(res.body._id).toBeUndefined()
+    })
+  });
+})

@@ -8,41 +8,119 @@
         "type": "node",
         "request": "launch",
         "name": "Start Server",
-        "program": "${workspaceFolder}/src/index.js"
+        "program": "${workspaceFolder}/../cli/bin/budi"
       },
       {
-          "type": "node",
-          "request": "launch",
-          "name": "Jest App Server",
-          "program": "${workspaceFolder}/node_modules/.bin/jest",
-          "args": ["apps", "--runInBand"],
-          "console": "integratedTerminal",
-          "internalConsoleOptions": "neverOpen",
-          "disableOptimisticBPs": true,
-          "windows": {
-              "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
-          }
-        },
-        {
-          "type": "node",
-          "request": "launch",
-          "name": "Jest Builder",
-          "program": "${workspaceFolder}/node_modules/.bin/jest",
-          "args": ["builder", "--runInBand"],
-          "console": "integratedTerminal",
-          "internalConsoleOptions": "neverOpen",
-          "disableOptimisticBPs": true,
-          "windows": {
-              "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
-          }
-        },
-        {
-          "type": "node",
-          "request": "launch",
-          "name": "Initialise Budibase",
-          "program": "yarn",
-          "args": ["run", "initialise"],
-          "console": "externalTerminal" 
+        "type": "node",
+        "request": "launch",
+        "name": "Jest - All",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": [],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
         }
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Jest - Users",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["user.spec", "--runInBand"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
+        }
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Jest - Instances",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["instance.spec", "--runInBand"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
+        }
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Jest - Records",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["record.spec", "--runInBand"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
+        }
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Jest - Models",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["model.spec", "--runInBand"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
+        }
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Jest - Views",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["view.spec", "--runInBand"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
+        }
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Jest - Applications",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["application.spec", "--runInBand"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
+        }
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Jest Builder",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["builder", "--runInBand"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
+        }
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Initialise Budibase",
+        "program": "yarn",
+        "args": ["run", "initialise"],
+        "console": "externalTerminal" 
+      }
     ]
 }

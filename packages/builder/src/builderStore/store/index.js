@@ -94,10 +94,7 @@ const setPackage = (store, initial) => async pkg => {
   }
 
   initial.libraries = await fetchComponentLibModules(pkg.application)
-  initial.components = await fetchComponentLibDefinitions(
-    pkg.clientId,
-    pkg.application._id
-  )
+  initial.components = await fetchComponentLibDefinitions(pkg.application._id)
   initial.appname = pkg.application.name
   initial.appId = pkg.application._id
   initial.pages = pkg.pages
@@ -354,7 +351,7 @@ const addChildComponent = store => (componentToAdd, presetName) => {
 
     const presetProps = presetName ? component.presets[presetName] : {}
 
-    const instanceId = get(backendUiStore).selectedDatabase.id;
+    const instanceId = get(backendUiStore).selectedDatabase._id;
 
     const newComponent = createProps(component, {
       ...presetProps,

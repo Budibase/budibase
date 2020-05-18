@@ -1,27 +1,23 @@
-const supertest = require("supertest");
-const app = require("../../../app");
-const { createInstanceDatabase, createModel } = require("./couchTestUtils");
-
-const TEST_INSTANCE_ID = "testing-123";
-
-const CONTACT_MODEL = {
-  "name": "Contact",
-  "type": "model",
-  "key": "name",
-  "schema": {
-    "name": { "type": "string" },
-    "age": { "type": "number" }
-  }
-};
+const { 
+  createApplication,
+  createClientDatabase,
+  createInstance, 
+  createModel,
+  supertest
+} = require("./couchTestUtils");
 
 describe("/records", () => {
-  let request;
-  let server;
-  let db;
+  let request
+  let server
+  let instance
+  let model
+  let record
+  let app
 
   beforeAll(async () => {
-    server = app;
-    request = supertest(server);
+    ({ request, server } = await supertest())
+    await createClientDatabase(request)
+    app = await createApplication(request)
   });
 
   afterAll(async () => {
@@ -29,95 +25,94 @@ describe("/records", () => {
   })
 
   describe("save, load, update, delete", () => {
-    let record;
-    let model;
 
     beforeEach(async () => {
-      db = await createInstanceDatabase(TEST_INSTANCE_ID);
-      model = await createModel(TEST_INSTANCE_ID, CONTACT_MODEL)
+      instance = await createInstance(request, app._id)
+      model = await createModel(request, instance._id)
       record = {
         name: "Test Contact",
         status: "new",
-        modelId: model.id
+        modelId: model._id
       }
-    });
+    })
 
-    afterEach(async () => {
-      await db.destroy();
-    });
-
-    it("returns a success message when the record is created", done => {
-      request
-        .post(`/api/${TEST_INSTANCE_ID}/records`)
-        .send(record)
+    const createRecord = async r => 
+      await request
+        .post(`/api/${instance._id}/records`)
+        .send(r || record)
         .set("Accept", "application/json")
         .expect('Content-Type', /json/)
         .expect(200)
-        .end(async (err, res) => {
-            expect(res.res.statusMessage).toEqual("Contact created successfully")           
-            expect(res.body.name).toEqual("Test Contact")
-            expect(res.body._rev).toBeDefined()   
-            done();
-        });
+
+    it("returns a success message when the record is created", async () => {
+      const res = await createRecord()
+      expect(res.res.statusMessage).toEqual(`${model.name} created successfully`)           
+      expect(res.body.name).toEqual("Test Contact")
+      expect(res.body._rev).toBeDefined()
     })
 
     it("updates a record successfully", async () => {
-      const existing = await db.post(record);
+      const rec = await createRecord()
+      const existing = rec.body
 
       const res = await request
-        .post(`/api/${TEST_INSTANCE_ID}/records`)
+        .post(`/api/${instance._id}/records`)
         .send({
-          _id: existing.id,
-          _rev: existing.rev,
-          modelId: model.id,
+          _id: existing._id,
+          _rev: existing._rev,
+          modelId: model._id,
           name: "Updated Name",
         })
         .set("Accept", "application/json")
         .expect('Content-Type', /json/)
         .expect(200)
       
-      expect(res.body.message).toEqual("Contact updated successfully.")
-      expect(res.body.record.name).toEqual("Updated Name")
+      expect(res.res.statusMessage).toEqual(`${model.name} updated successfully.`)
+      expect(res.body.name).toEqual("Updated Name")
     })
 
     it("should load a record", async () => {
-      const existing = await db.post(record);
+      const rec = await createRecord()
+      const existing = rec.body
 
       const res = await request
-        .get(`/api/${TEST_INSTANCE_ID}/records/${existing.id}`)
+        .get(`/api/${instance._id}/records/${existing._id}`)
         .set("Accept", "application/json")
         .expect('Content-Type', /json/)
         .expect(200)
 
       expect(res.body).toEqual({
         ...record,
-        _id: existing.id,
-        _rev: existing.rev
+        _id: existing._id,
+        _rev: existing._rev,
+        type: "record",
       })
     })
 
     it("should list all records for given modelId", async () => {
       const newRecord = {
-        modelId: model.id,
+        modelId: model._id,
         name: "Second Contact",
         status: "new"
       }
-
-      await db.post(newRecord);
+      await createRecord()
+      await createRecord(newRecord)
 
       const res = await request
-        .get(`/api/${TEST_INSTANCE_ID}/all_${newRecord.modelId}/records`)
+        .get(`/api/${instance._id}/all_${newRecord.modelId}/records`)
         .set("Accept", "application/json")
         .expect('Content-Type', /json/)
         .expect(200)
 
-      expect(res.body.length).toBe(1)
-      expect(res.body[0].name).toEqual(newRecord.name);
+      expect(res.body.length).toBe(2)
+      expect(res.body.find(r => r.name === newRecord.name)).toBeDefined()
+      expect(res.body.find(r => r.name === record.name)).toBeDefined()
     })
 
     it("load should return 404 when record does not exist", async () => {
+      await createRecord()
       await request
-        .get(`/api/${TEST_INSTANCE_ID}/records/not-a-valid-id`)
+        .get(`/api/${instance._id}/records/not-a-valid-id`)
         .set("Accept", "application/json")
         .expect('Content-Type', /json/)
         .expect(404)

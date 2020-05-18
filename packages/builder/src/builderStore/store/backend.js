@@ -16,8 +16,8 @@ export const getBackendUiStore = () => {
   store.actions = {
     database: {
       select: async db => {
-        const modelsResponse = await api.get(`/api/${db.id}/models`)
-        const viewsResponse = await api.get(`/api/${db.id}/views`)
+        const modelsResponse = await api.get(`/api/${db._id}/models`)
+        const viewsResponse = await api.get(`/api/${db._id}/views`)
         const models = await modelsResponse.json()
         const views = await viewsResponse.json()
         store.update(state => {
@@ -37,7 +37,7 @@ export const getBackendUiStore = () => {
         }),
       view: record =>
         store.update(state => {
-          state.breadcrumbs = [state.selectedDatabase.name, record.id]
+          state.breadcrumbs = [state.selectedDatabase.name, record._id]
           return state
         }),
       select: record =>

@@ -13,7 +13,7 @@
   let promise = getPackage()
 
   async function getPackage() {
-    const res = await fetch(`/api/${$store.clientId}/${application}/appPackage`)
+    const res = await fetch(`/api/${application}/appPackage`)
     const pkg = await res.json()
 
     if (res.ok) {
