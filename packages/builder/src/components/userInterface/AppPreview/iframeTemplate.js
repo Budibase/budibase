@@ -32,8 +32,8 @@ export default ({
           text-transform: uppercase;
           font-weight: bold;
         }
-    <\/style>
-    <\script>
+    </style>
+    <script>
         window["##BUDIBASE_FRONTEND_DEFINITION##"] = ${frontendDefinition};
         window["##BUDIBASE_FRONTEND_FUNCTIONS##"] = ${currentPageFunctions};
 
@@ -41,7 +41,7 @@ export default ({
         .then(module => {
             module.loadBudibase({ window, localStorage });
         })
-    <\/script>
+    </script>
   </head>
   <body>
   </body>
