@@ -1,31 +1,27 @@
 const Koa = require("koa")
-const logger = require("koa-logger")
-const api = require("./api")
 const koaBody = require("koa-body")
-const env = require("./environment")
+const logger = require("koa-pino-logger")
 const http = require("http")
+const api = require("./api")
+const env = require("./environment")
 
 const app = new Koa()
 
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 
-if (env.LOGGER !== "off") app.use(logger())
+app.use(logger({
+  prettyPrint: {
+    levelFirst: true
+  },
+  level: process.env.NODE_ENV === "jest" ? "silent" : "info"
+}))
 
 // api routes
 app.use(api.routes())
 
 module.exports = async port => {
-  port = port || env.PORT || 4001
+  const serverPort = port || env.PORT
   const server = http.createServer(app.callback())
-  return new Promise((resolve, reject) => {
-    server.on("error", e => {
-      if (e.code === "EADDRINUSE") {
-        reject(e)
-      }
-    })
-    server.listen({ port }, () => {
-      resolve(server)
-    })
-  })
+  return server.listen(serverPort || 4001)
 }
