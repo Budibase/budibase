@@ -30,6 +30,7 @@ router
       deflate: {
         flush: zlib.Z_SYNC_FLUSH,
       },
+      br: false,
     })
   )
   .use(async (ctx, next) => {

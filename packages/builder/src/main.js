@@ -1,6 +1,6 @@
 import "./global.css"
 import "./fonts.css"
-import "./budibase.css";
+import "./budibase.css"
 import "/assets/roboto-v20-latin-ext_latin-300"
 import "/assets/roboto-v20-latin-ext_latin-400"
 import "/assets/roboto-v20-latin-ext_latin-500"

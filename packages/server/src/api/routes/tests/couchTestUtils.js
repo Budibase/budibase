@@ -1,6 +1,9 @@
 const CouchDB = require("../../../db")
+const { create, destroy } = require("../../../db/clientDb")
 const supertest = require("supertest")
 const app = require("../../../app")
+
+const TEST_CLIENT_ID = "test-client-id"
 
 exports.supertest = async () => {
   let request
@@ -11,9 +14,12 @@ exports.supertest = async () => {
     try {
       server = await app(port)
       started = true
-    } catch (e) {
-      if (e.code === "EADDRINUSE") port = port + 1
-      else throw e
+    } catch (err) {
+      if (err.code === "EADDRINUSE") {
+        port = port + 1
+      } else {
+        throw err
+      }
     }
   }
 
@@ -45,13 +51,7 @@ exports.createModel = async (request, instanceId, model) => {
   return res.body
 }
 
-exports.createClientDatabase = async request => {
-  const res = await request
-    .post("/api/client")
-    .set(exports.defaultHeaders)
-    .send({})
-  return res.body
-}
+exports.createClientDatabase = async () => await create(TEST_CLIENT_ID)
 
 exports.createApplication = async (request, name = "test_application") => {
   const res = await request
@@ -63,12 +63,7 @@ exports.createApplication = async (request, name = "test_application") => {
   return res.body
 }
 
-exports.destroyClientDatabase = async request => {
-  await request
-    .delete(`/api/client`)
-    .set(exports.defaultHeaders)
-    .send({})
-}
+exports.destroyClientDatabase = async () => await destroy(TEST_CLIENT_ID)
 
 exports.createInstance = async (request, appId) => {
   const res = await request

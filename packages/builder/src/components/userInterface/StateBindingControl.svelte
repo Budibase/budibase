@@ -1,5 +1,5 @@
 <script>
-  import { backendUiStore } from "builderStore";
+  import { backendUiStore } from "builderStore"
   import IconButton from "../common/IconButton.svelte"
   import Input from "../common/Input.svelte"
   import PropertyCascader from "./PropertyCascader"
@@ -13,7 +13,6 @@
   export let styleBindingProperty = ""
 
   $: bindOptionToStyle = !!styleBindingProperty
-
 </script>
 
 <div class="unbound-container">
@@ -28,7 +27,7 @@
     <select
       class="uk-select uk-form-small"
       bind:value
-      on:change={() => { 
+      on:change={() => {
         onChanged(value)
       }}>
       {#each $backendUiStore.models || [] as option}
@@ -50,8 +49,6 @@
         {/if}
       {/each}
     </select>
-  {:else if type === 'colour'}
-    <Colorpicker {onChanged} {value} />
   {:else}
     <PropertyCascader {onChanged} {value} />
   {/if}

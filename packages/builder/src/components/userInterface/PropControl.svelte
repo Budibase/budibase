@@ -1,5 +1,5 @@
 <script>
-  import { store } from "builderStore";
+  import { store } from "builderStore"
   import Checkbox from "../common/Checkbox.svelte"
   import Textbox from "../common/Textbox.svelte"
   import Dropdown from "../common/Dropdown.svelte"
