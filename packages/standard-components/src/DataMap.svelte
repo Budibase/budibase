@@ -1,5 +1,5 @@
 <script>
-  import { GoogleMap } from '@beyonk/svelte-googlemaps'
+  import { GoogleMap } from "@beyonk/svelte-googlemaps"
 
   // export let _bb
   // export let onLoad
@@ -28,4 +28,4 @@
   // }
 </script>
 
-<GoogleMap apiKey={"AIzaSyCPJ_eiSIbhRMmKBiVYXgh4HFHmbC4ZL5U"} />
+<GoogleMap apiKey={'AIzaSyCPJ_eiSIbhRMmKBiVYXgh4HFHmbC4ZL5U'} />

@@ -18,7 +18,7 @@
       store.update(state => {
         state[model._id] = json
         return state
-      });
+      })
     } else {
       throw new Error("Failed to fetch records.", response)
     }
@@ -31,21 +31,14 @@
   })
 </script>
 
-<section 
-    class:grid={layout === "grid"}
-    class:list={layout === "list"}
->
+<section class:grid={layout === 'grid'} class:list={layout === 'list'}>
   {#each data as data}
     <div class="data-card">
       <ul>
         {#each Object.keys(data) as key}
           <li>
-          <span class="data-key">
-            {key}:
-          </span> 
-          <span class="data-value">
-            {data[key]}
-          </span>
+            <span class="data-key">{key}:</span>
+            <span class="data-value">{data[key]}</span>
           </li>
         {/each}
       </ul>

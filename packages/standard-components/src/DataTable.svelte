@@ -18,7 +18,7 @@
       store.update(state => {
         state[model._id] = json
         return state
-      });
+      })
 
       headers = Object.keys(json[0]).filter(key => !key.startsWith("_"))
     } else {
