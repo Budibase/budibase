@@ -1,11 +1,12 @@
 const CouchDB = require("../../db")
+const ClientDb = require("../../db/clientDb")
 const { getPackageForBuilder } = require("../../utilities/builder")
 const uuid = require("uuid")
 const env = require("../../environment")
 
 exports.fetch = async function(ctx) {
-  const clientDb = new CouchDB(`client-${env.CLIENT_ID}`)
-  const body = await clientDb.query("client/by_type", {
+  const db = new CouchDB(ClientDb.name(env.CLIENT_ID))
+  const body = await db.query("client/by_type", {
     include_docs: true,
     key: ["app"],
   })
@@ -14,13 +15,13 @@ exports.fetch = async function(ctx) {
 }
 
 exports.fetchAppPackage = async function(ctx) {
-  const clientDb = new CouchDB(`client-${env.CLIENT_ID}`)
-  const application = await clientDb.get(ctx.params.applicationId)
+  const db = new CouchDB(ClientDb.name(env.CLIENT_ID))
+  const application = await db.get(ctx.params.applicationId)
   ctx.body = await getPackageForBuilder(ctx.config, application)
 }
 
 exports.create = async function(ctx) {
-  const clientDb = new CouchDB(`client-${env.CLIENT_ID}`)
+  const db = new CouchDB(ClientDb.name(env.CLIENT_ID))
 
   const newApplication = {
     _id: uuid.v4().replace(/-/g, ""),
@@ -34,7 +35,7 @@ exports.create = async function(ctx) {
     ...ctx.request.body,
   }
 
-  const { rev } = await clientDb.post(newApplication)
+  const { rev } = await db.post(newApplication)
   newApplication._rev = rev
   ctx.body = newApplication
   ctx.message = `Application ${ctx.request.body.name} created successfully`

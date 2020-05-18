@@ -19,7 +19,9 @@ const run = async opts => {
     exec(`cd ${join(opts.dir, opts.applicationId)} && npm install`)
     console.log(chalk.green(`Budibase app ${opts.name} created!`))
   } catch (error) {
-    console.error(chalk.red("Error creating new app", error))
+    console.error(
+      chalk.red("Error creating new app", JSON.stringify(error, { space: 2 }))
+    )
   }
 }
 

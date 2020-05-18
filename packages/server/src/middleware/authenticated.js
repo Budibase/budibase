@@ -15,6 +15,12 @@ module.exports = async (ctx, next) => {
     return
   }
 
+  if (ctx.isDev && ctx.cookies.get("builder:token") === env.ADMIN_SECRET) {
+    ctx.isAuthenticated = true
+    await next()
+    return
+  }
+
   const token = ctx.cookies.get("budibase:token")
 
   if (!token) {

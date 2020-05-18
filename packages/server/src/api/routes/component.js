@@ -4,7 +4,7 @@ const controller = require("../controllers/component")
 const router = Router()
 
 router.get(
-  "/:clientId/:appId/components/definitions",
+  "/:appId/components/definitions",
   controller.fetchAppComponentDefinitions
 )
 

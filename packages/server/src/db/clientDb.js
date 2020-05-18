@@ -1,7 +1,7 @@
 const CouchDB = require("./client")
 
 exports.create = async clientId => {
-  const dbId = `client-${clientId}`
+  const dbId = exports.name(clientId)
   const db = new CouchDB(dbId)
   await db.put({
     _id: "_design/client",
@@ -17,6 +17,10 @@ exports.create = async clientId => {
 }
 
 exports.destroy = async function(clientId) {
-  const dbId = `client-${clientId}`
+  const dbId = exports.name(clientId)
   await new CouchDB(dbId).destroy()
+}
+
+exports.name = function(clientId) {
+  return `client_${clientId}`
 }

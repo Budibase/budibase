@@ -1,11 +1,10 @@
 /**
  * Fetches the definitions for component library components. This includes
  * their props and other metadata from components.json.
- * @param {string} clientId - ID of the current client
  * @param {string} appId - ID of the currently running app
  */
-export const fetchComponentLibDefinitions = async (clientId, appId) => {
-  const LIB_DEFINITION_URL = `/${clientId}/${appId}/components/definitions`
+export const fetchComponentLibDefinitions = async appId => {
+  const LIB_DEFINITION_URL = `/${appId}/components/definitions`
   try {
     const libDefinitionResponse = await fetch(LIB_DEFINITION_URL)
     return await libDefinitionResponse.json()

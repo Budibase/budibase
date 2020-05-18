@@ -1,4 +1,5 @@
 const CouchDB = require("../../db")
+const clientDb = require("../../db/clientDb")
 const bcrypt = require("../../utilities/bcrypt")
 const env = require("../../environment")
 
@@ -30,14 +31,14 @@ exports.create = async function(ctx) {
   })
 
   // the clientDB needs to store a map of users against the app
-  const clientDb = new CouchDB(`client-${env.CLIENT_ID}`)
-  const app = await clientDb.get(appId)
+  const db = new CouchDB(clientDb.name(env.CLIENT_ID))
+  const app = await db.get(appId)
 
   app.userInstanceMap = {
     ...app.userInstanceMap,
     [username]: ctx.params.instanceId,
   }
-  await clientDb.put(app)
+  await db.put(app)
 
   ctx.status = 200
   ctx.message = "User created successfully."

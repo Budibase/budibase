@@ -13,6 +13,7 @@ module.exports = opts => {
 const run = async opts => {
   try {
     await ensureAppDir(opts)
+    await setEnvironmentVariables(opts)
     await prompts(opts)
     await createClientDatabase(opts)
     await createDevEnvFile(opts)
@@ -22,16 +23,20 @@ const run = async opts => {
   }
 }
 
-const ensureAppDir = async opts => {
-  opts.dir = xPlatHomeDir(opts.dir)
-  await ensureDir(opts.dir)
-
+const setEnvironmentVariables = async opts => {
   if (opts.database === "local") {
     const dataDir = join(opts.dir, ".data")
     await ensureDir(dataDir)
     process.env.COUCH_DB_URL =
       dataDir + (dataDir.endsWith("/") || dataDir.endsWith("\\") ? "" : "/")
+  } else {
+    process.env.COUCH_DB_URL = opts.couchDbUrl
   }
+}
+
+const ensureAppDir = async opts => {
+  opts.dir = xPlatHomeDir(opts.dir)
+  await ensureDir(opts.dir)
 }
 
 const prompts = async opts => {
@@ -54,6 +59,10 @@ const prompts = async opts => {
 }
 
 const createClientDatabase = async opts => {
+  // cannot be a top level require as it
+  // will cause environment module to be loaded prematurely
+  const clientDb = require("@budibase/server/src/db/clientDb")
+
   if (opts.clientId === "new") {
     // cannot be a top level require as it
     // will cause environment module to be loaded prematurely
@@ -65,13 +74,10 @@ const createClientDatabase = async opts => {
     while (isExisting) {
       i += 1
       opts.clientId = i.toString()
-      isExisting = existing.includes(`client-${opts.clientId}`)
+      isExisting = existing.includes(clientDb.name(opts.clientId))
     }
   }
 
-  // cannot be a top level require as it
-  // will cause environment module to be loaded prematurely
-  const clientDb = require("@budibase/server/src/db/clientDb")
   await clientDb.create(opts.clientId)
 }
 
