@@ -93,7 +93,7 @@ const setPackage = (store, initial) => async pkg => {
     },
   }
 
-  initial.libraries = await fetchComponentLibModules(pkg.application)
+  initial.libraries = pkg.application.componentLibraries;
   initial.components = await fetchComponentLibDefinitions(pkg.application._id)
   initial.appname = pkg.application.name
   initial.appId = pkg.application._id

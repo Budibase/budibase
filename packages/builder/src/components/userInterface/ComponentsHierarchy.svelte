@@ -36,11 +36,6 @@
     sortBy("title"),
   ])
 
-  const isScreenSelected = component =>
-    component.component &&
-    $store.currentPreviewItem &&
-    component.component.name === $store.currentPreviewItem.name
-
   const confirmDeleteComponent = component => {
     componentToDelete = component
     confirmDeleteDialog.show()
@@ -53,6 +48,7 @@
 </script>
 
 <div class="root">
+
 
   {#each _screens as screen}
     <div
