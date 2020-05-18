@@ -3,7 +3,7 @@ const { create, destroy } = require("../../../db/clientDb")
 const supertest = require("supertest")
 const app = require("../../../app")
 
-const TEST_CLIENT_ID = "test-client-id";
+const TEST_CLIENT_ID = "test-client-id"
 
 exports.supertest = async () => {
   let request
@@ -15,7 +15,7 @@ exports.supertest = async () => {
       server = await app(port)
       started = true
     } catch (err) {
-      if (err.code === "EADDRINUSE") { 
+      if (err.code === "EADDRINUSE") {
         port = port + 1
       } else {
         throw err
@@ -51,7 +51,7 @@ exports.createModel = async (request, instanceId, model) => {
   return res.body
 }
 
-exports.createClientDatabase = async () => await create(TEST_CLIENT_ID);
+exports.createClientDatabase = async () => await create(TEST_CLIENT_ID)
 
 exports.createApplication = async (request, name = "test_application") => {
   const res = await request
@@ -63,7 +63,7 @@ exports.createApplication = async (request, name = "test_application") => {
   return res.body
 }
 
-exports.destroyClientDatabase = async () => await destroy(TEST_CLIENT_ID); 
+exports.destroyClientDatabase = async () => await destroy(TEST_CLIENT_ID)
 
 exports.createInstance = async (request, appId) => {
   const res = await request

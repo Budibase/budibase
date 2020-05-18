@@ -19,6 +19,6 @@ export default {
     resolve({
       browser: true,
     }),
-    commonjs()
+    commonjs(),
   ],
 }

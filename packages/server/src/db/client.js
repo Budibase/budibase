@@ -7,15 +7,15 @@ const COUCH_DB_URL = env.COUCH_DB_URL || `leveldb://${budibaseAppsDir()}/.data/`
 const isInMemory = env.NODE_ENV === "jest"
 
 let POUCH_DB_DEFAULTS = {
-  prefix: COUCH_DB_URL
-};
+  prefix: COUCH_DB_URL,
+}
 
 if (isInMemory) {
   PouchDB.plugin(require("pouchdb-adapter-memory"))
   POUCH_DB_DEFAULTS = {
     prefix: undefined,
-    adapter: "memory"
-  };
+    adapter: "memory",
+  }
 }
 
 const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
