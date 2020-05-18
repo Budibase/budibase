@@ -5,11 +5,11 @@
   export let panelDefinition = {}
   export let componentInstance = {}
   export let componentDefinition = {}
-  export let onPropChanged = () => {}
+  export let onStyleChanged = () => {}
 
   let selectedCategory = "desktop"
 
-  const getProperties = name => panelDefinition.properties[name]
+  const getProperties = name => panelDefinition[name]
 
   function onChange(category) {
     selectedCategory = category
@@ -23,8 +23,7 @@
     { value: "selected", text: "Selected" },
   ]
 
-  $: propertyGroupNames =
-    !!panelDefinition.properties && Object.keys(panelDefinition.properties)
+  $: propertyGroupNames = Object.keys(panelDefinition)
 </script>
 
 <div class="design-view-container">
@@ -38,7 +37,7 @@
       <PropertyGroup
         name={groupName}
         properties={getProperties(groupName)}
-        {onPropChanged}
+        {onStyleChanged}
         {componentDefinition}
         {componentInstance} />
     {/each}

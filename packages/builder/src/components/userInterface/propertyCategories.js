@@ -1,16 +1,14 @@
 import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
+import InputGroup from "../common/Inputs/InputGroup.svelte"
 /*
   TODO: Allow for default values for all properties
 */
 
-export const general = {
-  text: { control: Input },
-}
-
-export const layout = {
-  flexDirection: {
+export const layout = [
+  {
     label: "Direction",
+    cssKey: "flex-direction",
     control: OptionSelect,
     initialValue: "columnReverse",
     options: [
@@ -20,41 +18,45 @@ export const layout = {
       { label: "column-reverse", value: "columnReverse" },
     ],
   },
-  justifyContent: { label: "Justify", control: Input },
-  alignItems: { label: "Align", control: Input },
-  flexWrap: {
+  { label: "Justify", cssKey: "justify-content", control: Input },
+  { label: "Align", cssKey: "align-items", control: Input },
+  {
     label: "Wrap",
+    cssKey: "flex-wrap",
     control: OptionSelect,
     options: [{ label: "wrap" }, { label: "no wrap", value: "noWrap" }],
   },
-}
+]
 
-export const spacing = {
-  padding: { control: Input },
-  margin: { control: Input },
-}
+const spacingMeta = [
+  { placeholder: "T" },
+  { placeholder: "R" },
+  { placeholder: "B" },
+  { placeholder: "L" },
+]
+export const spacing = [
+  {
+    label: "Padding",
+    cssKey: "padding",
+    control: InputGroup,
+    meta: spacingMeta,
+  },
+  { label: "Margin", cssKey: "margin", control: InputGroup, meta: spacingMeta },
+]
 
-export const size = {
-  width: { control: Input },
-  height: { control: Input },
-  minWidth: { label: "Min W", control: Input },
-  minHeight: { label: "Min H", control: Input },
-  maxWidth: { label: "Max W", control: Input },
-  maxHeight: { label: "Max H", control: Input },
-  overflow: {
-    control: OptionSelect,
-    options: [
-      { label: "visible" },
-      { label: "auto" },
-      { label: "hidden" },
-      { label: "auto" },
-      { label: "scroll" },
-    ],
-  }, //custom
-}
+export const size = [
+  { label: "Width", cssKey: "width", control: Input },
+  { label: "Height", cssKey: "height", control: Input },
+  { label: "Min W", cssKey: "min-width", control: Input },
+  { label: "Min H", cssKey: "min-height", control: Input },
+  { label: "Max W", cssKey: "max-width", control: Input },
+  { label: "Max H", cssKey: "max-height", control: Input },
+]
 
-export const position = {
-  position: {
+export const position = [
+  {
+    label: "Position",
+    cssKey: "position",
     control: OptionSelect,
     options: [
       { label: "static" },
@@ -64,11 +66,12 @@ export const position = {
       { label: "sticky" },
     ],
   },
-}
+]
 
-export const typography = {
-  fontFamily: {
+export const typography = [
+  {
     label: "Font",
+    cssKey: "font-family",
     control: OptionSelect,
     options: [
       { label: "initial" },
@@ -82,8 +85,9 @@ export const typography = {
     ],
     styleBindingProperty: "font-family",
   },
-  fontWeight: {
-    label: "weight",
+  {
+    label: "Weight",
+    cssKey: "font-weight",
     control: OptionSelect,
     options: [
       { label: "normal" },
@@ -92,9 +96,11 @@ export const typography = {
       { label: "lighter" },
     ],
   },
-  fontSize: { label: "size", control: Input },
-  lineHeight: { label: "Line H", control: Input },
-  color: {
+  { label: "size", cssKey: "font-size", control: Input },
+  { label: "Line H", cssKey: "line-height", control: Input },
+  {
+    label: "Color",
+    cssKey: "color",
     control: OptionSelect,
     options: [
       { label: "black" },
@@ -104,8 +110,9 @@ export const typography = {
       { label: "green" },
     ],
   },
-  textAlign: {
+  {
     label: "align",
+    cssKey: "text-align",
     control: OptionSelect,
     options: [
       { label: "initial" },
@@ -115,13 +122,14 @@ export const typography = {
       { label: "justify" },
     ],
   }, //custom
-  textTransform: { label: "transform", control: Input }, //custom
-  fontStyle: { label: "style", control: Input }, //custom
-}
+  { label: "transform", cssKey: "text-transform", control: Input }, //custom
+  { label: "style", cssKey: "font-style", control: Input }, //custom
+]
 
-export const background = {
-  backgroundColor: {
-    label: "Background Color",
+export const background = [
+  {
+    label: "Background",
+    cssKey: "background",
     control: OptionSelect,
     options: [
       { label: "white" },
@@ -131,30 +139,29 @@ export const background = {
       { label: "black" },
     ],
   },
-  image: { control: Input }, //custom
-}
+  { label: "Image", cssKey: "image", control: Input }, //custom
+]
 
-export const border = {
-  borderRadius: { label: "radius", control: Input },
-  borderWidth: { label: "width", control: Input }, //custom
-  borderColor: { label: "color", control: Input },
-  borderStyle: { label: "style", control: Input },
-}
+export const border = [
+  { label: "Radius", cssKey: "border-radius", control: Input },
+  { label: "Width", cssKey: "border-width", control: Input }, //custom
+  { label: "Color", cssKey: "border-color", control: Input },
+  { label: "Style", cssKey: "border-style", control: Input },
+]
 
-export const effects = {
-  opacity: { control: Input },
-  rotate: { control: Input },
-  shadow: { control: Input },
-}
+export const effects = [
+  { label: "Opacity", cssKey: "opacity", control: Input },
+  { label: "Rotate", cssKey: "transform", control: Input }, //needs special control
+  { label: "Shadow", cssKey: "box-shadow", control: Input },
+]
 
-export const transitions = {
-  property: { control: Input },
-  duration: { control: Input },
-  ease: { control: Input },
-}
+export const transitions = [
+  { label: "Property", cssKey: "transition-property", control: Input },
+  { label: "Duration", cssKey: "transition-timing-function", control: Input },
+  { label: "Ease", cssKey: "transition-ease", control: Input },
+]
 
 export const all = {
-  general,
   layout,
   spacing,
   size,
