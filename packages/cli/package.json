@@ -11,9 +11,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {
-    "test": "test"
-  },
   "keywords": [
     "budibase"
   ],
