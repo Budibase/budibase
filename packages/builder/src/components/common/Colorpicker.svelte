@@ -2,7 +2,7 @@
   import { onMount, beforeUpdate, afterUpdate } from "svelte"
 
   export let value = null
-  export let onChanged = () => {}
+  export let onChange = () => {}
   export let swatches = []
 
   let picker
@@ -58,13 +58,10 @@
   onMount(() => {
     getRecentColors()
     createPicker()
-
-    picker.on("save", (colour, instance) => {
-      let color = colour.toHEXA().toString()
-      onChanged(color)
-      setRecentColor(color)
-      picker.hide()
-    })
+    return () => {
+      picker.destroyAndRemove()
+      picker = null
+    }
   })
 </script>
 

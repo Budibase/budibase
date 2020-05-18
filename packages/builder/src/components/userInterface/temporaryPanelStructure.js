@@ -1,3 +1,13 @@
+import {
+  general,
+  layout,
+  typography,
+  border,
+  size,
+  background,
+  all,
+} from "./propertyCategories.js"
+
 export default {
   categories: [
     {
@@ -20,6 +30,7 @@ export default {
           icon: "ri-layout-row-fill",
           commonProps: {},
           children: [],
+          properties: { background, size },
         },
         {
           name: "Text",
@@ -32,23 +43,18 @@ export default {
               name: "Headline",
               description: "A component for displaying heading text",
               icon: "ri-heading",
-              props: {
-                type: {
-                  type: "options",
-                  options: ["h1", "h2", "h3", "h4", "h5", "h6"],
-                  default: "h1",
-                },
-                text: "string",
+              properties: {
+               ...all
               },
             },
             {
               _component: "@budibase/standard-components/text",
               name: "Paragraph",
               description: "A component for displaying paragraph text.",
-              icon: "ri-paragraph",
-              props: {},
-            },
-          ],
+              icon: 'ri-paragraph',
+              properties: { general, typography },
+            }
+          ]
         },
         {
           name: "Input",
@@ -59,60 +65,58 @@ export default {
             {
               _component: "@budibase/standard-components/input",
               name: "Textfield",
-              description:
-                "A textfield component that allows the user to input text.",
-              icon: "ri-edit-box-line",
-              props: {},
+              description: "A textfield component that allows the user to input text.",
+              icon: 'ri-edit-box-line',
+              properties: {}
             },
             {
               _component: "@budibase/standard-components/checkbox",
               name: "Checkbox",
               description: "A selectable checkbox component",
-              icon: "ri-checkbox-line",
-              props: {},
+              icon: 'ri-checkbox-line',
+              properties: {}
             },
             {
               _component: "@budibase/standard-components/radiobutton",
               name: "Radiobutton",
               description: "A selectable radiobutton component",
-              icon: "ri-radio-button-line",
-              props: {},
+              icon: 'ri-radio-button-line',
+              properties: {}
             },
             {
               _component: "@budibase/standard-components/select",
               name: "Select",
-              description:
-                "A select component for choosing from different options",
-              icon: "ri-file-list-line",
-              props: {},
-            },
-          ],
+              description: "A select component for choosing from different options",
+              icon: 'ri-file-list-line',
+              properties: {}
+            }
+          ]
         },
         {
           _component: "@budibase/standard-components/button",
-          name: "Button",
-          description: "A basic html button that is ready for styling",
-          icon: "ri-radio-button-fill",
-          commonProps: {},
+          name: 'Button',
+          description: 'A basic html button that is ready for styling',
+          icon: 'ri-radio-button-fill',
           children: [],
+          properties: { background, typography, border, size },
         },
         {
           _component: "@budibase/standard-components/icon",
-          name: "Icon",
-          description: "A basic component for displaying icons",
-          icon: "ri-sun-fill",
-          commonProps: {},
-          children: [],
+          name: 'Icon',
+          description: 'A basic component for displaying icons',
+          icon: 'ri-sun-fill',
+          properties: {},
+          children: []
         },
         {
           _component: "@budibase/standard-components/link",
-          name: "Link",
-          description: "A basic link component for internal and external links",
-          icon: "ri-link",
-          commonProps: {},
-          children: [],
-        },
-      ],
+          name: 'Link',
+          description: 'A basic link component for internal and external links',
+          icon: 'ri-link',
+          properties: {},
+          children: []
+        }
+      ]
     },
     {
       name: "Blocks",
@@ -120,21 +124,18 @@ export default {
       children: [
         {
           _component: "@budibase/materialdesign-components/BasicCard",
-          name: "Card",
-          description:
-            "A basic card component that can contain content and actions.",
-          icon: "ri-layout-bottom-line",
-          commonProps: {},
+          name: 'Card',
+          description: 'A basic card component that can contain content and actions.',
+          icon: 'ri-layout-bottom-line',
           children: [],
+          properties: { size, background, border },
         },
         {
-          _component: "@budibase/standard-components/login",
-          name: "Login",
-          description:
-            "A component that automatically generates a login screen for your app.",
-          icon: "ri-login-box-fill",
-          commonProps: {},
-          children: [],
+          name: 'Login',
+          description: 'A component that automatically generates a login screen for your app.',
+          icon: 'ri-login-box-fill',
+          properties: {},
+          children: []
         },
         {
           name: "Navigation Bar",
@@ -142,30 +143,28 @@ export default {
           description:
             "A component for handling the navigation within your app.",
           icon: "ri-navigation-fill",
-          commonProps: {},
-          children: [],
-        },
-      ],
+          properties: {},
+          children: []
+        }
+      ]
     },
     {
       name: "Data",
       isCategory: true,
       children: [
         {
-          name: "Table",
-          _component: "@budibase/materialdesign-components/Datatable",
-          description: "A component that generates a table from your data.",
-          icon: "ri-archive-drawer-fill",
-          commonProps: {},
-          children: [],
+          name: 'Table',
+          description: 'A component that generates a table from your data.',
+          icon: 'ri-archive-drawer-fill',
+          properties: {},
+          children: []
         },
         {
+          name: 'Form',
+          description: 'A component that generates a form from your data.',
+          icon: 'ri-file-edit-fill',
+          properties: {},
           _component: "@budibase/materialdesign-components/Form",
-          name: "Form",
-          description: "A component that generates a form from your data.",
-          icon: "ri-file-edit-fill",
-          commonProps: {},
-          component: "@budibase/materialdesign-components/Form",
           template: {
             component: "@budibase/materialdesign-components/Form",
             description: "Form for saving a record",
