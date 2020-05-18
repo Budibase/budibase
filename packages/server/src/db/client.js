@@ -3,7 +3,7 @@ const allDbs = require("pouchdb-all-dbs")
 const { budibaseAppsDir } = require("../utilities/budibaseDir")
 const env = require("../environment")
 
-const COUCH_DB_URL = env.COUCH_DB_URL || `leveldb://${budibaseAppsDir()}/`
+const COUCH_DB_URL = env.COUCH_DB_URL || `leveldb://${budibaseAppsDir().replace(/\\/g, "/")}/.data/`
 const isInMemory = env.NODE_ENV === "jest"
 
 if (isInMemory) PouchDB.plugin(require("pouchdb-adapter-memory"))

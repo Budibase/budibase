@@ -1,12 +1,14 @@
 const CouchDB = require("../../db")
+const ClientDb = require("../../db/clientDb")
 const { resolve, join } = require("path")
 const {
   budibaseTempDir,
   budibaseAppsDir,
 } = require("../../utilities/budibaseDir")
+const env = require("../../environment")
 
 exports.fetchAppComponentDefinitions = async function(ctx) {
-  const db = new CouchDB(`client-${ctx.params.clientId}`)
+  const db = new CouchDB(ClientDb.name(env.CLIENT_ID))
   const app = await db.get(ctx.params.appId)
 
   const componentDefinitions = app.componentLibraries.reduce(

@@ -1,13 +1,12 @@
 const CouchDB = require("../../db")
+const client = require("../../db/clientDb")
 const uuid = require("uuid")
 const env = require("../../environment")
-
-const clientDatabaseId = clientId => `client-${clientId}`
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name
   const uid = uuid.v4().replace(/-/g, "")
-  const instanceId = `${ctx.params.applicationId.substring(0,7)}_${uid}`
+  const instanceId = `inst_${ctx.params.applicationId.substring(0,7)}_${uid}`
   const { applicationId } = ctx.params
   const clientId = env.CLIENT_ID
   const db = new CouchDB(instanceId)
@@ -34,7 +33,7 @@ exports.create = async function(ctx) {
   })
 
   // Add the new instance under the app clientDB
-  const clientDb = new CouchDB(clientDatabaseId(clientId))
+  const clientDb = new CouchDB(client.name(clientId))
   const budibaseApp = await clientDb.get(applicationId)
   const instance = { _id: instanceId, name: instanceName }
   budibaseApp.instances.push(instance)
@@ -52,7 +51,7 @@ exports.destroy = async function(ctx) {
 
   // remove instance from client application document
   const { metadata } = designDoc
-  const clientDb = new CouchDB(clientDatabaseId(metadata.clientId))
+  const clientDb = new CouchDB(client.name(metadata.clientId))
   const budibaseApp = await clientDb.get(metadata.applicationId)
   budibaseApp.instances = budibaseApp.instances.filter(
     instance => instance !== ctx.params.instanceId
