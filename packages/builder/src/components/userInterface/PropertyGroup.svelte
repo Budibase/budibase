@@ -3,10 +3,10 @@
   import PropertyControl from "./PropertyControl.svelte"
 
   export let name = ""
-  export let properties = {}
+  export let properties = []
   export let componentInstance = {}
   export let componentDefinition = {}
-  export let onPropChanged = () => {}
+  export let onStyleChanged = () => {}
 
   export let show = false
   let showComponentGroup = false
@@ -15,7 +15,10 @@
   const capitalize = name => name[0].toUpperCase() + name.slice(1)
 
   function onChange(key, v) {
-    !!v.target ? onPropChanged(key, v.target.value) : onPropChanged(key, v)
+    console.log("PROPERTY GROUP ON CHANGE")
+    !!v.target
+      ? onStyleChanged(name, key, v.target.value)
+      : onStyleChanged(name, key, v)
   }
 
   $: {
@@ -29,7 +32,6 @@
     }
   }
 
-  $: propertyDefinition = Object.entries(properties)
   $: icon = show ? "ri-arrow-down-s-fill" : "ri-arrow-right-s-fill"
 </script>
 
@@ -43,14 +45,14 @@
   </div>
   <div class="property-panel" class:show>
 
-    {#each propertyDefinition as [key, definition]}
+    {#each properties as props}
       <!-- {#if propExistsOnComponentDef(key)} -->
       <PropertyControl
-        label={definition.label || capitalize(key)}
-        control={definition.control}
-        value={componentInstance[key]}
-        onChange={value => onChange(key, value)}
-        props={{ ...excludeProps(definition, ['control']) }} />
+        label={props.label}
+        control={props.control}
+        value={componentInstance[props.cssKey]}
+        onChange={value => onChange(props.cssKey, value)}
+        props={{ ...excludeProps(props, ['control']) }} />
       <!-- {/if} -->
     {/each}
   </div>

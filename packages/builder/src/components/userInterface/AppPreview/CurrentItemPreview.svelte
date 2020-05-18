@@ -60,7 +60,7 @@
               _children: [
                 {
                   _component: "@budibase/standard-components/container",
-                  _styles: { position: {}, layout: {} },
+                  _styles: {},
                   _id: "__screenslot__text",
                   _code: "",
                   className: "",
@@ -69,7 +69,7 @@
                   _children: [
                     {
                       _component: "@budibase/standard-components/text",
-                      _styles: { position: {}, layout: {} },
+                      _styles: {},
                       _id: "__screenslot__text_2",
                       _code: "",
                       text: "content",

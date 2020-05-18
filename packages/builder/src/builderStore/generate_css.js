@@ -110,30 +110,33 @@ const object_to_css_string = [
   join_with("\n"),
 ]
 
-export const generate_css = ({ layout, position }) => {
-  let _layout = pipe(layout, object_to_css_string)
-  if (_layout.length) {
-    _layout += `\ndisplay: ${_layout.includes("flex") ? "flex" : "grid"};`
-  }
+export const generate_css = style => {
+  // let cssString = pipe(style, object_to_css_string)
+  let cssString = Object.entries(style).reduce((str, [key, value]) => {
+    //TODO Handle arrays and objects here also
+    if (typeof value === "string") {
+      if (value) {
+        return (str += `${key}: ${value};\n`)
+      }
+    } else if (Array.isArray(value)) {
+      return (str += `${key}: ${value.map(v => `${v}px`).join(" ")};\n`)
+    }
+  }, "")
 
-  return {
-    layout: _layout,
-    position: pipe(position, object_to_css_string),
-  }
+  return (cssString || "").trim()
 }
 
 const apply_class = (id, name, styles) => `.${name}-${id} {\n${styles}\n}`
 
 export const generate_screen_css = component_array => {
   let styles = ""
-  let emptyStyles = { layout: {}, position: {} }
-
+  let emptyStyles = {}
   for (let i = 0; i < component_array.length; i += 1) {
     const { _styles, _id, _children } = component_array[i]
-    const { layout, position } = generate_css(_styles || emptyStyles)
-
-    styles += apply_class(_id, "pos", position) + "\n"
-    styles += apply_class(_id, "lay", layout) + "\n"
+    const cssString = generate_css(_styles || emptyStyles) || ""
+    if (cssString) {
+      styles += apply_class(_id, "element", cssString)
+    }
     if (_children && _children.length) {
       styles += generate_screen_css(_children) + "\n"
     }

@@ -1,4 +1,5 @@
 <script>
+  import { setContext, onMount } from "svelte"
   import PropsView from "./PropsView.svelte"
   import { store } from "builderStore"
   import IconButton from "components/common/IconButton.svelte"
@@ -16,27 +17,28 @@
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
+  import SettingsView from "./SettingsView.svelte"
 
   let current_view = "design"
   let codeEditor
   let flattenedPanel = flattenComponents(panelStructure.categories)
   let categories = [
-    { name: "Design" },
-    { name: "Settings" },
-    { name: "Actions" },
+    { value: "design", name: "Design" },
+    { value: "settings", name: "Settings" },
+    { value: "actions", name: "Actions" },
   ]
   let selectedCategory = categories[0]
 
   $: components = $store.components
   $: componentInstance = $store.currentComponentInfo
-  $: componentDefinition = $store.components.find(
-    c => c.name === componentInstance._component
-  )
-
-  $: panelDefinition = flattenedPanel.find(
+  $: componentDefinition = $store.components[componentInstance._component]
+  $: componentPropDefinition = flattenedPanel.find(
     //use for getting controls for each component property
     c => c._component === componentInstance._component
   )
+  $: panelDefinition = componentPropDefinition
+    ? componentPropDefinition.properties[selectedCategory.value]
+    : {}
 
   // SCREEN PROPS =============================================
   $: screen_props =
@@ -44,8 +46,11 @@
       ? getProps($store.currentPreviewItem, ["name", "favicon"])
       : getProps($store.currentPreviewItem, ["name", "description", "route"])
 
+  // const onStyleChanged = store.setComponentStyle
+  // const onStyleChanged = store.onStyleChanged
+
   const onStyleChanged = store.setComponentStyle
-  const onPropChanged = store.onPropChanged
+  const onPropChanged = store.setComponentProp
 
   function walkProps(component, action) {
     action(component)
@@ -81,12 +86,17 @@
     {selectedCategory} />
 
   <div class="component-props-container">
-    {#if current_view === 'design'}
+    {#if selectedCategory.value === 'design'}
       <DesignView
         {panelDefinition}
         {componentInstance}
         {componentDefinition}
-        {onPropChanged} />
+        {onStyleChanged} />
+    {:else if selectedCategory.value === 'settings'}
+      <SettingsView
+        {componentInstance}
+        {panelDefinition}
+        onChange={onPropChanged} />
     {/if}
 
   </div>

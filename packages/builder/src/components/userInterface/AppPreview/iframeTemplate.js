@@ -11,7 +11,7 @@ export default ({
     <style>
       ${styles || ""}
 
-      .pos-${selectedComponentId} {
+      .element-${selectedComponentId} {
         border: 2px solid #0055ff; 
       }
 

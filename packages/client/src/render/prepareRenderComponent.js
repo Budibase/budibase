@@ -36,7 +36,7 @@ export const prepareRenderComponent = ({
         htmlElement.children[htmlElement.children.length - 1]
 
       if (props._id && thisNode.rootElement) {
-        thisNode.rootElement.classList.add(`pos-${props._id}`)
+        thisNode.rootElement.classList.add(`element-${props._id}`)
       }
     }
   }

@@ -24,7 +24,7 @@ export const createProps = (componentDefinition, derivedFromProps) => {
   const props = {
     _id: uuid(),
     _component: componentDefinition._component,
-    _styles: { position: {}, layout: {} },
+    _styles: {},
     _code: "",
   }
 
@@ -71,7 +71,7 @@ export const makePropsSafe = (componentDefinition, props) => {
   }
 
   if (!props._styles) {
-    props._styles = { layout: {}, position: {} }
+    props._styles = {}
   }
 
   return props
