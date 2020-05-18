@@ -1,5 +1,5 @@
 import { cloneDeep, values } from "lodash/fp"
-import { backendUiStore } from "builderStore";
+import { backendUiStore } from "builderStore"
 import * as backendStoreActions from "./backend"
 import { writable, get } from "svelte/store"
 import api from "../api"
@@ -194,7 +194,7 @@ const setCurrentScreen = store => screenName => {
 const deleteScreen = store => name => {
   store.update(s => {
     const components = s.components.filter(c => c.name !== name)
-    const screens = s.screens.filter(c => c.name !== name);
+    const screens = s.screens.filter(c => c.name !== name)
 
     s.components = components
     s.screens = screens
@@ -251,12 +251,12 @@ const renameScreen = store => (oldname, newname) => {
 
 const savePage = store => async page => {
   store.update(state => {
-    if (s.currentFrontEndType !== "page" || !s.currentPageName) {
+    if (state.currentFrontEndType !== "page" || !state.currentPageName) {
       return state
     }
 
-    s.pages[s.currentPageName] = page
-    _savePage(s)
+    state.pages[state.currentPageName] = page
+    _savePage(state)
     return state
   })
 }
@@ -271,7 +271,9 @@ const addStylesheet = store => stylesheet => {
 
 const removeStylesheet = store => stylesheet => {
   store.update(state => {
-    state.pages.stylesheets = s.pages.stylesheets.filter(s => s !== stylesheet)
+    state.pages.stylesheets = state.pages.stylesheets.filter(
+      s => s !== stylesheet
+    )
     _savePage(state)
     return state
   })
@@ -351,12 +353,16 @@ const addChildComponent = store => (componentToAdd, presetName) => {
 
     const presetProps = presetName ? component.presets[presetName] : {}
 
-    const instanceId = get(backendUiStore).selectedDatabase._id;
+    const instanceId = get(backendUiStore).selectedDatabase._id
 
-    const newComponent = createProps(component, {
-      ...presetProps,
-      _instanceId: instanceId
-    }, state)
+    const newComponent = createProps(
+      component,
+      {
+        ...presetProps,
+        _instanceId: instanceId,
+      },
+      state
+    )
 
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       newComponent.props
@@ -442,7 +448,7 @@ const setComponentCode = store => code => {
     // save without messing with the store
     _saveScreenApi(state.currentPreviewItem, state)
 
-    return s
+    return state
   })
 }
 

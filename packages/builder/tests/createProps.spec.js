@@ -29,15 +29,6 @@ describe("createDefaultProps", () => {
     expect(props._component).toBe("some_component")
   })
 
-  it("should return error when component name not supplied", () => {
-    const comp = getcomponent()
-    comp.name = ""
-
-    const { errors } = createProps(comp)
-
-    expect(errors.length).toEqual(1)
-  })
-
   it("should create a object with single blank string value, when prop definition is 'string' ", () => {
     const comp = getcomponent()
     comp.props.fieldName = "string"

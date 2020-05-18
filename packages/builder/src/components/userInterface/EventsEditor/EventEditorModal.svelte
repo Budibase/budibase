@@ -1,5 +1,5 @@
 <script>
-  import { store } from "builderStore";
+  import { store } from "builderStore"
   import Modal from "../../common/Modal.svelte"
   import HandlerSelector from "./HandlerSelector.svelte"
   import IconButton from "../../common/IconButton.svelte"
