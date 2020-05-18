@@ -1,11 +1,11 @@
 <script>
-  import { onMount } from "svelte";
-  import FusionCharts from "fusioncharts";
-  import Charts from "fusioncharts/fusioncharts.charts";
-  import FusionTheme from "fusioncharts/themes/fusioncharts.theme.fusion";
-  import SvelteFC, {fcRoot} from 'svelte-fusioncharts';
+  import { onMount } from "svelte"
+  import FusionCharts from "fusioncharts"
+  import Charts from "fusioncharts/fusioncharts.charts"
+  import FusionTheme from "fusioncharts/themes/fusioncharts.theme.fusion"
+  import SvelteFC, { fcRoot } from "svelte-fusioncharts"
 
-  fcRoot(FusionCharts, Charts, FusionTheme);
+  fcRoot(FusionCharts, Charts, FusionTheme)
 
   export let _bb
   export let _instanceId
@@ -16,12 +16,12 @@
 
   $: chartConfigs = {
     type,
-    width: '600',
-    height: '400',
-    dataFormat: 'json',
+    width: "600",
+    height: "400",
+    dataFormat: "json",
     dataSource: {
-      data: $store[model._id] || []
-    }
+      data: $store[model._id] || [],
+    },
   }
 
   async function fetchData() {
@@ -30,7 +30,7 @@
     if (response.status === 200) {
       const json = await response.json()
       store.update(state => {
-        state[model._id] = json 
+        state[model._id] = json
         return state
       })
     } else {
@@ -41,7 +41,6 @@
   onMount(async () => {
     await fetchData()
   })
-
 </script>
 
 <div id="container">
