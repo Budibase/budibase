@@ -10,12 +10,14 @@ const app = new Koa()
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 
-app.use(logger({
-  prettyPrint: {
-    levelFirst: true
-  },
-  level: process.env.NODE_ENV === "jest" ? "silent" : "info"
-}))
+app.use(
+  logger({
+    prettyPrint: {
+      levelFirst: true,
+    },
+    level: process.env.NODE_ENV === "jest" ? "silent" : "info",
+  })
+)
 
 // api routes
 app.use(api.routes())
