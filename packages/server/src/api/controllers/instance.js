@@ -5,7 +5,8 @@ const env = require("../../environment")
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name
-  const instanceId = `inst_${ctx.params.applicationId.substring(0, 7)}_${newid()}`
+  const appShortId = ctx.params.applicationId.substring(0, 7)
+  const instanceId = `inst_${appShortId}_${newid()}`
   const { applicationId } = ctx.params
   const clientId = env.CLIENT_ID
   const db = new CouchDB(instanceId)
