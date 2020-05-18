@@ -48,7 +48,6 @@
 </script>
 
 <div class="root">
-
   {#each _screens as screen}
     <div
       class="budibase__nav-item component"
