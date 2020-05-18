@@ -1,5 +1,5 @@
 const CouchDB = require("../../db")
-const uuid = require("uuid")
+const newid = require("../../db/newid")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
@@ -15,7 +15,7 @@ exports.create = async function(ctx) {
   const newModel = {
     type: "model",
     ...ctx.request.body,
-    _id: uuid.v4().replace(/-/g, ""),
+    _id: newid(),
   }
 
   const result = await db.post(newModel)

@@ -1,7 +1,7 @@
 const CouchDB = require("../../db")
 const ClientDb = require("../../db/clientDb")
 const { getPackageForBuilder } = require("../../utilities/builder")
-const uuid = require("uuid")
+const newid = require("../../db/newid")
 const env = require("../../environment")
 
 exports.fetch = async function(ctx) {
@@ -24,7 +24,7 @@ exports.create = async function(ctx) {
   const db = new CouchDB(ClientDb.name(env.CLIENT_ID))
 
   const newApplication = {
-    _id: uuid.v4().replace(/-/g, ""),
+    _id: newid(),
     type: "app",
     instances: [],
     userInstanceMap: {},
