@@ -49,8 +49,6 @@
         {/if}
       {/each}
     </select>
-  {:else if type === 'colour'}
-    <Colorpicker {onChanged} {value} />
   {:else}
     <PropertyCascader {onChanged} {value} />
   {/if}
