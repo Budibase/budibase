@@ -1,10 +1,23 @@
 const jwt = require("jsonwebtoken")
-const STATUS_CODES = require("../utilities/statusCodes");
+const STATUS_CODES = require("../utilities/statusCodes")
+const env = require("../environment")
 
 module.exports = async (ctx, next) => {
-  if (ctx.isDev) {
+  const authHeader = ctx.get("Authorization")
+
+  if (
+    authHeader &&
+    authHeader.startsWith("Basic") &&
+    authHeader.split(" ")[1] === env.ADMIN_SECRET
+  ) {
     ctx.isAuthenticated = true
-    await next();
+    await next()
+    return
+  }
+
+  if (ctx.isDev && ctx.cookies.get("builder:token") === env.ADMIN_SECRET) {
+    ctx.isAuthenticated = true
+    await next()
     return
   }
 

@@ -6,7 +6,7 @@
   export let record
   export let onClosed
 
-  $: instanceId = $backendUiStore.selectedDatabase.id
+  $: instanceId = $backendUiStore.selectedDatabase._id
 </script>
 
 <section>

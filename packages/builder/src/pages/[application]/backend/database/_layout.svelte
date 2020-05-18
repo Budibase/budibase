@@ -12,7 +12,7 @@
   onMount(async () => {
     if ($store.appInstances.length > 0) {
       await selectDatabase($store.appInstances[0])
-      $goto(`./${$backendUiStore.selectedDatabase.id}`)
+      $goto(`./${$backendUiStore.selectedDatabase._id}`)
     }
   })
 </script>

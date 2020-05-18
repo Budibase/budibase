@@ -1,37 +1,58 @@
-const supertest = require("supertest");
-const app = require("../../../app");
-const { createClientDatabase, destroyDatabase } = require("./couchTestUtils");
-
-
-const CLIENT_DB_ID = "client-testing";
+const { 
+  createClientDatabase,  
+  createApplication,
+  destroyClientDatabase,
+  supertest,
+  defaultHeaders
+} = require("./couchTestUtils")
 
 describe("/applications", () => {
-  let request;
-  let server;
+  let request
+  let server
 
   beforeAll(async () => {
-    server = app;
-    request = supertest(server);
-    await createClientDatabase();
+    ({ request, server } = await supertest())
   });
 
+  beforeEach(async () => {
+    await createClientDatabase(request)
+  })
+
+  afterEach(async () => {
+    await destroyClientDatabase(request)
+  })
+
   afterAll(async () => {
-    server.close();
-    await destroyDatabase(CLIENT_DB_ID)
+    server.close()
   })
 
   describe("create", () => {
-    it("returns a success message when the application is successfully created", done => {
-      request
-        .post("/api/testing/applications")
+    it("returns a success message when the application is successfully created", async () => {
+      const res = await request
+        .post("/api/applications")
         .send({ name: "My App" })
-        .set("Accept", "application/json")
+        .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(200)
-        .end((err, res) => {
-            expect(res.body.message).toEqual("Application My App created successfully");            
-            done();
-        });
-      })
-    });
-});
+      expect(res.res.statusMessage).toEqual("Application My App created successfully")
+      expect(res.body._id).toBeDefined()
+    })
+  })
+
+  describe("fetch", () => {
+    it("lists all applications", async () => {
+      
+      await createApplication(request, "app1")
+      await createApplication(request, "app2")
+
+      const res = await request
+        .get("/api/applications")
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      expect(res.body.length).toBe(2)
+    })
+  })
+
+})

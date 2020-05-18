@@ -17,14 +17,6 @@
   }
 
   onMount(async () => {
-    const res = await fetch(`/api/client/id`)
-    const json = await res.json()
-
-    store.update(state => {
-      state.clientId = json
-      return state
-    })
-
     window.addEventListener("error", showErrorBanner)
     window.addEventListener("unhandledrejection", showErrorBanner)
   })
@@ -34,8 +26,7 @@
 
 <AppNotification />
 
-{#if $store.clientId}
-  <Modal>
-    <Router {routes} />
-  </Modal>
-{/if}
+<Modal>
+  <Router {routes} />
+</Modal>
+

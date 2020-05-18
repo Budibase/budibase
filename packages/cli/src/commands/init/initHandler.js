@@ -3,10 +3,8 @@ const { exists, readFile, writeFile, ensureDir } = require("fs-extra")
 const chalk = require("chalk")
 const { serverFileName, xPlatHomeDir } = require("../../common")
 const { join } = require("path")
-const initialiseClientDb = require("@budibase/server/src/db/initialiseClientDb")
 const Sqrl = require("squirrelly")
 const uuid = require("uuid")
-const CouchDB = require("@budibase/server/src/db/client")
 
 module.exports = opts => {
   run(opts)
@@ -15,6 +13,7 @@ module.exports = opts => {
 const run = async opts => {
   try {
     await ensureAppDir(opts)
+    await setEnvironmentVariables(opts)
     await prompts(opts)
     await createClientDatabase(opts)
     await createDevEnvFile(opts)
@@ -24,16 +23,20 @@ const run = async opts => {
   }
 }
 
-const ensureAppDir = async opts => {
-  opts.dir = xPlatHomeDir(opts.dir)
-  await ensureDir(opts.dir)
-
+const setEnvironmentVariables = async opts => {
   if (opts.database === "local") {
     const dataDir = join(opts.dir, ".data")
     await ensureDir(dataDir)
     process.env.COUCH_DB_URL =
       dataDir + (dataDir.endsWith("/") || dataDir.endsWith("\\") ? "" : "/")
+  } else {
+    process.env.COUCH_DB_URL = opts.couchDbUrl
   }
+}
+
+const ensureAppDir = async opts => {
+  opts.dir = xPlatHomeDir(opts.dir)
+  await ensureDir(opts.dir)
 }
 
 const prompts = async opts => {
@@ -56,7 +59,14 @@ const prompts = async opts => {
 }
 
 const createClientDatabase = async opts => {
+  // cannot be a top level require as it
+  // will cause environment module to be loaded prematurely
+  const clientDb = require("@budibase/server/src/db/clientDb")
+
   if (opts.clientId === "new") {
+    // cannot be a top level require as it
+    // will cause environment module to be loaded prematurely
+    const CouchDB = require("@budibase/server/src/db/client")
     const existing = await CouchDB.allDbs()
 
     let i = 0
@@ -64,12 +74,11 @@ const createClientDatabase = async opts => {
     while (isExisting) {
       i += 1
       opts.clientId = i.toString()
-      isExisting = existing.includes(`client-${opts.clientId}`)
+      isExisting = existing.includes(clientDb.name(opts.clientId))
     }
   }
 
-  const db = new CouchDB(`client-${opts.clientId}`)
-  await initialiseClientDb(db)
+  await clientDb.create(opts.clientId)
 }
 
 const createDevEnvFile = async opts => {

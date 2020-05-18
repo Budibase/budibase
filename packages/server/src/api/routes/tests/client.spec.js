@@ -1,58 +1,48 @@
-const supertest = require("supertest");
-const app = require("../../../app");
-const { createClientDatabase, destroyClientDatabase } = require("./couchTestUtils")
+const { 
+  createClientDatabase, 
+  destroyClientDatabase,
+  supertest,
+} = require("./couchTestUtils")
 
-
-const CLIENT_DB_ID = "client-testing";
+const CLIENT_ID = "test-client-id"
 
 describe("/clients", () => {
   let request;
   let server;
-  let db;
 
-  beforeAll(async () => {
-    server = app
-    request = supertest(server);
+  beforeEach(async () => {
+    ({ request, server } = await supertest())
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     server.close();
   })
 
   describe("create", () => {
-    afterEach(async () => {
-      await destroyClientDatabase();
-    });
 
-    it("returns a success message when the client database is successfully created", done => {
-      request
-        .post("/api/clients")
+    it("returns a success message when the client database is successfully created", async () => {
+      const res = await request
+        .post("/api/client")
         .send({ clientId: "testing" })
         .set("Accept", "application/json")
-        .expect('Content-Type', /json/)
         .expect(200)
-        .end((err, res) => {
-            expect(res.body.message).toEqual(`Client Database ${CLIENT_DB_ID} successfully provisioned.`);            
-            done();
-        });
-      })
-    });
+
+      expect(res.res.statusMessage).toEqual(`Client Database ${process.env.CLIENT_ID} successfully provisioned.`);            
+    })
+  });
 
   describe("destroy", () => {
     beforeEach(async () => {
-      db = await createClientDatabase();
+      db = await createClientDatabase(request);
     });
 
-    it("returns a success message when the client database is successfully destroyed", async done => {
-      request
-        .delete(`/api/clients/testing`)
+    it("returns a success message when the client database is successfully destroyed", async () => {
+      const res = await request
+        .delete(`/api/client`)
         .set("Accept", "application/json")
-        .expect('Content-Type', /json/)
         .expect(200)
-        .end((err, res) => {
-            expect(res.body.message).toEqual(`Client Database ${CLIENT_DB_ID} successfully deleted.`);            
-            done();
-        });
-      })
-    });
+      expect(res.res.statusMessage).toEqual(`Client Database ${process.env.CLIENT_ID} successfully deleted.`);            
+
+    })
+  });
 });
