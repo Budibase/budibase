@@ -251,12 +251,12 @@ const renameScreen = store => (oldname, newname) => {
 
 const savePage = store => async page => {
   store.update(state => {
-    if (s.currentFrontEndType !== "page" || !s.currentPageName) {
+    if (state.currentFrontEndType !== "page" || !state.currentPageName) {
       return state
     }
 
-    s.pages[s.currentPageName] = page
-    _savePage(s)
+    state.pages[state.currentPageName] = page
+    _savePage(state)
     return state
   })
 }
@@ -271,7 +271,9 @@ const addStylesheet = store => stylesheet => {
 
 const removeStylesheet = store => stylesheet => {
   store.update(state => {
-    state.pages.stylesheets = s.pages.stylesheets.filter(s => s !== stylesheet)
+    state.pages.stylesheets = state.pages.stylesheets.filter(
+      s => s !== stylesheet
+    )
     _savePage(state)
     return state
   })
@@ -446,7 +448,7 @@ const setComponentCode = store => code => {
     // save without messing with the store
     _saveScreenApi(state.currentPreviewItem, state)
 
-    return s
+    return state
   })
 }
 
