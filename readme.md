@@ -39,6 +39,6 @@ Once you have created your app, you need to create yourself an instance of your 
 
 A work in progress, lives here: https://docs.budibase.com
 
+## Contributing
 
-
-
+Contributers, see [CONTRIBUTING.md](./CONTRIBUTING.md)
