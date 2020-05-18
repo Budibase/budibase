@@ -13,7 +13,7 @@ if (isDev) {
   })
 }
 
-const APP_URL = "http://localhost:4001"
+const APP_URL = "http://localhost:4001/_builder"
 const APP_TITLE = "Budibase Builder"
 
 let win
