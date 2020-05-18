@@ -7,7 +7,7 @@ const {
 const env = require("../../environment")
 
 exports.serveBuilder = async function(ctx) {
-  let builderPath = resolve(process.cwd(), "builder")
+  let builderPath = resolve(__dirname, "../../../builder")
   ctx.cookies.set("builder:token", env.ADMIN_SECRET)
   await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
 }
