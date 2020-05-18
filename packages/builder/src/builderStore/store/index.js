@@ -11,10 +11,7 @@ import {
   makePropsSafe,
   getBuiltin,
 } from "components/userInterface/pagesParsing/createProps"
-import {
-  fetchComponentLibModules,
-  fetchComponentLibDefinitions,
-} from "../loadComponentLibraries"
+import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import { buildCodeForScreens } from "../buildCodeForScreens"
 import { generate_screen_css } from "../generate_css"
 import { insertCodeMetadata } from "../insertCodeMetadata"
@@ -93,7 +90,7 @@ const setPackage = (store, initial) => async pkg => {
     },
   }
 
-  initial.libraries = pkg.application.componentLibraries;
+  initial.libraries = pkg.application.componentLibraries
   initial.components = await fetchComponentLibDefinitions(pkg.application._id)
   initial.appname = pkg.application.name
   initial.appId = pkg.application._id
