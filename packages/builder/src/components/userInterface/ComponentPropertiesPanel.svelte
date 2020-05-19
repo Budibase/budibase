@@ -46,9 +46,6 @@
       ? getProps($store.currentPreviewItem, ["name", "favicon"])
       : getProps($store.currentPreviewItem, ["name", "description", "route"])
 
-  // const onStyleChanged = store.setComponentStyle
-  // const onStyleChanged = store.onStyleChanged
-
   const onStyleChanged = store.setComponentStyle
   const onPropChanged = store.setComponentProp
 
@@ -87,14 +84,11 @@
 
   <div class="component-props-container">
     {#if selectedCategory.value === 'design'}
-      <DesignView
-        {panelDefinition}
-        {componentInstance}
-        {componentDefinition}
-        {onStyleChanged} />
+      <DesignView {panelDefinition} {componentInstance} {onStyleChanged} />
     {:else if selectedCategory.value === 'settings'}
       <SettingsView
         {componentInstance}
+        {componentDefinition}
         {panelDefinition}
         onChange={onPropChanged} />
     {/if}

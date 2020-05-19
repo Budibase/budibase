@@ -102,25 +102,13 @@ export const typography = [
     label: "Color",
     cssKey: "color",
     control: OptionSelect,
-    options: [
-      { label: "black" },
-      { label: "red" },
-      { label: "white" },
-      { label: "blue" },
-      { label: "green" },
-    ],
+    options: ["black", "red", "white", "blue", "green"],
   },
   {
     label: "align",
     cssKey: "text-align",
     control: OptionSelect,
-    options: [
-      { label: "initial" },
-      { label: "left" },
-      { label: "right" },
-      { label: "center" },
-      { label: "justify" },
-    ],
+    options: ["initial", "left", "right", "center", "justify"],
   }, //custom
   { label: "transform", cssKey: "text-transform", control: Input }, //custom
   { label: "style", cssKey: "font-style", control: Input }, //custom
