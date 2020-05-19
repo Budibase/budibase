@@ -8,7 +8,6 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "build": {
-    "asar": true,
     "appId": "com.budibase.builder",
     "productName": "Budibase Builder",
     "afterSign": "electron-builder-notarize",
