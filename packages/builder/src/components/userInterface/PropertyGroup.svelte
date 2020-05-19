@@ -5,37 +5,21 @@
   export let name = ""
   export let properties = []
   export let componentInstance = {}
-  export let componentDefinition = {}
   export let onStyleChanged = () => {}
 
   export let show = false
-  let showComponentGroup = false
 
-  const propExistsOnComponentDef = prop => prop in componentDefinition.props
   const capitalize = name => name[0].toUpperCase() + name.slice(1)
 
   function onChange(key, v) {
-    console.log("PROPERTY GROUP ON CHANGE")
     !!v.target
       ? onStyleChanged(name, key, v.target.value)
       : onStyleChanged(name, key, v)
   }
 
-  $: {
-    let res = false
-    let componentProps = Object.keys(componentDefinition.props)
-    for (let prop in properties) {
-      if (componentProps.includes(prop)) {
-        showComponentGroup = true
-      }
-      if (showComponentGroup) break
-    }
-  }
-
   $: icon = show ? "ri-arrow-down-s-fill" : "ri-arrow-right-s-fill"
 </script>
 
-<!-- {#if showComponentGroup} -->
 <div class="property-group-container">
   <div class="property-group-name" on:click={() => (show = !show)}>
     <div class="icon">
@@ -46,18 +30,16 @@
   <div class="property-panel" class:show>
 
     {#each properties as props}
-      <!-- {#if propExistsOnComponentDef(key)} -->
       <PropertyControl
         label={props.label}
         control={props.control}
-        value={componentInstance[props.cssKey]}
-        onChange={value => onChange(props.cssKey, value)}
+        key={props.cssKey}
+        value={componentInstance['_styles'][props.cssKey]}
+        onChange={onStyleChanged}
         props={{ ...excludeProps(props, ['control']) }} />
-      <!-- {/if} -->
     {/each}
   </div>
 </div>
-<!-- {/if} -->
 
 <style>
   .property-group-container {

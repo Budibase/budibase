@@ -87,6 +87,7 @@ const css_map = {
   },
 }
 
+//Only used here
 export const generate_rule = ([name, values]) =>
   `${css_map[name].name}: ${css_map[name].generate(values)};`
 
@@ -110,6 +111,7 @@ const object_to_css_string = [
   join_with("\n"),
 ]
 
+//USED BY generate_screen_css
 export const generate_css = style => {
   // let cssString = pipe(style, object_to_css_string)
   let cssString = Object.entries(style).reduce((str, [key, value]) => {
@@ -128,6 +130,7 @@ export const generate_css = style => {
 
 const apply_class = (id, name, styles) => `.${name}-${id} {\n${styles}\n}`
 
+//USED IN MULTIPLE PLACES IN THE BUILDER STORE
 export const generate_screen_css = component_array => {
   let styles = ""
   let emptyStyles = {}

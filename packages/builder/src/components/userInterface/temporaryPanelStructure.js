@@ -1,4 +1,6 @@
 import Input from "../common/Input.svelte"
+import OptionSelect from "./OptionSelect.svelte"
+import Checkbox from "../common/Checkbox.svelte"
 
 import { all } from "./propertyCategories.js"
 
@@ -24,7 +26,31 @@ export default {
           icon: "ri-layout-row-fill",
           commonProps: {},
           children: [],
-          properties: { design: { ...all } },
+          properties: {
+            design: { ...all },
+            settings: [
+              {
+                key: "type",
+                label: "Type",
+                control: OptionSelect,
+                options: [
+                  { label: "article" },
+                  { label: "aside" },
+                  { label: "details" },
+                  { label: "div" },
+                  { label: "figure" },
+                  { label: "figcaption" },
+                  { label: "footer" },
+                  { label: "header" },
+                  { label: "main" },
+                  { label: "mark" },
+                  { label: "nav" },
+                  { label: "paragraph" },
+                  { label: "summary" },
+                ],
+              },
+            ],
+          },
         },
         {
           name: "Text",
@@ -39,11 +65,19 @@ export default {
               icon: "ri-heading",
               properties: {
                 design: { ...all },
-                settings: {
-                  text: {
+                settings: [
+                  {
+                    key: "text",
+                    label: "Text",
                     control: Input,
                   },
-                },
+                  {
+                    key: "type",
+                    label: "Type",
+                    control: OptionSelect,
+                    options: ["h1", "h2", "h3", "h4", "h5", "h6"],
+                  },
+                ],
               },
             },
             {
@@ -53,11 +87,31 @@ export default {
               icon: "ri-paragraph",
               properties: {
                 design: { ...all },
-                settings: {
-                  text: {
+                settings: [
+                  {
+                    label: "Text",
+                    key: "text",
                     control: Input,
                   },
-                },
+                  {
+                    label: "Type",
+                    key: "type",
+                    control: OptionSelect,
+                    options: [
+                      "none",
+                      "bold",
+                      "strong",
+                      "italic",
+                      "emphasis",
+                      "mark",
+                      "small",
+                      "del",
+                      "ins",
+                      "sub",
+                      "sup",
+                    ],
+                  },
+                ],
               },
             },
           ],
@@ -74,21 +128,38 @@ export default {
               description:
                 "A textfield component that allows the user to input text.",
               icon: "ri-edit-box-line",
-              properties: { design: { ...all } },
+              properties: {
+                design: { ...all },
+                settings: [
+                  { label: "Label", key: "label", control: Input },
+                  {
+                    label: "Type",
+                    key: "type",
+                    control: OptionSelect,
+                    options: ["text", "password"],
+                  },
+                ],
+              },
             },
             {
               _component: "@budibase/standard-components/checkbox",
               name: "Checkbox",
               description: "A selectable checkbox component",
               icon: "ri-checkbox-line",
-              properties: { design: { ...all } },
+              properties: {
+                design: { ...all },
+                settings: [{ label: "Label", key: "label", control: Input }],
+              },
             },
             {
               _component: "@budibase/standard-components/radiobutton",
               name: "Radiobutton",
               description: "A selectable radiobutton component",
               icon: "ri-radio-button-line",
-              properties: { design: { ...all } },
+              properties: {
+                design: { ...all },
+                settings: [{ label: "Label", key: "label", control: Input }],
+              },
             },
             {
               _component: "@budibase/standard-components/select",
@@ -96,7 +167,10 @@ export default {
               description:
                 "A select component for choosing from different options",
               icon: "ri-file-list-line",
-              properties: { design: { ...all } },
+              properties: {
+                design: { ...all },
+                settings: []
+              },
             },
           ],
         },
@@ -106,7 +180,20 @@ export default {
           description: "A basic html button that is ready for styling",
           icon: "ri-radio-button-fill",
           children: [],
-          properties: { design: { ...all } },
+          properties: {
+            design: {
+              ...all
+            },
+            settings: [
+              { label: "Text", key: "text", control: Input },
+              {
+                label: "Disabled",
+                key: "disabled",
+                valueType: "checked",
+                control: Checkbox,
+              },
+            ]
+          },
         },
         {
           _component: "@budibase/standard-components/icon",

@@ -6,7 +6,10 @@
   export let initialValue = ""
   export let styleBindingProperty = ""
 
-  $: bindOptionToStyle = !!styleBindingProperty
+  const handleStyleBind = value =>
+    !!styleBindingProperty ? { style: `${styleBindingProperty}: ${value}` } : {}
+
+  $: isOptionsObject = options.every(o => typeof o === "object")
 
   onMount(() => {
     if (!value && !!initialValue) {
@@ -19,15 +22,15 @@
   class="uk-select uk-form-small"
   {value}
   on:change={ev => onChange(ev.target.value)}>
-  {#each options as { value, label }}
-    {#if bindOptionToStyle}
-      <option
-        style={`${styleBindingProperty}: ${value || label};`}
-        value={value || label}>
+  {#if isOptionsObject}
+    {#each options as { value, label }}
+      <option {...handleStyleBind(value || label)} value={value || label}>
         {label}
       </option>
-    {:else}
-      <option value={value || label}>{label}</option>
-    {/if}
-  {/each}
+    {/each}
+  {:else}
+    {#each options as value}
+      <option {...handleStyleBind(value)} {value}>{value}</option>
+    {/each}
+  {/if}
 </select>

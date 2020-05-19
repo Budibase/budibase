@@ -3,9 +3,20 @@
 
   export let label = ""
   export let control = null
+  export let key = ""
   export let value = ""
+  export let valueType = ""
   export let props = {}
   export let onChange = () => {}
+
+  function handleChange(key, v) {
+    !!v.target
+      ? onChange(name, key, valueType ? v.target[valueType] : v.target.value)
+      : onChange(name, key, v)
+  }
+
+  const handleValueType = value =>
+    valueType ? { [valueType]: value } : { value }
 </script>
 
 <div class="property-control">
@@ -13,9 +24,9 @@
   <div class="control">
     <svelte:component
       this={control}
-      {value}
-      on:change={onChange}
-      {onChange}
+      {...handleValueType(value)}
+      on:change={val => handleChange(key, val)}
+      onChange={val => handleChange(key, val)}
       {...props} />
   </div>
 </div>

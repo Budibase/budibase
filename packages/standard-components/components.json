@@ -23,35 +23,10 @@
 		"name": "Button",
 		"description": "an html <button />",
 		"props": {
-			"contentText": {
-				"type": "string",
-				"default": "Button"
-			},
+			"text": "string",
 			"className": "string",
 			"disabled": "bool",
-			"onClick": "event",
-			"background": "string",
-			"color": "string",
-			"border": "string",
-			"padding": "string",
-			"hoverColor": "string",
-			"hoverBackground": "string",
-			"hoverBorder": "string",
-			"fontFamily": {
-				"type": "options",
-				"default": "initial",
-				"styleBindingProperty": "font-family",
-				"options": [
-					"initial",
-					"Times New Roman",	
-					"Georgia",
-					"Arial",
-					"Arial Black",	
-					"Comic Sans MS",
-					"Impact",	
-					"Lucida Sans Unicode"
-				]
-			}
+			"onClick": "event"
 		},
 		"tags": [
 			"layout"
@@ -167,58 +142,7 @@
 		"children": false,
 		"props": {
 			"text": "string",
-			"color": "string",
-			"fontFamily": {
-				"type": "options",
-				"default": "initial",
-				"styleBindingProperty": "font-family",
-				"options": [
-					"initial",
-					"Times New Roman",	
-					"Georgia",
-					"Arial",
-					"Arial Black",	
-					"Comic Sans MS",
-					"Impact",	
-					"Lucida Sans Unicode"
-				]
-			},
-			"fontSize": "string",			
-			"textAlign": {
-				"type": "options",
-				"default": "inline",
-				"options": [
-					"left",
-					"center",
-					"right"
-				]
-			},
-			"verticalAlign": {
-				"type": "options",
-				"default": "inline",
-				"options": [
-					"top",
-					"middle",
-					"bottom"
-				]
-			},
-			"formattingTag": {
-				"type": "options",
-				"default": "none",
-				"options": [
-					"none",
-					"<b> - bold",
-					"<strong> - important",
-					"<i> - italic",
-					"<em> - emphasized",
-					"<mark> - marked text",
-					"<small> - small",
-					"<del> - deleted",
-					"<ins> - inserted",
-					"<sub> - subscript",
-					"<sup> - superscript"
-				]
-			}
+			"type": {"type": "string", "default": "none"}
 		},
 		"tags": [
 			"div",
@@ -230,6 +154,7 @@
 		"description": "A component that allows the user to input text.",
 		"props": {
 			"label": "string",
+			"type": "string",
 			"value": "string",
 			"onchange": "event"
 		}
@@ -383,27 +308,6 @@
 					"summary"
 				],
 				"default": "div"
-			},
-			"backgroundColor": "string",
-			"color": "string",
-			"height": "string",
-			"width": "string",
-			"borderWidth": "string",
-			"borderColor": "string",
-			"borderStyle": {
-				"type": "options",
-				"options": [
-					"none",
-					"solid",
-					"dotted",
-					"dashed",
-					"double",
-					"groove",
-					"ridge",
-					"inset",
-					"outset"
-				],
-				"default": "none"
 			}
 		},		
 		"container": true,
@@ -429,21 +333,6 @@
 					"h4",
 					"h5",
 					"h6"
-				]
-			},
-			"fontFamily": {
-				"type": "options",
-				"default": "initial",
-				"styleBindingProperty": "font-family",
-				"options": [
-					"initial",
-					"Times New Roman",	
-					"Georgia",
-					"Arial",
-					"Arial Black",	
-					"Comic Sans MS",
-					"Impact",	
-					"Lucida Sans Unicode"
 				]
 			}
 		},
