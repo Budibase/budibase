@@ -76,14 +76,9 @@ exports.createUser = async (
 
 exports.insertDocument = async (databaseId, document) => {
   const { id, ...documentFields } = document
-  await new CouchDB(databaseId).put({ _id: id, ...documentFields })
+  return await new CouchDB(databaseId).put({ _id: id, ...documentFields })
 }
 
-exports.createSchema = async (request, instanceId, schema) => {
-  for (let model of schema.models) {
-    await request.post(`/api/${instanceId}/models`).send(model)
-  }
-  for (let view of schema.views) {
-    await request.post(`/api/${instanceId}/views`).send(view)
-  }
+exports.destroyDocument = async (databaseId, documentId) => {
+  return await new CouchDB(databaseId).destroy(documentId);
 }
