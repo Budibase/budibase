@@ -45,7 +45,6 @@
   }
 
   const changeScreen = screen => {
-    debugger
     store.setCurrentScreen(screen.title)
     $goto(`./:page/${screen.title}`)
   }

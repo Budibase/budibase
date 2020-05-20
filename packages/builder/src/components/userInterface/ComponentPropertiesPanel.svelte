@@ -32,11 +32,13 @@
   $: components = $store.components
   $: componentInstance = $store.currentComponentInfo
   $: componentDefinition = $store.components[componentInstance._component]
-  $: componentPropDefinition = flattenedPanel.find(
-    //use for getting controls for each component property
-    c => c._component === componentInstance._component
-  )
-  $: panelDefinition = componentPropDefinition
+  $: componentPropDefinition =
+    flattenedPanel.find(
+      //use for getting controls for each component property
+      c => c._component === componentInstance._component
+    ) || {}
+
+  $: panelDefinition = componentPropDefinition.properties
     ? componentPropDefinition.properties[selectedCategory.value]
     : {}
 

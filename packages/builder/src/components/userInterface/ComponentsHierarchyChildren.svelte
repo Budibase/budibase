@@ -37,7 +37,6 @@
 
   const selectComponent = component => {
     // Set current component
-    debugger
     store.selectComponent(component)
 
     // Get ID path

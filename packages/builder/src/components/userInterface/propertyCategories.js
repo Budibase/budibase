@@ -8,7 +8,7 @@ import InputGroup from "../common/Inputs/InputGroup.svelte"
 export const layout = [
   {
     label: "Direction",
-    cssKey: "flex-direction",
+    key: "flex-direction",
     control: OptionSelect,
     initialValue: "columnReverse",
     options: [
@@ -18,11 +18,11 @@ export const layout = [
       { label: "column-reverse", value: "columnReverse" },
     ],
   },
-  { label: "Justify", cssKey: "justify-content", control: Input },
-  { label: "Align", cssKey: "align-items", control: Input },
+  { label: "Justify", key: "justify-content", control: Input },
+  { label: "Align", key: "align-items", control: Input },
   {
     label: "Wrap",
-    cssKey: "flex-wrap",
+    key: "flex-wrap",
     control: OptionSelect,
     options: [{ label: "wrap" }, { label: "no wrap", value: "noWrap" }],
   },
@@ -37,26 +37,26 @@ const spacingMeta = [
 export const spacing = [
   {
     label: "Padding",
-    cssKey: "padding",
+    key: "padding",
     control: InputGroup,
     meta: spacingMeta,
   },
-  { label: "Margin", cssKey: "margin", control: InputGroup, meta: spacingMeta },
+  { label: "Margin", key: "margin", control: InputGroup, meta: spacingMeta },
 ]
 
 export const size = [
-  { label: "Width", cssKey: "width", control: Input },
-  { label: "Height", cssKey: "height", control: Input },
-  { label: "Min W", cssKey: "min-width", control: Input },
-  { label: "Min H", cssKey: "min-height", control: Input },
-  { label: "Max W", cssKey: "max-width", control: Input },
-  { label: "Max H", cssKey: "max-height", control: Input },
+  { label: "Width", key: "width", control: Input },
+  { label: "Height", key: "height", control: Input },
+  { label: "Min W", key: "min-width", control: Input },
+  { label: "Min H", key: "min-height", control: Input },
+  { label: "Max W", key: "max-width", control: Input },
+  { label: "Max H", key: "max-height", control: Input },
 ]
 
 export const position = [
   {
     label: "Position",
-    cssKey: "position",
+    key: "position",
     control: OptionSelect,
     options: [
       { label: "static" },
@@ -71,7 +71,7 @@ export const position = [
 export const typography = [
   {
     label: "Font",
-    cssKey: "font-family",
+    key: "font-family",
     control: OptionSelect,
     options: [
       { label: "initial" },
@@ -87,7 +87,7 @@ export const typography = [
   },
   {
     label: "Weight",
-    cssKey: "font-weight",
+    key: "font-weight",
     control: OptionSelect,
     options: [
       { label: "normal" },
@@ -96,28 +96,28 @@ export const typography = [
       { label: "lighter" },
     ],
   },
-  { label: "size", cssKey: "font-size", control: Input },
-  { label: "Line H", cssKey: "line-height", control: Input },
+  { label: "size", key: "font-size", control: Input },
+  { label: "Line H", key: "line-height", control: Input },
   {
     label: "Color",
-    cssKey: "color",
+    key: "color",
     control: OptionSelect,
     options: ["black", "red", "white", "blue", "green"],
   },
   {
     label: "align",
-    cssKey: "text-align",
+    key: "text-align",
     control: OptionSelect,
     options: ["initial", "left", "right", "center", "justify"],
   }, //custom
-  { label: "transform", cssKey: "text-transform", control: Input }, //custom
-  { label: "style", cssKey: "font-style", control: Input }, //custom
+  { label: "transform", key: "text-transform", control: Input }, //custom
+  { label: "style", key: "font-style", control: Input }, //custom
 ]
 
 export const background = [
   {
     label: "Background",
-    cssKey: "background",
+    key: "background",
     control: OptionSelect,
     options: [
       { label: "white" },
@@ -127,26 +127,26 @@ export const background = [
       { label: "black" },
     ],
   },
-  { label: "Image", cssKey: "image", control: Input }, //custom
+  { label: "Image", key: "image", control: Input }, //custom
 ]
 
 export const border = [
-  { label: "Radius", cssKey: "border-radius", control: Input },
-  { label: "Width", cssKey: "border-width", control: Input }, //custom
-  { label: "Color", cssKey: "border-color", control: Input },
-  { label: "Style", cssKey: "border-style", control: Input },
+  { label: "Radius", key: "border-radius", control: Input },
+  { label: "Width", key: "border-width", control: Input }, //custom
+  { label: "Color", key: "border-color", control: Input },
+  { label: "Style", key: "border-style", control: Input },
 ]
 
 export const effects = [
-  { label: "Opacity", cssKey: "opacity", control: Input },
-  { label: "Rotate", cssKey: "transform", control: Input }, //needs special control
-  { label: "Shadow", cssKey: "box-shadow", control: Input },
+  { label: "Opacity", key: "opacity", control: Input },
+  { label: "Rotate", key: "transform", control: Input }, //needs special control
+  { label: "Shadow", key: "box-shadow", control: Input },
 ]
 
 export const transitions = [
-  { label: "Property", cssKey: "transition-property", control: Input },
-  { label: "Duration", cssKey: "transition-timing-function", control: Input },
-  { label: "Ease", cssKey: "transition-ease", control: Input },
+  { label: "Property", key: "transition-property", control: Input },
+  { label: "Duration", key: "transition-timing-function", control: Input },
+  { label: "Ease", key: "transition-ease", control: Input },
 ]
 
 export const all = {

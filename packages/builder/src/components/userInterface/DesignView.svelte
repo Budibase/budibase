@@ -33,14 +33,20 @@
   </div>
 
   <div class="design-view-property-groups">
-    {#each propertyGroupNames as groupName}
-      <PropertyGroup
-        name={groupName}
-        properties={getProperties(groupName)}
-        {onStyleChanged}
-        {componentDefinition}
-        {componentInstance} />
-    {/each}
+    {#if propertyGroupNames.length > 0}
+      {#each propertyGroupNames as groupName}
+        <PropertyGroup
+          name={groupName}
+          properties={getProperties(groupName)}
+          {onStyleChanged}
+          {componentDefinition}
+          {componentInstance} />
+      {/each}
+    {:else}
+      <div class="no-design">
+        <span>This component does not have any design properties</span>
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -57,5 +63,9 @@
 
   .design-view-property-groups {
     flex: 1;
+  }
+
+  .no-design {
+    text-align: center;
   }
 </style>
