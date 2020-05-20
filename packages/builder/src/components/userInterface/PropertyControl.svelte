@@ -5,18 +5,20 @@
   export let control = null
   export let key = ""
   export let value = ""
-  export let valueType = ""
   export let props = {}
   export let onChange = () => {}
 
   function handleChange(key, v) {
-    !!v.target
-      ? onChange(name, key, valueType ? v.target[valueType] : v.target.value)
-      : onChange(name, key, v)
+    if (v.target) {
+      let val = props.valueType ? v.target[props.valueType] : v.target.value
+      onChange(key, val)
+    } else {
+      onChange(key, v)
+    }
   }
 
   const handleValueType = value =>
-    valueType ? { [valueType]: value } : { value }
+    props.valueType ? { [props.valueType]: value } : { value }
 </script>
 
 <div class="property-control">

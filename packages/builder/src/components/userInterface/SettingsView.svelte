@@ -15,14 +15,26 @@
   }
 </script>
 
-{#each panelDefinition as definition}
-  {#if propExistsOnComponentDef(definition.key)}
-    <PropertyControl
-      control={definition.control}
-      label={definition.label}
-      key={definition.key}
-      value={componentInstance[definition.key]}
-      {onChange}
-      props={{ ...excludeProps(definition, ['control']) }} />
-  {/if}
-{/each}
+{#if panelDefinition.length > 0}
+  {#each panelDefinition as definition}
+    {#if propExistsOnComponentDef(definition.key)}
+      <PropertyControl
+        control={definition.control}
+        label={definition.label}
+        key={definition.key}
+        value={componentInstance[definition.key]}
+        {onChange}
+        props={{ ...excludeProps(definition, ['control', 'label']) }} />
+    {/if}
+  {/each}
+{:else}
+  <div>
+    <span>This component does not have any settings.</span>
+  </div>
+{/if}
+
+<style>
+  div {
+    text-align: center;
+  }
+</style>

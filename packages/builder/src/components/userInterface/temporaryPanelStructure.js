@@ -201,7 +201,9 @@ export default {
           description: "A basic component for displaying icons",
           icon: "ri-sun-fill",
           children: [],
-          properties: { design: { ...all } },
+          properties: {
+            design: { ...all },
+          },
         },
         {
           _component: "@budibase/standard-components/link",
@@ -209,7 +211,19 @@ export default {
           description: "A basic link component for internal and external links",
           icon: "ri-link",
           children: [],
-          properties: { design: { ...all } },
+          properties: {
+            design: { ...all },
+            settings: [
+              { label: "Text", key: "text", control: Input },
+              { label: "Url", key: "url", control: Input },
+              {
+                label: "Open New Tab",
+                key: "openInNewTab",
+                valueType: "checked",
+                control: Checkbox,
+              },
+            ],
+          },
         },
       ],
     },

@@ -11,12 +11,6 @@
 
   const capitalize = name => name[0].toUpperCase() + name.slice(1)
 
-  function onChange(key, v) {
-    !!v.target
-      ? onStyleChanged(name, key, v.target.value)
-      : onStyleChanged(name, key, v)
-  }
-
   $: icon = show ? "ri-arrow-down-s-fill" : "ri-arrow-right-s-fill"
 </script>
 
@@ -33,10 +27,10 @@
       <PropertyControl
         label={props.label}
         control={props.control}
-        key={props.cssKey}
-        value={componentInstance['_styles'][props.cssKey]}
-        onChange={onStyleChanged}
-        props={{ ...excludeProps(props, ['control']) }} />
+        key={props.key}
+        value={componentInstance['_styles'][props.key]}
+        onChange={(key, value) => onStyleChanged(name, key, value)}
+        props={{ ...excludeProps(props, ['control', 'label']) }} />
     {/each}
   </div>
 </div>
