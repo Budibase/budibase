@@ -1,6 +1,7 @@
 import regexparam from "regexparam"
 import { writable } from "svelte/store"
 
+// TODO: refactor
 export const screenRouter = (screens, onScreenSelected, appRootPath) => {
   const makeRootedPath = url => {
     if (appRootPath) {
