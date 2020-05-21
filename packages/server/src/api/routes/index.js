@@ -8,6 +8,7 @@ const modelRoutes = require("./model")
 const viewRoutes = require("./view")
 const staticRoutes = require("./static")
 const componentRoutes = require("./component")
+const workflowRoutes = require("./workflow")
 const accesslevelRoutes = require("./accesslevel")
 
 module.exports = {
@@ -21,5 +22,6 @@ module.exports = {
   viewRoutes,
   staticRoutes,
   componentRoutes,
+  workflowRoutes,
   accesslevelRoutes,
 }

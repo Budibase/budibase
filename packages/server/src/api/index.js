@@ -14,6 +14,7 @@ const {
   viewRoutes,
   staticRoutes,
   componentRoutes,
+  workflowRoutes,
   accesslevelRoutes,
 } = require("./routes")
 
@@ -72,6 +73,9 @@ router.use(userRoutes.allowedMethods())
 
 router.use(instanceRoutes.routes())
 router.use(instanceRoutes.allowedMethods())
+
+router.use(workflowRoutes.routes())
+router.use(workflowRoutes.allowedMethods())
 // end auth routes
 
 router.use(pageRoutes.routes())
