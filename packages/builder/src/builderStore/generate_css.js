@@ -121,7 +121,9 @@ export const generate_css = style => {
         return (str += `${key}: ${value};\n`)
       }
     } else if (Array.isArray(value)) {
-      return (str += `${key}: ${value.map(v => `${v}px`).join(" ")};\n`)
+      return (str += `${key}: ${value
+        .map(v => (!/px$/.test(v) ? `${v}px` : v))
+        .join(" ")};\n`)
     }
   }, "")
 

@@ -1,6 +1,7 @@
 <script>
   import PropertyControl from "./PropertyControl.svelte"
   import InputGroup from "../common/Inputs/InputGroup.svelte"
+  import Colorpicker from "../common/Colorpicker.svelte"
   import { excludeProps } from "./propertyCategories.js"
 
   export let panelDefinition = []
@@ -14,6 +15,8 @@
     data.target ? onChange(key, data.target.value) : onChange(key, data)
   }
 </script>
+
+<Colorpicker />
 
 {#if panelDefinition.length > 0}
   {#each panelDefinition as definition}

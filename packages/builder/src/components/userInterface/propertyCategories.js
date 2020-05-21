@@ -1,6 +1,7 @@
 import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import InputGroup from "../common/Inputs/InputGroup.svelte"
+import Colorpicker from "../common/Colorpicker.svelte"
 /*
   TODO: Allow for default values for all properties
 */
@@ -101,8 +102,7 @@ export const typography = [
   {
     label: "Color",
     key: "color",
-    control: OptionSelect,
-    options: ["black", "red", "white", "blue", "green"],
+    control: Colorpicker,
   },
   {
     label: "align",
@@ -118,14 +118,7 @@ export const background = [
   {
     label: "Background",
     key: "background",
-    control: OptionSelect,
-    options: [
-      { label: "white" },
-      { label: "red" },
-      { label: "blue" },
-      { label: "green" },
-      { label: "black" },
-    ],
+    control: Colorpicker,
   },
   { label: "Image", key: "image", control: Input }, //custom
 ]
@@ -133,7 +126,7 @@ export const background = [
 export const border = [
   { label: "Radius", key: "border-radius", control: Input },
   { label: "Width", key: "border-width", control: Input }, //custom
-  { label: "Color", key: "border-color", control: Input },
+  { label: "Color", key: "border-color", control: Colorpicker },
   { label: "Style", key: "border-style", control: Input },
 ]
 
