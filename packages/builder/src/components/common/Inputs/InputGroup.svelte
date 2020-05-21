@@ -3,13 +3,15 @@
 
   export let meta = []
   export let label = ""
-  export let values = []
+  export let value = [0, 0, 0, 0]
   export let type = "number"
   export let onChange = () => {}
 
-  let _values = values.map(v => v)
-
-  // $: onChange(_values)
+  function handleChange(val, idx) {
+    value.splice(idx, 1, val)
+    value = value
+    onChange(value)
+  }
 </script>
 
 <div class="input-container">
@@ -19,8 +21,8 @@
       <input
         {type}
         placeholder={placeholder || ''}
-        value={values[i]}
-        on:input={e => (_values[i] = e.target.value)} />
+        value={value[i] === 0 ? '' : value[i]}
+        on:change={e => handleChange(e.target.value || 0, i)} />
     {/each}
   </div>
 </div>
@@ -36,8 +38,6 @@
 
   .inputs {
     flex: 1;
-    /* display: flex;
-    justify-content: space-between; */
   }
 
   input {

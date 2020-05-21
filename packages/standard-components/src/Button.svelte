@@ -17,12 +17,10 @@
 
 <button
   bind:this={theButton}
-  class="{className}
+  class={className}
   disabled={disabled || false}
   on:click={clickHandler}>
-  {#if !_bb.props._children || _bb.props._children.length === 0}
-  {text}
-  {/if}
+  {#if !_bb.props._children || _bb.props._children.length === 0}{text}{/if}
 </button>
 
 <style>

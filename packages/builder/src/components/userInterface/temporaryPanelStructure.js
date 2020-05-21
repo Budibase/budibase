@@ -189,7 +189,7 @@ export default {
               {
                 label: "Disabled",
                 key: "disabled",
-                valueType: "checked",
+                valueKey: "checked",
                 control: Checkbox,
               },
             ]
@@ -219,7 +219,7 @@ export default {
               {
                 label: "Open New Tab",
                 key: "openInNewTab",
-                valueType: "checked",
+                valueKey: "checked",
                 control: Checkbox,
               },
             ],
