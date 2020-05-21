@@ -2,7 +2,10 @@ const CouchDB = require("../../../db")
 const { create, destroy } = require("../../../db/clientDb")
 const supertest = require("supertest")
 const app = require("../../../app")
-const { POWERUSER_LEVEL_ID } = require("../../../utilities/accessLevels")
+const {
+  POWERUSER_LEVEL_ID,
+  generateAdminPermissions,
+} = require("../../../utilities/accessLevels")
 
 const TEST_CLIENT_ID = "test-client-id"
 
@@ -92,11 +95,171 @@ exports.createUser = async (
   return res.body
 }
 
+exports.createUser_WithOnePermission = async (
+  request,
+  instanceId,
+  permName,
+  itemId
+) => {
+  let permissions = await generateAdminPermissions(instanceId)
+  permissions = permissions.filter(
+    p => p.name === permName && p.itemId === itemId
+  )
+
+  return await createUserWithPermissions(
+    request,
+    instanceId,
+    permissions,
+    "pam"
+  )
+}
+
+exports.createUser_WithAllPermissionExceptOne = async (
+  request,
+  instanceId,
+  permName,
+  itemId
+) => {
+  let permissions = await generateAdminPermissions(instanceId)
+  permissions = permissions.filter(
+    p => !(p.name === permName && p.itemId === itemId)
+  )
+
+  return await createUserWithPermissions(
+    request,
+    instanceId,
+    permissions,
+    "bill"
+  )
+}
+
+const createUserWithPermissions = async (
+  request,
+  instanceId,
+  permissions,
+  username
+) => {
+  const accessRes = await request
+    .post(`/api/${instanceId}/accesslevels`)
+    .send({ name: "TestLevel", permissions })
+    .set(exports.defaultHeaders)
+
+  await request
+    .post(`/api/${instanceId}/users`)
+    .set(exports.defaultHeaders)
+    .send({
+      name: username,
+      username,
+      password: "bills_password",
+      accessLevelId: accessRes.body._id,
+    })
+
+  const db = new CouchDB(instanceId)
+  const designDoc = await db.get("_design/database")
+
+  const loginResult = await request
+    .post(`/api/authenticate`)
+    .set("Referer", `http://localhost:4001/${designDoc.metadata.applicationId}`)
+    .send({ username, password: "bills_password" })
+
+  // returning necessary request headers
+  return {
+    Accept: "application/json",
+    Cookie: loginResult.headers["set-cookie"],
+  }
+}
+
+exports.shouldReturn403WhenNoPermission = async ({
+  request,
+  method,
+  url,
+  body,
+  instanceId,
+  permissionName,
+  itemId,
+}) => {
+  const headers = await exports.createUser_WithAllPermissionExceptOne(
+    request,
+    instanceId,
+    permissionName,
+    itemId
+  )
+
+  await createRequest(request, method, url, body)
+    .set(headers)
+    .expect(403)
+}
+
+exports.shouldReturn200WithOnlyOnePermission = async ({
+  request,
+  method,
+  url,
+  body,
+  instanceId,
+  permissionName,
+  itemId,
+}) => {
+  const headers = await exports.createUser_WithOnePermission(
+    request,
+    instanceId,
+    permissionName,
+    itemId
+  )
+
+  await createRequest(request, method, url, body)
+    .set(headers)
+    .expect(200)
+}
+
+exports.testPermissionsForEndpoint = async ({
+  request,
+  method,
+  url,
+  body,
+  instanceId,
+  permissionName,
+  itemId,
+}) => {
+  const headers = await exports.createUser_WithOnePermission(
+    request,
+    instanceId,
+    permissionName,
+    itemId
+  )
+
+  await createRequest(request, method, url, body)
+    .set(headers)
+    .expect(200)
+
+  const noPermsHeaders = await exports.createUser_WithAllPermissionExceptOne(
+    request,
+    instanceId,
+    permissionName,
+    itemId
+  )
+
+  await createRequest(request, method, url, body)
+    .set(noPermsHeaders)
+    .expect(403)
+}
+
+const createRequest = (request, method, url, body) => {
+  let req
+
+  if (method === "POST") req = request.post(url).send(body)
+  else if (method === "GET") req = request.get(url)
+  else if (method === "DELETE") req = request.delete(url)
+  else if (method === "PATCH") req = request.patch(url).send(body)
+  else if (method === "PUT") req = request.put(url).send(body)
+
+  return req
+}
+
 exports.insertDocument = async (databaseId, document) => {
   const { id, ...documentFields } = document
   return await new CouchDB(databaseId).put({ _id: id, ...documentFields })
 }
 
 exports.destroyDocument = async (databaseId, documentId) => {
-  return await new CouchDB(databaseId).destroy(documentId);
+  return await new CouchDB(databaseId).destroy(documentId)
 }

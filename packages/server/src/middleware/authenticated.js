@@ -33,7 +33,10 @@ module.exports = async (ctx, next) => {
 
     ctx.user = {
       ...jwtPayload,
-      accessLevel: await getAccessLevel(jwtPayload.accessLevelId),
+      accessLevel: await getAccessLevel(
+        jwtPayload.instanceId,
+        jwtPayload.accessLevelId
+      ),
     }
     ctx.isAuthenticated = true
   } catch (err) {
@@ -43,7 +46,7 @@ module.exports = async (ctx, next) => {
   await next()
 }
 
-const getAccessLevel = async accessLevelId => {
+const getAccessLevel = async (instanceId, accessLevelId) => {
   if (
     accessLevelId === POWERUSER_LEVEL_ID ||
     accessLevelId === ADMIN_LEVEL_ID
@@ -56,7 +59,10 @@ const getAccessLevel = async accessLevelId => {
   }
 
   const findAccessContext = {
-    params: { levelId: accessLevelId },
+    params: {
+      levelId: accessLevelId,
+      instanceId,
+    },
   }
   await accessLevelController.find(findAccessContext)
   return findAccessContext.body

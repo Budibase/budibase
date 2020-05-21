@@ -1,5 +1,6 @@
 const viewController = require("../api/controllers/view")
 const modelController = require("../api/controllers/model")
+const workflowController = require("../api/controllers/workflow")
 
 exports.ADMIN_LEVEL_ID = "ADMIN"
 exports.POWERUSER_LEVEL_ID = "POWER_USER"
@@ -40,6 +41,14 @@ exports.generatePowerUserPermissions = async instanceId => {
   await viewController.fetch(fetchViewsCtx)
   const views = fetchViewsCtx.body
 
+  const fetchWorkflowsCtx = {
+    params: {
+      instanceId,
+    },
+  }
+  await workflowController.fetch(fetchWorkflowsCtx)
+  const workflows = fetchWorkflowsCtx.body
+
   const readModelPermissions = models.map(m => ({
     itemId: m._id,
     name: exports.READ_MODEL,
@@ -55,10 +64,16 @@ exports.generatePowerUserPermissions = async instanceId => {
     name: exports.READ_VIEW,
   }))
 
+  const executeWorkflowPermissions = workflows.map(w => ({
+    itemId: w._id,
+    name: exports.EXECUTE_WORKFLOW,
+  }))
+
   return [
     ...readModelPermissions,
     ...writeModelPermissions,
     ...viewPermissions,
+    ...executeWorkflowPermissions,
     { name: exports.LIST_USERS },
   ]
 }
