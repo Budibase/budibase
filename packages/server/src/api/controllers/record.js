@@ -7,6 +7,7 @@ const ajv = new Ajv()
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
   const record = ctx.request.body
+  record.modelId = ctx.params.modelId
 
   if (!record._rev && !record._id) {
     record._id = newid()
@@ -43,16 +44,12 @@ exports.save = async function(ctx) {
   record.type = "record"
   const response = await db.post(record)
   record._rev = response.rev
-  // await ctx.publish(events.recordApi.save.onRecordCreated, {
-  //   record: record,
-  // })
-
   ctx.body = record
   ctx.status = 200
   ctx.message = `${model.name} created successfully`
 }
 
-exports.fetch = async function(ctx) {
+exports.fetchView = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
   const response = await db.query(`database/${ctx.params.viewName}`, {
     include_docs: true,
@@ -60,13 +57,30 @@ exports.fetch = async function(ctx) {
   ctx.body = response.rows.map(row => row.doc)
 }
 
+exports.fetchModel = async function(ctx) {
+  const db = new CouchDB(ctx.params.instanceId)
+  const response = await db.query(`database/all_${ctx.params.modelId}`, {
+    include_docs: true,
+  })
+  ctx.body = response.rows.map(row => row.doc)
+}
+
 exports.find = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
-  ctx.body = await db.get(ctx.params.recordId)
+  const record = await db.get(ctx.params.recordId)
+  if (record.modelId !== ctx.params.modelId) {
+    ctx.throw(400, "Supplied modelId doe not match the record's modelId")
+    return
+  }
+  ctx.body = record
 }
 
 exports.destroy = async function(ctx) {
-  const databaseId = ctx.params.instanceId
-  const db = new CouchDB(databaseId)
+  const db = new CouchDB(ctx.params.instanceId)
+  const record = await db.get(ctx.params.recordId)
+  if (record.modelId !== ctx.params.modelId) {
+    ctx.throw(400, "Supplied modelId doe not match the record's modelId")
+    return
+  }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
 }

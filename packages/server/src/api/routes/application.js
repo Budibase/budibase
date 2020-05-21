@@ -1,11 +1,17 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/application")
+const authorized = require("../../middleware/authorized")
+const { BUILDER } = require("../../utilities/accessLevels")
 
 const router = Router()
 
 router
-  .get("/api/applications", controller.fetch)
-  .get("/api/:applicationId/appPackage", controller.fetchAppPackage)
-  .post("/api/applications", controller.create)
+  .get("/api/applications", authorized(BUILDER), controller.fetch)
+  .get(
+    "/api/:applicationId/appPackage",
+    authorized(BUILDER),
+    controller.fetchAppPackage
+  )
+  .post("/api/applications", authorized(BUILDER), controller.create)
 
 module.exports = router
