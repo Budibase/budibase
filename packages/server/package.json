@@ -28,7 +28,7 @@
     "test:watch": "jest -w",
     "initialise": "node ../cli/bin/budi init -b local -q",
     "budi": "node ../cli/bin/budi",
-    "dev:builder": "nodemon ../cli/bin/budi run",
+    "dev:builder": "node ../cli/bin/budi run",
     "electron": "electron src/electron.js",
     "build:electron": "electron-builder --dir",
     "publish:electron": "electron-builder -mwl --publish always",

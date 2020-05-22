@@ -7,44 +7,55 @@ const ACTIONS = {
   },
   NAVIGATE: {
     name: "Navigate",
-    icon: "",
+    icon: "ri-navigation-line",
     description: "Navigate to another page.",
     type: "CLIENT"
   },
-  CREATE_RECORD: {
+  SAVE_RECORD: {
     name: "Save Record",
-    icon: "",
+    icon: "ri-save-3-fill",
     description: "Save a record to your database.",
     type: "SERVER",
   },
   DELETE_RECORD: {
     description: "Delete a record from your database.",
-    icon: "",
+    icon: "ri-delete-bin-line",
     name: "Delete Record",
     type: "SERVER",
   }
 };
 
 const TRIGGERS = {
+  SAVE_RECORD: {
+    name: "Record Saved",
+    icon: "ri-delete-bin-line",
+    description: "Save a record to your database.",
+    type: "SERVER",
+  },
   CLICK: {
     name: "Click",
-    icon: "",
+    icon: "ri-cursor-line",
     description: "Trigger when you click on an element in the UI."
   },
   LOAD: {
     name: "Load",
-    icon: "",
+    icon: "ri-loader-line",
     description: "Trigger an element has finished loading."
   },
   INPUT: {
     name: "Input",
-    icon: "",
+    icon: "ri-text",
     description: "Trigger when you type into an input box."
   },
 };
 
 const UTILITIES = {
-
+  IFELSE: {
+    name: "If/Else",
+    icon: "ri-git-branch-line",
+    description: "Perform different actions based on a condition",
+    type: "CLIENT"
+  },
 }
 
 export default {
