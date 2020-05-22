@@ -9,7 +9,7 @@ router
   .get("/api/:instanceId/workflows", authorized(BUILDER), controller.fetch)
   .get("/api/:instanceId/workflows/:id", authorized(BUILDER), controller.find)
   .post("/api/:instanceId/workflows", authorized(BUILDER), controller.create)
-  .put("/api/:instanceId/workflows/:id", authorized(BUILDER), controller.update)
+  .put("/api/:instanceId/workflows", authorized(BUILDER), controller.update)
   .delete(
     "/api/:instanceId/workflows/:id/:rev",
     authorized(BUILDER),

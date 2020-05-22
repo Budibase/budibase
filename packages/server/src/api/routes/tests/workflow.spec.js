@@ -84,6 +84,25 @@ describe("/workflows", () => {
     })
   })
 
+  describe("update", () => {
+    it("updates a workflows data", async () => {
+      await createWorkflow();
+      workflow._id = workflow.id
+      workflow._rev = workflow.rev
+      workflow.name = "Updated Name";
+
+      const res = await request
+        .put(`/api/${instance._id}/workflows`)
+        .set(defaultHeaders)
+        .send(workflow)
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+        expect(res.body.message).toEqual("Workflow Test Workflow updated successfully.");
+        expect(res.body.workflow.name).toEqual("Updated Name");
+    })
+  })
+
   describe("fetch", () => {
     it("return all the workflows for an instance", async () => {
       await createWorkflow();

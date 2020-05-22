@@ -16,6 +16,7 @@
       name,
       instanceId,
     })
+    flowy.deleteBlocks();
     onClosed()
   }
 </script>
