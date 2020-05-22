@@ -1,4 +1,5 @@
 import "./global.css"
+import "./flowy.css";
 import "./fonts.css"
 import "./budibase.css"
 import "/assets/roboto-v20-latin-ext_latin-300"
