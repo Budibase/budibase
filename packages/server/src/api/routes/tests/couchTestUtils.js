@@ -41,6 +41,19 @@ exports.createModel = async (request, instanceId, model) => {
   return res.body
 }
 
+exports.createRecord = async (request, instanceId, modelId, record) => {
+  record = record || {
+    modelId,
+    name: "test name",
+  }
+
+  const res = await request
+    .post(`/api/${instanceId}/${modelId}/records`)
+    .send(record)
+    .set(exports.defaultHeaders)
+  return res.body
+}
+
 exports.createView = async (request, instanceId, view) => {
   view = view || {
     map: "function(doc) { emit(doc[doc.key], doc._id); } ",
@@ -80,8 +93,8 @@ exports.createInstance = async (request, appId) => {
 exports.createUser = async (
   request,
   instanceId,
-  username = "bill",
-  password = "bills_password"
+  username = "babs",
+  password = "babs_password"
 ) => {
   const res = await request
     .post(`/api/${instanceId}/users`)
@@ -95,7 +108,7 @@ exports.createUser = async (
   return res.body
 }
 
-exports.createUser_WithOnePermission = async (
+const createUser_WithOnePermission = async (
   request,
   instanceId,
   permName,
@@ -110,11 +123,22 @@ exports.createUser_WithOnePermission = async (
     request,
     instanceId,
     permissions,
-    "pam"
+    "onePermOnlyUser"
   )
 }
 
-exports.createUser_WithAllPermissionExceptOne = async (
+const createUser_WithAdminPermissions = async (request, instanceId) => {
+  let permissions = await generateAdminPermissions(instanceId)
+
+  return await createUserWithPermissions(
+    request,
+    instanceId,
+    permissions,
+    "adminUser"
+  )
+}
+
+const createUser_WithAllPermissionExceptOne = async (
   request,
   instanceId,
   permName,
@@ -129,7 +153,7 @@ exports.createUser_WithAllPermissionExceptOne = async (
     request,
     instanceId,
     permissions,
-    "bill"
+    "allPermsExceptOneUser"
   )
 }
 
@@ -144,13 +168,14 @@ const createUserWithPermissions = async (
     .send({ name: "TestLevel", permissions })
     .set(exports.defaultHeaders)
 
+  const password = `password_${username}`
   await request
     .post(`/api/${instanceId}/users`)
     .set(exports.defaultHeaders)
     .send({
       name: username,
       username,
-      password: "bills_password",
+      password,
       accessLevelId: accessRes.body._id,
     })
 
@@ -160,55 +185,13 @@ const createUserWithPermissions = async (
   const loginResult = await request
     .post(`/api/authenticate`)
     .set("Referer", `http://localhost:4001/${designDoc.metadata.applicationId}`)
-    .send({ username, password: "bills_password" })
+    .send({ username, password })
 
   // returning necessary request headers
   return {
     Accept: "application/json",
     Cookie: loginResult.headers["set-cookie"],
   }
-}
-
-exports.shouldReturn403WhenNoPermission = async ({
-  request,
-  method,
-  url,
-  body,
-  instanceId,
-  permissionName,
-  itemId,
-}) => {
-  const headers = await exports.createUser_WithAllPermissionExceptOne(
-    request,
-    instanceId,
-    permissionName,
-    itemId
-  )
-
-  await createRequest(request, method, url, body)
-    .set(headers)
-    .expect(403)
-}
-
-exports.shouldReturn200WithOnlyOnePermission = async ({
-  request,
-  method,
-  url,
-  body,
-  instanceId,
-  permissionName,
-  itemId,
-}) => {
-  const headers = await exports.createUser_WithOnePermission(
-    request,
-    instanceId,
-    permissionName,
-    itemId
-  )
-
-  await createRequest(request, method, url, body)
-    .set(headers)
-    .expect(200)
 }
 
 exports.testPermissionsForEndpoint = async ({
@@ -220,7 +203,7 @@ exports.testPermissionsForEndpoint = async ({
   permissionName,
   itemId,
 }) => {
-  const headers = await exports.createUser_WithOnePermission(
+  const headers = await createUser_WithOnePermission(
     request,
     instanceId,
     permissionName,
@@ -231,7 +214,7 @@ exports.testPermissionsForEndpoint = async ({
     .set(headers)
     .expect(200)
 
-  const noPermsHeaders = await exports.createUser_WithAllPermissionExceptOne(
+  const noPermsHeaders = await createUser_WithAllPermissionExceptOne(
     request,
     instanceId,
     permissionName,
@@ -240,6 +223,20 @@ exports.testPermissionsForEndpoint = async ({
 
   await createRequest(request, method, url, body)
     .set(noPermsHeaders)
+    .expect(403)
+}
+
+exports.builderEndpointShouldBlockNormalUsers = async ({
+  request,
+  method,
+  url,
+  body,
+  instanceId,
+}) => {
+  const headers = await createUser_WithAdminPermissions(request, instanceId)
+
+  await createRequest(request, method, url, body)
+    .set(headers)
     .expect(403)
 }
 
