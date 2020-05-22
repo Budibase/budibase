@@ -1,10 +1,9 @@
 <script>
   import Modal from "svelte-simple-modal"
   import { onMount, getContext } from "svelte"
-  import { backendUiStore, workflowStore } from "builderStore";
+  import { backendUiStore, workflowStore } from "builderStore"
   import api from "builderStore/api"
-  import CreateWorkflowModal from "./CreateWorkflowModal.svelte";
-
+  import CreateWorkflowModal from "./CreateWorkflowModal.svelte"
 
   const { open, close } = getContext("simple-modal")
 
@@ -19,7 +18,7 @@
   }
 
   onMount(() => {
-    workflowStore.actions.fetch($backendUiStore.selectedDatabase._id);
+    workflowStore.actions.fetch($backendUiStore.selectedDatabase._id)
   })
 </script>
 
@@ -30,7 +29,10 @@
   </header>
   <ul>
     {#each $workflowStore.workflows as workflow}
-      <li class="workflow-item">
+      <li
+        class="workflow-item"
+        class:selected={workflow._id === $workflowStore.selectedWorkflowId}
+        on:click={() => workflowStore.actions.select(workflow)}>
         <i class="ri-stackshare-line" />
         {workflow.name}
       </li>
@@ -71,7 +73,7 @@
     border-radius: 3px;
     height: 40px;
   }
-  
+
   .workflow-item i {
     font-size: 24px;
     margin-right: 10px;
@@ -79,6 +81,10 @@
 
   .workflow-item:hover {
     cursor: pointer;
+    background: var(--secondary);
+  }
+
+  .workflow-item.selected {
     background: var(--secondary);
   }
 </style>

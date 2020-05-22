@@ -38,14 +38,28 @@ exports.create = async function(ctx) {
     message: "Workflow created successfully",
     workflow: {
       ...workflow,
-      ...response
+      _rev: response.rev,
+      _id: response.id
     }
   };
 }
 
 exports.update = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
-  ctx.body = await db.get(ctx.params.recordId)
+  const workflow = ctx.request.body;
+
+  const response = await db.put(workflow)
+  workflow._rev = response.rev
+
+  ctx.status = 200
+  ctx.body = {
+    message: `Workflow ${workflow._id} updated successfully.`,
+    workflow: {
+      ...workflow,
+      _rev: response.rev,
+      _id: response.id
+    },
+  }
 }
 
 exports.fetch = async function(ctx) {

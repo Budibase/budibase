@@ -293,6 +293,7 @@ body, html {
 .grabme, .blockico {
     display: inline-block;
 }
+
 .grabme {
     margin-top: 10px;
     margin-left: 10px;
@@ -322,6 +323,12 @@ body, html {
     text-align: center;
     white-space: nowrap;
 }
+
+.blockico i {
+  font-size: 24px;
+  color: var(--dark-grey);
+}
+
 .blockico span {
     height: 100%;
     width: 0px;

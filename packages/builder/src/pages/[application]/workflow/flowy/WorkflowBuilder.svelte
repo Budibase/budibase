@@ -1,25 +1,31 @@
 <script>
   import { onMount } from "svelte"
-
-  export let workflow = {}
+  import { workflowStore, backendUiStore } from "builderStore";
+  import api from "builderStore/api";
 
   let canvas
+  let workflow
+  let instanceId = $backendUiStore.selectedDatabase._id; 
+
+  $: workflow = $workflowStore.workflows.find(wf => wf._id === $workflowStore.selectedWorkflowId)
+
+  // $: if (workflow && workflow.uiTree) flowy.import(workflow.uiTree);
 
   onMount(() => {
-    if (workflow.uiTree) {
-      flowy.import(workflow.uiTree);
-      return;
-    } 
+    flowy(canvas, onGrab, onRelease, onSnap);
+  });
 
-    flowy(canvas, onGrab, onRelease);
-  })
+  function onGrab(block) {
+    console.log(block);
+  }
 
-  function onGrab() {
-
+  function onSnap(block, first, parent){
+    workflow.uiTree = flowy.output();
+    workflowStore.actions.update({ instanceId, workflow })
+    return true;
   }
 
   function onRelease() {
-    console.log("RELEASED!")
   }
 
   // function onGrab(block) {

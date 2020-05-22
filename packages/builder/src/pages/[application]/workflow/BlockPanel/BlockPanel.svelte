@@ -42,19 +42,18 @@
   </div>
   <div id="blocklist">
     {#each definitions as blockDefinition}
-      <div class="blockelem create-flowy noselect">
+      <div 
+        class="blockelem create-flowy noselect"
+        data-name={blockDefinition.name}
+      >
         <input
           type="hidden"
           name="blockelemtype"
           class="blockelemtype"
           value="1" />
-        <div class="grabme">
-          <!-- <img src="assets/grabme.svg" /> -->
-        </div>
         <div class="blockin">
           <div class="blockico">
-            <span />
-            <!-- <img src="assets/eye.svg" /> -->
+            <i class={blockDefinition.icon} />
           </div>
           <div class="blocktext">
             <p class="blocktitle">{blockDefinition.name}</p>
