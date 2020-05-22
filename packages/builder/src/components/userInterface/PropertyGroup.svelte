@@ -3,6 +3,7 @@
   import PropertyControl from "./PropertyControl.svelte"
 
   export let name = ""
+  export let styleCategory = "normal"
   export let properties = []
   export let componentInstance = {}
   export let onStyleChanged = () => {}

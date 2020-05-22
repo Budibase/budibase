@@ -60,7 +60,7 @@
               _children: [
                 {
                   _component: "@budibase/standard-components/container",
-                  _styles: {},
+                  _styles: { normal: {}, hover: {}, active: {}, selected: {} },
                   _id: "__screenslot__text",
                   _code: "",
                   className: "",
@@ -69,7 +69,12 @@
                   _children: [
                     {
                       _component: "@budibase/standard-components/text",
-                      _styles: {},
+                      _styles: {
+                        normal: {},
+                        hover: {},
+                        active: {},
+                        selected: {},
+                      },
                       _id: "__screenslot__text_2",
                       _code: "",
                       text: "content",

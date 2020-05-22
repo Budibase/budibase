@@ -135,9 +135,11 @@ const apply_class = (id, name, styles) => `.${name}-${id} {\n${styles}\n}`
 //USED IN MULTIPLE PLACES IN THE BUILDER STORE
 export const generate_screen_css = component_array => {
   let styles = ""
-  let emptyStyles = {}
+  let emptyStyles = { normal: {}, hover: {}, active: {}, selected: {} }
   for (let i = 0; i < component_array.length; i += 1) {
-    const { _styles, _id, _children } = component_array[i]
+    const { _styles, _id, _children, _component } = component_array[i]
+    // let [componentName] = _component.match(/[a-z]*$/)
+    debugger
     const cssString = generate_css(_styles || emptyStyles) || ""
     if (cssString) {
       styles += apply_class(_id, "element", cssString)
