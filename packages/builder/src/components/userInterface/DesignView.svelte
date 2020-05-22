@@ -7,7 +7,7 @@
   export let componentDefinition = {}
   export let onStyleChanged = () => {}
 
-  let selectedCategory = "desktop"
+  let selectedCategory = "normal"
 
   const getProperties = name => panelDefinition[name]
 
@@ -16,8 +16,7 @@
   }
 
   const buttonProps = [
-    { value: "desktop", text: "Desktop" },
-    { value: "mobile", text: "Mobile" },
+    { value: "normal", text: "Normal" },
     { value: "hover", text: "Hover" },
     { value: "active", text: "Active" },
     { value: "selected", text: "Selected" },
@@ -38,6 +37,7 @@
         <PropertyGroup
           name={groupName}
           properties={getProperties(groupName)}
+          styleCategory={selectedCategory}
           {onStyleChanged}
           {componentDefinition}
           {componentInstance} />
