@@ -16,8 +16,6 @@
   }
 </script>
 
-<Colorpicker />
-
 {#if panelDefinition.length > 0}
   {#each panelDefinition as definition}
     {#if propExistsOnComponentDef(definition.key)}
