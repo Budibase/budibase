@@ -43,9 +43,7 @@ exports.save = async function(ctx) {
   record.type = "record"
   const response = await db.post(record)
   record._rev = response.rev
-  // await ctx.publish(events.recordApi.save.onRecordCreated, {
-  //   record: record,
-  // })
+  ctx.eventPublisher.emit("RECORD_CREATED", record)
 
   ctx.body = record
   ctx.status = 200
