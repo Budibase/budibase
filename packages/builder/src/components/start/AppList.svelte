@@ -12,7 +12,7 @@ function myFunction() {
   <div class="inner">
     <div>
       <div>
-        <h2 class="app-section-title">Your Web Apps</h2>
+        <div class="app-section-title">Your Web Apps</div>
         {#each apps as app}
         <div class="apps-card">
             <h3 class="app-title">{app.name}</h3>
@@ -30,12 +30,14 @@ function myFunction() {
 
 <style>
   .root {
-    margin: 80px 80px;
+    margin: 40px 80px;
   }
 
   .app-section-title {
-    font-size: 24px;
+    font-size: 20px;
     color: var(--ink);
+    font-weight: 700;
+    margin-bottom: 20px;
   }
 
   .apps {
@@ -45,24 +47,11 @@ function myFunction() {
   }
   .apps-card {
     background-color: var(--white);
-    padding: 40px;
+    padding: 20px;
     max-width: 400px;
     max-height: 150px;
     border-radius: 5px;
     border: 1px solid var(--grey-dark);
-  }
-
-  .app-button {
-    background-color: var(--white);
-    color: var(--ink);
-    padding: 12px 20px;
-    border-radius: 5px;
-    border: 1px var(--grey) solid;
-    font-size: 14px;
-    font-weight: 400;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-sizing: border-box;
   }
 
   .app-button:hover {
@@ -81,15 +70,30 @@ function myFunction() {
     color: var(--ink-light);
   }
 
-  .modified-date {
-    font-size: 14px;
-    color: var(--ink-light);
-  }
-
   .card-footer {
     display: flex;
     flex-direction: row;
     align-items: baseline; 
     justify-content: space-between;
   }
+
+  .modified-date {
+    font-size: 14px;
+    color: var(--ink-light);
+  }
+
+  .app-button {
+    background-color: var(--white);
+    color: var(--ink);
+    padding: 12px 20px;
+    border-radius: 5px;
+    border: 1px var(--grey) solid;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+  }
+
+
 </style>
