@@ -50,12 +50,8 @@
 </div>
 
 <style>
-  .root {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 20px 0;
-  }
+
+
 
   .switcher {
     display: flex;

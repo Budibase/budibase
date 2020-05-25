@@ -32,7 +32,8 @@
       <button class="home-logo">
         <img
           src="/_builder/assets/bb-logo.svg"
-          alt="budibase icon" />
+          alt="budibase icon" 
+          on:click={() => $goto(`/`)}>
       </button>
 
       <!-- This gets all indexable subroutes and sticks them in the top nav. -->
