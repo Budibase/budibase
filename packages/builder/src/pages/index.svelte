@@ -4,19 +4,19 @@
   import { onMount } from "svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import IconButton from "components/common/IconButton.svelte"
-  import { 
-    SettingsIcon, 
-    AppsIcon, 
-    UpdatesIcon, 
-    HostingIcon, 
-    DocumentationIcon, 
-    TutorialsIcon, 
-    CommunityIcon, 
-    ContributionIcon, 
-    BugIcon, 
-    EmailIcon, 
+  import {
+    SettingsIcon,
+    AppsIcon,
+    UpdatesIcon,
+    HostingIcon,
+    DocumentationIcon,
+    TutorialsIcon,
+    CommunityIcon,
+    ContributionIcon,
+    BugIcon,
+    EmailIcon,
     TwitterIcon,
-    } from "components/common/Icons/"
+  } from "components/common/Icons/"
   import Spinner from "components/common/Spinner.svelte"
 
   let promise = getApps()
@@ -31,7 +31,6 @@
       throw new Error(json)
     }
   }
-
 </script>
 
 <div class="root">
@@ -54,13 +53,13 @@
         </span>
         <div class="nav-item-title">Settings</div>
       </div>
-      <a href="https://budibase.con/login" target="_blank" class="nav-item"> 
+      <a href="https://budibase.con/login" target="_blank" class="nav-item">
         <span class="nav-item-icon">
           <UpdatesIcon />
         </span>
         <div class="nav-item-title">Updates</div>
       </a>
-      <a href="https://budibase.con/login" target="_blank" class="nav-item"> 
+      <a href="https://budibase.con/login" target="_blank" class="nav-item">
         <span class="nav-item-icon">
           <HostingIcon />
         </span>
@@ -70,19 +69,22 @@
 
     <div class="nav-section">
       <div class="nav-section-title">Learn</div>
-        <a href="https://docs.budibase.com/" target="_blank" class="nav-item">
+      <a href="https://docs.budibase.com/" target="_blank" class="nav-item">
         <span class="nav-item-icon">
           <DocumentationIcon />
         </span>
         <div class="nav-item-title">Documentation</div>
       </a>
-      <a href="https://docs.budibase.com/tutorial/quick-start" target="_blank" class="nav-item">        
-      <span class="nav-item-icon">
+      <a
+        href="https://docs.budibase.com/tutorial/quick-start"
+        target="_blank"
+        class="nav-item">
+        <span class="nav-item-icon">
           <TutorialsIcon />
         </span>
         <div class="nav-item-title">Tutorials</div>
       </a>
-      <a href="https://forum.budibase.com/" target="_blank" class="nav-item"> 
+      <a href="https://forum.budibase.com/" target="_blank" class="nav-item">
         <span class="nav-item-icon">
           <CommunityIcon />
         </span>
@@ -92,25 +94,31 @@
 
     <div class="nav-section">
       <div class="nav-section-title">Contact</div>
-      <a href="https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md" target="_blank" class="nav-item"> 
+      <a
+        href="https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md"
+        target="_blank"
+        class="nav-item">
         <span class="nav-item-icon">
           <ContributionIcon />
         </span>
         <div class="nav-item-title">Contribute to our product</div>
       </a>
-      <a href="https://github.com/Budibase/budibase/issues" target="_blank" class="nav-item"> 
+      <a
+        href="https://github.com/Budibase/budibase/issues"
+        target="_blank"
+        class="nav-item">
         <span class="nav-item-icon">
           <BugIcon />
         </span>
         <div class="nav-item-title">Report bug</div>
       </a>
-      <a href="mailto:support@budibase.com" target="_blank" class="nav-item"> 
+      <a href="mailto:support@budibase.com" target="_blank" class="nav-item">
         <span class="nav-item-icon">
           <EmailIcon />
         </span>
         <div class="nav-item-title">Email</div>
       </a>
-      <a href="https://twitter.com/budibase" target="_blank" class="nav-item"> 
+      <a href="https://twitter.com/budibase" target="_blank" class="nav-item">
         <span class="nav-item-icon">
           <TwitterIcon />
         </span>
@@ -120,30 +128,31 @@
   </div>
 
   <div class="main">
-  <div class="welcome">Welcome to Budibase</div>
+    <div class="welcome">Welcome to Budibase</div>
     <div class="banner">
       <div class="banner-content">
         <div class="banner-header">
-         Every accomplishment starts with a decision to try.   
+          Every accomplishment starts with a decision to try.
         </div>
-        <button class="banner-button" type="button"><i class="ri-add-circle-fill"></i>
-            Create New Web App
+        <button class="banner-button" type="button">
+          <i class="ri-add-circle-fill" />
+          Create New Web App
         </button>
       </div>
       <div class="banner-image">
         <img src="/_builder/assets/banner-image.png" alt="Bannerimage" />
-     </div>
+      </div>
     </div>
-  {#await promise}
-    <div class="spinner-container">
-      <Spinner />
-    </div>
-  {:then result}
-    <AppList apps={result} />
-  {:catch err}
-    <h1 style="color:red">{err}</h1>
-  {/await}
-  </div>  
+    {#await promise}
+      <div class="spinner-container">
+        <Spinner />
+      </div>
+    {:then result}
+      <AppList apps={result} />
+    {:catch err}
+      <h1 style="color:red">{err}</h1>
+    {/await}
+  </div>
 </div>
 
 <style>
@@ -175,7 +184,7 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--grey-dark)
+    border-right: 1px solid var(--grey-dark);
   }
 
   .home-logo {
@@ -255,22 +264,36 @@
   .banner {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-gap: 20px;
     margin: 20px 80px 40px 80px;
-    background-image: linear-gradient(-45deg, #7F9CEB, #1D2F77);
+    background-image: linear-gradient(-45deg, #7f9ceb, #1d2f77);
     border-radius: 10px;
     max-height: 280px;
   }
 
   .banner-content {
-    padding: 80px;
+    padding: 60px;
   }
-  
+
+  @media only screen and (min-width: 1800px) {
+    .banner-content {
+      padding: 80px;
+    }
+  }
+
   .banner-header {
-    font-size: 36px;
+    font-size: 24px;
     color: var(--white);
     font-weight: 500;
     margin-bottom: 20px;
+  }
+
+  @media only screen and (min-width: 1800px) {
+    .banner-header {
+      font-size: 36px;
+      color: var(--white);
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
   }
 
   .banner-image {
@@ -303,7 +326,7 @@
     align-items: center;
     display: flex;
   }
-  
+
   .ri-add-circle-fill {
     margin-right: 4px;
     font-size: 24px;
