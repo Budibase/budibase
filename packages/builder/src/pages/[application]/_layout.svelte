@@ -2,7 +2,7 @@
   import { store } from "builderStore"
 
   import { fade } from "svelte/transition"
-  import { isActive, goto, context } from "@sveltech/routify"
+  import { isActive, goto, layout } from "@sveltech/routify"
 
   import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
   import IconButton from "components/common/IconButton.svelte"
@@ -23,8 +23,6 @@
       throw new Error(pkg)
     }
   }
-  $: ({ component } = $context)
-  $: list = component.parent.children.filter(child => child.isIndexable)
 </script>
 
 <div class="root">
@@ -33,17 +31,17 @@
     <div class="topleftnav">
       <button class="home-logo">
         <img
-          src="/_builder/assets/budibase-emblem-white.svg"
+          src="/_builder/assets/bb-logo.svg"
           alt="budibase icon" />
       </button>
 
       <!-- This gets all indexable subroutes and sticks them in the top nav. -->
-      {#each list as { path, prettyName, children, meta }}
+      {#each $layout.children as { path, title }}
         <span
           class:active={$isActive(path)}
           class="topnavitem"
           on:click={() => $goto(path)}>
-          {prettyName}
+          {title}
         </span>
       {/each}
       <!-- <IconButton icon="home"
@@ -87,13 +85,14 @@
 
   .top-nav {
     flex: 0 0 auto;
-    height: 48px;
-    background: #0d203b;
+    height: 60px;
+    background: #fff;
     padding: 0px 20px 0 20px;
     display: flex;
     box-sizing: border-box;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid var(--grey);
   }
 
   .content > div {
@@ -112,8 +111,8 @@
 
   .topnavitem {
     cursor: pointer;
-    color: rgb(255, 255, 255, 0.6);
-    margin: 0px 10px;
+    color: var(--ink-lighter);
+    margin: 0px 00px 0px 20px;
     padding-top: 4px;
     font-weight: 500;
     font-size: 1rem;
@@ -123,19 +122,19 @@
   }
 
   .topnavitem:hover {
-    color: rgb(255, 255, 255, 0.8);
+    color: var(--ink-light);
     font-weight: 500;
   }
 
   .active {
-    color: white;
-    font-weight: 600;
+    color: var(--ink);
+    font-weight: 500;
   }
 
   .topnavitemright {
     cursor: pointer;
-    color: rgb(255, 255, 255, 0.6);
-    margin: 0px 5px;
+    color: var(--ink-light);
+    margin: 0px 20px 0px 0px;
     padding-top: 4px;
     font-weight: 500;
     font-size: 1rem;
@@ -157,7 +156,8 @@
     cursor: pointer;
     outline: none;
     height: 40px;
-    padding: 8px 10px 8px 0;
+    padding: 0px 10px 8px 0;
+    align-items: center;
   }
 
   .home-logo:hover {
@@ -169,7 +169,7 @@
   }
 
   .home-logo img {
-    height: 100%;
+    height: 40px;
   }
   span:first-letter {
     text-transform: capitalize;

@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest routes --runInBand",
     "test:integration": "jest routes --runInBand",
     "test:watch": "jest -w",
     "initialise": "node ../cli/bin/budi init -b local -q",
@@ -55,11 +55,12 @@
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",
     "koa-compress": "^4.0.1",
-    "koa-logger": "^3.2.1",
+    "koa-pino-logger": "^3.0.0",
     "koa-send": "^5.0.0",
     "koa-session": "^5.12.0",
     "koa-static": "^5.0.0",
     "lodash": "^4.17.13",
+    "pino-pretty": "^4.0.0",
     "pouchdb": "^7.2.1",
     "pouchdb-all-dbs": "^1.0.2",
     "squirrelly": "^7.5.0",
@@ -82,7 +83,9 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "setupFiles": ["./scripts/jestSetup.js"]
+    "setupFiles": [
+      "./scripts/jestSetup.js"
+    ]
   },
   "gitHead": "b1f4f90927d9e494e513220ef060af28d2d42455"
 }

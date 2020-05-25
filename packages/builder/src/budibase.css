@@ -62,14 +62,14 @@
     margin: 5px 20px 5px 0px;
     border-radius: 0 5px 5px 0;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     font-weight: 500;
     font-size: 13px;
 }
 
 .budibase__nav-item.selected {
     color: var(--button-text);
-    background: #fafafa !important;
+    background: #f1f4fc;
 }
 
 .budibase__nav-item:hover {
