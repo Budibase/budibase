@@ -35,8 +35,9 @@ export const prepareRenderComponent = ({
       thisNode.rootElement =
         htmlElement.children[htmlElement.children.length - 1]
 
+      let [componentName] = props._component.match(/[a-z]*$/)
       if (props._id && thisNode.rootElement) {
-        thisNode.rootElement.classList.add(`element-${props._id}`)
+        thisNode.rootElement.classList.add(`${componentName}-${props._id}`)
       }
     }
   }

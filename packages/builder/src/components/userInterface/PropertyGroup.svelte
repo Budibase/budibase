@@ -13,6 +13,7 @@
   const capitalize = name => name[0].toUpperCase() + name.slice(1)
 
   $: icon = show ? "ri-arrow-down-s-fill" : "ri-arrow-right-s-fill"
+  $: style = componentInstance["_styles"][styleCategory] || {}
 </script>
 
 <div class="property-group-container">
@@ -29,8 +30,8 @@
         label={props.label}
         control={props.control}
         key={props.key}
-        value={componentInstance['_styles'][props.key]}
-        onChange={(key, value) => onStyleChanged(name, key, value)}
+        value={style[props.key]}
+        onChange={(key, value) => onStyleChanged(styleCategory, key, value)}
         props={{ ...excludeProps(props, ['control', 'label']) }} />
     {/each}
   </div>

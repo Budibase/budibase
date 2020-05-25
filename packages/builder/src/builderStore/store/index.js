@@ -141,7 +141,6 @@ const _saveScreen = async (store, s, screen) => {
 }
 
 const _saveScreenApi = (screen, s) => {
-
   api
     .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
     .then(() => _savePage(s))
@@ -427,8 +426,7 @@ const setComponentStyle = store => (type, name, value) => {
     if (!state.currentComponentInfo._styles) {
       state.currentComponentInfo._styles = {}
     }
-    // state.currentComponentInfo._styles[type][name] = value
-    state.currentComponentInfo._styles[name] = value
+    state.currentComponentInfo._styles[type][name] = value
 
     state.currentPreviewItem._css = generate_screen_css([
       state.currentPreviewItem.props,

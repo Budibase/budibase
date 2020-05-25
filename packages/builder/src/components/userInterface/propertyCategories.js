@@ -1,7 +1,7 @@
 import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import InputGroup from "../common/Inputs/InputGroup.svelte"
-import Colorpicker from "../common/Colorpicker.svelte"
+// import Colorpicker from "../common/Colorpicker.svelte"
 /*
   TODO: Allow for default values for all properties
 */
@@ -74,15 +74,16 @@ export const typography = [
     label: "Font",
     key: "font-family",
     control: OptionSelect,
+    defaultValue: "initial",
     options: [
-      { label: "initial" },
-      { label: "Times New Roman" },
-      { label: "Georgia" },
-      { label: "Arial" },
-      { label: "Arial Black" },
-      { label: "Comic Sans MS" },
-      { label: "Impact" },
-      { label: "Lucida Sans Unicode" },
+      "initial",
+      "Times New Roman",
+      "Georgia",
+      "Arial",
+      "Arial Black",
+      "Comic Sans MS",
+      "Impact",
+      "Lucida Sans Unicode",
     ],
     styleBindingProperty: "font-family",
   },
@@ -97,12 +98,13 @@ export const typography = [
       { label: "lighter" },
     ],
   },
-  { label: "size", key: "font-size", control: Input },
+  { label: "size", key: "font-size", defaultValue: "", control: Input },
   { label: "Line H", key: "line-height", control: Input },
   {
     label: "Color",
     key: "color",
-    control: Colorpicker,
+    control: OptionSelect,
+    options: ["black", "white", "red", "blue", "green"],
   },
   {
     label: "align",
@@ -118,7 +120,8 @@ export const background = [
   {
     label: "Background",
     key: "background",
-    control: Colorpicker,
+    control: OptionSelect,
+    options: ["black", "white", "red", "blue", "green"],
   },
   { label: "Image", key: "image", control: Input }, //custom
 ]
@@ -126,7 +129,10 @@ export const background = [
 export const border = [
   { label: "Radius", key: "border-radius", control: Input },
   { label: "Width", key: "border-width", control: Input }, //custom
-  { label: "Color", key: "border-color", control: Colorpicker },
+  {
+    label: "Color", key: "border-color", control: OptionSelect,
+    options: ["black", "white", "red", "blue", "green"]
+  },
   { label: "Style", key: "border-style", control: Input },
 ]
 
