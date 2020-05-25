@@ -110,7 +110,7 @@ h3 {
 h4 {
     font-family: var(--fontbold);
     font-size: 18pt;
-    color: var(--secondary100);
+    color: var(--ink);
 }
 
 h5 {
