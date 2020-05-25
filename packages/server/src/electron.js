@@ -13,13 +13,13 @@ if (isDev) {
   })
 }
 
-const APP_URL = "http://localhost:4001"
+const APP_URL = "http://localhost:4001/_builder"
 const APP_TITLE = "Budibase Builder"
 
 let win
 
-function createWindow() {
-  app.server = require("./app")
+async function createWindow() {
+  app.server = await require("./app")()
   win = new BrowserWindow({ width: 1920, height: 1080 })
   win.setTitle(APP_TITLE)
   win.loadURL(APP_URL)

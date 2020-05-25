@@ -41,4 +41,4 @@ A work in progress, lives here: https://docs.budibase.com
 
 ## Contributing
 
-Contributers, see [CONTRIBUTING.md](./CONTRIBUTING.md)
+Contributors, see [CONTRIBUTING.md](./CONTRIBUTING.md)

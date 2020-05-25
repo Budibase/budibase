@@ -1,8 +1,8 @@
 name: Budibase Release
 
 on: 
- # Trigger the workflow on push,
- # but only for the release branch
+ # Trigger the workflow on push with tags,
+ # but only for the master branch
  push:
   branches:
     - master
@@ -25,10 +25,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: yarn 
-      # - run: yarn lint 
+      - run: yarn lint 
       - run: yarn bootstrap 
       - run: yarn build 
-      # - run: yarn test
+      - run: yarn test
 
       - name: Prepare for app notarization (macOS)
         if: startsWith(matrix.os, 'macos')
