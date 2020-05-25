@@ -16,6 +16,11 @@
     return props
   }
 
+  const getComponentTypeName = component => {
+    let [componentName] = component._component.match(/[a-z]*$/)
+    return componentName || "element"
+  }
+
   $: iframe &&
     console.log(
       iframe.contentDocument.head.insertAdjacentHTML(
@@ -93,6 +98,8 @@
     appRootPath: "",
   }
 
+  $: selectedComponentType = getComponentTypeName($store.currentComponentInfo)
+
   $: selectedComponentId = $store.currentComponentInfo
     ? $store.currentComponentInfo._id
     : ""
@@ -107,6 +114,7 @@
       srcdoc={iframeTemplate({
         styles,
         stylesheetLinks,
+        selectedComponentType,
         selectedComponentId,
         frontendDefinition: JSON.stringify(frontendDefinition),
         currentPageFunctions: $store.currentPageFunctions,

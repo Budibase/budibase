@@ -17,9 +17,15 @@
     }
   }
 
+  const safeValue = () => {
+    return value === undefined && props.defaultValue !== undefined
+      ? props.defaultValue
+      : value
+  }
+
   //Incase the component has a different value key name
   const handlevalueKey = value =>
-    props.valueKey ? { [props.valueKey]: value } : { value }
+    props.valueKey ? { [props.valueKey]: safeValue() } : { value: safeValue() }
 </script>
 
 <div class="property-control">

@@ -21,7 +21,7 @@
       <input
         {type}
         placeholder={placeholder || ''}
-        value={value[i] === 0 ? '' : value[i]}
+        value={!value || value[i] === 0 ? '' : value[i]}
         on:change={e => handleChange(e.target.value || 0, i)} />
     {/each}
   </div>
