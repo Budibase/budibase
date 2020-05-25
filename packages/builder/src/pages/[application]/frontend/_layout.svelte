@@ -131,7 +131,7 @@
     grid-template-columns: 275px 1fr 275px;
     height: 100%;
     width: 100%;
-    background: #fafafa;
+    background: var(--grey-light);
   }
 
   @media only screen and (min-width: 1800px) {
@@ -140,7 +140,7 @@
       grid-template-columns: 300px 1fr 300px;
       height: 100%;
       width: 100%;
-      background: #fafafa;
+      background: var(--grey-light);
     }
   }
 
