@@ -14,7 +14,6 @@ const run = async opts => {
   try {
     await ensureAppDir(opts)
     await setEnvironmentVariables(opts)
-    await prompts(opts)
     await createClientDatabase(opts)
     await createDevEnvFile(opts)
     console.log(chalk.green("Budibase successfully initialised."))
@@ -24,38 +23,19 @@ const run = async opts => {
 }
 
 const setEnvironmentVariables = async opts => {
-  if (opts.database === "local") {
+  if (opts.couchDbUrl) {
+    process.env.COUCH_DB_URL = opts.couchDbUrl
+  } else {
     const dataDir = join(opts.dir, ".data")
     await ensureDir(dataDir)
     process.env.COUCH_DB_URL =
       dataDir + (dataDir.endsWith("/") || dataDir.endsWith("\\") ? "" : "/")
-  } else {
-    process.env.COUCH_DB_URL = opts.couchDbUrl
   }
 }
 
 const ensureAppDir = async opts => {
   opts.dir = xPlatHomeDir(opts.dir)
   await ensureDir(opts.dir)
-}
-
-const prompts = async opts => {
-  const questions = [
-    {
-      type: "input",
-      name: "couchDbUrl",
-      message:
-        "CouchDB Connection String (e.g. https://user:password@localhost:5984): ",
-      validate: function(value) {
-        return !!value || "Please enter connection string"
-      },
-    },
-  ]
-
-  if (opts.database === "remote" && !opts.couchDbUrl) {
-    const answers = await inquirer.prompt(questions)
-    opts.couchDbUrl = answers.couchDbUrl
-  }
 }
 
 const createClientDatabase = async opts => {
