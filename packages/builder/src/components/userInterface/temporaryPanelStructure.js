@@ -169,7 +169,7 @@ export default {
               icon: "ri-file-list-line",
               properties: {
                 design: { ...all },
-                settings: []
+                settings: [],
               },
             },
           ],
@@ -182,7 +182,7 @@ export default {
           children: [],
           properties: {
             design: {
-              ...all
+              ...all,
             },
             settings: [
               { label: "Text", key: "text", control: Input },
@@ -192,7 +192,7 @@ export default {
                 valueKey: "checked",
                 control: Checkbox,
               },
-            ]
+            ],
           },
         },
         {

@@ -40,10 +40,10 @@
     styles = styles
   }
 
-  $: stylesheetLinks = pipe(
-    $store.pages.stylesheets,
-    [map(s => `<link rel="stylesheet" href="${s}"/>`), join("\n")]
-  )
+  $: stylesheetLinks = pipe($store.pages.stylesheets, [
+    map(s => `<link rel="stylesheet" href="${s}"/>`),
+    join("\n"),
+  ])
 
   $: screensExist =
     $store.currentPreviewItem._screens &&
