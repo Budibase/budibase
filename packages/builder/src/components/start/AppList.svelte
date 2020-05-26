@@ -2,10 +2,10 @@
   import Button from "components/common/Button.svelte"
   export let apps
 
-function myFunction() {
-  var x = new Date(document.lastModified);
-  document.getElementById("demo").innerHTML = x;
-}
+  function myFunction() {
+    var x = new Date(document.lastModified)
+    document.getElementById("demo").innerHTML = x
+  }
 </script>
 
 <div class="root">
@@ -14,12 +14,17 @@ function myFunction() {
       <div>
         <div class="app-section-title">Your Web Apps</div>
         {#each apps as app}
-        <div class="apps-card">
+          <div class="apps-card">
             <h3 class="app-title">{app.name}</h3>
-            <p class="app-desc">A minimalist CRM which removes the noise and allows you to focus on your business. </p>
+            <p class="app-desc">
+              A minimalist CRM which removes the noise and allows you to focus
+              on your business.
+            </p>
             <div class="card-footer">
               <div class="modified-date">Last Edited - 25th May 2020</div>
-              <a href={`/_builder/${app._id}`} class="app-button">Open Web App</a>
+              <a href={`/_builder/${app._id}`} class="app-button">
+                Open Web App
+              </a>
             </div>
           </div>
         {/each}
@@ -73,7 +78,7 @@ function myFunction() {
   .card-footer {
     display: flex;
     flex-direction: row;
-    align-items: baseline; 
+    align-items: baseline;
     justify-content: space-between;
   }
 
@@ -94,6 +99,4 @@ function myFunction() {
     transition: all 0.2s;
     box-sizing: border-box;
   }
-
-
 </style>
