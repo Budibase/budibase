@@ -68,4 +68,4 @@ export const getNewRecordToState = (coreApi, setState) => ({
   }
 }
 
-const errorHandler = setState => message => setState(ERROR, message)
+const errorHandler = setState => message => setState("##error_message", message)

@@ -1,6 +1,6 @@
-const CouchDB = require("../../db")
+const CouchDB = require("../../../db")
 const Ajv = require("ajv")
-const newid = require("../../db/newid")
+const newid = require("../../../db/newid")
 
 const ajv = new Ajv()
 
@@ -74,6 +74,18 @@ exports.fetch = async function(ctx) {
 exports.find = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
   ctx.body = await db.get(ctx.params.id)
+}
+
+exports.executeAction = async function(ctx) {
+  const workflowAction = require(`./actions/${ctx.request.body.action}`);
+  const response = await workflowAction(ctx.request.body.args);
+  ctx.body = response; 
+}
+
+exports.fetchActionScript = async function(ctx) {
+  const workflowAction = require(`./actions/${ctx.action}`);
+  console.log(workflowAction);
+  ctx.body = workflowAction; 
 }
 
 exports.destroy = async function(ctx) {

@@ -5,6 +5,7 @@ const newid = require("../../db/newid")
 const ajv = new Ajv()
 
 exports.save = async function(ctx) {
+  console.log("THIS INSTANCE", ctx.params.instanceId);
   const db = new CouchDB(ctx.params.instanceId)
   const record = ctx.request.body
 
@@ -43,7 +44,7 @@ exports.save = async function(ctx) {
   record.type = "record"
   const response = await db.post(record)
   record._rev = response.rev
-  ctx.eventPublisher.emit("RECORD_CREATED", record)
+  // ctx.eventPublisher.emit("RECORD_CREATED", record)
 
   ctx.body = record
   ctx.status = 200

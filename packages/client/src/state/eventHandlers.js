@@ -33,7 +33,7 @@ export const eventHandlers = (store, rootPath, routeTo) => {
     "List Records": handler(["indexKey", "statePath"], api.listRecords),
     "Save Record": handler(["statePath"], api.saveRecord),
     "Navigate To": handler(["url"], param => routeTo(param && param.url)),
-
+    "Trigger Workflow": handler(["workflow"], api.triggerWorkflow),
     Authenticate: handler(["username", "password"], api.authenticate),
   }
 }
