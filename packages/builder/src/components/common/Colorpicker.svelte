@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { HsvPicker } from "svelte-color-picker"
+  // import { HsvPicker } from "svelte-color-picker"
 
   // export let initialValue = "#ffffff"
   export let onChange = color => {}
@@ -68,7 +68,7 @@
 <div class="colorpicker" {style}>
   <div class="overlay" on:click|self={() => toggleColorpicker(false)} />
   <div class="cp" style={pickerStyle}>
-    <HsvPicker on:colorChange={onColourChange} startColor={value} />
+    <!-- <HsvPicker on:colorChange={onColourChange} startColor={value} /> -->
   </div>
 </div>
 <!-- 
