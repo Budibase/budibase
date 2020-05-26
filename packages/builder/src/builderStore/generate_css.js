@@ -23,16 +23,28 @@ export const generate_css = style => {
         return (str += `${key}: ${value};\n`)
       }
     } else if (Array.isArray(value)) {
-      return (str += `${key}: ${value
-        .map(v => (!/px$/.test(v) ? `${v}px` : v))
-        .join(" ")};\n`)
+      if (value.length > 0 && !value.every(v => v === "")) {
+        return (str += `${key}: ${value
+          .map(generate_array_styles)
+          .join(" ")};\n`)
+      }
     }
   }, "")
 
   return (cssString || "").trim()
 }
 
-const apply_class = (id, name = "element", styles, selector) => {
+export const generate_array_styles = item => {
+  let safeItem = item === "" ? 0 : item
+  let hasPx = new RegExp("px$")
+  if (!hasPx.test(safeItem)) {
+    return `${safeItem}px`
+  } else {
+    return safeItem
+  }
+}
+
+export const apply_class = (id, name = "element", styles, selector) => {
   if (selector === "normal") {
     return `.${name}-${id} {\n${styles}\n}`
   } else {
