@@ -142,7 +142,7 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--grey-dark);
+    border-right: 1px solid var(--grey-medium);
   }
 
   .home-logo {

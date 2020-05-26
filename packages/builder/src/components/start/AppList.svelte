@@ -56,7 +56,7 @@
     max-width: 400px;
     max-height: 150px;
     border-radius: 5px;
-    border: 1px solid var(--grey-dark);
+    border: 1px solid var(--grey-medium);
   }
 
   .app-button:hover {

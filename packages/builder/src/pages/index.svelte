@@ -7,6 +7,7 @@
   import IconButton from "components/common/IconButton.svelte"
 
   import Spinner from "components/common/Spinner.svelte"
+  import CreateAppModal from "components/start/CreateAppModal.svelte"
 
   let promise = getApps()
 
@@ -23,9 +24,19 @@
 
   // Handle create app modal
   const { open } = getContext("simple-modal")
+  const onCancel = text => {
+    name = ""
+    status = -1
+  }
+
+  const onOkay = text => {
+    name = text
+    status = 1
+  }
+
   const showCreateAppModal = () => {
     open(
-      Dialog,
+      CreateAppModal,
       {
         message: "What is your name?",
         hasForm: true,
@@ -36,6 +47,7 @@
         closeButton: false,
         closeOnEsc: false,
         closeOnOuterClick: false,
+        styleContent: { padding: 0 },
       }
     )
   }
@@ -47,7 +59,7 @@
     <div class="banner-header">
       Every accomplishment starts with a decision to try.
     </div>
-    <button class="banner-button" type="button">
+    <button class="banner-button" type="button" on:click={showCreateAppModal}>
       <i class="ri-add-circle-fill" />
       Create New Web App
     </button>
