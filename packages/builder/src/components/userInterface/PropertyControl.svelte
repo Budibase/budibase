@@ -43,21 +43,24 @@
 <style>
   .property-control {
     display: flex;
-    flex-flow: row nowrap;
+    flex-flow: row;
     margin: 8px 0px;
+    align-items: center;
   }
 
   .label {
     flex: 0 0 50px;
-    padding: 0px 5px;
     font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.12px;
+    font-weight: 400;
     text-align: left;
+    color: var(--ink);
+    margin-right: auto;
+    text-transform: capitalize;
   }
 
   .control {
     flex: 1;
-    padding-left: 5px;
+    padding-left: 2px;
+    max-width: 164px;
   }
 </style>

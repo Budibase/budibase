@@ -117,7 +117,7 @@
   }
 
   .component-props-container {
-    margin-top: 10px;
+    margin-top: 20px;
     flex: 1 1 auto;
   }
 </style>
