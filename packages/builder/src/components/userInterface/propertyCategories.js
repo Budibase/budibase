@@ -130,8 +130,10 @@ export const border = [
   { label: "Radius", key: "border-radius", control: Input },
   { label: "Width", key: "border-width", control: Input }, //custom
   {
-    label: "Color", key: "border-color", control: OptionSelect,
-    options: ["black", "white", "red", "blue", "green"]
+    label: "Color",
+    key: "border-color",
+    control: OptionSelect,
+    options: ["black", "white", "red", "blue", "green"],
   },
   { label: "Style", key: "border-style", control: Input },
 ]

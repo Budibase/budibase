@@ -40,4 +40,3 @@ const apply_class = (id, name = "element", styles, selector) => {
     return `.${name}-${id}${sel} {\n${styles}\n}`
   }
 }
-
