@@ -24,7 +24,7 @@
       <button
         class:selected={selected === COMPONENT_SELECTION_TAB}
         on:click={() => selectTab(COMPONENT_SELECTION_TAB)}>
-        Components
+        Add
       </button>
 
       <button
@@ -50,37 +50,24 @@
 </div>
 
 <style>
-  .root {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 20px 0;
-  }
-
   .switcher {
     display: flex;
-    justify-content: space-between;
-    margin: 20px;
+    margin: 0px 20px 20px 20px;
   }
 
   .switcher > button {
-    text-rendering: optimizeLegibility;
     display: inline-block;
     border: none;
     margin: 0;
     padding: 0;
     cursor: pointer;
-    font-size: 14px;
-    text-transform: uppercase;
-    background: rgba(0, 0, 0, 0);
-    font-weight: 500;
-    color: var(--secondary40);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink-lighter);
     margin-right: 20px;
-    letter-spacing: 1px;
   }
 
   .switcher > .selected {
-    color: var(--secondary100);
-    font-weight: 600;
+    color: var(--ink);
   }
 </style>

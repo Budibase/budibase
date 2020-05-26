@@ -1,5 +1,20 @@
 
 :root {
+
+    --white: #FFFFFF;
+    
+    --blue: #0055ff;
+    --blue-light: #F1F4FC;
+    --blue-dark: #2F4C9B;
+
+    --ink: #393C44;
+    --ink-light: #808192;
+    --ink-lighter: #ADAEC4;
+    
+    --grey: #F2F2F2;
+    --grey-light: #FBFBFB;
+    --grey-dark: #E6E6E6;
+
     --primary100: #0055ff;
     --primary80: rgba(0, 85, 255, 0.8);
     --primary60: #rgba(0, 85, 255, 0.6);
@@ -9,7 +24,7 @@
     --primary5: #rgba(0, 85, 255, 0.05);
     --primarydark: #0044cc;
 
-    --secondary100:#000333;
+    --secondary100:#393C44;
     --secondary80: rgba(0, 3, 51, 0.8);
     --secondary60: rgba(0, 3, 51, 0.6);
     --secondary40: rgba(0, 3, 51, 0.4);
@@ -34,7 +49,7 @@
     --deletion10: #F2545B1A;
     --deletiondark: #CF4046;
 
-    --white: #FFFFFF;
+    
     --darkslate: #1a202c;
     --slate: #d8d8d8;
     --lightslate: #f9f9f9;
@@ -95,7 +110,7 @@ h3 {
 h4 {
     font-family: var(--fontbold);
     font-size: 18pt;
-    color: var(--secondary100);
+    color: var(--ink);
 }
 
 h5 {
