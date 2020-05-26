@@ -50,9 +50,6 @@
 </div>
 
 <style>
-
-
-
   .switcher {
     display: flex;
     justify-content: space-between;
