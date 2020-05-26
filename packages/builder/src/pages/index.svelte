@@ -48,6 +48,7 @@
         closeOnEsc: false,
         closeOnOuterClick: false,
         styleContent: { padding: 0 },
+        closeOnOuterClick: true
       }
     )
   }

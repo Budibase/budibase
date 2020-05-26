@@ -1,6 +1,5 @@
 <script>
-  import Button from "components/common/Button.svelte"
-  import { Input, TextArea } from "@budibase/bbui"
+  import { Input, TextArea, Button } from "@budibase/bbui"
   import { AppsIcon, InfoIcon, CloseIcon } from "components/common/Icons/"
   import { getContext } from "svelte"
   export let onCancel = () => {}
@@ -38,11 +37,11 @@
   </div>
   <div class="footer">
     <a href="./#" class="info"><InfoIcon />How to get started</a>
-    <Button color="secondary" on:click={_onCancel}>
-      <span class="button-text">Cancel</span>
+    <Button outline thin on:click={_onCancel}>
+      Cancel
     </Button>
-    <Button color="primary" on:click={_onOkay}>
-      <span class="button-text">Create</span>
+    <Button primary thin on:click={_onOkay}>
+      Save
     </Button>
   </div>
   <div class="close-button" on:click={_onCancel}><CloseIcon /></div>
@@ -68,6 +67,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    margin-bottom: 20px;
   }
   h3 {
     margin: 0;
@@ -102,17 +102,12 @@
   }
   .footer {
     display: grid;
+    grid-gap: 20px;
     align-items: center;
     grid-template-columns: 1fr auto auto;
     padding: 30px 40px;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 50px;
     background-color: var(--grey-light);
-  }
-  .button-text {
-    font-size: 18px;
-    line-height: 1.17;
-    letter-spacing: normal;
-    color: var(--white);
   }
 </style>
