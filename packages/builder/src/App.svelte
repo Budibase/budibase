@@ -26,6 +26,4 @@
 
 <AppNotification />
 
-<Modal>
-  <Router {routes} />
-</Modal>
+<Router {routes} />

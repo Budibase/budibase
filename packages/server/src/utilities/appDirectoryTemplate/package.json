@@ -1,0 +1,11 @@
+{
+  "name": "name",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@budibase/standard-components": "0.x",
+    "@budibase/materialdesign-components": "0.x"
+  }
+}
