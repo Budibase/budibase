@@ -1,15 +1,28 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/workflow")
+const authorized = require("../../middleware/authorized")
+const { BUILDER } = require("../../utilities/accessLevels")
 
 const router = Router()
 
 router
-  .get("/api/:instanceId/workflows", controller.fetch)
-  .get("/api/:instanceId/workflows/:id", controller.find)
-  .get("/api/:instanceId/workflows/:id/:action", controller.fetchActionScript)
-  .post("/api/:instanceId/workflows", controller.create)
-  .post("/api/:instanceId/workflows/action", controller.executeAction)
-  .put("/api/:instanceId/workflows", controller.update)
-  .delete("/api/:instanceId/workflows/:id/:rev", controller.destroy)
+  .get("/api/:instanceId/workflows", authorized(BUILDER), controller.fetch)
+  .get("/api/:instanceId/workflows/:id", authorized(BUILDER), controller.find)
+  .get(
+    "/api/:instanceId/workflows/:id/:action",
+    authorized(BUILDER),
+    controller.fetchActionScript
+  )
+  .put("/api/:instanceId/workflows", authorized(BUILDER), controller.update)
+  .post(
+    "/api/:instanceId/workflows/action",
+    authorized(BUILDER),
+    controller.executeAction
+  )
+  .delete(
+    "/api/:instanceId/workflows/:id",
+    authorized(BUILDER),
+    controller.destroy
+  )
 
 module.exports = router

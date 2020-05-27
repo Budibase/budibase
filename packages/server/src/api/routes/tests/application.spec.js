@@ -1,9 +1,11 @@
 const { 
   createClientDatabase,  
   createApplication,
+  createInstance,
   destroyClientDatabase,
+  builderEndpointShouldBlockNormalUsers,
   supertest,
-  defaultHeaders
+  defaultHeaders,
 } = require("./couchTestUtils")
 
 describe("/applications", () => {
@@ -37,6 +39,18 @@ describe("/applications", () => {
       expect(res.res.statusMessage).toEqual("Application My App created successfully")
       expect(res.body._id).toBeDefined()
     })
+
+    it("should apply authorization to endpoint", async () => {
+      const otherApplication = await createApplication(request) 
+      const instance = await createInstance(request, otherApplication._id)
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "POST",
+        url: `/api/applications`,
+        instanceId: instance._id,
+        body: { name: "My App" }
+      })
+    })
   })
 
   describe("fetch", () => {
@@ -52,6 +66,17 @@ describe("/applications", () => {
         .expect(200)
 
       expect(res.body.length).toBe(2)
+    })
+
+    it("should apply authorization to endpoint", async () => {
+      const otherApplication = await createApplication(request) 
+      const instance = await createInstance(request, otherApplication._id)
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "GET",
+        url: `/api/applications`,
+        instanceId: instance._id,
+      })
     })
   })
 

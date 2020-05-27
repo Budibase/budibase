@@ -7,7 +7,6 @@ const {
   authRoutes,
   pageRoutes,
   userRoutes,
-  recordRoutes,
   instanceRoutes,
   clientRoutes,
   applicationRoutes,
@@ -15,7 +14,8 @@ const {
   viewRoutes,
   staticRoutes,
   componentRoutes,
-  workflowRoutes
+  workflowRoutes,
+  accesslevelRoutes,
 } = require("./routes")
 
 const router = new Router()
@@ -71,9 +71,6 @@ router.use(modelRoutes.allowedMethods())
 router.use(userRoutes.routes())
 router.use(userRoutes.allowedMethods())
 
-router.use(recordRoutes.routes())
-router.use(recordRoutes.allowedMethods())
-
 router.use(instanceRoutes.routes())
 router.use(instanceRoutes.allowedMethods())
 
@@ -92,6 +89,9 @@ router.use(componentRoutes.allowedMethods())
 
 router.use(clientRoutes.routes())
 router.use(clientRoutes.allowedMethods())
+
+router.use(accesslevelRoutes.routes())
+router.use(accesslevelRoutes.allowedMethods())
 
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
