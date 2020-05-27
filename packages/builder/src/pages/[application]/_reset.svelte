@@ -1,4 +1,5 @@
 <script>
+  import Modal from "svelte-simple-modal"
   import { store } from "builderStore"
 
   import { fade } from "svelte/transition"
@@ -25,56 +26,58 @@
   }
 </script>
 
-<div class="root">
+<Modal>
+  <div class="root">
 
-  <div class="top-nav">
-    <div class="topleftnav">
-      <button class="home-logo">
-        <img
-          src="/_builder/assets/bb-logo.svg"
-          alt="budibase icon"
-          on:click={() => $goto(`/`)} />
-      </button>
+    <div class="top-nav">
+      <div class="topleftnav">
+        <button class="home-logo">
+          <img
+            src="/_builder/assets/bb-logo.svg"
+            alt="budibase icon"
+            on:click={() => $goto(`/`)} />
+        </button>
 
-      <!-- This gets all indexable subroutes and sticks them in the top nav. -->
-      {#each $layout.children as { path, title }}
-        <span
-          class:active={$isActive(path)}
-          class="topnavitem"
-          on:click={() => $goto(path)}>
-          {title}
-        </span>
-      {/each}
-      <!-- <IconButton icon="home"
+        <!-- This gets all indexable subroutes and sticks them in the top nav. -->
+        {#each $layout.children as { path, title }}
+          <span
+            class:active={$isActive(path)}
+            class="topnavitem"
+            on:click={() => $goto(path)}>
+            {title}
+          </span>
+        {/each}
+        <!-- <IconButton icon="home"
                       color="var(--slate)"
                       hoverColor="var(--secondary75)"/> -->
+      </div>
+      <div class="toprightnav">
+        <span
+          class:active={$isActive(`/settings`)}
+          class="topnavitemright"
+          on:click={() => $goto(`/settings`)}>
+          <SettingsIcon />
+        </span>
+        <span
+          class:active={false}
+          class="topnavitemright"
+          on:click={() => (location = `/${application}`)}>
+          <PreviewIcon />
+        </span>
+      </div>
     </div>
-    <div class="toprightnav">
-      <span
-        class:active={$isActive(`/settings`)}
-        class="topnavitemright"
-        on:click={() => $goto(`/settings`)}>
-        <SettingsIcon />
-      </span>
-      <span
-        class:active={false}
-        class="topnavitemright"
-        on:click={() => (location = `/${application}`)}>
-        <PreviewIcon />
-      </span>
-    </div>
+
+    {#await promise}
+      <!-- This should probably be some kind of loading state? -->
+      <div />
+    {:then}
+      <slot />
+    {:catch error}
+      <p>Something went wrong: {error.message}</p>
+    {/await}
+
   </div>
-
-  {#await promise}
-    <!-- This should probably be some kind of loading state? -->
-    <div />
-  {:then}
-    <slot />
-  {:catch error}
-    <p>Something went wrong: {error.message}</p>
-  {/await}
-
-</div>
+</Modal>
 
 <style>
   .root {
