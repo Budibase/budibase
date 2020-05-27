@@ -3,7 +3,9 @@ const {
   createModel, 
   supertest, 
   createClientDatabase, 
-  createApplication 
+  createApplication ,
+  defaultHeaders,
+  builderEndpointShouldBlockNormalUsers
 } = require("./couchTestUtils")
 
 describe("/models", () => {
@@ -38,7 +40,7 @@ describe("/models", () => {
             name: { type: "string" }
           }
         })
-        .set("Accept", "application/json")
+        .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
@@ -46,6 +48,22 @@ describe("/models", () => {
             expect(res.body.name).toEqual("TestModel");            
             done();
         });
+      })
+
+      it("should apply authorization to endpoint", async () => {
+        await builderEndpointShouldBlockNormalUsers({
+          request,
+          method: "POST",
+          url: `/api/${instance._id}/models`,
+          instanceId: instance._id,
+          body: { 
+            name: "TestModel",
+            key: "name",
+            schema: {
+              name: { type: "string" }
+            }
+          }
+        })
       })
     });
 
@@ -60,7 +78,7 @@ describe("/models", () => {
     it("returns all the models for that instance in the response body", done => {
       request
         .get(`/api/${instance._id}/models`)
-        .set("Accept", "application/json")
+        .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
@@ -69,7 +87,17 @@ describe("/models", () => {
             expect(fetchedModel.type).toEqual("model");            
             done();
         });
+    })
+
+    it("should apply authorization to endpoint", async () => {
+        await builderEndpointShouldBlockNormalUsers({
+          request,
+          method: "GET",
+          url: `/api/${instance._id}/models`,
+          instanceId: instance._id,
+        })
       })
+
     });
 
   describe("destroy", () => {
@@ -83,7 +111,7 @@ describe("/models", () => {
     it("returns a success response when a model is deleted.", done => {
       request
         .delete(`/api/${instance._id}/models/${testModel._id}/${testModel._rev}`)
-        .set("Accept", "application/json")
+        .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
@@ -91,5 +119,15 @@ describe("/models", () => {
             done();
         });
       })
-    });
+
+    it("should apply authorization to endpoint", async () => {
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "DELETE",
+        url: `/api/${instance._id}/models/${testModel._id}/${testModel._rev}`,
+        instanceId: instance._id,
+      })
+    })
+
+  });
 });

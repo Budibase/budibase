@@ -5,7 +5,8 @@ const {
   defaultHeaders,
   supertest,
   insertDocument,
-  destroyDocument
+  destroyDocument,
+  builderEndpointShouldBlockNormalUsers
 } = require("./couchTestUtils")
 
 const TEST_WORKFLOW = {
@@ -71,6 +72,16 @@ describe("/workflows", () => {
         expect(res.body.message).toEqual("Workflow created successfully");
         expect(res.body.workflow.name).toEqual("My Workflow");
     })
+
+    it("should apply authorization to endpoint", async () => {
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "POST",
+        url: `/api/${instance._id}/workflows`,
+        instanceId: instance._id,
+        body: TEST_WORKFLOW
+      })
+    })
   })
 
   describe("update", () => {
@@ -103,6 +114,15 @@ describe("/workflows", () => {
 
         expect(res.body[0]).toEqual(expect.objectContaining(TEST_WORKFLOW));
     })
+
+    it("should apply authorization to endpoint", async () => {
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "GET",
+        url: `/api/${instance._id}/workflows`,
+        instanceId: instance._id,
+      })
+    })
   })
 
   describe("find", () => {
@@ -116,6 +136,16 @@ describe("/workflows", () => {
 
         expect(res.body).toEqual(expect.objectContaining(TEST_WORKFLOW));
     })
+
+    it("should apply authorization to endpoint", async () => {
+      await createWorkflow();
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "GET",
+        url: `/api/${instance._id}/workflows/${workflow.id}`,
+        instanceId: instance._id,
+      })
+    })
   })
 
   describe("destroy", () => {
@@ -128,6 +158,16 @@ describe("/workflows", () => {
         .expect(200)
 
         expect(res.body.id).toEqual(TEST_WORKFLOW._id);
+    })
+
+    it("should apply authorization to endpoint", async () => {
+      await createWorkflow();
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "DELETE",
+        url: `/api/${instance._id}/workflows/${workflow.id}/${workflow._rev}`,
+        instanceId: instance._id,
+      })
     })
   })
 });

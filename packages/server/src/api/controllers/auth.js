@@ -24,20 +24,21 @@ exports.authenticate = async ctx => {
 
   // Check the user exists in the instance DB by username
   const instanceDb = new CouchDB(instanceId)
-  const { rows } = await instanceDb.query("database/by_username", {
-    include_docs: true,
-    username,
-  })
 
-  if (rows.length === 0) ctx.throw(500, `User does not exist.`)
-
-  const dbUser = rows[0].doc
+  let dbUser
+  try {
+    dbUser = await instanceDb.get(`user_${username}`)
+  } catch (_) {
+    // do not want to throw a 404 - as this could be
+    // used to dtermine valid usernames
+    ctx.throw(401, "Invalid Credentials")
+  }
 
   // authenticate
   if (await bcrypt.compare(password, dbUser.password)) {
     const payload = {
       userId: dbUser._id,
-      accessLevel: "",
+      accessLevelId: dbUser.accessLevelId,
       instanceId: instanceId,
     }
 

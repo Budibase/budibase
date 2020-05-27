@@ -3,8 +3,15 @@ const {
   createClientDatabase,
   createInstance, 
   createModel,
-  supertest
+  supertest,
+  defaultHeaders,
+  testPermissionsForEndpoint,
+  shouldReturn403WhenNoPermission,
+  shouldReturn200WithOnlyOnePermission,
 } = require("./couchTestUtils");
+const {
+  WRITE_MODEL, READ_MODEL
+} = require("../../../utilities/accessLevels")
 
 describe("/records", () => {
   let request
@@ -24,25 +31,25 @@ describe("/records", () => {
     server.close();
   })
 
-  describe("save, load, update, delete", () => {
+  beforeEach(async () => {
+    instance = await createInstance(request, app._id)
+    model = await createModel(request, instance._id)
+    record = {
+      name: "Test Contact",
+      status: "new",
+      modelId: model._id
+    }
+  })
 
-    beforeEach(async () => {
-      instance = await createInstance(request, app._id)
-      model = await createModel(request, instance._id)
-      record = {
-        name: "Test Contact",
-        status: "new",
-        modelId: model._id
-      }
-    })
+  const createRecord = async r => 
+    await request
+      .post(`/api/${instance._id}/${model._id}/records`)
+      .send(r || record)
+      .set(defaultHeaders)
+      .expect('Content-Type', /json/)
+      .expect(200)
 
-    const createRecord = async r => 
-      await request
-        .post(`/api/${instance._id}/records`)
-        .send(r || record)
-        .set("Accept", "application/json")
-        .expect('Content-Type', /json/)
-        .expect(200)
+  describe("save", () => {   
 
     it("returns a success message when the record is created", async () => {
       const res = await createRecord()
@@ -51,33 +58,47 @@ describe("/records", () => {
       expect(res.body._rev).toBeDefined()
     })
 
+    it("should apply authorization to endpoint", async () => {
+      await testPermissionsForEndpoint({
+        request,
+        method: "POST",
+        url: `/api/${instance._id}/${model._id}/records`,
+        body: record,
+        instanceId: instance._id,
+        permissionName: WRITE_MODEL,
+        itemId: model._id,
+      })
+    })
+
     it("updates a record successfully", async () => {
       const rec = await createRecord()
       const existing = rec.body
 
       const res = await request
-        .post(`/api/${instance._id}/records`)
+        .post(`/api/${instance._id}/${model._id}/records`)
         .send({
           _id: existing._id,
           _rev: existing._rev,
           modelId: model._id,
           name: "Updated Name",
         })
-        .set("Accept", "application/json")
+        .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(200)
       
       expect(res.res.statusMessage).toEqual(`${model.name} updated successfully.`)
       expect(res.body.name).toEqual("Updated Name")
     })
+  })
 
+  describe("find", () => {   
     it("should load a record", async () => {
       const rec = await createRecord()
       const existing = rec.body
 
       const res = await request
-        .get(`/api/${instance._id}/records/${existing._id}`)
-        .set("Accept", "application/json")
+        .get(`/api/${instance._id}/${model._id}/records/${existing._id}`)
+        .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -89,6 +110,31 @@ describe("/records", () => {
       })
     })
 
+    it("load should return 404 when record does not exist", async () => {
+      await createRecord()
+      await request
+        .get(`/api/${instance._id}/${model._id}/records/not-a-valid-id`)
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        .expect(404)
+    })
+
+    it("should apply authorization to endpoint", async () => {
+      const rec = await createRecord()
+      await testPermissionsForEndpoint({
+        request,
+        method: "GET",
+        url: `/api/${instance._id}/${model._id}/records/${rec.body._id}`,
+        instanceId: instance._id,
+        permissionName: READ_MODEL,
+        itemId: model._id,
+      })
+    })
+
+  })
+
+  describe("fetch", () => {   
+
     it("should list all records for given modelId", async () => {
       const newRecord = {
         modelId: model._id,
@@ -99,8 +145,8 @@ describe("/records", () => {
       await createRecord(newRecord)
 
       const res = await request
-        .get(`/api/${instance._id}/all_${newRecord.modelId}/records`)
-        .set("Accept", "application/json")
+        .get(`/api/${instance._id}/${model._id}/records`)
+        .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -109,13 +155,46 @@ describe("/records", () => {
       expect(res.body.find(r => r.name === record.name)).toBeDefined()
     })
 
-    it("load should return 404 when record does not exist", async () => {
-      await createRecord()
+    it("should apply authorization to endpoint", async () => {
+      await testPermissionsForEndpoint({
+        request,
+        method: "GET",
+        url: `/api/${instance._id}/${model._id}/records`,
+        instanceId: instance._id,
+        permissionName: READ_MODEL,
+        itemId: model._id,
+      })
+    })
+
+  })
+
+  describe("delete", () => {   
+
+    it("should remove a record", async () => {
+      const createRes = await createRecord()
+
       await request
-        .get(`/api/${instance._id}/records/not-a-valid-id`)
-        .set("Accept", "application/json")
-        .expect('Content-Type', /json/)
+        .delete(`/api/${instance._id}/${model._id}/records/${createRes.body._id}/${createRes.body._rev}`)
+        .set(defaultHeaders)
+        .expect(200)
+
+      await request
+        .get(`/api/${instance._id}/${model._id}/records/${createRes.body._id}`)
+        .set(defaultHeaders)
         .expect(404)
     })
+
+    it("should apply authorization to endpoint", async () => {
+      const createRes = await createRecord()
+      await testPermissionsForEndpoint({
+        request,
+        method: "DELETE",
+        url: `/api/${instance._id}/${model._id}/records/${createRes.body._id}/${createRes.body._rev}`,
+        instanceId: instance._id,
+        permissionName: WRITE_MODEL,
+        itemId: model._id,
+      })
+    })
+
   })
 })
