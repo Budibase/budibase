@@ -1,5 +1,4 @@
 const CouchDB = require("../../db")
-const Ajv = require("ajv")
 const newid = require("../../db/newid")
 
 exports.create = async function(ctx) {
