@@ -16,7 +16,7 @@ export const layout = [
     options: [
       { label: "Select Option", value: "Na" },
       { label: "Flex", value: "flex" },
-      { label: "Inline Flex", value: "inline-flex" }
+      { label: "Inline Flex", value: "inline-flex" },
     ],
   },
   {
@@ -32,32 +32,34 @@ export const layout = [
       { label: "Column Reverse", value: "columnReverse" },
     ],
   },
-  { label: "Justify", 
-    key: "justify-content", 
+  {
+    label: "Justify",
+    key: "justify-content",
     control: OptionSelect,
     initialValue: "Select Option",
     options: [
       { label: "Select Option", value: "Na" },
-      { label: "Flex Start", value: "flex-start" }, 
-      { label: "Flex End", value: "flex-end" }, 
-      { label: "Center", value: "center" }, 
-      { label: "Space Between", value: "space-between" }, 
-      { label: "Space Around", value: "space-around" }, 
-      { label: "Space Evenly", value: "space-evenly" }, 
+      { label: "Flex Start", value: "flex-start" },
+      { label: "Flex End", value: "flex-end" },
+      { label: "Center", value: "center" },
+      { label: "Space Between", value: "space-between" },
+      { label: "Space Around", value: "space-around" },
+      { label: "Space Evenly", value: "space-evenly" },
     ],
   },
-  { label: "Align", 
-    key: "align-items", 
+  {
+    label: "Align",
+    key: "align-items",
     control: OptionSelect,
     initialValue: "Select Option",
     options: [
       { label: "Select Option", value: "Na" },
-      { label: "Flex Start", value: "flex-start" }, 
-      { label: "Flex End", value: "flex-end" }, 
-      { label: "Center", value: "center" }, 
-      { label: "Baseline", value: "baseline" }, 
-      { label: "Stretch", value: "stretch" }, 
-    ], 
+      { label: "Flex Start", value: "flex-start" },
+      { label: "Flex End", value: "flex-end" },
+      { label: "Center", value: "center" },
+      { label: "Baseline", value: "baseline" },
+      { label: "Stretch", value: "stretch" },
+    ],
   },
   {
     label: "Wrap",
@@ -66,9 +68,9 @@ export const layout = [
     initialValue: "Wrap",
     options: [
       { label: "Select Option", value: "Na" },
-      { label: "Wrap", value: "wrap" }, 
+      { label: "Wrap", value: "wrap" },
       { label: "No Wrap", value: "nowrap" },
-      { label: "Wrap Reverse", value: "wrap-reverse" }
+      { label: "Wrap Reverse", value: "wrap-reverse" },
     ],
   },
 ]
@@ -80,11 +82,7 @@ const spacingMeta = [
   { placeholder: "T" },
 ]
 export const spacing = [
-  { label: "Margin", 
-    key: "margin", 
-    control: InputGroup, 
-    meta: spacingMeta 
-  },
+  { label: "Margin", key: "margin", control: InputGroup, meta: spacingMeta },
   {
     label: "Padding",
     key: "padding",
