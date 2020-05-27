@@ -2,6 +2,7 @@
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
   import components from "./temporaryPanelStructure.js"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import CategoryTab from "./CategoryTab.svelte"
   import {
     find,
     sortBy,
@@ -36,15 +37,12 @@
 </script>
 
 <div class="root">
-  <ul class="tabs">
-    {#each categories as category}
-      <li
-        on:click={() => (selectedCategory = category)}
-        class:active={selectedCategory === category}>
-        {category.name}
-      </li>
-    {/each}
-  </ul>
+
+  <CategoryTab
+    onClick={category => (selectedCategory = category)}
+    {selectedCategory}
+    {categories} />
+
   <div class="panel">
     <Tab
       list={selectedCategory}

@@ -31,7 +31,7 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
     }
   }
 
-  htmlElement.classList.add(`lay-${treeNode.props._id}`)
+  // htmlElement.classList.add(`lay-${treeNode.props._id}`)
 
   const childNodes = []
   for (let childProps of treeNode.props._children) {

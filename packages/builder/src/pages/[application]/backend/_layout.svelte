@@ -37,4 +37,13 @@
     width: 275px;
     height: 100%;
   }
+
+  @media only screen and (min-width: 1800px) {
+    .nav {
+      overflow: auto;
+      flex: 0 1 auto;
+      width: 300px;
+      height: 100%;
+    }
+  }
 </style>

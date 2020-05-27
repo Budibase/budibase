@@ -1,31 +1,18 @@
 <script>
-  import { store, backendUiStore } from "builderStore"
-  import { goto } from "@sveltech/routify"
-  import { onMount } from "svelte"
-  import ComponentsHierarchy from "components/userInterface/ComponentsHierarchy.svelte"
-  import ComponentsHierarchyChildren from "components/userInterface/ComponentsHierarchyChildren.svelte"
-  import PageLayout from "components/userInterface/PageLayout.svelte"
-  import PagesList from "components/userInterface/PagesList.svelte"
+  import ComponentsHierarchy from "./ComponentsHierarchy.svelte"
+  import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
+  import PageLayout from "./PageLayout.svelte"
+  import PagesList from "./PagesList.svelte"
+  import { store } from "builderStore"
   import IconButton from "components/common/IconButton.svelte"
-  import NewScreen from "components/userInterface/NewScreen.svelte"
-  import CurrentItemPreview from "components/userInterface/AppPreview"
-  import PageView from "components/userInterface/PageView.svelte"
-  import ComponentsPaneSwitcher from "components/userInterface/ComponentsPaneSwitcher.svelte"
+  import NewScreen from "./NewScreen.svelte"
+  import CurrentItemPreview from "./CurrentItemPreview.svelte"
+  import SettingsView from "./SettingsView.svelte"
+  import PageView from "./PageView.svelte"
+  import ComponentsPaneSwitcher from "./ComponentsPaneSwitcher.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { last } from "lodash/fp"
   import { AddIcon } from "components/common/Icons"
-
-  $: instances = $store.appInstances
-
-  async function selectDatabase(database) {
-    backendUiStore.actions.database.select(database)
-  }
-
-  onMount(async () => {
-    if ($store.appInstances.length > 0 && !$backendUiStore.database) {
-      await selectDatabase($store.appInstances[0])
-    }
-  })
 
   let newScreenPicker
   let confirmDeleteDialog
@@ -54,7 +41,9 @@
 
     <div class="pages-list-container">
       <div class="nav-header">
-        <span class="navigator-title">Navigate</span>
+        <span class="navigator-title">Navigator</span>
+        <div class="border-line" />
+
         <span class="components-nav-page">Pages</span>
       </div>
 
@@ -100,6 +89,7 @@
 </div>
 
 <NewScreen bind:this={newScreenPicker} />
+<SettingsView bind:this={settingsView} />
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
@@ -107,8 +97,6 @@
   body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component`}
   okText="Delete Component"
   onOk={() => store.deleteComponent(componentToDelete)} />
-
-<slot />
 
 <style>
   button {
@@ -126,17 +114,19 @@
 
   .root {
     display: grid;
-    grid-template-columns: 275px 1fr 275px;
+    grid-template-columns: 275px 1fr 300px;
+    height: 100%;
     width: 100%;
-    background: var(--grey-light);
+    background: #fafafa;
   }
 
   @media only screen and (min-width: 1800px) {
     .root {
       display: grid;
       grid-template-columns: 300px 1fr 300px;
+      height: 100%;
       width: 100%;
-      background: var(--grey-light);
+      background: #fafafa;
     }
   }
 
@@ -155,16 +145,20 @@
     margin: 40px;
     background: #fff;
     border-radius: 5px;
+    box-shadow: 0 0px 6px rgba(0, 0, 0, 0.05);
   }
 
   .components-pane {
     grid-column: 3;
     background-color: var(--white);
+    height: 100vh;
+    overflow-y: scroll;
   }
 
   .components-nav-page {
     font-size: 13px;
-    color: var(--ink);
+    color: #000333;
+    text-transform: uppercase;
     padding-left: 20px;
     margin-top: 20px;
     font-weight: 600;
@@ -174,7 +168,8 @@
 
   .components-nav-header {
     font-size: 13px;
-    color: var(--ink);
+    color: #000333;
+    text-transform: uppercase;
     margin-top: 20px;
     font-weight: 600;
     opacity: 0.4;
@@ -226,10 +221,13 @@
   }
 
   .navigator-title {
-    font-size: 18px;
-    color: var(--ink);
-    font-weight: bold;
+    font-size: 14px;
+    color: var(--secondary100);
+    font-weight: 600;
+    text-transform: uppercase;
     padding: 0 20px 20px 20px;
+    line-height: 1rem !important;
+    letter-spacing: 1px;
   }
 
   .border-line {
