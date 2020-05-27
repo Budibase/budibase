@@ -14,13 +14,14 @@ router
     controller.fetchActionScript
   )
   .put("/api/:instanceId/workflows", authorized(BUILDER), controller.update)
+  .post("/api/:instanceId/workflows", authorized(BUILDER), controller.create)
   .post(
     "/api/:instanceId/workflows/action",
     authorized(BUILDER),
     controller.executeAction
   )
   .delete(
-    "/api/:instanceId/workflows/:id",
+    "/api/:instanceId/workflows/:id/:rev",
     authorized(BUILDER),
     controller.destroy
   )
