@@ -8,59 +8,48 @@
   </div>
   <div class="item-text">
     <div class="item-name">{item.name}</div>
-    <div class="item-description">
-      <p>{item.description}</p>
-    </div>
   </div>
 </div>
 
 <style>
   .item-item {
     display: flex;
-    flex-direction: row;
-    padding: 10px 0px 8px 10px;
-    align-items: center;
+    flex-direction: column;
     cursor: pointer;
+    margin-bottom: 8px;
+    padding: 8px 0px 16px 0px;
+    width: 120px;
+    height: 80px;
+    justify-content: center;
+    align-items: center;
+    margin-right: 8px;
+    background-color: var(--grey-light);
+    border-radius: 3px;
   }
 
   .item-item:hover {
-    background: #fbfbfb;
-    border-radius: 5px;
+    background: var(--grey);
+    border-radius: 3px;
+    transition: all 0.2s;
   }
 
   .item-icon {
-    flex: 0 0 40px;
-    background: #f1f4fc;
-    height: 40px;
-    border-radius: 5px;
+    border-radius: 3px;
     display: flex;
-    justify-content: center;
-    align-items: center;
   }
 
   .item-text {
     display: flex;
-    padding-left: 16px;
-    padding-top: 8px;
     flex-direction: column;
   }
 
   .item-name {
     font-size: 14px;
-    font-weight: 500;
-  }
-
-  .item-description {
-    font-size: 12px;
-    color: #808192;
-  }
-
-  p {
-    line-height: 15px;
+    font-weight: 400;
   }
 
   i {
     font-size: 24px;
-    color: #808192;
+    color: var(--ink-light);
   }
 </style>
