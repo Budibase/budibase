@@ -54,7 +54,7 @@ exports.create = async function(ctx) {
   }
   await instanceController.create(createInstCtx)
 
-  if (env.NODE_ENV === "production") {
+  if (ctx.isDev) {
     const newAppFolder = await createEmptyAppPackage(ctx, newApplication)
     await runNpmInstall(newAppFolder)
   }
