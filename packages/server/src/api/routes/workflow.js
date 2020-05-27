@@ -1,7 +1,7 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/workflow")
 const authorized = require("../../middleware/authorized")
-const { BUILDER } = require("../../utilities/accessLevels")
+const { BUILDER, EXECUTE_WORKFLOW } = require("../../utilities/accessLevels")
 
 const router = Router()
 
@@ -17,7 +17,7 @@ router
   .post("/api/:instanceId/workflows", authorized(BUILDER), controller.create)
   .post(
     "/api/:instanceId/workflows/action",
-    authorized(BUILDER),
+    authorized(EXECUTE_WORKFLOW),
     controller.executeAction
   )
   .delete(
