@@ -249,7 +249,7 @@ export default {
           properties: { design: { ...all } },
         },
         {
-          name: "Navigation Bar",
+          name: "Nav Bar",
           _component: "@budibase/standard-components/Navigation",
           description:
             "A component for handling the navigation within your app.",
