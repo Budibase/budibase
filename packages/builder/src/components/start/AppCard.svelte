@@ -2,6 +2,8 @@
   import Button from "components/common/Button.svelte"
   export let name, description =`A minimalist CRM which removes the noise and allows you to focus
               on your business.`, _id;
+              
+  
 </script>
 
 <div class="apps-card">
@@ -31,8 +33,8 @@
     background-color: var(--grey-light);
     text-decoration: none;
   }
-          
-                .app-title {
+  
+  .app-title {
     font-size: 18px;
     font-weight: 700;
     color: var(--ink);
