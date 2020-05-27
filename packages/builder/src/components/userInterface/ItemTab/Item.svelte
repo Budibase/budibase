@@ -12,7 +12,6 @@
 </div>
 
 <style>
-
   .item-item {
     display: flex;
     flex-direction: column;
@@ -31,6 +30,7 @@
   .item-item:hover {
     background: var(--grey);
     border-radius: 3px;
+    transition: all 0.2s;
   }
 
   .item-icon {
@@ -47,7 +47,6 @@
     font-size: 14px;
     font-weight: 400;
   }
-
 
   i {
     font-size: 24px;
