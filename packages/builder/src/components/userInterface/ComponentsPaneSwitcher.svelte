@@ -55,7 +55,7 @@
     display: flex;
     flex-direction: column;
     padding: 20px 20px;
-    border-left: solid 1px #e8e8ef;
+    border-left: solid 1px var(--grey);
   }
 
   .switcher {

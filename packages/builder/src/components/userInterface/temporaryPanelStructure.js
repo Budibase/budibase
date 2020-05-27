@@ -15,7 +15,7 @@ export default {
           name: "Screenslot",
           description:
             "This component is a placeholder for the rendering of a screen within a page.",
-          icon: "ri-crop-2-line",
+          icon: "ri-crop-2-fill",
           commonProps: {},
           children: [],
         },
@@ -119,7 +119,7 @@ export default {
         {
           name: "Input",
           description: "These components handle user input.",
-          icon: "ri-edit-box-line",
+          icon: "ri-edit-box-fill",
           commonProps: {},
           children: [
             {
@@ -127,7 +127,7 @@ export default {
               name: "Textfield",
               description:
                 "A textfield component that allows the user to input text.",
-              icon: "ri-edit-box-line",
+              icon: "ri-edit-box-fill",
               properties: {
                 design: { ...all },
                 settings: [
@@ -145,7 +145,7 @@ export default {
               _component: "@budibase/standard-components/checkbox",
               name: "Checkbox",
               description: "A selectable checkbox component",
-              icon: "ri-checkbox-line",
+              icon: "ri-checkbox-fill",
               properties: {
                 design: { ...all },
                 settings: [{ label: "Label", key: "label", control: Input }],
@@ -166,7 +166,7 @@ export default {
               name: "Select",
               description:
                 "A select component for choosing from different options",
-              icon: "ri-file-list-line",
+              icon: "ri-file-list-fill",
               properties: {
                 design: { ...all },
                 settings: [],
@@ -236,7 +236,7 @@ export default {
           name: "Card",
           description:
             "A basic card component that can contain content and actions.",
-          icon: "ri-layout-bottom-line",
+          icon: "ri-layout-bottom-fill",
           children: [],
           properties: { design: { ...all } },
         },
@@ -303,7 +303,7 @@ export default {
           name: "Chart",
           _component: "@budibase/standard-components/datachart",
           description: "Shiny chart",
-          icon: "ri-bar-chart-line",
+          icon: "ri-bar-chart-fill",
           properties: { design: { ...all } },
           children: [],
         },
@@ -311,7 +311,7 @@ export default {
           name: "List",
           _component: "@budibase/standard-components/datalist",
           description: "Shiny list",
-          icon: "ri-file-list-line",
+          icon: "ri-file-list-fill",
           properties: { design: { ...all } },
           children: [],
         },
@@ -319,7 +319,7 @@ export default {
           name: "Map",
           _component: "@budibase/standard-components/datamap",
           description: "Shiny map",
-          icon: "ri-map-pin-line",
+          icon: "ri-map-pin-fill",
           properties: { design: { ...all } },
           children: [],
         },
