@@ -52,11 +52,9 @@
 </div>
 
 <style>
-
   .panel {
     padding: 20px 0px;
     display: flex;
     flex-wrap: wrap;
   }
-
 </style>
