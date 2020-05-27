@@ -1,7 +1,6 @@
 import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import InputGroup from "../common/Inputs/InputGroup.svelte"
-const newLocal = "display"
 // import Colorpicker from "../common/Colorpicker.svelte"
 /*
   TODO: Allow for default values for all properties
