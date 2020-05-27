@@ -1,4 +1,5 @@
 <script>
+  import Modal from "svelte-simple-modal"
   import {
     SettingsIcon,
     AppsIcon,
@@ -14,104 +15,106 @@
   } from "components/common/Icons/"
 </script>
 
-<div class="root">
-  <div class="ui-nav">
-    <div class="home-logo">
-      <img src="/_builder/assets/bb-logo.svg" alt="Budibase icon" />
-    </div>
-
-    <div class="nav-section">
-      <div class="nav-section-title">Build</div>
-      <div class="nav-item-home">
-        <span class="nav-item-icon">
-          <AppsIcon />
-        </span>
-        <div class="nav-item-title">Apps</div>
+<Modal>
+  <div class="root">
+    <div class="ui-nav">
+      <div class="home-logo">
+        <img src="/_builder/assets/bb-logo.svg" alt="Budibase icon" />
       </div>
-      <div class="nav-item">
-        <span class="nav-item-icon">
-          <SettingsIcon />
-        </span>
-        <div class="nav-item-title">Settings</div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Build</div>
+        <div class="nav-item-home">
+          <span class="nav-item-icon">
+            <AppsIcon />
+          </span>
+          <div class="nav-item-title">Apps</div>
+        </div>
+        <div class="nav-item">
+          <span class="nav-item-icon">
+            <SettingsIcon />
+          </span>
+          <div class="nav-item-title">Settings</div>
+        </div>
+        <a href="https://budibase.con/login" target="_blank" class="nav-item">
+          <span class="nav-item-icon">
+            <UpdatesIcon />
+          </span>
+          <div class="nav-item-title">Updates</div>
+        </a>
+        <a href="https://budibase.con/login" target="_blank" class="nav-item">
+          <span class="nav-item-icon">
+            <HostingIcon />
+          </span>
+          <div class="nav-item-title">Hosting</div>
+        </a>
       </div>
-      <a href="https://budibase.con/login" target="_blank" class="nav-item">
-        <span class="nav-item-icon">
-          <UpdatesIcon />
-        </span>
-        <div class="nav-item-title">Updates</div>
-      </a>
-      <a href="https://budibase.con/login" target="_blank" class="nav-item">
-        <span class="nav-item-icon">
-          <HostingIcon />
-        </span>
-        <div class="nav-item-title">Hosting</div>
-      </a>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Learn</div>
+        <a href="https://docs.budibase.com/" target="_blank" class="nav-item">
+          <span class="nav-item-icon">
+            <DocumentationIcon />
+          </span>
+          <div class="nav-item-title">Documentation</div>
+        </a>
+        <a
+          href="https://docs.budibase.com/tutorial/quick-start"
+          target="_blank"
+          class="nav-item">
+          <span class="nav-item-icon">
+            <TutorialsIcon />
+          </span>
+          <div class="nav-item-title">Tutorials</div>
+        </a>
+        <a href="https://forum.budibase.com/" target="_blank" class="nav-item">
+          <span class="nav-item-icon">
+            <CommunityIcon />
+          </span>
+          <div class="nav-item-title">Community</div>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Contact</div>
+        <a
+          href="https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md"
+          target="_blank"
+          class="nav-item">
+          <span class="nav-item-icon">
+            <ContributionIcon />
+          </span>
+          <div class="nav-item-title">Contribute to our product</div>
+        </a>
+        <a
+          href="https://github.com/Budibase/budibase/issues"
+          target="_blank"
+          class="nav-item">
+          <span class="nav-item-icon">
+            <BugIcon />
+          </span>
+          <div class="nav-item-title">Report bug</div>
+        </a>
+        <a href="mailto:support@budibase.com" target="_blank" class="nav-item">
+          <span class="nav-item-icon">
+            <EmailIcon />
+          </span>
+          <div class="nav-item-title">Email</div>
+        </a>
+        <a href="https://twitter.com/budibase" target="_blank" class="nav-item">
+          <span class="nav-item-icon">
+            <TwitterIcon />
+          </span>
+          <div class="nav-item-title">Twitter</div>
+        </a>
+      </div>
     </div>
 
-    <div class="nav-section">
-      <div class="nav-section-title">Learn</div>
-      <a href="https://docs.budibase.com/" target="_blank" class="nav-item">
-        <span class="nav-item-icon">
-          <DocumentationIcon />
-        </span>
-        <div class="nav-item-title">Documentation</div>
-      </a>
-      <a
-        href="https://docs.budibase.com/tutorial/quick-start"
-        target="_blank"
-        class="nav-item">
-        <span class="nav-item-icon">
-          <TutorialsIcon />
-        </span>
-        <div class="nav-item-title">Tutorials</div>
-      </a>
-      <a href="https://forum.budibase.com/" target="_blank" class="nav-item">
-        <span class="nav-item-icon">
-          <CommunityIcon />
-        </span>
-        <div class="nav-item-title">Community</div>
-      </a>
-    </div>
-
-    <div class="nav-section">
-      <div class="nav-section-title">Contact</div>
-      <a
-        href="https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md"
-        target="_blank"
-        class="nav-item">
-        <span class="nav-item-icon">
-          <ContributionIcon />
-        </span>
-        <div class="nav-item-title">Contribute to our product</div>
-      </a>
-      <a
-        href="https://github.com/Budibase/budibase/issues"
-        target="_blank"
-        class="nav-item">
-        <span class="nav-item-icon">
-          <BugIcon />
-        </span>
-        <div class="nav-item-title">Report bug</div>
-      </a>
-      <a href="mailto:support@budibase.com" target="_blank" class="nav-item">
-        <span class="nav-item-icon">
-          <EmailIcon />
-        </span>
-        <div class="nav-item-title">Email</div>
-      </a>
-      <a href="https://twitter.com/budibase" target="_blank" class="nav-item">
-        <span class="nav-item-icon">
-          <TwitterIcon />
-        </span>
-        <div class="nav-item-title">Twitter</div>
-      </a>
+    <div class="main">
+      <slot />
     </div>
   </div>
-
-  <div class="main">
-    <slot />
-  </div>
-</div>
+</Modal>
 
 <style>
   .root {
