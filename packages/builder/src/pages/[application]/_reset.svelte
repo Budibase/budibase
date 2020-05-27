@@ -150,7 +150,7 @@
   }
 
   .topnavitemright:hover {
-    color: rgb(255, 255, 255, 0.8);
+    color: var(--ink);
     font-weight: 500;
   }
 
