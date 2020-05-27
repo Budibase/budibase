@@ -1,6 +1,6 @@
 const ACTIONS = {
   SET_STATE: {
-    name: "Update UI",
+    name: "Update UI State",
     icon: "",
     description: "Update your User Interface with some data.",
     type: "CLIENT",
@@ -21,6 +21,24 @@ const ACTIONS = {
     description: "Delete a record from your database.",
     icon: "ri-delete-bin-line",
     name: "Delete Record",
+    type: "SERVER",
+  },
+  FIND_RECORD: {
+    description: "Delete a record from your database.",
+    icon: "ri-delete-bin-line",
+    name: "Find Record",
+    type: "SERVER",
+  },
+  CREATE_USER: {
+    description: "Create a new user.",
+    icon: "ri-user-add-fill",
+    name: "Create User",
+    type: "SERVER",
+  },
+  SEND_EMAIL: {
+    description: "Send an email.",
+    icon: "ri-mail-open-fill",
+    name: "Send Email",
     type: "SERVER",
   }
 };
@@ -49,11 +67,17 @@ const TRIGGERS = {
   },
 };
 
-const UTILITIES = {
-  IFELSE: {
-    name: "If/Else",
+const LOGIC = {
+  FILTER: {
+    name: "Filter",
     icon: "ri-git-branch-line",
-    description: "Perform different actions based on a condition",
+    description: "Filter any workflows which do not meet certain conditions.",
+    type: "CLIENT"
+  },
+  DELAY: {
+    name: "Delay",
+    icon: "ri-git-branch-line",
+    description: "Delay the workflow until an amount of time has passed.",
     type: "CLIENT"
   },
 }
@@ -61,5 +85,5 @@ const UTILITIES = {
 export default {
   ACTIONS,
   TRIGGERS,
-  UTILITIES
+  LOGIC
 }

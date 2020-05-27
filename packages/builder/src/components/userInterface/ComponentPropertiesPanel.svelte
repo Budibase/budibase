@@ -25,7 +25,7 @@
   let categories = [
     { value: "design", name: "Design" },
     { value: "settings", name: "Settings" },
-    { value: "actions", name: "Actions" },
+    { value: "events", name: "Events" }
   ]
   let selectedCategory = categories[0]
 
@@ -93,6 +93,8 @@
         {componentDefinition}
         {panelDefinition}
         onChange={onPropChanged} />
+    {:else if selectedCategory.value === 'events'}
+      <EventsEditor component={componentInstance} />
     {/if}
 
   </div>

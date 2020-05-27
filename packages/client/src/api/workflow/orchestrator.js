@@ -31,7 +31,7 @@ export default class Orchestrator {
 // Execute a workflow from a running budibase app
 export const clientStrategy = {
   context: {},
-  bindContextArgs: function(args) {
+  bindContextArgs: function(args, api) {
     const mappedArgs = { ...args };
 
     console.log("original args", args)
@@ -50,12 +50,16 @@ export const clientStrategy = {
 
         // if the value is bound to state
         if (argValue.startsWith("$state")) {
-          const path = argValue.match("$context.", "");
-          // pass in the value from context
-          mappedArgs[arg] = get(path, this.context);  
+          const path = argValue.replace("$state.", "");
+          // pass in the value from state
+          // TODO: not working
+          mappedArgs[arg] = api.getState(path);  
         }
       }
     }
+
+    console.log(mappedArgs);
+
     return Object.values(mappedArgs);
   },
   run: async function({ workflow, api, instanceId }) {
@@ -85,7 +89,7 @@ export const clientStrategy = {
         url: EXECUTE_WORKFLOW_URL, 
         body: {
           action: block.actionId,
-          args: block.args
+          args: this.bindContextArgs(block.args, api)
         } 
       });
 
