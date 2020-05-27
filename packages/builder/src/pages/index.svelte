@@ -24,15 +24,6 @@
 
   // Handle create app modal
   const { open } = getContext("simple-modal")
-  const onCancel = text => {
-    name = ""
-    status = -1
-  }
-
-  const onOkay = text => {
-    name = text
-    status = 1
-  }
 
   const showCreateAppModal = () => {
     open(
@@ -40,15 +31,13 @@
       {
         message: "What is your name?",
         hasForm: true,
-        onCancel,
-        onOkay,
       },
       {
         closeButton: false,
         closeOnEsc: false,
         closeOnOuterClick: false,
         styleContent: { padding: 0 },
-        closeOnOuterClick: true
+        closeOnOuterClick: true,
       }
     )
   }
