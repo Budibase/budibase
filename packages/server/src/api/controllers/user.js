@@ -61,7 +61,7 @@ exports.create = async function(ctx) {
   }
 }
 
-exports.update = async function(ctx) {}
+exports.update = async function() {}
 
 exports.destroy = async function(ctx) {
   const database = new CouchDB(ctx.params.instanceId)
