@@ -1,6 +1,7 @@
 import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import InputGroup from "../common/Inputs/InputGroup.svelte"
+const newLocal = "display"
 // import Colorpicker from "../common/Colorpicker.svelte"
 /*
   TODO: Allow for default values for all properties
@@ -8,41 +9,88 @@ import InputGroup from "../common/Inputs/InputGroup.svelte"
 
 export const layout = [
   {
+    label: "Display",
+    key: "display",
+    control: OptionSelect,
+    initialValue: "Select Option",
+    options: [
+      { label: "Select Option", value: "Na" },
+      { label: "Flex", value: "flex" },
+      { label: "Inline Flex", value: "inline-flex" }
+    ],
+  },
+  {
     label: "Direction",
     key: "flex-direction",
     control: OptionSelect,
-    initialValue: "columnReverse",
+    initialValue: "Select Option",
     options: [
-      { label: "row" },
-      { label: "row-reverse", value: "rowReverse" },
-      { label: "column" },
-      { label: "column-reverse", value: "columnReverse" },
+      { label: "Select Option", value: "Na" },
+      { label: "Row", value: "row" },
+      { label: "Row Reverse", value: "rowReverse" },
+      { label: "column", value: "column" },
+      { label: "Column Reverse", value: "columnReverse" },
     ],
   },
-  { label: "Justify", key: "justify-content", control: Input },
-  { label: "Align", key: "align-items", control: Input },
+  { label: "Justify", 
+    key: "justify-content", 
+    control: OptionSelect,
+    initialValue: "Select Option",
+    options: [
+      { label: "Select Option", value: "Na" },
+      { label: "Flex Start", value: "flex-start" }, 
+      { label: "Flex End", value: "flex-end" }, 
+      { label: "Center", value: "center" }, 
+      { label: "Space Between", value: "space-between" }, 
+      { label: "Space Around", value: "space-around" }, 
+      { label: "Space Evenly", value: "space-evenly" }, 
+    ],
+  },
+  { label: "Align", 
+    key: "align-items", 
+    control: OptionSelect,
+    initialValue: "Select Option",
+    options: [
+      { label: "Select Option", value: "Na" },
+      { label: "Flex Start", value: "flex-start" }, 
+      { label: "Flex End", value: "flex-end" }, 
+      { label: "Center", value: "center" }, 
+      { label: "Baseline", value: "baseline" }, 
+      { label: "Stretch", value: "stretch" }, 
+    ], 
+  },
   {
     label: "Wrap",
     key: "flex-wrap",
     control: OptionSelect,
-    options: [{ label: "wrap" }, { label: "no wrap", value: "noWrap" }],
+    initialValue: "Wrap",
+    options: [
+      { label: "Select Option", value: "Na" },
+      { label: "Wrap", value: "wrap" }, 
+      { label: "No Wrap", value: "nowrap" },
+      { label: "Wrap Reverse", value: "wrap-reverse" }
+    ],
   },
 ]
 
 const spacingMeta = [
-  { placeholder: "T" },
-  { placeholder: "R" },
-  { placeholder: "B" },
   { placeholder: "L" },
+  { placeholder: "B" },
+  { placeholder: "R" },
+  { placeholder: "T" },
 ]
 export const spacing = [
+  { label: "Margin", 
+    key: "margin", 
+    control: InputGroup, 
+    meta: spacingMeta 
+  },
   {
     label: "Padding",
     key: "padding",
     control: InputGroup,
     meta: spacingMeta,
   },
-  { label: "Margin", key: "margin", control: InputGroup, meta: spacingMeta },
 ]
 
 export const size = [
