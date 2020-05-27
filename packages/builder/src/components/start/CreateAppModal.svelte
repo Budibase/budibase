@@ -11,26 +11,44 @@
   let name = ""
   let description = ""
   let loading = false
+  let error = {}
 
   const createNewApp = async () => {
-    const data = { name, description }
-    loading = true
-    try {
-      const response = await fetch("/api/applications", {
-        method: "POST", // *GET, POST, PUT, DELETE, etc.
-        credentials: "same-origin", // include, *same-origin, omit
-        headers: {
-          "Content-Type": "application/json",
-          // 'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: JSON.stringify(data), // body data type must match "Content-Type" header
-      })
+    if ((name.length > 100 || name.length < 1) && description.length < 1) {
+      error = {
+        name: true,
+        description: true,
+      }
+    } else if (description.length < 1) {
+      error = {
+        name: false,
+        description: true,
+      }
+    } else if (name.length > 100 || name.length < 1) {
+      error = {
+        name: true,
+      }
+    } else {
+      error = {}
+      const data = { name, description }
+      loading = true
+      try {
+        const response = await fetch("/api/applications", {
+          method: "POST", // *GET, POST, PUT, DELETE, etc.
+          credentials: "same-origin", // include, *same-origin, omit
+          headers: {
+            "Content-Type": "application/json",
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: JSON.stringify(data), // body data type must match "Content-Type" header
+        })
 
-      const res = await response.json()
+        const res = await response.json()
 
-      $goto(`./${res._id}`)
-    } catch (error) {
-      console.error(error)
+        $goto(`./${res._id}`)
+      } catch (error) {
+        console.error(error)
+      }
     }
   }
 
@@ -60,11 +78,19 @@
       placeholder="Enter application name"
       on:change={e => (name = e.target.value)}
       on:input={e => (name = e.target.value)} />
+    {#if error.name}
+      <span class="error">You need to enter a name for your application.</span>
+    {/if}
     <TextArea
       bind:value={description}
       name="description"
       label="Description"
       placeholder="Describe your application" />
+    {#if error.description}
+      <span class="error">
+        Please enter a short description of your application
+      </span>
+    {/if}
   </div>
   <div class="footer">
     <a href="./#" class="info">
@@ -162,5 +188,10 @@
   }
   .spinner-text {
     font-size: 2em;
+  }
+  .error {
+    color: var(--deletion100);
+    font-weight: bold;
+    font-size: 0.8em;
   }
 </style>
