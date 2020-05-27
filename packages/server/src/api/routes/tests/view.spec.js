@@ -105,8 +105,8 @@ describe("/views", () => {
 
     it("should return records from custom view", async () => {
       await createView()
-      const rec1 = await createRecord(request, instance._id, model._id)
-      await createRecord(request, instance._id, model._id)
+      const rec1 = await createRecord({ request, instanceId: instance._id, modelId: model._id })
+      await createRecord({ request, instanceId: instance._id, modelId: model._id })
       const res = await request
         .get(`/api/${instance._id}/views/TestView`)
         .set(defaultHeaders)
