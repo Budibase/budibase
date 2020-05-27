@@ -1,5 +1,5 @@
 <script> 
-  import WorkflowBuilder from "./flowy/WorkflowBuilder.svelte";
+  import WorkflowBuilder from "./WorkflowBuilder/WorkflowBuilder.svelte";
 </script>
 
 <WorkflowBuilder />

@@ -44,6 +44,7 @@
     "@budibase/client": "^0.0.32",
     "@budibase/core": "^0.0.32",
     "@koa/router": "^8.0.0",
+    "@sendgrid/mail": "^7.1.1",
     "ajv": "^6.12.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",

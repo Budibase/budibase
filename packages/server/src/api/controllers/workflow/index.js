@@ -65,7 +65,7 @@ exports.update = async function(ctx) {
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
   const response = await db.query(`database/by_type`, {
-    type: "workflow",
+    key: ["workflow"],
     include_docs: true,
   })
   ctx.body = response.rows.map(row => row.doc)
