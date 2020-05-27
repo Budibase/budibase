@@ -19,14 +19,17 @@
     cursor: pointer;
     margin-bottom: 8px;
     padding: 8px 0px 16px 0px;
-    width: 80px;
+    width: 120px;
+    height: 80px;
     justify-content: center;
     align-items: center;
-    margin-right: 6px;
+    margin-right: 8px;
+    background-color: var(--grey-light);
+    border-radius: 3px;
   }
 
   .item-item:hover {
-    background: var(--grey-light);
+    background: var(--grey);
     border-radius: 3px;
   }
 
