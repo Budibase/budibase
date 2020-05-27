@@ -37,7 +37,7 @@ exports.authenticate = async ctx => {
   if (await bcrypt.compare(password, dbUser.password)) {
     const payload = {
       userId: dbUser._id,
-      accessLevel: "",
+      accessLevelId: dbUser.accessLevelId,
       instanceId: instanceId,
     }
 

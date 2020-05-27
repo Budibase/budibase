@@ -52,6 +52,19 @@
       {
         "type": "node",
         "request": "launch",
+        "name": "Jest - Access Levels",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["accesslevel.spec", "--runInBand"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest-cli/bin/jest",
+        }
+      },
+      {
+        "type": "node",
+        "request": "launch",
         "name": "Jest - Records",
         "program": "${workspaceFolder}/node_modules/.bin/jest",
         "args": ["record.spec", "--runInBand"],
