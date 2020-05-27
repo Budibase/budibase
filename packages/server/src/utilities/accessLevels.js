@@ -2,29 +2,29 @@ const viewController = require("../api/controllers/view")
 const modelController = require("../api/controllers/model")
 const workflowController = require("../api/controllers/workflow")
 
-exports.ADMIN_LEVEL_ID = "ADMIN"
-exports.POWERUSER_LEVEL_ID = "POWER_USER"
+const ADMIN_LEVEL_ID = "ADMIN"
+const POWERUSER_LEVEL_ID = "POWER_USER"
 
-exports.READ_MODEL = "read-model"
-exports.WRITE_MODEL = "write-model"
-exports.READ_VIEW = "read-view"
-exports.EXECUTE_WORKFLOW = "execute-workflow"
-exports.USER_MANAGEMENT = "user-management"
-exports.BUILDER = "builder"
-exports.LIST_USERS = "list-users"
+const READ_MODEL = "read-model"
+const WRITE_MODEL = "write-model"
+const READ_VIEW = "read-view"
+const EXECUTE_WORKFLOW = "execute-workflow"
+const USER_MANAGEMENT = "user-management"
+const BUILDER = "builder"
+const LIST_USERS = "list-users"
 
-exports.adminPermissions = [
+const adminPermissions = [
   {
-    name: exports.USER_MANAGEMENT,
+    name: USER_MANAGEMENT,
   },
 ]
 
-exports.generateAdminPermissions = async instanceId => [
-  ...exports.adminPermissions,
-  ...(await exports.generatePowerUserPermissions(instanceId)),
+const generateAdminPermissions = async instanceId => [
+  ...adminPermissions,
+  ...(await generatePowerUserPermissions(instanceId)),
 ]
 
-exports.generatePowerUserPermissions = async instanceId => {
+const generatePowerUserPermissions = async instanceId => {
   const fetchModelsCtx = {
     params: {
       instanceId,
@@ -51,22 +51,22 @@ exports.generatePowerUserPermissions = async instanceId => {
 
   const readModelPermissions = models.map(m => ({
     itemId: m._id,
-    name: exports.READ_MODEL,
+    name: READ_MODEL,
   }))
 
   const writeModelPermissions = models.map(m => ({
     itemId: m._id,
-    name: exports.WRITE_MODEL,
+    name: WRITE_MODEL,
   }))
 
   const viewPermissions = views.map(v => ({
     itemId: v.name,
-    name: exports.READ_VIEW,
+    name: READ_VIEW,
   }))
 
   const executeWorkflowPermissions = workflows.map(w => ({
     itemId: w._id,
-    name: exports.EXECUTE_WORKFLOW,
+    name: EXECUTE_WORKFLOW,
   }))
 
   return [
@@ -74,6 +74,20 @@ exports.generatePowerUserPermissions = async instanceId => {
     ...writeModelPermissions,
     ...viewPermissions,
     ...executeWorkflowPermissions,
-    { name: exports.LIST_USERS },
+    { name: LIST_USERS },
   ]
+}
+
+module.exports = {
+  ADMIN_LEVEL_ID,
+  POWERUSER_LEVEL_ID,
+  READ_MODEL,
+  WRITE_MODEL,
+  READ_VIEW,
+  EXECUTE_WORKFLOW,
+  USER_MANAGEMENT,
+  BUILDER,
+  LIST_USERS,
+  generateAdminPermissions,
+  generatePowerUserPermissions,
 }
