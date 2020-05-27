@@ -213,7 +213,6 @@ export default {
                 valueKey: "checked",
                 control: Checkbox,
               },
-              
             ],
           },
         },
