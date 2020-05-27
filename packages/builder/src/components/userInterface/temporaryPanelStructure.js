@@ -11,15 +11,6 @@ export default {
       isCategory: true,
       children: [
         {
-          _component: "##builtin/screenslot",
-          name: "Screenslot",
-          description:
-            "This component is a placeholder for the rendering of a screen within a page.",
-          icon: "ri-crop-2-fill",
-          commonProps: {},
-          children: [],
-        },
-        {
           _component: "@budibase/standard-components/container",
           name: "Container",
           description: "This component contains things within itself",
@@ -222,6 +213,7 @@ export default {
                 valueKey: "checked",
                 control: Checkbox,
               },
+              
             ],
           },
         },
@@ -249,21 +241,6 @@ export default {
           properties: { design: { ...all } },
         },
         {
-          name: "Nav Bar",
-          _component: "@budibase/standard-components/Navigation",
-          description:
-            "A component for handling the navigation within your app.",
-          icon: "ri-navigation-fill",
-          children: [],
-          properties: { design: { ...all } },
-        },
-      ],
-    },
-    {
-      name: "Data",
-      isCategory: true,
-      children: [
-        {
           name: "Table",
           description: "A component that generates a table from your data.",
           icon: "ri-archive-drawer-fill",
@@ -281,22 +258,6 @@ export default {
             description: "Form for saving a record",
             name: "@budibase/materialdesign-components/recordForm",
           },
-          children: [],
-        },
-        {
-          _component: "@budibase/standard-components/datatable",
-          name: "DataTable",
-          description: "A table for displaying data from the backend.",
-          icon: "ri-archive-drawer-fill",
-          properties: { design: { ...all } },
-          children: [],
-        },
-        {
-          _component: "@budibase/standard-components/dataform",
-          name: "DataForm",
-          description: "Form stuff",
-          icon: "ri-file-edit-fill",
-          properties: { design: { ...all } },
           children: [],
         },
         {
@@ -322,6 +283,30 @@ export default {
           icon: "ri-map-pin-fill",
           properties: { design: { ...all } },
           children: [],
+        },
+      ],
+    },
+    {
+      name: "Layouts",
+      isCategory: true,
+      children: [
+        {
+          _component: "##builtin/screenslot",
+          name: "Screenslot",
+          description:
+            "This component is a placeholder for the rendering of a screen within a page.",
+          icon: "ri-crop-2-fill",
+          commonProps: {},
+          children: [],
+        },
+        {
+          name: "Nav Bar",
+          _component: "@budibase/standard-components/Navigation",
+          description:
+            "A component for handling the navigation within your app.",
+          icon: "ri-navigation-fill",
+          children: [],
+          properties: { design: { ...all } },
         },
       ],
     },
