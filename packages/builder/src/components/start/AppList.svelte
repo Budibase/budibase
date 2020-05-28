@@ -13,11 +13,11 @@
     <div>
       <div>
         <div class="app-section-title">Your Web Apps</div>
-          <div class="apps">
-            {#each apps as app}
-              <AppCard {...app} />
-            {/each}
-          </div>
+        <div class="apps">
+          {#each apps as app}
+            <AppCard {...app} />
+          {/each}
+        </div>
       </div>
     </div>
   </div>
