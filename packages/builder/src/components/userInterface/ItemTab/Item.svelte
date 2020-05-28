@@ -1,9 +1,9 @@
 <script>
-	import { fly } from 'svelte/transition';
+  import { fly } from "svelte/transition"
   export let item
 </script>
 
-<div class="item-item" transition:fly="{{ y: 100, duration: 1000 }}" on:click>
+<div class="item-item" transition:fly={{ y: 100, duration: 1000 }} on:click>
   <div class="item-icon">
     <i class={item.icon} />
   </div>
