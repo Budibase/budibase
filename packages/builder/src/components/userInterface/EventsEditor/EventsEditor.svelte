@@ -32,6 +32,7 @@
 
   $: {
     events = Object.keys(component)
+      // TODO: use real events
       .filter(propName => ["onChange", "onClick", "onLoad"].includes(propName))
       .map(propName => ({
         name: propName,

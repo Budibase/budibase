@@ -56,11 +56,10 @@
         on:click={() => $goto(`/settings`)}>
         <SettingsIcon />
       </span>
-      <span
-        class:active={false}
-        class="topnavitemright"
-        on:click={() => (location = `/${application}`)}>
-        <PreviewIcon />
+      <span class:active={false} class="topnavitemright">
+        <a href={`/${application}`} target="_blank">
+          <PreviewIcon />
+        </a>
       </span>
     </div>
   </div>
@@ -82,6 +81,11 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+  }
+
+  a {
+    text-transform: none;
+    color: var(--ink-lighter);
   }
 
   .top-nav {

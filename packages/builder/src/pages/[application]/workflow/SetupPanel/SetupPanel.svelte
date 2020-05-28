@@ -1,13 +1,14 @@
 <script>
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
+  import { notifier } from "@beyonk/svelte-notifications";
   import api from "builderStore/api"
   import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte"
   import DeleteWorkflowModal from "./DeleteWorkflowModal.svelte"
 
   const { open, close } = getContext("simple-modal")
 
-  $: workflow = $workflowStore.currentWorkflow
+  $: workflow = $workflowStore.currentWorkflow && $workflowStore.currentWorkflow.workflow
   $: workflowBlock = $workflowStore.selectedWorkflowBlock
 
   function deleteWorkflow() {
@@ -21,8 +22,8 @@
   }
 
   function deleteWorkflowBlock() {
-    // TODO: implement, need to put IDs against workflow blocks
     workflowStore.actions.deleteWorkflowBlock(workflowBlock)
+    notifier.info("Workflow block deleted.");
   }
 </script>
 

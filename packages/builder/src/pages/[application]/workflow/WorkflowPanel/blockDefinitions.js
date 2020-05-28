@@ -2,7 +2,7 @@ const ACTION = {
   SET_STATE: {
     name: "Update UI State",
     tagline: "Update <b>{{path}}</b> to <b>{{value}}</b>",
-    icon: "",
+    icon: "ri-refresh-line",
     description: "Update your User Interface with some data.",
     environment: "CLIENT",
     params: {
@@ -38,8 +38,8 @@ const ACTION = {
     },
   },
   FIND_RECORD: {
-    description: "Delete a record from your database.",
-    icon: "ri-delete-bin-line",
+    description: "Find a record in your database.",
+    icon: "ri-search-line",
     name: "Find Record",
     environment: "SERVER",
     params: {
@@ -59,7 +59,7 @@ const ACTION = {
   },
   SEND_EMAIL: {
     description: "Send an email.",
-    tagline: "Send email to {{to}}",
+    tagline: "Send email to <b>{{to}}</b>",
     icon: "ri-mail-open-fill",
     name: "Send Email",
     environment: "SERVER",
@@ -73,9 +73,9 @@ const ACTION = {
 }
 
 const TRIGGER = {
-  SAVE_RECORD: {
+  RECORD_SAVED: {
     name: "Record Saved",
-    icon: "ri-delete-bin-line",
+    icon: "ri-save-line",
     tagline: "Record is added to {{model}}",
     description: "Save a record to your database.",
     environment: "SERVER",
@@ -83,39 +83,72 @@ const TRIGGER = {
       model: "model",
     },
   },
+  RECORD_DELETED: {
+    name: "Record Deleted",
+    icon: "ri-delete-bin-line",
+    tagline: "Record is deleted from <b>{{model}}</b>",
+    description: "Fired when a record is deleted from your database.",
+    environment: "SERVER",
+    params: {
+      model: "model"
+    },
+  },
   CLICK: {
     name: "Click",
     icon: "ri-cursor-line",
+    tagline: "{{component}} is clicked",
     description: "Trigger when you click on an element in the UI.",
+    environment: "CLIENT",
+    params: {
+      component: "component"
+    }
   },
   LOAD: {
     name: "Load",
     icon: "ri-loader-line",
+    tagline: "{{component}} is loaded",
     description: "Trigger an element has finished loading.",
+    environment: "CLIENT",
+    params: {
+      component: "component"
+    }
   },
   INPUT: {
     name: "Input",
     icon: "ri-text",
-    description: "Trigger when you environment into an input box.",
+    tagline: "Text entered into {{component}",
+    description: "Trigger when you type into an input box.",
+    environment: "CLIENT",
+    params: {
+      component: "component"
+    }
   },
 }
 
 const LOGIC = {
   FILTER: {
     name: "Filter",
-    tagline: "{{key}} {{condition}} {{value}}",
+    tagline: "{{field}} <b>{{condition}}</b> {{value}}",
     icon: "ri-git-branch-line",
     description: "Filter any workflows which do not meet certain conditions.",
     environment: "CLIENT",
     params: {
-      if: "string",
+      field: "string",
+      condition: [
+        "equals"
+      ],
+      value: "string"
     },
   },
   DELAY: {
     name: "Delay",
-    icon: "ri-git-branch-line",
+    icon: "ri-time-fill",
+    tagline: "Delay for <b>{{time}}</b> milliseconds",
     description: "Delay the workflow until an amount of time has passed.",
     environment: "CLIENT",
+    params: {
+      time: "number",
+    },
   },
 }
 

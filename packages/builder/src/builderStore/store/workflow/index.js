@@ -82,7 +82,7 @@ const workflowActions = store => ({
   },
   deleteWorkflowBlock: block => {
     store.update(state => {
-      state.currentWorkflow.deleteBlock(block._id)
+      state.currentWorkflow.deleteBlock(block.id)
       state.selectedWorkflowBlock = null
       return state
     })

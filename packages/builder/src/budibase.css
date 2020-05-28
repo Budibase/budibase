@@ -77,7 +77,8 @@
 }
 
 .budibase__input {
-    width: 250px;
+    width: 100%;
+    max-width: 250px;
     height: 35px;
     border-radius: 3px;
     border: 1px solid #DBDBDB;

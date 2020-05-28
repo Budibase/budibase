@@ -1,5 +1,5 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { backendUiStore, store } from "builderStore"
 
   export let workflowBlock
 
@@ -8,6 +8,7 @@
   $: workflowParams = workflowBlock.params
     ? Object.entries(workflowBlock.params)
     : []
+  $: components = Object.values($store.components).filter(comp => comp.name)
   // $: workflowArgs = workflowBlock.args ? Object.keys(workflowBlock.args) : []
 </script>
 
@@ -18,7 +19,15 @@
   <div class="uk-margin block-field">
     <label class="uk-form-label">{parameter}</label>
     <div class="uk-form-controls">
-      {#if type === 'number'}
+      {#if Array.isArray(type)}
+        <select
+          class="budibase__input"
+          bind:value={workflowBlock.args[parameter]}>
+          {#each type as option}
+            <option value={option}>{option}</option>
+          {/each}
+        </select>
+      {:else if type === 'number'}
         <input
           type="number"
           class="budibase__input"
@@ -32,11 +41,11 @@
           {/each}
         </select>
       {:else if type === 'component'}
-        <!-- <select>
-          {#each $store.components as question}
-            <option value={question}>{question.text}</option>
+        <select class="budibase__input">
+          {#each components as component}
+            <option value={component.id}>{component.name}</option>
           {/each}
-        </select> -->
+        </select>
       {:else if type === 'string'}
         <input
           type="text"

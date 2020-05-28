@@ -152,7 +152,7 @@ export default {
         {
           find: "builderStore",
           replacement: path.resolve(projectRootDir, "src/builderStore"),
-        },
+        }
       ],
       customResolver,
     }),

@@ -9,7 +9,7 @@
     EVENT_TYPE_MEMBER_NAME,
     allHandlers,
   } from "components/common/eventHandlers"
-  import { store } from "builderStore"
+  import { store, workflowStore } from "builderStore"
   import StateBindingOptions from "../PropertyCascader/StateBindingOptions.svelte"
   import { ArrowDownIcon } from "components/common/Icons/"
 
@@ -22,18 +22,26 @@
 <div class="handler-option">
   <span>{parameter.name}</span>
   <div class="handler-input">
-    <Input on:change={onChange} value={parameter.value} />
-    <button on:click={() => (isOpen = !isOpen)}>
-      <div class="icon" style={`transform: rotate(${isOpen ? 0 : 90}deg);`}>
-        <ArrowDownIcon size={36} />
-      </div>
-    </button>
-    {#if isOpen}
-      <StateBindingOptions
-        onSelect={option => {
-          onChange(option)
-          isOpen = false
-        }} />
+    {#if parameter.name === 'workflow'}
+      <select class="budibase__input" {onChange} value={parameter.value}>
+        {#each $workflowStore.workflows as workflow}
+          <option value={workflow._id}>{workflow.name}</option>
+        {/each}
+      </select>
+    {:else}
+      <Input on:change={onChange} value={parameter.value} />
+      <button on:click={() => (isOpen = !isOpen)}>
+        <div class="icon" style={`transform: rotate(${isOpen ? 0 : 90}deg);`}>
+          <ArrowDownIcon size={36} />
+        </div>
+      </button>
+      {#if isOpen}
+        <StateBindingOptions
+          onSelect={option => {
+            onChange(option)
+            isOpen = false
+          }} />
+      {/if}
     {/if}
   </div>
 </div>

@@ -5,17 +5,6 @@
   import api from "builderStore/api"
   import blockDefinitions from "./blockDefinitions"
 
-  const WORKFLOW_TABS = [
-    {
-      name: "Workflows",
-      key: "WORKFLOWS",
-    },
-    {
-      name: "Add",
-      key: "ADD",
-    },
-  ]
-
   let selectedTab = "WORKFLOWS"
   let definitions = []
 </script>
@@ -56,16 +45,5 @@
 
   span:not(.selected) {
     color: var(--dark-grey);
-  }
-
-  .delete-workflow-button {
-    font-family: Roboto;
-    width: 100%;
-    border: solid 1px #f2f2f2;
-    border-radius: 2px;
-    background: var(--white);
-    height: 32px;
-    font-size: 12px;
-    font-weight: 500;
   }
 </style>
