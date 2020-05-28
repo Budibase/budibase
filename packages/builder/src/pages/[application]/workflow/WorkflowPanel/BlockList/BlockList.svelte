@@ -1,8 +1,10 @@
 <script>
   import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
+  import { WorkflowList } from "../";
+  import WorkflowBlock from "./WorkflowBlock.svelte";
   import api from "builderStore/api"
-  import blockDefinitions from "./blockDefinitions"
+  import blockDefinitions from "../blockDefinitions"
 
   const SUB_TABS = [
     {
@@ -14,8 +16,8 @@
       key: "ACTIONS",
     },
     {
-      name: "Utilities",
-      key: "UTILITIES",
+      name: "Logic",
+      key: "LOGIC",
     },
   ]
 
@@ -23,13 +25,13 @@
   let definitions = []
 
   $: definitions = Object.values(blockDefinitions[selectedTab])
+
+  function myAction(node) {
+    console.log("ACTION FIRED", node);
+  }
 </script>
 
 <section>
-  <header>
-    <span>Blocks</span>
-    <span>Props</span>
-  </header>
   <div class="subtabs">
     {#each SUB_TABS as tab}
       <span
@@ -42,38 +44,12 @@
   </div>
   <div id="blocklist">
     {#each definitions as blockDefinition}
-      <div 
-        class="blockelem create-flowy noselect"
-        data-name={blockDefinition.name}
-      >
-        <input
-          type="hidden"
-          name="blockelemtype"
-          class="blockelemtype"
-          value="1" />
-        <div class="blockin">
-          <div class="blockico">
-            <i class={blockDefinition.icon} />
-          </div>
-          <div class="blocktext">
-            <p class="blocktitle">{blockDefinition.name}</p>
-            <p class="blockdesc">{blockDefinition.description}</p>
-          </div>
-        </div>
-      </div>
+      <WorkflowBlock {blockDefinition} blockType={selectedTab} />
     {/each}
   </div>
 </section>
 
 <style>
-  header {
-    font-size: 20px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
   .subtabs {
     margin-top: 27px;
     display: grid;

@@ -4,45 +4,35 @@
   export let text = ""
   export let className = ""
 
-  export let formattingTag = ""
-
-  export let fontFamily = ""
-  export let fontSize = "1em"
-  export let textAlign = ""
-  export let verticalAlign = ""
-  export let color = ""
+  export let type = ""
 
   export let _bb
 
-  const isTag = tag => (formattingTag || "").indexOf(tag) > -1
-
-  $: style = buildStyle({
-    "font-size": fontSize,
-    "font-family": fontFamily,
-    color,
-  })
+  const isTag = tag => type === tag
 </script>
 
 {#if isTag('none')}
-  <span {style}>{text}</span>
-{:else if isTag('<b>')}
-  <b class={className} {style}>{text}</b>
-{:else if isTag('<strong>')}
-  <strong class={className} {style}>{text}</strong>
-{:else if isTag('<i>')}
-  <i class={className} {style}>{text}</i>
-{:else if isTag('<em>')}
-  <em class={className} {style}>{text}</em>
-{:else if isTag('<mark>')}
-  <mark class={className} {style}>{text}</mark>
-{:else if isTag('<small>')}
-  <small class={className} {style}>{text}</small>
-{:else if isTag('<del>')}
-  <del class={className} {style}>{text}</del>
-{:else if isTag('<ins>')}
-  <ins class={className} {style}>{text}</ins>
-{:else if isTag('<sub>')}
-  <sub class={className} {style}>{text}</sub>
-{:else if isTag('<sup>')}
-  <sup class={className} {style}>{text}</sup>
-{:else}{text}{/if}
+  <span>{text}</span>
+{:else if isTag('bold')}
+  <b class={className}>{text}</b>
+{:else if isTag('strong')}
+  <strong class={className}>{text}</strong>
+{:else if isTag('italic')}
+  <i class={className}>{text}</i>
+{:else if isTag('emphasis')}
+  <em class={className}>{text}</em>
+{:else if isTag('mark')}
+  <mark class={className}>{text}</mark>
+{:else if isTag('small')}
+  <small class={className}>{text}</small>
+{:else if isTag('del')}
+  <del class={className}>{text}</del>
+{:else if isTag('ins')}
+  <ins class={className}>{text}</ins>
+{:else if isTag('sub')}
+  <sub class={className}>{text}</sub>
+{:else if isTag('sup')}
+  <sup class={className}>{text}</sup>
+{:else}
+  <span>{text}</span>
+{/if}
