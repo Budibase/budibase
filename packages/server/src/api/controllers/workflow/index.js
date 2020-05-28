@@ -28,7 +28,6 @@ exports.create = async function(ctx) {
   //   return
   // }
 
-
   workflow.type = "workflow"
   const response = await db.post(workflow)
   workflow._rev = response.rev
@@ -39,14 +38,14 @@ exports.create = async function(ctx) {
     workflow: {
       ...workflow,
       _rev: response.rev,
-      _id: response.id
-    }
-  };
+      _id: response.id,
+    },
+  }
 }
 
 exports.update = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
-  const workflow = ctx.request.body;
+  const workflow = ctx.request.body
 
   const response = await db.put(workflow)
   workflow._rev = response.rev
@@ -57,7 +56,7 @@ exports.update = async function(ctx) {
     workflow: {
       ...workflow,
       _rev: response.rev,
-      _id: response.id
+      _id: response.id,
     },
   }
 }
@@ -77,15 +76,15 @@ exports.find = async function(ctx) {
 }
 
 exports.executeAction = async function(ctx) {
-  const workflowAction = require(`./actions/${ctx.request.body.action}`);
-  const response = await workflowAction(ctx.request.body.args);
-  ctx.body = response; 
+  const workflowAction = require(`./actions/${ctx.request.body.action}`)
+  const response = await workflowAction(ctx.request.body.args)
+  ctx.body = response
 }
 
 exports.fetchActionScript = async function(ctx) {
-  const workflowAction = require(`./actions/${ctx.action}`);
-  console.log(workflowAction);
-  ctx.body = workflowAction; 
+  const workflowAction = require(`./actions/${ctx.action}`)
+  console.log(workflowAction)
+  ctx.body = workflowAction
 }
 
 exports.destroy = async function(ctx) {

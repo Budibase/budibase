@@ -47,9 +47,11 @@
     "lodash": "^4.17.13",
     "logrocket": "^1.0.6",
     "lunr": "^2.3.5",
+    "mustache": "^4.0.1",
     "safe-buffer": "^5.1.2",
     "shortid": "^2.2.8",
     "string_decoder": "^1.2.0",
+    "svelte-grid": "^1.10.8",
     "svelte-simple-modal": "^0.3.0",
     "uikit": "^3.1.7"
   },

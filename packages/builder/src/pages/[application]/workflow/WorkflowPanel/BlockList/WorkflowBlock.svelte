@@ -1,12 +1,18 @@
 <script>
-  import { workflowStore } from "builderStore";
+  import { workflowStore } from "builderStore"
 
   export let blockType
   export let blockDefinition
+  export let actionId
 
   function addBlockToWorkflow() {
     // TODO: store the block type in the DB as well
-    workflowStore.actions.addBlockToWorkflow({ blockDefinition, blockType });
+    workflowStore.actions.addBlockToWorkflow({
+      ...blockDefinition,
+      args: {},
+      actionId,
+      type: blockType,
+    })
   }
 </script>
 

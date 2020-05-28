@@ -7,9 +7,9 @@
 
 <section class="canvas">
   {#each blocks as block, idx}
-    <FlowItem onSelect={onSelect} {block} />
+    <FlowItem {onSelect} {block} />
     {#if idx !== blocks.length - 1}
-      <i class="ri-arrow-down-line"></i>
+      <i class="ri-arrow-down-line" />
     {/if}
   {/each}
 </section>

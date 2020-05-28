@@ -1,1 +1,1 @@
-export { default as SetupPanel } from "./SetupPanel.svelte";
+export { default as SetupPanel } from "./SetupPanel.svelte"

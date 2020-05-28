@@ -3,19 +3,22 @@
   export let block
 
   function selectBlock() {
-    onSelect(block);
+    onSelect(block)
   }
+
+  console.log(block)
 </script>
 
-<div class="hoverable" on:click={selectBlock}>
+<div class={`${block.type} hoverable`} on:click={selectBlock}>
   <header>{block.heading}</header>
   <hr />
-  <p>{block.body}</p>
+  <p>
+    {@html block.body}
+  </p>
 </div>
 
 <style>
   div {
-    border: 1px solid black;
     width: 320px;
     padding: 20px;
     margin-bottom: 60px;
@@ -25,6 +28,21 @@
     background-color: var(--font);
     font-size: 16px;
     color: var(--white);
+  }
+
+  .ACTION {
+    background-color: var(--white);
+    color: var(--font);
+  }
+
+  .TRIGGER {
+    background-color: var(--font);
+    color: var(--white);
+  }
+
+  .LOGIC {
+    background-color: var(--secondary);
+    color: var(--font);
   }
 
   div:hover {

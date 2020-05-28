@@ -5,7 +5,7 @@ const newid = require("../../db/newid")
 const ajv = new Ajv()
 
 exports.save = async function(ctx) {
-  console.log("THIS INSTANCE", ctx.params.instanceId);
+  console.log("THIS INSTANCE", ctx.params.instanceId)
   const db = new CouchDB(ctx.params.instanceId)
   const record = ctx.request.body
   record.modelId = ctx.params.modelId

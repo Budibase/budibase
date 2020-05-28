@@ -1,19 +1,19 @@
 <script>
   import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
-  import { WorkflowList } from "../";
-  import WorkflowBlock from "./WorkflowBlock.svelte";
+  import { WorkflowList } from "../"
+  import WorkflowBlock from "./WorkflowBlock.svelte"
   import api from "builderStore/api"
   import blockDefinitions from "../blockDefinitions"
 
   const SUB_TABS = [
     {
       name: "Triggers",
-      key: "TRIGGERS",
+      key: "TRIGGER",
     },
     {
       name: "Actions",
-      key: "ACTIONS",
+      key: "ACTION",
     },
     {
       name: "Logic",
@@ -21,14 +21,10 @@
     },
   ]
 
-  let selectedTab = "TRIGGERS"
+  let selectedTab = "TRIGGER"
   let definitions = []
 
-  $: definitions = Object.values(blockDefinitions[selectedTab])
-
-  function myAction(node) {
-    console.log("ACTION FIRED", node);
-  }
+  $: definitions = Object.entries(blockDefinitions[selectedTab])
 </script>
 
 <section>
@@ -43,8 +39,8 @@
     {/each}
   </div>
   <div id="blocklist">
-    {#each definitions as blockDefinition}
-      <WorkflowBlock {blockDefinition} blockType={selectedTab} />
+    {#each definitions as [actionId, blockDefinition]}
+      <WorkflowBlock {blockDefinition} {actionId} blockType={selectedTab} />
     {/each}
   </div>
 </section>

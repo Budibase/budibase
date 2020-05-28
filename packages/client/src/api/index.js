@@ -2,8 +2,7 @@ import { loadRecord } from "./loadRecord"
 import { listRecords } from "./listRecords"
 import { authenticate } from "./authenticate"
 import { saveRecord } from "./saveRecord"
-import { triggerWorkflow } from "./workflow";
-
+import { triggerWorkflow } from "./workflow"
 
 export const createApi = ({ rootPath = "", setState, getState }) => {
   const apiCall = method => async ({ url, body }) => {
@@ -16,7 +15,6 @@ export const createApi = ({ rootPath = "", setState, getState }) => {
       credentials: "same-origin",
     })
 
-    
     switch (response.status) {
       case 200:
         return response.json()
@@ -27,7 +25,7 @@ export const createApi = ({ rootPath = "", setState, getState }) => {
       case 403:
         return error(`${url} Forbidden`)
       default:
-        if (response.status >= 200 && response.status < 400) { 
+        if (response.status >= 200 && response.status < 400) {
           return response.json()
         }
 
@@ -66,6 +64,6 @@ export const createApi = ({ rootPath = "", setState, getState }) => {
     listRecords: listRecords(apiOpts),
     authenticate: authenticate(apiOpts),
     saveRecord: saveRecord(apiOpts),
-    triggerWorkflow: triggerWorkflow(apiOpts)
+    triggerWorkflow: triggerWorkflow(apiOpts),
   }
 }

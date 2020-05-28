@@ -2,37 +2,38 @@ const WORKFLOW_SCHEMA = {
   properties: {
     type: "workflow",
     pageId: {
-      type: "string"
+      type: "string",
     },
     screenId: {
-      type: "string"
+      type: "string",
     },
     live: {
-      type: "boolean"
+      type: "boolean",
     },
     uiTree: {
-      type: "object"
+      type: "object",
     },
     definition: {
       type: "object",
       properties: {
         triggers: { type: "array" },
-        next: { 
+        next: {
           type: "object",
           properties: {
+            environment: { environment: "string" },
             type: { type: "string" },
             actionId: { type: "string" },
             args: { type: "object" },
             conditions: { type: "array" },
             errorHandling: { type: "object" },
-            next: { type: "object" }
-          }
+            next: { type: "object" },
+          },
         },
-      }
-    }
-  }
-};
+      },
+    },
+  },
+}
 
 module.exports = {
-  WORKFLOW_SCHEMA
-};
+  WORKFLOW_SCHEMA,
+}

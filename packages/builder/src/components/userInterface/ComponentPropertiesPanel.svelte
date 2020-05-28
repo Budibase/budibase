@@ -25,7 +25,7 @@
   let categories = [
     { value: "design", name: "Design" },
     { value: "settings", name: "Settings" },
-    { value: "events", name: "Events" }
+    { value: "events", name: "Events" },
   ]
   let selectedCategory = categories[0]
 

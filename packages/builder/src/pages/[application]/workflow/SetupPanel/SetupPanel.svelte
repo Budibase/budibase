@@ -1,20 +1,27 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import api from "builderStore/api"
-  import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte";
+  import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte"
+  import DeleteWorkflowModal from "./DeleteWorkflowModal.svelte"
 
-  $: workflow = $workflowStore.workflows.find(
-    wf => wf._id === $workflowStore.selectedWorkflowId
-  )
+  const { open, close } = getContext("simple-modal")
+
+  $: workflow = $workflowStore.currentWorkflow
   $: workflowBlock = $workflowStore.selectedWorkflowBlock
 
   function deleteWorkflow() {
-    workflowStore.actions.deleteWorkflow(workflow)
+    open(
+      DeleteWorkflowModal,
+      {
+        onClosed: close,
+      },
+      { styleContent: { padding: "0" } }
+    )
   }
-  
+
   function deleteWorkflowBlock() {
-    // TODO: implement
+    // TODO: implement, need to put IDs against workflow blocks
     workflowStore.actions.deleteWorkflowBlock(workflowBlock)
   }
 </script>
@@ -26,10 +33,12 @@
   <div class="panel-body">
     {#if workflowBlock}
       <WorkflowBlockSetup {workflowBlock} />
-      <button class="delete-workflow-button hoverable" on:click={deleteWorkflowBlock}>
-        Delete {workflowBlock.type} 
+      <button
+        class="delete-workflow-button hoverable"
+        on:click={deleteWorkflowBlock}>
+        Delete Block
       </button>
-    {:else if $workflowStore.selectedWorkflowId}
+    {:else if $workflowStore.currentWorkflow}
       <label class="uk-form-label">Workflow: {workflow.name}</label>
       <div class="uk-margin">
         <label class="uk-form-label">Name</label>
@@ -44,7 +53,9 @@
         <label class="uk-form-label">User Access</label>
         Some User Access Stuff Here
       </div>
-      <button class="delete-workflow-button hoverable" on:click={deleteWorkflow}>
+      <button
+        class="delete-workflow-button hoverable"
+        on:click={deleteWorkflow}>
         Delete Workflow
       </button>
     {/if}
