@@ -148,8 +148,7 @@ export const typography = [
   {
     label: "Color",
     key: "color",
-    control: OptionSelect,
-    options: ["black", "white", "red", "blue", "green"],
+    control: Input,
   },
   {
     label: "align",
