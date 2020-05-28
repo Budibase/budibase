@@ -42,7 +42,8 @@
         ...record,
         modelId: $backendUiStore.selectedModel._id,
       },
-      instanceId
+      instanceId,
+      $backendUiStore.selectedModel._id
     )
     if (recordResponse.errors) {
       errors = recordResponse.errors
