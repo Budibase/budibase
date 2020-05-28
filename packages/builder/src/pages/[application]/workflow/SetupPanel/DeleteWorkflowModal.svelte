@@ -1,5 +1,6 @@
 <script>
   import { store, backendUiStore, workflowStore } from "builderStore"
+	import { notifier } from '@beyonk/svelte-notifications'
   import api from "builderStore/api"
   import ActionButton from "components/common/ActionButton.svelte"
 
@@ -16,6 +17,7 @@
       workflow: $workflowStore.currentWorkflow.workflow,
     })
     onClosed()
+    notifier.danger("Workflow deleted.")
   }
 </script>
 

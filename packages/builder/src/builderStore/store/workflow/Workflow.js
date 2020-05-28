@@ -1,6 +1,7 @@
 import mustache from "mustache"
 // TODO: tidy up import
 import blockDefinitions from "../../../pages/[application]/workflow/WorkflowPanel/blockDefinitions"
+import { generate } from "shortid"
 
 /**
  * Class responsible for the traversing of the workflow definition.
@@ -14,7 +15,10 @@ export default class Workflow {
   addBlock(block) {
     let node = this.workflow.definition
     while (node.next) node = node.next
-    node.next = block
+    node.next = {
+      id: generate(),
+      ...block
+    } 
   }
 
   updateBlock(updatedBlock, id) {
@@ -70,7 +74,7 @@ export default class Workflow {
       type: block.type,
       params: block.params,
       args,
-      heading: block.actionId,
+      heading: definition.actionId,
       body: mustache.render(tagline, args),
     })
 

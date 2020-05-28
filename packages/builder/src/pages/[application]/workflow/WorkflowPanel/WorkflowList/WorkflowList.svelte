@@ -1,5 +1,6 @@
 <script>
   import Modal from "svelte-simple-modal"
+  import { notifier } from "@beyonk/svelte-notifications";
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import api from "builderStore/api"
@@ -8,7 +9,7 @@
   const { open, close } = getContext("simple-modal")
 
   $: currentWorkflowId =
-    $workflowStore.currentWorkflow && $workflowStore.currentWorkflow._id
+    $workflowStore.currentWorkflow && $workflowStore.currentWorkflow.workflow._id
 
   function newWorkflow() {
     open(
@@ -24,12 +25,14 @@
     workflowStore.actions.fetch($backendUiStore.selectedDatabase._id)
   })
 
-  function saveWorkflow() {
+  async function saveWorkflow() {
+    const workflow = $workflowStore.currentWorkflow.workflow
     // TODO: Clean up args
-    workflowStore.actions.save({
+    await workflowStore.actions.save({
       instanceId: $backendUiStore.selectedDatabase._id,
-      workflow: $workflowStore.currentWorkflow.workflow,
+      workflow
     })
+    notifier.success(`Workflow ${workflow.name} saved.`);
   }
 </script>
 
@@ -82,7 +85,7 @@
     display: flex;
     align-items: center;
     border-radius: 3px;
-    height: 40px;
+    height: 32px;
     font-weight: 500;
   }
 

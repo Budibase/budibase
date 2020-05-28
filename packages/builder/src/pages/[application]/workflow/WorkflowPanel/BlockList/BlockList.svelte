@@ -52,16 +52,21 @@
     grid-gap: 5px;
     grid-auto-flow: column;
     grid-auto-columns: 1fr 1fr 1fr;
+    margin-bottom: 10px;
   }
 
   .subtabs span {
+    transition: 0.3s all;
     text-align: center;
-    color: var(--font);
+    color: var(--dark-grey);
     font-weight: 500;
+    padding: 10px;
   }
 
   .subtabs span.selected {
-    border-bottom: 4px solid var(--primary);
+    background: var(--dark-grey);
+    color: var(--white);
+    border-radius: 2px;
   }
 
   .subtabs span:not(.selected) {

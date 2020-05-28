@@ -1,5 +1,6 @@
 <script>
   import FlowItem from "./FlowItem.svelte"
+  import Arrow from "./Arrow.svelte";
 
   export let blocks = []
   export let onSelect
@@ -9,7 +10,7 @@
   {#each blocks as block, idx}
     <FlowItem {onSelect} {block} />
     {#if idx !== blocks.length - 1}
-      <i class="ri-arrow-down-line" />
+      <Arrow />
     {/if}
   {/each}
 </section>

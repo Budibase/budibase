@@ -1,17 +1,23 @@
 <script>
   import { onMount } from "svelte"
   import { workflowStore, backendUiStore } from "builderStore"
+  import { notifier } from "@beyonk/svelte-notifications"
   import Flowchart from "./svelte-flows/Flowchart.svelte"
   import api from "builderStore/api"
 
-  let canvas
-  let workflow
+  let selectedWorkflow
   let uiTree
   let instanceId = $backendUiStore.selectedDatabase._id
 
-  $: workflow = $workflowStore.currentWorkflow
+  // TODO: better naming
+  $: selectedWorkflow = $workflowStore.currentWorkflow
 
-  $: if (workflow) uiTree = workflow ? workflow.createUiTree() : []
+  $: workflowLive = selectedWorkflow && selectedWorkflow.workflow.live
+
+  $: if (selectedWorkflow)
+    uiTree = selectedWorkflow ? selectedWorkflow.createUiTree() : []
+
+  $: instanceId = $backendUiStore.selectedDatabase._id
 
   function onDelete(block) {
     // TODO finish
@@ -24,17 +30,37 @@
       return state
     })
   }
+
+  function setWorkflowLive(live) {
+    const { workflow } = selectedWorkflow
+    workflow.live = live
+    workflowStore.actions.save({ instanceId, workflow })
+    if (live) {
+      notifier.info(`Workflow ${workflow.name} enabled.`)
+    } else {
+      notifier.danger(`Workflow ${workflow.name} disabled.`)
+    }
+  }
 </script>
 
 <section>
   <Flowchart blocks={uiTree} {onSelect} on:delete={onDelete} />
   <footer>
-    <button class="stop-button hoverable">
-      <i class="ri-stop-fill" />
-    </button>
-    <button class="play-button hoverable">
-      <i class="ri-play-fill" />
-    </button>
+    {#if selectedWorkflow}
+      <button
+        class:highlighted={workflowLive}
+        class:hoverable={workflowLive}
+        class="stop-button hoverable">
+        <i class="ri-stop-fill" on:click={() => setWorkflowLive(false)} />
+      </button>
+      <button
+        class:highlighted={!workflowLive}
+        class:hoverable={!workflowLive}
+        class="play-button hoverable"
+        on:click={() => setWorkflowLive(true)}>
+        <i class="ri-play-fill" />
+      </button>
+    {/if}
   </footer>
 </section>
 
@@ -61,11 +87,11 @@
     margin-right: 24px;
   }
 
-  .play-button:hover {
+  .play-button.highlighted {
     background: var(--primary);
   }
 
-  .stop-button:hover {
+  .stop-button.highlighted {
     background: var(--coral);
   }
 </style>

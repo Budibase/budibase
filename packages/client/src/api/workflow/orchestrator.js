@@ -1,7 +1,7 @@
 import get from "lodash/fp/get"
 
 /**
- * The workflow orhestrator is a class responsible for executing workflows.
+ * The workflow orchestrator is a class responsible for executing workflows.
  * It relies on the strategy pattern, which allows composable behaviour to be
  * passed into its execute() function. This allows custom execution behaviour based
  * on where the orchestrator is run.
@@ -30,6 +30,7 @@ export default class Orchestrator {
 
 // Execute a workflow from a running budibase app
 export const clientStrategy = {
+  delay: ms => new Promise(resolve => setTimeout(resolve, ms)),
   context: {},
   bindContextArgs: function(args, api) {
     const mappedArgs = { ...args }
@@ -80,6 +81,10 @@ export const clientStrategy = {
           SET_STATE: block.args,
         }
       }
+
+      if (block.actionId === "DELAY") {
+        await this.delay(block.args.time)       
+      }
     }
 
     // this workflow block gets executed on the server
@@ -102,6 +107,6 @@ export const clientStrategy = {
     console.log("workflowContext", this.context)
 
     // TODO: clean this up, don't pass all those args
-    this.run({ workflow: workflow.next, instanceId, api })
+    await this.run({ workflow: workflow.next, instanceId, api })
   },
 }
