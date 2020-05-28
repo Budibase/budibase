@@ -15,11 +15,7 @@ router
   )
   .put("/api/:instanceId/workflows", authorized(BUILDER), controller.update)
   .post("/api/:instanceId/workflows", authorized(BUILDER), controller.create)
-  .post(
-    "/api/:instanceId/workflows/action",
-    authorized(EXECUTE_WORKFLOW),
-    controller.executeAction
-  )
+  .post("/api/:instanceId/workflows/action", controller.executeAction)
   .delete(
     "/api/:instanceId/workflows/:id/:rev",
     authorized(BUILDER),
