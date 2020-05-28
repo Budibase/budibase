@@ -77,11 +77,7 @@ const spacingMeta = [
 ]
 
 export const spacing = [
-  { label: "Margin", 
-    key: "margin", 
-    control: InputGroup, 
-    meta: spacingMeta 
-  },
+  { label: "Margin", key: "margin", control: InputGroup, meta: spacingMeta },
   {
     label: "Padding",
     key: "padding",
@@ -106,11 +102,11 @@ export const position = [
     control: OptionSelect,
     initialValue: "Wrap",
     options: [
-      { label: "Static", value: "static"},
-      { label: "Relative", value: "relative"},
-      { label: "Fixed", value: "fixed"},
-      { label: "Absolute", value: "absolute"},
-      { label: "Sticky", value: "sticky"},
+      { label: "Static", value: "static" },
+      { label: "Relative", value: "relative" },
+      { label: "Fixed", value: "fixed" },
+      { label: "Absolute", value: "absolute" },
+      { label: "Sticky", value: "sticky" },
     ],
   },
   {
@@ -211,32 +207,43 @@ export const border = [
     key: "border-color",
     control: Input,
   },
-  { 
-    label: "Style", 
-    key: "border-style", 
+  {
+    label: "Style",
+    key: "border-style",
     control: OptionSelect,
-    options: ["none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"],
-   },
+    options: [
+      "none",
+      "hidden",
+      "dotted",
+      "dashed",
+      "solid",
+      "double",
+      "groove",
+      "ridge",
+      "inset",
+      "outset",
+    ],
+  },
 ]
 
 export const effects = [
   { label: "Opacity", key: "opacity", control: Input },
-  { label: "Rotate", 
-    key: "transform", 
+  {
+    label: "Rotate",
+    key: "transform",
     control: OptionSelect,
     options: [
-      {label: "None", value:"rotate(0deg)"}, 
-      {label: "45 degrees", value:"rotate(45deg)"}, 
-      {label: "90 degrees", value:"rotate(90deg)"}, 
-      {label: "135 degrees", value:"rotate(135deg)"}, 
-      {label: "180 degrees", value:"rotate(180deg)"}, 
-      {label: "225 degrees", value:"rotate(225deg)"}, 
-      {label: "270 degrees", value:"rotate(270deg)"}, 
-      {label: "315 degrees", value:"rotate(315deg)"}, 
-      {label: "360 degrees", value:"rotate(360deg)"}, 
+      { label: "None", value: "rotate(0deg)" },
+      { label: "45 degrees", value: "rotate(45deg)" },
+      { label: "90 degrees", value: "rotate(90deg)" },
+      { label: "135 degrees", value: "rotate(135deg)" },
+      { label: "180 degrees", value: "rotate(180deg)" },
+      { label: "225 degrees", value: "rotate(225deg)" },
+      { label: "270 degrees", value: "rotate(270deg)" },
+      { label: "315 degrees", value: "rotate(315deg)" },
+      { label: "360 degrees", value: "rotate(360deg)" },
     ],
-  }
-    , //needs special control
+  }, //needs special control
   { label: "Shadow", key: "box-shadow", control: Input },
 ]
 
