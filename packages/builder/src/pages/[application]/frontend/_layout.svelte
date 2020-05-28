@@ -163,7 +163,6 @@
     grid-column: 3;
     background-color: var(--white);
     min-height: 0px;
-    overflow-y: scroll;
   }
 
   .components-nav-page {

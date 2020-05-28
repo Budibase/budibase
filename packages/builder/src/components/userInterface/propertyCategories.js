@@ -13,9 +13,9 @@ export const layout = [
     control: OptionSelect,
     initialValue: "columnReverse",
     options: [
-      { label: "row" },
+      { label: "row", value: "row" },
       { label: "row-reverse", value: "rowReverse" },
-      { label: "column" },
+      { label: "column", value: "column" },
       { label: "column-reverse", value: "columnReverse" },
     ],
   },
@@ -25,7 +25,10 @@ export const layout = [
     label: "Wrap",
     key: "flex-wrap",
     control: OptionSelect,
-    options: [{ label: "wrap" }, { label: "no wrap", value: "noWrap" }],
+    options: [
+      { label: "wrap", value: "wrap" },
+      { label: "no wrap", value: "noWrap" },
+    ],
   },
 ]
 
@@ -59,13 +62,7 @@ export const position = [
     label: "Position",
     key: "position",
     control: OptionSelect,
-    options: [
-      { label: "static" },
-      { label: "relative" },
-      { label: "fixed" },
-      { label: "absolute" },
-      { label: "sticky" },
-    ],
+    options: ["static", "relative", "fixed", "absolute", "sticky"],
   },
 ]
 
@@ -91,12 +88,7 @@ export const typography = [
     label: "Weight",
     key: "font-weight",
     control: OptionSelect,
-    options: [
-      { label: "normal" },
-      { label: "bold" },
-      { label: "bolder" },
-      { label: "lighter" },
-    ],
+    options: ["normal", "bold", "bolder", "lighter"],
   },
   { label: "size", key: "font-size", defaultValue: "", control: Input },
   { label: "Line H", key: "line-height", control: Input },
