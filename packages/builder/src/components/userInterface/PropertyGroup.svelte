@@ -70,12 +70,16 @@
   }
 
   .property-panel {
-    height: 0px;
-    overflow: hidden;
+    /* height: 0px;
+    overflow: hidden; */
+    display: none;
   }
 
   .show {
-    overflow: auto;
-    height: auto;
+    /* overflow: auto;
+    height: auto; */
+    display: flex;
+    flex-direction: column;
+    flex: 1;
   }
 </style>
