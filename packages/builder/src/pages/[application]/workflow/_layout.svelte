@@ -24,6 +24,7 @@
 
   .nav {
     padding: 20px;
+    height: 100%;
   }
 
   .root {

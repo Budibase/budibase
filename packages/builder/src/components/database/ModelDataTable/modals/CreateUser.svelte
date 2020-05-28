@@ -34,7 +34,7 @@
     <div class="uk-margin">
       <label class="uk-form-label" for="form-stacked-text">Access Level</label>
       <select class="uk-select" bind:value={accessLevelId}>
-        <option value=""></option>
+        <option value="" />
         <option value="POWER_USER">Power User</option>
         <option value="ADMIN">Admin</option>
       </select>

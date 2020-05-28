@@ -1,6 +1,6 @@
 import { getStore } from "./store"
 import { getBackendUiStore } from "./store/backend"
-import { getWorkflowStore } from "./store/workflow"
+import { getWorkflowStore } from "./store/workflow/"
 import LogRocket from "logrocket"
 
 export const store = getStore()

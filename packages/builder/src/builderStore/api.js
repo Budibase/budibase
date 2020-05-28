@@ -25,5 +25,5 @@ export default {
   get,
   patch,
   delete: del,
-  put
+  put,
 }

@@ -7,6 +7,9 @@
 
   const { open, close } = getContext("simple-modal")
 
+  $: currentWorkflowId =
+    $workflowStore.currentWorkflow && $workflowStore.currentWorkflow._id
+
   function newWorkflow() {
     open(
       CreateWorkflowModal,
@@ -20,6 +23,14 @@
   onMount(() => {
     workflowStore.actions.fetch($backendUiStore.selectedDatabase._id)
   })
+
+  function saveWorkflow() {
+    // TODO: Clean up args
+    workflowStore.actions.save({
+      instanceId: $backendUiStore.selectedDatabase._id,
+      workflow: $workflowStore.currentWorkflow.workflow,
+    })
+  }
 </script>
 
 <section>
@@ -30,13 +41,18 @@
     {#each $workflowStore.workflows as workflow}
       <li
         class="workflow-item"
-        class:selected={workflow._id === $workflowStore.selectedWorkflowId}
+        class:selected={workflow._id === currentWorkflowId}
         on:click={() => workflowStore.actions.select(workflow)}>
         <i class="ri-stackshare-line" class:live={workflow.live} />
         {workflow.name}
       </li>
     {/each}
   </ul>
+  {#if $workflowStore.currentWorkflow}
+    <button class="new-workflow-button hoverable" on:click={saveWorkflow}>
+      Save Workflow
+    </button>
+  {/if}
 </section>
 
 <style>

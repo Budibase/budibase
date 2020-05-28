@@ -28,7 +28,7 @@
       on:click={() => (selectedTab = 'WORKFLOWS')}>
       Workflows
     </span>
-    {#if $workflowStore.selectedWorkflowId}
+    {#if $workflowStore.currentWorkflow}
       <span
         class="hoverable"
         class:selected={selectedTab === 'ADD'}
@@ -58,4 +58,14 @@
     color: var(--dark-grey);
   }
 
+  .delete-workflow-button {
+    font-family: Roboto;
+    width: 100%;
+    border: solid 1px #f2f2f2;
+    border-radius: 2px;
+    background: var(--white);
+    height: 32px;
+    font-size: 12px;
+    font-weight: 500;
+  }
 </style>
