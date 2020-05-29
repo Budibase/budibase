@@ -22,11 +22,6 @@
     background: var(--background);
   }
 
-  .nav {
-    padding: 20px;
-    height: 100%;
-  }
-
   .root {
     height: 100%;
     display: flex;
@@ -39,10 +34,9 @@
   }
 
   .nav {
+    padding: 20px;
     overflow: auto;
-    flex: 0 1 auto;
     width: 275px;
-    height: 100%;
     border: 1px solid var(--medium-grey);
     background: var(--white);
   }

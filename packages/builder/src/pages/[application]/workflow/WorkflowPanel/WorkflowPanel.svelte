@@ -9,29 +9,27 @@
   let definitions = []
 </script>
 
-<section>
-  <header>
+<header>
+  <span
+    class="hoverable"
+    class:selected={selectedTab === 'WORKFLOWS'}
+    on:click={() => (selectedTab = 'WORKFLOWS')}>
+    Workflows
+  </span>
+  {#if $workflowStore.currentWorkflow}
     <span
       class="hoverable"
-      class:selected={selectedTab === 'WORKFLOWS'}
-      on:click={() => (selectedTab = 'WORKFLOWS')}>
-      Workflows
+      class:selected={selectedTab === 'ADD'}
+      on:click={() => (selectedTab = 'ADD')}>
+      Add
     </span>
-    {#if $workflowStore.currentWorkflow}
-      <span
-        class="hoverable"
-        class:selected={selectedTab === 'ADD'}
-        on:click={() => (selectedTab = 'ADD')}>
-        Add
-      </span>
-    {/if}
-  </header>
-  {#if selectedTab === 'WORKFLOWS'}
-    <WorkflowList />
-  {:else if selectedTab === 'ADD'}
-    <BlockList />
   {/if}
-</section>
+</header>
+{#if selectedTab === 'WORKFLOWS'}
+  <WorkflowList />
+{:else if selectedTab === 'ADD'}
+  <BlockList />
+{/if}
 
 <style>
   header {

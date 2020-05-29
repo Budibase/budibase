@@ -14,15 +14,9 @@
 
   $: workflowLive = selectedWorkflow && selectedWorkflow.workflow.live
 
-  $: if (selectedWorkflow)
-    uiTree = selectedWorkflow ? selectedWorkflow.createUiTree() : []
+  $: uiTree = selectedWorkflow ? selectedWorkflow.createUiTree() : []
 
   $: instanceId = $backendUiStore.selectedDatabase._id
-
-  function onDelete(block) {
-    // TODO finish
-    workflowStore.actions.deleteWorkflowBlock(block)
-  }
 
   function onSelect(block) {
     workflowStore.update(state => {
@@ -44,7 +38,7 @@
 </script>
 
 <section>
-  <Flowchart blocks={uiTree} {onSelect} on:delete={onDelete} />
+  <Flowchart blocks={uiTree} {onSelect} />
   <footer>
     {#if selectedWorkflow}
       <button

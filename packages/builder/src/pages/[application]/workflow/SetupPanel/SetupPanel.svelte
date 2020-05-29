@@ -1,14 +1,15 @@
 <script>
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
-  import { notifier } from "@beyonk/svelte-notifications";
+  import { notifier } from "@beyonk/svelte-notifications"
   import api from "builderStore/api"
   import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte"
   import DeleteWorkflowModal from "./DeleteWorkflowModal.svelte"
 
   const { open, close } = getContext("simple-modal")
 
-  $: workflow = $workflowStore.currentWorkflow && $workflowStore.currentWorkflow.workflow
+  $: workflow =
+    $workflowStore.currentWorkflow && $workflowStore.currentWorkflow.workflow
   $: workflowBlock = $workflowStore.selectedWorkflowBlock
 
   function deleteWorkflow() {
@@ -23,7 +24,7 @@
 
   function deleteWorkflowBlock() {
     workflowStore.actions.deleteWorkflowBlock(workflowBlock)
-    notifier.info("Workflow block deleted.");
+    notifier.info("Workflow block deleted.")
   }
 </script>
 
@@ -31,15 +32,15 @@
   <header>
     <span>Setup</span>
   </header>
-  <div class="panel-body">
-    {#if workflowBlock}
-      <WorkflowBlockSetup {workflowBlock} />
-      <button
-        class="delete-workflow-button hoverable"
-        on:click={deleteWorkflowBlock}>
-        Delete Block
-      </button>
-    {:else if $workflowStore.currentWorkflow}
+  {#if workflowBlock}
+    <WorkflowBlockSetup {workflowBlock} />
+    <button
+      class="delete-workflow-button hoverable"
+      on:click={deleteWorkflowBlock}>
+      Delete Block
+    </button>
+  {:else if $workflowStore.currentWorkflow}
+    <div class="panel-body">
       <label class="uk-form-label">Workflow: {workflow.name}</label>
       <div class="uk-margin">
         <label class="uk-form-label">Name</label>
@@ -54,19 +55,22 @@
         <label class="uk-form-label">User Access</label>
         Some User Access Stuff Here
       </div>
-      <button
-        class="delete-workflow-button hoverable"
-        on:click={deleteWorkflow}>
-        Delete Workflow
-      </button>
-    {/if}
-  </div>
+    </div>
+    <button class="delete-workflow-button hoverable" on:click={deleteWorkflow}>
+      Delete Workflow
+    </button>
+  {/if}
 </section>
 
 <style>
   section {
     display: flex;
     flex-direction: column;
+    height: 100%;
+  }
+
+  .panel-body {
+    flex: 1;
   }
 
   header {

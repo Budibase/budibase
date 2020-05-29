@@ -91,6 +91,25 @@ export const clientStrategy = {
       if (block.actionId === "DELAY") {
         await this.delay(block.args.time)       
       }
+
+      if (block.actionId === "FILTER") {
+        const { field, condition, value } = block.args;
+        switch (condition) {
+          case "=":
+            if (field !== value) return;
+            break;
+          case "!=":
+            if (field === value) return;
+            break;
+          case "gt":
+            if (field < value) return;
+            break;
+          case "lt":
+            if (field > value) return;
+          default:
+            return;
+        }
+      }
     }
 
     // this workflow block gets executed on the server

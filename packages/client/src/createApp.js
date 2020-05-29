@@ -24,9 +24,8 @@ export const createApp = ({
         routeTo,
         appRootPath: frontendDefinition.appRootPath,
       })
-      const getAttachChildrenParams = attachChildrenParams(stateManager)
       screenSlotNode.props._children = [screen.props]
-      const initialiseChildParams = getAttachChildrenParams(screenSlotNode)
+      const initialiseChildParams = attachChildrenParams(stateManager, screenSlotNode)
       attachChildren(initialiseChildParams)(screenSlotNode.rootElement, {
         hydrate: true,
         force: true,
@@ -48,17 +47,13 @@ export const createApp = ({
     routeTo(currentUrl || fallbackPath)
   }
 
-  const attachChildrenParams = stateManager => {
-    const getInitialiseParams = treeNode => ({
-      componentLibraries,
-      treeNode,
-      onScreenSlotRendered,
-      setupState: stateManager.setup,
-      getCurrentState: stateManager.getCurrentState,
-    })
-
-    return getInitialiseParams
-  }
+  const attachChildrenParams = (stateManager, treeNode) => ({
+    componentLibraries,
+    treeNode,
+    onScreenSlotRendered,
+    setupState: stateManager.setup,
+    getCurrentState: stateManager.getCurrentState,
+  });
 
   let rootTreeNode
   const pageStateManager = createStateManager({
@@ -79,8 +74,7 @@ export const createApp = ({
       _children: [page.props],
     }
     rootTreeNode.rootElement = target
-    const getInitialiseParams = attachChildrenParams(pageStateManager)
-    const initChildParams = getInitialiseParams(rootTreeNode)
+    const initChildParams = attachChildrenParams(pageStateManager, rootTreeNode)
 
     attachChildren(initChildParams)(target, {
       hydrate: true,
