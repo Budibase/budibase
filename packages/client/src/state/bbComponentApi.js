@@ -40,6 +40,13 @@ export const bbFactory = ({
     delete: apiCall("DELETE"),
   }
 
+  const safeCallEvent = (event, context) => {
+    const isFunction = obj =>
+      !!(obj && obj.constructor && obj.call && obj.apply)
+
+    if (isFunction(event)) event(context)
+  }
+
   return (treeNode, setupState) => {
     const attachParams = {
       componentLibraries,
@@ -53,7 +60,7 @@ export const bbFactory = ({
       attachChildren: attachChildren(attachParams),
       context: treeNode.context,
       props: treeNode.props,
-      call: (event, context) => event(context),
+      call: safeCallEvent,
       setStateFromBinding: (binding, value) =>
         setStateFromBinding(store, binding, value),
       setState: (path, value) => setState(store, path, value),

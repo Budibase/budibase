@@ -40,8 +40,13 @@ export default class Workflow {
       block = block.next
     }
 
-    // delete the block found
-    previous.next = block.next || {}
+    // delete the block matching your id
+    if (!block.next) {
+      delete previous.next
+    } else {
+      previous.next = block.next
+    }
+
   }
 
   createUiTree() {

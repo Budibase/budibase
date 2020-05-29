@@ -59,6 +59,11 @@
 </section>
 
 <style>
+  section {
+    display: flex;
+    flex-direction: column;
+  }
+
   i {
     color: #adaec4;
   }
@@ -70,6 +75,7 @@
   ul {
     list-style-type: none;
     padding: 0;
+    flex: 1;
   }
 
   .live {

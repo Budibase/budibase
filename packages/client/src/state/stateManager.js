@@ -4,6 +4,7 @@ import {
   EVENT_TYPE_MEMBER_NAME,
 } from "./eventHandlers"
 import { bbFactory } from "./bbComponentApi"
+import { createTreeNode } from "../render/prepareRenderComponent"
 import { getState } from "./getState"
 import { attachChildren } from "../render/attachChildren"
 import mustache from "mustache"
@@ -34,16 +35,16 @@ export const createStateManager = ({
   let currentState
 
   // any nodes that have props that are bound to the store
-  let nodesBoundByProps = []
+  // let nodesBoundByProps = []
 
   // any node whose children depend on code, that uses the store
-  let nodesWithCodeBoundChildren = []
+  // let nodesWithCodeBoundChildren = []
 
   const getCurrentState = () => currentState
-  const registerBindings = _registerBindings(
-    nodesBoundByProps,
-    nodesWithCodeBoundChildren
-  )
+  // const registerBindings = _registerBindings(
+  //   nodesBoundByProps,
+  //   nodesWithCodeBoundChildren
+  // )
   const bb = bbFactory({
     store,
     getCurrentState,
@@ -52,14 +53,14 @@ export const createStateManager = ({
     onScreenSlotRendered,
   })
 
-  const setup = _setup(handlerTypes, getCurrentState, registerBindings, bb)
+  const setup = _setup(handlerTypes, getCurrentState, bb)
 
   const unsubscribe = store.subscribe(
     onStoreStateUpdated({
-      setCurrentState: s => (currentState = s),
+      setCurrentState: state => (currentState = state),
       getCurrentState,
-      nodesWithCodeBoundChildren,
-      nodesBoundByProps,
+      // nodesWithCodeBoundChildren,
+      // nodesBoundByProps,
       componentLibraries,
       onScreenSlotRendered,
       setupState: setup,
@@ -77,91 +78,93 @@ export const createStateManager = ({
 const onStoreStateUpdated = ({
   setCurrentState,
   getCurrentState,
-  nodesWithCodeBoundChildren,
-  // nodesBoundByProps,
   componentLibraries,
   onScreenSlotRendered,
   setupState,
 }) => state => {
-  setCurrentState(state)
-
-  // the original array gets changed by components' destroy()
-  // so we make a clone and check if they are still in the original
-  const nodesWithBoundChildren_clone = [...nodesWithCodeBoundChildren]
-  for (let node of nodesWithBoundChildren_clone) {
-    if (!nodesWithCodeBoundChildren.includes(node)) continue
+    setCurrentState(state)
     attachChildren({
       componentLibraries,
-      treeNode: node,
+      treeNode: createTreeNode(),
       onScreenSlotRendered,
       setupState,
       getCurrentState,
-    })(node.rootElement, { hydrate: true, force: true })
-  }
+    })(document.querySelector("#app"), { hydrate: true, force: true })
 
-  // for (let node of nodesBoundByProps) {
-  //   setNodeState(state, node)
+  // // the original array gets changed by components' destroy()
+  // // so we make a clone and check if they are still in the original
+  // const nodesWithBoundChildren_clone = [...nodesWithCodeBoundChildren]
+  // for (let node of nodesWithBoundChildren_clone) {
+  //   if (!nodesWithCodeBoundChildren.includes(node)) continue
+  //   attachChildren({
+  //     componentLibraries,
+  //     treeNode: node,
+  //     onScreenSlotRendered,
+  //     setupState,
+  //     getCurrentState,
+  //   })(node.rootElement, { hydrate: true, force: true })
   // }
 }
 
-const _registerBindings = (nodesBoundByProps, nodesWithCodeBoundChildren) => (
-  node,
-  bindings
-) => {
-  if (bindings.length > 0) {
-    node.bindings = bindings
-    nodesBoundByProps.push(node)
-    const onDestroy = () => {
-      nodesBoundByProps = nodesBoundByProps.filter(n => n === node)
-      node.onDestroy = node.onDestroy.filter(d => d === onDestroy)
-    }
-    node.onDestroy.push(onDestroy)
-  }
-  if (
-    node.props._children &&
-    node.props._children.filter(c => c._codeMeta && c._codeMeta.dependsOnStore)
-      .length > 0
-  ) {
-    nodesWithCodeBoundChildren.push(node)
-    const onDestroy = () => {
-      nodesWithCodeBoundChildren = nodesWithCodeBoundChildren.filter(
-        n => n === node
-      )
-      node.onDestroy = node.onDestroy.filter(d => d === onDestroy)
-    }
-    node.onDestroy.push(onDestroy)
-  }
-}
+// const _registerBindings = (nodesBoundByProps, nodesWithCodeBoundChildren) => (
+//   node,
+//   bindings
+// ) => {
+//   if (bindings.length > 0) {
+//     node.bindings = bindings
+//     nodesBoundByProps.push(node)
+//     const onDestroy = () => {
+//       nodesBoundByProps = nodesBoundByProps.filter(n => n === node)
+//       node.onDestroy = node.onDestroy.filter(d => d === onDestroy)
+//     }
+//     node.onDestroy.push(onDestroy)
+//   }
+//   if (
+//     node.props._children &&
+//     node.props._children.filter(c => c._codeMeta && c._codeMeta.dependsOnStore)
+//       .length > 0
+//   ) {
+//     nodesWithCodeBoundChildren.push(node)
+//     const onDestroy = () => {
+//       nodesWithCodeBoundChildren = nodesWithCodeBoundChildren.filter(
+//         n => n === node
+//       )
+//       node.onDestroy = node.onDestroy.filter(d => d === onDestroy)
+//     }
+//     node.onDestroy.push(onDestroy)
+//   }
+// }
 
-const setNodeState = (storeState, node) => {
-  if (!node.component) return
-  const newProps = { ...node.bindings.initialProps }
+// const setNodeState = (storeState, node) => {
+//   if (!node.component) return
+//   const newProps = { ...node.bindings.initialProps }
 
-  for (let binding of node.bindings) {
-    const val = getState(storeState, binding.path, binding.fallback)
+//   for (let binding of node.bindings) {
+//     const val = getState(storeState, binding.path, binding.fallback)
 
-    if (val === undefined && newProps[binding.propName] !== undefined) {
-      delete newProps[binding.propName]
-    }
+//     if (val === undefined && newProps[binding.propName] !== undefined) {
+//       delete newProps[binding.propName]
+//     }
 
-    if (val !== undefined) {
-      newProps[binding.propName] = val
-    }
-  }
+//     if (val !== undefined) {
+//       newProps[binding.propName] = val
+//     }
+//   }
 
-  node.component.$set(newProps)
-}
+//   node.component.$set(newProps)
+// }
 
 const _setup = (
   handlerTypes,
   getCurrentState,
-  registerBindings,
   bb
 ) => node => {
+
+  console.log(node);
   const props = node.props
   const context = node.context || {}
   const initialProps = { ...props }
-  const storeBoundProps = []
+  // const storeBoundProps = []
   const currentStoreState = getCurrentState()
 
   for (let propName in props) {
@@ -249,9 +252,9 @@ const _setup = (
     }
   }
 
-  registerBindings(node, storeBoundProps)
+  // registerBindings(node, storeBoundProps)
 
-  const setup = _setup(handlerTypes, getCurrentState, registerBindings, bb)
+  const setup = _setup(handlerTypes, getCurrentState, bb)
   initialProps._bb = bb(node, setup)
 
   return initialProps
