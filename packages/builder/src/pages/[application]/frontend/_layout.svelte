@@ -100,7 +100,6 @@
     background-color: var(--white);
     height: calc(100vh - 49px);
     padding: 0;
-    overflow: scroll;
     display: flex;
     flex-direction: column;
   }
@@ -117,16 +116,12 @@
     background-color: var(--white);
   }
 
-  
-
   .nav-group-header > div:nth-child(1) {
     padding: 0rem 0.5rem 0rem 0rem;
     vertical-align: bottom;
     grid-column-start: icon;
     margin-right: 5px;
   }
-
-
 
   .nav-group-header > div:nth-child(3) {
     vertical-align: bottom;

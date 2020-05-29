@@ -46,7 +46,6 @@
 </script>
 
 <div class="pagelayoutSection">
-  <div class="components-nav-page">Page Layout</div>
   <div
     class="budibase__nav-item root"
     class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
@@ -56,12 +55,8 @@
       class:rotate={$store.currentPreviewItem.name !== _layout.title}>
       <ArrowDownIcon />
     </span>
-
-    <span class="icon">
-      <GridIcon />
-    </span>
-
-    <span class="title">Page Layout</span>
+  <i class="ri-layout-3-fill icon-big"></i>
+  <span class="title">Master Screen</span>
   </div>
 
   {#if $store.currentPreviewItem.name === _layout.title && _layout.component.props._children}
@@ -84,36 +79,29 @@
   onOk={() => store.deleteComponent(componentToDelete)} />
 
 <style>
-  .components-nav-page {
-    font-size: 13px;
-    color: #000333;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    padding-left: 20px;
-    font-weight: 600;
-    opacity: 0.4;
-    letter-spacing: 1px;
-  }
 
   .pagelayoutSection {
-    margin: 20px 0px 20px 0px;
+    margin: 20px 0px 0px 0px;
   }
+
   .title {
     margin-left: 10px;
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
   }
 
   .icon {
+    width: 24px;
     display: inline-block;
     transition: 0.2s;
     width: 20px;
-    margin-top: 2px;
-    color: #000333;
+    color: var(--ink-light);
   }
 
-  .icon:nth-of-type(2) {
-    width: 14px;
-    margin: 0 0 0 5px;
+  .icon-big {
+    font-size: 24px;
+    color: var(--ink-light);
   }
 
   :global(svg) {
