@@ -1,7 +1,6 @@
 <script>
   import { workflowStore } from "builderStore"
-  import { WorkflowPanel } from "./WorkflowPanel"
-  import { SetupPanel } from "./SetupPanel"
+  import { WorkflowPanel, SetupPanel } from "components/workflow"
 </script>
 
 <div class="root">
