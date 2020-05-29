@@ -120,7 +120,6 @@
     background-color: var(--white);
     height: calc(100vh - 49px);
     padding: 0;
-    overflow: scroll;
     display: flex;
     flex-direction: column;
   }
@@ -213,10 +212,6 @@
     padding: 0 20px 20px 20px;
     line-height: 1rem !important;
     letter-spacing: 1px;
-  }
-
-  .border-line {
-    border-bottom: 1px solid #d8d8d8;
   }
 
   .components-list-container {

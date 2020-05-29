@@ -105,6 +105,7 @@
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    padding: 20px;
   }
 
   .title > div:nth-child(1) {
