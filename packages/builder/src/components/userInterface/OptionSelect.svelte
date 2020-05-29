@@ -1,7 +1,6 @@
 <script>
   import { onMount, beforeUpdate } from "svelte"
-  //Create utilities and move this in
-  import { buildStyle } from "../../../../standard-components/src/buildStyle.js"
+  import {buildStyle} from "../../helpers.js"
   export let options = []
   export let value = ""
   export let styleBindingProperty
@@ -73,8 +72,8 @@
   }
 
   $: menuStyle = buildStyle({
-    maxHeight,
-    transformOrigin: `center ${positionSide}`,
+    "max-height": maxHeight,
+    "transform-origin": `center ${positionSide}`,
     [positionSide]: "32px",
   })
 
@@ -142,8 +141,7 @@
   .bb-select-container {
     position: relative;
     outline: none;
-    margin: 5px;
-    width: 164px;
+    width: 189px;
     height: 32px;
     cursor: pointer;
   }
@@ -160,11 +158,16 @@
   .bb-select-anchor > span {
     color: #565a66;
     font-weight: 500;
-    flex: 1;
+    width: 145px;
+    overflow-x: hidden;
   }
 
   .bb-select-anchor > i {
-    flex: 0 0 20px;
+    transition: transform 0.13s ease;
+    transform-origin: center;
+    width: 25px;
+    height: 25px;
+    text-align: center;
   }
 
   .selected {
@@ -178,7 +181,7 @@
     box-sizing: border-box;
     flex-direction: column;
     opacity: 0;
-    width: 164px;
+    width: 189px;
     z-index: 2;
     color: #808192;
     font-weight: 500;
@@ -211,8 +214,7 @@
     cursor: pointer;
   }
 
-  i {
-    transition: transform 0.13s ease;
-    transform-origin: center;
+  li:hover {
+    background-color:#e6e6e6
   }
 </style>

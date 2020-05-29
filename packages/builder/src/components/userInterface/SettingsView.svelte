@@ -3,7 +3,6 @@
   import InputGroup from "../common/Inputs/InputGroup.svelte"
   import Colorpicker from "../common/Colorpicker.svelte"
   import { excludeProps } from "./propertyCategories.js"
-  import OptionSelectNew from "./OptionSelectNew.svelte"
 
   export let panelDefinition = []
   export let componentDefinition = {}
@@ -16,9 +15,6 @@
     data.target ? onChange(key, data.target.value) : onChange(key, data)
   }
 </script>
-
-<OptionSelectNew
-  options={['arial enjfhewhfhw iejfiewj ewfnew', 'comicsans', 'tachoma', 'bla']} />
 
 {#if panelDefinition.length > 0}
   {#each panelDefinition as definition}
