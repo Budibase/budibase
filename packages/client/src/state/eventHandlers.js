@@ -22,7 +22,7 @@ export const eventHandlers = (store, rootPath, routeTo) => {
   const api = createApi({
     rootPath,
     setState: setStateWithStore,
-    getState: (path, fallback) => getState(currentState, path, fallback),
+    getState: (path, fallback) => getState(currentState, path, fallback)
   })
 
   const setStateHandler = ({ path, value }) => setState(store, path, value)

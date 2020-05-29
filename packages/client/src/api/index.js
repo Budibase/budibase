@@ -1,7 +1,4 @@
-import { loadRecord } from "./loadRecord"
-import { listRecords } from "./listRecords"
 import { authenticate } from "./authenticate"
-import { saveRecord } from "./saveRecord"
 import { triggerWorkflow } from "./workflow"
 
 export const createApi = ({ rootPath = "", setState, getState }) => {
@@ -60,10 +57,7 @@ export const createApi = ({ rootPath = "", setState, getState }) => {
   }
 
   return {
-    loadRecord: loadRecord(apiOpts),
-    listRecords: listRecords(apiOpts),
     authenticate: authenticate(apiOpts),
-    saveRecord: saveRecord(apiOpts),
     triggerWorkflow: triggerWorkflow(apiOpts),
   }
 }

@@ -32,6 +32,11 @@
           type="number"
           class="budibase__input"
           bind:value={workflowBlock.args[parameter]} />
+      {:else if type === 'longText'}
+        <textarea
+          type="text"
+          class="budibase__input"
+          bind:value={workflowBlock.args[parameter]} />
       {:else if type === 'model'}
         <select
           class="budibase__input"

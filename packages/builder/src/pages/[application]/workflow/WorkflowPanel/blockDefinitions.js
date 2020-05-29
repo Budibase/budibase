@@ -66,8 +66,8 @@ const ACTION = {
     params: {
       to: "string",
       from: "string",
-      subject: "string",
-      text: "string",
+      subject: "longText",
+      text: "longText",
     },
   },
 }

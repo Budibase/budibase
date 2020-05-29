@@ -5,7 +5,6 @@ import deepEqual from "deep-equal"
 
 export const attachChildren = initialiseOpts => (htmlElement, options) => {
   const {
-    uiFunctions,
     componentLibraries,
     treeNode,
     onScreenSlotRendered,
@@ -31,8 +30,6 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
     }
   }
 
-  // htmlElement.classList.add(`lay-${treeNode.props._id}`)
-
   const childNodes = []
   for (let childProps of treeNode.props._children) {
     const { componentName, libName } = splitName(childProps._component)
@@ -45,7 +42,6 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
       props: childProps,
       parentNode: treeNode,
       ComponentConstructor,
-      uiFunctions,
       htmlElement,
       anchor,
       getCurrentState,

@@ -36,7 +36,7 @@ export const parseBinding = prop => {
 export const isStoreBinding = binding => binding && binding.source === "store"
 export const isContextBinding = binding =>
   binding && binding.source === "context"
-export const isEventBinding = binding => binding && binding.source === "event"
+// export const isEventBinding = binding => binding && binding.source === "event"
 
 const hasBindingObject = prop =>
   typeof prop === "object" && prop[BB_STATE_BINDINGPATH] !== undefined
