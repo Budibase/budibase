@@ -42,7 +42,6 @@
     <div class="pages-list-container">
       <div class="nav-header">
         <span class="navigator-title">Navigator</span>
-        <div class="border-line" />
 
         <span class="components-nav-page">Pages</span>
       </div>
@@ -52,11 +51,7 @@
       </div>
     </div>
 
-    <div class="border-line" />
-
     <PageLayout layout={$store.pages[$store.currentPageName]} />
-
-    <div class="border-line" />
 
     <div class="components-list-container">
       <div class="nav-group-header">
@@ -114,20 +109,10 @@
 
   .root {
     display: grid;
-    grid-template-columns: 275px 1fr 300px;
+    grid-template-columns: 300px 1fr 300px;
     height: 100%;
     width: 100%;
-    background: #fafafa;
-  }
-
-  @media only screen and (min-width: 1800px) {
-    .root {
-      display: grid;
-      grid-template-columns: 300px 1fr 300px;
-      height: 100%;
-      width: 100%;
-      background: #fafafa;
-    }
+    background: #fbfbfb;
   }
 
   .ui-nav {
