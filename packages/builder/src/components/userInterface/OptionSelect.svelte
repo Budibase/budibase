@@ -205,13 +205,14 @@
   ul {
     list-style-type: none;
     margin: 0;
-    padding: 5px 10px;
+    padding: 5px 0px;
   }
 
   li {
     height: auto;
     padding: 5px 0px;
     cursor: pointer;
+    padding-left: 10px
   }
 
   li:hover {
