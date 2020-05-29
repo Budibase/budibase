@@ -9,7 +9,6 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
     treeNode,
     onScreenSlotRendered,
     setupState,
-    getCurrentState,
   } = initialiseOpts
 
   const anchor = options && options.anchor ? options.anchor : null
@@ -43,8 +42,7 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
       parentNode: treeNode,
       ComponentConstructor,
       htmlElement,
-      anchor,
-      getCurrentState,
+      anchor
     })
 
     for (let childNode of childNodesThisIteration) {

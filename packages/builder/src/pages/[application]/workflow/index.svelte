@@ -1,5 +1,5 @@
 <script>
-  import WorkflowBuilder from "./WorkflowBuilder/WorkflowBuilder.svelte"
+  import { WorkflowBuilder } from "components/workflow"
 </script>
 
 <WorkflowBuilder />

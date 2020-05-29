@@ -4,13 +4,9 @@ import {
   EVENT_TYPE_MEMBER_NAME,
 } from "./eventHandlers"
 import { bbFactory } from "./bbComponentApi"
-import { createTreeNode } from "../render/prepareRenderComponent"
-import { getState } from "./getState"
-import { attachChildren } from "../render/attachChildren"
 import mustache from "mustache"
+import { get } from "svelte/store";
 import { appStore } from "./store";
-
-import { parseBinding } from "./parseBinding"
 
 const doNothing = () => {}
 doNothing.isPlaceholder = true
@@ -175,7 +171,7 @@ const _setup = ({
   const context = node.context || {}
   const initialProps = { ...props }
   // const storeBoundProps = []
-  const currentStoreState = getCurrentState()
+  const currentStoreState = get(appStore)
 
   console.log("node", node);
 

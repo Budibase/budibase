@@ -1,7 +1,5 @@
-// import { getStateOrValue } from "./getState"
-import { setState, setStateFromBinding } from "./setState"
-import { trimSlash } from "../common/trimSlash"
-import { isBound } from "./parseBinding"
+import { setState } from "./setState"
+// import { isBound } from "./parseBinding"
 import { attachChildren } from "../render/attachChildren"
 import { getContext, setContext } from "./getSetContext"
 
@@ -9,7 +7,6 @@ export const trimSlash = str => str.replace(/^\/+|\/+$/g, "")
 
 export const bbFactory = ({
   store,
-  getCurrentState,
   frontendDefinition,
   componentLibraries,
   onScreenSlotRendered,
@@ -54,8 +51,7 @@ export const bbFactory = ({
       componentLibraries,
       treeNode,
       onScreenSlotRendered,
-      setupState,
-      getCurrentState,
+      setupState
     }
 
     return {
@@ -69,7 +65,6 @@ export const bbFactory = ({
       store: store,
       relativeUrl,
       api,
-      isBound,
       parent,
     }
   }
