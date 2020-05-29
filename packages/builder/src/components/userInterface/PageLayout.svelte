@@ -55,8 +55,8 @@
       class:rotate={$store.currentPreviewItem.name !== _layout.title}>
       <ArrowDownIcon />
     </span>
-  <i class="ri-layout-3-fill icon-big"></i>
-  <span class="title">Master Screen</span>
+    <i class="ri-layout-3-fill icon-big" />
+    <span class="title">Master Screen</span>
   </div>
 
   {#if $store.currentPreviewItem.name === _layout.title && _layout.component.props._children}
@@ -79,7 +79,6 @@
   onOk={() => store.deleteComponent(componentToDelete)} />
 
 <style>
-
   .pagelayoutSection {
     margin: 20px 0px 0px 0px;
   }

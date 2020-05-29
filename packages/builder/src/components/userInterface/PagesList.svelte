@@ -28,13 +28,11 @@
 </script>
 
 <div class="root">
-    {#each pages as { title, id }}
-        <button
-          class:active={id === $params.page}
-          on:click={() => changePage(id)}>
-          {title}
-        </button>
-    {/each}
+  {#each pages as { title, id }}
+    <button class:active={id === $params.page} on:click={() => changePage(id)}>
+      {title}
+    </button>
+  {/each}
 </div>
 
 <style>
@@ -63,5 +61,4 @@
     background: var(--ink-light);
     color: var(--white);
   }
-
 </style>
