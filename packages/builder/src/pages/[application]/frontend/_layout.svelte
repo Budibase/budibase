@@ -55,7 +55,8 @@
         <FrontendNavigatePane />
       </div>
       <div slot="1">
-        <ComponentSelectionList toggleTab={leftNavSwitcher.selectTab} />      </div>
+        <ComponentSelectionList toggleTab={leftNavSwitcher.selectTab} />      
+      </div>
     </Switcher>
     
 
