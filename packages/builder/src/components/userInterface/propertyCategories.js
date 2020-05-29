@@ -167,10 +167,16 @@ export const typography = [
     key: "font-weight",
     control: OptionSelect,
     options: [
-      { label: "normal" },
-      { label: "bold" },
-      { label: "bolder" },
-      { label: "lighter" },
+      { label: "100", value:"100"},
+      { label: "200", value:"200"},
+      { label: "300", value:"300"},
+      { label: "400", value:"400"},
+      { label: "500", value:"500"},
+      { label: "600", value:"600"},
+      { label: "700", value:"700"},
+      { label: "800", value:"800"},
+      { label: "900", value:"900"},
+
     ],
   },
   { label: "size", key: "font-size", defaultValue: "", control: Input },
@@ -186,6 +192,21 @@ export const typography = [
     control: OptionSelect,
     options: ["initial", "left", "right", "center", "justify"],
   }, //custom
+  {
+    label: "Decoration",
+    key: "text-decoration-line",
+    control: OptionSelect,
+    defaultValue: "Underline",
+    options: [
+      {label: "Underline", value: "underline"}, 
+      {label: "None", value: "none"}, 
+      {label: "Overline", value: "overline"}, 
+      {label: "Line-through", value: "line-through"}, 
+      {label: "Under Over", value: "underline overline"}, 
+
+    ],
+  }, 
+
   { label: "transform", key: "text-transform", control: Input }, //custom
   { label: "style", key: "font-style", control: Input }, //custom
 ]
