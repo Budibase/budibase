@@ -15,17 +15,17 @@ export const createApp = ({
   let screenStateManager
 
   const onScreenSlotRendered = screenSlotNode => {
-    const onScreenSelected = (screen, store, url) => {
+    const onScreenSelected = (screen, url) => {
       const stateManager = createStateManager({
-        store,
         frontendDefinition,
         componentLibraries,
         onScreenSlotRendered: () => {},
         routeTo,
         appRootPath: frontendDefinition.appRootPath,
       })
+      const getAttachChildrenParams = attachChildrenParams(stateManager)
       screenSlotNode.props._children = [screen.props]
-      const initialiseChildParams = attachChildrenParams(stateManager, screenSlotNode)
+      const initialiseChildParams = getAttachChildrenParams(screenSlotNode)
       attachChildren(initialiseChildParams)(screenSlotNode.rootElement, {
         hydrate: true,
         force: true,
@@ -35,11 +35,11 @@ export const createApp = ({
       currentUrl = url
     }
 
-    routeTo = screenRouter(
-      frontendDefinition.screens,
+    routeTo = screenRouter({
+      screens: frontendDefinition.screens,
       onScreenSelected,
-      frontendDefinition.appRootPath
-    )
+      appRootPath: frontendDefinition.appRootPath
+    })
     const fallbackPath = window.location.pathname.replace(
       frontendDefinition.appRootPath,
       ""
@@ -47,17 +47,21 @@ export const createApp = ({
     routeTo(currentUrl || fallbackPath)
   }
 
-  const attachChildrenParams = (stateManager, treeNode) => ({
-    componentLibraries,
-    treeNode,
-    onScreenSlotRendered,
-    setupState: stateManager.setup,
-    getCurrentState: stateManager.getCurrentState,
-  });
+  const attachChildrenParams = stateManager => {
+    const getInitialiseParams = treeNode => ({
+      componentLibraries,
+      treeNode,
+      onScreenSlotRendered,
+      setupState: stateManager.setup,
+      getCurrentState: stateManager.getCurrentState,
+    })
+
+    return getInitialiseParams
+  }
 
   let rootTreeNode
   const pageStateManager = createStateManager({
-    store: writable({ _bbuser: user }),
+    // store: writable({ _bbuser: user }),
     frontendDefinition,
     componentLibraries,
     onScreenSlotRendered,
@@ -73,8 +77,8 @@ export const createApp = ({
     rootTreeNode.props = {
       _children: [page.props],
     }
-    rootTreeNode.rootElement = target
-    const initChildParams = attachChildrenParams(pageStateManager, rootTreeNode)
+    const getInitialiseParams = attachChildrenParams(pageStateManager)
+    const initChildParams = getInitialiseParams(rootTreeNode)
 
     attachChildren(initChildParams)(target, {
       hydrate: true,

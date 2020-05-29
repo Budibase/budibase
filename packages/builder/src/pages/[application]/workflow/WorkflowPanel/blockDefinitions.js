@@ -12,6 +12,7 @@ const ACTION = {
   },
   NAVIGATE: {
     name: "Navigate",
+    tagline: "Navigate to <b>{{url}}</b>",
     icon: "ri-navigation-line",
     description: "Navigate to another page.",
     environment: "CLIENT",

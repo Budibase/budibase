@@ -8,6 +8,7 @@ import { createTreeNode } from "../render/prepareRenderComponent"
 import { getState } from "./getState"
 import { attachChildren } from "../render/attachChildren"
 import mustache from "mustache"
+import { appStore } from "./store";
 
 import { parseBinding } from "./parseBinding"
 
@@ -24,14 +25,14 @@ const isMetaProp = propName =>
   propName === "_styles"
 
 export const createStateManager = ({
-  store,
+  // store,
   appRootPath,
   frontendDefinition,
   componentLibraries,
   onScreenSlotRendered,
   routeTo,
 }) => {
-  let handlerTypes = eventHandlers(store, appRootPath, routeTo)
+  let handlerTypes = eventHandlers(appStore, appRootPath, routeTo)
   let currentState
 
   // any nodes that have props that are bound to the store
@@ -45,33 +46,40 @@ export const createStateManager = ({
   //   nodesBoundByProps,
   //   nodesWithCodeBoundChildren
   // )
+
   const bb = bbFactory({
-    store,
+    store: appStore,
     getCurrentState,
     frontendDefinition,
     componentLibraries,
     onScreenSlotRendered,
   })
 
-  const setup = _setup(handlerTypes, getCurrentState, bb)
+  const setup = _setup({ handlerTypes, getCurrentState, bb, store: appStore })
 
-  const unsubscribe = store.subscribe(
-    onStoreStateUpdated({
-      setCurrentState: state => (currentState = state),
-      getCurrentState,
-      // nodesWithCodeBoundChildren,
-      // nodesBoundByProps,
-      componentLibraries,
-      onScreenSlotRendered,
-      setupState: setup,
-    })
-  )
+  // TODO: remove
+  const unsubscribe = appStore.subscribe(state => {
+    console.log("store updated", state);
+    return state;
+  });
+
+  // const unsubscribe = store.subscribe(
+  //   onStoreStateUpdated({
+  //     setCurrentState: state => (currentState = state),
+  //     getCurrentState,
+  //     // nodesWithCodeBoundChildren,
+  //     // nodesBoundByProps,
+  //     componentLibraries,
+  //     onScreenSlotRendered,
+  //     setupState: setup,
+  //   })
+  // )
 
   return {
     setup,
     destroy: () => unsubscribe(),
     getCurrentState,
-    store,
+    store: appStore,
   }
 }
 
@@ -80,16 +88,19 @@ const onStoreStateUpdated = ({
   getCurrentState,
   componentLibraries,
   onScreenSlotRendered,
-  setupState,
+  setupState
 }) => state => {
-    setCurrentState(state)
-    attachChildren({
-      componentLibraries,
-      treeNode: createTreeNode(),
-      onScreenSlotRendered,
-      setupState,
-      getCurrentState,
-    })(document.querySelector("#app"), { hydrate: true, force: true })
+    // fire the state update event to re-render anything bound to this 
+    // setCurrentState(state)
+
+    // setCurrentState(state)
+    // attachChildren({
+    //   componentLibraries,
+    //   treeNode: createTreeNode(),
+    //   onScreenSlotRendered,
+    //   setupState,
+    //   getCurrentState,
+    // })(document.querySelector("#app"), { hydrate: true, force: true })
 
   // // the original array gets changed by components' destroy()
   // // so we make a clone and check if they are still in the original
@@ -154,18 +165,22 @@ const onStoreStateUpdated = ({
 //   node.component.$set(newProps)
 // }
 
-const _setup = (
+const _setup = ({
   handlerTypes,
   getCurrentState,
-  bb
-) => node => {
-
-  console.log(node);
+  bb,
+  store
+}) => node => {
   const props = node.props
   const context = node.context || {}
   const initialProps = { ...props }
   // const storeBoundProps = []
   const currentStoreState = getCurrentState()
+
+  console.log("node", node);
+
+  // console.log("node", node);
+  // console.log("nodeComponent", node.component);
 
   for (let propName in props) {
     if (isMetaProp(propName)) continue
@@ -173,13 +188,18 @@ const _setup = (
     const propValue = props[propName]
 
     // const binding = parseBinding(propValue)
-    // const isBound = !!binding
+    // TODO: better binding stuff
+    const isBound = typeof propValue === "string" && propValue.startsWith("{{");
 
-    if (typeof propValue === "string") {
+    if (isBound) {
       initialProps[propName] = mustache.render(propValue, {
         state: currentStoreState,
         context
       })
+
+      if (!node.stateBound) {
+        node.stateBound = true
+      }
     }
 
     // if (isBound) binding.propName = propName
@@ -254,7 +274,7 @@ const _setup = (
 
   // registerBindings(node, storeBoundProps)
 
-  const setup = _setup(handlerTypes, getCurrentState, bb)
+  const setup = _setup({ handlerTypes, getCurrentState, bb, store })
   initialProps._bb = bb(node, setup)
 
   return initialProps

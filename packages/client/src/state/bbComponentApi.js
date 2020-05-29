@@ -5,6 +5,8 @@ import { isBound } from "./parseBinding"
 import { attachChildren } from "../render/attachChildren"
 import { getContext, setContext } from "./getSetContext"
 
+export const trimSlash = str => str.replace(/^\/+|\/+$/g, "")
+
 export const bbFactory = ({
   store,
   getCurrentState,
@@ -61,11 +63,7 @@ export const bbFactory = ({
       context: treeNode.context,
       props: treeNode.props,
       call: safeCallEvent,
-      setStateFromBinding: (binding, value) =>
-        setStateFromBinding(store, binding, value),
-      setState: (path, value) => setState(store, path, value),
-      // getStateOrValue: (prop, currentContext) =>
-      //   getStateOrValue(getCurrentState(), prop, currentContext),
+      setState,
       getContext: getContext(treeNode),
       setContext: setContext(treeNode),
       store: store,
