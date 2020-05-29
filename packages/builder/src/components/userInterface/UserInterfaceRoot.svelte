@@ -51,9 +51,7 @@
       </div>
     </div>
 
-
     <PageLayout layout={$store.pages[$store.currentPageName]} />
-
 
     <div class="components-list-container">
       <div class="nav-group-header">
@@ -114,9 +112,8 @@
     grid-template-columns: 300px 1fr 300px;
     height: 100%;
     width: 100%;
-    background: #FBFBFB;
+    background: #fbfbfb;
   }
-
 
   .ui-nav {
     grid-column: 1;
