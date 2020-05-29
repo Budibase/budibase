@@ -1,4 +1,5 @@
 import get from "lodash/fp/get"
+import mustache from "mustache";
 
 /**
  * The workflow orchestrator is a class responsible for executing workflows.
@@ -41,23 +42,28 @@ export const clientStrategy = {
     for (let arg in args) {
       const argValue = args[arg]
       // Means that it's bound to state or workflow context
-      if (argValue.startsWith("$")) {
-        // if value is bound to workflow context.
-        if (argValue.startsWith("$context")) {
-          const path = argValue.replace("$context.", "")
-          // pass in the value from context
-          mappedArgs[arg] = get(path, this.context)
-        }
-
-        // if the value is bound to state
-        if (argValue.startsWith("$state")) {
-          const path = argValue.replace("$state.", "")
-          // pass in the value from state
-          // TODO: not working
-          mappedArgs[arg] = api.getState(path)
-        }
-      }
+      mappedArgs[arg] = mustache.render(argValue, {
+        context: this.context,
+        state: api.getState()
+      });
     }
+    //   if (argValue.startsWith("$")) {
+    //     // if value is bound to workflow context.
+    //     if (argValue.startsWith("$context")) {
+    //       const path = argValue.replace("$context.", "")
+    //       // pass in the value from context
+    //       mappedArgs[arg] = get(path, this.context)
+    //     }
+
+    //     // if the value is bound to state
+    //     if (argValue.startsWith("$state")) {
+    //       const path = argValue.replace("$state.", "")
+    //       // pass in the value from state
+    //       // TODO: not working
+    //       mappedArgs[arg] = api.getState(path)
+    //     }
+    //   }
+    // }
 
     console.log(mappedArgs)
 

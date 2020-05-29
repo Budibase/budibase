@@ -1,32 +1,34 @@
-import { isObject } from "lodash/fp"
+// import isObject from "lodash/fp/isObject"
+import set from "lodash/fp/set";
 import { parseBinding } from "./parseBinding"
 
 export const setState = (store, path, value) => {
   if (!path || path.length === 0) return
 
-  const pathParts = path.split(".")
+  // const pathParts = path.split(".")
 
-  const safeSetPath = (state, currentPartIndex = 0) => {
-    const currentKey = pathParts[currentPartIndex]
+  // const safeSetPath = (state, currentPartIndex = 0) => {
+  //   const currentKey = pathParts[currentPartIndex]
 
-    if (pathParts.length - 1 == currentPartIndex) {
-      state[currentKey] = value
-      return
-    }
+  //   if (pathParts.length - 1 == currentPartIndex) {
+  //     state[currentKey] = value
+  //     return
+  //   }
 
-    if (
-      state[currentKey] === null ||
-      state[currentKey] === undefined ||
-      !isObject(state[currentKey])
-    ) {
-      state[currentKey] = {}
-    }
+  //   if (
+  //     state[currentKey] === null ||
+  //     state[currentKey] === undefined ||
+  //     !isObject(state[currentKey])
+  //   ) {
+  //     state[currentKey] = {}
+  //   }
 
-    safeSetPath(state[currentKey], currentPartIndex + 1)
-  }
+  //   safeSetPath(state[currentKey], currentPartIndex + 1)
+  // }
 
   store.update(state => {
-    safeSetPath(state)
+    // safeSetPath(state)
+    state = set(path, value, state);
     return state
   })
 }

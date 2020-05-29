@@ -116,8 +116,7 @@
         stylesheetLinks,
         selectedComponentType,
         selectedComponentId,
-        frontendDefinition: JSON.stringify(frontendDefinition),
-        currentPageFunctions: $store.currentPageFunctions,
+        frontendDefinition: JSON.stringify(frontendDefinition)
       })} />
   {/if}
 </div>

@@ -1,46 +1,49 @@
-import { isUndefined, isObject } from "lodash/fp"
-import { parseBinding, isStoreBinding } from "./parseBinding"
+// import { isUndefined, isObject } from "lodash/fp"
+import getOr from "lodash/fp/getOr";
+// import { parseBinding, isStoreBinding } from "./parseBinding"
 
-export const getState = (s, path, fallback) => {
-  if (!s) return fallback
+export const getState = (state, path, fallback) => {
+  if (!state) return fallback
   if (!path || path.length === 0) return fallback
 
-  if (path === "$") return s
+  return getOr(fallback, path, state);
 
-  const pathParts = path.split(".")
-  const safeGetPath = (obj, currentPartIndex = 0) => {
-    const currentKey = pathParts[currentPartIndex]
+  // if (path === "$") return state
 
-    if (pathParts.length - 1 == currentPartIndex) {
-      const value = obj[currentKey]
-      if (isUndefined(value)) return fallback
-      else return value
-    }
+  // const pathParts = path.split(".")
+  // const safeGetPath = (obj, currentPartIndex = 0) => {
+  //   const currentKey = pathParts[currentPartIndex]
 
-    if (
-      obj[currentKey] === null ||
-      obj[currentKey] === undefined ||
-      !isObject(obj[currentKey])
-    ) {
-      return fallback
-    }
+  //   if (pathParts.length - 1 == currentPartIndex) {
+  //     const value = obj[currentKey]
+  //     if (isUndefined(value)) return fallback
+  //     else return value
+  //   }
 
-    return safeGetPath(obj[currentKey], currentPartIndex + 1)
-  }
+  //   if (
+  //     obj[currentKey] === null ||
+  //     obj[currentKey] === undefined ||
+  //     !isObject(obj[currentKey])
+  //   ) {
+  //     return fallback
+  //   }
 
-  return safeGetPath(s)
+  //   return safeGetPath(obj[currentKey], currentPartIndex + 1)
+  // }
+
+  // return safeGetPath(state)
 }
 
-export const getStateOrValue = (globalState, prop, currentContext) => {
-  if (!prop) return prop
+// export const getStateOrValue = (globalState, prop, currentContext) => {
+//   if (!prop) return prop
 
-  const binding = parseBinding(prop)
+//   const binding = parseBinding(prop)
 
-  if (binding) {
-    const stateToUse = isStoreBinding(binding) ? globalState : currentContext
+//   if (binding) {
+//     const stateToUse = isStoreBinding(binding) ? globalState : currentContext
 
-    return getState(stateToUse, binding.path, binding.fallback)
-  }
+//     return getState(stateToUse, binding.path, binding.fallback)
+//   }
 
-  return prop
-}
+//   return prop
+// }

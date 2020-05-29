@@ -13,7 +13,7 @@ export const load = async (page, screens, url, appRootPath) => {
     autoAssignIds(s.props)
   }
   setAppDef(dom.window, page, screens)
-  addWindowGlobals(dom.window, page, screens, appRootPath, uiFunctions, {
+  addWindowGlobals(dom.window, page, screens, appRootPath, {
     hierarchy: {},
     actions: [],
     triggers: [],
@@ -27,13 +27,12 @@ export const load = async (page, screens, url, appRootPath) => {
   return { dom, app }
 }
 
-const addWindowGlobals = (window, page, screens, appRootPath, uiFunctions) => {
+const addWindowGlobals = (window, page, screens, appRootPath) => {
   window["##BUDIBASE_FRONTEND_DEFINITION##"] = {
     page,
     screens,
     appRootPath,
   }
-  window["##BUDIBASE_FRONTEND_FUNCTIONS##"] = uiFunctions
 }
 
 export const makePage = props => ({ props })
@@ -184,28 +183,3 @@ const maketestlib = window => ({
     opts.target.appendChild(node)
   },
 })
-
-const uiFunctions = {
-  never_render: () => {},
-
-  always_render: render => {
-    render()
-  },
-
-  three_clones: render => {
-    for (let i = 0; i < 3; i++) {
-      render()
-    }
-  },
-
-  with_context: render => {
-    render({ testKey: "test value" })
-  },
-
-  n_clones_based_on_store: (render, _, state) => {
-    const n = state.componentCount || 0
-    for (let i = 0; i < n; i++) {
-      render({ index: `index_${i}` })
-    }
-  },
-}
