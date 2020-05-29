@@ -44,7 +44,8 @@ export const clientStrategy = {
       // Means that it's bound to state or workflow context
       mappedArgs[arg] = mustache.render(argValue, {
         context: this.context,
-        state: api.getState()
+        // TODO: map to the real state
+        state: {} 
       });
     }
     //   if (argValue.startsWith("$")) {
@@ -86,6 +87,9 @@ export const clientStrategy = {
           ...this.context,
           SET_STATE: block.args,
         }
+      }
+
+      if (block.actionId === "NAVIGATE") {
       }
 
       if (block.actionId === "DELAY") {
