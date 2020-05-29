@@ -90,18 +90,9 @@
 <style>
   .root {
     display: grid;
-    grid-template-columns: 275px 1fr 275px;
+    grid-template-columns: 300px 1fr 300px;
     width: 100%;
     background: var(--grey-light);
-  }
-
-  @media only screen and (min-width: 1800px) {
-    .root {
-      display: grid;
-      grid-template-columns: 300px 1fr 300px;
-      width: 100%;
-      background: var(--grey-light);
-    }
   }
 
   .ui-nav {
