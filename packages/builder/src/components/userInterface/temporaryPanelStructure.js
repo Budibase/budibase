@@ -295,7 +295,8 @@ export default {
           description:
             "This component is a placeholder for the rendering of a screen within a page.",
           icon: "ri-crop-2-fill",
-          commonProps: { design: { ...all } },
+          properties: { design: { ...all } },
+          commonProps: {},
           children: [],
         },
         {
