@@ -63,7 +63,6 @@
       </div>
     </div>
 
-
     <PageLayout layout={$store.pages[$store.currentPageName]} />
 
     <div class="components-list-container">
