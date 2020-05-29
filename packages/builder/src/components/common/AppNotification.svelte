@@ -5,7 +5,7 @@
     UIKit.notification({
       message: `
           <div class="message-container">
-            <i class="ri-information-fill information-icon"></i> 
+            <div class="information-icon">🤯</div> 
             <span class="notification-message"> 
               ${message}
             </span>
@@ -21,6 +21,7 @@
 <style>
   :global(.information-icon) {
     font-size: 24px;
+    margin-right: 8px;
   }
 
   :global(.uk-nofi) {
@@ -31,10 +32,9 @@
   }
 
   :global(.message-container) {
-    display: grid;
-    grid-template-columns: 40px 1fr auto;
-    grid-gap: 5px;
+    display: flex;
     align-items: center;
+    justify-content: center;
   }
 
   :global(.uk-notification) {
@@ -44,7 +44,6 @@
     margin-right: auto !important;
     margin-left: auto !important;
     border-radius: 10px;
-    box-shadow: 0px 3px 6px #00000029;
   }
 
   :global(.uk-notification-message) {
@@ -56,21 +55,23 @@
   }
 
   :global(.uk-notification-message-danger) {
-    background: #f2545b !important;
+    background: var(--ink-light) !important;
     color: #fff !important;
     font-family: Roboto;
-    font-size: 14px !important;
+    font-size: 16px !important;
   }
 
   :global(.refresh-page-button) {
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: 5px;
+    font-size: 14px;
+    border-radius: 3px;
     border: none;
-    padding: 5px;
-    width: 91px;
-    height: 28px;
-    color: #f2545b;
+    padding: 8px 16px;
+    color: var(--ink);
     background: #ffffff;
+    margin-left: 20px;
+  }
+
+  :global(.refresh-page-button):hover{
+    background: var(--grey-light);
   }
 </style>
