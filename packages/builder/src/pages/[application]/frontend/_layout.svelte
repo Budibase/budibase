@@ -63,11 +63,8 @@
       </div>
     </div>
 
-    <div class="border-line" />
 
     <PageLayout layout={$store.pages[$store.currentPageName]} />
-
-    <div class="border-line" />
 
     <div class="components-list-container">
       <div class="nav-group-header">
