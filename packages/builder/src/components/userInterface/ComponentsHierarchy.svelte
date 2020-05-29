@@ -61,7 +61,7 @@
         {/if}
       </span>
 
-      <i class="ri-artboard-2-fill icon"></i>
+      <i class="ri-artboard-2-fill icon" />
 
       <span class="title">{screen.title}</span>
     </div>
