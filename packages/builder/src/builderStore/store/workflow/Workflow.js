@@ -1,6 +1,6 @@
 import mustache from "mustache"
 // TODO: tidy up import
-import blockDefinitions from "../../../pages/[application]/workflow/WorkflowPanel/blockDefinitions"
+import blockDefinitions from "../../../components/workflow/WorkflowPanel/blockDefinitions"
 import { generate } from "shortid"
 
 /**
@@ -79,7 +79,7 @@ export default class Workflow {
       type: block.type,
       params: block.params,
       args,
-      heading: definition.actionId,
+      heading: block.actionId,
       body: mustache.render(tagline, args),
     })
 

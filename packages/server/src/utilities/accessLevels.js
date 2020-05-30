@@ -2,9 +2,11 @@ const viewController = require("../api/controllers/view")
 const modelController = require("../api/controllers/model")
 const workflowController = require("../api/controllers/workflow")
 
+// Access Level IDs
 const ADMIN_LEVEL_ID = "ADMIN"
 const POWERUSER_LEVEL_ID = "POWER_USER"
 
+// Permissions
 const READ_MODEL = "read-model"
 const WRITE_MODEL = "write-model"
 const READ_VIEW = "read-view"
