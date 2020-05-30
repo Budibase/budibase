@@ -2,8 +2,7 @@
   import { backendUiStore } from "builderStore"
   import IconButton from "../common/IconButton.svelte"
   import Input from "../common/Input.svelte"
-  import PropertyCascader from "./PropertyCascader"
-  import { isBinding, getBinding, setBinding } from "../common/binding"
+  // import PropertyCascader from "./PropertyCascader"
   import Colorpicker from "../common/Colorpicker.svelte"
 
   export let value = ""
@@ -50,7 +49,7 @@
       {/each}
     </select>
   {:else}
-    <PropertyCascader {onChanged} {value} />
+    <!-- <PropertyCascader {onChanged} {value} /> -->
   {/if}
 </div>
 

@@ -5,6 +5,8 @@
 
   let params
 
+  console.log("wfblock", workflowBlock)
+
   $: workflowParams = workflowBlock.params
     ? Object.entries(workflowBlock.params)
     : []
@@ -13,7 +15,7 @@
 </script>
 
 <label class="uk-form-label">
-  {workflowBlock.type}: {workflowBlock.heading}
+  {workflowBlock.type}: {workflowBlock.actionId}
 </label>
 {#each workflowParams as [parameter, type]}
   <div class="uk-margin block-field">
@@ -27,6 +29,18 @@
             <option value={option}>{option}</option>
           {/each}
         </select>
+      {:else if type === 'accessLevel'}
+        <select
+          class="budibase__input"
+          bind:value={workflowBlock.args[parameter]}>
+          <option value="ADMIN">Admin</option>
+          <option value="POWER_USER">Power User</option>
+        </select>
+      {:else if type === 'password'}
+        <input
+          type="password"
+          class="budibase__input"
+          bind:value={workflowBlock.args[parameter]} />
       {:else if type === 'number'}
         <input
           type="number"

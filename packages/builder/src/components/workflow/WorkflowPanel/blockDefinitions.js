@@ -49,13 +49,14 @@ const ACTION = {
   },
   CREATE_USER: {
     description: "Create a new user.",
+    tagline: "Create user <b>{{username}}</b>",
     icon: "ri-user-add-fill",
     name: "Create User",
     environment: "SERVER",
     params: {
-      name: "string",
+      username: "string",
       password: "password",
-      accessLevel: "accessLevel",
+      accessLevelId: "accessLevel",
     },
   },
   SEND_EMAIL: {

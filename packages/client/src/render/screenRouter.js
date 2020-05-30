@@ -1,5 +1,6 @@
 import regexparam from "regexparam"
 import { routerStore } from "../state/store";
+import { initRouteStore } from "../state/store"
 
 // TODO: refactor
 export const screenRouter = ({ screens, onScreenSelected, appRootPath }) => {
