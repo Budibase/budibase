@@ -63,6 +63,7 @@
 
   .control {
     flex: 1;
+    display: flex;
     padding-left: 2px;
     max-width: 164px;
   }

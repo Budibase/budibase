@@ -2,7 +2,8 @@ export const buildStyle = styles => {
   let str = ""
   for (let s in styles) {
     if (styles[s]) {
-      str += `${s}: ${styles[s]}; `
+      let key = convertCamel(s)
+      str += `${key}: ${styles[s]}; `
     }
   }
   return str
