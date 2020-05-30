@@ -141,7 +141,7 @@
   .bb-select-container {
     position: relative;
     outline: none;
-    width: 189px;
+    width: 160px;
     height: 32px;
     cursor: pointer;
   }
@@ -158,15 +158,15 @@
   .bb-select-anchor > span {
     color: #565a66;
     font-weight: 500;
-    width: 145px;
+    width: 140px;
     overflow-x: hidden;
   }
 
   .bb-select-anchor > i {
     transition: transform 0.13s ease;
     transform-origin: center;
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
     text-align: center;
   }
 
@@ -181,7 +181,7 @@
     box-sizing: border-box;
     flex-direction: column;
     opacity: 0;
-    width: 189px;
+    width: 160px;
     z-index: 2;
     color: #808192;
     font-weight: 500;
