@@ -1,6 +1,6 @@
 import mustache from "mustache"
 // TODO: tidy up import
-import blockDefinitions from "../../../components/workflow/WorkflowPanel/blockDefinitions"
+import blockDefinitions from "components/workflow/WorkflowPanel/blockDefinitions"
 import { generate } from "shortid"
 
 /**
@@ -10,6 +10,10 @@ import { generate } from "shortid"
 export default class Workflow {
   constructor(workflow) {
     this.workflow = workflow
+  }
+
+  isEmpty() {
+    return !this.workflow.definition.next
   }
 
   addBlock(block) {
@@ -74,6 +78,7 @@ export default class Workflow {
     const tagline = definition.tagline || ""
     const args = block.args || {}
 
+    // all the fields the workflow block needs to render in the UI
     tree.push({
       id: block.id,
       type: block.type,
@@ -81,6 +86,7 @@ export default class Workflow {
       args,
       heading: block.actionId,
       body: mustache.render(tagline, args),
+      name: definition.name
     })
 
     return this.buildUiTree(block.next, tree)

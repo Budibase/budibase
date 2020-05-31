@@ -11,7 +11,7 @@
 
 <header>
   <span
-    class="hoverable"
+    class="hoverable workflow-header"
     class:selected={selectedTab === 'WORKFLOWS'}
     on:click={() => (selectedTab = 'WORKFLOWS')}>
     Workflows
@@ -37,8 +37,11 @@
     font-weight: bold;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 20px;
+  }
+
+  .workflow-header {
+    margin-right: 20px;
   }
 
   span:not(.selected) {
