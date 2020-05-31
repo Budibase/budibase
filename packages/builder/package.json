@@ -43,6 +43,7 @@
     "@nx-js/compiler-util": "^2.0.0",
     "codemirror": "^5.51.0",
     "date-fns": "^1.29.0",
+    "deepmerge": "^4.2.2",
     "feather-icons": "^4.21.0",
     "flatpickr": "^4.5.7",
     "lodash": "^4.17.13",

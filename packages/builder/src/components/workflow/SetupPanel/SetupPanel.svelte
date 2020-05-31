@@ -79,10 +79,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 20px;
   }
 
-  span:not(.selected) {
-    color: var(--dark-grey);
+  header > span {
+    color: var(--font);
   }
 
   label {

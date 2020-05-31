@@ -7,7 +7,7 @@ const ACTION = {
     environment: "CLIENT",
     params: {
       path: "string",
-      value: "string",
+      value: "longText",
     },
   },
   NAVIGATE: {
@@ -77,8 +77,9 @@ const ACTION = {
 const TRIGGER = {
   RECORD_SAVED: {
     name: "Record Saved",
+    event: "record:save",
     icon: "ri-save-line",
-    tagline: "Record is added to {{model}}",
+    tagline: "Record is added to <b>{{model.name}}</b>",
     description: "Save a record to your database.",
     environment: "SERVER",
     params: {
@@ -87,44 +88,45 @@ const TRIGGER = {
   },
   RECORD_DELETED: {
     name: "Record Deleted",
+    event: "record:delete",
     icon: "ri-delete-bin-line",
-    tagline: "Record is deleted from <b>{{model}}</b>",
+    tagline: "Record is deleted from <b>{{model.name}}</b>",
     description: "Fired when a record is deleted from your database.",
     environment: "SERVER",
     params: {
       model: "model"
     },
   },
-  CLICK: {
-    name: "Click",
-    icon: "ri-cursor-line",
-    tagline: "{{component}} is clicked",
-    description: "Trigger when you click on an element in the UI.",
-    environment: "CLIENT",
-    params: {
-      component: "component"
-    }
-  },
-  LOAD: {
-    name: "Load",
-    icon: "ri-loader-line",
-    tagline: "{{component}} is loaded",
-    description: "Trigger an element has finished loading.",
-    environment: "CLIENT",
-    params: {
-      component: "component"
-    }
-  },
-  INPUT: {
-    name: "Input",
-    icon: "ri-text",
-    tagline: "Text entered into {{component}",
-    description: "Trigger when you type into an input box.",
-    environment: "CLIENT",
-    params: {
-      component: "component"
-    }
-  },
+  // CLICK: {
+  //   name: "Click",
+  //   icon: "ri-cursor-line",
+  //   tagline: "{{component}} is clicked",
+  //   description: "Trigger when you click on an element in the UI.",
+  //   environment: "CLIENT",
+  //   params: {
+  //     component: "component"
+  //   }
+  // },
+  // LOAD: {
+  //   name: "Load",
+  //   icon: "ri-loader-line",
+  //   tagline: "{{component}} is loaded",
+  //   description: "Trigger an element has finished loading.",
+  //   environment: "CLIENT",
+  //   params: {
+  //     component: "component"
+  //   }
+  // },
+  // INPUT: {
+  //   name: "Input",
+  //   icon: "ri-text",
+  //   tagline: "Text entered into {{component}",
+  //   description: "Trigger when you type into an input box.",
+  //   environment: "CLIENT",
+  //   params: {
+  //     component: "component"
+  //   }
+  // },
 }
 
 const LOGIC = {
@@ -135,9 +137,9 @@ const LOGIC = {
     description: "Filter any workflows which do not meet certain conditions.",
     environment: "CLIENT",
     params: {
-      field: "string",
+      filter: "string",
       condition: [
-        "equals"
+        "equals",
       ],
       value: "string"
     },

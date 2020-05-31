@@ -1,21 +1,19 @@
 <script>
   import { backendUiStore, store } from "builderStore"
+  import ComponentSelector from "./ParamInputs/ComponentSelector.svelte";
+  import ModelSelector from "./ParamInputs/ModelSelector.svelte";
 
   export let workflowBlock
 
   let params
 
-  console.log("wfblock", workflowBlock)
-
   $: workflowParams = workflowBlock.params
     ? Object.entries(workflowBlock.params)
     : []
-  $: components = Object.values($store.components).filter(comp => comp.name)
-  // $: workflowArgs = workflowBlock.args ? Object.keys(workflowBlock.args) : []
 </script>
 
 <label class="uk-form-label">
-  {workflowBlock.type}: {workflowBlock.actionId}
+  {workflowBlock.type}: {workflowBlock.name}
 </label>
 {#each workflowParams as [parameter, type]}
   <div class="uk-margin block-field">
@@ -29,6 +27,8 @@
             <option value={option}>{option}</option>
           {/each}
         </select>
+      {:else if type === 'component'}
+        <ComponentSelector bind:value={workflowBlock.args[parameter]} />
       {:else if type === 'accessLevel'}
         <select
           class="budibase__input"
@@ -52,19 +52,7 @@
           class="budibase__input"
           bind:value={workflowBlock.args[parameter]} />
       {:else if type === 'model'}
-        <select
-          class="budibase__input"
-          bind:value={workflowBlock.args[parameter]}>
-          {#each $backendUiStore.models as model}
-            <option value={model._id}>{model.name}</option>
-          {/each}
-        </select>
-      {:else if type === 'component'}
-        <select class="budibase__input">
-          {#each components as component}
-            <option value={component.id}>{component.name}</option>
-          {/each}
-        </select>
+        <ModelSelector bind:value={workflowBlock.args[parameter]} />
       {:else if type === 'string'}
         <input
           type="text"
@@ -86,5 +74,9 @@
     text-transform: capitalize;
     font-size: 14px;
     font-weight: 500;
+  }
+
+  textarea {
+    min-height: 150px;
   }
 </style>

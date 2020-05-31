@@ -6,7 +6,6 @@
   export let actionId
 
   function addBlockToWorkflow() {
-    // TODO: store the block type in the DB as well
     workflowStore.actions.addBlockToWorkflow({
       ...blockDefinition,
       args: {},

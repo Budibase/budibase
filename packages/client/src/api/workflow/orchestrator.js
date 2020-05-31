@@ -23,7 +23,10 @@ export default class Orchestrator {
   async execute(workflowId) {
     const EXECUTE_WORKFLOW_URL = `/api/${this.instanceId}/workflows/${workflowId}`
     const workflow = await this.api.get({ url: EXECUTE_WORKFLOW_URL })
-    this._strategy.run(workflow.definition)
+
+    if (workflow.live) {
+      this._strategy.run(workflow.definition)
+    }
   }
 }
 
@@ -80,17 +83,9 @@ export const clientStrategy = ({ api, instanceId }) => ({
       if (block.actionId === "FILTER") {
         const { field, condition, value } = block.args;
         switch (condition) {
-          case "=":
+          case "equals":
             if (field !== value) return;
             break;
-          case "!=":
-            if (field === value) return;
-            break;
-          case "gt":
-            if (field < value) return;
-            break;
-          case "lt":
-            if (field > value) return;
           default:
             return;
         }

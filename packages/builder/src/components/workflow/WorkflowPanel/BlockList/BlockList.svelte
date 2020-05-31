@@ -1,42 +1,45 @@
 <script>
   import { onMount } from "svelte"
-  import { backendUiStore } from "builderStore"
+  import { backendUiStore, workflowStore } from "builderStore"
   import { WorkflowList } from "../"
   import WorkflowBlock from "./WorkflowBlock.svelte"
   import api from "builderStore/api"
   import blockDefinitions from "../blockDefinitions"
 
-  const SUB_TABS = [
-    {
-      name: "Triggers",
-      key: "TRIGGER",
-    },
-    {
-      name: "Actions",
-      key: "ACTION",
-    },
-    {
-      name: "Logic",
-      key: "LOGIC",
-    },
-  ]
-
   let selectedTab = "TRIGGER"
   let definitions = []
 
   $: definitions = Object.entries(blockDefinitions[selectedTab])
+
+  $: {
+    if (!$workflowStore.currentWorkflow.isEmpty() && selectedTab === "TRIGGER") {
+      selectedTab = "ACTION"
+    }
+  }
 </script>
 
 <section>
   <div class="subtabs">
-    {#each SUB_TABS as tab}
+    {#if $workflowStore.currentWorkflow.isEmpty()}
       <span
         class="hoverable"
-        class:selected={tab.key === selectedTab}
-        on:click={() => (selectedTab = tab.key)}>
-        {tab.name}
+        class:selected={'TRIGGER' === selectedTab}
+        on:click={() => (selectedTab = 'TRIGGER')}>
+        Triggers
       </span>
-    {/each}
+    {/if}
+    <span
+      class="hoverable"
+      class:selected={'ACTION' === selectedTab}
+      on:click={() => (selectedTab = 'ACTION')}>
+      Actions
+    </span>
+    <span
+      class="hoverable"
+      class:selected={'LOGIC' === selectedTab}
+      on:click={() => (selectedTab = 'LOGIC')}>
+      Logic
+    </span>
   </div>
   <div id="blocklist">
     {#each definitions as [actionId, blockDefinition]}

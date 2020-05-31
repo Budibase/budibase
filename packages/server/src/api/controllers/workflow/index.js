@@ -10,24 +10,6 @@ exports.create = async function(ctx) {
 
   workflow._id = newid()
 
-  // TODO: Possibly validate the workflow against a schema
-
-  // // validation with ajv
-  // const model = await db.get(record.modelId)
-  // const validate = ajv.compile({
-  //   properties: model.schema,
-  // })
-  // const valid = validate(record)
-
-  // if (!valid) {
-  //   ctx.status = 400
-  //   ctx.body = {
-  //     status: 400,
-  //     errors: validate.errors,
-  //   }
-  //   return
-  // }
-
   workflow.type = "workflow"
   const response = await db.post(workflow)
   workflow._rev = response.rev

@@ -8,6 +8,4 @@ export const triggerWorkflow = api => ({ workflow }) => {
   workflowOrchestrator.strategy = clientStrategy
 
   workflowOrchestrator.execute(workflow)
-
-  // hit the API and get the workflow data back
 }
