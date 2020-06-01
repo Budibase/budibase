@@ -12,19 +12,19 @@ export const isValidRgba = (rgba) => {
 	return isValidLengthRange && isValidColorRange && isValidAlphaRange;
 };
 
-export const determineColorType = (color) => {
-	let hsva = [];
-	if (color.startsWith('#')) {
-		let [ rHex, gHex, bHex, aHex ] = getHexaValues(color);
-		hsva = hexaToHSVA([ rHex, gHex, bHex ], aHex);
-	} else if (color.startsWith('rgb')) {
-		let rgba = getRgbaValues(color);
-		hsva = rgbaToHSVA(rgba);
-	}
-};
 
-export const getHSLA = (hsv, a) => {
-	const [ h, s, l ] = hsvToHSL(hsv);
+export const getAndConvertHexa = (color) => { 
+	let [ rHex, gHex, bHex, aHex ] = getHexaValues(color);
+	return hexaToHSVA([ rHex, gHex, bHex ], aHex);
+}
+
+export const getAndConvertRgba = color => {
+	let rgba = getRgbaValues(color);
+	return rgbaToHSVA(rgba);
+}
+
+export const getHSLA = ([hue, sat, val, a]) => {
+	const [ h, s, l ] = _hsvToHSL([hue, sat, val]);
 	return `hsla(${h}, ${s}, ${l}, ${a})`;
 };
 
@@ -36,20 +36,21 @@ export const hexaToHSVA = (hex, alpha = 'FF') => {
 export const rgbaToHSVA = (rgba) => {
 	if (isValidRgba(rgba)) {
 		const [ r, g, b, a = '1' ] = rgba;
-		let hsv = rgbToHSV([ r, g, b ]);
+		let hsv = _rgbToHSV([ r, g, b ]);
 		return [ ...hsv, a ];
 	}
 };
 
-export const hsvaToHexa = () => {
-	const [ r, g, b, a ] = hsvaToRgba();
+export const hsvaToHexa = (hsva) => {
+	const [ r, g, b, a ] = hsvaToRgba(hsva);
 	const hexa = [ r, g, b ].map((v) => v.toString(16)).concat((a * 255).toFixed(1).toString(16));
-	return hexa;
+	return `#${hexa.join()}`
 };
 
-export const hsvaToRgba = (h, s, v, a) => {
+export const hsvaToRgba = ([h, s, v, a]) => {
 	let rgb = _hsvToRgb([ h, s, v ]);
-	return [ ...rgb, a ];
+	let rgba = [ ...rgb, a ];
+	return `rgba(${rgba.join(",")})`
 };
 
 //Credit : https://github.com/Qix-/color-convert
