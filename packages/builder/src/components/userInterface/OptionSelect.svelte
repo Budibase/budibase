@@ -144,6 +144,7 @@
     width: 160px;
     height: 32px;
     cursor: pointer;
+    font-size: 12px;
   }
 
   .bb-select-anchor {
@@ -153,6 +154,7 @@
     background-color: #f2f2f2;
     border-radius: 2px;
     border: 1px solid var(--grey-dark);
+    align-items: center;
   }
 
   .bb-select-anchor > span {

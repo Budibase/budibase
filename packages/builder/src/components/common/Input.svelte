@@ -1,17 +1,20 @@
 <script>
-  import {buildStyle} from "../../helpers.js"
+  import {onMount} from "svelte"
+  import { buildStyle } from "../../helpers.js"
   export let value = ""
   export let textAlign = "left"
   export let width = "160px"
   export let placeholder = ""
+  
+  let centerPlaceholder = textAlign === "center"
 
   let style = buildStyle({ width, textAlign })
 </script>
 
-<input type="text" {placeholder} {style} on:change bind:value />
+<input class:centerPlaceholder type="text" {placeholder} {style} on:change bind:value />
 
 <style>
-    input {
+  input {
     width: 32px;
     height: 32px;
     font-size: 12px;
@@ -24,10 +27,13 @@
     border: 1px solid var(--grey);
     border-radius: 2px;
     outline: none;
-    float: right;
   }
 
-   input::placeholder {
+  input::placeholder {    
+    text-align: left;
+  }
+
+  .centerPlaceholder::placeholder {
     text-align: center;
   }
 </style>

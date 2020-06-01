@@ -3,7 +3,7 @@
   export let value = ""
   export let text = ""
   export let icon = ""
-  export let padding = "8px 2px;"
+  export let padding = "8px 5px;"
   export let onClick = value => {}
   export let selected = false
   export let fontWeight = ""
