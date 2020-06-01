@@ -76,5 +76,7 @@
 
   textarea {
     min-height: 150px;
+    font-family: inherit;
+    padding: 5px;
   }
 </style>

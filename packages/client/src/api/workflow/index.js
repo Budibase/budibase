@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 import mustache from "mustache"
 import { appStore } from "../../state/store"
-import Orchestrator from "./orchestrator";
+import Orchestrator from "./orchestrator"
 import clientActions from "./actions"
 
 // Execute a workflow from a running budibase app
@@ -28,8 +28,6 @@ export const clientStrategy = ({ api, instanceId }) => ({
   },
   run: async function(workflow) {
     for (let block of workflow.steps) {
-      console.log("Executing workflow block", block)
-
       // This code gets run in the browser
       if (block.environment === "CLIENT") {
         const action = clientActions[block.actionId]
@@ -60,13 +58,11 @@ export const clientStrategy = ({ api, instanceId }) => ({
   },
 })
 
-export const triggerWorkflow = api => async ({ workflow }) => {
-  const instanceId = "inst_ad75c7f_4f3e7d5d80a74b17a5187a18e2aba85e";
-
+export const triggerWorkflow = api => async ({ workflow, instanceId }) => {
   const workflowOrchestrator = new Orchestrator(api, instanceId)
   workflowOrchestrator.strategy = clientStrategy
 
-  const EXECUTE_WORKFLOW_URL = `/api/${instanceId}/workflows/${workflow}`
+  const EXECUTE_WORKFLOW_URL = `/api/workflows/${workflow}`
   const workflowDefinition = await api.get({ url: EXECUTE_WORKFLOW_URL })
 
   workflowOrchestrator.execute(workflowDefinition)

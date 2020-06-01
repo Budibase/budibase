@@ -4,7 +4,6 @@ export default ({
   selectedComponentType,
   selectedComponentId,
   frontendDefinition,
-  currentPageFunctions,
 }) => `<html>
   <head>
     ${stylesheetLinks}

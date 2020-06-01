@@ -37,7 +37,6 @@ exports.serverStrategy = () => ({
   },
   run: async function(workflow) {
     for (let block of workflow.steps) {
-      console.log("Executing workflow block", block)
       if (block.type === "CLIENT") continue
 
       const action = require(`../api/controllers/workflow/actions/${block.actionId}`)
@@ -48,5 +47,5 @@ exports.serverStrategy = () => ({
         [block.id]: response,
       }
     }
-  }
-});
+  },
+})

@@ -6,8 +6,7 @@
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
   import {
-    EVENT_TYPE_MEMBER_NAME,
-    allHandlers,
+    EVENT_TYPE_MEMBER_NAME
   } from "components/common/eventHandlers"
   import { store, workflowStore } from "builderStore"
   import { ArrowDownIcon } from "components/common/Icons/"
@@ -26,7 +25,7 @@
         class="budibase__input"
         on:change={onChange}
         bind:value={parameter.value}>
-        {#each $workflowStore.workflows as workflow}
+        {#each $workflowStore.workflows.filter(wf => wf.live) as workflow}
           <option value={workflow._id}>{workflow.name}</option>
         {/each}
       </select>

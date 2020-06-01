@@ -1,4 +1,3 @@
-import { writable } from "svelte/store"
 import { attachChildren } from "./render/attachChildren"
 import { createTreeNode } from "./render/prepareRenderComponent"
 import { screenRouter } from "./render/screenRouter"
@@ -7,7 +6,6 @@ import { createStateManager } from "./state/stateManager"
 export const createApp = ({
   componentLibraries,
   frontendDefinition,
-  user,
   window,
 }) => {
   let routeTo

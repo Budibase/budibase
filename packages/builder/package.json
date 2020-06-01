@@ -54,7 +54,6 @@
     "safe-buffer": "^5.1.2",
     "shortid": "^2.2.8",
     "string_decoder": "^1.2.0",
-    "svelte-grid": "^1.10.8",
     "svelte-simple-modal": "^0.3.0",
     "uikit": "^3.1.7"
   },

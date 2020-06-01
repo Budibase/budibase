@@ -64,7 +64,6 @@
       <NumberBox label="Max Length" bind:value={constraints.length.maximum} />
       <ValuesList label="Categories" bind:values={constraints.inclusion} />
     {:else if type === 'datetime'}
-      <!-- TODO: revisit and fix with JSON schema -->
       <DatePicker
         label="Min Value"
         bind:value={constraints.datetime.earliest} />

@@ -1,4 +1,5 @@
 <script>
+	import { fade } from 'svelte/transition';
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import { notifier } from "@beyonk/svelte-notifications"
@@ -7,6 +8,9 @@
   import DeleteWorkflowModal from "./DeleteWorkflowModal.svelte"
 
   const { open, close } = getContext("simple-modal")
+
+  let selectedTab = "SETUP"
+  let testResult
 
   $: workflow =
     $workflowStore.currentWorkflow && $workflowStore.currentWorkflow.workflow
@@ -26,39 +30,86 @@
     workflowStore.actions.deleteWorkflowBlock(workflowBlock)
     notifier.info("Workflow block deleted.")
   }
+
+  function testWorkflow() {
+    testResult = "PASSED"
+  }
 </script>
 
 <section>
   <header>
-    <span>Setup</span>
+    <span
+      class="hoverable"
+      class:selected={selectedTab === 'SETUP'}
+      on:click={() => { 
+        selectedTab = 'SETUP'
+        testResult = null
+      }}>
+      Setup
+    </span>
+    {#if !workflowBlock}
+      <span
+        class="hoverable"
+        class:selected={selectedTab === 'TEST'}
+        on:click={() => (selectedTab = 'TEST')}>
+        Test
+      </span>
+    {/if}
   </header>
-  {#if workflowBlock}
-    <WorkflowBlockSetup {workflowBlock} />
-    <button
-      class="delete-workflow-button hoverable"
-      on:click={deleteWorkflowBlock}>
-      Delete Block
-    </button>
-  {:else if $workflowStore.currentWorkflow}
-    <div class="panel-body">
-      <label class="uk-form-label">Workflow: {workflow.name}</label>
-      <div class="uk-margin">
-        <label class="uk-form-label">Name</label>
-        <div class="uk-form-controls">
-          <input
-            type="text"
-            class="budibase__input"
-            bind:value={workflow.name} />
+  {#if selectedTab === 'TEST'}
+    <div class="uk-margin config-item">
+      {#if testResult}
+        <button
+          transition:fade
+          class:passed={testResult === 'PASSED'}
+          class:failed={testResult === 'FAILED'}
+          class="test-result">
+          {testResult}
+        </button>
+      {/if}
+      <button class="workflow-button hoverable" on:click={testWorkflow}>
+        Test
+      </button>
+    </div>
+  {/if}
+  {#if selectedTab === 'SETUP'}
+    {#if workflowBlock}
+      <WorkflowBlockSetup {workflowBlock} />
+      <button class="workflow-button hoverable" on:click={deleteWorkflowBlock}>
+        Delete Block
+      </button>
+    {:else if $workflowStore.currentWorkflow}
+      <div class="panel-body">
+        <label class="uk-form-label">Workflow: {workflow.name}</label>
+        <div class="uk-margin config-item">
+          <label class="uk-form-label">Name</label>
+          <div class="uk-form-controls">
+            <input
+              type="text"
+              class="budibase__input"
+              bind:value={workflow.name} />
+          </div>
+        </div>
+        <div class="uk-margin config-item">
+          <label class="uk-form-label">User Access</label>
+          <label>
+            <input class="uk-checkbox" type="checkbox" name="radio1" />
+            Admin
+          </label>
+          <br />
+          <label>
+            <input class="uk-checkbox" type="checkbox" name="radio1" />
+            Power User
+          </label>
+          <br />
         </div>
       </div>
-      <div class="uk-margin">
-        <label class="uk-form-label">User Access</label>
-        Some User Access Stuff Here
-      </div>
-    </div>
-    <button class="delete-workflow-button hoverable" on:click={deleteWorkflow}>
-      Delete Workflow
-    </button>
+      <button
+        class="workflow-button hoverable"
+        on:click={deleteWorkflow}>
+        Delete Workflow
+      </button>
+    {/if}
   {/if}
 </section>
 
@@ -78,12 +129,21 @@
     font-weight: bold;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 20px;
   }
 
-  header > span {
+  .selected {
     color: var(--font);
+  }
+
+  .config-item {
+    padding: 20px;
+    background: var(--light-grey);
+  }
+
+  header > span {
+    color: var(--dark-grey);
+    margin-right: 20px;
   }
 
   label {
@@ -92,7 +152,7 @@
     color: var(--font);
   }
 
-  .delete-workflow-button {
+  .workflow-button {
     font-family: Roboto;
     width: 100%;
     border: solid 1px #f2f2f2;
@@ -101,5 +161,25 @@
     height: 32px;
     font-size: 12px;
     font-weight: 500;
+  }
+
+  .test-result {
+    border: none;
+    width: 100%;
+    border-radius: 2px;
+    height: 32px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--white);
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .passed {
+    background: #84c991;
+  }
+
+  .failed {
+    background: var(--coral);
   }
 </style>

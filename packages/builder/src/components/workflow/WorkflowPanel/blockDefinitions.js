@@ -22,17 +22,19 @@ const ACTION = {
   },
   SAVE_RECORD: {
     name: "Save Record",
+    tagline: "Save a <b>{{model.name}}</b> record",
     icon: "ri-save-3-fill",
     description: "Save a record to your database.",
     environment: "SERVER",
     params: {
-      model: "string",
+      model: "model",
     },
   },
   DELETE_RECORD: {
     description: "Delete a record from your database.",
     icon: "ri-delete-bin-line",
     name: "Delete Record",
+    tagline: "Delete a <b>{{model.name}}</b> record",
     environment: "SERVER",
     params: {
       record: "string",

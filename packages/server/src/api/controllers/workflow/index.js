@@ -1,5 +1,5 @@
-const CouchDB = require("../../db")
-const newid = require("../../db/newid")
+const CouchDB = require("../../../db")
+const newid = require("../../../db/newid")
 
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
@@ -49,7 +49,7 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   ctx.body = await db.get(ctx.params.id)
 }
 
@@ -61,7 +61,6 @@ exports.executeAction = async function(ctx) {
 
 exports.fetchActionScript = async function(ctx) {
   const workflowAction = require(`./actions/${ctx.action}`)
-  console.log(workflowAction)
   ctx.body = workflowAction
 }
 
