@@ -40,7 +40,10 @@
         class="budibase__nav-item item"
         class:selected={currentComponent === component}
         style="padding-left: {level * 20 + 53}px">
-        <div>{get_capitalised_name(component._component)}</div>
+        <div class="nav-item">
+          <i class="icon ri-arrow-right-circle-fill" />
+          {get_capitalised_name(component._component)}
+        </div>
         <div class="actions">
           <ComponentDropdownMenu {component} />
         </div>
@@ -72,8 +75,6 @@
     border-radius: 3px;
     height: 35px;
     align-items: center;
-    font-weight: 400;
-    font-size: 13px;
   }
 
   .actions {
@@ -94,5 +95,17 @@
   }
   .item:hover .actions {
     display: block;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  .icon {
+    color: var(--ink-light);
+    margin-right: 8px;
   }
 </style>
