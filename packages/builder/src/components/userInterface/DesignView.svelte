@@ -64,6 +64,9 @@
 
   .design-view-property-groups {
     flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 500px;
   }
 
   .no-design {
