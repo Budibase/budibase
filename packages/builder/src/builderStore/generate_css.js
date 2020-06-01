@@ -1,3 +1,5 @@
+import {toNumber} from "lodash/fp"
+
 export const generate_screen_css = component_arr => {
   let styles = ""
   for (const { _styles, _id, _children, _component } of component_arr) {
@@ -37,7 +39,7 @@ export const generate_css = style => {
 export const generate_array_styles = item => {
   let safeItem = item === "" ? 0 : item
   let hasPx = new RegExp("px$")
-  if (!hasPx.test(safeItem)) {
+  if (!hasPx.test(safeItem) && !isNaN(toNumber(safeItem))) {
     return `${safeItem}px`
   } else {
     return safeItem
