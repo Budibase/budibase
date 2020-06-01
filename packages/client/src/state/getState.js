@@ -1,4 +1,3 @@
-// import { isUndefined, isObject } from "lodash/fp"
 import { get } from "svelte/store"
 import getOr from "lodash/fp/getOr"
 import { appStore } from "./store"

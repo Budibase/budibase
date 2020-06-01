@@ -68,7 +68,6 @@ const workflowActions = store => ({
   },
   select: workflow => {
     store.update(state => {
-      // TODO: better naming
       state.currentWorkflow = new Workflow(workflow)
       state.selectedWorkflowBlock = null
       return state

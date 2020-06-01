@@ -11,7 +11,6 @@ export const loadBudibase = async opts => {
 
   const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
 
-  // TODO: update
   const user = {}
 
   const componentLibraryModules = (opts && opts.componentLibraries) || {}

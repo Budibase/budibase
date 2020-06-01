@@ -1,5 +1,4 @@
 import { setState } from "./setState"
-// import { isBound } from "./parseBinding"
 import { attachChildren } from "../render/attachChildren"
 import { getContext, setContext } from "./getSetContext"
 
