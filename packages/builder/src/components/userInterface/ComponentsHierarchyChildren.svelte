@@ -40,7 +40,10 @@
         class="budibase__nav-item item"
         class:selected={currentComponent === component}
         style="padding-left: {level * 20 + 53}px">
-        <div class="nav-item"><i class="icon ri-arrow-right-circle-fill"></i>{get_capitalised_name(component._component)}</div>
+        <div class="nav-item">
+          <i class="icon ri-arrow-right-circle-fill" />
+          {get_capitalised_name(component._component)}
+        </div>
         <div class="actions">
           <ComponentDropdownMenu {component} />
         </div>

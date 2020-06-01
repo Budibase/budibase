@@ -28,7 +28,6 @@
 </div>
 
 <style>
-
   .label {
     flex: 0;
   }

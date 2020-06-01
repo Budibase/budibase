@@ -1,4 +1,4 @@
-import {toNumber} from "lodash/fp"
+import { toNumber } from "lodash/fp"
 
 export const generate_screen_css = component_arr => {
   let styles = ""

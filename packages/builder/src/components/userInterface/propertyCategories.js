@@ -78,11 +78,7 @@ const spacingMeta = [
 ]
 
 export const spacing = [
-  { label: "Margin", 
-    key: "margin", 
-    control: InputGroup,
-    meta: spacingMeta 
-  },
+  { label: "Margin", key: "margin", control: InputGroup, meta: spacingMeta },
   {
     label: "Padding",
     key: "padding",
