@@ -45,5 +45,4 @@
   .newscreen:hover {
     background: var(--grey-light);
   }
-
 </style>
