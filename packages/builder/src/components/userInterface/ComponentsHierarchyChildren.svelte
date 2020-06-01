@@ -15,22 +15,12 @@
   export let currentComponent
   export let onSelect = () => {}
   export let level = 0
-  export let onDeleteComponent
-  export let onMoveUpComponent
-  export let onMoveDownComponent
-  export let onCopyComponent
+
 
   const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
   const get_name = s => (!s ? "" : last(s.split("/")))
 
   const get_capitalised_name = name => pipe(name, [get_name, capitalise])
-
-  const moveDownComponent = component => {
-    const c = component
-    return () => {
-      return onMoveDownComponent(c)
-    }
-  }
 
   const selectComponent = component => {
     // Set current component
@@ -62,11 +52,7 @@
           components={component._children}
           {currentComponent}
           {onSelect}
-          level={level + 1}
-          {onDeleteComponent}
-          {onMoveUpComponent}
-          {onMoveDownComponent}
-          {onCopyComponent} />
+          level={level + 1} />
       {/if}
     </li>
   {/each}

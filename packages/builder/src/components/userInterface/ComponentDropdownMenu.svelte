@@ -20,23 +20,6 @@ const showDropdown = () => {
   dropdown.show()
 }
 
-/*
-{#if index > 0}
-            <button
-              class:solo={index === components.length - 1}
-              on:click|stopPropagation={() => onMoveUpComponent(component)}>
-              <ChevronUpIcon />
-            </button>
-          {/if}
-          {#if index < components.length - 1}
-            <button
-              class:solo={index === 0}
-              on:click|stopPropagation={moveDownComponent(component)}>
-              <ChevronDownIcon />
-            </button>
-          {/if}
-*/
-
 </script>
 
 <div class="root" on:click|stopPropagation={()  => {}}>
@@ -77,8 +60,9 @@ const showDropdown = () => {
   border-style: none;
   border-radius: 2px;
   padding: 5px;
-  background: var(--grey);
+  background: transparent;
   cursor: pointer;
+  color: var(--button-text)
 }
 
 .menu {

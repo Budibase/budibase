@@ -68,11 +68,7 @@
     <ComponentsHierarchyChildren
       thisComponent={_layout.component.props}
       components={_layout.component.props._children}
-      currentComponent={$store.currentComponentInfo}
-      onDeleteComponent={confirmDeleteComponent}
-      onMoveUpComponent={store.moveUpComponent}
-      onMoveDownComponent={store.moveDownComponent}
-      onCopyComponent={store.copyComponent} />
+      currentComponent={$store.currentComponentInfo} />
   {/if}
 </div>
 
