@@ -40,7 +40,7 @@
   }
 </script>
 
-<div class="pagelayoutSection">
+
   <div
     class="budibase__nav-item root"
     class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
@@ -60,17 +60,13 @@
       components={_layout.component.props._children}
       currentComponent={$store.currentComponentInfo} />
   {/if}
-</div>
 
 <style>
-  .pagelayoutSection {
-    margin: 20px 0px 0px 0px;
-  }
 
   .title {
     margin-left: 10px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--ink);
   }
 
