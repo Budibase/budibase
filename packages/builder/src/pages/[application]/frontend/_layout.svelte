@@ -143,7 +143,7 @@
   .ui-nav {
     grid-column: 1;
     background-color: var(--white);
-    height: calc(100vh - 49px);
+    height: calc(100vh - 69px);
     padding: 0;
     overflow: scroll;
     display: flex;
@@ -161,6 +161,8 @@
     grid-column: 3;
     background-color: var(--white);
     min-height: 0px;
+    height: calc(100vh - 69px);
+    overflow-y: hidden;
   }
 
   .components-nav-page {
