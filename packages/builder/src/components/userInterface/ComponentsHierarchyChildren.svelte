@@ -3,6 +3,7 @@
   import { store } from "builderStore"
   import { last } from "lodash/fp"
   import { pipe } from "components/common/core"
+  import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import {
     XCircleIcon,
     ChevronUpIcon,
@@ -51,30 +52,9 @@
         class:selected={currentComponent === component}
         style="padding-left: {level * 20 + 53}px">
         <div>{get_capitalised_name(component._component)}</div>
-        <div class="reorder-buttons">
-          {#if index > 0}
-            <button
-              class:solo={index === components.length - 1}
-              on:click|stopPropagation={() => onMoveUpComponent(component)}>
-              <ChevronUpIcon />
-            </button>
-          {/if}
-          {#if index < components.length - 1}
-            <button
-              class:solo={index === 0}
-              on:click|stopPropagation={moveDownComponent(component)}>
-              <ChevronDownIcon />
-            </button>
-          {/if}
+        <div class="actions">
+          <ComponentDropdownMenu component={component}/>
         </div>
-        <button
-          class="copy"
-          on:click|stopPropagation={() => onCopyComponent(component)}>
-          <CopyIcon />
-        </button>
-        <button on:click|stopPropagation={() => onDeleteComponent(component)}>
-          <XCircleIcon />
-        </button>
       </div>
 
       {#if component._children}
@@ -111,7 +91,7 @@
     font-size: 13px;
   }
 
-  .item button {
+  .actions {
     display: none;
     height: 20px;
     width: 28px;
@@ -120,37 +100,15 @@
     border-style: none;
     background: rgba(0, 0, 0, 0);
     cursor: pointer;
-  }
-
-  .item button.copy {
-    width: 26px;
+    position: relative;
   }
 
   .item:hover {
     background: #fafafa;
     cursor: pointer;
   }
-  .item:hover button {
+  .item:hover .actions {
     display: block;
   }
 
-  .item:hover button:hover {
-    color: var(--button-text);
-  }
-
-  .reorder-buttons {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  .reorder-buttons > button {
-    flex: 1 1 auto;
-    width: 30px;
-    height: 15px;
-  }
-
-  .reorder-buttons > button.solo {
-    padding-top: 2px;
-  }
 </style>
