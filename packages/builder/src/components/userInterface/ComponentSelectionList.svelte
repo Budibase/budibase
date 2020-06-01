@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "@sveltech/routify"
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
   import components from "./temporaryPanelStructure.js"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -32,7 +33,14 @@
 
   const onComponentChosen = component => {
     store.addChildComponent(component._component)
-    toggleTab()
+
+    toggleTab("Navigate")
+
+    // Get ID path
+    const path = store.getPathToComponent($store.currentComponentInfo)
+
+    // Go to correct URL
+    $goto(`./:page/:screen/${path}`)
   }
 </script>
 

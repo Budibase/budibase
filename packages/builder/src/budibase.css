@@ -57,23 +57,23 @@
 
 .budibase__nav-item {
     cursor: pointer;
-    padding: 0 7px 0 3px;
+    padding: 0 4px 0 2px;
     height: 35px;
-    margin: 5px 20px 5px 0px;
+    margin: 5px 0px 4px 0px;
     border-radius: 0 5px 5px 0;
     display: flex;
     align-items: center;
-    font-weight: 500;
-    font-size: 13px;
+    font-size: 14px;
+    transition: 0.2s;
 }
 
 .budibase__nav-item.selected {
-    color: var(--button-text);
-    background: #f1f4fc;
+    color: var(--ink);
+    background: var(--blue-light);
 }
 
 .budibase__nav-item:hover {
-    background: #fafafa;
+    background: var(--grey-light);
 }
 
 .budibase__input {
