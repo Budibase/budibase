@@ -20,10 +20,7 @@ export default class Orchestrator {
     this._strategy = strategy({ api: this.api, instanceId: this.instanceId })
   }
 
-  async execute(workflowId) {
-    const EXECUTE_WORKFLOW_URL = `/api/${this.instanceId}/workflows/${workflowId}`
-    const workflow = await this.api.get({ url: EXECUTE_WORKFLOW_URL })
-
+  async execute(workflow) {
     if (workflow.live) {
       this._strategy.run(workflow.definition)
     }

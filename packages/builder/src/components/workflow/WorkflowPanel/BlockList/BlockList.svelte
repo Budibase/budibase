@@ -13,7 +13,7 @@
 
   $: {
     if (
-      !$workflowStore.currentWorkflow.isEmpty() &&
+      $workflowStore.currentWorkflow.hasTrigger() &&
       selectedTab === "TRIGGER"
     ) {
       selectedTab = "ACTION"
@@ -23,7 +23,7 @@
 
 <section>
   <div class="subtabs">
-    {#if $workflowStore.currentWorkflow.isEmpty()}
+    {#if !$workflowStore.currentWorkflow.hasTrigger()}
       <span
         class="hoverable"
         class:selected={'TRIGGER' === selectedTab}

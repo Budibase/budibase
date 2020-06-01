@@ -13,8 +13,12 @@ const workflowActions = store => ({
     })
   },
   create: async ({ instanceId, name }) => {
-    // TODO: set these defaults in the backend
-    const workflow = { name, definition: { trigger: {}, steps: [] } }
+    const workflow = { 
+      name, 
+      definition: { 
+        steps: [] 
+      } 
+    };
     const CREATE_WORKFLOW_URL = `/api/${instanceId}/workflows`
     const response = await api.post(CREATE_WORKFLOW_URL, workflow)
     const json = await response.json()

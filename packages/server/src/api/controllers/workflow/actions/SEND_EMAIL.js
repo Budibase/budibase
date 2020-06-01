@@ -14,9 +14,10 @@ module.exports = async function sendEmail(args) {
     await sgMail.send(msg)
     return {
       success: true,
-      err,
+      ...args,
     }
   } catch (err) {
+    console.error(err)
     return {
       success: false,
       err,
