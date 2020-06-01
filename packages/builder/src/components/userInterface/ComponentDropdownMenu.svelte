@@ -11,13 +11,15 @@ export let component
 let confirmDeleteDialog
 let dropdownEl
 
-$: dropdown = UIkit.dropdown(dropdownEl, { mode: "click", offset: 0, pos: "bottom-right" });
+$: dropdown = UIkit.dropdown(dropdownEl, { mode: "click", offset: 0, pos: "bottom-right", "delay-hide": 0, animation: false });
+$: dropdown && UIkit.util.on(dropdown, "shown", () => hidden = false)
 $: noChildrenAllowed = !component || getComponentDefinition($store, component._component).children === false
 $: noPaste = !$store.componentToPaste || $store.componentToPaste._id === component._id
 
 const lastPartOfName = c => (c ? last(c._component.split("/")) : "")
-const showDropdown = () => {
-  dropdown.show()
+
+const hideDropdown = () => {
+  dropdown.hide()
 }
 
 </script>
@@ -26,7 +28,7 @@ const showDropdown = () => {
   <button>
     <MoreIcon />
   </button>
-  <ul class="menu" bind:this={dropdownEl} on:mouseout={() => dropdown.hide()} on:click={() => dropdown.hide()}>
+  <ul class="menu"  bind:this={dropdownEl} on:click={hideDropdown}>
     <li on:click={() => confirmDeleteDialog.show()}>Delete</li>
     <li on:click={() => store.moveUpComponent(component)}>Move up</li>
     <li on:click={() => store.moveDownComponent(component)}>Move down</li>
@@ -56,13 +58,18 @@ const showDropdown = () => {
   z-index:9;
 }
 
+.hidden {
+  display: none;
+}
+
 .root button {
   border-style: none;
   border-radius: 2px;
   padding: 5px;
   background: transparent;
   cursor: pointer;
-  color: var(--button-text)
+  color: var(--button-text);
+  outline: none;
 }
 
 .menu {
