@@ -347,7 +347,7 @@ const addChildComponent = store => (componentToAdd, presetName) => {
       return state
     }
 
-    const component = getComponentDefinition(componentToAdd)
+    const component = getComponentDefinition(state, componentToAdd)
 
     const presetProps = presetName ? component.presets[presetName] : {}
 
