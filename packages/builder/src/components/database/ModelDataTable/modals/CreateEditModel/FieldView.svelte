@@ -13,16 +13,20 @@
 
   const FIELD_TYPES = ["string", "number", "boolean"]
 
-  export let field = { type: "string", constraints: { type: "string", presence: false } }
+  export let field = {
+    type: "string",
+    constraints: { type: "string", presence: false },
+  }
   export let schema
   export let goBack
 
   let errors = []
   let draftField = cloneDeep(field)
-  
+
   let type = field.type
   let constraints = field.constraints
-  let required = field.constraints.presence && !field.constraints.presence.allowEmpty
+  let required =
+    field.constraints.presence && !field.constraints.presence.allowEmpty
 
   const save = () => {
     constraints.presence = required ? { allowEmpty: false } : false
@@ -31,15 +35,19 @@
     schema[field.name] = draftField
     goBack()
   }
-  
-  $: constraints = 
-      type === "string" ? { type: "string", length: {}, presence: false }
-      : type === "number" ? { type: "number", presence: false, numericality: {} }
-      : type === "boolean" ? { type: "boolean", presence: false }
-      : type === "datetime" ? { type: "date", datetime: {}, presence: false }
-      : type.startsWith('array') ? { type: "array", presence: false }
+
+  $: constraints =
+    type === "string"
+      ? { type: "string", length: {}, presence: false }
+      : type === "number"
+      ? { type: "number", presence: false, numericality: {} }
+      : type === "boolean"
+      ? { type: "boolean", presence: false }
+      : type === "datetime"
+      ? { type: "date", datetime: {}, presence: false }
+      : type.startsWith("array")
+      ? { type: "array", presence: false }
       : { type: "string", presence: false }
-      
 </script>
 
 <div class="root">
@@ -48,24 +56,26 @@
 
   <form on:submit|preventDefault class="uk-form-stacked">
     <Textbox label="Name" bind:text={field.name} />
-    <Dropdown
-      label="Type"
-      bind:selected={type}
-      options={FIELD_TYPES} />
-    
+    <Dropdown label="Type" bind:selected={type} options={FIELD_TYPES} />
+
     <Checkbox label="Required" bind:checked={required} />
-    
 
     {#if type === 'string'}
       <NumberBox label="Max Length" bind:value={constraints.length.maximum} />
       <ValuesList label="Categories" bind:values={constraints.inclusion} />
     {:else if type === 'datetime'}
       <!-- TODO: revisit and fix with JSON schema -->
-      <DatePicker label="Min Value" bind:value={constraints.datetime.earliest} />
+      <DatePicker
+        label="Min Value"
+        bind:value={constraints.datetime.earliest} />
       <DatePicker label="Max Value" bind:value={constraints.datetime.latest} />
     {:else if type === 'number'}
-      <NumberBox label="Min Value" bind:value={constraints.numericality.greaterThanOrEqualTo} />
-      <NumberBox label="Max Value" bind:value={constraints.numericality.lessThanOrEqualTo} />
+      <NumberBox
+        label="Min Value"
+        bind:value={constraints.numericality.greaterThanOrEqualTo} />
+      <NumberBox
+        label="Max Value"
+        bind:value={constraints.numericality.lessThanOrEqualTo} />
     {/if}
   </form>
 </div>

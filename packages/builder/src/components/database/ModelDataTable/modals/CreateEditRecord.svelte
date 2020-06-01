@@ -23,22 +23,22 @@
   function closed() {
     onClosed()
   }
-  
+
   const isSelect = meta =>
-    meta.type === "string" 
-    && meta.constraints 
-    && meta.constraints.inclusion 
-    && meta.constraints.inclusion.length > 0
-    
+    meta.type === "string" &&
+    meta.constraints &&
+    meta.constraints.inclusion &&
+    meta.constraints.inclusion.length > 0
+
   function determineInputType(meta) {
     if (meta.type === "datetime") return "date"
     if (meta.type === "number") return "number"
     if (meta.type === "boolean") return "checkbox"
     if (isSelect(meta)) return "select"
-        
+
     return "text"
   }
-  
+
   function determineOptions(meta) {
     return isSelect(meta) ? meta.constraints.inclusion : []
   }
@@ -54,8 +54,8 @@
     )
     if (recordResponse.errors) {
       errors = Object.keys(recordResponse.errors)
-                .map(k => ({dataPath: k,  message: recordResponse.errors[k]}))
-                .flat()
+        .map(k => ({ dataPath: k, message: recordResponse.errors[k] }))
+        .flat()
       return
     }
 
