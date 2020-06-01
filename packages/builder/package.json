@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@beyonk/svelte-notifications": "^2.0.3",
+    "@budibase/bbui": "^0.3.5",
     "@budibase/client": "^0.0.32",
     "@nx-js/compiler-util": "^2.0.0",
     "codemirror": "^5.51.0",
@@ -83,7 +84,7 @@
     "rollup-plugin-svelte": "^5.0.3",
     "rollup-plugin-terser": "^4.0.4",
     "rollup-plugin-url": "^2.2.2",
-    "svelte": "^3.0.0"
+    "svelte": "3.23.x"
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
 }

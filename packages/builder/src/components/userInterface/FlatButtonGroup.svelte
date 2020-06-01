@@ -1,6 +1,5 @@
 <script>
   import { onMount } from "svelte"
-
   import FlatButton from "./FlatButton.svelte"
   export let buttonProps = []
   export let isMultiSelect = false

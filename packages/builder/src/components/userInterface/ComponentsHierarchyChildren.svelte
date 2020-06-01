@@ -3,6 +3,7 @@
   import { store } from "builderStore"
   import { last } from "lodash/fp"
   import { pipe } from "components/common/core"
+  import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import {
     XCircleIcon,
     ChevronUpIcon,
@@ -14,22 +15,11 @@
   export let currentComponent
   export let onSelect = () => {}
   export let level = 0
-  export let onDeleteComponent
-  export let onMoveUpComponent
-  export let onMoveDownComponent
-  export let onCopyComponent
 
   const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
   const get_name = s => (!s ? "" : last(s.split("/")))
 
   const get_capitalised_name = name => pipe(name, [get_name, capitalise])
-
-  const moveDownComponent = component => {
-    const c = component
-    return () => {
-      return onMoveDownComponent(c)
-    }
-  }
 
   const selectComponent = component => {
     // Set current component
@@ -51,30 +41,9 @@
         class:selected={currentComponent === component}
         style="padding-left: {level * 20 + 53}px">
         <div>{get_capitalised_name(component._component)}</div>
-        <div class="reorder-buttons">
-          {#if index > 0}
-            <button
-              class:solo={index === components.length - 1}
-              on:click|stopPropagation={() => onMoveUpComponent(component)}>
-              <ChevronUpIcon />
-            </button>
-          {/if}
-          {#if index < components.length - 1}
-            <button
-              class:solo={index === 0}
-              on:click|stopPropagation={moveDownComponent(component)}>
-              <ChevronDownIcon />
-            </button>
-          {/if}
+        <div class="actions">
+          <ComponentDropdownMenu {component} />
         </div>
-        <button
-          class="copy"
-          on:click|stopPropagation={() => onCopyComponent(component)}>
-          <CopyIcon />
-        </button>
-        <button on:click|stopPropagation={() => onDeleteComponent(component)}>
-          <XCircleIcon />
-        </button>
       </div>
 
       {#if component._children}
@@ -82,11 +51,7 @@
           components={component._children}
           {currentComponent}
           {onSelect}
-          level={level + 1}
-          {onDeleteComponent}
-          {onMoveUpComponent}
-          {onMoveDownComponent}
-          {onCopyComponent} />
+          level={level + 1} />
       {/if}
     </li>
   {/each}
@@ -111,7 +76,7 @@
     font-size: 13px;
   }
 
-  .item button {
+  .actions {
     display: none;
     height: 20px;
     width: 28px;
@@ -120,37 +85,14 @@
     border-style: none;
     background: rgba(0, 0, 0, 0);
     cursor: pointer;
-  }
-
-  .item button.copy {
-    width: 26px;
+    position: relative;
   }
 
   .item:hover {
     background: #fafafa;
     cursor: pointer;
   }
-  .item:hover button {
+  .item:hover .actions {
     display: block;
-  }
-
-  .item:hover button:hover {
-    color: var(--button-text);
-  }
-
-  .reorder-buttons {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  .reorder-buttons > button {
-    flex: 1 1 auto;
-    width: 30px;
-    height: 15px;
-  }
-
-  .reorder-buttons > button.solo {
-    padding-top: 2px;
   }
 </style>

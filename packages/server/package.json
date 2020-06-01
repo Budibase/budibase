@@ -45,7 +45,6 @@
     "@budibase/core": "^0.0.32",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
-    "ajv": "^6.12.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
     "electron-is-dev": "^1.2.0",
@@ -68,6 +67,7 @@
     "squirrelly": "^7.5.0",
     "tar-fs": "^2.0.0",
     "uuid": "^3.3.2",
+    "validate.js": "^0.13.1",
     "yargs": "^13.2.4",
     "zlib": "^1.0.5"
   },
