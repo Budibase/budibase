@@ -163,8 +163,8 @@
     <li class="item" on:click={() => storeComponentForCopy(false)}><i class="icon ri-file-copy-line"></i>Copy</li>
     <hr class="hr-style">
     <li class="item" class:disabled={noPaste} on:click={() => pasteComponent('above')}><i class="icon ri-insert-row-top"></i>Paste above</li>
-    <li class="item" class:disabled={noPaste} on:click={() => pasteComponent('below')}><MoreIcon /></i>Paste below</li>
-    <li class="item" class:disabled={noPaste || noChildrenAllowed} on:click={() => pasteComponent('inside')}>Paste inside</li>
+    <li class="item" class:disabled={noPaste} on:click={() => pasteComponent('below')}><i class="icon ri-insert-row-bottom"></i>Paste below</li>
+    <li class="item" class:disabled={noPaste || noChildrenAllowed} on:click={() => pasteComponent('inside')}><i class="icon ri-insert-column-right"></i>Paste inside</li>
   </ul>
 </div>
 
