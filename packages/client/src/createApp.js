@@ -8,7 +8,7 @@ export const createApp = ({
   componentLibraries,
   frontendDefinition,
   user,
-  window
+  window,
 }) => {
   let routeTo
   let currentUrl
@@ -38,7 +38,7 @@ export const createApp = ({
     routeTo = screenRouter({
       screens: frontendDefinition.screens,
       onScreenSelected,
-      appRootPath: frontendDefinition.appRootPath
+      appRootPath: frontendDefinition.appRootPath,
     })
     const fallbackPath = window.location.pathname.replace(
       frontendDefinition.appRootPath,

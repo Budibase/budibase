@@ -39,7 +39,7 @@ export const loadBudibase = async opts => {
     componentLibraries: componentLibraryModules,
     frontendDefinition,
     user,
-    window
+    window,
   })
 
   const route = _window.location

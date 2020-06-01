@@ -94,7 +94,7 @@ const TRIGGER = {
     description: "Fired when a record is deleted from your database.",
     environment: "SERVER",
     params: {
-      model: "model"
+      model: "model",
     },
   },
   // CLICK: {
@@ -138,10 +138,8 @@ const LOGIC = {
     environment: "CLIENT",
     params: {
       filter: "string",
-      condition: [
-        "equals",
-      ],
-      value: "string"
+      condition: ["equals"],
+      value: "string",
     },
   },
   DELAY: {

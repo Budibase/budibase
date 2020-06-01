@@ -1,6 +1,6 @@
 <script>
   import { store } from "builderStore"
-  import deepmerge from "deepmerge";
+  import deepmerge from "deepmerge"
 
   export let value
 

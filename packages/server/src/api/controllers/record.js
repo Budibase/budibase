@@ -47,7 +47,7 @@ exports.save = async function(ctx) {
 
   ctx.eventEmitter.emit(`record:save`, {
     record,
-    instanceId: ctx.params.instanceId
+    instanceId: ctx.params.instanceId,
   })
   ctx.body = record
   ctx.status = 200

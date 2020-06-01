@@ -1,12 +1,12 @@
 import { appStore } from "../state/store"
-import mustache from "mustache";
+import mustache from "mustache"
 
 export const prepareRenderComponent = ({
   ComponentConstructor,
   htmlElement,
   anchor,
   props,
-  parentNode
+  parentNode,
 }) => {
   const parentContext = (parentNode && parentNode.context) || {}
 
@@ -42,14 +42,16 @@ export const prepareRenderComponent = ({
       // make this node listen to the store
       if (thisNode.stateBound) {
         const unsubscribe = appStore.subscribe(state => {
-          const storeBoundProps = { ...initialProps._bb.props };
+          const storeBoundProps = { ...initialProps._bb.props }
           for (let prop in storeBoundProps) {
             if (typeof storeBoundProps[prop] === "string") {
-              storeBoundProps[prop] = mustache.render(storeBoundProps[prop], { state });
+              storeBoundProps[prop] = mustache.render(storeBoundProps[prop], {
+                state,
+              })
             }
-          } 
-          thisNode.component.$set(storeBoundProps);
-        });
+          }
+          thisNode.component.$set(storeBoundProps)
+        })
         thisNode.unsubscribe = unsubscribe
       }
     }

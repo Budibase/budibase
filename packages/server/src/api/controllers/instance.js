@@ -37,8 +37,8 @@ exports.create = async function(ctx) {
               emit([trigger.event], trigger)
             }
           }
-        }.toString()
-      }
+        }.toString(),
+      },
     },
   })
 

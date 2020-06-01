@@ -13,82 +13,109 @@ export default class Workflow {
   }
 
   isEmpty() {
-    return !this.workflow.definition.next
+    // return this.workflow.definition.next
+    return this.workflow.length > 0
   }
 
   addBlock(block) {
-    let node = this.workflow.definition
-    while (node.next) node = node.next
-    node.next = {
+    // Make sure to add trigger if doesn't exist
+    this.workflow.definition.steps.push({
       id: generate(),
-      ...block
-    } 
+      ...block,
+    })
   }
 
   updateBlock(updatedBlock, id) {
-    let block = this.workflow.definition
+    const { steps, trigger } = this.workflow.definition
 
-    while (block.id !== id) block = block.next
-    if (!block) throw new Error("Block not found.")
+    // if the block is a trigger do X
 
-    block = updatedBlock
+    // if step
+    const stepIdx = steps.findIndex(step => step.id === id)
+
+    // while (block.id !== id) block = block.next
+    if (stepIdx < 0) throw new Error("Block not found.")
+
+    steps.splice(stepIdx, 1, updatedBlock)
   }
 
   deleteBlock(id) {
-    let previous = null
-    let block = this.workflow.definition
+    const { steps, trigger } = this.workflow.definition
 
-    // iterate through the blocks
-    while (block.id !== id) {
-      previous = block
-      block = block.next
-    }
+    const stepIdx = steps.findIndex(step => step.id === id)
 
-    // delete the block matching your id
-    if (!block.next) {
-      delete previous.next
-    } else {
-      previous.next = block.next
-    }
+    if (stepIdx < 0) throw new Error("Block not found.")
 
+    steps.splice(stepIdx, 1)
   }
 
   createUiTree() {
-    if (!this.workflow.definition.next) return []
-    return Workflow.buildUiTree(this.workflow.definition.next)
+    if (!this.workflow.definition) return []
+    return Workflow.buildUiTree(this.workflow.definition)
   }
 
-  static buildUiTree(block, tree = []) {
-    if (!block) return tree
+  static buildUiTree(definition) {
+    return definition.steps.map(step => {
+      // The client side display definition for the block
+      const definition = blockDefinitions[step.type][step.actionId]
+      if (!definition) {
+        throw new Error(
+          `No block definition exists for the chosen block. Check there's an entry in the block definitions for ${step.actionId}`
+        )
+      }
 
-    // The client side display definition for the block
-    const definition = blockDefinitions[block.type][block.actionId]
-    if (!definition) {
-      throw new Error(
-        `No block definition exists for the chosen block. Check there's an entry in the block definitions for ${block.actionId}`
-      )
-    }
+      if (!definition.params) {
+        throw new Error(
+          `Blocks should always have parameters. Ensure that the block definition is correct for ${step.actionId}`
+        )
+      }
 
-    if (!definition.params) {
-      throw new Error(
-        `Blocks should always have parameters. Ensure that the block definition is correct for ${block.actionId}`
-      )
-    }
+      const tagline = definition.tagline || ""
+      const args = step.args || {}
 
-    const tagline = definition.tagline || ""
-    const args = block.args || {}
-
-    // all the fields the workflow block needs to render in the UI
-    tree.push({
-      id: block.id,
-      type: block.type,
-      params: block.params,
-      args,
-      heading: block.actionId,
-      body: mustache.render(tagline, args),
-      name: definition.name
+      return {
+        id: step.id,
+        type: step.type,
+        params: step.params,
+        args,
+        heading: step.actionId,
+        body: mustache.render(tagline, args),
+        name: definition.name,
+      }
     })
-
-    return this.buildUiTree(block.next, tree)
   }
+
+  // static buildUiTree(block, tree = []) {
+  //   if (!block) return tree
+
+  //   // The client side display definition for the block
+  //   const definition = blockDefinitions[block.type][block.actionId]
+  //   if (!definition) {
+  //     throw new Error(
+  //       `No block definition exists for the chosen block. Check there's an entry in the block definitions for ${block.actionId}`
+  //     )
+  //   }
+
+  //   if (!definition.params) {
+  //     throw new Error(
+  //       `Blocks should always have parameters. Ensure that the block definition is correct for ${block.actionId}`
+  //     )
+  //   }
+
+  //   const tagline = definition.tagline || ""
+  //   const args = block.args || {}
+
+  //   // all the fields the workflow block needs to render in the UI
+  //   tree.push({
+  //     id: block.id,
+  //     type: block.type,
+  //     params: block.params,
+  //     args,
+  //     heading: block.actionId,
+  //     body: mustache.render(tagline, args),
+  //     name: definition.name
+  //   })
+
+  //   return this.buildUiTree(block.next, tree)
+  // }
 }

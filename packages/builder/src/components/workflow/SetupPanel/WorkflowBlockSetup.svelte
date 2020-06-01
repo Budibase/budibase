@@ -1,7 +1,7 @@
 <script>
   import { backendUiStore, store } from "builderStore"
-  import ComponentSelector from "./ParamInputs/ComponentSelector.svelte";
-  import ModelSelector from "./ParamInputs/ModelSelector.svelte";
+  import ComponentSelector from "./ParamInputs/ComponentSelector.svelte"
+  import ModelSelector from "./ParamInputs/ModelSelector.svelte"
 
   export let workflowBlock
 
@@ -12,9 +12,7 @@
     : []
 </script>
 
-<label class="uk-form-label">
-  {workflowBlock.type}: {workflowBlock.name}
-</label>
+<label class="uk-form-label">{workflowBlock.type}: {workflowBlock.name}</label>
 {#each workflowParams as [parameter, type]}
   <div class="uk-margin block-field">
     <label class="uk-form-label">{parameter}</label>

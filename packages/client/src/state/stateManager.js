@@ -5,8 +5,8 @@ import {
 } from "./eventHandlers"
 import { bbFactory } from "./bbComponentApi"
 import mustache from "mustache"
-import { get } from "svelte/store";
-import { appStore } from "./store";
+import { get } from "svelte/store"
+import { appStore } from "./store"
 
 const doNothing = () => {}
 doNothing.isPlaceholder = true
@@ -55,9 +55,9 @@ export const createStateManager = ({
 
   // TODO: remove
   const unsubscribe = appStore.subscribe(state => {
-    console.log("store updated", state);
-    return state;
-  });
+    console.log("store updated", state)
+    return state
+  })
 
   // const unsubscribe = store.subscribe(
   //   onStoreStateUpdated({
@@ -84,20 +84,18 @@ const onStoreStateUpdated = ({
   getCurrentState,
   componentLibraries,
   onScreenSlotRendered,
-  setupState
+  setupState,
 }) => state => {
-    // fire the state update event to re-render anything bound to this 
-    // setCurrentState(state)
-
-    // setCurrentState(state)
-    // attachChildren({
-    //   componentLibraries,
-    //   treeNode: createTreeNode(),
-    //   onScreenSlotRendered,
-    //   setupState,
-    //   getCurrentState,
-    // })(document.querySelector("#app"), { hydrate: true, force: true })
-
+  // fire the state update event to re-render anything bound to this
+  // setCurrentState(state)
+  // setCurrentState(state)
+  // attachChildren({
+  //   componentLibraries,
+  //   treeNode: createTreeNode(),
+  //   onScreenSlotRendered,
+  //   setupState,
+  //   getCurrentState,
+  // })(document.querySelector("#app"), { hydrate: true, force: true })
   // // the original array gets changed by components' destroy()
   // // so we make a clone and check if they are still in the original
   // const nodesWithBoundChildren_clone = [...nodesWithCodeBoundChildren]
@@ -161,19 +159,14 @@ const onStoreStateUpdated = ({
 //   node.component.$set(newProps)
 // }
 
-const _setup = ({
-  handlerTypes,
-  getCurrentState,
-  bb,
-  store
-}) => node => {
+const _setup = ({ handlerTypes, getCurrentState, bb, store }) => node => {
   const props = node.props
   const context = node.context || {}
   const initialProps = { ...props }
   // const storeBoundProps = []
   const currentStoreState = get(appStore)
 
-  console.log("node", node);
+  console.log("node", node)
 
   // console.log("node", node);
   // console.log("nodeComponent", node.component);
@@ -185,12 +178,12 @@ const _setup = ({
 
     // const binding = parseBinding(propValue)
     // TODO: better binding stuff
-    const isBound = typeof propValue === "string" && propValue.startsWith("{{");
+    const isBound = typeof propValue === "string" && propValue.startsWith("{{")
 
     if (isBound) {
       initialProps[propName] = mustache.render(propValue, {
         state: currentStoreState,
-        context
+        context,
       })
 
       if (!node.stateBound) {
@@ -230,10 +223,11 @@ const _setup = ({
         const resolvedParams = {}
         for (let paramName in handlerInfo.parameters) {
           const paramValue = handlerInfo.parameters[paramName]
-          resolvedParams[paramName] = () => mustache.render(paramValue, {
-            state: getCurrentState(),
-            context,
-          })
+          resolvedParams[paramName] = () =>
+            mustache.render(paramValue, {
+              state: getCurrentState(),
+              context,
+            })
           // const paramBinding = parseBinding(paramValue)
           // if (!paramBinding) {
           //   resolvedParams[paramName] = () => paramValue

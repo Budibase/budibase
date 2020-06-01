@@ -12,7 +12,10 @@
   $: definitions = Object.entries(blockDefinitions[selectedTab])
 
   $: {
-    if (!$workflowStore.currentWorkflow.isEmpty() && selectedTab === "TRIGGER") {
+    if (
+      !$workflowStore.currentWorkflow.isEmpty() &&
+      selectedTab === "TRIGGER"
+    ) {
       selectedTab = "ACTION"
     }
   }

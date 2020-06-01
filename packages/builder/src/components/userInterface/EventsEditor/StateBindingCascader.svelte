@@ -17,14 +17,16 @@
   export let onChange
 
   let isOpen = false
-
 </script>
 
 <div class="handler-option">
   <span>{parameter.name}</span>
   <div class="handler-input">
     {#if parameter.name === 'workflow'}
-      <select class="budibase__input" on:change={onChange} bind:value={parameter.value}>
+      <select
+        class="budibase__input"
+        on:change={onChange}
+        bind:value={parameter.value}>
         {#each $workflowStore.workflows as workflow}
           <option value={workflow._id}>{workflow.name}</option>
         {/each}
