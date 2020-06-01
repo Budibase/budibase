@@ -33,15 +33,14 @@
 
   const onComponentChosen = component => {
     store.addChildComponent(component._component)
-    
+
     toggleTab("Navigate")
-    
+
     // Get ID path
     const path = store.getPathToComponent($store.currentComponentInfo)
 
     // Go to correct URL
     $goto(`./:page/:screen/${path}`)
-    
   }
 </script>
 
