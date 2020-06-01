@@ -1,4 +1,4 @@
- <script>
+<script>
   import { MoreIcon } from "components/common/Icons"
   import { store } from "builderStore"
   import { getComponentDefinition } from "builderStore/store"
@@ -155,16 +155,52 @@
     <MoreIcon />
   </button>
   <ul class="menu" bind:this={dropdownEl} on:click={hideDropdown}>
-    <li class="item" on:click={() => confirmDeleteDialog.show()}><i class="icon ri-delete-bin-2-line"></i>Delete</li>
-    <li class="item" on:click={moveUpComponent}><i class="icon ri-arrow-up-line"></i>Move up</li>
-    <li class="item" on:click={moveDownComponent}><i class="icon ri-arrow-down-line"></i>Move down</li>
-    <li class="item" on:click={copyComponent}><i class="icon ri-repeat-one-line"></i>Duplicate</li>
-    <li class="item" on:click={() => storeComponentForCopy(true)}><i class="icon ri-scissors-cut-line"></i>Cut</li>
-    <li class="item" on:click={() => storeComponentForCopy(false)}><i class="icon ri-file-copy-line"></i>Copy</li>
-    <hr class="hr-style">
-    <li class="item" class:disabled={noPaste} on:click={() => pasteComponent('above')}><i class="icon ri-insert-row-top"></i>Paste above</li>
-    <li class="item" class:disabled={noPaste} on:click={() => pasteComponent('below')}><i class="icon ri-insert-row-bottom"></i>Paste below</li>
-    <li class="item" class:disabled={noPaste || noChildrenAllowed} on:click={() => pasteComponent('inside')}><i class="icon ri-insert-column-right"></i>Paste inside</li>
+    <li class="item" on:click={() => confirmDeleteDialog.show()}>
+      <i class="icon ri-delete-bin-2-line" />
+      Delete
+    </li>
+    <li class="item" on:click={moveUpComponent}>
+      <i class="icon ri-arrow-up-line" />
+      Move up
+    </li>
+    <li class="item" on:click={moveDownComponent}>
+      <i class="icon ri-arrow-down-line" />
+      Move down
+    </li>
+    <li class="item" on:click={copyComponent}>
+      <i class="icon ri-repeat-one-line" />
+      Duplicate
+    </li>
+    <li class="item" on:click={() => storeComponentForCopy(true)}>
+      <i class="icon ri-scissors-cut-line" />
+      Cut
+    </li>
+    <li class="item" on:click={() => storeComponentForCopy(false)}>
+      <i class="icon ri-file-copy-line" />
+      Copy
+    </li>
+    <hr class="hr-style" />
+    <li
+      class="item"
+      class:disabled={noPaste}
+      on:click={() => pasteComponent('above')}>
+      <i class="icon ri-insert-row-top" />
+      Paste above
+    </li>
+    <li
+      class="item"
+      class:disabled={noPaste}
+      on:click={() => pasteComponent('below')}>
+      <i class="icon ri-insert-row-bottom" />
+      Paste below
+    </li>
+    <li
+      class="item"
+      class:disabled={noPaste || noChildrenAllowed}
+      on:click={() => pasteComponent('inside')}>
+      <i class="icon ri-insert-column-right" />
+      Paste inside
+    </li>
   </ul>
 </div>
 
@@ -235,6 +271,6 @@
 
   .hr-style {
     margin: 8px 0;
-    color: var(--grey-dark)
+    color: var(--grey-dark);
   }
 </style>
