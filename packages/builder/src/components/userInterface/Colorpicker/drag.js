@@ -6,7 +6,6 @@ export default function(node) {
 
 	function handleMouseMove(event) {
 		let mouseX = event.clientX;
-		console.log(mouseX);
 		node.dispatchEvent(
 			new CustomEvent('drag', {
 				detail: mouseX

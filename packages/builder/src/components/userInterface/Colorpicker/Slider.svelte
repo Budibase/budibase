@@ -2,34 +2,29 @@
   import { onMount, createEventDispatcher } from "svelte";
   import dragable from "./drag.js";
 
+  export let value = 1
   export let type = "hue";
 
   const dispatch = createEventDispatcher();
 
   let slider;
-  let dimensions = {};
-  let thumbPosition = 0;
-
-  onMount(() => {
-    if (slider) {
-      dimensions = slider.getBoundingClientRect();
-    }
-  });
+  let sliderWidth = 0;
 
   function handleClick(mouseX) {
-    const { left, width } = dimensions;
+    const { left } = slider.getBoundingClientRect();
     let clickPosition = mouseX - left;
-    debugger;
-    if (clickPosition >= 0 && clickPosition <= width) {
-      thumbPosition = clickPosition;
-      let percentageClick = thumbPosition / width;
+    
+    if (clickPosition >= 0 && clickPosition <= sliderWidth) {
+      let percentageClick = clickPosition / sliderWidth;
       let value =
         type === "hue"
-          ? Math.round(360 * percentageClick).toString()
-          : percentageClick.toFixed(2);
+          ? 360 * percentageClick.toString()
+          : percentageClick.toString();
       dispatch("change", value);
     }
   }
+
+  $: thumbPosition = type === "hue" ? sliderWidth * (value / 360) : sliderWidth * (value)
 
   $: style = `transform: translateX(${thumbPosition - 6}px);`;
 </script>
@@ -75,6 +70,7 @@
 
 <div
   bind:this={slider}
+  bind:clientWidth={sliderWidth}
   on:click={event => handleClick(event.clientX)}
   class="color-format-slider"
   class:hue={type === 'hue'}
