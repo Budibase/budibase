@@ -26,10 +26,8 @@
     }
   })
 
-  
   let confirmDeleteDialog
   let componentToDelete = ""
-
 
   let settingsView
   const settings = () => {
@@ -50,21 +48,20 @@
 
   <div class="ui-nav">
 
-    <Switcher bind:this={leftNavSwitcher} tabs={["Navigate", "Add"]}>
+    <Switcher bind:this={leftNavSwitcher} tabs={['Navigate', 'Add']}>
       <div slot="0">
         <FrontendNavigatePane />
       </div>
       <div slot="1">
-        <ComponentSelectionList toggleTab={leftNavSwitcher.selectTab} />      
+        <ComponentSelectionList toggleTab={leftNavSwitcher.selectTab} />
       </div>
     </Switcher>
-    
 
   </div>
 
   <div class="preview-pane">
     {#if $store.currentPageName && $store.currentPageName.length > 0}
-    <CurrentItemPreview />
+      <CurrentItemPreview />
     {/if}
   </div>
 
@@ -75,8 +72,6 @@
   {/if}
 
 </div>
-
-
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
@@ -100,7 +95,6 @@
     background-color: var(--white);
     height: calc(100vh - 49px);
     padding: 0;
-    overflow: scroll;
     display: flex;
     flex-direction: column;
     z-index: 5;
@@ -118,16 +112,12 @@
     background-color: var(--white);
   }
 
-  
-
   .nav-group-header > div:nth-child(1) {
     padding: 0rem 0.5rem 0rem 0rem;
     vertical-align: bottom;
     grid-column-start: icon;
     margin-right: 5px;
   }
-
-
 
   .nav-group-header > div:nth-child(3) {
     vertical-align: bottom;
@@ -139,5 +129,4 @@
   .nav-group-header > div:nth-child(3):hover {
     color: var(--primary75);
   }
-
 </style>

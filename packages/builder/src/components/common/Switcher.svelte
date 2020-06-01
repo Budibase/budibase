@@ -9,9 +9,6 @@
   let selectedIndex = 0
 
   const isSelected = tab => selected === tab
-
-  
-
 </script>
 
 <div class="root">
@@ -19,9 +16,7 @@
   <div class="switcher">
 
     {#each tabs as tab}
-      <button
-        class:selected={selected === tab}
-        on:click={() => selectTab(tab)}>
+      <button class:selected={selected === tab} on:click={() => selectTab(tab)}>
         {tab}
       </button>
     {/each}
@@ -30,13 +25,13 @@
 
   <div class="panel">
     {#if selectedIndex === 0}
-      <slot name="0"></slot>
+      <slot name="0" />
     {:else if selectedIndex === 1}
-      <slot name="1"></slot>
+      <slot name="1" />
     {:else if selectedIndex === 2}
-      <slot name="2"></slot>
+      <slot name="2" />
     {:else if selectedIndex === 3}
-      <slot name="3"></slot>
+      <slot name="3" />
     {/if}
   </div>
 

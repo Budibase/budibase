@@ -25,17 +25,17 @@ describe("/records", () => {
     server.close();
   })
 
-  describe("save, load, update, delete", () => {
+  beforeEach(async () => {
+    instance = await createInstance(request, app._id)
+    model = await createModel(request, instance._id)
+    record = {
+      name: "Test Contact",
+      status: "new",
+      modelId: model._id
+    }
+  })
 
-    beforeEach(async () => {
-      instance = await createInstance(request, app._id)
-      model = await createModel(request, instance._id)
-      record = {
-        name: "Test Contact",
-        status: "new",
-        modelId: model._id
-      }
-    })
+  describe("save, load, update, delete", () => {
 
     const createRecord = async r => 
       await request
@@ -117,6 +117,33 @@ describe("/records", () => {
         .set(defaultHeaders)
         .expect('Content-Type', /json/)
         .expect(404)
+    })
+  })
+
+  describe("validate", () => {
+    it("should return no errors on valid record", async () => {
+      const result = await request
+        .post(`/api/${instance._id}/${model._id}/records/validate`)
+        .send({ name: "ivan" })
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      
+      expect(result.body.valid).toBe(true)
+      expect(Object.keys(result.body.errors)).toEqual([])
+    })
+
+    it("should errors on invalid record", async () => {
+      const result = await request
+        .post(`/api/${instance._id}/${model._id}/records/validate`)
+        .send({ name: 1 })
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      
+      expect(result.body.valid).toBe(false)
+      expect(Object.keys(result.body.errors)).toEqual(["name"])
+
     })
   })
 })
