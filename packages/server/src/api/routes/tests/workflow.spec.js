@@ -125,29 +125,6 @@ describe("/workflows", () => {
     })
   })
 
-  describe("find", () => {
-    it("returns a workflow when queried by ID", async () => {
-      await createWorkflow();
-      const res = await request
-        .get(`/api/${instance._id}/workflows/${workflow.id}`)
-        .set(defaultHeaders)
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-        expect(res.body).toEqual(expect.objectContaining(TEST_WORKFLOW));
-    })
-
-    it("should apply authorization to endpoint", async () => {
-      await createWorkflow();
-      await builderEndpointShouldBlockNormalUsers({
-        request,
-        method: "GET",
-        url: `/api/${instance._id}/workflows/${workflow.id}`,
-        instanceId: instance._id,
-      })
-    })
-  })
-
   describe("destroy", () => {
     it("deletes a workflow by its ID", async () => {
       await createWorkflow();
