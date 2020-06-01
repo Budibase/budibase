@@ -2,6 +2,7 @@
   import { backendUiStore, store } from "builderStore"
   import ComponentSelector from "./ParamInputs/ComponentSelector.svelte"
   import ModelSelector from "./ParamInputs/ModelSelector.svelte"
+  import RecordSelector from "./ParamInputs/RecordSelector.svelte"
 
   export let workflowBlock
 
@@ -51,6 +52,8 @@
           bind:value={workflowBlock.args[parameter]} />
       {:else if type === 'model'}
         <ModelSelector bind:value={workflowBlock.args[parameter]} />
+      {:else if type === 'record'}
+        <RecordSelector bind:value={workflowBlock.args[parameter]} />
       {:else if type === 'string'}
         <input
           type="text"
