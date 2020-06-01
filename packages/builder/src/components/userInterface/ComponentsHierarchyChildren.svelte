@@ -16,7 +16,6 @@
   export let onSelect = () => {}
   export let level = 0
 
-
   const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
   const get_name = s => (!s ? "" : last(s.split("/")))
 
@@ -43,7 +42,7 @@
         style="padding-left: {level * 20 + 53}px">
         <div>{get_capitalised_name(component._component)}</div>
         <div class="actions">
-          <ComponentDropdownMenu component={component}/>
+          <ComponentDropdownMenu {component} />
         </div>
       </div>
 
@@ -96,5 +95,4 @@
   .item:hover .actions {
     display: block;
   }
-
 </style>
