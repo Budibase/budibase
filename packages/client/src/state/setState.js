@@ -9,9 +9,3 @@ export const setState = (path, value) => {
     return state
   })
 }
-
-// export const setStateFromBinding = (store, binding, value) => {
-//   const parsedBinding = parseBinding(binding)
-//   if (!parsedBinding) return
-//   return setState(store, parsedBinding.path, value)
-// }

@@ -44,8 +44,9 @@ export const prepareRenderComponent = ({
         const unsubscribe = appStore.subscribe(state => {
           const storeBoundProps = { ...initialProps._bb.props }
           for (let prop in storeBoundProps) {
-            if (typeof storeBoundProps[prop] === "string") {
-              storeBoundProps[prop] = mustache.render(storeBoundProps[prop], {
+            const propValue = storeBoundProps[prop]
+            if (typeof propValue === "string") {
+              storeBoundProps[prop] = mustache.render(propValue, {
                 state,
               })
             }
