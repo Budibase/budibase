@@ -34,11 +34,6 @@
     settingsView.show()
   }
 
-  const confirmDeleteComponent = component => {
-    componentToDelete = component
-    confirmDeleteDialog.show()
-  }
-
   let leftNavSwitcher
 
   const lastPartOfName = c => (c ? last(c.split("/")) : "")
@@ -72,13 +67,6 @@
   {/if}
 
 </div>
-
-<ConfirmDialog
-  bind:this={confirmDeleteDialog}
-  title="Confirm Delete"
-  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component`}
-  okText="Delete Component"
-  onOk={() => store.deleteComponent(componentToDelete)} />
 
 <slot />
 

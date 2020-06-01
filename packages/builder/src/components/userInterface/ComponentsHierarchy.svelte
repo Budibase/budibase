@@ -35,11 +35,6 @@
     sortBy("title"),
   ])
 
-  const confirmDeleteComponent = component => {
-    componentToDelete = component
-    confirmDeleteDialog.show()
-  }
-
   const changeScreen = screen => {
     store.setCurrentScreen(screen.title)
     $goto(`./:page/${screen.title}`)
@@ -74,13 +69,6 @@
   {/each}
 
 </div>
-
-<ConfirmDialog
-  bind:this={confirmDeleteDialog}
-  title="Confirm Delete"
-  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component?`}
-  okText="Delete Component"
-  onOk={() => store.deleteComponent(componentToDelete)} />
 
 <style>
   .root {
