@@ -1,4 +1,4 @@
-import { cloneDeep, values } from "lodash/fp"
+import { values } from "lodash/fp"
 import { backendUiStore } from "builderStore"
 import * as backendStoreActions from "./backend"
 import { writable, get } from "svelte/store"
@@ -16,6 +16,14 @@ import { buildCodeForScreens } from "../buildCodeForScreens"
 import { generate_screen_css } from "../generate_css"
 import { insertCodeMetadata } from "../insertCodeMetadata"
 import { uuid } from "../uuid"
+import {
+  selectComponent as _selectComponent,
+  getParent,
+  walkProps,
+  savePage as _savePage,
+  saveCurrentPreviewItem as _saveCurrentPreviewItem,
+  saveScreenApi as _saveScreenApi,
+} from "../storeUtils"
 
 export const getStore = () => {
   const initial = {
@@ -57,10 +65,6 @@ export const getStore = () => {
   store.setComponentStyle = setComponentStyle(store)
   store.setComponentCode = setComponentCode(store)
   store.setScreenType = setScreenType(store)
-  store.deleteComponent = deleteComponent(store)
-  store.moveUpComponent = moveUpComponent(store)
-  store.moveDownComponent = moveDownComponent(store)
-  store.copyComponent = copyComponent(store)
   store.getPathToComponent = getPathToComponent(store)
   store.addTemplatedComponent = addTemplatedComponent(store)
   store.setMetadataProp = setMetadataProp(store)
@@ -68,6 +72,9 @@ export const getStore = () => {
 }
 
 export default getStore
+
+export const getComponentDefinition = (state, name) =>
+  name.startsWith("##") ? getBuiltin(name) : state.components[name]
 
 const setPackage = (store, initial) => async pkg => {
   const [main_screens, unauth_screens] = await Promise.all([
@@ -138,12 +145,6 @@ const _saveScreen = async (store, s, screen) => {
     })
 
   return s
-}
-
-const _saveScreenApi = (screen, s) => {
-  api
-    .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
-    .then(() => _savePage(s))
 }
 
 const createScreen = store => (screenName, route, layoutComponentName) => {
@@ -277,15 +278,6 @@ const removeStylesheet = store => stylesheet => {
   })
 }
 
-const _savePage = async s => {
-  const page = s.pages[s.currentPageName]
-  await api.post(`/_builder/api/${s.appId}/pages/${s.currentPageName}`, {
-    page: { componentLibraries: s.pages.componentLibraries, ...page },
-    uiFunctions: s.currentPageFunctions,
-    screens: page._screens,
-  })
-}
-
 const setCurrentPage = store => pageName => {
   store.update(state => {
     const current_screens = state.pages[pageName]._screens
@@ -317,8 +309,6 @@ const setCurrentPage = store => pageName => {
   })
 }
 
-// const getComponentDefinition = (components, name) => components.find(c => c.name === name)
-
 /**
  * @param  {string} componentToAdd - name of the component to add to the application
  * @param  {string} presetName - name of the component preset if defined
@@ -344,9 +334,7 @@ const addChildComponent = store => (componentToAdd, presetName) => {
       return state
     }
 
-    const component = componentToAdd.startsWith("##")
-      ? getBuiltin(componentToAdd)
-      : state.components[componentToAdd]
+    const component = getComponentDefinition(state, componentToAdd)
 
     const presetProps = presetName ? component.presets[presetName] : {}
 
@@ -400,12 +388,7 @@ const addTemplatedComponent = store => props => {
 
 const selectComponent = store => component => {
   store.update(state => {
-    const componentDef = component._component.startsWith("##")
-      ? component
-      : state.components[component._component]
-    state.currentComponentInfo = makePropsSafe(componentDef, component)
-    state.currentView = "component"
-    return state
+    return _selectComponent(state, component)
   })
 }
 
@@ -472,75 +455,6 @@ const setScreenType = store => type => {
   })
 }
 
-const deleteComponent = store => componentName => {
-  store.update(state => {
-    const parent = getParent(state.currentPreviewItem.props, componentName)
-
-    if (parent) {
-      parent._children = parent._children.filter(
-        component => component !== componentName
-      )
-    }
-
-    _saveCurrentPreviewItem(state)
-
-    return state
-  })
-}
-
-const moveUpComponent = store => component => {
-  store.update(s => {
-    const parent = getParent(s.currentPreviewItem.props, component)
-
-    if (parent) {
-      const currentIndex = parent._children.indexOf(component)
-      if (currentIndex === 0) return s
-
-      const newChildren = parent._children.filter(c => c !== component)
-      newChildren.splice(currentIndex - 1, 0, component)
-      parent._children = newChildren
-    }
-    s.currentComponentInfo = component
-    _saveCurrentPreviewItem(s)
-
-    return s
-  })
-}
-
-const moveDownComponent = store => component => {
-  store.update(s => {
-    const parent = getParent(s.currentPreviewItem.props, component)
-
-    if (parent) {
-      const currentIndex = parent._children.indexOf(component)
-      if (currentIndex === parent._children.length - 1) return s
-
-      const newChildren = parent._children.filter(c => c !== component)
-      newChildren.splice(currentIndex + 1, 0, component)
-      parent._children = newChildren
-    }
-    s.currentComponentInfo = component
-    _saveCurrentPreviewItem(s)
-
-    return s
-  })
-}
-
-const copyComponent = store => component => {
-  store.update(s => {
-    const parent = getParent(s.currentPreviewItem.props, component)
-    const copiedComponent = cloneDeep(component)
-    walkProps(copiedComponent, p => {
-      p._id = uuid()
-    })
-    parent._children = [...parent._children, copiedComponent]
-    s.curren
-    _saveCurrentPreviewItem(s)
-    s.currentComponentInfo = copiedComponent
-    return s
-  })
-}
-
 const getPathToComponent = store => component => {
   // Gets all the components to needed to construct a path.
   const tempStore = get(store)
@@ -572,39 +486,9 @@ const getPathToComponent = store => component => {
   return path
 }
 
-const getParent = (rootProps, child) => {
-  let parent
-  walkProps(rootProps, (p, breakWalk) => {
-    if (p._children && p._children.includes(child)) {
-      parent = p
-      breakWalk()
-    }
-  })
-  return parent
-}
-
-const walkProps = (props, action, cancelToken = null) => {
-  cancelToken = cancelToken || { cancelled: false }
-  action(props, () => {
-    cancelToken.cancelled = true
-  })
-
-  if (props._children) {
-    for (let child of props._children) {
-      if (cancelToken.cancelled) return
-      walkProps(child, action, cancelToken)
-    }
-  }
-}
-
 const setMetadataProp = store => (name, prop) => {
   store.update(s => {
     s.currentPreviewItem[name] = prop
     return s
   })
 }
-
-const _saveCurrentPreviewItem = s =>
-  s.currentFrontEndType === "page"
-    ? _savePage(s)
-    : _saveScreenApi(s.currentPreviewItem, s)
