@@ -28,9 +28,9 @@
     onChange(val)
   }
 
-  const checkSelected = val => isMultiSelect ? value.includes(val) : value === val
+  const checkSelected = val =>
+    isMultiSelect ? value.includes(val) : value === val
 
-  $: console.log("VALUE",value)
 </script>
 
 <div class="flatbutton-group">
