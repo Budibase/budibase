@@ -44,11 +44,13 @@
     flex-direction: column;
     padding: 20px 20px;
     border-left: solid 1px var(--grey);
+    box-sizing: border-box;
   }
 
   .switcher {
     display: flex;
     margin: 0px 20px 20px 0px;
+    box-sizing: border-box;
   }
 
   .switcher > button {
@@ -66,5 +68,10 @@
 
   .switcher > .selected {
     color: var(--ink);
+  }
+  
+  .panel {
+    min-height: 0;
+    overflow-y: auto;
   }
 </style>
