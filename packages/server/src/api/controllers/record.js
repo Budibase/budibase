@@ -1,8 +1,6 @@
 const CouchDB = require("../../db")
-const Ajv = require("ajv")
+const validateJs = require("validate.js")
 const newid = require("../../db/newid")
-
-const ajv = new Ajv()
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
@@ -13,18 +11,18 @@ exports.save = async function(ctx) {
     record._id = newid()
   }
 
-  // validation with ajv
   const model = await db.get(record.modelId)
-  const validate = ajv.compile({
-    properties: model.schema,
-  })
-  const valid = validate(record)
 
-  if (!valid) {
+  const validateResult = await validate({
+    record,
+    model,
+  })
+
+  if (!validateResult.valid) {
     ctx.status = 400
     ctx.body = {
       status: 400,
-      errors: validate.errors,
+      errors: validateResult.errors,
     }
     return
   }
@@ -83,4 +81,30 @@ exports.destroy = async function(ctx) {
     return
   }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
+}
+
+exports.validate = async function(ctx) {
+  const errors = await validate({
+    instanceId: ctx.params.instanceId,
+    modelId: ctx.params.modelId,
+    record: ctx.request.body,
+  })
+  ctx.status = 200
+  ctx.body = errors
+}
+
+async function validate({ instanceId, modelId, record, model }) {
+  if (!model) {
+    const db = new CouchDB(instanceId)
+    model = await db.get(modelId)
+  }
+  const errors = {}
+  for (let fieldName in model.schema) {
+    const res = validateJs.single(
+      record[fieldName],
+      model.schema[fieldName].constraints
+    )
+    if (res) errors[fieldName] = res
+  }
+  return { valid: Object.keys(errors).length === 0, errors }
 }

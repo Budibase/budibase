@@ -3,10 +3,16 @@
   export let value = ""
   export let label
   export let errors = []
-  export let className = "uk-input"
-
+  export let options = []
+  
   let checked = type === "checkbox" ? value : false
-
+  
+  const determineClassName = type => {
+    if (type === "checkbox") return "uk-checkbox"
+    if (type === "select") return "uk-select"
+    return "uk-input"
+  }
+    
   const handleInput = event => {
     if (event.target.type === "checkbox") {
       value = event.target.checked
@@ -23,11 +29,23 @@
 </script>
 
 <label>{label}</label>
+
+{#if type === "select"}
+<select 
+  class={determineClassName(type)}
+  bind:value={value}
+  class:uk-form-danger={errors.length > 0} >
+  {#each options as opt}
+    <option value={opt}>{ opt }</option>
+  {/each}
+</select>
+{:else}
 <input
-  class={className}
+  class={determineClassName(type)}
   class:uk-form-danger={errors.length > 0}
   {checked}
   {type}
   {value}
   on:input={handleInput}
   on:change={handleInput} />
+{/if}
