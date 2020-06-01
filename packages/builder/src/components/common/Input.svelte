@@ -16,7 +16,6 @@
     line-height: 1.3;
     padding: 12px;
     width: 164px;
-    float: right;
     max-width: 100%;
     box-sizing: border-box;
     margin: 0;
