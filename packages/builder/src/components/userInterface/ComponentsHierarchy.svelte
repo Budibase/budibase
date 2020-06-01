@@ -80,7 +80,7 @@
     margin-left: 10px;
     margin-top: 2px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
   }
 
   .icon {
