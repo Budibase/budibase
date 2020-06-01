@@ -8,7 +8,7 @@
   function addBlockToWorkflow() {
     workflowStore.actions.addBlockToWorkflow({
       ...blockDefinition,
-      args: {},
+      args: blockDefinition.args || {},
       actionId,
       type: blockType,
     })

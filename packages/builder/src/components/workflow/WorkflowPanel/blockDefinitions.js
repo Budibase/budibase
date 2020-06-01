@@ -22,26 +22,33 @@ const ACTION = {
   },
   SAVE_RECORD: {
     name: "Save Record",
-    tagline: "Save a <b>{{model.name}}</b> record",
+    tagline: "<b>Save</b> a <b>{{record.model.name}}</b> record",
     icon: "ri-save-3-fill",
     description: "Save a record to your database.",
     environment: "SERVER",
     params: {
-      model: "model",
+      record: "record",
+    },
+    args: {
+      record: {},
     },
   },
   DELETE_RECORD: {
     description: "Delete a record from your database.",
     icon: "ri-delete-bin-line",
     name: "Delete Record",
-    tagline: "Delete a <b>{{model.name}}</b> record",
+    tagline: "<b>Delete</b> a <b>{{record.model.name}}</b> record",
     environment: "SERVER",
     params: {
-      record: "string",
+      record: "record",
+    },
+    args: {
+      record: {},
     },
   },
   FIND_RECORD: {
     description: "Find a record in your database.",
+    tagline: "<b>Find</b> a <b>{{record.model.name}}</b> record",
     icon: "ri-search-line",
     name: "Find Record",
     environment: "SERVER",

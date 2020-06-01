@@ -33,7 +33,7 @@ export const createStateManager = ({
   const getCurrentState = () => currentState
 
   const bb = bbFactory({
-  store: appStore,
+    store: appStore,
     getCurrentState,
     frontendDefinition,
     componentLibraries,
@@ -65,7 +65,7 @@ const _setup = ({ handlerTypes, getCurrentState, bb, store }) => node => {
     const isBound = typeof propValue === "string" && propValue.startsWith("{{")
 
     if (isBound) {
-      console.log("NODE IS BOUND", node);
+      console.log("NODE IS BOUND", node)
       initialProps[propName] = mustache.render(propValue, {
         state: currentStoreState,
         context,
