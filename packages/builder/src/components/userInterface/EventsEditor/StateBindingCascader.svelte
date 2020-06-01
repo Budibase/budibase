@@ -5,9 +5,7 @@
   import Input from "components/common/Input.svelte"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
-  import {
-    EVENT_TYPE_MEMBER_NAME
-  } from "components/common/eventHandlers"
+  import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
   import { store, workflowStore } from "builderStore"
   import { ArrowDownIcon } from "components/common/Icons/"
 

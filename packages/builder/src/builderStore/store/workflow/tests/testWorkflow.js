@@ -3,7 +3,6 @@ export default {
   _rev: "4-02c6659734934895812fa7be0215ee59",
   name: "Test Workflow",
   definition: {
-    trigger: {},
     steps: [
       {
         id: "VFWeZcIPx",
