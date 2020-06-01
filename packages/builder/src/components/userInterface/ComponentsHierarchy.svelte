@@ -72,11 +72,7 @@
     {#if $store.currentPreviewItem.name === screen.title && screen.component.props._children}
       <ComponentsHierarchyChildren
         components={screen.component.props._children}
-        currentComponent={$store.currentComponentInfo}
-        onDeleteComponent={confirmDeleteComponent}
-        onMoveUpComponent={store.moveUpComponent}
-        onMoveDownComponent={store.moveDownComponent}
-        onCopyComponent={store.copyComponent} />
+        currentComponent={$store.currentComponentInfo} />
     {/if}
   {/each}
 
