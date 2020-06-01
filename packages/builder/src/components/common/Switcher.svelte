@@ -61,6 +61,7 @@
     font-weight: 700;
     color: var(--ink-lighter);
     margin-right: 20px;
+    background-color: var(--white);
   }
 
   .switcher > .selected {
