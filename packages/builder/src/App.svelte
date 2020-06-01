@@ -30,6 +30,4 @@
 <!-- svelte-notifications -->
 <NotificationDisplay />
 
-<Modal>
-  <Router {routes} />
-</Modal>
+<Router {routes} />

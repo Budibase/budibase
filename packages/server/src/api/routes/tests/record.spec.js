@@ -197,4 +197,31 @@ describe("/records", () => {
     })
 
   })
+
+  describe("validate", () => {
+    it("should return no errors on valid record", async () => {
+      const result = await request
+        .post(`/api/${instance._id}/${model._id}/records/validate`)
+        .send({ name: "ivan" })
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      
+      expect(result.body.valid).toBe(true)
+      expect(Object.keys(result.body.errors)).toEqual([])
+    })
+
+    it("should errors on invalid record", async () => {
+      const result = await request
+        .post(`/api/${instance._id}/${model._id}/records/validate`)
+        .send({ name: 1 })
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      
+      expect(result.body.valid).toBe(false)
+      expect(Object.keys(result.body.errors)).toEqual(["name"])
+
+    })
+  })
 })

@@ -30,7 +30,12 @@ exports.createModel = async (request, instanceId, model) => {
     type: "model",
     key: "name",
     schema: {
-      name: { type: "string" },
+      name: {
+        type: "text",
+        constraints: {
+          type: "string",
+        },
+      },
     },
   }
 
@@ -38,19 +43,6 @@ exports.createModel = async (request, instanceId, model) => {
     .post(`/api/${instanceId}/models`)
     .set(exports.defaultHeaders)
     .send(model)
-  return res.body
-}
-
-exports.createRecord = async ({ request, instanceId, modelId, record }) => {
-  record = record || {
-    modelId,
-    name: "test name",
-  }
-
-  const res = await request
-    .post(`/api/${instanceId}/${modelId}/records`)
-    .send(record)
-    .set(exports.defaultHeaders)
   return res.body
 }
 

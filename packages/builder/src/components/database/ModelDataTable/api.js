@@ -15,13 +15,13 @@ export async function createDatabase(appname, instanceName) {
 }
 
 export async function deleteRecord(record, instanceId) {
-  const DELETE_RECORDS_URL = `/api/${instanceId}/${record.modelId}/records/${record._id}/${record._rev}`
+  const DELETE_RECORDS_URL = `/api/${instanceId}/${record._modelId}/records/${record._id}/${record._rev}`
   const response = await api.delete(DELETE_RECORDS_URL)
   return response
 }
 
-export async function saveRecord(record, instanceId) {
-  const SAVE_RECORDS_URL = `/api/${instanceId}/${record.modelId}/records`
+export async function saveRecord(record, instanceId, modelId) {
+  const SAVE_RECORDS_URL = `/api/${instanceId}/${modelId}/records`
   const response = await api.post(SAVE_RECORDS_URL, record)
 
   return await response.json()

@@ -1,8 +1,5 @@
-const CouchDB = require("../../../db")
-const Ajv = require("ajv")
-const newid = require("../../../db/newid")
-
-const ajv = new Ajv()
+const CouchDB = require("../../db")
+const newid = require("../../db/newid")
 
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
@@ -19,8 +16,7 @@ exports.create = async function(ctx) {
     message: "Workflow created successfully",
     workflow: {
       ...workflow,
-      _rev: response.rev,
-      _id: response.id,
+      ...response,
     },
   }
 }

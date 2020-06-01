@@ -16,7 +16,7 @@ app.use(
     prettyPrint: {
       levelFirst: true,
     },
-    level: process.env.NODE_ENV === "jest" ? "silent" : "info",
+    level: env.LOG_LEVEL || "error",
   })
 )
 

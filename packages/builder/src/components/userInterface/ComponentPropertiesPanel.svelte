@@ -107,11 +107,12 @@
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    padding: 20px;
   }
 
   .title > div:nth-child(1) {
     grid-column-start: name;
-    color: var(--secondary100);
+    color: var(--ink);
   }
 
   .title > div:nth-child(2) {
