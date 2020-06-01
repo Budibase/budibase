@@ -10,7 +10,6 @@
     allHandlers,
   } from "components/common/eventHandlers"
   import { store, workflowStore } from "builderStore"
-  import StateBindingOptions from "../PropertyCascader/StateBindingOptions.svelte"
   import { ArrowDownIcon } from "components/common/Icons/"
 
   export let parameter
@@ -38,13 +37,6 @@
           <ArrowDownIcon size={36} />
         </div>
       </button>
-      {#if isOpen}
-        <StateBindingOptions
-          onSelect={option => {
-            onChange(option)
-            isOpen = false
-          }} />
-      {/if}
     {/if}
   </div>
 </div>

@@ -11,19 +11,16 @@ export default class Workflow {
     this.workflow = workflow
   }
 
-  isEmpty() {
-    return this.workflow.definition.trigger.length === 0
+  hasTrigger() {
+    return this.workflow.definition.trigger
   }
 
   addBlock(block) {
     // Make sure to add trigger if doesn't exist
-    // if (this.isEmpty()) {
-    //   this.workflow.definition.triggers.push({
-    //     id: generate(),
-    //     ...block,
-    //   })
-    //   return;
-    // }
+    if (!this.hasTrigger()) {
+      this.workflow.definition.trigger = { id: generate(), ...block }
+      return;
+    }
 
     this.workflow.definition.steps.push({
       id: generate(),
@@ -33,23 +30,27 @@ export default class Workflow {
 
   updateBlock(updatedBlock, id) {
     const { steps, trigger } = this.workflow.definition
-    // TODO: Account for trigger
+    
+    if (trigger && trigger.id === id) {
+      this.workflow.definition.trigger = null
+      return
+    }
 
     const stepIdx = steps.findIndex(step => step.id === id)
-
     if (stepIdx < 0) throw new Error("Block not found.")
-
     steps.splice(stepIdx, 1, updatedBlock)
   }
 
   deleteBlock(id) {
     const { steps, trigger } = this.workflow.definition
-    // TODO: Account for trigger
+    
+    if (trigger && trigger.id === id) {
+      this.workflow.definition.trigger = null
+      return
+    }
 
     const stepIdx = steps.findIndex(step => step.id === id)
-
     if (stepIdx < 0) throw new Error("Block not found.")
-
     steps.splice(stepIdx, 1)
   }
 
@@ -59,7 +60,7 @@ export default class Workflow {
   }
 
   static buildUiTree(definition) {
-    return definition.steps.map(step => {
+    const steps = definition.steps.map(step => {
       // The client side display definition for the block
       const definition = blockDefinitions[step.type][step.actionId]
       if (!definition) {
@@ -87,5 +88,9 @@ export default class Workflow {
         name: definition.name,
       }
     })
+
+    console.log(definition);
+    
+    return definition.trigger ? [definition.trigger, ...steps] : steps
   }
 }

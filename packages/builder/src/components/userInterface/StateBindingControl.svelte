@@ -2,7 +2,6 @@
   import { backendUiStore } from "builderStore"
   import IconButton from "../common/IconButton.svelte"
   import Input from "../common/Input.svelte"
-  // import PropertyCascader from "./PropertyCascader"
   import Colorpicker from "../common/Colorpicker.svelte"
 
   export let value = ""
@@ -22,34 +21,32 @@
         size="19"
         on:click={() => onChanged(!value)} />
     </div>
-  {:else if type === 'models'}
-    <select
-      class="uk-select uk-form-small"
-      bind:value
-      on:change={() => {
-        onChanged(value)
-      }}>
-      {#each $backendUiStore.models || [] as option}
-        <option value={option}>{option.name}</option>
-      {/each}
-    </select>
-  {:else if type === 'options' || type === 'models'}
-    <select
-      class="uk-select uk-form-small"
-      {value}
-      on:change={ev => onChanged(ev.target.value)}>
-      {#each options || [] as option}
-        {#if bindOptionToStyle}
-          <option style={`${styleBindingProperty}: ${option};`} value={option}>
-            {option}
-          </option>
-        {:else}
-          <option value={option}>{option}</option>
-        {/if}
-      {/each}
-    </select>
-  {:else}
-    <!-- <PropertyCascader {onChanged} {value} /> -->
+    {:else if type === 'models'}
+      <select
+        class="uk-select uk-form-small"
+        bind:value
+        on:change={() => {
+          onChanged(value)
+        }}>
+        {#each $backendUiStore.models || [] as option}
+          <option value={option}>{option.name}</option>
+        {/each}
+      </select>
+    {:else if type === 'options' || type === 'models'}
+      <select
+        class="uk-select uk-form-small"
+        {value}
+        on:change={ev => onChanged(ev.target.value)}>
+        {#each options || [] as option}
+          {#if bindOptionToStyle}
+            <option style={`${styleBindingProperty}: ${option};`} value={option}>
+              {option}
+            </option>
+          {:else}
+            <option value={option}>{option}</option>
+          {/if}
+        {/each}
+      </select>
   {/if}
 </div>
 

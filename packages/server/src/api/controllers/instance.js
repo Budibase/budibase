@@ -32,7 +32,7 @@ exports.create = async function(ctx) {
       by_workflow_trigger: {
         map: function(doc) {
           if (doc.type === "workflow") {
-            const trigger = doc.definition.next
+            const trigger = doc.definition.trigger
             if (trigger) {
               emit([trigger.event], trigger)
             }
