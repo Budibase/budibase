@@ -9,6 +9,7 @@ export default {
       ...context,
       [id]: args,
     }
+    return context
   },
   NAVIGATE: () => {
     // TODO client navigation

@@ -1,5 +1,5 @@
 <script>
-	import { fade } from 'svelte/transition';
+  import { fade } from "svelte/transition"
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import { notifier } from "@beyonk/svelte-notifications"
@@ -41,7 +41,7 @@
     <span
       class="hoverable"
       class:selected={selectedTab === 'SETUP'}
-      on:click={() => { 
+      on:click={() => {
         selectedTab = 'SETUP'
         testResult = null
       }}>
@@ -104,9 +104,7 @@
           <br />
         </div>
       </div>
-      <button
-        class="workflow-button hoverable"
-        on:click={deleteWorkflow}>
+      <button class="workflow-button hoverable" on:click={deleteWorkflow}>
         Delete Workflow
       </button>
     {/if}
