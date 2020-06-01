@@ -116,7 +116,7 @@
         stylesheetLinks,
         selectedComponentType,
         selectedComponentId,
-        frontendDefinition: JSON.stringify(frontendDefinition)
+        frontendDefinition: JSON.stringify(frontendDefinition),
       })} />
   {/if}
 </div>

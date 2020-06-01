@@ -51,7 +51,7 @@ export const bbFactory = ({
       componentLibraries,
       treeNode,
       onScreenSlotRendered,
-      setupState
+      setupState,
     }
 
     return {

@@ -1,4 +1,3 @@
-
 <script>
   import { backendUiStore } from "builderStore"
 

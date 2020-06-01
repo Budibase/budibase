@@ -1,7 +1,7 @@
-import { get } from "svelte/store";
-import { setState } from "../../state/setState";
-import mustache from "mustache";
-import { appStore } from "../../state/store";
+import { get } from "svelte/store"
+import mustache from "mustache"
+import { appStore } from "../../state/store"
+import clientActions from "./actions"
 
 /**
  * The workflow orchestrator is a class responsible for executing workflows.
@@ -17,7 +17,7 @@ export default class Orchestrator {
   }
 
   set strategy(strategy) {
-    this._strategy = strategy({ api: this.api, instanceId: this.instanceId });
+    this._strategy = strategy({ api: this.api, instanceId: this.instanceId })
   }
 
   async execute(workflowId) {
@@ -32,85 +32,58 @@ export default class Orchestrator {
 
 // Execute a workflow from a running budibase app
 export const clientStrategy = ({ api, instanceId }) => ({
-  delay: ms => new Promise(resolve => setTimeout(resolve, ms)),
   context: {},
   bindContextArgs: function(args) {
     const mappedArgs = { ...args }
 
-    console.log("original args", args)
-
     // bind the workflow action args to the workflow context, if required
     for (let arg in args) {
       const argValue = args[arg]
+
+      // We don't want to render mustache templates on non-strings
+      if (typeof argValue !== "string") continue
+
       // Means that it's bound to state or workflow context
-      console.log(argValue, get(appStore));
       mappedArgs[arg] = mustache.render(argValue, {
         context: this.context,
-        state: get(appStore) 
-      });
+        state: get(appStore),
+      })
     }
-
-    console.log(mappedArgs)
 
     return mappedArgs
   },
   run: async function(workflow) {
-    const block = workflow.next
+    for (let block of workflow.steps) {
+      console.log("Executing workflow block", block)
 
-    console.log("Executing workflow block", block)
+      // This code gets run in the browser
+      if (block.environment === "CLIENT") {
+        const action = clientActions[block.actionId]
+        await action({
+          context: this.context,
+          args: this.bindContextArgs(block.args),
+          id: block.id,
+        })
+      }
 
-    if (!block) return
+      // this workflow block gets executed on the server
+      if (block.environment === "SERVER") {
+        const EXECUTE_WORKFLOW_URL = `/api/${instanceId}/workflows/action`
+        const response = await api.post({
+          url: EXECUTE_WORKFLOW_URL,
+          body: {
+            action: block.actionId,
+            args: this.bindContextArgs(block.args, api),
+          },
+        })
 
-    // This code gets run in the browser
-    if (block.environment === "CLIENT") {
-      if (block.actionId === "SET_STATE") {
-        // get props from the workflow context if required
-        setState(...Object.values(this.bindContextArgs(block.args)))
-        // update the context with the data
         this.context = {
           ...this.context,
-          SET_STATE: block.args,
+          [block.actionId]: response,
         }
       }
 
-      if (block.actionId === "NAVIGATE") {
-      }
-
-      if (block.actionId === "DELAY") {
-        await this.delay(block.args.time)       
-      }
-
-      if (block.actionId === "FILTER") {
-        const { field, condition, value } = block.args;
-        switch (condition) {
-          case "equals":
-            if (field !== value) return;
-            break;
-          default:
-            return;
-        }
-      }
+      console.log("workflowContext", this.context)
     }
-
-    // this workflow block gets executed on the server
-    if (block.environment === "SERVER") {
-      const EXECUTE_WORKFLOW_URL = `/api/${instanceId}/workflows/action`
-      const response = await api.post({
-        url: EXECUTE_WORKFLOW_URL,
-        body: {
-          action: block.actionId,
-          args: this.bindContextArgs(block.args, api),
-        },
-      })
-
-      this.context = {
-        ...this.context,
-        [block.actionId]: response,
-      }
-    }
-
-    console.log("workflowContext", this.context)
-
-    await this.run(workflow.next)
   },
 })

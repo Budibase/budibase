@@ -3,7 +3,7 @@ import Orchestrator, { clientStrategy } from "./orchestrator"
 export const triggerWorkflow = api => ({ workflow }) => {
   const workflowOrchestrator = new Orchestrator(
     api,
-    "inst_60dd510_700f7dc06735403e81d5af91072d7241"
+    "inst_ad75c7f_4f3e7d5d80a74b17a5187a18e2aba85e"
   )
   workflowOrchestrator.strategy = clientStrategy
 

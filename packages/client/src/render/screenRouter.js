@@ -1,5 +1,5 @@
 import regexparam from "regexparam"
-import { routerStore } from "../state/store";
+import { routerStore } from "../state/store"
 import { initRouteStore } from "../state/store"
 
 // TODO: refactor
@@ -43,8 +43,8 @@ export const screenRouter = ({ screens, onScreenSelected, appRootPath }) => {
     }
 
     routerStore.update(state => {
-      state["##routeParams"] = params;
-      return state;
+      state["##routeParams"] = params
+      return state
     })
 
     const screenIndex = current !== -1 ? current : fallback

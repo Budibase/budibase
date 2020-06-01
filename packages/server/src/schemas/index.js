@@ -17,7 +17,7 @@ const WORKFLOW_SCHEMA = {
       type: "object",
       properties: {
         triggers: { type: "array" },
-        steps: { type: "array" }
+        steps: { type: "array" },
         // next: {
         //   type: "object",
         //   properties: {

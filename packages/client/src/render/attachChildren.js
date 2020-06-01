@@ -42,7 +42,7 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
       parentNode: treeNode,
       ComponentConstructor,
       htmlElement,
-      anchor
+      anchor,
     })
 
     for (let childNode of childNodesThisIteration) {

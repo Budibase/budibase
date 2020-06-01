@@ -1,7 +1,7 @@
 import { setState } from "./setState"
 import { getState } from "./getState"
 import { isArray, isUndefined } from "lodash/fp"
-import { appStore } from "./store";
+import { appStore } from "./store"
 
 import { createApi } from "../api"
 
@@ -21,7 +21,7 @@ export const eventHandlers = (store, rootPath, routeTo) => {
   const api = createApi({
     rootPath,
     setState,
-    getState: (path, fallback) => getState(path, fallback)
+    getState: (path, fallback) => getState(path, fallback),
   })
 
   const setStateHandler = ({ path, value }) => setState(path, value)
@@ -29,7 +29,7 @@ export const eventHandlers = (store, rootPath, routeTo) => {
   return {
     "Set State": handler(["path", "value"], setStateHandler),
     "Navigate To": handler(["url"], param => routeTo(param && param.url)),
-    "Trigger Workflow": handler(["workflow"], api.triggerWorkflow)
+    "Trigger Workflow": handler(["workflow"], api.triggerWorkflow),
   }
 }
 
