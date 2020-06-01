@@ -78,9 +78,9 @@
 
   .actions {
     display: none;
-    height: 20px;
-    width: 28px;
-    color: var(--slate);
+    height: 24px;
+    width: 24px;
+    color: var(--ink);
     padding: 0px 5px;
     border-style: none;
     background: rgba(0, 0, 0, 0);
@@ -89,7 +89,7 @@
   }
 
   .item:hover {
-    background: #fafafa;
+    background: var(--grey-light);
     cursor: pointer;
   }
   .item:hover .actions {

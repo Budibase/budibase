@@ -22,8 +22,9 @@ export const layout = [
     label: "Direction",
     key: "flex-direction",
     control: OptionSelect,
-    initialValue: "Row",
+    initialValue: "Select Option",
     options: [
+      { label: "Select Option", value: "" },
       { label: "Row", value: "row" },
       { label: "Row Reverse", value: "rowReverse" },
       { label: "column", value: "column" },
@@ -34,8 +35,9 @@ export const layout = [
     label: "Justify",
     key: "justify-content",
     control: OptionSelect,
-    initialValue: "Flex Start",
+    initialValue: "Select Option",
     options: [
+      { label: "Select Option", value: "" },
       { label: "Flex Start", value: "flex-start" },
       { label: "Flex End", value: "flex-end" },
       { label: "Center", value: "center" },
@@ -48,8 +50,9 @@ export const layout = [
     label: "Align",
     key: "align-items",
     control: OptionSelect,
-    initialValue: "Flex Start",
+    initialValue: "Select Option",
     options: [
+      { label: "Select Option", value: "" },
       { label: "Flex Start", value: "flex-start" },
       { label: "Flex End", value: "flex-end" },
       { label: "Center", value: "center" },
@@ -61,8 +64,9 @@ export const layout = [
     label: "Wrap",
     key: "flex-wrap",
     control: OptionSelect,
-    initialValue: "NoWrap",
+    initialValue: "Select Option",
     options: [
+      { label: "Select Option", value: "" },
       { label: "No Wrap", value: "nowrap" },
       { label: "Wrap", value: "wrap" },
       { label: "Wrap Reverse", value: "wrap-reverse" },
