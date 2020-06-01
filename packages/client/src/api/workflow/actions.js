@@ -1,6 +1,4 @@
-import { get } from "svelte/store"
 import { setState } from "../../state/setState"
-import { appStore } from "../../state/store"
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -12,11 +10,11 @@ export default {
       [id]: args,
     }
   },
-  NAVIGATE: ({ context, args, id }) => {
+  NAVIGATE: () => {
     // TODO client navigation
   },
-  DELAY: async ({ context, args }) => await delay(args.time),
-  FILTER: ({ context, args }) => {
+  DELAY: async ({ args }) => await delay(args.time),
+  FILTER: ({ args }) => {
     const { field, condition, value } = args
     switch (condition) {
       case "equals":

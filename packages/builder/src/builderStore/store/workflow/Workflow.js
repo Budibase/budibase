@@ -17,9 +17,9 @@ export default class Workflow {
 
   addBlock(block) {
     // Make sure to add trigger if doesn't exist
-    if (!this.hasTrigger()) {
+    if (!this.hasTrigger() && block.type === "TRIGGER") {
       this.workflow.definition.trigger = { id: generate(), ...block }
-      return;
+      return
     }
 
     this.workflow.definition.steps.push({
@@ -30,7 +30,7 @@ export default class Workflow {
 
   updateBlock(updatedBlock, id) {
     const { steps, trigger } = this.workflow.definition
-    
+
     if (trigger && trigger.id === id) {
       this.workflow.definition.trigger = null
       return
@@ -43,7 +43,7 @@ export default class Workflow {
 
   deleteBlock(id) {
     const { steps, trigger } = this.workflow.definition
-    
+
     if (trigger && trigger.id === id) {
       this.workflow.definition.trigger = null
       return
@@ -60,7 +60,10 @@ export default class Workflow {
   }
 
   static buildUiTree(definition) {
-    const steps = definition.steps.map(step => {
+    const steps = []
+    if (definition.trigger) steps.push(definition.trigger)
+
+    return [...steps, ...definition.steps].map(step => {
       // The client side display definition for the block
       const definition = blockDefinitions[step.type][step.actionId]
       if (!definition) {
@@ -88,9 +91,5 @@ export default class Workflow {
         name: definition.name,
       }
     })
-
-    console.log(definition);
-    
-    return definition.trigger ? [definition.trigger, ...steps] : steps
   }
 }

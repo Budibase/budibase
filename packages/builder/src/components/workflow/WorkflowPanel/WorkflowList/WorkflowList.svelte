@@ -28,7 +28,6 @@
 
   async function saveWorkflow() {
     const workflow = $workflowStore.currentWorkflow.workflow
-    // TODO: Clean up args
     await workflowStore.actions.save({
       instanceId: $backendUiStore.selectedDatabase._id,
       workflow,

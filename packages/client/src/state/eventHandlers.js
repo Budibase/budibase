@@ -6,15 +6,10 @@ import { createApi } from "../api"
 
 export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType"
 
-export const eventHandlers = (store, rootPath, routeTo) => {
+export const eventHandlers = (rootPath, routeTo) => {
   const handler = (parameters, execute) => ({
     execute,
     parameters,
-  })
-
-  let currentState
-  store.subscribe(state => {
-    currentState = state
   })
 
   const api = createApi({

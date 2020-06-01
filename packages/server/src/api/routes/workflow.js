@@ -1,13 +1,13 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/workflow")
 const authorized = require("../../middleware/authorized")
-const { BUILDER, EXECUTE_WORKFLOW } = require("../../utilities/accessLevels")
+const { BUILDER } = require("../../utilities/accessLevels")
 
 const router = Router()
 
 router
   .get("/api/:instanceId/workflows", authorized(BUILDER), controller.fetch)
-  .get("/api/:instanceId/workflows/:id", authorized(BUILDER), controller.find)
+  .get("/api/workflows/:id", authorized(BUILDER), controller.find)
   .get(
     "/api/:instanceId/workflows/:id/:action",
     authorized(BUILDER),
