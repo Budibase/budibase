@@ -34,11 +34,6 @@
     title: lastPartOfName(layout),
   }
 
-  const confirmDeleteComponent = async component => {
-    componentToDelete = component
-    confirmDeleteDialog.show()
-  }
-
   const setCurrentScreenToLayout = () => {
     store.setScreenType("page")
     $goto("./:page/page-layout")
@@ -66,13 +61,6 @@
       currentComponent={$store.currentComponentInfo} />
   {/if}
 </div>
-
-<ConfirmDialog
-  bind:this={confirmDeleteDialog}
-  title="Confirm Delete"
-  body={`Are you sure you wish to delete this '${lastPartOfName(componentToDelete)}' component?`}
-  okText="Delete Component"
-  onOk={() => store.deleteComponent(componentToDelete)} />
 
 <style>
   .pagelayoutSection {

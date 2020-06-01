@@ -1,4 +1,4 @@
-import { cloneDeep, values } from "lodash/fp"
+import { values } from "lodash/fp"
 import { backendUiStore } from "builderStore"
 import * as backendStoreActions from "./backend"
 import { writable, get } from "svelte/store"
@@ -16,6 +16,14 @@ import { buildCodeForScreens } from "../buildCodeForScreens"
 import { generate_screen_css } from "../generate_css"
 import { insertCodeMetadata } from "../insertCodeMetadata"
 import { uuid } from "../uuid"
+import {
+  selectComponent as _selectComponent,
+  getParent,
+  walkProps,
+  savePage as _savePage,
+  saveCurrentPreviewItem as _saveCurrentPreviewItem,
+  saveScreenApi as _saveScreenApi,
+} from "../storeUtils"
 
 export const getStore = () => {
   const initial = {
@@ -57,15 +65,9 @@ export const getStore = () => {
   store.setComponentStyle = setComponentStyle(store)
   store.setComponentCode = setComponentCode(store)
   store.setScreenType = setScreenType(store)
-  store.deleteComponent = deleteComponent(store)
-  store.moveUpComponent = moveUpComponent(store)
-  store.moveDownComponent = moveDownComponent(store)
-  store.copyComponent = copyComponent(store)
   store.getPathToComponent = getPathToComponent(store)
   store.addTemplatedComponent = addTemplatedComponent(store)
   store.setMetadataProp = setMetadataProp(store)
-  store.storeComponentForCopy = storeComponentForCopy(store)
-  store.pasteComponent = pasteComponent(store)
   return store
 }
 
@@ -143,12 +145,6 @@ const _saveScreen = async (store, s, screen) => {
     })
 
   return s
-}
-
-const _saveScreenApi = (screen, s) => {
-  api
-    .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
-    .then(() => _savePage(s))
 }
 
 const createScreen = store => (screenName, route, layoutComponentName) => {
@@ -282,15 +278,6 @@ const removeStylesheet = store => stylesheet => {
   })
 }
 
-const _savePage = async s => {
-  const page = s.pages[s.currentPageName]
-  await api.post(`/_builder/api/${s.appId}/pages/${s.currentPageName}`, {
-    page: { componentLibraries: s.pages.componentLibraries, ...page },
-    uiFunctions: s.currentPageFunctions,
-    screens: page._screens,
-  })
-}
-
 const setCurrentPage = store => pageName => {
   store.update(state => {
     const current_screens = state.pages[pageName]._screens
@@ -399,15 +386,6 @@ const addTemplatedComponent = store => props => {
   })
 }
 
-const _selectComponent = (state, component) => {
-  const componentDef = component._component.startsWith("##")
-    ? component
-    : state.components[component._component]
-  state.currentComponentInfo = makePropsSafe(componentDef, component)
-  state.currentView = "component"
-  return state
-}
-
 const selectComponent = store => component => {
   store.update(state => {
     return _selectComponent(state, component)
@@ -477,74 +455,6 @@ const setScreenType = store => type => {
   })
 }
 
-const deleteComponent = store => componentName => {
-  store.update(state => {
-    const parent = getParent(state.currentPreviewItem.props, componentName)
-
-    if (parent) {
-      parent._children = parent._children.filter(
-        component => component !== componentName
-      )
-    }
-
-    _saveCurrentPreviewItem(state)
-
-    return state
-  })
-}
-
-const moveUpComponent = store => component => {
-  store.update(s => {
-    const parent = getParent(s.currentPreviewItem.props, component)
-
-    if (parent) {
-      const currentIndex = parent._children.indexOf(component)
-      if (currentIndex === 0) return s
-
-      const newChildren = parent._children.filter(c => c !== component)
-      newChildren.splice(currentIndex - 1, 0, component)
-      parent._children = newChildren
-    }
-    s.currentComponentInfo = component
-    _saveCurrentPreviewItem(s)
-
-    return s
-  })
-}
-
-const moveDownComponent = store => component => {
-  store.update(s => {
-    const parent = getParent(s.currentPreviewItem.props, component)
-
-    if (parent) {
-      const currentIndex = parent._children.indexOf(component)
-      if (currentIndex === parent._children.length - 1) return s
-
-      const newChildren = parent._children.filter(c => c !== component)
-      newChildren.splice(currentIndex + 1, 0, component)
-      parent._children = newChildren
-    }
-    s.currentComponentInfo = component
-    _saveCurrentPreviewItem(s)
-
-    return s
-  })
-}
-
-const copyComponent = store => component => {
-  store.update(s => {
-    const parent = getParent(s.currentPreviewItem.props, component)
-    const copiedComponent = cloneDeep(component)
-    walkProps(copiedComponent, p => {
-      p._id = uuid()
-    })
-    parent._children = [...parent._children, copiedComponent]
-    _saveCurrentPreviewItem(s)
-    s.currentComponentInfo = copiedComponent
-    return s
-  })
-}
-
 const getPathToComponent = store => component => {
   // Gets all the components to needed to construct a path.
   const tempStore = get(store)
@@ -576,87 +486,9 @@ const getPathToComponent = store => component => {
   return path
 }
 
-const generateNewIdsForComponent = component =>
-  walkProps(component, p => {
-    p._id = uuid()
-  })
-
-const storeComponentForCopy = store => (component, cut = false) => {
-  store.update(s => {
-    const copiedComponent = cloneDeep(component)
-    s.componentToPaste = copiedComponent
-    if (cut) {
-      const parent = getParent(s.currentPreviewItem.props, component._id)
-      parent._children = parent._children.filter(c => c._id !== component._id)
-      _selectComponent(s, parent)
-    }
-
-    return s
-  })
-}
-
-const pasteComponent = store => (targetComponent, mode) => {
-  store.update(s => {
-    if (!s.componentToPaste) return s
-
-    const componentToPaste = cloneDeep(s.componentToPaste)
-    generateNewIdsForComponent(componentToPaste)
-    delete componentToPaste._cutId
-
-    if (mode === "inside") {
-      targetComponent._children.push(componentToPaste)
-      return s
-    }
-
-    const parent = getParent(s.currentPreviewItem.props, targetComponent)
-
-    const targetIndex = parent._children.indexOf(targetComponent)
-    const index = mode === "above" ? targetIndex : targetIndex + 1
-    parent._children.splice(index, 0, cloneDeep(componentToPaste))
-
-    _saveCurrentPreviewItem(s)
-    _selectComponent(s, componentToPaste)
-
-    return s
-  })
-}
-
-const getParent = (rootProps, child) => {
-  let parent
-  walkProps(rootProps, (p, breakWalk) => {
-    if (
-      p._children &&
-      (p._children.includes(child) || p._children.some(c => c._id === child))
-    ) {
-      parent = p
-      breakWalk()
-    }
-  })
-  return parent
-}
-
-const walkProps = (props, action, cancelToken = null) => {
-  cancelToken = cancelToken || { cancelled: false }
-  action(props, () => {
-    cancelToken.cancelled = true
-  })
-
-  if (props._children) {
-    for (let child of props._children) {
-      if (cancelToken.cancelled) return
-      walkProps(child, action, cancelToken)
-    }
-  }
-}
-
 const setMetadataProp = store => (name, prop) => {
   store.update(s => {
     s.currentPreviewItem[name] = prop
     return s
   })
 }
-
-const _saveCurrentPreviewItem = s =>
-  s.currentFrontEndType === "page"
-    ? _savePage(s)
-    : _saveScreenApi(s.currentPreviewItem, s)

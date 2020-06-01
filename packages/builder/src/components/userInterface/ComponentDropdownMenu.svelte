@@ -3,8 +3,10 @@ import { MoreIcon } from "components/common/Icons"
 import { store } from "builderStore"
 import { getComponentDefinition } from "builderStore/store"
 import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-import { last } from "lodash/fp"
+import { last, cloneDeep } from "lodash/fp"
 import UIkit from "uikit"
+import { selectComponent, getParent, walkProps, saveCurrentPreviewItem } from "builderStore/storeUtils"
+import { uuid } from "builderStore/uuid"
 
 export let component
 
@@ -22,6 +24,119 @@ const hideDropdown = () => {
   dropdown.hide()
 }
 
+const moveUpComponent = () => {
+  store.update(s => {
+    const parent = getParent(s.currentPreviewItem.props, component)
+
+    if (parent) {
+      const currentIndex = parent._children.indexOf(component)
+      if (currentIndex === 0) return s
+
+      const newChildren = parent._children.filter(c => c !== component)
+      newChildren.splice(currentIndex - 1, 0, component)
+      parent._children = newChildren
+    }
+    s.currentComponentInfo = component
+    saveCurrentPreviewItem(s)
+
+    return s
+  })
+}
+
+const moveDownComponent = () => {
+  store.update(s => {
+    const parent = getParent(s.currentPreviewItem.props, component)
+
+    if (parent) {
+      const currentIndex = parent._children.indexOf(component)
+      if (currentIndex === parent._children.length - 1) return s
+
+      const newChildren = parent._children.filter(c => c !== component)
+      newChildren.splice(currentIndex + 1, 0, component)
+      parent._children = newChildren
+    }
+    s.currentComponentInfo = component
+    saveCurrentPreviewItem(s)
+
+    return s
+  })
+}
+
+const copyComponent = () => {
+  store.update(s => {
+    const parent = getParent(s.currentPreviewItem.props, component)
+    const copiedComponent = cloneDeep(component)
+    walkProps(copiedComponent, p => {
+      p._id = uuid()
+    })
+    parent._children = [...parent._children, copiedComponent]
+    saveCurrentPreviewItem(s)
+    s.currentComponentInfo = copiedComponent
+    return s
+  })
+}
+
+const deleteComponent = () => {
+  store.update(state => {
+    const parent = getParent(state.currentPreviewItem.props, component)
+
+    if (parent) {
+      parent._children = parent._children.filter(
+        c => c !== component
+      )
+    }
+
+    saveCurrentPreviewItem(state)
+
+    return state
+  })
+}
+
+const generateNewIdsForComponent = c =>
+  walkProps(c, p => {
+    p._id = uuid()
+  })
+
+const storeComponentForCopy = (cut = false) => {
+  store.update(s => {
+    const copiedComponent = cloneDeep(component)
+    s.componentToPaste = copiedComponent
+    if (cut) {
+      const parent = getParent(s.currentPreviewItem.props, component._id)
+      parent._children = parent._children.filter(c => c._id !== component._id)
+      selectComponent(s, parent)
+    }
+
+    return s
+  })
+}
+
+const pasteComponent = mode => {
+  store.update(s => {
+    if (!s.componentToPaste) return s
+
+    const componentToPaste = cloneDeep(s.componentToPaste)
+    generateNewIdsForComponent(componentToPaste)
+    delete componentToPaste._cutId
+
+    if (mode === "inside") {
+      component._children.push(componentToPaste)
+      return s
+    }
+
+    const parent = getParent(s.currentPreviewItem.props, component)
+
+    const targetIndex = parent._children.indexOf(component)
+    const index = mode === "above" ? targetIndex : targetIndex + 1
+    parent._children.splice(index, 0, cloneDeep(componentToPaste))
+
+    saveCurrentPreviewItem(s)
+    selectComponent(s, componentToPaste)
+
+    return s
+  })
+}
+
 </script>
 
 <div class="root" on:click|stopPropagation={()  => {}}>
@@ -30,15 +145,15 @@ const hideDropdown = () => {
   </button>
   <ul class="menu"  bind:this={dropdownEl} on:click={hideDropdown}>
     <li on:click={() => confirmDeleteDialog.show()}>Delete</li>
-    <li on:click={() => store.moveUpComponent(component)}>Move up</li>
-    <li on:click={() => store.moveDownComponent(component)}>Move down</li>
-    <li on:click={() => store.copyComponent(component)}>Duplicate</li>
-    <li on:click={() => store.storeComponentForCopy(component, true)}>Cut</li>
-    <li on:click={() => store.storeComponentForCopy(component)}>Copy</li>
+    <li on:click={moveUpComponent}>Move up</li>
+    <li on:click={moveDownComponent}>Move down</li>
+    <li on:click={copyComponent}>Duplicate</li>
+    <li on:click={() => storeComponentForCopy(true)}>Cut</li>
+    <li on:click={() => storeComponentForCopy(false)}>Copy</li>
     <hr />
-    <li class:disabled={noPaste} on:click={() => store.pasteComponent(component, "above")}>Paste above</li>
-    <li class:disabled={noPaste} on:click={() => store.pasteComponent(component, "below")}>Paste below</li>
-    <li class:disabled={noPaste || noChildrenAllowed} on:click={() => store.pasteComponent(component, "inside")}>Paste inside</li>    
+    <li class:disabled={noPaste} on:click={() => pasteComponent("above")}>Paste above</li>
+    <li class:disabled={noPaste} on:click={() => pasteComponent("below")}>Paste below</li>
+    <li class:disabled={noPaste || noChildrenAllowed} on:click={() => pasteComponent("inside")}>Paste inside</li>    
   </ul>
 </div>
 
@@ -49,17 +164,13 @@ const hideDropdown = () => {
   title="Confirm Delete"
   body={`Are you sure you wish to delete this '${lastPartOfName(component)}' component?`}
   okText="Delete Component"
-  onOk={() => store.deleteComponent(component)} />
+  onOk={deleteComponent} />
 
 <style>
 
 .root {
   overflow: hidden;
   z-index:9;
-}
-
-.hidden {
-  display: none;
 }
 
 .root button {
