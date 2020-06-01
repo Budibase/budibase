@@ -1,7 +1,6 @@
 import { setState } from "./setState"
 import { getState } from "./getState"
 import { isArray, isUndefined } from "lodash/fp"
-import { appStore } from "./store"
 
 import { createApi } from "../api"
 

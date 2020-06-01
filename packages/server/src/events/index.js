@@ -19,7 +19,7 @@ emitter.on("record:save", async function(event) {
   )
 
   for (let workflow of workflowsToTrigger) {
-    // SERVER SIDE STUFF!!
+    // TODO: server side workflow triggers
   }
 })
 
@@ -30,7 +30,7 @@ emitter.on("record:delete", async function(event) {
   )
 
   for (let workflow of workflowsToTrigger) {
-    // SERVER SIDE STUFF!!
+    // TODO: server side workflow triggers
   }
 })
 

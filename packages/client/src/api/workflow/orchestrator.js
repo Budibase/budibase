@@ -43,7 +43,7 @@ export const clientStrategy = ({ api, instanceId }) => ({
       // We don't want to render mustache templates on non-strings
       if (typeof argValue !== "string") continue
 
-      // Means that it's bound to state or workflow context
+      // Render the string with values from the workflow context and state
       mappedArgs[arg] = mustache.render(argValue, {
         context: this.context,
         state: get(appStore),
@@ -82,8 +82,6 @@ export const clientStrategy = ({ api, instanceId }) => ({
           [block.actionId]: response,
         }
       }
-
-      console.log("workflowContext", this.context)
     }
   },
 })

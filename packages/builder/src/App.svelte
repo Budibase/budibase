@@ -25,7 +25,11 @@
   $basepath = "/_builder"
 </script>
 
+<AppNotification />
+
+<!-- svelte-notifications -->
 <NotificationDisplay />
+
 <Modal>
   <Router {routes} />
 </Modal>

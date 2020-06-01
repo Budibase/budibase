@@ -61,7 +61,6 @@ export const createApp = ({
 
   let rootTreeNode
   const pageStateManager = createStateManager({
-    // store: writable({ _bbuser: user }),
     frontendDefinition,
     componentLibraries,
     onScreenSlotRendered,

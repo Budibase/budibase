@@ -2,14 +2,13 @@
   import { onMount } from "svelte"
   import { workflowStore, backendUiStore } from "builderStore"
   import { notifier } from "@beyonk/svelte-notifications"
-  import Flowchart from "./svelte-flows/Flowchart.svelte"
+  import Flowchart from "./flowchart/Flowchart.svelte"
   import api from "builderStore/api"
 
   let selectedWorkflow
   let uiTree
   let instanceId = $backendUiStore.selectedDatabase._id
 
-  // TODO: better naming
   $: selectedWorkflow = $workflowStore.currentWorkflow
 
   $: workflowLive = selectedWorkflow && selectedWorkflow.workflow.live
