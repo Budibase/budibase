@@ -40,8 +40,10 @@
     </ActionButton>
   {/if}
 </div>
-{#if $backendUiStore.selectedDatabase._id}
+{#if $backendUiStore.selectedDatabase._id && $backendUiStore.selectedModel.name}
   <ModelDataTable {selectRecord} />
+{:else}
+  <h3>Start building - create your first model  >>> </h3>
 {/if}
 
 <style>
