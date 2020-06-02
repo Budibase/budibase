@@ -10,7 +10,7 @@
     getParent,
     walkProps,
     saveCurrentPreviewItem,
-    regenerateCssForCurentScreen,
+    regenerateCssForCurrentScreen,
   } from "builderStore/storeUtils"
   import { uuid } from "builderStore/uuid"
 
@@ -86,7 +86,7 @@
       parent._children = [...parent._children, copiedComponent]
       saveCurrentPreviewItem(s)
       s.currentComponentInfo = copiedComponent
-      regenerateCssForCurentScreen(s)
+      regenerateCssForCurrentScreen(s)
       return s
     })
   }
@@ -142,7 +142,7 @@
       const targetIndex = parent._children.indexOf(component)
       const index = mode === "above" ? targetIndex : targetIndex + 1
       parent._children.splice(index, 0, cloneDeep(componentToPaste))
-      regenerateCssForCurentScreen(s)
+      regenerateCssForCurrentScreen(s)
       saveCurrentPreviewItem(s)
       selectComponent(s, componentToPaste)
       
