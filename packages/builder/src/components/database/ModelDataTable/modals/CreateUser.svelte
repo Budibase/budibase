@@ -7,14 +7,15 @@
 
   let username
   let password
+  let accessLevelId
 
-  $: valid = username && password
+  $: valid = username && password && accessLevelId
   $: instanceId = $backendUiStore.selectedDatabase._id
   $: appId = $store.appId
 
   async function createUser() {
-    const user = { name: username, username, password }
-    const response = await api.createUser(user, appId, instanceId)
+    const user = { name: username, username, password, accessLevelId }
+    const response = await api.createUser(user, instanceId)
     backendUiStore.actions.users.create(response)
     onClosed()
   }
@@ -29,6 +30,14 @@
     <div class="uk-margin">
       <label class="uk-form-label" for="form-stacked-text">Password</label>
       <input class="uk-input" type="password" bind:value={password} />
+    </div>
+    <div class="uk-margin">
+      <label class="uk-form-label" for="form-stacked-text">Access Level</label>
+      <select class="uk-select" bind:value={accessLevelId}>
+        <option value="" />
+        <option value="POWER_USER">Power User</option>
+        <option value="ADMIN">Admin</option>
+      </select>
     </div>
   </div>
   <footer>

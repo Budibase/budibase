@@ -74,6 +74,17 @@
 
     --background-button: #f9f9f9;
     --button-text: #0055ff;
+
+    /* Budibase Styleguide Colors */
+    --primary: #0055ff;
+    --secondary: #f1f4fc;
+    --color: #393c44;
+    --light-grey: #fbfbfb;
+    --dark-grey: #808192;
+    --medium-grey: #e8e8ef;
+    --background: rgb(251, 251, 251);
+    --font: #393c44;
+    --coral: #eb5757;
 }
 
 html, body {

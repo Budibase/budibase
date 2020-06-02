@@ -1,7 +1,7 @@
 import regexparam from "regexparam"
-import { writable } from "svelte/store"
+import { routerStore } from "../state/store"
 
-export const screenRouter = (screens, onScreenSelected, appRootPath) => {
+export const screenRouter = ({ screens, onScreenSelected, appRootPath }) => {
   const makeRootedPath = url => {
     if (appRootPath) {
       if (url) return `${appRootPath}${url.startsWith("/") ? "" : "/"}${url}`
@@ -40,13 +40,14 @@ export const screenRouter = (screens, onScreenSelected, appRootPath) => {
       })
     }
 
-    const storeInitial = {}
-    storeInitial["##routeParams"] = params
-    const store = writable(storeInitial)
+    routerStore.update(state => {
+      state["##routeParams"] = params
+      return state
+    })
 
     const screenIndex = current !== -1 ? current : fallback
 
-    onScreenSelected(screens[screenIndex], store, _url)
+    onScreenSelected(screens[screenIndex], _url)
 
     try {
       !url.state && history.pushState(_url, null, _url)
@@ -55,29 +56,8 @@ export const screenRouter = (screens, onScreenSelected, appRootPath) => {
     }
   }
 
-  function click(e) {
-    const x = e.target.closest("a")
-    const y = x && x.getAttribute("href")
-
-    if (
-      e.ctrlKey ||
-      e.metaKey ||
-      e.altKey ||
-      e.shiftKey ||
-      e.button ||
-      e.defaultPrevented
-    )
-      return
-
-    if (!y || x.target || x.host !== location.host) return
-
-    e.preventDefault()
-    route(y)
-  }
-
   addEventListener("popstate", route)
   addEventListener("pushstate", route)
-  addEventListener("click", click)
 
   return route
 }

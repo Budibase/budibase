@@ -1,6 +1,5 @@
 import { createProps } from "../src/components/userInterface/pagesParsing/createProps"
 import { keys, some } from "lodash/fp"
-import { BB_STATE_BINDINGPATH } from "@budibase/client/src/state/parseBinding"
 import { stripStandardProps } from "./testData"
 
 describe("createDefaultProps", () => {
@@ -92,17 +91,6 @@ describe("createDefaultProps", () => {
     expect(errors).toEqual([])
     expect(props.onClick).toBeDefined()
     expect(props.onClick).toEqual([])
-  })
-
-  it("should create a object with empty state when prop def is 'state' ", () => {
-    const comp = getcomponent()
-    comp.props.data = "state"
-
-    const { props, errors } = createProps(comp)
-
-    expect(errors).toEqual([])
-    expect(props.data[BB_STATE_BINDINGPATH]).toBeDefined()
-    expect(props.data[BB_STATE_BINDINGPATH]).toBe("")
   })
 
   it("should create a object children array when children == true ", () => {

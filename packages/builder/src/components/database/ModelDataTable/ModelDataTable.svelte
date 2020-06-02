@@ -43,13 +43,6 @@
     )
   }
 
-  async function selectRecord(record) {
-    return await api.loadRecord(record.key, {
-      appname: $store.appname,
-      instanceId: $backendUiStore.selectedDatabase._id,
-    })
-  }
-
   const ITEMS_PER_PAGE = 10
   // Internal headers we want to hide from the user
   const INTERNAL_HEADERS = ["_id", "_rev", "modelId", "type"]
