@@ -229,7 +229,35 @@ export default {
             "A basic card component that can contain content and actions.",
           icon: "ri-layout-bottom-fill",
           children: [],
-          properties: { design: { ...all } },
+          properties: {
+            design: { ...all },
+            settings: [
+              {
+                label: "Heading",
+                key: "heading",
+                control: Input,
+                placeholder: "text",
+              },
+              {
+                label: "Subheading",
+                key: "subheading",
+                control: Input,
+                placeholder: "text",
+              },
+              {
+                label: "Content",
+                key: "content",
+                control: Input,
+                placeholder: "text",
+              },
+              {
+                label: "Image",
+                key: "imageUrl",
+                control: Input,
+                placeholder: "src",
+              },
+            ],
+          },
         },
         {
           name: "Login",
