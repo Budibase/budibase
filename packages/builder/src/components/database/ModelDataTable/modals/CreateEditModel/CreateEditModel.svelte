@@ -88,7 +88,7 @@
       </tbody>
     </table>
     <footer>
-      <ActionButton color="secondary" on:click={saveModel}>Save</ActionButton>
+        <ActionButton color="secondary" on:click={saveModel}>Save</ActionButton>
     </footer>
   </div>
 {:else}
@@ -128,7 +128,7 @@
   }
 
   tbody > tr:hover {
-    background-color: var(--blue-light);
+    background-color: var(--grey-light);
   }
 
   .table-controls {
@@ -154,10 +154,12 @@
   }
 
   footer {
-    margin: 40px 40px 0px 40px;
     background-color: var(--grey-light);
-    padding: 20px 0px;
+    margin-top: 40px;
+    padding: 20px 40px 20px 40px;
     display: flex;
     justify-content: flex-end;
   }
+
+
 </style>
