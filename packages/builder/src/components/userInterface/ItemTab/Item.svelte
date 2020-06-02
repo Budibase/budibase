@@ -3,7 +3,7 @@
   export let item
 </script>
 
-<div class="item-item" transition:fly={{ y: 100, duration: 1000 }} on:click>
+<div class="item-item" in:fly={{ y: 100, duration: 1000 }} on:click>
   <div class="item-icon">
     <i class={item.icon} />
   </div>

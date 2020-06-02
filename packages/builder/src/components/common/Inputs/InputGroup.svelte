@@ -6,6 +6,7 @@
   export let label = ""
   export let value = ["0", "0", "0", "0"]
   export let suffix = ""
+
   export let onChange = () => {}
 
   function handleChange(val, idx) {
@@ -42,4 +43,5 @@
   .inputs-group {
     flex: 1;
   }
+
 </style>
