@@ -5,13 +5,23 @@
   export let textAlign = "left"
   export let width = "160px"
   export let placeholder = ""
+  export let suffix = ""
+  export let onChange = val => {}
   
   let centerPlaceholder = textAlign === "center"
 
   let style = buildStyle({ width, textAlign })
+  
+  function handleChange(val) {
+    value = val
+    onChange(value)
+  }
+
+  $: displayValue = suffix && value.endsWith(suffix) ? value.replace(new RegExp(`${suffix}$`), "") : value
+  
 </script>
 
-<input class:centerPlaceholder type="text" {placeholder} {style} on:change bind:value />
+<input class:centerPlaceholder type="text" value={displayValue} {placeholder} {style} on:change={e => handleChange(e.target.value)} />
 
 <style>
   input {
