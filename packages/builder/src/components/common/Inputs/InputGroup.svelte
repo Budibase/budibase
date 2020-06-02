@@ -30,7 +30,7 @@
         textAlign="center"
         placeholder={m.placeholder || ''}
         value={!displayValues || displayValues[i] === '0' ? '' : displayValues[i]}
-        on:change={e => handleChange(e.target.value || 0, i)} />
+        onChange={value => handleChange(value || 0, i)} />
     {/each}
   </div>
 </div>

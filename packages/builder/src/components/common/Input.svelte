@@ -11,11 +11,10 @@
   let centerPlaceholder = textAlign === "center"
 
   let style = buildStyle({ width, textAlign })
-
+  
   function handleChange(val) {
     value = val
-    let _value = suffix ? value + suffix : value
-    onChange(_value)
+    onChange(value)
   }
 
   $: displayValue = suffix && value.endsWith(suffix) ? value.replace(new RegExp(`${suffix}$`), "") : value
