@@ -9,8 +9,10 @@
 		"_id": 0,
 		"type": "div",
 		"_styles": {
-			"layout": {},
-			"position": {}
+			"active": {},
+			"hover": {},
+			"normal": {},
+			"selected": {}
 		},
 		"_code": ""
 	},
