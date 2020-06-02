@@ -9,6 +9,17 @@
 
   const { open, close } = getContext("simple-modal")
 
+  const ACCESS_LEVELS = [
+    {
+      name: "Admin",
+      key: "ADMIN"
+    },
+    {
+      name: "Power User",
+      key: "POWER_USER"
+    }
+  ];
+
   let selectedTab = "SETUP"
   let testResult
 
@@ -92,16 +103,14 @@
         </div>
         <div class="uk-margin config-item">
           <label class="uk-form-label">User Access</label>
-          <label>
-            <input class="uk-checkbox" type="checkbox" name="radio1" />
-            Admin
-          </label>
-          <br />
-          <label>
-            <input class="uk-checkbox" type="checkbox" name="radio1" />
-            Power User
-          </label>
-          <br />
+          <div class="access-levels">
+            {#each ACCESS_LEVELS as { name, key }}
+              <span class="access-level">
+                <label>{name}</label>
+                <input class="uk-checkbox" type="checkbox" />
+              </span>
+            {/each}
+          </div>
         </div>
       </div>
       <button class="workflow-button hoverable" on:click={deleteWorkflow}>
@@ -159,6 +168,21 @@
     height: 32px;
     font-size: 12px;
     font-weight: 500;
+  }
+
+  .workflow-button:hover {
+    background: var(--light-grey);
+  }
+
+  .access-level {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+
+  .access-level label {
+    font-weight: normal;
   }
 
   .test-result {

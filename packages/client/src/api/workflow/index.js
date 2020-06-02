@@ -5,7 +5,7 @@ import Orchestrator from "./orchestrator"
 import clientActions from "./actions"
 
 // Execute a workflow from a running budibase app
-export const clientStrategy = ({ api, instanceId }) => ({
+export const clientStrategy = ({ api }) => ({
   context: {},
   bindContextArgs: function(args) {
     const mappedArgs = { ...args }
@@ -40,7 +40,7 @@ export const clientStrategy = ({ api, instanceId }) => ({
 
       // this workflow block gets executed on the server
       if (block.environment === "SERVER") {
-        const EXECUTE_WORKFLOW_URL = `/api/${instanceId}/workflows/action`
+        const EXECUTE_WORKFLOW_URL = `/api/workflows/action`
         const response = await api.post({
           url: EXECUTE_WORKFLOW_URL,
           body: {
@@ -58,8 +58,8 @@ export const clientStrategy = ({ api, instanceId }) => ({
   },
 })
 
-export const triggerWorkflow = api => async ({ workflow, instanceId }) => {
-  const workflowOrchestrator = new Orchestrator(api, instanceId)
+export const triggerWorkflow = api => async ({ workflow }) => {
+  const workflowOrchestrator = new Orchestrator(api)
   workflowOrchestrator.strategy = clientStrategy
 
   const EXECUTE_WORKFLOW_URL = `/api/workflows/${workflow}`

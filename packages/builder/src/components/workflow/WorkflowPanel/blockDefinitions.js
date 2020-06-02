@@ -46,16 +46,16 @@ const ACTION = {
       record: {},
     },
   },
-  FIND_RECORD: {
-    description: "Find a record in your database.",
-    tagline: "<b>Find</b> a <b>{{record.model.name}}</b> record",
-    icon: "ri-search-line",
-    name: "Find Record",
-    environment: "SERVER",
-    params: {
-      record: "string",
-    },
-  },
+  // FIND_RECORD: {
+  //   description: "Find a record in your database.",
+  //   tagline: "<b>Find</b> a <b>{{record.model.name}}</b> record",
+  //   icon: "ri-search-line",
+  //   name: "Find Record",
+  //   environment: "SERVER",
+  //   params: {
+  //     record: "string",
+  //   },
+  // },
   CREATE_USER: {
     description: "Create a new user.",
     tagline: "Create user <b>{{username}}</b>",
