@@ -59,7 +59,7 @@ export const walkProps = (props, action, cancelToken = null) => {
   }
 }
 
-export const regenerateCssForCurentScreen = state => {
+export const regenerateCssForCurrentScreen = state => {
   state.currentPreviewItem._css = generate_screen_css([
     state.currentPreviewItem.props,
   ])
