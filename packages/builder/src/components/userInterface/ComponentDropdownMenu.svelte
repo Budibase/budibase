@@ -10,6 +10,7 @@
     getParent,
     walkProps,
     saveCurrentPreviewItem,
+    regenerateCssForCurentScreen,
   } from "builderStore/storeUtils"
   import { uuid } from "builderStore/uuid"
 
@@ -29,8 +30,7 @@
   $: noChildrenAllowed =
     !component ||
     getComponentDefinition($store, component._component).children === false
-  $: noPaste =
-    !$store.componentToPaste || $store.componentToPaste._id === component._id
+  $: noPaste = !$store.componentToPaste
 
   const lastPartOfName = c => (c ? last(c._component.split("/")) : "")
 
@@ -86,6 +86,7 @@
       parent._children = [...parent._children, copiedComponent]
       saveCurrentPreviewItem(s)
       s.currentComponentInfo = copiedComponent
+      regenerateCssForCurentScreen(s)
       return s
     })
   }
@@ -141,10 +142,10 @@
       const targetIndex = parent._children.indexOf(component)
       const index = mode === "above" ? targetIndex : targetIndex + 1
       parent._children.splice(index, 0, cloneDeep(componentToPaste))
-
+      regenerateCssForCurentScreen(s)
       saveCurrentPreviewItem(s)
       selectComponent(s, componentToPaste)
-
+      
       return s
     })
   }

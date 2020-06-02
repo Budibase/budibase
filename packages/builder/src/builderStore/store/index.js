@@ -23,6 +23,7 @@ import {
   savePage as _savePage,
   saveCurrentPreviewItem as _saveCurrentPreviewItem,
   saveScreenApi as _saveScreenApi,
+  regenerateCssForCurentScreen,
 } from "../storeUtils"
 
 export const getStore = () => {
@@ -174,11 +175,10 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
 const setCurrentScreen = store => screenName => {
   store.update(s => {
     const screen = getExactComponent(s.screens, screenName)
-    screen._css = generate_screen_css([screen.props])
     s.currentPreviewItem = screen
     s.currentFrontEndType = "screen"
     s.currentView = "detail"
-
+    regenerateCssForCurentScreen(s)
     const safeProps = makePropsSafe(
       s.components[screen.props._component],
       screen.props
@@ -296,9 +296,7 @@ const setCurrentPage = store => pageName => {
     state.currentComponentInfo = safeProps
     currentPage.props = safeProps
     state.currentPreviewItem = state.pages[pageName]
-    state.currentPreviewItem._css = generate_screen_css([
-      state.currentPreviewItem.props,
-    ])
+    regenerateCssForCurentScreen(state)
 
     for (let screen of state.screens) {
       screen._css = generate_screen_css([screen.props])
@@ -375,9 +373,7 @@ const addTemplatedComponent = store => props => {
     state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
       props
     )
-    state.currentPreviewItem._css = generate_screen_css([
-      state.currentPreviewItem.props,
-    ])
+    regenerateCssForCurentScreen(state)
 
     setCurrentPageFunctions(state)
     _saveCurrentPreviewItem(state)
@@ -411,9 +407,7 @@ const setComponentStyle = store => (type, name, value) => {
     }
     state.currentComponentInfo._styles[type][name] = value
 
-    state.currentPreviewItem._css = generate_screen_css([
-      state.currentPreviewItem.props,
-    ])
+    regenerateCssForCurentScreen(state)
 
     // save without messing with the store
     _saveCurrentPreviewItem(state)
