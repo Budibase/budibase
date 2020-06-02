@@ -1,5 +1,5 @@
 <script>
-  import {onMount} from "svelte"
+  import { onMount } from "svelte"
   import { buildStyle } from "../../helpers.js"
   export let value = ""
   export let textAlign = "left"
@@ -7,22 +7,30 @@
   export let placeholder = ""
   export let suffix = ""
   export let onChange = val => {}
-  
+
   let centerPlaceholder = textAlign === "center"
 
   let style = buildStyle({ width, textAlign })
-  
+
   function handleChange(val) {
     value = val
     let _value = value !== "auto" ? value + suffix : value
     onChange(_value)
   }
 
-  $: displayValue = suffix && value && value.endsWith(suffix) ? value.replace(new RegExp(`${suffix}$`), "") : (value || "")
-  
+  $: displayValue =
+    suffix && value && value.endsWith(suffix)
+      ? value.replace(new RegExp(`${suffix}$`), "")
+      : value || ""
 </script>
 
-<input class:centerPlaceholder type="text" value={displayValue} {placeholder} {style} on:change={e => handleChange(e.target.value)} />
+<input
+  class:centerPlaceholder
+  type="text"
+  value={displayValue}
+  {placeholder}
+  {style}
+  on:change={e => handleChange(e.target.value)} />
 
 <style>
   input {
@@ -43,7 +51,7 @@
     outline: none;
   }
 
-  input::placeholder {    
+  input::placeholder {
     text-align: left;
   }
 

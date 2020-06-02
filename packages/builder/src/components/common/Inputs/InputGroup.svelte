@@ -11,9 +11,11 @@
 
   function handleChange(val, idx) {
     value.splice(idx, 1, val !== "auto" ? val + suffix : val)
-    
+
     value = value
-    let _value = value.map(v => (!v.endsWith(suffix) && v !== "auto" ? v + suffix : v))
+    let _value = value.map(v =>
+      !v.endsWith(suffix) && v !== "auto" ? v + suffix : v
+    )
     onChange(_value)
   }
 
@@ -44,5 +46,4 @@
   .inputs-group {
     flex: 1;
   }
-
 </style>

@@ -20,17 +20,17 @@
     height: "400",
     dataFormat: "json",
     dataSource: {
-      data: $store[model._id] || [],
+      data: $store[model] || [],
     },
   }
 
   async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/${_instanceId}/all_${model._id}/records`
+    const FETCH_RECORDS_URL = `/api/${_instanceId}/views/all_${model}`
     const response = await _bb.api.get(FETCH_RECORDS_URL)
     if (response.status === 200) {
       const json = await response.json()
       store.update(state => {
-        state[model._id] = json
+        state[model] = json
         return state
       })
     } else {
