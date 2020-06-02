@@ -15,7 +15,7 @@
 
 <style>
   input {
-    width: 32px;
+    /* width: 32px; */
     height: 32px;
     font-size: 12px;
     font-weight: 700;
@@ -23,6 +23,9 @@
     color: var(--ink);
     opacity: 0.7;
     padding: 0px 4px;
+    line-height: 1.3;
+    /* padding: 12px; */
+    width: 164px;
     box-sizing: border-box;
     border: 1px solid var(--grey);
     border-radius: 2px;
