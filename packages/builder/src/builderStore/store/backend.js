@@ -30,7 +30,10 @@ export const getBackendUiStore = () => {
         const views = await viewsResponse.json()
         store.update(state => {
           state.selectedDatabase = db
-          state.selectedModel = models && models.length > 0 && models[0]
+          if (models && models.length > 0) {
+            state.selectedModel = models[0]
+            state.selectedView = `${models[0]._id}`
+          }
           state.breadcrumbs = [db.name]
           state.models = models
           state.views = views
@@ -73,6 +76,7 @@ export const getBackendUiStore = () => {
           state.models.push(model)
           state.models = state.models
           state.selectedModel = model
+          state.selectedView = `${model._id}`
           return state
         }),
     },
