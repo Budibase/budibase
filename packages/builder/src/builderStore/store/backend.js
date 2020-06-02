@@ -1,5 +1,13 @@
 import { writable } from "svelte/store"
 import api from "../api"
+import { getContext } from "svelte"
+
+/** TODO: DEMO SOLUTION
+ * this section should not be here, it is a quick fix for a demo
+ * when we reorg the backend UI, this should disappear
+ *  **/
+import { CreateEditModelModal } from "components/database/ModelDataTable/modals"
+/** DEMO SOLUTION  END **/
 
 export const getBackendUiStore = () => {
   const INITIAL_BACKEND_UI_STATE = {
@@ -28,6 +36,18 @@ export const getBackendUiStore = () => {
           state.views = views
           return state
         })
+        /** TODO: DEMO SOLUTION**/
+        if (!models || models.length === 0) {
+          const { open, close } = getContext("simple-modal")
+          open(
+            CreateEditModelModal,
+            {
+              onClosed: close,
+            },
+            { styleContent: { padding: "0" } }
+          )
+        }
+        /** DEMO SOLUTION  END **/
       },
     },
     records: {
