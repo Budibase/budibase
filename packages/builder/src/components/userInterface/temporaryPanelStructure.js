@@ -319,6 +319,17 @@ export default {
           children: [],
         },
         {
+          name: "Another List",
+          _component: "@budibase/standard-components/list",
+          description: "Shiny list",
+          icon: "ri-file-list-fill",
+          properties: {
+            design: { ...all },
+            settings: [{ label: "Model", key: "model", control: ModelSelect }],
+          },
+          children: [],
+        },
+        {
           name: "Map",
           _component: "@budibase/standard-components/datamap",
           description: "Shiny map",
