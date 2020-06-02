@@ -14,6 +14,7 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
   const anchor = options && options.anchor ? options.anchor : null
   const force = options ? options.force : false
   const hydrate = options ? options.hydrate : true
+  const context = options && options.context
 
   if (!force && treeNode.children.length > 0) return treeNode.children
 
@@ -37,16 +38,27 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
 
     const ComponentConstructor = componentLibraries[libName][componentName]
 
-    const childNodesThisIteration = prepareRenderComponent({
-      props: childProps,
-      parentNode: treeNode,
-      ComponentConstructor,
-      htmlElement,
-      anchor,
-    })
+    const prepareNodes = ctx => {
+      const childNodesThisIteration = prepareRenderComponent({
+        props: childProps,
+        parentNode: treeNode,
+        ComponentConstructor,
+        htmlElement,
+        anchor,
+        context: ctx,
+      })
 
-    for (let childNode of childNodesThisIteration) {
-      childNodes.push(childNode)
+      for (let childNode of childNodesThisIteration) {
+        childNodes.push(childNode)
+      }
+    }
+
+    if (Array.isArray(context)) {
+      for (let singleCtx of context) {
+        prepareNodes(singleCtx)
+      }
+    } else {
+      prepareNodes(context)
     }
   }
 
