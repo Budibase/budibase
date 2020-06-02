@@ -42,13 +42,13 @@
   .secondary {
     color: var(--ink);
     border: solid 1px var(--grey-dark);
-    background: none;
+    background: white;
   }
 
   .button {
     font-size: 14px;
     font-weight: 500;
-    border-radius: 5px;
+    border-radius: 3px;
     padding: 10px 20px;
     height: 40px;
   }

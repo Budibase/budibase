@@ -96,6 +96,7 @@
   .snippet-selector__heading {
     margin-right: 20px;
     font-size: 14px;
+    color: var(--ink-lighter);
   }
 
   .header {
@@ -109,7 +110,7 @@
   }
   
   .code-snippets {
-  margin: 20px 0px 20px 0px;
+    margin: 20px 0px 20px 0px;
   }
 
   .buttons {

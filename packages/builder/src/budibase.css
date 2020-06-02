@@ -117,7 +117,7 @@
 }
 
 .budibase__table tr {
-    border-bottom: 1px solid var(--blue-light);
+    border-bottom: 1px solid var(--grey-light);
 }
 
 .button--toggled {
