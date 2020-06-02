@@ -32,7 +32,7 @@ export const getBackendUiStore = () => {
           state.selectedDatabase = db
           if (models && models.length > 0) {
             state.selectedModel = models[0]
-            state.selectedView = `${models[0]._id}`
+            state.selectedView = `all_${models[0]._id}`
           }
           state.breadcrumbs = [db.name]
           state.models = models
@@ -76,7 +76,7 @@ export const getBackendUiStore = () => {
           state.models.push(model)
           state.models = state.models
           state.selectedModel = model
-          state.selectedView = `${model._id}`
+          state.selectedView = `all_${model._id}`
           return state
         }),
     },
