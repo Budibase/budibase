@@ -69,7 +69,7 @@
   .switcher > .selected {
     color: var(--ink);
   }
-  
+
   .panel {
     min-height: 0;
     height: 100%;
