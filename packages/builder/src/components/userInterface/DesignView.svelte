@@ -66,7 +66,7 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    max-height: 500px;
+    min-height: 0;
   }
 
   .no-design {
