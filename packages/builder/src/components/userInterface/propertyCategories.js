@@ -240,7 +240,7 @@ export const typography = [
     label: "Weight",
     key: "font-weight",
     control: OptionSelect,
-    options: ["normal", "bold", "bolder", "lighter"],
+    options: ["200", "300", "400", "500", "600", "700", "800", "900"],
   },
   {
     label: "size",
@@ -297,7 +297,7 @@ export const typography = [
 
 export const background = [
   {
-    label: "Background",
+    label: "Color",
     key: "background",
     control: Input,
   },
