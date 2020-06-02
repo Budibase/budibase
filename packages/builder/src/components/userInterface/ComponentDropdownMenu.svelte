@@ -151,7 +151,7 @@
   }
 </script>
 
-<div class="root" on:click|stopPropagation={() => {}}>
+<div class="root boundary" on:click|stopPropagation={() => {}}>
   <button>
     <MoreIcon />
   </button>
