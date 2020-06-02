@@ -42,6 +42,12 @@ exports.save = async function(ctx) {
   record.type = "record"
   const response = await db.post(record)
   record._rev = response.rev
+
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emit(`record:save`, {
+      record,
+      instanceId: ctx.params.instanceId,
+    })
   ctx.body = record
   ctx.status = 200
   ctx.message = `${model.name} created successfully`
@@ -81,6 +87,7 @@ exports.destroy = async function(ctx) {
     return
   }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
+  ctx.eventEmitter && ctx.eventEmitter.emit(`record:delete`, record)
 }
 
 exports.validate = async function(ctx) {

@@ -1,43 +1,33 @@
-import { ERROR } from "../state/standardState"
-import { loadRecord } from "./loadRecord"
-import { listRecords } from "./listRecords"
 import { authenticate } from "./authenticate"
-import { saveRecord } from "./saveRecord"
+import { triggerWorkflow } from "./workflow"
 
 export const createApi = ({ rootPath = "", setState, getState }) => {
-  const apiCall = method => ({
-    url,
-    body,
-    notFound,
-    badRequest,
-    forbidden,
-  }) => {
-    return fetch(`${rootPath}${url}`, {
+  const apiCall = method => async ({ url, body }) => {
+    const response = await fetch(`${rootPath}${url}`, {
       method: method,
       headers: {
         "Content-Type": "application/json",
       },
       body: body && JSON.stringify(body),
       credentials: "same-origin",
-    }).then(r => {
-      switch (r.status) {
-        case 200:
-          return r.json()
-        case 404:
-          return error(notFound || `${url} Not found`)
-        case 400:
-          return error(badRequest || `${url} Bad Request`)
-        case 403:
-          return error(forbidden || `${url} Forbidden`)
-        default:
-          if (
-            r.status.toString().startsWith("2") ||
-            r.status.toString().startsWith("3")
-          )
-            return r.json()
-          else return error(`${url} - ${r.statusText}`)
-      }
     })
+
+    switch (response.status) {
+      case 200:
+        return response.json()
+      case 404:
+        return error(`${url} Not found`)
+      case 400:
+        return error(`${url} Bad Request`)
+      case 403:
+        return error(`${url} Forbidden`)
+      default:
+        if (response.status >= 200 && response.status < 400) {
+          return response.json()
+        }
+
+        return error(`${url} - ${response.statusText}`)
+    }
   }
 
   const post = apiCall("POST")
@@ -47,10 +37,9 @@ export const createApi = ({ rootPath = "", setState, getState }) => {
 
   const ERROR_MEMBER = "##error"
   const error = message => {
-    const e = {}
-    e[ERROR_MEMBER] = message
-    setState(ERROR, message)
-    return e
+    const err = { [ERROR_MEMBER]: message }
+    setState("##error_message", message)
+    return err
   }
 
   const isSuccess = obj => !obj || !obj[ERROR_MEMBER]
@@ -68,9 +57,7 @@ export const createApi = ({ rootPath = "", setState, getState }) => {
   }
 
   return {
-    loadRecord: loadRecord(apiOpts),
-    listRecords: listRecords(apiOpts),
     authenticate: authenticate(apiOpts),
-    saveRecord: saveRecord(apiOpts),
+    triggerWorkflow: triggerWorkflow(apiOpts),
   }
 }

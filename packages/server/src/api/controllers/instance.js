@@ -29,6 +29,16 @@ exports.create = async function(ctx) {
           emit([doc.type], doc._id)
         }.toString(),
       },
+      by_workflow_trigger: {
+        map: function(doc) {
+          if (doc.type === "workflow") {
+            const trigger = doc.definition.trigger
+            if (trigger) {
+              emit([trigger.event], trigger)
+            }
+          }
+        }.toString(),
+      },
     },
   })
 

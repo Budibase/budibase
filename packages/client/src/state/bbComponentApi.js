@@ -1,16 +1,13 @@
-import { getStateOrValue } from "./getState"
-import { setState, setStateFromBinding } from "./setState"
-import { trimSlash } from "../common/trimSlash"
-import { isBound } from "./parseBinding"
+import { setState } from "./setState"
 import { attachChildren } from "../render/attachChildren"
 import { getContext, setContext } from "./getSetContext"
 
+export const trimSlash = str => str.replace(/^\/+|\/+$/g, "")
+
 export const bbFactory = ({
   store,
-  getCurrentState,
   frontendDefinition,
   componentLibraries,
-  uiFunctions,
   onScreenSlotRendered,
 }) => {
   const relativeUrl = url => {
@@ -51,11 +48,9 @@ export const bbFactory = ({
   return (treeNode, setupState) => {
     const attachParams = {
       componentLibraries,
-      uiFunctions,
       treeNode,
       onScreenSlotRendered,
       setupState,
-      getCurrentState,
     }
 
     return {
@@ -63,17 +58,12 @@ export const bbFactory = ({
       context: treeNode.context,
       props: treeNode.props,
       call: safeCallEvent,
-      setStateFromBinding: (binding, value) =>
-        setStateFromBinding(store, binding, value),
-      setState: (path, value) => setState(store, path, value),
-      getStateOrValue: (prop, currentContext) =>
-        getStateOrValue(getCurrentState(), prop, currentContext),
+      setState,
       getContext: getContext(treeNode),
       setContext: setContext(treeNode),
       store: store,
       relativeUrl,
       api,
-      isBound,
       parent,
     }
   }

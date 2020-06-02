@@ -4,7 +4,8 @@ const {
   supertest, 
   createClientDatabase, 
   createApplication ,
-  defaultHeaders
+  defaultHeaders,
+  builderEndpointShouldBlockNormalUsers
 } = require("./couchTestUtils")
 
 describe("/models", () => {
@@ -48,6 +49,22 @@ describe("/models", () => {
             done();
         });
       })
+
+      it("should apply authorization to endpoint", async () => {
+        await builderEndpointShouldBlockNormalUsers({
+          request,
+          method: "POST",
+          url: `/api/${instance._id}/models`,
+          instanceId: instance._id,
+          body: { 
+            name: "TestModel",
+            key: "name",
+            schema: {
+              name: { type: "string" }
+            }
+          }
+        })
+      })
     });
 
   describe("fetch", () => {
@@ -70,7 +87,17 @@ describe("/models", () => {
             expect(fetchedModel.type).toEqual("model");            
             done();
         });
+    })
+
+    it("should apply authorization to endpoint", async () => {
+        await builderEndpointShouldBlockNormalUsers({
+          request,
+          method: "GET",
+          url: `/api/${instance._id}/models`,
+          instanceId: instance._id,
+        })
       })
+
     });
 
   describe("destroy", () => {
@@ -92,5 +119,15 @@ describe("/models", () => {
             done();
         });
       })
-    });
+
+    it("should apply authorization to endpoint", async () => {
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "DELETE",
+        url: `/api/${instance._id}/models/${testModel._id}/${testModel._rev}`,
+        instanceId: instance._id,
+      })
+    })
+
+  });
 });

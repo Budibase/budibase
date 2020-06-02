@@ -4,7 +4,6 @@ export default ({
   selectedComponentType,
   selectedComponentId,
   frontendDefinition,
-  currentPageFunctions,
 }) => `<html>
   <head>
     ${stylesheetLinks}
@@ -36,7 +35,6 @@ export default ({
     </style>
     <script>
         window["##BUDIBASE_FRONTEND_DEFINITION##"] = ${frontendDefinition};
-        window["##BUDIBASE_FRONTEND_FUNCTIONS##"] = ${currentPageFunctions};
 
         import('/_builder/budibase-client.esm.mjs')
         .then(module => {
