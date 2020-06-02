@@ -1,5 +1,6 @@
 import { makePropsSafe } from "components/userInterface/pagesParsing/createProps"
 import api from "./api"
+import { generate_screen_css } from "./generate_css"
 
 export const selectComponent = (state, component) => {
   const componentDef = component._component.startsWith("##")
@@ -56,4 +57,11 @@ export const walkProps = (props, action, cancelToken = null) => {
       walkProps(child, action, cancelToken)
     }
   }
+}
+
+export const regenerateCssForCurrentScreen = state => {
+  state.currentPreviewItem._css = generate_screen_css([
+    state.currentPreviewItem.props,
+  ])
+  return state
 }
