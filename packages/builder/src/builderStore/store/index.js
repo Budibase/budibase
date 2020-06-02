@@ -1,4 +1,3 @@
-
 import { values } from "lodash/fp"
 import { backendUiStore } from "builderStore"
 import * as backendStoreActions from "./backend"
@@ -120,28 +119,33 @@ const saveScreen = store => screen => {
 }
 
 const _saveScreen = async (store, s, screen) => {
-	const currentPageScreens = s.pages[s.currentPageName]._screens;
+  const currentPageScreens = s.pages[s.currentPageName]._screens
 
-	await api.post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen).then(() => {
-		if (currentPageScreens.includes(screen)) return;
+  await api
+    .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
+    .then(() => {
+      if (currentPageScreens.includes(screen)) return
 
-		const screens = [ ...currentPageScreens, screen ];
+      const screens = [...currentPageScreens, screen]
 
-		store.update((innerState) => {
-			innerState.pages[s.currentPageName]._screens = screens;
-			innerState.screens = screens;
-			innerState.currentPreviewItem = screen;
-			const safeProps = makePropsSafe(innerState.components[screen.props._component], screen.props);
-			innerState.currentComponentInfo = safeProps;
-			screen.props = safeProps;
+      store.update(innerState => {
+        innerState.pages[s.currentPageName]._screens = screens
+        innerState.screens = screens
+        innerState.currentPreviewItem = screen
+        const safeProps = makePropsSafe(
+          innerState.components[screen.props._component],
+          screen.props
+        )
+        innerState.currentComponentInfo = safeProps
+        screen.props = safeProps
 
-			_savePage(innerState);
-			return innerState;
-		});
-	});
+        _savePage(innerState)
+        return innerState
+      })
+    })
 
-	return s;
-};
+  return s
+}
 
 const createScreen = store => (screenName, route, layoutComponentName) => {
   store.update(state => {
