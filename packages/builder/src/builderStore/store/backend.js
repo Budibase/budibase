@@ -51,6 +51,7 @@ export const getBackendUiStore = () => {
         store.update(state => {
           state.models.push(model)
           state.models = state.models
+          state.selectedModel = model
           return state
         }),
     },
