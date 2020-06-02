@@ -1,5 +1,5 @@
 <script>
-  import {buildStyle} from "../../helpers.js"
+  import { buildStyle } from "../../helpers.js"
   export let value = ""
   export let text = ""
   export let icon = ""
@@ -8,18 +8,23 @@
   export let selected = false
   export let fontWeight = ""
 
-  $: style = buildStyle({padding, fontWeight})
+  $: style = buildStyle({ padding, fontWeight })
   $: useIcon = !!icon
 </script>
 
-<div class="flatbutton" {style} class:selected on:click={() => onClick(value || text)}>
+<div
+  class="flatbutton"
+  {style}
+  class:selected
+  on:click={() => onClick(value || text)}>
   {#if useIcon}
     <i class={icon} />
   {:else}
-    <span>{@html text}</span>
+    <span>
+      {@html text}
+    </span>
   {/if}
 </div>
-
 
 <style>
   .flatbutton {
@@ -41,8 +46,8 @@
     background: var(--ink-light);
     color: #ffffff;
   }
-  
-  i{
+
+  i {
     font-size: 20px;
   }
 </style>
