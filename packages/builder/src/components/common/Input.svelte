@@ -14,7 +14,7 @@
   
   function handleChange(val) {
     value = val
-    let _value = value + suffix
+    let _value = value !== "auto" ? value + suffix : value
     onChange(_value)
   }
 
