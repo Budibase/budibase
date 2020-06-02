@@ -145,7 +145,7 @@
       regenerateCssForCurrentScreen(s)
       saveCurrentPreviewItem(s)
       selectComponent(s, componentToPaste)
-      
+
       return s
     })
   }

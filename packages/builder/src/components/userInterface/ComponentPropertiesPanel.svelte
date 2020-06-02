@@ -107,7 +107,7 @@
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
-    overflow-y:  hidden;
+    overflow-y: hidden;
     padding: 20px;
     box-sizing: border-box;
   }

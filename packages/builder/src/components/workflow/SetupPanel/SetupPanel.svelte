@@ -12,13 +12,13 @@
   const ACCESS_LEVELS = [
     {
       name: "Admin",
-      key: "ADMIN"
+      key: "ADMIN",
     },
     {
       name: "Power User",
-      key: "POWER_USER"
-    }
-  ];
+      key: "POWER_USER",
+    },
+  ]
 
   let selectedTab = "SETUP"
   let testResult
