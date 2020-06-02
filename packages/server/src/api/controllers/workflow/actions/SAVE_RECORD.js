@@ -1,18 +1,29 @@
 const recordController = require("../../record")
 
-module.exports = async function saveRecord(args) {
+module.exports = async function saveRecord({ args, instanceId }) {
+  const { model, ...record } = args.record
+
   const ctx = {
     params: {
-      instanceId: "inst_60dd510_700f7dc06735403e81d5af91072d7241",
+      instanceId,
+      modelId: model._id,
     },
     request: {
-      body: args.record,
+      body: record,
     },
   }
 
   await recordController.save(ctx)
 
-  return {
-    record: ctx.body,
+  try {
+    return {
+      record: ctx.body,
+    }
+  } catch (err) {
+    console.error(err)
+    return {
+      record: null,
+      error: err.message,
+    }
   }
 }

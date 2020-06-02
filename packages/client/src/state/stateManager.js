@@ -65,7 +65,6 @@ const _setup = ({ handlerTypes, getCurrentState, bb, store }) => node => {
     const isBound = typeof propValue === "string" && propValue.startsWith("{{")
 
     if (isBound) {
-      console.log("NODE IS BOUND", node)
       initialProps[propName] = mustache.render(propValue, {
         state: currentStoreState,
         context,

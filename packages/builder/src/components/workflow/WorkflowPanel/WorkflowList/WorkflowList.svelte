@@ -119,4 +119,8 @@
     font-size: 12px;
     font-weight: 500;
   }
+
+  .new-workflow-button:hover {
+    background: var(--light-grey);
+  }
 </style>

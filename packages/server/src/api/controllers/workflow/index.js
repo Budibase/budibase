@@ -54,8 +54,12 @@ exports.find = async function(ctx) {
 }
 
 exports.executeAction = async function(ctx) {
-  const workflowAction = require(`./actions/${ctx.request.body.action}`)
-  const response = await workflowAction(ctx.request.body.args)
+  const { args, action } = ctx.request.body
+  const workflowAction = require(`./actions/${action}`)
+  const response = await workflowAction({
+    args,
+    instanceId: ctx.user.instanceId,
+  })
   ctx.body = response
 }
 
