@@ -236,27 +236,27 @@ export default {
                 label: "Heading",
                 key: "heading",
                 control: Input,
-                placeholder: "text", 
+                placeholder: "text",
               },
               {
                 label: "Subheading",
                 key: "subheading",
                 control: Input,
-                placeholder: "text",                
+                placeholder: "text",
               },
               {
                 label: "Content",
                 key: "content",
                 control: Input,
-                placeholder: "text"
+                placeholder: "text",
               },
               {
                 label: "Image",
                 key: "imageUrl",
                 control: Input,
-                placeholder: "src"
+                placeholder: "src",
               },
-            ] 
+            ],
           },
         },
         {
