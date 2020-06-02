@@ -14,7 +14,8 @@
   
   function handleChange(val) {
     value = val
-    onChange(value)
+    let _value = value + suffix
+    onChange(_value)
   }
 
   $: displayValue = suffix && value.endsWith(suffix) ? value.replace(new RegExp(`${suffix}$`), "") : value
