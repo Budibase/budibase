@@ -22,6 +22,7 @@ export const getBackendUiStore = () => {
         const views = await viewsResponse.json()
         store.update(state => {
           state.selectedDatabase = db
+          state.selectedModel = models && models.length > 0 && models[0]
           state.breadcrumbs = [db.name]
           state.models = models
           state.views = views
