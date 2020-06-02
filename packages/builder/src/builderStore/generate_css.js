@@ -26,6 +26,8 @@ export const generate_css = style => {
         return (str += `${key}: ${value.join(" ")};\n`)
       }
     }
+
+    return str
   }, "")
 
   return (cssString || "").trim()
