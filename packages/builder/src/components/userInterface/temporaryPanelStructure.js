@@ -261,6 +261,7 @@ export default {
         },
         {
           name: "Login",
+          _component: "@budibase/standard-components/login",
           description:
             "A component that automatically generates a login screen for your app.",
           icon: "ri-login-box-fill",
@@ -269,6 +270,7 @@ export default {
         },
         {
           name: "Table",
+          _component: "@budibase/standard-components/datatable",
           description: "A component that generates a table from your data.",
           icon: "ri-archive-drawer-fill",
           properties: { design: { ...all } },
@@ -279,7 +281,7 @@ export default {
           description: "A component that generates a form from your data.",
           icon: "ri-file-edit-fill",
           properties: { design: { ...all } },
-          _component: "@budibase/materialdesign-components/Form",
+          _component: "@budibase/standard-components/dataform",
           template: {
             component: "@budibase/materialdesign-components/Form",
             description: "Form for saving a record",
