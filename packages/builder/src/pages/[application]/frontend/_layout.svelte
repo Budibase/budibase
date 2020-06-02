@@ -84,7 +84,7 @@
   .ui-nav {
     grid-column: 1;
     background-color: var(--white);
-    height: calc(100vh - 49px);
+    height: calc(100vh - 69px);
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -101,6 +101,47 @@
   .components-pane {
     grid-column: 3;
     background-color: var(--white);
+    min-height: 0px;
+    height: calc(100vh - 69px);
+    overflow-y: hidden;
+  }
+
+  .components-nav-page {
+    font-size: 13px;
+    color: var(--ink);
+    padding-left: 20px;
+    margin-top: 20px;
+    font-weight: 600;
+    opacity: 0.4;
+    letter-spacing: 1px;
+  }
+
+  .components-nav-header {
+    font-size: 13px;
+    color: var(--ink);
+    margin-top: 20px;
+    font-weight: 600;
+    opacity: 0.4;
+    letter-spacing: 1px;
+  }
+
+  .nav-header {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+  }
+
+  .nav-items-container {
+    padding: 1rem 0rem 0rem 0rem;
+  }
+
+  .nav-group-header {
+    display: flex;
+    padding: 0px 20px 0px 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    justify-content: space-between;
+    align-items: center;
     min-height: 0;
   }
 
