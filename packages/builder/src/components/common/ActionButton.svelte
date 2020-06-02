@@ -30,8 +30,8 @@
 
   .alert {
     color: white;
-    background: #E26D69;
-    border: solid 1px #E26D69;
+    background: #e26d69;
+    border: solid 1px #e26d69;
   }
 
   .cancel {

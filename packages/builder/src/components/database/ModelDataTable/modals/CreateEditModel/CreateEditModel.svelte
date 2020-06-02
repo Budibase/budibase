@@ -88,7 +88,7 @@
       </tbody>
     </table>
     <footer>
-        <ActionButton color="secondary" on:click={saveModel}>Save</ActionButton>
+      <ActionButton color="secondary" on:click={saveModel}>Save</ActionButton>
     </footer>
   </div>
 {:else}
@@ -160,6 +160,4 @@
     display: flex;
     justify-content: flex-end;
   }
-
-
 </style>

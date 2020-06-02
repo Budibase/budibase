@@ -43,11 +43,11 @@
   <i class="ri-eye-line button--toggled" />
   <h3 class="budibase__title--3">Create / Edit View</h3>
 </div>
-  <form on:submit|preventDefault class="uk-form-stacked root">
-    {#if $store.errors && $store.errors.length > 0}
-      <ErrorsBox errors={$store.errors} />
-    {/if}
-    <div class="main">
+<form on:submit|preventDefault class="uk-form-stacked root">
+  {#if $store.errors && $store.errors.length > 0}
+    <ErrorsBox errors={$store.errors} />
+  {/if}
+  <div class="main">
     <div class="uk-grid-small" uk-grid>
       <div class="uk-width-1-2@s">
         <Textbox bind:text={view.name} label="Name" />
@@ -108,7 +108,7 @@
   .main {
     margin: 20px 40px 0px 40px;
   }
-  
+
   .code-snippets {
     margin: 20px 0px 20px 0px;
   }
