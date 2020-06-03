@@ -267,7 +267,21 @@ export default {
             "A component that automatically generates a login screen for your app.",
           icon: "ri-login-box-fill",
           children: [],
-          properties: { design: { ...all } },
+          properties: {
+            design: { ...all },
+            settings: [
+              {
+                label: "Name",
+                key: "name",
+                control: Input,
+              },
+              {
+                label: "Logo",
+                key: "logo",
+                control: Input,
+              },
+            ],
+          },
         },
         {
           name: "Table",
