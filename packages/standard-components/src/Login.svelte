@@ -25,9 +25,16 @@
 
   const login = async () => {
     loading = true
-    const response = await _bb.api.post("/api/authenticate", {
-      username,
-      password,
+    const response = await fetch(_bb.relativeUrl("/api/authenticate"), {
+      body: JSON.stringify({
+        username,
+        password,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-agent": "Budibase Builder",
+      },
+      method: "POST",
     })
 
     if (response.status === 200) {
