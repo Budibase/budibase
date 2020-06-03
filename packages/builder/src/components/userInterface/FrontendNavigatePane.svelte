@@ -9,6 +9,7 @@
     newScreenPicker.show()
   }
 
+  $: console.log("STORE SCREENS", $store.screens)
   let newScreenPicker
 </script>
 
