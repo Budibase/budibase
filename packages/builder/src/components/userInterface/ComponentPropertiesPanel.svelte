@@ -1,5 +1,6 @@
 <script>
   import { setContext, onMount } from "svelte"
+  import {screen, page} from "./propertyCategories.js"
   import PropsView from "./PropsView.svelte"
   import { store } from "builderStore"
   import IconButton from "components/common/IconButton.svelte"
@@ -41,15 +42,48 @@
   $: panelDefinition = componentPropDefinition.properties
     ? componentPropDefinition.properties[selectedCategory.value]
     : {}
+  
+  let panelDefNew = {}
 
-  // SCREEN PROPS =============================================
-  $: screen_props =
-    $store.currentFrontEndType === "page"
-      ? getProps($store.currentPreviewItem, ["name", "favicon"])
-      : getProps($store.currentPreviewItem, ["name", "description", "route"])
+  $: {
+    if(componentPropDefinition.properties) {
+      if(selectedCategory.value === "design") {
+        panelDefNew = componentPropDefinition.properties["design"]
+      }else{
+        let panelDef = componentPropDefinition.properties["settings"]
+        if($store.currentFrontEndType === "page") {
+          panelDefNew = [...page,...panelDef]
+        }else if($store.currentFrontEndType === "screen" && $store.currentView !== "component") {
+          panelDefNew = [...screen, ...panelDef]
+        }else {
+          panelDefNew = panelDef
+        }
+      }
+    }
+  }
+
+  let componentInstanceNew = {}
+  $: {
+     if(($store.currentFrontEndType === "screen" || $store.currentFrontEndType === "page") && $store.currentView !== "component") {
+       componentInstanceNew = {...$store.currentPreviewItem, ...$store.currentComponentInfo}
+     }else {
+       componentInstanceNew = $store.currentComponentInfo
+     }
+  }
+
+  $: console.log("COMP INSTA NEW", componentInstanceNew)
 
   const onStyleChanged = store.setComponentStyle
-  const onPropChanged = store.setComponentProp
+
+  function onPropChanged(key, value) {
+   if($store.currentFrontEndType === "page") {
+      store.editPageOrScreen(key, value)
+   }else if($store.currentFrontEndType === "screen" && $store.currentView !== "component") {
+      store.editPageOrScreen(key, value)
+   }else {
+      store.setComponentProp(key, value)
+    }
+  }
 
   function walkProps(component, action) {
     action(component)
@@ -86,12 +120,12 @@
 
   <div class="component-props-container">
     {#if selectedCategory.value === 'design'}
-      <DesignView {panelDefinition} {componentInstance} {onStyleChanged} />
+      <DesignView panelDefinition={panelDefNew} {componentInstance} {onStyleChanged} />
     {:else if selectedCategory.value === 'settings'}
       <SettingsView
+        panelDefinition={panelDefNew}
         {componentInstance}
         {componentDefinition}
-        {panelDefinition}
         onChange={onPropChanged} />
     {:else if selectedCategory.value === 'events'}
       <EventsEditor component={componentInstance} />
@@ -106,12 +140,10 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    /* Merge Check */
     overflow-x: hidden;
     overflow-y: hidden;
     padding: 20px;
     box-sizing: border-box;
-    /* Merge Check */
   }
 
   .title > div:nth-child(1) {
