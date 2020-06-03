@@ -307,7 +307,7 @@ export default {
           },
           children: [],
         },
-        {
+        /*{
           name: "List",
           _component: "@budibase/standard-components/datalist",
           description: "Shiny list",
@@ -317,9 +317,9 @@ export default {
             settings: [{ label: "Model", key: "model", control: ModelSelect }],
           },
           children: [],
-        },
+        },*/
         {
-          name: "Another List",
+          name: "List",
           _component: "@budibase/standard-components/list",
           description: "Shiny list",
           icon: "ri-file-list-fill",
