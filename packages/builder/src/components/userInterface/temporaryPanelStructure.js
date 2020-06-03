@@ -354,6 +354,7 @@ export default {
             settings: [
               { label: "Logo URL", key: "logoUrl", control: Input },
               { label: "Title", key: "title", control: Input },
+              { label: "Color", key: "color", control: Input },
               { label: "Background", key: "backgroundColor", control: Input }],
           },
         },
