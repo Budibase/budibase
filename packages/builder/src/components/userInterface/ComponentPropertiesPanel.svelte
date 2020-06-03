@@ -31,7 +31,6 @@
   let selectedCategory = categories[0]
 
   $: components = $store.components
-  $: componentInstance = $store.currentComponentInfo
   $: componentDefinition = $store.components[componentInstance._component]
   $: componentPropDefinition =
     flattenedPanel.find(
@@ -39,39 +38,34 @@
       c => c._component === componentInstance._component
     ) || {}
 
-  $: panelDefinition = componentPropDefinition.properties
-    ? componentPropDefinition.properties[selectedCategory.value]
-    : {}
   
-  let panelDefNew = {}
+  let panelDefinition = {}
 
   $: {
     if(componentPropDefinition.properties) {
       if(selectedCategory.value === "design") {
-        panelDefNew = componentPropDefinition.properties["design"]
+        panelDefinition = componentPropDefinition.properties["design"]
       }else{
         let panelDef = componentPropDefinition.properties["settings"]
         if($store.currentFrontEndType === "page") {
-          panelDefNew = [...page,...panelDef]
+          panelDefinition = [...page,...panelDef]
         }else if($store.currentFrontEndType === "screen" && $store.currentView !== "component") {
-          panelDefNew = [...screen, ...panelDef]
+          panelDefinition = [...screen, ...panelDef]
         }else {
-          panelDefNew = panelDef
+          panelDefinition = panelDef
         }
       }
     }
   }
 
-  let componentInstanceNew = {}
+  let componentInstance = {}
   $: {
      if(($store.currentFrontEndType === "screen" || $store.currentFrontEndType === "page") && $store.currentView !== "component") {
-       componentInstanceNew = {...$store.currentPreviewItem, ...$store.currentComponentInfo}
+       componentInstance = {...$store.currentPreviewItem, ...$store.currentComponentInfo}
      }else {
-       componentInstanceNew = $store.currentComponentInfo
+       componentInstance = $store.currentComponentInfo
      }
   }
-
-  $: console.log("COMP INSTA NEW", componentInstanceNew)
 
   const onStyleChanged = store.setComponentStyle
 
@@ -120,10 +114,10 @@
 
   <div class="component-props-container">
     {#if selectedCategory.value === 'design'}
-      <DesignView panelDefinition={panelDefNew} {componentInstance} {onStyleChanged} />
+      <DesignView {panelDefinition} {componentInstance} {onStyleChanged} />
     {:else if selectedCategory.value === 'settings'}
       <SettingsView
-        panelDefinition={panelDefNew}
+        {panelDefinition}
         {componentInstance}
         {componentDefinition}
         onChange={onPropChanged} />
