@@ -5,14 +5,14 @@
   import { onMount } from "svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import IconButton from "components/common/IconButton.svelte"
-
+  import { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
 
   let promise = getApps()
 
   async function getApps() {
-    const res = await fetch(`/api/applications`)
+    const res = await get("/api/applications")
     const json = await res.json()
 
     if (res.ok) {

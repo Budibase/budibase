@@ -3,6 +3,7 @@ const apiCall = method => async (url, body) => {
     method: method,
     headers: {
       "Content-Type": "application/json",
+      "User-Agent": "Budibase Builder",
     },
     body: body && JSON.stringify(body),
   })
@@ -14,11 +15,11 @@ const apiCall = method => async (url, body) => {
   return response
 }
 
-const post = apiCall("POST")
-const get = apiCall("GET")
-const patch = apiCall("PATCH")
-const del = apiCall("DELETE")
-const put = apiCall("PUT")
+export const post = apiCall("POST")
+export const get = apiCall("GET")
+export const patch = apiCall("PATCH")
+export const del = apiCall("DELETE")
+export const put = apiCall("PUT")
 
 export default {
   post,
