@@ -9,7 +9,9 @@
   export let componentInstance = {}
   export let onChange = () => {}
 
-  const propExistsOnComponentDef = prop => prop in componentDefinition.props
+  let pageScreenProps = ["name", "favicon", "description", "route"]
+  
+  const propExistsOnComponentDef = prop => pageScreenProps.includes(prop) || prop in componentDefinition.props
 
   function handleChange(key, data) {
     data.target ? onChange(key, data.target.value) : onChange(key, data)
