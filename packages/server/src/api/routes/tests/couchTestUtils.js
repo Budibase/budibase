@@ -176,8 +176,7 @@ const createUserWithPermissions = async (
   const designDoc = await db.get("_design/database")
 
   const loginResult = await request
-    .post(`/api/authenticate`)
-    .set("Referer", `http://localhost:4001/${designDoc.metadata.applicationId}`)
+    .post(`/${designDoc.metadata.applicationId}/api/authenticate`)
     .send({ username, password })
 
   // returning necessary request headers
