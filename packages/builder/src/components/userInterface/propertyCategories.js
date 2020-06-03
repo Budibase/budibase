@@ -5,13 +5,12 @@ import FlatButtonGroup from "./FlatButtonGroup.svelte"
 
 
 export const screen = [
-  { label: "Name", key: "name", control: Input },
   { label: "Description", key: "description", control: Input },
   { label: "Route", key: "route", control: Input },
 ]
 
 export const page = [
-  { label: "Name", key: "name", control: Input },
+  { label: "Title", key: "title", control: Input },
   { label: "Favicon", key: "favicon", control: Input },
 ]
 

@@ -9,7 +9,9 @@
   export let componentInstance = {}
   export let onChange = () => {}
 
-  let pageScreenProps = ["name", "favicon", "description", "route"]
+  $: console.log("SET COMP INSTANCE",componentInstance)
+
+  let pageScreenProps = ["title","favicon", "description", "route"]
   
   const propExistsOnComponentDef = prop => pageScreenProps.includes(prop) || prop in componentDefinition.props
 
