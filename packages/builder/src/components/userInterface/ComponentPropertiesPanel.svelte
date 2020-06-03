@@ -71,18 +71,15 @@
      }
   }
 
-  $: console.log("COMP INSTA NEW", componentInstanceNew)
-
   const onStyleChanged = store.setComponentStyle
 
   function onPropChanged(key, value) {
-   if($store.currentFrontEndType === "page") {
+   if($store.currentFrontEndType === "page" || ($store.currentFrontEndType === "screen" && $store.currentView !== "component")) {
       store.editPageOrScreen(key, value)
-   }else if($store.currentFrontEndType === "screen" && $store.currentView !== "component") {
-      store.editPageOrScreen(key, value)
-   }else {
-      store.setComponentProp(key, value)
-    }
+      return;
+   }
+      
+    store.setComponentProp(key, value)
   }
 
   function walkProps(component, action) {
