@@ -79,19 +79,28 @@
   </form>
 </div>
 <footer>
+  <div class="button">
+    <ActionButton secondary on:click={goBack}>Cancel</ActionButton>
+  </div>
   <ActionButton primary on:click={save}>Save</ActionButton>
-  <ActionButton alert on:click={goBack}>Cancel</ActionButton>
 </footer>
 
 <style>
   .root {
-    margin: 20px;
+    margin: 40px;
   }
   footer {
-    padding: 20px;
+    padding: 20px 40px;
     border-radius: 0 0 5px 5px;
     bottom: 0;
     left: 0;
-    background: #fafafa;
+    background: var(--grey-light);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .button {
+    margin-right: 20px;
   }
 </style>

@@ -1,19 +1,45 @@
 {
-	"title": "Test App",
-	"favicon": "./_shared/favicon.png",
-	"stylesheets": [],
-	"componentLibraries": ["@budibase/standard-components", "@budibase/materialdesign-components"],
-	"props" : {
-		"_component": "@budibase/standard-components/container",
-		"_children": [],
-		"_id": 1,
-		"type": "div",
-		"_styles": {
-			"layout": {},
-			"position": {}
-		},
-		"_code": ""
-	},
-	"_css": "",
-	"uiFunctions": ""
+  "componentLibraries": [
+    "@budibase/standard-components",
+    "@budibase/materialdesign-components"
+  ],
+  "title": "{{ name }}",
+  "favicon": "./_shared/favicon.png",
+  "stylesheets": [],
+  "props": {
+    "_component": "@budibase/standard-components/container",
+    "_children": [
+      {
+        "_id": "686c252d-dbf2-4e28-9078-414ba4719759",
+        "_component": "@budibase/standard-components/login",
+        "_styles": {
+          "normal": {},
+          "hover": {},
+          "active": {},
+          "selected": {}
+        },
+        "_code": "",
+        "loginRedirect": "",
+        "usernameLabel": "Username",
+        "passwordLabel": "Password",
+        "loginButtonLabel": "Login",
+        "buttonClass": "",
+        "inputClass": "",
+        "_children": [],
+        "name": "{{ name }}",
+        "logo": ""
+      }
+    ],
+    "_id": 1,
+    "type": "div",
+    "_styles": {
+      "layout": {},
+      "position": {}
+    },
+    "_code": "",
+    "className": "",
+    "onLoad": []
+  },
+  "_css": "",
+  "uiFunctions": ""
 }
