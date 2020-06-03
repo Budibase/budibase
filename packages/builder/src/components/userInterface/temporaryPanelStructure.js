@@ -323,7 +323,20 @@ export default {
                 label: "Chart Type",
                 key: "type",
                 control: OptionSelect,
-                options: ["column2d", "password"],
+                options: [
+                  "column2d", 
+                  "column3d",
+                  "line",
+                  "area2d",
+                  "bar2d",
+                  "bar3d",
+                  "pie2d",
+                  "pie3d",
+                  "doughnut2d",
+                  "doughnut3d",
+                  "pareto2d",
+                  "pareto3d"
+                ]
               },
             ],
           },
