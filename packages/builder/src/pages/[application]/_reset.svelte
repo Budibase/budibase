@@ -1,6 +1,7 @@
 <script>
   import Modal from "svelte-simple-modal"
   import { store } from "builderStore"
+  import { get } from "builderStore/api"
 
   import { fade } from "svelte/transition"
   import { isActive, goto, layout } from "@sveltech/routify"
@@ -14,7 +15,7 @@
   let promise = getPackage()
 
   async function getPackage() {
-    const res = await fetch(`/api/${application}/appPackage`)
+    const res = await get(`/api/${application}/appPackage`)
     const pkg = await res.json()
 
     if (res.ok) {
