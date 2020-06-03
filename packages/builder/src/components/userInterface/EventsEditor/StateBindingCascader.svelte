@@ -28,7 +28,7 @@
         {/each}
       </select>
     {:else}
-      <Input on:change={onChange} value={parameter.value} />
+      <Input onChange={onChange} value={parameter.value} />
       <button on:click={() => (isOpen = !isOpen)}>
         <div class="icon" style={`transform: rotate(${isOpen ? 0 : 90}deg);`}>
           <ArrowDownIcon size={36} />
