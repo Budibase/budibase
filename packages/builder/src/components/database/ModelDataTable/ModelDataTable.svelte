@@ -145,19 +145,19 @@
   }
 
   table {
-    border: 1px solid #ccc;
+    border: 1px solid var(--grey-dark);
     background: #fff;
     border-radius: 3px;
     border-collapse: collapse;
   }
 
   thead {
-    background: #f9f9f9;
-    border: 1px solid #ccc;
+    background: var(--blue-light);
+    border: 1px solid var(--grey-dark);
   }
 
   thead th {
-    color: var(--button-text);
+    color: var(--ink);
     text-transform: capitalize;
     font-weight: 500;
     font-size: 14px;
@@ -166,14 +166,14 @@
   }
 
   tbody tr {
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid var(--grey-dark);
     transition: 0.3s background-color;
-    color: var(--secondary100);
+    color: var(--ink);
     font-size: 14px;
   }
 
   tbody tr:hover {
-    background: #fafafa;
+    background: var(--grey-light);
   }
 
   .table-controls {
