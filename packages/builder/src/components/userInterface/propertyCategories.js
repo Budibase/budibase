@@ -11,7 +11,7 @@ export const screen = [
 ]
 
 export const page = [
-  { label: "Name", key: "name", control: Input },
+  { label: "Title", key: "title", control: Input },
   { label: "Favicon", key: "favicon", control: Input },
 ]
 
