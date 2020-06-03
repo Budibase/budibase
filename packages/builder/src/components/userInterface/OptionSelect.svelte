@@ -1,6 +1,6 @@
 <script>
   import { onMount, beforeUpdate } from "svelte"
-  import {buildStyle} from "../../helpers.js"
+  import { buildStyle } from "../../helpers.js"
   export let options = []
   export let value = ""
   export let styleBindingProperty
@@ -214,10 +214,10 @@
     height: auto;
     padding: 5px 0px;
     cursor: pointer;
-    padding-left: 10px
+    padding-left: 10px;
   }
 
   li:hover {
-    background-color:#e6e6e6
+    background-color: #e6e6e6;
   }
 </style>
