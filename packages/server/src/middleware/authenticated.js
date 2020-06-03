@@ -15,19 +15,16 @@ module.exports = async (ctx, next) => {
 
   const appToken = ctx.cookies.get("budibase:token")
   const builderToken = ctx.cookies.get("builder:token")
-  const isBuilderAgent = ctx.headers["user-agent"] === "Budibase Builder"
+  const isBuilderAgent = ctx.headers["x-user-agent"] === "Budibase Builder"
 
   // all admin api access should auth with buildertoken and 'Budibase Builder user agent
   const shouldAuthAsBuilder = isBuilderAgent && builderToken
 
   if (shouldAuthAsBuilder) {
-    if (builderToken === env.ADMIN_SECRET) {
-      ctx.isAuthenticated = true
-      ctx.isBuilder = true
-    } else {
-      ctx.isAuthenticated = false
-      ctx.isBuilder = false
-    }
+    const builderTokenValid = builderToken === env.ADMIN_SECRET
+
+    ctx.isAuthenticated = builderTokenValid
+    ctx.isBuilder = builderTokenValid
 
     await next()
     return
