@@ -324,7 +324,7 @@ export default {
                 key: "type",
                 control: OptionSelect,
                 options: [
-                  "column2d", 
+                  "column2d",
                   "column3d",
                   "line",
                   "area2d",
@@ -335,8 +335,8 @@ export default {
                   "doughnut2d",
                   "doughnut3d",
                   "pareto2d",
-                  "pareto3d"
-                ]
+                  "pareto3d",
+                ],
               },
             ],
           },

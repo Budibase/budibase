@@ -1,4 +1,4 @@
-import { get } from "builderStore/api";
+import { get } from "builderStore/api"
 
 /**
  * Fetches the definitions for component library components. This includes

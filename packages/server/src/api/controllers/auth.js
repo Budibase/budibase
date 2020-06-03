@@ -12,7 +12,8 @@ exports.authenticate = async ctx => {
 
   // find the instance that the user is associated with
   const db = new CouchDB(ClientDb.name(env.CLIENT_ID))
-  const app = await db.get(ctx.params.appId)
+  const appId = ctx.params.appId
+  const app = await db.get(appId)
   const instanceId = app.userInstanceMap[username]
 
   if (!instanceId)
