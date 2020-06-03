@@ -349,7 +349,15 @@ export default {
             "A component for handling the navigation within your app.",
           icon: "ri-navigation-fill",
           children: [],
-          properties: { design: { ...all } },
+          properties: {
+            design: { ...all },
+            settings: [
+              { label: "Logo URL", key: "logoUrl", control: Input },
+              { label: "Title", key: "title", control: Input },
+              { label: "Color", key: "color", control: Input },
+              { label: "Background", key: "backgroundColor", control: Input },
+            ],
+          },
         },
       ],
     },
