@@ -27,6 +27,7 @@ export const bbFactory = ({
       method: method,
       headers: {
         "Content-Type": "application/json",
+        "x-user-agent": "Budibase Builder"
       },
       body: body && JSON.stringify(body),
     })

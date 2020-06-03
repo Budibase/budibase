@@ -317,7 +317,15 @@ export default {
           icon: "ri-bar-chart-fill",
           properties: {
             design: { ...all },
-            settings: [{ label: "Model", key: "model", control: ModelSelect }],
+            settings: [
+              { label: "Model", key: "model", control: ModelSelect },
+              {
+                label: "Chart Type",
+                key: "type",
+                control: OptionSelect,
+                options: ["column2d", "password"],
+              },
+            ],
           },
           children: [],
         },

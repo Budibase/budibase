@@ -10,13 +10,9 @@ exports.authenticate = async ctx => {
   if (!username) ctx.throw(400, "Username Required.")
   if (!password) ctx.throw(400, "Password Required")
 
-  // TODO: Don't use this. It can't be relied on
-  const referer = ctx.request.headers.referer.split("/")
-  const appId = referer[3]
-
   // find the instance that the user is associated with
   const db = new CouchDB(ClientDb.name(env.CLIENT_ID))
-  const app = await db.get(appId)
+  const app = await db.get(ctx.params.appId)
   const instanceId = app.userInstanceMap[username]
 
   if (!instanceId)
