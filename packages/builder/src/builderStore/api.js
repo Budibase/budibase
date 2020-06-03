@@ -3,7 +3,7 @@ const apiCall = method => async (url, body) => {
     method: method,
     headers: {
       "Content-Type": "application/json",
-      "User-Agent": "Budibase Builder",
+      "x-user-agent": "Budibase Builder",
     },
     body: body && JSON.stringify(body),
   })
