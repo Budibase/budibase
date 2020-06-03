@@ -3,7 +3,6 @@ import OptionSelect from "./OptionSelect.svelte"
 import InputGroup from "../common/Inputs/InputGroup.svelte"
 import FlatButtonGroup from "./FlatButtonGroup.svelte"
 
-
 export const screen = [
   { label: "Name", key: "name", control: Input },
   { label: "Description", key: "description", control: Input },
