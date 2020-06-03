@@ -1,6 +1,6 @@
 <script>
   import { setContext, onMount } from "svelte"
-  import {screen, page} from "./propertyCategories.js"
+  import { screen, page } from "./propertyCategories.js"
   import PropsView from "./PropsView.svelte"
   import { store } from "builderStore"
   import IconButton from "components/common/IconButton.svelte"
@@ -38,20 +38,22 @@
       c => c._component === componentInstance._component
     ) || {}
 
-  
   let panelDefinition = {}
 
   $: {
-    if(componentPropDefinition.properties) {
-      if(selectedCategory.value === "design") {
+    if (componentPropDefinition.properties) {
+      if (selectedCategory.value === "design") {
         panelDefinition = componentPropDefinition.properties["design"]
-      }else{
+      } else {
         let panelDef = componentPropDefinition.properties["settings"]
-        if($store.currentFrontEndType === "page") {
-          panelDefinition = [...page,...panelDef]
-        }else if($store.currentFrontEndType === "screen" && $store.currentView !== "component") {
+        if ($store.currentFrontEndType === "page") {
+          panelDefinition = [...page, ...panelDef]
+        } else if (
+          $store.currentFrontEndType === "screen" &&
+          $store.currentView !== "component"
+        ) {
           panelDefinition = [...screen, ...panelDef]
-        }else {
+        } else {
           panelDefinition = panelDef
         }
       }
@@ -60,21 +62,32 @@
 
   let componentInstance = {}
   $: {
-     if(($store.currentFrontEndType === "screen" || $store.currentFrontEndType === "page") && $store.currentView !== "component") {
-       componentInstance = {...$store.currentPreviewItem, ...$store.currentComponentInfo}
-     }else {
-       componentInstance = $store.currentComponentInfo
-     }
+    if (
+      ($store.currentFrontEndType === "screen" ||
+        $store.currentFrontEndType === "page") &&
+      $store.currentView !== "component"
+    ) {
+      componentInstance = {
+        ...$store.currentPreviewItem,
+        ...$store.currentComponentInfo,
+      }
+    } else {
+      componentInstance = $store.currentComponentInfo
+    }
   }
 
   const onStyleChanged = store.setComponentStyle
 
   function onPropChanged(key, value) {
-   if($store.currentFrontEndType === "page" || ($store.currentFrontEndType === "screen" && $store.currentView !== "component")) {
+    if (
+      $store.currentFrontEndType === "page" ||
+      ($store.currentFrontEndType === "screen" &&
+        $store.currentView !== "component")
+    ) {
       store.editPageOrScreen(key, value)
-      return;
-   }
-      
+      return
+    }
+
     store.setComponentProp(key, value)
   }
 
