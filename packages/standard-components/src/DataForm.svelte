@@ -58,24 +58,95 @@
   }
 </script>
 
-<form class="uk-form" on:submit|preventDefault>
-  <h4>{modelDef.name}</h4>
-  <div>
+<form class="form" on:submit|preventDefault>
+  <div class="form-content">
     {#each fields as field}
-      <div class="uk-margin">
+      <div class="form-item">
         <label class="form-label" for="form-stacked-text">{field}</label>
         <input
-          class="uk-input"
+          class="input"
+          placeholder={field}
           type={schema[field].type === 'string' ? 'text' : schema[field].type}
           on:change={handleInput(field)} />
       </div>
+      <hr />
     {/each}
+    <div class="button-block">
+      <button on:click={save}>Submit Form</button>
+    </div>
   </div>
-  <button on:click={save}>SAVE</button>
 </form>
 
 <style>
+  .form {
+    align-items: center;
+    width: 100%;
+  }
+
+  .form-content {
+    margin-bottom: 20px;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .input {
+    width: 600px;
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid #e6e6e6;
+    padding: 6px 12px 6px 12px;
+    font-size: 16px;
+  }
+
+  .form-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
   .form-label {
     font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  hr {
+    border: 1px solid #fafafa;
+    margin: 20px 0px;
+  }
+
+  hr:nth-last-child(2) {
+    border: 1px solid #fff;
+    margin: 20px 0px;
+  }
+
+  .button-block {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  button {
+    font-family: Inter;
+    font-size: 16px;
+    padding: 0.4em;
+    box-sizing: border-box;
+    border-radius: 4px;
+    color: white;
+    background-color: #393c44;
+    outline: none;
+    width: 300px;
+    height: 40px;
+    cursor: pointer;
+    transition: all 0.2s ease 0s;
+    overflow: hidden;
+    outline: none;
+    user-select: none;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  button:hover {
+    background-color: white;
+    border-color: #393c44;
+    color: #393c44;
   }
 </style>
