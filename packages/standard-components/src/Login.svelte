@@ -99,11 +99,11 @@
   }
 
   .logo-container {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
   }
 
   .logo-container > img {
-    max-width: 100%;
+    max-width: 200px;
   }
 
   .login-button-container {
