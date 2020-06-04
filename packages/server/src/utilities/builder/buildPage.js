@@ -45,7 +45,7 @@ const copyClientLib = async (appPath, pageName) => {
 
 const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
   const appPublicPath = publicPath(appPath, pageName)
-  const appRootPath = appId
+  const appRootPath = rootPath(config, appId)
 
   const stylesheetUrl = s =>
     s.startsWith("http") ? s : `/${rootPath(config, appId)}/${s}`

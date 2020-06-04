@@ -13,7 +13,7 @@
   $: target = openInNewTab ? "_blank" : "_self"
 </script>
 
-<a href={_bb.relativeUrl(url)} bind:this={anchorElement} {target}>{text}</a>
+<a href={url} bind:this={anchorElement} {target}>{text}</a>
 
 <style>
   .textDecoration {
