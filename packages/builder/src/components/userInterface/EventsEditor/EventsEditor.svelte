@@ -1,4 +1,5 @@
 <script>
+  import { getContext } from "svelte"
   import {
     keys,
     map,
@@ -17,7 +18,6 @@
   import PlusButton from "components/common/PlusButton.svelte"
   import IconButton from "components/common/IconButton.svelte"
   import EventEditorModal from "./EventEditorModal.svelte"
-  import HandlerSelector from "./HandlerSelector.svelte"
 
   import { PencilIcon } from "components/common/Icons"
   import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
@@ -26,7 +26,6 @@
 
   export let component
 
-  let modalOpen = false
   let events = []
   let selectedEvent = null
 
@@ -40,14 +39,28 @@
       }))
   }
 
+  // Handle create app modal
+  const { open, close } = getContext("simple-modal")
+
   const openModal = event => {
     selectedEvent = event
-    modalOpen = true
-  }
-
-  const closeModal = () => {
-    selectedEvent = null
-    modalOpen = false
+    open(
+      EventEditorModal,
+      {
+        eventOptions: events,
+        event: selectedEvent,
+        onClose: () => {
+          close()
+          selectedEvent = null
+        },
+      },
+      {
+        closeButton: false,
+        closeOnEsc: false,
+        styleContent: { padding: 0 },
+        closeOnOuterClick: true,
+      }
+    )
   }
 </script>
 
@@ -71,11 +84,6 @@
     {/each}
   </form>
 </div>
-<EventEditorModal
-  open={modalOpen}
-  onClose={closeModal}
-  eventOptions={events}
-  event={selectedEvent} />
 
 <style>
   h3 {
