@@ -19,7 +19,7 @@
   <div class="root">
     <div class="ui-nav">
       <div class="home-logo">
-        <img src="/_builder/assets/bb-logo.svg" alt="Budibase icon" />
+        <img src="/_builder/assets/budibase-logo.svg" alt="Budibase icon" />
       </div>
 
       <div class="nav-section">
