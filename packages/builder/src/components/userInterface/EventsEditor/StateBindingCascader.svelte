@@ -1,8 +1,8 @@
 <script>
+  import { Input } from "@budibase/bbui"
   import IconButton from "components/common/IconButton.svelte"
   import PlusButton from "components/common/PlusButton.svelte"
   import Select from "components/common/Select.svelte"
-  import Input from "components/common/Input.svelte"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
   import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
@@ -10,64 +10,43 @@
   import { ArrowDownIcon } from "components/common/Icons/"
 
   export let parameter
-  export let onChange
 
   let isOpen = false
+
+  const capitalize = s => {
+    if (typeof s !== "string") return ""
+    return s.charAt(0).toUpperCase() + s.slice(1)
+  }
 </script>
 
 <div class="handler-option">
-  <span>{parameter.name}</span>
-  <div class="handler-input">
-    {#if parameter.name === 'workflow'}
-      <select
-        class="budibase__input"
-        on:change={onChange}
-        bind:value={parameter.value}>
-        {#each $workflowStore.workflows.filter(wf => wf.live) as workflow}
-          <option value={workflow._id}>{workflow.name}</option>
-        {/each}
-      </select>
-    {:else}
-      <Input onChange={onChange} value={parameter.value} />
-      <button on:click={() => (isOpen = !isOpen)}>
-        <div class="icon" style={`transform: rotate(${isOpen ? 0 : 90}deg);`}>
-          <ArrowDownIcon size={36} />
-        </div>
-      </button>
-    {/if}
-  </div>
+  {#if parameter.name === 'workflow'}
+    <span>{parameter.name}</span>
+  {/if}
+  {#if parameter.name === 'workflow'}
+    <Select on:change bind:value={parameter.value}>
+      {#each $workflowStore.workflows.filter(wf => wf.live) as workflow}
+        <option value={workflow._id}>{workflow.name}</option>
+      {/each}
+    </Select>
+  {:else}
+    <Input
+      name={parameter.name}
+      label={capitalize(parameter.name)}
+      on:change
+      value={parameter.value} />
+  {/if}
 </div>
 
 <style>
-  button {
-    cursor: pointer;
-    outline: none;
-    border: none;
-    border-radius: 5px;
-    background: rgba(249, 249, 249, 1);
-
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: rgba(22, 48, 87, 1);
-    margin-left: 5px;
-  }
-
-  .icon {
-    width: 24px;
-  }
-
   .handler-option {
     display: flex;
     flex-direction: column;
   }
 
-  .handler-input {
-    position: relative;
-    display: flex;
-  }
-
   span {
-    font-size: 13px;
-    margin-bottom: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: 500;
   }
 </style>
