@@ -64,8 +64,8 @@
   }
 </script>
 
-<button class="newevent" on:click={() => openModal()} >
-    <i class="icon ri-add-circle-fill" />
+<button class="newevent" on:click={() => openModal()}>
+  <i class="icon ri-add-circle-fill" />
   Create New Event
 </button>
 
@@ -86,7 +86,6 @@
 </div>
 
 <style>
-
   .root {
     font-size: 10pt;
     width: 100%;
