@@ -45,6 +45,15 @@
   function testWorkflow() {
     testResult = "PASSED"
   }
+
+  async function saveWorkflow() {
+    const workflow = $workflowStore.currentWorkflow.workflow
+    await workflowStore.actions.save({
+      instanceId: $backendUiStore.selectedDatabase._id,
+      workflow,
+    })
+    notifier.success(`Workflow ${workflow.name} saved.`)
+  }
 </script>
 
 <section>
@@ -87,6 +96,9 @@
     {#if workflowBlock}
       <WorkflowBlockSetup {workflowBlock} />
       <div class="buttons">
+        <button class="workflow-button hoverable" on:click={saveWorkflow}>
+          Save Workflow
+        </button>
         <button
           class="delete-workflow-button hoverable"
           on:click={deleteWorkflowBlock}>
@@ -241,6 +253,7 @@
     font-size: 14px;
     font-weight: 500;
     transition: all 2ms;
+    margin-bottom: 10px;
   }
 
   .workflow-button:hover {

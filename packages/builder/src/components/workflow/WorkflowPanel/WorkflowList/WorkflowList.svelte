@@ -25,15 +25,6 @@
   onMount(() => {
     workflowStore.actions.fetch($backendUiStore.selectedDatabase._id)
   })
-
-  async function saveWorkflow() {
-    const workflow = $workflowStore.currentWorkflow.workflow
-    await workflowStore.actions.save({
-      instanceId: $backendUiStore.selectedDatabase._id,
-      workflow,
-    })
-    notifier.success(`Workflow ${workflow.name} saved.`)
-  }
 </script>
 
 <section>
@@ -52,11 +43,6 @@
       </li>
     {/each}
   </ul>
-  {#if $workflowStore.currentWorkflow}
-    <button class="new-workflow-button hoverable" on:click={saveWorkflow}>
-      Save Workflow
-    </button>
-  {/if}
 </section>
 
 <style>
