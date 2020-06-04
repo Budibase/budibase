@@ -35,7 +35,7 @@
     <i class="ri-information-line" />
     Learn about workflows
   </a>
-  <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
+  <ActionButton secondary on:click={onClosed}>Cancel</ActionButton>
   <ActionButton disabled={!valid} on:click={createWorkflow}>Save</ActionButton>
 </footer>
 

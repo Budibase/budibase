@@ -38,6 +38,7 @@
 
 <section>
   <button class="new-workflow-button hoverable" on:click={newWorkflow}>
+    <i class="icon ri-add-circle-fill" />
     Create New Workflow
   </button>
   <ul>
@@ -87,12 +88,13 @@
   }
 
   .workflow-item {
-    padding: 20px;
     display: flex;
-    align-items: center;
     border-radius: 3px;
-    height: 32px;
-    font-weight: 500;
+    padding-left: 12px; 
+    align-items: center;
+    height: 40px;
+    margin-bottom: 4px;
+    color: var(--ink);
   }
 
   .workflow-item i {
@@ -102,25 +104,36 @@
 
   .workflow-item:hover {
     cursor: pointer;
-    background: var(--secondary);
+    background: var(--grey-light);
   }
 
   .workflow-item.selected {
-    background: var(--secondary);
+    background: var(--blue-light);
   }
-
+  
   .new-workflow-button {
-    font-family: Roboto;
+    cursor: pointer;
+    border: 1px solid var(--grey-dark);
+    border-radius: 3px;
     width: 100%;
-    border: solid 1px #f2f2f2;
-    border-radius: 2px;
-    background: var(--white);
-    height: 32px;
-    font-size: 12px;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    color: var(--ink);
+    font-size: 14px;
     font-weight: 500;
+    transition: all 2ms;
   }
 
   .new-workflow-button:hover {
-    background: var(--light-grey);
+    background: var(--grey-light);
+  }
+
+  .icon {
+    color: var(--ink);
+    font-size: 16px;
+    margin-right: 4px;
   }
 </style>
