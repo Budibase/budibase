@@ -38,6 +38,7 @@ router
     ctx.config = {
       latestPackagesFolder: budibaseAppsDir(),
       jwtSecret: env.JWT_SECRET,
+      useAppRootPath: true,
     }
     ctx.isDev = env.NODE_ENV !== "production" && env.NODE_ENV !== "jest"
     await next()

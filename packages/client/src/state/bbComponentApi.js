@@ -23,10 +23,11 @@ export const bbFactory = ({
   }
 
   const apiCall = method => (url, body) =>
-    fetch(relativeUrl(url), {
+    fetch(url, {
       method: method,
       headers: {
         "Content-Type": "application/json",
+        "x-user-agent": "Budibase Builder",
       },
       body: body && JSON.stringify(body),
     })

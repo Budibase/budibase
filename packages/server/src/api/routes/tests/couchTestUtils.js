@@ -22,6 +22,7 @@ exports.supertest = async () => {
 exports.defaultHeaders = {
   Accept: "application/json",
   Cookie: ["builder:token=test-admin-secret"],
+  "x-user-agent": "Budibase Builder",
 }
 
 exports.createModel = async (request, instanceId, model) => {
@@ -175,8 +176,7 @@ const createUserWithPermissions = async (
   const designDoc = await db.get("_design/database")
 
   const loginResult = await request
-    .post(`/api/authenticate`)
-    .set("Referer", `http://localhost:4001/${designDoc.metadata.applicationId}`)
+    .post(`/${designDoc.metadata.applicationId}/api/authenticate`)
     .send({ username, password })
 
   // returning necessary request headers

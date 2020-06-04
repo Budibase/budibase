@@ -10,6 +10,12 @@ exports.fetch = async function(ctx) {
   ctx.body = body.rows.map(row => row.doc)
 }
 
+exports.find = async function(ctx) {
+  const db = new CouchDB(ctx.params.instanceId)
+  const model = await db.get(ctx.params.id)
+  ctx.body = model
+}
+
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
   const newModel = {
