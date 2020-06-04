@@ -174,7 +174,7 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
 
 const setCurrentScreen = store => screenName => {
   store.update(s => {
-    const screen = getExactComponent(s.screens, screenName)
+    const screen = getExactComponent(s.screens, screenName, true)
     s.currentPreviewItem = screen
     s.currentFrontEndType = "screen"
     s.currentView = "detail"

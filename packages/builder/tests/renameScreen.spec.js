@@ -3,7 +3,9 @@ import { rename } from "../src/components/userInterface/pagesParsing/renameScree
 import { componentsAndScreens } from "./testData"
 
 describe("rename component", () => {
-  it("should change the name of the component, duh", () => {
+ /*  
+//  removing for now as renaming screens are no longer done through the rename fn
+ it("should change the name of the component, duh", () => {
     const { screens } = componentsAndScreens()
 
     const result = rename({}, screens, "PrimaryButton", "MainButton")
@@ -13,7 +15,7 @@ describe("rename component", () => {
     expect(oldComponent).toBeUndefined()
     expect(newComponent).toBeDefined()
     expect(newComponent.name).toBe("MainButton")
-  })
+  }) */
 
   /* this may be usefull if we have user defined components
     it("should change name of nested _components", () => {

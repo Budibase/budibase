@@ -1,7 +1,7 @@
 export const componentsAndScreens = () => ({
   components: [
     {
-      name: "budibase-components/TextBox",
+      _instanceName: "TextBox",
       tags: ["Text", "input"],
       children: false,
       props: {
@@ -12,7 +12,7 @@ export const componentsAndScreens = () => ({
       },
     },
     {
-      name: "budibase-components/Button",
+      _instanceName: "budibase-components/Button",
       tags: ["input"],
       children: true,
       props: {
@@ -22,14 +22,14 @@ export const componentsAndScreens = () => ({
       },
     },
     {
-      name: "budibase-components/div",
+      _instanceName: "budibase-components/div",
       tags: ["input"],
       props: {
         width: "number",
       },
     },
     {
-      name: "budibase-components/RecordView",
+      _instanceName: "budibase-components/RecordView",
       tags: ["record"],
       props: {
         data: "state",
@@ -38,17 +38,17 @@ export const componentsAndScreens = () => ({
   ],
   screens: [
     {
-      name: "common/SmallTextbox",
       props: {
+        _instanceName: "Container",
         _component: "budibase-components/TextBox",
         size: "small",
       },
     },
 
     {
-      name: "common/PasswordBox",
       tags: ["mask"],
       props: {
+        _instanceName: "common/PasswordBox",
         _component: "budibase-components/TextBox",
         isPassword: true,
         size: "small",
@@ -56,17 +56,17 @@ export const componentsAndScreens = () => ({
     },
 
     {
-      name: "PrimaryButton",
       props: {
+        _instanceName: "PrimaryButton",
         _component: "budibase-components/Button",
         css: "btn-primary",
       },
     },
 
     {
-      name: "Screen 1",
       route: "",
       props: {
+        _instanceName: "Screen 1",
         _component: "budibase-components/div",
         width: 100,
         _children: [
@@ -88,8 +88,8 @@ export const componentsAndScreens = () => ({
     },
 
     {
-      name: "Field",
       props: {
+        _instanceName: "Field",
         _component: "budibase-components/div",
         _children: [
           {
