@@ -49,7 +49,7 @@
     color: var(--ink-lighter);
   }
 
-    span:not(.selected):hover {
+  span:not(.selected):hover {
     color: var(--ink);
   }
 </style>

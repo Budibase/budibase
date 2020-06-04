@@ -106,7 +106,6 @@
     overflow-y: hidden;
   }
 
-
   .nav-group-header > div:nth-child(1) {
     padding: 0rem 0.5rem 0rem 0rem;
     vertical-align: bottom;
