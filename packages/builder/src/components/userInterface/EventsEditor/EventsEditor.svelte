@@ -64,10 +64,10 @@
   }
 </script>
 
-<header>
-  <h3>Events</h3>
-  <PlusButton on:click={() => openModal()} />
-</header>
+<button class="newevent" on:click={() => openModal()} >
+    <i class="icon ri-add-circle-fill" />
+  Create New Event
+</button>
 
 <div class="root">
   <form on:submit|preventDefault class="uk-form-stacked form-root">
@@ -86,17 +86,37 @@
 </div>
 
 <style>
-  h3 {
-    text-transform: uppercase;
-    font-size: 13px;
-    font-weight: 700;
-    color: #8997ab;
-    margin-bottom: 10px;
-  }
 
   .root {
     font-size: 10pt;
     width: 100%;
+  }
+
+  .newevent {
+    cursor: pointer;
+    border: 1px solid var(--grey-dark);
+    border-radius: 3px;
+    width: 100%;
+    padding: 8px 16px;
+    margin: 0px 0px 12px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 2ms;
+  }
+
+  .newevent:hover {
+    background: var(--grey-light);
+  }
+
+  .icon {
+    color: var(--ink);
+    font-size: 16px;
+    margin-right: 4px;
   }
 
   .form-root {
