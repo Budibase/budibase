@@ -125,7 +125,7 @@
   }
 
   button {
-    font-family: Inter;
+    font-family: roboto;
     font-size: 16px;
     padding: 0.4em;
     box-sizing: border-box;

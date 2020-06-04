@@ -292,7 +292,19 @@ export const typography = [
       },
     ],
   },
-  { label: "style", key: "font-style", control: Input },
+  {
+    label: "Decoration",
+    key: "text-decoration-line",
+    control: OptionSelect,
+    defaultValue: "Underline",
+    options: [
+      { label: "Underline", value: "underline" },
+      { label: "None", value: "none" },
+      { label: "Overline", value: "overline" },
+      { label: "Line-through", value: "line-through" },
+      { label: "Under Over", value: "underline overline" },
+    ],
+  },
 ]
 
 export const background = [
@@ -398,7 +410,7 @@ export const transitions = [
   },
   {
     label: "Duration",
-    key: "transition-timing-function",
+    key: "transition-duration",
     control: Input,
     width: "48px",
     textAlign: "center",
@@ -406,7 +418,7 @@ export const transitions = [
   },
   {
     label: "Ease",
-    key: "transition-ease",
+    key: "transition-timing-function:",
     control: OptionSelect,
     options: ["linear", "ease", "ease-in", "ease-out", "ease-in-out"],
   },
