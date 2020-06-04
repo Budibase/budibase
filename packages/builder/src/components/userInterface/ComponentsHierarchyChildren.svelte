@@ -42,7 +42,7 @@
         style="padding-left: {level * 20 + 53}px">
         <div class="nav-item">
           <i class="icon ri-arrow-right-circle-fill" />
-          {get_capitalised_name(component._component)}
+          {component._instanceName}
         </div>
         <div class="actions">
           <ComponentDropdownMenu {component} />
