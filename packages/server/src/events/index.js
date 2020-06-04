@@ -22,7 +22,7 @@ async function executeRelevantWorkflows(event, eventType) {
   }
 }
 
-emitter.on("action", async function(event) {
+emitter.on("record:save", async function(event) {
   await executeRelevantWorkflows(event, "record:save")
 })
 
