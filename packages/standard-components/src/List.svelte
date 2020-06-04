@@ -25,7 +25,6 @@
     } else {
       throw new Error("Failed to fetch records.", response)
     }
-
   }
 
   $: if (model) fetchData()
@@ -36,8 +35,7 @@
 </script>
 
 <section class:grid={layout === 'grid'} class:list={layout === 'list'}>
-  <div class="data-card" bind:this={target}>
-  </div>
+  <div class="data-card" bind:this={target} />
 </section>
 
 <style>
