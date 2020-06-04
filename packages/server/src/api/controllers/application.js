@@ -5,8 +5,10 @@ const newid = require("../../db/newid")
 const env = require("../../environment")
 const instanceController = require("./instance")
 const { resolve, join } = require("path")
-const { copy, readJSON, writeJSON, exists } = require("fs-extra")
+const { copy, exists, readFile, writeFile } = require("fs-extra")
+const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const { exec } = require("child_process")
+const sqrl = require("squirrelly")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ClientDb.name(env.CLIENT_ID))
@@ -72,7 +74,7 @@ const createEmptyAppPackage = async (ctx, app) => {
     "appDirectoryTemplate"
   )
 
-  const appsFolder = env.BUDIBASE_DIR
+  const appsFolder = budibaseAppsDir()
   const newAppFolder = resolve(appsFolder, app._id)
 
   if (await exists(newAppFolder)) {
@@ -82,14 +84,25 @@ const createEmptyAppPackage = async (ctx, app) => {
 
   await copy(templateFolder, newAppFolder)
 
-  const packageJsonPath = join(appsFolder, app._id, "package.json")
-  const packageJson = await readJSON(packageJsonPath)
-
-  packageJson.name = npmFriendlyAppName(app.name)
-
-  await writeJSON(packageJsonPath, packageJson)
+  await updateJsonFile(join(appsFolder, app._id, "package.json"), {
+    name: npmFriendlyAppName(app.name),
+  })
+  await updateJsonFile(
+    join(appsFolder, app._id, "pages", "main", "page.json"),
+    app
+  )
+  await updateJsonFile(
+    join(appsFolder, app._id, "pages", "unauthenticated", "page.json"),
+    app
+  )
 
   return newAppFolder
+}
+
+const updateJsonFile = async (filePath, app) => {
+  const json = await readFile(filePath, "utf8")
+  const newJson = sqrl.Render(json, app)
+  await writeFile(filePath, newJson, "utf8")
 }
 
 const runNpmInstall = async newAppFolder => {

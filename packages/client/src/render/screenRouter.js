@@ -56,8 +56,30 @@ export const screenRouter = ({ screens, onScreenSelected, appRootPath }) => {
     }
   }
 
+  function click(e) {
+    const x = e.target.closest("a")
+    const y = x && x.getAttribute("href")
+
+    if (
+      e.ctrlKey ||
+      e.metaKey ||
+      e.altKey ||
+      e.shiftKey ||
+      e.button ||
+      e.defaultPrevented
+    )
+      return
+
+    const target = x.target || "_self"
+    if (!y || target !== "_self" || x.host !== location.host) return
+
+    e.preventDefault()
+    route(y)
+  }
+
   addEventListener("popstate", route)
   addEventListener("pushstate", route)
+  addEventListener("click", click)
 
   return route
 }

@@ -267,7 +267,21 @@ export default {
             "A component that automatically generates a login screen for your app.",
           icon: "ri-login-box-fill",
           children: [],
-          properties: { design: { ...all } },
+          properties: {
+            design: { ...all },
+            settings: [
+              {
+                label: "Name",
+                key: "name",
+                control: Input,
+              },
+              {
+                label: "Logo",
+                key: "logo",
+                control: Input,
+              },
+            ],
+          },
         },
         {
           name: "Table",
@@ -303,7 +317,28 @@ export default {
           icon: "ri-bar-chart-fill",
           properties: {
             design: { ...all },
-            settings: [{ label: "Model", key: "model", control: ModelSelect }],
+            settings: [
+              { label: "Model", key: "model", control: ModelSelect },
+              {
+                label: "Chart Type",
+                key: "type",
+                control: OptionSelect,
+                options: [
+                  "column2d",
+                  "column3d",
+                  "line",
+                  "area2d",
+                  "bar2d",
+                  "bar3d",
+                  "pie2d",
+                  "pie3d",
+                  "doughnut2d",
+                  "doughnut3d",
+                  "pareto2d",
+                  "pareto3d",
+                ],
+              },
+            ],
           },
           children: [],
         },
