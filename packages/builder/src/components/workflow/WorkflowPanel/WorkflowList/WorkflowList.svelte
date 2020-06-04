@@ -90,7 +90,7 @@
   .workflow-item {
     display: flex;
     border-radius: 3px;
-    padding-left: 12px; 
+    padding-left: 12px;
     align-items: center;
     height: 40px;
     margin-bottom: 4px;
@@ -110,7 +110,7 @@
   .workflow-item.selected {
     background: var(--blue-light);
   }
-  
+
   .new-workflow-button {
     cursor: pointer;
     border: 1px solid var(--grey-dark);

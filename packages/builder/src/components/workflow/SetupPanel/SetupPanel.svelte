@@ -87,7 +87,9 @@
     {#if workflowBlock}
       <WorkflowBlockSetup {workflowBlock} />
       <div class="buttons">
-        <button class="delete-workflow-button hoverable" on:click={deleteWorkflowBlock}>
+        <button
+          class="delete-workflow-button hoverable"
+          on:click={deleteWorkflowBlock}>
           Delete Block
         </button>
       </div>
@@ -179,7 +181,7 @@
     color: var(--ink);
     font-size: 14px;
     padding-left: 12px;
-}
+  }
 
   header > span {
     color: var(--ink-lighter);
@@ -270,7 +272,7 @@
   }
 
   .passed {
-    background: #84C991;
+    background: #84c991;
   }
 
   .failed {

@@ -46,10 +46,10 @@
 <div class="welcome">Welcome to Budibase</div>
 
 <div class="banner">
-  <img src="/_builder/assets/rocket.jpg" alt="rocket">
-   <div class="banner-content">
-      Every accomplishment starts with a decision to try.
-    </div>
+  <img src="/_builder/assets/rocket.jpg" alt="rocket" />
+  <div class="banner-content">
+    Every accomplishment starts with a decision to try.
+  </div>
 </div>
 <div class="app-section-header">
   <div class="app-section-title">Your Web Apps</div>
@@ -70,7 +70,6 @@
 {/await}
 
 <style>
-
   .welcome {
     font-size: 42px;
     color: var(--ink);
@@ -93,7 +92,7 @@
     height: 250px;
     width: 100%;
     border-radius: 5px;
-}
+  }
 
   .banner-content {
     position: absolute;

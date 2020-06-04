@@ -81,7 +81,7 @@
     color: var(--ink);
     font-size: 14px;
     padding-left: 12px;
-}
+  }
 
   label {
     text-transform: capitalize;
