@@ -1,5 +1,6 @@
 <script>
   import { store } from "builderStore"
+  import { Button } from "@budibase/bbui"
   import Modal from "../../common/Modal.svelte"
   import HandlerSelector from "./HandlerSelector.svelte"
   import IconButton from "../../common/IconButton.svelte"
@@ -8,12 +9,12 @@
   import Select from "../../common/Select.svelte"
   import Input from "../../common/Input.svelte"
   import getIcon from "../../common/icon"
+  import { CloseIcon } from "components/common/Icons/"
 
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
 
   export let event
   export let eventOptions = []
-  export let open
   export let onClose
 
   let eventType = ""
@@ -62,105 +63,111 @@
   }
 </script>
 
-<Modal bind:isOpen={open} onClosed={closeModal}>
-  <h2>
-    {eventData.name ? `${eventData.name} Event` : 'Create a New Component Event'}
-  </h2>
-  <a href="https://docs.budibase.com/" target="_blank">
-    Click here to learn more about component events
-  </a>
+<div class="container">
+  <div class="body">
+    <div class="heading">
+      <h3>
+        {eventData.name ? `${eventData.name} Event` : 'Create a New Component Event'}
+      </h3>
+    </div>
+    <div class="event-options">
+      <div class="section">
+        <h4>Event Type</h4>
+        <Select bind:value={eventType}>
+          {#each eventOptions as option}
+            <option value={option.name}>{option.name}</option>
+          {/each}
+        </Select>
+      </div>
+    </div>
 
-  <div class="event-options">
-    <div>
-      <header>
-        <h5>Event Type</h5>
-        {@html getIcon('info', 20)}
-      </header>
-      <Select bind:value={eventType}>
-        {#each eventOptions as option}
-          <option value={option.name}>{option.name}</option>
-        {/each}
-      </Select>
+    <div class="section">
+      <h4>Event Action(s)</h4>
+      <HandlerSelector
+        newHandler
+        onChanged={updateDraftEventHandler}
+        onCreate={() => {
+          createNewEventHandler(draftEventHandler)
+          draftEventHandler = { parameters: [] }
+        }}
+        handler={draftEventHandler} />
+    </div>
+    {#if eventData}
+      {#each eventData.handlers as handler, index}
+        <HandlerSelector
+          {index}
+          onChanged={updateEventHandler}
+          onRemoved={() => deleteEventHandler(index)}
+          {handler} />
+      {/each}
+    {/if}
+
+  </div>
+  <div class="footer">
+    {#if eventData.name}
+      <Button
+        outline
+        on:click={deleteEvent}
+        disabled={eventData.handlers.length === 0}>
+        Delete
+      </Button>
+    {/if}
+    <div class="save">
+      <Button
+        primary
+        on:click={saveEventData}
+        disabled={eventData.handlers.length === 0}>
+        Save
+      </Button>
     </div>
   </div>
-
-  <header>
-    <h5>Event Action(s)</h5>
-    {@html getIcon('info', 20)}
-  </header>
-  <HandlerSelector
-    newHandler
-    onChanged={updateDraftEventHandler}
-    onCreate={() => {
-      createNewEventHandler(draftEventHandler)
-      draftEventHandler = { parameters: [] }
-    }}
-    handler={draftEventHandler} />
-  {#if eventData}
-    {#each eventData.handlers as handler, index}
-      <HandlerSelector
-        {index}
-        onChanged={updateEventHandler}
-        onRemoved={() => deleteEventHandler(index)}
-        {handler} />
-    {/each}
-  {/if}
-
-  <div class="actions">
-    <ActionButton
-      alert
-      disabled={eventData.handlers.length === 0}
-      hidden={!eventData.name}
-      on:click={deleteEvent}>
-      Delete
-    </ActionButton>
-    <ActionButton
-      disabled={eventData.handlers.length === 0}
-      on:click={saveEventData}>
-      Save
-    </ActionButton>
+  <div class="close-button" on:click={closeModal}>
+    <CloseIcon />
   </div>
-</Modal>
+</div>
 
 <style>
-  h2 {
-    color: var(--primary100);
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 0;
+  .container {
+    position: relative;
+  }
+  .heading {
+    margin-bottom: 20px;
   }
 
-  h5 {
-    color: rgba(22, 48, 87, 0.6);
-    font-size: 15px;
-    margin: 0;
+  .close-button {
+    cursor: pointer;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+  .close-button :global(svg) {
+    width: 24px;
+    height: 24px;
   }
 
-  .event-options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-gap: 10px;
-  }
-
-  .actions,
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .actions {
-    margin-top: auto;
-  }
-
-  header {
-    margin-top: 30px;
+  h4 {
     margin-bottom: 10px;
   }
 
-  a {
-    color: rgba(22, 48, 87, 0.6);
-    font-size: 13px;
-    margin-top: 0;
+  h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+  }
+  .body {
+    padding: 40px;
+    display: grid;
+    grid-gap: 20px;
+  }
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 30px 40px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 50px;
+    background-color: var(--grey-light);
+  }
+  .save {
+    margin-left: 20px;
   }
 </style>
