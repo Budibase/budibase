@@ -76,15 +76,14 @@
 }
 
 .budibase__input {
-    width: 100%;
-    max-width: 250px;
     height: 35px;
+    width: 220px;
     border-radius: 3px;
     border: 1px solid var(--grey-dark);
     text-align: left;
     color: var(--ink);
-    font-size: 16px;
-    padding-left: 5px;
+    font-size: 14px;
+    padding-left: 12px;
 }
 
 .uk-text-right {
