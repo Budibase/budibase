@@ -59,6 +59,7 @@
 </script>
 
 <form class="form" on:submit|preventDefault>
+  <h1>{modelDef.name} Form</h1>
   <div class="form-content">
     {#each fields as field}
       <div class="form-item">
@@ -79,14 +80,14 @@
 
 <style>
   .form {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    width: 100%;
   }
 
   .form-content {
     margin-bottom: 20px;
-    justify-content: space-between;
-    align-items: baseline;
+
   }
 
   .input {
@@ -100,13 +101,13 @@
 
   .form-item {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     margin-bottom: 16px;
   }
 
   .form-label {
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
 
   hr {

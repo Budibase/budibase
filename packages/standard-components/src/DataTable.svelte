@@ -65,24 +65,31 @@
   }
 
   thead {
-    background: #f9f9f9;
+    background: #393C44;
     border: 1px solid #ccc;
+    height: 40px;
+    text-align: left;
+    margin-right: 60px;
   }
 
   thead th {
-    color: var(--button-text);
+    color: #ffffff;
     text-transform: capitalize;
     font-weight: 500;
     font-size: 14px;
     text-rendering: optimizeLegibility;
     letter-spacing: 1px;
+    justify-content: left;
+    padding: 16px 20px 16px 8px;
+    margin-right: 20px;
   }
 
   tbody tr {
     border-bottom: 1px solid #ccc;
     transition: 0.3s background-color;
-    color: var(--secondary100);
+    color: #393C44;
     font-size: 14px;
+    height: 40px;
   }
 
   tbody tr:hover {
