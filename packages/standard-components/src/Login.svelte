@@ -79,7 +79,7 @@
 
     <div class="login-button-container">
       <button disabled={loading} on:click={login} class={_buttonClass}>
-        {loginButtonLabel}
+        Log in to {name}
       </button>
     </div>
 
