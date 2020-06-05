@@ -16,6 +16,10 @@
     --grey-medium: #e8e8ef;
     --grey-dark: #E6E6E6;
 
+    --red: #E26D69;
+    --red-light:#FFE6E6;
+    --red-dark: #800400;
+
     --primary100: #0055ff;
     --primary80: rgba(0, 85, 255, 0.8);
     --primary60: #rgba(0, 85, 255, 0.6);
