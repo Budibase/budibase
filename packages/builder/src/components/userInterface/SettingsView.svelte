@@ -9,7 +9,6 @@
   export let componentInstance = {}
   export let onChange = () => {}
 
-  $: console.log("SET COMP INSTANCE",componentInstance)
 
   let pageScreenProps = ["title","favicon", "description", "route"]
   
