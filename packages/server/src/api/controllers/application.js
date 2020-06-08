@@ -6,6 +6,7 @@ const env = require("../../environment")
 const instanceController = require("./instance")
 const { resolve, join } = require("path")
 const { copy, exists, readFile, writeFile } = require("fs-extra")
+const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const { exec } = require("child_process")
 const sqrl = require("squirrelly")
 
@@ -73,7 +74,7 @@ const createEmptyAppPackage = async (ctx, app) => {
     "appDirectoryTemplate"
   )
 
-  const appsFolder = env.BUDIBASE_DIR
+  const appsFolder = budibaseAppsDir()
   const newAppFolder = resolve(appsFolder, app._id)
 
   if (await exists(newAppFolder)) {

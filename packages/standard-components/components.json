@@ -217,6 +217,21 @@
 			}
 		}
 	},
+	"list": {
+		"description": "A configurable data list that attaches to your backend models.",
+		"data": true,
+		"props": {
+			"model": "models",
+			"layout": {
+				"type": "options",
+				"default": "list",
+				"options": [
+					"list",
+					"grid"
+				]
+			}
+		}
+	},
 	"datamap": {
 		"description": "shiny chart",
 		"data": true,

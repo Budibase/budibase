@@ -5,13 +5,17 @@
 
 <div class="root">
   <div class="nav">
-    <WorkflowPanel />
+    <div class="inner">
+      <WorkflowPanel />
+    </div>
   </div>
   <div class="content">
     <slot />
   </div>
   <div class="nav">
-    <SetupPanel />
+    <div class="inner">
+      <SetupPanel />
+    </div>
   </div>
 </div>
 
@@ -24,7 +28,7 @@
   .root {
     height: 100%;
     display: flex;
-    background: #fafafa;
+    background: var(--grey-light);
   }
 
   .content {
@@ -33,10 +37,13 @@
   }
 
   .nav {
-    padding: 20px;
     overflow: auto;
-    width: 275px;
-    border: 1px solid var(--medium-grey);
+    width: 300px;
+    border-right: 1px solid var(--grey);
     background: var(--white);
+  }
+
+  .inner {
+    padding: 20px;
   }
 </style>

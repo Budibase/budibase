@@ -40,7 +40,7 @@ exports.serverStrategy = () => ({
       if (block.type === "CLIENT") continue
 
       const action = require(`../api/controllers/workflow/actions/${block.actionId}`)
-      const response = await action(this.bindContextArgs(block.args))
+      const response = await action({ args: this.bindContextArgs(block.args) })
 
       this.context = {
         ...this.context,
