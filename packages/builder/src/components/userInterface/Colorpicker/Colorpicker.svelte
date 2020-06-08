@@ -1,48 +1,80 @@
 <script>
   import {onMount} from "svelte"
-  import { getAndConvertHexa, getAndConvertRgba, getHSLA, hsvaToHexa, hsvaToRgba } from "./utils.js"
+  import { getAndConvertHexa, getAndConvertRgba, getHSLA, hsvaToHexa, hsvaToRgba, getColorFormat, convertToHSVA } from "./utils.js"
   import Slider from "./Slider.svelte";
   import Palette from "./Palette.svelte";
 
-  export let value = "#00bfffff";
+  export let value = "rgba(255,255,255,1)";
   export let format = "hexa";
 
-  let h = 0;
-  let s = 0;
-  let v = 0;
-  let a = 1;
+  let h = null;
+  let s = null;
+  let v = null;
+  let a = null;
 
   onMount(() => {
-    let hsva = getFormatAndConvert(value)
-    setHSVA(hsva)
-  })
+    format = getColorFormat(value)
+    if(format) {
+      let hsva = convertToHSVA(value, format)
+      setHSVA(hsva)
+    }
+})
 
-  function getFormatAndConvert() {
-  if (value.startsWith('#')) {
-    format = "hexa"
-		return getAndConvertHexa(value)
-	} else if (value.startsWith('rgba')) {
-    format = "rgba"
-		return getAndConvertRgba(value)
-	}
+  const hsvaIsNull = () => [h,s,v,a].every(c => c === null)
+
+  function setFormatAndConvert() {
+    if (value.startsWith('#')) {
+      format = "hexa"
+      return getAndConvertHexa(value)
+    } else if (value.startsWith('rgba')) {
+      format = "rgba"
+      return getAndConvertRgba(value)
+    }
   }
 
   function setHSVA([hue, sat, val, alpha]) {
     h = hue;
-    s = sat / 100;
-    v - val / 100;
+    s = sat;
+    v = val;
     a = alpha;
   }
 
+  //fired by choosing a color from the palette
   function setSaturationAndValue({detail}) {
     s = detail.s
     v = detail.v
+    let res = convertHSVA()
+    console.log("SAT-VAL", res)
+  }
+    
+  function setHue(hue) {
+    h = hue
+    let res = convertHSVA()
+    console.log("HUE",res)
+  }
+
+  function setAlpha(alpha) {
+    a = alpha
+    let res = convertHSVA()
+    console.log("ALPHA",res)
+
+  }
+
+  function convertHSVA() {
+    let hsva = [h, s, v, a]
+    let _value = format === "hexa" ? hsvaToHexa(hsva, true) : hsvaToRgba(hsva, true)
+    return _value;
+    // onchange(_value)
   }
 
   // $: {
-  //   let hsva = [h, s, v, a]
-  //   value = format === "hexa" ? hsvaToHexa(hsva) : hsvaToRgba(hsva)
-  //   console.log("VAL", value)
+  //   if(!hsvaIsNull()) {
+  //     let hsva = [h, s, v, a]
+  //     // let t = value + "abs"
+  //     value = format === "hexa" ? hsvaToHexa(hsva) : hsvaToRgba(hsva)
+  //     debugger
+  //     // console.log("VAL", value)
+  //   }
   // }
 </script>
 
@@ -62,7 +94,7 @@
 
   <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
 
-  <Slider type="hue" value={h} on:change={hue => (h = hue.detail)} />
+  <Slider type="hue" value={h} on:change={hue => setHue(hue.detail)} />
 
-  <Slider type="alpha" value={a} on:change={alpha => (a = alpha.detail)} />
+  <Slider type="alpha" value={a} on:change={alpha => setAlpha(alpha.detail)} />
 </div>
