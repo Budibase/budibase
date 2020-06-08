@@ -1,4 +1,5 @@
 <script>
+  import { getContext } from "svelte"
   import {
     keys,
     map,
@@ -17,7 +18,6 @@
   import PlusButton from "components/common/PlusButton.svelte"
   import IconButton from "components/common/IconButton.svelte"
   import EventEditorModal from "./EventEditorModal.svelte"
-  import HandlerSelector from "./HandlerSelector.svelte"
 
   import { PencilIcon } from "components/common/Icons"
   import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
@@ -26,7 +26,6 @@
 
   export let component
 
-  let modalOpen = false
   let events = []
   let selectedEvent = null
 
@@ -40,21 +39,35 @@
       }))
   }
 
+  // Handle create app modal
+  const { open, close } = getContext("simple-modal")
+
   const openModal = event => {
     selectedEvent = event
-    modalOpen = true
-  }
-
-  const closeModal = () => {
-    selectedEvent = null
-    modalOpen = false
+    open(
+      EventEditorModal,
+      {
+        eventOptions: events,
+        event: selectedEvent,
+        onClose: () => {
+          close()
+          selectedEvent = null
+        },
+      },
+      {
+        closeButton: false,
+        closeOnEsc: false,
+        styleContent: { padding: 0 },
+        closeOnOuterClick: true,
+      }
+    )
   }
 </script>
 
-<header>
-  <h3>Events</h3>
-  <PlusButton on:click={() => openModal()} />
-</header>
+<button class="newevent" on:click={() => openModal()}>
+  <i class="icon ri-add-circle-fill" />
+  Create New Event
+</button>
 
 <div class="root">
   <form on:submit|preventDefault class="uk-form-stacked form-root">
@@ -71,24 +84,38 @@
     {/each}
   </form>
 </div>
-<EventEditorModal
-  open={modalOpen}
-  onClose={closeModal}
-  eventOptions={events}
-  event={selectedEvent} />
 
 <style>
-  h3 {
-    text-transform: uppercase;
-    font-size: 13px;
-    font-weight: 700;
-    color: #8997ab;
-    margin-bottom: 10px;
-  }
-
   .root {
     font-size: 10pt;
     width: 100%;
+  }
+
+  .newevent {
+    cursor: pointer;
+    border: 1px solid var(--grey-dark);
+    border-radius: 3px;
+    width: 100%;
+    padding: 8px 16px;
+    margin: 0px 0px 12px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 2ms;
+  }
+
+  .newevent:hover {
+    background: var(--grey-light);
+  }
+
+  .icon {
+    color: var(--ink);
+    font-size: 16px;
+    margin-right: 4px;
   }
 
   .form-root {

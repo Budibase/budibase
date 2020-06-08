@@ -106,45 +106,6 @@
     overflow-y: hidden;
   }
 
-  .components-nav-page {
-    font-size: 13px;
-    color: var(--ink);
-    padding-left: 20px;
-    margin-top: 20px;
-    font-weight: 600;
-    opacity: 0.4;
-    letter-spacing: 1px;
-  }
-
-  .components-nav-header {
-    font-size: 13px;
-    color: var(--ink);
-    margin-top: 20px;
-    font-weight: 600;
-    opacity: 0.4;
-    letter-spacing: 1px;
-  }
-
-  .nav-header {
-    display: flex;
-    flex-direction: column;
-    margin-top: 20px;
-  }
-
-  .nav-items-container {
-    padding: 1rem 0rem 0rem 0rem;
-  }
-
-  .nav-group-header {
-    display: flex;
-    padding: 0px 20px 0px 20px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    justify-content: space-between;
-    align-items: center;
-    min-height: 0;
-  }
-
   .nav-group-header > div:nth-child(1) {
     padding: 0rem 0.5rem 0rem 0rem;
     vertical-align: bottom;

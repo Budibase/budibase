@@ -12,7 +12,6 @@
   <div class="inner">
     <div>
       <div>
-        <div class="app-section-title">Your Web Apps</div>
         <div class="apps">
           {#each apps as app}
             <AppCard {...app} />
@@ -26,18 +25,12 @@
 <style>
   .apps {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 400px);
-    grid-gap: 40px 85px;
+    grid-template-columns: repeat(auto-fill, 380px);
+    grid-gap: 20px 40px;
     justify-content: start;
   }
-  .root {
-    margin: 40px 80px;
-  }
 
-  .app-section-title {
-    font-size: 20px;
-    color: var(--ink);
-    font-weight: 700;
-    margin-bottom: 20px;
+  .root {
+    margin: 20px 80px;
   }
 </style>
