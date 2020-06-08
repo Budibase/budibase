@@ -1,16 +1,81 @@
-export const getRgbaValues = (rgbaString) => rgbaString.replace(/[a-z()\s]/gi, '').split(',');
+export const isValidHex = (str) => /^#(?:[A-F0-9]{3}$|[A-F0-9]{6}$|[A-F0-9]{8})$/gi.test(str)
 
-export const getHexaValues = (hexString) => hexString.match(/[A-F]{2}|[A-F]\d{1}|\d{2}|\d[A-F]/gi);
+const getHexaValues = (hexString) => hexString.match(/[A-F0-9]{2}/gi);
 
-export const isValidRgba = (rgba) => {
-	let [ r, g, b, a = 1 ] = rgba;
+export const isValidRgb = (str) => {
+	const hasValidStructure = /^(?:rgba\(|rgb\()[0-9,.\s]*\)$/gi.test(str);
+	if(hasValidStructure) {
+		return testRgbaValues(str.toLowerCase());
+	}
+}
 
-	let isValidLengthRange = rgba.length === 3 || rgba.length === 4;
+const findNonNumericChars = /[a-z()%\s]/gi
+
+export const getNumericValues = (str) => str.replace(findNonNumericChars, '').split(',').map(c => Number(c));
+
+export const testRgbaValues = (str) => {
+	const rgba = getNumericValues(str)
+	let [ r, g, b, a ] = rgba;
+
+	let isValidLengthRange = (str.startsWith("rgb(") && rgba.length === 3) || (str.startsWith("rgba(") && rgba.length === 4);
 	let isValidColorRange = [ r, g, b ].every((v) => v >= 0 && v <= 255);
-	let isValidAlphaRange = rgba.length === 3 || (a >= 0 && a <= 1);
+	let isValidAlphaRange =  str.startsWith("rgba(") ? a >= 0 && a <= 1 : true;
 
 	return isValidLengthRange && isValidColorRange && isValidAlphaRange;
 };
+
+export const isValidHsl = (str) => {
+	const hasValidStructure = /^(?:hsl\(|hsla\()[0-9,.\s]*\)$/gi.test(str)
+	if(hasValidStructure) {
+		return testHslaValues(str.toLowerCase())
+	}
+}
+
+export const testHslaValues = (str) => {
+
+	const hsla = getNumericValues(str)
+	const [h, s, l, a] = hsla
+
+	let isValidLengthRange = (str.startsWith("hsl(") && hsla.length === 3) || (str.startsWith("hsla(") && hsla.length === 4);
+	let isValidColorRange = (h >= 0 && h <= 360) && [s, l].every(v => v >= 0 && v <= 100)
+	let isValidAlphaRange = str.startsWith("hsla(") ? (a >= 0 && a <= 1) : true
+
+	return isValidLengthRange && isValidColorRange && isValidAlphaRange;
+}
+
+export const getColorFormat = (color) => {
+	if(typeof color === "string") {
+		if(isValidHex(color)) {
+			return 'hex'
+		}else if(isValidRgb(color)) {
+			return 'rgb'
+		}else if(isValidHsl(color)) {
+			return 'hsl'
+		}
+	}
+}
+
+export const convertToHSVA = (value, format) => {
+	switch(format) {
+		case "hex":
+			return getAndConvertHexa(value)
+		case "rgb": 
+			return getAndConvertRgba(value)
+		case "hsl":
+			return getAndConvertHsla(value)
+	}
+}
+
+export const convertHsvaToFormat = (hsva, format) => {
+	switch(format) {
+		case "hex":
+			return hsvaToHexa(hsva, true)
+		case "rgb":
+			return hsvaToRgba(hsva, true)
+		case "hsl":
+			return hsvaToHsla(hsva, true)
+	}
+}
 
 
 export const getAndConvertHexa = (color) => { 
@@ -19,8 +84,13 @@ export const getAndConvertHexa = (color) => {
 }
 
 export const getAndConvertRgba = color => {
-	let rgba = getRgbaValues(color);
+	let rgba = getNumericValues(color);
 	return rgbaToHSVA(rgba);
+}
+
+export const getAndConvertHsla = color => {
+	let hsla = getNumericValues(color);
+	return hslaToHSVA(hsla)
 }
 
 export const getHSLA = ([hue, sat, val, a]) => {
@@ -29,29 +99,55 @@ export const getHSLA = ([hue, sat, val, a]) => {
 };
 
 export const hexaToHSVA = (hex, alpha = 'FF') => {
-	const rgba = hex.map((v) => parseInt(v, 16)).concat((parseInt(alpha, 16) / 255).toFixed(1));
+	const rgba = hex.map((v) => parseInt(v, 16)).concat(Number((parseInt(alpha, 16) / 255).toFixed(2)));
 	return rgbaToHSVA(rgba);
 };
 
 export const rgbaToHSVA = (rgba) => {
-	if (isValidRgba(rgba)) {
-		const [ r, g, b, a = '1' ] = rgba;
-		let hsv = _rgbToHSV([ r, g, b ]);
-		return [ ...hsv, a ];
-	}
+	const [ r, g, b, a = 1 ] = rgba;
+	let hsv = _rgbToHSV([ r, g, b ]);
+	return [ ...hsv, a ];
 };
 
-export const hsvaToHexa = (hsva) => {
+export const hslaToHSVA = ([h, s, l, a = 1]) => {
+	let hsv = _hslToHSV([h, s, l])
+	return [...hsv, a]
+}
+
+export const hsvaToHexa = (hsva, asString = false) => {
 	const [ r, g, b, a ] = hsvaToRgba(hsva);
-	const hexa = [ r, g, b ].map((v) => v.toString(16)).concat((a * 255).toFixed(1).toString(16));
-	return `#${hexa.join()}`
+
+	const hexa = [ r, g, b ].map((v) => Math.round(v).toString(16)).concat(Math.round((a * 255)).toString(16));
+	return asString ? `#${hexa.join('')}` : hexa
 };
 
-export const hsvaToRgba = ([h, s, v, a]) => {
-	let rgb = _hsvToRgb([ h, s, v ]);
+export const hsvaToRgba = ([h, s, v, a], asString = false) => {
+	let rgb = _hsvToRgb([ h, s, v ]).map(x => Math.round(x));
 	let rgba = [ ...rgb, a ];
-	return `rgba(${rgba.join(",")})`
+	return asString ? `rgba(${rgba.join(",")})` : rgba
 };
+
+export const hsvaToHsla = ([h, s, v, a = 1], asString = false) => {
+	let hsl = _hsvToHSL([h, s, v])
+	let hsla = [...hsl, a]
+	return asString ? `hsla(${hsla.join(",")})` : hsla
+}
+
+export const _hslToHSV = (hsl) => {
+	const h = hsl[0];
+	let s = hsl[1] / 100;
+	let l = hsl[2] / 100;
+	let smin = s;
+	const lmin = Math.max(l, 0.01);
+
+	l *= 2;
+	s *= (l <= 1) ? l : 2 - l;
+	smin *= lmin <= 1 ? lmin : 2 - lmin;
+	const v = (l + s) / 2;
+	const sv = l === 0 ? (2 * smin) / (lmin + smin) : (2 * s) / (l + s);
+
+	return [h, sv * 100, v * 100];
+}
 
 //Credit : https://github.com/Qix-/color-convert
 export const _rgbToHSV = (rgb) => {
@@ -94,7 +190,7 @@ export const _rgbToHSV = (rgb) => {
 		}
 	}
 
-	const hsvResult = [ h * 360, s * 100, v * 100 ].map((v) => v.toFixed(0));
+	const hsvResult = [ h * 360, s * 100, v * 100 ].map((v) => Math.round(v));
 	return hsvResult;
 };
 
@@ -129,6 +225,7 @@ export const _hsvToRgb = (hsv) => {
 
 //Credit : https://github.com/Qix-/color-convert
 export const _hsvToHSL = (hsv) => {
+	
 	const h = hsv[0];
 	const s = hsv[1] / 100;
 	const v = hsv[2] / 100;
@@ -143,5 +240,5 @@ export const _hsvToHSL = (hsv) => {
 	sl = sl || 0;
 	l /= 2;
 
-	return [ h, sl * 100, l * 100 ];
+	return [ h, Number((sl * 100).toFixed(1)), Number((l * 100).toFixed(1)) ];
 };
