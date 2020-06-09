@@ -110,11 +110,8 @@
       frontendDefinition,
     }))
   }
-  let iframeLoaded = false
-  $: if(iframe && !iframeLoaded) {
-    iframe.contentWindow.addEventListener("bb-ready", refreshContent)
-    iframeLoaded = true
-  }
+
+  $: if(iframe) iframe.contentWindow.addEventListener("bb-ready", refreshContent, { once: true })
 
   $: if(iframe && frontendDefinition) {
 		refreshContent()
