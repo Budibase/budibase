@@ -195,7 +195,7 @@ export default {
           children: [],
           properties: {
             design: { ...all },
-            settings: [{label: "URL", key: "url", control: Input }],
+            settings: [{ label: "URL", key: "url", control: Input }],
           },
         },
         {
