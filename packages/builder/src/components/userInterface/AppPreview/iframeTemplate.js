@@ -53,6 +53,11 @@ export default `<html>
       let styles
       let selectedComponentStyle
 
+      document.addEventListener("click", function(e) {
+        e.preventDefault()
+        e.stopPropagation()
+        return false;
+      }, true)
 
       import('/_builder/budibase-client.esm.mjs')
       .then(module => {
