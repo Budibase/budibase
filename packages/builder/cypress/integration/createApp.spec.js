@@ -20,6 +20,6 @@ context('Create Application', () => {
 
         cy.visit('localhost:4001/_builder')
 
-        cy.contains('My Cool Application')
+        cy.contains('My Cool Application').should('exist')
     })
 })
