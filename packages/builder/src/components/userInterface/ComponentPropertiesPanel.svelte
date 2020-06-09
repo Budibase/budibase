@@ -58,25 +58,16 @@
     }
   }
 
-  let componentInstance = {}
-  $: {
-     if(($store.currentFrontEndType === "screen" || $store.currentFrontEndType === "page") && $store.currentView !== "component") {
-       componentInstance = {...$store.currentPreviewItem, ...$store.currentComponentInfo}
-     }else {
-       componentInstance = $store.currentComponentInfo
-     }
-  }
+  $: componentInstance = $store.currentView !== "component" ? {...$store.currentPreviewItem, ...$store.currentComponentInfo} : $store.currentComponentInfo
 
   const onStyleChanged = store.setComponentStyle
 
   function onPropChanged(key, value) {
-   if($store.currentFrontEndType === "page") {
+    if($store.currentView !== "component") {
       store.editPageOrScreen(key, value)
-   }else if($store.currentFrontEndType === "screen" && $store.currentView !== "component") {
-      store.editPageOrScreen(key, value)
-   }else {
-      store.setComponentProp(key, value)
+      return
     }
+    store.setComponentProp(key, value)
   }
 
   function walkProps(component, action) {
