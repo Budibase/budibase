@@ -10,9 +10,10 @@
     "test:watch": "jest --watchAll",
     "dev:builder": "routify --routify-dir routify -c rollup",
     "rollup": "rollup -c -w",
-    "cy:setup": "node ../cli/bin/budi init -d ~/.budibase-cypress && node ../cli/bin/budi run -d ~/.budibase-cypress",
-    "cy:run": "dev:cypress run",
-    "cy:open": "cypress open"
+    "cy:setup": "rm -rf node ~/.budibase-cypress && ../cli/bin/budi init -d ~/.budibase-cypress && node ../cli/bin/budi run -d ~/.budibase-cypress",
+    "cy:run": "cypress run",
+    "cy:open": "cypress open",
+    "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run"
   },
   "jest": {
     "globals": {
@@ -87,6 +88,7 @@
     "rollup-plugin-svelte": "^5.0.3",
     "rollup-plugin-terser": "^4.0.4",
     "rollup-plugin-url": "^2.2.2",
+    "start-server-and-test": "^1.11.0",
     "svelte": "3.23.x"
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
