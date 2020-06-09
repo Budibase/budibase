@@ -9,7 +9,10 @@
     "test": "jest",
     "test:watch": "jest --watchAll",
     "dev:builder": "routify --routify-dir routify -c rollup",
-    "rollup": "rollup -c -w"
+    "rollup": "rollup -c -w",
+    "cy:setup": "node ../cli/bin/budi init -d ~/.budibase-cypress && node ../cli/bin/budi run -d ~/.budibase-cypress",
+    "cy:run": "dev:cypress run",
+    "cy:open": "cypress open"
   },
   "jest": {
     "globals": {
@@ -67,6 +70,7 @@
     "@sveltech/routify": "1.7.11",
     "babel-jest": "^24.8.0",
     "browser-sync": "^2.26.7",
+    "cypress": "^4.8.0",
     "http-proxy-middleware": "^0.19.1",
     "jest": "^24.8.0",
     "ncp": "^2.0.0",
