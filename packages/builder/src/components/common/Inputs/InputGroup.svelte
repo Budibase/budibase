@@ -10,18 +10,18 @@
   export let onChange = () => {}
 
   function handleChange(val, idx) {
-    value.splice(idx, 1, val !== "auto" ? val + suffix : val)
+    value.splice(idx, 1, val !== "auto" && suffix ? val + suffix : val)
 
     value = value
     let _value = value.map(v =>
-      !v.endsWith(suffix) && v !== "auto" ? v + suffix : v
+      suffix && !v.endsWith(suffix) && v !== "auto" ? v + suffix : v
     )
     onChange(_value)
   }
 
-  $: displayValues = value
+  $: displayValues = value && suffix
     ? value.map(v => v.replace(new RegExp(`${suffix}$`), ""))
-    : []
+    : value || []
 </script>
 
 <div class="input-container">
