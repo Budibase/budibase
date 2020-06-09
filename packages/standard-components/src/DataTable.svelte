@@ -65,7 +65,7 @@
   }
 
   thead {
-    background: #393C44;
+    background: #393c44;
     border: 1px solid #ccc;
     height: 40px;
     text-align: left;
@@ -87,7 +87,7 @@
   tbody tr {
     border-bottom: 1px solid #ccc;
     transition: 0.3s background-color;
-    color: #393C44;
+    color: #393c44;
     font-size: 14px;
     height: 40px;
   }
