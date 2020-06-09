@@ -188,6 +188,17 @@ export default {
           },
         },
         {
+          _component: "@budibase/standard-components/image",
+          name: "Image",
+          description: "A basic component for displaying images",
+          icon: "ri-image-fill",
+          children: [],
+          properties: {
+            design: { ...all },
+            settings: [{label: "URL", key: "url", control: Input }],
+          },
+        },
+        {
           _component: "@budibase/standard-components/icon",
           name: "Icon",
           description: "A basic component for displaying icons",
