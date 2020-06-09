@@ -69,6 +69,7 @@ export const getStore = () => {
   store.getPathToComponent = getPathToComponent(store)
   store.addTemplatedComponent = addTemplatedComponent(store)
   store.setMetadataProp = setMetadataProp(store)
+  store.editPageOrScreen = editPageOrScreen(store)
   return store
 }
 
@@ -166,6 +167,15 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
     state.currentFrontEndType = "screen"
 
     _saveScreen(store, state, newScreen)
+
+    return state
+  })
+}
+
+const editPageOrScreen = store => (key, value) => {
+  store.update(state => {
+    state.currentPreviewItem[key] = value
+    _saveCurrentPreviewItem(state)
 
     return state
   })
@@ -285,6 +295,7 @@ const setCurrentPage = store => pageName => {
 
     state.currentFrontEndType = "page"
     state.currentPageName = pageName
+    state.currentView = "detail"
     state.screens = Array.isArray(current_screens)
       ? current_screens
       : Object.values(current_screens)
@@ -445,6 +456,7 @@ const setScreenType = store => type => {
 
     state.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null
     state.currentPreviewItem = pageOrScreen
+    state.currentView = "detail"
     return state
   })
 }

@@ -2,10 +2,16 @@ import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import InputGroup from "../common/Inputs/InputGroup.svelte"
 import FlatButtonGroup from "./FlatButtonGroup.svelte"
-// import Colorpicker from "../common/Colorpicker.svelte"
-/*
-  TODO: Allow for default values for all properties
-*/
+
+export const screen = [
+  { label: "Description", key: "description", control: Input },
+  { label: "Route", key: "route", control: Input },
+]
+
+export const page = [
+  { label: "Title", key: "title", control: Input },
+  { label: "Favicon", key: "favicon", control: Input },
+]
 
 export const layout = [
   {
