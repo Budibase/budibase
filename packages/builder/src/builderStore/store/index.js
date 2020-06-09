@@ -295,6 +295,7 @@ const setCurrentPage = store => pageName => {
 
     state.currentFrontEndType = "page"
     state.currentPageName = pageName
+    state.currentView = "detail"
     state.screens = Array.isArray(current_screens)
       ? current_screens
       : Object.values(current_screens)
@@ -455,6 +456,7 @@ const setScreenType = store => type => {
 
     state.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null
     state.currentPreviewItem = pageOrScreen
+    state.currentView = "detail"
     return state
   })
 }
