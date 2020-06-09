@@ -24,7 +24,8 @@
     "test": "lerna run test",
     "lint": "eslint packages",
     "lint:fix": "eslint --fix packages",
-    "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\""
+    "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\"",
+    "test:e2e": "lerna run cy:test"
   },
   "dependencies": {
     "@material/icon-button": "4.0.0",
