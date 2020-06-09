@@ -62,7 +62,7 @@
         <span
           class:active={false}
           class="topnavitemright"
-          on:click={() => (location = `/${application}`)}>
+          on:click={() => window.open(`/${application}`)}>
           <PreviewIcon />
         </span>
       </div>
