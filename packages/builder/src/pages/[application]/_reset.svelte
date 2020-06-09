@@ -59,12 +59,12 @@
           on:click={() => $goto(`/settings`)}>
           <SettingsIcon />
         </span>
-          <span
-            class:active={false}
-            class="topnavitemright"
-            on:click={() => window.open(`/${application}`)}>
-            <PreviewIcon />
-          </span>
+        <span
+          class:active={false}
+          class="topnavitemright"
+          on:click={() => window.open(`/${application}`)}>
+          <PreviewIcon />
+        </span>
       </div>
     </div>
 
