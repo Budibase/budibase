@@ -37,16 +37,26 @@
       //use for getting controls for each component property
       c => c._component === componentInstance._component
     ) || {}
+  
+  let panelDefinition = {}
 
-  $: panelDefinition = componentPropDefinition.properties
-    ? componentPropDefinition.properties[selectedCategory.value]
-    : {}
+  $: {
+    if(componentPropDefinition.properties) {
+      if(selectedCategory.value === "design") {
+        panelDefinition = componentPropDefinition.properties["design"]
+      }else{
+        let panelDef = componentPropDefinition.properties["settings"]
+        if($store.currentFrontEndType === "page" && $store.currentView !== "component") {
+          panelDefinition = [...page,...panelDef]
+        }else if($store.currentFrontEndType === "screen" && $store.currentView !== "component") {
+          panelDefinition = [...screen, ...panelDef]
+        }else {
+          panelDefinition = panelDef
+        }
+      }
+    }
+  }
 
-  // SCREEN PROPS =============================================
-  $: screen_props =
-    $store.currentFrontEndType === "page"
-      ? getProps($store.currentPreviewItem, ["name", "favicon"])
-      : getProps($store.currentPreviewItem, ["name", "description", "route"])
 
   const onStyleChanged = store.setComponentStyle
   const onPropChanged = store.setComponentProp
@@ -106,12 +116,10 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    /* Merge Check */
     overflow-x: hidden;
     overflow-y: hidden;
     padding: 20px;
     box-sizing: border-box;
-    /* Merge Check */
   }
 
   .title > div:nth-child(1) {
