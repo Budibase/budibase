@@ -47,7 +47,7 @@
         panelDefinition = componentPropDefinition.properties["design"]
       }else{
         let panelDef = componentPropDefinition.properties["settings"]
-        if($store.currentFrontEndType === "page") {
+        if($store.currentFrontEndType === "page" && $store.currentView !== "component") {
           panelDefinition = [...page,...panelDef]
         }else if($store.currentFrontEndType === "screen" && $store.currentView !== "component") {
           panelDefinition = [...screen, ...panelDef]
