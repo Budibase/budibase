@@ -8,7 +8,9 @@ const {
 const env = require("../../environment")
 
 exports.fetchAppComponentDefinitions = async function(ctx) {
-  const db = new CouchDB(ClientDb.name(env.CLIENT_ID))
+  const masterDb = new CouchDB("master")
+  const { clientId } = await masterDb.get(ctx.params.appId)
+  const db = new CouchDB(ClientDb.name(clientId))
   const app = await db.get(ctx.params.appId)
 
   const componentDefinitions = app.componentLibraries.reduce(
