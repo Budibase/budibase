@@ -1,5 +1,6 @@
 <script>
   import Modal from "svelte-simple-modal"
+  import { Home as Link } from "@budibase/bbui"
   import {
     SettingsIcon,
     AppsIcon,
@@ -24,89 +25,29 @@
 
       <div class="nav-section">
         <div class="nav-section-title">Build</div>
-        <div class="nav-item-home">
-          <span class="nav-item-icon">
-            <AppsIcon />
-          </span>
-          <div class="nav-item-title">Apps</div>
-        </div>
-        <div class="nav-item">
-          <span class="nav-item-icon">
-            <SettingsIcon />
-          </span>
-          <div class="nav-item-title">Settings</div>
-        </div>
-        <a href="https://budibase.con/login" target="_blank" class="nav-item">
-          <span class="nav-item-icon">
-            <UpdatesIcon />
-          </span>
-          <div class="nav-item-title">Updates</div>
-        </a>
-        <a href="https://budibase.con/login" target="_blank" class="nav-item">
-          <span class="nav-item-icon">
-            <HostingIcon />
-          </span>
-          <div class="nav-item-title">Hosting</div>
-        </a>
+        <Link icon={AppsIcon} title="Apps" href="/" active />
+        <Link icon={SettingsIcon} title="Settings" href="/" />
+        <Link icon={UpdatesIcon} title="Updates" href="/" />
+        <Link icon={HostingIcon} title="Hosting" href="/" />
       </div>
 
       <div class="nav-section">
         <div class="nav-section-title">Learn</div>
-        <a href="https://docs.budibase.com/" target="_blank" class="nav-item">
-          <span class="nav-item-icon">
-            <DocumentationIcon />
-          </span>
-          <div class="nav-item-title">Documentation</div>
-        </a>
-        <a
-          href="https://docs.budibase.com/tutorial/quick-start"
-          target="_blank"
-          class="nav-item">
-          <span class="nav-item-icon">
-            <TutorialsIcon />
-          </span>
-          <div class="nav-item-title">Tutorials</div>
-        </a>
-        <a href="https://forum.budibase.com/" target="_blank" class="nav-item">
-          <span class="nav-item-icon">
-            <CommunityIcon />
-          </span>
-          <div class="nav-item-title">Community</div>
-        </a>
+        <Link icon={DocumentationIcon} title="Documentation" href="/" />
+        <Link icon={TutorialsIcon} title="Tutorials" href="/" />
+        <Link icon={CommunityIcon} title="Community" href="/" />
+        <Link icon={ContributionIcon} title="Contact" href="/" />
       </div>
 
       <div class="nav-section">
         <div class="nav-section-title">Contact</div>
-        <a
-          href="https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md"
-          target="_blank"
-          class="nav-item">
-          <span class="nav-item-icon">
-            <ContributionIcon />
-          </span>
-          <div class="nav-item-title">Contribute to our product</div>
-        </a>
-        <a
-          href="https://github.com/Budibase/budibase/issues"
-          target="_blank"
-          class="nav-item">
-          <span class="nav-item-icon">
-            <BugIcon />
-          </span>
-          <div class="nav-item-title">Report bug</div>
-        </a>
-        <a href="mailto:support@budibase.com" target="_blank" class="nav-item">
-          <span class="nav-item-icon">
-            <EmailIcon />
-          </span>
-          <div class="nav-item-title">Email</div>
-        </a>
-        <a href="https://twitter.com/budibase" target="_blank" class="nav-item">
-          <span class="nav-item-icon">
-            <TwitterIcon />
-          </span>
-          <div class="nav-item-title">Twitter</div>
-        </a>
+        <Link
+          icon={ContributionIcon}
+          title="Contribute to our product"
+          href="/" />
+        <Link icon={BugIcon} title="Report bug" href="/" />
+        <Link icon={EmailIcon} title="Email" href="/" />
+        <Link icon={TwitterIcon} title="Twitter" href="/" />
       </div>
     </div>
 
@@ -159,49 +100,5 @@
     color: var(--ink);
     font-weight: 700;
     margin-bottom: 12px;
-  }
-
-  .nav-item {
-    cursor: pointer;
-    margin: 0px 0px 4px 0px;
-    padding: 0px 0px 0px 12px;
-    height: 40px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    box-sizing: border-box;
-  }
-
-  .nav-item-home {
-    cursor: pointer;
-    margin: 0px 0px 4px 0px;
-    padding: 0px 0px 0px 12px;
-    height: 40px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    box-sizing: border-box;
-    background-color: var(--blue-light);
-  }
-
-  .nav-item:hover {
-    background-color: var(--grey-light);
-    border-radius: 3px;
-  }
-
-  .nav-item::selection {
-    background-color: var(--blue-light);
-    border-radius: 3px;
-  }
-
-  .nav-item-title {
-    font-size: 14px;
-    color: var(--ink);
-    font-weight: 400;
-    margin-left: 12px;
-  }
-
-  .nav-item-icon {
-    color: var(--ink-light);
   }
 </style>

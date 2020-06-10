@@ -1,6 +1,5 @@
 <script>
   import { setContext, onMount } from "svelte"
-  import {screen, page} from "./propertyCategories.js"
   import PropsView from "./PropsView.svelte"
   import { store } from "builderStore"
   import IconButton from "components/common/IconButton.svelte"
@@ -31,13 +30,13 @@
   let selectedCategory = categories[0]
 
   $: components = $store.components
+  $: componentInstance = $store.currentComponentInfo
   $: componentDefinition = $store.components[componentInstance._component]
   $: componentPropDefinition =
     flattenedPanel.find(
       //use for getting controls for each component property
       c => c._component === componentInstance._component
     ) || {}
-
   
   let panelDefinition = {}
 
@@ -58,17 +57,9 @@
     }
   }
 
-  $: componentInstance = $store.currentView !== "component" ? {...$store.currentPreviewItem, ...$store.currentComponentInfo} : $store.currentComponentInfo
 
   const onStyleChanged = store.setComponentStyle
-
-  function onPropChanged(key, value) {
-    if($store.currentView !== "component") {
-      store.editPageOrScreen(key, value)
-      return
-    }
-    store.setComponentProp(key, value)
-  }
+  const onPropChanged = store.setComponentProp
 
   function walkProps(component, action) {
     action(component)
@@ -108,9 +99,9 @@
       <DesignView {panelDefinition} {componentInstance} {onStyleChanged} />
     {:else if selectedCategory.value === 'settings'}
       <SettingsView
-        {panelDefinition}
         {componentInstance}
         {componentDefinition}
+        {panelDefinition}
         onChange={onPropChanged} />
     {:else if selectedCategory.value === 'events'}
       <EventsEditor component={componentInstance} />
