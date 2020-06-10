@@ -1,7 +1,6 @@
 const CouchDB = require("../../db")
 const clientDb = require("../../db/clientDb")
 const bcrypt = require("../../utilities/bcrypt")
-const env = require("../../environment")
 const getUserId = userName => `user_${userName}`
 const {
   POWERUSER_LEVEL_ID,

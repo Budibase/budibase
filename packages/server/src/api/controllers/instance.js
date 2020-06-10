@@ -1,7 +1,6 @@
 const CouchDB = require("../../db")
 const client = require("../../db/clientDb")
 const newid = require("../../db/newid")
-const env = require("../../environment")
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name

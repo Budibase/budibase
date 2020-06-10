@@ -5,7 +5,6 @@ const {
   budibaseTempDir,
   budibaseAppsDir,
 } = require("../../utilities/budibaseDir")
-const env = require("../../environment")
 
 exports.fetchAppComponentDefinitions = async function(ctx) {
   const masterDb = new CouchDB("master")
