@@ -8,7 +8,10 @@ exports.create = async function(ctx) {
   const appShortId = ctx.params.applicationId.substring(0, 7)
   const instanceId = `inst_${appShortId}_${newid()}`
   const { applicationId } = ctx.params
-  const clientId = env.CLIENT_ID
+
+  const masterDb = new CouchDB("master")
+  const { clientId } = await masterDb.get(applicationId)
+
   const db = new CouchDB(instanceId)
   await db.put({
     _id: "_design/database",
