@@ -9,6 +9,7 @@ const {
 
 const TEST_CLIENT_ID = "test-client-id"
 
+exports.TEST_CLIENT_ID = TEST_CLIENT_ID
 exports.supertest = async () => {
   let request
   let port = 4002
@@ -59,7 +60,7 @@ exports.createView = async (request, instanceId, view) => {
   return res.body
 }
 
-exports.createClientDatabase = async () => await create(TEST_CLIENT_ID)
+exports.createClientDatabase = async id => await create(id || TEST_CLIENT_ID)
 
 exports.createApplication = async (request, name = "test_application") => {
   const res = await request
