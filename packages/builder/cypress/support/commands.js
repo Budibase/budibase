@@ -82,3 +82,15 @@ Cypress.Commands.add("createUser", (username, password, level) => {
     // Save
     cy.contains('Save').click()
 })
+
+Cypress.Commands.add("addHeadlineComponent", (text) => {
+    // Create User
+    cy.get('.switcher > :nth-child(2)').click()
+
+    cy.contains('Text').click()
+    cy.contains('Headline').click()
+    cy.get('.tabs > :nth-child(2)').click()
+    cy.get('input[type="text"]')
+        .type(text)
+    cy.contains('Design').click()
+})
