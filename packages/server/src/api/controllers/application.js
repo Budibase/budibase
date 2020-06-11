@@ -36,7 +36,7 @@ exports.create = async function(ctx) {
   }
   const appId = newid()
   // insert an appId -> clientId lookup
-  const masterDb = new CouchDB("master")
+  const masterDb = new CouchDB("clientAppLookup")
   await masterDb.put({
     _id: appId,
     clientId,
@@ -113,7 +113,7 @@ const createEmptyAppPackage = async (ctx, app) => {
 }
 
 const lookupClientId = async appId => {
-  const masterDb = new CouchDB("master")
+  const masterDb = new CouchDB("clientAppLookup")
   const { clientId } = await masterDb.get(appId)
   return clientId
 }

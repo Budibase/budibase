@@ -9,7 +9,7 @@ exports.authenticate = async ctx => {
   if (!username) ctx.throw(400, "Username Required.")
   if (!password) ctx.throw(400, "Password Required")
 
-  const masterDb = new CouchDB("master")
+  const masterDb = new CouchDB("clientAppLookup")
   const { clientId } = await masterDb.get(ctx.params.appId)
 
   if (!clientId) {
