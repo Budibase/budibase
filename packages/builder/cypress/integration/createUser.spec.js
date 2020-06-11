@@ -1,4 +1,4 @@
-context('Create Model', () => {
+context('Create a User', () => {
 
     before(() => {
         cy.visit('localhost:4001/_builder')
