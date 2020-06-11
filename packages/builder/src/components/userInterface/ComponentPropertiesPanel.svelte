@@ -37,26 +37,31 @@
       //use for getting controls for each component property
       c => c._component === componentInstance._component
     ) || {}
-  
+
   let panelDefinition = {}
 
   $: {
-    if(componentPropDefinition.properties) {
-      if(selectedCategory.value === "design") {
+    if (componentPropDefinition.properties) {
+      if (selectedCategory.value === "design") {
         panelDefinition = componentPropDefinition.properties["design"]
-      }else{
+      } else {
         let panelDef = componentPropDefinition.properties["settings"]
-        if($store.currentFrontEndType === "page" && $store.currentView !== "component") {
-          panelDefinition = [...page,...panelDef]
-        }else if($store.currentFrontEndType === "screen" && $store.currentView !== "component") {
+        if (
+          $store.currentFrontEndType === "page" &&
+          $store.currentView !== "component"
+        ) {
+          panelDefinition = [...page, ...panelDef]
+        } else if (
+          $store.currentFrontEndType === "screen" &&
+          $store.currentView !== "component"
+        ) {
           panelDefinition = [...screen, ...panelDef]
-        }else {
+        } else {
           panelDefinition = panelDef
         }
       }
     }
   }
-
 
   const onStyleChanged = store.setComponentStyle
   const onPropChanged = store.setComponentProp
