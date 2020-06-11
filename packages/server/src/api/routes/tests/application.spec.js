@@ -5,6 +5,7 @@ const {
   destroyClientDatabase,
   builderEndpointShouldBlockNormalUsers,
   supertest,
+  TEST_CLIENT_ID,
   defaultHeaders,
 } = require("./couchTestUtils")
 
@@ -51,6 +52,7 @@ describe("/applications", () => {
         body: { name: "My App" }
       })
     })
+
   })
 
   describe("fetch", () => {
@@ -66,6 +68,37 @@ describe("/applications", () => {
         .expect(200)
 
       expect(res.body.length).toBe(2)
+    })
+
+    it("lists only applications in requested client databse", async () => {
+      await createApplication(request, "app1")
+      await createClientDatabase("new_client")
+
+      const blah = await request
+        .post("/api/applications")
+        .send({ name: "app2", clientId: "new_client"})
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        //.expect(200)
+
+      const client1Res = await request
+        .get(`/api/applications?clientId=${TEST_CLIENT_ID}`)
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      
+      expect(client1Res.body.length).toBe(1)
+      expect(client1Res.body[0].name).toBe("app1")
+
+      const client2Res = await request
+        .get(`/api/applications?clientId=new_client`)
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        .expect(200)
+      
+      expect(client2Res.body.length).toBe(1)
+      expect(client2Res.body[0].name).toBe("app2")
+
     })
 
     it("should apply authorization to endpoint", async () => {
