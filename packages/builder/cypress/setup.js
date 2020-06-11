@@ -4,10 +4,14 @@
 // 3. Runs the server using said folder
 
 const rimraf = require("rimraf")
-const homedir = require("os").homedir() + "/.budibase-cypress"
-const { execSync } = require("child_process")
+const { join } = require("path")
+const homedir = join(require("os").homedir(), ".budibase-cypress")
+const init = require("../../cli/src/commands/init/initHandler")
+const run = require("../../cli/src/commands/run/runHandler")
 
 rimraf.sync(homedir)
 
-execSync(`../../packages/cli/bin/budi init -d ${homedir}`)
-execSync(`../../packages/cli/bin/budi run -d ${homedir}`)
+init({ dir: homedir })
+.then(() => {
+  run({ dir: homedir })
+})
