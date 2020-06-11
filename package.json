@@ -5,6 +5,7 @@
     "@rollup/plugin-json": "^4.0.2",
     "babel-eslint": "^10.0.3",
     "eslint": "^6.8.0",
+    "eslint-plugin-cypress": "^2.11.1",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-svelte3": "^2.7.3",
     "lerna": "3.14.1",

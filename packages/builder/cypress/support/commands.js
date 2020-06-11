@@ -25,76 +25,81 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 Cypress.Commands.add("createApp", (name, description) => {
-    cy.get('.banner-button')
-        .click()
-        .get('input[name="name"]')
-        .type(name).should('have.value', name)
+  cy.get(".banner-button")
+    .click()
+    .get('input[name="name"]')
+    .type(name)
+    .should("have.value", name)
 
-    cy.get('textarea[name="description"]')
-        .type(description).should('have.value', description)
+  cy.get('textarea[name="description"]')
+    .type(description)
+    .should("have.value", description)
 
-    cy.contains('Save').click()
+  cy.contains("Save").click()
 })
 Cypress.Commands.add("createModel", (modelName, firstField, secondField) => {
-    // Enter model name
-    cy.get('[data-cy=Name]').click()
-        .type(modelName)
+  // Enter model name
+  cy.get("[data-cy=Name]")
+    .click()
+    .type(modelName)
 
-    // Add 'name' field
-    cy.get('[data-cy=add-new-model-field]').click()
-    cy.get('[data-cy=Name]').click()
-        .type(firstField)
-    cy.contains('Save').click()
+  // Add 'name' field
+  cy.get("[data-cy=add-new-model-field]").click()
+  cy.get("[data-cy=Name]")
+    .click()
+    .type(firstField)
+  cy.contains("Save").click()
 
+  // Add 'age' field
+  cy.get("[data-cy=add-new-model-field]").click()
 
-    // Add 'age' field
-    cy.get('[data-cy=add-new-model-field]').click()
+  cy.get("[data-cy=Name]")
+    .click()
+    .type(secondField)
+  cy.get("select").select("number")
+  cy.contains("Save").click()
+  cy.contains(secondField).should("exist")
 
-    cy.get('[data-cy=Name]').click()
-        .type(secondField)
-    cy.get('select').select('number')
-    cy.contains('Save').click()
-    cy.contains(secondField).should('exist')
-
-    // Save model
-    cy.contains('Save').click()
+  // Save model
+  cy.contains("Save").click()
 })
 Cypress.Commands.add("addRecord", (firstField, secondField) => {
-    cy.contains('Create new record')
-        .click()
+  cy.contains("Create new record").click()
 
-    cy.get('[data-cy=name-input]').click().type(firstField)
-    cy.get('[data-cy=age-input]').click().type(secondField)
+  cy.get("[data-cy=name-input]")
+    .click()
+    .type(firstField)
+  cy.get("[data-cy=age-input]")
+    .click()
+    .type(secondField)
 
-    // Save
-    cy.contains('Save').click()
+  // Save
+  cy.contains("Save").click()
 })
 
 Cypress.Commands.add("createUser", (username, password, level) => {
-    // Create User
-    cy.get('.nav-group-header > .ri-add-line')
-        .click()
+  // Create User
+  cy.get(".nav-group-header > .ri-add-line").click()
 
-    cy.get('[data-cy=username]').type(username)
-    cy.get('[data-cy=password]').type(password)
-    cy.get('[data-cy=accessLevel]').select(level)
+  cy.get("[data-cy=username]").type(username)
+  cy.get("[data-cy=password]").type(password)
+  cy.get("[data-cy=accessLevel]").select(level)
 
-    // Save
-    cy.contains('Save').click()
+  // Save
+  cy.contains("Save").click()
 })
 
-Cypress.Commands.add("addHeadlineComponent", (text) => {
-    cy.get('.switcher > :nth-child(2)').click()
+Cypress.Commands.add("addHeadlineComponent", text => {
+  cy.get(".switcher > :nth-child(2)").click()
 
-    cy.get('[data-cy=Text]').click()
-    cy.get('[data-cy=Headline]').click()
-    cy.get('.tabs > :nth-child(2)').click()
-    cy.get('input[type="text"]')
-        .type(text)
-    cy.contains('Design').click()
+  cy.get("[data-cy=Text]").click()
+  cy.get("[data-cy=Headline]").click()
+  cy.get(".tabs > :nth-child(2)").click()
+  cy.get('input[type="text"]').type(text)
+  cy.contains("Design").click()
 })
-Cypress.Commands.add("addButtonComponent", (text) => {
-    cy.get('.switcher > :nth-child(2)').click()
+Cypress.Commands.add("addButtonComponent", () => {
+  cy.get(".switcher > :nth-child(2)").click()
 
-    cy.get('[data-cy=Button]').click()
+  cy.get("[data-cy=Button]").click()
 })

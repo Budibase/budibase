@@ -3,8 +3,8 @@
 // 2. Initialises using `.budibase-cypress`
 // 3. Runs the server using said folder
 
-const rimraf = require("rimraf");
-const homedir = require('os').homedir() + '/.budibase-cypress';
+const rimraf = require("rimraf")
+const homedir = require("os").homedir() + "/.budibase-cypress"
 const { execSync } = require("child_process")
 
 rimraf.sync(homedir)

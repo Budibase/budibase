@@ -41,6 +41,11 @@
       "/node_modules/(?!svelte).+\\.js$"
     ]
   },
+  "eslintConfig": {
+    "extends": [
+      "plugin:cypress/recommended"
+    ]
+  },
   "dependencies": {
     "@beyonk/svelte-notifications": "^2.0.3",
     "@budibase/bbui": "^1.1.1",
