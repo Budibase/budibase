@@ -61,10 +61,19 @@ exports.fetchView = async function(ctx) {
   ctx.body = response.rows.map(row => row.doc)
 }
 
-exports.fetchModel = async function(ctx) {
+exports.fetchModelRecords = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
   const response = await db.query(`database/all_${ctx.params.modelId}`, {
     include_docs: true,
+  })
+  ctx.body = response.rows.map(row => row.doc)
+}
+
+exports.search = async function(ctx) {
+  const db = new CouchDB(ctx.params.instanceId)
+  const response = await db.allDocs({
+    include_docs: true,
+    ...ctx.request.body,
   })
   ctx.body = response.rows.map(row => row.doc)
 }
