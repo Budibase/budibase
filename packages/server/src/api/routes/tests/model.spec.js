@@ -3,9 +3,10 @@ const {
   createModel, 
   supertest, 
   createClientDatabase, 
-  createApplication ,
+  createApplication,
   defaultHeaders,
-  builderEndpointShouldBlockNormalUsers
+  builderEndpointShouldBlockNormalUsers,
+  getDocument
 } = require("./couchTestUtils")
 
 describe("/models", () => {
@@ -115,6 +116,41 @@ describe("/models", () => {
         .expect(200)
         .end(async (_, res) => {
             expect(res.res.statusMessage).toEqual(`Model ${testModel._id} deleted.`);            
+            done();
+        });
+      })
+
+    it("deletes linked references to the model after deletion", async done => {
+      const linkedModel = await createModel(request, instance._id, {
+        name: "LinkedModel",
+        type: "model",
+        key: "name",
+        schema: {
+          name: {
+            type: "text",
+            constraints: {
+              type: "string",
+            },
+          },
+          TestModel: {
+            type: "link",
+            modelId: testModel._id,
+            constraints: {
+              type: "array"
+            }
+          }
+        },
+      })
+
+      request
+        .delete(`/api/${instance._id}/models/${testModel._id}/${testModel._rev}`)
+        .set(defaultHeaders)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(async (_, res) => {
+            expect(res.res.statusMessage).toEqual(`Model ${testModel._id} deleted.`);            
+            const dependentModel = await getDocument(instance._id, linkedModel._id)
+            expect(dependentModel.schema.TestModel).not.toBeDefined();
             done();
         });
       })
