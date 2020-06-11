@@ -1,14 +1,16 @@
 const CouchDB = require("../../db")
 const client = require("../../db/clientDb")
 const newid = require("../../db/newid")
-const env = require("../../environment")
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name
   const appShortId = ctx.params.applicationId.substring(0, 7)
   const instanceId = `inst_${appShortId}_${newid()}`
   const { applicationId } = ctx.params
-  const clientId = env.CLIENT_ID
+
+  const masterDb = new CouchDB("clientAppLookup")
+  const { clientId } = await masterDb.get(applicationId)
+
   const db = new CouchDB(instanceId)
   await db.put({
     _id: "_design/database",
