@@ -6,13 +6,26 @@ exports.getClientId = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
-  await create(env.CLIENT_ID)
+  const clientId = getClientId(ctx)
+  await create(clientId)
   ctx.status = 200
-  ctx.message = `Client Database ${env.CLIENT_ID} successfully provisioned.`
+  ctx.message = `Client Database ${clientId} successfully provisioned.`
 }
 
 exports.destroy = async function(ctx) {
-  await destroy(env.CLIENT_ID)
+  const clientId = getClientId(ctx)
+  await destroy(clientId)
   ctx.status = 200
-  ctx.message = `Client Database ${env.CLIENT_ID} successfully deleted.`
+  ctx.message = `Client Database ${clientId} successfully deleted.`
+}
+
+const getClientId = ctx => {
+  const clientId =
+    (ctx.query && ctx.query.clientId) ||
+    (ctx.body && ctx.body.clientId) ||
+    env.CLIENT_ID
+  if (!clientId) {
+    ctx.throw(400, "ClientId not suplied")
+  }
+  return clientId
 }
