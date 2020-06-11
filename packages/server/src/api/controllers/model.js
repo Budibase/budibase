@@ -70,6 +70,7 @@ exports.destroy = async function(ctx) {
   const modelToDelete = await db.get(ctx.params.modelId)
 
   await db.remove(modelToDelete)
+
   const modelViewId = `all_${ctx.params.modelId}`
 
   // Delete all records for that model
