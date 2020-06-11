@@ -1,4 +1,4 @@
-context('Create Application', () => {
+context('Create an Application', () => {
 
     beforeEach(() => {
         cy.visit('localhost:4001/_builder')
