@@ -32,15 +32,15 @@ exports.create = async function(ctx) {
     // model has a linked record
     if (schema[key].type === "link") {
       // create the link field in the other model
-      const linkedModel = await db.get(schema[key].modelId);
+      const linkedModel = await db.get(schema[key].modelId)
       linkedModel.schema[newModel.name] = {
         type: "link",
         modelId: newModel._id,
         constraints: {
-          type: "array"
-        }
+          type: "array",
+        },
       }
-      await db.put(linkedModel);
+      await db.put(linkedModel)
     }
   }
 
@@ -67,7 +67,7 @@ exports.update = async function() {}
 exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.params.instanceId)
 
-  const modelToDelete = await db.get(ctx.params.modelId);
+  const modelToDelete = await db.get(ctx.params.modelId)
 
   await db.remove(modelToDelete)
   const modelViewId = `all_${ctx.params.modelId}`
@@ -80,14 +80,13 @@ exports.destroy = async function(ctx) {
 
   // Delete linked record fields in dependent models
   for (let key in modelToDelete.schema) {
-    const { type, modelId } = modelToDelete.schema[key];
+    const { type, modelId } = modelToDelete.schema[key]
     if (type === "link") {
-      const linkedModel = await db.get(modelId);
+      const linkedModel = await db.get(modelId)
       delete linkedModel.schema[modelToDelete.name]
       await db.put(linkedModel)
     }
   }
-
 
   // delete the "all" view
   const designDoc = await db.get("_design/database")
