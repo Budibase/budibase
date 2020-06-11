@@ -21,7 +21,7 @@
     return componentName || "element"
   }
 
-  const screenPlaceholder =  {
+  const screenPlaceholder = {
     name: "Screen Placeholder",
     route: "*",
     props: {
@@ -60,9 +60,8 @@
     },
   }
 
-
   $: hasComponent = !!$store.currentPreviewItem
-  
+
   $: {
     styles = ""
     // Apply the CSS from the currently selected page and its screens
@@ -88,9 +87,9 @@
     libraries: $store.libraries,
     page: $store.pages[$store.currentPageName],
     screens: [
-          $store.currentFrontEndType === "page"
-          ? screenPlaceholder
-          : $store.currentPreviewItem,
+      $store.currentFrontEndType === "page"
+        ? screenPlaceholder
+        : $store.currentPreviewItem,
     ],
     appRootPath: "",
   }
@@ -102,20 +101,25 @@
     : ""
 
   const refreshContent = () => {
-    iframe.contentWindow.postMessage(JSON.stringify({
-      styles,
-      stylesheetLinks,
-      selectedComponentType,
-      selectedComponentId,
-      frontendDefinition,
-    }))
+    iframe.contentWindow.postMessage(
+      JSON.stringify({
+        styles,
+        stylesheetLinks,
+        selectedComponentType,
+        selectedComponentId,
+        frontendDefinition,
+      })
+    )
   }
 
-  $: if(iframe) iframe.contentWindow.addEventListener("bb-ready", refreshContent, { once: true })
+  $: if (iframe)
+    iframe.contentWindow.addEventListener("bb-ready", refreshContent, {
+      once: true,
+    })
 
-  $: if(iframe && frontendDefinition) {
-		refreshContent()
-	}
+  $: if (iframe && frontendDefinition) {
+    refreshContent()
+  }
 </script>
 
 <div class="component-container">

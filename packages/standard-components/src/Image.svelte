@@ -7,6 +7,8 @@
   export let height
   export let width
 
+  export let _bb
+
   $: style = buildStyle({ height, width })
 </script>
 
