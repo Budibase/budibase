@@ -5,11 +5,9 @@
 
 const rimraf = require("rimraf");
 const homedir = require('os').homedir() + '/.budibase-cypress';
-const { exec } = require("child_process")
+const { execSync } = require("child_process")
 
-rimraf(homedir, function (error) {
-    console.log('Error: ', error);
-})
+rimraf.sync(homedir)
 
-exec(`../../packages/cli/bin/budi init -d ${homedir}`)
-exec(`../../packages/cli/bin/budi run -d ${homedir}`)
+execSync(`../../packages/cli/bin/budi init -d ${homedir}`)
+execSync(`../../packages/cli/bin/budi run -d ${homedir}`)
