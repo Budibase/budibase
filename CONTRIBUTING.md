@@ -170,11 +170,13 @@ Follow from **Step 3. Install and Build** in the setup guide above. You should h
 
 #### End-to-end Tests
 
-Budibase uses Cypress to run a number of E2E tests. To run the tests execute the following command:
+Budibase uses Cypress to run a number of E2E tests. To run the tests execute the following command in the root folder:
 
 ```
 yarn test:e2e
 ```
+
+Or if you are in the builder you can run `yarn cy:test`.
 
 
 ### Other Useful Information
