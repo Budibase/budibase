@@ -10,6 +10,7 @@ const {
   instanceRoutes,
   clientRoutes,
   applicationRoutes,
+  recordRoutes,
   modelRoutes,
   viewRoutes,
   staticRoutes,
@@ -68,6 +69,9 @@ router.use(viewRoutes.allowedMethods())
 
 router.use(modelRoutes.routes())
 router.use(modelRoutes.allowedMethods())
+
+router.use(recordRoutes.routes())
+router.use(recordRoutes.allowedMethods())
 
 router.use(userRoutes.routes())
 router.use(userRoutes.allowedMethods())

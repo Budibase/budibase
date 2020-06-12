@@ -6,7 +6,6 @@ import { writable, get } from "svelte/store"
 import api from "../api"
 import { DEFAULT_PAGES_OBJECT } from "../../constants"
 import { getExactComponent } from "components/userInterface/pagesParsing/searchComponents"
-import { rename } from "components/userInterface/pagesParsing/renameScreen"
 import {
   createProps,
   makePropsSafe,
@@ -25,6 +24,7 @@ import {
   saveCurrentPreviewItem as _saveCurrentPreviewItem,
   saveScreenApi as _saveScreenApi,
   regenerateCssForCurrentScreen,
+  renameCurrentScreen,
 } from "../storeUtils"
 
 export const getStore = () => {
@@ -53,7 +53,6 @@ export const getStore = () => {
   store.createDatabaseForApp = backendStoreActions.createDatabaseForApp(store)
 
   store.saveScreen = saveScreen(store)
-  store.renameScreen = renameScreen(store)
   store.deleteScreen = deleteScreen(store)
   store.setCurrentScreen = setCurrentScreen(store)
   store.setCurrentPage = setCurrentPage(store)
@@ -64,6 +63,7 @@ export const getStore = () => {
   store.addChildComponent = addChildComponent(store)
   store.selectComponent = selectComponent(store)
   store.setComponentProp = setComponentProp(store)
+  store.setPageOrScreenProp = setPageOrScreenProp(store)
   store.setComponentStyle = setComponentStyle(store)
   store.setComponentCode = setComponentCode(store)
   store.setScreenType = setScreenType(store)
@@ -203,46 +203,6 @@ const deleteScreen = store => name => {
     }
 
     api.delete(`/_builder/api/${s.appId}/screen/${name}`)
-
-    return s
-  })
-}
-
-const renameScreen = store => (oldname, newname) => {
-  store.update(s => {
-    const { screens, pages, error, changedScreens } = rename(
-      s.pages,
-      s.screens,
-      oldname,
-      newname
-    )
-
-    if (error) {
-      // should really do something with this
-      return s
-    }
-
-    s.screens = screens
-    s.pages = pages
-    if (s.currentPreviewItem.name === oldname)
-      s.currentPreviewItem.name = newname
-
-    const saveAllChanged = async () => {
-      for (let screenName of changedScreens) {
-        const changedScreen = getExactComponent(screens, screenName)
-        await api.post(`/_builder/api/${s.appId}/screen`, changedScreen)
-      }
-    }
-
-    api
-      .patch(`/_builder/api/${s.appId}/screen`, {
-        oldname,
-        newname,
-      })
-      .then(() => saveAllChanged())
-      .then(() => {
-        _savePage(s)
-      })
 
     return s
   })
@@ -399,6 +359,18 @@ const setComponentProp = store => (name, value) => {
     _saveCurrentPreviewItem(state)
 
     state.currentComponentInfo = current_component
+    return state
+  })
+}
+
+const setPageOrScreenProp = store => (name, value) => {
+  store.update(state => {
+    if (name === "name" && state.currentFrontEndType === "screen") {
+      state = renameCurrentScreen(value, state)
+    } else {
+      state.currentPreviewItem[name] = value
+      _saveCurrentPreviewItem(state)
+    }
     return state
   })
 }

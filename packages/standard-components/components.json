@@ -6,6 +6,13 @@
 			"component": "button"
 		}
 	},
+	"embed": {
+		"name": "Embed",
+		"description": "Embed stuff",
+		"props": {
+			"embed": "string"
+		}
+	},
 	"Navigation": {
 		"name": "Navigation",
 		"description": "A basic header navigation component",
