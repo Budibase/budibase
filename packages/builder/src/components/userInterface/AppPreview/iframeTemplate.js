@@ -44,6 +44,7 @@ export default `<html>
         document.head.appendChild(styles)
         styles.appendChild(document.createTextNode(data.styles))
 
+        document.cookie = "budibase:appid=" + data.appId
         window["##BUDIBASE_FRONTEND_DEFINITION##"] = data.frontendDefinition;
         if (clientModule) {
           clientModule.loadBudibase({ window, localStorage })

@@ -12,6 +12,18 @@ export default {
       isCategory: true,
       children: [
         {
+          _component: "@budibase/standard-components/embed",
+          icon: "ri-code-line",
+          name: "Embed",
+          description: "Embed content from 3rd party sources",
+          properties: {
+            design: {
+              ...all,
+            },
+            settings: [{ label: "Embed", key: "embed", control: Input }],
+          },
+        },
+        {
           _component: "@budibase/standard-components/container",
           name: "Container",
           description: "This component contains things within itself",

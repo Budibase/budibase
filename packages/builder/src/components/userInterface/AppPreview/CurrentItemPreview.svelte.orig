@@ -100,6 +100,16 @@
     : ""
 
   const refreshContent = () => {
+<<<<<<< HEAD
+    iframe.contentWindow.postMessage(JSON.stringify({
+      styles,
+      stylesheetLinks,
+      selectedComponentType,
+      selectedComponentId,
+      frontendDefinition,
+      appId: $store.appId
+    }))
+=======
     iframe.contentWindow.postMessage(
       JSON.stringify({
         styles,
@@ -107,9 +117,9 @@
         selectedComponentType,
         selectedComponentId,
         frontendDefinition,
-        appId: $store.appId,
       })
     )
+>>>>>>> master
   }
 
   $: if (iframe)
