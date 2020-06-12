@@ -1,2 +1,3 @@
-import Colorpicker from './Colorpicker.svelte';
-export default Colorpicker;
+import Colorpreview from './Colorpreview.svelte';
+
+export default Colorpreview;
