@@ -1,10 +1,17 @@
 <script>
-  import {onMount} from "svelte"
-  import { getAndConvertHexa, getAndConvertRgba, getHSLA, hsvaToHexa, hsvaToRgba, getColorFormat, convertToHSVA } from "./utils.js"
+  import { onMount, createEventDispatcher } from "svelte";
+
+  import {
+    getColorFormat,
+    convertToHSVA,
+    convertHsvaToFormat
+  } from "./utils.js";
   import Slider from "./Slider.svelte";
   import Palette from "./Palette.svelte";
+  import ButtonGroup from "./ButtonGroup.svelte";
+  import Input from "./Input.svelte";
 
-  export let value = "rgba(255,255,255,1)";
+  export let value = "#3ec1d3ff";
   export let format = "hexa";
 
   let h = null;
@@ -12,24 +19,20 @@
   let v = null;
   let a = null;
 
+  const dispatch = createEventDispatcher();
+
   onMount(() => {
-    format = getColorFormat(value)
-    if(format) {
-      let hsva = convertToHSVA(value, format)
-      setHSVA(hsva)
+    format = getColorFormat(value);
+    if (format) {
+      convertAndSetHSVA()
     }
-})
+  });
 
-  const hsvaIsNull = () => [h,s,v,a].every(c => c === null)
+  const hsvaIsNull = () => [h, s, v, a].every(c => c === null);
 
-  function setFormatAndConvert() {
-    if (value.startsWith('#')) {
-      format = "hexa"
-      return getAndConvertHexa(value)
-    } else if (value.startsWith('rgba')) {
-      format = "rgba"
-      return getAndConvertRgba(value)
-    }
+  function convertAndSetHSVA() {
+    let hsva = convertToHSVA(value, format);
+    setHSVA(hsva);
   }
 
   function setHSVA([hue, sat, val, alpha]) {
@@ -40,53 +43,81 @@
   }
 
   //fired by choosing a color from the palette
-  function setSaturationAndValue({detail}) {
-    s = detail.s
-    v = detail.v
-    let res = convertHSVA()
-    console.log("SAT-VAL", res)
+  function setSaturationAndValue({ detail }) {
+    s = detail.s;
+    v = detail.v;
+    value = convertHsvaToFormat([h, s, v, a], format);
+    dispatch("change", value)
   }
-    
+
   function setHue(hue) {
-    h = hue
-    let res = convertHSVA()
-    console.log("HUE",res)
+    h = hue;
+    value = convertHsvaToFormat([h, s, v, a], format);    
+    dispatch("change", value)
   }
 
   function setAlpha(alpha) {
-    a = alpha
-    let res = convertHSVA()
-    console.log("ALPHA",res)
-
+    a = alpha === "1.00" ? "1" :alpha;
+    value = convertHsvaToFormat([h, s, v, a], format);    
+    dispatch("change", value)
   }
 
-  function convertHSVA() {
-    let hsva = [h, s, v, a]
-    let _value = format === "hexa" ? hsvaToHexa(hsva, true) : hsvaToRgba(hsva, true)
-    return _value;
-    // onchange(_value)
+  function changeFormatAndConvert(f) {
+    format = f;
+    value = convertHsvaToFormat([h, s, v, a], format);
   }
 
-  // $: {
-  //   if(!hsvaIsNull()) {
-  //     let hsva = [h, s, v, a]
-  //     // let t = value + "abs"
-  //     value = format === "hexa" ? hsvaToHexa(hsva) : hsvaToRgba(hsva)
-  //     debugger
-  //     // console.log("VAL", value)
-  //   }
-  // }
+  function handleColorInput(text) {
+    let f = getColorFormat(text)
+    if(f) {
+      format = f;
+      value = text
+      convertAndSetHSVA()
+    }
+  }
 </script>
 
 <style>
   .colorpicker-container {
     display: flex;
+    font-size: 12px;
+    font-weight: 400;
     flex-direction: column;
     height: 300px;
     width: 250px;
     background: #ffffff;
-    border: 1px solid #e8e8ef;
     border-radius: 2px;
+    box-shadow: 0 0.15em 1.5em 0 rgba(0,0,0,.1), 0 0 1em 0 rgba(0,0,0,.03);
+  }
+
+  .control-panel {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    background: white;
+    border: 1px solid #d2d2d2
+  }
+
+  .alpha-hue-panel {
+    display: grid;
+    grid-template-columns: 25px 1fr;
+    grid-gap: 15px;
+    justify-content: center;
+    align-items: center;
+    /* padding: 8px; */
+  }
+
+  .selected-color {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid #dedada;
+  }
+
+  .format-input-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 </style>
 
@@ -94,7 +125,24 @@
 
   <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
 
-  <Slider type="hue" value={h} on:change={hue => setHue(hue.detail)} />
+  <div class="control-panel">
+    <div class="alpha-hue-panel">
+      <div>
+        <div class="selected-color" style={`background: ${value}`} />
+      </div>
+      <div>
+        <Slider type="hue" value={h} on:change={hue => setHue(hue.detail)} />
+        <Slider
+          type="alpha"
+          value={a}
+          on:change={alpha => setAlpha(alpha.detail)} />
+      </div>
+    </div>
 
-  <Slider type="alpha" value={a} on:change={alpha => setAlpha(alpha.detail)} />
+    <div class="format-input-panel">
+      <ButtonGroup {format} onclick={changeFormatAndConvert} />
+      <Input {value} on:input={event => handleColorInput(event.target.value)} />
+    </div>
+  </div>
+
 </div>

@@ -2,7 +2,7 @@
   import { onMount, createEventDispatcher } from "svelte";
   import dragable from "./drag.js";
 
-  export let value = 1
+  export let value = 1;
   export let type = "hue";
 
   const dispatch = createEventDispatcher();
@@ -11,20 +11,22 @@
   let sliderWidth = 0;
 
   function handleClick(mouseX) {
-    const { left } = slider.getBoundingClientRect();
+    const { left, width } = slider.getBoundingClientRect();
     let clickPosition = mouseX - left;
+
+    let percentageClick = (clickPosition / sliderWidth).toFixed(2)
     
-    if (clickPosition >= 0 && clickPosition <= sliderWidth) {
-      let percentageClick = clickPosition / sliderWidth;
+    if (percentageClick >= 0 && percentageClick <= 1) {
       let value =
         type === "hue"
-          ? 360 * percentageClick.toString()
-          : percentageClick.toString();
+          ? 360 * percentageClick
+          : percentageClick;
       dispatch("change", value);
     }
   }
 
-  $: thumbPosition = type === "hue" ? sliderWidth * (value / 360) : sliderWidth * (value)
+  $: thumbPosition =
+    type === "hue" ? sliderWidth * (value / 360) : sliderWidth * value;
 
   $: style = `transform: translateX(${thumbPosition - 6}px);`;
 </script>
@@ -34,10 +36,11 @@
     position: relative;
     align-self: center;
     height: 8px;
-    width: 220px;
+    width: 185px;
     border-radius: 10px;
     margin: 10px 0px;
     border: 1px solid #e8e8ef;
+    cursor: pointer;
   }
 
   .hue {
@@ -62,9 +65,10 @@
     bottom: -3px;
     height: 12px;
     width: 12px;
-    border: 1px solid black;
+    border: 1px solid #777676;
     border-radius: 50%;
     background-color: #ffffff;
+    cursor:grab;
   }
 </style>
 

@@ -42,6 +42,7 @@
     width: 100%;
     height: 175px;
     cursor: crosshair;
+    overflow: hidden;
   }
 
   .picker {
