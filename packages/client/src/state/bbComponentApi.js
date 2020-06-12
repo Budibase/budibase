@@ -9,7 +9,6 @@ export const bbFactory = ({
   componentLibraries,
   onScreenSlotRendered,
 }) => {
-
   const apiCall = method => (url, body) =>
     fetch(url, {
       method: method,

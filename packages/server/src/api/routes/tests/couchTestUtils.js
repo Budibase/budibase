@@ -178,7 +178,7 @@ const createUserWithPermissions = async (
 
   const loginResult = await request
     .post(`/api/authenticate`)
-    .set({ Cookie: `budibase:appid=${designDoc.metadata.applicationId}`})
+    .set({ Cookie: `budibase:appid=${designDoc.metadata.applicationId}` })
     .send({ username, password })
 
   // returning necessary request headers
