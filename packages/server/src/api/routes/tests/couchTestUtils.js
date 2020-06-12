@@ -253,3 +253,7 @@ exports.insertDocument = async (databaseId, document) => {
 exports.destroyDocument = async (databaseId, documentId) => {
   return await new CouchDB(databaseId).destroy(documentId)
 }
+
+exports.getDocument = async (databaseId, documentId) => {
+  return await new CouchDB(databaseId).get(documentId)
+}
