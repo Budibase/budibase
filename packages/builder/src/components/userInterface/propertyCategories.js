@@ -12,8 +12,9 @@ export const layout = [
     label: "Display",
     key: "display",
     control: OptionSelect,
-    initialValue: "Flex",
+    initialValue: "",
     options: [
+      { label: "", value: "" },
       { label: "Flex", value: "flex" },
       { label: "Inline Flex", value: "inline-flex" },
     ],
@@ -39,6 +40,7 @@ export const layout = [
     control: OptionSelect,
     initialValue: "Flex Start",
     options: [
+      { label: "", value: "" },
       { label: "Flex Start", value: "flex-start" },
       { label: "Flex End", value: "flex-end" },
       { label: "Center", value: "center" },
@@ -317,19 +319,31 @@ export const border = [
   {
     label: "Radius",
     key: "border-radius",
-    control: Input,
-    width: "48px",
-    placeholder: "px",
-    textAlign: "center",
+    control: OptionSelect,
+    defaultValue: "None",
+    options: [
+      { label: "None", value: "0" },
+      { label: "small", value: "0.125rem" },
+      { label: "Medium", value: "0.25rem;" },
+      { label: "Large", value: "0.375rem" },
+      { label: "Extra large", value: "0.5rem" },
+      { label: "Full", value: "5678px" },
+    ],
   },
   {
     label: "Width",
     key: "border-width",
-    control: Input,
-    width: "48px",
-    placeholder: "px",
-    textAlign: "center",
-  }, //custom
+    control: OptionSelect,
+    defaultValue: "None",
+    options: [
+      { label: "None", value: "0" },
+      { label: "Extra small", value: "0.5px" },
+      { label: "Small", value: "1px" },
+      { label: "Medium", value: "2px" },
+      { label: "Large", value: "4px" },
+      { label: "Extra large", value: "8px" },
+    ],
+  },
   {
     label: "Color",
     key: "border-color",
@@ -339,6 +353,7 @@ export const border = [
     label: "Style",
     key: "border-style",
     control: OptionSelect,
+    defaultValue: "None",
     options: [
       "none",
       "hidden",
@@ -365,17 +380,50 @@ export const effects = [
   },
   {
     label: "Rotate",
-    key: "transform",
-    control: Input,
-    width: "48px",
-    textAlign: "center",
-    placeholder: "deg",
+    key: "transform-rotate",
+    control: OptionSelect,
+    defaultValue: "0",
+    options: [
+      "0",
+      "45deg",
+      "90deg",
+      "90deg",
+      "135deg",
+      "180deg",
+      "225deg",
+      "270deg",
+      "315dev",
+    ],
   }, //needs special control
   {
     label: "Shadow",
     key: "box-shadow",
-    control: InputGroup,
-    meta: [{ placeholder: "X" }, { placeholder: "Y" }, { placeholder: "B" }],
+    control: OptionSelect,
+    defaultValue: "None",
+    options: [
+      { label: "None", value: "none" },
+      { label: "Extra small", value: "0 1px 2px 0 rgba(0, 0, 0, 0.05)" },
+      {
+        label: "Small",
+        value:
+          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+      },
+      {
+        label: "Medium",
+        value:
+          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      },
+      {
+        label: "Large",
+        value:
+          "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+      },
+      {
+        label: "Extra large",
+        value:
+          "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      },
+    ],
   },
 ]
 

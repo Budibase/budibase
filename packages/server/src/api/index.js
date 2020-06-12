@@ -10,6 +10,7 @@ const {
   instanceRoutes,
   clientRoutes,
   applicationRoutes,
+  recordRoutes,
   modelRoutes,
   viewRoutes,
   staticRoutes,
@@ -59,6 +60,11 @@ router.use(async (ctx, next) => {
   }
 })
 
+router.use(async (ctx, next) => {
+  ctx.appId = ctx.cookies.get("budibase:appid")
+  await next()
+})
+
 router.use(authRoutes.routes())
 router.use(authRoutes.allowedMethods())
 
@@ -68,6 +74,9 @@ router.use(viewRoutes.allowedMethods())
 
 router.use(modelRoutes.routes())
 router.use(modelRoutes.allowedMethods())
+
+router.use(recordRoutes.routes())
+router.use(recordRoutes.allowedMethods())
 
 router.use(userRoutes.routes())
 router.use(userRoutes.allowedMethods())

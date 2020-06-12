@@ -24,15 +24,15 @@
     {{ /each }}
 
     {{ each(options.screenStyles) }}
-    <link rel='stylesheet' href='{{ appRootPath }}{{ @this }}'>
+    <link rel='stylesheet' href='/assets{{ @this }}'>
     {{ /each }}
 
     {{ if(options.pageStyle) }}
-    <link rel='stylesheet' href='{{ appRootPath }}{{ pageStyle }}'>
+    <link rel='stylesheet' href='/assets{{ pageStyle }}'>
     {{ /if }}
 
-    <script src='{{ appRootPath }}/clientFrontendDefinition.js'></script>
-    <script src='{{ appRootPath }}/budibase-client.js'></script>
+    <script src='/assets/clientFrontendDefinition.js'></script>
+    <script src='/assets/budibase-client.js'></script>
 
 </head>
 

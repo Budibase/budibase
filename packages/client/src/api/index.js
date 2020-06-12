@@ -1,9 +1,9 @@
 import { authenticate } from "./authenticate"
 import { triggerWorkflow } from "./workflow"
 
-export const createApi = ({ rootPath = "", setState, getState }) => {
+export const createApi = ({ setState, getState }) => {
   const apiCall = method => async ({ url, body }) => {
-    const response = await fetch(`${rootPath}${url}`, {
+    const response = await fetch(url, {
       method: method,
       headers: {
         "Content-Type": "application/json",
@@ -45,7 +45,6 @@ export const createApi = ({ rootPath = "", setState, getState }) => {
   const isSuccess = obj => !obj || !obj[ERROR_MEMBER]
 
   const apiOpts = {
-    rootPath,
     setState,
     getState,
     isSuccess,
