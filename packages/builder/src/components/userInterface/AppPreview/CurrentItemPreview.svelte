@@ -110,7 +110,6 @@
         appId: $store.appId,
       })
     )
-    )
   }
 
   $: if (iframe)
