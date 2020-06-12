@@ -110,6 +110,30 @@ describe("/records", () => {
       expect(res.body.find(r => r.name === record.name)).toBeDefined()
     })
 
+    it("lists records when queried by their ID", async () => {
+      const newRecord = {
+        modelId: model._id,
+        name: "Second Contact",
+        status: "new"
+      }
+      const record = await createRecord()
+      const secondRecord = await createRecord(newRecord)
+
+      const recordIds = [record.body._id, secondRecord.body._id]
+
+      const res = await request
+        .post(`/api/${instance._id}/records/search`)
+        .set(defaultHeaders)
+        .send({
+          keys: recordIds
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      expect(res.body.length).toBe(2)
+      expect(res.body.map(response => response._id)).toEqual(expect.arrayContaining(recordIds))
+    })
+
     it("load should return 404 when record does not exist", async () => {
       await createRecord()
       await request

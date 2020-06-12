@@ -25,7 +25,7 @@
   "scripts": {
     "test": "jest routes --runInBand",
     "test:integration": "jest workflow --runInBand",
-    "test:watch": "jest -w",
+    "test:watch": "jest --watch",
     "initialise": "node ../cli/bin/budi init -b local -q",
     "budi": "node ../cli/bin/budi",
     "dev:builder": "nodemon ../cli/bin/budi run",
