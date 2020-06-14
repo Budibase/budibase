@@ -66,9 +66,4 @@ exports.serveComponentLibrary = async function(ctx) {
   await send(ctx, "/index.js", { root: componentLibraryPath })
 }
 
-const looksLikeAppId = appId => {
-  const allowedChars = "0123456789abcdef".split("")
-  return (
-    appId.length === 32 && !appId.split("").some(c => allowedChars.includes(c))
-  )
-}
+const looksLikeAppId = appId => /^[0-9a-f]{32}$/.test(appId)
