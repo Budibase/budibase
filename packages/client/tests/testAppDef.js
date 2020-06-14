@@ -1,12 +1,29 @@
-import { JSDOM } from "jsdom"
+import jsdom, { JSDOM } from "jsdom"
 import { loadBudibase } from "../src/index"
 
-export const load = async (page, screens, url) => {
+export const load = async (page, screens, url, host = "test.com") => {
   screens = screens || []
   url = url || "/"
+
+  const fullUrl = `http://${host}${url}`
+  const cookieJar = new jsdom.CookieJar()
+  cookieJar.setCookie(
+    `budibase:appid=TEST_APP_ID;domain=${host};path=/`,
+    fullUrl,
+    {
+      looseMode: false,
+    },
+    () => {}
+  )
+
   const dom = new JSDOM("<!DOCTYPE html><html><body></body><html>", {
-    url: `http://test${url}`,
+    url: fullUrl,
+    cookieJar,
   })
+  /*const cookie = tough.Cookie
+  cookie.key = "budibase:appid"
+  cookie.value = "TEST_APPID"*/
+
   autoAssignIds(page.props)
   for (let s of screens) {
     autoAssignIds(s.props)
@@ -27,6 +44,7 @@ export const load = async (page, screens, url) => {
 }
 
 const addWindowGlobals = (window, page, screens) => {
+  window.document.cookie = "budibase:appid=TEST_APP_ID"
   window["##BUDIBASE_FRONTEND_DEFINITION##"] = {
     page,
     screens,

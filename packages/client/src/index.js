@@ -9,7 +9,7 @@ import { getAppId } from "./render/getAppId"
 export const loadBudibase = async opts => {
   const _window = (opts && opts.window) || window
   // const _localStorage = (opts && opts.localStorage) || localStorage
-  const appId = getAppId()
+  const appId = getAppId(_window.document.cookie)
   const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
 
   const user = {}
@@ -37,7 +37,7 @@ export const loadBudibase = async opts => {
     componentLibraries: componentLibraryModules,
     frontendDefinition,
     user,
-    window,
+    window: _window,
   })
 
   const route = _window.location

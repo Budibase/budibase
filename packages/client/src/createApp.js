@@ -35,8 +35,12 @@ export const createApp = ({
     routeTo = screenRouter({
       screens: frontendDefinition.screens,
       onScreenSelected,
+      window,
     })
-    const fallbackPath = window.location.pathname.replace(getAppId(), "")
+    const fallbackPath = window.location.pathname.replace(
+      getAppId(window.document.cookie),
+      ""
+    )
     routeTo(currentUrl || fallbackPath)
   }
 
