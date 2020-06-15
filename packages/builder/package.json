@@ -39,6 +39,9 @@
     },
     "transformIgnorePatterns": [
       "/node_modules/(?!svelte).+\\.js$"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/cypress/"
     ]
   },
   "eslintConfig": {
