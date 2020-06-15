@@ -24,7 +24,6 @@ import {
   saveCurrentPreviewItem as _saveCurrentPreviewItem,
   saveScreenApi as _saveScreenApi,
   regenerateCssForCurrentScreen,
-  renameCurrentScreen,
 } from "../storeUtils"
 
 export const getStore = () => {
