@@ -1,6 +1,7 @@
 <script>
   import { setContext, onMount } from "svelte"
   import PropsView from "./PropsView.svelte"
+
   import { store } from "builderStore"
   import IconButton from "components/common/IconButton.svelte"
   import {
@@ -29,7 +30,7 @@
   let selectedCategory = categories[0]
 
   $: components = $store.components
-  $: componentInstance = $store.currentComponentInfo
+  $: componentInstance = $store.currentView !== "component" ? {...$store.currentPreviewItem, ...$store.currentComponentInfo} : $store.currentComponentInfo
   $: componentDefinition = $store.components[componentInstance._component]
   $: componentPropDefinition =
     flattenedPanel.find(
@@ -43,9 +44,16 @@
       componentPropDefinition.properties[selectedCategory.value]
 
   const onStyleChanged = store.setComponentStyle
-  const onPropChanged = store.setComponentProp
 
-  $: displayName = $store.currentFrontEndType === "screen" && componentInstance._instanceName
+   function onPropChanged(key, value) {
+    if($store.currentView !== "component") {
+      store.setPageOrScreenProp(key, value)
+      return
+    }
+    store.setComponentProp(key, value)
+  }
+
+  $: displayName = ( $store.currentView === "component" || $store.currentFrontEndType === "screen") && componentInstance._instanceName && componentInstance._component !== "##builtin/screenslot"
 
   function walkProps(component, action) {
     action(component)
@@ -95,8 +103,7 @@
         {componentDefinition}
         {panelDefinition}
         displayNameField={displayName}
-        onChange={onPropChanged} />
-        onScreenPropChange={store.setPageOrScreenProp}
+        onChange={onPropChanged}
         screenOrPageInstance={$store.currentView !== "component" && $store.currentPreviewItem} />
     {:else if selectedCategory.value === 'events'}
       <EventsEditor component={componentInstance} />
