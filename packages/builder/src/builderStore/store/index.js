@@ -70,6 +70,7 @@ export const getStore = () => {
   store.getPathToComponent = getPathToComponent(store)
   store.addTemplatedComponent = addTemplatedComponent(store)
   store.setMetadataProp = setMetadataProp(store)
+  store.editPageOrScreen = editPageOrScreen(store)
   return store
 }
 
@@ -159,7 +160,6 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
       _css: "",
       props: createProps(rootComponent).props,
     }
-
     newScreen.route = route
     newScreen.props._instanceName = screenName || ""
     state.currentPreviewItem = newScreen
@@ -174,7 +174,7 @@ const createScreen = store => (screenName, route, layoutComponentName) => {
 
 const setCurrentScreen = store => screenName => {
   store.update(s => {
-    const screen = getExactComponent(s.screens, screenName)
+    const screen = getExactComponent(s.screens, screenName, true)
     s.currentPreviewItem = screen
     s.currentFrontEndType = "screen"
     s.currentView = "detail"
@@ -245,6 +245,7 @@ const setCurrentPage = store => pageName => {
     const currentPage = state.pages[pageName]
 
     state.currentFrontEndType = "page"
+    state.currentView = "detail"
     state.currentPageName = pageName
     state.screens = Array.isArray(current_screens)
       ? current_screens
@@ -365,12 +366,12 @@ const setComponentProp = store => (name, value) => {
 
 const setPageOrScreenProp = store => (name, value) => {
   store.update(state => {
-    if (name === "name" && state.currentFrontEndType === "screen") {
-      state = renameCurrentScreen(value, state)
+    if (name === "_instanceName" && state.currentFrontEndType === "screen") {
+      state.currentPreviewItem.props[name] = value
     } else {
       state.currentPreviewItem[name] = value
-      _saveCurrentPreviewItem(state)
     }
+    _saveCurrentPreviewItem(state)
     return state
   })
 }
@@ -420,6 +421,18 @@ const setScreenType = store => type => {
 
     state.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null
     state.currentPreviewItem = pageOrScreen
+    state.currentView = "detail"
+    return state
+  })
+}
+
+const editPageOrScreen = store => (key, value, setOnComponent = false) => {
+  store.update(state => {
+    setOnComponent
+      ? (state.currentPreviewItem.props[key] = value)
+      : (state.currentPreviewItem[key] = value)
+    _saveCurrentPreviewItem(state)
+
     return state
   })
 }

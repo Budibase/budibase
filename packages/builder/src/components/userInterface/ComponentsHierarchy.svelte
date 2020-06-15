@@ -7,7 +7,7 @@
   import { store } from "builderStore"
   import { ArrowDownIcon, ShapeIcon } from "components/common/Icons/"
 
-  export let screens = []
+  export let screens = []  
 
   let confirmDeleteDialog
   let componentToDelete = ""

@@ -16,7 +16,7 @@ export const searchAllComponents = (components, phrase) => {
     pipe(vals, [some(v => includes(normalString(phrase))(normalString(v)))])
 
   const componentMatches = c => {
-    if (hasPhrase(c.name, ...(c.tags || []))) return true
+    if (hasPhrase(c._instanceName, ...(c.tags || []))) return true
 
     if (isRootComponent(c)) return false
 
@@ -28,10 +28,14 @@ export const searchAllComponents = (components, phrase) => {
   return filter(componentMatches)(components)
 }
 
-export const getExactComponent = (components, name) => {
+export const getExactComponent = (components, name, isScreen = false) => {
   const stringEquals = (s1, s2) => normalString(s1) === normalString(s2)
   return pipe(components, [
-    find(c => stringEquals(c.props._instanceName, name)),
+    find(c =>
+      isScreen
+        ? stringEquals(c.props._instanceName, name)
+        : stringEquals(c._instanceName, name)
+    ),
   ])
 }
 
