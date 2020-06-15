@@ -20,12 +20,6 @@
   $: modelFields = model.schema ? Object.entries(model.schema) : []
   $: instanceId = $backendUiStore.selectedDatabase._id
 
-  function editField() {}
-
-  function deleteField() {}
-
-  function onFinishedFieldEdit() {}
-
   async function saveModel() {
     const SAVE_MODEL_URL = `/api/${instanceId}/models`
     const response = await api.post(SAVE_MODEL_URL, model)
@@ -94,7 +88,6 @@
 {:else}
   <FieldView
     field={fieldToEdit}
-    onFinished={onFinishedFieldEdit}
     schema={model.schema}
     goBack={() => (showFieldView = false)} />
 {/if}
