@@ -39,8 +39,9 @@
 
   let panelDefinition = {}
 
-  $: panelDefinition = componentPropDefinition.properties && 
-      componentPropDefinition.properties[selectedCategory.value]
+  $: panelDefinition =
+    componentPropDefinition.properties &&
+    componentPropDefinition.properties[selectedCategory.value]
 
   const onStyleChanged = store.setComponentStyle
   const onPropChanged = store.setComponentProp
@@ -88,7 +89,7 @@
         {panelDefinition}
         onChange={onPropChanged}
         onScreenPropChange={store.setPageOrScreenProp}
-        screenOrPageInstance={$store.currentView !== "component" && $store.currentPreviewItem} />
+        screenOrPageInstance={$store.currentView !== 'component' && $store.currentPreviewItem} />
     {:else if selectedCategory.value === 'events'}
       <EventsEditor component={componentInstance} />
     {/if}
