@@ -110,7 +110,7 @@ describe("/models", () => {
 
     afterEach(() => {
       delete testModel._rev
-    })
+    });
 
     it("returns a success response when a model is deleted.", async done => {
       request

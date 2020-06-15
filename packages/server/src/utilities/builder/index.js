@@ -41,7 +41,7 @@ const screenPath = (appPath, pageName, name) =>
 
 module.exports.saveScreen = async (config, appname, pagename, screen) => {
   const appPath = appPackageFolder(config, appname)
-  const compPath = screenPath(appPath, pagename, screen.name)
+  const compPath = screenPath(appPath, pagename, screen.props._instanceName)
   await ensureDir(dirname(compPath))
   if (screen._css) {
     delete screen._css
