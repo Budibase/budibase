@@ -64,7 +64,7 @@ export const componentsAndScreens = () => ({
       },
     },
 
-    {      
+    {
       route: "",
       props: {
         _component: "budibase-components/div",

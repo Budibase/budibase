@@ -50,7 +50,8 @@ export const rename = (pages, screens, oldname, newname) => {
 
     hasEdited = traverseProps(screen.props) || hasEdited
 
-    if (hasEdited && screen.props.instanceName !== newname) changedScreens.push(screen.props.instanceName)
+    if (hasEdited && screen.props.instanceName !== newname)
+      changedScreens.push(screen.props.instanceName)
   }
 
   for (let pageName in pages) {
