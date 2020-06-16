@@ -46,7 +46,7 @@
   function selectModel(model) {
     backendUiStore.update(state => {
       state.selectedModel = model
-      state.selectedView = `${model._id}`
+      state.selectedView = `all_${model._id}`
       return state
     })
   }

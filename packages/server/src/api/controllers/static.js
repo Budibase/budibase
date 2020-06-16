@@ -13,7 +13,6 @@ exports.serveBuilder = async function(ctx) {
 }
 
 exports.serveApp = async function(ctx) {
-  // TODO: update homedir stuff to wherever budi is run
   // default to homedir
   const appPath = resolve(
     budibaseAppsDir(),
@@ -26,7 +25,6 @@ exports.serveApp = async function(ctx) {
 }
 
 exports.serveComponentLibrary = async function(ctx) {
-  // TODO: update homedir stuff to wherever budi is run
   // default to homedir
   let componentLibraryPath = resolve(
     budibaseAppsDir(),

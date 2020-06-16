@@ -71,7 +71,7 @@
     margin-left: 20px;
   }
 
-  :global(.refresh-page-button):hover{
+  :global(.refresh-page-button):hover {
     background: var(--grey-light);
   }
 </style>

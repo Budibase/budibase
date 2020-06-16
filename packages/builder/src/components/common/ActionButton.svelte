@@ -1,6 +1,7 @@
 <script>
   export let disabled = false
   export let hidden = false
+  export let secondary = false
   export let primary = true
   export let cancel = false
   export let alert = false
@@ -11,6 +12,7 @@
   on:click
   class="button"
   class:hidden
+  class:secondary
   class:primary
   class:alert
   class:cancel
@@ -22,12 +24,14 @@
 <style>
   .primary {
     color: #ffffff;
-    background: #0055ff;
+    background: var(--blue);
+    border: solid 1px var(--blue);
   }
 
   .alert {
-    color: rgba(255, 0, 31, 1);
-    background: rgba(255, 0, 31, 0.1);
+    color: white;
+    background: #e26d69;
+    border: solid 1px #e26d69;
   }
 
   .cancel {
@@ -35,18 +39,22 @@
     background: none;
   }
 
+  .secondary {
+    color: var(--ink);
+    border: solid 1px var(--grey-dark);
+    background: white;
+  }
+
   .button {
     font-size: 14px;
-    font-weight: 600;
-    border-radius: 5px;
-    border: none;
+    font-weight: 500;
+    border-radius: 3px;
     padding: 10px 20px;
-    height: 45px;
+    height: 40px;
   }
 
   .button:hover {
     cursor: pointer;
-    font-weight: 600;
     filter: saturate(90%);
   }
 

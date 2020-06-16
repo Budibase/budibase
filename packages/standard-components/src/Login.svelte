@@ -1,10 +1,9 @@
 <script>
   import Button from "./Button.svelte"
 
-  export let usernameLabel = "Username"
-  export let passwordLabel = "Password"
   export let loginButtonLabel = "Login"
   export let logo = ""
+  export let name = ""
   export let buttonClass = ""
   export let inputClass = ""
 
@@ -26,9 +25,16 @@
 
   const login = async () => {
     loading = true
-    const response = await _bb.api.post("/api/authenticate", {
-      username,
-      password,
+    const response = await fetch(_bb.relativeUrl("/api/authenticate"), {
+      body: JSON.stringify({
+        username,
+        password,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-agent": "Budibase Builder",
+      },
+      method: "POST",
     })
 
     if (response.status === 200) {
@@ -51,20 +57,29 @@
       </div>
     {/if}
 
+    <h1 class="header-content">Log in to {name}</h1>
+
     <div class="form-root">
-      <div class="label">{usernameLabel}</div>
       <div class="control">
-        <input bind:value={username} type="text" class={_inputClass} />
+        <input
+          bind:value={username}
+          type="text"
+          placeholder="Username"
+          class={_inputClass} />
       </div>
-      <div class="label">{passwordLabel}</div>
+
       <div class="control">
-        <input bind:value={password} type="password" class={_inputClass} />
+        <input
+          bind:value={password}
+          type="password"
+          placeholder="Password"
+          class={_inputClass} />
       </div>
     </div>
 
     <div class="login-button-container">
       <button disabled={loading} on:click={login} class={_buttonClass}>
-        {loginButtonLabel}
+        Log in to {name}
       </button>
     </div>
 
@@ -77,28 +92,42 @@
 <style>
   .root {
     height: 100%;
-    display: grid;
-    grid-template-columns: [left] 1fr [middle] auto [right] 1fr;
-    grid-template-rows: [top] 1fr [center] auto [bottom] 1fr;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .content {
-    grid-column-start: middle;
-    grid-row-start: center;
-    width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .logo-container {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
   }
 
   .logo-container > img {
-    max-width: 100%;
+    max-width: 200px;
   }
 
   .login-button-container {
-    text-align: right;
-    margin-top: 20px;
+    margin-top: 6px;
+    max-width: 100%;
+  }
+
+  .header-content {
+    font-family: Inter;
+    font-weight: 700;
+    color: #1f1f1f;
+    font-size: 48px;
+    line-height: 72px;
+    margin-bottom: 30px;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "case" "rlig" "calt" 0;
   }
 
   .incorrect-details-panel {
@@ -114,48 +143,55 @@
   }
 
   .form-root {
-    display: grid;
-    grid-template-columns: [label] auto [control] 1fr; /* [overflow] auto;*/
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 300px;
   }
 
-  .label {
-    grid-column-start: label;
-    padding: 5px 10px;
-    vertical-align: middle;
-  }
   .control {
-    grid-column-start: control;
-    padding: 5px 10px;
-  }
-
-  .default-input {
-    font-family: inherit;
-    font-size: inherit;
-    padding: 0.4em;
-    margin: 0 0 0.5em 0;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 2px;
+    padding: 6px 0px;
     width: 100%;
   }
 
-  .default-button {
-    font-family: inherit;
-    font-size: inherit;
-    padding: 0.4em;
+  .default-input {
+    font-family: Inter;
+    font-size: 14px;
+    color: #393c44;
+    padding: 2px 6px 2px 12px;
     margin: 0 0 0.5em 0;
     box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 2px;
-    color: #000333;
+    border: 0.5px solid #d8d8d8;
+    border-radius: 4px;
+    width: 100%;
+    height: 40px;
+    transition: border-color 100ms ease-in 0s;
+    outline-color: #797979;
+  }
+
+  .default-button {
+    font-family: Inter;
+    font-size: 16px;
+    padding: 0.4em;
+    box-sizing: border-box;
+    border-radius: 4px;
+    color: white;
+    background-color: #393c44;
     outline: none;
+    width: 300px;
+    height: 40px;
+    cursor: pointer;
+    transition: all 0.2s ease 0s;
+    overflow: hidden;
+    outline: none;
+    user-select: none;
+    white-space: nowrap;
+    text-align: center;
   }
 
-  .default-button:active {
-    background-color: #f9f9f9;
-  }
-
-  .default-button:focus {
-    border-color: #f9f9f9;
+  .default-button:hover {
+    background-color: white;
+    border-color: #393c44;
+    color: #393c44;
   }
 </style>

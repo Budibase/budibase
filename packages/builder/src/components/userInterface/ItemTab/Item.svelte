@@ -3,7 +3,7 @@
   export let item
 </script>
 
-<div class="item-item" transition:fly={{ y: 100, duration: 1000 }} on:click>
+<div class="item-item" in:fly={{ y: 100, duration: 1000 }} on:click>
   <div class="item-icon">
     <i class={item.icon} />
   </div>
@@ -19,7 +19,7 @@
     cursor: pointer;
     margin-bottom: 8px;
     padding: 8px 0px 16px 0px;
-    width: 120px;
+    width: 110px;
     height: 80px;
     justify-content: center;
     align-items: center;

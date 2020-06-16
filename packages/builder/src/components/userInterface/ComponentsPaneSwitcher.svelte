@@ -54,7 +54,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 20px 20px;
+    padding: 20px 5px 20px 10px;
     border-left: solid 1px var(--grey);
   }
 
@@ -77,5 +77,9 @@
 
   .switcher > .selected {
     color: var(--ink);
+  }
+
+  .panel {
+    height: 100%;
   }
 </style>

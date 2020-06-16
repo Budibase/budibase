@@ -27,13 +27,16 @@
     }
     onChange(val)
   }
+
+  const checkSelected = val =>
+    isMultiSelect ? value.includes(val) : value === val
 </script>
 
 <div class="flatbutton-group">
   {#each buttonProps as props}
     <div class="button-container">
       <FlatButton
-        selected={value.includes(props.value)}
+        selected={isMultiSelect ? value.includes(props.value) : value === props.value}
         onClick={onButtonClicked}
         {...props} />
     </div>

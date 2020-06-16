@@ -1,6 +1,6 @@
 import api from "builderStore/api"
 
-export async function createUser(user, appId, instanceId) {
+export async function createUser(user, instanceId) {
   const CREATE_USER_URL = `/api/${instanceId}/users`
   const response = await api.post(CREATE_USER_URL, user)
   return await response.json()
@@ -28,7 +28,7 @@ export async function saveRecord(record, instanceId, modelId) {
 }
 
 export async function fetchDataForView(viewName, instanceId) {
-  const FETCH_RECORDS_URL = `/api/${instanceId}/${viewName}/records`
+  const FETCH_RECORDS_URL = `/api/${instanceId}/views/${viewName}`
 
   const response = await api.get(FETCH_RECORDS_URL)
   return await response.json()

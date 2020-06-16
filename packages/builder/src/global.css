@@ -16,6 +16,10 @@
     --grey-medium: #e8e8ef;
     --grey-dark: #E6E6E6;
 
+    --red: #E26D69;
+    --red-light:#FFE6E6;
+    --red-dark: #800400;
+
     --primary100: #0055ff;
     --primary80: rgba(0, 85, 255, 0.8);
     --primary60: #rgba(0, 85, 255, 0.6);
@@ -74,6 +78,17 @@
 
     --background-button: #f9f9f9;
     --button-text: #0055ff;
+
+    /* Budibase Styleguide Colors */
+    --primary: #0055ff;
+    --secondary: #f1f4fc;
+    --color: #393c44;
+    --light-grey: #fbfbfb;
+    --dark-grey: #808192;
+    --medium-grey: #e8e8ef;
+    --background: rgb(251, 251, 251);
+    --font: #393c44;
+    --coral: #eb5757;
 }
 
 html, body {
@@ -88,6 +103,8 @@ html, body {
 
 #app {
     height: 100%;
+    box-sizing: border-box;
+    overflow-y: hidden;
 }
 
 h1 {

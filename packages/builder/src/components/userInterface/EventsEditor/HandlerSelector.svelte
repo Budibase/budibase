@@ -1,4 +1,5 @@
 <script>
+  import { Button } from "@budibase/bbui"
   import IconButton from "components/common/IconButton.svelte"
   import PlusButton from "components/common/PlusButton.svelte"
   import Select from "components/common/Select.svelte"
@@ -85,27 +86,28 @@
       </Select>
     </div>
     {#if parameters}
+      <br />
       {#each parameters as parameter, idx}
-        <StateBindingCascader onChange={onParameterChanged(idx)} {parameter} />
+        <StateBindingCascader on:change={onParameterChanged(idx)} {parameter} />
       {/each}
     {/if}
-  </div>
-  <div class="event-action-button">
     {#if parameters.length > 0}
-      {#if newHandler}
-        <PlusButton on:click={onCreate} />
-      {:else}
-        <IconButton icon="x" on:click={onRemoved} />
-      {/if}
+      <div class="button-container">
+        {#if newHandler}
+          <Button primary thin on:click={onCreate}>Add Action</Button>
+        {:else}
+          <Button outline thin on:click={onRemoved}>Remove Action</Button>
+        {/if}
+      </div>
     {/if}
   </div>
 </div>
 
 <style>
   .type-selector-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: grid;
+    grid-gap: 20px;
+    width: 100%;
     background: rgba(223, 223, 223, 0.5);
     border: 1px solid #dfdfdf;
     margin-bottom: 18px;
@@ -122,17 +124,19 @@
 
   .handler-controls {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 10px;
+    grid-template-columns: 1fr;
+    grid-gap: 20px;
     padding: 22px;
   }
 
-  .event-action-button {
-    margin-right: 20px;
+  .button-container {
+    display: grid;
+    justify-items: end;
   }
 
   span {
-    font-size: 13px;
-    margin-bottom: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: 500;
   }
 </style>

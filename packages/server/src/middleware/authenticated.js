@@ -13,27 +13,38 @@ module.exports = async (ctx, next) => {
     return
   }
 
-  if (ctx.cookies.get("builder:token") === env.ADMIN_SECRET) {
-    ctx.isAuthenticated = true
-    ctx.isBuilder = true
+  const appToken = ctx.cookies.get("budibase:token")
+  const builderToken = ctx.cookies.get("builder:token")
+  const isBuilderAgent = ctx.headers["x-user-agent"] === "Budibase Builder"
+
+  // all admin api access should auth with buildertoken and 'Budibase Builder user agent
+  const shouldAuthAsBuilder = isBuilderAgent && builderToken
+
+  if (shouldAuthAsBuilder) {
+    const builderTokenValid = builderToken === env.ADMIN_SECRET
+
+    ctx.isAuthenticated = builderTokenValid
+    ctx.isBuilder = builderTokenValid
+
     await next()
     return
   }
 
-  const token = ctx.cookies.get("budibase:token")
-
-  if (!token) {
+  if (!appToken) {
     ctx.isAuthenticated = false
     await next()
     return
   }
 
   try {
-    const jwtPayload = jwt.verify(token, ctx.config.jwtSecret)
+    const jwtPayload = jwt.verify(appToken, ctx.config.jwtSecret)
 
     ctx.user = {
       ...jwtPayload,
-      accessLevel: await getAccessLevel(jwtPayload.accessLevelId),
+      accessLevel: await getAccessLevel(
+        jwtPayload.instanceId,
+        jwtPayload.accessLevelId
+      ),
     }
     ctx.isAuthenticated = true
   } catch (err) {
@@ -43,7 +54,7 @@ module.exports = async (ctx, next) => {
   await next()
 }
 
-const getAccessLevel = async accessLevelId => {
+const getAccessLevel = async (instanceId, accessLevelId) => {
   if (
     accessLevelId === POWERUSER_LEVEL_ID ||
     accessLevelId === ADMIN_LEVEL_ID
@@ -56,7 +67,10 @@ const getAccessLevel = async accessLevelId => {
   }
 
   const findAccessContext = {
-    params: { levelId: accessLevelId },
+    params: {
+      levelId: accessLevelId,
+      instanceId,
+    },
   }
   await accessLevelController.find(findAccessContext)
   return findAccessContext.body

@@ -10,7 +10,6 @@
   <h3 class="app-title">{name}</h3>
   <p class="app-desc">{description}</p>
   <div class="card-footer">
-    <div class="modified-date">Last Edited - 25th May 2020</div>
     <a href={`/_builder/${_id}`} class="app-button">Open Web App</a>
   </div>
 </div>
@@ -18,7 +17,7 @@
 <style>
   .apps-card {
     background-color: var(--white);
-    padding: 20px;
+    padding: 20px 20px 30px 20px;
     max-width: 400px;
     max-height: 150px;
     border-radius: 5px;
@@ -48,14 +47,13 @@
     justify-content: space-between;
   }
 
-  .modified-date {
-    font-size: 14px;
-    color: var(--ink-light);
-  }
-
   .app-button {
+    align-items: center;
+    display: flex;
     background-color: var(--white);
     color: var(--ink);
+    width: 100%;
+    justify-content: center;
     padding: 12px 20px;
     border-radius: 5px;
     border: 1px var(--grey) solid;
