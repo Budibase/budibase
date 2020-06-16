@@ -3,7 +3,7 @@
   import { Switcher } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { store, backendUiStore } from "builderStore"
-  import BlockNavigator from "./BlockNavigator.svelte";
+  import BlockNavigator from "./BlockNavigator.svelte"
   import SchemaManagementDrawer from "../SchemaManagementDrawer.svelte"
   import HierarchyRow from "../HierarchyRow.svelte"
   import ListItem from "./ListItem.svelte"
@@ -28,22 +28,31 @@
     backendUiStore.actions.models.select(model)
   }
 
-  function selectField() {}
+  function selectField(field) {
+    backendUiStore.update(state => {
+      state.selectedField = field
+      return state
+    });
+  }
+
+  function setupForNewModel() {
+    backendUiStore.update(state => {
+      state.selectedModel = {}
+      state.draftModel = { schema: {} }
+      return state
+    })
+    $goto(`./database/${$backendUiStore.selectedDatabase._id}/newmodel`)
+  }
 </script>
 
 <div class="items-root">
-  {#if $backendUiStore.selectedDatabase._id}
+  {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
     <div class="hierarchy">
       <div class="components-list-container">
         <Switcher headings={HEADINGS} bind:value={selectedTab}>
           {#if selectedTab === 'NAVIGATE'}
-            <Button
-              secondary
-              wide
-              on:click={() => $goto(`./database/${$backendUiStore.selectedDatabase._id}/newmodel`)}>
-              Create New Model
-            </Button>
-            <div class="hierarchy-items-container">
+            <Button secondary wide on:click={setupForNewModel}>Create New Model</Button>
+          <div class="hierarchy-items-container">
               {#each $backendUiStore.models as model}
                 <ListItem
                   selected={model._id === $backendUiStore.selectedModel._id}
@@ -55,7 +64,7 @@
                     indented
                     icon="ri-layout-column-fill"
                     title={field}
-                    on:click={() => selectField(model.schema[field])} />
+                    on:click={() => selectField({ name: field, ...model.schema[field] })} />
                 {/each}
               {/each}
             </div>

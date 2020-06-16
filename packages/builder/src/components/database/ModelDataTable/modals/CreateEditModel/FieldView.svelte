@@ -30,9 +30,7 @@
 
   const save = () => {
     constraints.presence = required ? { allowEmpty: false } : false
-    draftField.constraints = constraints
-    draftField.type = type
-    schema[field.name] = draftField
+    schema[field.name] = { type, constraints }
     goBack()
   }
 

@@ -1,8 +1,7 @@
 <script>
   import * as blockDefinitions from "constants/backend"
+  import { backendUiStore } from "builderStore";
   import Block from "./Block.svelte"
-
-  console.log(blockDefinitions)
 
   const HEADINGS = [
     {
@@ -20,6 +19,10 @@
   ]
 
   let selectedTab = "FIELDS"
+
+  function addField(blockDefinition) {
+    backendUiStore.actions.models.addField(blockDefinition)
+  }
 </script>
 
 <section>
@@ -36,6 +39,7 @@
   <div class="block-grid">
     {#each Object.values(blockDefinitions[selectedTab]) as blockDefinition}
       <Block
+        on:click={() => addField(blockDefinition)}
         primary={true}
         secondary={false}
         tertiary={false}
