@@ -1,4 +1,5 @@
 import { writable } from "svelte/store"
+import { cloneDeep } from "lodash/fp";
 import api from "../api"
 
 export const getBackendUiStore = () => {
@@ -56,38 +57,47 @@ export const getBackendUiStore = () => {
       select: model => store.update(state => {
         state.selectedModel = model;
         // TODO: prevent pointing to same obj
-        state.draftModel = model;
+        state.draftModel = cloneDeep(model);
         state.selectedField = null
-        return state
+        return state;
       }),
-      save: model =>
-        store.update(async state => {
-          const SAVE_MODEL_URL = `/api/${state.selectedDatabase._id}/models`
-          const response = await api.post(SAVE_MODEL_URL, model)
-          const savedModel = await response.json()
+      save: async ({ instanceId, model }) => {
+        const SAVE_MODEL_URL = `/api/${instanceId}/models`
+        const response = await api.post(SAVE_MODEL_URL, model)
+        const savedModel = await response.json()
 
-          state.models = [...state.models, savedModel]
+        store.update(state => {
+          // New model
+          if (!model._id) {
+            state.models = [...state.models, savedModel]
+          } else {
+            const existingIdx = state.models.findIndex(({ _id }) => _id === model._id);
+            state.models.splice(existingIdx, 1, savedModel);
+            state.models = state.models
+          }
+
           state.selectedModel = savedModel
           state.draftModel = savedModel
           state.selectedView = `all_${savedModel._id}`
           return state
-        }),
-        addField: field => {
-          store.update(state => {
-            if (!state.draftModel.schema) {
-              state.draftModel.schema = {}
-            }
+        })
+      },
+      addField: field => {
+        store.update(state => {
+          if (!state.draftModel.schema) {
+            state.draftModel.schema = {}
+          }
 
-            state.draftModel.schema = {
-              ...state.draftModel.schema,
-              [field.name]: field
-            }
+          state.draftModel.schema = {
+            ...state.draftModel.schema,
+            [field.name]: field
+          }
 
-            state.selectedField = field
+          state.selectedField = field
 
-            return state
-          });
-        }
+          return state
+        });
+      }
     },
     views: {
       select: view =>

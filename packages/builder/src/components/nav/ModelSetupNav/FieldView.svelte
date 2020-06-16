@@ -21,12 +21,11 @@
   $: required =
     constraints && constraints.presence && !constraints.presence.allowEmpty
 
-  $: console.log(field)
-
   const save = () => {
-    // constraints.presence = required ? { allowEmpty: false } : false
-    // draft[field.name] = { type, constraints }
-    backendUiStore.actions.models.save($backendUiStore.draftModel)
+    backendUiStore.actions.models.save({ 
+      instanceId: $backendUiStore.selectedDatabase._id,
+      model: $backendUiStore.draftModel
+    })
   }
 </script>
 

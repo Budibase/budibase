@@ -3,7 +3,7 @@
   import { Button, Switcher } from "@budibase/bbui"
   import { store, backendUiStore } from "builderStore"
   import api from "builderStore/api"
-  import FieldView from "./FieldView.svelte"
+  import FieldView from "./FieldView.svelte";
 
   const { open, close } = getContext("simple-modal")
 
@@ -24,7 +24,6 @@
 
   let selectedTab = "SETUP"
 
-  // TODO: draftModel undefined after save
   $: edited = $backendUiStore.draftModel.name !== $backendUiStore.selectedModel.name
 
   async function deleteModel() {
@@ -41,7 +40,10 @@
   }
 
   async function saveModel() {
-    await backendUiStore.actions.models.save($backendUiStore.draftModel)
+    await backendUiStore.actions.models.save({ 
+      instanceId: $backendUiStore.selectedDatabase._id,
+      model: $backendUiStore.draftModel
+    })
   }
 </script>
 
@@ -63,7 +65,12 @@
           <Button wide secondary>Import CSV</Button>
         </div>
 
-        <Button attention wide on:click={saveModel}>Save</Button>
+        <Button
+          attention
+          wide
+          on:click={saveModel}>
+          Save
+        </Button>
       {/if}
     {:else if selectedTab === 'DELETE'}
       <div class="titled-input">
