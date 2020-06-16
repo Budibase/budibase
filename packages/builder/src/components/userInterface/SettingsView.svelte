@@ -21,7 +21,6 @@
     data.target ? onChange(key, data.target.value) : onChange(key, data)
   }
 
-
   const screenDefinition = [
     { key: "description", label: "Description", control: Input },
     { key: "route", label: "Route", control: Input },
@@ -34,7 +33,6 @@
 
   $: isPage = screenOrPageInstance && screenOrPageInstance.favicon
   $: screenOrPageDefinition = isPage ? pageDefinition : screenDefinition
-
 </script>
 
 {#if screenOrPageInstance}
@@ -47,7 +45,7 @@
         {onChange}
         props={{ ...excludeProps(def, ['control', 'label']) }} />
   {/each}
-  <hr/>
+  <hr />
 {/if}
 
 {#if displayNameField}

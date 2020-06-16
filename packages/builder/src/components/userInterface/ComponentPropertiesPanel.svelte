@@ -40,8 +40,9 @@
 
   let panelDefinition = {}
 
-  $: panelDefinition = componentPropDefinition.properties && 
-      componentPropDefinition.properties[selectedCategory.value]
+  $: panelDefinition =
+    componentPropDefinition.properties &&
+    componentPropDefinition.properties[selectedCategory.value]
 
   const onStyleChanged = store.setComponentStyle
 
@@ -105,6 +106,7 @@
         displayNameField={displayName}
         onChange={onPropChanged}
         screenOrPageInstance={$store.currentView !== "component" && $store.currentPreviewItem} />
+
     {:else if selectedCategory.value === 'events'}
       <EventsEditor component={componentInstance} />
     {/if}
