@@ -13,7 +13,6 @@
   import CodeEditor from "./CodeEditor.svelte"
   import LayoutEditor from "./LayoutEditor.svelte"
   import EventsEditor from "./EventsEditor"
-
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
@@ -25,7 +24,7 @@
   let categories = [
     { value: "design", name: "Design" },
     { value: "settings", name: "Settings" },
-    { value: "actions", name: "Actions" },
+    { value: "events", name: "Events" },
   ]
   let selectedCategory = categories[0]
 
@@ -38,15 +37,10 @@
       c => c._component === componentInstance._component
     ) || {}
 
-  $: panelDefinition = componentPropDefinition.properties
-    ? componentPropDefinition.properties[selectedCategory.value]
-    : {}
+  let panelDefinition = {}
 
-  // SCREEN PROPS =============================================
-  $: screen_props =
-    $store.currentFrontEndType === "page"
-      ? getProps($store.currentPreviewItem, ["name", "favicon"])
-      : getProps($store.currentPreviewItem, ["name", "description", "route"])
+  $: panelDefinition = componentPropDefinition.properties && 
+      componentPropDefinition.properties[selectedCategory.value]
 
   const onStyleChanged = store.setComponentStyle
   const onPropChanged = store.setComponentProp
@@ -92,7 +86,11 @@
         {componentInstance}
         {componentDefinition}
         {panelDefinition}
-        onChange={onPropChanged} />
+        onChange={onPropChanged}
+        onScreenPropChange={store.setPageOrScreenProp}
+        screenOrPageInstance={$store.currentView !== "component" && $store.currentPreviewItem} />
+    {:else if selectedCategory.value === 'events'}
+      <EventsEditor component={componentInstance} />
     {/if}
 
   </div>
@@ -105,6 +103,9 @@
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    overflow-y: hidden;
+    padding: 20px;
+    box-sizing: border-box;
   }
 
   .title > div:nth-child(1) {
@@ -119,5 +120,7 @@
   .component-props-container {
     margin-top: 20px;
     flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
   }
 </style>

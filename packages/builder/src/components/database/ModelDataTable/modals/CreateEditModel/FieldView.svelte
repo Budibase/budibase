@@ -13,17 +13,41 @@
 
   const FIELD_TYPES = ["string", "number", "boolean"]
 
-  export let field = { type: "string" }
+  export let field = {
+    type: "string",
+    constraints: { type: "string", presence: false },
+  }
   export let schema
   export let goBack
 
   let errors = []
   let draftField = cloneDeep(field)
 
+  let type = field.type
+  let constraints = field.constraints
+  let required =
+    field.constraints.presence && !field.constraints.presence.allowEmpty
+
   const save = () => {
+    constraints.presence = required ? { allowEmpty: false } : false
+    draftField.constraints = constraints
+    draftField.type = type
     schema[field.name] = draftField
     goBack()
   }
+
+  $: constraints =
+    type === "string"
+      ? { type: "string", length: {}, presence: false }
+      : type === "number"
+      ? { type: "number", presence: false, numericality: {} }
+      : type === "boolean"
+      ? { type: "boolean", presence: false }
+      : type === "datetime"
+      ? { type: "date", datetime: {}, presence: false }
+      : type.startsWith("array")
+      ? { type: "array", presence: false }
+      : { type: "string", presence: false }
 </script>
 
 <div class="root">
@@ -32,49 +56,51 @@
 
   <form on:submit|preventDefault class="uk-form-stacked">
     <Textbox label="Name" bind:text={field.name} />
-    <Dropdown
-      label="Type"
-      bind:selected={draftField.type}
-      options={FIELD_TYPES} />
+    <Dropdown label="Type" bind:selected={type} options={FIELD_TYPES} />
 
-    {#if field.type === 'string'}
-      <NumberBox label="Max Length" bind:value={draftField.maxLength} />
-      <ValuesList label="Categories" bind:values={draftField.values} />
-    {:else if field.type === 'boolean'}
-      <!-- TODO: revisit and fix with JSON schema -->
-      <Checkbox label="Allow Null" bind:checked={draftField.allowNulls} />
-    {:else if field.format === 'datetime'}
-      <!-- TODO: revisit and fix with JSON schema -->
-      <DatePicker label="Min Value" bind:value={draftField.minValue} />
-      <DatePicker label="Max Value" bind:value={draftField.maxValue} />
-    {:else if field.type === 'number'}
-      <NumberBox label="Min Value" bind:value={draftField.minimum} />
-      <NumberBox label="Max Value" bind:value={draftField.maximum} />
-    {:else if draftField.type.startsWith('array')}
-      <!-- TODO: revisit and fix with JSON schema -->
+    <Checkbox label="Required" bind:checked={required} />
+
+    {#if type === 'string'}
+      <NumberBox label="Max Length" bind:value={constraints.length.maximum} />
+      <ValuesList label="Categories" bind:values={constraints.inclusion} />
+    {:else if type === 'datetime'}
+      <DatePicker
+        label="Min Value"
+        bind:value={constraints.datetime.earliest} />
+      <DatePicker label="Max Value" bind:value={constraints.datetime.latest} />
+    {:else if type === 'number'}
       <NumberBox
-        label="Min Length"
-        bind:value={draftField.typeOptions.minLength} />
+        label="Min Value"
+        bind:value={constraints.numericality.greaterThanOrEqualTo} />
       <NumberBox
-        label="Max Length"
-        bind:value={draftField.typeOptions.maxLength} />
+        label="Max Value"
+        bind:value={constraints.numericality.lessThanOrEqualTo} />
     {/if}
   </form>
 </div>
 <footer>
+  <div class="button">
+    <ActionButton secondary on:click={goBack}>Cancel</ActionButton>
+  </div>
   <ActionButton primary on:click={save}>Save</ActionButton>
-  <ActionButton alert on:click={goBack}>Cancel</ActionButton>
 </footer>
 
 <style>
   .root {
-    margin: 20px;
+    margin: 40px;
   }
   footer {
-    padding: 20px;
+    padding: 20px 40px;
     border-radius: 0 0 5px 5px;
     bottom: 0;
     left: 0;
-    background: #fafafa;
+    background: var(--grey-light);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .button {
+    margin-right: 20px;
   }
 </style>

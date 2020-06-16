@@ -5,14 +5,14 @@
   import { onMount } from "svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import IconButton from "components/common/IconButton.svelte"
-
+  import { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
 
   let promise = getApps()
 
   async function getApps() {
-    const res = await fetch(`/api/applications`)
+    const res = await get("/api/applications")
     const json = await res.json()
 
     if (res.ok) {
@@ -44,20 +44,21 @@
 </script>
 
 <div class="welcome">Welcome to Budibase</div>
+
 <div class="banner">
+  <img src="/_builder/assets/rocket.jpg" alt="rocket" />
   <div class="banner-content">
-    <div class="banner-header">
-      Every accomplishment starts with a decision to try.
-    </div>
-    <button class="banner-button" type="button" on:click={showCreateAppModal}>
-      <i class="ri-add-circle-fill" />
-      Create New Web App
-    </button>
-  </div>
-  <div class="banner-image">
-    <img src="/_builder/assets/banner-image.png" alt="Bannerimage" />
+    Every accomplishment starts with a decision to try.
   </div>
 </div>
+<div class="app-section-header">
+  <div class="app-section-title">Your Web Apps</div>
+  <button class="banner-button" type="button" on:click={showCreateAppModal}>
+    <i class="ri-add-circle-fill" />
+    Create New Web App
+  </button>
+</div>
+
 {#await promise}
   <div class="spinner-container">
     <Spinner />
@@ -70,53 +71,34 @@
 
 <style>
   .welcome {
-    margin: 60px 80px 0px 80px;
     font-size: 42px;
     color: var(--ink);
     font-weight: 900;
+    margin: 40px 0px 0px 80px;
   }
 
   .banner {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    text-align: center;
+    color: white;
     margin: 20px 80px 40px 80px;
-    background-image: linear-gradient(-45deg, #7f9ceb, #1d2f77);
     border-radius: 10px;
-    max-height: 280px;
+  }
+
+  .banner img {
+    height: 250px;
+    width: 100%;
+    border-radius: 5px;
   }
 
   .banner-content {
-    padding: 60px;
-  }
-
-  @media only screen and (min-width: 1800px) {
-    .banner-content {
-      padding: 80px;
-    }
-  }
-
-  .banner-header {
+    position: absolute;
     font-size: 24px;
     color: var(--white);
     font-weight: 500;
-    margin-bottom: 20px;
-  }
-
-  @media only screen and (min-width: 1800px) {
-    .banner-header {
-      font-size: 36px;
-      color: var(--white);
-      font-weight: 500;
-      margin-bottom: 20px;
-    }
-  }
-
-  .banner-image {
-    z-index: 1;
-  }
-
-  .banner-image img {
-    max-height: 400px;
   }
 
   .spinner-container {
@@ -128,18 +110,22 @@
   }
 
   .banner-button {
-    background-color: var(--white);
-    color: var(--ink);
-    padding: 12px 20px;
+    background-color: var(--ink);
+    color: var(--white);
+    padding: 12px 24px;
     border-radius: 5px;
-    border: 0px transparent solid;
+    border: var(--ink) 1px solid;
     font-size: 16px;
     font-weight: 400;
-    cursor: pointer;
-    transition: all 0.2s;
     box-sizing: border-box;
     align-items: center;
     display: flex;
+    cursor: pointer;
+    transition: all 0.2s ease 0s;
+    overflow: hidden;
+    outline: none;
+    user-select: none;
+    white-space: nowrap;
   }
 
   .ri-add-circle-fill {
@@ -148,6 +134,22 @@
   }
 
   .banner-button:hover {
-    background-color: var(--grey);
+    background-color: var(--white);
+    color: var(--ink);
+    border: var(--grey-dark) 1px solid;
+  }
+
+  .app-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 40px 80px 0px 80px;
+  }
+
+  .app-section-title {
+    font-size: 20px;
+    color: var(--ink);
+    font-weight: 700;
+    margin-bottom: 20px;
   }
 </style>

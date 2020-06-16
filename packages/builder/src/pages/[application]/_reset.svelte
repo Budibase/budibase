@@ -1,6 +1,7 @@
 <script>
   import Modal from "svelte-simple-modal"
   import { store } from "builderStore"
+  import { get } from "builderStore/api"
 
   import { fade } from "svelte/transition"
   import { isActive, goto, layout } from "@sveltech/routify"
@@ -14,7 +15,7 @@
   let promise = getPackage()
 
   async function getPackage() {
-    const res = await fetch(`/api/${application}/appPackage`)
+    const res = await get(`/api/${application}/appPackage`)
     const pkg = await res.json()
 
     if (res.ok) {
@@ -61,7 +62,7 @@
         <span
           class:active={false}
           class="topnavitemright"
-          on:click={() => (location = `/${application}`)}>
+          on:click={() => window.open(`/${application}`)}>
           <PreviewIcon />
         </span>
       </div>
@@ -81,10 +82,16 @@
 
 <style>
   .root {
+    min-height: 100%;
     height: 100%;
     width: 100%;
     display: flex;
     flex-direction: column;
+  }
+
+  a {
+    text-transform: none;
+    color: var(--ink-lighter);
   }
 
   .top-nav {

@@ -10,9 +10,7 @@ export const loadBudibase = async opts => {
   // const _localStorage = (opts && opts.localStorage) || localStorage
 
   const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
-  const uiFunctions = _window["##BUDIBASE_FRONTEND_FUNCTIONS##"]
 
-  // TODO: update
   const user = {}
 
   const componentLibraryModules = (opts && opts.componentLibraries) || {}
@@ -36,14 +34,12 @@ export const loadBudibase = async opts => {
     pageStore,
     routeTo,
     rootNode,
-  } = createApp(
-    componentLibraryModules,
+  } = createApp({
+    componentLibraries: componentLibraryModules,
     frontendDefinition,
     user,
-    uiFunctions || {},
-    _window,
-    rootNode
-  )
+    window,
+  })
 
   const route = _window.location
     ? _window.location.pathname.replace(frontendDefinition.appRootPath, "")

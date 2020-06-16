@@ -8,7 +8,7 @@ const router = Router()
 
 router
   .get(
-    "/api/:instanceId/view/:viewName",
+    "/api/:instanceId/views/:viewName",
     authorized(READ_VIEW, ctx => ctx.params.viewName),
     recordController.fetchView
   )

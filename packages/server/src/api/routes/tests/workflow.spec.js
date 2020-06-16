@@ -5,7 +5,8 @@ const {
   defaultHeaders,
   supertest,
   insertDocument,
-  destroyDocument
+  destroyDocument,
+  builderEndpointShouldBlockNormalUsers
 } = require("./couchTestUtils")
 
 const TEST_WORKFLOW = {
@@ -71,6 +72,35 @@ describe("/workflows", () => {
         expect(res.body.message).toEqual("Workflow created successfully");
         expect(res.body.workflow.name).toEqual("My Workflow");
     })
+
+    it("should apply authorization to endpoint", async () => {
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "POST",
+        url: `/api/${instance._id}/workflows`,
+        instanceId: instance._id,
+        body: TEST_WORKFLOW
+      })
+    })
+  })
+
+  describe("update", () => {
+    it("updates a workflows data", async () => {
+      await createWorkflow();
+      workflow._id = workflow.id
+      workflow._rev = workflow.rev
+      workflow.name = "Updated Name";
+
+      const res = await request
+        .put(`/api/${instance._id}/workflows`)
+        .set(defaultHeaders)
+        .send(workflow)
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+        expect(res.body.message).toEqual("Workflow Test Workflow updated successfully.");
+        expect(res.body.workflow.name).toEqual("Updated Name");
+    })
   })
 
   describe("fetch", () => {
@@ -84,18 +114,14 @@ describe("/workflows", () => {
 
         expect(res.body[0]).toEqual(expect.objectContaining(TEST_WORKFLOW));
     })
-  })
 
-  describe("find", () => {
-    it("returns a workflow when queried by ID", async () => {
-      await createWorkflow();
-      const res = await request
-        .get(`/api/${instance._id}/workflows/${workflow.id}`)
-        .set(defaultHeaders)
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-        expect(res.body).toEqual(expect.objectContaining(TEST_WORKFLOW));
+    it("should apply authorization to endpoint", async () => {
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "GET",
+        url: `/api/${instance._id}/workflows`,
+        instanceId: instance._id,
+      })
     })
   })
 
@@ -109,6 +135,16 @@ describe("/workflows", () => {
         .expect(200)
 
         expect(res.body.id).toEqual(TEST_WORKFLOW._id);
+    })
+
+    it("should apply authorization to endpoint", async () => {
+      await createWorkflow();
+      await builderEndpointShouldBlockNormalUsers({
+        request,
+        method: "DELETE",
+        url: `/api/${instance._id}/workflows/${workflow.id}/${workflow._rev}`,
+        instanceId: instance._id,
+      })
     })
   })
 });

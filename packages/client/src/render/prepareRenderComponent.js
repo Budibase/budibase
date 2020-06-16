@@ -1,18 +1,18 @@
+import { appStore } from "../state/store"
+import mustache from "mustache"
+
 export const prepareRenderComponent = ({
   ComponentConstructor,
-  uiFunctions,
   htmlElement,
   anchor,
   props,
   parentNode,
-  getCurrentState,
+  context,
 }) => {
-  const func = props._id ? uiFunctions[props._id] : undefined
-
   const parentContext = (parentNode && parentNode.context) || {}
 
   let nodesToRender = []
-  const createNodeAndRender = context => {
+  const createNodeAndRender = () => {
     let componentContext = parentContext
     if (context) {
       componentContext = { ...context }
@@ -39,16 +39,28 @@ export const prepareRenderComponent = ({
       if (props._id && thisNode.rootElement) {
         thisNode.rootElement.classList.add(`${componentName}-${props._id}`)
       }
+
+      // make this node listen to the store
+      if (thisNode.stateBound) {
+        const unsubscribe = appStore.subscribe(state => {
+          const storeBoundProps = { ...initialProps._bb.props }
+          for (let prop in storeBoundProps) {
+            const propValue = storeBoundProps[prop]
+            if (typeof propValue === "string") {
+              storeBoundProps[prop] = mustache.render(propValue, {
+                state,
+                context: componentContext,
+              })
+            }
+          }
+          thisNode.component.$set(storeBoundProps)
+        })
+        thisNode.unsubscribe = unsubscribe
+      }
     }
   }
 
-  if (func) {
-    const state = getCurrentState()
-    const routeParams = state["##routeParams"]
-    func(createNodeAndRender, parentContext, getCurrentState(), routeParams)
-  } else {
-    createNodeAndRender()
-  }
+  createNodeAndRender()
 
   return nodesToRender
 }

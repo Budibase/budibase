@@ -10,6 +10,7 @@ const {
   instanceRoutes,
   clientRoutes,
   applicationRoutes,
+  recordRoutes,
   modelRoutes,
   viewRoutes,
   staticRoutes,
@@ -38,6 +39,7 @@ router
     ctx.config = {
       latestPackagesFolder: budibaseAppsDir(),
       jwtSecret: env.JWT_SECRET,
+      useAppRootPath: true,
     }
     ctx.isDev = env.NODE_ENV !== "production" && env.NODE_ENV !== "jest"
     await next()
@@ -67,6 +69,9 @@ router.use(viewRoutes.allowedMethods())
 
 router.use(modelRoutes.routes())
 router.use(modelRoutes.allowedMethods())
+
+router.use(recordRoutes.routes())
+router.use(recordRoutes.allowedMethods())
 
 router.use(userRoutes.routes())
 router.use(userRoutes.allowedMethods())

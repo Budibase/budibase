@@ -1,14 +1,10 @@
 import {
   generate_css,
   generate_screen_css,
-  generate_array_styles
 } from "../src/builderStore/generate_css.js"
 
 describe("generate_css", () => {
 
-  test("Check how partially empty arrays are handled", () => {
-    expect(["", "5", "", ""].map(generate_array_styles)).toEqual(["0px", "5px", "0px", "0px"])
-  })
 
   test("Check how array styles are output", () => {
     expect(generate_css({ margin: ["0", "10", "0", "15"] })).toBe("margin: 0px 10px 0px 15px;")
