@@ -22,13 +22,6 @@
 
   let selectedRecord
 
-  async function selectRecord(record) {
-    selectedRecord = await api.loadRecord(record.key, {
-      appname: $store.appname,
-      instanceId: selectedDatabase,
-    })
-  }
-
   $: breadcrumbs = $backendUiStore.breadcrumbs.join(" / ")
 </script>
 
@@ -41,7 +34,7 @@
   {/if}
 </div>
 {#if $backendUiStore.selectedDatabase._id && $backendUiStore.selectedModel.name}
-  <ModelDataTable {selectRecord} />
+  <ModelDataTable />
 {:else}
   <i style="color: var(--grey-dark)">
     create your first model to start building
