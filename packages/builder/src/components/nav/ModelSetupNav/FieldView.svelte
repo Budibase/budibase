@@ -14,12 +14,11 @@
 
   const FIELD_TYPES = ["string", "number", "boolean", "link"]
 
-  export let field
+  let field = {}
 
-  $: type = field.type
-  $: constraints = field.constraints
+  $: field = $backendUiStore.draftModel.schema[$backendUiStore.selectedField] || {}
   $: required =
-    constraints && constraints.presence && !constraints.presence.allowEmpty
+    field.constraints && field.constraints.presence && !constraints.presence.allowEmpty
 
   const save = () => {
     backendUiStore.actions.models.save({ 
@@ -31,24 +30,24 @@
 
 <form on:submit|preventDefault class="uk-form-stacked">
   <Textbox label="Name" bind:text={field.name} />
-  <Dropdown label="Type" bind:selected={type} options={FIELD_TYPES} />
+  <Dropdown label="Type" bind:selected={field.type} options={FIELD_TYPES} />
 
   <Checkbox label="Required" bind:checked={required} />
 
-  {#if type === 'string'}
-    <NumberBox label="Max Length" bind:value={constraints.length.maximum} />
-    <ValuesList label="Categories" bind:values={constraints.inclusion} />
-  {:else if type === 'datetime'}
-    <DatePicker label="Min Value" bind:value={constraints.datetime.earliest} />
-    <DatePicker label="Max Value" bind:value={constraints.datetime.latest} />
-  {:else if type === 'number'}
+  {#if field.type === 'string'}
+    <NumberBox label="Max Length" bind:value={field.constraints.length.maximum} />
+    <ValuesList label="Categories" bind:values={field.constraints.inclusion} />
+  {:else if field.type === 'datetime'}
+    <DatePicker label="Min Value" bind:value={field.constraints.datetime.earliest} />
+    <DatePicker label="Max Value" bind:value={field.constraints.datetime.latest} />
+  {:else if field.type === 'number'}
     <NumberBox
       label="Min Value"
-      bind:value={constraints.numericality.greaterThanOrEqualTo} />
+      bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
     <NumberBox
       label="Max Value"
-      bind:value={constraints.numericality.lessThanOrEqualTo} />
-  {:else if type === 'link'}
+      bind:value={field.constraints.numericality.lessThanOrEqualTo} />
+  {:else if field.type === 'link'}
     <select class="budibase__input" bind:value={field.modelId}>
       <option value={''} />
       {#each $backendUiStore.models as model}

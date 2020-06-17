@@ -25,9 +25,7 @@ export const getBackendUiStore = () => {
         store.update(state => {
           state.selectedDatabase = db
           if (models && models.length > 0) {
-            state.selectedModel = models[0]
-            state.draftModel = models[0]
-            state.selectedView = `all_${models[0]._id}`
+            store.actions.models.select(models[0]);
           }
           state.breadcrumbs = [db.name]
           state.models = models
@@ -56,14 +54,25 @@ export const getBackendUiStore = () => {
     models: {
       select: model => store.update(state => {
         state.selectedModel = model;
-        // TODO: prevent pointing to same obj
         state.draftModel = cloneDeep(model);
-        state.selectedField = null
+        state.selectedField = ""
+        state.selectedView = `all_${model._id}`
         return state;
       }),
       save: async ({ instanceId, model }) => {
+        const updatedModel = cloneDeep(model);
+
+        // TODO: refactor
+        for (let key in updatedModel.schema) {
+          const field = updatedModel.schema[key]
+          if (field.name && field.name !== key) { 
+            updatedModel.schema[field.name] = field 
+            delete updatedModel.schema[key];
+          } 
+        }
+
         const SAVE_MODEL_URL = `/api/${instanceId}/models`
-        const response = await api.post(SAVE_MODEL_URL, model)
+        const response = await api.post(SAVE_MODEL_URL, updatedModel)
         const savedModel = await response.json()
 
         store.update(state => {
@@ -76,9 +85,7 @@ export const getBackendUiStore = () => {
             state.models = state.models
           }
 
-          state.selectedModel = savedModel
-          state.draftModel = savedModel
-          state.selectedView = `all_${savedModel._id}`
+          store.actions.models.select(savedModel)
           return state
         })
       },
@@ -93,11 +100,11 @@ export const getBackendUiStore = () => {
             [field.name]: field
           }
 
-          state.selectedField = field
+          state.selectedField = field.name
 
           return state
         });
-      }
+      },
     },
     views: {
       select: view =>

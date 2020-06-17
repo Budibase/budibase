@@ -68,10 +68,10 @@
     }
   }
 
-  $: paginatedData = data.slice(
+  $: paginatedData = data ? data.slice(
     currentPage * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-  )
+  ) : []
 
   onMount(() => {
     if (views.length) {

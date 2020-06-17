@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import NewModel from "./NewModel.svelte"
   import ModelDataTable from "components/database/ModelDataTable"
   import { store, backendUiStore } from "builderStore"
   import ActionButton from "components/common/ActionButton.svelte"
@@ -33,7 +34,9 @@
     </ActionButton>
   {/if}
 </div>
-{#if $backendUiStore.selectedDatabase._id && $backendUiStore.selectedModel.name}
+{#if $backendUiStore.selectedModel.schema && Object.keys($backendUiStore.selectedModel.schema).length === 0}
+  <NewModel />
+{:else if $backendUiStore.selectedDatabase._id && $backendUiStore.selectedModel.name}
   <ModelDataTable />
 {:else}
   <i style="color: var(--grey-dark)">

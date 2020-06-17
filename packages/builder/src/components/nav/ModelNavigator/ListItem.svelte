@@ -13,7 +13,7 @@
 
 <style>
   .indented {
-    margin-left: 20px;
+    margin-left: 10px;
   }
 
   div {
@@ -21,11 +21,11 @@
     width: 260px;
     height: 40px;
     border-radius: 3px;
-    font-weight: bold;
     display: flex;
     align-items: center;
     transition: 0.3s background-color;
     color: var(--ink);
+    font-weight: 500;
     font-size: 16px;
   }
 

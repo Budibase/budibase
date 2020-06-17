@@ -11,7 +11,7 @@
 
   const { open, close } = getContext("simple-modal")
 
-  const HEADINGS = [
+  let HEADINGS = [
     {
       title: "Navigate",
       key: "NAVIGATE",
@@ -28,9 +28,9 @@
     backendUiStore.actions.models.select(model)
   }
 
-  function selectField(field) {
+  function selectField(fieldName) {
     backendUiStore.update(state => {
-      state.selectedField = field
+      state.selectedField = fieldName
       return state
     });
   }
@@ -41,7 +41,6 @@
       state.draftModel = { schema: {} }
       return state
     })
-    $goto(`./database/${$backendUiStore.selectedDatabase._id}/newmodel`)
   }
 </script>
 
@@ -51,7 +50,7 @@
       <div class="components-list-container">
         <Switcher headings={HEADINGS} bind:value={selectedTab}>
           {#if selectedTab === 'NAVIGATE'}
-            <Button secondary wide on:click={setupForNewModel}>Create New Model</Button>
+          <Button secondary wide on:click={setupForNewModel}>Create New Model</Button>
           <div class="hierarchy-items-container">
               {#each $backendUiStore.models as model}
                 <ListItem
@@ -61,10 +60,11 @@
                   on:click={() => selectModel(model)} />
                 {#each Object.keys(model.schema) as field}
                   <ListItem
+                    selected={field === $backendUiStore.selectedField}
                     indented
                     icon="ri-layout-column-fill"
                     title={field}
-                    on:click={() => selectField({ name: field, ...model.schema[field] })} />
+                    on:click={() => selectField(field)} />
                 {/each}
               {/each}
             </div>
