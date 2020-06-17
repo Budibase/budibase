@@ -160,7 +160,7 @@ export const hsvaToRgba = ([h, s, v, a = 1], asString = false) => {
   return asString ? `rgba(${rgba.join(",")})` : rgba
 }
 
-export const hsvaToHsla = ([h, s, v, a = 1], asString = false) => {
+export const hsvaToHsla = ([h, s, v, a = 1]) => {
   let [hue, sat, lum] = _hsvToHSL([h, s, v])
   let hsla = [hue, sat + "%", lum + "%", a < 1 ? _fixNum(a, 2) : a]
   return `hsla(${hsla.join(",")})`
