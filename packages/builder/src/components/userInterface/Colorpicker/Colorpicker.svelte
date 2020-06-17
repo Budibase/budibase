@@ -22,13 +22,10 @@
   const dispatch = createEventDispatcher();
 
   onMount(() => {
-    format = getColorFormat(value);
     if (format) {
       convertAndSetHSVA()
     }
   });
-
-  const hsvaIsNull = () => [h, s, v, a].every(c => c === null);
 
   function convertAndSetHSVA() {
     let hsva = convertToHSVA(value, format);
@@ -53,17 +50,16 @@
   function setHue(hue) {
     h = hue;
     value = convertHsvaToFormat([h, s, v, a], format);    
-    dispatch("change", value)
   }
 
   function setAlpha(alpha) {
     a = alpha === "1.00" ? "1" :alpha;
     value = convertHsvaToFormat([h, s, v, a], format);    
-    dispatch("change", value)
   }
 
   function changeFormatAndConvert(f) {
     format = f;
+    console.log(f)
     value = convertHsvaToFormat([h, s, v, a], format);
   }
 
@@ -73,14 +69,16 @@
       format = f;
       value = text
       convertAndSetHSVA()
+      dispatch("change", value)
     }
   }
+
 </script>
 
 <style>
   .colorpicker-container {
     display: flex;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 400;
     flex-direction: column;
     height: 300px;
@@ -104,7 +102,6 @@
     grid-gap: 15px;
     justify-content: center;
     align-items: center;
-    /* padding: 8px; */
   }
 
   .selected-color {

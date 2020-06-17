@@ -127,9 +127,11 @@ export const rgbaToHSVA = rgba => {
 };
 
 export const hslaToHSVA = ([h, s, l, a = 1]) => {
-  let hsv = _hslToHSV([h, s, l]);
-  return [...hsv, a];
-};
+  let sat = s.replace(/%/, "")
+  let lum = l.replace(/%/, "")
+  let hsv = _hslToHSV([h, sat, lum])
+  return [...hsv, a]
+}
 
 export const hsvaToHexa = (hsva, asString = false) => {
   const [r, g, b, a] = hsvaToRgba(hsva);

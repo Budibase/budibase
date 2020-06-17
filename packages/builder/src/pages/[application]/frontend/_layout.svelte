@@ -103,7 +103,6 @@
     background-color: var(--white);
     min-height: 0px;
     height: calc(100vh - 69px);
-    overflow-y: hidden;
   }
 
   .nav-group-header > div:nth-child(1) {
