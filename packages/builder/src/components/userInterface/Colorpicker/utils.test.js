@@ -54,7 +54,7 @@ describe("convertHsvaToFormat - convert from hsva to format", () => {
 
   test("Convert to hsla", () => {
     expect(convertHsvaToFormat([264, 68.63, 100, 1], "hsl")).toBe(
-      "hsla(264,100,65.7,1)"
+      "hsla(264,100%,66%,1)"
     )
   })
 })
@@ -93,7 +93,7 @@ describe("Get Color Format", () => {
   })
 
   test("Testing hsla value with alpha", () => {
-    expect(getColorFormat("hsla(150, 60, 50, 0.5)")).toBe("hsl")
+    expect(getColorFormat("hsla(150, 60%, 50%, 0.5)")).toBe("hsl")
   })
 
   test("Testing hsl value with incorrectly provided alpha", () => {

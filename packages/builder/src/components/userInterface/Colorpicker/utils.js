@@ -132,14 +132,14 @@ export const hexaToHSVA = (hex, alpha = "FF") => {
 export const rgbaToHSVA = rgba => {
   const [r, g, b, a = 1] = rgba
   let hsv = _rgbToHSV([r, g, b])
-  return [...hsv, a]
+  return [...hsv, a].map(x => parseFloat(x))
 }
 
 export const hslaToHSVA = ([h, s, l, a = 1]) => {
   let sat = s.replace(/%/, "")
   let lum = l.replace(/%/, "")
   let hsv = _hslToHSV([h, sat, lum])
-  return [...hsv, a]
+  return [...hsv, a].map(x => parseFloat(x))
 }
 
 export const hsvaToHexa = (hsva, asString = false) => {
