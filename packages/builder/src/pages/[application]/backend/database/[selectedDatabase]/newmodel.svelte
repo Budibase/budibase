@@ -1,31 +1,70 @@
 <script>
-  import { FIELDS } from "constants/backend";
+  import { backendUiStore } from "builderStore";
+  import { FIELDS, BLOCKS, MODELS } from "constants/backend";
   import Block from "./Block.svelte";
+
+  function addNewField(field) {
+    backendUiStore.actions.models.addField(field);
+  }
 </script>
 
 <section>
   <header>
     <h2>Create New Table</h2>
-    <span>Before you can view your table, you need to set it up.</span>
+    <p>Before you can view your table, you need to set it up.</p>
   </header>
 
   <div class="block-row">
-    <h4>Fields</h4>
+    <span class="block-row-title">Fields</span>
+    <p>Blocks are pre-made fields and help you build your table quicker.</p>
     <div class="blocks">
       {#each Object.values(FIELDS) as field}
-        <Block primary title={field.name} icon={field.icon} />
+        <Block primary title={field.name} icon={field.icon} on:click={() => addNewField(field)} />
       {/each}
     </div>
   </div>
 
-  <!-- TODO: More block rows -->
+  <div class="block-row">
+    <span class="block-row-title">Blocks</span>
+    <p>Blocks are pre-made fields and help you build your table quicker.</p>
+    <div class="blocks">
+      {#each Object.values(BLOCKS) as field}
+        <Block secondary title={field.name} icon={field.icon} />
+      {/each}
+    </div>
+  </div>
 
+  <div class="block-row">
+    <span class="block-row-title">Models</span>
+    <p>Blocks are pre-made fields and help you build your table quicker.</p>
+    <div class="blocks">
+      {#each Object.values(MODELS) as model}
+        <Block tertiary title={model.name} icon={model.icon} />
+      {/each}
+    </div>
+  </div>
 </section>
 
 <style>
+  section {
+    height: 100vh;
+  }
+
   h2 {
     font-size: 20px;
     font-weight: bold;
+    margin: 0;
+  }
+
+  .block-row-title {
+    font-weight: 500;
+    font-size: 16px;
+  }
+
+  p {
+    margin-top: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
   }
 
   .block-row {
@@ -35,6 +74,6 @@
   .block-row .blocks {
     display: grid;
     grid-auto-flow: column;
-    grid-gap: 10px;
+    grid-gap: 20px;
   }
 </style>

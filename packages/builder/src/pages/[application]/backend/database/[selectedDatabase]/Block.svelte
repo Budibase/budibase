@@ -19,11 +19,17 @@
     height: 90px;
     border-radius: 3px;
     color: var(--ink);
-    padding: 20px;
+    font-weight: 500;
+    padding: 15px;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    transition: 0.3s transform;
+  }
+
+  i {
+    font-size: 30px;
   }
   
   span {
@@ -32,6 +38,7 @@
 
   div:hover {
     cursor: pointer;
+    transform: scale(1.1);
   }
 
   .primary {

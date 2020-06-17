@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { Button, Switcher } from "@budibase/bbui"
+  import { notifier } from "@beyonk/svelte-notifications"
   import { store, backendUiStore } from "builderStore"
   import api from "builderStore/api"
   import FieldView from "./FieldView.svelte";
@@ -27,14 +28,19 @@
   $: edited = $backendUiStore.draftModel.name !== $backendUiStore.selectedModel.name
 
   async function deleteModel() {
-    backendUiStore.update(async state => {
-      const modelToDelete = state.selectedModel
-      const DELETE_MODEL_URL = `/api/${state.selectedDatabase._id}/models/${modelToDelete._id}/${modelToDelete._rev}`
-      const response = await api.delete(DELETE_MODEL_URL)
+    const modelToDelete = $backendUiStore.selectedModel
+    if ($backendUiStore.selectedField) {
+      delete modelToDelete[$backendUiStore.selectedField]
+    }
+
+    const DELETE_MODEL_URL = `/api/${$backendUiStore.selectedDatabase._id}/models/${modelToDelete._id}/${modelToDelete._rev}`
+    const response = await api.delete(DELETE_MODEL_URL)
+    backendUiStore.update(state => {
+      state.selectedView = null
       state.models = state.models.filter(
         model => model._id !== modelToDelete._id
       )
-      state.selectedView = {}
+      notifier.danger(`${modelToDelete.name} deleted successfully.`)
       return state
     })
   }
@@ -44,6 +50,7 @@
       instanceId: $backendUiStore.selectedDatabase._id,
       model: $backendUiStore.draftModel
     })
+    notifier.success("Success! Your changes have been saved. Please continue on with your greatness.");
   }
 </script>
 
@@ -51,7 +58,7 @@
   <Switcher headings={ITEMS} bind:value={selectedTab}>
     {#if selectedTab === 'SETUP'}
       {#if $backendUiStore.selectedField}
-        <FieldView field={$backendUiStore.selectedField} />
+        <FieldView />
       {:else}
         <div class="titled-input">
           <header>Name</header>
@@ -64,7 +71,6 @@
           <header>Import Data</header>
           <Button wide secondary>Import CSV</Button>
         </div>
-
         <Button
           attention
           wide
@@ -82,6 +88,10 @@
 </div>
 
 <style>
+  header {
+    font-weight: 500;
+  }
+
   .items-root {
     padding: 20px;
     display: flex;
