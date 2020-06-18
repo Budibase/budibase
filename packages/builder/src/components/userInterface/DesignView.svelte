@@ -31,6 +31,7 @@
     <FlatButtonGroup value={selectedCategory} {buttonProps} {onChange} />
   </div>
 
+<div class="positioned-wrapper">
   <div class="design-view-property-groups">
     {#if propertyGroupNames.length > 0}
       {#each propertyGroupNames as groupName}
@@ -49,6 +50,7 @@
     {/if}
   </div>
 </div>
+</div>
 
 <style>
   .design-view-container {
@@ -62,10 +64,15 @@
     flex: 0 0 50px;
   }
 
+  .positioned-wrapper{
+    position: relative;
+    display: flex;
+    min-height: 0;
+  }
+
   .design-view-property-groups {
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
     min-height: 0;
   }
 

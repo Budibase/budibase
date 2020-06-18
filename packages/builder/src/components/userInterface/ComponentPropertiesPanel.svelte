@@ -13,7 +13,6 @@
   import CodeEditor from "./CodeEditor.svelte"
   import LayoutEditor from "./LayoutEditor.svelte"
   import EventsEditor from "./EventsEditor"
-
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
@@ -40,28 +39,9 @@
 
   let panelDefinition = {}
 
-  $: {
-    if (componentPropDefinition.properties) {
-      if (selectedCategory.value === "design") {
-        panelDefinition = componentPropDefinition.properties["design"]
-      } else {
-        let panelDef = componentPropDefinition.properties["settings"]
-        if (
-          $store.currentFrontEndType === "page" &&
-          $store.currentView !== "component"
-        ) {
-          panelDefinition = [...page, ...panelDef]
-        } else if (
-          $store.currentFrontEndType === "screen" &&
-          $store.currentView !== "component"
-        ) {
-          panelDefinition = [...screen, ...panelDef]
-        } else {
-          panelDefinition = panelDef
-        }
-      }
-    }
-  }
+  $: panelDefinition =
+    componentPropDefinition.properties &&
+    componentPropDefinition.properties[selectedCategory.value]
 
   const onStyleChanged = store.setComponentStyle
   const onPropChanged = store.setComponentProp
@@ -107,7 +87,9 @@
         {componentInstance}
         {componentDefinition}
         {panelDefinition}
-        onChange={onPropChanged} />
+        onChange={onPropChanged}
+        onScreenPropChange={store.setPageOrScreenProp}
+        screenOrPageInstance={$store.currentView !== 'component' && $store.currentPreviewItem} />
     {:else if selectedCategory.value === 'events'}
       <EventsEditor component={componentInstance} />
     {/if}
@@ -121,8 +103,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
-    overflow-y: hidden;
     padding: 20px;
     box-sizing: border-box;
   }
@@ -140,6 +120,5 @@
     margin-top: 20px;
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
   }
 </style>
