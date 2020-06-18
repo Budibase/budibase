@@ -54,8 +54,9 @@ describe("/users", () => {
       await testPermissionsForEndpoint({
         request,
         method: "GET",
-        url: `/api/${instance._id}/users`,
+        url: `/api/users`,
         instanceId: instance._id,
+        appId: app._id,
         permissionName: LIST_USERS,
       })
     })
@@ -66,7 +67,7 @@ describe("/users", () => {
 
     it("returns a success message when a user is successfully created", async () => {
       const res = await request
-        .post(`/api/${instance._id}/users`)
+        .post(`/api/users`)
         .set(defaultHeaders(app._id, instance._id))
         .send({ name: "Bill", username: "bill", password: "bills_password", accessLevelId: POWERUSER_LEVEL_ID })
         .expect(200)
@@ -81,8 +82,9 @@ describe("/users", () => {
         request,
         method: "POST",
         body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: POWERUSER_LEVEL_ID },
-        url: `/api/${instance._id}/users`,
+        url: `/api/users`,
         instanceId: instance._id,
+        appId: app._id,
         permissionName: USER_MANAGEMENT,
       })
     })

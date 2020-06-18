@@ -44,7 +44,7 @@ describe("/accesslevels", () => {
 
     it("returns a success message when level is successfully created", async () => {
       const res = await request
-        .post(`/api/${instanceId}/accesslevels`)
+        .post(`/api/accesslevels`)
         .send({ name: "user" })
         .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
@@ -62,7 +62,7 @@ describe("/accesslevels", () => {
 
     it("should list custom levels, plus 2 default levels", async () => {
       const createRes = await request
-        .post(`/api/${instanceId}/accesslevels`)
+        .post(`/api/accesslevels`)
         .send({ name: "user", permissions: [ { itemId: model._id, name: READ_MODEL }] })
         .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
@@ -71,7 +71,7 @@ describe("/accesslevels", () => {
       const customLevel = createRes.body
 
       const res = await request
-        .get(`/api/${instanceId}/accesslevels`)
+        .get(`/api/accesslevels`)
         .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
         .expect(200)
@@ -95,7 +95,7 @@ describe("/accesslevels", () => {
   describe("destroy", () => {
     it("should delete custom access level", async () => {
       const createRes = await request
-        .post(`/api/${instanceId}/accesslevels`)
+        .post(`/api/accesslevels`)
         .send({ name: "user", permissions: [ { itemId: model._id, name: READ_MODEL } ] })
         .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
@@ -104,12 +104,12 @@ describe("/accesslevels", () => {
       const customLevel = createRes.body
 
       await request
-        .delete(`/api/${instanceId}/accesslevels/${customLevel._id}/${customLevel._rev}`)
+        .delete(`/api/accesslevels/${customLevel._id}/${customLevel._rev}`)
         .set(defaultHeaders(appId, instanceId))
         .expect(200)
 
       await request
-        .get(`/api/${instanceId}/accesslevels/${customLevel._id}`)
+        .get(`/api/accesslevels/${customLevel._id}`)
         .set(defaultHeaders(appId, instanceId))
         .expect(404)      
     })
@@ -118,7 +118,7 @@ describe("/accesslevels", () => {
   describe("patch", () => {
     it("should add given permissions", async () => {
       const createRes = await request
-        .post(`/api/${instanceId}/accesslevels`)
+        .post(`/api/accesslevels`)
         .send({ name: "user", permissions: [ { itemId: model._id, name: READ_MODEL }] })
         .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
@@ -127,7 +127,7 @@ describe("/accesslevels", () => {
       const customLevel = createRes.body
 
       await request
-        .patch(`/api/${instanceId}/accesslevels/${customLevel._id}`)
+        .patch(`/api/accesslevels/${customLevel._id}`)
         .send({
           _rev: customLevel._rev,
           addedPermissions:  [ { itemId: model._id, name: WRITE_MODEL } ] 
@@ -137,7 +137,7 @@ describe("/accesslevels", () => {
         .expect(200)
 
       const finalRes = await request
-        .get(`/api/${instanceId}/accesslevels/${customLevel._id}`)
+        .get(`/api/accesslevels/${customLevel._id}`)
         .set(defaultHeaders(appId, instanceId))
         .expect(200) 
 
@@ -148,7 +148,7 @@ describe("/accesslevels", () => {
 
     it("should remove given permissions", async () => {
       const createRes = await request
-        .post(`/api/${instanceId}/accesslevels`)
+        .post(`/api/accesslevels`)
         .send({ 
           name: "user", 
           permissions: [ 
@@ -163,7 +163,7 @@ describe("/accesslevels", () => {
       const customLevel = createRes.body
 
       await request
-        .patch(`/api/${instanceId}/accesslevels/${customLevel._id}`)
+        .patch(`/api/accesslevels/${customLevel._id}`)
         .send({
           _rev: customLevel._rev,
           removedPermissions:  [ { itemId: model._id, name: WRITE_MODEL }] 
@@ -173,7 +173,7 @@ describe("/accesslevels", () => {
         .expect(200)
 
       const finalRes = await request
-        .get(`/api/${instanceId}/accesslevels/${customLevel._id}`)
+        .get(`/api/accesslevels/${customLevel._id}`)
         .set(defaultHeaders(appId, instanceId))
         .expect(200) 
 

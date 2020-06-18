@@ -6,7 +6,7 @@ const { BUILDER, READ_MODEL } = require("../../utilities/accessLevels")
 const router = Router()
 
 router
-  .get("/api/models", modelController.fetch)
+  .get("/api/models", authorized(BUILDER), modelController.fetch)
   .get(
     "/api/models/:id",
     authorized(READ_MODEL, ctx => ctx.params.id),

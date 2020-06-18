@@ -57,7 +57,7 @@ exports.createModel = async (request, appId, instanceId, model) => {
   }
 
   const res = await request
-    .post(`/api/${instanceId}/models`)
+    .post(`/api/models`)
     .set(exports.defaultHeaders(appId, instanceId))
     .send(model)
   return res.body
@@ -69,7 +69,7 @@ exports.createView = async (request, appId, instanceId, view) => {
   }
 
   const res = await request
-    .post(`/api/${instanceId}/views`)
+    .post(`/api/views`)
     .set(exports.defaultHeaders(appId, instanceId))
     .send(view)
   return res.body
@@ -80,10 +80,10 @@ exports.createClientDatabase = async id => await create(id || TEST_CLIENT_ID)
 exports.createApplication = async (request, name = "test_application") => {
   const res = await request
     .post("/api/applications")
-    .set(exports.defaultHeaders())
     .send({
       name,
     })
+    .set(exports.defaultHeaders())
   return res.body
 }
 
@@ -92,10 +92,10 @@ exports.destroyClientDatabase = async () => await destroy(TEST_CLIENT_ID)
 exports.createInstance = async (request, appId) => {
   const res = await request
     .post(`/api/instances`)
-    .set(exports.defaultHeaders(appId))
     .send({
-      name: "test-instance",
+      name: "test-instance2",
     })
+    .set(exports.defaultHeaders(appId))
   return res.body
 }
 
@@ -180,13 +180,13 @@ const createUserWithPermissions = async (
   username
 ) => {
   const accessRes = await request
-    .post(`/api/${instanceId}/accesslevels`)
+    .post(`/api/accesslevels`)
     .send({ name: "TestLevel", permissions })
     .set(exports.defaultHeaders(appId, instanceId))
 
   const password = `password_${username}`
   await request
-    .post(`/api/${instanceId}/users`)
+    .post(`/api/users`)
     .set(exports.defaultHeaders(appId, instanceId))
     .send({
       name: username,

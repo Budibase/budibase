@@ -30,7 +30,7 @@ describe("/views", () => {
 
   const createView = async () => 
     await request
-    .post(`/api/${instance._id}/views`)
+    .post(`/api/views`)
     .send({ 
       name: "TestView",
       map: `function(doc) {
@@ -62,7 +62,7 @@ describe("/views", () => {
     it("should only return custom views", async () => {
       const view = await createView()
       const res = await request
-        .get(`/api/${instance._id}/views`)
+        .get(`/api/views`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
