@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-	import { slide } from 'svelte/transition';
+  import { slide } from "svelte/transition"
   import { Switcher } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { store, backendUiStore } from "builderStore"
@@ -21,7 +21,7 @@
     },
   ]
 
-  $: selectedTab = $backendUiStore.tabs.NAVIGATION_PANEL 
+  $: selectedTab = $backendUiStore.tabs.NAVIGATION_PANEL
 
   function selectModel(model, fieldName) {
     backendUiStore.actions.models.select(model)
@@ -30,7 +30,7 @@
       backendUiStore.update(state => {
         state.selectedField = fieldName
         return state
-      });
+      })
     }
   }
 
@@ -47,10 +47,14 @@
   {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
     <div class="hierarchy">
       <div class="components-list-container">
-        <Switcher headings={HEADINGS} bind:value={$backendUiStore.tabs.NAVIGATION_PANEL}>
+        <Switcher
+          headings={HEADINGS}
+          bind:value={$backendUiStore.tabs.NAVIGATION_PANEL}>
           {#if selectedTab === 'NAVIGATE'}
-          <Button secondary wide on:click={setupForNewModel}>Create New Model</Button>
-          <div class="hierarchy-items-container">
+            <Button secondary wide on:click={setupForNewModel}>
+              Create New Model
+            </Button>
+            <div class="hierarchy-items-container">
               {#each $backendUiStore.models as model}
                 <ListItem
                   selected={!$backendUiStore.selectedField && model._id === $backendUiStore.selectedModel._id}

@@ -38,44 +38,42 @@
   </div>
 </div>
 
-  <div class="info">
-    <div class="field">
-      <label>Required</label>
-      <input type="checkbox" />
-    </div>
+<div class="info">
+  <div class="field">
+    <label>Required</label>
+    <input type="checkbox" />
+  </div>
 
-    {#if field.type === 'string'}
-      <NumberBox
-        label="Max Length"
-        bind:value={field.constraints.length.maximum} />
-      <ValuesList
-        label="Categories"
-        bind:values={field.constraints.inclusion} />
-    {:else if field.type === 'datetime'}
-      <DatePicker
-        label="Min Value"
-        bind:value={field.constraints.datetime.earliest} />
-      <DatePicker
-        label="Max Value"
-        bind:value={field.constraints.datetime.latest} />
-    {:else if field.type === 'number'}
-      <NumberBox
-        label="Min Value"
-        bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
-      <NumberBox
-        label="Max Value"
-        bind:value={field.constraints.numericality.lessThanOrEqualTo} />
-    {:else if field.type === 'link'}
-      <div class="field">
-        <label>Link</label>
-        <select class="budibase__input" bind:value={field.modelId}>
-          <option value={''} />
-          {#each $backendUiStore.models as model}
-            <option value={model._id}>{model.name}</option>
-          {/each}
-        </select>
-      </div>
-    {/if}
+  {#if field.type === 'string'}
+    <NumberBox
+      label="Max Length"
+      bind:value={field.constraints.length.maximum} />
+    <ValuesList label="Categories" bind:values={field.constraints.inclusion} />
+  {:else if field.type === 'datetime'}
+    <DatePicker
+      label="Min Value"
+      bind:value={field.constraints.datetime.earliest} />
+    <DatePicker
+      label="Max Value"
+      bind:value={field.constraints.datetime.latest} />
+  {:else if field.type === 'number'}
+    <NumberBox
+      label="Min Value"
+      bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
+    <NumberBox
+      label="Max Value"
+      bind:value={field.constraints.numericality.lessThanOrEqualTo} />
+  {:else if field.type === 'link'}
+    <div class="field">
+      <label>Link</label>
+      <select class="budibase__input" bind:value={field.modelId}>
+        <option value={''} />
+        {#each $backendUiStore.models as model}
+          <option value={model._id}>{model.name}</option>
+        {/each}
+      </select>
+    </div>
+  {/if}
 </div>
 
 <style>

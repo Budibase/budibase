@@ -1,5 +1,3 @@
-const FIELD_TYPES = ["string", "number", "boolean"]
-
 export const FIELDS = {
   PLAIN_TEXT: {
     name: "Plain Text",
@@ -30,52 +28,52 @@ export const FIELDS = {
       presence: false,
     },
   },
-  // OPTIONS: {
-  //   name: "Options",
-  //   icon: "ri-list-check-2",
-  //   type: "options",
-  //   constraints: {
-  //     type: "string",
-  //     presence: false,
-  //   },
-  // },
-  // DATETIME: {
-  //   name: "Date/Time",
-  //   icon: "ri-calendar-event-fill",
-  //   type: "datetime",
-  //   constraints: {
-  //     type: "date",
-  //     datetime: {},
-  //     presence: false,
-  //   },
-  // },
-  // IMAGE: {
-  //   name: "File",
-  //   icon: "ri-image-line",
-  //   type: "file",
-  //   constraints: {
-  //     type: "string",
-  //     presence: false,
-  //   },
-  // },
-  // FILE: {
-  //   name: "Image",
-  //   icon: "ri-file-line",
-  //   type: "file",
-  //   constraints: {
-  //     type: "string",
-  //     presence: false,
-  //   },
-  // },
-  // DATA_LINK: {
-  //   name: "Data Links",
-  //   icon: "ri-link",
-  //   type: "link",
-  //   modelId: null,
-  //   constraints: {
-  //     type: "array",
-  //   }
-  // },
+  OPTIONS: {
+    name: "Options",
+    icon: "ri-list-check-2",
+    type: "options",
+    constraints: {
+      type: "string",
+      presence: false,
+    },
+  },
+  DATETIME: {
+    name: "Date/Time",
+    icon: "ri-calendar-event-fill",
+    type: "datetime",
+    constraints: {
+      type: "date",
+      datetime: {},
+      presence: false,
+    },
+  },
+  IMAGE: {
+    name: "File",
+    icon: "ri-image-line",
+    type: "file",
+    constraints: {
+      type: "string",
+      presence: false,
+    },
+  },
+  FILE: {
+    name: "Image",
+    icon: "ri-file-line",
+    type: "file",
+    constraints: {
+      type: "string",
+      presence: false,
+    },
+  },
+  DATA_LINK: {
+    name: "Data Links",
+    icon: "ri-link",
+    type: "link",
+    modelId: null,
+    constraints: {
+      type: "array",
+    },
+  },
 }
 
 export const BLOCKS = {
@@ -115,11 +113,7 @@ export const BLOCKS = {
     constraints: {
       type: "string",
       presence: false,
-      inclusion: [
-        "low",
-        "medium",
-        "high"
-    ]
+      inclusion: ["low", "medium", "high"],
     },
   },
   END_DATE: {
@@ -157,7 +151,7 @@ export const BLOCKS = {
     modelId: null,
     constraints: {
       type: "array",
-    }
+    },
   },
 }
 
@@ -168,15 +162,15 @@ export const MODELS = {
     name: "Contacts",
     schema: {
       Name: BLOCKS.NAME,
-      "Phone Number": BLOCKS.PHONE_NUMBER
-    }
+      "Phone Number": BLOCKS.PHONE_NUMBER,
+    },
   },
   RECIPES: {
     icon: "ri-link",
     name: "Recipes",
     schema: {
       Name: BLOCKS.NAME,
-      "Phone Number": BLOCKS.PHONE_NUMBER
-    }
-  }
+      "Phone Number": BLOCKS.PHONE_NUMBER,
+    },
+  },
 }

@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import { cloneDeep } from "lodash/fp";
+import { cloneDeep } from "lodash/fp"
 import api from "../api"
 
 export const getBackendUiStore = () => {
@@ -12,8 +12,8 @@ export const getBackendUiStore = () => {
     draftModel: {},
     tabs: {
       SETUP_PANEL: "SETUP",
-      NAVIGATION_PANEL: "NAVIGATE"
-    }
+      NAVIGATION_PANEL: "NAVIGATE",
+    },
   }
 
   const store = writable(INITIAL_BACKEND_UI_STATE)
@@ -28,7 +28,7 @@ export const getBackendUiStore = () => {
         store.update(state => {
           state.selectedDatabase = db
           if (models && models.length > 0) {
-            store.actions.models.select(models[0]);
+            store.actions.models.select(models[0])
           }
           state.models = models
           state.views = views
@@ -49,24 +49,25 @@ export const getBackendUiStore = () => {
         }),
     },
     models: {
-      select: model => store.update(state => {
-        state.selectedModel = model;
-        state.draftModel = cloneDeep(model);
-        state.selectedField = ""
-        state.selectedView = `all_${model._id}`
-        state.tabs.SETUP_PANEL = "SETUP"
-        return state;
-      }),
+      select: model =>
+        store.update(state => {
+          state.selectedModel = model
+          state.draftModel = cloneDeep(model)
+          state.selectedField = ""
+          state.selectedView = `all_${model._id}`
+          state.tabs.SETUP_PANEL = "SETUP"
+          return state
+        }),
       save: async ({ instanceId, model }) => {
-        const updatedModel = cloneDeep(model);
+        const updatedModel = cloneDeep(model)
 
         // TODO: refactor
         for (let key in updatedModel.schema) {
           const field = updatedModel.schema[key]
-          if (field.name && field.name !== key) { 
-            updatedModel.schema[field.name] = field 
-            delete updatedModel.schema[key];
-          } 
+          if (field.name && field.name !== key) {
+            updatedModel.schema[field.name] = field
+            delete updatedModel.schema[key]
+          }
         }
 
         const SAVE_MODEL_URL = `/api/${instanceId}/models`
@@ -78,8 +79,10 @@ export const getBackendUiStore = () => {
           if (!model._id) {
             state.models = [...state.models, savedModel]
           } else {
-            const existingIdx = state.models.findIndex(({ _id }) => _id === model._id);
-            state.models.splice(existingIdx, 1, savedModel);
+            const existingIdx = state.models.findIndex(
+              ({ _id }) => _id === model._id
+            )
+            state.models.splice(existingIdx, 1, savedModel)
             state.models = state.models
           }
 
@@ -95,7 +98,7 @@ export const getBackendUiStore = () => {
 
           state.draftModel.schema = {
             ...state.draftModel.schema,
-            [field.name]: field
+            [field.name]: field,
           }
 
           state.selectedField = field.name
@@ -103,7 +106,7 @@ export const getBackendUiStore = () => {
           state.tabs.NAVIGATION_PANEL = "NAVIGATE"
 
           return state
-        });
+        })
       },
     },
     views: {

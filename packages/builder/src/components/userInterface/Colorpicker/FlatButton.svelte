@@ -1,7 +1,9 @@
 <script>
-  export let text = "";
-  export let selected = false;
+  export let text = ""
+  export let selected = false
 </script>
+
+<div class="flatbutton" class:selected on:click>{text}</div>
 
 <style>
   .flatbutton {
@@ -22,5 +24,3 @@
     border: none;
   }
 </style>
-
-<div class="flatbutton" class:selected on:click>{text}</div>
