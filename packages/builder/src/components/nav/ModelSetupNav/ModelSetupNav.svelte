@@ -4,7 +4,7 @@
   import { notifier } from "@beyonk/svelte-notifications"
   import { store, backendUiStore } from "builderStore"
   import api from "builderStore/api"
-  import FieldView from "./FieldView.svelte";
+  import ModelFieldEditor from "./ModelFieldEditor.svelte"
 
   const { open, close } = getContext("simple-modal")
 
@@ -14,51 +14,56 @@
       key: "SETUP",
     },
     {
-      title: "Filter",
-      key: "FILTER",
-    },
-    {
       title: "Delete",
       key: "DELETE",
     },
   ]
 
-  let selectedTab = "SETUP"
+  $: selectedTab = $backendUiStore.tabs.SETUP_PANEL
 
-  $: edited = $backendUiStore.draftModel.name !== $backendUiStore.selectedModel.name
+  $: edited =
+    $backendUiStore.draftModel.name !== $backendUiStore.selectedModel.name
 
   async function deleteModel() {
-    const modelToDelete = $backendUiStore.selectedModel
-    if ($backendUiStore.selectedField) {
-      delete modelToDelete[$backendUiStore.selectedField]
+    const model = $backendUiStore.selectedModel
+    const instanceId = $backendUiStore.selectedDatabase._id
+    const field = $backendUiStore.selectedField
+
+    if (field) {
+      delete model.schema[field]
+      backendUiStore.actions.models.save({ model, instanceId });
+      notifier.danger(`Field ${field} deleted.`);
+      return;
     }
 
-    const DELETE_MODEL_URL = `/api/${$backendUiStore.selectedDatabase._id}/models/${modelToDelete._id}/${modelToDelete._rev}`
+    const DELETE_MODEL_URL = `/api/${instanceId}/models/${model._id}/${model._rev}`
     const response = await api.delete(DELETE_MODEL_URL)
     backendUiStore.update(state => {
       state.selectedView = null
       state.models = state.models.filter(
-        model => model._id !== modelToDelete._id
+        ({ _id }) => _id !== model._id
       )
-      notifier.danger(`${modelToDelete.name} deleted successfully.`)
+      notifier.danger(`${model.name} deleted successfully.`)
       return state
     })
   }
 
   async function saveModel() {
-    await backendUiStore.actions.models.save({ 
+    await backendUiStore.actions.models.save({
       instanceId: $backendUiStore.selectedDatabase._id,
-      model: $backendUiStore.draftModel
+      model: $backendUiStore.draftModel,
     })
-    notifier.success("Success! Your changes have been saved. Please continue on with your greatness.");
+    notifier.success(
+      "Success! Your changes have been saved. Please continue on with your greatness."
+    )
   }
 </script>
 
 <div class="items-root">
-  <Switcher headings={ITEMS} bind:value={selectedTab}>
+  <Switcher headings={ITEMS} bind:value={$backendUiStore.tabs.SETUP_PANEL}>
     {#if selectedTab === 'SETUP'}
       {#if $backendUiStore.selectedField}
-        <FieldView />
+        <ModelFieldEditor />
       {:else}
         <div class="titled-input">
           <header>Name</header>
@@ -71,13 +76,10 @@
           <header>Import Data</header>
           <Button wide secondary>Import CSV</Button>
         </div>
-        <Button
-          attention
-          wide
-          on:click={saveModel}>
-          Save
-        </Button>
       {/if}
+      <footer>
+        <Button attention wide on:click={saveModel}>Save</Button>
+      </footer>
     {:else if selectedTab === 'DELETE'}
       <div class="titled-input">
         <header>Danger Zone</header>
@@ -92,6 +94,10 @@
     font-weight: 500;
   }
 
+  footer {
+    width: 100%;
+  }
+
   .items-root {
     padding: 20px;
     display: flex;
@@ -102,9 +108,8 @@
   }
 
   .titled-input {
-    padding: 20px;
+    padding: 12px;
     background: var(--light-grey);
-    margin-top: 20px;
   }
 
   .titled-input header {

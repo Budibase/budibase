@@ -7,7 +7,6 @@
   export let tertiary
 </script>
 
-<!-- TODO: Move to bbui -->
 <div on:click class:primary class:secondary class:tertiary>
   <i class={icon} />
   <span>{title}</span>
@@ -15,8 +14,7 @@
 
 <style>
   div {
-    width: 120px;
-    height: 90px;
+    height: 80px;
     border-radius: 3px;
     color: var(--ink);
     font-weight: 500;
@@ -26,6 +24,7 @@
     align-items: center;
     flex-direction: column;
     transition: 0.3s transform;
+    background: var(--light-grey);
   }
 
   i {
@@ -33,7 +32,8 @@
   }
   
   span {
-    font-size: 16px;
+    font-size: 14px;
+    text-align: center;
   }
 
   div:hover {
@@ -53,4 +53,5 @@
   .tertiary {
     background: var(--white);
   }
+
 </style>

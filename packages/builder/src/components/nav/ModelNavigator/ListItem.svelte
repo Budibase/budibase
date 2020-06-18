@@ -18,7 +18,7 @@
 
   div {
     padding: 0 10px 0 10px;
-    width: 260px;
+    width: 90%;
     height: 40px;
     border-radius: 3px;
     display: flex;
@@ -27,6 +27,8 @@
     color: var(--ink);
     font-weight: 500;
     font-size: 16px;
+    margin-top: 4px;
+    margin-bottom: 4px;
   }
 
   .selected {

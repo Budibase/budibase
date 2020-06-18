@@ -1,22 +1,23 @@
 <script>
   import { backendUiStore } from "builderStore";
+	import { fade } from 'svelte/transition';
   import { FIELDS, BLOCKS, MODELS } from "constants/backend";
-  import Block from "./Block.svelte";
+  import Block from "components/common/Block.svelte";
 
   function addNewField(field) {
     backendUiStore.actions.models.addField(field);
   }
 </script>
 
-<section>
+<section transition:fade>
   <header>
-    <h2>Create New Table</h2>
-    <p>Before you can view your table, you need to set it up.</p>
+    <h2>Create New Model</h2>
+    <p>Before you can view your model, you need to set it up.</p>
   </header>
 
   <div class="block-row">
     <span class="block-row-title">Fields</span>
-    <p>Blocks are pre-made fields and help you build your table quicker.</p>
+    <p>Blocks are pre-made fields and help you build your model quicker.</p>
     <div class="blocks">
       {#each Object.values(FIELDS) as field}
         <Block primary title={field.name} icon={field.icon} on:click={() => addNewField(field)} />
@@ -26,17 +27,17 @@
 
   <div class="block-row">
     <span class="block-row-title">Blocks</span>
-    <p>Blocks are pre-made fields and help you build your table quicker.</p>
+    <p>Blocks are pre-made fields and help you build your model quicker.</p>
     <div class="blocks">
       {#each Object.values(BLOCKS) as field}
-        <Block secondary title={field.name} icon={field.icon} />
+        <Block secondary title={field.name} icon={field.icon} on:click={() => addNewField(field)} />
       {/each}
     </div>
   </div>
 
   <div class="block-row">
     <span class="block-row-title">Models</span>
-    <p>Blocks are pre-made fields and help you build your table quicker.</p>
+    <p>Blocks are pre-made fields and help you build your model quicker.</p>
     <div class="blocks">
       {#each Object.values(MODELS) as model}
         <Block tertiary title={model.name} icon={model.icon} />
@@ -74,6 +75,7 @@
   .block-row .blocks {
     display: grid;
     grid-auto-flow: column;
+    grid-auto-columns: 110px;
     grid-gap: 20px;
   }
 </style>

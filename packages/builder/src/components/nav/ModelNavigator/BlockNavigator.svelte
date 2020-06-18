@@ -1,7 +1,7 @@
 <script>
   import * as blockDefinitions from "constants/backend"
   import { backendUiStore } from "builderStore";
-  import Block from "./Block.svelte"
+  import Block from "components/common/Block.svelte"
 
   const HEADINGS = [
     {
@@ -13,8 +13,8 @@
       key: "BLOCKS",
     },
     {
-      title: "Table",
-      key: "TABLES",
+      title: "Model",
+      key: "MODELS",
     },
   ]
 
@@ -40,9 +40,6 @@
     {#each Object.values(blockDefinitions[selectedTab]) as blockDefinition}
       <Block
         on:click={() => addField(blockDefinition)}
-        primary={true}
-        secondary={false}
-        tertiary={false}
         title={blockDefinition.name}
         icon={blockDefinition.icon} />
     {/each}
@@ -53,11 +50,15 @@
   header {
     margin-top: 20px;
     margin-bottom: 20px;
+    display: grid;
+    grid-gap: 20px;
+    grid-template-columns: repeat(3, 1fr);
   }
 
   span {
-    margin-right: 20px;
+    text-align: center;
     padding: 10px;
+    font-weight: 500;
     border-radius: 3px;
     color: var(--ink-lighter);
     font-size: 14px;

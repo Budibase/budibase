@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { store, backendUiStore } from "builderStore"
+  import { notifier } from "@beyonk/svelte-notifications";
   import { compose, map, get, flatten } from "lodash/fp"
   import ActionButton from "components/common/ActionButton.svelte"
   import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"
@@ -63,6 +64,7 @@
     backendUiStore.update(state => {
       state.selectedView = state.selectedView
       onClosed()
+      notifier.success("Record created successfully.");
       return state
     })
   }

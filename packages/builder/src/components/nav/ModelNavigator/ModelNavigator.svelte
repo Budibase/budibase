@@ -1,11 +1,10 @@
 <script>
   import { getContext } from "svelte"
+	import { slide } from 'svelte/transition';
   import { Switcher } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { store, backendUiStore } from "builderStore"
   import BlockNavigator from "./BlockNavigator.svelte"
-  import SchemaManagementDrawer from "../SchemaManagementDrawer.svelte"
-  import HierarchyRow from "../HierarchyRow.svelte"
   import ListItem from "./ListItem.svelte"
   import { Button } from "@budibase/bbui"
 
@@ -22,17 +21,17 @@
     },
   ]
 
-  let selectedTab = "NAVIGATE"
+  $: selectedTab = $backendUiStore.tabs.NAVIGATION_PANEL 
 
-  function selectModel(model) {
+  function selectModel(model, fieldName) {
     backendUiStore.actions.models.select(model)
-  }
 
-  function selectField(fieldName) {
-    backendUiStore.update(state => {
-      state.selectedField = fieldName
-      return state
-    });
+    if (fieldName) {
+      backendUiStore.update(state => {
+        state.selectedField = fieldName
+        return state
+      });
+    }
   }
 
   function setupForNewModel() {
@@ -48,24 +47,28 @@
   {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
     <div class="hierarchy">
       <div class="components-list-container">
-        <Switcher headings={HEADINGS} bind:value={selectedTab}>
+        <Switcher headings={HEADINGS} bind:value={$backendUiStore.tabs.NAVIGATION_PANEL}>
           {#if selectedTab === 'NAVIGATE'}
           <Button secondary wide on:click={setupForNewModel}>Create New Model</Button>
           <div class="hierarchy-items-container">
               {#each $backendUiStore.models as model}
                 <ListItem
-                  selected={model._id === $backendUiStore.selectedModel._id}
+                  selected={!$backendUiStore.selectedField && model._id === $backendUiStore.selectedModel._id}
                   title={model.name}
                   icon="ri-table-fill"
                   on:click={() => selectModel(model)} />
-                {#each Object.keys(model.schema) as field}
-                  <ListItem
-                    selected={field === $backendUiStore.selectedField}
-                    indented
-                    icon="ri-layout-column-fill"
-                    title={field}
-                    on:click={() => selectField(field)} />
-                {/each}
+                {#if model._id === $backendUiStore.selectedModel._id}
+                  <div in:slide>
+                    {#each Object.keys(model.schema) as field}
+                      <ListItem
+                        selected={model._id === $backendUiStore.selectedModel._id && field === $backendUiStore.selectedField}
+                        indented
+                        icon="ri-layout-column-fill"
+                        title={field}
+                        on:click={() => selectModel(model, field)} />
+                    {/each}
+                  </div>
+                {/if}
               {/each}
             </div>
           {:else if selectedTab === 'ADD'}
