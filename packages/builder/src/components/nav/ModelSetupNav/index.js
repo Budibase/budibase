@@ -1,1 +1,1 @@
-export { default as ModelSetupNav } from "./ModelSetupNav.svelte";
+export { default as ModelSetupNav } from "./ModelSetupNav.svelte"

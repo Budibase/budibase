@@ -30,7 +30,7 @@
   i {
     font-size: 30px;
   }
-  
+
   span {
     font-size: 14px;
     text-align: center;
@@ -53,5 +53,4 @@
   .tertiary {
     background: var(--white);
   }
-
 </style>

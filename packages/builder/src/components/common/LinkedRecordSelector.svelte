@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
   import api from "builderStore/api"
 
@@ -19,7 +19,7 @@
   })
 
   function linkRecord(record) {
-    linkedRecords.push(record);
+    linkedRecords.push(record)
   }
 </script>
 

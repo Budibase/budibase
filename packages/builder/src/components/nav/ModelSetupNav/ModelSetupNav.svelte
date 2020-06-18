@@ -25,8 +25,8 @@
 
   $: edited =
     $backendUiStore.selectedField ||
-    $backendUiStore.draftModel &&
-    $backendUiStore.draftModel.name !== $backendUiStore.selectedModel.name
+    ($backendUiStore.draftModel &&
+      $backendUiStore.draftModel.name !== $backendUiStore.selectedModel.name)
 
   async function deleteModel() {
     const model = $backendUiStore.selectedModel

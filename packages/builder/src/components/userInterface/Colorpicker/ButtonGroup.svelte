@@ -1,11 +1,20 @@
 <script>
-  import FlatButton from "./FlatButton.svelte";
+  import FlatButton from "./FlatButton.svelte"
 
-  export let format = "hex";
-  export let onclick = format => {};
+  export let format = "hex"
+  export let onclick = format => {}
 
-  let colorFormats = ["hex", "rgb", "hsl"];
+  let colorFormats = ["hex", "rgb", "hsl"]
 </script>
+
+<div class="flatbutton-group">
+  {#each colorFormats as text}
+    <FlatButton
+      selected={format === text}
+      {text}
+      on:click={() => onclick(text)} />
+  {/each}
+</div>
 
 <style>
   .flatbutton-group {
@@ -16,12 +25,3 @@
     justify-content: center;
   }
 </style>
-
-<div class="flatbutton-group">
-  {#each colorFormats as text}
-    <FlatButton
-      selected={format === text}
-      {text}
-      on:click={() => onclick(text)} />
-  {/each}
-</div>

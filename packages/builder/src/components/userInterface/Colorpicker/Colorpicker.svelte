@@ -1,122 +1,78 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount, createEventDispatcher } from "svelte"
 
   import {
     getColorFormat,
     convertToHSVA,
-    convertHsvaToFormat
-  } from "./utils.js";
-  import Slider from "./Slider.svelte";
-  import Palette from "./Palette.svelte";
-  import ButtonGroup from "./ButtonGroup.svelte";
-  import Input from "./Input.svelte";
+    convertHsvaToFormat,
+  } from "./utils.js"
+  import Slider from "./Slider.svelte"
+  import Palette from "./Palette.svelte"
+  import ButtonGroup from "./ButtonGroup.svelte"
+  import Input from "./Input.svelte"
 
-  export let value = "#3ec1d3ff";
-  export let format = "hexa";
+  export let value = "#3ec1d3ff"
+  export let format = "hexa"
 
-  let h = null;
-  let s = null;
-  let v = null;
-  let a = null;
+  let h = null
+  let s = null
+  let v = null
+  let a = null
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher()
 
   onMount(() => {
     if (format) {
       convertAndSetHSVA()
     }
-  });
+  })
 
   function convertAndSetHSVA() {
-    let hsva = convertToHSVA(value, format);
-    setHSVA(hsva);
+    let hsva = convertToHSVA(value, format)
+    setHSVA(hsva)
   }
 
   function setHSVA([hue, sat, val, alpha]) {
-    h = hue;
-    s = sat;
-    v = val;
-    a = alpha;
+    h = hue
+    s = sat
+    v = val
+    a = alpha
   }
 
   //fired by choosing a color from the palette
   function setSaturationAndValue({ detail }) {
-    s = detail.s;
-    v = detail.v;
-    value = convertHsvaToFormat([h, s, v, a], format);
+    s = detail.s
+    v = detail.v
+    value = convertHsvaToFormat([h, s, v, a], format)
     dispatch("change", value)
   }
 
   function setHue(hue) {
-    h = hue;
-    value = convertHsvaToFormat([h, s, v, a], format);    
+    h = hue
+    value = convertHsvaToFormat([h, s, v, a], format)
   }
 
   function setAlpha(alpha) {
-    a = alpha === "1.00" ? "1" :alpha;
-    value = convertHsvaToFormat([h, s, v, a], format);    
+    a = alpha === "1.00" ? "1" : alpha
+    value = convertHsvaToFormat([h, s, v, a], format)
   }
 
   function changeFormatAndConvert(f) {
-    format = f;
+    format = f
     console.log(f)
-    value = convertHsvaToFormat([h, s, v, a], format);
+    value = convertHsvaToFormat([h, s, v, a], format)
   }
 
   function handleColorInput(text) {
     let f = getColorFormat(text)
-    if(f) {
-      format = f;
+    if (f) {
+      format = f
       value = text
       convertAndSetHSVA()
       dispatch("change", value)
     }
   }
-
 </script>
-
-<style>
-  .colorpicker-container {
-    display: flex;
-    font-size: 11px;
-    font-weight: 400;
-    flex-direction: column;
-    height: 300px;
-    width: 250px;
-    background: #ffffff;
-    border-radius: 2px;
-    box-shadow: 0 0.15em 1.5em 0 rgba(0,0,0,.1), 0 0 1em 0 rgba(0,0,0,.03);
-  }
-
-  .control-panel {
-    display: flex;
-    flex-direction: column;
-    padding: 8px;
-    background: white;
-    border: 1px solid #d2d2d2
-  }
-
-  .alpha-hue-panel {
-    display: grid;
-    grid-template-columns: 25px 1fr;
-    grid-gap: 15px;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .selected-color {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 1px solid #dedada;
-  }
-
-  .format-input-panel {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-</style>
 
 <div class="colorpicker-container">
 
@@ -143,3 +99,47 @@
   </div>
 
 </div>
+
+<style>
+  .colorpicker-container {
+    display: flex;
+    font-size: 11px;
+    font-weight: 400;
+    flex-direction: column;
+    height: 300px;
+    width: 250px;
+    background: #ffffff;
+    border-radius: 2px;
+    box-shadow: 0 0.15em 1.5em 0 rgba(0, 0, 0, 0.1),
+      0 0 1em 0 rgba(0, 0, 0, 0.03);
+  }
+
+  .control-panel {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    background: white;
+    border: 1px solid #d2d2d2;
+  }
+
+  .alpha-hue-panel {
+    display: grid;
+    grid-template-columns: 25px 1fr;
+    grid-gap: 15px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .selected-color {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid #dedada;
+  }
+
+  .format-input-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+</style>

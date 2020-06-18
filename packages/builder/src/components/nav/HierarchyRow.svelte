@@ -3,9 +3,7 @@
   import { store, backendUiStore } from "builderStore"
   import { cloneDeep } from "lodash/fp"
   import getIcon from "../common/icon"
-  import {
-    CreateEditViewModal,
-  } from "components/database/ModelDataTable/modals"
+  import { CreateEditViewModal } from "components/database/ModelDataTable/modals"
   import api from "builderStore/api"
 
   const { open, close } = getContext("simple-modal")

@@ -1,11 +1,11 @@
 <script>
-  import { backendUiStore } from "builderStore";
-	import { fade } from 'svelte/transition';
-  import { FIELDS, BLOCKS, MODELS } from "constants/backend";
-  import Block from "components/common/Block.svelte";
+  import { backendUiStore } from "builderStore"
+  import { fade } from "svelte/transition"
+  import { FIELDS, BLOCKS, MODELS } from "constants/backend"
+  import Block from "components/common/Block.svelte"
 
   function addNewField(field) {
-    backendUiStore.actions.models.addField(field);
+    backendUiStore.actions.models.addField(field)
   }
 </script>
 
@@ -20,7 +20,11 @@
     <p>Blocks are pre-made fields and help you build your model quicker.</p>
     <div class="blocks">
       {#each Object.values(FIELDS) as field}
-        <Block primary title={field.name} icon={field.icon} on:click={() => addNewField(field)} />
+        <Block
+          primary
+          title={field.name}
+          icon={field.icon}
+          on:click={() => addNewField(field)} />
       {/each}
     </div>
   </div>
@@ -30,7 +34,11 @@
     <p>Blocks are pre-made fields and help you build your model quicker.</p>
     <div class="blocks">
       {#each Object.values(BLOCKS) as field}
-        <Block secondary title={field.name} icon={field.icon} on:click={() => addNewField(field)} />
+        <Block
+          secondary
+          title={field.name}
+          icon={field.icon}
+          on:click={() => addNewField(field)} />
       {/each}
     </div>
   </div>

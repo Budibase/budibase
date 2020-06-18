@@ -1,6 +1,6 @@
 <script>
   import * as blockDefinitions from "constants/backend"
-  import { backendUiStore } from "builderStore";
+  import { backendUiStore } from "builderStore"
   import Block from "components/common/Block.svelte"
 
   const HEADINGS = [
