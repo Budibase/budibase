@@ -39,7 +39,7 @@
 </div>
 
   <div class="info">
-    <div class="required-field">
+    <div class="field">
       <label>Required</label>
       <input type="checkbox" />
     </div>
@@ -66,12 +66,15 @@
         label="Max Value"
         bind:value={field.constraints.numericality.lessThanOrEqualTo} />
     {:else if field.type === 'link'}
-      <select class="budibase__input" bind:value={field.modelId}>
-        <option value={''} />
-        {#each $backendUiStore.models as model}
-          <option value={model._id}>{model.name}</option>
-        {/each}
-      </select>
+      <div class="field">
+        <label>Link</label>
+        <select class="budibase__input" bind:value={field.modelId}>
+          <option value={''} />
+          {#each $backendUiStore.models as model}
+            <option value={model._id}>{model.name}</option>
+          {/each}
+        </select>
+      </div>
     {/if}
 </div>
 
@@ -87,15 +90,20 @@
     font-size: 12px;
   }
 
-  .required-field {
+  .field {
     display: grid;
     align-items: center;
     grid-template-columns: 40% 1fr;
+    margin-top: 8px;
   }
 
   .field-box header {
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 16px;
+  }
+
+  .field-box span {
+    font-weight: bold;
   }
 </style>
