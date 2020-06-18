@@ -45,7 +45,7 @@ describe("/records", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-    fit("returns a success message when the record is created", async () => {
+    it("returns a success message when the record is created", async () => {
       const res = await createRecord()
       expect(res.res.statusMessage).toEqual(`${model.name} created successfully`)           
       expect(res.body.name).toEqual("Test Contact")

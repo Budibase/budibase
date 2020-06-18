@@ -33,7 +33,7 @@ describe("/models", () => {
 
     it("returns a success message when the model is successfully created", done => {
       request
-        .post(`/api/${instance._id}/models`)
+        .post(`/api/models`)
         .send({ 
           name: "TestModel",
           key: "name",
@@ -55,8 +55,9 @@ describe("/models", () => {
         await builderEndpointShouldBlockNormalUsers({
           request,
           method: "POST",
-          url: `/api/${instance._id}/models`,
+          url: `/api/models`,
           instanceId: instance._id,
+          appId: app._id,
           body: { 
             name: "TestModel",
             key: "name",
@@ -78,7 +79,7 @@ describe("/models", () => {
 
     it("returns all the models for that instance in the response body", done => {
       request
-        .get(`/api/${instance._id}/models`)
+        .get(`/api/models`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
@@ -94,8 +95,9 @@ describe("/models", () => {
         await builderEndpointShouldBlockNormalUsers({
           request,
           method: "GET",
-          url: `/api/${instance._id}/models`,
+          url: `/api/models`,
           instanceId: instance._id,
+          appId: app._id,
         })
       })
     });
@@ -114,7 +116,7 @@ describe("/models", () => {
 
     it("returns a success response when a model is deleted.", async done => {
       request
-        .delete(`/api/${instance._id}/models/${testModel._id}/${testModel._rev}`)
+        .delete(`/api/models/${testModel._id}/${testModel._rev}`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
@@ -147,7 +149,7 @@ describe("/models", () => {
       })
 
       request
-        .delete(`/api/${instance._id}/models/${testModel._id}/${testModel._rev}`)
+        .delete(`/api/models/${testModel._id}/${testModel._rev}`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
@@ -163,8 +165,9 @@ describe("/models", () => {
       await builderEndpointShouldBlockNormalUsers({
         request,
         method: "DELETE",
-        url: `/api/${instance._id}/models/${testModel._id}/${testModel._rev}`,
+        url: `/api/models/${testModel._id}/${testModel._rev}`,
         instanceId: instance._id,
+        appId: app._id,
       })
     })
 

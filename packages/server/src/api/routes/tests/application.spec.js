@@ -41,7 +41,7 @@ describe("/applications", () => {
       expect(res.body._id).toBeDefined()
     })
 
-    fit("should apply authorization to endpoint", async () => {
+    it("should apply authorization to endpoint", async () => {
       const otherApplication = await createApplication(request) 
       const instance = await createInstance(request, otherApplication._id)
       await builderEndpointShouldBlockNormalUsers({

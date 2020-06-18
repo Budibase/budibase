@@ -81,6 +81,8 @@ const getAccessLevel = async (instanceId, accessLevelId) => {
   const findAccessContext = {
     params: {
       levelId: accessLevelId,
+    },
+    user: {
       instanceId,
     },
   }
