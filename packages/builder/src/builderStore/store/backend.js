@@ -4,13 +4,16 @@ import api from "../api"
 
 export const getBackendUiStore = () => {
   const INITIAL_BACKEND_UI_STATE = {
-    breadcrumbs: [],
     models: [],
     views: [],
     users: [],
     selectedDatabase: {},
     selectedModel: {},
-    draftModel: {}
+    draftModel: {},
+    tabs: {
+      SETUP_PANEL: "SETUP",
+      NAVIGATION_PANEL: "NAVIGATE"
+    }
   }
 
   const store = writable(INITIAL_BACKEND_UI_STATE)
@@ -27,7 +30,6 @@ export const getBackendUiStore = () => {
           if (models && models.length > 0) {
             store.actions.models.select(models[0]);
           }
-          state.breadcrumbs = [db.name]
           state.models = models
           state.views = views
           return state
@@ -38,11 +40,6 @@ export const getBackendUiStore = () => {
       delete: () =>
         store.update(state => {
           state.selectedView = state.selectedView
-          return state
-        }),
-      view: record =>
-        store.update(state => {
-          state.breadcrumbs = [state.selectedDatabase.name, record._id]
           return state
         }),
       select: record =>
@@ -57,6 +54,7 @@ export const getBackendUiStore = () => {
         state.draftModel = cloneDeep(model);
         state.selectedField = ""
         state.selectedView = `all_${model._id}`
+        state.tabs.SETUP_PANEL = "SETUP"
         return state;
       }),
       save: async ({ instanceId, model }) => {
@@ -101,6 +99,8 @@ export const getBackendUiStore = () => {
           }
 
           state.selectedField = field.name
+
+          state.tabs.NAVIGATION_PANEL = "NAVIGATE"
 
           return state
         });

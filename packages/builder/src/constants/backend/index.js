@@ -50,9 +50,9 @@ export const FIELDS = {
     },
   },
   IMAGE: {
-    name: "Image",
+    name: "File",
     icon: "ri-image-line",
-    type: "image",
+    type: "file",
     constraints: {
       type: "string",
       presence: false,

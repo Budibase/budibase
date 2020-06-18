@@ -4,7 +4,6 @@
   import { cloneDeep } from "lodash/fp"
   import getIcon from "../common/icon"
   import {
-    CreateEditModelModal,
     CreateEditViewModal,
   } from "components/database/ModelDataTable/modals"
   import api from "builderStore/api"
