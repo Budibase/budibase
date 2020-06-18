@@ -12,8 +12,10 @@
     font-weight: 500;
     display: flex;
     flex-flow: row nowrap;
-    width: 100%;
     justify-content: center;
+    width: 170px;
+    height: 30px;
+    align-self: center;
   }
 </style>
 
