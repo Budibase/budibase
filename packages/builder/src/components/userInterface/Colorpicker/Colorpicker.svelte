@@ -1,6 +1,7 @@
 <script>
   import { onMount, createEventDispatcher } from "svelte";
-
+  import CheckedBackground from "./CheckedBackground.svelte"
+  import {buildStyle} from "./helpers.js"
   import {
     getColorFormat,
     convertToHSVA,
@@ -59,7 +60,6 @@
 
   function changeFormatAndConvert(f) {
     format = f;
-    console.log(f)
     value = convertHsvaToFormat([h, s, v, a], format);
   }
 
@@ -73,6 +73,8 @@
     }
   }
 
+    $: border = s < 10 ? "1px dashed #dedada" : ""
+    $: style = buildStyle({background: value, border})
 </script>
 
 <style>
@@ -81,19 +83,25 @@
     font-size: 11px;
     font-weight: 400;
     flex-direction: column;
-    height: 300px;
-    width: 250px;
+    height: 265px;
+    width: 220px;
     background: #ffffff;
     border-radius: 2px;
     box-shadow: 0 0.15em 1.5em 0 rgba(0,0,0,.1), 0 0 1em 0 rgba(0,0,0,.03);
   }
 
+  .palette-panel {
+    flex: 1;
+  }
+
   .control-panel {
+    flex: 1;
     display: flex;
     flex-direction: column;
     padding: 8px;
     background: white;
-    border: 1px solid #d2d2d2
+    border: 1px solid #d2d2d2;
+    color: #777373;
   }
 
   .alpha-hue-panel {
@@ -108,7 +116,6 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    border: 1px solid #dedada;
   }
 
   .format-input-panel {
@@ -120,19 +127,27 @@
 
 <div class="colorpicker-container">
 
-  <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
+  <div class="palette-panel">
+    <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
+  </div>
 
   <div class="control-panel">
     <div class="alpha-hue-panel">
       <div>
-        <div class="selected-color" style={`background: ${value}`} />
+        <CheckedBackground borderRadius="50%" backgroundSize="8px">
+          <div class="selected-color" {style} />
+        </CheckedBackground>
       </div>
       <div>
         <Slider type="hue" value={h} on:change={hue => setHue(hue.detail)} />
-        <Slider
-          type="alpha"
-          value={a}
-          on:change={alpha => setAlpha(alpha.detail)} />
+
+        <CheckedBackground borderRadius="10px" backgroundSize="7px">
+          <Slider
+            type="alpha"
+            value={a}
+            on:change={alpha => setAlpha(alpha.detail)} />
+        </CheckedBackground>
+        
       </div>
     </div>
 
