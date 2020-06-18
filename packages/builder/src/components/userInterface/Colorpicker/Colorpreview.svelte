@@ -1,5 +1,6 @@
 <script>
     import Colorpicker from "./Colorpicker.svelte"
+    import CheckedBackground from "./CheckedBackground.svelte"
     import {createEventDispatcher, afterUpdate, beforeUpdate} from "svelte"
     import {buildStyle} from "./helpers.js"
     import { fade } from 'svelte/transition';
@@ -72,7 +73,7 @@
             
             //TOO: Testing and Scroll Awareness for x Scroll
             const spaceRight = (innerWidth - spaceLeft) + previewWidth
-            const left = spaceRight > spaceLeft ? (offsetLeft + previewWidth) + pickerWidth : offsetLeft - pickerWidth
+            const left = spaceRight > spaceLeft ? (offsetLeft + previewWidth) : offsetLeft - pickerWidth
 
             dimensions = {top, left}
 
@@ -88,7 +89,10 @@
 
 <div class="color-preview-container">
     {#if !errorMsg}
-        <div bind:this={colorPreview} bind:clientHeight={previewHeight} bind:clientWidth={previewWidth} class="color-preview" style={previewStyle} on:click={openColorpicker}></div>
+        <CheckedBackground borderRadius="3px" backgroundSize="8px">
+            <div bind:this={colorPreview} bind:clientHeight={previewHeight} bind:clientWidth={previewWidth} class="color-preview" style={previewStyle} on:click={openColorpicker} />        
+        </CheckedBackground>
+
         {#if open}
         <div class="picker-container" bind:clientHeight={pickerHeight} bind:clientWidth={pickerWidth} style={pickerStyle}>
             <Colorpicker on:change={onColorChange} {format} {value} />
@@ -111,9 +115,8 @@
     }
 
     .color-preview {
-        flex: 1;
         border-radius: 3px;
-        border: 1px solid #dedada;
+        border: 1px solid #dedada;        
     }
 
     .preview-error {

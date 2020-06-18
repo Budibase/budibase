@@ -36,7 +36,7 @@
     position: relative;
     align-self: center;
     height: 8px;
-    width: 185px;
+    width: 150px;
     border-radius: 10px;
     margin: 10px 0px;
     border: 1px solid #e8e8ef;
