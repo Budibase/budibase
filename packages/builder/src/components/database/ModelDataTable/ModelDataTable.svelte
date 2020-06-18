@@ -198,4 +198,14 @@
   .no-data {
     padding: 20px;
   }
+
+  .button-inner {
+    display: flex;
+    align-items: center;
+  }
+
+  .button-inner i {
+    margin-right: 5px;
+    font-size: 20px;
+  }
 </style>

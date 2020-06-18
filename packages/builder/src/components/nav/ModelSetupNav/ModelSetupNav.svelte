@@ -19,9 +19,13 @@
     },
   ]
 
+  let edited = false
+
   $: selectedTab = $backendUiStore.tabs.SETUP_PANEL
 
   $: edited =
+    $backendUiStore.selectedField ||
+    $backendUiStore.draftModel &&
     $backendUiStore.draftModel.name !== $backendUiStore.selectedModel.name
 
   async function deleteModel() {
@@ -31,18 +35,16 @@
 
     if (field) {
       delete model.schema[field]
-      backendUiStore.actions.models.save({ model, instanceId });
-      notifier.danger(`Field ${field} deleted.`);
-      return;
+      backendUiStore.actions.models.save({ model, instanceId })
+      notifier.danger(`Field ${field} deleted.`)
+      return
     }
 
     const DELETE_MODEL_URL = `/api/${instanceId}/models/${model._id}/${model._rev}`
     const response = await api.delete(DELETE_MODEL_URL)
     backendUiStore.update(state => {
       state.selectedView = null
-      state.models = state.models.filter(
-        ({ _id }) => _id !== model._id
-      )
+      state.models = state.models.filter(({ _id }) => _id !== model._id)
       notifier.danger(`${model.name} deleted successfully.`)
       return state
     })
@@ -78,7 +80,9 @@
         </div>
       {/if}
       <footer>
-        <Button attention wide on:click={saveModel}>Save</Button>
+        <Button disabled={!edited} attention={edited} wide on:click={saveModel}>
+          Save
+        </Button>
       </footer>
     {:else if selectedTab === 'DELETE'}
       <div class="titled-input">
@@ -96,6 +100,8 @@
 
   footer {
     width: 100%;
+    position: fixed;
+    bottom: 20px;
   }
 
   .items-root {
@@ -110,6 +116,7 @@
   .titled-input {
     padding: 12px;
     background: var(--light-grey);
+    margin-bottom: 5px;
   }
 
   .titled-input header {
