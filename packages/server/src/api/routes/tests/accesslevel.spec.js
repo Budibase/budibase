@@ -36,8 +36,8 @@ describe("/accesslevels", () => {
 
   beforeEach(async () => {
     instanceId = (await createInstance(request, appId))._id
-    model = await createModel(request, instanceId)
-    view = await createView(request, instanceId)
+    model = await createModel(request, appId, instanceId)
+    view = await createView(request, appId, instanceId)
   })
 
   describe("create", () => {
@@ -46,7 +46,7 @@ describe("/accesslevels", () => {
       const res = await request
         .post(`/api/${instanceId}/accesslevels`)
         .send({ name: "user" })
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -64,7 +64,7 @@ describe("/accesslevels", () => {
       const createRes = await request
         .post(`/api/${instanceId}/accesslevels`)
         .send({ name: "user", permissions: [ { itemId: model._id, name: READ_MODEL }] })
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -72,7 +72,7 @@ describe("/accesslevels", () => {
 
       const res = await request
         .get(`/api/${instanceId}/accesslevels`)
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -97,7 +97,7 @@ describe("/accesslevels", () => {
       const createRes = await request
         .post(`/api/${instanceId}/accesslevels`)
         .send({ name: "user", permissions: [ { itemId: model._id, name: READ_MODEL } ] })
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -105,12 +105,12 @@ describe("/accesslevels", () => {
 
       await request
         .delete(`/api/${instanceId}/accesslevels/${customLevel._id}/${customLevel._rev}`)
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect(200)
 
       await request
         .get(`/api/${instanceId}/accesslevels/${customLevel._id}`)
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect(404)      
     })
   })
@@ -120,7 +120,7 @@ describe("/accesslevels", () => {
       const createRes = await request
         .post(`/api/${instanceId}/accesslevels`)
         .send({ name: "user", permissions: [ { itemId: model._id, name: READ_MODEL }] })
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -132,13 +132,13 @@ describe("/accesslevels", () => {
           _rev: customLevel._rev,
           addedPermissions:  [ { itemId: model._id, name: WRITE_MODEL } ] 
         })
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
         .expect(200)
 
       const finalRes = await request
         .get(`/api/${instanceId}/accesslevels/${customLevel._id}`)
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect(200) 
 
       expect(finalRes.body.permissions.length).toBe(2)
@@ -156,7 +156,7 @@ describe("/accesslevels", () => {
             { itemId: model._id, name: WRITE_MODEL },
           ] 
         })
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -168,13 +168,13 @@ describe("/accesslevels", () => {
           _rev: customLevel._rev,
           removedPermissions:  [ { itemId: model._id, name: WRITE_MODEL }] 
         })
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect('Content-Type', /json/)
         .expect(200)
 
       const finalRes = await request
         .get(`/api/${instanceId}/accesslevels/${customLevel._id}`)
-        .set(defaultHeaders)
+        .set(defaultHeaders(appId, instanceId))
         .expect(200) 
 
       expect(finalRes.body.permissions.length).toBe(1)

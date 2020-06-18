@@ -7,8 +7,9 @@ export const load = async (page, screens, url, host = "test.com") => {
 
   const fullUrl = `http://${host}${url}`
   const cookieJar = new jsdom.CookieJar()
+  const cookie = btoa('{}{"appId":"TEST_APP_ID"}signature')
   cookieJar.setCookie(
-    `budibase:appid=TEST_APP_ID;domain=${host};path=/`,
+    `budibase:token=${cookie};domain=${host};path=/`,
     fullUrl,
     {
       looseMode: false,
@@ -20,9 +21,6 @@ export const load = async (page, screens, url, host = "test.com") => {
     url: fullUrl,
     cookieJar,
   })
-  /*const cookie = tough.Cookie
-  cookie.key = "budibase:appid"
-  cookie.value = "TEST_APPID"*/
 
   autoAssignIds(page.props)
   for (let s of screens) {
@@ -44,7 +42,6 @@ export const load = async (page, screens, url, host = "test.com") => {
 }
 
 const addWindowGlobals = (window, page, screens) => {
-  window.document.cookie = "budibase:appid=TEST_APP_ID"
   window["##BUDIBASE_FRONTEND_DEFINITION##"] = {
     page,
     screens,

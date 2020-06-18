@@ -2,7 +2,6 @@
   import { onMount } from "svelte"
 
   export let _bb
-  export let _instanceId
   export let model
 
   let username
@@ -21,14 +20,14 @@
   $: fields = Object.keys(schema)
 
   async function fetchModel() {
-    const FETCH_MODEL_URL = `/api/${_instanceId}/models/${model}`
+    const FETCH_MODEL_URL = `/api/models/${model}`
     const response = await _bb.api.get(FETCH_MODEL_URL)
     modelDef = await response.json()
     schema = modelDef.schema
   }
 
   async function save() {
-    const SAVE_RECORD_URL = `/api/${_instanceId}/${model}/records`
+    const SAVE_RECORD_URL = `/api/${model}/records`
     const response = await _bb.api.post(SAVE_RECORD_URL, newModel)
     const json = await response.json()
 

@@ -108,6 +108,7 @@
         selectedComponentId,
         frontendDefinition,
         appId: $store.appId,
+        instanceId: $backendUiStore.selectedDatabase._id,
       })
     )
   }

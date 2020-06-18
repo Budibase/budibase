@@ -41,7 +41,7 @@ describe("/models", () => {
             name: { type: "string" }
           }
         })
-        .set(defaultHeaders)
+        .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
@@ -73,13 +73,13 @@ describe("/models", () => {
 
     beforeEach(async () => {
       instance = await createInstance(request, app._id)
-      testModel = await createModel(request, instance._id, testModel)
+      testModel = await createModel(request, app._id, instance._id, testModel)
     });
 
     it("returns all the models for that instance in the response body", done => {
       request
         .get(`/api/${instance._id}/models`)
-        .set(defaultHeaders)
+        .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
@@ -105,7 +105,7 @@ describe("/models", () => {
 
     beforeEach(async () => {
       instance = await createInstance(request, app._id)
-      testModel = await createModel(request, instance._id, testModel)
+      testModel = await createModel(request, app._id, instance._id, testModel)
     });
 
     afterEach(() => {
@@ -115,7 +115,7 @@ describe("/models", () => {
     it("returns a success response when a model is deleted.", async done => {
       request
         .delete(`/api/${instance._id}/models/${testModel._id}/${testModel._rev}`)
-        .set(defaultHeaders)
+        .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
@@ -125,7 +125,7 @@ describe("/models", () => {
       })
 
     it("deletes linked references to the model after deletion", async done => {
-      const linkedModel = await createModel(request, instance._id, {
+      const linkedModel = await createModel(request, app._id, instance._id, {
         name: "LinkedModel",
         type: "model",
         key: "name",
@@ -148,7 +148,7 @@ describe("/models", () => {
 
       request
         .delete(`/api/${instance._id}/models/${testModel._id}/${testModel._rev}`)
-        .set(defaultHeaders)
+        .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {

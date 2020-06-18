@@ -40,7 +40,7 @@ describe("/views", () => {
       }`,
       reduce: `function(keys, values) { }`
     })
-    .set(defaultHeaders)
+    .set(defaultHeaders(app._id, instance._id))
     .expect('Content-Type', /json/)
     .expect(200)
 
@@ -56,14 +56,14 @@ describe("/views", () => {
   describe("fetch", () => {
 
     beforeEach(async () => {
-      model = await createModel(request, instance._id);
+      model = await createModel(request, app._id, instance._id);
     });
 
     it("should only return custom views", async () => {
       const view = await createView()
       const res = await request
         .get(`/api/${instance._id}/views`)
-        .set(defaultHeaders)
+        .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
       expect(res.body.length).toBe(1)

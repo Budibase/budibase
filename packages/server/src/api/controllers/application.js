@@ -9,6 +9,7 @@ const { copy, exists, readFile, writeFile } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const { exec } = require("child_process")
 const sqrl = require("squirrelly")
+const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ClientDb.name(getClientId(ctx)))
@@ -25,6 +26,14 @@ exports.fetchAppPackage = async function(ctx) {
   const db = new CouchDB(ClientDb.name(clientId))
   const application = await db.get(ctx.params.applicationId)
   ctx.body = await getPackageForBuilder(ctx.config, application)
+  /* 
+  instance is hardcoded now - this can only change when we move
+  pages and screens into the database 
+  */
+  const devInstance = application.instances.find(
+    i => i.name === `dev-${clientId}`
+  )
+  setBuilderToken(ctx, ctx.params.applicationId, devInstance._id)
 }
 
 exports.create = async function(ctx) {
@@ -37,10 +46,12 @@ exports.create = async function(ctx) {
   const appId = newid()
   // insert an appId -> clientId lookup
   const masterDb = new CouchDB("clientAppLookup")
+
   await masterDb.put({
     _id: appId,
     clientId,
   })
+
   const db = new CouchDB(ClientDb.name(clientId))
 
   const newApplication = {
@@ -56,18 +67,18 @@ exports.create = async function(ctx) {
     description: ctx.request.body.description,
   }
 
-  const { rev } = await db.post(newApplication)
+  const { rev } = await db.put(newApplication)
   newApplication._rev = rev
-
   const createInstCtx = {
-    params: {
-      applicationId: newApplication._id,
+    user: {
+      appId: newApplication._id,
     },
     request: {
       body: { name: `dev-${clientId}` },
     },
   }
   await instanceController.create(createInstCtx)
+  newApplication.instances.push(createInstCtx.body)
 
   if (ctx.isDev) {
     const newAppFolder = await createEmptyAppPackage(ctx, newApplication)

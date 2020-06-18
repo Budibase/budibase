@@ -1,8 +1,8 @@
 import api from "builderStore/api"
 
 export async function createUser(user, instanceId) {
-  const CREATE_USER_URL = `/api/${instanceId}/users`
-  const response = await api.post(CREATE_USER_URL, user)
+  const CREATE_USER_URL = `/api/users`
+  const response = await api(instanceId).post(CREATE_USER_URL, user)
   return await response.json()
 }
 
@@ -15,21 +15,21 @@ export async function createDatabase(appname, instanceName) {
 }
 
 export async function deleteRecord(record, instanceId) {
-  const DELETE_RECORDS_URL = `/api/${instanceId}/${record._modelId}/records/${record._id}/${record._rev}`
-  const response = await api.delete(DELETE_RECORDS_URL)
+  const DELETE_RECORDS_URL = `/api/${record._modelId}/records/${record._id}/${record._rev}`
+  const response = await api(instanceId).delete(DELETE_RECORDS_URL)
   return response
 }
 
 export async function saveRecord(record, instanceId, modelId) {
-  const SAVE_RECORDS_URL = `/api/${instanceId}/${modelId}/records`
-  const response = await api.post(SAVE_RECORDS_URL, record)
+  const SAVE_RECORDS_URL = `/api/${modelId}/records`
+  const response = await api(instanceId).post(SAVE_RECORDS_URL, record)
 
   return await response.json()
 }
 
 export async function fetchDataForView(viewName, instanceId) {
-  const FETCH_RECORDS_URL = `/api/${instanceId}/views/${viewName}`
+  const FETCH_RECORDS_URL = `/api/views/${viewName}`
 
-  const response = await api.get(FETCH_RECORDS_URL)
+  const response = await api(instanceId).get(FETCH_RECORDS_URL)
   return await response.json()
 }

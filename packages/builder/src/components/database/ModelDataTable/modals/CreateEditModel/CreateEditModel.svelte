@@ -27,8 +27,8 @@
   function onFinishedFieldEdit() {}
 
   async function saveModel() {
-    const SAVE_MODEL_URL = `/api/${instanceId}/models`
-    const response = await api.post(SAVE_MODEL_URL, model)
+    const SAVE_MODEL_URL = `/api/models`
+    const response = await api(instanceId).post(SAVE_MODEL_URL, model)
     const newModel = await response.json()
     backendUiStore.actions.models.create(newModel)
     onClosed()
