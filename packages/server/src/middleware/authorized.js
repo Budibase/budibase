@@ -2,6 +2,7 @@ const {
   adminPermissions,
   ADMIN_LEVEL_ID,
   POWERUSER_LEVEL_ID,
+  BUILDER_LEVEL_ID,
   BUILDER,
 } = require("../utilities/accessLevels")
 
@@ -10,7 +11,11 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
     ctx.throw(403, "Session not authenticated")
   }
 
-  if (ctx.isBuilder) {
+  if (!ctx.user) {
+    ctx.throw(403, "User not found")
+  }
+
+  if (ctx.user.accessLevel._id === BUILDER_LEVEL_ID) {
     await next()
     return
   }
@@ -18,10 +23,6 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
   if (permName === BUILDER) {
     ctx.throw(403, "Not Authorized")
     return
-  }
-
-  if (!ctx.user) {
-    ctx.throw(403, "User not found")
   }
 
   const permissionId = ({ name, itemId }) => name + (itemId ? `-${itemId}` : "")

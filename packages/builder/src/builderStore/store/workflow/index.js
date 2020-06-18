@@ -4,8 +4,8 @@ import Workflow from "./Workflow"
 
 const workflowActions = store => ({
   fetch: async instanceId => {
-    const WORKFLOWS_URL = `/api/${instanceId}/workflows`
-    const workflowResponse = await api.get(WORKFLOWS_URL)
+    const WORKFLOWS_URL = `/api/workflows`
+    const workflowResponse = await api(instanceId).get(WORKFLOWS_URL)
     const json = await workflowResponse.json()
     store.update(state => {
       state.workflows = json
@@ -19,8 +19,8 @@ const workflowActions = store => ({
         steps: [],
       },
     }
-    const CREATE_WORKFLOW_URL = `/api/${instanceId}/workflows`
-    const response = await api.post(CREATE_WORKFLOW_URL, workflow)
+    const CREATE_WORKFLOW_URL = `/api/workflows`
+    const response = await api(instanceId).post(CREATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
       state.workflows = state.workflows.concat(json.workflow)
@@ -29,8 +29,8 @@ const workflowActions = store => ({
     })
   },
   save: async ({ instanceId, workflow }) => {
-    const UPDATE_WORKFLOW_URL = `/api/${instanceId}/workflows`
-    const response = await api.put(UPDATE_WORKFLOW_URL, workflow)
+    const UPDATE_WORKFLOW_URL = `/api/workflows`
+    const response = await api(instanceId).put(UPDATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
       const existingIdx = state.workflows.findIndex(
@@ -43,8 +43,8 @@ const workflowActions = store => ({
     })
   },
   update: async ({ instanceId, workflow }) => {
-    const UPDATE_WORKFLOW_URL = `/api/${instanceId}/workflows`
-    const response = await api.put(UPDATE_WORKFLOW_URL, workflow)
+    const UPDATE_WORKFLOW_URL = `/api/workflows`
+    const response = await api(instanceId).put(UPDATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
       const existingIdx = state.workflows.findIndex(
@@ -57,8 +57,8 @@ const workflowActions = store => ({
   },
   delete: async ({ instanceId, workflow }) => {
     const { _id, _rev } = workflow
-    const DELETE_WORKFLOW_URL = `/api/${instanceId}/workflows/${_id}/${_rev}`
-    await api.delete(DELETE_WORKFLOW_URL)
+    const DELETE_WORKFLOW_URL = `/api/workflows/${_id}/${_rev}`
+    await api(instanceId).delete(DELETE_WORKFLOW_URL)
 
     store.update(state => {
       const existingIdx = state.workflows.findIndex(

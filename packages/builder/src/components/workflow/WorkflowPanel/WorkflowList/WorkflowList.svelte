@@ -3,7 +3,6 @@
   import { notifier } from "@beyonk/svelte-notifications"
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
-  import api from "builderStore/api"
   import CreateWorkflowModal from "./CreateWorkflowModal.svelte"
 
   const { open, close } = getContext("simple-modal")

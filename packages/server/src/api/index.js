@@ -60,11 +60,6 @@ router.use(async (ctx, next) => {
   }
 })
 
-router.use(async (ctx, next) => {
-  ctx.appId = ctx.cookies.get("budibase:appid")
-  await next()
-})
-
 router.use(authRoutes.routes())
 router.use(authRoutes.allowedMethods())
 

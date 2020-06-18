@@ -6,7 +6,7 @@ const { BUILDER } = require("../../utilities/accessLevels")
 const router = Router()
 
 router
-  .post("/api/:applicationId/instances", authorized(BUILDER), controller.create)
+  .post("/api/instances", authorized(BUILDER), controller.create)
   .delete("/api/instances/:instanceId", authorized(BUILDER), controller.destroy)
 
 module.exports = router
