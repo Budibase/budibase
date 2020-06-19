@@ -7,7 +7,7 @@ export const load = async (page, screens, url, host = "test.com") => {
 
   const fullUrl = `http://${host}${url}`
   const cookieJar = new jsdom.CookieJar()
-  const cookie = btoa('{}{"appId":"TEST_APP_ID"}signature')
+  const cookie = `${btoa("{}")}.${btoa('{"appId":"TEST_APP_ID"}')}.signature`
   cookieJar.setCookie(
     `budibase:token=${cookie};domain=${host};path=/`,
     fullUrl,
