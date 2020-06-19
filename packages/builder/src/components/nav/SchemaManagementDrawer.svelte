@@ -53,7 +53,7 @@
 
   async function deleteModel(modelToDelete) {
     const DELETE_MODEL_URL = `/api/models/${node._id}/${node._rev}`
-    const response = await api(instanceId).delete(DELETE_MODEL_URL)
+    const response = await api.delete(DELETE_MODEL_URL)
     backendUiStore.update(state => {
       state.models = state.models.filter(
         model => model._id !== modelToDelete._id

@@ -53,12 +53,10 @@
   let views = []
   let currentPage = 0
 
-  $: instanceId = $backendUiStore.selectedDatabase._id
-
   $: {
     if ($backendUiStore.selectedView) {
       api
-        .fetchDataForView($backendUiStore.selectedView, instanceId)
+        .fetchDataForView($backendUiStore.selectedView)
         .then(records => {
           data = records || []
           headers = Object.keys($backendUiStore.selectedModel.schema).filter(

@@ -24,8 +24,8 @@ export const getBackendUiStore = () => {
   store.actions = {
     database: {
       select: async db => {
-        const modelsResponse = await api(db._id).get(`/api/models`)
-        const viewsResponse = await api(db._id).get(`/api/views`)
+        const modelsResponse = await api.get(`/api/models`)
+        const viewsResponse = await api.get(`/api/views`)
         const models = await modelsResponse.json()
         const views = await viewsResponse.json()
         store.update(state => {

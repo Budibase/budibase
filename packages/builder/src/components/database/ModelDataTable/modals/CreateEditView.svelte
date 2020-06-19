@@ -30,7 +30,7 @@
 
   async function saveView() {
     const SAVE_VIEW_URL = `/api/views`
-    const response = await api(instanceId).post(SAVE_VIEW_URL, view)
+    const response = await api.post(SAVE_VIEW_URL, view)
     backendUiStore.update(state => {
       state.views = [...state.views, response.view]
       return state

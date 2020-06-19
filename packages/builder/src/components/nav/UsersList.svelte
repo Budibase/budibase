@@ -12,12 +12,11 @@
 
   $: currentAppInfo = {
     appname: $store.appname,
-    instanceId: $backendUiStore.selectedDatabase._id,
   }
 
   async function fetchUsers() {
     const FETCH_USERS_URL = `/api/users`
-    const response = await api(currentAppInfo.instanceId).get(FETCH_USERS_URL)
+    const response = await api.get(FETCH_USERS_URL)
     const users = await response.json()
     backendUiStore.update(state => {
       state.users = users

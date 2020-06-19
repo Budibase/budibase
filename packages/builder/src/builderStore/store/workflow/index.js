@@ -12,7 +12,7 @@ const workflowActions = store => ({
       return state
     })
   },
-  create: async ({ instanceId, name }) => {
+  create: async ({ name }) => {
     const workflow = {
       name,
       definition: {
@@ -20,7 +20,7 @@ const workflowActions = store => ({
       },
     }
     const CREATE_WORKFLOW_URL = `/api/workflows`
-    const response = await api(instanceId).post(CREATE_WORKFLOW_URL, workflow)
+    const response = await api.post(CREATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
       state.workflows = state.workflows.concat(json.workflow)
@@ -28,9 +28,9 @@ const workflowActions = store => ({
       return state
     })
   },
-  save: async ({ instanceId, workflow }) => {
+  save: async ({ workflow }) => {
     const UPDATE_WORKFLOW_URL = `/api/workflows`
-    const response = await api(instanceId).put(UPDATE_WORKFLOW_URL, workflow)
+    const response = await api.put(UPDATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
       const existingIdx = state.workflows.findIndex(
@@ -42,9 +42,9 @@ const workflowActions = store => ({
       return state
     })
   },
-  update: async ({ instanceId, workflow }) => {
+  update: async ({ workflow }) => {
     const UPDATE_WORKFLOW_URL = `/api/workflows`
-    const response = await api(instanceId).put(UPDATE_WORKFLOW_URL, workflow)
+    const response = await api.put(UPDATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
       const existingIdx = state.workflows.findIndex(
@@ -55,10 +55,10 @@ const workflowActions = store => ({
       return state
     })
   },
-  delete: async ({ instanceId, workflow }) => {
+  delete: async ({ workflow }) => {
     const { _id, _rev } = workflow
     const DELETE_WORKFLOW_URL = `/api/workflows/${_id}/${_rev}`
-    await api(instanceId).delete(DELETE_WORKFLOW_URL)
+    await api.delete(DELETE_WORKFLOW_URL)
 
     store.update(state => {
       const existingIdx = state.workflows.findIndex(

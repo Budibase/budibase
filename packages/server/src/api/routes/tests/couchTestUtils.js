@@ -37,7 +37,6 @@ exports.defaultHeaders = (appId, instanceId) => {
   return {
     Accept: "application/json",
     Cookie: [`builder:token=${builderToken}`],
-    "x-user-agent": "Budibase Builder",
   }
 }
 
