@@ -55,9 +55,14 @@ exports.authenticate = async ctx => {
       expiresIn: "1 day",
     })
 
-    const ONE_DAY_FROM_NOW = new Date(Date.now() + 24 * 3600)
+    const expires = new Date()
+    expires.setDate(expires.getDate() + 1)
 
-    ctx.cookies.set("budibase:token", token, { expires: ONE_DAY_FROM_NOW })
+    ctx.cookies.set("budibase:token", token, {
+      expires,
+      path: "/",
+      httpOnly: false,
+    })
 
     ctx.body = {
       token,

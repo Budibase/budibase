@@ -6,10 +6,13 @@ const {
 } = require("../../utilities/budibaseDir")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const { ANON_LEVEL_ID } = require("../../utilities/accessLevels")
+const jwt = require("jsonwebtoken")
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(__dirname, "../../../builder")
-  setBuilderToken(ctx)
+  if (ctx.file === "index.html") {
+    setBuilderToken(ctx)
+  }
   await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
 }
 
@@ -24,11 +27,12 @@ exports.serveApp = async function(ctx) {
   // only set the appId cookie for /appId .. we COULD check for valid appIds
   // but would like to avoid that DB hit
   if (looksLikeAppId(ctx.params.appId) && !ctx.isAuthenticated) {
-    const anonToken = {
+    const anonUser = {
       userId: "ANON",
       accessLevelId: ANON_LEVEL_ID,
       appId: ctx.params.appId,
     }
+    const anonToken = jwt.sign(anonUser, ctx.config.jwtSecret)
     ctx.cookies.set("budibase:token", anonToken, {
       path: "/",
       httpOnly: false,
