@@ -18,7 +18,6 @@
   let fieldToEdit
 
   $: modelFields = model.schema ? Object.entries(model.schema) : []
-  $: instanceId = $backendUiStore.selectedDatabase._id
 
   function editField() {}
 
@@ -28,7 +27,7 @@
 
   async function saveModel() {
     const SAVE_MODEL_URL = `/api/models`
-    const response = await api(instanceId).post(SAVE_MODEL_URL, model)
+    const response = await api.post(SAVE_MODEL_URL, model)
     const newModel = await response.json()
     backendUiStore.actions.models.create(newModel)
     onClosed()
