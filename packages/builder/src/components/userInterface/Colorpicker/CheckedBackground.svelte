@@ -1,5 +1,6 @@
 <script>
     import {buildStyle} from "./helpers.js"
+    import {fade} from "svelte/transition"
 
     export let backgroundSize = "10px"
     export let borderRadius = ""
@@ -18,6 +19,6 @@
   }
 </style>
 
-<div {style}>
+<div transition:fade {style}>
     <slot />
 </div>

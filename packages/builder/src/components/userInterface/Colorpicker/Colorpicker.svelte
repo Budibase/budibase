@@ -1,5 +1,6 @@
 <script>
   import { onMount, createEventDispatcher } from "svelte";
+  import { fade } from 'svelte/transition';
   import CheckedBackground from "./CheckedBackground.svelte"
   import {buildStyle} from "./helpers.js"
   import {
@@ -14,6 +15,11 @@
 
   export let value = "#3ec1d3ff";
   export let format = "hexa";
+  
+  let recentColors = []
+
+  export let pickerHeight = 0;
+  export let pickerWidth = 0;
 
   let h = null;
   let s = null;
@@ -23,10 +29,29 @@
   const dispatch = createEventDispatcher();
 
   onMount(() => {
+    getRecentColors()
+
     if (format) {
       convertAndSetHSVA()
     }
   });
+
+  function getRecentColors() {
+    let colorStore = localStorage.getItem("cp:recent-colors")
+    if (colorStore) {
+      recentColors = JSON.parse(colorStore)
+    }
+  }
+
+  function setRecentColor(color) {
+    if (recentColors.length === 6) {
+      recentColors.splice(0, 1)
+    }
+    if (!recentColors.includes(color)) {
+      recentColors = [...recentColors, color]
+      localStorage.setItem("cp:recent-colors", JSON.stringify(recentColors))
+    }
+  }
 
   function convertAndSetHSVA() {
     let hsva = convertToHSVA(value, format);
@@ -45,17 +70,30 @@
     s = detail.s;
     v = detail.v;
     value = convertHsvaToFormat([h, s, v, a], format);
+    setRecentColor(value)
+    dispatchValue()
+  }
+
+  function setHue({color, isDrag}) {
+    h = color;
+    value = convertHsvaToFormat([h, s, v, a], format);   
+    if(!isDrag) {
+      setRecentColor(value)
+      dispatchValue()
+    } 
+  }
+
+  function setAlpha({color, isDrag}) {
+    a = color === "1.00" ? "1" : color;
+    value = convertHsvaToFormat([h, s, v, a], format);    
+    if(!isDrag) {
+        setRecentColor(value)
+        dispatchValue()
+      } 
+  }
+
+  function dispatchValue() {
     dispatch("change", value)
-  }
-
-  function setHue(hue) {
-    h = hue;
-    value = convertHsvaToFormat([h, s, v, a], format);    
-  }
-
-  function setAlpha(alpha) {
-    a = alpha === "1.00" ? "1" :alpha;
-    value = convertHsvaToFormat([h, s, v, a], format);    
   }
 
   function changeFormatAndConvert(f) {
@@ -64,16 +102,32 @@
   }
 
   function handleColorInput(text) {
-    let f = getColorFormat(text)
-    if(f) {
-      format = f;
+    let format = getColorFormat(text)
+    if(format) {
       value = text
       convertAndSetHSVA()
-      dispatch("change", value)
     }
   }
 
-    $: border = s < 10 ? "1px dashed #dedada" : ""
+  function dispatchInputChange() {
+    if(format) {
+      setRecentColor(value)
+      dispatchValue()
+    }
+  }
+  
+
+  function applyRecentColor(color) {
+    if(value !== color) {
+      format = getColorFormat(color)
+      if(format) {
+        value = color
+        convertAndSetHSVA()
+        dispatchValue()
+      }
+    }
+  }
+    $: border = (v > 90 && s < 5) ? "1px dashed #dedada" : ""
     $: style = buildStyle({background: value, border})
 </script>
 
@@ -83,7 +137,8 @@
     font-size: 11px;
     font-weight: 400;
     flex-direction: column;
-    height: 265px;
+    /* height: 265px; */
+    height: auto;
     width: 220px;
     background: #ffffff;
     border-radius: 2px;
@@ -118,6 +173,24 @@
     border-radius: 50%;
   }
 
+  .recent-color-panel {
+    flex: 0 0 15px;
+    display: grid;
+    grid-gap: 10px;
+    justify-content: flex-start;
+    grid-auto-flow: column;
+    padding: 5px;
+    margin-left: 6px;
+  }
+
+  .recent-color {
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid #dedada;  
+    height: 20px; 
+    width: 20px;   
+  }
+
   .format-input-panel {
     display: flex;
     flex-direction: column;
@@ -125,7 +198,7 @@
   }
 </style>
 
-<div class="colorpicker-container">
+<div class="colorpicker-container" bind:clientHeight={pickerHeight} bind:clientWidth={pickerWidth}>
 
   <div class="palette-panel">
     <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
@@ -139,21 +212,33 @@
         </CheckedBackground>
       </div>
       <div>
-        <Slider type="hue" value={h} on:change={hue => setHue(hue.detail)} />
+        <Slider type="hue" value={h} on:change={(hue) => setHue(hue.detail)} on:dragend={dispatchValue} />
 
         <CheckedBackground borderRadius="10px" backgroundSize="7px">
           <Slider
             type="alpha"
             value={a}
-            on:change={alpha => setAlpha(alpha.detail)} />
+            on:change={(alpha, isDrag) => setAlpha(alpha.detail, isDrag)} 
+            on:dragend={dispatchValue}
+            />
         </CheckedBackground>
         
       </div>
     </div>
 
+    {#if recentColors.length > 0}
+      <div transition:fade class="recent-color-panel">
+        {#each recentColors as color}
+          <CheckedBackground borderRadius="6px"> 
+            <div transition:fade class="recent-color" style={`background: ${color};`} on:click={() => applyRecentColor(color)} />
+          </CheckedBackground>
+        {/each}
+      </div>
+    {/if}
+
     <div class="format-input-panel">
       <ButtonGroup {format} onclick={changeFormatAndConvert} />
-      <Input {value} on:input={event => handleColorInput(event.target.value)} />
+      <Input {value} on:input={event => handleColorInput(event.target.value)} on:change={dispatchInputChange} />
     </div>
   </div>
 
