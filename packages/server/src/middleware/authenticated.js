@@ -16,12 +16,8 @@ module.exports = async (ctx, next) => {
 
   const appToken = ctx.cookies.get("budibase:token")
   const builderToken = ctx.cookies.get("builder:token")
-  const isBuilderAgent = ctx.headers["x-user-agent"] === "Budibase Builder"
 
-  // all admin api access should auth with buildertoken and 'Budibase Builder user agent
-  const shouldAuthAsBuilder = isBuilderAgent && builderToken
-
-  if (shouldAuthAsBuilder) {
+  if (builderToken) {
     try {
       const jwtPayload = jwt.verify(builderToken, ctx.config.jwtSecret)
       ctx.isAuthenticated = jwtPayload.accessLevelId === BUILDER_LEVEL_ID

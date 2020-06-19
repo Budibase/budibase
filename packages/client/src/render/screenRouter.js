@@ -79,7 +79,7 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
     )
       return
 
-    const target = x.target || "_self"
+    const target = (x && x.target) || "_self"
     if (!y || target !== "_self" || x.host !== location.host) return
 
     e.preventDefault()

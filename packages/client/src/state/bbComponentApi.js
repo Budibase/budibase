@@ -9,16 +9,16 @@ export const bbFactory = ({
   componentLibraries,
   onScreenSlotRendered,
 }) => {
-  const apiCall = method => (url, body) =>
-    fetch(url, {
+  const apiCall = method => (url, body) => {
+    return fetch(url, {
       method: method,
       headers: {
         "Content-Type": "application/json",
-        "x-user-agent": "Budibase Builder",
       },
       body: body && JSON.stringify(body),
       credentials: "same-origin",
     })
+  }
 
   const api = {
     post: apiCall("POST"),

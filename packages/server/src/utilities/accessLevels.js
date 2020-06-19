@@ -94,6 +94,7 @@ module.exports = {
   USER_MANAGEMENT,
   BUILDER,
   LIST_USERS,
+  adminPermissions,
   generateAdminPermissions,
   generatePowerUserPermissions,
 }
