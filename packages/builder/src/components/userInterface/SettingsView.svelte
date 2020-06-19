@@ -19,9 +19,9 @@
     data.target ? onChange(key, data.target.value) : onChange(key, data)
   }
 
-  function handleScreenPropChange (name, value) {
-    onScreenPropChange(name,value)
-    if(!isPage && name === "name") {
+  function handleScreenPropChange(name, value) {
+    onScreenPropChange(name, value)
+    if (!isPage && name === "name") {
       // screen name is changed... change URL
       $goto(`./:page/${value}`)
     }
@@ -40,20 +40,19 @@
 
   $: isPage = screenOrPageInstance && screenOrPageInstance.favicon
   $: screenOrPageDefinition = isPage ? pageDefinition : screenDefinition
-
 </script>
 
 {#if screenOrPageInstance}
   {#each screenOrPageDefinition as def}
     <PropertyControl
-        control={def.control}
-        label={def.label}
-        key={def.key}
-        value={screenOrPageInstance[def.key]}
-        onChange={handleScreenPropChange}
-        props={{ ...excludeProps(def, ['control', 'label']) }} />
+      control={def.control}
+      label={def.label}
+      key={def.key}
+      value={screenOrPageInstance[def.key]}
+      onChange={handleScreenPropChange}
+      props={{ ...excludeProps(def, ['control', 'label']) }} />
   {/each}
-  <hr/>
+  <hr />
 {/if}
 
 {#if panelDefinition && panelDefinition.length > 0}
