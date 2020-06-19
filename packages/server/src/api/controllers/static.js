@@ -26,7 +26,8 @@ exports.serveApp = async function(ctx) {
   )
   // only set the appId cookie for /appId .. we COULD check for valid appIds
   // but would like to avoid that DB hit
-  if (looksLikeAppId(ctx.params.appId) && !ctx.isAuthenticated) {
+  const looksLikeAppId = /^[0-9a-f]{32}$/.test(ctx.params.appId)
+  if (looksLikeAppId && !ctx.isAuthenticated) {
     const anonUser = {
       userId: "ANON",
       accessLevelId: ANON_LEVEL_ID,
@@ -74,5 +75,3 @@ exports.serveComponentLibrary = async function(ctx) {
 
   await send(ctx, "/index.js", { root: componentLibraryPath })
 }
-
-const looksLikeAppId = appId => /^[0-9a-f]{32}$/.test(appId)
