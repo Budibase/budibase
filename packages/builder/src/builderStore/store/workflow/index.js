@@ -3,9 +3,9 @@ import api from "../../api"
 import Workflow from "./Workflow"
 
 const workflowActions = store => ({
-  fetch: async instanceId => {
+  fetch: async () => {
     const WORKFLOWS_URL = `/api/workflows`
-    const workflowResponse = await api(instanceId).get(WORKFLOWS_URL)
+    const workflowResponse = await api.get(WORKFLOWS_URL)
     const json = await workflowResponse.json()
     store.update(state => {
       state.workflows = json
