@@ -22,7 +22,7 @@
   }
 
   onMount(() => {
-    workflowStore.actions.fetch($backendUiStore.selectedDatabase._id)
+    workflowStore.actions.fetch()
   })
 </script>
 
