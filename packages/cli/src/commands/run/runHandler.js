@@ -5,7 +5,6 @@ module.exports = ({ dir }) => {
   dir = xPlatHomeDir(dir)
   process.env.BUDIBASE_DIR = resolve(dir)
   require("dotenv").config({ path: resolve(dir, ".env") })
-  console.log("dotenv loaded")
 
   // dont make this a variable or top level require
   // ti will cause environment module to be loaded prematurely
