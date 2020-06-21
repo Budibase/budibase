@@ -3,6 +3,6 @@ const controller = require("../controllers/auth")
 
 const router = Router()
 
-router.post("/:appId/api/authenticate", controller.authenticate)
+router.post("/api/authenticate", controller.authenticate)
 
 module.exports = router

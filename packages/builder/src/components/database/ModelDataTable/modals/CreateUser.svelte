@@ -10,12 +10,11 @@
   let accessLevelId
 
   $: valid = username && password && accessLevelId
-  $: instanceId = $backendUiStore.selectedDatabase._id
   $: appId = $store.appId
 
   async function createUser() {
     const user = { name: username, username, password, accessLevelId }
-    const response = await api.createUser(user, instanceId)
+    const response = await api.createUser(user)
     backendUiStore.actions.users.create(response)
     onClosed()
   }

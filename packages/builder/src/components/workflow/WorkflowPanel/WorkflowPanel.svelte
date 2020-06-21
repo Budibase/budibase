@@ -2,7 +2,6 @@
   import { onMount } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import { WorkflowList, BlockList } from "./"
-  import api from "builderStore/api"
   import blockDefinitions from "./blockDefinitions"
 
   let selectedTab = "WORKFLOWS"
