@@ -32,7 +32,7 @@
     const json = await response.json()
 
     store.update(state => {
-      state[model._id] = [...state[model], json]
+      state[model] = state[model] ? [...state[model], json] : [json]
       return state
     })
   }
