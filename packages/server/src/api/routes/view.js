@@ -8,13 +8,13 @@ const router = Router()
 
 router
   .get(
-    "/api/:instanceId/views/:viewName",
+    "/api/views/:viewName",
     authorized(READ_VIEW, ctx => ctx.params.viewName),
     recordController.fetchView
   )
-  .get("/api/:instanceId/views", authorized(BUILDER), viewController.fetch)
+  .get("/api/views", authorized(BUILDER), viewController.fetch)
   // .patch("/api/:databaseId/views", controller.update);
   // .delete("/api/:instanceId/views/:viewId/:revId", controller.destroy);
-  .post("/api/:instanceId/views", authorized(BUILDER), viewController.create)
+  .post("/api/views", authorized(BUILDER), viewController.create)
 
 module.exports = router

@@ -98,6 +98,5 @@ window["##BUDIBASE_APPDEFINITION##"] = {
     nodeId: 0,
   },
   componentLibraries: ["budibase-standard-components"],
-  appRootPath: "/testApp2",
   props: {},
 }

@@ -3,7 +3,6 @@
   import { workflowStore, backendUiStore } from "builderStore"
   import { notifier } from "@beyonk/svelte-notifications"
   import Flowchart from "./flowchart/FlowChart.svelte"
-  import api from "builderStore/api"
 
   let selectedWorkflow
   let uiTree
