@@ -13,5 +13,8 @@ rimraf.sync(homedir)
 
 init({ dir: homedir, clientId: "cypress-test" })
 .then(() => {
+  delete require.cache[require.resolve("../../server/src/environment")]
   run({ dir: homedir })
 })
+
+
