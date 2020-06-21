@@ -18,7 +18,7 @@ describe("screenRouting", () => {
 
   it("should load correct screen, for initial URL, when appRootPath is something", async () => {
     const { page, screens } = pageWith3Screens()
-    const { dom } = await load(page, screens, "/testApp/screen2", "/testApp")
+    const { dom } = await load(page, screens, "/TEST_APP_ID/screen2", "127.0.0.1")
 
     const rootDiv = dom.window.document.body.children[0]
     expect(rootDiv.children.length).toBe(1)
@@ -50,8 +50,8 @@ describe("screenRouting", () => {
     const { dom, app } = await load(
       page,
       screens,
-      "/testApp/screen2",
-      "/testApp"
+      "/TEST_APP_ID/screen2",
+      "127.0.0.1"
     )
 
     app.routeTo()("/screen3")

@@ -8,7 +8,7 @@ const {
 } = require("../../utilities/accessLevels")
 
 exports.fetch = async function(ctx) {
-  const database = new CouchDB(ctx.params.instanceId)
+  const database = new CouchDB(ctx.user.instanceId)
   const data = await database.query("database/by_type", {
     include_docs: true,
     key: ["user"],
@@ -18,7 +18,7 @@ exports.fetch = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
-  const database = new CouchDB(ctx.params.instanceId)
+  const database = new CouchDB(ctx.user.instanceId)
   const appId = (await database.get("_design/database")).metadata.applicationId
   const { username, password, name, accessLevelId } = ctx.request.body
 
@@ -50,7 +50,7 @@ exports.create = async function(ctx) {
 
   app.userInstanceMap = {
     ...app.userInstanceMap,
-    [username]: ctx.params.instanceId,
+    [username]: ctx.user.instanceId,
   }
   await db.put(app)
 
@@ -66,14 +66,14 @@ exports.create = async function(ctx) {
 exports.update = async function() {}
 
 exports.destroy = async function(ctx) {
-  const database = new CouchDB(ctx.params.instanceId)
+  const database = new CouchDB(ctx.user.instanceId)
   await database.destroy(getUserId(ctx.params.username))
   ctx.message = `User ${ctx.params.username} deleted.`
   ctx.status = 200
 }
 
 exports.find = async function(ctx) {
-  const database = new CouchDB(ctx.params.instanceId)
+  const database = new CouchDB(ctx.user.instanceId)
   const user = await database.get(getUserId(ctx.params.username))
   ctx.body = {
     username: user.username,
