@@ -11,7 +11,7 @@ const run = require("../../cli/src/commands/run/runHandler")
 
 rimraf.sync(homedir)
 
-init({ dir: homedir })
+init({ dir: homedir, clientId: "cypress-test" })
 .then(() => {
   run({ dir: homedir })
 })
