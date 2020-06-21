@@ -11,10 +11,7 @@ const run = require("../../cli/src/commands/run/runHandler")
 
 rimraf.sync(homedir)
 
-init({ dir: homedir, clientId: "cypress-test" })
-.then(() => {
+init({ dir: homedir, clientId: "cypress-test" }).then(() => {
   delete require.cache[require.resolve("../../server/src/environment")]
   run({ dir: homedir })
 })
-
-
