@@ -1,7 +1,6 @@
 context('Create a workflow', () => {
 
     before(() => {
-        Cypress.Cookies.preserveOnce('builder:token')
         cy.visit('localhost:4001/_builder')
 
         cy.createApp('Workflow Test App', 'This app is used to test that workflows do in fact work!')
