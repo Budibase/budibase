@@ -2,7 +2,7 @@ const CouchDB = require("../../../db")
 const newid = require("../../../db/newid")
 
 exports.create = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const workflow = ctx.request.body
 
   workflow._id = newid()
@@ -22,7 +22,7 @@ exports.create = async function(ctx) {
 }
 
 exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const workflow = ctx.request.body
 
   const response = await db.put(workflow)
@@ -40,7 +40,7 @@ exports.update = async function(ctx) {
 }
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const response = await db.query(`database/by_type`, {
     key: ["workflow"],
     include_docs: true,
@@ -69,6 +69,6 @@ exports.fetchActionScript = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
 }

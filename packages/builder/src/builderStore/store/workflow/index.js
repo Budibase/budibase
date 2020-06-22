@@ -3,8 +3,8 @@ import api from "../../api"
 import Workflow from "./Workflow"
 
 const workflowActions = store => ({
-  fetch: async instanceId => {
-    const WORKFLOWS_URL = `/api/${instanceId}/workflows`
+  fetch: async () => {
+    const WORKFLOWS_URL = `/api/workflows`
     const workflowResponse = await api.get(WORKFLOWS_URL)
     const json = await workflowResponse.json()
     store.update(state => {
@@ -12,14 +12,14 @@ const workflowActions = store => ({
       return state
     })
   },
-  create: async ({ instanceId, name }) => {
+  create: async ({ name }) => {
     const workflow = {
       name,
       definition: {
         steps: [],
       },
     }
-    const CREATE_WORKFLOW_URL = `/api/${instanceId}/workflows`
+    const CREATE_WORKFLOW_URL = `/api/workflows`
     const response = await api.post(CREATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
@@ -28,8 +28,8 @@ const workflowActions = store => ({
       return state
     })
   },
-  save: async ({ instanceId, workflow }) => {
-    const UPDATE_WORKFLOW_URL = `/api/${instanceId}/workflows`
+  save: async ({ workflow }) => {
+    const UPDATE_WORKFLOW_URL = `/api/workflows`
     const response = await api.put(UPDATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
@@ -42,8 +42,8 @@ const workflowActions = store => ({
       return state
     })
   },
-  update: async ({ instanceId, workflow }) => {
-    const UPDATE_WORKFLOW_URL = `/api/${instanceId}/workflows`
+  update: async ({ workflow }) => {
+    const UPDATE_WORKFLOW_URL = `/api/workflows`
     const response = await api.put(UPDATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
@@ -55,9 +55,9 @@ const workflowActions = store => ({
       return state
     })
   },
-  delete: async ({ instanceId, workflow }) => {
+  delete: async ({ workflow }) => {
     const { _id, _rev } = workflow
-    const DELETE_WORKFLOW_URL = `/api/${instanceId}/workflows/${_id}/${_rev}`
+    const DELETE_WORKFLOW_URL = `/api/workflows/${_id}/${_rev}`
     await api.delete(DELETE_WORKFLOW_URL)
 
     store.update(state => {

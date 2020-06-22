@@ -6,12 +6,8 @@ const { BUILDER } = require("../../utilities/accessLevels")
 const router = Router()
 
 router
-  .get("/api/:instanceId/screens", authorized(BUILDER), controller.fetch)
-  .post("/api/:instanceId/screens", authorized(BUILDER), controller.save)
-  .delete(
-    "/api/:instanceId/:screenId/:revId",
-    authorized(BUILDER),
-    controller.destroy
-  )
+  .get("/api/screens", authorized(BUILDER), controller.fetch)
+  .post("/api/screens", authorized(BUILDER), controller.save)
+  .delete("/api/:screenId/:revId", authorized(BUILDER), controller.destroy)
 
 module.exports = router

@@ -15,7 +15,7 @@ export default async () => {
   const { initialisePage } = createApp(
     window.document,
     componentLibraries,
-    { appRootPath: "" },
+    {},
     appDef,
     user,
     {},
