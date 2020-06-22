@@ -53,7 +53,10 @@
     </div>
     <div class="table-controls">
       <span class="label">Fields</span>
-      <div class="hoverable new-field" on:click={() => (showFieldView = true)}>
+      <div
+        data-cy="add-new-model-field"
+        class="hoverable new-field"
+        on:click={() => (showFieldView = true)}>
         Add new field
       </div>
     </div>
