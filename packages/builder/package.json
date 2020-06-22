@@ -9,7 +9,11 @@
     "test": "jest",
     "test:watch": "jest --watchAll",
     "dev:builder": "routify --routify-dir routify -c rollup",
-    "rollup": "rollup -c -w"
+    "rollup": "rollup -c -w",
+    "cy:setup": "node ./cypress/setup.js",
+    "cy:run": "cypress run",
+    "cy:open": "cypress open",
+    "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run"
   },
   "jest": {
     "globals": {
@@ -35,11 +39,19 @@
     },
     "transformIgnorePatterns": [
       "/node_modules/(?!svelte).+\\.js$"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/cypress/"
+    ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "plugin:cypress/recommended"
     ]
   },
   "dependencies": {
     "@beyonk/svelte-notifications": "^2.0.3",
-    "@budibase/bbui": "^1.5.0",
+    "@budibase/bbui": "^1.8.0",
     "@budibase/client": "^0.0.32",
     "@nx-js/compiler-util": "^2.0.0",
     "codemirror": "^5.51.0",
@@ -67,10 +79,12 @@
     "@sveltech/routify": "1.7.11",
     "babel-jest": "^24.8.0",
     "browser-sync": "^2.26.7",
+    "cypress": "^4.8.0",
     "http-proxy-middleware": "^0.19.1",
     "jest": "^24.8.0",
     "ncp": "^2.0.0",
     "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.2",
     "rollup": "^1.12.0",
     "rollup-plugin-alias": "^1.5.2",
     "rollup-plugin-browsersync": "^1.0.0",
@@ -83,6 +97,7 @@
     "rollup-plugin-svelte": "^5.0.3",
     "rollup-plugin-terser": "^4.0.4",
     "rollup-plugin-url": "^2.2.2",
+    "start-server-and-test": "^1.11.0",
     "svelte": "3.23.x"
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"

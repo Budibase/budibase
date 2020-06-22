@@ -1,5 +1,6 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte"
+  import { onMount, createEventDispatcher } from "svelte";
+  import CheckedBackground from "./CheckedBackground.svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -53,7 +54,7 @@
   .palette {
     position: relative;
     width: 100%;
-    height: 175px;
+    height: 140px;
     cursor: crosshair;
     overflow: hidden;
   }
@@ -67,3 +68,9 @@
     border-radius: 50%;
   }
 </style>
+
+  <CheckedBackground width="100%">
+    <div bind:this={palette} bind:clientHeight={paletteHeight} bind:clientWidth={paletteWidth} on:click={handleClick} class="palette" {style}>
+      <div class="picker" style={pickerStyle} />
+    </div>
+  </CheckedBackground>

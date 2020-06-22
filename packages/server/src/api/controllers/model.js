@@ -2,7 +2,7 @@ const CouchDB = require("../../db")
 const newid = require("../../db/newid")
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const body = await db.query("database/by_type", {
     include_docs: true,
     key: ["model"],
@@ -11,13 +11,13 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const model = await db.get(ctx.params.id)
   ctx.body = model
 }
 
-exports.save = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+exports.create = async function(ctx) {
+  const db = new CouchDB(ctx.user.instanceId)
   const modelToSave = {
     type: "model",
     _id: newid(),
@@ -64,7 +64,7 @@ exports.save = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
 
   const modelToDelete = await db.get(ctx.params.modelId)
 
