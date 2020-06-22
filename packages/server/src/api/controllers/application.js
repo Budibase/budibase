@@ -1,6 +1,6 @@
 const CouchDB = require("../../db")
 const ClientDb = require("../../db/clientDb")
-const { getPackageForBuilder } = require("../../utilities/builder")
+const { getPackageForBuilder, buildPage } = require("../../utilities/builder")
 const newid = require("../../db/newid")
 const env = require("../../environment")
 const instanceController = require("./instance")
@@ -111,14 +111,22 @@ const createEmptyAppPackage = async (ctx, app) => {
   await updateJsonFile(join(appsFolder, app._id, "package.json"), {
     name: npmFriendlyAppName(app.name),
   })
-  await updateJsonFile(
+
+  const mainJson = await updateJsonFile(
     join(appsFolder, app._id, "pages", "main", "page.json"),
     app
   )
-  await updateJsonFile(
+
+  await buildPage(ctx.config, app._id, "main", { page: mainJson })
+
+  const unauthenticatedJson = await updateJsonFile(
     join(appsFolder, app._id, "pages", "unauthenticated", "page.json"),
     app
   )
+
+  await buildPage(ctx.config, app._id, "unauthenticated", {
+    page: unauthenticatedJson,
+  })
 
   return newAppFolder
 }
@@ -145,6 +153,7 @@ const updateJsonFile = async (filePath, app) => {
   const json = await readFile(filePath, "utf8")
   const newJson = sqrl.Render(json, app)
   await writeFile(filePath, newJson, "utf8")
+  return JSON.parse(newJson)
 }
 
 const runNpmInstall = async newAppFolder => {
