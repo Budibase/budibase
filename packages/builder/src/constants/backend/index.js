@@ -28,15 +28,15 @@ export const FIELDS = {
       presence: false,
     },
   },
-  OPTIONS: {
-    name: "Options",
-    icon: "ri-list-check-2",
-    type: "options",
-    constraints: {
-      type: "string",
-      presence: false,
-    },
-  },
+  // OPTIONS: {
+  //   name: "Options",
+  //   icon: "ri-list-check-2",
+  //   type: "options",
+  //   constraints: {
+  //     type: "string",
+  //     presence: false,
+  //   },
+  // },
   DATETIME: {
     name: "Date/Time",
     icon: "ri-calendar-event-fill",
@@ -47,24 +47,24 @@ export const FIELDS = {
       presence: false,
     },
   },
-  IMAGE: {
-    name: "File",
-    icon: "ri-image-line",
-    type: "file",
-    constraints: {
-      type: "string",
-      presence: false,
-    },
-  },
-  FILE: {
-    name: "Image",
-    icon: "ri-file-line",
-    type: "file",
-    constraints: {
-      type: "string",
-      presence: false,
-    },
-  },
+  // IMAGE: {
+  //   name: "File",
+  //   icon: "ri-image-line",
+  //   type: "file",
+  //   constraints: {
+  //     type: "string",
+  //     presence: false,
+  //   },
+  // },
+  // FILE: {
+  //   name: "Image",
+  //   icon: "ri-file-line",
+  //   type: "file",
+  //   constraints: {
+  //     type: "string",
+  //     presence: false,
+  //   },
+  // },
   DATA_LINK: {
     name: "Data Links",
     icon: "ri-link",
@@ -106,16 +106,16 @@ export const BLOCKS = {
       presence: false,
     },
   },
-  PRIORITY: {
-    name: "Options",
-    icon: "ri-list-check-2",
-    type: "options",
-    constraints: {
-      type: "string",
-      presence: false,
-      inclusion: ["low", "medium", "high"],
-    },
-  },
+  // PRIORITY: {
+  //   name: "Options",
+  //   icon: "ri-list-check-2",
+  //   type: "options",
+  //   constraints: {
+  //     type: "string",
+  //     presence: false,
+  //     inclusion: ["low", "medium", "high"],
+  //   },
+  // },
   END_DATE: {
     name: "End Date",
     icon: "ri-calendar-event-fill",
@@ -126,39 +126,29 @@ export const BLOCKS = {
       presence: false,
     },
   },
-  AVATAR: {
-    name: "Avatar",
-    icon: "ri-image-line",
-    type: "image",
-    constraints: {
-      type: "string",
-      presence: false,
-    },
-  },
-  PDF: {
-    name: "PDF",
-    icon: "ri-file-line",
-    type: "file",
-    constraints: {
-      type: "string",
-      presence: false,
-    },
-  },
-  DATA_LINK: {
-    name: "Data Links",
-    icon: "ri-link",
-    type: "link",
-    modelId: null,
-    constraints: {
-      type: "array",
-    },
-  },
+  // AVATAR: {
+  //   name: "Avatar",
+  //   icon: "ri-image-line",
+  //   type: "image",
+  //   constraints: {
+  //     type: "string",
+  //     presence: false,
+  //   },
+  // },
+  // PDF: {
+  //   name: "PDF",
+  //   icon: "ri-file-line",
+  //   type: "file",
+  //   constraints: {
+  //     type: "string",
+  //     presence: false,
+  //   },
+  // },
 }
 
-// TODO: Needs more thought, need to come up with the constraints etc for each one
 export const MODELS = {
   CONTACTS: {
-    icon: "ri-link",
+    icon: "ri-contacts-book-line",
     name: "Contacts",
     schema: {
       Name: BLOCKS.NAME,
@@ -170,7 +160,21 @@ export const MODELS = {
     name: "Recipes",
     schema: {
       Name: BLOCKS.NAME,
-      "Phone Number": BLOCKS.PHONE_NUMBER,
+      Cuisine: {
+        ...FIELDS.PLAIN_TEXT,
+        name: "Cuisine"
+      },
+    },
+  },
+  SPORTS_TEAM: {
+    icon: "ri-basketball-line",
+    name: "Sports Team",
+    schema: {
+      Name: BLOCKS.NAME,
+      Championships: {
+        ...FIELDS.NUMBER,
+        name: "Championships"
+      }
     },
   },
 }

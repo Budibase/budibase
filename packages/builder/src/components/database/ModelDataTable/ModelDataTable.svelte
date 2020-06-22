@@ -4,6 +4,7 @@
   import { Button } from "@budibase/bbui"
   import Select from "components/common/Select.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
+  import LinkedRecord from "./LinkedRecord.svelte";
   import TablePagination from "./TablePagination.svelte"
   import { DeleteRecordModal, CreateEditRecordModal } from "./modals"
   import * as api from "./api"
@@ -41,6 +42,7 @@
   let headers = []
   let views = []
   let currentPage = 0
+  let search
 
   $: instanceId = $backendUiStore.selectedDatabase._id
 
@@ -91,6 +93,10 @@
       </span>
     </Button>
   </div>
+  <div class="search">
+    <i class="ri-search-line"></i>
+    <input placeholder="Search" class="budibase__input" bind:value={search} />
+  </div>
   <table class="uk-table">
     <thead>
       <tr>
@@ -130,7 +136,13 @@
             </div>
           </td>
           {#each headers as header}
-            <td>{row[header]}</td>
+            <td>
+            {#if Array.isArray(row[header])}
+              <LinkedRecord {header} ids={row[header]} />
+            {:else}
+              {row[header] || 0}
+            {/if}
+            </td>
           {/each}
         </tr>
       {/each}
