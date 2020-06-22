@@ -20,13 +20,13 @@ context('Create Components', () => {
 
         getIframeBody().contains('An Amazing headline!')
     })
-    it('change the background color of the headline', () => {
-        cy.contains('Background').click()
-        cy.get('input[name="background"]')
-            .type('rgb(102, 51, 153)')
+    it('change the font size of the headline', () => {
+        cy.contains('Typography').click()
+        cy.get('input[name="font-size"]')
+            .type('60px')
         cy.contains('Design').click()
 
-        getIframeBody().contains('An Amazing headline!').should('have.css', 'background-color', 'rgb(102, 51, 153)')
+        getIframeBody().contains('An Amazing headline!').should('have.css', 'font-size', '60px')
     })
 })
 
