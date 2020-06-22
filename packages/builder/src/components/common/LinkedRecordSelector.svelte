@@ -4,7 +4,8 @@
   import api from "builderStore/api"
 
   export let modelId
-  export let linkedRecords
+  export let linkName
+  export let linked = []
 
   let records = []
 
@@ -19,16 +20,16 @@
   })
 
   function linkRecord(record) {
-    linkedRecords.push(record)
+    linked.push(record._id)
   }
 </script>
 
 <section>
+  <h3>{linkName}</h3>
   {#each records as record}
-    <div class="linked-record" on:click={linkRecord}>
-      <h3>{record.name}</h3>
+    <div class="linked-record" on:click={() => linkRecord(record)}>
       <div class="fields">
-        {#each Object.keys(record) as key}
+        {#each Object.keys(record).slice(0, 2) as key}
           <div class="field">
             <span>{key}</span>
             <p>{record[key]}</p>
@@ -40,19 +41,22 @@
 </section>
 
 <style>
-  section {
-    background: var(--grey);
-    padding: 20px;
+  h3 {
+    font-size: 20px;
   }
 
   .fields {
-    padding: 20px;
+    padding: 15px;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 20px;
-    background: var(--white);
+    background: var(--grey);
     border: 1px solid var(--grey);
     border-radius: 5px;
+  }
+
+  .field:hover {
+    cursor: pointer;
   }
 
   .field span {
@@ -64,5 +68,7 @@
     color: var(--ink);
     font-size: 14px;
     word-break: break-word;
+    font-weight: 500;
+    margin-top: 4px;
   }
 </style>

@@ -7,6 +7,18 @@
   function addNewField(field) {
     backendUiStore.actions.models.addField(field)
   }
+
+  function createModel(model) {
+    const { schema, ...rest } = $backendUiStore.selectedModel
+
+    backendUiStore.actions.models.save({ 
+      model: {
+        ...model,
+        ...rest
+      },
+      instanceId: $backendUiStore.selectedDatabase._id
+    });
+  }
 </script>
 
 <section transition:fade>
@@ -48,7 +60,7 @@
     <p>Blocks are pre-made fields and help you build your model quicker.</p>
     <div class="blocks">
       {#each Object.values(MODELS) as model}
-        <Block tertiary title={model.name} icon={model.icon} />
+        <Block tertiary title={model.name} icon={model.icon} on:click={() => createModel(model)}/>
       {/each}
     </div>
   </div>

@@ -77,7 +77,7 @@
     {#each modelSchema as [key, meta]}
       <div class="uk-margin">
         {#if meta.type === 'link'}
-          <LinkedRecordSelector modelId={meta.modelId} />
+          <LinkedRecordSelector bind:linked={record[key]} linkName={key} modelId={meta.modelId} />
         {:else}
           <RecordFieldControl
             type={determineInputType(meta)}
