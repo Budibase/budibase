@@ -6,8 +6,9 @@
     export let borderRadius = ""
     export let height = ""
     export let width = ""
+    export let margin = ""
 
-    $: style = buildStyle({backgroundSize, borderRadius, height, width})
+    $: style = buildStyle({backgroundSize, borderRadius, height, width, margin})
 
 </script>
 
@@ -19,6 +20,6 @@
   }
 </style>
 
-<div transition:fade {style}>
+<div in:fade {style}>
     <slot />
 </div>

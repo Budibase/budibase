@@ -8,6 +8,8 @@
     import {getColorFormat} from "./utils.js"
 
     export let value = "#3ec1d3ff"
+    export let swatches = []
+    export let disableSwatches = false
     export let open = false;
     export let width = "25px"
     export let height = "25px"
@@ -99,7 +101,7 @@
 
         {#if open}
         <div transition:fade class="picker-container" style={pickerStyle}>
-            <Colorpicker on:change={onColorChange} bind:format bind:value bind:pickerHeight bind:pickerWidth />
+            <Colorpicker on:change={onColorChange} on:addswatch on:removeswatch bind:format bind:value bind:pickerHeight bind:pickerWidth {swatches} {disableSwatches} {open} />
         </div>
         <div on:click|self={() => open = false} class="overlay"></div>
         {/if}
