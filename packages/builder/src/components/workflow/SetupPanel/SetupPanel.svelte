@@ -95,7 +95,10 @@
     {#if workflowBlock}
       <WorkflowBlockSetup {workflowBlock} />
       <div class="buttons">
-        <button class="workflow-button hoverable" on:click={saveWorkflow}>
+        <button
+          data-cy="save-workflow-setup"
+          class="workflow-button hoverable"
+          on:click={saveWorkflow}>
           Save Workflow
         </button>
         <button

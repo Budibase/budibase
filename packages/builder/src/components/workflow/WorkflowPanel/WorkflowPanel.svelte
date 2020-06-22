@@ -10,6 +10,7 @@
 
 <header>
   <span
+    data-cy="workflow-list"
     class="hoverable workflow-header"
     class:selected={selectedTab === 'WORKFLOWS'}
     on:click={() => (selectedTab = 'WORKFLOWS')}>
@@ -17,6 +18,7 @@
   </span>
   {#if $workflowStore.currentWorkflow}
     <span
+      data-cy="add-workflow-component"
       class="hoverable"
       class:selected={selectedTab === 'ADD'}
       on:click={() => (selectedTab = 'ADD')}>
