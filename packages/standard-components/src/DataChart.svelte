@@ -8,7 +8,6 @@
   fcRoot(FusionCharts, Charts, FusionTheme)
 
   export let _bb
-  export let _instanceId
   export let model
   export let type = "column2d"
 
@@ -25,7 +24,7 @@
   }
 
   async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/${_instanceId}/views/all_${model}`
+    const FETCH_RECORDS_URL = `/api/views/all_${model}`
     const response = await _bb.api.get(FETCH_RECORDS_URL)
     if (response.status === 200) {
       const json = await response.json()

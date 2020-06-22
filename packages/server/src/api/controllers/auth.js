@@ -4,25 +4,31 @@ const ClientDb = require("../../db/clientDb")
 const bcrypt = require("../../utilities/bcrypt")
 
 exports.authenticate = async ctx => {
+  if (!ctx.user.appId) ctx.throw(400, "No appId")
+
   const { username, password } = ctx.request.body
 
   if (!username) ctx.throw(400, "Username Required.")
   if (!password) ctx.throw(400, "Password Required")
 
   const masterDb = new CouchDB("clientAppLookup")
-  const { clientId } = await masterDb.get(ctx.params.appId)
+
+  const { clientId } = await masterDb.get(ctx.user.appId)
 
   if (!clientId) {
     ctx.throw(400, "ClientId not suplied")
   }
   // find the instance that the user is associated with
   const db = new CouchDB(ClientDb.name(clientId))
-  const appId = ctx.params.appId
-  const app = await db.get(appId)
+  const app = await db.get(ctx.user.appId)
   const instanceId = app.userInstanceMap[username]
 
   if (!instanceId)
-    ctx.throw(500, "User is not associated with an instance of app", appId)
+    ctx.throw(
+      500,
+      "User is not associated with an instance of app",
+      ctx.user.appId
+    )
 
   // Check the user exists in the instance DB by username
   const instanceDb = new CouchDB(instanceId)
@@ -41,16 +47,22 @@ exports.authenticate = async ctx => {
     const payload = {
       userId: dbUser._id,
       accessLevelId: dbUser.accessLevelId,
-      instanceId: instanceId,
+      appId: ctx.user.appId,
+      instanceId,
     }
 
     const token = jwt.sign(payload, ctx.config.jwtSecret, {
       expiresIn: "1 day",
     })
 
-    const ONE_DAY_FROM_NOW = new Date(Date.now() + 24 * 3600)
+    const expires = new Date()
+    expires.setDate(expires.getDate() + 1)
 
-    ctx.cookies.set("budibase:token", token, { expires: ONE_DAY_FROM_NOW })
+    ctx.cookies.set("budibase:token", token, {
+      expires,
+      path: "/",
+      httpOnly: false,
+    })
 
     ctx.body = {
       token,

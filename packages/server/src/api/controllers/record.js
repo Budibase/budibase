@@ -4,7 +4,7 @@ const newid = require("../../db/newid")
 const { link } = require("pouchdb-adapter-memory")
 
 exports.save = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const record = ctx.request.body
   record.modelId = ctx.params.modelId
 
@@ -69,7 +69,7 @@ exports.save = async function(ctx) {
   ctx.eventEmitter &&
     ctx.eventEmitter.emit(`record:save`, {
       record,
-      instanceId: ctx.params.instanceId,
+      instanceId: ctx.user.instanceId,
     })
   ctx.body = record
   ctx.status = 200
@@ -77,7 +77,7 @@ exports.save = async function(ctx) {
 }
 
 exports.fetchView = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const response = await db.query(`database/${ctx.params.viewName}`, {
     include_docs: true,
   })
@@ -85,7 +85,7 @@ exports.fetchView = async function(ctx) {
 }
 
 exports.fetchModelRecords = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const response = await db.query(`database/all_${ctx.params.modelId}`, {
     include_docs: true,
   })
@@ -93,7 +93,7 @@ exports.fetchModelRecords = async function(ctx) {
 }
 
 exports.search = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const response = await db.allDocs({
     include_docs: true,
     ...ctx.request.body,
@@ -102,7 +102,7 @@ exports.search = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const record = await db.get(ctx.params.recordId)
   if (record.modelId !== ctx.params.modelId) {
     ctx.throw(400, "Supplied modelId doe not match the record's modelId")
@@ -112,7 +112,7 @@ exports.find = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const record = await db.get(ctx.params.recordId)
   if (record.modelId !== ctx.params.modelId) {
     ctx.throw(400, "Supplied modelId doe not match the record's modelId")
@@ -124,7 +124,7 @@ exports.destroy = async function(ctx) {
 
 exports.validate = async function(ctx) {
   const errors = await validate({
-    instanceId: ctx.params.instanceId,
+    instanceId: ctx.user.instanceId,
     modelId: ctx.params.modelId,
     record: ctx.request.body,
   })
