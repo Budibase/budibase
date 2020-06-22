@@ -1,6 +1,7 @@
 <script>
   import { onMount, createEventDispatcher } from "svelte";
   import { fade } from 'svelte/transition';
+  import Swatch from "./Swatch.svelte";
   import CheckedBackground from "./CheckedBackground.svelte"
   import {buildStyle} from "./helpers.js"
   import {
@@ -14,12 +15,15 @@
   import Input from "./Input.svelte";
 
   export let value = "#3ec1d3ff";
+  export let swatches = [] //TODO: Safe swatches - limit to 12. warn in console
+  export let disableSwatches = false
   export let format = "hexa";
+  export let open = false;
   
-  let recentColors = []
-
   export let pickerHeight = 0;
   export let pickerWidth = 0;
+
+  let adder = null;
 
   let h = null;
   let s = null;
@@ -29,7 +33,10 @@
   const dispatch = createEventDispatcher();
 
   onMount(() => {
-    getRecentColors()
+    if(!swatches.length > 0) {
+      //Don't use locally stored recent colors if swatches have been passed as props
+      getRecentColors()
+    }
 
     if (format) {
       convertAndSetHSVA()
@@ -39,17 +46,17 @@
   function getRecentColors() {
     let colorStore = localStorage.getItem("cp:recent-colors")
     if (colorStore) {
-      recentColors = JSON.parse(colorStore)
+      swatches = JSON.parse(colorStore)      
     }
   }
 
   function setRecentColor(color) {
-    if (recentColors.length === 6) {
-      recentColors.splice(0, 1)
+    if (swatches.length === 12) {
+      swatches.splice(0, 1)
     }
-    if (!recentColors.includes(color)) {
-      recentColors = [...recentColors, color]
-      localStorage.setItem("cp:recent-colors", JSON.stringify(recentColors))
+    if (!swatches.includes(color)) {
+      swatches = [...swatches, color]
+      localStorage.setItem("cp:recent-colors", JSON.stringify(swatches))
     }
   }
 
@@ -70,7 +77,6 @@
     s = detail.s;
     v = detail.v;
     value = convertHsvaToFormat([h, s, v, a], format);
-    setRecentColor(value)
     dispatchValue()
   }
 
@@ -78,7 +84,6 @@
     h = color;
     value = convertHsvaToFormat([h, s, v, a], format);   
     if(!isDrag) {
-      setRecentColor(value)
       dispatchValue()
     } 
   }
@@ -87,7 +92,6 @@
     a = color === "1.00" ? "1" : color;
     value = convertHsvaToFormat([h, s, v, a], format);    
     if(!isDrag) {
-        setRecentColor(value)
         dispatchValue()
       } 
   }
@@ -111,13 +115,26 @@
 
   function dispatchInputChange() {
     if(format) {
-      setRecentColor(value)
       dispatchValue()
     }
   }
+
+  function addSwatch() {
+    if(format) {
+      dispatch("addswatch", value)
+      setRecentColor(value)
+    }
+  }
+
+  function removeSwatch(idx) {
+    let removedSwatch = swatches.splice(idx, 1);
+    swatches = swatches
+    dispatch("removeswatch", removedSwatch)
+    localStorage.setItem("cp:recent-colors", JSON.stringify(swatches))
+  }
   
 
-  function applyRecentColor(color) {
+  function applySwatch(color) {
     if(value !== color) {
       format = getColorFormat(color)
       if(format) {
@@ -127,8 +144,10 @@
       }
     }
   }
+
     $: border = (v > 90 && s < 5) ? "1px dashed #dedada" : ""
     $: style = buildStyle({background: value, border})
+    $: shrink = swatches.length > 0
 </script>
 
 <style>
@@ -173,28 +192,40 @@
     border-radius: 50%;
   }
 
-  .recent-color-panel {
+   .swatch-panel {
     flex: 0 0 15px;
-    display: grid;
-    grid-gap: 10px;
+    display: flex;
+    flex-flow: row wrap;
     justify-content: flex-start;
-    grid-auto-flow: column;
-    padding: 5px;
-    margin-left: 6px;
+    padding: 0 5px;
+    max-height: 56px;
   }
 
-  .recent-color {
+  .adder {
+    flex: 1;
+    height: 20px;		
+    display: flex;
+    transition: flex 0.5s;
+    justify-content: center;
+    align-items: center;
+    background: #f1f3f4;
     cursor: pointer;
-    border-radius: 6px;
-    border: 1px solid #dedada;  
-    height: 20px; 
-    width: 20px;   
+    border: 1px solid #d4d4d4;
+    border-radius: 8px;
+    margin-left: 5px;
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  .shrink { 
+    flex: 0 0 20px;
   }
 
   .format-input-panel {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    padding-top: 3px;
   }
 </style>
 
@@ -226,15 +257,20 @@
       </div>
     </div>
 
-    {#if recentColors.length > 0}
-      <div transition:fade class="recent-color-panel">
-        {#each recentColors as color}
-          <CheckedBackground borderRadius="6px"> 
-            <div transition:fade class="recent-color" style={`background: ${color};`} on:click={() => applyRecentColor(color)} />
-          </CheckedBackground>
-        {/each}
-      </div>
-    {/if}
+      {#if !disableSwatches}
+        <div transition:fade class="swatch-panel">
+          {#if swatches.length > 0}
+            {#each swatches as color, idx}
+              <Swatch {color} on:click={() => applySwatch(color)} on:removeswatch={() => removeSwatch(idx)} />
+            {/each}
+          {/if}
+          {#if swatches.length !== 12}
+            <div bind:this={adder} transition:fade class="adder" on:click={addSwatch} class:shrink>
+              <span>&plus;</span>
+            </div>
+          {/if}
+        </div>
+      {/if}
 
     <div class="format-input-panel">
       <ButtonGroup {format} onclick={changeFormatAndConvert} />
