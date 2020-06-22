@@ -24,5 +24,5 @@
 </style>
 
 <div>
-  <input on:input type="text" {value} maxlength="25" />
+  <input on:input on:change type="text" {value} maxlength="25" />
 </div>

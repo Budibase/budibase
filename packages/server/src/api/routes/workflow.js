@@ -6,20 +6,16 @@ const { BUILDER } = require("../../utilities/accessLevels")
 const router = Router()
 
 router
-  .get("/api/:instanceId/workflows", authorized(BUILDER), controller.fetch)
+  .get("/api/workflows", authorized(BUILDER), controller.fetch)
   .get("/api/workflows/:id", authorized(BUILDER), controller.find)
   .get(
-    "/api/:instanceId/workflows/:id/:action",
+    "/api/workflows/:id/:action",
     authorized(BUILDER),
     controller.fetchActionScript
   )
-  .put("/api/:instanceId/workflows", authorized(BUILDER), controller.update)
-  .post("/api/:instanceId/workflows", authorized(BUILDER), controller.create)
+  .put("/api/workflows", authorized(BUILDER), controller.update)
+  .post("/api/workflows", authorized(BUILDER), controller.create)
   .post("/api/workflows/action", controller.executeAction)
-  .delete(
-    "/api/:instanceId/workflows/:id/:rev",
-    authorized(BUILDER),
-    controller.destroy
-  )
+  .delete("/api/workflows/:id/:rev", authorized(BUILDER), controller.destroy)
 
 module.exports = router

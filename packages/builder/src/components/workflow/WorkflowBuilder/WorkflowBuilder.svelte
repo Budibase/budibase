@@ -3,7 +3,6 @@
   import { workflowStore, backendUiStore } from "builderStore"
   import { notifier } from "@beyonk/svelte-notifications"
   import Flowchart from "./flowchart/FlowChart.svelte"
-  import api from "builderStore/api"
 
   let selectedWorkflow
   let uiTree
@@ -50,6 +49,7 @@
         class:highlighted={!workflowLive}
         class:hoverable={!workflowLive}
         class="play-button hoverable"
+        data-cy="activate-workflow"
         on:click={() => setWorkflowLive(true)}>
         <i class="ri-play-fill" />
       </button>
