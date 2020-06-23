@@ -21,7 +21,8 @@ if (env.NODE_ENV !== "production") {
 }
 
 router
-  .get("/:appId/componentlibrary", controller.serveComponentLibrary)
-  .get("/:appId/:file*", controller.serveApp)
+  .get("/componentlibrary", controller.serveComponentLibrary)
+  .get("/assets/:file*", controller.serveAppAsset)
+  .get("/:appId/:path*", controller.serveApp)
 
 module.exports = router

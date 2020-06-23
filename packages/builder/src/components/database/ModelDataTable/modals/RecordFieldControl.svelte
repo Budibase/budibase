@@ -32,6 +32,7 @@
 
 {#if type === 'select'}
   <select
+    data-cy="{label}-select"
     class={determineClassName(type)}
     bind:value
     class:uk-form-danger={errors.length > 0}>
@@ -41,6 +42,7 @@
   </select>
 {:else}
   <input
+    data-cy="{label}-input"
     class={determineClassName(type)}
     class:uk-form-danger={errors.length > 0}
     {checked}

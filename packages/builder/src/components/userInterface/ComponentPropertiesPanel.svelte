@@ -120,8 +120,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
-    overflow-y: hidden;
     padding: 20px;
     box-sizing: border-box;
   }
@@ -139,7 +137,6 @@
     margin-top: 10px;
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
   }
 
   .instance-name {
