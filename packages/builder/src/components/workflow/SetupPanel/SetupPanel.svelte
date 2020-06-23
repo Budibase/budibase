@@ -160,7 +160,7 @@
 
   header {
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 600;
     display: flex;
     align-items: center;
     margin-bottom: 18px;
@@ -181,14 +181,14 @@
   .config-item {
     margin: 0px 0px 4px 0px;
     padding: 12px;
-    background: var(--light-grey);
+    background: var(--grey-1);
   }
 
   .budibase_input {
     height: 35px;
     width: 220px;
     border-radius: 3px;
-    border: 1px solid var(--grey-dark);
+    border: 1px solid var(--grey-4);
     text-align: left;
     color: var(--ink);
     font-size: 14px;
@@ -196,7 +196,7 @@
   }
 
   header > span {
-    color: var(--ink-lighter);
+    color: var(--grey-5);
     margin-right: 20px;
   }
 
@@ -241,7 +241,7 @@
 
   .workflow-button {
     cursor: pointer;
-    border: 1px solid var(--grey-dark);
+    border: 1px solid var(--grey-4);
     border-radius: 3px;
     width: 100%;
     padding: 8px 16px;
@@ -257,7 +257,7 @@
   }
 
   .workflow-button:hover {
-    background: var(--grey-light);
+    background: var(--grey-1);
   }
 
   .access-level {

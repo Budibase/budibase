@@ -35,7 +35,7 @@
     border-radius: 5px;
     transition: 0.3s all;
     box-shadow: 0 4px 30px 0 rgba(57, 60, 68, 0.08);
-    background-color: var(--font);
+    background-color: var(--ink);
     font-size: 16px;
     color: var(--white);
   }
@@ -54,17 +54,17 @@
 
   .ACTION {
     background-color: var(--white);
-    color: var(--font);
+    color: var(--ink);
   }
 
   .TRIGGER {
-    background-color: var(--font);
+    background-color: var(--ink);
     color: var(--white);
   }
 
   .LOGIC {
     background-color: var(--secondary);
-    color: var(--font);
+    color: var(--ink);
   }
 
   div:hover {

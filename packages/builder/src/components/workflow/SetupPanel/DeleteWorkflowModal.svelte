@@ -42,7 +42,7 @@
 <style>
   header {
     font-size: 24px;
-    color: var(--font);
+    color: var(--ink);
     font-weight: bold;
     padding: 30px;
   }
@@ -51,7 +51,7 @@
     margin-right: 10px;
     font-size: 20px;
     background: var(--secondary);
-    color: var(--dark-grey);
+    color: var(--grey-4);
     padding: 8px;
   }
 
@@ -70,7 +70,7 @@
     grid-gap: 5px;
     grid-auto-columns: 3fr 1fr 1fr;
     padding: 20px;
-    background: #fafafa;
+    background: var(--grey-1);
     border-radius: 0.5rem;
   }
 

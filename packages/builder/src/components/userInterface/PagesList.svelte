@@ -46,19 +46,20 @@
     padding: 8px 16px;
     text-align: center;
     background: #ffffff;
-    color: var(--ink-light);
+    color: var(--grey-7);
     border-radius: 5px;
-    font-family: Roboto;
+    font-family: inter;
     font-size: 14px;
     font-weight: 400;
     transition: all 0.3s;
     text-rendering: optimizeLegibility;
     border: none !important;
     transition: 0.2s;
+    outline: none;
   }
 
   .active {
-    background: var(--ink-light);
-    color: var(--white);
+    background: var(--grey-3);
+    color: var(--ink);
   }
 </style>

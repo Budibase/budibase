@@ -38,7 +38,7 @@
     word-wrap: break-word;
     font-size: 13px;
     font-weight: 400;
-    color: #000333;
+    color: var(--ink);
     opacity: 0.8;
     padding-top: 13px;
     margin-bottom: 0;

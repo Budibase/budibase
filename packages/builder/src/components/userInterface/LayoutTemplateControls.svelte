@@ -50,7 +50,7 @@
 
 <style>
   .selected {
-    color: var(--button-text);
+    color: var(--blue);
     background: #f9f9f9;
     opacity: 1;
   }
@@ -70,7 +70,7 @@
 
     font-size: 1.2rem;
     font-weight: 500;
-    color: #000333;
+    color: var(--ink);
   }
 
   .inputs {

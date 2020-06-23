@@ -151,15 +151,14 @@
     cursor: pointer;
     display: flex;
     padding: 5px 10px;
-    background-color: #f2f2f2;
-    border-radius: 2px;
-    border: 1px solid var(--grey-dark);
+    background-color: var(--grey-2);
+    border-radius: 5px;
     align-items: center;
   }
 
   .bb-select-anchor > span {
-    color: #565a66;
-    font-weight: 500;
+    color: var(--ink);
+    font-weight: 400;
     width: 140px;
     overflow-x: hidden;
   }
@@ -173,8 +172,8 @@
   }
 
   .selected {
-    color: #565a66;
-    font-weight: 500;
+    color: var(--ink);
+    font-weight: 400;
   }
 
   .bb-select-menu {
@@ -185,15 +184,15 @@
     opacity: 0;
     width: 160px;
     z-index: 2;
-    color: #808192;
-    font-weight: 500;
+    color: var(--ink);
+    font-weight: 400;
     height: fit-content !important;
     border-bottom-left-radius: 2px;
     border-bottom-right-radius: 2px;
-    border-right: 1px solid var(--grey-dark);
-    border-left: 1px solid var(--grey-dark);
-    border-bottom: 1px solid var(--grey-dark);
-    background-color: #f2f2f2;
+    border-right: 1px solid var(--grey-4);
+    border-left: 1px solid var(--grey-4);
+    border-bottom: 1px solid var(--grey-4);
+    background-color: var(--grey-2);
     transform: scale(0);
     transition: opacity 0.13s linear, transform 0.12s cubic-bezier(0, 0, 0.2, 1);
     overflow-y: auto;

@@ -63,7 +63,7 @@
     grid-template-columns: 300px 1fr;
     height: 100%;
     width: 100%;
-    background: var(--grey-light);
+    background: var(--grey-1);
   }
 
   .main {
@@ -76,7 +76,7 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--grey-medium);
+    border-right: 1px solid var(--grey-4);
   }
 
   .home-logo {
@@ -98,7 +98,7 @@
   .nav-section-title {
     font-size: 20px;
     color: var(--ink);
-    font-weight: 700;
+    font-weight: 600;
     margin-bottom: 12px;
   }
 </style>

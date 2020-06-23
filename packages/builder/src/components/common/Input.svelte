@@ -37,7 +37,7 @@
     /* width: 32px; */
     height: 32px;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 500;
     margin: 0px 0px 0px 1px;
     color: var(--ink);
     opacity: 0.7;
@@ -46,7 +46,7 @@
     /* padding: 12px; */
     width: 164px;
     box-sizing: border-box;
-    border: 1px solid var(--grey);
+    border: 1px solid var(--grey-2);
     border-radius: 2px;
     outline: none;
   }

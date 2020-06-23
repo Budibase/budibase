@@ -67,7 +67,7 @@
 <style>
   .block-field {
     border-radius: 3px;
-    background: var(--grey-light);
+    background: var(--grey-1);
     padding: 12px;
     margin: 0px 0px 4px 0px;
   }
@@ -76,7 +76,7 @@
     height: 35px;
     width: 220px;
     border-radius: 3px;
-    border: 1px solid var(--grey-dark);
+    border: 1px solid var(--grey-4);
     text-align: left;
     color: var(--ink);
     font-size: 14px;

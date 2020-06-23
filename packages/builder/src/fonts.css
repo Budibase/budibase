@@ -1,47 +1,56 @@
 /* latin-ext */
-/* roboto-regular - latin-ext_latin */
+/* Inter-regular - latin-ext_latin */
 @font-face {
-  font-family: 'Roboto';
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 400;
-  src: local('Roboto'), local('Roboto-Regular'),
-       url('/_builder/assets/roboto-v20-latin-ext_latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
-       url('/_builder/assets/roboto-v20-latin-ext_latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+  src: local('Inter'), local('Inter-Regular'),
+       url('/_builder/assets/Inter-Regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/_builder/assets/Inter-Regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
 }
-/* roboto-300 - latin-ext_latin */
+/* Inter-500 - latin-ext_latin */
 @font-face {
-  font-family: 'Roboto';
-  font-style: normal;
-  font-weight: 300;
-  src: local('Roboto Light'), local('Roboto-Light'),
-       url('/_builder/assets/roboto-v20-latin-ext_latin-300.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
-       url('/_builder/assets/roboto-v20-latin-ext_latin-300.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
-}
-/* roboto-500 - latin-ext_latin */
-@font-face {
-  font-family: 'Roboto';
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 500;
-  src: local('Roboto Medium'), local('Roboto-Medium'),
-       url('/_builder/assets/roboto-v20-latin-ext_latin-500.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
-       url('/_builder/assets/roboto-v20-latin-ext_latin-500.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+  src: local('Inter Medium'), local('Inter-Medium'),
+       url('/_builder/assets/Inter-Medium.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/_builder/assets/Inter-Medium.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
 }
-/* roboto-700 - latin-ext_latin */
+/* Inter-600 - latin-ext_latin */
 @font-face {
-  font-family: 'Roboto';
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  src: local('Inter SemiBold'), local('Inter-SemiBold'),
+       url('/_builder/assets/Inter-SemiBold.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/_builder/assets/Inter-SemiBold.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* Inter-700 - latin-ext_latin */
+@font-face {
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 700;
-  src: local('Roboto Bold'), local('Roboto-Bold'),
-       url('/_builder/assets/roboto-v20-latin-ext_latin-700.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
-       url('/_builder/assets/roboto-v20-latin-ext_latin-700.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+  src: local('Inter Bold'), local('Inter-Bold'),
+       url('/_builder/assets/Inter-Bold.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/_builder/assets/Inter-Bold.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
 }
-/* roboto-900 - latin-ext_latin */
+/* Inter-800 - latin-ext_latin */
 @font-face {
-  font-family: 'Roboto';
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Inter ExtraBold'), local('Inter-ExtraBold'),
+       url('/_builder/assets/Inter-ExtraBold.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/_builder/assets/Inter-ExtraBold.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* Inter-900 - latin-ext_latin */
+@font-face {
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 900;
-  src: local('Roboto Black'), local('Roboto-Black'),
-       url('/_builder/assets/roboto-v20-latin-ext_latin-900.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
-       url('/_builder/assets/roboto-v20-latin-ext_latin-900.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+  src: local('Inter Black'), local('Inter-Black'),
+       url('/_builder/assets/Inter-Black.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('/_builder/assets/Inter-Black.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
 }
   
