@@ -58,7 +58,7 @@ export const getBackendUiStore = () => {
           state.tabs.SETUP_PANEL = "SETUP"
           return state
         }),
-      save: async ({ instanceId, model }) => {
+      save: async ({ model }) => {
         const updatedModel = cloneDeep(model)
 
         // TODO: refactor
@@ -70,7 +70,7 @@ export const getBackendUiStore = () => {
           }
         }
 
-        const SAVE_MODEL_URL = `/api/${instanceId}/models`
+        const SAVE_MODEL_URL = `/api/models`
         const response = await api.post(SAVE_MODEL_URL, updatedModel)
         const savedModel = await response.json()
 
@@ -85,6 +85,8 @@ export const getBackendUiStore = () => {
             state.models.splice(existingIdx, 1, savedModel)
             state.models = state.models
           }
+
+          // TODO: fetch models
 
           store.actions.models.select(savedModel)
           return state
