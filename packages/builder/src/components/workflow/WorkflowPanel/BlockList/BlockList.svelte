@@ -64,18 +64,18 @@
   .subtabs span {
     transition: 0.3s all;
     text-align: center;
-    color: var(--dark-grey);
+    color: var(--grey-7);
     font-weight: 500;
     padding: 10px;
   }
 
   .subtabs span.selected {
-    background: var(--dark-grey);
+    background: var(--grey-7);
     color: var(--white);
     border-radius: 2px;
   }
 
   .subtabs span:not(.selected) {
-    color: var(--dark-grey);
+    color: var(--grey-7);
   }
 </style>

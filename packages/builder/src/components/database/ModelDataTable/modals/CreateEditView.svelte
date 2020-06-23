@@ -96,7 +96,7 @@
   .snippet-selector__heading {
     margin-right: 20px;
     font-size: 14px;
-    color: var(--ink-lighter);
+    color: var(--grey-5);
   }
 
   .header {
@@ -116,7 +116,7 @@
   .buttons {
     display: flex;
     justify-content: flex-end;
-    background-color: var(--grey-light);
+    background-color: var(--grey-1);
     margin: 0 40px;
     padding: 20px 0;
   }

@@ -43,7 +43,7 @@
 {#if $backendUiStore.selectedDatabase._id && $backendUiStore.selectedModel.name}
   <ModelDataTable {selectRecord} />
 {:else}
-  <i style="color: var(--grey-dark)">
+  <i style="color: var(--grey-4)">
     create your first model to start building
   </i>
 {/if}

@@ -49,7 +49,7 @@
           </span>
         {/each}
         <!-- <IconButton icon="home"
-                      color="var(--slate)"
+                      color="var(--grey-2)"
                       hoverColor="var(--secondary75)"/> -->
       </div>
       <div class="toprightnav">
@@ -91,7 +91,7 @@
 
   a {
     text-transform: none;
-    color: var(--ink-lighter);
+    color: var(--grey-5);
   }
 
   .top-nav {
@@ -103,7 +103,7 @@
     box-sizing: border-box;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--grey);
+    border-bottom: 1px solid var(--grey-2);
   }
 
   .content > div {
@@ -122,18 +122,18 @@
 
   .topnavitem {
     cursor: pointer;
-    color: var(--ink-lighter);
+    color: var(--grey-5);
     margin: 0px 00px 0px 20px;
     padding-top: 4px;
     font-weight: 500;
-    font-size: 1rem;
+    font-size: var(--font-size-md);
     height: 100%;
     align-items: center;
     box-sizing: border-box;
   }
 
   .topnavitem:hover {
-    color: var(--ink-light);
+    color: var(--grey-7);
     font-weight: 500;
   }
 
@@ -144,7 +144,7 @@
 
   .topnavitemright {
     cursor: pointer;
-    color: var(--ink-light);
+    color: var(--grey-7);
     margin: 0px 20px 0px 0px;
     padding-top: 4px;
     font-weight: 500;

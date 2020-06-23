@@ -59,7 +59,7 @@
 
   .title {
     font-size: 24px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--ink);
     margin-left: 12px;
   }
@@ -74,7 +74,7 @@
     align-items: center;
     justify-content: flex-end;
     padding: 20px;
-    background: var(--grey-light);
+    background: var(--grey-1);
     border-radius: 0 0 5px 5px;
   }
 

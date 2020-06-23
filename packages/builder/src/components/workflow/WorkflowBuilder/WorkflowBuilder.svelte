@@ -85,6 +85,6 @@
   }
 
   .stop-button.highlighted {
-    background: var(--coral);
+    background: var(--red);
   }
 </style>

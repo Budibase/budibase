@@ -132,8 +132,8 @@
   h3 {
     text-transform: uppercase;
     font-size: 13px;
-    font-weight: 700;
-    color: #000333;
+    font-weight: 600;
+    color: var(--ink);
     opacity: 0.6;
     margin-bottom: 10px;
   }
@@ -142,16 +142,15 @@
     text-transform: uppercase;
     font-size: 10px;
     font-weight: 600;
-    color: #000333;
+    color: var(--ink);
     opacity: 0.4;
-    letter-spacing: 1px;
     margin-bottom: 10px;
   }
 
   h5 {
     font-size: 13px;
     font-weight: 400;
-    color: #000333;
+    color: var(--ink);
     opacity: 0.8;
     padding-top: 13px;
     margin-bottom: 0;
