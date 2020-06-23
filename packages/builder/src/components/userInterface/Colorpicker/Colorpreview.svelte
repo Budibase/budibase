@@ -85,42 +85,10 @@
 
         dimensions = {top, left}
     }
-  })
 
-  function openColorpicker(event) {
-    if (colorPreview) {
-      const {
-        top: spaceAbove,
-        width,
-        bottom,
-        right,
-        left: spaceLeft,
-      } = colorPreview.getBoundingClientRect()
-      const { innerHeight, innerWidth } = window
-
-      const { offsetLeft, offsetTop } = colorPreview
-      //get the scrollTop value for all scrollable parent elements
-      let scrollTop = parentNodes.reduce(
-        (scrollAcc, el) => (scrollAcc += el.scrollTop),
-        0
-      )
-
-      const spaceBelow = innerHeight - spaceAbove - previewHeight
-      const top =
-        spaceAbove > spaceBelow
-          ? offsetTop - pickerHeight - scrollTop
-          : offsetTop + previewHeight - scrollTop
-
-      //TOO: Testing and Scroll Awareness for x Scroll
-      const spaceRight = innerWidth - spaceLeft + previewWidth
-      const left =
-        spaceRight > spaceLeft
-          ? offsetLeft + previewWidth + pickerWidth
-          : offsetLeft - pickerWidth
-
-      dimensions = { top, left }
-
-      open = true
+    function onColorChange(color) {
+        value = color.detail;
+        dispatch("change", color.detail)
     }
 
 </script>
@@ -142,12 +110,8 @@
             <span>&times;</span>
         </div>
     {/if}
-  {:else}
-    <div class="color-preview preview-error" style={errorPreviewStyle}>
-      <span>&times;</span>
-    </div>
-  {/if}
 </div>
+
 
 <style>
     .color-preview-container{

@@ -9,8 +9,13 @@
 
   let records = []
 
+  let linkedRecords = new Set(linked)
+
+  $: linked = [...linkedRecords]
+  $: FIELDS_TO_HIDE = ["modelId", "type", "_id", "_rev", $backendUiStore.selectedModel.name]
+
   async function fetchRecords() {
-    const FETCH_RECORDS_URL = `/api/${$backendUiStore.selectedDatabase._id}/${modelId}/records`
+    const FETCH_RECORDS_URL = `/api/${modelId}/records`
     const response = await api.get(FETCH_RECORDS_URL)
     records = await response.json()
   }
@@ -19,17 +24,25 @@
     fetchRecords()
   })
 
-  function linkRecord(record) {
-    linked.push(record._id)
+  function linkRecord(id) {
+    if (linkedRecords.has(id)) {
+      linkedRecords.delete(id);
+    } else {
+      linkedRecords.add(id)
+    }
+
+    linkedRecords = linkedRecords
   }
 </script>
 
 <section>
-  <h3>{linkName}</h3>
+  <header>
+    <h3>{linkName}</h3>
+  </header>
   {#each records as record}
-    <div class="linked-record" on:click={() => linkRecord(record)}>
-      <div class="fields">
-        {#each Object.keys(record).slice(0, 2) as key}
+    <div class="linked-record" on:click={() => linkRecord(record._id)}>
+      <div class="fields" class:selected={linkedRecords.has(record._id)}>
+        {#each Object.keys(record).filter(key => !FIELDS_TO_HIDE.includes(key)) as key}
           <div class="field">
             <span>{key}</span>
             <p>{record[key]}</p>
@@ -41,8 +54,15 @@
 </section>
 
 <style>
+  .fields.selected {
+    background: var(--light-grey);
+  }
+
   h3 {
-    font-size: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--ink);
   }
 
   .fields {
@@ -50,12 +70,14 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 20px;
-    background: var(--grey);
+    background: var(--white);
     border: 1px solid var(--grey);
     border-radius: 5px;
+    transition: 0.5s all;
+    margin-bottom: 8px;
   }
 
-  .field:hover {
+  .fields:hover {
     cursor: pointer;
   }
 

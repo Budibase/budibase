@@ -40,7 +40,7 @@
       return
     }
 
-    const DELETE_MODEL_URL = `/api/${instanceId}/models/${model._id}/${model._rev}`
+    const DELETE_MODEL_URL = `/api/models/${model._id}/${model._rev}`
     const response = await api.delete(DELETE_MODEL_URL)
     backendUiStore.update(state => {
       state.selectedView = null

@@ -4,21 +4,27 @@
   import { backendUiStore } from "builderStore"
   import api from "builderStore/api"
 
+
   export let ids = []
   export let header
 
   let records = []
   let open = false
 
+  $: FIELDS_TO_HIDE = ["modelId", "type", "_id", "_rev", $backendUiStore.selectedModel.name]
+
   async function fetchRecords() {
-    const FETCH_RECORDS_URL = `/api/${$backendUiStore.selectedDatabase._id}/records/search`
-    const response = await api.post(FETCH_RECORDS_URL, {
-      keys: ids,
+    const response = await api.post("/api/records/search", { 
+      keys: ids
     })
     records = await response.json()
   }
 
-  $: ids && fetchRecords() 
+  $: ids && fetchRecords()
+
+  function toggleOpen() {
+    open = !open
+  }
 
   onMount(() => {
     fetchRecords()
@@ -26,14 +32,17 @@
 </script>
 
 <section>
-  <a on:click={() => (open = !open)}>{records.length}</a>
+  <a on:click={toggleOpen}>{records.length}</a>
   {#if open}
     <div class="popover" transition:fade>
+    <header>
       <h3>{header}</h3>
+      <i class="ri-close-circle-fill" on:click={toggleOpen} />
+    </header>
       {#each records as record}
         <div class="linked-record">
           <div class="fields">
-            {#each Object.keys(record).slice(0, 2) as key}
+            {#each Object.keys(record).filter(key => !FIELDS_TO_HIDE.includes(key)) as key}
               <div class="field">
                 <span>{key}</span>
                 <p>{record[key]}</p>
@@ -47,11 +56,29 @@
 </section>
 
 <style>
+  header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  i {
+    font-size: 24px;
+    color: var(--ink-lighter);
+  }
+
+  i:hover {
+    cursor: pointer;
+  }
+
   a {
     font-size: 14px;
   }
 
   .popover {
+    width: 500px;
     position: absolute;
     right: 15%;
     padding: 20px;
@@ -61,6 +88,8 @@
 
   h3 {
     font-size: 20px;
+    font-weight: bold;
+    margin: 0;
   }
 
   .fields {
@@ -71,10 +100,7 @@
     background: var(--white);
     border: 1px solid var(--grey);
     border-radius: 5px;
-  }
-
-  .field:hover {
-    cursor: pointer;
+    margin-bottom: 8px;
   }
 
   .field span {
