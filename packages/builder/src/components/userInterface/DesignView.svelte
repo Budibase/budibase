@@ -19,7 +19,6 @@
     { value: "normal", text: "Normal" },
     { value: "hover", text: "Hover" },
     { value: "active", text: "Active" },
-    { value: "selected", text: "Selected" },
   ]
 
   $: propertyGroupNames = Object.keys(panelDefinition)

@@ -180,15 +180,15 @@
 
   .config-item {
     margin: 0px 0px 4px 0px;
-    padding: 12px;
-    background: var(--grey-1);
+    padding: 12px 0px;
   }
 
   .budibase_input {
     height: 35px;
-    width: 220px;
+    width: 244px;
     border-radius: 3px;
-    border: 1px solid var(--grey-4);
+    background-color: var(--grey-2);
+    border: 1px solid var(--grey-2);
     text-align: left;
     color: var(--ink);
     font-size: 14px;

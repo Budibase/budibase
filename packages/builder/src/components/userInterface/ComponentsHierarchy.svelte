@@ -77,8 +77,7 @@
   }
 
   .title {
-    margin-left: 10px;
-    margin-top: 2px;
+    margin-left: 14px;
     font-size: 14px;
     font-weight: 400;
   }
@@ -87,8 +86,7 @@
     display: inline-block;
     transition: 0.2s;
     font-size: 24px;
-    width: 20px;
-    margin-top: 2px;
+    width: 18px;
     color: var(--grey-7);
   }
 

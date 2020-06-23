@@ -36,7 +36,6 @@
         <Link icon={DocumentationIcon} title="Documentation" href="/" />
         <Link icon={TutorialsIcon} title="Tutorials" href="/" />
         <Link icon={CommunityIcon} title="Community" href="/" />
-        <Link icon={ContributionIcon} title="Contact" href="/" />
       </div>
 
       <div class="nav-section">

@@ -43,7 +43,8 @@
 
   button {
     cursor: pointer;
-    padding: 8px 16px;
+    padding: 0px 16px;
+    height: 36px;
     text-align: center;
     background: #ffffff;
     color: var(--grey-7);

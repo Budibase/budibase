@@ -53,29 +53,31 @@
 
 <style>
   .subtabs {
-    margin-top: 27px;
+    margin-top: 20px;
     display: grid;
-    grid-gap: 5px;
     grid-auto-flow: column;
     grid-auto-columns: 1fr 1fr 1fr;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
 
   .subtabs span {
     transition: 0.3s all;
     text-align: center;
     color: var(--grey-7);
-    font-weight: 500;
-    padding: 10px;
+    font-weight: 400;
+    padding: 8px 16px;
+    text-rendering: optimizeLegibility;
+    border: none !important;
+    outline: none;
   }
 
   .subtabs span.selected {
-    background: var(--grey-7);
-    color: var(--white);
-    border-radius: 2px;
+    background: var(--grey-3);
+    color: var(--ink);
+    border-radius: 5px;
   }
 
   .subtabs span:not(.selected) {
-    color: var(--grey-7);
+    color: var(--ink);
   }
 </style>
