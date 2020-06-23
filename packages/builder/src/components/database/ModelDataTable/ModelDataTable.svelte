@@ -4,7 +4,7 @@
   import { Button } from "@budibase/bbui"
   import Select from "components/common/Select.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
-  import LinkedRecord from "./LinkedRecord.svelte";
+  import LinkedRecord from "./LinkedRecord.svelte"
   import TablePagination from "./TablePagination.svelte"
   import { DeleteRecordModal, CreateEditRecordModal } from "./modals"
   import * as api from "./api"
@@ -46,14 +46,12 @@
 
   $: {
     if ($backendUiStore.selectedView) {
-      api
-        .fetchDataForView($backendUiStore.selectedView)
-        .then(records => {
-          data = records || []
-          headers = Object.keys($backendUiStore.selectedModel.schema).filter(
-            key => !INTERNAL_HEADERS.includes(key)
-          )
-        })
+      api.fetchDataForView($backendUiStore.selectedView).then(records => {
+        data = records || []
+        headers = Object.keys($backendUiStore.selectedModel.schema).filter(
+          key => !INTERNAL_HEADERS.includes(key)
+        )
+      })
     }
   }
 
@@ -90,10 +88,6 @@
         Create New Record
       </span>
     </Button>
-  </div>
-  <div class="search">
-    <i class="ri-search-line"></i>
-    <input placeholder="Search" class="budibase__input" bind:value={search} />
   </div>
   <table class="uk-table">
     <thead>
@@ -135,11 +129,9 @@
           </td>
           {#each headers as header}
             <td>
-            {#if Array.isArray(row[header])}
-              <LinkedRecord {header} ids={row[header]} />
-            {:else}
-              {row[header] || 0}
-            {/if}
+              {#if Array.isArray(row[header])}
+                <LinkedRecord {header} ids={row[header]} />
+              {:else}{row[header] || 0}{/if}
             </td>
           {/each}
         </tr>

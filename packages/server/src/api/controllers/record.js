@@ -1,7 +1,6 @@
 const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const newid = require("../../db/newid")
-const { link } = require("pouchdb-adapter-memory")
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
@@ -46,7 +45,6 @@ exports.save = async function(ctx) {
 
   // create links in other tables
   for (let key in record) {
-    // link
     if (Array.isArray(record[key])) {
       const linked = await db.allDocs({
         include_docs: true,
@@ -58,7 +56,9 @@ exports.save = async function(ctx) {
         const doc = row.doc
         return {
           ...doc,
-          [model.name]: doc[model.name] ? [...doc[model.name], record._id] : [record._id]
+          [model.name]: doc[model.name]
+            ? [...doc[model.name], record._id]
+            : [record._id],
         }
       })
 
@@ -105,7 +105,7 @@ exports.find = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const record = await db.get(ctx.params.recordId)
   if (record.modelId !== ctx.params.modelId) {
-    ctx.throw(400, "Supplied modelId doe not match the record's modelId")
+    ctx.throw(400, "Supplied modelId does not match the records modelId")
     return
   }
   ctx.body = record

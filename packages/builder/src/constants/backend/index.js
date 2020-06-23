@@ -162,7 +162,7 @@ export const MODELS = {
       Name: BLOCKS.NAME,
       Cuisine: {
         ...FIELDS.PLAIN_TEXT,
-        name: "Cuisine"
+        name: "Cuisine",
       },
     },
   },
@@ -173,8 +173,8 @@ export const MODELS = {
       Name: BLOCKS.NAME,
       Championships: {
         ...FIELDS.NUMBER,
-        name: "Championships"
-      }
+        name: "Championships",
+      },
     },
   },
 }
