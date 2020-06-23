@@ -2,6 +2,7 @@ import { attachChildren } from "./render/attachChildren"
 import { createTreeNode } from "./render/prepareRenderComponent"
 import { screenRouter } from "./render/screenRouter"
 import { createStateManager } from "./state/stateManager"
+import { getAppId } from "./render/getAppId"
 
 export const createApp = ({
   componentLibraries,
@@ -15,11 +16,9 @@ export const createApp = ({
   const onScreenSlotRendered = screenSlotNode => {
     const onScreenSelected = (screen, url) => {
       const stateManager = createStateManager({
-        frontendDefinition,
         componentLibraries,
         onScreenSlotRendered: () => {},
         routeTo,
-        appRootPath: frontendDefinition.appRootPath,
       })
       const getAttachChildrenParams = attachChildrenParams(stateManager)
       screenSlotNode.props._children = [screen.props]
@@ -36,10 +35,10 @@ export const createApp = ({
     routeTo = screenRouter({
       screens: frontendDefinition.screens,
       onScreenSelected,
-      appRootPath: frontendDefinition.appRootPath,
+      window,
     })
     const fallbackPath = window.location.pathname.replace(
-      frontendDefinition.appRootPath,
+      getAppId(window.document.cookie),
       ""
     )
     routeTo(currentUrl || fallbackPath)
@@ -59,10 +58,8 @@ export const createApp = ({
 
   let rootTreeNode
   const pageStateManager = createStateManager({
-    frontendDefinition,
     componentLibraries,
     onScreenSlotRendered,
-    appRootPath: frontendDefinition.appRootPath,
     // seems weird, but the routeTo variable may not be available at this point
     routeTo: url => routeTo(url),
   })

@@ -4,19 +4,19 @@ const newid = require("../../db/newid")
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name
-  const appShortId = ctx.params.applicationId.substring(0, 7)
+  const { appId } = ctx.user
+  const appShortId = appId.substring(0, 7)
   const instanceId = `inst_${appShortId}_${newid()}`
-  const { applicationId } = ctx.params
 
   const masterDb = new CouchDB("clientAppLookup")
-  const { clientId } = await masterDb.get(applicationId)
+  const { clientId } = await masterDb.get(appId)
 
   const db = new CouchDB(instanceId)
   await db.put({
     _id: "_design/database",
     metadata: {
       clientId,
-      applicationId,
+      applicationId: appId,
     },
     views: {
       by_username: {
@@ -46,7 +46,7 @@ exports.create = async function(ctx) {
 
   // Add the new instance under the app clientDB
   const clientDb = new CouchDB(client.name(clientId))
-  const budibaseApp = await clientDb.get(applicationId)
+  const budibaseApp = await clientDb.get(appId)
   const instance = { _id: instanceId, name: instanceName }
   budibaseApp.instances.push(instance)
   await clientDb.put(budibaseApp)
