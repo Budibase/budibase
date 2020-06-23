@@ -43,6 +43,8 @@
     const response = await api.delete(DELETE_MODEL_URL)
     backendUiStore.update(state => {
       state.selectedView = null
+      state.selectedModel = {}
+      state.draftModel = {}
       state.models = state.models.filter(({ _id }) => _id !== model._id)
       notifier.danger(`${model.name} deleted successfully.`)
       return state
@@ -64,7 +66,7 @@
     {#if selectedTab === 'SETUP'}
       {#if $backendUiStore.selectedField}
         <ModelFieldEditor />
-      {:else}
+      {:else if $backendUiStore.draftModel.schema}
         <div class="titled-input">
           <header>Name</header>
           <input

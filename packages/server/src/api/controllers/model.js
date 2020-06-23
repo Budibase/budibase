@@ -16,7 +16,7 @@ exports.find = async function(ctx) {
   ctx.body = model
 }
 
-exports.create = async function(ctx) {
+exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const modelToSave = {
     type: "model",
@@ -33,7 +33,7 @@ exports.create = async function(ctx) {
     if (schema[key].type === "link") {
       // create the link field in the other model
       const linkedModel = await db.get(schema[key].modelId)
-      linkedModel.schema[modelToSave.name] = {
+      linkedModel.schema[modelToSave._id] = {
         name: modelToSave.name,
         type: "link",
         modelId: modelToSave._id,

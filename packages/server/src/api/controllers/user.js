@@ -41,7 +41,7 @@ exports.create = async function(ctx) {
 
   const response = await database.post(user)
 
-  const masterDb = new CouchDB("clientAppLookup")
+  const masterDb = new CouchDB("client_app_lookup")
   const { clientId } = await masterDb.get(appId)
 
   // the clientDB needs to store a map of users against the app

@@ -23,12 +23,12 @@
 
   $: selectedTab = $backendUiStore.tabs.NAVIGATION_PANEL
 
-  function selectModel(model, fieldName) {
+  function selectModel(model, fieldId) {
     backendUiStore.actions.models.select(model)
 
-    if (fieldName) {
+    if (fieldId) {
       backendUiStore.update(state => {
-        state.selectedField = fieldName
+        state.selectedField = fieldId
         return state
       })
     }
@@ -38,6 +38,7 @@
     backendUiStore.update(state => {
       state.selectedModel = {}
       state.draftModel = { schema: {} }
+      state.tabs.SETUP_PANEL = "SETUP"
       return state
     })
   }
@@ -63,13 +64,13 @@
                   on:click={() => selectModel(model)} />
                 {#if model._id === $backendUiStore.selectedModel._id}
                   <div in:slide>
-                    {#each Object.keys(model.schema) as field}
+                    {#each Object.keys(model.schema) as fieldId}
                       <ListItem
-                        selected={model._id === $backendUiStore.selectedModel._id && field === $backendUiStore.selectedField}
+                        selected={model._id === $backendUiStore.selectedModel._id && fieldId === $backendUiStore.selectedField}
                         indented
                         icon="ri-layout-column-fill"
-                        title={field}
-                        on:click={() => selectModel(model, field)} />
+                        title={model.schema[fieldId].name}
+                        on:click={() => selectModel(model, fieldId)} />
                     {/each}
                   </div>
                 {/if}
