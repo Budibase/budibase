@@ -15,6 +15,7 @@
     "type",
     "_id",
     "_rev",
+    $backendUiStore.selectedModel._id,
     $backendUiStore.selectedModel.name,
   ]
 

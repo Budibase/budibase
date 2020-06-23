@@ -48,9 +48,6 @@
     if ($backendUiStore.selectedView) {
       api.fetchDataForView($backendUiStore.selectedView).then(records => {
         data = records || []
-        headers = Object.keys($backendUiStore.selectedModel.schema).filter(
-          key => !INTERNAL_HEADERS.includes(key)
-        )
       })
     }
   }
@@ -61,6 +58,12 @@
         currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
       )
     : []
+
+  $: headers = Object.keys($backendUiStore.selectedModel.schema).filter(
+    id => !INTERNAL_HEADERS.includes(id)
+  )
+
+  $: schema = $backendUiStore.selectedModel.schema
 
   const createNewRecord = () => {
     open(
@@ -94,7 +97,7 @@
       <tr>
         <th>Edit</th>
         {#each headers as header}
-          <th>{header}</th>
+          <th>{$backendUiStore.selectedModel.schema[header].name}</th>
         {/each}
       </tr>
     </thead>
@@ -129,9 +132,11 @@
           </td>
           {#each headers as header}
             <td>
-              {#if Array.isArray(row[header])}
-                <LinkedRecord {header} ids={row[header]} />
-              {:else}{row[header] || 0}{/if}
+              {#if schema[header].type === "link"}
+                <LinkedRecord header={schema[header].name} ids={row[header]} />
+              {:else}
+                {row[header]}
+              {/if}
             </td>
           {/each}
         </tr>

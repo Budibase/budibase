@@ -79,13 +79,13 @@
         {#if meta.type === 'link'}
           <LinkedRecordSelector
             bind:linked={record[key]}
-            linkName={key}
+            linkName={meta.name}
             modelId={meta.modelId} />
         {:else}
           <RecordFieldControl
             type={determineInputType(meta)}
             options={determineOptions(meta)}
-            label={key}
+            label={meta.name}
             bind:value={record[key]} />
         {/if}
       </div>
@@ -101,7 +101,7 @@
   header {
     margin-bottom: 40px;
     display: grid;
-    grid-gap: 5px;
+    grid-gap: 20px;
     grid-template-columns: 40px 1fr;
     align-items: center;
   }
@@ -115,7 +115,6 @@
     background: var(--secondary);
     color: var(--ink);
     font-size: 20px;
-    margin-right: 20px;
     border-radius: 3px;
   }
 

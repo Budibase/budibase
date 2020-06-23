@@ -18,6 +18,7 @@
     "_id",
     "_rev",
     $backendUiStore.selectedModel.name,
+    modelId
   ]
 
   async function fetchRecords() {
@@ -25,10 +26,6 @@
     const response = await api.get(FETCH_RECORDS_URL)
     records = await response.json()
   }
-
-  onMount(() => {
-    fetchRecords()
-  })
 
   function linkRecord(id) {
     if (linkedRecords.has(id)) {
@@ -39,6 +36,10 @@
 
     linkedRecords = linkedRecords
   }
+
+  onMount(() => {
+    fetchRecords()
+  })
 </script>
 
 <section>
