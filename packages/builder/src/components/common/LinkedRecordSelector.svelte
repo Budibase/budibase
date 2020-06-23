@@ -12,7 +12,13 @@
   let linkedRecords = new Set(linked)
 
   $: linked = [...linkedRecords]
-  $: FIELDS_TO_HIDE = ["modelId", "type", "_id", "_rev", $backendUiStore.selectedModel.name]
+  $: FIELDS_TO_HIDE = [
+    "modelId",
+    "type",
+    "_id",
+    "_rev",
+    $backendUiStore.selectedModel.name,
+  ]
 
   async function fetchRecords() {
     const FETCH_RECORDS_URL = `/api/${modelId}/records`
@@ -26,7 +32,7 @@
 
   function linkRecord(id) {
     if (linkedRecords.has(id)) {
-      linkedRecords.delete(id);
+      linkedRecords.delete(id)
     } else {
       linkedRecords.add(id)
     }

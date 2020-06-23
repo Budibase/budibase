@@ -6,7 +6,6 @@
 
   export let record
   export let onClosed
-
 </script>
 
 <section>
@@ -26,7 +25,7 @@
       alert
       on:click={async () => {
         await api.deleteRecord(record)
-        notifier.danger("Record deleted")
+        notifier.danger('Record deleted')
         backendUiStore.actions.records.delete(record)
         onClosed()
       }}>

@@ -30,12 +30,11 @@
 
   async function deleteModel() {
     const model = $backendUiStore.selectedModel
-    const instanceId = $backendUiStore.selectedDatabase._id
     const field = $backendUiStore.selectedField
 
     if (field) {
       delete model.schema[field]
-      backendUiStore.actions.models.save({ model, instanceId })
+      backendUiStore.actions.models.save({ model })
       notifier.danger(`Field ${field} deleted.`)
       return
     }
@@ -52,7 +51,6 @@
 
   async function saveModel() {
     await backendUiStore.actions.models.save({
-      instanceId: $backendUiStore.selectedDatabase._id,
       model: $backendUiStore.draftModel,
     })
     notifier.success(

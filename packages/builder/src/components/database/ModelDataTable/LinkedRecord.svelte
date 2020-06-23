@@ -4,18 +4,23 @@
   import { backendUiStore } from "builderStore"
   import api from "builderStore/api"
 
-
   export let ids = []
   export let header
 
   let records = []
   let open = false
 
-  $: FIELDS_TO_HIDE = ["modelId", "type", "_id", "_rev", $backendUiStore.selectedModel.name]
+  $: FIELDS_TO_HIDE = [
+    "modelId",
+    "type",
+    "_id",
+    "_rev",
+    $backendUiStore.selectedModel.name,
+  ]
 
   async function fetchRecords() {
-    const response = await api.post("/api/records/search", { 
-      keys: ids
+    const response = await api.post("/api/records/search", {
+      keys: ids,
     })
     records = await response.json()
   }
@@ -35,10 +40,10 @@
   <a on:click={toggleOpen}>{records.length}</a>
   {#if open}
     <div class="popover" transition:fade>
-    <header>
-      <h3>{header}</h3>
-      <i class="ri-close-circle-fill" on:click={toggleOpen} />
-    </header>
+      <header>
+        <h3>{header}</h3>
+        <i class="ri-close-circle-fill" on:click={toggleOpen} />
+      </header>
       {#each records as record}
         <div class="linked-record">
           <div class="fields">
