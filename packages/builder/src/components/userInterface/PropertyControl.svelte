@@ -54,7 +54,6 @@
     flex: 0 0 50px;
     display: flex;
     align-items: center;
-    padding: 0px 5px;
     font-size: 12px;
     font-weight: 400;
     text-align: left;

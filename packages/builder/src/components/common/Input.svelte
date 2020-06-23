@@ -38,16 +38,16 @@
     height: 32px;
     font-size: 12px;
     font-weight: 500;
-    margin: 0px 0px 0px 1px;
+    margin: 0px 0px 0px 2px;
     color: var(--ink);
     opacity: 0.7;
     padding: 0px 4px;
     line-height: 1.3;
-    /* padding: 12px; */
     width: 164px;
     box-sizing: border-box;
-    border: 1px solid var(--grey-2);
-    border-radius: 2px;
+    background-color: var(--grey-3);
+    border-radius: 4px;
+    border: 1px solid var(--grey-3);
     outline: none;
   }
 

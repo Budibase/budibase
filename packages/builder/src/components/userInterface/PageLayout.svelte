@@ -77,7 +77,7 @@
   }
 
   .icon-big {
-    font-size: 24px;
+    font-size: 20px;
     color: var(--grey-7);
   }
 

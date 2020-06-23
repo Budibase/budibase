@@ -57,9 +57,9 @@
 .budibase__nav-item {
     cursor: pointer;
     padding: 0 4px 0 2px;
-    height: 35px;
-    margin: 5px 0px 4px 0px;
-    border-radius: 0 5px 5px 0;
+    height: 40px;
+    margin: 0px 0px 0px 0px;
+    border-radius: 5px;
     display: flex;
     align-items: center;
     font-size: 14px;

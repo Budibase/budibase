@@ -55,7 +55,7 @@
   }
 
   :global(.uk-notification-message-danger) {
-    background: var(--grey-7) !important;
+    background: var(--grey-9) !important;
     color: #fff !important;
     font-size: 16px !important;
   }

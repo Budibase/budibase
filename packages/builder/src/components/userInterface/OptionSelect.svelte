@@ -142,15 +142,16 @@
     position: relative;
     outline: none;
     width: 160px;
-    height: 32px;
+    height: 36px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .bb-select-anchor {
     cursor: pointer;
     display: flex;
-    padding: 5px 10px;
+    padding: 0px 12px;
+    height: 36px;
     background-color: var(--grey-2);
     border-radius: 5px;
     align-items: center;

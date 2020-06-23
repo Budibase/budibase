@@ -262,15 +262,10 @@ export const typography = [
     key: "text-transform",
     control: FlatButtonGroup,
     buttonProps: [
-      { text: "BB", padding: "0px 5px", fontWeight: 500, value: "uppercase" },
-      { text: "Bb", padding: "0px 5px", fontWeight: 500, value: "capitalize" },
-      { text: "bb", padding: "0px 5px", fontWeight: 500, value: "lowercase" },
-      {
-        text: "&times;",
-        padding: "0px 5px",
-        fontWeight: 500,
-        value: "none",
-      },
+      { text: "BB", value: "uppercase" },
+      { text: "Bb", value: "capitalize" },
+      { text: "bb", value: "lowercase" },
+      { text: "&times;", value: "none" },
     ],
   },
   {
