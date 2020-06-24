@@ -1,16 +1,12 @@
 const apiCall = method => async (url, body) => {
+  const headers = {
+    "Content-Type": "application/json",
+  }
   const response = await fetch(url, {
     method: method,
-    headers: {
-      "Content-Type": "application/json",
-      "x-user-agent": "Budibase Builder",
-    },
     body: body && JSON.stringify(body),
+    headers,
   })
-
-  // if (response.status === 500) {
-  //   throw new Error("Server Error");
-  // }
 
   return response
 }
@@ -22,9 +18,9 @@ export const del = apiCall("DELETE")
 export const put = apiCall("PUT")
 
 export default {
-  post,
-  get,
-  patch,
-  delete: del,
-  put,
+  post: apiCall("POST"),
+  get: apiCall("GET"),
+  patch: apiCall("PATCH"),
+  delete: apiCall("DELETE"),
+  put: apiCall("PUT"),
 }

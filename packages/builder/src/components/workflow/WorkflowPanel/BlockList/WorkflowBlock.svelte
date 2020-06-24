@@ -15,8 +15,12 @@
   }
 </script>
 
-<div class="workflow-block hoverable" on:click={addBlockToWorkflow}>
-  <div class="icon">
+
+<div
+  class="workflow-block hoverable"
+  on:click={addBlockToWorkflow}
+  data-cy={actionId}>
+  <div>
     <i class={blockDefinition.icon} />
   </div>
   <div class="workflow-text">
