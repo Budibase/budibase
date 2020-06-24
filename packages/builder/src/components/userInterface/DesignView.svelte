@@ -19,7 +19,6 @@
     { value: "normal", text: "Normal" },
     { value: "hover", text: "Hover" },
     { value: "active", text: "Active" },
-    { value: "selected", text: "Selected" },
   ]
 
   $: propertyGroupNames = Object.keys(panelDefinition)
@@ -31,25 +30,25 @@
     <FlatButtonGroup value={selectedCategory} {buttonProps} {onChange} />
   </div>
 
-<div class="positioned-wrapper">
-  <div class="design-view-property-groups">
-    {#if propertyGroupNames.length > 0}
-      {#each propertyGroupNames as groupName}
-        <PropertyGroup
-          name={groupName}
-          properties={getProperties(groupName)}
-          styleCategory={selectedCategory}
-          {onStyleChanged}
-          {componentDefinition}
-          {componentInstance} />
-      {/each}
-    {:else}
-      <div class="no-design">
-        <span>This component does not have any design properties</span>
-      </div>
-    {/if}
+  <div class="positioned-wrapper">
+    <div class="design-view-property-groups">
+      {#if propertyGroupNames.length > 0}
+        {#each propertyGroupNames as groupName}
+          <PropertyGroup
+            name={groupName}
+            properties={getProperties(groupName)}
+            styleCategory={selectedCategory}
+            {onStyleChanged}
+            {componentDefinition}
+            {componentInstance} />
+        {/each}
+      {:else}
+        <div class="no-design">
+          <span>This component does not have any design properties</span>
+        </div>
+      {/if}
+    </div>
   </div>
-</div>
 </div>
 
 <style>
@@ -64,7 +63,7 @@
     flex: 0 0 50px;
   }
 
-  .positioned-wrapper{
+  .positioned-wrapper {
     position: relative;
     display: flex;
     min-height: 0;

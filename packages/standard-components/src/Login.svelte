@@ -23,7 +23,10 @@
 
   const login = async () => {
     loading = true
-    const response = await _bb.api.post("/api/authenticate", { username, password })
+    const response = await _bb.api.post("/api/authenticate", {
+      username,
+      password,
+    })
     if (response.status === 200) {
       const json = await response.json()
       localStorage.setItem("budibase:token", json.token)
@@ -36,47 +39,39 @@
   }
 </script>
 
-<div class="root">
-  <div class="content">
-    {#if logo}
-      <div class="logo-container">
-        <img src={logo} alt="logo" />
-      </div>
-    {/if}
+<div class="container">
+  <div class="root">
+    <div class="content">
+      {#if logo}
+        <div class="logo-container">
+          <img src={logo} alt="logo" />
+        </div>
+      {/if}
 
-    <h1 class="header-content">Log in to {name}</h1>
-
-    <div class="form-root">
-      <div class="control">
-        <input
-          bind:value={username}
-          type="text"
-          placeholder="Username"
-          class={_inputClass} />
+      <div class="login-button-container">
+        <button disabled={loading} on:click={login} class={_buttonClass}>
+          Log in to {name}
+        </button>
       </div>
 
-      <div class="control">
-        <input
-          bind:value={password}
-          type="password"
-          placeholder="Password"
-          class={_inputClass} />
-      </div>
+      {#if error}
+        <div class="incorrect-details-panel">
+          Incorrect username or password
+        </div>
+      {/if}
     </div>
-
-    <div class="login-button-container">
-      <button disabled={loading} on:click={login} class={_buttonClass}>
-        Log in to {name}
-      </button>
-    </div>
-
-    {#if error}
-      <div class="incorrect-details-panel">Incorrect username or password</div>
-    {/if}
   </div>
 </div>
 
 <style>
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+  }
   .root {
     height: 100%;
     display: flex;
@@ -107,7 +102,7 @@
 
   .header-content {
     font-family: Inter;
-    font-weight: 700;
+    font-weight: 600;
     color: #1f1f1f;
     font-size: 48px;
     line-height: 72px;

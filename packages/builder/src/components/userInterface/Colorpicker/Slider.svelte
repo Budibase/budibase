@@ -1,36 +1,61 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte";
-  import dragable from "./drag.js";
+  import { onMount, createEventDispatcher } from "svelte"
+  import dragable from "./drag.js"
 
-  export let value = 1;
-  export let type = "hue";
+  export let value = 1
+  export let type = "hue"
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher()
 
-  let slider;
-  let sliderWidth = 0;
+  let slider
+  let sliderWidth = 0
 
   function onSliderChange(mouseX, isDrag = false) {
-    const { left, width } = slider.getBoundingClientRect();
-    let clickPosition = mouseX - left;
+    const { left, width } = slider.getBoundingClientRect()
+    let clickPosition = mouseX - left
 
     let percentageClick = (clickPosition / sliderWidth).toFixed(2)
-    
+
     if (percentageClick >= 0 && percentageClick <= 1) {
-      let value =
-        type === "hue"
-          ? 360 * percentageClick
-          : percentageClick;
-      
-      dispatch("change", {color: value, isDrag});
+      let value = type === "hue" ? 360 * percentageClick : percentageClick
+
+      dispatch("change", { color: value, isDrag })
     }
   }
 
   $: thumbPosition =
-    type === "hue" ? sliderWidth * (value / 360) : sliderWidth * value;
+    type === "hue" ? sliderWidth * (value / 360) : sliderWidth * value
 
-  $: style = `transform: translateX(${thumbPosition - 6}px);`;
+  $: style = `transform: translateX(${thumbPosition - 6}px);`
 </script>
+
+<div
+  bind:this={slider}
+  bind:clientWidth={sliderWidth}
+  on:click={event => handleClick(event.clientX)}
+  class="color-format-slider"
+  class:hue={type === 'hue'}
+  class:alpha={type === 'alpha'}>
+  <div
+    use:dragable
+    on:drag={e => handleClick(e.detail)}
+    class="slider-thumb"
+    {style} />
+</div>
+<div
+  bind:this={slider}
+  bind:clientWidth={sliderWidth}
+  on:click={event => onSliderChange(event.clientX)}
+  class="color-format-slider"
+  class:hue={type === 'hue'}
+  class:alpha={type === 'alpha'}>
+  <div
+    use:dragable
+    on:drag={e => onSliderChange(e.detail, true)}
+    on:dragend
+    class="slider-thumb"
+    {style} />
+</div>
 
 <style>
   .color-format-slider {
@@ -69,21 +94,6 @@
     border: 1px solid #777676;
     border-radius: 50%;
     background-color: #ffffff;
-    cursor:grab;
+    cursor: grab;
   }
 </style>
-
-<div
-  bind:this={slider}
-  bind:clientWidth={sliderWidth}
-  on:click={event => onSliderChange(event.clientX)}
-  class="color-format-slider"
-  class:hue={type === 'hue'}
-  class:alpha={type === 'alpha'}>
-  <div
-    use:dragable
-    on:drag={e => onSliderChange(e.detail, true)}
-    on:dragend
-    class="slider-thumb"
-    {style} />
-</div>

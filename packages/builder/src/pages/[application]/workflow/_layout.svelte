@@ -22,13 +22,13 @@
 <style>
   .content {
     position: relative;
-    background: var(--background);
+    background: var(--grey-1);
   }
 
   .root {
     height: 100%;
     display: flex;
-    background: var(--grey-light);
+    background: var(--grey-1);
   }
 
   .content {
@@ -39,7 +39,7 @@
   .nav {
     overflow: auto;
     width: 300px;
-    border-right: 1px solid var(--grey);
+    border-right: 1px solid var(--grey-2);
     background: var(--white);
   }
 
