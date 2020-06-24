@@ -45,7 +45,7 @@ describe("/models", () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
-            expect(res.res.statusMessage).toEqual("Model TestModel created successfully.");            
+            expect(res.res.statusMessage).toEqual("Model TestModel saved successfully.");            
             expect(res.body.name).toEqual("TestModel");            
             done();
         });
