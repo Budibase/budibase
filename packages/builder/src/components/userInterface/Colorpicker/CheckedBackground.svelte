@@ -9,13 +9,8 @@
   export let margin = ""
 
   $: style = buildStyle({ backgroundSize, borderRadius, height, width, margin })
-
-  $: style = buildStyle({ backgroundSize, borderRadius, height, width })
 </script>
 
-<div {style}>
-  <slot />
-</div>
 <div in:fade {style}>
   <slot />
 </div>
