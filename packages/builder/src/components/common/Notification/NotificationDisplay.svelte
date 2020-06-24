@@ -16,17 +16,20 @@
   $: if ($notificationStore.notifications.length) {
     setTimeout(() => {
       notificationStore.update(state => {
-        state.notifications.shift();
+        state.notifications.shift()
         state.notifications = state.notifications
-        return state;
+        return state
       })
     }, timeout)
-  } 
+  }
 </script>
 
 <ul class="notifications">
   {#each $notificationStore.notifications as notification (notification.id)}
-    <li class="toast" style="background: {themes[notification.type]};" transition:fade>
+    <li
+      class="toast"
+      style="background: {themes[notification.type]};"
+      transition:fade>
       <div class="content">{notification.message}</div>
       {#if notification.icon}
         <i class={notification.icon} />

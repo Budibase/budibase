@@ -78,7 +78,10 @@
   {:else if field.type === 'link'}
     <div class="field">
       <label>Link</label>
-      <select class="budibase__input" bind:value={field.modelId} on:change={attachModelIdToSchema}>
+      <select
+        class="budibase__input"
+        bind:value={field.modelId}
+        on:change={attachModelIdToSchema}>
         <option value={''} />
         {#each $backendUiStore.models as model}
           {#if model._id !== $backendUiStore.draftModel._id}
