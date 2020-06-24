@@ -50,7 +50,6 @@
     ]
   },
   "dependencies": {
-    "@beyonk/svelte-notifications": "^2.0.3",
     "@budibase/bbui": "^1.10.1",
     "@budibase/client": "^0.0.32",
     "@nx-js/compiler-util": "^2.0.0",
