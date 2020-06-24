@@ -45,7 +45,7 @@ exports.save = async function(ctx) {
 
   // create links in other tables
   for (let key in record) {
-    if (Array.isArray(record[key])) {
+    if (model.schema[key].type === "link") {
       const linked = await db.allDocs({
         include_docs: true,
         keys: record[key],

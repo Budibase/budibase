@@ -59,6 +59,7 @@
   .content {
     padding: 10px;
     display: block;
+    color: var(--white);
     font-weight: 500;
   }
 </style>
