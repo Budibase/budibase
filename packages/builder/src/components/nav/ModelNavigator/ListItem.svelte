@@ -32,11 +32,11 @@
   }
 
   .selected {
-    background-color: var(--secondary);
+    background-color: var(--blue-light);
   }
 
   div:hover {
-    background-color: var(--secondary);
+    background-color: var(--blue-light);
     cursor: pointer;
   }
 

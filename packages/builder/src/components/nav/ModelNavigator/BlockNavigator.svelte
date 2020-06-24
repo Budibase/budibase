@@ -63,12 +63,12 @@
   }
 
   span:hover {
-    background: var(--secondary);
+    background: var(--blue-light);
     cursor: pointer;
   }
 
   .selected {
-    background: var(--secondary);
+    background: var(--blue-light);
     color: var(--ink);
   }
 
