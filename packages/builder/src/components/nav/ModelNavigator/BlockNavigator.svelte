@@ -18,6 +18,7 @@
 
   function addField(blockDefinition) {
     backendUiStore.actions.models.addField(blockDefinition)
+    backendUiStore.actions.models.fetch()
   }
 </script>
 

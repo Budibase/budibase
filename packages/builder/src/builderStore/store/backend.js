@@ -50,6 +50,14 @@ export const getBackendUiStore = () => {
         }),
     },
     models: {
+      fetch: async () => {
+        const modelsResponse = await api.get(`/api/models`)
+        const models = await modelsResponse.json()
+        store.update(state => {
+          state.models = models
+          return state
+        })
+      },
       select: model =>
         store.update(state => {
           state.selectedModel = model
