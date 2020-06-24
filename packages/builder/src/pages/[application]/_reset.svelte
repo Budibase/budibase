@@ -1,6 +1,6 @@
 <script>
   import Modal from "svelte-simple-modal"
-  import { store } from "builderStore"
+  import { store, workflowStore } from "builderStore"
   import { get } from "builderStore/api"
 
   import { fade } from "svelte/transition"
@@ -20,6 +20,7 @@
 
     if (res.ok) {
       await store.setPackage(pkg)
+      workflowStore.actions.fetch()
       return pkg
     } else {
       throw new Error(pkg)
