@@ -137,6 +137,12 @@
           </div>
         </div>
         <div class="buttons">
+          <button
+            data-cy="save-workflow-setup"
+            class="workflow-button hoverable"
+            on:click={saveWorkflow}>
+            Save Workflow
+          </button>
           <button class="delete-workflow-button" on:click={deleteWorkflow}>
             Delete Workflow
           </button>
