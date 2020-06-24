@@ -17,9 +17,7 @@ const run = async opts => {
     exec(`cd ${join(opts.dir, opts.applicationId)} && npm install`)
     console.log(chalk.green(`Budibase app ${opts.name} created!`))
   } catch (error) {
-    console.error(
-      chalk.red("Error creating new app", JSON.stringify(error, { space: 2 }))
-    )
+    console.error(chalk.red("Error creating new app", error))
   }
 }
 
@@ -53,7 +51,9 @@ const createAppInstance = async opts => {
   const createInstCtx = {
     params: {
       clientId: process.env.CLIENT_ID,
-      applicationId: opts.applicationId,
+    },
+    user: {
+      appId: opts.applicationId,
     },
     request: {
       body: { name: `dev-${process.env.CLIENT_ID}` },

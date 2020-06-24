@@ -26,3 +26,7 @@
     font-weight: 550;
   }
 </style>
+
+<div>
+  <input on:input on:change type="text" {value} maxlength="25" />
+</div>

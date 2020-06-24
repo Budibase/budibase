@@ -7,28 +7,28 @@ const router = Router()
 
 router
   .get(
-    "/api/:instanceId/:modelId/records",
+    "/api/:modelId/records",
     authorized(READ_MODEL, ctx => ctx.params.modelId),
     recordController.fetchModelRecords
   )
   .get(
-    "/api/:instanceId/:modelId/records/:recordId",
+    "/api/:modelId/records/:recordId",
     authorized(READ_MODEL, ctx => ctx.params.modelId),
     recordController.find
   )
-  .post("/api/:instanceId/records/search", recordController.search)
+  .post("/api/records/search", recordController.search)
   .post(
-    "/api/:instanceId/:modelId/records",
+    "/api/:modelId/records",
     authorized(WRITE_MODEL, ctx => ctx.params.modelId),
     recordController.save
   )
   .post(
-    "/api/:instanceId/:modelId/records/validate",
+    "/api/:modelId/records/validate",
     authorized(WRITE_MODEL, ctx => ctx.params.modelId),
     recordController.validate
   )
   .delete(
-    "/api/:instanceId/:modelId/records/:recordId/:revId",
+    "/api/:modelId/records/:recordId/:revId",
     authorized(WRITE_MODEL, ctx => ctx.params.modelId),
     recordController.destroy
   )

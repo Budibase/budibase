@@ -3,14 +3,13 @@
 
   export let _bb
   export let onLoad
-  export let _instanceId
   export let model
 
   let headers = []
   let store = _bb.store
 
   async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/${_instanceId}/views/all_${model}`
+    const FETCH_RECORDS_URL = `/api/views/all_${model}`
 
     const response = await _bb.api.get(FETCH_RECORDS_URL)
     if (response.status === 200) {

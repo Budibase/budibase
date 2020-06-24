@@ -2,7 +2,6 @@
   import { onMount } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import { WorkflowList, BlockList } from "./"
-  import api from "builderStore/api"
   import blockDefinitions from "./blockDefinitions"
 
   let selectedTab = "WORKFLOWS"
@@ -11,6 +10,7 @@
 
 <header>
   <span
+    data-cy="workflow-list"
     class="hoverable workflow-header"
     class:selected={selectedTab === 'WORKFLOWS'}
     on:click={() => (selectedTab = 'WORKFLOWS')}>
@@ -18,6 +18,7 @@
   </span>
   {#if $workflowStore.currentWorkflow}
     <span
+      data-cy="add-workflow-component"
       class="hoverable"
       class:selected={selectedTab === 'ADD'}
       on:click={() => (selectedTab = 'ADD')}>
