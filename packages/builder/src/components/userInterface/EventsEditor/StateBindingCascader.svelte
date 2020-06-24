@@ -14,11 +14,6 @@
 
   let isOpen = false
 
-  $: {
-    let p = parameter
-    console.log(JSON.stringify(p))
-  }
-
   const capitalize = s => {
     if (typeof s !== "string") return ""
     return s.charAt(0).toUpperCase() + s.slice(1)
