@@ -57,13 +57,14 @@
 .budibase__nav-item {
     cursor: pointer;
     padding: 0 4px 0 2px;
-    height: 40px;
+    height: 36px;
     margin: 0px 0px 0px 0px;
     border-radius: 5px;
     display: flex;
     align-items: center;
     font-size: 14px;
     transition: 0.2s;
+    border-top: var(--grey-1) .5px solid;
 }
 
 .budibase__nav-item.selected {
@@ -76,7 +77,7 @@
 }
 
 .budibase__input {
-    height: 35px;
+    height: 36px;
     width: 220px;
     border-radius: 3px;
     border: 1px solid var(--grey-4);

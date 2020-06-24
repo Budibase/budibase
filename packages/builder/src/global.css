@@ -39,7 +39,7 @@
 
 html, body {
     display: grid;
-    font-family: var(--font-normal);
+    font-family: inter;
     color: var(--ink);
     padding: 0;
     margin: 0;
