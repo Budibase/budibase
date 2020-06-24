@@ -23,7 +23,10 @@
 
   const login = async () => {
     loading = true
-    const response = await _bb.api.post("/api/authenticate", { username, password })
+    const response = await _bb.api.post("/api/authenticate", {
+      username,
+      password,
+    })
     if (response.status === 200) {
       const json = await response.json()
       localStorage.setItem("budibase:token", json.token)
@@ -39,19 +42,11 @@
 <div class="container">
   <div class="root">
     <div class="content">
-      {#if _logo}
+      {#if logo}
         <div class="logo-container">
-          <img src={_logo} alt="logo" />
+          <img src={logo} alt="logo" />
         </div>
       {/if}
-
-
-<div class="root">
-  <div class="content">
-    {#if logo}
-      <div class="logo-container">
-        <img src={logo} alt="logo" />
-      </div>
 
       <div class="login-button-container">
         <button disabled={loading} on:click={login} class={_buttonClass}>

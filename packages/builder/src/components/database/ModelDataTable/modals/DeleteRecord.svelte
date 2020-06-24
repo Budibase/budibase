@@ -5,7 +5,6 @@
 
   export let record
   export let onClosed
-
 </script>
 
 <section>
