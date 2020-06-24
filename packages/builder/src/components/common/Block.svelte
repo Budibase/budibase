@@ -47,7 +47,7 @@
   }
 
   .secondary {
-    background: var(--secondary);
+    background: var(--blue-light);
   }
 
   .tertiary {

@@ -112,7 +112,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--secondary);
+    background: var(--blue-light);
     color: var(--ink);
     font-size: 20px;
     border-radius: 3px;

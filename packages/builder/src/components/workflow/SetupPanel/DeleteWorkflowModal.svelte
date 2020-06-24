@@ -49,7 +49,7 @@
   header i {
     margin-right: 10px;
     font-size: 20px;
-    background: var(--secondary);
+    background: var(--blue-light);
     color: var(--grey-4);
     padding: 8px;
   }
