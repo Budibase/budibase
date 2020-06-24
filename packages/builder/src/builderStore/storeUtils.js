@@ -46,8 +46,9 @@ export const saveScreenApi = (screen, s) => {
 }
 
 export const renameCurrentScreen = (newname, state) => {
-  const oldname = state.currentPreviewItem.name
-  state.currentPreviewItem.name = newname
+  const oldname = state.currentPreviewItem.props._instanceName
+  state.currentPreviewItem.props._instanceName = newname
+
   api.patch(
     `/_builder/api/${state.appId}/pages/${state.currentPageName}/screen`,
     {
