@@ -184,7 +184,7 @@
   }
 
   .budibase_input {
-    height: 35px;
+    height: 36px;
     width: 244px;
     border-radius: 3px;
     background-color: var(--grey-2);
