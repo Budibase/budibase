@@ -12,10 +12,14 @@
     {
       name: "Admin",
       key: "ADMIN",
+      canExecute: true,
+      editable: false,
     },
     {
       name: "Power User",
       key: "POWER_USER",
+      canExecute: true,
+      editable: false,
     },
   ]
 
@@ -123,10 +127,10 @@
           <div class="config-item">
             <label class="uk-form-label">User Access</label>
             <div class="access-levels">
-              {#each ACCESS_LEVELS as { name, key }}
+              {#each ACCESS_LEVELS as level}
                 <span class="access-level">
-                  <label>{name}</label>
-                  <input class="uk-checkbox" type="checkbox" />
+                  <label>{level.name}</label>
+                  <input class="uk-checkbox" type="checkbox" disabled={!level.editable} bind:checked={level.canExecute}/>
                 </span>
               {/each}
             </div>
