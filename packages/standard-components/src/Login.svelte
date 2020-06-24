@@ -48,6 +48,7 @@
     }
   }
 </script>
+
 <div class="container">
   <div class="root">
     <div class="content">
@@ -84,22 +85,23 @@
       </div>
 
       {#if error}
-        <div class="incorrect-details-panel">Incorrect username or password</div>
+        <div class="incorrect-details-panel">
+          Incorrect username or password
+        </div>
       {/if}
     </div>
   </div>
 </div>
 
 <style>
-
-.container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
-  position: absolute;
-}
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+  }
   .root {
     height: 100%;
     display: flex;

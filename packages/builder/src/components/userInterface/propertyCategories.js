@@ -1,6 +1,5 @@
 import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
-import InputGroup from "../common/Inputs/InputGroup.svelte"
 import FlatButtonGroup from "./FlatButtonGroup.svelte"
 import Colorpicker from "./Colorpicker"
 /*
@@ -71,13 +70,6 @@ export const layout = [
       { label: "no wrap", value: "noWrap" },
     ],
   },
-]
-
-const spacingMeta = [
-  { placeholder: "T" },
-  { placeholder: "R" },
-  { placeholder: "B" },
-  { placeholder: "L" },
 ]
 
 export const margin = [
@@ -378,7 +370,20 @@ export const typography = [
     label: "size",
     key: "font-size",
     control: OptionSelect,
-    options: ["8px", "10px", "12px", "14px", "16px", "18px", "20px", "24px", "32px", "48px", "60px", "72px"],
+    options: [
+      "8px",
+      "10px",
+      "12px",
+      "14px",
+      "16px",
+      "18px",
+      "20px",
+      "24px",
+      "32px",
+      "48px",
+      "60px",
+      "72px",
+    ],
     textAlign: "center",
   },
   {
@@ -444,17 +449,50 @@ export const background = [
     defaultValue: "None",
     options: [
       { label: "None", value: "None" },
-      { label: "Warm Flame", value: "linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);" },
-      { label: "Night Fade", value: "linear-gradient(to top, #a18cd1 0%, #fbc2eb 100%);" },
-      { label: "Spring Warmth", value: "linear-gradient(to top, #fad0c4 0%, #ffd1ff 100%);" },
-      { label: "Sunny Morning", value: "linear-gradient(120deg, #f6d365 0%, #fda085 100%);" },
-      { label: "Winter Neva", value: "linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);" },
-      { label: "Tempting Azure", value: "linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);" },
-      { label: "Heavy Rain", value: "linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);" },
-      { label: "Deep Blue", value: "linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);" },
-      { label: "Near Moon", value: "linear-gradient(to top, #5ee7df 0%, #b490ca 100%);" },
-      { label: "Wild Apple", value: "linear-gradient(to top, #d299c2 0%, #fef9d7 100%);" },
-      { label: "Plum Plate", value: "linear-gradient(135deg, #667eea 0%, #764ba2 100%);" },
+      {
+        label: "Warm Flame",
+        value: "linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);",
+      },
+      {
+        label: "Night Fade",
+        value: "linear-gradient(to top, #a18cd1 0%, #fbc2eb 100%);",
+      },
+      {
+        label: "Spring Warmth",
+        value: "linear-gradient(to top, #fad0c4 0%, #ffd1ff 100%);",
+      },
+      {
+        label: "Sunny Morning",
+        value: "linear-gradient(120deg, #f6d365 0%, #fda085 100%);",
+      },
+      {
+        label: "Winter Neva",
+        value: "linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);",
+      },
+      {
+        label: "Tempting Azure",
+        value: "linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);",
+      },
+      {
+        label: "Heavy Rain",
+        value: "linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);",
+      },
+      {
+        label: "Deep Blue",
+        value: "linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);",
+      },
+      {
+        label: "Near Moon",
+        value: "linear-gradient(to top, #5ee7df 0%, #b490ca 100%);",
+      },
+      {
+        label: "Wild Apple",
+        value: "linear-gradient(to top, #d299c2 0%, #fef9d7 100%);",
+      },
+      {
+        label: "Plum Plate",
+        value: "linear-gradient(135deg, #667eea 0%, #764ba2 100%);",
+      },
     ],
   },
   {
@@ -528,14 +566,7 @@ export const effects = [
     key: "opacity",
     control: OptionSelect,
     textAlign: "center",
-    options: [
-      "0",
-      "0.2",
-      "0.4",
-      "0.6",
-      "0.8",
-      "1",
-    ],
+    options: ["0", "0.2", "0.4", "0.6", "0.8", "1"],
   },
   {
     label: "Rotate",
@@ -544,16 +575,16 @@ export const effects = [
     defaultValue: "0",
     options: [
       { label: "None", value: "0" },
-      { label: "45 deg", value:"rotate(45deg)" },
-      { label: "90 deg", value:"rotate(90deg)" },
-      { label: "135 deg", value:"rotate(135deg)" },
-      { label: "180 deg", value:"rotate(180deg)" },
-      { label: "225 deg", value:"rotate(225deg)" },
-      { label: "270 deg", value:"rotate(270deg)" },
-      { label: "315 deg", value:"rotate(315deg)" },
-      { label: "360 deg", value:"rotate(360deg)" },
+      { label: "45 deg", value: "rotate(45deg)" },
+      { label: "90 deg", value: "rotate(90deg)" },
+      { label: "135 deg", value: "rotate(135deg)" },
+      { label: "180 deg", value: "rotate(180deg)" },
+      { label: "225 deg", value: "rotate(225deg)" },
+      { label: "270 deg", value: "rotate(270deg)" },
+      { label: "315 deg", value: "rotate(315deg)" },
+      { label: "360 deg", value: "rotate(360deg)" },
     ],
-  }, 
+  },
   {
     label: "Shadow",
     key: "box-shadow",
@@ -613,7 +644,7 @@ export const transitions = [
     control: OptionSelect,
     textAlign: "center",
     placeholder: "sec",
-    options: ["0.2ms", "0.4ms", "0.8ms", "1s", "2s", "4s",],
+    options: ["0.2ms", "0.4ms", "0.8ms", "1s", "2s", "4s"],
   },
   {
     label: "Ease",

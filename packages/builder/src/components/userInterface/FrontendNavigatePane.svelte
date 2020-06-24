@@ -14,9 +14,7 @@
 
 <PagesList />
 
-<button class="newscreen" on:click={newScreen}>
-  Create New Screen
-</button>
+<button class="newscreen" on:click={newScreen}>Create New Screen</button>
 
 <PageLayout layout={$store.pages[$store.currentPageName]} />
 

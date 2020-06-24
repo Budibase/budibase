@@ -9,10 +9,7 @@
   $: useIcon = !!icon
 </script>
 
-<div
-  class="flatbutton"
-  class:selected
-  on:click={() => onClick(value || text)}>
+<div class="flatbutton" class:selected on:click={() => onClick(value || text)}>
   {#if useIcon}
     <i class={icon} />
   {:else}
