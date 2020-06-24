@@ -21,7 +21,7 @@
   .select-container {
     font-size: 14px;
     position: relative;
-    border: var(--grey-dark) 1px solid;
+    border: var(--grey-4) 1px solid;
   }
 
   .adjusted {

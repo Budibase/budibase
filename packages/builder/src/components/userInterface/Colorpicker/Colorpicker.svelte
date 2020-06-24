@@ -151,19 +151,27 @@
 
 <div class="colorpicker-container">
 
-  <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
+  <div class="palette-panel">
+    <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
+  </div>
 
   <div class="control-panel">
     <div class="alpha-hue-panel">
       <div>
-        <div class="selected-color" style={`background: ${value}`} />
+        <CheckedBackground borderRadius="50%" backgroundSize="8px">
+          <div class="selected-color" {style} />
+        </CheckedBackground>
       </div>
       <div>
         <Slider type="hue" value={h} on:change={hue => setHue(hue.detail)} />
-        <Slider
-          type="alpha"
-          value={a}
-          on:change={alpha => setAlpha(alpha.detail)} />
+
+        <CheckedBackground borderRadius="10px" backgroundSize="7px">
+          <Slider
+            type="alpha"
+            value={a}
+            on:change={alpha => setAlpha(alpha.detail)} />
+        </CheckedBackground>
+
       </div>
     </div>
 
