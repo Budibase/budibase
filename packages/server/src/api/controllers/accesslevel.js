@@ -8,7 +8,7 @@ const {
 } = require("../../utilities/accessLevels")
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const body = await db.query("database/by_type", {
     include_docs: true,
     key: ["accesslevel"],
@@ -19,12 +19,12 @@ exports.fetch = async function(ctx) {
     {
       _id: ADMIN_LEVEL_ID,
       name: "Admin",
-      permissions: await generateAdminPermissions(ctx.params.instanceId),
+      permissions: await generateAdminPermissions(ctx.user.instanceId),
     },
     {
       _id: POWERUSER_LEVEL_ID,
       name: "Power User",
-      permissions: await generatePowerUserPermissions(ctx.params.instanceId),
+      permissions: await generatePowerUserPermissions(ctx.user.instanceId),
     },
   ]
 
@@ -32,12 +32,12 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   ctx.body = await db.get(ctx.params.levelId)
 }
 
 exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const level = await db.get(ctx.params.levelId)
   level.name = ctx.body.name
   level.permissions = ctx.request.body.permissions
@@ -48,7 +48,7 @@ exports.update = async function(ctx) {
 }
 
 exports.patch = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   const level = await db.get(ctx.params.levelId)
   const { removedPermissions, addedPermissions, _rev } = ctx.request.body
 
@@ -84,7 +84,7 @@ exports.patch = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
 
   const level = {
     name: ctx.request.body.name,
@@ -101,7 +101,7 @@ exports.create = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
+  const db = new CouchDB(ctx.user.instanceId)
   await db.remove(ctx.params.levelId, ctx.params.rev)
   ctx.message = `Access Level ${ctx.params.id} deleted successfully`
   ctx.status = 200

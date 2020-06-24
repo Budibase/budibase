@@ -33,7 +33,7 @@ describe("/models", () => {
 
     it("returns a success message when the model is successfully created", done => {
       request
-        .post(`/api/${instance._id}/models`)
+        .post(`/api/models`)
         .send({ 
           name: "TestModel",
           key: "name",
@@ -41,7 +41,7 @@ describe("/models", () => {
             name: { type: "string" }
           }
         })
-        .set(defaultHeaders)
+        .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
@@ -55,8 +55,9 @@ describe("/models", () => {
         await builderEndpointShouldBlockNormalUsers({
           request,
           method: "POST",
-          url: `/api/${instance._id}/models`,
+          url: `/api/models`,
           instanceId: instance._id,
+          appId: app._id,
           body: { 
             name: "TestModel",
             key: "name",
@@ -73,13 +74,13 @@ describe("/models", () => {
 
     beforeEach(async () => {
       instance = await createInstance(request, app._id)
-      testModel = await createModel(request, instance._id, testModel)
+      testModel = await createModel(request, app._id, instance._id, testModel)
     });
 
     it("returns all the models for that instance in the response body", done => {
       request
-        .get(`/api/${instance._id}/models`)
-        .set(defaultHeaders)
+        .get(`/api/models`)
+        .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
@@ -94,8 +95,9 @@ describe("/models", () => {
         await builderEndpointShouldBlockNormalUsers({
           request,
           method: "GET",
-          url: `/api/${instance._id}/models`,
+          url: `/api/models`,
           instanceId: instance._id,
+          appId: app._id,
         })
       })
     });
@@ -105,7 +107,7 @@ describe("/models", () => {
 
     beforeEach(async () => {
       instance = await createInstance(request, app._id)
-      testModel = await createModel(request, instance._id, testModel)
+      testModel = await createModel(request, app._id, instance._id, testModel)
     });
 
     afterEach(() => {
@@ -114,8 +116,8 @@ describe("/models", () => {
 
     it("returns a success response when a model is deleted.", async done => {
       request
-        .delete(`/api/${instance._id}/models/${testModel._id}/${testModel._rev}`)
-        .set(defaultHeaders)
+        .delete(`/api/models/${testModel._id}/${testModel._rev}`)
+        .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
@@ -125,7 +127,7 @@ describe("/models", () => {
       })
 
     it("deletes linked references to the model after deletion", async done => {
-      const linkedModel = await createModel(request, instance._id, {
+      const linkedModel = await createModel(request, app._id, instance._id, {
         name: "LinkedModel",
         type: "model",
         key: "name",
@@ -147,8 +149,8 @@ describe("/models", () => {
       })
 
       request
-        .delete(`/api/${instance._id}/models/${testModel._id}/${testModel._rev}`)
-        .set(defaultHeaders)
+        .delete(`/api/models/${testModel._id}/${testModel._rev}`)
+        .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
@@ -163,8 +165,9 @@ describe("/models", () => {
       await builderEndpointShouldBlockNormalUsers({
         request,
         method: "DELETE",
-        url: `/api/${instance._id}/models/${testModel._id}/${testModel._rev}`,
+        url: `/api/models/${testModel._id}/${testModel._rev}`,
         instanceId: instance._id,
+        appId: app._id,
       })
     })
 

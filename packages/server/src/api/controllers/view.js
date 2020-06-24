@@ -3,7 +3,7 @@ const CouchDB = require("../../db")
 const controller = {
   query: async () => {},
   fetch: async ctx => {
-    const db = new CouchDB(ctx.params.instanceId)
+    const db = new CouchDB(ctx.user.instanceId)
     const designDoc = await db.get("_design/database")
     const response = []
 
@@ -24,7 +24,7 @@ const controller = {
     ctx.body = response
   },
   create: async ctx => {
-    const db = new CouchDB(ctx.params.instanceId)
+    const db = new CouchDB(ctx.user.instanceId)
     const newView = ctx.request.body
 
     const designDoc = await db.get("_design/database")
@@ -38,7 +38,7 @@ const controller = {
     ctx.message = `View ${newView.name} created successfully.`
   },
   destroy: async ctx => {
-    const db = new CouchDB(ctx.params.instanceId)
+    const db = new CouchDB(ctx.user.instanceId)
     ctx.body = await db.destroy(ctx.params.userId)
   },
 }

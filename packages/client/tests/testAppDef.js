@@ -1,19 +1,33 @@
-import { JSDOM } from "jsdom"
+import jsdom, { JSDOM } from "jsdom"
 import { loadBudibase } from "../src/index"
 
-export const load = async (page, screens, url, appRootPath) => {
+export const load = async (page, screens, url, host = "test.com") => {
   screens = screens || []
   url = url || "/"
-  appRootPath = appRootPath || ""
+
+  const fullUrl = `http://${host}${url}`
+  const cookieJar = new jsdom.CookieJar()
+  const cookie = `${btoa("{}")}.${btoa('{"appId":"TEST_APP_ID"}')}.signature`
+  cookieJar.setCookie(
+    `budibase:token=${cookie};domain=${host};path=/`,
+    fullUrl,
+    {
+      looseMode: false,
+    },
+    () => {}
+  )
+
   const dom = new JSDOM("<!DOCTYPE html><html><body></body><html>", {
-    url: `http://test${url}`,
+    url: fullUrl,
+    cookieJar,
   })
+
   autoAssignIds(page.props)
   for (let s of screens) {
     autoAssignIds(s.props)
   }
   setAppDef(dom.window, page, screens)
-  addWindowGlobals(dom.window, page, screens, appRootPath, {
+  addWindowGlobals(dom.window, page, screens, {
     hierarchy: {},
     actions: [],
     triggers: [],
@@ -27,11 +41,10 @@ export const load = async (page, screens, url, appRootPath) => {
   return { dom, app }
 }
 
-const addWindowGlobals = (window, page, screens, appRootPath) => {
+const addWindowGlobals = (window, page, screens) => {
   window["##BUDIBASE_FRONTEND_DEFINITION##"] = {
     page,
     screens,
-    appRootPath,
   }
 }
 
@@ -88,7 +101,6 @@ const setAppDef = (window, page, screens) => {
     componentLibraries: [],
     page,
     screens,
-    appRootPath: "",
   }
 }
 

@@ -34,7 +34,7 @@ describe("/applications", () => {
       const res = await request
         .post("/api/applications")
         .send({ name: "My App" })
-        .set(defaultHeaders)
+        .set(defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
       expect(res.res.statusMessage).toEqual("Application My App created successfully")
@@ -49,6 +49,7 @@ describe("/applications", () => {
         method: "POST",
         url: `/api/applications`,
         instanceId: instance._id,
+        appId: otherApplication._id,
         body: { name: "My App" }
       })
     })
@@ -63,7 +64,7 @@ describe("/applications", () => {
 
       const res = await request
         .get("/api/applications")
-        .set(defaultHeaders)
+        .set(defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -77,13 +78,13 @@ describe("/applications", () => {
       const blah = await request
         .post("/api/applications")
         .send({ name: "app2", clientId: "new_client"})
-        .set(defaultHeaders)
+        .set(defaultHeaders())
         .expect('Content-Type', /json/)
         //.expect(200)
 
       const client1Res = await request
         .get(`/api/applications?clientId=${TEST_CLIENT_ID}`)
-        .set(defaultHeaders)
+        .set(defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
       
@@ -92,7 +93,7 @@ describe("/applications", () => {
 
       const client2Res = await request
         .get(`/api/applications?clientId=new_client`)
-        .set(defaultHeaders)
+        .set(defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
       
@@ -109,6 +110,7 @@ describe("/applications", () => {
         method: "GET",
         url: `/api/applications`,
         instanceId: instance._id,
+        appId: otherApplication._id,
       })
     })
   })
