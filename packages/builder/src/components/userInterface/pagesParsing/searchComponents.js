@@ -1,4 +1,4 @@
-import { find, isUndefined, filter, some, includes } from "lodash/fp"
+import { isUndefined, filter, some, includes } from "lodash/fp"
 import { pipe } from "components/common/core"
 
 const normalString = s => (s || "").trim().toLowerCase()
@@ -16,7 +16,7 @@ export const searchAllComponents = (components, phrase) => {
     pipe(vals, [some(v => includes(normalString(phrase))(normalString(v)))])
 
   const componentMatches = c => {
-    if (hasPhrase(c.name, ...(c.tags || []))) return true
+    if (hasPhrase(c._instanceName, ...(c.tags || []))) return true
 
     if (isRootComponent(c)) return false
 
@@ -28,10 +28,10 @@ export const searchAllComponents = (components, phrase) => {
   return filter(componentMatches)(components)
 }
 
-export const getExactComponent = (components, name) => {
-  const stringEquals = (s1, s2) => normalString(s1) === normalString(s2)
-
-  return pipe(components, [find(c => stringEquals(c.name, name))])
+export const getExactComponent = (components, name, isScreen = false) => {
+  return components.find(c =>
+    isScreen ? c.props._instanceName === name : c._instanceName === name
+  )
 }
 
 export const getAncestorProps = (components, name, found = []) => {
