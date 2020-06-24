@@ -4,7 +4,7 @@
   import { Router, basepath } from "@sveltech/routify"
   import { routes } from "../routify/routes"
   import { store, initialise } from "builderStore"
-  import NotificationDisplay from "components/common/Notification.svelte";
+  import NotificationDisplay from "components/common/Notification/NotificationDisplay.svelte";
 
   $basepath = "/_builder"
 </script>

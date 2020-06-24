@@ -1,9 +1,15 @@
 import { writable } from 'svelte/store'
+import { generate } from "shortid"
 
-export const notificationStore = writable()
+export const notificationStore = writable({
+  notifications: []
+})
 
-export function send(message, type = 'default', timeout) {
-  notificationStore.set({ type, message, timeout })
+export function send(message, type = 'default') {
+  notificationStore.update(state => {
+    state.notifications = [...state.notifications, { id: generate(), type, message }]
+    return state
+  })
 }
 
 export const notifier = {
