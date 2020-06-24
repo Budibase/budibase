@@ -4,7 +4,7 @@ body, html {
     overflow: hidden;
     background-repeat: repeat;
     background-size: 30px 30px;
-    background-color: #FBFBFB;
+    background-color: var(--grey-1);
     height: 100%;
 }
 #navigation {
@@ -63,7 +63,7 @@ body, html {
 }
 #leftswitch {
     border: 1px solid #E8E8EF;
-    background-color: #FBFBFB;
+    background-color: var(--grey-1);
     width: 111px;
     height: 39px;
     line-height: 39px;
@@ -326,7 +326,7 @@ body, html {
 
 .blockico i {
   font-size: 24px;
-  color: var(--dark-grey);
+  color: var(--grey-4);
 }
 
 .blockico span {

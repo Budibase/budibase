@@ -12,7 +12,7 @@
     if (v.target) {
       let val = props.valueKey ? v.target[props.valueKey] : v.target.value
       onChange(key, val)
-    }else if(v.detail) {
+    } else if (v.detail) {
       onChange(key, v.detail)
     } else {
       onChange(key, v)
@@ -55,7 +55,6 @@
     flex: 0 0 50px;
     display: flex;
     align-items: center;
-    padding: 0px 5px;
     font-size: 12px;
     font-weight: 400;
     text-align: left;
