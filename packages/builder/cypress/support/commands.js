@@ -105,11 +105,9 @@ Cypress.Commands.add("addButtonComponent", () => {
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {
-  cy.wait(4000)
-  cy.get(".close").click()
+  cy.get(".close", { timeout: 10000 }).click()
   cy.contains("frontend").click()
-  cy.wait(2000)
-  cy.get(".close").click()
+  cy.get(".close", { timeout: 10000 }).click()
 })
 
 Cypress.Commands.add("createScreen", (screenName, route) => {
