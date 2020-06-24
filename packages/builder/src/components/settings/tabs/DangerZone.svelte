@@ -1,5 +1,7 @@
 <script>
   import { Input, TextArea, Button } from "@budibase/bbui"
+  import Title from "../TabTitle.svelte"
+
   let value = ""
   let loading = false
 
@@ -10,6 +12,7 @@
   }
 </script>
 
+<Title>Danger Zone</Title>
 <div class="background">
   <Input
     on:change={e => (value = e.target.value)}
@@ -32,7 +35,7 @@
 <style>
   .background {
     display: grid;
-    grid-gap: 16px;
+    grid-gap: var(--space);
     border-radius: 5px;
     background-color: var(--light-grey);
     padding: 12px 12px 18px 12px;

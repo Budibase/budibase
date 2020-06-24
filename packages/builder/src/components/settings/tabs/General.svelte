@@ -1,7 +1,9 @@
 <script>
   import { Input, TextArea, Button } from "@budibase/bbui"
+  import Title from "../TabTitle.svelte"
 </script>
 
+<Title>General</Title>
 <div class="container">
   <div class="background">
     <Input thin edit placeholder="Enter your name" label="Name" />
@@ -14,7 +16,7 @@
 <style>
   .container {
     display: grid;
-    grid-gap: 16px;
+    grid-gap: var(--space);
   }
   .background {
     border-radius: 5px;

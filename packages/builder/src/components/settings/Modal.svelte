@@ -1,5 +1,5 @@
 <script>
-  import { General, Permissions, Users, Integrations, DangerZone } from "./tabs"
+  import { General, Users, DangerZone } from "./tabs"
 
   import { Input, TextArea, Button, Switcher } from "@budibase/bbui"
   import { SettingsIcon, CloseIcon } from "components/common/Icons/"
@@ -16,19 +16,9 @@
       component: General,
     },
     {
-      title: "Permissions",
-      key: "PERMISSIONS",
-      component: Permissions,
-    },
-    {
       title: "Users",
       key: "USERS",
       component: Users,
-    },
-    {
-      title: "Integrations",
-      key: "INTEGRATIONS",
-      component: Integrations,
     },
     {
       title: "Danger Zone",
