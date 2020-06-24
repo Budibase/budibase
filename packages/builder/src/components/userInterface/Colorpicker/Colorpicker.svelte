@@ -1,7 +1,7 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte";
-  import { fade } from 'svelte/transition';
-  import Swatch from "./Swatch.svelte";
+  import { onMount, createEventDispatcher } from "svelte"
+  import { fade } from "svelte/transition"
+  import Swatch from "./Swatch.svelte"
   import CheckedBackground from "./CheckedBackground.svelte"
   import { buildStyle } from "./helpers.js"
   import {
@@ -14,16 +14,16 @@
   import ButtonGroup from "./ButtonGroup.svelte"
   import Input from "./Input.svelte"
 
-  export let value = "#3ec1d3ff";
+  export let value = "#3ec1d3ff"
   export let swatches = [] //TODO: Safe swatches - limit to 12. warn in console
   export let disableSwatches = false
-  export let format = "hexa";
-  export let open = false;
-  
-  export let pickerHeight = 0;
-  export let pickerWidth = 0;
+  export let format = "hexa"
+  export let open = false
 
-  let adder = null;
+  export let pickerHeight = 0
+  export let pickerWidth = 0
+
+  let adder = null
 
   let h = null
   let s = null
@@ -33,7 +33,7 @@
   const dispatch = createEventDispatcher()
 
   onMount(() => {
-    if(!swatches.length > 0) {
+    if (!swatches.length > 0) {
       //Don't use locally stored recent colors if swatches have been passed as props
       getRecentColors()
     }
@@ -46,7 +46,7 @@
   function getRecentColors() {
     let colorStore = localStorage.getItem("cp:recent-colors")
     if (colorStore) {
-      swatches = JSON.parse(colorStore)      
+      swatches = JSON.parse(colorStore)
     }
   }
 
@@ -74,26 +74,26 @@
 
   //fired by choosing a color from the palette
   function setSaturationAndValue({ detail }) {
-    s = detail.s;
-    v = detail.v;
-    value = convertHsvaToFormat([h, s, v, a], format);
+    s = detail.s
+    v = detail.v
+    value = convertHsvaToFormat([h, s, v, a], format)
     dispatchValue()
   }
 
-  function setHue({color, isDrag}) {
-    h = color;
-    value = convertHsvaToFormat([h, s, v, a], format);   
-    if(!isDrag) {
+  function setHue({ color, isDrag }) {
+    h = color
+    value = convertHsvaToFormat([h, s, v, a], format)
+    if (!isDrag) {
       dispatchValue()
-    } 
+    }
   }
 
-  function setAlpha({color, isDrag}) {
-    a = color === "1.00" ? "1" : color;
-    value = convertHsvaToFormat([h, s, v, a], format);    
-    if(!isDrag) {
-        dispatchValue()
-      } 
+  function setAlpha({ color, isDrag }) {
+    a = color === "1.00" ? "1" : color
+    value = convertHsvaToFormat([h, s, v, a], format)
+    if (!isDrag) {
+      dispatchValue()
+    }
   }
 
   function dispatchValue() {
@@ -107,37 +107,36 @@
 
   function handleColorInput(text) {
     let format = getColorFormat(text)
-    if(format) {
+    if (format) {
       value = text
       convertAndSetHSVA()
     }
   }
 
   function dispatchInputChange() {
-    if(format) {
+    if (format) {
       dispatchValue()
     }
   }
 
   function addSwatch() {
-    if(format) {
+    if (format) {
       dispatch("addswatch", value)
       setRecentColor(value)
     }
   }
 
   function removeSwatch(idx) {
-    let removedSwatch = swatches.splice(idx, 1);
+    let removedSwatch = swatches.splice(idx, 1)
     swatches = swatches
     dispatch("removeswatch", removedSwatch)
     localStorage.setItem("cp:recent-colors", JSON.stringify(swatches))
   }
-  
 
   function applySwatch(color) {
-    if(value !== color) {
+    if (value !== color) {
       format = getColorFormat(color)
-      if(format) {
+      if (format) {
         value = color
         convertAndSetHSVA()
         dispatchValue()
@@ -145,9 +144,9 @@
     }
   }
 
-    $: border = (v > 90 && s < 5) ? "1px dashed #dedada" : ""
-    $: style = buildStyle({background: value, border})
-    $: shrink = swatches.length > 0
+  $: border = v > 90 && s < 5 ? "1px dashed #dedada" : ""
+  $: style = buildStyle({ background: value, border })
+  $: shrink = swatches.length > 0
 </script>
 
 <div class="colorpicker-container">
@@ -179,6 +178,73 @@
     <div class="format-input-panel">
       <ButtonGroup {format} onclick={changeFormatAndConvert} />
       <Input {value} on:input={event => handleColorInput(event.target.value)} />
+    </div>
+  </div>
+
+</div>
+<div
+  class="colorpicker-container"
+  bind:clientHeight={pickerHeight}
+  bind:clientWidth={pickerWidth}>
+
+  <div class="palette-panel">
+    <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
+  </div>
+
+  <div class="control-panel">
+    <div class="alpha-hue-panel">
+      <div>
+        <CheckedBackground borderRadius="50%" backgroundSize="8px">
+          <div class="selected-color" {style} />
+        </CheckedBackground>
+      </div>
+      <div>
+        <Slider
+          type="hue"
+          value={h}
+          on:change={hue => setHue(hue.detail)}
+          on:dragend={dispatchValue} />
+
+        <CheckedBackground borderRadius="10px" backgroundSize="7px">
+          <Slider
+            type="alpha"
+            value={a}
+            on:change={(alpha, isDrag) => setAlpha(alpha.detail, isDrag)}
+            on:dragend={dispatchValue} />
+        </CheckedBackground>
+
+      </div>
+    </div>
+
+    {#if !disableSwatches}
+      <div transition:fade class="swatch-panel">
+        {#if swatches.length > 0}
+          {#each swatches as color, idx}
+            <Swatch
+              {color}
+              on:click={() => applySwatch(color)}
+              on:removeswatch={() => removeSwatch(idx)} />
+          {/each}
+        {/if}
+        {#if swatches.length !== 12}
+          <div
+            bind:this={adder}
+            transition:fade
+            class="adder"
+            on:click={addSwatch}
+            class:shrink>
+            <span>&plus;</span>
+          </div>
+        {/if}
+      </div>
+    {/if}
+
+    <div class="format-input-panel">
+      <ButtonGroup {format} onclick={changeFormatAndConvert} />
+      <Input
+        {value}
+        on:input={event => handleColorInput(event.target.value)}
+        on:change={dispatchInputChange} />
     </div>
   </div>
 
@@ -227,7 +293,7 @@
     border-radius: 50%;
   }
 
-   .swatch-panel {
+  .swatch-panel {
     flex: 0 0 15px;
     display: flex;
     flex-flow: row wrap;
@@ -238,7 +304,7 @@
 
   .adder {
     flex: 1;
-    height: 20px;		
+    height: 20px;
     display: flex;
     transition: flex 0.5s;
     justify-content: center;
@@ -252,7 +318,7 @@
     font-weight: 500;
   }
 
-  .shrink { 
+  .shrink {
     flex: 0 0 20px;
   }
 
@@ -263,54 +329,3 @@
     padding-top: 3px;
   }
 </style>
-
-<div class="colorpicker-container" bind:clientHeight={pickerHeight} bind:clientWidth={pickerWidth}>
-
-  <div class="palette-panel">
-    <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
-  </div>
-
-  <div class="control-panel">
-    <div class="alpha-hue-panel">
-      <div>
-        <CheckedBackground borderRadius="50%" backgroundSize="8px">
-          <div class="selected-color" {style} />
-        </CheckedBackground>
-      </div>
-      <div>
-        <Slider type="hue" value={h} on:change={(hue) => setHue(hue.detail)} on:dragend={dispatchValue} />
-
-        <CheckedBackground borderRadius="10px" backgroundSize="7px">
-          <Slider
-            type="alpha"
-            value={a}
-            on:change={(alpha, isDrag) => setAlpha(alpha.detail, isDrag)} 
-            on:dragend={dispatchValue}
-            />
-        </CheckedBackground>
-        
-      </div>
-    </div>
-
-      {#if !disableSwatches}
-        <div transition:fade class="swatch-panel">
-          {#if swatches.length > 0}
-            {#each swatches as color, idx}
-              <Swatch {color} on:click={() => applySwatch(color)} on:removeswatch={() => removeSwatch(idx)} />
-            {/each}
-          {/if}
-          {#if swatches.length !== 12}
-            <div bind:this={adder} transition:fade class="adder" on:click={addSwatch} class:shrink>
-              <span>&plus;</span>
-            </div>
-          {/if}
-        </div>
-      {/if}
-
-    <div class="format-input-panel">
-      <ButtonGroup {format} onclick={changeFormatAndConvert} />
-      <Input {value} on:input={event => handleColorInput(event.target.value)} on:change={dispatchInputChange} />
-    </div>
-  </div>
-
-</div>

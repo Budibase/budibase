@@ -15,7 +15,6 @@
   }
 </script>
 
-
 <div
   class="workflow-block hoverable"
   on:click={addBlockToWorkflow}

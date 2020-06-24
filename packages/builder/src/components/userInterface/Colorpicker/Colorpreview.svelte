@@ -1,146 +1,143 @@
 <script>
-    import Colorpicker from "./Colorpicker.svelte"
-    import CheckedBackground from "./CheckedBackground.svelte"
-    import {createEventDispatcher, afterUpdate, beforeUpdate} from "svelte"
+  import Colorpicker from "./Colorpicker.svelte"
+  import CheckedBackground from "./CheckedBackground.svelte"
+  import { createEventDispatcher, afterUpdate, beforeUpdate } from "svelte"
 
-    import {buildStyle} from "./helpers.js"
-    import { fade } from 'svelte/transition';
-    import {getColorFormat} from "./utils.js"
+  import { buildStyle } from "./helpers.js"
+  import { fade } from "svelte/transition"
+  import { getColorFormat } from "./utils.js"
 
-    export let value = "#3ec1d3ff"
-    export let swatches = []
-    export let disableSwatches = false
-    export let open = false;
-    export let width = "25px"
-    export let height = "25px"
+  export let value = "#3ec1d3ff"
+  export let swatches = []
+  export let disableSwatches = false
+  export let open = false
+  export let width = "25px"
+  export let height = "25px"
 
-    let format = "hexa";
-    let dimensions = {top: 0, left: 0}
-    let colorPreview = null
+  let format = "hexa"
+  let dimensions = { top: 0, left: 0 }
+  let colorPreview = null
 
-    let previewHeight = null    
-    let previewWidth = null
-    let pickerWidth = 0
-    let pickerHeight = 0
+  let previewHeight = null
+  let previewWidth = null
+  let pickerWidth = 0
+  let pickerHeight = 0
 
-    let anchorEl = null
-    let parentNodes = [];
-    let errorMsg = null
+  let anchorEl = null
+  let parentNodes = []
+  let errorMsg = null
 
-    $: previewStyle = buildStyle({width, height, background: value})
-    $: errorPreviewStyle = buildStyle({width, height})
-    $: pickerStyle = buildStyle({top: `${dimensions.top}px`, left: `${dimensions.left}px`})    
+  $: previewStyle = buildStyle({ width, height, background: value })
+  $: errorPreviewStyle = buildStyle({ width, height })
+  $: pickerStyle = buildStyle({
+    top: `${dimensions.top}px`,
+    left: `${dimensions.left}px`,
+  })
 
-    const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher()
 
-    beforeUpdate(() => {
-       format = getColorFormat(value)
-       if(!format) {
-           errorMsg = `Colorpicker - ${value} is an unknown color format. Please use a hex, rgb or hsl value`
-           console.error(errorMsg)
-       }else{
-           errorMsg = null
-       }
-    })
-
-    afterUpdate(() => {
-        if(colorPreview && colorPreview.offsetParent && !anchorEl) {
-            //Anchor relative to closest positioned ancestor element. If none, then anchor to body
-            anchorEl = colorPreview.offsetParent 
-                let curEl = colorPreview
-                let els = []
-                //Travel up dom tree from preview element to find parent elements that scroll
-                while(!anchorEl.isSameNode(curEl)) {
-                    curEl = curEl.parentNode
-                    let elOverflow = window.getComputedStyle(curEl).getPropertyValue("overflow")                    
-                    if(/scroll|auto/.test(elOverflow)) {
-                        els.push(curEl)
-                    }
-                } 
-                parentNodes = els
-        }
-    })
-
-
-    function openColorpicker(event) {
-        if(colorPreview) {
-            open = true;        
-        }
+  beforeUpdate(() => {
+    format = getColorFormat(value)
+    if (!format) {
+      errorMsg = `Colorpicker - ${value} is an unknown color format. Please use a hex, rgb or hsl value`
+      console.error(errorMsg)
+    } else {
+      errorMsg = null
     }
+  })
 
-    $: if(open && colorPreview) {
-        const {top: spaceAbove, width, bottom, right, left: spaceLeft} = colorPreview.getBoundingClientRect()   
-        const {innerHeight, innerWidth} = window
-
-        const {offsetLeft, offsetTop} = colorPreview
-        //get the scrollTop value for all scrollable parent elements 
-        let scrollTop = parentNodes.reduce((scrollAcc, el) => scrollAcc += el.scrollTop, 0);
-
-        const spaceBelow = (innerHeight - spaceAbove) - previewHeight
-        const top = spaceAbove > spaceBelow ? (offsetTop - pickerHeight) - scrollTop : (offsetTop + previewHeight) - scrollTop      
-        
-        //TOO: Testing and Scroll Awareness for x Scroll
-        const spaceRight = (innerWidth - spaceLeft) + previewWidth
-        const left = spaceRight > spaceLeft ? (offsetLeft + previewWidth) : offsetLeft - pickerWidth
-
-        dimensions = {top, left}
+  afterUpdate(() => {
+    if (colorPreview && colorPreview.offsetParent && !anchorEl) {
+      //Anchor relative to closest positioned ancestor element. If none, then anchor to body
+      anchorEl = colorPreview.offsetParent
+      let curEl = colorPreview
+      let els = []
+      //Travel up dom tree from preview element to find parent elements that scroll
+      while (!anchorEl.isSameNode(curEl)) {
+        curEl = curEl.parentNode
+        let elOverflow = window
+          .getComputedStyle(curEl)
+          .getPropertyValue("overflow")
+        if (/scroll|auto/.test(elOverflow)) {
+          els.push(curEl)
+        }
+      }
+      parentNodes = els
     }
   })
 
   function openColorpicker(event) {
     if (colorPreview) {
-      const {
-        top: spaceAbove,
-        width,
-        bottom,
-        right,
-        left: spaceLeft,
-      } = colorPreview.getBoundingClientRect()
-      const { innerHeight, innerWidth } = window
-
-      const { offsetLeft, offsetTop } = colorPreview
-      //get the scrollTop value for all scrollable parent elements
-      let scrollTop = parentNodes.reduce(
-        (scrollAcc, el) => (scrollAcc += el.scrollTop),
-        0
-      )
-
-      const spaceBelow = innerHeight - spaceAbove - previewHeight
-      const top =
-        spaceAbove > spaceBelow
-          ? offsetTop - pickerHeight - scrollTop
-          : offsetTop + previewHeight - scrollTop
-
-      //TOO: Testing and Scroll Awareness for x Scroll
-      const spaceRight = innerWidth - spaceLeft + previewWidth
-      const left =
-        spaceRight > spaceLeft
-          ? offsetLeft + previewWidth
-          : offsetLeft - pickerWidth
-
-      dimensions = { top, left }
-
       open = true
     }
+  }
 
+  $: if (open && colorPreview) {
+    const {
+      top: spaceAbove,
+      width,
+      bottom,
+      right,
+      left: spaceLeft,
+    } = colorPreview.getBoundingClientRect()
+    const { innerHeight, innerWidth } = window
+
+    const { offsetLeft, offsetTop } = colorPreview
+    //get the scrollTop value for all scrollable parent elements
+    let scrollTop = parentNodes.reduce(
+      (scrollAcc, el) => (scrollAcc += el.scrollTop),
+      0
+    )
+
+    const spaceBelow = innerHeight - spaceAbove - previewHeight
+    const top =
+      spaceAbove > spaceBelow
+        ? offsetTop - pickerHeight - scrollTop
+        : offsetTop + previewHeight - scrollTop
+
+    //TOO: Testing and Scroll Awareness for x Scroll
+    const spaceRight = innerWidth - spaceLeft + previewWidth
+    const left =
+      spaceRight > spaceLeft
+        ? offsetLeft + previewWidth
+        : offsetLeft - pickerWidth
+
+    dimensions = { top, left }
+  }
+
+  function onColorChange(color) {
+    value = color.detail
+    dispatch("change", color.detail)
+  }
 </script>
 
 <div class="color-preview-container">
-    {#if !errorMsg}
-        <CheckedBackground borderRadius="3px" backgroundSize="8px">
-            <div bind:this={colorPreview} bind:clientHeight={previewHeight} bind:clientWidth={previewWidth} class="color-preview" style={previewStyle} on:click={openColorpicker} />        
-        </CheckedBackground>
+  {#if !errorMsg}
+    <CheckedBackground borderRadius="3px" backgroundSize="8px">
+      <div
+        bind:this={colorPreview}
+        bind:clientHeight={previewHeight}
+        bind:clientWidth={previewWidth}
+        class="color-preview"
+        style={previewStyle}
+        on:click={openColorpicker} />
+    </CheckedBackground>
 
-        {#if open}
-        <div transition:fade class="picker-container" style={pickerStyle}>
-            <Colorpicker on:change={onColorChange} on:addswatch on:removeswatch bind:format bind:value bind:pickerHeight bind:pickerWidth {swatches} {disableSwatches} {open} />
-        </div>
-        <div on:click|self={() => open = false} class="overlay"></div>
-        {/if}
-    {:else}
-        <div class="color-preview preview-error" style={errorPreviewStyle}>
-            <span>&times;</span>
-        </div>
+    {#if open}
+      <div transition:fade class="picker-container" style={pickerStyle}>
+        <Colorpicker
+          on:change={onColorChange}
+          on:addswatch
+          on:removeswatch
+          bind:format
+          bind:value
+          bind:pickerHeight
+          bind:pickerWidth
+          {swatches}
+          {disableSwatches}
+          {open} />
+      </div>
+      <div on:click|self={() => (open = false)} class="overlay" />
     {/if}
   {:else}
     <div class="color-preview preview-error" style={errorPreviewStyle}>

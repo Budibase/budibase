@@ -21,7 +21,8 @@
     if (
       clickX > 0 &&
       clickY > 0 &&
-      clickX < paletteWidth && clickY < paletteHeight
+      clickX < paletteWidth &&
+      clickY < paletteHeight
     ) {
       let s = (clickX / paletteWidth) * 100
       let v = 100 - (clickY / paletteHeight) * 100

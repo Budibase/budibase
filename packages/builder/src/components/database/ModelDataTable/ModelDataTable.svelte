@@ -55,14 +55,12 @@
 
   $: {
     if ($backendUiStore.selectedView) {
-      api
-        .fetchDataForView($backendUiStore.selectedView)
-        .then(records => {
-          data = records || []
-          headers = Object.keys($backendUiStore.selectedModel.schema).filter(
-            key => !INTERNAL_HEADERS.includes(key)
-          )
-        })
+      api.fetchDataForView($backendUiStore.selectedView).then(records => {
+        data = records || []
+        headers = Object.keys($backendUiStore.selectedModel.schema).filter(
+          key => !INTERNAL_HEADERS.includes(key)
+        )
+      })
     }
   }
 
