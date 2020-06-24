@@ -33,9 +33,10 @@
     const field = $backendUiStore.selectedField
 
     if (field) {
+      const name = model.schema[field].name
       delete model.schema[field]
       backendUiStore.actions.models.save({ model })
-      notifier.danger(`Field ${field} deleted.`)
+      notifier.danger(`Field ${name} deleted.`)
       return
     }
 

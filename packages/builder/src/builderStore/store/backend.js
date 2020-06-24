@@ -71,24 +71,8 @@ export const getBackendUiStore = () => {
         const updatedModel = cloneDeep(model)
 
         const SAVE_MODEL_URL = `/api/models`
-        const response = await api.post(SAVE_MODEL_URL, updatedModel)
-        const savedModel = await response.json()
-
-        store.update(state => {
-          // New model
-          if (!model._id) {
-            state.models = [...state.models, savedModel]
-          } else {
-            const existingIdx = state.models.findIndex(
-              ({ _id }) => _id === model._id
-            )
-            state.models.splice(existingIdx, 1, savedModel)
-            state.models = state.models
-          }
-
-          store.actions.models.select(savedModel)
-          return state
-        })
+        await api.post(SAVE_MODEL_URL, updatedModel)
+        await store.actions.models.fetch()
       },
       addField: field => {
         store.update(state => {
