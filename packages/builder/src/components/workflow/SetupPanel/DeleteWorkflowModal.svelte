@@ -1,6 +1,6 @@
 <script>
   import { store, backendUiStore, workflowStore } from "builderStore"
-  import { notifier } from "@beyonk/svelte-notifications"
+  import { notifier } from "builderStore/store/notifications"
   import ActionButton from "components/common/ActionButton.svelte"
 
   export let onClosed

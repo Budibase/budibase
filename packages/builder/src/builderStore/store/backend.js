@@ -62,16 +62,6 @@ export const getBackendUiStore = () => {
       save: async ({ model }) => {
         const updatedModel = cloneDeep(model)
 
-        // // TODO: refactor
-        // for (let key in updatedModel.schema) {
-        //   const field = updatedModel.schema[key]
-        //   // TODO: use IDs
-        //   if (field.name && field.name !== key) {
-        //     updatedModel.schema[field.name] = field
-        //     delete updatedModel.schema[key]
-        //   }
-        // }
-
         const SAVE_MODEL_URL = `/api/models`
         const response = await api.post(SAVE_MODEL_URL, updatedModel)
         const savedModel = await response.json()

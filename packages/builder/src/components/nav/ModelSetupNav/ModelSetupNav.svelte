@@ -1,7 +1,7 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { Button, Switcher } from "@budibase/bbui"
-  import { notifier } from "@beyonk/svelte-notifications"
+  import { notifier } from "builderStore/store/notifications"
   import { store, backendUiStore } from "builderStore"
   import api from "builderStore/api"
   import ModelFieldEditor from "./ModelFieldEditor.svelte"

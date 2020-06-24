@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { store, backendUiStore } from "builderStore"
-  import { notifier } from "@beyonk/svelte-notifications"
+  import { notifier } from "builderStore/store/notifications"
   import { compose, map, get, flatten } from "lodash/fp"
   import { Button } from "@budibase/bbui"
   import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"

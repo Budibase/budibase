@@ -5,25 +5,21 @@
   import api from "builderStore/api"
 
   export let ids = []
-  export let header
+  export let field
 
   let records = []
   let open = false
+  let model
 
-  $: FIELDS_TO_HIDE = [
-    "modelId",
-    "type",
-    "_id",
-    "_rev",
-    $backendUiStore.selectedModel._id,
-    $backendUiStore.selectedModel.name,
-  ]
+  $: FIELDS_TO_HIDE = [$backendUiStore.selectedModel._id, field.modelId]
 
   async function fetchRecords() {
     const response = await api.post("/api/records/search", {
       keys: ids,
     })
+    const modelResponse = await api.get(`/api/models/${field.modelId}`)
     records = await response.json()
+    model = await modelResponse.json()
   }
 
   $: ids && fetchRecords()
@@ -42,15 +38,15 @@
   {#if open}
     <div class="popover" transition:fade>
       <header>
-        <h3>{header}</h3>
+        <h3>{field.name}</h3>
         <i class="ri-close-circle-fill" on:click={toggleOpen} />
       </header>
       {#each records as record}
         <div class="linked-record">
           <div class="fields">
-            {#each Object.keys(record).filter(key => !FIELDS_TO_HIDE.includes(key)) as key}
+            {#each Object.keys(model.schema).filter(key => !FIELDS_TO_HIDE.includes(key)) as key}
               <div class="field">
-                <span>{key}</span>
+                <span>{model.schema[key].name}</span>
                 <p>{record[key]}</p>
               </div>
             {/each}
@@ -62,6 +58,10 @@
 </section>
 
 <style>
+  section {
+    display: relative;
+  }
+
   header {
     width: 100%;
     display: flex;
