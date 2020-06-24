@@ -2,7 +2,7 @@
   import { fade } from "svelte/transition"
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
-  import { notifier } from "@beyonk/svelte-notifications"
+  import { notifier } from "builderStore/store/notifications"
   import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte"
   import DeleteWorkflowModal from "./DeleteWorkflowModal.svelte"
 

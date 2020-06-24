@@ -1,6 +1,6 @@
 <script>
   import Modal from "svelte-simple-modal"
-  import { notifier } from "@beyonk/svelte-notifications"
+  import { notifier } from "builderStore/store/notifications"
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import CreateWorkflowModal from "./CreateWorkflowModal.svelte"

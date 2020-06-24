@@ -8,22 +8,20 @@
   export let linked = []
 
   let records = []
+  let model = {}
 
   let linkedRecords = new Set(linked)
 
   $: linked = [...linkedRecords]
-  $: FIELDS_TO_HIDE = [
-    "modelId",
-    "type",
-    "_id",
-    "_rev",
-    $backendUiStore.selectedModel.name,
-    modelId
-  ]
+  $: FIELDS_TO_HIDE = [$backendUiStore.selectedModel._id]
+  $: schema = $backendUiStore.selectedModel.schema
 
   async function fetchRecords() {
     const FETCH_RECORDS_URL = `/api/${modelId}/records`
     const response = await api.get(FETCH_RECORDS_URL)
+    const modelResponse = await api.get(`/api/models/${modelId}`)
+
+    model = await modelResponse.json()
     records = await response.json()
   }
 
@@ -49,9 +47,9 @@
   {#each records as record}
     <div class="linked-record" on:click={() => linkRecord(record._id)}>
       <div class="fields" class:selected={linkedRecords.has(record._id)}>
-        {#each Object.keys(record).filter(key => !FIELDS_TO_HIDE.includes(key)) as key}
+        {#each Object.keys(model.schema).filter(key => !FIELDS_TO_HIDE.includes(key)) as key}
           <div class="field">
-            <span>{key}</span>
+            <span>{model.schema[key].name}</span>
             <p>{record[key]}</p>
           </div>
         {/each}

@@ -133,7 +133,7 @@
           {#each headers as header}
             <td>
               {#if schema[header].type === "link"}
-                <LinkedRecord header={schema[header].name} ids={row[header]} />
+                <LinkedRecord field={schema[header]} ids={row[header]} />
               {:else}
                 {row[header]}
               {/if}
