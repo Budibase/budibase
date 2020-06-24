@@ -8,7 +8,7 @@ exports.create = async function(ctx) {
   const appShortId = appId.substring(0, 7)
   const instanceId = `inst_${appShortId}_${newid()}`
 
-  const masterDb = new CouchDB("clientAppLookup")
+  const masterDb = new CouchDB("client_app_lookup")
   const { clientId } = await masterDb.get(appId)
 
   const db = new CouchDB(instanceId)

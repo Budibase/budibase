@@ -7,7 +7,7 @@ const {
 } = require("../../utilities/budibaseDir")
 
 exports.fetchAppComponentDefinitions = async function(ctx) {
-  const masterDb = new CouchDB("clientAppLookup")
+  const masterDb = new CouchDB("client_app_lookup")
   const { clientId } = await masterDb.get(ctx.params.appId)
   const db = new CouchDB(ClientDb.name(clientId))
   const app = await db.get(ctx.params.appId)

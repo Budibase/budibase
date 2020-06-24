@@ -15,7 +15,7 @@ export async function createDatabase(appname, instanceName) {
 }
 
 export async function deleteRecord(record) {
-  const DELETE_RECORDS_URL = `/api/${record._modelId}/records/${record._id}/${record._rev}`
+  const DELETE_RECORDS_URL = `/api/${record.modelId}/records/${record._id}/${record._rev}`
   const response = await api.delete(DELETE_RECORDS_URL)
   return response
 }
