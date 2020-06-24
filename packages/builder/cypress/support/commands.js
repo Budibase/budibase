@@ -103,3 +103,23 @@ Cypress.Commands.add("addButtonComponent", () => {
 
   cy.get("[data-cy=Button]").click()
 })
+
+Cypress.Commands.add("navigateToFrontend", () => {
+  cy.get(".close", { timeout: 10000 }).click()
+  cy.contains("frontend").click()
+  cy.get(".close", { timeout: 10000 }).click()
+})
+
+Cypress.Commands.add("createScreen", (screenName, route) => {
+  cy.get(".newscreen").click()
+  cy.get(".uk-input:first").type(screenName)
+  if (route) {
+    cy.get(".uk-input:last").type(route)
+  }
+  cy.get(".uk-modal-footer").within(() => {
+    cy.contains("Create Screen").click()
+  })
+  cy.get(".nav-items-container").within(() => {
+    cy.contains(screenName).should("exist")
+  })
+})
