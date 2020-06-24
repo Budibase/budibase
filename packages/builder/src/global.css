@@ -38,7 +38,6 @@
 }
 
 html, body {
-    display: grid;
     font-family: inter;
     color: var(--ink);
     padding: 0;
