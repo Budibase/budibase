@@ -17,7 +17,7 @@
     align-items: center;
 
     font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--secondary100);
+    font-weight: 600;
+    color: var(--ink);
   }
 </style>

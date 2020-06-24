@@ -4,7 +4,7 @@
   export let size = 18
   export let icon = ""
   export let style = ""
-  export let color = "var(--secondary100)"
+  export let color = "var(--ink)"
   export let hoverColor = "var(--secondary75)"
   export let attributes = {}
 

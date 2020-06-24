@@ -41,15 +41,6 @@
   $: pickerStyle = `transform: translate(${pickerX - 8}px, ${pickerY - 8}px);`
 </script>
 
-<div
-  bind:this={palette}
-  bind:clientHeight={paletteHeight}
-  bind:clientWidth={paletteWidth}
-  on:click={handleClick}
-  class="palette"
-  {style}>
-  <div class="picker" style={pickerStyle} />
-</div>
 <CheckedBackground width="100%">
   <div
     bind:this={palette}

@@ -23,7 +23,7 @@
   .root {
     height: 100%;
     display: flex;
-    background: #fafafa;
+    background: var(--grey-1);
   }
 
   .content {

@@ -109,7 +109,7 @@
   }
 
   hr {
-    border: 1px solid #fafafa;
+    border: 1px solid var(--grey-1);
     margin: 20px 0px;
   }
 
@@ -124,7 +124,6 @@
   }
 
   button {
-    font-family: roboto;
     font-size: 16px;
     padding: 0.4em;
     box-sizing: border-box;

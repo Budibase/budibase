@@ -58,20 +58,19 @@
     padding: 10px;
     margin: 0;
     background: #fff;
-    border: 1px solid #ccc;
+    border: 1px solid var(--grey-4);
     text-transform: capitalize;
     border-radius: 3px;
-    font-family: Roboto;
     min-width: 20px;
     transition: 0.3s background-color;
   }
 
   .pagination__buttons button:hover {
     cursor: pointer;
-    background-color: #fafafa;
+    background-color: var(--grey-1);
   }
 
   .selected {
-    color: var(--button-text);
+    color: var(--blue);
   }
 </style>

@@ -64,7 +64,6 @@
     margin: 0 0 0 6px;
     padding: 0;
     border: none;
-    font-family: Roboto;
     font-size: 13px;
     outline: none;
     cursor: pointer;

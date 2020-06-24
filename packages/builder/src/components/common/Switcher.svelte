@@ -43,7 +43,7 @@
     display: flex;
     flex-direction: column;
     padding: 20px 20px;
-    border-left: solid 1px var(--grey);
+    border-left: solid 1px var(--grey-2);
     box-sizing: border-box;
   }
 
@@ -60,10 +60,11 @@
     padding: 0;
     cursor: pointer;
     font-size: 18px;
-    font-weight: 700;
-    color: var(--ink-lighter);
+    font-weight: 600;
+    color: var(--grey-5);
     margin-right: 20px;
     background: none;
+    outline: none;
   }
 
   .switcher > .selected {
