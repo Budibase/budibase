@@ -353,12 +353,11 @@ const selectComponent = store => component => {
 
 const setComponentProp = store => (name, value) => {
   store.update(state => {
-    const current_component = state.currentComponentInfo
-    state.currentComponentInfo[name] = value
-
-    _saveCurrentPreviewItem(state)
+    let current_component = state.currentComponentInfo
+    current_component[name] = value
 
     state.currentComponentInfo = current_component
+    _saveCurrentPreviewItem(state)
     return state
   })
 }

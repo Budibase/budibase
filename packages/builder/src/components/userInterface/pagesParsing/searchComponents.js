@@ -29,14 +29,7 @@ export const searchAllComponents = (components, phrase) => {
 }
 
 export const getExactComponent = (components, name, isScreen = false) => {
-  const stringEquals = (s1, s2) => normalString(s1) === normalString(s2)
-  return pipe(components, [
-    find(c =>
-      isScreen
-        ? stringEquals(c.props._instanceName, name)
-        : stringEquals(c._instanceName, name)
-    ),
-  ])
+  return components.find(c => isScreen ? c.props._instanceName === name : c._instanceName === name)
 }
 
 export const getAncestorProps = (components, name, found = []) => {

@@ -38,11 +38,6 @@ export const rename = (pages, screens, oldname, newname) => {
   for (let screen of screens) {
     let hasEdited = false
 
-    // if (screen.name === oldname) {
-    //   screen.name = newname
-    //   hasEdited = true
-    // }
-
     if (screen.props.instanceName === oldname) {
       screen.props.instanceName = newname
       hasEdited = true

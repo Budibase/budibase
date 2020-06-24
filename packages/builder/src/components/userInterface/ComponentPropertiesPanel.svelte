@@ -54,7 +54,10 @@
     store.setComponentProp(key, value)
   }
 
-  $: displayName = ( $store.currentView === "component" || $store.currentFrontEndType === "screen") && componentInstance._instanceName && componentInstance._component !== "##builtin/screenslot"
+  $: isComponentOrScreen =  $store.currentView === "component" || $store.currentFrontEndType === "screen" 
+  $: isNotScreenslot = componentInstance._component !== "##builtin/screenslot"
+
+  $: displayName = isComponentOrScreen && componentInstance._instanceName && isNotScreenslot
 
   function walkProps(component, action) {
     action(component)
