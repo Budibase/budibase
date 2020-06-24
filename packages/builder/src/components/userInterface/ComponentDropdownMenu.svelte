@@ -257,21 +257,21 @@
 
   .menu li:not(.disabled) {
     cursor: pointer;
-    color: var(--ink-light);
+    color: var(--grey-7);
   }
 
   .menu li:not(.disabled):hover {
     color: var(--ink);
-    background-color: var(--grey-light);
+    background-color: var(--grey-1);
   }
 
   .disabled {
-    color: var(--grey-dark);
+    color: var(--grey-4);
     cursor: default;
   }
 
   .hr-style {
     margin: 8px 0;
-    color: var(--grey-dark);
+    color: var(--grey-4);
   }
 </style>

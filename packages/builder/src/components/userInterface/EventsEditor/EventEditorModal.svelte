@@ -165,7 +165,7 @@
     padding: 30px 40px;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 50px;
-    background-color: var(--grey-light);
+    background-color: var(--grey-1);
   }
   .save {
     margin-left: 20px;

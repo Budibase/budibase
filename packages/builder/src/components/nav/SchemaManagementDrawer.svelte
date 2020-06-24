@@ -126,7 +126,7 @@
   .hierarchy-title {
     align-items: center;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 600;
     text-rendering: optimizeLegibility;
     color: var(--ink);
   }

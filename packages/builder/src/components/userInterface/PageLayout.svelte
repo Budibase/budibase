@@ -73,12 +73,12 @@
     display: inline-block;
     transition: 0.2s;
     width: 20px;
-    color: var(--ink-light);
+    color: var(--grey-7);
   }
 
   .icon-big {
-    font-size: 24px;
-    color: var(--ink-light);
+    font-size: 20px;
+    color: var(--grey-7);
   }
 
   :global(svg) {
