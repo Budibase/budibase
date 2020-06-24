@@ -2,11 +2,14 @@
     import Colorpicker from "./Colorpicker.svelte"
     import CheckedBackground from "./CheckedBackground.svelte"
     import {createEventDispatcher, afterUpdate, beforeUpdate} from "svelte"
+
     import {buildStyle} from "./helpers.js"
     import { fade } from 'svelte/transition';
     import {getColorFormat} from "./utils.js"
 
     export let value = "#3ec1d3ff"
+    export let swatches = []
+    export let disableSwatches = false
     export let open = false;
     export let width = "25px"
     export let height = "25px"
@@ -17,8 +20,8 @@
 
     let previewHeight = null    
     let previewWidth = null
-    let pickerWidth = 250
-    let pickerHeight = 300
+    let pickerWidth = 0
+    let pickerHeight = 0
 
     let anchorEl = null
     let parentNodes = [];
@@ -61,30 +64,33 @@
 
     function openColorpicker(event) {
         if(colorPreview) {
-            const {top: spaceAbove, width, bottom, right, left: spaceLeft} = colorPreview.getBoundingClientRect()   
-            const {innerHeight, innerWidth} = window
-
-            const {offsetLeft, offsetTop} = colorPreview
-            //get the scrollTop value for all scrollable parent elements 
-            let scrollTop = parentNodes.reduce((scrollAcc, el) => scrollAcc += el.scrollTop, 0);
-
-            const spaceBelow = (innerHeight - spaceAbove) - previewHeight
-            const top = spaceAbove > spaceBelow ? (offsetTop - pickerHeight) - scrollTop : (offsetTop + previewHeight) - scrollTop      
-            
-            //TOO: Testing and Scroll Awareness for x Scroll
-            const spaceRight = (innerWidth - spaceLeft) + previewWidth
-            const left = spaceRight > spaceLeft ? (offsetLeft + previewWidth) : offsetLeft - pickerWidth
-
-            dimensions = {top, left}
-
             open = true;        
         }
+    }
+
+    $: if(open && colorPreview) {
+        const {top: spaceAbove, width, bottom, right, left: spaceLeft} = colorPreview.getBoundingClientRect()   
+        const {innerHeight, innerWidth} = window
+
+        const {offsetLeft, offsetTop} = colorPreview
+        //get the scrollTop value for all scrollable parent elements 
+        let scrollTop = parentNodes.reduce((scrollAcc, el) => scrollAcc += el.scrollTop, 0);
+
+        const spaceBelow = (innerHeight - spaceAbove) - previewHeight
+        const top = spaceAbove > spaceBelow ? (offsetTop - pickerHeight) - scrollTop : (offsetTop + previewHeight) - scrollTop      
+        
+        //TOO: Testing and Scroll Awareness for x Scroll
+        const spaceRight = (innerWidth - spaceLeft) + previewWidth
+        const left = spaceRight > spaceLeft ? (offsetLeft + previewWidth) : offsetLeft - pickerWidth
+
+        dimensions = {top, left}
     }
 
     function onColorChange(color) {
         value = color.detail;
         dispatch("change", color.detail)
     }
+
 </script>
 
 <div class="color-preview-container">
@@ -94,8 +100,8 @@
         </CheckedBackground>
 
         {#if open}
-        <div class="picker-container" bind:clientHeight={pickerHeight} bind:clientWidth={pickerWidth} style={pickerStyle}>
-            <Colorpicker on:change={onColorChange} {format} {value} />
+        <div transition:fade class="picker-container" style={pickerStyle}>
+            <Colorpicker on:change={onColorChange} on:addswatch on:removeswatch bind:format bind:value bind:pickerHeight bind:pickerWidth {swatches} {disableSwatches} {open} />
         </div>
         <div on:click|self={() => open = false} class="overlay"></div>
         {/if}

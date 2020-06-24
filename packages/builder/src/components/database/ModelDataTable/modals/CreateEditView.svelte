@@ -29,7 +29,7 @@
   function deleteView() {}
 
   async function saveView() {
-    const SAVE_VIEW_URL = `/api/${instanceId}/views`
+    const SAVE_VIEW_URL = `/api/views`
     const response = await api.post(SAVE_VIEW_URL, view)
     backendUiStore.update(state => {
       state.views = [...state.views, response.view]
