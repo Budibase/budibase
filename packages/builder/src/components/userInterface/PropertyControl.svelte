@@ -12,7 +12,7 @@
     if (v.target) {
       let val = props.valueKey ? v.target[props.valueKey] : v.target.value
       onChange(key, val)
-    }else if(v.detail) {
+    } else if (v.detail) {
       onChange(key, v.detail)
     } else {
       onChange(key, v)

@@ -1,14 +1,17 @@
 <script>
-    import {buildStyle} from "./helpers.js"
+  import { buildStyle } from "./helpers.js"
 
-    export let backgroundSize = "10px"
-    export let borderRadius = ""
-    export let height = ""
-    export let width = ""
+  export let backgroundSize = "10px"
+  export let borderRadius = ""
+  export let height = ""
+  export let width = ""
 
-    $: style = buildStyle({backgroundSize, borderRadius, height, width})
-
+  $: style = buildStyle({ backgroundSize, borderRadius, height, width })
 </script>
+
+<div {style}>
+  <slot />
+</div>
 
 <style>
   div {
@@ -17,7 +20,3 @@
     width: fit-content;
   }
 </style>
-
-<div {style}>
-    <slot />
-</div>
