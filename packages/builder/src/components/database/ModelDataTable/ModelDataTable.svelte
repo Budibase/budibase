@@ -87,7 +87,6 @@
     <h2 class="title">{$backendUiStore.selectedModel.name}</h2>
     <Button primary on:click={createNewRecord}>
       <span class="button-inner">
-        <i class="ri-add-circle-fill" />
         Create New Record
       </span>
     </Button>
@@ -208,8 +207,4 @@
     align-items: center;
   }
 
-  .button-inner i {
-    margin-right: 5px;
-    font-size: 20px;
-  }
 </style>
