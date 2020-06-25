@@ -16,7 +16,7 @@
     backendUiStore.actions.models.save({
       model: {
         ...model,
-        ...rest 
+        ...rest,
       },
     })
     notifier.success(`${model.name} model created.`)
