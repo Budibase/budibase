@@ -12,16 +12,12 @@
   function createModel(model) {
     const { schema, ...rest } = $backendUiStore.selectedModel
 
-    const newModel = { ...model, schema: {} }
-
-    // TODO: could be better
-    for (let key in model.schema) {
-      newModel.schema[uuid()] = model.schema[key]
-    }
+    // const newModel = { ...model, schema: {} }
 
     backendUiStore.actions.models.save({
       model: {
-        ...newModel,
+        ...model, 
+        schema: {},
         ...rest,
       },
     })

@@ -80,13 +80,11 @@ export const getBackendUiStore = () => {
             state.draftModel.schema = {}
           }
 
-          const id = uuid()
-
           state.draftModel.schema = {
             ...state.draftModel.schema,
-            [id]: field,
+            [field.name]: field,
           }
-          state.selectedField = id
+          state.selectedField = field.name
           state.tabs.NAVIGATION_PANEL = "NAVIGATE"
 
           return state
