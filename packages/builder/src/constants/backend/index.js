@@ -40,10 +40,10 @@ export const FIELDS = {
   DATETIME: {
     name: "Date/Time",
     icon: "ri-calendar-event-fill",
-    type: "datetime",
+    type: "string",
     constraints: {
-      type: "date",
-      datetime: {},
+      type: "string",
+      length: {},
       presence: false,
     },
   },
@@ -119,10 +119,10 @@ export const BLOCKS = {
   END_DATE: {
     name: "End Date",
     icon: "ri-calendar-event-fill",
-    type: "datetime",
+    type: "string",
     constraints: {
-      type: "date",
-      datetime: {},
+      type: "string",
+      length: {},
       presence: false,
     },
   },
