@@ -1,5 +1,6 @@
 const CouchDB = require("../../db")
 const newid = require("../../db/newid")
+const { rename } = require("fs-extra")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
@@ -24,6 +25,22 @@ exports.save = async function(ctx) {
     ...ctx.request.body,
   }
 
+  // update renamed record fields when model is updated 
+  const { _rename } = modelToSave
+  if (_rename) {
+    const records = await db.query(`database/all_${modelToSave._id}`, {
+      include_docs: true
+    });
+    const docs = records.rows.map(({ doc }) => {
+      doc[_rename.updated] = doc[_rename.old]
+      delete doc[_rename.old]
+      return doc
+    })
+
+    await db.bulkDocs(docs)
+    delete modelToSave._rename
+  }
+
   const result = await db.post(modelToSave)
   modelToSave._rev = result.rev
 
@@ -39,7 +56,7 @@ exports.save = async function(ctx) {
         modelId: modelToSave._id,
         constraints: {
           type: "array",
-        },
+        }
       }
       await db.put(linkedModel)
     }

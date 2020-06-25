@@ -8,7 +8,9 @@
   import { notifier } from "builderStore/store/notifications"
 
   function showErrorBanner() {
-    notifier.danger("Whoops! Looks like we're having trouble. Please refresh the page.")
+    notifier.danger(
+      "Whoops! Looks like we're having trouble. Please refresh the page."
+    )
   }
 
   onMount(async () => {
