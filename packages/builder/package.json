@@ -50,7 +50,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "^1.10.2",
+    "@budibase/bbui": "^1.13.0",
     "@budibase/client": "^0.0.32",
     "@nx-js/compiler-util": "^2.0.0",
     "codemirror": "^5.51.0",
