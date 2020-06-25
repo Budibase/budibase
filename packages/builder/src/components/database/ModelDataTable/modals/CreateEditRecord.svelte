@@ -142,7 +142,6 @@
     background: var(--grey-1);
     border-bottom-left-radius: 0.5rem;
     border-bottom-left-radius: 0.5rem;
-
   }
 
   .button-margin-3 {

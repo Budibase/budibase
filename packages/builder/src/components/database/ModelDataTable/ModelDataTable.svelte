@@ -86,9 +86,7 @@
   <div class="table-controls">
     <h2 class="title">{$backendUiStore.selectedModel.name}</h2>
     <Button primary on:click={createNewRecord}>
-      <span class="button-inner">
-        Create New Record
-      </span>
+      <span class="button-inner">Create New Record</span>
     </Button>
   </div>
   <table class="uk-table">
@@ -206,5 +204,4 @@
     display: flex;
     align-items: center;
   }
-
 </style>

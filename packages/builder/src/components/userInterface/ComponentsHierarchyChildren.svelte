@@ -43,7 +43,7 @@
         style="padding-left: {level * 20 + 40}px">
         <div class="nav-item">
           <i class="icon ri-arrow-right-circle-fill" />
-          {isScreenslot(component._component) ? "Screenslot" : component._instanceName}
+          {isScreenslot(component._component) ? 'Screenslot' : component._instanceName}
         </div>
         <div class="actions">
           <ComponentDropdownMenu {component} />
