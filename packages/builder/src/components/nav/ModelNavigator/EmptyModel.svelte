@@ -2,6 +2,7 @@
   import { backendUiStore } from "builderStore"
   import { uuid } from "builderStore/uuid"
   import { fade } from "svelte/transition"
+  import { notifier } from "builderStore/store/notifications"
   import { FIELDS, BLOCKS, MODELS } from "constants/backend"
   import Block from "components/common/Block.svelte"
 
@@ -12,15 +13,13 @@
   function createModel(model) {
     const { schema, ...rest } = $backendUiStore.selectedModel
 
-    // const newModel = { ...model, schema: {} }
-
     backendUiStore.actions.models.save({
       model: {
-        ...model, 
-        schema: {},
-        ...rest,
+        ...model,
+        ...rest 
       },
     })
+    notifier.success(`${model.name} model created.`)
   }
 </script>
 
