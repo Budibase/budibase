@@ -51,7 +51,7 @@ exports.save = async function(ctx) {
     [`all_${modelToSave._id}`]: {
       map: `function(doc) {
         if (doc.modelId === "${modelToSave._id}") {
-          emit(doc[doc.key], doc._id); 
+          emit(doc._id); 
         }
       }`,
     },
@@ -75,7 +75,7 @@ exports.destroy = async function(ctx) {
   // Delete all records for that model
   const records = await db.query(`database/${modelViewId}`)
   await db.bulkDocs(
-    records.rows.map(record => ({ id: record.id, _deleted: true }))
+    records.rows.map(record => ({ _id: record.id, _deleted: true }))
   )
 
   // Delete linked record fields in dependent models

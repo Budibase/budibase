@@ -68,11 +68,11 @@ export const getBackendUiStore = () => {
           return state
         }),
       save: async ({ model }) => {
-        const updatedModel = cloneDeep(model)
-
         const SAVE_MODEL_URL = `/api/models`
-        await api.post(SAVE_MODEL_URL, updatedModel)
+        const response = await api.post(SAVE_MODEL_URL, model)
+        const json = await response.json()
         await store.actions.models.fetch()
+        store.actions.models.select(json)
       },
       addField: field => {
         store.update(state => {

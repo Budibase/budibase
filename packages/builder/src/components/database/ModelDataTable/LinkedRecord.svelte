@@ -88,7 +88,7 @@
     position: absolute;
     right: 15%;
     padding: 20px;
-    background: var(--light-grey);
+    background: var(--grey-1);
     border: 1px solid var(--grey);
   }
 
