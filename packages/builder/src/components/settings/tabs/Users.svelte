@@ -1,64 +1,122 @@
 <script>
   import { Input, Select, Button } from "@budibase/bbui"
   import Title from "../TabTitle.svelte"
+  import UserRow from "../UserRow.svelte"
+
+  import { store, backendUiStore } from "builderStore"
+  import api from "builderStore/api"
+  // import * as api from "../api"
+
+  let username = ""
+  let password = ""
+  let accessLevelId
+
+  $: valid = username && password && accessLevelId
+  $: appId = $store.appId
+
+  // Create user!
+  async function createUser() {
+    if (valid) {
+      const user = { name: username, username, password, accessLevelId }
+      const response = await api.post(`/api/users`, user)
+      const json = await response.json()
+      backendUiStore.actions.users.create(json)
+      fetchUsersPromise = fetchUsers()
+    }
+  }
+
+  // Get users
+  async function fetchUsers() {
+    const response = await api.get(`/api/users`)
+    const users = await response.json()
+    backendUiStore.update(state => {
+      state.users = users
+      return state
+    })
+    return users
+  }
+
+  let fetchUsersPromise = fetchUsers()
 </script>
 
 <Title>Users</Title>
 <div class="container">
-  <div class="background">
+  <div class="background create">
     <div class="title">Create new user</div>
-    <Input thin placeholder="Enter name" label="Name" />
-    <Input thin placeholder="Enter Password" label="Password" />
-    <div>
-      <label>Access Level</label>
-      <Select>
-        <option value="admin">Admin</option>
-        <option value="poweruser">Power User</option>
+    <div class="inputs">
+      <Input thin bind:value={username} name="Name" placeholder="Username" />
+      <Input
+        thin
+        bind:value={password}
+        name="Password"
+        placeholder="Password" />
+      <Select bind:value={accessLevelId} thin>
+        <option value="ADMIN">Admin</option>
+        <option value="POWER_USER">Power User</option>
       </Select>
     </div>
     <div class="create-button">
-      <Button attention>Create</Button>
+      <Button on:click={createUser} small blue>Create</Button>
     </div>
+  </div>
+  <div class="background">
+    <div class="title">Current Users</div>
+    {#await fetchUsersPromise}
+      Loading state!
+    {:then users}
+      <ul>
+        {#each users as user}
+          <li>
+            <UserRow {user} />
+          </li>
+        {:else}
+          <li>No Users found</li>
+        {/each}
+      </ul>
+    {:catch error}
+      err0r
+    {/await}
   </div>
 </div>
 
 <style>
-  label {
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.17;
-    font: var(--ink);
-    margin-bottom: 12px;
-  }
   .container {
     display: grid;
-    grid-gap: var(--space);
+    grid-gap: 14px;
   }
   .background {
-    display: grid;
-    grid-gap: var(--space-md);
     position: relative;
+    display: grid;
+    grid-gap: 12px;
     border-radius: 5px;
     background-color: var(--light-grey);
     padding: 12px 12px 18px 12px;
   }
-  .background :global(select) {
-    min-width: 100%;
+  .background.create {
+    background-color: var(--blue-light);
+  }
+  .inputs :global(select) {
     padding: 12px 9px;
     height: initial;
   }
   .create-button {
-    display: flex;
-    justify-content: flex-end;
+    position: absolute;
+    top: 12px;
+    right: 12px;
   }
   .title {
     font-size: 14px;
     font-weight: 500;
-    font-stretch: normal;
-    font-style: normal;
-    line-height: 1.14;
-    letter-spacing: 0.14px;
-    text-align: left;
-    color: var(--font);
+  }
+  .inputs {
+    display: grid;
+    grid-gap: 18px;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-gap: 8px;
   }
 </style>
