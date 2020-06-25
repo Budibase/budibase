@@ -33,7 +33,7 @@ exports.save = async function(ctx) {
     if (schema[key].type === "link") {
       // create the link field in the other model
       const linkedModel = await db.get(schema[key].modelId)
-      linkedModel.schema[modelToSave._id] = {
+      linkedModel.schema[modelToSave.name] = {
         name: modelToSave.name,
         type: "link",
         modelId: modelToSave._id,
