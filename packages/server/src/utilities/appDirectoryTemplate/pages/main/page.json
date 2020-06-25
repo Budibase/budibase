@@ -4,6 +4,7 @@
 	"stylesheets": [],
 	"componentLibraries": ["@budibase/standard-components", "@budibase/materialdesign-components"],
 	"props" : {
+		"_id": "private-master-root",
 		"_component": "@budibase/standard-components/container",
 		"_children": [
       {
@@ -19,7 +20,6 @@
         "_children": []
       }
     ],
-		"_id": 0,
 		"type": "div",
 		"_styles": {
 			"active": {},
