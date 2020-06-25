@@ -24,6 +24,7 @@
     height: 100%;
     display: flex;
     background: var(--grey-1);
+    line-height: 1;
   }
 
   .content {
@@ -32,7 +33,6 @@
   }
 
   .nav {
-    overflow: auto;
     flex: 0 1 auto;
     width: 300px;
     height: 100%;

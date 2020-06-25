@@ -78,12 +78,17 @@
 
 .budibase__input {
     height: 36px;
-    width: 220px;
-    border-radius: 3px;
-    border: 1px solid var(--grey-4);
+    background-color: var(--grey-2);
+    border: none;
+    border-radius: 5px;
+    width: 100%;
     text-align: left;
     color: var(--ink);
     font-size: 14px;
+    padding-left: 8px;
+    -moz-box-sizing: border-box; 
+    -webkit-box-sizing: border-box; 
+     box-sizing: border-box; 
 }
 
 .uk-text-right {

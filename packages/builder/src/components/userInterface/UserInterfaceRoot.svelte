@@ -199,6 +199,6 @@
   }
 
   .components-list-container {
-    padding: 20px 0px 0 0;
+    padding: 10px 0px 0 0;
   }
 </style>
