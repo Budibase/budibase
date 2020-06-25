@@ -26,12 +26,12 @@
   .numberbox {
     display: grid;
     align-items: center;
-    grid-template-columns: 40% 1fr;
-    margin-top: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
   }
 
   label {
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
   }
 </style>

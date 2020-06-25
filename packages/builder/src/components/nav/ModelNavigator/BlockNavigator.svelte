@@ -48,7 +48,6 @@
     margin-top: 20px;
     margin-bottom: 20px;
     display: grid;
-    grid-gap: 20px;
     grid-template-columns: repeat(3, 1fr);
   }
 
@@ -68,7 +67,7 @@
   }
 
   .selected {
-    background: var(--blue-light);
+    background: var(--grey-3);
     color: var(--ink);
   }
 

@@ -18,15 +18,14 @@
 
   div {
     padding: 0 10px 0 10px;
-    width: 90%;
-    height: 40px;
-    border-radius: 3px;
+    height: 36px;
+    border-radius: 5px;
     display: flex;
     align-items: center;
     transition: 0.3s background-color;
     color: var(--ink);
-    font-weight: 500;
-    font-size: 16px;
+    font-weight: 400;
+    font-size: 14px;
     margin-top: 4px;
     margin-bottom: 4px;
   }
@@ -41,7 +40,7 @@
   }
 
   i {
-    color: var(--dark-grey);
+    color: var(--grey-7);
     font-size: 20px;
     margin-right: 8px;
   }

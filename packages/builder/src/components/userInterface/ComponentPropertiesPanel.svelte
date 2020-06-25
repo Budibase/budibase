@@ -30,7 +30,10 @@
   let selectedCategory = categories[0]
 
   $: components = $store.components
-  $: componentInstance = $store.currentView !== "component" ? {...$store.currentPreviewItem, ...$store.currentComponentInfo} : $store.currentComponentInfo
+  $: componentInstance =
+    $store.currentView !== "component"
+      ? { ...$store.currentPreviewItem, ...$store.currentComponentInfo }
+      : $store.currentComponentInfo
   $: componentDefinition = $store.components[componentInstance._component]
   $: componentPropDefinition =
     flattenedPanel.find(
@@ -46,18 +49,21 @@
 
   const onStyleChanged = store.setComponentStyle
 
-   function onPropChanged(key, value) {
-    if($store.currentView !== "component") {
+  function onPropChanged(key, value) {
+    if ($store.currentView !== "component") {
       store.setPageOrScreenProp(key, value)
       return
     }
     store.setComponentProp(key, value)
   }
 
-  $: isComponentOrScreen =  $store.currentView === "component" || $store.currentFrontEndType === "screen" 
+  $: isComponentOrScreen =
+    $store.currentView === "component" ||
+    $store.currentFrontEndType === "screen"
   $: isNotScreenslot = componentInstance._component !== "##builtin/screenslot"
 
-  $: displayName = isComponentOrScreen && componentInstance._instanceName && isNotScreenslot
+  $: displayName =
+    isComponentOrScreen && componentInstance._instanceName && isNotScreenslot
 
   function walkProps(component, action) {
     action(component)
@@ -92,11 +98,11 @@
     {categories}
     {selectedCategory} />
 
-    {#if displayName}
-      <div class="instance-name">
-        <strong>{componentInstance._instanceName}</strong>
-      </div>
-    {/if}
+  {#if displayName}
+    <div class="instance-name">
+      <strong>{componentInstance._instanceName}</strong>
+    </div>
+  {/if}
 
   <div class="component-props-container">
     {#if selectedCategory.value === 'design'}
@@ -108,8 +114,7 @@
         {panelDefinition}
         displayNameField={displayName}
         onChange={onPropChanged}
-        screenOrPageInstance={$store.currentView !== "component" && $store.currentPreviewItem} />
-
+        screenOrPageInstance={$store.currentView !== 'component' && $store.currentPreviewItem} />
     {:else if selectedCategory.value === 'events'}
       <EventsEditor component={componentInstance} />
     {/if}
