@@ -23,7 +23,6 @@
 </div>
 
 <style>
-
   .margin {
     margin-bottom: 16px;
     display: grid;
@@ -31,7 +30,7 @@
   .label {
     font-size: 14px;
     font-weight: 500;
-    margin-bottom: 8px
+    margin-bottom: 8px;
   }
   textarea {
     font-size: 14px;
@@ -42,8 +41,8 @@
     cursor: text;
     background: var(--grey-2);
     padding: 12px;
-    -moz-box-sizing: border-box; 
-    -webkit-box-sizing: border-box; 
-     box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
   }
 </style>
