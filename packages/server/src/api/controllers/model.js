@@ -1,6 +1,5 @@
 const CouchDB = require("../../db")
 const newid = require("../../db/newid")
-const { rename } = require("fs-extra")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
