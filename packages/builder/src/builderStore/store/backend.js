@@ -1,7 +1,6 @@
 import { writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import api from "../api"
-import { update } from "lodash"
 
 export const getBackendUiStore = () => {
   const INITIAL_BACKEND_UI_STATE = {
@@ -82,7 +81,7 @@ export const getBackendUiStore = () => {
         }
 
         const SAVE_MODEL_URL = `/api/models`
-        console.log(updatedModel);
+        console.log(updatedModel)
         const response = await api.post(SAVE_MODEL_URL, updatedModel)
         const savedModel = await response.json()
         await store.actions.models.fetch()
