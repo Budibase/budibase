@@ -130,7 +130,11 @@
               {#each ACCESS_LEVELS as level}
                 <span class="access-level">
                   <label>{level.name}</label>
-                  <input class="uk-checkbox" type="checkbox" disabled={!level.editable} bind:checked={level.canExecute}/>
+                  <input
+                    class="uk-checkbox"
+                    type="checkbox"
+                    disabled={!level.editable}
+                    bind:checked={level.canExecute} />
                 </span>
               {/each}
             </div>

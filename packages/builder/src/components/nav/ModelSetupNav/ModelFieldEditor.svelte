@@ -95,30 +95,38 @@
 
 <style>
   .info {
-    background: var(--light-grey);
-    padding: 12px;
-    margin-bottom: 5px;
-    border-radius: 3px;
+    margin-bottom: 16px;
+    border-radius: 5px;
   }
 
   label {
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
   }
 
   .field {
     display: grid;
     align-items: center;
-    grid-template-columns: 40% 1fr;
-    margin-top: 8px;
+    margin-bottom: 16px;
   }
 
   .field-box header {
     font-size: 14px;
     font-weight: 500;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   .field-box span {
-    font-weight: bold;
+    background: var(--grey-2);
+    color: var(--grey-6);
+    font-weight: 400;
+    height: 36px;
+    display: grid;
+    align-items: center;
+    padding-left: 12px;
+    text-transform: capitalize;
+    border-radius: 5px;
+    cursor: not-allowed;
   }
 </style>
