@@ -24,12 +24,12 @@ exports.save = async function(ctx) {
     ...ctx.request.body,
   }
 
-  // update renamed record fields when model is updated 
+  // update renamed record fields when model is updated
   const { _rename } = modelToSave
   if (_rename) {
     const records = await db.query(`database/all_${modelToSave._id}`, {
-      include_docs: true
-    });
+      include_docs: true,
+    })
     const docs = records.rows.map(({ doc }) => {
       doc[_rename.updated] = doc[_rename.old]
       delete doc[_rename.old]
@@ -55,7 +55,7 @@ exports.save = async function(ctx) {
         modelId: modelToSave._id,
         constraints: {
           type: "array",
-        }
+        },
       }
       await db.put(linkedModel)
     }
