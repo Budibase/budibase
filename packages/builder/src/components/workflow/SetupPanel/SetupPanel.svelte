@@ -91,9 +91,7 @@
           {testResult}
         </button>
       {/if}
-      <Button secondary wide on:click={testWorkflow}>
-        Test Workflow
-      </Button>
+      <Button secondary wide on:click={testWorkflow}>Test Workflow</Button>
     </div>
   {/if}
   {#if selectedTab === 'SETUP'}
@@ -101,16 +99,13 @@
       <WorkflowBlockSetup {workflowBlock} />
       <div class="buttons">
         <Button
-          green wide
+          green
+          wide
           data-cy="save-workflow-setup"
           on:click={saveWorkflow}>
           Save Workflow
         </Button>
-        <Button
-          red wide
-          on:click={deleteWorkflowBlock}>
-          Delete Block
-        </Button>
+        <Button red wide on:click={deleteWorkflowBlock}>Delete Block</Button>
       </div>
     {:else if $workflowStore.currentWorkflow}
       <div class="panel">
@@ -142,14 +137,14 @@
           </div>
         </div>
         <div class="buttons">
-          <Button green wide
+          <Button
+            green
+            wide
             data-cy="save-workflow-setup"
             on:click={saveWorkflow}>
             Save Workflow
           </Button>
-          <Button red wide on:click={deleteWorkflow}>
-            Delete Workflow
-          </Button>
+          <Button red wide on:click={deleteWorkflow}>Delete Workflow</Button>
         </div>
       </div>
     {/if}

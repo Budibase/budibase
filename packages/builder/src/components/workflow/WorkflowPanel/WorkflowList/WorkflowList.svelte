@@ -28,9 +28,7 @@
 </script>
 
 <section>
-  <Button purple wide on:click{newWorkflow}>
-    Create New Workflow
-  </Button>
+  <Button purple wide on:click{newWorkflow}>Create New Workflow</Button>
   <ul>
     {#each $workflowStore.workflows as workflow}
       <li
