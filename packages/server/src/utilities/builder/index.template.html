@@ -31,6 +31,10 @@
     <link rel='stylesheet' href='/assets{{ pageStyle }}'>
     {{ /if }}
 
+    {{ each(options.fontUrls )}}
+    <link rel='stylesheet' href='{{ @this }}'>
+    {{ /each }}
+
     <script src='/assets/clientFrontendDefinition.js'></script>
     <script src='/assets/budibase-client.js'></script>
 

@@ -11,6 +11,7 @@ const sqrl = require("squirrelly")
 const { convertCssToFiles } = require("./convertCssToFiles")
 const publicPath = require("./publicPath")
 const deleteCodeMeta = require("./deleteCodeMeta")
+const { uniq } = require("lodash")
 
 module.exports = async (config, appId, pageName, pkg) => {
   const appPath = appPackageFolder(config, appId)
@@ -55,6 +56,10 @@ const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
     stylesheets: (pkg.page.stylesheets || []).map(stylesheetUrl),
     screenStyles: pkg.screens.filter(s => s._css).map(s => s._css),
     pageStyle: pkg.page._css,
+    fontUrls: uniq([
+      ...pkg.screens.map(s => s._fontUrls),
+      ...pkg.page._fontUrls,
+    ]),
   }
 
   const indexHtmlTemplate = await readFile(
@@ -114,6 +119,10 @@ const savePageJson = async (appPath, pageName, pkg) => {
   }
 
   if (pkg.page._screens) {
+    delete pkg.page._screens
+  }
+
+  if (pkg.page._fontUrls) {
     delete pkg.page._screens
   }
 

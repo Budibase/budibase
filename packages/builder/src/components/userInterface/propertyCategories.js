@@ -352,7 +352,7 @@ export const typography = [
       "Inter",
       "Lucida Sans Unicode",
       "Open Sans",
-      "Playfair",
+      "Playfair Display",
       "Roboto",
       "Roboto Mono",
       "Times New Roman",

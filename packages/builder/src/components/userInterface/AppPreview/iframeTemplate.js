@@ -1,5 +1,10 @@
+import { fontUrls } from "../../../builderStore/getFontUrls"
+
 export default `<html>
   <head>
+    ${Object.values(fontUrls)
+      .map(u => `<link rel='stylesheet' href='${u}'>`)
+      .join("\n")}
     <style>
       body, html {
         height: 100%!important;

@@ -14,6 +14,7 @@ import {
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import { buildCodeForScreens } from "../buildCodeForScreens"
 import { generate_screen_css } from "../generate_css"
+import { getFontUrls } from "../getFontUrls"
 import { insertCodeMetadata } from "../insertCodeMetadata"
 import { uuid } from "../uuid"
 import {
@@ -260,6 +261,7 @@ const setCurrentPage = store => pageName => {
 
     for (let screen of state.screens) {
       screen._css = generate_screen_css([screen.props])
+      screen._fontUrls = getFontUrls(screen._css)
     }
 
     setCurrentPageFunctions(state)

@@ -1,6 +1,7 @@
 import { makePropsSafe } from "components/userInterface/pagesParsing/createProps"
 import api from "./api"
 import { generate_screen_css } from "./generate_css"
+import { getFontUrls } from "./getFontUrls"
 
 export const selectComponent = (state, component) => {
   const componentDef = component._component.startsWith("##")
@@ -77,5 +78,8 @@ export const regenerateCssForCurrentScreen = state => {
   state.currentPreviewItem._css = generate_screen_css([
     state.currentPreviewItem.props,
   ])
+  state.currentPreviewItem._fontUrls = getFontUrls(
+    state.currentPreviewItem._css
+  )
   return state
 }

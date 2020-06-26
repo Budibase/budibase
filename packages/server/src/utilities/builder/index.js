@@ -48,6 +48,10 @@ module.exports.saveScreen = async (config, appname, pagename, screen) => {
     delete screen._css
   }
 
+  if (screen._fontUrls) {
+    delete screen._fontUrls
+  }
+
   deleteCodeMeta(screen.props)
 
   await writeJSON(compPath, screen, {
