@@ -4,6 +4,7 @@
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import CreateWorkflowModal from "./CreateWorkflowModal.svelte"
+  import { Button } from "@budibase/bbui"
 
   const { open, close } = getContext("simple-modal")
 
@@ -27,10 +28,9 @@
 </script>
 
 <section>
-  <button class="new-workflow-button hoverable" on:click={newWorkflow}>
-    <i class="icon ri-add-circle-fill" />
+  <Button purple wide on:click{newWorkflow}>
     Create New Workflow
-  </button>
+  </Button>
   <ul>
     {#each $workflowStore.workflows as workflow}
       <li
@@ -74,10 +74,10 @@
 
   .workflow-item {
     display: flex;
-    border-radius: 3px;
+    border-radius: 5px;
     padding-left: 12px;
     align-items: center;
-    height: 40px;
+    height: 36px;
     margin-bottom: 4px;
     color: var(--ink);
   }
