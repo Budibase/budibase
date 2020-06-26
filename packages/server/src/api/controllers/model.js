@@ -16,16 +16,16 @@ exports.find = async function(ctx) {
   ctx.body = model
 }
 
-exports.create = async function(ctx) {
+exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
-  const newModel = {
+  const modelToSave = {
     type: "model",
-    ...ctx.request.body,
     _id: newid(),
+    ...ctx.request.body,
   }
 
-  const result = await db.post(newModel)
-  newModel._rev = result.rev
+  const result = await db.post(modelToSave)
+  modelToSave._rev = result.rev
 
   const { schema } = ctx.request.body
   for (let key in schema) {
@@ -33,9 +33,10 @@ exports.create = async function(ctx) {
     if (schema[key].type === "link") {
       // create the link field in the other model
       const linkedModel = await db.get(schema[key].modelId)
-      linkedModel.schema[newModel.name] = {
+      linkedModel.schema[modelToSave._id] = {
+        name: modelToSave.name,
         type: "link",
-        modelId: newModel._id,
+        modelId: modelToSave._id,
         constraints: {
           type: "array",
         },
@@ -47,9 +48,9 @@ exports.create = async function(ctx) {
   const designDoc = await db.get("_design/database")
   designDoc.views = {
     ...designDoc.views,
-    [`all_${newModel._id}`]: {
+    [`all_${modelToSave._id}`]: {
       map: `function(doc) {
-        if (doc.modelId === "${newModel._id}") {
+        if (doc.modelId === "${modelToSave._id}") {
           emit(doc[doc.key], doc._id); 
         }
       }`,
@@ -58,11 +59,9 @@ exports.create = async function(ctx) {
   await db.put(designDoc)
 
   ctx.status = 200
-  ctx.message = `Model ${ctx.request.body.name} created successfully.`
-  ctx.body = newModel
+  ctx.message = `Model ${ctx.request.body.name} saved successfully.`
+  ctx.body = modelToSave
 }
-
-exports.update = async function() {}
 
 exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)

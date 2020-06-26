@@ -1,20 +1,10 @@
 <script>
   import { onMount, getContext } from "svelte"
   import { store, backendUiStore } from "builderStore"
-  import {
-    tap,
-    get,
-    find,
-    last,
-    compose,
-    flatten,
-    map,
-    remove,
-    keys,
-    takeRight,
-  } from "lodash/fp"
+  import { Button } from "@budibase/bbui"
   import Select from "components/common/Select.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
+  import LinkedRecord from "./LinkedRecord.svelte"
   import TablePagination from "./TablePagination.svelte"
   import { DeleteRecordModal, CreateEditRecordModal } from "./modals"
   import * as api from "./api"
@@ -52,24 +42,38 @@
   let headers = []
   let views = []
   let currentPage = 0
+  let search
 
   $: {
     if ($backendUiStore.selectedView) {
-      api
-        .fetchDataForView($backendUiStore.selectedView)
-        .then(records => {
-          data = records || []
-          headers = Object.keys($backendUiStore.selectedModel.schema).filter(
-            key => !INTERNAL_HEADERS.includes(key)
-          )
-        })
+      api.fetchDataForView($backendUiStore.selectedView).then(records => {
+        data = records || []
+      })
     }
   }
 
-  $: paginatedData = data.slice(
-    currentPage * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  $: paginatedData = data
+    ? data.slice(
+        currentPage * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+      )
+    : []
+
+  $: headers = Object.keys($backendUiStore.selectedModel.schema).filter(
+    id => !INTERNAL_HEADERS.includes(id)
   )
+
+  $: schema = $backendUiStore.selectedModel.schema
+
+  const createNewRecord = () => {
+    open(
+      CreateEditRecordModal,
+      {
+        onClosed: close,
+      },
+      { styleContent: { padding: "0" } }
+    )
+  }
 
   onMount(() => {
     if (views.length) {
@@ -81,13 +85,16 @@
 <section>
   <div class="table-controls">
     <h2 class="title">{$backendUiStore.selectedModel.name}</h2>
+    <Button primary on:click={createNewRecord}>
+      <span class="button-inner">Create New Record</span>
+    </Button>
   </div>
   <table class="uk-table">
     <thead>
       <tr>
         <th>Edit</th>
         {#each headers as header}
-          <th>{header}</th>
+          <th>{$backendUiStore.selectedModel.schema[header].name}</th>
         {/each}
       </tr>
     </thead>
@@ -121,7 +128,11 @@
             </div>
           </td>
           {#each headers as header}
-            <td>{row[header]}</td>
+            <td>
+              {#if schema[header].type === 'link'}
+                <LinkedRecord field={schema[header]} ids={row[header]} />
+              {:else}{row[header]}{/if}
+            </td>
           {/each}
         </tr>
       {/each}
@@ -143,7 +154,7 @@
   }
 
   table {
-    border: 1px solid var(--grey-dark);
+    border: 1px solid var(--grey-4);
     background: #fff;
     border-radius: 3px;
     border-collapse: collapse;
@@ -151,7 +162,7 @@
 
   thead {
     background: var(--blue-light);
-    border: 1px solid var(--grey-dark);
+    border: 1px solid var(--grey-4);
   }
 
   thead th {
@@ -160,18 +171,17 @@
     font-weight: 500;
     font-size: 14px;
     text-rendering: optimizeLegibility;
-    letter-spacing: 1px;
   }
 
   tbody tr {
-    border-bottom: 1px solid var(--grey-dark);
+    border-bottom: 1px solid var(--grey-4);
     transition: 0.3s background-color;
     color: var(--ink);
     font-size: 14px;
   }
 
   tbody tr:hover {
-    background: var(--grey-light);
+    background: var(--grey-1);
   }
 
   .table-controls {
@@ -188,5 +198,10 @@
 
   .no-data {
     padding: 20px;
+  }
+
+  .button-inner {
+    display: flex;
+    align-items: center;
   }
 </style>

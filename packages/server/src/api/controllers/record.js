@@ -43,6 +43,29 @@ exports.save = async function(ctx) {
   const response = await db.post(record)
   record._rev = response.rev
 
+  // create links in other tables
+  for (let key in record) {
+    if (model.schema[key] && model.schema[key].type === "link") {
+      const linked = await db.allDocs({
+        include_docs: true,
+        keys: record[key],
+      })
+
+      // add this record to the linked records in attached models
+      const linkedDocs = linked.rows.map(row => {
+        const doc = row.doc
+        return {
+          ...doc,
+          [model._id]: doc[model._id]
+            ? [...doc[model._id], record._id]
+            : [record._id],
+        }
+      })
+
+      await db.bulkDocs(linkedDocs)
+    }
+  }
+
   ctx.eventEmitter &&
     ctx.eventEmitter.emit(`record:save`, {
       record,
@@ -82,7 +105,7 @@ exports.find = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const record = await db.get(ctx.params.recordId)
   if (record.modelId !== ctx.params.modelId) {
-    ctx.throw(400, "Supplied modelId doe not match the record's modelId")
+    ctx.throw(400, "Supplied modelId does not match the records modelId")
     return
   }
   ctx.body = record

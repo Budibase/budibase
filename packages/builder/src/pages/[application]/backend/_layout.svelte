@@ -3,19 +3,19 @@
   import { store, backendUiStore } from "builderStore"
   import * as api from "components/database/ModelDataTable/api"
 
-  import BackendNav from "components/nav/BackendNav.svelte"
-  import SchemaManagementDrawer from "components/nav/SchemaManagementDrawer.svelte"
+  import ModelNavigator from "components/nav/ModelNavigator/ModelNavigator.svelte"
+  import { ModelSetupNav } from "components/nav/ModelSetupNav"
 </script>
 
 <div class="root">
   <div class="nav">
-    <BackendNav />
+    <ModelNavigator />
   </div>
   <div class="content">
     <slot />
   </div>
   <div class="nav">
-    <SchemaManagementDrawer />
+    <ModelSetupNav />
   </div>
 </div>
 
@@ -23,7 +23,8 @@
   .root {
     height: 100%;
     display: flex;
-    background: #fafafa;
+    background: var(--grey-1);
+    line-height: 1;
   }
 
   .content {
@@ -32,7 +33,6 @@
   }
 
   .nav {
-    overflow: auto;
     flex: 0 1 auto;
     width: 300px;
     height: 100%;

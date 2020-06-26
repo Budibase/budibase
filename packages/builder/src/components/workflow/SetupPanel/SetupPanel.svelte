@@ -2,7 +2,7 @@
   import { fade } from "svelte/transition"
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
-  import { notifier } from "@beyonk/svelte-notifications"
+  import { notifier } from "builderStore/store/notifications"
   import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte"
   import DeleteWorkflowModal from "./DeleteWorkflowModal.svelte"
 
@@ -12,10 +12,14 @@
     {
       name: "Admin",
       key: "ADMIN",
+      canExecute: true,
+      editable: false,
     },
     {
       name: "Power User",
       key: "POWER_USER",
+      canExecute: true,
+      editable: false,
     },
   ]
 
@@ -123,16 +127,26 @@
           <div class="config-item">
             <label class="uk-form-label">User Access</label>
             <div class="access-levels">
-              {#each ACCESS_LEVELS as { name, key }}
+              {#each ACCESS_LEVELS as level}
                 <span class="access-level">
-                  <label>{name}</label>
-                  <input class="uk-checkbox" type="checkbox" />
+                  <label>{level.name}</label>
+                  <input
+                    class="uk-checkbox"
+                    type="checkbox"
+                    disabled={!level.editable}
+                    bind:checked={level.canExecute} />
                 </span>
               {/each}
             </div>
           </div>
         </div>
         <div class="buttons">
+          <button
+            data-cy="save-workflow-setup"
+            class="workflow-button hoverable"
+            on:click={saveWorkflow}>
+            Save Workflow
+          </button>
           <button class="delete-workflow-button" on:click={deleteWorkflow}>
             Delete Workflow
           </button>
@@ -162,7 +176,7 @@
 
   header {
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 600;
     display: flex;
     align-items: center;
     margin-bottom: 18px;
@@ -182,15 +196,15 @@
 
   .config-item {
     margin: 0px 0px 4px 0px;
-    padding: 12px;
-    background: var(--light-grey);
+    padding: 12px 0px;
   }
 
   .budibase_input {
-    height: 35px;
-    width: 220px;
+    height: 36px;
+    width: 244px;
     border-radius: 3px;
-    border: 1px solid var(--grey-dark);
+    background-color: var(--grey-2);
+    border: 1px solid var(--grey-2);
     text-align: left;
     color: var(--ink);
     font-size: 14px;
@@ -198,7 +212,7 @@
   }
 
   header > span {
-    color: var(--ink-lighter);
+    color: var(--grey-5);
     margin-right: 20px;
   }
 
@@ -243,7 +257,7 @@
 
   .workflow-button {
     cursor: pointer;
-    border: 1px solid var(--grey-dark);
+    border: 1px solid var(--grey-4);
     border-radius: 3px;
     width: 100%;
     padding: 8px 16px;
@@ -259,7 +273,7 @@
   }
 
   .workflow-button:hover {
-    background: var(--grey-light);
+    background: var(--grey-1);
   }
 
   .access-level {

@@ -1,8 +1,10 @@
 <script>
   import { onMount } from "svelte"
   import { store, backendUiStore } from "builderStore"
+  import { notifier } from "builderStore/store/notifications"
   import { compose, map, get, flatten } from "lodash/fp"
-  import ActionButton from "components/common/ActionButton.svelte"
+  import { Button } from "@budibase/bbui"
+  import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"
   import Select from "components/common/Select.svelte"
   import RecordFieldControl from "./RecordFieldControl.svelte"
   import * as api from "../api"
@@ -59,38 +61,96 @@
     backendUiStore.update(state => {
       state.selectedView = state.selectedView
       onClosed()
+      notifier.success("Record created successfully.")
       return state
     })
   }
 </script>
 
 <div class="actions">
-  <h4 class="budibase__title--4">Create / Edit Record</h4>
+  <header>
+    <i class="ri-file-user-fill" />
+    <h4 class="budibase__title--4">Create / Edit Record</h4>
+  </header>
   <ErrorsBox {errors} />
   <form on:submit|preventDefault class="uk-form-stacked">
     {#each modelSchema as [key, meta]}
       <div class="uk-margin">
-        <RecordFieldControl
-          type={determineInputType(meta)}
-          options={determineOptions(meta)}
-          label={key}
-          bind:value={record[key]} />
+        {#if meta.type === 'link'}
+          <LinkedRecordSelector
+            bind:linked={record[key]}
+            linkName={meta.name}
+            modelId={meta.modelId} />
+        {:else}
+          <RecordFieldControl
+            type={determineInputType(meta)}
+            options={determineOptions(meta)}
+            label={meta.name}
+            bind:value={record[key]} />
+        {/if}
       </div>
     {/each}
   </form>
 </div>
 <footer>
-  <ActionButton alert on:click={onClosed}>Cancel</ActionButton>
-  <ActionButton on:click={saveRecord}>Save</ActionButton>
+  <div class="button-margin-3">
+    <Button secondary on:click={onClosed}>Cancel</Button>
+  </div>
+  <div class="button-margin-4">
+    <Button blue on:click={saveRecord}>Save</Button>
+  </div>
 </footer>
 
 <style>
+  header {
+    margin-bottom: 40px;
+    display: grid;
+    grid-gap: 20px;
+    grid-template-columns: 40px 1fr;
+    align-items: center;
+  }
+
+  i {
+    height: 40px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--blue-light);
+    color: var(--ink);
+    font-size: 20px;
+    border-radius: 3px;
+  }
+
+  h4 {
+    display: inline-block;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--ink);
+    margin: 0;
+  }
+
   .actions {
     padding: 30px;
   }
+
   footer {
-    padding: 20px;
-    background: #fafafa;
-    border-radius: 0.5rem;
+    padding: 20px 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 20px;
+    background: var(--grey-1);
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+  }
+
+  .button-margin-3 {
+    grid-column-start: 3;
+    display: grid;
+  }
+
+  .button-margin-4 {
+    grid-column-start: 4;
+    display: grid;
   }
 </style>

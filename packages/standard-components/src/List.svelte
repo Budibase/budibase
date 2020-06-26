@@ -41,7 +41,7 @@
   .list {
     display: flex;
     flex-direction: column;
-    font-family: Roboto;
+    font-family: Inter;
   }
 
   .grid {
