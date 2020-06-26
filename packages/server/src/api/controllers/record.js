@@ -56,8 +56,8 @@ exports.save = async function(ctx) {
         const doc = row.doc
         return {
           ...doc,
-          [model._id]: doc[model._id]
-            ? [...doc[model._id], record._id]
+          [model.name]: doc[model.name]
+            ? [...doc[model.name], record._id]
             : [record._id],
         }
       })
