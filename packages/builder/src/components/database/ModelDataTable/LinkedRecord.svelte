@@ -11,7 +11,7 @@
   let open = false
   let model
 
-  $: FIELDS_TO_HIDE = [$backendUiStore.selectedModel._id, field.modelId]
+  $: FIELDS_TO_HIDE = [$backendUiStore.selectedModel.name]
 
   async function fetchRecords() {
     const response = await api.post("/api/records/search", {
@@ -88,7 +88,7 @@
     position: absolute;
     right: 15%;
     padding: 20px;
-    background: var(--light-grey);
+    background: var(--grey-1);
     border: 1px solid var(--grey);
   }
 

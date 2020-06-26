@@ -24,6 +24,22 @@ exports.save = async function(ctx) {
     ...ctx.request.body,
   }
 
+  // update renamed record fields when model is updated
+  const { _rename } = modelToSave
+  if (_rename) {
+    const records = await db.query(`database/all_${modelToSave._id}`, {
+      include_docs: true,
+    })
+    const docs = records.rows.map(({ doc }) => {
+      doc[_rename.updated] = doc[_rename.old]
+      delete doc[_rename.old]
+      return doc
+    })
+
+    await db.bulkDocs(docs)
+    delete modelToSave._rename
+  }
+
   const result = await db.post(modelToSave)
   modelToSave._rev = result.rev
 
@@ -33,7 +49,7 @@ exports.save = async function(ctx) {
     if (schema[key].type === "link") {
       // create the link field in the other model
       const linkedModel = await db.get(schema[key].modelId)
-      linkedModel.schema[modelToSave._id] = {
+      linkedModel.schema[modelToSave.name] = {
         name: modelToSave.name,
         type: "link",
         modelId: modelToSave._id,
@@ -51,7 +67,7 @@ exports.save = async function(ctx) {
     [`all_${modelToSave._id}`]: {
       map: `function(doc) {
         if (doc.modelId === "${modelToSave._id}") {
-          emit(doc[doc.key], doc._id); 
+          emit(doc._id); 
         }
       }`,
     },
@@ -75,7 +91,7 @@ exports.destroy = async function(ctx) {
   // Delete all records for that model
   const records = await db.query(`database/${modelViewId}`)
   await db.bulkDocs(
-    records.rows.map(record => ({ id: record.id, _deleted: true }))
+    records.rows.map(record => ({ _id: record.id, _deleted: true }))
   )
 
   // Delete linked record fields in dependent models
