@@ -25,6 +25,17 @@
     }
   }
 
+  // Update user!
+  async function updateUser(event) {
+    const response = await api.put(`/api/users`, event.detail)
+    const users = await response.json()
+    backendUiStore.update(state => {
+      state.users = users
+      return state
+    })
+    fetchUsersPromise = fetchUsers()
+  }
+
   // Get users
   async function fetchUsers() {
     const response = await api.get(`/api/users`)
@@ -67,7 +78,7 @@
       <ul>
         {#each users as user}
           <li>
-            <UserRow {user} />
+            <UserRow {user} on:save={updateUser} />
           </li>
         {:else}
           <li>No Users found</li>
@@ -89,7 +100,7 @@
     display: grid;
     grid-gap: 12px;
     border-radius: 5px;
-    background-color: var(--light-grey);
+    background-color: var(--grey-2);
     padding: 12px 12px 18px 12px;
   }
   .background.create {

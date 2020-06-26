@@ -1,4 +1,6 @@
 <script>
+  import { createEventDispatcher } from "svelte"
+  const dispatch = createEventDispatcher()
   import { Input, Select, Button } from "@budibase/bbui"
   export let user
 </script>
@@ -9,7 +11,7 @@
     <option value="ADMIN">Admin</option>
     <option value="POWER_USER">Power User</option>
   </Select>
-  <Button on:click>Edit</Button>
+  <Button on:click={() => dispatch('save', user)}>Edit</Button>
 </div>
 
 <style>
