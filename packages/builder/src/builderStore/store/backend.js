@@ -1,6 +1,5 @@
 import { writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { uuid } from "builderStore/uuid"
 import api from "../api"
 
 export const getBackendUiStore = () => {
@@ -70,9 +69,23 @@ export const getBackendUiStore = () => {
       save: async ({ model }) => {
         const updatedModel = cloneDeep(model)
 
+        // update any renamed schema keys to reflect their names
+        for (let key in updatedModel.schema) {
+          const field = updatedModel.schema[key]
+          // field has been renamed
+          if (field.name && field.name !== key) {
+            updatedModel.schema[field.name] = field
+            updatedModel._rename = { old: key, updated: field.name }
+            delete updatedModel.schema[key]
+          }
+        }
+
         const SAVE_MODEL_URL = `/api/models`
-        await api.post(SAVE_MODEL_URL, updatedModel)
+        console.log(updatedModel)
+        const response = await api.post(SAVE_MODEL_URL, updatedModel)
+        const savedModel = await response.json()
         await store.actions.models.fetch()
+        store.actions.models.select(savedModel)
       },
       addField: field => {
         store.update(state => {
@@ -80,13 +93,11 @@ export const getBackendUiStore = () => {
             state.draftModel.schema = {}
           }
 
-          const id = uuid()
-
           state.draftModel.schema = {
             ...state.draftModel.schema,
-            [id]: field,
+            [field.name]: cloneDeep(field),
           }
-          state.selectedField = id
+          state.selectedField = field.name
           state.tabs.NAVIGATION_PANEL = "NAVIGATE"
 
           return state
