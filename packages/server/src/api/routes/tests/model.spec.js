@@ -26,7 +26,6 @@ describe("/models", () => {
   })
 
   describe("create", () => {
-
     beforeEach(async () => {
       instance = await createInstance(request, app._id);
     });
@@ -50,6 +49,50 @@ describe("/models", () => {
             done();
         });
       })
+
+    it("renames all the record fields for a model when a schema key is renamed", async () => {
+      const testModel = await createModel(request, app._id, instance._id);
+
+      const testRecord = await request
+        .post(`/api/${testModel._id}/records`)
+        .send({
+          name: "test"
+        })
+        .set(defaultHeaders(app._id, instance._id))
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      const updatedModel = await request
+        .post(`/api/models`)
+        .send({ 
+          _id: testModel._id,
+          _rev: testModel._rev,
+          name: "TestModel",
+          key: "name",
+          _rename: {
+            old: "name",
+            updated: "updatedName"
+          },
+          schema: {
+            updatedName: { type: "string" }
+          }
+        })
+        .set(defaultHeaders(app._id, instance._id))
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+        expect(updatedModel.res.statusMessage).toEqual("Model TestModel saved successfully.");            
+        expect(updatedModel.body.name).toEqual("TestModel");            
+
+        const res = await request
+          .get(`/api/${testModel._id}/records/${testRecord.body._id}`)
+          .set(defaultHeaders(app._id, instance._id))
+          .expect('Content-Type', /json/)
+          .expect(200)
+
+          expect(res.body.updatedName).toEqual("test");
+          expect(res.body.name).toBeUndefined();
+      });
 
       it("should apply authorization to endpoint", async () => {
         await builderEndpointShouldBlockNormalUsers({
