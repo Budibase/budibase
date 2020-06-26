@@ -1,6 +1,6 @@
 <script>
   import Modal from "svelte-simple-modal"
-  import { notifier } from "@beyonk/svelte-notifications"
+  import { notifier } from "builderStore/store/notifications"
   import { onMount, getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import CreateWorkflowModal from "./CreateWorkflowModal.svelte"
@@ -89,7 +89,7 @@
 
   .workflow-item:hover {
     cursor: pointer;
-    background: var(--grey-light);
+    background: var(--grey-1);
   }
 
   .workflow-item.selected {
@@ -98,7 +98,7 @@
 
   .new-workflow-button {
     cursor: pointer;
-    border: 1px solid var(--grey-dark);
+    border: 1px solid var(--grey-4);
     border-radius: 3px;
     width: 100%;
     padding: 8px 16px;
@@ -113,7 +113,7 @@
   }
 
   .new-workflow-button:hover {
-    background: var(--grey-light);
+    background: var(--grey-1);
   }
 
   .icon {

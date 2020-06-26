@@ -11,7 +11,7 @@
     padding: 10px;
     margin-top: 5px;
     margin-bottom: 10px;
-    background: var(--secondary80);
+    background: var(--grey-7);
     color: var(--white);
     font-family: "Courier New", Courier, monospace;
     height: 200px;

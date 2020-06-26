@@ -8,97 +8,42 @@
     --blue-dark: #2F4C9B;
 
     --ink: #393C44;
-    --ink-light: #808192;
-    --ink-lighter: #ADAEC4;
+    --grey-7: #808192;
+    --grey-5: #ADAEC4;
     
     --grey: #F2F2F2;
-    --grey-light: #FBFBFB;
-    --grey-medium: #e8e8ef;
-    --grey-dark: #E6E6E6;
+    --grey-1: var(--grey-1);
+    --grey-4: #e8e8ef;
+    --grey-4: #E6E6E6;
 
     --red: #E26D69;
     --red-light:#FFE6E6;
     --red-dark: #800400;
 
-    --primary100: #0055ff;
-    --primary80: rgba(0, 85, 255, 0.8);
-    --primary60: #rgba(0, 85, 255, 0.6);
-    --primary40: #rgba(0, 85, 255, 0.4);
-    --primary20: #rgba(0, 85, 255, 0.2);
-    --primary10: #rgba(0, 85, 255, 0.1);
-    --primary5: #rgba(0, 85, 255, 0.05);
-    --primarydark: #0044cc;
 
-    --secondary100:#393C44;
-    --secondary80: rgba(0, 3, 51, 0.8);
-    --secondary60: rgba(0, 3, 51, 0.6);
-    --secondary40: rgba(0, 3, 51, 0.4);
-    --secondary20: rgba(0, 3, 51, 0.2);
-    --secondary10: rgba(0, 3, 51, 0.1);
-    --secondary5: rgba(0, 3, 51, 0.05);
-    --secondarydark: #00021a;
+    --font-black: "Inter Black";
+    --font-bold: "Inter Bold";
+    --fontsemibold: "Inter Medium";
+    --font-normal: "Inter";
 
-    --tertiary: #F2F5F7;
+    --bodytext: var(--font-normal) "regular" var(--secondary100) 16pt;
+    --bigbodytext: var(--font-normal) "regular" var(--secondary100) 20pt;
+    --smallbodytext: var(--font-normal) "regular" var(--secondary100) 12pt;
+    --lightbodytext: "regular" "normal" 16pt  var(--font-normal);
+    --heavybodytext: var(--font-bold) "regular" var(--secondary100) 16pt;
+    --quotation: var(--font-normal) "italics" var(--darkslate) 16pt;
+    --smallheavybodytext: var(--font-bold) "regular" var(--secondary100) 14pt;
 
-    --success100: #49C39EFF;
-    --success75: #49C39EBF;
-    --success50: #49C39E80;
-    --success25: #49C39E40;
-    --success10: #49C39E1A;
-    --successdark: #44B492;
 
-    --deletion100: #F2545BFF;
-    --deletion75: #F2545BBF;
-    --deletion50: #F2545B80;
-    --deletion25: #F2545B40;
-    --deletion10: #F2545B1A;
-    --deletiondark: #CF4046;
-
-    
-    --darkslate: #1a202c;
-    --slate: #d8d8d8;
-    --lightslate: #f9f9f9;
-
-    --borderradius: 2px;
-    --borderradiusall: 2px 2px 2px 2px;
-
-    --fontblack: "Roboto Black";
-    --fontbold: "Roboto Bold";
-    --fontsemibold: "Roboto Medium";
-    --fontnormal: "Roboto";
-    --fontlight: "Roboto Light";
-
-    --bodytext: var(--fontnormal) "regular" var(--secondary100) 16pt;
-    --bigbodytext: var(--fontnormal) "regular" var(--secondary100) 20pt;
-    --smallbodytext: var(--fontnormal) "regular" var(--secondary100) 12pt;
-    --lightbodytext: "regular" "normal" 16pt  var(--fontnormal);
-    --heavybodytext: var(--fontbold) "regular" var(--secondary100) 16pt;
-    --quotation: var(--fontnormal) "italics" var(--darkslate) 16pt;
-    --smallheavybodytext: var(--fontbold) "regular" var(--secondary100) 14pt;
-
-    --background-button: #f9f9f9;
-    --button-text: #0055ff;
-
-    /* Budibase Styleguide Colors */
-    --primary: #0055ff;
-    --secondary: #f1f4fc;
-    --color: #393c44;
-    --light-grey: #fbfbfb;
-    --dark-grey: #808192;
-    --medium-grey: #e8e8ef;
-    --background: rgb(251, 251, 251);
-    --font: #393c44;
-    --coral: #eb5757;
 }
 
 html, body {
-    display: grid;
-    font-family: var(--fontnormal);
-    color: var(--secondary80);
+    font-family: inter;
+    color: var(--ink);
     padding: 0;
     margin: 0;
-    height:100%;
-    width:100%;
+    height: 100%;
+    width: 100%;
 }
 
 #app {
@@ -108,43 +53,43 @@ html, body {
 }
 
 h1 {
-    font-family: var(--fontblack);
+    font-family: var(--font-black);
     font-size: 36pt;
     color: var(--secondary100);
 }
 
 h2 {
-    font-family: var(--fontbold);
+    font-family: var(--font-bold);
     font-size: 30pt;
     color: var(--secondary100);
 }
 
 h3 {
-    font-family: var(--fontbold);
+    font-family: var(--font-bold);
     font-size: 24pt;
     color: var(--secondary60);
 }
 
 h4 {
-    font-family: var(--fontbold);
+    font-family: var(--font-bold);
     font-size: 18pt;
     color: var(--ink);
 }
 
 h5 {
-    font-family: var(--fontblack);
+    font-family: var(--font-black);
     font-size: 14pt;
     color: var(--secondary100);
 }
 
 h5 {
-    font-family: var(--fontblack);
+    font-family: var(--font-black);
     font-size: 12pt;
     color: var(--darkslate);
 }
 
 textarea {
-    font-family: var(--fontnormal);
+    font-family: var(--font-normal);
 }
 
 .hoverable:hover {

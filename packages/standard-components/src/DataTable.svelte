@@ -77,7 +77,6 @@
     font-weight: 500;
     font-size: 14px;
     text-rendering: optimizeLegibility;
-    letter-spacing: 1px;
     justify-content: left;
     padding: 16px 20px 16px 8px;
     margin-right: 20px;
@@ -92,6 +91,6 @@
   }
 
   tbody tr:hover {
-    background: #fafafa;
+    background: var(--grey-1);
   }
 </style>

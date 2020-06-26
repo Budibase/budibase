@@ -37,19 +37,18 @@
 <style>
   input {
     /* width: 32px; */
-    height: 32px;
-    font-size: 12px;
-    font-weight: 700;
-    margin: 0px 0px 0px 1px;
+    height: 36px;
+    font-size: 14px;
+    font-weight: 400;
+    margin: 0px 0px 0px 2px;
     color: var(--ink);
-    opacity: 0.7;
-    padding: 0px 4px;
-    line-height: 1.3;
-    /* padding: 12px; */
+    padding: 0px 8px;
+    font-family: inter;
     width: 164px;
     box-sizing: border-box;
-    border: 1px solid var(--grey);
-    border-radius: 2px;
+    background-color: var(--grey-2);
+    border-radius: 4px;
+    border: 1px solid var(--grey-2);
     outline: none;
   }
 

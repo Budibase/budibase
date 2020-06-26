@@ -51,3 +51,16 @@
     on:input={handleInput}
     on:change={handleInput} />
 {/if}
+
+<style>
+  label {
+    display: block;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  input {
+    color: var(--dark-grey);
+  }
+</style>

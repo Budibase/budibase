@@ -21,11 +21,11 @@
     display: flex;
     list-style: none;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   li {
-    color: var(--ink-lighter);
+    color: var(--grey-5);
     cursor: pointer;
     margin-right: 20px;
   }

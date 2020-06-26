@@ -93,7 +93,7 @@
 
   .newevent {
     cursor: pointer;
-    border: 1px solid var(--grey-dark);
+    border: 1px solid var(--grey-4);
     border-radius: 3px;
     width: 100%;
     padding: 8px 16px;
@@ -109,7 +109,7 @@
   }
 
   .newevent:hover {
-    background: var(--grey-light);
+    background: var(--grey-1);
   }
 
   .icon {
@@ -155,7 +155,7 @@
   }
 
   .selected {
-    color: var(--button-text);
-    background: var(--background-button) !important;
+    color: var(--blue);
+    background: var(--grey-1) !important;
   }
 </style>

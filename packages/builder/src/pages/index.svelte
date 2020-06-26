@@ -73,7 +73,7 @@
   .welcome {
     font-size: 42px;
     color: var(--ink);
-    font-weight: 900;
+    font-weight: 700;
     margin: 40px 0px 0px 80px;
   }
 
@@ -136,7 +136,7 @@
   .banner-button:hover {
     background-color: var(--white);
     color: var(--ink);
-    border: var(--grey-dark) 1px solid;
+    border: var(--grey-4) 1px solid;
   }
 
   .app-section-header {
@@ -149,7 +149,7 @@
   .app-section-title {
     font-size: 20px;
     color: var(--ink);
-    font-weight: 700;
+    font-weight: 600;
     margin-bottom: 20px;
   }
 </style>

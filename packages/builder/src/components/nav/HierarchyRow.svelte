@@ -3,10 +3,8 @@
   import { store, backendUiStore } from "builderStore"
   import { cloneDeep } from "lodash/fp"
   import getIcon from "../common/icon"
-  import {
-    CreateEditModelModal,
-    CreateEditViewModal,
-  } from "components/database/ModelDataTable/modals"
+  import { CreateEditViewModal } from "components/database/ModelDataTable/modals"
+  import api from "builderStore/api"
 
   const { open, close } = getContext("simple-modal")
 
@@ -30,14 +28,6 @@
     class:selected={$backendUiStore.selectedView === `all_${node._id}`}>
     <i class={ICON_MAP[type]} />
     <span style="margin-left: 1rem">{node.name}</span>
-    <!-- <i
-      class="ri-edit-line hoverable"
-      on:click={editModel}
-    />
-    <i
-      class="ri-delete-bin-7-line hoverable"
-      on:click={deleteModel}
-    /> -->
   </div>
 </div>
 
