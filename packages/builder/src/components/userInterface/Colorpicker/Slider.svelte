@@ -32,19 +32,6 @@
 <div
   bind:this={slider}
   bind:clientWidth={sliderWidth}
-  on:click={event => handleClick(event.clientX)}
-  class="color-format-slider"
-  class:hue={type === 'hue'}
-  class:alpha={type === 'alpha'}>
-  <div
-    use:dragable
-    on:drag={e => handleClick(e.detail)}
-    class="slider-thumb"
-    {style} />
-</div>
-<div
-  bind:this={slider}
-  bind:clientWidth={sliderWidth}
   on:click={event => onSliderChange(event.clientX)}
   class="color-format-slider"
   class:hue={type === 'hue'}
