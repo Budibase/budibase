@@ -321,17 +321,44 @@ export default {
           name: "Form",
           description: "A component that generates a form from your data.",
           icon: "ri-file-edit-fill",
-          properties: {
-            design: { ...all },
-            settings: [{ label: "Model", key: "model", control: ModelSelect }],
-          },
-          _component: "@budibase/standard-components/dataform",
-          template: {
-            component: "@budibase/materialdesign-components/Form",
-            description: "Form for saving a record",
-            name: "@budibase/materialdesign-components/recordForm",
-          },
-          children: [],
+          commonProps: {},
+          children: [
+            {
+              _component: "@budibase/standard-components/dataform",
+              name: "Form Basic",
+              icon: "ri-file-edit-fill",
+              properties: {
+                design: { ...all },
+                settings: [
+                  {
+                    label: "Model",
+                    key: "model",
+                    control: ModelSelect,
+                  },
+                ],
+              },
+              template: {
+                component: "@budibase/materialdesign-components/Form",
+                description: "Form for saving a record",
+                name: "@budibase/materialdesign-components/recordForm",
+              },
+            },
+            {
+              _component: "@budibase/standard-components/dataformwide",
+              name: "Form Wide",
+              icon: "ri-file-edit-fill",
+              properties: {
+                design: { ...all },
+                settings: [
+                  {
+                    label: "Model",
+                    key: "model",
+                    control: ModelSelect,
+                  },
+                ],
+              },
+            },
+          ],
         },
         {
           name: "Chart",
