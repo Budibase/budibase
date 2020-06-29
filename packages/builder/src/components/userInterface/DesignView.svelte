@@ -1,6 +1,8 @@
 <script>
+  import {onMount} from "svelte"
   import PropertyGroup from "./PropertyGroup.svelte"
   import FlatButtonGroup from "./FlatButtonGroup.svelte"
+
 
   export let panelDefinition = {}
   export let componentInstance = {}
@@ -8,8 +10,17 @@
   export let onStyleChanged = () => {}
 
   let selectedCategory = "normal"
+  let propGroup = null
 
   const getProperties = name => panelDefinition[name]
+
+  onMount(() => {
+    // if(propGroup) {
+    //   propGroup.addEventListener("scroll", function(e){
+    //     console.log("I SCROLLED", e.target.scrollTop)
+    //   })
+    // }
+  })
 
   function onChange(category) {
     selectedCategory = category
@@ -31,7 +42,7 @@
   </div>
 
   <div class="positioned-wrapper">
-    <div class="design-view-property-groups">
+    <div bind:this={propGroup} class="design-view-property-groups">
       {#if propertyGroupNames.length > 0}
         {#each propertyGroupNames as groupName}
           <PropertyGroup
