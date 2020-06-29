@@ -9,7 +9,7 @@
 
 <div class="inputs">
   <Input
-    disabled={!editMode}
+    disabled
     thin
     bind:value={user.username}
     name="Name"
