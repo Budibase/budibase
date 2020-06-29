@@ -18,6 +18,8 @@ exports.fetch = async function(ctx) {
     key: ["app"],
   })
 
+  console.log("Apps: ", body)
+
   ctx.body = body.rows.map(row => row.doc)
 }
 
@@ -88,6 +90,22 @@ exports.create = async function(ctx) {
   ctx.status = 200
   ctx.body = newApplication
   ctx.message = `Application ${ctx.request.body.name} created successfully`
+}
+
+exports.update = async function(ctx) {
+  const clientId = await lookupClientId(ctx.params.applicationId)
+  const db = new CouchDB(ClientDb.name(clientId))
+  const application = await db.get(ctx.params.applicationId)
+
+  const data = ctx.request.body
+  const newData = { ...application, ...data }
+
+  const response = await db.put(newData)
+  data._rev = response.rev
+
+  ctx.status = 200
+  ctx.message = `Application ${application.name} updated successfully.`
+  ctx.body = response
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
