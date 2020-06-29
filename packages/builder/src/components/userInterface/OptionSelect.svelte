@@ -27,13 +27,10 @@
   onMount(() => {
     if (select) {
       select.addEventListener("keydown", handleEnter)
-      selectMenu.addEventListener("keydown", handleEscape)
     }
-
 
     return () => {
       select.removeEventListener("keydown", handleEnter)
-      selectMenu.removeEventListener("keydown", handleEscape)
     }
 
   })
@@ -72,12 +69,11 @@
   function toggleSelect(isOpen) {
     getDimensions()
     if (isOpen) {
-      icon.style.transform = "rotate(180deg)"
-      selectMenu.focus()
+      icon.style.transform = "rotate(180deg)"      
     } else {
       icon.style.transform = "rotate(0deg)"
     }
-    open = isOpen    
+    open = isOpen
   }
 
 
@@ -99,6 +95,10 @@
     ? options.find(o => o.value === value)
     : {}
 
+  $: if(open && selectMenu) {
+    selectMenu.focus()
+  }
+
   $: displayLabel =
     selectedOption && selectedOption.label ? selectedOption.label : value || ""
 </script>
@@ -112,13 +112,15 @@
     <span>{displayLabel}</span>
     <i bind:this={icon} class="ri-arrow-down-s-fill" />
   </div>
+  {#if open}
   <Portal>
     <div
       tabindex="0"
+      class:open
       bind:this={selectMenu}
       style={menuStyle}
-      class="bb-select-menu"
-      class:open>
+      on:keydown={handleEscape}
+      class="bb-select-menu">
       <ul>
         {#if isOptionsObject}
           {#each options as { value: v, label }}
@@ -141,11 +143,10 @@
         {/if}
       </ul>
     </div>
+   <div on:click|self={() => toggleSelect(false)} class="overlay" />
   </Portal>
+  {/if}
 </div>
-{#if open}
-  <div on:click|self={() => toggleSelect(false)} class="overlay" />
-{/if}
 
 <style>
   .overlay {
