@@ -27,7 +27,9 @@
 
   // Update user!
   async function updateUser(event) {
-    const response = await api.put(`/api/users`, event.detail)
+    let data = event.detail
+    delete data.password
+    const response = await api.put(`/api/users`, data)
     const users = await response.json()
     backendUiStore.update(state => {
       state.users = users

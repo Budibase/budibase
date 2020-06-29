@@ -63,32 +63,28 @@ exports.create = async function(ctx) {
   }
 }
 
-exports.update = async function(ctx) {
+exports.update = async function (ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const user = ctx.request.body
 
   const response = await db.put(user)
   user._rev = response.rev
 
+  console.log(response)
+
   ctx.status = 200
-  ctx.body = {
-    message: `User ${ctx.request.body.username} updated successfully.`,
-    user: {
-      ...user,
-      _rev: response.rev,
-      _id: response.id,
-    },
-  }
+  ctx.message = `User ${ctx.request.body.username} updated successfully.`
+  ctx.body = response
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const database = new CouchDB(ctx.user.instanceId)
   await database.destroy(getUserId(ctx.params.username))
   ctx.message = `User ${ctx.params.username} deleted.`
   ctx.status = 200
 }
 
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   const database = new CouchDB(ctx.user.instanceId)
   const user = await database.get(getUserId(ctx.params.username))
   ctx.body = {
