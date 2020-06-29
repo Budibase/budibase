@@ -58,7 +58,7 @@
     border-radius: 3px;
     color: var(--ink-lighter);
     font-size: 14px;
-    background: var(--light-grey);
+    background: var(--grey-1);
   }
 
   span:hover {
