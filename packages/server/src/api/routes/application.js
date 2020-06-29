@@ -12,6 +12,7 @@ router
     authorized(BUILDER),
     controller.fetchAppPackage
   )
+  .put("/api/:applicationId/appPackage", authorized(BUILDER), controller.update)
   .post("/api/applications", authorized(BUILDER), controller.create)
 
 module.exports = router
