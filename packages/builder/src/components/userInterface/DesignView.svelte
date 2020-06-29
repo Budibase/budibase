@@ -11,6 +11,7 @@
 
   let selectedCategory = "normal"
   let propGroup = null
+  let currentGroup
 
   const getProperties = name => panelDefinition[name]
 
@@ -33,6 +34,7 @@
   ]
 
   $: propertyGroupNames = Object.keys(panelDefinition)
+  
 </script>
 
 <div class="design-view-container">
@@ -51,7 +53,9 @@
             styleCategory={selectedCategory}
             {onStyleChanged}
             {componentDefinition}
-            {componentInstance} />
+            {componentInstance}
+            open={currentGroup === groupName}
+            on:open={() => currentGroup = groupName} />
         {/each}
       {:else}
         <div class="no-design">
