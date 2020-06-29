@@ -149,39 +149,6 @@
   $: shrink = swatches.length > 0
 </script>
 
-<div class="colorpicker-container">
-
-  <div class="palette-panel">
-    <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
-  </div>
-
-  <div class="control-panel">
-    <div class="alpha-hue-panel">
-      <div>
-        <CheckedBackground borderRadius="50%" backgroundSize="8px">
-          <div class="selected-color" {style} />
-        </CheckedBackground>
-      </div>
-      <div>
-        <Slider type="hue" value={h} on:change={hue => setHue(hue.detail)} />
-
-        <CheckedBackground borderRadius="10px" backgroundSize="7px">
-          <Slider
-            type="alpha"
-            value={a}
-            on:change={alpha => setAlpha(alpha.detail)} />
-        </CheckedBackground>
-
-      </div>
-    </div>
-
-    <div class="format-input-panel">
-      <ButtonGroup {format} onclick={changeFormatAndConvert} />
-      <Input {value} on:input={event => handleColorInput(event.target.value)} />
-    </div>
-  </div>
-
-</div>
 <div
   class="colorpicker-container"
   bind:clientHeight={pickerHeight}
