@@ -6,7 +6,7 @@
   const TYPE_MAP = {
     string: "text",
     boolean: "checkbox",
-    number: "number"
+    number: "number",
   }
 
   let username
@@ -52,6 +52,7 @@
     newModel[field] = value
   }
 </script>
+
 <form class="form" on:submit|preventDefault>
   <h1>{modelDef.name} Form</h1>
   <hr />
@@ -59,10 +60,10 @@
     {#each fields as field}
       <div class="form-item">
         <label class="form-label" for="form-stacked-text">{field}</label>
-        {#if schema[field].type === "string" && schema[field].constraints.inclusion}
+        {#if schema[field].type === 'string' && schema[field].constraints.inclusion}
           <select on:blur={handleInput(field)}>
             {#each schema[field].constraints.inclusion as opt}
-            <option>{opt}</option>
+              <option>{opt}</option>
             {/each}
           </select>
         {:else}
@@ -79,6 +80,7 @@
     </div>
   </div>
 </form>
+
 <style>
   .form {
     display: flex;
@@ -135,37 +137,37 @@
     text-align: center;
   }
 
-button:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); 
-}
+  button:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
 
-input[type=checkbox] {
+  input[type="checkbox"] {
     transform: scale(2);
     cursor: pointer;
-}
+  }
 
-select::-ms-expand {
-  display: none;
-}
-select {
-  cursor: pointer;
-  display: inline-block;
-  align-items: baseline;
-  box-sizing: border-box;
-  padding: 1em 1em;
-  border: 1px solid #eaeaea;
-  border-radius: 5px;
-  font: inherit;
-  line-height: inherit;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  -ms-appearance: none;
-  appearance: none;
-  background-repeat: no-repeat;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: right 17px top 1.5em, right 10px top 1.5em;
-  background-size: 7px 7px, 7px 7px;
-}
-
-
-</style> 
+  select::-ms-expand {
+    display: none;
+  }
+  select {
+    cursor: pointer;
+    display: inline-block;
+    align-items: baseline;
+    box-sizing: border-box;
+    padding: 1em 1em;
+    border: 1px solid #eaeaea;
+    border-radius: 5px;
+    font: inherit;
+    line-height: inherit;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ms-appearance: none;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: right 17px top 1.5em, right 10px top 1.5em;
+    background-size: 7px 7px, 7px 7px;
+  }
+</style>
