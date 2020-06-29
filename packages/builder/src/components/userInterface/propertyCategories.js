@@ -123,7 +123,7 @@ export const margin = [
   },
   {
     label: "Bottom",
-    key: "padding-bottom",
+    key: "margin-bottom",
     control: OptionSelect,
     options: [
       { label: "None", value: "0px" },
@@ -352,7 +352,6 @@ export const typography = [
       "Inter",
       "Lucida Sans Unicode",
       "Open Sans",
-      "Playfair",
       "Roboto",
       "Roboto Mono",
       "Times New Roman",
