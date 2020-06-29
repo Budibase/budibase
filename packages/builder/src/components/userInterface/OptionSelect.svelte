@@ -26,20 +26,22 @@
 
   onMount(() => {
     if (select) {
-      select.addEventListener("keydown", addSelectKeyEvents)
+      select.addEventListener("keydown", handleEnter)
+      selectMenu.addEventListener("keydown", handleEscape)
     }
 
-    containerEl = document.querySelector(".design-view-property-groups")
 
     return () => {
-      select.removeEventListener("keydown", addSelectKeyEvents)
-      containerEl.removeEventListener("scroll", disableScroll)
+      select.removeEventListener("keydown", handleEnter)
+      selectMenu.removeEventListener("keydown", handleEscape)
     }
 
   })
 
-  function disableScroll(e) {
-    containerEl.scrollTop = scrollTop 
+  function handleEscape(e) {
+    if(open && e.key === "Escape") {
+        toggleSelect(false)
+    }
   }
 
   function getDimensions() {
@@ -61,28 +63,19 @@
     dimensions = {[positionSide]: y, left}
   }
 
-  function addSelectKeyEvents(e) {
-    if (e.key === "Enter") {
-      if (!open) {
+  function handleEnter(e) {
+    if (!open && e.key === "Enter") {
         toggleSelect(true)
-      }
-    } else if (e.key === "Escape") {
-      if (open) {
-        toggleSelect(false)
-      }
-    }
+    } 
   }
 
   function toggleSelect(isOpen) {
     getDimensions()
     if (isOpen) {
       icon.style.transform = "rotate(180deg)"
-      let containerWidth = containerEl.offsetWidth
-      scrollTop = containerEl.scrollTop
-      containerEl.addEventListener("scroll", disableScroll)
+      selectMenu.focus()
     } else {
       icon.style.transform = "rotate(0deg)"
-      containerEl.removeEventListener("scroll", disableScroll)
     }
     open = isOpen    
   }
@@ -121,6 +114,7 @@
   </div>
   <Portal>
     <div
+      tabindex="0"
       bind:this={selectMenu}
       style={menuStyle}
       class="bb-select-menu"
@@ -204,6 +198,7 @@
   .bb-select-menu {
     position: absolute;
     display: flex;
+    outline: none;
     box-sizing: border-box;
     flex-direction: column;
     opacity: 0;
