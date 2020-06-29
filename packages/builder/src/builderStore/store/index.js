@@ -29,7 +29,8 @@ import {
 export const getStore = () => {
   const initial = {
     apps: [],
-    appname: "",
+    name: "",
+    description: "",
     pages: DEFAULT_PAGES_OBJECT,
     mainUi: {},
     unauthenticatedUi: {},
@@ -101,7 +102,8 @@ const setPackage = (store, initial) => async pkg => {
 
   initial.libraries = pkg.application.componentLibraries
   initial.components = await fetchComponentLibDefinitions(pkg.application._id)
-  initial.appname = pkg.application.name
+  initial.name = pkg.application.name
+  initial.description = pkg.application.description
   initial.appId = pkg.application._id
   initial.pages = pkg.pages
   initial.hasAppPackage = true
