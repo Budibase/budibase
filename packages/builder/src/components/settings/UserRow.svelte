@@ -3,15 +3,33 @@
   const dispatch = createEventDispatcher()
   import { Input, Select, Button } from "@budibase/bbui"
   export let user
+
+  let editMode = false
 </script>
 
 <div class="inputs">
-  <Input thin bind:value={user.username} name="Name" placeholder="Username" />
-  <Select bind:value={user.accessLevelId} thin>
+  <Input
+    disabled={!editMode}
+    thin
+    bind:value={user.username}
+    name="Name"
+    placeholder="Username" />
+  <Select disabled={editMode} bind:value={user.accessLevelId} thin>
     <option value="ADMIN">Admin</option>
     <option value="POWER_USER">Power User</option>
   </Select>
-  <Button on:click={() => dispatch('save', user)}>Edit</Button>
+  {#if editMode}
+    <Button
+      blue
+      on:click={() => {
+        dispatch('save', user)
+        editMode = false
+      }}>
+      Save
+    </Button>
+  {:else}
+    <Button secondary on:click={() => (editMode = true)}>Edit</Button>
+  {/if}
 </div>
 
 <style>
