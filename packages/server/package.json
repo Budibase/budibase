@@ -63,6 +63,7 @@
     "koa-static": "^5.0.0",
     "lodash": "^4.17.13",
     "mustache": "^4.0.1",
+    "node-fetch": "^2.6.0",
     "pino-pretty": "^4.0.0",
     "pouchdb": "^7.2.1",
     "pouchdb-all-dbs": "^1.0.2",

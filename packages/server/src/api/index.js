@@ -7,6 +7,7 @@ const {
   authRoutes,
   pageRoutes,
   userRoutes,
+  deployRoutes,
   instanceRoutes,
   clientRoutes,
   applicationRoutes,
@@ -41,7 +42,8 @@ router
       jwtSecret: env.JWT_SECRET,
       useAppRootPath: true,
     }
-    ctx.isDev = env.NODE_ENV !== "production" && env.NODE_ENV !== "jest"
+    // ctx.isDev = env.NODE_ENV !== "production" && env.NODE_ENV !== "jest"
+    ctx.isCloud = true
     await next()
   })
   .use(authenticated)
@@ -81,6 +83,9 @@ router.use(instanceRoutes.allowedMethods())
 
 router.use(workflowRoutes.routes())
 router.use(workflowRoutes.allowedMethods())
+
+router.use(deployRoutes.routes())
+router.use(deployRoutes.allowedMethods())
 // end auth routes
 
 router.use(pageRoutes.routes())

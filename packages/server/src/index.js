@@ -1,7 +1,10 @@
-const { resolve } = require("path")
+const { resolve, join } = require("path")
+const { homedir } = require("os")
+
 
 async function runServer() {
   const budibaseDir = "~/.budibase"
+  require("dotenv").config()
 
   process.env.BUDIBASE_DIR = resolve(budibaseDir)
 
