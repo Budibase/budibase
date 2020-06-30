@@ -28,6 +28,11 @@
     }
   }
 
+  // handles navigation between frontend, backend, workflow.
+  // this remembers your last place on each of the sections
+  // e.g. if one of your screens is selected on front end, then
+  // you browse to backend, when you click fronend, you will be
+  // brought back to the same screen
   const topItemNavigate = path => () => {
     const activeTopNav = $layout.children.find(c => $isActive(c.path))
     if (!activeTopNav) return
