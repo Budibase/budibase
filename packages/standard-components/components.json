@@ -209,6 +209,13 @@
 			"model": "models"
 		}
 	},
+	"dataformwide": {
+		"description": "an HTML table that fetches data from a model or view and displays it.",
+		"data": true,
+		"props": {
+			"model": "models"
+		}
+	},
 	"datalist": {
 		"description": "A configurable data list that attaches to your backend models.",
 		"data": true,
