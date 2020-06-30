@@ -8,6 +8,8 @@
   }
 
   onMount(async () => {
+    // navigate to first model in list, if not already selected
+    // and this is the final url (i.e. no selectedModel)
     if (!$leftover && $backendUiStore.models.length > 0 && (!$backendUiStore.selectedModel || !$backendUiStore.selectedModel._id)) {
       $goto(`./${$backendUiStore.models[0]._id}`)
     }
