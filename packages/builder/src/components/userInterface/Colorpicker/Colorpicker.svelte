@@ -13,16 +13,18 @@
   import Palette from "./Palette.svelte"
   import ButtonGroup from "./ButtonGroup.svelte"
   import Input from "./Input.svelte"
+  import Portal from "./Portal.svelte"
 
   export let value = "#3ec1d3ff"
+  export let open = false;
   export let swatches = [] //TODO: Safe swatches - limit to 12. warn in console
   export let disableSwatches = false
   export let format = "hexa"
-  export let open = false
-
+  export let style = ""
   export let pickerHeight = 0
   export let pickerWidth = 0
 
+  let colorPicker = null
   let adder = null
 
   let h = null
@@ -38,6 +40,10 @@
       getRecentColors()
     }
 
+    if(colorPicker) {
+      colorPicker.focus()
+    }
+
     if (format) {
       convertAndSetHSVA()
     }
@@ -47,6 +53,12 @@
     let colorStore = localStorage.getItem("cp:recent-colors")
     if (colorStore) {
       swatches = JSON.parse(colorStore)
+    }
+  }
+
+  function handleEscape(e) {
+    if(open && e.key === "Escape") {
+      open = false
     }
   }
 
@@ -145,85 +157,97 @@
   }
 
   $: border = v > 90 && s < 5 ? "1px dashed #dedada" : ""
-  $: style = buildStyle({ background: value, border })
+  $: selectedColorStyle = buildStyle({ background: value, border })
   $: shrink = swatches.length > 0
+  
 </script>
 
-<div
-  class="colorpicker-container"
-  bind:clientHeight={pickerHeight}
-  bind:clientWidth={pickerWidth}>
 
-  <div class="palette-panel">
-    <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
-  </div>
+<Portal>
+  <div
+    class="colorpicker-container"
+    transition:fade
+    bind:this={colorPicker}
+    {style}
+    tabindex="0"
+    on:keydown={handleEscape}
+    bind:clientHeight={pickerHeight}
+    bind:clientWidth={pickerWidth}>
 
-  <div class="control-panel">
-    <div class="alpha-hue-panel">
-      <div>
-        <CheckedBackground borderRadius="50%" backgroundSize="8px">
-          <div class="selected-color" {style} />
-        </CheckedBackground>
-      </div>
-      <div>
-        <Slider
-          type="hue"
-          value={h}
-          on:change={hue => setHue(hue.detail)}
-          on:dragend={dispatchValue} />
+    <div class="palette-panel">
+      <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
+    </div>
 
-        <CheckedBackground borderRadius="10px" backgroundSize="7px">
+    <div class="control-panel">
+      <div class="alpha-hue-panel">
+        <div>
+          <CheckedBackground borderRadius="50%" backgroundSize="8px">
+            <div class="selected-color" style={selectedColorStyle} />
+          </CheckedBackground>
+        </div>
+        <div>
           <Slider
-            type="alpha"
-            value={a}
-            on:change={(alpha, isDrag) => setAlpha(alpha.detail, isDrag)}
+            type="hue"
+            value={h}
+            on:change={hue => setHue(hue.detail)}
             on:dragend={dispatchValue} />
-        </CheckedBackground>
 
+          <CheckedBackground borderRadius="10px" backgroundSize="7px">
+            <Slider
+              type="alpha"
+              value={a}
+              on:change={(alpha, isDrag) => setAlpha(alpha.detail, isDrag)}
+              on:dragend={dispatchValue} />
+          </CheckedBackground>
+
+        </div>
+      </div>
+
+      {#if !disableSwatches}
+        <div transition:fade class="swatch-panel">
+          {#if swatches.length > 0}
+            {#each swatches as color, idx}
+              <Swatch
+                {color}
+                on:click={() => applySwatch(color)}
+                on:removeswatch={() => removeSwatch(idx)} />
+            {/each}
+          {/if}
+          {#if swatches.length !== 12}
+            <div
+              bind:this={adder}
+              transition:fade
+              class="adder"
+              on:click={addSwatch}
+              class:shrink>
+              <span>&plus;</span>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
+      <div class="format-input-panel">
+        <ButtonGroup {format} onclick={changeFormatAndConvert} />
+        <Input
+          {value}
+          on:input={event => handleColorInput(event.target.value)}
+          on:change={dispatchInputChange} />
       </div>
     </div>
 
-    {#if !disableSwatches}
-      <div transition:fade class="swatch-panel">
-        {#if swatches.length > 0}
-          {#each swatches as color, idx}
-            <Swatch
-              {color}
-              on:click={() => applySwatch(color)}
-              on:removeswatch={() => removeSwatch(idx)} />
-          {/each}
-        {/if}
-        {#if swatches.length !== 12}
-          <div
-            bind:this={adder}
-            transition:fade
-            class="adder"
-            on:click={addSwatch}
-            class:shrink>
-            <span>&plus;</span>
-          </div>
-        {/if}
-      </div>
-    {/if}
-
-    <div class="format-input-panel">
-      <ButtonGroup {format} onclick={changeFormatAndConvert} />
-      <Input
-        {value}
-        on:input={event => handleColorInput(event.target.value)}
-        on:change={dispatchInputChange} />
-    </div>
   </div>
-
-</div>
+</Portal>
 
 <style>
   .colorpicker-container {
+    position: absolute;
+    outline: none;
+    z-index: 3;
     display: flex;
     font-size: 11px;
     font-weight: 400;
     flex-direction: column;
-    /* height: 265px; */
+    margin: 5px 0px;
     height: auto;
     width: 220px;
     background: #ffffff;
