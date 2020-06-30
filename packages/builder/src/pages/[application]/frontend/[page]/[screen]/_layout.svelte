@@ -14,7 +14,7 @@
     if ($leftover) {
       // Get the correct screen children.
       const screenChildren = $store.pages[$params.page]._screens.find(
-        screen => screen.name === $params.screen
+        screen => screen.props._instanceName === $params.screen
       ).props._children
       findComponent(componentIds, screenChildren)
     }
