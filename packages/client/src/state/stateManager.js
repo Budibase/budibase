@@ -59,7 +59,7 @@ const _setup = ({ handlerTypes, getCurrentState, bb, store }) => node => {
     const propValue = props[propName]
 
     // A little bit of a hack - won't bind if the string doesn't start with {{
-    const isBound = typeof propValue === "string" && propValue.startsWith("{{")
+    const isBound = typeof propValue === "string" && propValue.includes("{{")
 
     if (isBound) {
       initialProps[propName] = mustache.render(propValue, {

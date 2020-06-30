@@ -3,7 +3,7 @@
   import { Button } from "@budibase/bbui"
   import EmptyModel from "components/nav/ModelNavigator/EmptyModel.svelte"
   import ModelDataTable from "components/database/ModelDataTable"
-  import { store, backendUiStore } from "builderStore"
+  import { backendUiStore } from "builderStore"
   import ActionButton from "components/common/ActionButton.svelte"
   import * as api from "components/database/ModelDataTable/api"
   import { CreateEditRecordModal } from "components/database/ModelDataTable/modals"
