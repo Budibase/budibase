@@ -1,6 +1,5 @@
 <script>
   import { onMount } from "svelte"
-
   export let _bb
   export let model
 
@@ -18,46 +17,37 @@
   let store = _bb.store
   let schema = {}
   let modelDef = {}
-
   $: if (model && model.length !== 0) {
     fetchModel()
   }
-
   $: fields = Object.keys(schema)
-
   async function fetchModel() {
     const FETCH_MODEL_URL = `/api/models/${model}`
     const response = await _bb.api.get(FETCH_MODEL_URL)
     modelDef = await response.json()
     schema = modelDef.schema
   }
-
   async function save() {
     const SAVE_RECORD_URL = `/api/${model}/records`
     const response = await _bb.api.post(SAVE_RECORD_URL, newModel)
     const json = await response.json()
-
     store.update(state => {
       state[model] = state[model] ? [...state[model], json] : [json]
       return state
     })
   }
-
   const handleInput = field => event => {
     let value
-
     if (event.target.type === "checkbox") {
       value = event.target.checked
       newModel[field] = value
       return
     }
-
     if (event.target.type === "number") {
       value = parseInt(event.target.value)
       newModel[field] = value
       return
     }
-
     value = event.target.value
     newModel[field] = value
   }
@@ -95,57 +85,48 @@
   .form {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    justify-content: center;
+    margin: auto;
+    padding: 40px;
   }
-
   .form-content {
     margin-bottom: 20px;
   }
-
   .input {
-    width: 600px;
-    height: 40px;
     border-radius: 5px;
     border: 1px solid #e6e6e6;
-    padding: 6px 12px 6px 12px;
+    padding: 1em;
     font-size: 16px;
   }
 
   .form-item {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 30% 1fr;
     margin-bottom: 16px;
-  }
-
-  .form-label {
-    font-weight: bold;
-    margin-bottom: 12px;
+    align-items: center;
+    gap: 1em;
   }
 
   hr {
-    border: 1px solid var(--grey-1);
-    margin: 20px 0px;
+    border: 1px solid #f5f5f5;
+    margin: 40px 0px;
   }
-
   hr:nth-last-child(2) {
-    border: 1px solid #fff;
-    margin: 20px 0px;
+    border: 1px solid #f5f5f5;
+    margin: 40px 0px;
   }
-
   .button-block {
     display: flex;
     justify-content: flex-end;
   }
-
   button {
     font-size: 16px;
-    padding: 0.4em;
+    padding: 8px 16px;
     box-sizing: border-box;
     border-radius: 4px;
     color: white;
-    background-color: #393c44;
+    background-color: black;
     outline: none;
-    width: 300px;
     height: 40px;
     cursor: pointer;
     transition: all 0.2s ease 0s;
@@ -162,22 +143,16 @@
   }
 
   input[type="checkbox"] {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    margin: 0;
-    vertical-align: bottom;
-    position: relative;
-    top: -1px;
-    *overflow: hidden;
+    transform: scale(2);
+    cursor: pointer;
   }
 
   select::-ms-expand {
     display: none;
   }
   select {
-    display: inline-block;
     cursor: pointer;
+    display: inline-block;
     align-items: baseline;
     box-sizing: border-box;
     padding: 1em 1em;
