@@ -25,7 +25,7 @@
 
   function selectModel(model, fieldId) {
     backendUiStore.actions.models.select(model)
-
+    $goto(`./model/${model._id}`)
     if (fieldId) {
       backendUiStore.update(state => {
         state.selectedField = fieldId
