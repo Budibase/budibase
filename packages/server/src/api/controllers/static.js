@@ -8,8 +8,7 @@ const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const { ANON_LEVEL_ID } = require("../../utilities/accessLevels")
 const jwt = require("jsonwebtoken")
 const fetch = require("node-fetch")
-
-const S3_URL_PREFIX = "https://s3-eu-west-1.amazonaws.com/apps.budibase.com"
+const { S3 } = require("aws-sdk")
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(__dirname, "../../../builder")
@@ -47,15 +46,16 @@ exports.serveApp = async function(ctx) {
 
   const { file = "index.html" } = ctx
 
+
   if (ctx.isCloud) {
-    const requestUrl = `${S3_URL_PREFIX}/${ctx.params.appId}/public/${mainOrAuth}/${file}`
-    console.log('request url:' , requestUrl)
-    const response = await fetch(requestUrl)
+    const S3_URL = `https://${ctx.params.appId}.app.budi.live/assets/${ctx.params.appId}/public/${mainOrAuth}/${file}`
+    const response = await fetch(S3_URL)
     const body = await response.text()
     ctx.body = body 
-  } else {
-    await send(ctx, file, { root: ctx.devPath || appPath })
+    return
   }
+
+  await send(ctx, file, { root: ctx.devPath || appPath })
 }
 
 exports.serveAppAsset = async function(ctx) {
@@ -69,15 +69,15 @@ exports.serveAppAsset = async function(ctx) {
     mainOrAuth
   )
 
-  if (ctx.isCloud) {
-    const requestUrl = `${S3_URL_PREFIX}/${appId}/public/${mainOrAuth}/${ctx.file || "index.html"}`
-    console.log('request url:' , requestUrl)
-    const response = await fetch(requestUrl)
-    const body = await response.text()
-    ctx.body = body 
-  } else {
+  // if (ctx.isCloud) {
+  //   const requestUrl = `${S3_URL_PREFIX}/${appId}/public/${mainOrAuth}/${ctx.file || "index.html"}`
+  //   console.log('request url:' , requestUrl)
+  //   const response = await fetch(requestUrl)
+  //   const body = await response.text()
+  //   ctx.body = body 
+  // } else {
     await send(ctx, ctx.file, { root: ctx.devPath || appPath })
-  }
+  // }
 }
 
 exports.serveComponentLibrary = async function(ctx) {
@@ -98,16 +98,16 @@ exports.serveComponentLibrary = async function(ctx) {
     )
   }
 
-  if (ctx.isCloud) {
-    const appId = ctx.user.appId
-    const requestUrl = encodeURI(`${S3_URL_PREFIX}/${appId}/node_modules/${ctx.query.library}/dist/index.js`)
-    console.log('request url components: ', requestUrl)
-    const response = await fetch(requestUrl)
-    const body = await response.text()
-    ctx.type = 'application/javascript'
-    ctx.body = body;
-    return
-  }
+  // if (ctx.isCloud) {
+  //   const appId = ctx.user.appId
+  //   const requestUrl = encodeURI(`${S3_URL_PREFIX}/${appId}/node_modules/${ctx.query.library}/dist/index.js`)
+  //   console.log('request url components: ', requestUrl)
+  //   const response = await fetch(requestUrl)
+  //   const body = await response.text()
+  //   ctx.type = 'application/javascript'
+  //   ctx.body = body;
+  //   return
+  // }
 
   await send(ctx, "/index.js", { root: componentLibraryPath })
 }
