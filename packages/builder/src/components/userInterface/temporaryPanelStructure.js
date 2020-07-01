@@ -406,8 +406,19 @@ export default {
         {
           name: "List",
           _component: "@budibase/standard-components/list",
-          description: "Shiny list",
+          description: "Renders all children once per record, of a given model",
           icon: "ri-file-list-fill",
+          properties: {
+            design: { ...all },
+            settings: [{ label: "Model", key: "model", control: ModelSelect }],
+          },
+          children: [],
+        },
+        {
+          name: "Record Detail",
+          _component: "@budibase/standard-components/recorddetail",
+          description: "Loads a record, using an id from the URL, which can be used with {{ context }}, in children",
+          icon: "ri-profile-line",
           properties: {
             design: { ...all },
             settings: [{ label: "Model", key: "model", control: ModelSelect }],
