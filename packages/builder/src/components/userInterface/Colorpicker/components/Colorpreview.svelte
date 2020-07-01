@@ -1,11 +1,11 @@
 <script>
   import Colorpicker from "./Colorpicker.svelte"
   import CheckedBackground from "./CheckedBackground.svelte"
-  import { createEventDispatcher, beforeUpdate } from "svelte"
+  import { createEventDispatcher, beforeUpdate, onMount } from "svelte"
 
-  import { buildStyle } from "./helpers.js"
+  import {buildStyle, debounce} from "../helpers.js"
   import { fade } from "svelte/transition"
-  import { getColorFormat } from "./utils.js"
+  import { getColorFormat } from "../utils.js"
 
   export let value = "#3ec1d3ff"
   export let swatches = []
@@ -50,8 +50,8 @@
     dispatch("change", color.detail)
   }
 
-  $: if(open && colorPreview) {
-    const {
+  function calculateDimensions() {
+   const {
       top: spaceAbove,
       width,
       bottom,
@@ -72,9 +72,13 @@
       y = bottom
     }
 
-    x = (left + previewCenter) - (pickerWidth / 2)
+    x = (left + previewCenter) - (220 / 2)
 
-    dimensions = { [positionSide]: y.toFixed(1), left: x.toFixed(1) }
+    dimensions = { [positionSide]: y.toFixed(1), left: x.toFixed(1) } 
+  }
+
+  $: if(open && colorPreview) {
+    calculateDimensions()
   }
 
   $: previewStyle = buildStyle({ width, height, background: value })
@@ -85,6 +89,8 @@
   })
   
 </script>
+
+<svelte:window on:resize={debounce(calculateDimensions, 200)} />
 
 <div class="color-preview-container">
   {#if !errorMsg}
