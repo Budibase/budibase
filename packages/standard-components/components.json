@@ -235,15 +235,14 @@
 		"description": "A configurable data list that attaches to your backend models.",
 		"data": true,
 		"props": {
-			"model": "models",
-			"layout": {
-				"type": "options",
-				"default": "list",
-				"options": [
-					"list",
-					"grid"
-				]
-			}
+			"model": "models"
+		}
+	},
+	"recorddetail": {
+		"description": "Loads a record, using an ID in the url",
+		"data": true,
+		"props": {
+			"model": "models"
 		}
 	},
 	"datamap": {
