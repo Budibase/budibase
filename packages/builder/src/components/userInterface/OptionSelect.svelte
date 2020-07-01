@@ -13,13 +13,13 @@
   let selectMenu
   let icon
 
-  let selectAnchor = null;
-  let dimensions = {top: 0, bottom: 0, left: 0}
+  let selectAnchor = null
+  let dimensions = { top: 0, bottom: 0, left: 0 }
 
   let positionSide = "top"
   let maxHeight = 0
-  let scrollTop = 0;
-  let containerEl = null;
+  let scrollTop = 0
+  let containerEl = null
 
   const handleStyleBind = value =>
     !!styleBindingProperty ? { style: `${styleBindingProperty}: ${value}` } : {}
@@ -32,50 +32,52 @@
     return () => {
       select.removeEventListener("keydown", handleEnter)
     }
-
   })
 
   function handleEscape(e) {
-    if(open && e.key === "Escape") {
-        toggleSelect(false)
+    if (open && e.key === "Escape") {
+      toggleSelect(false)
     }
   }
 
   function getDimensions() {
-    const { bottom, top: spaceAbove, left } = selectAnchor.getBoundingClientRect()
+    const {
+      bottom,
+      top: spaceAbove,
+      left,
+    } = selectAnchor.getBoundingClientRect()
     const spaceBelow = window.innerHeight - bottom
 
-    let y;
+    let y
 
     if (spaceAbove > spaceBelow) {
       positionSide = "bottom"
-      maxHeight = spaceAbove - 20  
-      y = (window.innerHeight - spaceAbove)
+      maxHeight = spaceAbove - 20
+      y = window.innerHeight - spaceAbove
     } else {
       positionSide = "top"
       y = bottom
       maxHeight = spaceBelow - 20
     }
 
-    dimensions = {[positionSide]: y, left}
+    dimensions = { [positionSide]: y, left }
   }
 
   function handleEnter(e) {
     if (!open && e.key === "Enter") {
-        toggleSelect(true)
-    } 
+      toggleSelect(true)
+    }
   }
 
   function toggleSelect(isOpen) {
     getDimensions()
     if (isOpen) {
-      icon.style.transform = "rotate(180deg)"      
+      icon.style.transform = "rotate(180deg)"
     } else {
       icon.style.transform = "rotate(0deg)"
     }
     open = isOpen
   }
-
 
   function handleClick(val) {
     value = val
@@ -86,7 +88,7 @@
     "max-height": `${maxHeight.toFixed(0)}px`,
     "transform-origin": `center ${positionSide}`,
     [positionSide]: `${dimensions[positionSide]}px`,
-    "left": `${dimensions.left.toFixed(0)}px`,
+    left: `${dimensions.left.toFixed(0)}px`,
   })
 
   $: isOptionsObject = options.every(o => typeof o === "object")
@@ -95,7 +97,7 @@
     ? options.find(o => o.value === value)
     : {}
 
-  $: if(open && selectMenu) {
+  $: if (open && selectMenu) {
     selectMenu.focus()
   }
 
@@ -113,38 +115,38 @@
     <i bind:this={icon} class="ri-arrow-down-s-fill" />
   </div>
   {#if open}
-  <Portal>
-    <div
-      tabindex="0"
-      class:open
-      bind:this={selectMenu}
-      style={menuStyle}
-      on:keydown={handleEscape}
-      class="bb-select-menu">
-      <ul>
-        {#if isOptionsObject}
-          {#each options as { value: v, label }}
-            <li
-              {...handleStyleBind(v)}
-              on:click|self={handleClick(v)}
-              class:selected={value === v}>
-              {label}
-            </li>
-          {/each}
-        {:else}
-          {#each options as v}
-            <li
-              {...handleStyleBind(v)}
-              on:click|self={handleClick(v)}
-              class:selected={value === v}>
-              {v}
-            </li>
-          {/each}
-        {/if}
-      </ul>
-    </div>
-   <div on:click|self={() => toggleSelect(false)} class="overlay" />
-  </Portal>
+    <Portal>
+      <div
+        tabindex="0"
+        class:open
+        bind:this={selectMenu}
+        style={menuStyle}
+        on:keydown={handleEscape}
+        class="bb-select-menu">
+        <ul>
+          {#if isOptionsObject}
+            {#each options as { value: v, label }}
+              <li
+                {...handleStyleBind(v)}
+                on:click|self={handleClick(v)}
+                class:selected={value === v}>
+                {label}
+              </li>
+            {/each}
+          {:else}
+            {#each options as v}
+              <li
+                {...handleStyleBind(v)}
+                on:click|self={handleClick(v)}
+                class:selected={value === v}>
+                {v}
+              </li>
+            {/each}
+          {/if}
+        </ul>
+      </div>
+      <div on:click|self={() => toggleSelect(false)} class="overlay" />
+    </Portal>
   {/if}
 </div>
 

@@ -68,71 +68,76 @@
 </table>
 
 <style>
-table { 
-	width: 100%; 
-	border-collapse: collapse; 
-	}
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
 
   /* Zebra striping */
-tr:nth-of-type(odd) { 
-	background: var(--stripeColor); 
-	}
+  tr:nth-of-type(odd) {
+    background: var(--stripeColor);
+  }
 
-th { 
-	background-color: var(--backgroundColor); 
-	color: var(--color); 
-	font-weight: bold; 
-  text-transform: capitalize;
-	}
+  th {
+    background-color: var(--backgroundColor);
+    color: var(--color);
+    font-weight: bold;
+    text-transform: capitalize;
+  }
 
-td, th { 
-	padding: 16px; 
-	border: 1px solid var(--borderColor); 
-	text-align: left; 
-	}
+  td,
+  th {
+    padding: 16px;
+    border: 1px solid var(--borderColor);
+    text-align: left;
+  }
 
+  @media only screen and (max-width: 760px),
+    (min-device-width: 768px) and (max-device-width: 1024px) {
+    table {
+      width: 100%;
+    }
 
-@media 
-only screen and (max-width: 760px),
-(min-device-width: 768px) and (max-device-width: 1024px)  {
+    /* Force table to not be like tables anymore */
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+      display: block;
+    }
 
-	table { 
-	  	width: 100%; 
-	}
+    /* Hide table headers (but not display: none;, for accessibility) */
+    thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+    }
 
-	/* Force table to not be like tables anymore */
-	table, thead, tbody, th, td, tr { 
-		display: block; 
-	}
-	
-	/* Hide table headers (but not display: none;, for accessibility) */
-	thead tr { 
-		position: absolute;
-		top: -9999px;
-		left: -9999px;
-	}
-	
-	tr { border: 1px solid var(--borderColor); }
-	
-	td { 
-		/* Behave  like a "row" */
-		border: none;
-		border-bottom: 1px solid #eee; 
-		position: relative;
-		padding-left: 10%; 
-	}
+    tr {
+      border: 1px solid var(--borderColor);
+    }
 
-	td:before { 
-		/* Now like a table header */
-		position: absolute;
-		/* Top/left values mimic padding */
-		top: 6px;
-		left: 6px;
-		width: 45%; 
-		padding-right: 10px; 
-		white-space: nowrap;
-		/* Label the data */
-		content: attr(data-column);
-	}
-}
+    td {
+      /* Behave  like a "row" */
+      border: none;
+      border-bottom: 1px solid #eee;
+      position: relative;
+      padding-left: 10%;
+    }
+
+    td:before {
+      /* Now like a table header */
+      position: absolute;
+      /* Top/left values mimic padding */
+      top: 6px;
+      left: 6px;
+      width: 45%;
+      padding-right: 10px;
+      white-space: nowrap;
+      /* Label the data */
+      content: attr(data-column);
+    }
+  }
 </style>

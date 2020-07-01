@@ -99,9 +99,7 @@
     {selectedCategory} />
 
   {#if displayName}
-    <div class="instance-name">
-      {componentInstance._instanceName}
-    </div>
+    <div class="instance-name">{componentInstance._instanceName}</div>
   {/if}
 
   <div class="component-props-container">
