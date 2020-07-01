@@ -81,7 +81,7 @@
   }
 
   .play-button.highlighted {
-    background: var(--primary);
+    background: var(--purple);
   }
 
   .stop-button.highlighted {
