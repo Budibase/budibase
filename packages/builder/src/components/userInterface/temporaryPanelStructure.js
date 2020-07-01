@@ -417,7 +417,8 @@ export default {
         {
           name: "Record Detail",
           _component: "@budibase/standard-components/recorddetail",
-          description: "Loads a record, using an id from the URL, which can be used with {{ context }}, in children",
+          description:
+            "Loads a record, using an id from the URL, which can be used with {{ context }}, in children",
           icon: "ri-profile-line",
           properties: {
             design: { ...all },
