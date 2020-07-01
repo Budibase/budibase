@@ -318,7 +318,7 @@ export default {
               { label: "Stripe Color", key: "stripeColor", control: Input },
               { label: "Border Color", key: "borderColor", control: Input },
               { label: "TH Color", key: "backgroundColor", control: Input },
-              { label: "TH Font Color", key: "color", control: Input }
+              { label: "TH Font Color", key: "color", control: Input },
             ],
           },
           children: [],
@@ -336,7 +336,7 @@ export default {
               properties: {
                 design: { ...all },
                 settings: [
-                  { label: "Model", key: "model", control: ModelSelect,},
+                  { label: "Model", key: "model", control: ModelSelect },
                 ],
               },
               template: {
