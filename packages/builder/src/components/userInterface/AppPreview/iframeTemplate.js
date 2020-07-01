@@ -7,6 +7,9 @@ export default `<html>
         height: 100%!important;
         font-family: Roboto !important;
       }
+      *, *:before, *:after {
+        box-sizing: border-box;
+      }
       .lay-__screenslot__text {
           width: 100%;
           height: 100%;
