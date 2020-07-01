@@ -26,20 +26,6 @@
 			"borderStyle": "string"
 		}
 	},
-	"Navigation1": {
-		"name": "Navigation1",
-		"description": "A basic left navigation component",
-		"props": {
-			"logoUrl": "string",
-			"title": "string",
-			"backgroundColor": "string",
-			"color": "string",
-			"borderWidth": "string",
-			"borderColor": "string",
-			"borderStyle": "string"
-		}
-	},
-	
 	"button": {
 		"name": "Button",
 		"description": "an html <button />",
