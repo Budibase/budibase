@@ -395,7 +395,6 @@ export const typography = [
     label: "Color",
     key: "color",
     control: Colorpicker,
-    swatches: ["#fff", "#000", "#111", "#ccc", "ede"],
     defaultValue: "#000",
   },
   {
