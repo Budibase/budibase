@@ -209,6 +209,13 @@
 			"model": "models"
 		}
 	},
+	"dataformwide": {
+		"description": "an HTML table that fetches data from a model or view and displays it.",
+		"data": true,
+		"props": {
+			"model": "models"
+		}
+	},
 	"datalist": {
 		"description": "A configurable data list that attaches to your backend models.",
 		"data": true,
@@ -228,15 +235,14 @@
 		"description": "A configurable data list that attaches to your backend models.",
 		"data": true,
 		"props": {
-			"model": "models",
-			"layout": {
-				"type": "options",
-				"default": "list",
-				"options": [
-					"list",
-					"grid"
-				]
-			}
+			"model": "models"
+		}
+	},
+	"recorddetail": {
+		"description": "Loads a record, using an ID in the url",
+		"data": true,
+		"props": {
+			"model": "models"
 		}
 	},
 	"datamap": {

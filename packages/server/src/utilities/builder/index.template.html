@@ -17,6 +17,9 @@
             margin: 0px;
             padding: 0px;
         }
+        *, *:before, *:after {
+            box-sizing: border-box;
+        }
     </style>
 
     {{ each(options.stylesheets) }}
@@ -30,6 +33,9 @@
     {{ if(options.pageStyle) }}
     <link rel='stylesheet' href='/assets{{ pageStyle }}'>
     {{ /if }}
+
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
 
     <script src='/assets/clientFrontendDefinition.js'></script>
     <script src='/assets/budibase-client.js'></script>
