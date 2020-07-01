@@ -16,7 +16,7 @@ app.use(
     prettyPrint: {
       levelFirst: true,
     },
-    level: env.LOG_LEVEL || "error",
+    level: "info" || "info",
   })
 )
 
