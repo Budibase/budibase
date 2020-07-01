@@ -26,6 +26,20 @@
 			"borderStyle": "string"
 		}
 	},
+	"Navigation1": {
+		"name": "Navigation1",
+		"description": "A basic left navigation component",
+		"props": {
+			"logoUrl": "string",
+			"title": "string",
+			"backgroundColor": "string",
+			"color": "string",
+			"borderWidth": "string",
+			"borderColor": "string",
+			"borderStyle": "string"
+		}
+	},
+	
 	"button": {
 		"name": "Button",
 		"description": "an html <button />",
@@ -190,16 +204,22 @@
 	"icon": {
 		"description": "A HTML icon tag",
 		"props": {
-			"icon": "string",
-			"fontSize": "string",
-			"color": "string"
+			"url": "string",
+			"className": "string",
+			"description": "string",
+			"height": "string",
+			"width": "string"
 		}
 	},
 	"datatable": {
 		"description": "an HTML table that fetches data from a model or view and displays it.",
 		"data": true,
 		"props": {
-			"model": "models" 
+			"model": "models",
+			"stripeColor": "string",
+			"borderColor": "string",
+			"backgroundColor": "string",
+			"color": "string"
 		}
 	},
 	"dataform": {
