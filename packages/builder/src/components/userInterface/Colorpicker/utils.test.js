@@ -1,4 +1,4 @@
-import { getColorFormat, convertToHSVA, convertHsvaToFormat } from "./utils"
+import { getColorFormat, convertToHSVA, convertHsvaToFormat } from "./../utils"
 
 describe("convertToHSVA - convert to hsva from format", () => {
   test("convert from hexa", () => {
