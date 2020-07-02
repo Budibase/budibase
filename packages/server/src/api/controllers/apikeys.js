@@ -20,7 +20,13 @@ exports.fetch = async function (ctx) {
 }
 
 exports.update = async function (ctx) {
-    // Do something with ctx.request.body: <{ value: value }>
+    // Set process.env
+    const envKeyName = `${ctx.params.key.toUpperCase()}_API_KEY`
+    process.env[envKeyName] = ctx.request.body.value
+
+    // Write to file
+    // TODO
+
     ctx.status = 200
     ctx.message = `Updated ${ctx.params.key} API key succesfully.`
     ctx.body = { [ctx.params.key]: ctx.request.body.value }
@@ -33,7 +39,8 @@ async function getEnvironmentVariables() {
     return data = fs.readFileSync(filePath, 'utf8');
 }
 
-async function extractKeys() {
+async function extractKeys(content) {
+    const lines = content.split(/\r?\n/)
     // Extract keys here
     return []
 }
