@@ -1,5 +1,5 @@
 <script>
-  import { General, Users, DangerZone } from "./tabs"
+  import { General, Users, DangerZone, APIKeys } from "./tabs"
 
   import { Input, TextArea, Button, Switcher } from "@budibase/bbui"
   import { SettingsIcon, CloseIcon } from "components/common/Icons/"
@@ -19,6 +19,11 @@
       title: "Users",
       key: "USERS",
       component: Users,
+    },
+    {
+      title: "API Keys",
+      key: "API_KEYS",
+      component: APIKeys,
     },
     {
       title: "Danger Zone",
