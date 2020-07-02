@@ -18,15 +18,10 @@ exports.fetch = async function (ctx) {
 }
 
 exports.update = async function (ctx) {
+    // Do something with ctx.request.body: <{ value: value }>
     ctx.status = 200
-    ctx.message = `Updated ${ctx.params.key} succesfully.`
-    ctx.body = {
-        [ctx.params.key]: "somethingsomethingsomething"
-    }
-
-    ctx.status = 200
-    ctx.message = `User ${ctx.request.body.username} updated successfully.`
-    ctx.body = response
+    ctx.message = `Updated ${ctx.params.key} API key succesfully.`
+    ctx.body = { [ctx.params.key]: ctx.request.body.value }
 }
 
 const checkAccessLevel = async (db, accessLevelId) => {
