@@ -1,8 +1,7 @@
 <script>
-  import {onMount} from "svelte"
+  import { onMount } from "svelte"
   import PropertyGroup from "./PropertyGroup.svelte"
   import FlatButtonGroup from "./FlatButtonGroup.svelte"
-
 
   export let panelDefinition = {}
   export let componentInstance = {}
@@ -34,7 +33,6 @@
   ]
 
   $: propertyGroupNames = Object.keys(panelDefinition)
-  
 </script>
 
 <div class="design-view-container">
@@ -55,7 +53,7 @@
             {componentDefinition}
             {componentInstance}
             open={currentGroup === groupName}
-            on:open={() => currentGroup = groupName} />
+            on:open={() => (currentGroup = groupName)} />
         {/each}
       {:else}
         <div class="no-design">
