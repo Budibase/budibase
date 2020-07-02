@@ -394,7 +394,7 @@ export const typography = [
   {
     label: "Color",
     key: "color",
-    control: Colorpicker,    
+    control: Colorpicker,
     defaultValue: "#000",
   },
   {
