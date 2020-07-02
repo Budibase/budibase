@@ -40,10 +40,7 @@
 
       <div class="nav-section">
         <div class="nav-section-title">Contact</div>
-        <Link
-          icon={ContributionIcon}
-          title="Contribute to our product"
-          href="/" />
+        <Link icon={ContributionIcon} title="Contribute" href="/" />
         <Link icon={BugIcon} title="Report bug" href="/" />
         <Link icon={EmailIcon} title="Email" href="/" />
         <Link icon={TwitterIcon} title="Twitter" href="/" />
@@ -59,7 +56,7 @@
 <style>
   .root {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 260px 1fr;
     height: 100%;
     width: 100%;
     background: var(--grey-1);
@@ -67,6 +64,7 @@
 
   .main {
     grid-column: 2;
+    overflow: auto;
   }
 
   .ui-nav {
@@ -75,7 +73,6 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--grey-4);
   }
 
   .home-logo {

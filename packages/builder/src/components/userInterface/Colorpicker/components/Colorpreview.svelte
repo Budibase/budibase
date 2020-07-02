@@ -38,7 +38,6 @@
     }
   })
 
-
   function openColorpicker(event) {
     if (colorPreview) {
       open = true
@@ -62,12 +61,12 @@
     const spaceBelow = window.innerHeight - bottom
     const previewCenter = previewWidth / 2
 
-    let y, x;
+    let y, x
 
-    if(spaceAbove > spaceBelow) {
+    if (spaceAbove > spaceBelow) {
       positionSide = "bottom"
-      y = (window.innerHeight - spaceAbove)
-    }else{
+      y = window.innerHeight - spaceAbove
+    } else {
       positionSide = "top"
       y = bottom
     }
@@ -87,7 +86,6 @@
     [positionSide]: `${dimensions[positionSide]}px`,
     left: `${dimensions.left}px`,
   })
-  
 </script>
 
 <svelte:window on:resize={debounce(calculateDimensions, 200)} />
@@ -105,19 +103,18 @@
     </CheckedBackground>
 
     {#if open}
-    <Colorpicker
-      style={pickerStyle}
-      on:change={onColorChange}
-      on:addswatch
-      on:removeswatch
-      bind:format
-      bind:value
-      bind:pickerHeight
-      bind:pickerWidth
-      bind:open
-      {swatches}
-      {disableSwatches}
-       />
+      <Colorpicker
+        style={pickerStyle}
+        on:change={onColorChange}
+        on:addswatch
+        on:removeswatch
+        bind:format
+        bind:value
+        bind:pickerHeight
+        bind:pickerWidth
+        bind:open
+        {swatches}
+        {disableSwatches} />
       <div on:click|self={() => (open = false)} class="overlay" />
     {/if}
   {:else}
