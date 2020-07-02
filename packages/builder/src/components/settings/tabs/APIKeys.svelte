@@ -17,12 +17,10 @@
   async function fetchKeys() {
     const response = await api.get(`/api/keys/`)
     const res = await response.json()
-    console.log("Res: ", res)
-    // fetch keys from endpoint
-    // return keys
+    keys = res
   }
 
-  let fetchKeysPromise = fetchKeys()
+  fetchKeys()
 </script>
 
 <Title>API Keys</Title>
