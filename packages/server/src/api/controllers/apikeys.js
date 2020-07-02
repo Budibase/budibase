@@ -1,21 +1,11 @@
 const fs = require("fs")
-
 const ENV_FILE_PATH = ".budibase/.env"
 
 exports.fetch = async function (ctx) {
-    // Check if structure of call makes sense, if not, return error
-
-
-    // Read File
-    const fileContent = await getEnvironmentVariables()
-    const keys = await extractKeys(fileContent)
-
-    // Temporary while "real" infrastructure to store keys is created
     ctx.status = 200
-    ctx.message = "API Keys"
     ctx.body = {
-        budibase: 'testFromBackEnd',
-        sendgrid: 'testFromBackEnd'
+        budibase: process.env.BUDIBASE_API_KEY,
+        sendgrid: process.env.SENDGRID_API_KEY
     }
 }
 
@@ -41,6 +31,7 @@ async function getEnvironmentVariables() {
 
 async function extractKeys(content) {
     const lines = content.split(/\r?\n/)
+    console.log(lines)
     // Extract keys here
-    return []
+    return lines
 }
