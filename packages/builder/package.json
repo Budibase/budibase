@@ -87,6 +87,7 @@
     "babel-jest": "^24.8.0",
     "browser-sync": "^2.26.7",
     "cypress": "^4.8.0",
+    "eslint-plugin-cypress": "^2.11.1",
     "http-proxy-middleware": "^0.19.1",
     "jest": "^24.8.0",
     "ncp": "^2.0.0",

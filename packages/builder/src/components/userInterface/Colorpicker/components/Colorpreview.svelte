@@ -3,7 +3,7 @@
   import CheckedBackground from "./CheckedBackground.svelte"
   import { createEventDispatcher, beforeUpdate, onMount } from "svelte"
 
-  import {buildStyle, debounce} from "../helpers.js"
+  import { buildStyle, debounce } from "../helpers.js"
   import { fade } from "svelte/transition"
   import { getColorFormat } from "../utils.js"
 
@@ -50,7 +50,7 @@
   }
 
   function calculateDimensions() {
-   const {
+    const {
       top: spaceAbove,
       width,
       bottom,
@@ -71,12 +71,12 @@
       y = bottom
     }
 
-    x = (left + previewCenter) - (220 / 2)
+    x = left + previewCenter - 220 / 2
 
-    dimensions = { [positionSide]: y.toFixed(1), left: x.toFixed(1) } 
+    dimensions = { [positionSide]: y.toFixed(1), left: x.toFixed(1) }
   }
 
-  $: if(open && colorPreview) {
+  $: if (open && colorPreview) {
     calculateDimensions()
   }
 
@@ -97,6 +97,7 @@
         bind:this={colorPreview}
         bind:clientHeight={previewHeight}
         bind:clientWidth={previewWidth}
+        title={value}
         class="color-preview"
         style={previewStyle}
         on:click={openColorpicker} />
@@ -118,7 +119,10 @@
       <div on:click|self={() => (open = false)} class="overlay" />
     {/if}
   {:else}
-    <div class="color-preview preview-error" style={errorPreviewStyle}>
+    <div
+      class="color-preview preview-error"
+      title="Invalid Color"
+      style={errorPreviewStyle}>
       <span>&times;</span>
     </div>
   {/if}
