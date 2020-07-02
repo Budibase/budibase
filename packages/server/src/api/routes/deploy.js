@@ -5,7 +5,6 @@ const { BUILDER } = require("../../utilities/accessLevels")
 
 const router = Router()
 
-// router.post("/:appId/deploy", authorized(BUILDER), controller.deployApp)
-router.post("/deploy", controller.deployApp)
+router.post("/deploy", authorized(BUILDER), controller.deployApp)
 
 module.exports = router

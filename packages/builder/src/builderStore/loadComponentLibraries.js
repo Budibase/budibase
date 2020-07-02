@@ -23,7 +23,8 @@ export const fetchComponentLibModules = async application => {
   const allLibraries = {}
 
   for (let libraryName of application.componentLibraries) {
-    const LIBRARY_URL = `/${application._id}/componentlibrary?library=${libraryName}`
+    // const LIBRARY_URL = `/${application._id}/componentlibrary?library=${libraryName}`
+    const LIBRARY_URL = `/assets/componentlibrary/${libraryName}/dist/index.js`
     const libraryModule = await import(LIBRARY_URL)
     allLibraries[libraryName] = libraryModule
   }

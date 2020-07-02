@@ -1,7 +1,10 @@
 <script>
   import { Button } from "@budibase/bbui"
+  import { store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
+
+  $: appId = $store.appId
 
   async function deployApp() {
     const DEPLOY_URL = `/deploy`
@@ -14,7 +17,7 @@
         throw new Error
       }
 
-      notifier.success("Deployment Complete. View your app at blah URL")
+      notifier.success(`Deployment Complete. View your app at blah URL https://${appId}.app.budi.live/${appId}`)
     } catch (err) {
       notifier.danger("Deployment unsuccessful. Please try again later.")
     }

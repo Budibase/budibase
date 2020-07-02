@@ -37,9 +37,15 @@
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
 
-    <script src='/assets/clientFrontendDefinition.js'></script>
-    <script src='/assets/budibase-client.js'></script>
-
+    {{ if(options.production) }}
+        <script src='/assets/{{ options.appId }}/{{ pageName }}/clientFrontendDefinition.js'></script>
+        <script src='/assets/{{ options.appId }}/{{ pageName }}/budibase-client.js'></script>
+    {{ else }}
+        <script src='/assets/clientFrontendDefinition.js'></script>
+        <script src='/assets/budibase-client.js'></script>
+    {{ /if }}
+    <script src='/assets/{{ appId }}/{{ pageName }}/clientFrontendDefinition.js'></script>
+    <script src='/assets/{{ appId }}/{{ pageName }}/budibase-client.js'></script>
 </head>
 
 <body id="app">

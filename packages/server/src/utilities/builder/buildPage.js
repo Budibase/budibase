@@ -55,6 +55,10 @@ const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
     stylesheets: (pkg.page.stylesheets || []).map(stylesheetUrl),
     screenStyles: pkg.screens.filter(s => s._css).map(s => s._css),
     pageStyle: pkg.page._css,
+    appId,
+    pageName,
+    // TODO: don't hardcode
+    production: true
   }
 
   const indexHtmlTemplate = await readFile(
