@@ -55,7 +55,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "^1.15.0",
+    "@budibase/bbui": "^1.15.4",
     "@budibase/client": "^0.0.32",
     "@nx-js/compiler-util": "^2.0.0",
     "codemirror": "^5.51.0",
@@ -87,6 +87,7 @@
     "babel-jest": "^24.8.0",
     "browser-sync": "^2.26.7",
     "cypress": "^4.8.0",
+    "eslint-plugin-cypress": "^2.11.1",
     "http-proxy-middleware": "^0.19.1",
     "jest": "^24.8.0",
     "ncp": "^2.0.0",
