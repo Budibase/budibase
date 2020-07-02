@@ -3,7 +3,7 @@
   import { fade } from "svelte/transition"
   import Swatch from "./Swatch.svelte"
   import CheckedBackground from "./CheckedBackground.svelte"
-  import {buildStyle} from "../helpers.js"
+  import { buildStyle } from "../helpers.js"
   import {
     getColorFormat,
     convertToHSVA,
@@ -14,11 +14,11 @@
   import ButtonGroup from "./ButtonGroup.svelte"
   import Input from "./Input.svelte"
   import Portal from "./Portal.svelte"
-  import {keyevents} from "../actions"
+  import { keyevents } from "../actions"
 
   export let value = "#3ec1d3ff"
-  export let open = false;
-  export let swatches = [] //TODO: Safe swatches - limit to 12. warn in console
+  export let open = false
+  export let swatches = []
   export let disableSwatches = false
   export let format = "hexa"
   export let style = ""
@@ -27,6 +27,7 @@
 
   let colorPicker = null
   let adder = null
+  let swatchesSetFromLocalStore = false
 
   let h = 0
   let s = 0
@@ -38,10 +39,17 @@
   onMount(() => {
     if (!swatches.length > 0) {
       //Don't use locally stored recent colors if swatches have been passed as props
-      getRecentColors()
+      swatchesSetFromLocalStore = true
+      swatches = getRecentColors() || []
     }
 
-    if(colorPicker) {
+    if (swatches.length > 12) {
+      console.warn(
+        `Colorpicker - ${swatches.length} swatches were provided. Only the first 12 swatches will be displayed.`
+      )
+    }
+
+    if (colorPicker) {
       colorPicker.focus()
     }
 
@@ -53,24 +61,21 @@
   function getRecentColors() {
     let colorStore = localStorage.getItem("cp:recent-colors")
     if (colorStore) {
-      swatches = JSON.parse(colorStore)
+      return JSON.parse(colorStore)
     }
   }
 
   function handleEscape() {
-    if(open) {
-      open = false;
+    if (open) {
+      open = false
     }
   }
 
-  function setRecentColor(color) {
-    if (swatches.length === 12) {
-      swatches.splice(0, 1)
-    }
-    if (!swatches.includes(color)) {
-      swatches = [...swatches, color]
-      localStorage.setItem("cp:recent-colors", JSON.stringify(swatches))
-    }
+  function setRecentColors(color) {
+    const s = swatchesSetFromLocalStore
+      ? swatches
+      : [...getRecentColors(), color]
+    localStorage.setItem("cp:recent-colors", JSON.stringify(s))
   }
 
   function convertAndSetHSVA() {
@@ -134,8 +139,16 @@
 
   function addSwatch() {
     if (format) {
+      if (swatches.length === 12) {
+        swatches.splice(0, 1)
+      }
+
+      if (!swatches.includes(value)) {
+        swatches = [...swatches, value]
+        setRecentColors(value)
+      }
+
       dispatch("addswatch", value)
-      setRecentColor(value)
     }
   }
 
@@ -143,7 +156,10 @@
     let removedSwatch = swatches.splice(idx, 1)
     swatches = swatches
     dispatch("removeswatch", removedSwatch)
-    localStorage.setItem("cp:recent-colors", JSON.stringify(swatches))
+    if (swatchesSetFromLocalStore) {
+      //as could be a swatch not present in local storage
+      setRecentColors()
+    }
   }
 
   function applySwatch(color) {
@@ -159,14 +175,13 @@
 
   $: border = v > 90 && s < 5 ? "1px dashed #dedada" : ""
   $: selectedColorStyle = buildStyle({ background: value, border })
-  $: shrink = swatches.length > 0
-    
+  $: hasSwatches = swatches.length > 0
 </script>
 
 <Portal>
   <div
     class="colorpicker-container"
-    use:keyevents={{"Escape": handleEscape}}
+    use:keyevents={{ Escape: handleEscape }}
     transition:fade
     bind:this={colorPicker}
     {style}
@@ -182,7 +197,10 @@
       <div class="alpha-hue-panel">
         <div>
           <CheckedBackground borderRadius="50%" backgroundSize="8px">
-            <div class="selected-color" style={selectedColorStyle} />
+            <div
+              class="selected-color"
+              title={value}
+              style={selectedColorStyle} />
           </CheckedBackground>
         </div>
         <div>
@@ -205,22 +223,24 @@
 
       {#if !disableSwatches}
         <div transition:fade class="swatch-panel">
-          {#if swatches.length > 0}
+          {#if hasSwatches}
             {#each swatches as color, idx}
-              <Swatch
-                {color}
-                on:click={() => applySwatch(color)}
-                on:removeswatch={() => removeSwatch(idx)} />
+              {#if idx < 12}
+                <Swatch
+                  {color}
+                  on:click={() => applySwatch(color)}
+                  on:removeswatch={() => removeSwatch(idx)} />
+              {/if}
             {/each}
           {/if}
-          {#if swatches.length !== 12}
+          {#if swatches.length < 12}
             <div
               tabindex="0"
-              use:keyevents={{"Enter": addSwatch}}
+              use:keyevents={{ Enter: addSwatch }}
               bind:this={adder}
               transition:fade
               class="adder"
-              class:shrink
+              class:shrink={hasSwatches}
               on:click={addSwatch}>
               <span>&plus;</span>
             </div>
@@ -310,7 +330,7 @@
     margin-left: 5px;
     margin-top: 3px;
     font-weight: 500;
-    outline-color:  #003cb0;
+    outline-color: #003cb0;
     outline-width: thin;
   }
 
