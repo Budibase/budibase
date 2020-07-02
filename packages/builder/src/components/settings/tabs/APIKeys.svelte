@@ -9,12 +9,15 @@
   async function updateKey(e) {
     console.log("Event Key: ", e.detail)
     // Send to endpoint when it exists
-    // const response = await api.put(`/api/${$store.appId}`, data)
+    const response = await api.put(`/api/${$store.appId}`, data)
     // const res = await response.json()
   }
 
   // Get Keys
   async function fetchKeys() {
+    const response = await api.get(`/api/keys/`)
+    const res = await response.json()
+    console.log("Res: ", res)
     // fetch keys from endpoint
     // return keys
   }
