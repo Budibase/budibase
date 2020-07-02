@@ -28,7 +28,7 @@
 {:else if $backendUiStore.selectedDatabase._id && selectedModel.name}
   <ModelDataTable />
 {:else}
-  <i style="color: var(--grey-4)">create your first model to start building</i>
+  <i style="color: var(--grey-4)">create your first table to start building</i>
 {/if}
 
 <style>
