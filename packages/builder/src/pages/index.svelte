@@ -8,6 +8,7 @@
   import { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
+  import { Button } from "@budibase/bbui"
 
   let promise = getApps()
 
@@ -43,20 +44,18 @@
   }
 </script>
 
-<div class="welcome">Welcome to Budibase</div>
+<div class="header">
+  <div class="welcome">Welcome to the Budibase Beta</div>
+    <Button purple large on:click={showCreateAppModal}>
+      Create New Web App
+    </Button>
+</div>
 
 <div class="banner">
-  <img src="/_builder/assets/rocket.jpg" alt="rocket" />
+  <img src="/_builder/assets/orange-landscape.png" alt="rocket" />
   <div class="banner-content">
     Every accomplishment starts with a decision to try.
   </div>
-</div>
-<div class="app-section-header">
-  <div class="app-section-title">Your Web Apps</div>
-  <button class="banner-button" type="button" on:click={showCreateAppModal}>
-    <i class="ri-add-circle-fill" />
-    Create New Web App
-  </button>
 </div>
 
 {#await promise}
@@ -70,11 +69,18 @@
 {/await}
 
 <style>
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 40px 80px 0px 80px;
+  }
+
   .welcome {
     font-size: 42px;
     color: var(--ink);
     font-weight: 700;
-    margin: 40px 0px 0px 80px;
   }
 
   .banner {
@@ -107,49 +113,5 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .banner-button {
-    background-color: var(--ink);
-    color: var(--white);
-    padding: 12px 24px;
-    border-radius: 5px;
-    border: var(--ink) 1px solid;
-    font-size: 16px;
-    font-weight: 400;
-    box-sizing: border-box;
-    align-items: center;
-    display: flex;
-    cursor: pointer;
-    transition: all 0.2s ease 0s;
-    overflow: hidden;
-    outline: none;
-    user-select: none;
-    white-space: nowrap;
-  }
-
-  .ri-add-circle-fill {
-    margin-right: 4px;
-    font-size: 24px;
-  }
-
-  .banner-button:hover {
-    background-color: var(--white);
-    color: var(--ink);
-    border: var(--grey-4) 1px solid;
-  }
-
-  .app-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 40px 80px 0px 80px;
-  }
-
-  .app-section-title {
-    font-size: 20px;
-    color: var(--ink);
-    font-weight: 600;
-    margin-bottom: 20px;
   }
 </style>
