@@ -5,7 +5,7 @@
   import Title from "../TabTitle.svelte"
 
   async function updateApplication(data) {
-    const response = await api.put(`/api/${$store.appId}/appPackage`, data)
+    const response = await api.put(`/api/${$store.appId}`, data)
     const app = await response.json()
     store.update(state => {
       state = {
