@@ -1,4 +1,4 @@
-export const buildStyle = styles => {
+export function buildStyle(styles) {
   let str = ""
   for (let s in styles) {
     if (styles[s]) {
@@ -11,4 +11,10 @@ export const buildStyle = styles => {
 
 export const convertCamel = str => {
   return str.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`)
+}
+
+export const debounce = (fn, milliseconds) => {
+  return () => {
+    setTimeout(fn, milliseconds)
+  }
 }
