@@ -196,21 +196,21 @@
 		}
 	},
 	"datatable": {
-		"description": "an HTML table that fetches data from a model or view and displays it.",
+		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
 			"model": "models" 
 		}
 	},
 	"dataform": {
-		"description": "an HTML table that fetches data from a model or view and displays it.",
+		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
 			"model": "models"
 		}
 	},
 	"dataformwide": {
-		"description": "an HTML table that fetches data from a model or view and displays it.",
+		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
 			"model": "models"
