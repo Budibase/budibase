@@ -46,9 +46,7 @@
 
 <div class="header">
   <div class="welcome">Welcome to the Budibase Beta</div>
-    <Button purple large on:click={showCreateAppModal}>
-      Create New Web App
-    </Button>
+  <Button purple large on:click={showCreateAppModal}>Create New Web App</Button>
 </div>
 
 <div class="banner">
@@ -69,7 +67,6 @@
 {/await}
 
 <style>
-
   .header {
     display: flex;
     justify-content: space-between;

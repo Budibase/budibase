@@ -38,7 +38,9 @@
     if (!activeTopNav) return
     store.update(state => {
       if (!state.previousTopNavPath) state.previousTopNavPath = {}
-      state.previousTopNavPath[activeTopNav.path] = window.location.pathname.replace("/_builder", "")
+      state.previousTopNavPath[
+        activeTopNav.path
+      ] = window.location.pathname.replace("/_builder", "")
       $goto(state.previousTopNavPath[path] || path)
       return state
     })

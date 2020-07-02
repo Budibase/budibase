@@ -16,7 +16,7 @@
   import Portal from "./Portal.svelte"
 
   export let value = "#3ec1d3ff"
-  export let open = false;
+  export let open = false
   export let swatches = [] //TODO: Safe swatches - limit to 12. warn in console
   export let disableSwatches = false
   export let format = "hexa"
@@ -40,7 +40,7 @@
       getRecentColors()
     }
 
-    if(colorPicker) {
+    if (colorPicker) {
       colorPicker.focus()
     }
 
@@ -57,7 +57,7 @@
   }
 
   function handleEscape(e) {
-    if(open && e.key === "Escape") {
+    if (open && e.key === "Escape") {
       open = false
     }
   }
@@ -159,9 +159,7 @@
   $: border = v > 90 && s < 5 ? "1px dashed #dedada" : ""
   $: selectedColorStyle = buildStyle({ background: value, border })
   $: shrink = swatches.length > 0
-  
 </script>
-
 
 <Portal>
   <div
