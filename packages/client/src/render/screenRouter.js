@@ -1,6 +1,6 @@
 import regexparam from "regexparam"
 import { routerStore } from "../state/store"
-import { getAppId } from "./getAppId"
+import { parseAppIdFromCookie } from "./getAppId"
 
 export const screenRouter = ({ screens, onScreenSelected, window }) => {
   const makeRootedPath = url => {
@@ -9,7 +9,7 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
       (window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1")
     ) {
-      const appId = getAppId(window.document.cookie)
+      const appId = parseAppIdFromCookie(window.document.cookie)
       if (url) {
         if (url.startsWith(appId)) return url
         return `/${appId}${url.startsWith("/") ? "" : "/"}${url}`

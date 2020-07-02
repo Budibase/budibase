@@ -8,15 +8,17 @@ const {
 async function fetchTemporaryCredentials() {
   const CREDENTIALS_URL = "https://dt4mpwwap8.execute-api.eu-west-1.amazonaws.com/prod/"
 
+  const BUDIBASE_API_KEY = process.env.BUDIBASE_API_KEY
+
   const response = await fetch(CREDENTIALS_URL, {
     method: "POST",
     body: JSON.stringify({
-      apiKey: "d498278c-4ab4-144b-c212-b8f9e6da5c2b"
+      apiKey: BUDIBASE_API_KEY 
     })
   })
 
   if (response.status !== 200) {
-    throw new Error
+    throw new Error(`Error fetching temporary credentials for api key: ${BUDIBASE_API_KEY}`)
   }
 
   const json = await response.json()
@@ -24,12 +26,14 @@ async function fetchTemporaryCredentials() {
   return json
 } 
 
+const CONTENT_TYPE_MAP = {
+  html: "text/html",
+  css: "text/css",
+  js: "application/javascript"
+};
+
 exports.uploadAppAssets = async function ({ appId }) {
   const { credentials, accountId } = await fetchTemporaryCredentials()
-  console.log({
-    credentials,
-    accountId
-  });
 
   AWS.config.update({
     accessKeyId: credentials.AccessKeyId, 
@@ -58,11 +62,17 @@ exports.uploadAppAssets = async function ({ appId }) {
       if (stat.isFile()) {
         const fileBytes = fs.readFileSync(`${appAssetsPath}/${page}/${filename}`)
 
-        console.log(`${accountId}/${appId}/${page}/${filename}`)
+        console.log(`${appId}/${page}/${filename}`)
+
+        const fileExtension = [...filename.split(".")].pop()
 
         const upload = s3.upload({
-          Key: `assets/${accountId}/${appId}/${page}/${filename}`,
-          Body: fileBytes
+          Key: `assets/${appId}/${page}/${filename}`,
+          Body: fileBytes,
+          ContentType: CONTENT_TYPE_MAP[fileExtension],
+          Metadata: {
+            accountId
+          }
         }).promise()
 
         uploads.push(upload)
@@ -71,7 +81,7 @@ exports.uploadAppAssets = async function ({ appId }) {
   }
 
   try {
-    await Promise.all(uploads)
+    return Promise.all(uploads)
   } catch (err) {
     console.error("Error uploading budibase app assets to s3", err)
     throw err

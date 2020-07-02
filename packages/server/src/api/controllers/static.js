@@ -48,7 +48,8 @@ exports.serveApp = async function(ctx) {
 
 
   if (ctx.isCloud) {
-    const S3_URL = `https://${ctx.params.appId}.app.budi.live/assets/${ctx.params.appId}/public/${mainOrAuth}/${file}`
+    const S3_URL = `https://${ctx.params.appId}.app.budi.live/assets/${ctx.params.appId}/${mainOrAuth}/${file}`
+    console.log("Serving: " + S3_URL)
     const response = await fetch(S3_URL)
     const body = await response.text()
     ctx.body = body 
