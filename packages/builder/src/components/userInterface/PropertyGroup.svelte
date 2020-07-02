@@ -13,7 +13,7 @@
   $: style = componentInstance["_styles"][styleCategory] || {}
 </script>
 
-<DetailSummary {name} on:open show={open} >
+<DetailSummary {name} on:open show={open}>
   {#each properties as props}
     <PropertyControl
       label={props.label}

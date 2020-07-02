@@ -19,6 +19,7 @@
   export let value = "#3ec1d3ff"
   export let open = false
   export let swatches = []
+
   export let disableSwatches = false
   export let format = "hexa"
   export let style = ""
@@ -176,6 +177,7 @@
   $: border = v > 90 && s < 5 ? "1px dashed #dedada" : ""
   $: selectedColorStyle = buildStyle({ background: value, border })
   $: hasSwatches = swatches.length > 0
+
 </script>
 
 <Portal>
