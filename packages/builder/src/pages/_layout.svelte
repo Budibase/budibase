@@ -40,14 +40,11 @@
 
       <div class="nav-section">
         <div class="nav-section-title">Contact</div>
-        <Link
-          icon={ContributionIcon}
-          title="Contribute"
-          href="/" />
+        <Link icon={ContributionIcon} title="Contribute" href="/" />
         <Link icon={BugIcon} title="Report bug" href="/" />
         <Link icon={EmailIcon} title="Email" href="/" />
         <Link icon={TwitterIcon} title="Twitter" href="/" />
-      </div> 
+      </div>
     </div>
 
     <div class="main">

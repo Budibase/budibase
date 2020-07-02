@@ -1,35 +1,35 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount } from "svelte"
 
-  export let target = document.body;
+  export let target = document.body
 
-  let targetEl;
-  let portal;
-  let componentInstance;
+  let targetEl
+  let portal
+  let componentInstance
 
   onMount(() => {
     if (typeof target === "string") {
-      targetEl = document.querySelector(target);
+      targetEl = document.querySelector(target)
       // Force exit
       if (targetEl === null) {
-        return () => {};
+        return () => {}
       }
     } else if (target instanceof HTMLElement) {
-      targetEl = target;
+      targetEl = target
     } else {
       throw new TypeError(
         `Unknown target type: ${typeof target}. Allowed types: String (CSS selector), HTMLElement.`
-      );
+      )
     }
 
-    portal = document.createElement("div");
-    targetEl.appendChild(portal);
-    portal.appendChild(componentInstance);
+    portal = document.createElement("div")
+    targetEl.appendChild(portal)
+    portal.appendChild(componentInstance)
 
     return () => {
-      targetEl.removeChild(portal);
-    };
-  });
+      targetEl.removeChild(portal)
+    }
+  })
 </script>
 
 <div bind:this={componentInstance}>
