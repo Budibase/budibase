@@ -154,7 +154,7 @@
   }
 
   function removeSwatch(idx) {
-    let removedSwatch = swatches.splice(idx, 1);
+    let [removedSwatch] = swatches.splice(idx, 1);
     swatches = swatches;
     dispatch("removeswatch", removedSwatch);
     if (swatchesSetFromLocalStore) {
