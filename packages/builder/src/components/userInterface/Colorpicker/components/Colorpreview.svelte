@@ -114,8 +114,6 @@
     cursor: pointer;
     border-radius: 3px;
     border: 1px solid #dedada;
-    position: absolute;
-    left: 110px;
   }
 
   .preview-error {
