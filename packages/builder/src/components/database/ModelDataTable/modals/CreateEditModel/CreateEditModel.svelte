@@ -37,7 +37,7 @@
 <div class="heading">
   {#if !showFieldView}
     <i class="ri-list-settings-line button--toggled" />
-    <h3 class="budibase__title--3">Create / Edit Model</h3>
+    <h3 class="budibase__title--3">Create / Edit Table</h3>
   {:else}
     <i class="ri-file-list-line button--toggled" />
     <h3 class="budibase__title--3">Create / Edit Field</h3>
