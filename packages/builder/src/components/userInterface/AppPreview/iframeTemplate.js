@@ -24,6 +24,16 @@ export default `<html>
           text-transform: uppercase;
           font-weight: bold;
         }
+
+        .container-screenslot-placeholder {
+          padding: 20px;
+          text-align: center;
+          border-style: dashed !important;
+          border-width: 1px;
+          color: #806fde;
+          background: #e9e6ff44;
+          height: 100%;
+        }
     </style>
     <script src='/assets/budibase-client.js'></script>
     <script>

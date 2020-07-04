@@ -25,16 +25,10 @@
     name: "Screen Placeholder",
     route: "*",
     props: {
-      "_id": "49c3d0a2-7028-46f0-b004-7eddf62ad01c",
+      "_id": "screenslot-placeholder",
       "_component": "@budibase/standard-components/container",
       "_styles": {
-        "normal": {
-          "padding": "0px",
-          "font-family": "Roboto",
-          "border-width": "0",
-          "border-style": "None",
-          "text-align": "center"
-        },
+        "normal": {},
         "hover": {},
         "active": {},
         "selected": {}
@@ -45,47 +39,87 @@
       "type": "div",
       "_children": [
         {
-          "_id": "335428f7-f9ca-4acd-9e76-71bc8ad27324",
-          "_component": "@budibase/standard-components/container",
-          "_styles": {
-            "normal": {
-              "padding": "16px",
-              "border-style": "Dashed",
-              "border-width": "2px",
-              "border-color": "#8a8989fa"
-            },
-            "hover": {},
-            "active": {},
-            "selected": {}
+        "_id": "51a1b494-0fa4-49c3-90cc-c2a6c7a3f888",
+        "_component": "@budibase/standard-components/container",
+        "_styles": {
+          "normal": {
+            "display": "flex",
+            "flex-direction": "column",
+            "align-items": "center"
           },
-          "_code": "",
-          "className": "",
-          "onLoad": [],
-          "type": "div",
-          "_instanceId": "inst_b3b4e95_ab0df02dda3f4d8eb4b35eea2968bad3",
-          "_instanceName": "Container",
-          "_children": [
-            {
-              "_id": "ddb6a225-33ba-4ba8-91da-bc6a2697ebf9",
-              "_component": "@budibase/standard-components/heading",
-              "_styles": {
-                "normal": {
-                  "font-family": "Roboto"
-                },
-                "hover": {},
-                "active": {},
-                "selected": {}
+          "hover": {},
+          "active": {},
+          "selected": {}
+        },
+        "_code": "",
+        "className": "",
+        "onLoad": [],
+        "type": "div",
+        "_instanceId": "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
+        "_instanceName": "Container",
+        "_children": [
+          {
+            "_id": "90a52cd0-f215-46c1-b29b-e28f9e7edf72",
+            "_component": "@budibase/standard-components/heading",
+            "_styles": {
+              "normal": {
+                "width": "500px",
+                "padding": "8px"
               },
-              "_code": "",
-              "className": "",
-              "text": "Your screens go here",
-              "type": "h1",
-              "_instanceId": "inst_b3b4e95_ab0df02dda3f4d8eb4b35eea2968bad3",
-              "_instanceName": "Heading",
-              "_children": []
-            }
-          ]
-        }
+              "hover": {},
+              "active": {},
+              "selected": {}
+            },
+            "_code": "",
+            "className": "",
+            "text": "Screenslot",
+            "type": "h1",
+            "_instanceId": "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
+            "_instanceName": "Heading",
+            "_children": []
+          },
+          {
+            "_id": "71a3da65-72c6-4c43-8c6a-49871c07b77d",
+            "_component": "@budibase/standard-components/text",
+            "_styles": {
+              "normal": {
+                "max-width": "",
+                "text-align": "left",
+                "width": "500px",
+                "padding": "8px"
+              },
+              "hover": {},
+              "active": {},
+              "selected": {}
+            },
+            "_code": "",
+            "text": "The screens that you create will be displayed inside this box.",
+            "type": "none",
+            "_instanceId": "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
+            "_instanceName": "Text"
+          },
+          {
+            "_id": "8af80374-460d-497b-a5d8-7dd2ec4a7bbc",
+            "_component": "@budibase/standard-components/text",
+            "_styles": {
+              "normal": {
+                "max-width": "",
+                "text-align": "left",
+                "width": "500px",
+                "padding": "8px"
+              },
+              "hover": {},
+              "active": {},
+              "selected": {}
+            },
+            "_code": "",
+            "text": "This box is just a placeholder, to show you the position of screens.",
+            "type": "none",
+            "_instanceId": "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
+            "_instanceName": "Text"
+          }
+        ]
+      }
       ],
       "_instanceName": "Content Placeholder"
     },

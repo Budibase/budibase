@@ -5,13 +5,58 @@
 	"componentLibraries": ["@budibase/standard-components", "@budibase/materialdesign-components"],
 	"props" : {
 		"_id": "private-master-root",
-		"_component": "@budibase/standard-components/container",
-		"_children": [
+    "_component": "@budibase/standard-components/container",
+    "_children": [
+      {
+        "_id": "c32dd256-a61c-4c41-876e-95e91c5e3a43",
+        "_component": "@budibase/standard-components/container",
+        "_styles": {
+          "normal": {
+            "background": "#e8e8ef",
+            "padding": "8px",
+            "color": "#393C44",
+            "display": "N/A",
+            "flex-direction": "column"
+          },
+          "hover": {},
+          "active": {},
+          "selected": {}
+        },
+        "_code": "",
+        "className": "",
+        "onLoad": [],
+        "type": "div",
+        "_instanceId": "inst_1808f0d_e1277174d255421784ef2467d470abc8",
+        "_instanceName": "Container",
+        "_children": [
+          {
+            "_id": "fbd9520f-6b34-4e3e-828d-0197144568a1",
+            "_component": "@budibase/standard-components/heading",
+            "_styles": {
+              "normal": {},
+              "hover": {},
+              "active": {},
+              "selected": {}
+            },
+            "_code": "",
+            "className": "",
+            "text": "{{ name }}",
+            "type": "h1",
+            "_instanceId": "inst_1808f0d_e1277174d255421784ef2467d470abc8",
+            "_instanceName": "Heading",
+            "_children": []
+          }
+        ]
+      },
       {
         "_id": "7fcf11e4-6f5b-4085-8e0d-9f3d44c98967",
         "_component": "##builtin/screenslot",
         "_styles": {
-          "normal": {},
+          "normal": {
+            "padding": "8px",
+            "align-items": "flex-start",
+            "height": "100vh"
+          },
           "hover": {},
           "active": {},
           "selected": {}
@@ -20,14 +65,22 @@
         "_children": []
       }
     ],
-		"type": "div",
-		"_styles": {
-			"active": {},
-			"hover": {},
-			"normal": {},
-			"selected": {}
-		},
-		"_code": ""
+    "type": "div",
+    "_styles": {
+      "active": {},
+      "hover": {},
+      "normal": {
+        "display": "flex",
+        "flex-direction": "column",
+        "align-items": "stretch",
+        "justify-content": "flex-start",
+        "height": "100vh"
+      },
+      "selected": {}
+    },
+    "_code": "",
+    "className": "",
+    "onLoad": []
 	},
 	"_css": "",
 	"uiFunctions": ""
