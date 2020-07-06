@@ -1,37 +1,52 @@
 const fs = require("fs")
-const ENV_FILE_PATH = ".budibase/.env"
+const readline = require("readline")
+const { budibaseAppsDir } = require("../../utilities/budibaseDir")
+const ENV_FILE_PATH = "/.env"
 
-exports.fetch = async function (ctx) {
-    ctx.status = 200
-    ctx.body = {
-        budibase: process.env.BUDIBASE_API_KEY,
-        sendgrid: process.env.SENDGRID_API_KEY
+exports.fetch = async function(ctx) {
+  ctx.status = 200
+  ctx.body = {
+    budibase: process.env.BUDIBASE_API_KEY,
+    sendgrid: process.env.SENDGRID_API_KEY,
+  }
+}
+
+exports.update = async function(ctx) {
+  const key = `${ctx.params.key.toUpperCase()}_API_KEY`
+  const value = ctx.request.body.value
+  // Set process.env
+  process.env[key] = value
+
+  // Write to file
+  await updateValues([key, value])
+
+  ctx.status = 200
+  ctx.message = `Updated ${ctx.params.key} API key succesfully.`
+  ctx.body = { [ctx.params.key]: ctx.request.body.value }
+}
+
+async function updateValues([key, value]) {
+  let newContent = ""
+  let keyExists = false
+  const readInterface = readline.createInterface({
+    input: fs.createReadStream(`${budibaseAppsDir()}/${ENV_FILE_PATH}`),
+    output: process.stdout,
+    console: false,
+  })
+  readInterface.on("line", function(line) {
+    // Mutate lines and change API Key
+    if (line.startsWith(key)) {
+      line = `${key}=${value}`
+      keyExists = true
     }
-}
-
-exports.update = async function (ctx) {
-    // Set process.env
-    const envKeyName = `${ctx.params.key.toUpperCase()}_API_KEY`
-    process.env[envKeyName] = ctx.request.body.value
-
-    // Write to file
-    // TODO
-
-    ctx.status = 200
-    ctx.message = `Updated ${ctx.params.key} API key succesfully.`
-    ctx.body = { [ctx.params.key]: ctx.request.body.value }
-}
-
-async function getEnvironmentVariables() {
-    const home = require('os').homedir();
-    const filePath = `${home}/${ENV_FILE_PATH}`
-
-    return data = fs.readFileSync(filePath, 'utf8');
-}
-
-async function extractKeys(content) {
-    const lines = content.split(/\r?\n/)
-    console.log(lines)
-    // Extract keys here
-    return lines
+    newContent = `${newContent}\n${line}`
+  })
+  readInterface.on("close", function() {
+    // Write file here
+    if (!keyExists) {
+      // Add API Key if it doesn't exist in the file at all
+      newContent = `${newContent}\n${key}=${value}`
+    }
+    fs.writeFileSync(`${budibaseAppsDir()}/${ENV_FILE_PATH}`, newContent)
+  })
 }
