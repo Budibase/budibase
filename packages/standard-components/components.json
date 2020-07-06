@@ -66,7 +66,7 @@
 		"props": {
 			"logo": "asset",
 			"loginRedirect": "string",
-			"name": "string",
+			"title": "string",
 			"usernameLabel": {
 				"type": "string",
 				"default": "Username"
@@ -80,7 +80,8 @@
 				"default": "Login"
 			},
 			"buttonClass": "string",
-			"inputClass": "string"
+			"inputClass": "string",
+			"buttonText": "string"
 		},
 		"tags": [
 			"login",
