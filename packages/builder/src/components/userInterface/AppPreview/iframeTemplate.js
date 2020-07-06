@@ -34,6 +34,11 @@ export default `<html>
           background: #e9e6ff44;
           height: 100%;
         }
+
+        .container-screenslot-placeholder span {
+          display: block;
+          margin-bottom: 10px;
+        }
     </style>
     <script src='/assets/budibase-client.js'></script>
     <script>
