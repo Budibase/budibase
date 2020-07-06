@@ -20,10 +20,10 @@ export const loadBudibase = async opts => {
 
   for (let library of libraries) {
     // fetch the JavaScript for the component libraries from the server
-    // componentLibraryModules[library] = await import(
-    //   `/componentlibrary?library=${encodeURI(library)}`
-    // )
-    componentLibraryModules[library] = await import(`/assets/componentlibrary/${library}/dist/index.js`)
+    componentLibraryModules[library] = await import(
+      `/componentlibrary?library=${encodeURI(library)}`
+    )
+    // componentLibraryModules[library] = await import(`/assets/componentlibrary/${library}/dist/index.js`)
   }
 
   componentLibraryModules[builtinLibName] = builtins(_window)

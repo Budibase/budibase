@@ -57,8 +57,6 @@ const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
     pageStyle: pkg.page._css,
     appId,
     pageName,
-    // TODO: don't hardcode
-    production: true
   }
 
   const indexHtmlTemplate = await readFile(
@@ -67,10 +65,16 @@ const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
   )
 
   const indexHtmlPath = join(appPublicPath, "index.html")
+  const deployableHtmlPath = join(appPublicPath, "index.production.html")
 
   const indexHtml = sqrl.Render(indexHtmlTemplate, templateObj)
+  const deployableHtml = sqrl.Render(indexHtmlTemplate, {
+    ...templateObj,
+    production: true
+  })
 
   await writeFile(indexHtmlPath, indexHtml, { flag: "w+" })
+  await writeFile(deployableHtmlPath, deployableHtml, { flag: "w+" })
 }
 
 const buildFrontendAppDefinition = async (config, appId, pageName, pkg) => {

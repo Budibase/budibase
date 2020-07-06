@@ -5,15 +5,28 @@ const {
   budibaseAppsDir,
 } = require("../../../utilities/budibaseDir")
 
+async function invalidateCDN(appId) {
+  const cf = new AWS.CloudFront({})
+
+  return cf.createInvalidation({ 
+    DistributionId: process.env.DEPLOYMENT_CF_DISTRIBUTION_ID,
+    InvalidationBatch: {
+      CallerReference: appId,
+      Paths: {
+        Quantity: 1,
+        Items: [
+          `/assets/${appId}/*` 
+        ]
+      }
+    }
+  }).promise()
+}
+
 async function fetchTemporaryCredentials() {
-  const CREDENTIALS_URL = "https://dt4mpwwap8.execute-api.eu-west-1.amazonaws.com/prod/"
-
-  const BUDIBASE_API_KEY = process.env.BUDIBASE_API_KEY
-
-  const response = await fetch(CREDENTIALS_URL, {
+  const response = await fetch(process.env.DEPLOYMENT_CREDENTIALS_URL, {
     method: "POST",
     body: JSON.stringify({
-      apiKey: BUDIBASE_API_KEY 
+      apiKey: process.env.BUDIBASE_API_KEY 
     })
   })
 
@@ -32,6 +45,27 @@ const CONTENT_TYPE_MAP = {
   js: "application/javascript"
 };
 
+/**
+ * Recursively walk a directory tree and execute a callback on all files.
+ * @param {Re} dirPath - Directory to traverse
+ * @param {*} callback - callback to execute on files
+ */
+function walkDir(dirPath, callback) {
+  for (let filename of fs.readdirSync(dirPath)) {
+    const filePath =  `${dirPath}/${filename}`
+    const stat = fs.lstatSync(filePath)
+    
+    if (stat.isFile()) {
+      callback({ 
+        bytes: fs.readFileSync(filePath), 
+        filename 
+      })
+    } else {
+      walkDir(filePath, callback)
+    }
+  }
+}
+
 exports.uploadAppAssets = async function ({ appId }) {
   const { credentials, accountId } = await fetchTemporaryCredentials()
 
@@ -43,7 +77,7 @@ exports.uploadAppAssets = async function ({ appId }) {
 
   const s3 = new AWS.S3({
     params: {
-      Bucket: process.env.BUDIBASE_APP_ASSETS_BUCKET
+      Bucket: process.env.DEPLOYMENT_APP_ASSETS_BUCKET
     }
   })
 
@@ -54,34 +88,27 @@ exports.uploadAppAssets = async function ({ appId }) {
   const uploads = []
 
   for (let page of appPages) {
-    for (let filename of fs.readdirSync(`${appAssetsPath}/${page}`)) {
-      const filePath =  `${appAssetsPath}/${page}/${filename}`
-      const stat = await fs.lstatSync(filePath)
-      
-      // TODO: need to account for recursively traversing dirs
-      if (stat.isFile()) {
-        const fileBytes = fs.readFileSync(`${appAssetsPath}/${page}/${filename}`)
+    walkDir(`${appAssetsPath}/${page}`, function prepareUploadsForS3({ bytes, filename }) {
+      const fileExtension = [...filename.split(".")].pop()
 
-        console.log(`${appId}/${page}/${filename}`)
+      const upload = s3.upload({
+        Key: `assets/${appId}/${page}/${filename}`,
+        Body: bytes,
+        ContentType: CONTENT_TYPE_MAP[fileExtension],
+        Metadata: {
+          accountId
+        }
+      }).promise()
 
-        const fileExtension = [...filename.split(".")].pop()
-
-        const upload = s3.upload({
-          Key: `assets/${appId}/${page}/${filename}`,
-          Body: fileBytes,
-          ContentType: CONTENT_TYPE_MAP[fileExtension],
-          Metadata: {
-            accountId
-          }
-        }).promise()
-
-        uploads.push(upload)
-      }
-    }
+      uploads.push(upload)
+    })
   }
 
   try {
-    return Promise.all(uploads)
+    const uploadAllFiles = Promise.all(uploads)
+    const invalidateCloudfront = invalidateCDN(appId) 
+    await uploadAllFiles
+    await invalidateCloudfront
   } catch (err) {
     console.error("Error uploading budibase app assets to s3", err)
     throw err

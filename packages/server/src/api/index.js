@@ -43,7 +43,6 @@ router
       useAppRootPath: true,
     }
     ctx.isDev = env.NODE_ENV !== "production" && env.NODE_ENV !== "jest"
-    // ctx.isCloud = true
     await next()
   })
   .use(authenticated)

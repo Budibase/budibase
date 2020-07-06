@@ -44,19 +44,15 @@ exports.serveApp = async function(ctx) {
     })
   }
 
-  const { file = "index.html" } = ctx
-
-
-  if (ctx.isCloud) {
-    const S3_URL = `https://${ctx.params.appId}.app.budi.live/assets/${ctx.params.appId}/${mainOrAuth}/${file}`
-    console.log("Serving: " + S3_URL)
+  if (process.env.CLOUD) {
+    const S3_URL = `https://${ctx.params.appId}.app.budi.live/assets/${ctx.params.appId}/${mainOrAuth}/${ctx.file || "index.production.html"}`
     const response = await fetch(S3_URL)
     const body = await response.text()
     ctx.body = body 
     return
   }
 
-  await send(ctx, file, { root: ctx.devPath || appPath })
+  await send(ctx, ctx.file || "index.html", { root: ctx.devPath || appPath })
 }
 
 exports.serveAppAsset = async function(ctx) {
@@ -70,15 +66,7 @@ exports.serveAppAsset = async function(ctx) {
     mainOrAuth
   )
 
-  // if (ctx.isCloud) {
-  //   const requestUrl = `${S3_URL_PREFIX}/${appId}/public/${mainOrAuth}/${ctx.file || "index.html"}`
-  //   console.log('request url:' , requestUrl)
-  //   const response = await fetch(requestUrl)
-  //   const body = await response.text()
-  //   ctx.body = body 
-  // } else {
-    await send(ctx, ctx.file, { root: ctx.devPath || appPath })
-  // }
+  await send(ctx, ctx.file, { root: ctx.devPath || appPath })
 }
 
 exports.serveComponentLibrary = async function(ctx) {
@@ -99,16 +87,15 @@ exports.serveComponentLibrary = async function(ctx) {
     )
   }
 
-  // if (ctx.isCloud) {
-  //   const appId = ctx.user.appId
-  //   const requestUrl = encodeURI(`${S3_URL_PREFIX}/${appId}/node_modules/${ctx.query.library}/dist/index.js`)
-  //   console.log('request url components: ', requestUrl)
-  //   const response = await fetch(requestUrl)
-  //   const body = await response.text()
-  //   ctx.type = 'application/javascript'
-  //   ctx.body = body;
-  //   return
-  // }
+  if (process.env.CLOUD) {
+    const appId = ctx.user.appId
+    const S3_URL = encodeURI(`https://${appId}.app.budi.live/assets/componentlibrary/${ctx.query.library}/dist/index.js`)
+    const response = await fetch(S3_URL)
+    const body = await response.text()
+    ctx.type = 'application/javascript'
+    ctx.body = body;
+    return
+  }
 
   await send(ctx, "/index.js", { root: componentLibraryPath })
 }
