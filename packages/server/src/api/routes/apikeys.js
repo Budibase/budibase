@@ -6,7 +6,7 @@ const { BUILDER } = require("../../utilities/accessLevels")
 const router = Router()
 
 router
-    .get("/api/keys", authorized(BUILDER), controller.fetch)
-    .put("/api/keys/:key", authorized(BUILDER), controller.update)
+  .get("/api/keys", authorized(BUILDER), controller.fetch)
+  .put("/api/keys/:key", authorized(BUILDER), controller.update)
 
 module.exports = router
