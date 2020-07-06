@@ -1,8 +1,11 @@
 <script>
   import { onMount } from "svelte"
+  import { fade } from "svelte/transition"
+
   export let _bb
   export let model
   export let title
+  export let buttonText
 
   const TYPE_MAP = {
     string: "text",
@@ -16,6 +19,11 @@
   let store = _bb.store
   let schema = {}
   let modelDef = {}
+  let saved = false
+  let saving = false
+
+  let inputElements = {}
+
   $: if (model && model.length !== 0) {
     fetchModel()
   }
@@ -27,14 +35,41 @@
     schema = modelDef.schema
   }
   async function save() {
+    // prevent double clicking firing multiple requests
+    if (saving) return
+    saving = true
     const SAVE_RECORD_URL = `/api/${model}/records`
     const response = await _bb.api.post(SAVE_RECORD_URL, newModel)
     const json = await response.json()
-    store.update(state => {
-      state[model] = state[model] ? [...state[model], json] : [json]
-      return state
-    })
+
+    if (response.status === 200) {
+      store.update(state => {
+        state[model] = state[model] ? [...state[model], json] : [json]
+        return state
+      })
+      
+      resetForm()
+
+      saved = true
+      setTimeout(() => {
+        saved = false
+      }, 1000)
+    }
+    saving = false
   }
+
+  const resetForm = () => {
+    for (let el of Object.values(inputElements)) {
+      el.value = ""
+      if (el.checked) {
+        el.checked = false
+      }
+    }
+    newModel = {
+      modelId: model
+    }
+  }
+
   const handleInput = field => event => {
     let value
     if (event.target.type === "checkbox") {
@@ -62,13 +97,14 @@
       <div class="form-item">
         <label class="form-label" for="form-stacked-text">{field}</label>
         {#if schema[field].type === 'string' && schema[field].constraints.inclusion}
-          <select on:blur={handleInput(field)}>
+          <select on:blur={handleInput(field)} bind:this={inputElements[field]}>
             {#each schema[field].constraints.inclusion as opt}
               <option>{opt}</option>
             {/each}
           </select>
         {:else}
           <input
+            bind:this={inputElements[field]}
             class="input"
             type={TYPE_MAP[schema[field].type]}
             on:change={handleInput(field)} />
@@ -77,7 +113,17 @@
       <hr />
     {/each}
     <div class="button-block">
-      <button on:click={save}>Submit Form</button>
+      <button on:click={save} class:saved>
+        {#if saved}
+          <div in:fade>
+            <span class:saved style="margin-right: 5px">🎉</span>Success<span class:saved style="margin-left: 5px">🎉</span>
+          </div>
+        {:else}
+          <div>
+            {buttonText || "Submit Form"}
+          </div>
+        {/if}
+      </button>
     </div>
   </div>
 </form>
@@ -137,6 +183,10 @@
     white-space: nowrap;
     text-align: center;
   }
+
+  button.saved {
+    background-color: green;
+  } 
 
   button:hover {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
