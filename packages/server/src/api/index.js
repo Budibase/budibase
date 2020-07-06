@@ -17,7 +17,7 @@ const {
   componentRoutes,
   workflowRoutes,
   accesslevelRoutes,
-  apiKeysRoutes
+  apiKeysRoutes,
 } = require("./routes")
 
 const router = new Router()

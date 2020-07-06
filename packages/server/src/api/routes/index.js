@@ -27,5 +27,5 @@ module.exports = {
   componentRoutes,
   workflowRoutes,
   accesslevelRoutes,
-  apiKeysRoutes
+  apiKeysRoutes,
 }
