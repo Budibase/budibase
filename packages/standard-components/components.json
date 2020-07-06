@@ -206,14 +206,16 @@
 		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
-			"model": "models"
+			"model": "models",
+			"title": "string"
 		}
 	},
 	"dataformwide": {
 		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
-			"model": "models"
+			"model": "models",
+			"title": "string"
 		}
 	},
 	"datalist": {

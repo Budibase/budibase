@@ -3,6 +3,7 @@
 
   export let _bb
   export let model
+  export let title
 
   const TYPE_MAP = {
     string: "text",
@@ -10,8 +11,6 @@
     number: "number",
   }
 
-  let username
-  let password
   let newModel = {
     modelId: model,
   }
@@ -64,7 +63,9 @@
 </script>
 
 <form class="form" on:submit|preventDefault>
-  <h1>{modelDef.name} Form</h1>
+  {#if title}
+    <h1>{title}</h1>
+  {/if}
   <hr />
   <div class="form-content">
     {#each fields as field}

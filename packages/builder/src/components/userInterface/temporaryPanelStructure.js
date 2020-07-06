@@ -335,6 +335,11 @@ export default {
                     key: "model",
                     control: ModelSelect,
                   },
+                  {
+                    label: "Title",
+                    key: "title",
+                    control: Input,
+                  },
                 ],
               },
               template: {
@@ -354,6 +359,11 @@ export default {
                     label: "Table",
                     key: "model",
                     control: ModelSelect,
+                  },
+                  {
+                    label: "Title",
+                    key: "title",
+                    control: Input,
                   },
                 ],
               },
