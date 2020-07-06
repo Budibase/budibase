@@ -350,6 +350,11 @@ export default {
                     key: "title",
                     control: Input,
                   },
+                  {
+                    label: "Button Text",
+                    key: "buttonText",
+                    control: Input,
+                  },
                 ],
               },
               template: {
@@ -373,6 +378,11 @@ export default {
                   {
                     label: "Title",
                     key: "title",
+                    control: Input,
+                  },
+                  {
+                    label: "Button Text",
+                    key: "buttonText",
                     control: Input,
                   },
                 ],

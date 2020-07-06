@@ -208,7 +208,8 @@
 		"data": true,
 		"props": {
 			"model": "models",
-			"title": "string"
+			"title": "string",
+			"buttonText": "string"
 		}
 	},
 	"dataformwide": {
@@ -216,7 +217,8 @@
 		"data": true,
 		"props": {
 			"model": "models",
-			"title": "string"
+			"title": "string",
+			"buttonText": "string"
 		}
 	},
 	"datalist": {
