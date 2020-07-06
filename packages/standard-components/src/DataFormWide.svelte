@@ -50,6 +50,8 @@
       
       resetForm()
 
+      // set saved, and unset after 1 second
+      // i.e. make the success notifier appear, then disappear again after time
       saved = true
       setTimeout(() => {
         saved = false
@@ -58,6 +60,8 @@
     saving = false
   }
 
+  // we cannot use svelte bind on these inputs, as it does not allow
+  // bind, when the input type is dynamic
   const resetForm = () => {
     for (let el of Object.values(inputElements)) {
       el.value = ""
