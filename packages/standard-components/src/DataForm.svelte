@@ -13,14 +13,14 @@
     number: "number",
   }
 
-  let newModel = {
-    modelId: model,
-  }
+  let record
   let store = _bb.store
   let schema = {}
   let modelDef = {}
   let saved = false
   let saving = false
+  let recordId
+  let isNew = true
 
   let inputElements = {}
 
@@ -29,6 +29,8 @@
   }
 
   $: fields = Object.keys(schema)
+
+  $: Object.values(inputElements).length && setForm(record)
 
   async function fetchModel() {
     const FETCH_MODEL_URL = `/api/models/${model}`
@@ -42,7 +44,8 @@
     if (saving) return
     saving = true
     const SAVE_RECORD_URL = `/api/${model}/records`
-    const response = await _bb.api.post(SAVE_RECORD_URL, newModel)
+    const response = await _bb.api.post(SAVE_RECORD_URL, record)
+
     const json = await response.json()
 
     if (response.status === 200) {
@@ -51,7 +54,13 @@
         return state
       })
       
-      resetForm()
+      // wipe form, if new record, otherwise update
+      // model to get new _rev 
+      if (isNew) {
+        resetForm()
+      } else {
+        record = json
+      }
 
       // set saved, and unset after 1 second
       // i.e. make the success notifier appear, then disappear again after time
@@ -72,8 +81,19 @@
         el.checked = false
       }
     }
-    newModel = {
+    record = {
       modelId: model
+    }
+  }
+
+  const setForm = rec => {
+    if (isNew || !rec) return
+    for (let fieldName in inputElements) {
+      if (typeof rec[fieldName] === "boolean") {
+        inputElements[fieldName].checked = rec[fieldName]
+      } else {
+        inputElements[fieldName].value = rec[fieldName]
+      }
     }
   }
 
@@ -82,19 +102,37 @@
 
     if (event.target.type === "checkbox") {
       value = event.target.checked
-      newModel[field] = value
+      record[field] = value
       return
     }
 
     if (event.target.type === "number") {
       value = parseInt(event.target.value)
-      newModel[field] = value
+      record[field] = value
       return
     }
 
     value = event.target.value
-    newModel[field] = value
+    record[field] = value
   }
+
+  onMount(() => {
+    const routeParams = _bb.routeParams()
+    recordId = Object.keys(routeParams).length > 0 &&  (routeParams.id || routeParams[0])
+    isNew = !recordId || recordId === "new"
+
+    if (isNew) {
+      record = { modelId: model }
+    } else {
+      const GET_RECORD_URL = `/api/${model}/records/${recordId}`
+      _bb.api.get(GET_RECORD_URL)
+        .then(response => response.json())
+        .then(rec => {
+          record = rec
+          setForm(rec)
+        })
+    }    
+	});
 </script>
 
 <form class="form" on:submit|preventDefault>
