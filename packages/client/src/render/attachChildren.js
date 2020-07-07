@@ -99,6 +99,7 @@ const areTreeNodesEqual = (children1, children2) => {
 
   let isEqual = false
   for (let i = 0; i < children1.length; i++) {
+    // same context and same children, then nothing has changed
     isEqual =
       deepEqual(children1[i].context, children2[i].context) &&
       areTreeNodesEqual(children1[i].children, children2[i].children)
