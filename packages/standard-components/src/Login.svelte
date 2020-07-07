@@ -1,9 +1,9 @@
 <script>
   import Button from "./Button.svelte"
 
-  export let loginButtonLabel = "Login"
+  export let buttonText = "Login"
   export let logo = ""
-  export let name = ""
+  export let title = ""
   export let buttonClass = ""
   export let inputClass = ""
 
@@ -47,7 +47,9 @@
       </div>
     {/if}
 
-    <h1 class="header-content">Log in to {name}</h1>
+    {#if title}
+      <h1 class="header-content">{title}</h1>
+    {/if}
 
     <div class="form-root">
       <div class="control">
@@ -69,7 +71,7 @@
 
     <div class="login-button-container">
       <button disabled={loading} on:click={login} class={_buttonClass}>
-        Log in to {name}
+        {buttonText || "Login"}
       </button>
     </div>
 
