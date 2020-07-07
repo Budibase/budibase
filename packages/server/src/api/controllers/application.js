@@ -10,6 +10,7 @@ const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const { exec } = require("child_process")
 const sqrl = require("squirrelly")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
+const fs = require("fs-extra")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ClientDb.name(getClientId(ctx)))
@@ -104,6 +105,21 @@ exports.update = async function(ctx) {
   ctx.status = 200
   ctx.message = `Application ${application.name} updated successfully.`
   ctx.body = response
+}
+
+exports.delete = async function(ctx) {
+  const db = new CouchDB(ClientDb.name(getClientId(ctx)))
+  const app = await db.get(ctx.params.applicationId)
+  const result = await db.remove(app)
+  await fs.rmdir(`${budibaseAppsDir()}/${ctx.params.applicationId}`, {
+    recursive: true,
+  })
+
+  console.log
+
+  ctx.status = 200
+  ctx.message = `Application ${app.name} deleted successfully.`
+  ctx.body = result
 }
 
 const createEmptyAppPackage = async (ctx, app) => {

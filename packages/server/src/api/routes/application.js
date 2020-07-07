@@ -14,5 +14,6 @@ router
   )
   .put("/api/:applicationId", authorized(BUILDER), controller.update)
   .post("/api/applications", authorized(BUILDER), controller.create)
+  .delete("/api/:applicationId", authorized(BUILDER), controller.delete)
 
 module.exports = router
