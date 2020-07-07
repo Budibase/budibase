@@ -1,8 +1,11 @@
 <script>
   import { onMount } from "svelte"
+  import { fade } from "svelte/transition"
 
   export let _bb
   export let model
+  export let title
+  export let buttonText
 
   const TYPE_MAP = {
     string: "text",
@@ -10,20 +13,24 @@
     number: "number",
   }
 
-  let username
-  let password
-  let newModel = {
-    modelId: model,
-  }
+  let record
   let store = _bb.store
   let schema = {}
   let modelDef = {}
+  let saved = false
+  let saving = false
+  let recordId
+  let isNew = true
+
+  let inputElements = {}
 
   $: if (model && model.length !== 0) {
     fetchModel()
   }
 
   $: fields = Object.keys(schema)
+
+  $: Object.values(inputElements).length && setForm(record)
 
   async function fetchModel() {
     const FETCH_MODEL_URL = `/api/models/${model}`
@@ -33,14 +40,61 @@
   }
 
   async function save() {
+    // prevent double clicking firing multiple requests
+    if (saving) return
+    saving = true
     const SAVE_RECORD_URL = `/api/${model}/records`
-    const response = await _bb.api.post(SAVE_RECORD_URL, newModel)
+    const response = await _bb.api.post(SAVE_RECORD_URL, record)
+
     const json = await response.json()
 
-    store.update(state => {
-      state[model] = state[model] ? [...state[model], json] : [json]
-      return state
-    })
+    if (response.status === 200) {
+      store.update(state => {
+        state[model] = state[model] ? [...state[model], json] : [json]
+        return state
+      })
+      
+      // wipe form, if new record, otherwise update
+      // model to get new _rev 
+      if (isNew) {
+        resetForm()
+      } else {
+        record = json
+      }
+
+      // set saved, and unset after 1 second
+      // i.e. make the success notifier appear, then disappear again after time
+      saved = true
+      setTimeout(() => {
+        saved = false
+      }, 1000)
+    }
+    saving = false
+  }
+
+  // we cannot use svelte bind on these inputs, as it does not allow
+  // bind, when the input type is dynamic
+  const resetForm = () => {
+    for (let el of Object.values(inputElements)) {
+      el.value = ""
+      if (el.checked) {
+        el.checked = false
+      }
+    }
+    record = {
+      modelId: model
+    }
+  }
+
+  const setForm = rec => {
+    if (isNew || !rec) return
+    for (let fieldName in inputElements) {
+      if (typeof rec[fieldName] === "boolean") {
+        inputElements[fieldName].checked = rec[fieldName]
+      } else {
+        inputElements[fieldName].value = rec[fieldName]
+      }
+    }
   }
 
   const handleInput = field => event => {
@@ -48,36 +102,57 @@
 
     if (event.target.type === "checkbox") {
       value = event.target.checked
-      newModel[field] = value
+      record[field] = value
       return
     }
 
     if (event.target.type === "number") {
       value = parseInt(event.target.value)
-      newModel[field] = value
+      record[field] = value
       return
     }
 
     value = event.target.value
-    newModel[field] = value
+    record[field] = value
   }
+
+  onMount(() => {
+    const routeParams = _bb.routeParams()
+    recordId = Object.keys(routeParams).length > 0 &&  (routeParams.id || routeParams[0])
+    isNew = !recordId || recordId === "new"
+
+    if (isNew) {
+      record = { modelId: model }
+    } else {
+      const GET_RECORD_URL = `/api/${model}/records/${recordId}`
+      _bb.api.get(GET_RECORD_URL)
+        .then(response => response.json())
+        .then(rec => {
+          record = rec
+          setForm(rec)
+        })
+    }    
+	});
 </script>
 
 <form class="form" on:submit|preventDefault>
-  <h1>{modelDef.name} Form</h1>
+  {#if title}
+    <h1>{title}</h1>
+  {/if}
   <hr />
   <div class="form-content">
     {#each fields as field}
       <div class="form-item">
         <label class="form-label" for="form-stacked-text">{field}</label>
         {#if schema[field].type === 'string' && schema[field].constraints.inclusion}
-          <select on:blur={handleInput(field)}>
+          <select on:blur={handleInput(field)} bind:this={inputElements[field]}>
             {#each schema[field].constraints.inclusion as opt}
               <option>{opt}</option>
             {/each}
           </select>
         {:else}
           <input
+            bind:this={inputElements[field]}
             class="input"
             type={TYPE_MAP[schema[field].type]}
             on:change={handleInput(field)} />
@@ -86,7 +161,17 @@
       <hr />
     {/each}
     <div class="button-block">
-      <button on:click={save}>Submit Form</button>
+      <button on:click={save} class:saved>
+        {#if saved}
+          <div in:fade>
+            <span class:saved style="margin-right: 5px">🎉</span>Success<span class:saved style="margin-left: 5px">🎉</span>
+          </div>
+        {:else}
+          <div>
+            {buttonText || "Submit Form"}
+          </div>
+        {/if}
+      </button>    
     </div>
   </div>
 </form>
@@ -155,6 +240,10 @@
     white-space: nowrap;
     text-align: center;
   }
+
+  button.saved {
+    background-color: green;
+  } 
 
   button:hover {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),

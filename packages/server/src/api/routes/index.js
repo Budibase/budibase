@@ -12,6 +12,7 @@ const componentRoutes = require("./component")
 const workflowRoutes = require("./workflow")
 const accesslevelRoutes = require("./accesslevel")
 const deployRoutes = require("./deploy")
+const apiKeysRoutes = require("./apikeys")
 
 module.exports = {
   deployRoutes,
@@ -28,4 +29,5 @@ module.exports = {
   componentRoutes,
   workflowRoutes,
   accesslevelRoutes,
+  apiKeysRoutes,
 }
