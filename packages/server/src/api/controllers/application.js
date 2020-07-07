@@ -115,8 +115,6 @@ exports.delete = async function(ctx) {
     recursive: true,
   })
 
-  console.log
-
   ctx.status = 200
   ctx.message = `Application ${app.name} deleted successfully.`
   ctx.body = result

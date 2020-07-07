@@ -11,7 +11,6 @@
     loading = true
     const id = $params.application
     const res = await del(`/api/${id}`)
-    console.log(res)
     const json = await res.json()
 
     loading = false
