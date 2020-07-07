@@ -26,8 +26,14 @@ export const createStateManager = ({
   routeTo,
 }) => {
   let handlerTypes = eventHandlers(routeTo)
-  let currentState
 
+  // creating a reference to the current state
+  // this avoids doing store.get() ... which is expensive on
+  // hot paths, according to the svelte docs.
+  // the state object reference never changes (although it's internals do)
+  // so this should work fine for us
+  let currentState
+  appStore.subscribe(s => (currentState = s))
   const getCurrentState = () => currentState
 
   const bb = bbFactory({

@@ -103,10 +103,12 @@
             class="budibase__input"
             bind:value={$backendUiStore.draftModel.name} />
         </div>
+        <!-- dont have this capability yet..
         <div class="titled-input">
           <header>Import Data</header>
           <Button wide secondary>Import CSV</Button>
         </div>
+        -->
       {/if}
       <footer>
         <Button disabled={!edited} green={edited} wide on:click={saveModel}>
