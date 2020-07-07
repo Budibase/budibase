@@ -79,6 +79,7 @@ export const createTreeNode = () => ({
     const node = this
     return () => {
       if (node.children) {
+        // destroy children first - from leaf nodes up
         for (let child of node.children) {
           child.destroy()
         }
