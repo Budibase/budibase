@@ -5,11 +5,11 @@ const {
   budibaseAppsDir,
 } = require("../../../utilities/budibaseDir")
 
-async function invalidateCDN(appId) {
+async function invalidateCDN(cfDistribution, appId) {
   const cf = new AWS.CloudFront({})
 
   return cf.createInvalidation({ 
-    DistributionId: process.env.DEPLOYMENT_CF_DISTRIBUTION_ID,
+    DistributionId: cfDistribution,
     InvalidationBatch: {
       CallerReference: appId,
       Paths: {
@@ -47,8 +47,8 @@ const CONTENT_TYPE_MAP = {
 
 /**
  * Recursively walk a directory tree and execute a callback on all files.
- * @param {Re} dirPath - Directory to traverse
- * @param {*} callback - callback to execute on files
+ * @param {String} dirPath - Directory to traverse
+ * @param {Function} callback - callback to execute on files
  */
 function walkDir(dirPath, callback) {
   for (let filename of fs.readdirSync(dirPath)) {
@@ -56,10 +56,7 @@ function walkDir(dirPath, callback) {
     const stat = fs.lstatSync(filePath)
     
     if (stat.isFile()) {
-      callback({ 
-        bytes: fs.readFileSync(filePath), 
-        filename 
-      })
+      callback(filePath)
     } else {
       walkDir(filePath, callback)
     }
@@ -67,7 +64,12 @@ function walkDir(dirPath, callback) {
 }
 
 exports.uploadAppAssets = async function ({ appId }) {
-  const { credentials, accountId } = await fetchTemporaryCredentials()
+  const { 
+    credentials, 
+    accountId, 
+    bucket,
+    cfDistribution,
+  } = await fetchTemporaryCredentials()
 
   AWS.config.update({
     accessKeyId: credentials.AccessKeyId, 
@@ -77,7 +79,7 @@ exports.uploadAppAssets = async function ({ appId }) {
 
   const s3 = new AWS.S3({
     params: {
-      Bucket: process.env.DEPLOYMENT_APP_ASSETS_BUCKET
+      Bucket: bucket 
     }
   })
 
@@ -88,12 +90,13 @@ exports.uploadAppAssets = async function ({ appId }) {
   const uploads = []
 
   for (let page of appPages) {
-    walkDir(`${appAssetsPath}/${page}`, function prepareUploadsForS3({ bytes, filename }) {
-      const fileExtension = [...filename.split(".")].pop()
+    walkDir(`${appAssetsPath}/${page}`, function prepareUploadsForS3(filePath) {
+      const fileExtension = [...filePath.split(".")].pop()
+      const fileBytes = fs.readFileSync(filePath)
 
       const upload = s3.upload({
-        Key: `assets/${appId}/${page}/${filename}`,
-        Body: bytes,
+        Key: filePath.replace(appAssetsPath, `assets/${appId}`),
+        Body: fileBytes,
         ContentType: CONTENT_TYPE_MAP[fileExtension],
         Metadata: {
           accountId
@@ -105,10 +108,8 @@ exports.uploadAppAssets = async function ({ appId }) {
   }
 
   try {
-    const uploadAllFiles = Promise.all(uploads)
-    const invalidateCloudfront = invalidateCDN(appId) 
-    await uploadAllFiles
-    await invalidateCloudfront
+    await Promise.all(uploads)
+    await invalidateCDN(cfDistribution, appId) 
   } catch (err) {
     console.error("Error uploading budibase app assets to s3", err)
     throw err
