@@ -25,69 +25,69 @@
     name: "Screen Placeholder",
     route: "*",
     props: {
-      "_id": "49c3d0a2-7028-46f0-b004-7eddf62ad01c",
-      "_component": "@budibase/standard-components/container",
-      "_styles": {
-        "normal": {
-          "padding": "0px",
+      _id: "49c3d0a2-7028-46f0-b004-7eddf62ad01c",
+      _component: "@budibase/standard-components/container",
+      _styles: {
+        normal: {
+          padding: "0px",
           "font-family": "Roboto",
           "border-width": "0",
           "border-style": "None",
-          "text-align": "center"
+          "text-align": "center",
         },
-        "hover": {},
-        "active": {},
-        "selected": {}
+        hover: {},
+        active: {},
+        selected: {},
       },
-      "_code": "",
-      "className": "",
-      "onLoad": [],
-      "type": "div",
-      "_children": [
+      _code: "",
+      className: "",
+      onLoad: [],
+      type: "div",
+      _children: [
         {
-          "_id": "335428f7-f9ca-4acd-9e76-71bc8ad27324",
-          "_component": "@budibase/standard-components/container",
-          "_styles": {
-            "normal": {
-              "padding": "16px",
+          _id: "335428f7-f9ca-4acd-9e76-71bc8ad27324",
+          _component: "@budibase/standard-components/container",
+          _styles: {
+            normal: {
+              padding: "16px",
               "border-style": "Dashed",
               "border-width": "2px",
-              "border-color": "#8a8989fa"
+              "border-color": "#8a8989fa",
             },
-            "hover": {},
-            "active": {},
-            "selected": {}
+            hover: {},
+            active: {},
+            selected: {},
           },
-          "_code": "",
-          "className": "",
-          "onLoad": [],
-          "type": "div",
-          "_instanceId": "inst_b3b4e95_ab0df02dda3f4d8eb4b35eea2968bad3",
-          "_instanceName": "Container",
-          "_children": [
+          _code: "",
+          className: "",
+          onLoad: [],
+          type: "div",
+          _instanceId: "inst_b3b4e95_ab0df02dda3f4d8eb4b35eea2968bad3",
+          _instanceName: "Container",
+          _children: [
             {
-              "_id": "ddb6a225-33ba-4ba8-91da-bc6a2697ebf9",
-              "_component": "@budibase/standard-components/heading",
-              "_styles": {
-                "normal": {
-                  "font-family": "Roboto"
+              _id: "ddb6a225-33ba-4ba8-91da-bc6a2697ebf9",
+              _component: "@budibase/standard-components/heading",
+              _styles: {
+                normal: {
+                  "font-family": "Roboto",
                 },
-                "hover": {},
-                "active": {},
-                "selected": {}
+                hover: {},
+                active: {},
+                selected: {},
               },
-              "_code": "",
-              "className": "",
-              "text": "Your screens go here",
-              "type": "h1",
-              "_instanceId": "inst_b3b4e95_ab0df02dda3f4d8eb4b35eea2968bad3",
-              "_instanceName": "Heading",
-              "_children": []
-            }
-          ]
-        }
+              _code: "",
+              className: "",
+              text: "Your screens go here",
+              type: "h1",
+              _instanceId: "inst_b3b4e95_ab0df02dda3f4d8eb4b35eea2968bad3",
+              _instanceName: "Heading",
+              _children: [],
+            },
+          ],
+        },
       ],
-      "_instanceName": "Content Placeholder"
+      _instanceName: "Content Placeholder",
     },
   }
 

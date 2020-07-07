@@ -43,7 +43,7 @@
       <Button secondary medium on:click={deployApp}>
         Deploy App
         {#if loading}
-          <Spinner ratio={"0.5"} />
+          <Spinner ratio={'0.5'} />
         {/if}
       </Button>
     {/if}

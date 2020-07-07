@@ -70,7 +70,7 @@ const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
   const indexHtml = sqrl.Render(indexHtmlTemplate, templateObj)
   const deployableHtml = sqrl.Render(indexHtmlTemplate, {
     ...templateObj,
-    production: true
+    production: true,
   })
 
   await writeFile(indexHtmlPath, indexHtml, { flag: "w+" })
