@@ -7,7 +7,7 @@ const {
 function replicate(local, remote) {
   return new Promise((resolve, reject) => {
 
-    const replication = local.replicate.to(remote);
+    const replication = local.sync(remote);
 
     replication.on("complete", () => resolve())
     replication.on("error", err => reject(err))
@@ -15,24 +15,24 @@ function replicate(local, remote) {
 }
 
 async function replicateCouch(instanceId, clientId) {
-    const clientDb = new PouchDB(`client_${clientId}`)
-    const remoteClientDb = new CouchDB(`${process.env.COUCH_DB_REMOTE}/client_${clientId}`)
 
-    const clientAppLookupDb = new PouchDB("client_app_lookup")
-    const remoteClientAppLookupDb = new CouchDB(`${process.env.COUCH_DB_REMOTE}/client_app_lookup`)
+    const databases = [
+      `client_${clientId}`,
+      "client_app_lookup",
+      instanceId
+    ];
 
-    const localDb = new PouchDB(instanceId)
-    const remoteDb = new CouchDB(`${process.env.COUCH_DB_REMOTE}/${instanceId}`)
+    const replications = databases.map(local => {
+      const localDb = new PouchDB(local);
+      const remoteDb = new CouchDB(`${process.env.DEPLOYMENT_COUCH_DB_URL}/${local}`)
 
-    await Promise.all([
-      replicate(clientDb, remoteClientDb),
-      replicate(clientAppLookupDb, remoteClientAppLookupDb),
-      replicate(localDb, remoteDb)
-    ])
+      return replicate(localDb, remoteDb);
+    });
+
+    await Promise.all(replications)
 }
 
 exports.deployApp = async function(ctx) {
-  // TODO: This should probably be async - it could take a while  
   try {
     const clientAppLookupDB = new PouchDB("client_app_lookup")
     const { clientId } = await clientAppLookupDB.get(ctx.user.appId)
@@ -51,8 +51,7 @@ exports.deployApp = async function(ctx) {
       status: "SUCCESS", 
       completed: Date.now()
     }
-
-    } catch (err) {
-      ctx.throw(err.status || 500, `Deployment Failed: ${err.message}`);
-    }
+  } catch (err) {
+    ctx.throw(err.status || 500, `Deployment Failed: ${err.message}`);
+  }
 }

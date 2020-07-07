@@ -8,7 +8,6 @@ const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const { ANON_LEVEL_ID } = require("../../utilities/accessLevels")
 const jwt = require("jsonwebtoken")
 const fetch = require("node-fetch")
-const { S3 } = require("aws-sdk")
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(__dirname, "../../../builder")
@@ -28,14 +27,20 @@ exports.serveApp = async function(ctx) {
     "public",
     mainOrAuth
   )
+
+  let appId = ctx.params.appId
+  if (process.env.CLOUD) {
+    appId = ctx.subdomains[1]
+  }
+  
   // only set the appId cookie for /appId .. we COULD check for valid appIds
   // but would like to avoid that DB hit
-  const looksLikeAppId = /^[0-9a-f]{32}$/.test(ctx.params.appId)
+  const looksLikeAppId = /^[0-9a-f]{32}$/.test(appId)
   if (looksLikeAppId && !ctx.isAuthenticated) {
     const anonUser = {
       userId: "ANON",
       accessLevelId: ANON_LEVEL_ID,
-      appId: ctx.params.appId,
+      appId,
     }
     const anonToken = jwt.sign(anonUser, ctx.config.jwtSecret)
     ctx.cookies.set("budibase:token", anonToken, {
@@ -45,7 +50,7 @@ exports.serveApp = async function(ctx) {
   }
 
   if (process.env.CLOUD) {
-    const S3_URL = `https://${ctx.params.appId}.app.budi.live/assets/${ctx.params.appId}/${mainOrAuth}/${ctx.file || "index.production.html"}`
+    const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file || "index.production.html"}`
     const response = await fetch(S3_URL)
     const body = await response.text()
     ctx.body = body 
