@@ -99,7 +99,9 @@ const areTreeNodesEqual = (children1, children2) => {
 
   let isEqual = false
   for (let i = 0; i < children1.length; i++) {
-    isEqual = deepEqual(children1[i].context, children2[i].context)
+    isEqual =
+      deepEqual(children1[i].context, children2[i].context) &&
+      areTreeNodesEqual(children1[i].children, children2[i].children)
     if (!isEqual) return false
     if (isScreenSlot(children1[i].parentNode.props._component)) {
       isEqual = deepEqual(children1[i].props, children2[i].props)
