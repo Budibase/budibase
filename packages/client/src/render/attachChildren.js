@@ -30,34 +30,33 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
     }
   }
 
+  const contextArray = Array.isArray(context) ? context : [context]
+
   const childNodes = []
-  for (let childProps of treeNode.props._children) {
-    const { componentName, libName } = splitName(childProps._component)
 
-    if (!componentName || !libName) return
+  for (let context of contextArray) {
+    for (let childProps of treeNode.props._children) {
+      const { componentName, libName } = splitName(childProps._component)
 
-    const ComponentConstructor = componentLibraries[libName][componentName]
+      if (!componentName || !libName) return
 
-    const prepareNodes = ctx => {
-      const childNodesThisIteration = prepareRenderComponent({
-        props: childProps,
-        parentNode: treeNode,
-        ComponentConstructor,
-        htmlElement,
-        anchor,
-        context: ctx,
-      })
+      const ComponentConstructor = componentLibraries[libName][componentName]
 
-      for (let childNode of childNodesThisIteration) {
-        childNodes.push(childNode)
+      const prepareNodes = ctx => {
+        const childNodesThisIteration = prepareRenderComponent({
+          props: childProps,
+          parentNode: treeNode,
+          ComponentConstructor,
+          htmlElement,
+          anchor,
+          context: ctx,
+        })
+
+        for (let childNode of childNodesThisIteration) {
+          childNodes.push(childNode)
+        }
       }
-    }
 
-    if (Array.isArray(context)) {
-      for (let singleCtx of context) {
-        prepareNodes(singleCtx)
-      }
-    } else {
       prepareNodes(context)
     }
   }
@@ -100,7 +99,10 @@ const areTreeNodesEqual = (children1, children2) => {
 
   let isEqual = false
   for (let i = 0; i < children1.length; i++) {
-    isEqual = deepEqual(children1[i].context, children2[i].context)
+    // same context and same children, then nothing has changed
+    isEqual =
+      deepEqual(children1[i].context, children2[i].context) &&
+      areTreeNodesEqual(children1[i].children, children2[i].children)
     if (!isEqual) return false
     if (isScreenSlot(children1[i].parentNode.props._component)) {
       isEqual = deepEqual(children1[i].props, children2[i].props)

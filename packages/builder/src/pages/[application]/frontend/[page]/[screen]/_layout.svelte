@@ -38,15 +38,21 @@
 
     // Loop through each ID
     ids.forEach(id => {
-      // Find ID and select it
-      componentToSelect = currentChildren.find(child => child._id === id)
+      // Find ID
+      const component = currentChildren.find(child => child._id === id)
+
+      // If it does not exist, ignore (use last valid route)
+      if (!component) return
+
+      componentToSelect = component
 
       // Update childrens array to selected components children
       currentChildren = componentToSelect._children
     })
 
     // Select Component!
-    store.selectComponent(componentToSelect)
+    if (componentToSelect)
+      store.selectComponent(componentToSelect)
   }
 </script>
 

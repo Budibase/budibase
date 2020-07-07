@@ -303,6 +303,16 @@ export default {
                 key: "logo",
                 control: Input,
               },
+              {
+                label: "Title",
+                key: "title",
+                control: Input,
+              },
+              {
+                label: "Button Text",
+                key: "buttonText",
+                control: Input,
+              },
             ],
           },
         },
@@ -335,6 +345,16 @@ export default {
                     key: "model",
                     control: ModelSelect,
                   },
+                  {
+                    label: "Title",
+                    key: "title",
+                    control: Input,
+                  },
+                  {
+                    label: "Button Text",
+                    key: "buttonText",
+                    control: Input,
+                  },
                 ],
               },
               template: {
@@ -354,6 +374,16 @@ export default {
                     label: "Table",
                     key: "model",
                     control: ModelSelect,
+                  },
+                  {
+                    label: "Title",
+                    key: "title",
+                    control: Input,
+                  },
+                  {
+                    label: "Button Text",
+                    key: "buttonText",
+                    control: Input,
                   },
                 ],
               },
