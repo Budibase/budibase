@@ -1,5 +1,5 @@
 <script>
-  import {buildStyle} from "../helpers.js"
+  import { buildStyle } from "../helpers.js"
   import { fade } from "svelte/transition"
 
   export let backgroundSize = "10px"

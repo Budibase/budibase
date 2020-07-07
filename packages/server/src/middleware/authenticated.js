@@ -61,11 +61,11 @@ module.exports = async (ctx, next) => {
 }
 
 /**
- * Return the full access level object either from constants 
+ * Return the full access level object either from constants
  * or the database based on the access level ID passed.
- * 
+ *
  * @param {*} instanceId - instanceId of the user
- * @param {*} accessLevelId - the id of the users access level 
+ * @param {*} accessLevelId - the id of the users access level
  */
 const getAccessLevel = async (instanceId, accessLevelId) => {
   if (

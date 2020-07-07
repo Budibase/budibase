@@ -1,6 +1,4 @@
-const { resolve, join } = require("path")
-const { homedir } = require("os")
-
+const { resolve } = require("path")
 
 async function runServer() {
   const budibaseDir = "~/.budibase"

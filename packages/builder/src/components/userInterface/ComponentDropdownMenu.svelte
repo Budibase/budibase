@@ -27,7 +27,8 @@
     animation: false,
   })
   $: dropdown && UIkit.util.on(dropdown, "shown", () => (hidden = false))
-  $: noChildrenAllowed = !component ||
+  $: noChildrenAllowed =
+    !component ||
     getComponentDefinition($store, component._component).children === false
   $: noPaste = !$store.componentToPaste
 

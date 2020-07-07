@@ -18,7 +18,7 @@ exports.serveBuilder = async function(ctx) {
 }
 
 exports.serveApp = async function(ctx) {
-  const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated";
+  const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated"
 
   // default to homedir
   const appPath = resolve(
@@ -32,7 +32,7 @@ exports.serveApp = async function(ctx) {
   if (process.env.CLOUD) {
     appId = ctx.subdomains[1]
   }
-  
+
   // only set the appId cookie for /appId .. we COULD check for valid appIds
   // but would like to avoid that DB hit
   const looksLikeAppId = /^[0-9a-f]{32}$/.test(appId)
@@ -50,10 +50,11 @@ exports.serveApp = async function(ctx) {
   }
 
   if (process.env.CLOUD) {
-    const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file || "index.production.html"}`
+    const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file ||
+      "index.production.html"}`
     const response = await fetch(S3_URL)
     const body = await response.text()
-    ctx.body = body 
+    ctx.body = body
     return
   }
 
@@ -62,7 +63,7 @@ exports.serveApp = async function(ctx) {
 
 exports.serveAppAsset = async function(ctx) {
   // default to homedir
-  const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated";
+  const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated"
 
   const appPath = resolve(
     budibaseAppsDir(),
@@ -94,11 +95,13 @@ exports.serveComponentLibrary = async function(ctx) {
 
   if (process.env.CLOUD) {
     const appId = ctx.user.appId
-    const S3_URL = encodeURI(`https://${appId}.app.budi.live/assets/componentlibrary/${ctx.query.library}/dist/index.js`)
+    const S3_URL = encodeURI(
+      `https://${appId}.app.budi.live/assets/componentlibrary/${ctx.query.library}/dist/index.js`
+    )
     const response = await fetch(S3_URL)
     const body = await response.text()
-    ctx.type = 'application/javascript'
-    ctx.body = body;
+    ctx.type = "application/javascript"
+    ctx.body = body
     return
   }
 
