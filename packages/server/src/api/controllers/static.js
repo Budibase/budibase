@@ -49,9 +49,10 @@ exports.serveApp = async function(ctx) {
     })
   }
 
-  if (process.env.CLOUD) {
+  if (!process.env.CLOUD) {
     const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file ||
       "index.production.html"}`
+
     const response = await fetch(S3_URL)
     const body = await response.text()
     ctx.body = body
