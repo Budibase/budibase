@@ -15,32 +15,41 @@
 
 <script>
   import { onMount } from "svelte";
+  import shortid from "shortid"
+
+  const _id = shortid.generate()
 
   export let type = "bar";
   export let data = [];
   export let tooltipProps = null;
+  export let legendProps = null;
+  export let useTooltip = false;
+  export let useLegend = false;
 
   export let colors = colorSchemas ? colorSchemas.britecharts : null;
-
   export let gradients = colorGradients ? colorGradients.bluePurple : null;
+  export let tooltip = null; //can bind to outside the component and therefore access
 
   let chartElement = null;
   let chartContainer = null;
   let tooltipContainer = null;
-
-  let tooltipElement = null;
+  let legendContainer = null;
+  let legend = null;
 
   let chart = chartTypes.includes(type) ? britecharts[type]() : null;
-  export let tooltip = null; //can bind and therefore access
+
+  const chartClass = `chart-container-${_id}` 
+  const legendClass = `legend-container-${_id}`
 
   onMount(() => {
     if (chart) {
-      chartContainer = d3.select(chartElement);
+      chartContainer = d3.select(`.${chartClass}`);
       bindChartColors();
-      bindChartTooltip();
       bindChartUIProps();
       bindChartEvents();
       chartContainer.datum(data).call(chart);
+      bindChartTooltip();
+      bindChartLegend();
     } else {
       console.error("Britecharts could not be found");
     }
@@ -58,17 +67,72 @@
     if (canUseTooltip) {
       tooltip = britecharts.tooltip();
 
-      const validTooltipProps = Object.getOwnPropertyNames(tooltip);
+      bindProps(tooltip, tooltipProps)
 
-      const props = Object.entries(tooltipProps);
-      for (let [key, value] of props) {
-        if (validTooltipProps.includes(key)) {
-          tooltip[key](value);
-        }
+      tooltipContainer = d3.select(`.${chartClass} .metadata-group .vertical-marker-container`);
+      tooltipContainer.datum([]).call(tooltip);
+      // tooltip.show()
+    }
+  }
+
+  function bindChartLegend() {
+    if(useLegend) {
+
+      if(!Array.isArray(data)) {
+        console.warn("Cannot use legend as data is not an array")
+        return;
       }
 
-      tooltipContainer = d3.select(tooltipElement);
-      tooltipContainer.datum([]).call(tooltip);
+      let excludeProps = []
+
+      legend = britecharts.legend();
+
+      if(!legendProps || !legendProps.width) {
+        excludeProps = ["width"]
+        legend.width(chart.width())
+      }
+  
+      if(legendProps){
+        bindProps(legend, legendProps, excludeProps)
+      }
+  
+      legendContainer = d3.select(`.${legendClass}`)
+      legendContainer.datum(data).call(legend)
+    }
+  }
+
+  function bindChartEvents() {
+    if ($$props.on) {
+      const events = Object.entries($$props.on);
+      for (let [type, fn] of events) {
+        chart.on(type, fn);
+      }
+    }
+  }
+
+  function bindChartUIProps() {
+    const excludeProps = ["data", "colors", "type", "gradients", "on", "useTooltip", "tooltip", "tooltipProps", "legendProps", "useLegend"]
+
+    if (!$$props.width) {
+      chart.width(chartElement.getBoundingClientRect().width);
+    }
+
+    bindProps(chart, $$props, excludeProps)
+  }
+
+  function bindProps(element, elProps, excludeArray) {
+    const props = excludeArray ? Object.entries(excludeProps(elProps, excludeArray)) : Object.entries(elProps)
+    
+    const validElementProps = Object.getOwnPropertyNames(element);
+
+    for (let [prop, value] of props) {
+      if (validElementProps.includes(prop)) {
+        chart[prop](value);
+      } else {
+        console.warn(
+          `${type} - ${prop} is an unrecognised chart prop and wont be applied`
+        );
+      }
     }
   }
 
@@ -82,42 +146,12 @@
     return modifiedProps;
   }
 
-  function bindChartEvents() {
-    if ($$props.on) {
-      const events = Object.entries($$props.on);
-      for (let [type, fn] of events) {
-        chart.on(type, fn);
-      }
-    }
-  }
-
-  function bindChartUIProps() {
-    const props = Object.entries(
-      excludeProps($$props, ["data", "colors", "type", "gradients", "on"])
-    );
-
-    if (!props.includes("width")) {
-      chart.width(chartElement.getBoundingClientRect().width);
-    }
-
-    for (let [prop, value] of props) {
-      if (validChartProps.includes(prop)) {
-        chart[prop](value);
-      } else {
-        console.warn(
-          `${type} chart - ${prop} is an unrecognised prop and wont be applied`
-        );
-      }
-    }
-  }
-
   $: validChartProps = chart ? Object.getOwnPropertyNames(chart) : null;
-  $: canUseTooltip = type === "groupedBar" && tooltipProps;
-  $: console.log("VALID CHART PROPS", validChartProps);
+  $: canUseTooltip = type === "groupedBar" && tooltipProps && useTooltip;
+  
 </script>
 
-<div bind:this={chartElement} class="chart-container" />
-
-{#if canUseTooltip}
-  <div bind:this={tooltipElement} class="tooltip-container" />
+<div bind:this={chartElement} class={chartClass} />
+{#if useLegend}
+  <div class={legendClass}/>
 {/if}
