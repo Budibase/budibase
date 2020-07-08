@@ -3,7 +3,7 @@
   import { slide } from "svelte/transition"
   import { Switcher } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
-  import { store, backendUiStore } from "builderStore"
+  import { store, backendUiStore, tourStore } from "builderStore"
   import BlockNavigator from "./BlockNavigator.svelte"
   import ListItem from "./ListItem.svelte"
   import { Button } from "@budibase/bbui"
@@ -35,6 +35,10 @@
   }
 
   function setupForNewModel() {
+    setTimeout(() => {
+      $tourStore.tour.next()
+    }, 500)
+
     backendUiStore.update(state => {
       state.selectedModel = {}
       state.draftModel = { schema: {} }
@@ -46,7 +50,7 @@
 
 <div class="items-root">
   {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
-    <div class="hierarchy">
+    <div class="hierarchy" id="shep-create-new-table">
       <div class="components-list-container">
         <Switcher
           headings={HEADINGS}

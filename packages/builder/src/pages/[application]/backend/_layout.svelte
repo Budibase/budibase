@@ -5,9 +5,11 @@
 
   import ModelNavigator from "components/nav/ModelNavigator/ModelNavigator.svelte"
   import { ModelSetupNav } from "components/nav/ModelSetupNav"
+  import ShepherdWalkthrough from "components/shepherd/ShepherdWalkthrough.svelte"
 </script>
 
 <div class="root">
+  <ShepherdWalkthrough />
   <div class="nav">
     <ModelNavigator />
   </div>

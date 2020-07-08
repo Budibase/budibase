@@ -51,7 +51,7 @@
   <div class="root">
 
     <div class="top-nav">
-      <div class="topleftnav">
+      <div class="topleftnav" id="shep-top-nav">
         <button class="home-logo">
           <img
             src="/_builder/assets/bb-logo.svg"

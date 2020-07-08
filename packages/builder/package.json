@@ -68,6 +68,7 @@
     "lunr": "^2.3.5",
     "mustache": "^4.0.1",
     "safe-buffer": "^5.1.2",
+    "shepherd.js": "^8.0.1",
     "shortid": "^2.2.8",
     "string_decoder": "^1.2.0",
     "svelte-portal": "^0.1.0",

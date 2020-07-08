@@ -6,6 +6,7 @@ import LogRocket from "logrocket"
 export const store = getStore()
 export const backendUiStore = getBackendUiStore()
 export const workflowStore = getWorkflowStore()
+export { tourStore } from "./store/tour"
 
 export const initialise = async () => {
   try {

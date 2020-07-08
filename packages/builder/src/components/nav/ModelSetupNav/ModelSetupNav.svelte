@@ -2,7 +2,7 @@
   import { getContext, onMount } from "svelte"
   import { Button, Switcher } from "@budibase/bbui"
   import { notifier } from "builderStore/store/notifications"
-  import { store, backendUiStore } from "builderStore"
+  import { store, backendUiStore, tourStore } from "builderStore"
   import api from "builderStore/api"
   import ModelFieldEditor from "./ModelFieldEditor.svelte"
 
@@ -59,7 +59,9 @@
       if (field.name.startsWith("_")) {
         errors.push(`field '${field.name}' - name cannot begin with '_''`)
       } else if (restrictedFieldNames.includes(field.name)) {
-        errors.push(`field '${field.name}' - is a restricted name, please rename`)
+        errors.push(
+          `field '${field.name}' - is a restricted name, please rename`
+        )
       } else if (!field.name || !field.name.trim()) {
         errors.push("field name cannot be blank")
       }
@@ -75,9 +77,7 @@
   async function saveModel() {
     const errors = validate()
     if (errors.length > 0) {
-      notifier.danger(
-        errors.join("/n")
-      )
+      notifier.danger(errors.join("/n"))
       return
     }
 
@@ -96,7 +96,7 @@
       {#if $backendUiStore.selectedField}
         <ModelFieldEditor />
       {:else if $backendUiStore.draftModel.schema}
-        <div class="titled-input">
+        <div class="titled-input" id="shep-setup-tab">
           <header>Name</header>
           <input
             type="text"
@@ -108,7 +108,7 @@
           <Button wide secondary>Import CSV</Button>
         </div>
       {/if}
-      <footer>
+      <footer id="shep-setup-save">
         <Button disabled={!edited} green={edited} wide on:click={saveModel}>
           Save
         </Button>
