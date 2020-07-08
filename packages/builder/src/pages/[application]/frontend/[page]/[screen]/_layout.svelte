@@ -51,8 +51,7 @@
     })
 
     // Select Component!
-    if (componentToSelect)
-      store.selectComponent(componentToSelect)
+    if (componentToSelect) store.selectComponent(componentToSelect)
   }
 </script>
 

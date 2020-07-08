@@ -1,183 +1,266 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte";
-  import { fade } from "svelte/transition";
-  import Swatch from "./Swatch.svelte";
-  import CheckedBackground from "./CheckedBackground.svelte";
-  import { buildStyle } from "../helpers.js";
+  import { onMount, createEventDispatcher } from "svelte"
+  import { fade } from "svelte/transition"
+  import Swatch from "./Swatch.svelte"
+  import CheckedBackground from "./CheckedBackground.svelte"
+  import { buildStyle } from "../helpers.js"
   import {
     getColorFormat,
     convertToHSVA,
-    convertHsvaToFormat
-  } from "../utils.js";
-  import Slider from "./Slider.svelte";
-  import Palette from "./Palette.svelte";
-  import ButtonGroup from "./ButtonGroup.svelte";
-  import Input from "./Input.svelte";
-  import Portal from "./Portal.svelte";
-  import { keyevents } from "../actions";
+    convertHsvaToFormat,
+  } from "../utils.js"
+  import Slider from "./Slider.svelte"
+  import Palette from "./Palette.svelte"
+  import ButtonGroup from "./ButtonGroup.svelte"
+  import Input from "./Input.svelte"
+  import Portal from "./Portal.svelte"
+  import { keyevents } from "../actions"
 
-  export let value = "#3ec1d3ff";
-  export let open = false;
-  export let swatches = [];
+  export let value = "#3ec1d3ff"
+  export let open = false
+  export let swatches = []
 
-  export let disableSwatches = false;
-  export let format = "hexa";
-  export let style = "";
-  export let pickerHeight = 0;
-  export let pickerWidth = 0;
+  export let disableSwatches = false
+  export let format = "hexa"
+  export let style = ""
+  export let pickerHeight = 0
+  export let pickerWidth = 0
 
-  let colorPicker = null;
-  let adder = null;
-  let swatchesSetFromLocalStore = false;
+  let colorPicker = null
+  let adder = null
+  let swatchesSetFromLocalStore = false
 
-  let h = 0;
-  let s = 0;
-  let v = 0;
-  let a = 0;
+  let h = 0
+  let s = 0
+  let v = 0
+  let a = 0
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher()
 
   onMount(() => {
     if (!swatches.length > 0) {
       //Don't use locally stored recent colors if swatches have been passed as props
-      swatchesSetFromLocalStore = true;
-      swatches = getRecentColors() || [];
+      swatchesSetFromLocalStore = true
+      swatches = getRecentColors() || []
     }
 
     if (swatches.length > 12) {
       console.warn(
         `Colorpicker - ${swatches.length} swatches were provided. Only the first 12 swatches will be displayed.`
-      );
+      )
     }
 
     if (colorPicker) {
-      colorPicker.focus();
+      colorPicker.focus()
     }
 
     if (format) {
-      convertAndSetHSVA();
+      convertAndSetHSVA()
     }
-  });
+  })
 
   function getRecentColors() {
-    let colorStore = localStorage.getItem("cp:recent-colors");
+    let colorStore = localStorage.getItem("cp:recent-colors")
     if (colorStore) {
-      return JSON.parse(colorStore);
+      return JSON.parse(colorStore)
     }
   }
 
   function handleEscape() {
     if (open) {
-      open = false;
+      open = false
     }
   }
 
   function setRecentColors(color) {
     const s = swatchesSetFromLocalStore
       ? swatches
-      : [...getRecentColors(), color];
-    localStorage.setItem("cp:recent-colors", JSON.stringify(s));
+      : [...getRecentColors(), color]
+    localStorage.setItem("cp:recent-colors", JSON.stringify(s))
   }
 
   function convertAndSetHSVA() {
-    let hsva = convertToHSVA(value, format);
-    setHSVA(hsva);
+    let hsva = convertToHSVA(value, format)
+    setHSVA(hsva)
   }
 
   function setHSVA([hue, sat, val, alpha]) {
-    h = hue;
-    s = sat;
-    v = val;
-    a = alpha;
+    h = hue
+    s = sat
+    v = val
+    a = alpha
   }
 
   //fired by choosing a color from the palette
   function setSaturationAndValue({ detail }) {
-    s = detail.s;
-    v = detail.v;
-    value = convertHsvaToFormat([h, s, v, a], format);
-    dispatchValue();
+    s = detail.s
+    v = detail.v
+    value = convertHsvaToFormat([h, s, v, a], format)
+    dispatchValue()
   }
 
   function setHue({ color, isDrag }) {
-    h = color;
-    value = convertHsvaToFormat([h, s, v, a], format);
+    h = color
+    value = convertHsvaToFormat([h, s, v, a], format)
     if (!isDrag) {
-      dispatchValue();
+      dispatchValue()
     }
   }
 
   function setAlpha({ color, isDrag }) {
-    a = color === "1.00" ? "1" : color;
-    value = convertHsvaToFormat([h, s, v, a], format);
+    a = color === "1.00" ? "1" : color
+    value = convertHsvaToFormat([h, s, v, a], format)
     if (!isDrag) {
-      dispatchValue();
+      dispatchValue()
     }
   }
 
   function dispatchValue() {
-    dispatch("change", value);
+    dispatch("change", value)
   }
 
   function changeFormatAndConvert(f) {
-    format = f;
-    value = convertHsvaToFormat([h, s, v, a], format);
+    format = f
+    value = convertHsvaToFormat([h, s, v, a], format)
   }
 
   function handleColorInput(text) {
-    let format = getColorFormat(text);
+    let format = getColorFormat(text)
     if (format) {
-      value = text;
-      convertAndSetHSVA();
+      value = text
+      convertAndSetHSVA()
     }
   }
 
   function dispatchInputChange() {
     if (format) {
-      dispatchValue();
+      dispatchValue()
     }
   }
 
   function addSwatch() {
     if (format) {
       if (swatches.length === 12) {
-        swatches.splice(0, 1);
+        swatches.splice(0, 1)
       }
 
       if (!swatches.includes(value)) {
-        swatches = [...swatches, value];
-        setRecentColors(value);
+        swatches = [...swatches, value]
+        setRecentColors(value)
       }
 
-      dispatch("addswatch", value);
+      dispatch("addswatch", value)
     }
   }
 
   function removeSwatch(idx) {
-    let [removedSwatch] = swatches.splice(idx, 1);
-    swatches = swatches;
-    dispatch("removeswatch", removedSwatch);
+    let [removedSwatch] = swatches.splice(idx, 1)
+    swatches = swatches
+    dispatch("removeswatch", removedSwatch)
     if (swatchesSetFromLocalStore) {
       //as could be a swatch not present in local storage
-      setRecentColors();
+      setRecentColors()
     }
   }
 
   function applySwatch(color) {
     if (value !== color) {
-      format = getColorFormat(color);
+      format = getColorFormat(color)
       if (format) {
-        value = color;
-        convertAndSetHSVA();
-        dispatchValue();
+        value = color
+        convertAndSetHSVA()
+        dispatchValue()
       }
     }
   }
 
-  $: border = v > 90 && s < 5 ? "1px dashed #dedada" : "";
-  $: selectedColorStyle = buildStyle({ background: value, border });
-  $: hasSwatches = swatches.length > 0;
+  $: border = v > 90 && s < 5 ? "1px dashed #dedada" : ""
+  $: selectedColorStyle = buildStyle({ background: value, border })
+  $: hasSwatches = swatches.length > 0
 </script>
+
+<Portal>
+  <div
+    class="colorpicker-container"
+    use:keyevents={{ Escape: handleEscape }}
+    transition:fade
+    bind:this={colorPicker}
+    {style}
+    tabindex="0"
+    bind:clientHeight={pickerHeight}
+    bind:clientWidth={pickerWidth}>
+
+    <div class="palette-panel">
+      <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
+    </div>
+
+    <div class="control-panel">
+      <div class="alpha-hue-panel">
+        <div>
+          <CheckedBackground borderRadius="50%" backgroundSize="8px">
+            <div
+              class="selected-color"
+              title={value}
+              style={selectedColorStyle} />
+          </CheckedBackground>
+        </div>
+        <div>
+          <Slider
+            type="hue"
+            value={h}
+            on:change={hue => setHue(hue.detail)}
+            on:dragend={dispatchValue} />
+
+          <CheckedBackground borderRadius="10px" backgroundSize="7px">
+            <Slider
+              type="alpha"
+              value={a}
+              on:change={(alpha, isDrag) => setAlpha(alpha.detail, isDrag)}
+              on:dragend={dispatchValue} />
+          </CheckedBackground>
+
+        </div>
+      </div>
+
+      {#if !disableSwatches}
+        <div transition:fade class="swatch-panel">
+          {#if hasSwatches}
+            {#each swatches as color, idx}
+              {#if idx < 12}
+                <Swatch
+                  {color}
+                  on:click={() => applySwatch(color)}
+                  on:removeswatch={() => removeSwatch(idx)} />
+              {/if}
+            {/each}
+          {/if}
+          {#if swatches.length < 12}
+            <div
+              tabindex="0"
+              title="Add Swatch"
+              use:keyevents={{ Enter: addSwatch }}
+              bind:this={adder}
+              transition:fade
+              class="adder"
+              class:shrink={hasSwatches}
+              on:click={addSwatch}>
+              <span>&plus;</span>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
+      <div class="format-input-panel">
+        <ButtonGroup {format} onclick={changeFormatAndConvert} />
+        <Input
+          {value}
+          on:input={event => handleColorInput(event.target.value)}
+          on:change={dispatchInputChange} />
+      </div>
+    </div>
+
+  </div>
+</Portal>
 
 <style>
   .colorpicker-container {
@@ -264,86 +347,3 @@
     padding-top: 3px;
   }
 </style>
-
-<Portal>
-  <div
-    class="colorpicker-container"
-    use:keyevents={{ Escape: handleEscape }}
-    transition:fade
-    bind:this={colorPicker}
-    {style}
-    tabindex="0"
-    bind:clientHeight={pickerHeight}
-    bind:clientWidth={pickerWidth}>
-
-    <div class="palette-panel">
-      <Palette on:change={setSaturationAndValue} {h} {s} {v} {a} />
-    </div>
-
-    <div class="control-panel">
-      <div class="alpha-hue-panel">
-        <div>
-          <CheckedBackground borderRadius="50%" backgroundSize="8px">
-            <div
-              class="selected-color"
-              title={value}
-              style={selectedColorStyle} />
-          </CheckedBackground>
-        </div>
-        <div>
-          <Slider
-            type="hue"
-            value={h}
-            on:change={hue => setHue(hue.detail)}
-            on:dragend={dispatchValue} />
-
-          <CheckedBackground borderRadius="10px" backgroundSize="7px">
-            <Slider
-              type="alpha"
-              value={a}
-              on:change={(alpha, isDrag) => setAlpha(alpha.detail, isDrag)}
-              on:dragend={dispatchValue} />
-          </CheckedBackground>
-
-        </div>
-      </div>
-
-      {#if !disableSwatches}
-        <div transition:fade class="swatch-panel">
-          {#if hasSwatches}
-            {#each swatches as color, idx}
-              {#if idx < 12}
-                <Swatch
-                  {color}
-                  on:click={() => applySwatch(color)}
-                  on:removeswatch={() => removeSwatch(idx)} />
-              {/if}
-            {/each}
-          {/if}
-          {#if swatches.length < 12}
-            <div
-              tabindex="0"
-              title="Add Swatch"
-              use:keyevents={{ Enter: addSwatch }}
-              bind:this={adder}
-              transition:fade
-              class="adder"
-              class:shrink={hasSwatches}
-              on:click={addSwatch}>
-              <span>&plus;</span>
-            </div>
-          {/if}
-        </div>
-      {/if}
-
-      <div class="format-input-panel">
-        <ButtonGroup {format} onclick={changeFormatAndConvert} />
-        <Input
-          {value}
-          on:input={event => handleColorInput(event.target.value)}
-          on:change={dispatchInputChange} />
-      </div>
-    </div>
-
-  </div>
-</Portal>

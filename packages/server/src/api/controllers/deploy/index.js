@@ -1,6 +1,6 @@
 const CouchDB = require("pouchdb")
 const PouchDB = require("../../../db")
-const { uploadAppAssets } = require("./aws")
+const { uploadAppAssets, fetchTemporaryCredentials } = require("./aws")
 
 function replicate(local, remote) {
   return new Promise((resolve, reject) => {
@@ -11,13 +11,18 @@ function replicate(local, remote) {
   })
 }
 
-async function replicateCouch(instanceId, clientId) {
+async function replicateCouch({ instanceId, clientId, credentials }) {
   const databases = [`client_${clientId}`, "client_app_lookup", instanceId]
 
-  const replications = databases.map(local => {
-    const localDb = new PouchDB(local)
+  const replications = databases.map(localDbName => {
+    const localDb = new PouchDB(localDbName)
     const remoteDb = new CouchDB(
-      `${process.env.DEPLOYMENT_COUCH_DB_URL}/${local}`
+      `${process.env.DEPLOYMENT_DB_URL}/${localDbName}`,
+      {
+        auth: {
+          ...credentials,
+        },
+      }
     )
 
     return replicate(localDb, remoteDb)
@@ -32,14 +37,21 @@ exports.deployApp = async function(ctx) {
     const { clientId } = await clientAppLookupDB.get(ctx.user.appId)
 
     ctx.log.info(`Uploading assets for appID ${ctx.user.appId} assets to s3..`)
+    const credentials = await fetchTemporaryCredentials()
+
     await uploadAppAssets({
       clientId,
       appId: ctx.user.appId,
+      ...credentials,
     })
 
     // replicate the DB to the couchDB cluster in prod
     ctx.log.info("Replicating local PouchDB to remote..")
-    await replicateCouch(ctx.user.instanceId, clientId)
+    await replicateCouch({
+      instanceId: ctx.user.instanceId,
+      clientId,
+      credentials: credentials.couchDbCreds,
+    })
 
     ctx.body = {
       status: "SUCCESS",

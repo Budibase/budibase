@@ -20,7 +20,7 @@ async function invalidateCDN(cfDistribution, appId) {
     .promise()
 }
 
-async function fetchTemporaryCredentials() {
+exports.fetchTemporaryCredentials = async function() {
   const response = await fetch(process.env.DEPLOYMENT_CREDENTIALS_URL, {
     method: "POST",
     body: JSON.stringify({
@@ -63,14 +63,13 @@ function walkDir(dirPath, callback) {
   }
 }
 
-exports.uploadAppAssets = async function({ appId }) {
-  const {
-    credentials,
-    accountId,
-    bucket,
-    cfDistribution,
-  } = await fetchTemporaryCredentials()
-
+exports.uploadAppAssets = async function({
+  appId,
+  credentials,
+  bucket,
+  cfDistribution,
+  accountId,
+}) {
   AWS.config.update({
     accessKeyId: credentials.AccessKeyId,
     secretAccessKey: credentials.SecretAccessKey,
