@@ -1,6 +1,6 @@
 {
   "name": "@budibase/server",
-  "version": "0.0.32",
+  "version": "0.1.0",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -42,7 +42,7 @@
   "author": "Michael Shanks",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/client": "^0.0.32",
+    "@budibase/client": "^0.1.0",
     "@budibase/core": "^0.0.32",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
