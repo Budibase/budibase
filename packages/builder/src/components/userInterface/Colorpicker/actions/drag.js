@@ -1,14 +1,14 @@
-export default function(node) {
+export default function (node) {
   function handleMouseDown() {
     window.addEventListener("mousemove", handleMouseMove)
     window.addEventListener("mouseup", handleMouseUp)
+    node.dispatchEvent(new CustomEvent("dragstart"))
   }
 
   function handleMouseMove(event) {
-    let mouseX = event.clientX
     node.dispatchEvent(
       new CustomEvent("drag", {
-        detail: mouseX,
+        detail: { mouseX: event.clientX, mouseY: event.clientY },
       })
     )
   }
