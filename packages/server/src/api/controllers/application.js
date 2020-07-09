@@ -147,7 +147,7 @@ const createEmptyAppPackage = async (ctx, app) => {
     app
   )
 
-  await buildPage(ctx.config, app._id, "main", { 
+  await buildPage(ctx.config, app._id, "main", {
     page: mainJson,
     screens: await loadScreens(newAppFolder, "main"),
   })
