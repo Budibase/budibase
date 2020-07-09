@@ -71,7 +71,6 @@
 
       tooltipContainer = d3.select(`.${chartClass} .metadata-group .vertical-marker-container`);
       tooltipContainer.datum([]).call(tooltip);
-      // tooltip.show()
     }
   }
 
@@ -147,7 +146,7 @@
   }
 
   $: validChartProps = chart ? Object.getOwnPropertyNames(chart) : null;
-  $: canUseTooltip = type === "groupedBar" && tooltipProps && useTooltip;
+  $: canUseTooltip = tooltipProps && useTooltip;
   
 </script>
 
