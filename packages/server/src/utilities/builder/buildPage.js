@@ -55,6 +55,8 @@ const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
     stylesheets: (pkg.page.stylesheets || []).map(stylesheetUrl),
     screenStyles: pkg.screens.filter(s => s._css).map(s => s._css),
     pageStyle: pkg.page._css,
+    appId,
+    pageName,
   }
 
   const indexHtmlTemplate = await readFile(
@@ -63,10 +65,16 @@ const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
   )
 
   const indexHtmlPath = join(appPublicPath, "index.html")
+  const deployableHtmlPath = join(appPublicPath, "index.production.html")
 
   const indexHtml = sqrl.Render(indexHtmlTemplate, templateObj)
+  const deployableHtml = sqrl.Render(indexHtmlTemplate, {
+    ...templateObj,
+    production: true,
+  })
 
   await writeFile(indexHtmlPath, indexHtml, { flag: "w+" })
+  await writeFile(deployableHtmlPath, deployableHtml, { flag: "w+" })
 }
 
 const buildFrontendAppDefinition = async (config, appId, pageName, pkg) => {
