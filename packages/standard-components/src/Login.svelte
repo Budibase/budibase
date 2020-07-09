@@ -71,7 +71,7 @@
 
     <div class="login-button-container">
       <button disabled={loading} on:click={login} class={_buttonClass}>
-        {buttonText || "Login"}
+        {buttonText || 'Login'}
       </button>
     </div>
 
