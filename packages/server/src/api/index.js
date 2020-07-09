@@ -7,6 +7,7 @@ const {
   authRoutes,
   pageRoutes,
   userRoutes,
+  deployRoutes,
   instanceRoutes,
   clientRoutes,
   applicationRoutes,
@@ -82,6 +83,9 @@ router.use(instanceRoutes.allowedMethods())
 
 router.use(workflowRoutes.routes())
 router.use(workflowRoutes.allowedMethods())
+
+router.use(deployRoutes.routes())
+router.use(deployRoutes.allowedMethods())
 // end auth routes
 
 router.use(pageRoutes.routes())

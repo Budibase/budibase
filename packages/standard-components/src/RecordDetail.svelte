@@ -22,7 +22,7 @@
 
     let record
     // if srcdoc, then we assume this is the builder preview
-    if(pathParts.length === 0 || pathParts[0] === "srcdoc") {
+    if (pathParts.length === 0 || pathParts[0] === "srcdoc") {
       record = await fetchFirstRecord()
     } else {
       const id = pathParts[pathParts.length - 1]
@@ -48,5 +48,4 @@
   })
 </script>
 
-<section bind:this={target}>
-</section>
+<section bind:this={target} />

@@ -53,9 +53,9 @@
         state[model] = state[model] ? [...state[model], json] : [json]
         return state
       })
-      
+
       // wipe form, if new record, otherwise update
-      // model to get new _rev 
+      // model to get new _rev
       if (isNew) {
         resetForm()
       } else {
@@ -82,7 +82,7 @@
       }
     }
     record = {
-      modelId: model
+      modelId: model,
     }
   }
 
@@ -118,21 +118,23 @@
 
   onMount(() => {
     const routeParams = _bb.routeParams()
-    recordId = Object.keys(routeParams).length > 0 &&  (routeParams.id || routeParams[0])
+    recordId =
+      Object.keys(routeParams).length > 0 && (routeParams.id || routeParams[0])
     isNew = !recordId || recordId === "new"
 
     if (isNew) {
       record = { modelId: model }
     } else {
       const GET_RECORD_URL = `/api/${model}/records/${recordId}`
-      _bb.api.get(GET_RECORD_URL)
+      _bb.api
+        .get(GET_RECORD_URL)
         .then(response => response.json())
         .then(rec => {
           record = rec
           setForm(rec)
         })
-    }    
-	});
+    }
+  })
 </script>
 
 <form class="form" on:submit|preventDefault>
@@ -164,14 +166,14 @@
       <button on:click={save} class:saved>
         {#if saved}
           <div in:fade>
-            <span class:saved style="margin-right: 5px">🎉</span>Success<span class:saved style="margin-left: 5px">🎉</span>
+            <span class:saved style="margin-right: 5px">🎉</span>
+            Success
+            <span class:saved style="margin-left: 5px">🎉</span>
           </div>
         {:else}
-          <div>
-            {buttonText || "Submit Form"}
-          </div>
+          <div>{buttonText || 'Submit Form'}</div>
         {/if}
-      </button>    
+      </button>
     </div>
   </div>
 </form>
@@ -234,7 +236,7 @@
 
   button.saved {
     background-color: green;
-  } 
+  }
 
   button:hover {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
