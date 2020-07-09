@@ -22,5 +22,4 @@
 </script>
 
 <NotificationDisplay />
-
 <Router {routes} />
