@@ -3,47 +3,84 @@
 	"favicon": "./_shared/favicon.png",
 	"stylesheets": [],
 	"componentLibraries": ["@budibase/standard-components", "@budibase/materialdesign-components"],
-	"props" : {
-		"_id": "private-master-root",
+	"props": {
+    "_id": "private-master-root",
     "_component": "@budibase/standard-components/container",
     "_children": [
       {
-        "_id": "c32dd256-a61c-4c41-876e-95e91c5e3a43",
-        "_component": "@budibase/standard-components/container",
+        "_id": "49e0e519-9e5e-4127-885a-ee6a0a49e2c1",
+        "_component": "@budibase/standard-components/Navigation",
         "_styles": {
-          "normal": {
-            "background": "#e8e8ef",
-            "padding": "8px",
-            "color": "#393C44",
-            "display": "N/A",
-            "flex-direction": "column"
-          },
+          "normal": {},
           "hover": {},
           "active": {},
           "selected": {}
         },
         "_code": "",
-        "className": "",
-        "onLoad": [],
-        "type": "div",
-        "_instanceId": "inst_1808f0d_e1277174d255421784ef2467d470abc8",
-        "_instanceName": "Container",
+        "logoUrl": "http://acmelogos.com/images/logo-8.svg",
+        "title": "",
+        "backgroundColor": "",
+        "color": "",
+        "borderWidth": "",
+        "borderColor": "",
+        "borderStyle": "",
+        "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
+        "_instanceName": "Navigation",
         "_children": [
           {
-            "_id": "fbd9520f-6b34-4e3e-828d-0197144568a1",
-            "_component": "@budibase/standard-components/heading",
+            "_id": "48b35328-4c91-4343-a6a3-1a1fd77b3386",
+            "_component": "@budibase/standard-components/link",
             "_styles": {
-              "normal": {},
+              "normal": {
+                "font-family": "Inter",
+                "font-weight": "400",
+                "color": "#000000",
+                "text-decoration-line": "none",
+                "font-size": "16px"
+              },
               "hover": {},
               "active": {},
               "selected": {}
             },
             "_code": "",
-            "className": "",
-            "text": "{{ name }}",
-            "type": "h1",
-            "_instanceId": "inst_1808f0d_e1277174d255421784ef2467d470abc8",
-            "_instanceName": "Heading",
+            "url": "/",
+            "openInNewTab": false,
+            "text": "Home",
+            "color": "",
+            "hoverColor": "",
+            "underline": false,
+            "fontSize": "",
+            "fontFamily": "initial",
+            "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
+            "_instanceName": "Home Link",
+            "_children": []
+          },
+          {
+            "_id": "d3325634-0945-4387-8bb3-d9d9be186c1c",
+            "_component": "@budibase/standard-components/link",
+            "_styles": {
+              "normal": {
+                "font-family": "Inter",
+                "font-weight": "400",
+                "color": "#000000",
+                "text-decoration-line": "none",
+                "font-size": "16px"
+              },
+              "hover": {},
+              "active": {},
+              "selected": {}
+            },
+            "_code": "",
+            "url": "/screen1",
+            "openInNewTab": false,
+            "text": "Screen 1",
+            "color": "",
+            "hoverColor": "",
+            "underline": false,
+            "fontSize": "",
+            "fontFamily": "initial",
+            "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
+            "_instanceName": "Screen 1 Link",
             "_children": []
           }
         ]
@@ -53,9 +90,10 @@
         "_component": "##builtin/screenslot",
         "_styles": {
           "normal": {
-            "padding": "8px",
+            "padding": "0px",
             "align-items": "flex-start",
-            "height": "100vh"
+            "height": "100vh",
+            "background-image": "None"
           },
           "hover": {},
           "active": {},
@@ -74,14 +112,17 @@
         "flex-direction": "column",
         "align-items": "stretch",
         "justify-content": "flex-start",
-        "height": "100vh"
+        "height": "",
+        "max-width": "",
+        "margin-right": "auto",
+        "margin-left": "auto"
       },
       "selected": {}
     },
     "_code": "",
     "className": "",
     "onLoad": []
-	},
+  },
 	"_css": "",
 	"uiFunctions": ""
 }
