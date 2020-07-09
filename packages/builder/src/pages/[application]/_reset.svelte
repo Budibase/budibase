@@ -1,6 +1,6 @@
 <script>
   import Modal from "svelte-simple-modal"
-  import { store, workflowStore } from "builderStore"
+  import { store, workflowStore, tourStore } from "builderStore"
   import SettingsLink from "components/settings/Link.svelte"
   import { get } from "builderStore/api"
 
@@ -42,6 +42,8 @@
         activeTopNav.path
       ] = window.location.pathname.replace("/_builder", "")
       $goto(state.previousTopNavPath[path] || path)
+
+      $tourStore.tour.next()
       return state
     })
   }

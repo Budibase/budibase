@@ -1,5 +1,5 @@
 <script>
-  import { store, backendUiStore } from "builderStore"
+  import { store, backendUiStore, tourStore } from "builderStore"
   import ComponentsHierarchy from "components/userInterface/ComponentsHierarchy.svelte"
   import PageLayout from "components/userInterface/PageLayout.svelte"
   import PagesList from "components/userInterface/PagesList.svelte"
@@ -7,6 +7,8 @@
 
   const newScreen = () => {
     newScreenPicker.show()
+
+    $tourStore.tour.cancel()
   }
 
   let newScreenPicker

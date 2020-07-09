@@ -1,6 +1,6 @@
 <script>
   import * as blockDefinitions from "constants/backend"
-  import { backendUiStore } from "builderStore"
+  import { backendUiStore, tourStore } from "builderStore"
   import Block from "components/common/Block.svelte"
 
   const HEADINGS = [
@@ -19,6 +19,10 @@
   function addField(blockDefinition) {
     backendUiStore.actions.models.addField(blockDefinition)
     backendUiStore.actions.models.fetch()
+
+    setTimeout(() => {
+      $tourStore.tour.next()
+    })
   }
 </script>
 

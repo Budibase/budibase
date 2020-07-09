@@ -50,7 +50,7 @@
 
 <div class="items-root">
   {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
-    <div class="hierarchy" id="shep-create-new-table">
+    <div class="hierarchy" id="shep-builder-left-panel">
       <div class="components-list-container">
         <Switcher
           headings={HEADINGS}
@@ -81,6 +81,7 @@
               {/each}
             </div>
           {:else if selectedTab === 'ADD'}
+            {$tourStore.tour.next()}
             <BlockNavigator />
           {/if}
         </Switcher>

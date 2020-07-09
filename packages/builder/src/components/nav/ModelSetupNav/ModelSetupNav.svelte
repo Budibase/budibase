@@ -87,6 +87,10 @@
     notifier.success(
       "Success! Your changes have been saved. Please continue on with your greatness."
     )
+
+    setTimeout(() => {
+      $tourStore.tour.next()
+    }, 500)
   }
 </script>
 
@@ -101,6 +105,7 @@
           <input
             type="text"
             class="budibase__input"
+            on:blur={$tourStore.tour.next}
             bind:value={$backendUiStore.draftModel.name} />
         </div>
         <div class="titled-input">

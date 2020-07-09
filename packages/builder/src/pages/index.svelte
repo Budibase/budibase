@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { store } from "builderStore"
+  import { store, tourStore } from "builderStore"
   import AppList from "components/start/AppList.svelte"
   import { onMount } from "svelte"
   import ActionButton from "components/common/ActionButton.svelte"
@@ -41,6 +41,10 @@
         closeOnOuterClick: true,
       }
     )
+  }
+
+  if ($tourStore.tour) {
+    $tourStore.tour.cancel()
   }
 </script>
 
