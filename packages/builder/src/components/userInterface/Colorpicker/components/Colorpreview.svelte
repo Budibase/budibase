@@ -47,7 +47,8 @@
 
   function onColorChange(color) {
     value = color.detail
-    dispatch("change", color.detail)
+    const fn = debounce(() => dispatch("change", color.detail), 300)
+    fn()
   }
 
   function calculateDimensions() {
