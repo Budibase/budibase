@@ -11,7 +11,6 @@
   export let a = 1
 
   let palette
-  let cursor = "grab"
 
   let paletteHeight,
     paletteWidth = 0
@@ -35,8 +34,7 @@
   `
   $: style = `background: ${paletteGradient};`
 
-  $: pickerStyle = `transform: translate(${pickerX - 8}px, ${pickerY -
-    8}px); cursor: ${cursor};`
+  $: pickerStyle = `transform: translate(${pickerX - 8}px, ${pickerY - 8}px);`
 </script>
 
 <CheckedBackground width="100%">
@@ -52,9 +50,7 @@
     {style}>
     <div
       use:drag
-      on:dragstart={() => (cursor = 'grabbing')}
       on:drag={event => handePaletteChange(event.detail)}
-      on:dragend={() => (cursor = 'grab')}
       class="picker"
       style={pickerStyle} />
   </div>
@@ -71,10 +67,15 @@
 
   .picker {
     position: absolute;
+    cursor: grab;
     width: 10px;
     height: 10px;
     background: transparent;
     border: 2px solid white;
     border-radius: 50%;
+  }
+
+  .picker:active {
+    cursor: grabbing;
   }
 </style>
