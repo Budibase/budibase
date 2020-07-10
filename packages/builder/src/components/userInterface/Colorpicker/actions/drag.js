@@ -1,4 +1,4 @@
-export default function (node) {
+export default function(node) {
   function handleMouseDown() {
     window.addEventListener("mousemove", handleMouseMove)
     window.addEventListener("mouseup", handleMouseUp)
