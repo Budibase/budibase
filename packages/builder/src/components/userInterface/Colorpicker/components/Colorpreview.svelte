@@ -28,6 +28,8 @@
   let errorMsg = null
 
   const dispatch = createEventDispatcher()
+  const dispatchValue = value =>
+    debounce(() => dispatch("change", value), 300, true)
 
   beforeUpdate(() => {
     format = getColorFormat(value)
@@ -47,8 +49,7 @@
 
   function onColorChange(color) {
     value = color.detail
-    const fn = debounce(() => dispatch("change", color.detail), 300)
-    fn()
+    dispatchValue(value)
   }
 
   function calculateDimensions() {

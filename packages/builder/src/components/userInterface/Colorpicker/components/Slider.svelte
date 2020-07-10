@@ -11,16 +11,11 @@
   let sliderWidth = 0
   let upperLimit = type === "hue" ? 360 : 1
   let incrementFactor = type === "hue" ? 1 : 0.01
-  let cursor = "grab"
 
   const isWithinLimit = value => value >= 0 && value <= upperLimit
 
   function onSliderChange({ mouseX }, isDrag = false) {
     const { left, width } = slider.getBoundingClientRect()
-
-    if (isDrag && cursor !== "grabbing") {
-      cursor = "grabbing"
-    }
 
     let clickPosition = mouseX - left
 
@@ -48,19 +43,14 @@
     }
   }
 
-  function handleDragStart() {
-    cursor = "grabbing"
-  }
-
   function handleDragEnd() {
-    cursor = "grab"
     dispatch("dragend")
   }
 
   $: thumbPosition =
     type === "hue" ? sliderWidth * (value / 360) : sliderWidth * value
 
-  $: style = `transform: translateX(${thumbPosition - 6}px); cursor: ${cursor};`
+  $: style = `transform: translateX(${thumbPosition - 6}px);`
 </script>
 
 <div
@@ -75,7 +65,6 @@
   <div
     use:drag
     on:drag={e => onSliderChange(e.detail, true)}
-    on:dragstart={handleDragStart}
     on:dragend={handleDragEnd}
     class="slider-thumb"
     {style} />
@@ -121,5 +110,9 @@
     border-radius: 50%;
     background-color: #ffffff;
     cursor: grab;
+  }
+
+  .slider-thumb:active {
+    cursor: grabbing;
   }
 </style>
