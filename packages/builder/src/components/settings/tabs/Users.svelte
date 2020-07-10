@@ -87,7 +87,8 @@
         {/each}
       </ul>
     {:catch error}
-      err0r
+      Something went wrong when trying to fetch users. Please refresh the page
+      and try again.
     {/await}
   </div>
 </div>
