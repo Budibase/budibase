@@ -118,6 +118,11 @@
     top: 12px;
     right: 12px;
   }
+  .create-button :global(button) {
+    font-size: var(--font-size-sm);
+    min-width: 100px;
+    border-radius: var(--rounded-small);
+  }
   .title {
     font-size: 14px;
     font-weight: 500;
