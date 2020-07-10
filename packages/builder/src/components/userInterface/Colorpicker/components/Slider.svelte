@@ -14,8 +14,9 @@
 
   const isWithinLimit = value => value >= 0 && value <= upperLimit
 
-  function onSliderChange(mouseX, isDrag = false) {
+  function onSliderChange({ mouseX }, isDrag = false) {
     const { left, width } = slider.getBoundingClientRect()
+
     let clickPosition = mouseX - left
 
     let percentageClick = (clickPosition / sliderWidth).toFixed(2)
@@ -42,6 +43,10 @@
     }
   }
 
+  function handleDragEnd() {
+    dispatch("dragend")
+  }
+
   $: thumbPosition =
     type === "hue" ? sliderWidth * (value / 360) : sliderWidth * value
 
@@ -53,14 +58,14 @@
   bind:this={slider}
   use:keyevents={{ 37: handleLeftKey, 39: handleRightKey }}
   bind:clientWidth={sliderWidth}
-  on:click={event => onSliderChange(event.clientX)}
+  on:click={event => onSliderChange({ mouseX: event.clientX })}
   class="color-format-slider"
   class:hue={type === 'hue'}
   class:alpha={type === 'alpha'}>
   <div
     use:drag
     on:drag={e => onSliderChange(e.detail, true)}
-    on:dragend
+    on:dragend={handleDragEnd}
     class="slider-thumb"
     {style} />
 </div>
@@ -105,5 +110,9 @@
     border-radius: 50%;
     background-color: #ffffff;
     cursor: grab;
+  }
+
+  .slider-thumb:active {
+    cursor: grabbing;
   }
 </style>
