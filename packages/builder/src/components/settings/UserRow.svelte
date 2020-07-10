@@ -39,4 +39,16 @@
     grid-gap: 18px;
     grid-template-columns: 1fr 1fr 1fr;
   }
+  .inputs :global(input) {
+    padding: 10px 12px;
+    border-radius: var(--rounded-small);
+  }
+  .inputs :global(select) {
+    padding: 9px 12px;
+    border-radius: var(--rounded-small);
+  }
+  .inputs :global(button) {
+    border-radius: var(--rounded-small);
+    height: initial;
+  }
 </style>
