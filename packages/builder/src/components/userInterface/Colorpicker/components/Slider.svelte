@@ -1,6 +1,6 @@
 <script>
   import { onMount, createEventDispatcher } from "svelte"
-  import {drag, keyevents} from "../actions"
+  import { drag, keyevents } from "../actions"
 
   export let value = 1
   export let type = "hue"
@@ -21,15 +21,14 @@
     let percentageClick = (clickPosition / sliderWidth).toFixed(2)
 
     if (percentageClick >= 0 && percentageClick <= 1) {
-      
       let value = type === "hue" ? 360 * percentageClick : percentageClick
       dispatch("change", { color: value, isDrag })
     }
   }
-  
+
   function handleLeftKey() {
     let v = value - incrementFactor
-    if(isWithinLimit(v)) {
+    if (isWithinLimit(v)) {
       value = v
       dispatch("change", { color: value })
     }
@@ -37,13 +36,12 @@
 
   function handleRightKey() {
     let v = value + incrementFactor
-    if(isWithinLimit(v)) {
+    if (isWithinLimit(v)) {
       value = v
       dispatch("change", { color: value })
-
     }
   }
-  
+
   $: thumbPosition =
     type === "hue" ? sliderWidth * (value / 360) : sliderWidth * value
 
@@ -53,7 +51,7 @@
 <div
   tabindex="0"
   bind:this={slider}
-  use:keyevents={{37: handleLeftKey, 39: handleRightKey}}
+  use:keyevents={{ 37: handleLeftKey, 39: handleRightKey }}
   bind:clientWidth={sliderWidth}
   on:click={event => onSliderChange(event.clientX)}
   class="color-format-slider"
@@ -77,7 +75,7 @@
     margin: 10px 0px;
     border: 1px solid #e8e8ef;
     cursor: pointer;
-    outline-color:  #003cb0;
+    outline-color: #003cb0;
     outline-width: thin;
   }
 
