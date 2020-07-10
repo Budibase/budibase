@@ -21,6 +21,7 @@ module.exports = async (ctx, next) => {
     try {
       const jwtPayload = jwt.verify(builderToken, ctx.config.jwtSecret)
       ctx.isAuthenticated = jwtPayload.accessLevelId === BUILDER_LEVEL_ID
+      ctx.isBuilder = true
       ctx.user = {
         ...jwtPayload,
         accessLevel: await getAccessLevel(
