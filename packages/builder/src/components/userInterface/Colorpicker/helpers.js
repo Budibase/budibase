@@ -13,8 +13,12 @@ export const convertCamel = str => {
   return str.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`)
 }
 
-export const debounce = (fn, milliseconds) => {
-  return () => {
+export const debounce = (fn, milliseconds, callImmediately) => {
+  const debouncedFn = () => {
     setTimeout(fn, milliseconds)
   }
+  if (callImmediately) {
+    debouncedFn()
+  }
+  return debouncedFn
 }
