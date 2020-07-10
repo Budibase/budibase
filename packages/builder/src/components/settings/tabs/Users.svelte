@@ -87,7 +87,8 @@
         {/each}
       </ul>
     {:catch error}
-      err0r
+      Something went wrong when trying to fetch users. Please refresh the page
+      and try again.
     {/await}
   </div>
 </div>
@@ -102,20 +103,21 @@
     display: grid;
     grid-gap: 12px;
     border-radius: 5px;
-    background-color: var(--grey-2);
+    background-color: var(--grey-1);
     padding: 12px 12px 18px 12px;
   }
   .background.create {
     background-color: var(--blue-light);
   }
-  .inputs :global(select) {
-    padding: 12px 9px;
-    height: initial;
-  }
   .create-button {
     position: absolute;
     top: 12px;
     right: 12px;
+  }
+  .create-button :global(button) {
+    font-size: var(--font-size-sm);
+    min-width: 100px;
+    border-radius: var(--rounded-small);
   }
   .title {
     font-size: 14px;
@@ -125,6 +127,14 @@
     display: grid;
     grid-gap: 18px;
     grid-template-columns: 1fr 1fr 1fr;
+  }
+  .inputs :global(input) {
+    padding: 10px 12px;
+    border-radius: var(--rounded-small);
+  }
+  .inputs :global(select) {
+    padding: 9px 12px;
+    border-radius: var(--rounded-small);
   }
   ul {
     list-style: none;
