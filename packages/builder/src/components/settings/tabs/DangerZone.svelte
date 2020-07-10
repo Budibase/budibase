@@ -30,7 +30,7 @@
     on:input={e => (value = e.target.value)}
     thin
     disabled={loading}
-    placeholder="Enter your name"
+    placeholder=""
     label="Type DELETE into the textbox, then click the following button to
     delete your web app:" />
 
@@ -46,7 +46,7 @@
 <style>
   .background {
     display: grid;
-    grid-gap: var(--space);
+    grid-gap: 16px;
     border-radius: 5px;
     background-color: var(--light-grey);
     padding: 12px 12px 18px 12px;
