@@ -31,11 +31,11 @@
   }
 
   .selected {
-    background-color: var(--blue-light);
+    background-color: var(--grey-2);
   }
 
   div:hover {
-    background-color: var(--blue-light);
+    background-color: var(--grey-1);
     cursor: pointer;
   }
 

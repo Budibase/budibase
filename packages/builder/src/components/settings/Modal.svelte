@@ -55,6 +55,7 @@
 <style>
   .container {
     position: relative;
+    height: 36rem;
   }
 
   .close-button {
@@ -88,9 +89,10 @@
     width: 20px;
     padding: 10px;
     background-color: var(--blue-light);
+    color: var(--grey-7);
   }
   .body {
-    padding: 40px 40px 80px 40px;
+    padding: 40px 40px 40px 40px;
     display: grid;
     grid-gap: 20px;
   }

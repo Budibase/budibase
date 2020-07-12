@@ -15,7 +15,7 @@
 
   input {
     width: 175px;
-    font-size: 13px;
+    font-size: 14px;
     background: #f1f3f4;
     border-radius: 8px;
     height: 20px;
@@ -24,5 +24,6 @@
     text-align: center;
     border: 1px solid #dadada;
     font-weight: 550;
+    font-family: sans-serif;
   }
 </style>
