@@ -5,7 +5,7 @@ export default `<html>
     <style>
       body, html {
         height: 100%!important;
-        font-family: Roboto !important;
+        font-family: Inter !important;
       }
       *, *:before, *:after {
         box-sizing: border-box;
@@ -26,13 +26,16 @@ export default `<html>
         }
 
         .container-screenslot-placeholder {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           padding: 20px;
           text-align: center;
           border-style: dashed !important;
           border-width: 1px;
-          color: #806fde;
-          background: #e9e6ff44;
-          height: 100%;
+          color: #000000;
+          background: #fafafa;
+          height: 94%;
         }
 
         .container-screenslot-placeholder span {

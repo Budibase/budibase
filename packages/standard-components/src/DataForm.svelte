@@ -166,9 +166,7 @@
       <button on:click={save} class:saved>
         {#if saved}
           <div in:fade>
-            <span class:saved style="margin-right: 5px">🎉</span>
-            Success
-            <span class:saved style="margin-left: 5px">🎉</span>
+            <span class:saved>Success</span>
           </div>
         {:else}
           <div>{buttonText || 'Submit Form'}</div>
@@ -187,14 +185,13 @@
 
   .form-content {
     margin-bottom: 20px;
+    width: 100%;
   }
 
   .input {
-    width: 600px;
-    height: 40px;
     border-radius: 5px;
     border: 1px solid #e6e6e6;
-    padding: 6px 12px 6px 12px;
+    padding: 1rem;
     font-size: 16px;
   }
 
@@ -244,7 +241,8 @@
   }
 
   button.saved {
-    background-color: green;
+    background-color: #84c991;
+    border: none;
   }
 
   button:hover {
