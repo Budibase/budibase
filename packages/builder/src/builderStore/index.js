@@ -11,7 +11,7 @@ export const initialise = async () => {
   try {
     if (process.env.NODE_ENV === "production") {
       posthog.init(process.env.POSTHOG_TOKEN, {
-        api_host: process.env.POSTHOG_URL
+        api_host: process.env.POSTHOG_URL,
       })
     }
   } catch (err) {

@@ -9,7 +9,7 @@
   async function updateKey([key, value]) {
     const response = await api.put(`/api/keys/${key}`, { value })
     const res = await response.json()
-    if (key === "budibase") posthog.identify(value);
+    if (key === "budibase") posthog.identify(value)
     keys = { ...keys, ...res }
   }
 
