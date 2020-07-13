@@ -166,9 +166,7 @@
       <button on:click={save} class:saved>
         {#if saved}
           <div in:fade>
-            <span class:saved style="margin-right: 5px">🎉</span>
-            Success
-            <span class:saved style="margin-left: 5px">🎉</span>
+            <span class:saved>Success</span>
           </div>
         {:else}
           <div>{buttonText || 'Submit Form'}</div>
@@ -235,7 +233,8 @@
   }
 
   button.saved {
-    background-color: green;
+    background-color: #84c991;
+    border: none;
   }
 
   button:hover {
