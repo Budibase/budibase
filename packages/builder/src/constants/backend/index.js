@@ -87,8 +87,38 @@ export const BLOCKS = {
       presence: false,
     },
   },
+  COMPANY: {
+    name: "Company",
+    icon: "ri-text",
+    type: "string",
+    constraints: {
+      type: "string",
+      length: {},
+      presence: false,
+    },
+  },
+  EMAIL: {
+    name: "Email",
+    icon: "ri-text",
+    type: "string",
+    constraints: {
+      type: "string",
+      length: {},
+      presence: false,
+    },
+  },
   PHONE_NUMBER: {
-    name: "Phone Number",
+    name: "Phone No.",
+    icon: "ri-number-1",
+    type: "number",
+    constraints: {
+      type: "number",
+      presence: false,
+      numericality: {},
+    },
+  },
+  VALUE: {
+    name: "Value",
     icon: "ri-number-1",
     type: "number",
     constraints: {

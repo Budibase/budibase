@@ -91,7 +91,7 @@
   }
 
   .workflow-item.selected {
-    background: var(--blue-light);
+    background: var(--grey-2);
   }
 
   .new-workflow-button {

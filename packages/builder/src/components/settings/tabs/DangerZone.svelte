@@ -1,7 +1,6 @@
 <script>
   import { params, goto } from "@sveltech/routify"
   import { Input, TextArea, Button } from "@budibase/bbui"
-  import Title from "../TabTitle.svelte"
   import { del } from "builderStore/api"
 
   let value = ""
@@ -23,20 +22,21 @@
   }
 </script>
 
-<Title>Danger Zone</Title>
 <div class="background">
+  <p>
+    Type DELETE into the textbox, then click the following button to delete your
+    web app:
+  </p>
   <Input
     on:change={e => (value = e.target.value)}
     on:input={e => (value = e.target.value)}
     thin
     disabled={loading}
-    placeholder=""
-    label="Type DELETE into the textbox, then click the following button to
-    delete your web app:" />
+    placeholder="" />
 
   <Button
     disabled={value !== 'DELETE' || loading}
-    primary
+    red
     wide
     on:click={deleteApp}>
     Delete Entire Web App
@@ -48,8 +48,10 @@
     display: grid;
     grid-gap: 16px;
     border-radius: 5px;
-    background-color: var(--light-grey);
-    padding: 12px 12px 18px 12px;
+    padding: 12px 0px;
+  }
+  p {
+    margin: 0;
   }
   .background :global(button) {
     max-width: 100%;

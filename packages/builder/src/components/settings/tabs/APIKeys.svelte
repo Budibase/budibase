@@ -2,7 +2,6 @@
   import { Input, Button } from "@budibase/bbui"
   import { store } from "builderStore"
   import api from "builderStore/api"
-  import Title from "../TabTitle.svelte"
 
   let keys = { budibase: "", sendGrid: "" }
 
@@ -22,7 +21,6 @@
   fetchKeys()
 </script>
 
-<Title>API Keys</Title>
 <div class="container">
   <div class="background">
     <Input
@@ -49,7 +47,6 @@
   }
   .background {
     border-radius: 5px;
-    background-color: var(--light-grey);
-    padding: 12px 12px 18px 12px;
+    padding: 12px 0px;
   }
 </style>

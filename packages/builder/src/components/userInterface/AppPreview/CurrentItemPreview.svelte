@@ -72,7 +72,7 @@
               },
               _code: "",
               className: "",
-              text: "Screenslot",
+              text: "Screen Slot",
               type: "h1",
               _instanceId: "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
               _instanceName: "Heading",

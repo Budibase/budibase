@@ -37,7 +37,7 @@
 
 <nav use:cssVars={cssVariables}>
   <a href="/">
-    <img class="logo" alt="logo" src={logoUrl} height="30" />
+    <img class="logo" alt="logo" src={logoUrl} height="48" />
     <span>{title}</span>
   </a>
   <div class="menu-items" bind:this={itemContainer} />
@@ -51,7 +51,7 @@
     display: flex;
     font-weight: bold;
     justify-content: space-between;
-    padding: 20px 0 20px 40px;
+    padding: 20px 0px;
   }
 
   nav > a {
@@ -63,8 +63,7 @@
   }
 
   nav a img {
-    border-radius: 15px;
-    margin-right: 15px;
+    margin-right: 16px;
   }
   .menu-items {
     display: flex;
