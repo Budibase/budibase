@@ -125,7 +125,7 @@
   }
 
   function handleColorInput(text) {
-    let format = getColorFormat(text)
+    format = getColorFormat(text)
     if (format) {
       value = text
       convertAndSetHSVA()
