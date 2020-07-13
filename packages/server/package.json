@@ -29,7 +29,7 @@
     "initialise": "node ../cli/bin/budi init -q",
     "run:docker": "node src/index",
     "budi": "node ../cli/bin/budi",
-    "dev:builder": "nodemon ../cli/bin/budi run",
+    "dev:builder": "nodemon src/index.js",
     "electron": "electron src/electron.js",
     "build:electron": "electron-builder --dir",
     "publish:electron": "electron-builder -mwl --publish always",
@@ -81,7 +81,7 @@
     "electron-builder-notarize": "^1.1.2",
     "eslint": "^6.8.0",
     "jest": "^24.8.0",
-    "nodemon": "^2.0.2",
+    "nodemon": "^2.0.4",
     "pouchdb-adapter-memory": "^7.2.1",
     "server-destroy": "^1.0.1",
     "supertest": "^4.0.2"
