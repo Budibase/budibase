@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell } = require("electron")
+const { app, BrowserWindow, shell, dialog } = require("electron")
 const { join } = require("path")
 const isDev = require("electron-is-dev")
 const { autoUpdater } = require("electron-updater")
@@ -72,10 +72,11 @@ autoUpdater.on("update-downloaded", (event, releaseNotes, releaseName) => {
     buttons: ["Restart", "Later"],
     title: "Budibase Update Available",
     message: process.platform === "win32" ? releaseNotes : releaseName,
-    detail: "A new version of the budibase builder has been downloaded. Restart the application to apply the updates."
+    detail:
+      "A new version of the budibase builder has been downloaded. Restart the application to apply the updates.",
   }
 
-  dialog.showMessageBox(dialogOpts).then((returnValue) => {
+  dialog.showMessageBox(dialogOpts).then(returnValue => {
     if (returnValue.response === 0) autoUpdater.quitAndInstall()
   })
 })
@@ -85,5 +86,4 @@ autoUpdater.on("error", message => {
   console.error(message)
 })
 
-
-startApp();
+startApp()

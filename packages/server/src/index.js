@@ -1,12 +1,12 @@
 const { resolve, join } = require("path")
-const { homedir } = require("os");
-const { app } = require("electron");
+const { homedir } = require("os")
+const { app } = require("electron")
 
 async function runServer() {
-  const homeDir = app ? app.getPath("home") : homedir(); 
+  const homeDir = app ? app.getPath("home") : homedir()
 
   const budibaseDir = join(homeDir, ".budibase")
-  process.env.BUDIBASE_DIR = budibaseDir 
+  process.env.BUDIBASE_DIR = budibaseDir
 
   require("dotenv").config({ path: resolve(budibaseDir, ".env") })
 
