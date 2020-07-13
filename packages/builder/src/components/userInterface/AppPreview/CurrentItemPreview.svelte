@@ -72,11 +72,7 @@
               },
               _code: "",
               className: "",
-<<<<<<< HEAD
-              text: "Screenslot",
-=======
               text: "Screen Slot",
->>>>>>> master
               type: "h1",
               _instanceId: "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
               _instanceName: "Heading",
@@ -144,10 +140,10 @@
     styles = styles
   }
 
-  $: stylesheetLinks = pipe($store.pages.stylesheets, [
-    map(s => `<link rel="stylesheet" href="${s}"/>`),
-    join("\n"),
-  ])
+  $: stylesheetLinks = pipe(
+    $store.pages.stylesheets,
+    [map(s => `<link rel="stylesheet" href="${s}"/>`), join("\n")]
+  )
 
   $: screensExist =
     $store.currentPreviewItem._screens &&
