@@ -303,6 +303,16 @@ export default {
                 key: "logo",
                 control: Input,
               },
+              {
+                label: "Title",
+                key: "title",
+                control: Input,
+              },
+              {
+                label: "Button Text",
+                key: "buttonText",
+                control: Input,
+              },
             ],
           },
         },
@@ -335,6 +345,16 @@ export default {
                     key: "model",
                     control: ModelSelect,
                   },
+                  {
+                    label: "Title",
+                    key: "title",
+                    control: Input,
+                  },
+                  {
+                    label: "Button Text",
+                    key: "buttonText",
+                    control: Input,
+                  },
                 ],
               },
               template: {
@@ -354,6 +374,16 @@ export default {
                     label: "Table",
                     key: "model",
                     control: ModelSelect,
+                  },
+                  {
+                    label: "Title",
+                    key: "title",
+                    control: Input,
+                  },
+                  {
+                    label: "Button Text",
+                    key: "buttonText",
+                    control: Input,
                   },
                 ],
               },
@@ -442,7 +472,7 @@ export default {
       children: [
         {
           _component: "##builtin/screenslot",
-          name: "Screenslot",
+          name: "Screen Slot",
           description:
             "This component is a placeholder for the rendering of a screen within a page.",
           icon: "ri-crop-2-fill",

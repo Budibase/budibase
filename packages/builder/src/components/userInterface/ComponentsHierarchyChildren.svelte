@@ -73,7 +73,7 @@
     grid-template-columns: 1fr auto auto auto;
     padding: 0px 5px 0px 15px;
     margin: auto 0px;
-    border-radius: 3px;
+    border-radius: 5px;
     height: 36px;
     align-items: center;
   }

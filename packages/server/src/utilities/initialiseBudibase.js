@@ -48,18 +48,7 @@ const createClientDatabase = async opts => {
   const clientDb = require("../db/clientDb")
 
   if (!opts.clientId || opts.clientId === "new") {
-    // cannot be a top level require as it
-    // will cause environment module to be loaded prematurely
-    const CouchDB = require("../db/client")
-    const existing = await CouchDB.allDbs()
-
-    let i = 0
-    let isExisting = true
-    while (isExisting) {
-      i += 1
-      opts.clientId = i.toString()
-      isExisting = existing.includes(clientDb.name(opts.clientId))
-    }
+    opts.clientId = uuid.v4()
   }
 
   await clientDb.create(opts.clientId)

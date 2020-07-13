@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell } = require("electron")
+const { app, BrowserWindow, shell, dialog } = require("electron")
 const { join } = require("path")
 const isDev = require("electron-is-dev")
 const { autoUpdater } = require("electron-updater")
@@ -10,16 +10,10 @@ const { budibaseAppsDir } = require("./utilities/budibaseDir")
 const budibaseDir = budibaseAppsDir()
 const envFile = join(budibaseDir, ".env")
 
-if (!existsSync(envFile)) {
-  // assume not initialised
-  initialiseBudibase({ dir: budibaseDir }).then(() => {
-    startApp()
-  })
-} else {
-  startApp()
-}
-
-function startApp() {
+async function startApp() {
+  if (!existsSync(envFile)) {
+    await initialiseBudibase({ dir: budibaseDir })
+  }
   // evict environment from cache, so it reloads when next asked
   delete require.cache[require.resolve("./environment")]
   require("dotenv").config({ path: envFile })
@@ -71,3 +65,25 @@ function startApp() {
     if (win === null) createWindow()
   })
 }
+
+autoUpdater.on("update-downloaded", (event, releaseNotes, releaseName) => {
+  const dialogOpts = {
+    type: "info",
+    buttons: ["Restart", "Later"],
+    title: "Budibase Update Available",
+    message: process.platform === "win32" ? releaseNotes : releaseName,
+    detail:
+      "A new version of the budibase builder has been downloaded. Restart the application to apply the updates.",
+  }
+
+  dialog.showMessageBox(dialogOpts).then(returnValue => {
+    if (returnValue.response === 0) autoUpdater.quitAndInstall()
+  })
+})
+
+autoUpdater.on("error", message => {
+  console.error("There was a problem updating the application")
+  console.error(message)
+})
+
+startApp()

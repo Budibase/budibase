@@ -108,10 +108,12 @@
             on:blur={$tourStore.tour.next}
             bind:value={$backendUiStore.draftModel.name} />
         </div>
+        <!-- dont have this capability yet..
         <div class="titled-input">
           <header>Import Data</header>
           <Button wide secondary>Import CSV</Button>
         </div>
+        -->
       {/if}
       <footer id="shep-setup-save">
         <Button disabled={!edited} green={edited} wide on:click={saveModel}>

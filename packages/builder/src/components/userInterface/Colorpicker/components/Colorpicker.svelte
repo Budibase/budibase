@@ -120,12 +120,12 @@
   }
 
   function changeFormatAndConvert(f) {
-    format = f
+    format = f.detail
     value = convertHsvaToFormat([h, s, v, a], format)
   }
 
   function handleColorInput(text) {
-    let format = getColorFormat(text)
+    format = getColorFormat(text)
     if (format) {
       value = text
       convertAndSetHSVA()
@@ -251,7 +251,7 @@
       {/if}
 
       <div class="format-input-panel">
-        <ButtonGroup {format} onclick={changeFormatAndConvert} />
+        <ButtonGroup {format} on:click={changeFormatAndConvert} />
         <Input
           {value}
           on:input={event => handleColorInput(event.target.value)}

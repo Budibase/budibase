@@ -11,9 +11,11 @@ const staticRoutes = require("./static")
 const componentRoutes = require("./component")
 const workflowRoutes = require("./workflow")
 const accesslevelRoutes = require("./accesslevel")
+const deployRoutes = require("./deploy")
 const apiKeysRoutes = require("./apikeys")
 
 module.exports = {
+  deployRoutes,
   authRoutes,
   pageRoutes,
   userRoutes,

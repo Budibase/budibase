@@ -63,7 +63,7 @@
 
 .budibase__nav-item.selected {
     color: var(--ink);
-    background: var(--blue-light);
+    background: var(--grey-2);
 }
 
 .budibase__nav-item:hover {

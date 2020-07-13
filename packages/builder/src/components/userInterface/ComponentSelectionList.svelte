@@ -61,8 +61,9 @@
 
 <style>
   .panel {
-    padding: 20px 0px;
-    display: flex;
-    flex-wrap: wrap;
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 20px;
   }
 </style>
