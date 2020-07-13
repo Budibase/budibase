@@ -1,11 +1,17 @@
-const { resolve } = require("path")
+const { resolve, join } = require("path")
+const { homedir } = require("os")
+const { app } = require("electron")
 
 async function runServer() {
-  const budibaseDir = "~/.budibase"
+  const homeDir = app ? app.getPath("home") : homedir()
 
-  process.env.BUDIBASE_DIR = resolve(budibaseDir)
+  const budibaseDir = join(homeDir, ".budibase")
+  process.env.BUDIBASE_DIR = budibaseDir
+
+  require("dotenv").config({ path: resolve(budibaseDir, ".env") })
 
   const server = await require("./app")()
+
   server.on("close", () => console.log("Server Closed"))
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
 }
