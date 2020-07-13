@@ -35,19 +35,19 @@ exports.serveApp = async function(ctx) {
 
   // only set the appId cookie for /appId .. we COULD check for valid appIds
   // but would like to avoid that DB hit
-  // const looksLikeAppId = /^[0-9a-f]{32}$/.test(appId)
-  // if (looksLikeAppId && !ctx.isAuthenticated) {
-  //   const anonUser = {
-  //     userId: "ANON",
-  //     accessLevelId: ANON_LEVEL_ID,
-  //     appId,
-  //   }
-  //   const anonToken = jwt.sign(anonUser, ctx.config.jwtSecret)
-  //   ctx.cookies.set("budibase:token", anonToken, {
-  //     path: "/",
-  //     httpOnly: false,
-  //   })
-  // }
+  const looksLikeAppId = /^[0-9a-f]{32}$/.test(appId)
+  if (looksLikeAppId && !ctx.isAuthenticated) {
+    const anonUser = {
+      userId: "ANON",
+      accessLevelId: ANON_LEVEL_ID,
+      appId,
+    }
+    const anonToken = jwt.sign(anonUser, ctx.config.jwtSecret)
+    ctx.cookies.set("budibase:token", anonToken, {
+      path: "/",
+      httpOnly: false,
+    })
+  }
 
   if (process.env.CLOUD) {
     const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file ||
