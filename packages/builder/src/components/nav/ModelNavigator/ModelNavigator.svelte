@@ -35,9 +35,7 @@
   }
 
   function setupForNewModel() {
-    setTimeout(() => {
-      $tourStore.tour.next()
-    }, 500)
+    $tourStore.tour.next()
 
     backendUiStore.update(state => {
       state.selectedModel = {}

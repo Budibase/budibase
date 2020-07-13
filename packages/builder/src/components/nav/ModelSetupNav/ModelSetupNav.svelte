@@ -88,9 +88,7 @@
       "Success! Your changes have been saved. Please continue on with your greatness."
     )
 
-    setTimeout(() => {
-      $tourStore.tour.next()
-    }, 500)
+    $tourStore.tour.next()
   }
 </script>
 

@@ -119,7 +119,6 @@
   })
 
   setTimeout(() => {
-    console.log($tourStore.tour)
     $tourStore.tour.start()
   }, 500)
 </script>

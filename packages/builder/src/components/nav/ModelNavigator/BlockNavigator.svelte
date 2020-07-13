@@ -20,9 +20,7 @@
     backendUiStore.actions.models.addField(blockDefinition)
     backendUiStore.actions.models.fetch()
 
-    setTimeout(() => {
-      $tourStore.tour.next()
-    })
+    $tourStore.tour.next()
   }
 </script>
 
