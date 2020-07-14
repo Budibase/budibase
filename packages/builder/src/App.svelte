@@ -14,8 +14,8 @@
   }
 
   onMount(async () => {
-    window.addEventListener("error", showErrorBanner)
-    window.addEventListener("unhandledrejection", showErrorBanner)
+    // window.addEventListener("error", showErrorBanner)
+    // window.addEventListener("unhandledrejection", showErrorBanner)
     await initialise()
   })
 
