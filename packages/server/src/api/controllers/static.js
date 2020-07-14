@@ -83,6 +83,7 @@ exports.serveComponentLibrary = async function(ctx) {
     ctx.user.appId,
     "node_modules",
     decodeURI(ctx.query.library),
+    "package",
     "dist"
   )
 

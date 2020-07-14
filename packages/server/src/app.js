@@ -27,7 +27,7 @@ app.context.eventEmitter = eventEmitter
 // api routes
 app.use(api.routes())
 
-if (electron.app && electron.app.isPackaged()) {
+if (electron.app && electron.app.isPackaged) {
   Sentry.init()
 
   app.on("error", (err, ctx) => {
