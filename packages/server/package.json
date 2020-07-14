@@ -52,6 +52,7 @@
     "electron-is-dev": "^1.2.0",
     "electron-unhandled": "^3.0.2",
     "electron-updater": "^4.3.1",
+    "fix-path": "^3.0.0",
     "fs-extra": "^8.1.0",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.7.0",
@@ -92,5 +93,5 @@
       "./scripts/jestSetup.js"
     ]
   },
-  "gitHead": "2699362f071df22267620cf704c40edcee51bc18"
+  "gitHead": "a266952b782f47c80a4d9fca2c2acc88153c8ef1"
 }
