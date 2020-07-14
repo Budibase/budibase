@@ -11,6 +11,7 @@ const { exec } = require("child_process")
 const sqrl = require("squirrelly")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const fs = require("fs-extra")
+const chmodr = require("../../utilities/chmodr")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ClientDb.name(getClientId(ctx)))
@@ -137,6 +138,11 @@ const createEmptyAppPackage = async (ctx, app) => {
   }
 
   await copy(templateFolder, newAppFolder)
+
+  // this line allows full permission on copied files
+  // we have an unknown problem without this, whereby the
+  // files get weird permissions and cant be written to :(
+  await chmodr(newAppFolder, 0o777)
 
   await updateJsonFile(join(appsFolder, app._id, "package.json"), {
     name: npmFriendlyAppName(app.name),
