@@ -1,6 +1,6 @@
 {
   "name": "@budibase/server",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
