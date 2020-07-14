@@ -10,24 +10,20 @@ const streamPipeline = promisify(stream.pipeline)
 exports.appPackageFolder = (config, appname) =>
   resolve(cwd(), config.latestPackagesFolder, appname)
 
-
 exports.downloadExtractComponentLibraries = async appFolder => {
-
-  const LIBRARIES = [
-    "materialdesign-components",
-    "standard-components"
-  ]
+  const LIBRARIES = ["materialdesign-components", "standard-components"]
 
   // Need to download tarballs directly from NPM as our users may not have node on their machine
   for (let lib of LIBRARIES) {
     // download tarball
     // TODO: make sure the latest version is always downloaded
-    const registryUrl = `https://registry.npmjs.org/@budibase/${lib}/-/${lib}-0.1.2.tgz`;
+    const registryUrl = `https://registry.npmjs.org/@budibase/${lib}/-/${lib}-0.1.2.tgz`
     const response = await fetch(registryUrl)
-    if (!response.ok) throw new Error(`unexpected response ${response.statusText}`)
+    if (!response.ok)
+      throw new Error(`unexpected response ${response.statusText}`)
 
     await streamPipeline(
-      response.body, 
+      response.body,
       zlib.Unzip(),
       tar.extract(`${appFolder}/node_modules/@budibase/${lib}`)
     )

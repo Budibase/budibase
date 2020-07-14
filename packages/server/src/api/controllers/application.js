@@ -12,8 +12,9 @@ const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const fs = require("fs-extra")
 const { promisify } = require("util")
 const chmodr = require("chmodr")
-const { downloadExtractComponentLibraries } = require("../../utilities/createAppPackage")
-
+const {
+  downloadExtractComponentLibraries,
+} = require("../../utilities/createAppPackage")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ClientDb.name(getClientId(ctx)))
