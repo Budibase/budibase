@@ -113,15 +113,15 @@
                     on:click={() => {
                       editRecord(row)
                     }}>
-                    <div>Edit</div>
+                    <i class="ri-edit-line" />
+                    <div class="label">Edit</div>
                   </li>
-                  <li>
-                    <div
-                      on:click={() => {
-                        deleteRecord(row)
-                      }}>
-                      Delete
-                    </div>
+                  <li
+                    on:click={() => {
+                      deleteRecord(row)
+                    }}>
+                    <i class="ri-delete-bin-2-line" />
+                    <div class="label">Delete</div>
                   </li>
                 </ul>
               </div>
@@ -146,6 +146,9 @@
 </section>
 
 <style>
+  section {
+    margin-bottom: 20px;
+  }
   .title {
     font-size: 24px;
     font-weight: 600;
@@ -203,5 +206,29 @@
   .button-inner {
     display: flex;
     align-items: center;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+  }
+
+  i {
+    color: var(--grey-7);
+    margin-right: 8px;
+    font-size: 20px;
+  }
+
+  .label {
+    color: var(--grey-7);
+    font-size: 14px;
+    font-family: inter;
+    font-weight: 400;
+    margin: 12px 0px;
+  }
+  .label:hover {
+    color: var(--ink);
+    cursor: pointer;
   }
 </style>
