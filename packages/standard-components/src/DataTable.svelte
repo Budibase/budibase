@@ -71,6 +71,8 @@
     background: #fff;
     border-radius: 3px;
     border-collapse: collapse;
+    overflow: scroll; /* Scrollbar are always visible */
+    overflow: auto; /* Scrollbar is displayed as it's needed */
   }
 
   thead {
