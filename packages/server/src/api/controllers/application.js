@@ -137,8 +137,11 @@ const createEmptyAppPackage = async (ctx, app) => {
     ctx.throw(400, "App folder already exists for this application")
   }
 
-  await fs.ensureDir(join(newAppFolder, "pages", "main", "screens"), 0o777)
-  await fs.ensureDir(join(newAppFolder, "pages", "unauthenticated", "screens"), 0o777)
+  await fs.ensureDir(join(newAppFolder, "pages", "main", "screens"), 0o777)
+  await fs.ensureDir(
+    join(newAppFolder, "pages", "unauthenticated", "screens"),
+    0o777
+  )
 
   await copy(templateFolder, newAppFolder)
 
