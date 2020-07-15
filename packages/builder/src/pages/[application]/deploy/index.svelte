@@ -26,6 +26,9 @@
       notifier.success(`Your Deployment is Complete.`)
       deployed = true
       loading = false
+      analytics.captureEvent("deployment", {
+        appId,
+      })
     } catch (err) {
       analytics.captureException(err)
       notifier.danger("Deployment unsuccessful. Please try again later.")

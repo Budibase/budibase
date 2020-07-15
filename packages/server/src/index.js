@@ -20,3 +20,8 @@ async function runServer() {
 }
 
 runServer()
+
+process.on("SIGINT", function() {
+  console.log("\nGracefully shutting down from SIGINT")
+  process.exit(1)
+})
