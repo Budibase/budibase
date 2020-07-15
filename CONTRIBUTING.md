@@ -27,15 +27,15 @@ A client represents a single budibase customer. Each budibase client will have 1
 
 ### App
 
-A client can have one or more budibase applications. Think of a budibase application as a tree. Budibase applications have one definition of what the front end will look like, 
+A client can have one or more budibase applications. Budibase applications would be things like "Developer Inventory Management" or "Goat Herder CRM". Think of a budibase application as a tree. 
 
 ### Database
 
 An App can have one or more databases. Keeping with our [dendrology](https://en.wikipedia.org/wiki/Dendrology) analogy - think of an database as a branch on the tree. Databases are used to keep data separate for different instances of your app. For example, if you had a CRM app, you may create a database for your US office, and a database for your Australian office. Databases allow us to support [multitenancy](https://www.gartner.com/en/information-technology/glossary/multitenancy) in budibase applications.
 
-### Model
+### Table
 
-Models in budibase are almost akin to tables in relational databases. A model may be a "Car" or an "Employee". They are the main building blocks for the creation and management of backend data in budibase.
+Tables in budibase are almost akin to tables in relational databases. A table may be a "Car" or an "Employee". They are the main building blocks for the creation and management of backend data in budibase.
 
 ### View
 
