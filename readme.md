@@ -1,3 +1,6 @@
+![Discord Shield](https://discordapp.com/api/guilds/733030666647765003/widget.png?style=shield)
+
+
 # Getting Started with Budibase
 
 (For contributors - scroll down)
