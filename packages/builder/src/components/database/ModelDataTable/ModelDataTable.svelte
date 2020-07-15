@@ -180,7 +180,7 @@
     border-bottom: 1px solid var(--grey-4);
     transition: 0.3s background-color;
     color: var(--ink);
-    font-size: 14px;
+    font-size: 12px;
   }
 
   tbody tr:hover {
