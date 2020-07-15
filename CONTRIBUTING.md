@@ -149,13 +149,35 @@ The backend schema, models and records are stored using PouchDB when developing 
 
 ### Publishing Budibase to NPM
 
-You can publish all the latest versions of the monorepo packages by running:
+#### Testing In Electron
+
+At budibase, we pride ourselves on giving our users a fast, native and slick local development experience. As a result, we use the electron to provide a native GUI for the budibase builder. In order to release budibase out into the wild, you should test your changes in a packaged electron application. To do this, first build budibase from the root directory. 
+```
+yarn build
+```
+
+Now everything is built, you can package up your electron application.
+```
+cd packages/server
+yarn build:electron
+```
+
+Your new electron application will be stored in `packages/server/dist/<operating-system>`. Open up the executable and make sure everything is working smoothly.
+
+
+#### Publishing to NPM
+
+Once you are happy that your changes work in electron, you can publish all the latest versions of the monorepo packages by running:
 
 ```
 yarn publishnpm
 ```
 
 from your root directory.
+
+#### CI Release
+
+After NPM has successfully published the budibase packages, a new tag will be pushed to master. This will kick off a github action (can be found at `.github/workflows/release.yml`) this will build and package the electron application for every OS (Windows, Mac, Linux). The binaries will be stored under the new tag on the [budibase releases page](https://github.com/Budibase/budibase/releases).
 
 ### Troubleshooting
 
