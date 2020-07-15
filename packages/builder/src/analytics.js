@@ -12,7 +12,12 @@ function captureException(err) {
   Sentry.captureException(err)
 }
 
+function captureEvent(event) {
+  posthog.capture(event)
+}
+
 export default {
   activate,
   captureException,
+  captureEvent,
 }
