@@ -27,6 +27,7 @@ exports.fetchAppComponentDefinitions = async function(ctx) {
       const componentJson = require(join(
         appDirectory,
         componentLibrary,
+        "package",
         "components.json"
       ))
 

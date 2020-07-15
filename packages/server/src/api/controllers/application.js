@@ -85,7 +85,7 @@ exports.create = async function(ctx) {
   await instanceController.create(createInstCtx)
   newApplication.instances.push(createInstCtx.body)
 
-  if (ctx.isDev) {
+  if (process.env.NODE_ENV !== "jest") {
     const newAppFolder = await createEmptyAppPackage(ctx, newApplication)
     await downloadExtractComponentLibraries(newAppFolder)
   }
