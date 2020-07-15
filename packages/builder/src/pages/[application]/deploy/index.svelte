@@ -4,6 +4,7 @@
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
+  import analytics from "../../../analytics"
 
   let deployed = false
   let loading = false
@@ -26,6 +27,7 @@
       deployed = true
       loading = false
     } catch (err) {
+      analytics.captureException(err)
       notifier.danger("Deployment unsuccessful. Please try again later.")
       loading = false
     }

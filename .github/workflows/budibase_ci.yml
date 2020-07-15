@@ -29,9 +29,6 @@ jobs:
     - run: yarn lint
     - run: yarn bootstrap
     - run: yarn build
-      env:
-        POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
-        POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
     - run: yarn test
       env:
         CI: true
