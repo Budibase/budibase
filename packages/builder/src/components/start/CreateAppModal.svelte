@@ -42,7 +42,7 @@
         analytics.captureEvent("web_app_created", {
           name,
           description,
-          appId: res._id
+          appId: res._id,
         })
         $goto(`./${res._id}`)
       } catch (error) {
