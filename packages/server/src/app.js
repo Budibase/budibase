@@ -41,13 +41,10 @@ if (electron.app && electron.app.isPackaged) {
   })
 }
 
-module.exports = async port => {
-  const serverPort = port || env.PORT
-  const server = http.createServer(app.callback())
-  return server.listen(serverPort || 4001)
-}
+const server = http.createServer(app.callback())
 
-process.on("SIGINT", function() {
-  console.log("\nGracefully shutting down from SIGINT")
-  process.exit(1)
+server.on("close", () => console.log("Server Closed"))
+
+module.exports = server.listen(env.PORT || 4001, () => {
+  console.log(`Budibase running on ${JSON.stringify(server.address())}`)
 })
