@@ -43,7 +43,6 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@budibase/client": "^0.1.1",
-    "@budibase/core": "^0.0.32",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",
@@ -88,6 +87,9 @@
     "pouchdb-adapter-memory": "^7.2.1",
     "server-destroy": "^1.0.1",
     "supertest": "^4.0.2"
+  },
+  "nodemonConfig": {
+    "delay": "1000"
   },
   "jest": {
     "testEnvironment": "node",
