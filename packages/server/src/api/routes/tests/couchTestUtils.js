@@ -1,7 +1,6 @@
 const CouchDB = require("../../../db")
 const { create, destroy } = require("../../../db/clientDb")
 const supertest = require("supertest")
-const app = require("../../../app")
 const {
   POWERUSER_LEVEL_ID,
   ANON_LEVEL_ID,
