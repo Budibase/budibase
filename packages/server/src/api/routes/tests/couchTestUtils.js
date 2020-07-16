@@ -16,9 +16,9 @@ const TEST_CLIENT_ID = "test-client-id"
 exports.TEST_CLIENT_ID = TEST_CLIENT_ID
 exports.supertest = async () => {
   let request
-  let port = 4002
   let server
-  server = await app(port)
+  process.env.PORT = 4002
+  server = require("../../../app")
 
   request = supertest(server)
   return { request, server }
