@@ -1,5 +1,11 @@
 ![Discord Shield](https://discordapp.com/api/guilds/733030666647765003/widget.png?style=shield)
 
+# What is Budibase?
+
+Budibase is a platform for building web applications, without needing to write code.
+
+Come talk to us in the [Discord chatroom](https://discord.gg/rCYayfe).
+
 
 # Getting Started with Budibase
 
