@@ -6,7 +6,7 @@ export const FIELDS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   NUMBER: {
@@ -15,7 +15,7 @@ export const FIELDS = {
     type: "number",
     constraints: {
       type: "number",
-      presence: false,
+      presence: { allowEmpty: true },
       numericality: {},
     },
   },
@@ -25,7 +25,7 @@ export const FIELDS = {
     type: "boolean",
     constraints: {
       type: "boolean",
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   // OPTIONS: {
@@ -34,7 +34,7 @@ export const FIELDS = {
   //   type: "options",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
   DATETIME: {
@@ -44,7 +44,7 @@ export const FIELDS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   // IMAGE: {
@@ -53,7 +53,7 @@ export const FIELDS = {
   //   type: "file",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
   // FILE: {
@@ -62,7 +62,7 @@ export const FIELDS = {
   //   type: "file",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
   LINKED_FIELDS: {
@@ -84,7 +84,7 @@ export const BLOCKS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   COMPANY: {
@@ -94,7 +94,7 @@ export const BLOCKS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   EMAIL: {
@@ -104,7 +104,7 @@ export const BLOCKS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   PHONE_NUMBER: {
@@ -113,7 +113,7 @@ export const BLOCKS = {
     type: "number",
     constraints: {
       type: "number",
-      presence: false,
+      presence: { allowEmpty: true },
       numericality: {},
     },
   },
@@ -123,7 +123,7 @@ export const BLOCKS = {
     type: "number",
     constraints: {
       type: "number",
-      presence: false,
+      presence: { allowEmpty: true },
       numericality: {},
     },
   },
@@ -133,7 +133,7 @@ export const BLOCKS = {
     type: "boolean",
     constraints: {
       type: "boolean",
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   URL: {
@@ -143,7 +143,7 @@ export const BLOCKS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   IMAGE: {
@@ -153,7 +153,7 @@ export const BLOCKS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   // PRIORITY: {
@@ -162,7 +162,7 @@ export const BLOCKS = {
   //   type: "options",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //     inclusion: ["low", "medium", "high"],
   //   },
   // },
@@ -173,7 +173,7 @@ export const BLOCKS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   // AVATAR: {
@@ -182,7 +182,7 @@ export const BLOCKS = {
   //   type: "image",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
   // PDF: {
@@ -191,7 +191,7 @@ export const BLOCKS = {
   //   type: "file",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
 }
