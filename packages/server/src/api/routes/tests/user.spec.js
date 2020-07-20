@@ -12,7 +12,8 @@ const {
   LIST_USERS, 
   USER_MANAGEMENT 
 } = require("../../../utilities/accessLevels")
-
+jest.mock("@sendgrid/mail",()=>{return{setApiKey:jest.fn(() => Promise.resolve(true)),send:jest.fn(() => Promise.resolve(true))}})
+const mailSender = require("@sendgrid/mail")
 describe("/users", () => {
   let request
   let server
@@ -76,8 +77,20 @@ describe("/users", () => {
       expect(res.res.statusMessage).toEqual("User created successfully."); 
       expect(res.body._id).toBeUndefined()
     })
+	
+	it("call sendGrid API when no password is provided", async () => {
+      const res = await request
+        .post(`/api/users`)
+        .set(defaultHeaders(app._id, instance._id))
+        .send({ name: "Bill", username: "bill", email: "bill@email.com", accessLevelId: POWERUSER_LEVEL_ID })
+        .expect(200)
+        .expect('Content-Type', /json/)
+      expect(res.res.statusMessage).toEqual("User created successfully."); 
+      expect(res.body._id).toBeUndefined()
+      expect(mailSender.send).toHaveBeenCalled()
+    })
 
-    it("should apply authorization to endpoint", async () => {
+  it("should apply authorization to endpoint", async () => {
       await testPermissionsForEndpoint({
         request,
         method: "POST",

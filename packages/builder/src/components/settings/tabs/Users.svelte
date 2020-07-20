@@ -8,15 +8,19 @@
 
   let username = ""
   let password = ""
+  let email = ""
   let accessLevelId
 
-  $: valid = username && password && accessLevelId
+  $: valid =
+    username &&
+    (password || (email && /\S+@\S+\.\S+/.test(email))) &&
+    accessLevelId
   $: appId = $store.appId
 
   // Create user!
   async function createUser() {
     if (valid) {
-      const user = { name: username, username, password, accessLevelId }
+      const user = { name: username, username, email, password, accessLevelId }
       const response = await api.post(`/api/users`, user)
       const json = await response.json()
       backendUiStore.actions.users.create(json)
@@ -61,6 +65,7 @@
         bind:value={password}
         name="Password"
         placeholder="Password" />
+      <Input thin bind:value={email} name="Email" placeholder="Email" />
       <Select bind:value={accessLevelId} thin>
         <option value="ADMIN">Admin</option>
         <option value="POWER_USER">Power User</option>

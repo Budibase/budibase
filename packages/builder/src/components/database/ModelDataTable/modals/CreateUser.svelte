@@ -7,13 +7,14 @@
 
   let username
   let password
+  let email
   let accessLevelId
 
-  $: valid = username && password && accessLevelId
+  $: valid = username && (password || email) && accessLevelId
   $: appId = $store.appId
 
   async function createUser() {
-    const user = { name: username, username, password, accessLevelId }
+    const user = { name: username, username, email, password, accessLevelId }
     const response = await api.createUser(user)
     backendUiStore.actions.users.create(response)
     onClosed()
@@ -33,6 +34,10 @@
         class="uk-input"
         type="text"
         bind:value={username} />
+    </div>
+    <div class="uk-margin">
+      <label class="uk-form-label" for="form-stacked-text">Email</label>
+      <input data-cy="email" class="uk-input" type="text" bind:value={email} />
     </div>
     <div class="uk-margin">
       <label class="uk-form-label" for="form-stacked-text">Password</label>

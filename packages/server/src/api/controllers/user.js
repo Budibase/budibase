@@ -1,12 +1,13 @@
 const CouchDB = require("../../db")
 const clientDb = require("../../db/clientDb")
+const mailSender = require("@sendgrid/mail")
 const bcrypt = require("../../utilities/bcrypt")
+mailSender.setApiKey(process.env.SENDGRID_API_KEY)
 const getUserId = userName => `user_${userName}`
 const {
   POWERUSER_LEVEL_ID,
   ADMIN_LEVEL_ID,
 } = require("../../utilities/accessLevels")
-
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.instanceId)
   const data = await database.query("database/by_type", {
@@ -20,10 +21,27 @@ exports.fetch = async function(ctx) {
 exports.create = async function(ctx) {
   const database = new CouchDB(ctx.user.instanceId)
   const appId = (await database.get("_design/database")).metadata.applicationId
-  const { username, password, name, accessLevelId } = ctx.request.body
-
-  if (!username || !password) {
-    ctx.throw(400, "Username and Password Required.")
+  const { username, email, name, accessLevelId } = ctx.request.body
+  let password = ctx.request.body.password
+  if (!username) {
+    ctx.throw(400, "Username Required.")
+  }
+  if (!password) {
+    if (!email) {
+      ctx.throw(400, "Password or Email Required.")
+    } else {
+      // In this case we are able to generate a password and send it to the user
+      password = Math.random()
+        .toString(36)
+        .slice(-8)
+      await mailSender.send({
+        to: email,
+        from: process.env.SENDGRID_EMAIL,
+        subject: "Your Budibase password",
+        text: `${password} is your budibase password`,
+        html: `<strong>${password} is your budibase password</strong>`,
+      })
+    }
   }
 
   const accessLevel = await checkAccessLevel(database, accessLevelId)
@@ -35,6 +53,7 @@ exports.create = async function(ctx) {
     username,
     password: await bcrypt.hash(password),
     name: name || username,
+    email: email,
     type: "user",
     accessLevelId,
   }
