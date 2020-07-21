@@ -32,11 +32,35 @@
 
   $: Object.values(inputElements).length && setForm(record)
 
+  const createBlankRecord = () => {
+    if (!schema) return
+    const newrecord = {
+      modelId: model,
+    }
+    for (let fieldName in schema) {
+      const field = schema[fieldName]
+      // defaulting to first one, as a blank value will fail validation
+      if (
+        field.type === "string" &&
+        field.constraints &&
+        field.constraints.inclusion &&
+        field.constraints.inclusion.length > 0
+      ) {
+        newrecord[fieldName] = field.constraints.inclusion[0]
+      } else if (field.type === "number") newrecord[fieldName] = null
+      else if (field.type === "boolean") newrecord[fieldName] = false
+      else if (field.type === "link") newrecord[fieldName] = []
+      else newrecord[fieldName] = ""
+    }
+    return newrecord
+  }
+
   async function fetchModel() {
     const FETCH_MODEL_URL = `/api/models/${model}`
     const response = await _bb.api.get(FETCH_MODEL_URL)
     modelDef = await response.json()
     schema = modelDef.schema
+    record = createBlankRecord()
   }
 
   async function save() {
@@ -81,9 +105,7 @@
         el.checked = false
       }
     }
-    record = {
-      modelId: model,
-    }
+    record = createBlankRecord()
   }
 
   const setForm = rec => {
@@ -123,7 +145,7 @@
     isNew = !recordId || recordId === "new"
 
     if (isNew) {
-      record = { modelId: model }
+      record = createBlankRecord()
     } else {
       const GET_RECORD_URL = `/api/${model}/records/${recordId}`
       _bb.api
