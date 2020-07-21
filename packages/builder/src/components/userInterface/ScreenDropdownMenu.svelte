@@ -4,20 +4,14 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UIkit from "uikit"
   import api from "builderStore/api"
+  import Portal from "svelte-portal"
+  import { DropdownMenu } from "@budibase/bbui"
 
   export let screen
 
   let confirmDeleteDialog
-  let dropdownEl
-
-  $: dropdown = UIkit.dropdown(dropdownEl, {
-    mode: "click",
-    offset: 0,
-    pos: "bottom-right",
-    "delay-hide": 0,
-    animation: false,
-  })
-  $: dropdown && UIkit.util.on(dropdown, "shown", () => (hidden = false))
+  let dropdown
+  let buttonForDropdown
 
   const hideDropdown = () => {
     dropdown.hide()
@@ -42,15 +36,17 @@
 </script>
 
 <div class="root boundary" on:click|stopPropagation={() => {}}>
-  <button>
+  <button on:click={() => dropdown.show()} bind:this={buttonForDropdown}>
     <MoreIcon />
   </button>
-  <ul class="menu" bind:this={dropdownEl} on:click={hideDropdown}>
-    <li class="item" on:click={() => confirmDeleteDialog.show()}>
-      <i class="icon ri-delete-bin-2-line" />
-      Delete
-    </li>
-  </ul>
+  <DropdownMenu bind:this={dropdown} anchor={buttonForDropdown}>
+    <ul class="menu" on:click={hideDropdown}>
+      <li class="item" on:click={() => confirmDeleteDialog.show()}>
+        <i class="icon ri-delete-bin-2-line" />
+        Delete
+      </li>
+    </ul>
+  </DropdownMenu>
 </div>
 
 <ConfirmDialog
@@ -81,6 +77,7 @@
     overflow: visible;
     padding: 12px 0px;
     border-radius: 5px;
+    margin: 0;
   }
 
   .menu li {
