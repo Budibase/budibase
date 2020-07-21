@@ -23,8 +23,8 @@
   let codeEditor
   let flattenedPanel = flattenComponents(panelStructure.categories)
   let categories = [
-    { value: "design", name: "Design" },
     { value: "settings", name: "Settings" },
+    { value: "design", name: "Design" },
     { value: "events", name: "Events" },
   ]
   let selectedCategory = categories[0]
