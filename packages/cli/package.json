@@ -1,6 +1,6 @@
 {
   "name": "budibase",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Budibase CLI",
   "repository": "https://github.com/Budibase/Budibase",
   "homepage": "https://www.budibase.com",
@@ -17,7 +17,7 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/server": "^0.1.9",
+    "@budibase/server": "^0.1.10",
     "@inquirer/password": "^0.0.6-alpha.0",
     "chalk": "^2.4.2",
     "dotenv": "^8.2.0",
