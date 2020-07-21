@@ -55,7 +55,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "^1.15.8",
+    "@budibase/bbui": "^1.16.0",
     "@budibase/client": "^0.1.1",
     "@budibase/colorpicker": "^1.0.1",
     "@nx-js/compiler-util": "^2.0.0",
