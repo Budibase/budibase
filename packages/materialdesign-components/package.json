@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@budibase/client": "^0.1.1",
-    "@budibase/standard-components": "^0.1.8",
+    "@budibase/standard-components": "^0.1.10",
     "@material/button": "^4.0.0",
     "@material/checkbox": "^4.0.0",
     "@material/data-table": "4.0.0",
@@ -50,7 +50,7 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.1.8",
+  "version": "0.1.10",
   "license": "MIT",
   "gitHead": "eff4fa93ca1db11b97b5fdedc0c488413e277eb8",
   "dependencies": {
