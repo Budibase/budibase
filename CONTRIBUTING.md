@@ -95,7 +95,7 @@ then `cd ` into your local copy.
 
 ### 4. Initialising Budibase and Creating a Budibase App
 
-`yarn initialise` will initialise your budibase installation. A Budibase apps folder will have been created in `~/.budibase`.
+`yarn initialise` will initialise your budibase installation. A Budibase apps folder will have been created in `~/.budibase`. You can also just start up the budibase electron app and it should initialise budibase for you.
 
 This is a blank apps folder, so you will need to create yourself an app.
 
