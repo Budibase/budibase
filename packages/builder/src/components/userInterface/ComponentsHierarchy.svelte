@@ -6,6 +6,7 @@
   import { pipe } from "components/common/core"
   import { store } from "builderStore"
   import { ArrowDownIcon, ShapeIcon } from "components/common/Icons/"
+  import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
 
   export let screens = []
 
@@ -15,12 +16,15 @@
   const joinPath = join("/")
 
   const normalizedName = name =>
-    pipe(name, [
-      trimCharsStart("./"),
-      trimCharsStart("~/"),
-      trimCharsStart("../"),
-      trimChars(" "),
-    ])
+    pipe(
+      name,
+      [
+        trimCharsStart("./"),
+        trimCharsStart("~/"),
+        trimCharsStart("../"),
+        trimChars(" "),
+      ]
+    )
 
   const changeScreen = screen => {
     store.setCurrentScreen(screen.props._instanceName)
@@ -31,7 +35,7 @@
 <div class="root">
   {#each screens as screen}
     <div
-      class="budibase__nav-item component"
+      class="budibase__nav-item screen-header-row"
       class:selected={$store.currentComponentInfo._id === screen.props._id}
       on:click|stopPropagation={() => changeScreen(screen)}>
 
@@ -46,6 +50,10 @@
       <i class="ri-artboard-2-fill icon" />
 
       <span class="title">{screen.props._instanceName}</span>
+
+      <div class="dropdown-menu">
+        <ScreenDropdownMenu {screen} />
+      </div>
     </div>
 
     {#if $store.currentPreviewItem.props._instanceName && $store.currentPreviewItem.props._instanceName === screen.props._instanceName && screen.props._children}
@@ -63,10 +71,16 @@
     color: var(--ink);
   }
 
+  .screen-header-row {
+    display: flex;
+    flex-direction: row;
+  }
+
   .title {
     margin-left: 14px;
     font-size: 14px;
     font-weight: 400;
+    flex: 1;
   }
 
   .icon {
@@ -88,5 +102,21 @@
 
   .rotate :global(svg) {
     transform: rotate(-90deg);
+  }
+
+  .dropdown-menu {
+    display: none;
+    height: 24px;
+    width: 24px;
+    color: var(--ink);
+    padding: 0px 5px;
+    border-style: none;
+    background: rgba(0, 0, 0, 0);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .budibase__nav-item:hover .dropdown-menu {
+    display: block;
   }
 </style>
