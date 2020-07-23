@@ -1,6 +1,6 @@
 <script>
   import Modal from "svelte-simple-modal"
-  import { store, workflowStore, tourStore } from "builderStore"
+  import { store, workflowStore, backendUiStore, tourStore } from "builderStore"
   import SettingsLink from "components/settings/Link.svelte"
   import { get } from "builderStore/api"
 
@@ -20,6 +20,7 @@
     const pkg = await res.json()
 
     if (res.ok) {
+      backendUiStore.actions.reset()
       await store.setPackage(pkg)
       workflowStore.actions.fetch()
       return pkg

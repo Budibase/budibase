@@ -6,7 +6,7 @@ export const FIELDS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   NUMBER: {
@@ -15,7 +15,7 @@ export const FIELDS = {
     type: "number",
     constraints: {
       type: "number",
-      presence: false,
+      presence: { allowEmpty: true },
       numericality: {},
     },
   },
@@ -25,7 +25,7 @@ export const FIELDS = {
     type: "boolean",
     constraints: {
       type: "boolean",
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   // OPTIONS: {
@@ -34,7 +34,7 @@ export const FIELDS = {
   //   type: "options",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
   DATETIME: {
@@ -44,7 +44,7 @@ export const FIELDS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   // IMAGE: {
@@ -53,7 +53,7 @@ export const FIELDS = {
   //   type: "file",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
   // FILE: {
@@ -62,11 +62,11 @@ export const FIELDS = {
   //   type: "file",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
-  DATA_LINK: {
-    name: "Data Links",
+  LINKED_FIELDS: {
+    name: "Linked Fields",
     icon: "ri-link",
     type: "link",
     modelId: null,
@@ -84,46 +84,46 @@ export const BLOCKS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   COMPANY: {
     name: "Company",
-    icon: "ri-text",
+    icon: "ri-store-line",
     type: "string",
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   EMAIL: {
     name: "Email",
-    icon: "ri-text",
+    icon: "ri-mail-line",
     type: "string",
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   PHONE_NUMBER: {
     name: "Phone No.",
-    icon: "ri-number-1",
+    icon: "ri-phone-line",
     type: "number",
     constraints: {
       type: "number",
-      presence: false,
+      presence: { allowEmpty: true },
       numericality: {},
     },
   },
   VALUE: {
     name: "Value",
-    icon: "ri-number-1",
+    icon: "ri-number-5",
     type: "number",
     constraints: {
       type: "number",
-      presence: false,
+      presence: { allowEmpty: true },
       numericality: {},
     },
   },
@@ -133,7 +133,27 @@ export const BLOCKS = {
     type: "boolean",
     constraints: {
       type: "boolean",
-      presence: false,
+      presence: { allowEmpty: true },
+    },
+  },
+  URL: {
+    name: "URL",
+    icon: "ri-link",
+    type: "string",
+    constraints: {
+      type: "string",
+      length: {},
+      presence: { allowEmpty: true },
+    },
+  },
+  IMAGE: {
+    name: "Image URL",
+    icon: "ri-image-line",
+    type: "string",
+    constraints: {
+      type: "string",
+      length: {},
+      presence: { allowEmpty: true },
     },
   },
   // PRIORITY: {
@@ -142,7 +162,7 @@ export const BLOCKS = {
   //   type: "options",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //     inclusion: ["low", "medium", "high"],
   //   },
   // },
@@ -153,7 +173,7 @@ export const BLOCKS = {
     constraints: {
       type: "string",
       length: {},
-      presence: false,
+      presence: { allowEmpty: true },
     },
   },
   // AVATAR: {
@@ -162,7 +182,7 @@ export const BLOCKS = {
   //   type: "image",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
   // PDF: {
@@ -171,7 +191,7 @@ export const BLOCKS = {
   //   type: "file",
   //   constraints: {
   //     type: "string",
-  //     presence: false,
+  //     presence: { allowEmpty: true },
   //   },
   // },
 }

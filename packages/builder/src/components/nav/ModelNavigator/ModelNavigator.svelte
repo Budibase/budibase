@@ -70,7 +70,7 @@
                       <ListItem
                         selected={model._id === $backendUiStore.selectedModel._id && fieldName === $backendUiStore.selectedField}
                         indented
-                        icon="ri-layout-column-fill"
+                        icon="ri-layout-column-line"
                         title={model.schema[fieldName].name}
                         on:click={() => selectModel(model, fieldName)} />
                     {/each}

@@ -4,6 +4,7 @@
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
+  import analytics from "../../../analytics"
 
   let deployed = false
   let loading = false
@@ -25,7 +26,11 @@
       notifier.success(`Your Deployment is Complete.`)
       deployed = true
       loading = false
+      analytics.captureEvent("web_app_deployment", {
+        appId,
+      })
     } catch (err) {
+      analytics.captureException(err)
       notifier.danger("Deployment unsuccessful. Please try again later.")
       loading = false
     }

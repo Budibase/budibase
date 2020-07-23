@@ -1,6 +1,6 @@
 {
   "name": "@budibase/server",
-  "version": "0.1.2",
+  "version": "0.1.10",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -43,15 +43,17 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@budibase/client": "^0.1.1",
-    "@budibase/core": "^0.0.32",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
+    "@sentry/node": "^5.19.2",
     "aws-sdk": "^2.706.0",
     "bcryptjs": "^2.4.3",
+    "chmodr": "^1.2.0",
     "dotenv": "^8.2.0",
     "electron-is-dev": "^1.2.0",
     "electron-unhandled": "^3.0.2",
     "electron-updater": "^4.3.1",
+    "fix-path": "^3.0.0",
     "fs-extra": "^8.1.0",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.7.0",
@@ -68,7 +70,7 @@
     "pouchdb": "^7.2.1",
     "pouchdb-all-dbs": "^1.0.2",
     "squirrelly": "^7.5.0",
-    "tar-fs": "^2.0.0",
+    "tar-fs": "^2.1.0",
     "uuid": "^3.3.2",
     "validate.js": "^0.13.1",
     "yargs": "^13.2.4",
@@ -86,11 +88,14 @@
     "server-destroy": "^1.0.1",
     "supertest": "^4.0.2"
   },
+  "nodemonConfig": {
+    "delay": "1000"
+  },
   "jest": {
     "testEnvironment": "node",
     "setupFiles": [
       "./scripts/jestSetup.js"
     ]
   },
-  "gitHead": "e4e053cb6ff9a0ddc7115b44ccaa24b8ec41fb9a"
+  "gitHead": "eff4fa93ca1db11b97b5fdedc0c488413e277eb8"
 }

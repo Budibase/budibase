@@ -43,7 +43,8 @@ router
       jwtSecret: env.JWT_SECRET,
       useAppRootPath: true,
     }
-    ctx.isDev = env.NODE_ENV !== "production" && env.NODE_ENV !== "jest"
+    ctx.isDev =
+      process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "jest"
     await next()
   })
   .use(authenticated)

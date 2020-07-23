@@ -33,9 +33,9 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.1.2",
+  "version": "0.1.10",
   "license": "MIT",
-  "gitHead": "e4e053cb6ff9a0ddc7115b44ccaa24b8ec41fb9a",
+  "gitHead": "eff4fa93ca1db11b97b5fdedc0c488413e277eb8",
   "dependencies": {
     "@beyonk/svelte-googlemaps": "^2.2.0",
     "fusioncharts": "^3.15.1-sr.1",

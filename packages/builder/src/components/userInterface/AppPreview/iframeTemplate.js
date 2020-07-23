@@ -6,6 +6,7 @@ export default `<html>
       body, html {
         height: 100%!important;
         font-family: Inter !important;
+        margin: 0px!important;
       }
       *, *:before, *:after {
         box-sizing: border-box;

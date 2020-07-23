@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.1.2",
+  "version": "0.1.10",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -55,9 +55,11 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "^1.15.8",
+    "@budibase/bbui": "^1.16.0",
     "@budibase/client": "^0.1.1",
+    "@budibase/colorpicker": "^1.0.1",
     "@nx-js/compiler-util": "^2.0.0",
+    "@sentry/browser": "5.19.1",
     "codemirror": "^5.51.0",
     "date-fns": "^1.29.0",
     "deepmerge": "^4.2.2",

@@ -1,7 +1,7 @@
 import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import FlatButtonGroup from "./FlatButtonGroup.svelte"
-import Colorpicker from "./Colorpicker"
+import Colorpicker from "@budibase/colorpicker"
 /*
   TODO: Allow for default values for all properties
 */
