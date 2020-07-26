@@ -11,9 +11,16 @@
   export const colorGradients = britecharts
     ? britecharts.colors.colorGradients
     : null
+
+  export const getColorSchema = color =>
+    color ? colorSchemas[color] : colorSchemas["britecharts"]
+
+  export const getChartGradient = gradient =>
+    gradient ? colorGradients[gradient] : null
 </script>
 
 <script>
+  import { beforeUpdate } from "svelte"
   import britecharts from "britecharts"
   import { select } from "d3-selection"
 
@@ -29,8 +36,6 @@
   export let useTooltip = false
   export let useLegend = false
 
-  export let colors = colorSchemas ? colorSchemas.britecharts : null
-  export let gradients = colorGradients ? colorGradients.bluePurple : null
   export let tooltip = null //can bind to outside the component and therefore access
 
   let chartElement = null
@@ -47,7 +52,6 @@
   onMount(() => {
     if (chart) {
       chartContainer = select(`.${chartClass}`)
-      bindChartColors()
       bindChartUIProps()
       bindChartEvents()
       chartContainer.datum(data).call(chart)
@@ -58,23 +62,13 @@
     }
   })
 
-  function bindChartColors() {
-    if (chart.colorSchema) {
-      chart.colorSchema(colors)
-    } else if (chart.gradient) {
-      chart.gradient(gradients)
-    }
-  }
-
   function bindChartTooltip() {
-    if (canUseTooltip) {
-      tooltip = britecharts.tooltip()
+    if (useTooltip) {
+      tooltip = britecharts.miniTooltip()
 
       bindProps(tooltip, tooltipProps)
 
-      tooltipContainer = select(
-        `.${chartClass} .metadata-group .vertical-marker-container`
-      )
+      tooltipContainer = select(`.${chartClass} .metadata-group`)
       tooltipContainer.datum([]).call(tooltip)
     }
   }
@@ -108,7 +102,9 @@
     if ($$props.on) {
       const events = Object.entries($$props.on)
       for (let [type, fn] of events) {
-        chart.on(type, fn)
+        if (fn) {
+          chart.on(type, fn)
+        }
       }
     }
   }
@@ -116,9 +112,7 @@
   function bindChartUIProps() {
     const excludeProps = [
       "data",
-      "colors",
       "type",
-      "gradients",
       "on",
       "useTooltip",
       "tooltip",
@@ -135,19 +129,23 @@
   }
 
   function bindProps(element, elProps, excludeArray) {
-    const props = excludeArray
-      ? Object.entries(excludeProps(elProps, excludeArray))
-      : Object.entries(elProps)
+    if (elProps) {
+      const props = excludeArray
+        ? Object.entries(excludeProps(elProps, excludeArray))
+        : Object.entries(elProps)
 
-    const validElementProps = Object.getOwnPropertyNames(element)
+      const validElementProps = Object.getOwnPropertyNames(element)
 
-    for (let [prop, value] of props) {
-      if (validElementProps.includes(prop)) {
-        chart[prop](value)
-      } else {
-        console.warn(
-          `${type} - ${prop} is an unrecognised chart prop and wont be applied`
-        )
+      for (let [prop, value] of props) {
+        if (validElementProps.includes(prop)) {
+          if (!!value) {
+            chart[prop](value)
+          }
+        } else {
+          console.warn(
+            `${type} - ${prop} is an unrecognised chart prop and wont be applied`
+          )
+        }
       }
     }
   }
@@ -163,7 +161,6 @@
   }
 
   $: validChartProps = chart ? Object.getOwnPropertyNames(chart) : null
-  $: canUseTooltip = tooltipProps && useTooltip
 </script>
 
 <div bind:this={chartElement} class={chartClass} />

@@ -32,7 +32,7 @@
   let selectedCategory = categories[0]
 
   const onComponentChosen = component => {
-    store.addChildComponent(component._component)
+    store.addChildComponent(component._component, component.presetProps)
 
     toggleTab("Navigate")
 

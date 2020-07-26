@@ -4,6 +4,11 @@ import Checkbox from "../common/Checkbox.svelte"
 import ModelSelect from "components/userInterface/ModelSelect.svelte"
 
 import { all } from "./propertyCategories.js"
+/* 
+{ label: "N/A ", value: "N/A" },
+{ label: "Flex", value: "flex" },
+{ label: "Inline Flex", value: "inline-flex" }, 
+*/
 
 export default {
   categories: [
@@ -362,35 +367,422 @@ export default {
         },
         {
           name: "Chart",
-          _component: "@budibase/standard-components/datachart",
           description: "Shiny chart",
           icon: "ri-bar-chart-fill",
-          properties: {
-            design: { ...all },
-            settings: [
-              { label: "Table", key: "model", control: ModelSelect },
-              {
-                label: "Chart Type",
-                key: "type",
-                control: OptionSelect,
-                options: [
-                  "column2d",
-                  "column3d",
-                  "line",
-                  "area2d",
-                  "bar2d",
-                  "bar3d",
-                  "pie2d",
-                  "pie3d",
-                  "doughnut2d",
-                  "doughnut3d",
-                  "pareto2d",
-                  "pareto3d",
+          children: [
+            {
+              name: "Donut",
+              _component: "@budibase/standard-components/donut",
+              description: "Donut chart",
+              icon: "ri-donut-chart-line",
+              presetProps: {
+                data: [
+                  {
+                    quantity: 1,
+                    percentage: 50,
+                    name: "glittering",
+                    id: 1,
+                  },
+                  {
+                    quantity: 1,
+                    percentage: 50,
+                    name: "luminous",
+                    id: 2,
+                  },
                 ],
               },
-            ],
-          },
-          children: [],
+              properties: {
+                settings: [
+                  {
+                    label: "Fix Highlight Slice",
+                    key: "hasFixedHighlightedSlice",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Hover highlight",
+                    key: "hasLastHoverSliceHighlighted",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Is Animated",
+                    key: "isAnimated",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Colors",
+                    key: "color",
+                    control: OptionSelect,
+                    options: [
+                      "britecharts",
+                      "blueGreen",
+                      "green",
+                      "grey",
+                      "orange",
+                      "pink",
+                      "purple",
+                      "red",
+                      "teal",
+                      "yellow",
+                    ],
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "External Radius",
+                    key: "externalRadius",
+                    control: Input,
+                  },
+                  {
+                    label: "Internal Radius",
+                    key: "internalRadius",
+                    control: Input,
+                  },
+                  {
+                    label: "Radius Offset",
+                    key: "radiusHoverOffset ",
+                    control: Input,
+                  },
+                  {
+                    label: "Show Legend",
+                    key: "useLegend ",
+                    control: Checkbox,
+                  },
+                ],
+              },
+            },
+            {
+              name: "Bar",
+              _component: "@budibase/standard-components/bar",
+              description: "Bar chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: [
+                  {
+                    value: 1,
+                    name: "glittering",
+                  },
+                  {
+                    value: 1,
+                    name: "luminous",
+                  },
+                ],
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "Y Axis Label",
+                    key: "yAxisLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Label",
+                    key: "xAxisLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Bar Padding",
+                    key: "betweenBarsPadding",
+                    control: Input,
+                  },
+                  {
+                    label: "Colors",
+                    key: "color",
+                    control: OptionSelect,
+                    options: [
+                      { label: "Normal", value: "britecharts" },
+                      { label: "Blue Green", value: "blueGreen" },
+                      { label: "Green", value: "green" },
+                      { label: "Grey", value: "grey" },
+                      { label: "Orange", value: "orange" },
+                      { label: "Pink", value: "pink" },
+                      { label: "Purple", value: "purple" },
+                      { label: "Red", value: "red" },
+                      { label: "Teal", value: "teal" },
+                      { label: "Yellow", value: "yellow" },
+                    ],
+                  },
+                  {
+                    label: "Gradients",
+                    key: "gradient",
+                    control: OptionSelect,
+                    options: [
+                      { value: "", label: "None" },
+                      { value: "bluePurple", label: "Blue Purple" },
+                      { value: "greenBlue", label: "Green Blue" },
+                      { value: "orangePink", label: "Orange Pink" },
+                    ],
+                  },
+                  {
+                    label: "Enable Labels",
+                    key: "enableLabels",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "Highlight Single Bar",
+                    key: "hasSingleBarHighlight",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Animate",
+                    key: "isAnimate",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "Horizontal",
+                    key: "isHorizontal",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "Label Offset",
+                    key: "labelOffset",
+                    control: Input,
+                  },
+                  {
+                    label: "Label Number Format",
+                    key: "labelsNumberFormat",
+                    control: Input,
+                  },
+                  {
+                    label: "Label Size",
+                    key: "labelSize",
+                    control: Input,
+                  },
+                  {
+                    label: "Locale",
+                    key: "locale",
+                    control: Input,
+                  },
+                  {
+                    label: "Name Label",
+                    key: "nameLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Number Format",
+                    key: "numberFormat",
+                    control: Input,
+                  },
+                  {
+                    label: "Use Legend",
+                    key: "useLegend",
+                    control: Checkbox,
+                  },
+                ],
+              },
+            },
+            {
+              name: "Line",
+              _component: "@budibase/standard-components/line",
+              description: "Line chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: {
+                  data: [
+                    {
+                      topicName: "San Francisco",
+                      name: 1,
+                      date: "2020-01-16",
+                      value: 1,
+                    },
+                    {
+                      topicName: "San Fran",
+                      name: 2,
+                      date: "2020-01-17",
+                      value: 2,
+                    },
+                    {
+                      topicName: "LA",
+                      name: 3,
+                      date: "2020-01-18",
+                      value: 3,
+                    },
+                    {
+                      topicName: "Toronto",
+                      name: 4,
+                      date: "2020-01-19",
+                      value: 7,
+                    },
+                    {
+                      topicName: "Van",
+                      name: 4,
+                      date: "2020-01-20",
+                      value: 12,
+                    },
+                    {
+                      topicName: "Dundee",
+                      name: 4,
+                      date: "2020-01-21",
+                      value: 16,
+                    },
+                    {
+                      topicName: "Dublin",
+                      name: 4,
+                      date: "2020-01-22",
+                      value: 31,
+                    },
+                  ],
+                },
+                aspectRatio: 0.5,
+                grid: "horizontal",
+                dateLabel: "fullDate",
+                shouldShowAllDataPoints: true,
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "X Axis Combo",
+                    key: "axisTimeCombinations",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Combo",
+                    key: "axisTimeCombinations",
+                    control: Input,
+                  },
+                  {
+                    label: "Colors",
+                    key: "color",
+                    control: OptionSelect,
+                    options: [
+                      "britecharts",
+                      "blueGreen",
+                      "green",
+                      "grey",
+                      "orange",
+                      "pink",
+                      "purple",
+                      "red",
+                      "teal",
+                      "yellow",
+                    ],
+                  },
+                  {
+                    label: "Grid",
+                    key: "grid",
+                    control: OptionSelect,
+                    options: ["vertical", "horizontal", "full"],
+                  },
+                  {
+                    label: "Aspect Ratio",
+                    key: "aspectRatio",
+                    control: Input,
+                  },
+                  {
+                    label: "Date Label",
+                    key: "dateLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Is Animated",
+                    key: "isAnimated",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "Line Curve",
+                    key: "lineCurve",
+                    control: OptionSelect,
+                    options: [
+                      "linear",
+                      "basis",
+                      "natural",
+                      "monotoneX",
+                      "monotoneY",
+                      "step",
+                      "stepAfter",
+                      "stepBefore",
+                      "cardinal",
+                      "catmullRom",
+                    ],
+                  },
+                  {
+                    label: "Locale",
+                    key: "locale",
+                    control: Input,
+                  },
+                  {
+                    label: "Topic Label",
+                    key: "topicLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Value Label",
+                    key: "valueLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Label",
+                    key: "xAxisLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Value Type",
+                    key: "xAxisValueType",
+                    control: OptionSelect,
+                    options: ["date", "number"],
+                  },
+                  {
+                    label: "X Axis Scale",
+                    key: "xAxisScale",
+                    control: OptionSelect,
+                    options: ["linear", "logarithmic"],
+                  },
+                  {
+                    label: "X Axis Format",
+                    key: "xAxisFormat",
+                    control: OptionSelect,
+                    options: [
+                      "day-month",
+                      "minute-hour",
+                      "hour-daymonth",
+                      "month-year",
+                      "custom",
+                    ],
+                  },
+                  {
+                    label: "X Axis Custom Format",
+                    key: "xAxisCustomFormat",
+                    control: Input,
+                  },
+                ],
+              },
+            },
+          ],
         },
         {
           name: "Data List",
@@ -412,7 +804,14 @@ export default {
             design: { ...all },
             settings: [{ label: "Table", key: "model", control: ModelSelect }],
           },
-          children: [],
+          children: [
+            {
+              _component: "@budibase/standard-components/heading",
+              name: "Headline",
+              description: "A component for displaying heading text",
+              icon: "ri-heading",
+            },
+          ],
         },
         {
           name: "Record Detail",

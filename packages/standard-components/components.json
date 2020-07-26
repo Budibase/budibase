@@ -252,6 +252,71 @@
 			"model": "models"
 		}
 	},
+	"donut": {
+		"description": "Donut Chart",
+		"data": true,
+		"props": {
+			"color": "string",
+			"height": "number",
+			"width": "number",
+			"hasFixedHighlightedSlice": "bool",
+			"hasLastHoverSliceHighlighted": "bool",
+			"isAnimated": "bool",
+			"externalRadius": "number",
+			"internalRadius": "number",
+			"radiusHoverOffset": "number",
+			"useLegend": "bool"
+		}
+	},
+	"bar": {
+		"description": "Bar Chart",
+		"data": true,
+		"props": {
+			"betweenBarsPadding": "number",
+			"gradient": "string",
+			"color": "string",
+			"enableLabels": "bool",
+			"hasSingleBarHighlight": "bool",
+			"height": "number",
+			"width": "number",
+			"isAnimated": "bool",
+			"isHorizontal": "bool",
+			"labelOffset": "number",
+			"labelNumberFormat": "number",
+			"labelSize": "number",
+			"locale": "string",
+			"nameLabel": "string",			
+			"numberLabel": "string",
+			"xAxisLabel": "string",
+			"yAxisLabel": "string",
+			"useLegend": "bool"
+		}
+	},
+	"line": {
+		"description": "Line Chart",
+		"data": true,
+		"props": {
+			"width": "number",
+			"height": "number",
+			"axisTimeCombinations": "string",
+			"color": "string",
+			"grid": "string",
+			"aspectRatio": "number",
+			"dateLabel": "string",
+			"isAnimated": "bool",
+			"lineCurve": "string",
+			"locale": "string",
+			"numberFormat": "string",
+			"shouldShowAllDataPoints": "bool",
+			"topicLabel": "string",
+			"valueLabel": "string",
+			"xAxisLabel": "string",
+			"xAxisValueType": "string",
+			"xAxisScale": "string",
+			"xAxisFormat": "string",
+			"xAxisCustomFormat": "string"
+		}
+	},
 	"datachart": {
 		"description": "shiny chart",
 		"data": true,

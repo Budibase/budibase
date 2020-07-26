@@ -9,14 +9,15 @@
   export let onChange = () => {}
 
   function handleChange(key, v) {
-    if (v.target) {
-      let val = props.valueKey ? v.target[props.valueKey] : v.target.value
-      onChange(key, val)
-    } else if (v.detail) {
-      onChange(key, v.detail)
-    } else {
-      onChange(key, v)
+    let innerVal = v
+    if (typeof v === "object") {
+      if ("detail" in v) {
+        innerVal = v.detail
+      } else if ("target" in v) {
+        innerVal = props.valueKey ? v.target[props.valueKey] : v.target.value
+      }
     }
+    onChange(key, innerVal)
   }
 
   const safeValue = () => {
