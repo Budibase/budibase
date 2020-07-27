@@ -1,3 +1,5 @@
+# Get in touch
+If you have a question or would like to talk with other Budibase users, please join our Discord server:
 ![Discord Shield](https://discordapp.com/api/guilds/733030666647765003/widget.png?style=shield)
 
 # What is Budibase?
