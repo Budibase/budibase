@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { cssVars, createClasses } from "./cssVars"
+  import fsort from "fast-sort"
 
   export let _bb
   export let onLoad
@@ -23,28 +24,7 @@
   }
 
   $: data = $store[model] || []
-  $: sorted = data
-  $: {
-    let result = [...sorted]
-
-    if (!sort.column) sorted = result
-
-    console.log(sort);
-
-    if (sort.direction === "ASC") {
-      result.sort((a, b) =>  {
-        console.log(a[sort.column], b[sort.column])
-        return String(a[sort.column]).localeCompare(String(b[sort.column]))
-      }
-      )
-    }
-
-    if (sort.direction === "DESC") {
-      result.reverse()
-    }
-
-    sorted = result
-  }
+  $: sorted = sort.direction ? fsort(data)[sort.direction](sort.column) : data
   $: if (model) fetchData()
 
   const shouldDisplayField = name => {
@@ -78,15 +58,15 @@
   function sortColumn(column) {
     if (column === sort.column) {
       sort = {
-        direction: sort.direction === "ASC" ? "DESC" : null,
-        column: sort.direction === "ASC" ? sort.column : null,
+        direction: sort.direction === "asc" ? "desc" : null,
+        column: sort.direction === "asc" ? sort.column : null,
       }
       return
     }
 
     sort = {
       column,
-      direction: "ASC",
+      direction: "asc",
     }
   }
 
@@ -101,7 +81,9 @@
       {#each headers as header}
         <th on:click={() => sortColumn(header)}>
           {header}
-          {#if sort.column === header}v{/if}
+          {#if sort.column === header}
+            {#if sort.direction === 'asc'}v{:else}^{/if}
+          {/if}
         </th>
       {/each}
     </tr>
