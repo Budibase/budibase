@@ -1,12 +1,24 @@
 <script>
   import { onMount } from "svelte"
+  import { cssVars, createClasses } from "./cssVars"
 
   export let _bb
   export let onLoad
   export let model
+  export let backgroundColor
+  export let color
+  export let stripeColor
+  export let borderColor
 
   let headers = []
   let store = _bb.store
+
+  $: cssVariables = {
+    backgroundColor,
+    color,
+    stripeColor,
+    borderColor,
+  }
 
   const shouldDisplayField = name => {
     if (name.startsWith("_")) return false
@@ -44,7 +56,7 @@
   })
 </script>
 
-<table class="uk-table">
+<table use:cssVars={cssVariables}>
   <thead>
     <tr>
       {#each headers as header}
@@ -67,42 +79,77 @@
 
 <style>
   table {
-    border: 1px solid #ccc;
-    background: #fff;
-    border-radius: 3px;
+    width: 100%;
     border-collapse: collapse;
     overflow: scroll; /* Scrollbar are always visible */
     overflow: auto; /* Scrollbar is displayed as it's needed */
   }
 
-  thead {
-    background: #393c44;
-    border: 1px solid #ccc;
-    height: 40px;
-    text-align: left;
-    margin-right: 60px;
+  /* Zebra striping */
+  tr:nth-of-type(odd) {
+    background: var(--stripeColor);
   }
 
-  thead th {
-    color: #ffffff;
+  th {
+    background-color: var(--backgroundColor);
+    color: var(--color);
+    font-weight: bold;
     text-transform: capitalize;
-    font-weight: 500;
-    font-size: 14px;
-    text-rendering: optimizeLegibility;
-    justify-content: left;
-    padding: 16px 20px 16px 8px;
-    margin-right: 20px;
   }
 
-  tbody tr {
-    border-bottom: 1px solid #ccc;
-    transition: 0.3s background-color;
-    color: #393c44;
-    font-size: 14px;
-    height: 40px;
+  td,
+  th {
+    padding: 16px;
+    border: 1px solid var(--borderColor);
+    text-align: left;
   }
 
-  tbody tr:hover {
-    background: var(--grey-1);
+  @media only screen and (max-width: 760px),
+    (min-device-width: 768px) and (max-device-width: 1024px) {
+    table {
+      width: 100%;
+    }
+
+    /* Force table to not be like tables anymore */
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+      display: block;
+    }
+
+    /* Hide table headers (but not display: none;, for accessibility) */
+    thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+    }
+
+    tr {
+      border: 1px solid var(--borderColor);
+    }
+
+    td {
+      /* Behave  like a "row" */
+      border: none;
+      border-bottom: 1px solid #eee;
+      position: relative;
+      padding-left: 10%;
+    }
+
+    td:before {
+      /* Now like a table header */
+      position: absolute;
+      /* Top/left values mimic padding */
+      top: 6px;
+      left: 6px;
+      width: 45%;
+      padding-right: 10px;
+      white-space: nowrap;
+      /* Label the data */
+      content: attr(data-column);
+    }
   }
 </style>
