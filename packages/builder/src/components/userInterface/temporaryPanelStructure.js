@@ -392,6 +392,9 @@ export default {
                 ],
               },
               properties: {
+                design: {
+                  ...all
+                },
                 settings: [
                   {
                     label: "Fix Highlight Slice",
