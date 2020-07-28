@@ -290,7 +290,14 @@ export default {
           icon: "ri-archive-drawer-line",
           properties: {
             design: { ...all },
-            settings: [{ label: "Table", key: "model", control: ModelSelect }],
+            settings: [
+              { label: "Model", key: "model", control: ModelSelect },
+              { label: "Stripe Color", key: "stripeColor", control: Input },
+              { label: "Border Color", key: "borderColor", control: Input },
+              { label: "TH Color", key: "backgroundColor", control: Input },
+              { label: "TH Font Color", key: "color", control: Input },
+              { label: "Table", key: "model", control: ModelSelect },
+            ],
           },
           children: [],
         },
