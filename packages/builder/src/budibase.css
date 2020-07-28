@@ -1,11 +1,5 @@
 /* Budibase Component Styles */
-.header {
-    font-size: 0.75rem;
-    color: var(--ink);
-    text-transform: uppercase;
-    margin-top: 1rem;
-    font-weight: 500;
-}
+
 
 .budibase__title {
     font-weight: 900;
@@ -69,7 +63,7 @@
 
 .budibase__nav-item.selected {
     color: var(--ink);
-    background: var(--blue-light);
+    background: var(--grey-2);
 }
 
 .budibase__nav-item:hover {

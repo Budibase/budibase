@@ -6,6 +6,7 @@
   import { getContext } from "svelte"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
+  import analytics from "../../analytics"
 
   const { open, close } = getContext("simple-modal")
 
@@ -38,6 +39,11 @@
 
         const res = await response.json()
 
+        analytics.captureEvent("web_app_created", {
+          name,
+          description,
+          appId: res._id,
+        })
         $goto(`./${res._id}`)
       } catch (error) {
         console.error(error)
@@ -63,7 +69,7 @@
       <span class="icon">
         <AppsIcon />
       </span>
-      <h3>Create new web app</h3>
+      <h3 class="header">Create new web app</h3>
     </div>
     <Input
       name="name"
@@ -90,7 +96,7 @@
       <InfoIcon />
       How to get started
     </a>
-    <Button outline thin on:click={_onCancel}>Cancel</Button>
+    <Button secondary thin on:click={_onCancel}>Cancel</Button>
     <Button primary thin on:click={_onOkay}>Save</Button>
   </div>
   <div class="close-button" on:click={_onCancel}>
@@ -125,10 +131,11 @@
     align-items: center;
     margin-bottom: 20px;
   }
-  h3 {
+  .header {
     margin: 0;
     font-size: 24px;
-    font-weight: bold;
+    font-weight: 600;
+    font-family: inter;
   }
   .icon {
     display: grid;

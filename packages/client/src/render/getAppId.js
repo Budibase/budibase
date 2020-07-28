@@ -1,4 +1,4 @@
-export const getAppId = docCookie => {
+export const parseAppIdFromCookie = docCookie => {
   const cookie =
     docCookie.split(";").find(c => c.trim().startsWith("budibase:token")) ||
     docCookie.split(";").find(c => c.trim().startsWith("builder:token"))

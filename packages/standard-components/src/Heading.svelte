@@ -8,7 +8,11 @@
 
   let containerElement
 
-  $: containerElement && !text && _bb.attachChildren(containerElement)
+  $: containerElement &&
+    !text &&
+    _bb.props.children &&
+    _bb.props.children.length &&
+    _bb.attachChildren(containerElement)
 </script>
 
 {#if type === 'h1'}

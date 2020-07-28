@@ -5,7 +5,11 @@ export default `<html>
     <style>
       body, html {
         height: 100%!important;
-        font-family: Roboto !important;
+        font-family: Inter !important;
+        margin: 0px!important;
+      }
+      *, *:before, *:after {
+        box-sizing: border-box;
       }
       .lay-__screenslot__text {
           width: 100%;
@@ -20,6 +24,24 @@ export default `<html>
           color: #999;
           text-transform: uppercase;
           font-weight: bold;
+        }
+
+        .container-screenslot-placeholder {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          text-align: center;
+          border-style: dashed !important;
+          border-width: 1px;
+          color: #000000;
+          background: #fafafa;
+          height: 94%;
+        }
+
+        .container-screenslot-placeholder span {
+          display: block;
+          margin-bottom: 10px;
         }
     </style>
     <script src='/assets/budibase-client.js'></script>

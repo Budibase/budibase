@@ -66,7 +66,7 @@
 		"props": {
 			"logo": "asset",
 			"loginRedirect": "string",
-			"name": "string",
+			"title": "string",
 			"usernameLabel": {
 				"type": "string",
 				"default": "Username"
@@ -80,7 +80,8 @@
 				"default": "Login"
 			},
 			"buttonClass": "string",
-			"inputClass": "string"
+			"inputClass": "string",
+			"buttonText": "string"
 		},
 		"tags": [
 			"login",
@@ -198,7 +199,7 @@
 		}
 	},
 	"datatable": {
-		"description": "an HTML table that fetches data from a model or view and displays it.",
+		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
 			"model": "models",
@@ -209,17 +210,21 @@
 		}
 	},
 	"dataform": {
-		"description": "an HTML table that fetches data from a model or view and displays it.",
+		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
-			"model": "models"
+			"model": "models",
+			"title": "string",
+			"buttonText": "string"
 		}
 	},
 	"dataformwide": {
-		"description": "an HTML table that fetches data from a model or view and displays it.",
+		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
-			"model": "models"
+			"model": "models",
+			"title": "string",
+			"buttonText": "string"
 		}
 	},
 	"datalist": {
@@ -241,15 +246,14 @@
 		"description": "A configurable data list that attaches to your backend models.",
 		"data": true,
 		"props": {
-			"model": "models",
-			"layout": {
-				"type": "options",
-				"default": "list",
-				"options": [
-					"list",
-					"grid"
-				]
-			}
+			"model": "models"
+		}
+	},
+	"recorddetail": {
+		"description": "Loads a record, using an ID in the url",
+		"data": true,
+		"props": {
+			"model": "models"
 		}
 	},
 	"datamap": {

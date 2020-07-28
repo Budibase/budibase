@@ -20,6 +20,16 @@
     borderColor,
   }
 
+  const shouldDisplayField = name => {
+    if (name.startsWith("_")) return false
+    // always 'record'
+    if (name === "type") return false
+    // tables are always tied to a single modelId, this is irrelevant
+    if (name === "modelId") return false
+
+    return true
+  }
+
   async function fetchData() {
     const FETCH_RECORDS_URL = `/api/views/all_${model}`
 
@@ -32,7 +42,7 @@
         return state
       })
 
-      headers = Object.keys(json[0]).filter(key => !key.startsWith("_"))
+      headers = Object.keys(json[0]).filter(shouldDisplayField)
     } else {
       throw new Error("Failed to fetch records.", response)
     }
@@ -71,6 +81,8 @@
   table {
     width: 100%;
     border-collapse: collapse;
+    overflow: scroll; /* Scrollbar are always visible */
+    overflow: auto; /* Scrollbar is displayed as it's needed */
   }
 
   /* Zebra striping */

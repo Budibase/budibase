@@ -28,7 +28,7 @@
 </script>
 
 <section>
-  <Button purple wide on:click{newWorkflow}>Create New Workflow</Button>
+  <Button purple wide on:click={newWorkflow}>Create New Workflow</Button>
   <ul>
     {#each $workflowStore.workflows as workflow}
       <li
@@ -91,7 +91,7 @@
   }
 
   .workflow-item.selected {
-    background: var(--blue-light);
+    background: var(--grey-2);
   }
 
   .new-workflow-button {

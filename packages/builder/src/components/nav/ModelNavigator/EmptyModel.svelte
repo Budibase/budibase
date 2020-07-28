@@ -19,19 +19,19 @@
         ...rest,
       },
     })
-    notifier.success(`${model.name} model created.`)
+    notifier.success(`${model.name} table created.`)
   }
 </script>
 
 <section transition:fade>
   <header>
-    <h2>Create New Model</h2>
-    <p>Before you can view your model, you need to set it up.</p>
+    <h2>Create New Table</h2>
+    <p>Before you can view your table, you need to set it up.</p>
   </header>
 
   <div class="block-row">
     <span class="block-row-title">Fields</span>
-    <p>Blocks are pre-made fields and help you build your model quicker.</p>
+    <p>Blocks are pre-made fields and help you build your table quicker.</p>
     <div class="blocks">
       {#each Object.values(FIELDS) as field}
         <Block
@@ -45,7 +45,7 @@
 
   <div class="block-row">
     <span class="block-row-title">Blocks</span>
-    <p>Blocks are pre-made fields and help you build your model quicker.</p>
+    <p>Blocks are pre-made fields and help you build your table quicker.</p>
     <div class="blocks">
       {#each Object.values(BLOCKS) as field}
         <Block
@@ -58,8 +58,8 @@
   </div>
 
   <div class="block-row">
-    <span class="block-row-title">Models</span>
-    <p>Blocks are pre-made fields and help you build your model quicker.</p>
+    <span class="block-row-title">Tables</span>
+    <p>Blocks are pre-made fields and help you build your table quicker.</p>
     <div class="blocks">
       {#each Object.values(MODELS) as model}
         <Block

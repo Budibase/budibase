@@ -7,9 +7,14 @@ const instanceController = require("./instance")
 const { resolve, join } = require("path")
 const { copy, exists, readFile, writeFile } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
-const { exec } = require("child_process")
 const sqrl = require("squirrelly")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
+const fs = require("fs-extra")
+const { promisify } = require("util")
+const chmodr = require("chmodr")
+const {
+  downloadExtractComponentLibraries,
+} = require("../../utilities/createAppPackage")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ClientDb.name(getClientId(ctx)))
@@ -80,14 +85,43 @@ exports.create = async function(ctx) {
   await instanceController.create(createInstCtx)
   newApplication.instances.push(createInstCtx.body)
 
-  if (ctx.isDev) {
+  if (process.env.NODE_ENV !== "jest") {
     const newAppFolder = await createEmptyAppPackage(ctx, newApplication)
-    await runNpmInstall(newAppFolder)
+    await downloadExtractComponentLibraries(newAppFolder)
   }
 
   ctx.status = 200
   ctx.body = newApplication
   ctx.message = `Application ${ctx.request.body.name} created successfully`
+}
+
+exports.update = async function(ctx) {
+  const clientId = await lookupClientId(ctx.params.applicationId)
+  const db = new CouchDB(ClientDb.name(clientId))
+  const application = await db.get(ctx.params.applicationId)
+
+  const data = ctx.request.body
+  const newData = { ...application, ...data }
+
+  const response = await db.put(newData)
+  data._rev = response.rev
+
+  ctx.status = 200
+  ctx.message = `Application ${application.name} updated successfully.`
+  ctx.body = response
+}
+
+exports.delete = async function(ctx) {
+  const db = new CouchDB(ClientDb.name(getClientId(ctx)))
+  const app = await db.get(ctx.params.applicationId)
+  const result = await db.remove(app)
+  await fs.rmdir(`${budibaseAppsDir()}/${ctx.params.applicationId}`, {
+    recursive: true,
+  })
+
+  ctx.status = 200
+  ctx.message = `Application ${app.name} deleted successfully.`
+  ctx.body = result
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
@@ -106,7 +140,19 @@ const createEmptyAppPackage = async (ctx, app) => {
     ctx.throw(400, "App folder already exists for this application")
   }
 
+  await fs.ensureDir(join(newAppFolder, "pages", "main", "screens"), 0o777)
+  await fs.ensureDir(
+    join(newAppFolder, "pages", "unauthenticated", "screens"),
+    0o777
+  )
+
   await copy(templateFolder, newAppFolder)
+
+  // this line allows full permission on copied files
+  // we have an unknown problem without this, whereby the
+  // files get weird permissions and cant be written to :(
+  const chmodrPromise = promisify(chmodr)
+  await chmodrPromise(newAppFolder, 0o777)
 
   await updateJsonFile(join(appsFolder, app._id, "package.json"), {
     name: npmFriendlyAppName(app.name),
@@ -117,7 +163,10 @@ const createEmptyAppPackage = async (ctx, app) => {
     app
   )
 
-  await buildPage(ctx.config, app._id, "main", { page: mainJson })
+  await buildPage(ctx.config, app._id, "main", {
+    page: mainJson,
+    screens: await loadScreens(newAppFolder, "main"),
+  })
 
   const unauthenticatedJson = await updateJsonFile(
     join(appsFolder, app._id, "pages", "unauthenticated", "page.json"),
@@ -126,9 +175,24 @@ const createEmptyAppPackage = async (ctx, app) => {
 
   await buildPage(ctx.config, app._id, "unauthenticated", {
     page: unauthenticatedJson,
+    screens: await loadScreens(newAppFolder, "unauthenticated"),
   })
 
   return newAppFolder
+}
+
+const loadScreens = async (appFolder, page) => {
+  const screensFolder = join(appFolder, "pages", page, "screens")
+
+  const screenFiles = (await fs.readdir(screensFolder)).filter(s =>
+    s.endsWith(".json")
+  )
+
+  let screens = []
+  for (let file of screenFiles) {
+    screens.push(await fs.readJSON(join(screensFolder, file)))
+  }
+  return screens
 }
 
 const lookupClientId = async appId => {
@@ -154,18 +218,6 @@ const updateJsonFile = async (filePath, app) => {
   const newJson = sqrl.Render(json, app)
   await writeFile(filePath, newJson, "utf8")
   return JSON.parse(newJson)
-}
-
-const runNpmInstall = async newAppFolder => {
-  return new Promise((resolve, reject) => {
-    const cmd = `cd ${newAppFolder} && npm install`
-    exec(cmd, (error, stdout, stderr) => {
-      if (error) {
-        reject(error)
-      }
-      resolve(stdout ? stdout : stderr)
-    })
-  })
 }
 
 const npmFriendlyAppName = name =>
