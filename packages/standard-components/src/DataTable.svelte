@@ -12,6 +12,8 @@
 
   let headers = []
   let store = _bb.store
+  let sort = {}
+  let sorted = []
 
   $: cssVariables = {
     backgroundColor,
@@ -19,6 +21,31 @@
     stripeColor,
     borderColor,
   }
+
+  $: data = $store[model] || []
+  $: sorted = data
+  $: {
+    let result = [...sorted]
+
+    if (!sort.column) sorted = result
+
+    console.log(sort);
+
+    if (sort.direction === "ASC") {
+      result.sort((a, b) =>  {
+        console.log(a[sort.column], b[sort.column])
+        return String(a[sort.column]).localeCompare(String(b[sort.column]))
+      }
+      )
+    }
+
+    if (sort.direction === "DESC") {
+      result.reverse()
+    }
+
+    sorted = result
+  }
+  $: if (model) fetchData()
 
   const shouldDisplayField = name => {
     if (name.startsWith("_")) return false
@@ -48,8 +75,20 @@
     }
   }
 
-  $: data = $store[model] || []
-  $: if (model) fetchData()
+  function sortColumn(column) {
+    if (column === sort.column) {
+      sort = {
+        direction: sort.direction === "ASC" ? "DESC" : null,
+        column: sort.direction === "ASC" ? sort.column : null,
+      }
+      return
+    }
+
+    sort = {
+      column,
+      direction: "ASC",
+    }
+  }
 
   onMount(async () => {
     await fetchData()
@@ -60,12 +99,15 @@
   <thead>
     <tr>
       {#each headers as header}
-        <th>{header}</th>
+        <th on:click={() => sortColumn(header)}>
+          {header}
+          {#if sort.column === header}v{/if}
+        </th>
       {/each}
     </tr>
   </thead>
   <tbody>
-    {#each data as row}
+    {#each sorted as row (row._id)}
       <tr>
         {#each headers as header}
           {#if row[header]}
@@ -118,6 +160,10 @@
     td,
     tr {
       display: block;
+    }
+
+    th {
+      cursor: pointer;
     }
 
     /* Hide table headers (but not display: none;, for accessibility) */
