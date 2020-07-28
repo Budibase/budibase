@@ -28,12 +28,17 @@ jobs:
       - run: yarn lint 
       - run: yarn bootstrap 
       - run: yarn build 
+        env:
+          POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
+          POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       - run: yarn test
 
       - name: Prepare for app notarization (macOS)
         if: startsWith(matrix.os, 'macos')
         # Import Apple API key for app notarization on macOS
         run: |
+          xattr -cr *
           mkdir -p ~/private_keys/
           echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
 

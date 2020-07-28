@@ -1,6 +1,6 @@
 {
   "name": "@budibase/client",
-  "version": "0.0.32",
+  "version": "0.1.1",
   "license": "MPL-2.0",
   "main": "dist/budibase-client.js",
   "module": "dist/budibase-client.esm.mjs",
@@ -60,5 +60,5 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^4.0.4"
   },
-  "gitHead": "b1f4f90927d9e494e513220ef060af28d2d42455"
+  "gitHead": "e4e053cb6ff9a0ddc7115b44ccaa24b8ec41fb9a"
 }

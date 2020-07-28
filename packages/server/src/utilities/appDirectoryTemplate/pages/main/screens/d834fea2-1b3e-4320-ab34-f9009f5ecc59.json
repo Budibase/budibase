@@ -1,0 +1,61 @@
+{
+  "description": "",
+  "url": "",
+  "props": {
+    "_id": "d834fea2-1b3e-4320-ab34-f9009f5ecc59",
+    "_component": "@budibase/standard-components/container",
+    "_styles": {
+      "normal": {},
+      "hover": {},
+      "active": {},
+      "selected": {}
+    },
+    "_code": "",
+    "className": "",
+    "onLoad": [],
+    "type": "div",
+    "_children": [
+      {
+        "_id": "ef60083f-4a02-4df3-80f3-a0d3d16847e7",
+        "_component": "@budibase/standard-components/heading",
+        "_styles": {
+          "normal": {},
+          "hover": {},
+          "active": {},
+          "selected": {}
+        },
+        "_code": "",
+        "className": "",
+        "text": "Home",
+        "type": "h1",
+        "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
+        "_instanceName": "Heading",
+        "_children": []
+      },
+      {
+        "_id": "6c256e06-784c-4ac0-a644-ed2f9b91d459",
+        "_component": "@budibase/standard-components/image",
+        "_styles": {
+          "normal": {
+            "width": "100%"
+          },
+          "hover": {},
+          "active": {},
+          "selected": {}
+        },
+        "_code": "",
+        "url": "https://source.unsplash.com/Vun-71Vy2hc",
+        "className": "",
+        "description": "",
+        "height": "",
+        "width": "",
+        "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
+        "_instanceName": "Image",
+        "_children": []
+      }
+    ],
+    "_instanceName": "Home"
+  },
+  "route": "/*",
+  "name": "d834fea2-1b3e-4320-ab34-f9009f5ecc59"
+}

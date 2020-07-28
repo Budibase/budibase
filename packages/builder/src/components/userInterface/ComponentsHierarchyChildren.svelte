@@ -42,7 +42,7 @@
         class:selected={currentComponent === component}
         style="padding-left: {level * 20 + 40}px">
         <div class="nav-item">
-          <i class="icon ri-arrow-right-circle-fill" />
+          <i class="icon ri-arrow-right-circle-line" />
           {isScreenslot(component._component) ? 'Screenslot' : component._instanceName}
         </div>
         <div class="actions">
@@ -73,7 +73,7 @@
     grid-template-columns: 1fr auto auto auto;
     padding: 0px 5px 0px 15px;
     margin: auto 0px;
-    border-radius: 3px;
+    border-radius: 5px;
     height: 36px;
     align-items: center;
   }

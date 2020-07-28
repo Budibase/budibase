@@ -1,6 +1,6 @@
 import regexparam from "regexparam"
-import { routerStore } from "../state/store"
-import { getAppId } from "./getAppId"
+import { appStore } from "../state/store"
+import { parseAppIdFromCookie } from "./getAppId"
 
 export const screenRouter = ({ screens, onScreenSelected, window }) => {
   const makeRootedPath = url => {
@@ -9,7 +9,7 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
       (window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1")
     ) {
-      const appId = getAppId(window.document.cookie)
+      const appId = parseAppIdFromCookie(window.document.cookie)
       if (url) {
         if (url.startsWith(appId)) return url
         return `/${appId}${url.startsWith("/") ? "" : "/"}${url}`
@@ -49,20 +49,20 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
       })
     }
 
-    routerStore.update(state => {
+    appStore.update(state => {
       state["##routeParams"] = params
       return state
     })
 
     const screenIndex = current !== -1 ? current : fallback
 
-    onScreenSelected(screens[screenIndex], _url)
-
     try {
       !url.state && history.pushState(_url, null, _url)
     } catch (_) {
       // ignoring an exception here as the builder runs an iframe, which does not like this
     }
+
+    onScreenSelected(screens[screenIndex], _url)
   }
 
   function click(e) {

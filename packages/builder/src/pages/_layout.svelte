@@ -26,27 +26,39 @@
       <div class="nav-section">
         <div class="nav-section-title">Build</div>
         <Link icon={AppsIcon} title="Apps" href="/" active />
-        <Link icon={SettingsIcon} title="Settings" href="/" />
-        <Link icon={UpdatesIcon} title="Updates" href="/" />
-        <Link icon={HostingIcon} title="Hosting" href="/" />
+        <Link
+          icon={HostingIcon}
+          title="Hosting"
+          href="https://portal.budi.live/" />
       </div>
 
       <div class="nav-section">
         <div class="nav-section-title">Learn</div>
-        <Link icon={DocumentationIcon} title="Documentation" href="/" />
-        <Link icon={TutorialsIcon} title="Tutorials" href="/" />
-        <Link icon={CommunityIcon} title="Community" href="/" />
+        <Link
+          icon={DocumentationIcon}
+          title="Documentation"
+          href="https://docs.budibase.com/" />
+        <Link
+          icon={CommunityIcon}
+          title="Community"
+          href="https://forum.budibase.com/" />
       </div>
 
       <div class="nav-section">
         <div class="nav-section-title">Contact</div>
         <Link
           icon={ContributionIcon}
-          title="Contribute to our product"
-          href="/" />
-        <Link icon={BugIcon} title="Report bug" href="/" />
-        <Link icon={EmailIcon} title="Email" href="/" />
-        <Link icon={TwitterIcon} title="Twitter" href="/" />
+          title="Contribute"
+          href="https://github.com/Budibase/budibase" />
+        <Link
+          icon={BugIcon}
+          title="Report bug"
+          href="https://github.com/Budibase/budibase/issues" />
+        <Link icon={EmailIcon} title="Email" href="mailto:hi@budibase.com" />
+        <Link
+          icon={TwitterIcon}
+          title="Twitter"
+          href="https://twitter.com/budibase" />
       </div>
     </div>
 
@@ -59,7 +71,7 @@
 <style>
   .root {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 260px 1fr;
     height: 100%;
     width: 100%;
     background: var(--grey-1);
@@ -67,6 +79,7 @@
 
   .main {
     grid-column: 2;
+    overflow: auto;
   }
 
   .ui-nav {
@@ -75,7 +88,6 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--grey-4);
   }
 
   .home-logo {
