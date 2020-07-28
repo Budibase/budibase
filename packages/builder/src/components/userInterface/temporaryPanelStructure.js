@@ -296,7 +296,7 @@ export default {
               { label: "Border Color", key: "borderColor", control: Input },
               { label: "TH Color", key: "backgroundColor", control: Input },
               { label: "TH Font Color", key: "color", control: Input },
-              { label: "Table", key: "model", control: ModelSelect }
+              { label: "Table", key: "model", control: ModelSelect },
             ],
           },
           children: [],
