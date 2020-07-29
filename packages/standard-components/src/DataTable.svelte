@@ -1,6 +1,8 @@
 <script>
   import { onMount } from "svelte"
   import { cssVars, createClasses } from "./cssVars"
+  import ArrowUp from "./icons/ArrowUp.svelte"
+  import ArrowDown from "./icons/ArrowDown.svelte"
   import fsort from "fast-sort"
 
   export let _bb
@@ -80,10 +82,14 @@
     <tr>
       {#each headers as header}
         <th on:click={() => sortColumn(header)}>
-          {header}
-          {#if sort.column === header}
-            {#if sort.direction === 'asc'}v{:else}^{/if}
-          {/if}
+          <span>
+            {header}
+            {#if sort.column === header}
+              <svelte:component
+                style="height: 1em;"
+                this={sort.direction === 'asc' ? ArrowUp : ArrowDown} />
+            {/if}
+          </span>
         </th>
       {/each}
     </tr>
@@ -119,6 +125,12 @@
     color: var(--color);
     font-weight: bold;
     text-transform: capitalize;
+    cursor: pointer;
+  }
+
+  th span {
+    display: flex;
+    align-items: center;
   }
 
   td,
