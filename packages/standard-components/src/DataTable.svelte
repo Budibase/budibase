@@ -86,8 +86,8 @@
             {header}
             {#if sort.column === header}
               <svelte:component
-                style="height: 1em;"
-                this={sort.direction === 'asc' ? ArrowDown : ArrowUp} />
+                this={sort.direction === 'asc' ? ArrowDown : ArrowUp}
+                style="height: 1em;" />
             {/if}
           </span>
         </th>
@@ -154,10 +154,6 @@
     td,
     tr {
       display: block;
-    }
-
-    th {
-      cursor: pointer;
     }
 
     /* Hide table headers (but not display: none;, for accessibility) */
