@@ -34,28 +34,35 @@
   export let gradient = null
   export let color = "britecharts"
   export let enableLabels = true
+  export let hasPercentage = null
   export let hasSingleBarHighlight = true
+  export let highlightBarFunction = null
   export let height = 200
   export let width = 300
+  export let labelsMargin = null
   export let isAnimated = true
   export let isHorizontal = true
-  export let labelOffset = null
+  export let xAxisLabelOffset = null
+  export let yAxisLabelOffset = null
   export let labelsNumberFormat = null
-  export let labelSize = null
   export let locale = null
+  export let valueLabel = null
   export let nameLabel = null
   export let numberFormat = null
+  export let labelsSize = null
+  export let xTicks = null
+  export let yTicks = null
+  export let percentageAxisToMaxRatio = null
 
   export let useLegend = true
 
   onMount(() => {
-    //call charts props in here
     if (chartElement) {
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
-      bindChartTooltip()
       chartContainer.datum(data).call(chart)
+      bindChartTooltip()
     }
   })
 
@@ -73,16 +80,25 @@
       chart.yAxisLabel(yAxisLabel)
     }
     if (betweenBarsPadding) {
-      chart.betweenBarsPadding(betweenBarsPadding)
+      chart.betweenBarsPadding(Number(betweenBarsPadding))
     }
     if (enableLabels) {
       chart.enableLabels(enableLabels)
     }
+    if (hasPercentage) {
+      chart.hasPercentage(hasPercentage)
+    }
     if (hasSingleBarHighlight) {
       chart.hasSingleBarHighlight(hasSingleBarHighlight)
     }
+    if (labelsMargin) {
+      chart.labelsMargin(labelsMargin)
+    }
     if (height) {
       chart.height(height)
+    }
+    if (highlightBarFunction) {
+      chart.highlightBarFunction(highlightBarFunction)
     }
     if (width) {
       chart.width(width)
@@ -93,14 +109,17 @@
     if (isHorizontal) {
       chart.isHorizontal(isHorizontal)
     }
-    if (labelOffset) {
-      chart.labelOffset(labelOffset)
+    if (yAxisLabelOffset) {
+      chart.yAxisLabelOffset(Number(yAxisLabelOffset))
+    }
+    if (xAxisLabelOffset) {
+      chart.xAxisLabelOffset(Number(xAxisLabelOffset))
     }
     if (labelsNumberFormat) {
       chart.labelsNumberFormat(labelsNumberFormat)
     }
-    if (labelSize) {
-      chart.labelSize(labelSize)
+    if (valueLabel) {
+      chart.valueLabel(valueLabel)
     }
     if (locale) {
       chart.locale(locale)
@@ -110,6 +129,18 @@
     }
     if (numberFormat) {
       chart.numberFormat(numberFormat)
+    }
+    if (labelsSize) {
+      chart.labelsSize(labelsSize)
+    }
+    if (xTicks) {
+      chart.xTicks(xTicks)
+    }
+    if (yTicks) {
+      chart.yTicks(yTicks)
+    }
+    if (percentageAxisToMaxRatio) {
+      chart.percentageAxisToMaxRatio(percentageAxisToMaxRatio)
     }
   }
 
@@ -130,7 +161,6 @@
 
   function bindChartTooltip() {
     tooltip = britecharts.miniTooltip()
-    debugger
     tooltipContainer = select(`.${chartClass} .metadata-group`)
     tooltipContainer.datum([]).call(tooltip)
   }
