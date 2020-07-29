@@ -261,11 +261,14 @@
 			"width": "number",
 			"hasFixedHighlightedSlice": "bool",
 			"hasLastHoverSliceHighlighted": "bool",
+			"hasHoverAnimation": "bool",
+			"numberFormat": "string",
 			"isAnimated": "bool",
 			"externalRadius": "number",
 			"internalRadius": "number",
 			"radiusHoverOffset": "number",
-			"useLegend": "bool"
+			"useLegend": "bool",
+			"percentageFormat": "string"
 		}
 	},
 	"bar": {
@@ -281,7 +284,8 @@
 			"width": "number",
 			"isAnimated": "bool",
 			"isHorizontal": "bool",
-			"labelOffset": "number",
+			"xAxisLabelOffset": "number",
+			"yAxisLabelOffset": "number",
 			"labelNumberFormat": "number",
 			"labelSize": "number",
 			"locale": "string",
@@ -289,7 +293,9 @@
 			"numberLabel": "string",
 			"xAxisLabel": "string",
 			"yAxisLabel": "string",
-			"useLegend": "bool"
+			"useLegend": "bool",
+			"xTicks": "number",
+			"yTicks": "number"
 		}
 	},
 	"line": {
@@ -310,11 +316,40 @@
 			"shouldShowAllDataPoints": "bool",
 			"topicLabel": "string",
 			"valueLabel": "string",
-			"xAxisLabel": "string",
 			"xAxisValueType": "string",
 			"xAxisScale": "string",
 			"xAxisFormat": "string",
+			"xAxisCustomFormat": "string",
+			"xAxisLabel": "string"
+		}
+	},
+	"brush":{
+		"description": "brush chart",
+		"data": true,
+		"props": {
+			"gradient": "string",
+			"height": "number",
+			"width": "number",
+			"margin": "string",
+			"dateRange": "string",
+			"locale": "string",
+			"roundingTimeInterval": "string",
+			"xAxisFormat": "string",
+			"xTicks": "number",
 			"xAxisCustomFormat": "string"
+		}
+	},
+	"bullet": {
+		"description": "Bullet chart",
+		"data": true,
+		"props": {
+			"color": "string",
+			"customSubtitle": "string",
+			"customTitle": "string",
+			"numberFormat": "string",
+			"paddingBetweenAxisAndChart": "number",
+			"height": "number",
+			"width": "number"
 		}
 	},
 	"datachart": {

@@ -1,17 +1,31 @@
 <script>
-  import Chart, { getColorSchema, getChartGradient } from "./Chart.svelte"
+  import { getColorSchema, getChartGradient, notNull } from "./utils"
+  import britecharts from "britecharts"
+  import { onMount } from "svelte"
 
-  /*
-    ISSUES:
-    
-  */
+  import { select } from "d3-selection"
+  import shortid from "shortid"
 
-  let type = "line"
+  const _id = shortid.generate()
+
+  const chart = britecharts.line()
+  const chartClass = `line-container-${_id}`
+  const legendClass = `legend-container-${_id}`
+
+  let chartElement
+  let chartContainer
   let tooltip
+  let tooltipContainer
+
+  export let customMouseHover = null
+  export let customMouseMove = null
+  export let customMouseOut = null
+  export let customDataEntryClick = null
+  export let customTouchMove = null
 
   export let data = []
-  export let axisTimeCombinations = ""
   export let color = "britecharts"
+  export let axisTimeCombinations = ""
   export let grid = "horizontal"
   export let aspectRatio = 0.5
   export let dateLabel = "date"
@@ -29,31 +43,118 @@
   export let xAxisScale = "linear"
   export let xAxisFormat = "day-month"
   export let xAxisCustomFormat = "%H"
+  export let yAxisLabel = null
+  export let useLegend = true
+  export let yAxisLabelPadding = null
+  export let lines = null //not handled by setting prop
+  export let tooltipThreshold = null
+
+  onMount(() => {
+    chartContainer = select(`.${chartClass}`)
+    bindChartUIProps()
+    bindChartEvents()
+    chartContainer.datum(data).call(chart)
+    bindChartTooltip()
+  })
+
+  function bindChartUIProps() {
+    if (notNull(color)) {
+      chart.colorSchema(colorSchema)
+    }
+    if (notNull(axisTimeCombinations)) {
+      chart.axisTimeCombinations(axisTimeCombinations)
+    }
+    if (notNull(grid)) {
+      chart.grid(grid)
+    }
+    if (notNull(aspectRatio)) {
+      chart.aspectRatio(aspectRatio)
+    }
+    if (notNull(dateLabel)) {
+      chart.dateLabel(dateLabel)
+    }
+    if (notNull(width)) {
+      chart.width(width)
+    }
+    if (notNull(height)) {
+      chart.height(height)
+    }
+    if (notNull(isAnimated)) {
+      chart.isAnimated(isAnimated)
+    }
+    if (notNull(lineCurve)) {
+      chart.lineCurve(lineCurve)
+    }
+    if (notNull(locale)) {
+      chart.locale(locale)
+    }
+    if (notNull(numberFormat)) {
+      chart.numberFormat(numberFormat)
+    }
+    if (notNull(shouldShowAllDataPoints)) {
+      chart.shouldShowAllDataPoints(shouldShowAllDataPoints)
+    }
+    if (notNull(topicLabel)) {
+      chart.topicLabel(topicLabel)
+    }
+    if (notNull(valueLabel)) {
+      chart.valueLabel(valueLabel)
+    }
+    if (notNull(xAxisLabel)) {
+      chart.xAxisLabel(xAxisLabel)
+    }
+    if (notNull(xAxisValueType)) {
+      chart.xAxisValueType(xAxisValueType)
+    }
+    if (notNull(xAxisScale)) {
+      chart.xAxisScale(xAxisScale)
+    }
+    if (notNull(xAxisFormat)) {
+      chart.xAxisFormat(xAxisFormat)
+    }
+    if (notNull(xAxisCustomFormat)) {
+      chart.xAxisCustomFormat(xAxisCustomFormat)
+    }
+    if (notNull(yAxisLabel)) {
+      chart.yAxisLabel(yAxisLabel)
+    }
+    if (notNull(yAxisLabelPadding)) {
+      chart.yAxisLabelPadding(yAxisLabelPadding)
+    }
+  }
+
+  function bindChartEvents() {
+    if (customMouseHover) {
+      chart.on("customMouseHover", customMouseHover)
+    }
+    if (customMouseMove) {
+      chart.on("customMouseMove", customMouseMove)
+    }
+    if (customMouseOut) {
+      chart.on("customMouseOut", customMouseOut)
+    }
+    if (customDataEntryClick) {
+      chart.on("customDataEntryClick", customDataEntryClick)
+    }
+    if (customTouchMove) {
+      chart.on("customTouchMove", customTouchMove)
+    }
+  }
+
+  function bindChartTooltip() {
+    tooltip = britecharts.miniTooltip()
+
+    tooltipContainer = select(`.${chartClass} .metadata-group`)
+    tooltipContainer.datum([]).call(tooltip)
+  }
 
   $: colorSchema = getColorSchema(color)
-  $: console.log($$props)
 </script>
 
-<Chart
-  {type}
-  {data}
-  {colorSchema}
-  {axisTimeCombinations}
-  {lineCurve}
-  {numberFormat}
-  {height}
-  {topicLabel}
-  {shouldShowAllDataPoints}
-  {xAxisLabel}
-  {valueLabel}
-  {xAxisValueType}
-  {xAxisScale}
-  {xAxisCustomFormat}
-  {aspectRatio}
-  {grid}
-  tooltipThreshold={600}
-  {width}
-  {dateLabel} />
+<div bind:this={chartElement} class={chartClass} />
+{#if useLegend}
+  <div class={legendClass} />
+{/if}
 
 <!-- 
 

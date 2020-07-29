@@ -393,7 +393,7 @@ export default {
               },
               properties: {
                 design: {
-                  ...all
+                  ...all,
                 },
                 settings: [
                   {
@@ -411,6 +411,12 @@ export default {
                   {
                     label: "Is Animated",
                     key: "isAnimated",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Has Hover",
+                    key: "hasHoverAnimation",
                     valueKey: "checked",
                     control: Checkbox,
                   },
@@ -459,6 +465,7 @@ export default {
                   {
                     label: "Show Legend",
                     key: "useLegend ",
+                    valueKey: "checked",
                     control: Checkbox,
                   },
                 ],
@@ -561,8 +568,13 @@ export default {
                     valueKey: "checked",
                   },
                   {
-                    label: "Label Offset",
-                    key: "labelOffset",
+                    label: "X Axis Label Offset",
+                    key: "xAxisLabelOffset",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis Label Offset",
+                    key: "yAxisLabelOffset",
                     control: Input,
                   },
                   {
@@ -594,6 +606,172 @@ export default {
                     label: "Use Legend",
                     key: "useLegend",
                     control: Checkbox,
+                  },
+                ],
+              },
+            },
+            {
+              name: "Brush",
+              _component: "@budibase/standard-components/brush",
+              description: "Brush chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: [
+                  {
+                    value: 1,
+                    date: "2011-01-06T00:00:00Z",
+                  },
+                  {
+                    value: 2,
+                    date: "2011-01-07T00:00:00Z",
+                  },
+                ],
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "Gradient",
+                    key: "gradient",
+                    control: OptionSelect,
+                    options: [
+                      { value: "", label: "None" },
+                      { value: "bluePurple", label: "Blue Purple" },
+                      { value: "greenBlue", label: "Green Blue" },
+                      { value: "orangePink", label: "Orange Pink" },
+                    ],
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Date Range",
+                    key: "dateRange",
+                    control: Input,
+                  },
+                  {
+                    label: "Locale",
+                    key: "locale",
+                    control: Input,
+                  },
+                  {
+                    label: "Time Interval",
+                    key: "roundingTimeInterval",
+                    control: OptionSelect,
+                    options: [
+                      "timeDay",
+                      "timeMillisecond",
+                      "utcMillisecond",
+                      "timeSecond",
+                      "utcSecond",
+                      "timeMinute",
+                      "utcMinute",
+                      "timeHour",
+                      "utcHour",
+                      "utcDay",
+                      "timeWeek",
+                      "utcWeek",
+                      "timeSunday",
+                      "utcSunday",
+                      "timeMonday",
+                      "utcMonday",
+                      "timeTuesday",
+                      "utcTuesday",
+                      "timeWednesday",
+                      "utcWednesday",
+                      "timeThursday",
+                      "utcThursday",
+                      "timeFriday",
+                      "utcFriday",
+                      "timeSaturday",
+                      "utcSaturday",
+                      "timeMonth",
+                      "utcMonth",
+                      "timeYear",
+                      "utcYear",
+                    ],
+                  },
+                  {
+                    label: "X Axis Format",
+                    key: "xAxisFormat",
+                    control: OptionSelect,
+                    options: [
+                      "day-month",
+                      "minute-hour",
+                      "hour-daymonth",
+                      "month-year",
+                      "custom",
+                    ],
+                  },
+                  {
+                    label: "X Ticks",
+                    key: "xTicks",
+                    control: Input,
+                  },
+                ],
+              },
+            },
+            {
+              name: "Bullet",
+              _component: "@budibase/standard-components/bullet",
+              description: "Bullet chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: {
+                  ranges: [130, 160, 250],
+                  measures: [150, 180],
+                  markers: [175],
+                },
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "Color",
+                    key: "color",
+                    control: OptionSelect,
+                    options: [
+                      "britecharts",
+                      "blueGreen",
+                      "green",
+                      "grey",
+                      "orange",
+                      "pink",
+                      "purple",
+                      "red",
+                      "teal",
+                      "yellow",
+                    ],
+                  },
+                  {
+                    label: "Title",
+                    key: "title",
+                    control: Input,
+                  },
+                  {
+                    label: "Subtitle",
+                    key: "subtitle",
+                    control: Input,
+                  },
+                  {
+                    label: "Axis Padding",
+                    key: "paddingBetweenAxisAndChart",
+                    control: Input,
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
                   },
                 ],
               },
@@ -683,6 +861,12 @@ export default {
                       "teal",
                       "yellow",
                     ],
+                  },
+                  {
+                    label: "X Axis Value Type",
+                    key: "xAxisValueType",
+                    control: OptionSelect,
+                    options: ["date", "number"],
                   },
                   {
                     label: "Grid",
@@ -780,6 +964,11 @@ export default {
                   {
                     label: "X Axis Custom Format",
                     key: "xAxisCustomFormat",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Label",
+                    key: "xAxisLabel",
                     control: Input,
                   },
                 ],
