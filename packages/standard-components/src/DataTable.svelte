@@ -87,7 +87,7 @@
             {#if sort.column === header}
               <svelte:component
                 style="height: 1em;"
-                this={sort.direction === 'asc' ? ArrowUp : ArrowDown} />
+                this={sort.direction === 'asc' ? ArrowDown : ArrowUp} />
             {/if}
           </span>
         </th>
