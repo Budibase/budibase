@@ -472,6 +472,143 @@ export default {
               },
             },
             {
+              name: "Heatmap",
+              _component: "@budibase/standard-components/heatmap",
+              description: "Heatmap chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: [
+                  {
+                    day: 0,
+                    hour: 0,
+                    value: 7,
+                  },
+                  {
+                    day: 0,
+                    hour: 1,
+                    value: 10,
+                  },
+                ],
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "Color",
+                    key: "color",
+                    control: OptionSelect,
+                    options: [
+                      "britecharts",
+                      "blueGreen",
+                      "green",
+                      "grey",
+                      "orange",
+                      "pink",
+                      "purple",
+                      "red",
+                      "teal",
+                      "yellow",
+                    ],
+                  },
+                  {
+                    label: "Show Legend",
+                    key: "useLegend ",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Boxsize",
+                    key: "boxSize",
+                    control: Input,
+                  },
+                ],
+              },
+            },
+            {
+              name: "Sparkline",
+              _component: "@budibase/standard-components/sparkline",
+              description: "Sparkline chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: [
+                  {
+                    value: 1,
+                    date: "2011-01-06T00:00:00Z",
+                  },
+                  {
+                    value: 2,
+                    date: "2011-01-07T00:00:00Z",
+                  },
+                ],
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "Line Gradient",
+                    key: "lineGradient",
+                    control: OptionSelect,
+                    options: [
+                      { value: "", label: "None" },
+                      { value: "bluePurple", label: "Blue Purple" },
+                      { value: "greenBlue", label: "Green Blue" },
+                      { value: "orangePink", label: "Orange Pink" },
+                    ],
+                  },
+                  {
+                    label: "Area Gradient",
+                    key: "areaGradient",
+                    control: OptionSelect,
+                    options: [
+                      { value: "", label: "None" },
+                      { value: "bluePurple", label: "Blue Purple" },
+                      { value: "greenBlue", label: "Green Blue" },
+                      { value: "orangePink", label: "Orange Pink" },
+                    ],
+                  },
+                  {
+                    key: "height",
+                    label: "Height",
+                    control: Input,
+                  },
+                  {
+                    key: "width",
+                    label: "Width",
+                    control: Input,
+                  },
+                  {
+                    key: "dateLabel",
+                    label: "Date Label",
+                    control: Input,
+                  },
+                  {
+                    key: "isAnimated",
+                    label: "Is Animated",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    key: "titleText",
+                    label: "Title Text",
+                    control: Input,
+                  },
+                  {
+                    key: "valueLabel",
+                    label: "Value Label",
+                    control: Input,
+                  },
+                ],
+              },
+            },
+            {
               name: "Bar",
               _component: "@budibase/standard-components/bar",
               description: "Bar chart",
@@ -713,6 +850,100 @@ export default {
                     label: "X Ticks",
                     key: "xTicks",
                     control: Input,
+                  },
+                ],
+              },
+            },
+            {
+              name: "Groupedbar",
+              _component: "@budibase/standard-components/groupedbar",
+              description: "Groupedbar chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: [
+                  {
+                    name: "2011-01",
+                    group: "Direct",
+                    value: 0,
+                  },
+                ],
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "Color",
+                    key: "color",
+                    control: OptionSelect,
+                    options: [
+                      "britecharts",
+                      "blueGreen",
+                      "green",
+                      "grey",
+                      "orange",
+                      "pink",
+                      "purple",
+                      "red",
+                      "teal",
+                      "yellow",
+                    ],
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Aspect Ratio",
+                    key: "aspectRatio",
+                    control: Input,
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Grid",
+                    key: "grid",
+                    control: OptionSelect,
+                    options: ["vertical", "horizontal", "full"],
+                  },
+                  {
+                    label: "Group Label",
+                    key: "groupLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Name Label",
+                    key: "nameLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Ticks",
+                    key: "yTicks",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Tick Text Offset",
+                    key: "yTickTextOffset",
+                    control: Input,
+                  },
+                  {
+                    label: "Is Animated",
+                    key: "isAnimated",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Is Horizontal",
+                    key: "isHorizontal",
+                    valueKey: "checked",
+                    control: Checkbox,
                   },
                 ],
               },
