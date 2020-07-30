@@ -271,6 +271,21 @@
 			"percentageFormat": "string"
 		}
 	},
+	"sparkline": {
+		"description": "Sparkline Chart",
+		"data": true,
+		"props": {
+			"areaGradient": "string",
+			"height": "number",
+			"width": "number",
+			"dateLabel": "string",
+			"duration": "string",
+			"isAnimated": "bool",
+			"lineGradient": "string",
+			"titleText": "string",
+			"valueLabel": "string"
+		}	
+	},
 	"bar": {
 		"description": "Bar Chart",
 		"data": true,
@@ -337,6 +352,38 @@
 			"xAxisFormat": "string",
 			"xTicks": "number",
 			"xAxisCustomFormat": "string"
+		}
+	},
+	"heatmap": {
+		"description": "Groupedbar chart",
+		"data": true,
+		"props": {
+			"color": "string",
+			"height": "number",
+			"width": "number",
+			"useLegend": "bool",
+			"yAxisLabel": "string",
+			"boxSize": "number"
+		}		
+	},
+	"groupedbar": {
+		"description": "Groupedbar chart",
+		"data": true,
+		"props": {
+			"color": "string",
+			"height": "string",
+			"width": "string",
+			"margin": "string",
+			"aspectRatio": "number",
+			"grid":"string",
+			"groupLabel": "string",
+			"isAnimated": "bool",
+			"isHorizontal": "bool",
+			"nameLabel": "string",
+			"valueLabel":"string",
+			"yTicks": "string",
+			"yTickTextOffset": "string",
+			"useLegend": "bool"
 		}
 	},
 	"bullet": {

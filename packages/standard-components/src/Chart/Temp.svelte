@@ -31,6 +31,8 @@
       bindChartTooltip()
     }
   })
+
+  $: colorSchema = getColorSchema(color)
 </script>
 
 <div bind:this={chartElement} class={chartClass} />
