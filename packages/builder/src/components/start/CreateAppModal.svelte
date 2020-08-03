@@ -1,4 +1,14 @@
+<script context="module">
+  // Init store here so that it doesn't get destroyed and removed when the component instance is destroyed. This is to make sure no data is lost if the user closes the model
+  import { writable } from "svelte/store"
+
+  export const createAppStore = writable({ currentStep: 0, values: {} })
+</script>
+
 <script>
+  import { string, object } from "yup"
+  import api from "builderStore/api"
+  import Form from "@svelteschool/svelte-forms"
   import Spinner from "components/common/Spinner.svelte"
   import { API, Info, User } from "./Steps"
   import Indicator from "./Indicator.svelte"
@@ -10,52 +20,136 @@
   import { post } from "builderStore/api"
   import analytics from "../../analytics"
 
-  export let hasAPIKey = false
-
   const { open, close } = getContext("simple-modal")
 
-  let name = ""
-  let description = ""
-  let loading = false
-  let error = {}
+  export let hasKey
 
-  const createNewApp = async () => {
-    if ((name.length > 100 || name.length < 1) && description.length < 1) {
-      error = {
-        name: true,
-        description: true,
-      }
-    } else if (description.length < 1) {
-      error = {
-        name: false,
-        description: true,
-      }
-    } else if (name.length > 100 || name.length < 1) {
-      error = {
-        name: true,
-      }
-    } else {
-      error = {}
-      const data = { name, description }
-      loading = true
-      try {
-        const response = await post("/api/applications", data)
+  let submitting = false
+  let errors = {}
+  let validationErrors = {}
+  let validationSchemas = [
+    {
+      apiKey: string().required("Please enter your API key."),
+    },
+    {
+      applicationName: string().required("Your application must have a name."),
+    },
+    {
+      username: string().required("Your application needs a first user."),
+      password: string().required(
+        "Please enter a password for your first user."
+      ),
+      accessLevelId: string().required(
+        "You need to select an access level for your user."
+      ),
+    },
+  ]
 
-        const res = await response.json()
+  let steps = [
+    {
+      component: API,
+      errors,
+    },
+    {
+      component: Info,
+      errors,
+    },
+    {
+      component: User,
+      errors,
+    },
+  ]
 
-        analytics.captureEvent("web_app_created", {
-          name,
-          description,
-          appId: res._id,
-        })
-        $goto(`./${res._id}`)
-      } catch (error) {
-        console.error(error)
-      }
+  if (hasKey) {
+    validationSchemas.shift()
+    validationSchemas = validationSchemas
+    steps.shift()
+    steps = steps
+  }
+
+  // Handles form navigation
+  const back = () => {
+    if ($createAppStore.currentStep > 0) {
+      $createAppStore.currentStep -= 1
+    }
+  }
+  const next = () => {
+    $createAppStore.currentStep += 1
+  }
+
+  // $: errors = validationSchemas.validate(values);
+  $: getErrors(
+    $createAppStore.values,
+    validationSchemas[$createAppStore.currentStep]
+  )
+
+  async function getErrors(values, schema) {
+    try {
+      validationErrors = {}
+      await object(schema).validate(values, { abortEarly: false })
+    } catch (error) {
+      validationErrors = extractErrors(error)
     }
   }
 
-  let value
+  const checkValidity = async (values, currentStep) => {
+    const validity = await object()
+      .shape(validationSchemas[currentStep])
+      .isValid(values)
+    currentStepIsValid = validity
+
+    // Check full form on last step
+    if (currentStep === steps.length - 1) {
+      // Make one big schema from all the small ones
+      const fullSchema = Object.assign({}, ...validationSchemas)
+
+      // Check full form schema
+      const formIsValid = await object()
+        .shape(fullSchema)
+        .isValid(values)
+      fullFormIsValid = formIsValid
+    }
+  }
+
+  async function signUp() {
+    submitting = true
+    try {
+      if (!hasKey) {
+        await updateKey(["budibase", $createAppStore.values.apiKey])
+      }
+      const response = await post("/api/applications", {
+        name: $createAppStore.values.applicationName,
+      })
+      const res = await response.json()
+      analytics.captureEvent("web_app_created", {
+        name,
+        description,
+        appId: res._id,
+      })
+      console.log("App created!")
+      // $goto(`./${res._id}`)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function updateKey([key, value]) {
+    console.log("Saving API Key")
+    const response = await api.put(`/api/keys/${key}`, { value })
+    const res = await response.json()
+    return res
+  }
+
+  function extractErrors({ inner }) {
+    return inner.reduce((acc, err) => {
+      return { ...acc, [err.path]: err.message }
+    }, {})
+  }
+
+  let currentStepIsValid = false
+  let fullFormIsValid = false
+  $: checkValidity($createAppStore.values, $createAppStore.currentStep)
+
   let onChange = () => {}
 
   function _onCancel() {
@@ -65,21 +159,14 @@
   async function _onOkay() {
     await createNewApp()
   }
-
-  let currentStep = 0
-  let steps = [
-    { title: "Setup your API Key" },
-    { title: "Create your first web app" },
-    { title: "Create new user" },
-  ]
 </script>
 
 <div class="container">
   <div class="sidebar">
     {#each steps as { active, done }, i}
       <Indicator
-        active={currentStep === i}
-        done={i < currentStep}
+        active={$createAppStore.currentStep === i}
+        done={i < $createAppStore.currentStep}
         step={i + 1} />
     {/each}
   </div>
@@ -88,38 +175,41 @@
       <h3 class="header">Get Started with Budibase</h3>
     </div>
     <div class="step">
-      <Input
-        error={error.name}
-        name="name"
-        label="Name"
-        placeholder="Enter application name"
-        on:change={e => (name = e.target.value)}
-        on:input={e => (name = e.target.value)} />
-      <TextArea
-        bind:value={description}
-        name="description"
-        label="Description"
-        placeholder="Describe your application" />
-      {#if error.description}
-        <span class="error">
-          Please enter a short description of your application
-        </span>
-      {/if}
+      <Form bind:values={$createAppStore.values}>
+        {#each steps as step, i (i)}
+          <div class:hidden={$createAppStore.currentStep !== i}>
+            <svelte:component
+              this={step.component}
+              {validationErrors}
+              options={step.options}
+              name={step.name} />
+          </div>
+        {/each}
+      </Form>
     </div>
     <div class="footer">
-      {#if currentStep !== 0}
-        <Button primary thin on:click={_onOkay}>Back</Button>
+      {#if $createAppStore.currentStep > 0}
+        <Button secondary on:click={back}>Back</Button>
       {/if}
-      <Button primary thin on:click={_onOkay}>Next</Button>
-      {#if currentStep + 1 === steps.length}
-        <Button primary thin on:click={_onOkay}>Launch</Button>
+      {#if $createAppStore.currentStep < steps.length - 1}
+        <Button secondary on:click={next} disabled={!currentStepIsValid}>
+          Next
+        </Button>
+      {/if}
+      {#if $createAppStore.currentStep === steps.length - 1}
+        <Button
+          secondary
+          on:click={signUp}
+          disabled={!fullFormIsValid || submitting}>
+          {submitting ? 'Loading...' : 'Submit'}
+        </Button>
       {/if}
     </div>
   </div>
   <div class="close-button" on:click={_onCancel}>
     <CloseIcon />
   </div>
-  {#if loading}
+  {#if submitting}
     <div in:fade class="spinner-container">
       <Spinner />
       <span class="spinner-text">Creating your app...</span>
@@ -129,6 +219,7 @@
 
 <style>
   .container {
+    min-height: 600px;
     display: grid;
     grid-template-columns: 80px 1fr;
     position: relative;
@@ -165,6 +256,7 @@
   .body {
     padding: 40px 60px 60px 60px;
     display: grid;
+    align-items: center;
     grid-template-rows: auto 1fr auto;
   }
   .footer {
@@ -189,9 +281,8 @@
   .spinner-text {
     font-size: 2em;
   }
-  .error {
-    color: var(--red);
-    font-weight: bold;
-    font-size: 0.8em;
+
+  .hidden {
+    display: none;
   }
 </style>
