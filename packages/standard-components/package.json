@@ -38,6 +38,7 @@
   "gitHead": "eff4fa93ca1db11b97b5fdedc0c488413e277eb8",
   "dependencies": {
     "@beyonk/svelte-googlemaps": "^2.2.0",
+    "fast-sort": "^2.2.0",
     "fusioncharts": "^3.15.1-sr.1",
     "svelte-fusioncharts": "^1.0.0"
   }
