@@ -6,8 +6,9 @@
 </script>
 
 <script>
+  import { store, workflowStore, backendUiStore } from "builderStore"
   import { string, object } from "yup"
-  import api from "builderStore/api"
+  import api, { get } from "builderStore/api"
   import Form from "@svelteschool/svelte-forms"
   import Spinner from "components/common/Spinner.svelte"
   import { API, Info, User } from "./Steps"
@@ -114,27 +115,48 @@
   async function signUp() {
     submitting = true
     try {
+      // Add API key if there is none.
       if (!hasKey) {
         await updateKey(["budibase", $createAppStore.values.apiKey])
       }
-      const response = await post("/api/applications", {
+
+      // Create App
+      const appResp = await post("/api/applications", {
         name: $createAppStore.values.applicationName,
       })
-      const res = await response.json()
+      const appJson = await appResp.json()
       analytics.captureEvent("web_app_created", {
         name,
-        description,
-        appId: res._id,
+        appId: appJson._id,
       })
-      console.log("App created!")
-      // $goto(`./${res._id}`)
+
+      // Select Correct Application/DB in prep for creating user
+      const applicationPkg = await get(`/api/${appJson._id}/appPackage`)
+      const pkg = await applicationPkg.json()
+      if (applicationPkg.ok) {
+        backendUiStore.actions.reset()
+        await store.setPackage(pkg)
+        workflowStore.actions.fetch()
+      } else {
+        throw new Error(pkg)
+      }
+
+      // Create user
+      const user = {
+        name: $createAppStore.values.username,
+        username: $createAppStore.values.username,
+        password: $createAppStore.values.password,
+        accessLevelId: $createAppStore.values.accessLevelId,
+      }
+      const userResp = await api.post(`/api/users`, user)
+      const json = await userResp.json()
+      $goto(`./${appJson._id}`)
     } catch (error) {
       console.error(error)
     }
   }
 
   async function updateKey([key, value]) {
-    console.log("Saving API Key")
     const response = await api.put(`/api/keys/${key}`, { value })
     const res = await response.json()
     return res
