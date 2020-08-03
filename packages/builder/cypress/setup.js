@@ -6,12 +6,12 @@
 const rimraf = require("rimraf")
 const { join } = require("path")
 const homedir = join(require("os").homedir(), ".budibase-cypress")
-const init = require("../../cli/src/commands/init/initHandler")
 const run = require("../../cli/src/commands/run/runHandler")
+const initialiseBudibase = require("../../server/src/utilities/initialiseBudibase")
 
 rimraf.sync(homedir)
 
-init({ dir: homedir, clientId: "cypress-test" }).then(() => {
+initialiseBudibase({ dir: homedir, clientId: "cypress-test" }).then(() => {
   delete require.cache[require.resolve("../../server/src/environment")]
   run({ dir: homedir })
 })

@@ -13,7 +13,7 @@
     "cy:setup": "node ./cypress/setup.js",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
-    "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run"
+    "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run --browser electron"
   },
   "jest": {
     "globals": {

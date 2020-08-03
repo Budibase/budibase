@@ -35,7 +35,7 @@
   ],
   "version": "0.1.10",
   "license": "MIT",
-  "gitHead": "eff4fa93ca1db11b97b5fdedc0c488413e277eb8",
+  "gitHead": "284cceb9b703c38566c6e6363c022f79a08d5691",
   "dependencies": {
     "@beyonk/svelte-googlemaps": "^2.2.0",
     "fusioncharts": "^3.15.1-sr.1",

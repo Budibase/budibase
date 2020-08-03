@@ -25,7 +25,7 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 Cypress.Commands.add("createApp", (name, description) => {
-  cy.get(".banner-button")
+  cy.contains("Create New Web App")
     .click()
     .get('input[name="name"]')
     .type(name)
@@ -39,39 +39,27 @@ Cypress.Commands.add("createApp", (name, description) => {
 })
 Cypress.Commands.add("createModel", (modelName, firstField, secondField) => {
   // Enter model name
-  cy.get("[data-cy=Name]")
-    .click()
-    .type(modelName)
+  cy.contains("Create New Table").click();
+  cy.get("[data-cy=table-name-input]").type(modelName)
 
   // Add 'name' field
-  cy.get("[data-cy=add-new-model-field]").click()
-  cy.get("[data-cy=Name]")
-    .click()
-    .type(firstField)
-  cy.contains("Save").click()
+  cy.contains("Add").click();
+  cy.contains("Plain Text").click()
 
   // Add 'age' field
-  cy.get("[data-cy=add-new-model-field]").click()
+  cy.contains("Add").click();
+  cy.contains("Number").click()
 
-  cy.get("[data-cy=Name]")
-    .click()
-    .type(secondField)
-  cy.get("select").select("number")
   cy.contains("Save").click()
-  cy.contains(secondField).should("exist")
 
-  // Save model
-  cy.contains("Save").click()
+  cy.contains(modelName).click();
 })
-Cypress.Commands.add("addRecord", (firstField, secondField) => {
-  cy.contains("Create new record").click()
 
-  cy.get("[data-cy=name-input]")
-    .click()
-    .type(firstField)
-  cy.get("[data-cy=age-input]")
-    .click()
-    .type(secondField)
+Cypress.Commands.add("addRecord", (firstField, secondField) => {
+  cy.contains("Create New Record").click()
+
+  cy.get("[data-cy='Plain Text-input']").type(firstField)
+  cy.get("[data-cy=Number-input]").type(secondField)
 
   // Save
   cy.contains("Save").click()
@@ -95,7 +83,8 @@ Cypress.Commands.add("addHeadlineComponent", text => {
   cy.get("[data-cy=Text]").click()
   cy.get("[data-cy=Headline]").click()
   cy.get(".tabs > :nth-child(2)").click()
-  cy.get('input[type="text"]').type(text)
+  cy.contains("Settings").click()
+  cy.get('input[name="text"]').type(text)
   cy.contains("Design").click()
 })
 Cypress.Commands.add("addButtonComponent", () => {

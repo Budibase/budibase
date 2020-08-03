@@ -33,3 +33,7 @@ jobs:
       env:
         CI: true
         name: Budibase CI
+    - uses: cypress-io/github-action@v2
+        with:
+          browser: electron
+          headless: true
