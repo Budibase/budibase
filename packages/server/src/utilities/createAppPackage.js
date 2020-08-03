@@ -5,6 +5,8 @@ const fetch = require("node-fetch")
 const tar = require("tar-fs")
 const zlib = require("zlib")
 const { promisify } = require("util")
+const packageJson = require("../../package.json")
+
 const streamPipeline = promisify(stream.pipeline)
 
 exports.appPackageFolder = (config, appname) =>
@@ -17,7 +19,7 @@ exports.downloadExtractComponentLibraries = async appFolder => {
   for (let lib of LIBRARIES) {
     // download tarball
     // TODO: make sure the latest version is always downloaded
-    const registryUrl = `https://registry.npmjs.org/@budibase/${lib}/-/${lib}-0.1.2.tgz`
+    const registryUrl = `https://registry.npmjs.org/@budibase/${lib}/-/${lib}-${packageJson.version}.tgz`
     const response = await fetch(registryUrl)
     if (!response.ok)
       throw new Error(`unexpected response ${response.statusText}`)
