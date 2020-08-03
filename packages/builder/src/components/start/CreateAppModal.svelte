@@ -231,6 +231,7 @@
   <div class="close-button" on:click={_onCancel}>
     <CloseIcon />
   </div>
+  <img src="/_builder/assets/bb-logo.svg" alt="budibase icon" />
   {#if submitting}
     <div in:fade class="spinner-container">
       <Spinner />
@@ -306,5 +307,11 @@
 
   .hidden {
     display: none;
+  }
+  img {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    height: 40px;
   }
 </style>
