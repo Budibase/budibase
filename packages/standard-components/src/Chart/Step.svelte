@@ -1,0 +1,105 @@
+<script>
+  import { getColorSchema, getChartGradient, notNull } from "./utils"
+  import britecharts from "britecharts"
+  import { onMount } from "svelte"
+
+  import { select } from "d3-selection"
+  import shortid from "shortid"
+
+  /* 
+  ISSUES - Doesn't seem to allow color change. Chart is colored black by default
+  */
+
+  const _id = shortid.generate()
+
+  const chart = britecharts.step()
+  const chartClass = `step-container-${_id}`
+  const legendClass = `legend-container-${_id}`
+
+  let chartElement = null
+  let chartContainer = null
+  let tooltip
+  let tooltipContainer
+
+  export let customMouseOver = () => tooltip.show()
+  export let customMouseMove = (
+    dataPoint,
+    colorMapping,
+    xPosition,
+    yPosition = null
+  ) => tooltip.update(dataPoint, colorMapping, xPosition, (yPosition = null))
+  export let customMouseOut = () => tooltip.hide()
+
+  export let data = []
+  export let height = null
+  export let width = null
+  export let margin = null
+  export let xAxisLabel = null
+  export let xAxisLabelOffset = null
+  export let yAxisLabel = null
+  export let yAxisLabelOffset = null
+  export let yTicks = null
+  export let useLegend = true
+
+  onMount(() => {
+    if (chart) {
+      chartContainer = select(`.${chartClass}`)
+      bindChartUIProps()
+      bindChartEvents()
+      chartContainer.datum(data).call(chart)
+      bindChartTooltip()
+    }
+  })
+
+  function bindChartUIProps() {
+    if (notNull(height)) {
+      chart.height(height)
+    }
+    if (notNull(width)) {
+      chart.width(width)
+    }
+    if (notNull(margin)) {
+      chart.margin(margin)
+    }
+    if (notNull(xAxisLabel)) {
+      chart.xAxisLabel(xAxisLabel)
+    }
+    if (notNull(xAxisLabelOffset)) {
+      chart.xAxisLabelOffset(xAxisLabelOffset)
+    }
+    if (notNull(yAxisLabel)) {
+      chart.yAxisLabel(yAxisLabel)
+    }
+    if (notNull(yAxisLabelOffset)) {
+      chart.yAxisLabelOffset(yAxisLabelOffset)
+    }
+    if (notNull(yTicks)) {
+      chart.yTicks(yTicks)
+    }
+  }
+
+  function bindChartEvents() {
+    if (customMouseMove) {
+      chart.on("customMouseMove", customMouseMove)
+    }
+    if (customMouseOut) {
+      chart.on("customMouseOut", customMouseOut)
+    }
+    if (customMouseOver) {
+      chart.on("customMouseOver", customMouseOver)
+    }
+  }
+
+  function bindChartTooltip() {
+    tooltip = britecharts.miniTooltip()
+    tooltipContainer = select(`.${chartClass} .metadata-group`)
+    tooltipContainer.datum([]).call(tooltip)
+  }
+
+  $: colorSchema = getColorSchema(color)
+</script>
+
+<div bind:this={chartElement} class={chartClass} />
+{#if useLegend}
+  <div class={legendClass} />
+{/if}
