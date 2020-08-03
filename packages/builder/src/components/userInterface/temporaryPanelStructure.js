@@ -534,6 +534,316 @@ export default {
               },
             },
             {
+              name: "Scatterplot",
+              _component: "@budibase/standard-components/scatterplot",
+              description: "Scatterplot chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: [
+                  {
+                    name: "topic",
+                    x: 123,
+                    y: 24,
+                  },
+                  {
+                    name: "topic1",
+                    x: 53,
+                    y: 31,
+                  },
+                  {
+                    name: "topic2",
+                    x: 631,
+                    y: 321,
+                  },
+                  {
+                    name: "topic1",
+                    x: 231,
+                    y: 111,
+                  },
+                ],
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "Colors",
+                    key: "color",
+                    control: OptionSelect,
+                    options: [
+                      { label: "Normal", value: "britecharts" },
+                      { label: "Blue Green", value: "blueGreen" },
+                      { label: "Green", value: "green" },
+                      { label: "Grey", value: "grey" },
+                      { label: "Orange", value: "orange" },
+                      { label: "Pink", value: "pink" },
+                      { label: "Purple", value: "purple" },
+                      { label: "Red", value: "red" },
+                      { label: "Teal", value: "teal" },
+                      { label: "Yellow", value: "yellow" },
+                    ],
+                  },
+                  {
+                    label: "height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Aspect Ratio",
+                    key: "aspectRatio",
+                    control: Input,
+                  },
+                  {
+                    label: "Circle Opacity",
+                    key: "circleOpacity",
+                    control: Input,
+                  },
+                  {
+                    label: "Grid",
+                    key: "grid",
+                    control: OptionSelect,
+                    options: ["vertical", "horizontal", "full"],
+                  },
+                  {
+                    label: "Has Crosshairs",
+                    key: "hasCrossHairs",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Is Animated",
+                    key: "isAnimated",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Max Circle Area",
+                    key: "maxCircleArea",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Label",
+                    key: "xAxisLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Label Offset",
+                    key: "xAxisLabelOffset",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis",
+                    key: "xTicks",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis Format",
+                    key: "yAxisFormat",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis Label",
+                    key: "yAxisLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis Label Offset",
+                    key: "yAxisLabelOffset",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Ticks",
+                    key: "yTicks",
+                    control: Input,
+                  },
+                ],
+              },
+            },
+            {
+              name: "StackedArea",
+              _component: "@budibase/standard-components/stackedarea",
+              description: "StackedArea chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: [
+                  {
+                    date: "2011-01-05T00:00:00Z",
+                    name: "Direct",
+                    value: 0,
+                  },
+                ],
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "Color",
+                    key: "color",
+                    control: OptionSelect,
+                    options: [
+                      "britecharts",
+                      "blueGreen",
+                      "green",
+                      "grey",
+                      "orange",
+                      "pink",
+                      "purple",
+                      "red",
+                      "teal",
+                      "yellow",
+                    ],
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Aspect Ratio",
+                    key: "aspectRatio",
+                    control: Input,
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Grid",
+                    key: "grid",
+                    control: OptionSelect,
+                    options: ["vertical", "horizontal", "full"],
+                  },
+                  {
+                    label: "X Axis Label",
+                    key: "xAxisLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Label Offset",
+                    key: "xAxisLabelOffset",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis",
+                    key: "yAxisLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis Label Offset",
+                    key: "yAxisLabelOffset",
+                    control: Input,
+                  },
+                  {
+                    label: "Area Curve",
+                    key: "areaCurve",
+                    control: Input,
+                  },
+                  {
+                    label: "Area Opacity",
+                    key: "areaOpacity",
+                    control: Input,
+                  },
+                  {
+                    label: "Area Opacity",
+                    key: "areaOpacity",
+                    control: Input,
+                  },
+                  {
+                    label: "dateLabel",
+                    key: "dateLabel",
+                    control: Input,
+                  },
+                  {
+                    key: "isAnimated",
+                    label: "Is Animated",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Key Label",
+                    key: "keyLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Locale",
+                    key: "locale",
+                    control: Input,
+                  },
+                  {
+                    label: "Value Label",
+                    key: "valueLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Use Legend",
+                    key: "useLegend",
+                    keyValue: "checked",
+                    control: Checkbox,
+                  },
+                ],
+              },
+            },
+            {
+              name: "Step",
+              _component: "@budibase/standard-components/step",
+              description: "Step chart",
+              icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: [
+                  {
+                    value: 1,
+                    key: "glittering",
+                  },
+                  {
+                    value: 2,
+                    key: "luminous",
+                  },
+                ],
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis Label",
+                    key: "yAxisLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis Label Offset",
+                    key: "yAxisLabelOffset",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Ticks",
+                    key: "yTicks",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Label Offset",
+                    key: "xAxisLabelOffset",
+                    control: Input,
+                  },
+                ],
+              },
+            },
+            {
               name: "Sparkline",
               _component: "@budibase/standard-components/sparkline",
               description: "Sparkline chart",
@@ -742,6 +1052,7 @@ export default {
                   {
                     label: "Use Legend",
                     key: "useLegend",
+                    keyValue: "checked",
                     control: Checkbox,
                   },
                 ],
@@ -1002,6 +1313,137 @@ export default {
                   {
                     label: "Width",
                     key: "width",
+                    control: Input,
+                  },
+                ],
+              },
+            },
+            {
+              name: "Stacked Bar",
+              _component: "@budibase/standard-components/stackedbar",
+              description: "Stacked Bar Chart",
+              icon: "ri-file-list-fill",
+              presetProps: {
+                data: [
+                  {
+                    name: "2011-01",
+                    stack: "Direct",
+                    value: 0,
+                  },
+                ],
+              },
+              properties: {
+                settings: [
+                  {
+                    label: "Colors",
+                    key: "color",
+                    control: OptionSelect,
+                    options: [
+                      "britecharts",
+                      "blueGreen",
+                      "green",
+                      "grey",
+                      "orange",
+                      "pink",
+                      "purple",
+                      "red",
+                      "teal",
+                      "yellow",
+                    ],
+                  },
+                  {
+                    label: "Grid",
+                    key: "grid",
+                    control: OptionSelect,
+                    options: ["vertical", "horizontal", "full"],
+                  },
+                  {
+                    label: "Aspect Ratio",
+                    key: "aspectRatio",
+                    control: Input,
+                  },
+                  {
+                    label: "Between Bars Padding",
+                    key: "betweenBarsPadding",
+                    control: Input,
+                  },
+                  {
+                    label: "Max Ratio Percentage",
+                    key: "percentageToMaxRatio",
+                    control: Input,
+                  },
+                  {
+                    label: "Date Label",
+                    key: "dateLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Name Label",
+                    key: "nameLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Stack Label",
+                    key: "stackLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Locale",
+                    key: "locale",
+                    control: Input,
+                  },
+                  {
+                    label: "Is Animated",
+                    key: "isAnimated",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "Is Horizontal",
+                    key: "isHorizontal",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "Has Reversed Stacks",
+                    key: "hasReversedStacks",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "Has Percentage",
+                    key: "hasPercentage",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "X Ticks",
+                    key: "xTicks",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Ticks",
+                    key: "yTicks",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis Label",
+                    key: "yTicksLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Axis Label Offset",
+                    key: "yAxisLabelOffset",
                     control: Input,
                   },
                 ],

@@ -6,4 +6,8 @@ export { default as bullet } from "./Bullet.svelte"
 export { default as groupedbar } from "./GroupedBar.svelte"
 export { default as heatmap } from "./Heatmap.svelte"
 export { default as sparkline } from "./Sparkline.svelte"
+export { default as scatterplot } from "./ScatterPlot.svelte"
+export { default as step } from "./Step.svelte"
+export { default as stackedarea } from "./StackedArea.svelte"
+export { default as stackedbar } from "./StackedBar.svelte"
 

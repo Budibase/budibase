@@ -8,20 +8,18 @@
 
   const _id = shortid.generate()
 
-  const chart = britecharts.stackedArea()
-  const chartClass = `stackedarea-container-${_id}`
+  const chart = britecharts.stackedBar()
+  const chartClass = `stackedbar-container-${_id}`
   const legendClass = `legend-container-${_id}`
 
   let chartElement = null
   let chartContainer = null
+  let tooltip
+  let tooltipContainer
 
   export let customMouseOver = () => tooltip.show()
-  export let customMouseMove = (
-    dataPoint,
-    colorMapping,
-    xPosition,
-    yPosition = null
-  ) => tooltip.update(dataPoint, colorMapping, xPosition, (yPosition = null))
+  export let customMouseMove = (dataPoint, colorMapping, xPosition) =>
+    tooltip.update(dataPoint, colorMapping, xPosition)
   export let customMouseOut = () => tooltip.hide()
 
   export let data = []
@@ -29,26 +27,23 @@
   export let height = null
   export let width = null
   export let margin = null
-  export let areaCurve = null
-  export let areaOpacity = null
   export let aspectRatio = null
-  export let dateLabel = null
+  export let betweenBarsPadding = null
   export let grid = null
+  export let hasPercentage = null
+  export let hasReversedStacks = null
   export let isAnimated = null
-  export let keyLabel = null
+  export let isHorizontal = null
   export let locale = null
-  export let tooltipThreshold = null
-  export let topicsOrder = null
+  export let nameLabel = null
+  export let percentageAxisToMaxRatio = null
+  export let stackLabel = null
   export let valueLabel = null
-  export let xAxisCustomFormat = null
-  export let xAxisFormat = null
-  export let xAxisScale = null
-  export let xAxisValueType = null
+  export let valueLabelFormat = null
   export let xTicks = null
-  export let yAxisBaseline = null
+  export let yTicks = null
   export let yAxisLabel = null
   export let yAxisLabelOffset = null
-  export let yTicks = null
   export let useLegend = true
 
   onMount(() => {
@@ -57,11 +52,12 @@
       bindChartUIProps()
       bindChartEvents()
       chartContainer.datum(data).call(chart)
-      bindChartTooltip()
+      //   bindChartTooltip()
     }
   })
 
   function bindChartUIProps() {
+    //UI PROPS
     if (notNull(color)) {
       chart.colorSchema(colorSchema)
     }
@@ -74,65 +70,56 @@
     if (notNull(margin)) {
       chart.margin(margin)
     }
-    if (notNull(areaCurve)) {
-      chart.areaCurve(areaCurve)
-    }
-    if (notNull(areaOpacity)) {
-      chart.areaOpacity(areaOpacity)
-    }
     if (notNull(aspectRatio)) {
       chart.aspectRatio(aspectRatio)
     }
-    if (notNull(dateLabel)) {
-      chart.dateLabel(dateLabel)
+    if (notNull(betweenBarsPadding)) {
+      chart.betweenBarsPadding(betweenBarsPadding)
     }
     if (notNull(grid)) {
       chart.grid(grid)
     }
+    if (notNull(hasPercentage)) {
+      chart.hasPercentage(hasPercentage)
+    }
+    if (notNull(hasReversedStacks)) {
+      chart.hasReversedStacks(hasReversedStacks)
+    }
     if (notNull(isAnimated)) {
       chart.isAnimated(isAnimated)
     }
-    if (notNull(keyLabel)) {
-      chart.keyLabel(keyLabel)
+    if (notNull(isHorizontal)) {
+      chart.isHorizontal(isHorizontal)
     }
     if (notNull(locale)) {
       chart.locale(locale)
     }
-    if (notNull(tooltipThreshold)) {
-      chart.tooltipThreshold(tooltipThreshold)
+    if (notNull(nameLabel)) {
+      chart.nameLabel(nameLabel)
     }
-    if (notNull(topicsOrder)) {
-      chart.topicsOrder(topicsOrder)
+    if (notNull(percentageAxisToMaxRatio)) {
+      chart.percentageAxisToMaxRatio(percentageAxisToMaxRatio)
+    }
+    if (notNull(stackLabel)) {
+      chart.stackLabel(stackLabel)
     }
     if (notNull(valueLabel)) {
       chart.valueLabel(valueLabel)
     }
-    if (notNull(xAxisCustomFormat)) {
-      chart.xAxisCustomFormat(xAxisCustomFormat)
-    }
-    if (notNull(xAxisFormat)) {
-      chart.xAxisFormat(xAxisFormat)
-    }
-    if (notNull(xAxisScale)) {
-      chart.xAxisScale(xAxisScale)
-    }
-    if (notNull(xAxisValueType)) {
-      chart.xAxisValueType(xAxisValueType)
+    if (notNull(valueLabelFormat)) {
+      chart.valueLabelFormat(valueLabelFormat)
     }
     if (notNull(xTicks)) {
       chart.xTicks(xTicks)
     }
-    if (notNull(yAxisBaseline)) {
-      chart.yAxisBaseline(yAxisBaseline)
+    if (notNull(yTicks)) {
+      chart.yTicks(yTicks)
     }
     if (notNull(yAxisLabel)) {
       chart.yAxisLabel(yAxisLabel)
     }
     if (notNull(yAxisLabelOffset)) {
       chart.yAxisLabelOffset(yAxisLabelOffset)
-    }
-    if (notNull(yTicks)) {
-      chart.yTicks(yTicks)
     }
   }
 
@@ -146,6 +133,14 @@
     if (customMouseOver) {
       chart.on("customMouseOver", customMouseOver)
     }
+  }
+
+  function bindChartTooltip() {
+    tooltip = britecharts.tooltip()
+    // tooltip.topicLabel("Hi Im the topic")
+    // tooltip.topicsOrder(["x", "y"])
+    tooltipContainer = select(`.${chartClass} .metadata-group`)
+    tooltipContainer.datum([]).call(tooltip)
   }
 
   $: colorSchema = getColorSchema(color)

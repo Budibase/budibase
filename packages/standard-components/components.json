@@ -286,6 +286,103 @@
 			"valueLabel": "string"
 		}	
 	},
+	"stackedbar": {
+		"description": "Stacked Bar Chart",
+		"data": true,
+		"props": {
+			"color": "string",
+			"height": "number",
+			"width": "number",
+			"margin": "string",
+			"aspectRatio": "string",
+			"betweenBarsPadding": "number",
+			"grid": "string",
+			"hasPercentage": "bool",
+			"hasReversedStacks": "bool",
+			"isAnimated": "bool",
+			"isHorizontal": "bool",
+			"locale": "string",
+			"nameLabel": "string",
+			"percentageAxisToMaxRatio": "number",
+			"stackLabel": "string",
+			"valueLabel": "string",
+			"valueLabelFormat": "string",
+			"xTicks": "number",
+			"yTicks": "number",
+			"yAxisLabel": "string",
+			"yAxisLabelOffset": "number",
+			"useLegend": "bool"
+		}		
+	},
+	"stackarea": {
+		"description": "Step Chart",
+		"data": true,
+		"props": {
+			"color": "string",
+			"height": "number",
+			"width": "number",
+			"margin": "string",
+			"xAxisLabel": "string",
+			"xAxisLabelOffset": "string",
+			"yAxisLabel": "string",
+			"yAxisLabelOffset": "string",
+			"areaCurve": "number",
+			"areaOpacity": "number",
+			"aspectRatio": "number",
+			"dateLabel": "string",
+			"grid": "string",
+			"isAnimated": "bool",
+			"keyLabel": "string",
+			"locale": "string",
+			"tooltipThreshold": "number",
+			"topicsOrder": "string",
+			"valueLabel": "string",
+			"xAxisCustomFormat": "string",
+			"xAxisFormat": "string",
+			"xAxisScale": "string",
+			"xAxisValueType":"string",
+			"yTicks": "number",
+			"xTicks": "number",
+			"yAxisBaseline": "string",
+			"useLegend": "bool"
+		}
+	},
+	"step": {
+		"description": "Step Chart",
+		"data": true,
+		"props": {
+			"height": "number",
+			"width": "number",
+			"margin": "string",
+			"xAxisLabel": "string",
+			"xAxisLabelOffset": "string",
+			"yAxisLabel": "string",
+			"yAxisLabelOffset": "string",	
+			"yTicks": "string"
+		}
+	},
+	"scatterplot": {
+		"description": "Scatterplot Chart",
+		"data": true,
+		"props": { 
+			"color": "string",
+			"height": "number",
+			"width": "number",
+			"aspectRatio": "string",
+			"circleOpacity": "string",
+			"grid": "string",
+			"hasCrossHairs": "bool",
+			"isAnimated": "bool",
+			"maxCircleArea": "number",
+			"xAxisLabel": "string",
+			"xAxisLabelOffset": "string",
+			"xTicks": "string",
+			"yAxisFormat": "string",
+			"yAxisLabel": "string",
+			"yAxisLabelOffset": "string",	
+			"yTicks": "string"
+		}
+	},
 	"bar": {
 		"description": "Bar Chart",
 		"data": true,
