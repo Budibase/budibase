@@ -1,11 +1,6 @@
-<script context="module">
-  // Init store here so that it doesn't get destroyed and removed when the component instance is destroyed. This is to make sure no data is lost if the user closes the model
+<script>
   import { writable } from "svelte/store"
 
-  export const createAppStore = writable({ currentStep: 0, values: {} })
-</script>
-
-<script>
   import { store, workflowStore, backendUiStore } from "builderStore"
   import { string, object } from "yup"
   import api, { get } from "builderStore/api"
@@ -22,6 +17,8 @@
   import analytics from "../../analytics"
 
   const { open, close } = getContext("simple-modal")
+  //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
+  const createAppStore = writable({ currentStep: 0, values: {} })
 
   export let hasKey
 
