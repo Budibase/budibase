@@ -69,7 +69,6 @@ exports.create = async function(ctx) {
       "@budibase/materialdesign-components",
     ],
     name: ctx.request.body.name,
-    description: ctx.request.body.description,
   }
 
   const { rev } = await db.put(newApplication)
