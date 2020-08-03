@@ -366,6 +366,38 @@ export default {
           ],
         },
         {
+          name: "Data Chart",
+          _component: "@budibase/standard-components/datachart",
+          description: "Shiny chart",
+          icon: "ri-bar-chart-line",
+          properties: {
+            design: { ...all },
+            settings: [
+              { label: "Table", key: "model", control: ModelSelect },
+              {
+                label: "Chart Type",
+                key: "type",
+                control: OptionSelect,
+                options: [
+                  "column2d",
+                  "column3d",
+                  "line",
+                  "area2d",
+                  "bar2d",
+                  "bar3d",
+                  "pie2d",
+                  "pie3d",
+                  "doughnut2d",
+                  "doughnut3d",
+                  "pareto2d",
+                  "pareto3d",
+                ],
+              },
+            ],
+          },
+          children: [],
+        },
+        {
           name: "Chart",
           description: "Shiny chart",
           icon: "ri-bar-chart-fill",
