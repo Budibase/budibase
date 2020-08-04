@@ -11,6 +11,11 @@
     - Chart gradient doesn't seem to do anything
   */
 
+  export let _bb
+  export let model
+
+  let store = _bb.store
+
   const _id = shortid.generate()
 
   const chart = britecharts.brush()
@@ -36,14 +41,31 @@
   export let xTicks = null
   export let xAxisCustomFormat = null
 
-  onMount(() => {
+  onMount(async () => {
     if (chart) {
+      if (model) {
+        await fetchData()
+      }
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
-      chartContainer.datum(data).call(chart)
+      chartContainer.datum(_data).call(chart)
     }
   })
+
+  async function fetchData() {
+    const FETCH_RECORDS_URL = `/api/views/all_${model}`
+    const response = await _bb.api.get(FETCH_RECORDS_URL)
+    if (response.status === 200) {
+      const json = await response.json()
+      store.update(state => {
+        state[model] = json
+        return state
+      })
+    } else {
+      throw new Error("Failed to fetch records.", response)
+    }
+  }
 
   function bindChartUIProps() {
     if (notNull(gradient)) {
@@ -86,6 +108,8 @@
       chart.on("customBrushStart", customBrushStart)
     }
   }
+
+  $: _data = model ? $store[model] : data
 
   $: chartGradient = getChartGradient(gradient)
   $: console.log(chartGradient)

@@ -60,15 +60,13 @@
     }
   }
 
-  onMount(async () => {
-    await fetchData()
-  })
-
   $: _data = model ? $store[model] : data
   $: console.log("_data", _data)
 
-  onMount(() => {
+  onMount(async () => {
     if (chart) {
+      await fetchData()
+
       chart.emptyDataConfig({
         showEmptySlice: true,
         emptySliceColor: "#000000",
@@ -76,7 +74,7 @@
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
-      chartContainer.datum(data).call(chart)
+      chartContainer.datum(_data).call(chart)
     }
   })
 

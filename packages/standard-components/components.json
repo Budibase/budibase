@@ -279,10 +279,10 @@
 		"description": "Donut Chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"color": "string",
 			"height": "number",
 			"width": "number",
-			"model": "string",
 			"hasFixedHighlightedSlice": "bool",
 			"hasLastHoverSliceHighlighted": "bool",
 			"hasHoverAnimation": "bool",
@@ -299,6 +299,7 @@
 		"description": "Sparkline Chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"areaGradient": "string",
 			"height": "number",
 			"width": "number",
@@ -314,6 +315,7 @@
 		"description": "Stacked Bar Chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"color": "string",
 			"height": "number",
 			"width": "number",
@@ -342,6 +344,7 @@
 		"description": "Step Chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"color": "string",
 			"height": "number",
 			"width": "number",
@@ -375,6 +378,7 @@
 		"description": "Step Chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"height": "number",
 			"width": "number",
 			"margin": "string",
@@ -389,6 +393,7 @@
 		"description": "Scatterplot Chart",
 		"data": true,
 		"props": { 
+			"model": "string",
 			"color": "string",
 			"height": "number",
 			"width": "number",
@@ -411,6 +416,7 @@
 		"description": "Bar Chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"betweenBarsPadding": "number",
 			"gradient": "string",
 			"color": "string",
@@ -425,7 +431,8 @@
 			"labelNumberFormat": "number",
 			"labelSize": "number",
 			"locale": "string",
-			"nameLabel": "string",			
+			"nameLabel": "string",
+			"valueLabel": "string",
 			"numberLabel": "string",
 			"xAxisLabel": "string",
 			"yAxisLabel": "string",
@@ -438,6 +445,7 @@
 		"description": "Line Chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"width": "number",
 			"height": "number",
 			"axisTimeCombinations": "string",
@@ -463,6 +471,7 @@
 		"description": "brush chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"gradient": "string",
 			"height": "number",
 			"width": "number",
@@ -479,6 +488,7 @@
 		"description": "Groupedbar chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"color": "string",
 			"height": "number",
 			"width": "number",
@@ -491,6 +501,7 @@
 		"description": "Groupedbar chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"color": "string",
 			"height": "string",
 			"width": "string",
@@ -511,6 +522,7 @@
 		"description": "Bullet chart",
 		"data": true,
 		"props": {
+			"model": "string",
 			"color": "string",
 			"customSubtitle": "string",
 			"customTitle": "string",

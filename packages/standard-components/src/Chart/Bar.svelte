@@ -56,15 +56,35 @@
 
   export let useLegend = true
 
-  onMount(() => {
+  export let _bb
+  export let model
+
+  let store = _bb.store
+
+  onMount(async () => {
     if (chartElement) {
+      await fetchData()
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
-      chartContainer.datum(data).call(chart)
+      chartContainer.datum(_data).call(chart)
       bindChartTooltip()
     }
   })
+
+  async function fetchData() {
+    const FETCH_RECORDS_URL = `/api/views/all_${model}`
+    const response = await _bb.api.get(FETCH_RECORDS_URL)
+    if (response.status === 200) {
+      const json = await response.json()
+      store.update(state => {
+        state[model] = json
+        return state
+      })
+    } else {
+      throw new Error("Failed to fetch records.", response)
+    }
+  }
 
   function bindChartUIProps() {
     if (color) {
@@ -164,6 +184,8 @@
     tooltipContainer = select(`.${chartClass} .metadata-group`)
     tooltipContainer.datum([]).call(tooltip)
   }
+
+  $: _data = model ? $store[model] : data
 
   $: colorSchema = getColorSchema(color)
   $: chartGradient = getChartGradient(gradient)

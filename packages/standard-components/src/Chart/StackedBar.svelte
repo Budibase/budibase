@@ -12,6 +12,11 @@
   const chartClass = `stackedbar-container-${_id}`
   const legendClass = `legend-container-${_id}`
 
+  export let _bb
+  export let model
+
+  let store = _bb.store
+
   let chartElement = null
   let chartContainer = null
   let tooltip
@@ -46,15 +51,32 @@
   export let yAxisLabelOffset = null
   export let useLegend = true
 
-  onMount(() => {
+  onMount(async () => {
     if (chart) {
+      if (model) {
+        await fetchData()
+      }
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
-      chartContainer.datum(data).call(chart)
+      chartContainer.datum(_data).call(chart)
       //   bindChartTooltip()
     }
   })
+
+  async function fetchData() {
+    const FETCH_RECORDS_URL = `/api/views/all_${model}`
+    const response = await _bb.api.get(FETCH_RECORDS_URL)
+    if (response.status === 200) {
+      const json = await response.json()
+      store.update(state => {
+        state[model] = json
+        return state
+      })
+    } else {
+      throw new Error("Failed to fetch records.", response)
+    }
+  }
 
   function bindChartUIProps() {
     //UI PROPS
@@ -142,6 +164,8 @@
     tooltipContainer = select(`.${chartClass} .metadata-group`)
     tooltipContainer.datum([]).call(tooltip)
   }
+
+  $: _data = model ? $store[model] : data
 
   $: colorSchema = getColorSchema(color)
 </script>
