@@ -1,6 +1,6 @@
 // What this script does:
-// 1. Removes the old test folder if it exists (.budibase-cypress)
-// 2. Initialises using `.budibase-cypress`
+// 1. Removes the old test folder if it exists (.budibase)
+// 2. Initialises using `.budibase`
 // 3. Runs the server using said folder
 
 const rimraf = require("rimraf")

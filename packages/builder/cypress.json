@@ -1,5 +1,8 @@
 {
   "baseUrl": "http://localhost:4001/_builder/",
   "video": false,
-  "projectId": "bmbemn"
+  "projectId": "bmbemn",
+  "env": {
+    "BUDIBASE_API_KEY": "test"
+  }
 }
