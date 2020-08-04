@@ -259,6 +259,7 @@
 			"color": "string",
 			"height": "number",
 			"width": "number",
+			"model": "string",
 			"hasFixedHighlightedSlice": "bool",
 			"hasLastHoverSliceHighlighted": "bool",
 			"hasHoverAnimation": "bool",
