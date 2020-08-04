@@ -8,6 +8,11 @@
 
   const _id = shortid.generate()
 
+  export let _bb
+  export let model
+
+  let store = _bb.store
+
   const chart = britecharts.stackedArea()
   const chartClass = `stackedarea-container-${_id}`
   const legendClass = `legend-container-${_id}`
@@ -51,15 +56,32 @@
   export let yTicks = null
   export let useLegend = true
 
-  onMount(() => {
+  onMount(async () => {
     if (chart) {
+      if (model) {
+        await fetchData()
+      }
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
-      chartContainer.datum(data).call(chart)
+      chartContainer.datum(_data).call(chart)
       bindChartTooltip()
     }
   })
+
+  async function fetchData() {
+    const FETCH_RECORDS_URL = `/api/views/all_${model}`
+    const response = await _bb.api.get(FETCH_RECORDS_URL)
+    if (response.status === 200) {
+      const json = await response.json()
+      store.update(state => {
+        state[model] = json
+        return state
+      })
+    } else {
+      throw new Error("Failed to fetch records.", response)
+    }
+  }
 
   function bindChartUIProps() {
     if (notNull(color)) {
@@ -147,6 +169,8 @@
       chart.on("customMouseOver", customMouseOver)
     }
   }
+
+  $: _data = model ? $store[model] : data
 
   $: colorSchema = getColorSchema(color)
 </script>

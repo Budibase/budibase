@@ -594,6 +594,11 @@ export default {
               properties: {
                 settings: [
                   {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
+                  {
                     label: "Color",
                     key: "color",
                     control: OptionSelect,
@@ -665,6 +670,11 @@ export default {
               },
               properties: {
                 settings: [
+                  {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
                   {
                     label: "Colors",
                     key: "color",
@@ -779,6 +789,11 @@ export default {
               },
               properties: {
                 settings: [
+                  {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
                   {
                     label: "Color",
                     key: "color",
@@ -912,6 +927,11 @@ export default {
               properties: {
                 settings: [
                   {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
+                  {
                     label: "height",
                     key: "height",
                     control: Input,
@@ -963,6 +983,11 @@ export default {
               },
               properties: {
                 settings: [
+                  {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
                   {
                     label: "Line Gradient",
                     key: "lineGradient",
@@ -1038,6 +1063,11 @@ export default {
               },
               properties: {
                 settings: [
+                  {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
                   {
                     label: "Y Axis Label",
                     key: "yAxisLabel",
@@ -1146,6 +1176,11 @@ export default {
                     control: Input,
                   },
                   {
+                    label: "Value Label",
+                    key: "valueLabel",
+                    control: Input,
+                  },
+                  {
                     label: "Number Format",
                     key: "numberFormat",
                     control: Input,
@@ -1178,6 +1213,11 @@ export default {
               },
               properties: {
                 settings: [
+                  {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
                   {
                     label: "Gradient",
                     key: "gradient",
@@ -1283,6 +1323,11 @@ export default {
               properties: {
                 settings: [
                   {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
+                  {
                     label: "Color",
                     key: "color",
                     control: OptionSelect,
@@ -1375,6 +1420,11 @@ export default {
               properties: {
                 settings: [
                   {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
+                  {
                     label: "Color",
                     key: "color",
                     control: OptionSelect,
@@ -1435,6 +1485,11 @@ export default {
               },
               properties: {
                 settings: [
+                  {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
                   {
                     label: "Colors",
                     key: "color",
@@ -1609,6 +1664,11 @@ export default {
               },
               properties: {
                 settings: [
+                  {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
                   {
                     label: "X Axis Combo",
                     key: "axisTimeCombinations",
