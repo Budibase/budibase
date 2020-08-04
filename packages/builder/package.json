@@ -15,8 +15,39 @@
     "cy:open": "cypress open",
     "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run"
   },
-  "jest": {
-   "testEnvironment": "node"
+ "jest": {
+    "globals": {
+      "GLOBALS": {
+        "client": "web"
+      }
+    },
+    "testURL": "http://jest-breaks-if-this-does-not-exist",
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
+      "\\.(css|less|sass|scss)$": "identity-obj-proxy",
+      "components(.*)$": "<rootDir>/src/components$1",
+      "builderStore(.*)$": "<rootDir>/src/builderStore$1"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "svelte"
+    ],
+    "moduleDirectories": [
+      "node_modules"
+    ],
+    "transform": {
+      "^.+js$": "babel-jest",
+      "^.+.svelte$": "svelte-jester"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!svelte).+\\.js$"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/cypress/"
+    ],
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-dom/extend-expect"
+    ]
   },
   "eslintConfig": {
     "extends": [
