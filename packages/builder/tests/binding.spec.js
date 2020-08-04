@@ -89,9 +89,7 @@ describe("fetch bindable properties", () => {
     })
     const componentBinding = result.find(r => r.instance._id === "child-list-item-input-id" && r.type === "instance")
     expect(componentBinding).toBeDefined()
-  })
-
-  
+  }) 
 
 })
 
