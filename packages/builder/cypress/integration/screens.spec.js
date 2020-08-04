@@ -7,7 +7,7 @@ context('Screen Tests', () => {
     })
 
     it('Should successful create a screen', () => { 
-        cy.createScreen("test Screen")        
+        cy.createScreen("test Screen", "/test")        
     })
 
     it('Should rename a screen', () => {

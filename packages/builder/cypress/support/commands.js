@@ -37,22 +37,22 @@ Cypress.Commands.add("createApp", (name, description) => {
 
   cy.contains("Save").click()
 })
-Cypress.Commands.add("createModel", (modelName, firstField, secondField) => {
+Cypress.Commands.add("createModel", modelName => {
   // Enter model name
-  cy.contains("Create New Table").click();
+  cy.contains("Create New Table").click()
   cy.get("[data-cy=table-name-input]").type(modelName)
 
   // Add 'name' field
-  cy.contains("Add").click();
+  cy.contains("Add").click()
   cy.contains("Plain Text").click()
 
   // Add 'age' field
-  cy.contains("Add").click();
+  cy.contains("Add").click()
   cy.contains("Number").click()
 
   cy.contains("Save").click()
 
-  cy.contains(modelName).click();
+  cy.contains(modelName).click()
 })
 
 Cypress.Commands.add("addRecord", (firstField, secondField) => {
@@ -65,16 +65,16 @@ Cypress.Commands.add("addRecord", (firstField, secondField) => {
   cy.contains("Save").click()
 })
 
-Cypress.Commands.add("createUser", (username, password, level) => {
+Cypress.Commands.add("createUser", (username, password) => {
   // Create User
-  cy.get(".nav-group-header > .ri-add-line").click()
+  cy.get(".toprightnav > .settings").click()
+  cy.contains("Users").click()
 
-  cy.get("[data-cy=username]").type(username)
-  cy.get("[data-cy=password]").type(password)
-  cy.get("[data-cy=accessLevel]").select(level)
+  cy.get("[name=Name]").type(username)
+  cy.get("[name=Password]").type(password)
 
   // Save
-  cy.contains("Save").click()
+  cy.get(".create-button").click()
 })
 
 Cypress.Commands.add("addHeadlineComponent", text => {
@@ -94,9 +94,7 @@ Cypress.Commands.add("addButtonComponent", () => {
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {
-  cy.get(".close", { timeout: 10000 }).click()
   cy.contains("frontend").click()
-  cy.get(".close", { timeout: 10000 }).click()
 })
 
 Cypress.Commands.add("createScreen", (screenName, route) => {

@@ -10,10 +10,11 @@ context('Create a workflow', () => {
     it('should create a workflow', () => {
         cy.createModel('dog', 'name', 'age')
         cy.createUser('bbuser', 'test', 'ADMIN')
+        cy.get(".close-button").click()
 
 
         cy.contains('workflow').click()
-        cy.get('.new-workflow-button').click()
+        cy.contains('Create New Workflow').click()
         cy.get('input').type('Add Record')
         cy.contains('Save').click()
 
@@ -28,14 +29,13 @@ context('Create a workflow', () => {
         cy.get(':nth-child(3) > .budibase__input').type('11')
 
         // Save
-        cy.get('[data-cy=save-workflow-setup]').click()
-        cy.get('.workflow-button').click()
+        cy.contains('Save Workflow').click()
 
         // Activate Workflow
         cy.get('[data-cy=activate-workflow]').click()
 
     })
-    it('should add record when a new record is added', () => {
+    xit('should add record when a new record is added', () => {
         cy.contains('backend').click()
 
         cy.addRecord('bob', '15')
