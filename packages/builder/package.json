@@ -15,7 +15,7 @@
     "cy:open": "cypress open",
     "cy:run:ci": "cypress run --browser electron --record --key f308590b-6070-41af-b970-794a3823d451",
     "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run:ci"
+    "cy:ci": "BUDIBASE_API_KEY=ci start-server-and-test cy:setup http://localhost:4001/_builder cy:run:ci"
   },
   "jest": {
     "globals": {
