@@ -34,5 +34,3 @@ jobs:
         CI: true
         name: Budibase CI
     - run: yarn test:e2e:ci
-      env:
-        BUDIBASE_API_KEY: test 

@@ -10,12 +10,12 @@
     "test:watch": "jest --watchAll",
     "dev:builder": "routify --routify-dir routify -c rollup",
     "rollup": "rollup -c -w",
-    "cy:setup": "node ./cypress/setup.js",
+    "cy:setup": "BUDIBASE_API_KEY=test node ./cypress/setup.js",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
     "cy:run:ci": "cypress run --browser electron --record --key f308590b-6070-41af-b970-794a3823d451",
     "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run",
-    "cy:ci": "BUDIBASE_API_KEY=ci start-server-and-test cy:setup http://localhost:4001/_builder cy:run:ci"
+    "cy:ci": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run:ci"
   },
   "jest": {
     "globals": {
