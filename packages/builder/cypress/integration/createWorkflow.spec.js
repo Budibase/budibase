@@ -9,9 +9,6 @@ context('Create a workflow', () => {
     // https://on.cypress.io/interacting-with-elements
     it('should create a workflow', () => {
         cy.createModel('dog', 'name', 'age')
-        cy.createUser('bbuser', 'test', 'ADMIN')
-        cy.get(".close-button").click()
-
 
         cy.contains('workflow').click()
         cy.contains('Create New Workflow').click()

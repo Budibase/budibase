@@ -24,18 +24,23 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
-Cypress.Commands.add("createApp", (name, description) => {
-  cy.contains("Create New Web App")
-    .click()
-    .get('input[name="name"]')
+Cypress.Commands.add("createApp", name => {
+  // first time pop up
+  cy.contains("Create New Web App").click()
+
+  cy.get("input[name=applicationName]")
     .type(name)
     .should("have.value", name)
 
-  cy.get('textarea[name="description"]')
-    .type(description)
-    .should("have.value", description)
+  cy.contains("Next").click()
 
-  cy.contains("Save").click()
+  cy.get("input[name=username]")
+    .click()
+    .type("test")
+  cy.get("input[name=password]")
+    .click()
+    .type("test")
+  cy.contains("Submit").click()
 })
 Cypress.Commands.add("createModel", modelName => {
   // Enter model name
@@ -70,8 +75,12 @@ Cypress.Commands.add("createUser", (username, password) => {
   cy.get(".toprightnav > .settings").click()
   cy.contains("Users").click()
 
-  cy.get("[name=Name]").type(username)
-  cy.get("[name=Password]").type(password)
+  cy.get("[name=Name]")
+    .first()
+    .type(username)
+  cy.get("[name=Password]")
+    .first()
+    .type(password)
 
   // Save
   cy.get(".create-button").click()
