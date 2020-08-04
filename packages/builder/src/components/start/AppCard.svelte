@@ -1,27 +1,24 @@
 <script>
   import Button from "components/common/Button.svelte"
-  export let name,
-    description = `A minimalist CRM which removes the noise and allows you to focus
-              on your business.`,
-    _id
+  export let name, _id
 </script>
 
 <div class="apps-card">
   <h3 class="app-title">{name}</h3>
-  <p class="app-desc">{description}</p>
   <div class="card-footer">
-    <a href={`/_builder/${_id}`} class="app-button">Open Web App</a>
+    <a href={`/_builder/${_id}`} class="app-button">Open {name}</a>
   </div>
 </div>
 
 <style>
   .apps-card {
     background-color: var(--white);
-    padding: 20px 20px 30px 20px;
+    padding: 20px 20px 20px 20px;
     max-width: 400px;
     max-height: 150px;
     border-radius: 5px;
     border: 1px solid var(--grey-4);
+    font-family: Inter;
   }
 
   .app-button:hover {
@@ -34,12 +31,15 @@
     font-weight: 600;
     color: var(--ink);
     text-transform: capitalize;
-    font-family: Inter;
   }
 
   .app-desc {
     color: var(--grey-7);
-    font-family: Inter;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .card-footer {

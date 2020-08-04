@@ -21,21 +21,17 @@
     display: flex;
     flex-direction: column;
     cursor: pointer;
-    margin-bottom: 8px;
-    padding: 8px 0px 16px 0px;
-    width: 110px;
+    padding: 12px 16px 16px 16px;
     height: 80px;
     justify-content: center;
     align-items: center;
-    margin-right: 8px;
     background-color: var(--grey-1);
-    border-radius: 3px;
+    border-radius: 5px;
   }
 
   .item-item:hover {
     background: var(--grey-2);
-    border-radius: 3px;
-    transition: all 0.2s;
+    transition: all 0.3s;
   }
 
   .item-icon {
@@ -51,6 +47,7 @@
   .item-name {
     font-size: 14px;
     font-weight: 400;
+    text-align: center;
   }
 
   i {

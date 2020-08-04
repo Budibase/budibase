@@ -1,38 +1,12 @@
+
+# What is Budibase?
+
+Budibase is a platform for building web applications, without needing to write code.
+
+
 # Getting Started with Budibase
 
-(For contributors - scroll down)
-
-### 1. Global install budibase
-
-`npm install -g budibase`
-
-### 2. Start using Budibase
-
-Create a directory to store your Budibase apps
-
-`mkdir my-budibase`
-
-`cd my-budibase`
-
-Initialise Budibase in current directory
-
-`budi init`
-
-Create a new Budibase app
-
-`budi new my-app`
-
-Run Budibase
-
-`budi`
-
-You can now access the Budibase builder on http://localhost:4001/_builder
-
-Start building!
-
-Once you have created your app, you need to create yourself an instance of your app (i.e. a database)
-
-`budi instance my-app`
+The Budibase builder runs in Electron, on Mac, PC and Linux. [Download the latest release](https://github.com/Budibase/budibase/releases), and start building!
 
 
 ## Documentation
@@ -42,3 +16,11 @@ A work in progress, lives here: https://docs.budibase.com
 ## Contributing
 
 Contributors, see [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+## Get in touch
+
+If you have a question or would like to talk with other Budibase users, please join our Discord server:
+
+[Discord chatroom](https://discord.gg/rCYayfe)
+
+![Discord Shield](https://discordapp.com/api/guilds/733030666647765003/widget.png?style=shield)

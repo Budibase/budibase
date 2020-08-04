@@ -27,15 +27,15 @@ A client represents a single budibase customer. Each budibase client will have 1
 
 ### App
 
-A client can have one or more budibase applications. Think of a budibase application as a tree. Budibase applications have one definition of what the front end will look like, 
+A client can have one or more budibase applications. Budibase applications would be things like "Developer Inventory Management" or "Goat Herder CRM". Think of a budibase application as a tree. 
 
 ### Database
 
 An App can have one or more databases. Keeping with our [dendrology](https://en.wikipedia.org/wiki/Dendrology) analogy - think of an database as a branch on the tree. Databases are used to keep data separate for different instances of your app. For example, if you had a CRM app, you may create a database for your US office, and a database for your Australian office. Databases allow us to support [multitenancy](https://www.gartner.com/en/information-technology/glossary/multitenancy) in budibase applications.
 
-### Model
+### Table
 
-Models in budibase are almost akin to tables in relational databases. A model may be a "Car" or an "Employee". They are the main building blocks for the creation and management of backend data in budibase.
+Tables in budibase are almost akin to tables in relational databases. A table may be a "Car" or an "Employee". They are the main building blocks for the creation and management of backend data in budibase.
 
 ### View
 
@@ -95,7 +95,7 @@ then `cd ` into your local copy.
 
 ### 4. Initialising Budibase and Creating a Budibase App
 
-`yarn initialise` will initialise your budibase installation. A Budibase apps folder will have been created in `~/.budibase`.
+`yarn initialise` will initialise your budibase installation. A Budibase apps folder will have been created in `~/.budibase`. You can also just start up the budibase electron app and it should initialise budibase for you.
 
 This is a blank apps folder, so you will need to create yourself an app.
 
@@ -149,13 +149,35 @@ The backend schema, models and records are stored using PouchDB when developing 
 
 ### Publishing Budibase to NPM
 
-You can publish all the latest versions of the monorepo packages by running:
+#### Testing In Electron
+
+At budibase, we pride ourselves on giving our users a fast, native and slick local development experience. As a result, we use the electron to provide a native GUI for the budibase builder. In order to release budibase out into the wild, you should test your changes in a packaged electron application. To do this, first build budibase from the root directory. 
+```
+yarn build
+```
+
+Now everything is built, you can package up your electron application.
+```
+cd packages/server
+yarn build:electron
+```
+
+Your new electron application will be stored in `packages/server/dist/<operating-system>`. Open up the executable and make sure everything is working smoothly.
+
+
+#### Publishing to NPM
+
+Once you are happy that your changes work in electron, you can publish all the latest versions of the monorepo packages by running:
 
 ```
 yarn publishnpm
 ```
 
 from your root directory.
+
+#### CI Release
+
+After NPM has successfully published the budibase packages, a new tag will be pushed to master. This will kick off a github action (can be found at `.github/workflows/release.yml`) this will build and package the electron application for every OS (Windows, Mac, Linux). The binaries will be stored under the new tag on the [budibase releases page](https://github.com/Budibase/budibase/releases).
 
 ### Troubleshooting
 

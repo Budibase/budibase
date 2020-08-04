@@ -59,7 +59,9 @@
       if (field.name.startsWith("_")) {
         errors.push(`field '${field.name}' - name cannot begin with '_''`)
       } else if (restrictedFieldNames.includes(field.name)) {
-        errors.push(`field '${field.name}' - is a restricted name, please rename`)
+        errors.push(
+          `field '${field.name}' - is a restricted name, please rename`
+        )
       } else if (!field.name || !field.name.trim()) {
         errors.push("field name cannot be blank")
       }
@@ -75,9 +77,7 @@
   async function saveModel() {
     const errors = validate()
     if (errors.length > 0) {
-      notifier.danger(
-        errors.join("/n")
-      )
+      notifier.danger(errors.join("/n"))
       return
     }
 
@@ -103,10 +103,12 @@
             class="budibase__input"
             bind:value={$backendUiStore.draftModel.name} />
         </div>
+        <!-- dont have this capability yet..
         <div class="titled-input">
           <header>Import Data</header>
           <Button wide secondary>Import CSV</Button>
         </div>
+        -->
       {/if}
       <footer>
         <Button disabled={!edited} green={edited} wide on:click={saveModel}>

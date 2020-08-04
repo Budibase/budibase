@@ -22,7 +22,8 @@
 <style>
   .root {
     height: 100%;
-    display: flex;
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr) 300px;
     background: var(--grey-1);
     line-height: 1;
   }
