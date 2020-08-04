@@ -1,27 +1,28 @@
-import { cloneDeep, difference, fill } from "lodash"
+import { cloneDeep, difference } from "lodash"
 
-const stubBindings = [
-  {
-    // type: instance represents a bindable property of a component
-    type: "instance",
-    instance: {} /** a component instance **/,
-    // how the binding expression persists, and is used in the app at runtime
-    runtimeBinding: "state.<component instance Id>.<component property name>",
-    // how the binding exressions looks to the user of the builder
-    readableBinding: "<component instance name>",
-  },
-  {
-    type: "context",
-    instance: {
-      /** a component instance **/
-    },
-    // how the binding expression persists, and is used in the app at runtime
-    runtimeBinding: "context._parent.<key of model/record>",
-    // how the binding exressions looks to the user of the builder
-    readableBinding: "<component instance name>.<model/view name>.<key>",
-  },
-]
+/**
+ * parameter for fetchBindableProperties function
+ * @typedef {Object} fetchBindablePropertiesParameter
+ * @property {string}  componentInstanceId - an _id of a component that has been added to a screen, whihc you want to fetch bindable props for
+ * @propperty {Object} screen - current screen - where componentInstanceId lives
+ * @property {Object} components - dictionary of component definitions
+ * @property {Array} models - array of all models
+ */
 
+/**
+ *
+ * @typedef {Object} BindableProperty
+ * @property {string} type - either "instance" (binding to a component instance) or "context" (binding to data in context e.g. List Item)
+ * @property {Object} instance - relevant component instance. If "context" type, this instance is the component that provides the context... e.g. the List
+ * @property {string} runtimeBinding - a binding string that is a) saved against the string, and b) used at runtime to read/write the value
+ * @property {string} readableBinding - a binding string that is displayed to the user, in the builder
+ */
+
+/**
+ * Generates all allowed bindings from within any particular component instance
+ * @param {fetchBindablePropertiesParameter} param
+ * @returns {Array.<BindableProperty>}
+ */
 export default function({ componentInstanceId, screen, components, models }) {
   const walkResult = walk({
     // cloning so we are free to mutate props (e.g. by adding _contexts)
