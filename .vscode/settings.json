@@ -1,0 +1,11 @@
+{
+    "editor.formatOnSave": true,
+    "eslint.format.enable": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true
+    },
+    "[svelte]": {
+        "editor.defaultFormatter": "JamesBirtles.svelte-vscode"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+}

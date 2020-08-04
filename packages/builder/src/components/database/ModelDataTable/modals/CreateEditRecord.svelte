@@ -3,7 +3,7 @@
   import { store, backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { compose, map, get, flatten } from "lodash/fp"
-  import { Button } from "@budibase/bbui"
+  import { Input, TextArea, Button } from "@budibase/bbui"
   import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"
   import Select from "components/common/Select.svelte"
   import RecordFieldControl from "./RecordFieldControl.svelte"
@@ -70,7 +70,7 @@
 <div class="actions">
   <header>
     <i class="ri-file-user-fill" />
-    <h4 class="budibase__title--4">Create / Edit Record</h4>
+    <h4>Create / Edit Record</h4>
   </header>
   <ErrorsBox {errors} />
   <form on:submit|preventDefault class="uk-form-stacked">
@@ -117,15 +117,16 @@
     align-items: center;
     justify-content: center;
     background: var(--blue-light);
-    color: var(--ink);
+    color: var(--grey-7);
     font-size: 20px;
-    border-radius: 3px;
+    border-radius: 5px;
   }
 
   h4 {
     display: inline-block;
     font-size: 24px;
-    font-weight: bold;
+    font-weight: 600;
+    font-family: sans-serif;
     color: var(--ink);
     margin: 0;
   }

@@ -16,8 +16,10 @@ const run = async opts => {
     await createEmptyAppPackage(opts)
     exec(`cd ${join(opts.dir, opts.applicationId)} && npm install`)
     console.log(chalk.green(`Budibase app ${opts.name} created!`))
+    process.exit()
   } catch (error) {
     console.error(chalk.red("Error creating new app", error))
+    process.exit(1)
   }
 }
 

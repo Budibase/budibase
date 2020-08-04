@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { store } from "builderStore"
+  import api from "builderStore/api"
   import AppList from "components/start/AppList.svelte"
   import { onMount } from "svelte"
   import ActionButton from "components/common/ActionButton.svelte"
@@ -23,6 +24,24 @@
     }
   }
 
+  let hasKey
+
+  async function fetchKeys() {
+    const response = await api.get(`/api/keys/`)
+    const res = await response.json()
+    return res.budibase
+  }
+
+  async function checkIfKeysAndApps() {
+    const key = await fetchKeys()
+    const apps = await getApps()
+    if (key) {
+      hasKey = true
+    } else {
+      showCreateAppModal()
+    }
+  }
+
   // Handle create app modal
   const { open } = getContext("simple-modal")
 
@@ -30,8 +49,7 @@
     open(
       CreateAppModal,
       {
-        message: "What is your name?",
-        hasForm: true,
+        hasKey,
       },
       {
         closeButton: false,
@@ -42,6 +60,8 @@
       }
     )
   }
+
+  checkIfKeysAndApps()
 </script>
 
 <div class="header">

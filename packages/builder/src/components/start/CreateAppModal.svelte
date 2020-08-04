@@ -1,51 +1,174 @@
 <script>
+  import { writable } from "svelte/store"
+
+  import { store, workflowStore, backendUiStore } from "builderStore"
+  import { string, object } from "yup"
+  import api, { get } from "builderStore/api"
+  import Form from "@svelteschool/svelte-forms"
   import Spinner from "components/common/Spinner.svelte"
+  import { API, Info, User } from "./Steps"
+  import Indicator from "./Indicator.svelte"
   import { Input, TextArea, Button } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { AppsIcon, InfoIcon, CloseIcon } from "components/common/Icons/"
   import { getContext } from "svelte"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
+  import analytics from "../../analytics"
 
   const { open, close } = getContext("simple-modal")
+  //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
+  const createAppStore = writable({ currentStep: 0, values: {} })
 
-  let name = ""
-  let description = ""
-  let loading = false
-  let error = {}
+  export let hasKey
 
-  const createNewApp = async () => {
-    if ((name.length > 100 || name.length < 1) && description.length < 1) {
-      error = {
-        name: true,
-        description: true,
-      }
-    } else if (description.length < 1) {
-      error = {
-        name: false,
-        description: true,
-      }
-    } else if (name.length > 100 || name.length < 1) {
-      error = {
-        name: true,
-      }
-    } else {
-      error = {}
-      const data = { name, description }
-      loading = true
-      try {
-        const response = await post("/api/applications", data)
+  let submitting = false
+  let errors = {}
+  let validationErrors = {}
+  let validationSchemas = [
+    {
+      apiKey: string().required("Please enter your API key."),
+    },
+    {
+      applicationName: string().required("Your application must have a name."),
+    },
+    {
+      username: string().required("Your application needs a first user."),
+      password: string().required(
+        "Please enter a password for your first user."
+      ),
+      accessLevelId: string().required(
+        "You need to select an access level for your user."
+      ),
+    },
+  ]
 
-        const res = await response.json()
+  let steps = [
+    {
+      component: API,
+      errors,
+    },
+    {
+      component: Info,
+      errors,
+    },
+    {
+      component: User,
+      errors,
+    },
+  ]
 
-        $goto(`./${res._id}`)
-      } catch (error) {
-        console.error(error)
-      }
+  if (hasKey) {
+    validationSchemas.shift()
+    validationSchemas = validationSchemas
+    steps.shift()
+    steps = steps
+  }
+
+  // Handles form navigation
+  const back = () => {
+    if ($createAppStore.currentStep > 0) {
+      $createAppStore.currentStep -= 1
+    }
+  }
+  const next = () => {
+    $createAppStore.currentStep += 1
+  }
+
+  // $: errors = validationSchemas.validate(values);
+  $: getErrors(
+    $createAppStore.values,
+    validationSchemas[$createAppStore.currentStep]
+  )
+
+  async function getErrors(values, schema) {
+    try {
+      validationErrors = {}
+      await object(schema).validate(values, { abortEarly: false })
+    } catch (error) {
+      validationErrors = extractErrors(error)
     }
   }
 
-  let value
+  const checkValidity = async (values, currentStep) => {
+    const validity = await object()
+      .shape(validationSchemas[currentStep])
+      .isValid(values)
+    currentStepIsValid = validity
+
+    // Check full form on last step
+    if (currentStep === steps.length - 1) {
+      // Make one big schema from all the small ones
+      const fullSchema = Object.assign({}, ...validationSchemas)
+
+      // Check full form schema
+      const formIsValid = await object()
+        .shape(fullSchema)
+        .isValid(values)
+      fullFormIsValid = formIsValid
+    }
+  }
+
+  async function signUp() {
+    submitting = true
+    try {
+      // Add API key if there is none.
+      if (!hasKey) {
+        await updateKey(["budibase", $createAppStore.values.apiKey])
+      }
+
+      // Create App
+      const appResp = await post("/api/applications", {
+        name: $createAppStore.values.applicationName,
+      })
+      const appJson = await appResp.json()
+      analytics.captureEvent("web_app_created", {
+        name,
+        appId: appJson._id,
+      })
+
+      // Select Correct Application/DB in prep for creating user
+      const applicationPkg = await get(`/api/${appJson._id}/appPackage`)
+      const pkg = await applicationPkg.json()
+      if (applicationPkg.ok) {
+        backendUiStore.actions.reset()
+        await store.setPackage(pkg)
+        workflowStore.actions.fetch()
+      } else {
+        throw new Error(pkg)
+      }
+
+      // Create user
+      const user = {
+        name: $createAppStore.values.username,
+        username: $createAppStore.values.username,
+        password: $createAppStore.values.password,
+        accessLevelId: $createAppStore.values.accessLevelId,
+      }
+      const userResp = await api.post(`/api/users`, user)
+      const json = await userResp.json()
+      $goto(`./${appJson._id}`)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function updateKey([key, value]) {
+    const response = await api.put(`/api/keys/${key}`, { value })
+    const res = await response.json()
+    return res
+  }
+
+  function extractErrors({ inner }) {
+    return inner.reduce((acc, err) => {
+      return { ...acc, [err.path]: err.message }
+    }, {})
+  }
+
+  let currentStepIsValid = false
+  let fullFormIsValid = false
+  $: checkValidity($createAppStore.values, $createAppStore.currentStep)
+
   let onChange = () => {}
 
   function _onCancel() {
@@ -58,45 +181,55 @@
 </script>
 
 <div class="container">
+  <div class="sidebar">
+    {#each steps as { active, done }, i}
+      <Indicator
+        active={$createAppStore.currentStep === i}
+        done={i < $createAppStore.currentStep}
+        step={i + 1} />
+    {/each}
+  </div>
   <div class="body">
     <div class="heading">
-      <span class="icon">
-        <AppsIcon />
-      </span>
-      <h3 class="header">Create new web app</h3>
+      <h3 class="header">Get Started with Budibase</h3>
     </div>
-    <Input
-      name="name"
-      label="Name"
-      placeholder="Enter application name"
-      on:change={e => (name = e.target.value)}
-      on:input={e => (name = e.target.value)} />
-    {#if error.name}
-      <span class="error">You need to enter a name for your application.</span>
-    {/if}
-    <TextArea
-      bind:value={description}
-      name="description"
-      label="Description"
-      placeholder="Describe your application" />
-    {#if error.description}
-      <span class="error">
-        Please enter a short description of your application
-      </span>
-    {/if}
-  </div>
-  <div class="footer">
-    <a href="./#" class="info">
-      <InfoIcon />
-      How to get started
-    </a>
-    <Button secondary thin on:click={_onCancel}>Cancel</Button>
-    <Button primary thin on:click={_onOkay}>Save</Button>
+    <div class="step">
+      <Form bind:values={$createAppStore.values}>
+        {#each steps as step, i (i)}
+          <div class:hidden={$createAppStore.currentStep !== i}>
+            <svelte:component
+              this={step.component}
+              {validationErrors}
+              options={step.options}
+              name={step.name} />
+          </div>
+        {/each}
+      </Form>
+    </div>
+    <div class="footer">
+      {#if $createAppStore.currentStep > 0}
+        <Button secondary on:click={back}>Back</Button>
+      {/if}
+      {#if $createAppStore.currentStep < steps.length - 1}
+        <Button secondary on:click={next} disabled={!currentStepIsValid}>
+          Next
+        </Button>
+      {/if}
+      {#if $createAppStore.currentStep === steps.length - 1}
+        <Button
+          secondary
+          on:click={signUp}
+          disabled={!fullFormIsValid || submitting}>
+          {submitting ? 'Loading...' : 'Submit'}
+        </Button>
+      {/if}
+    </div>
   </div>
   <div class="close-button" on:click={_onCancel}>
     <CloseIcon />
   </div>
-  {#if loading}
+  <img src="/_builder/assets/bb-logo.svg" alt="budibase icon" />
+  {#if submitting}
     <div in:fade class="spinner-container">
       <Spinner />
       <span class="spinner-text">Creating your app...</span>
@@ -106,9 +239,19 @@
 
 <style>
   .container {
+    min-height: 600px;
+    display: grid;
+    grid-template-columns: 80px 1fr;
     position: relative;
   }
-
+  .sidebar {
+    display: grid;
+    border-bottom-left-radius: 0.5rem;
+    border-top-left-radius: 0.5rem;
+    grid-gap: 30px;
+    align-content: center;
+    background: #f5f5f5;
+  }
   .close-button {
     cursor: pointer;
     position: absolute;
@@ -129,43 +272,18 @@
     margin: 0;
     font-size: 24px;
     font-weight: 600;
-    font-family: inter;
-  }
-  .icon {
-    display: grid;
-    border-radius: 3px;
-    align-content: center;
-    justify-content: center;
-    margin-right: 12px;
-    height: 20px;
-    width: 20px;
-    padding: 10px;
-    background-color: var(--blue-light);
-  }
-  .info {
-    color: var(--blue);
-    text-decoration-color: var(--blue);
-  }
-  .info :global(svg) {
-    fill: var(--blue);
-    margin-right: 8px;
-    width: 24px;
-    height: 24px;
   }
   .body {
-    padding: 40px 40px 80px 40px;
+    padding: 40px 60px 60px 60px;
     display: grid;
-    grid-gap: 20px;
+    align-items: center;
+    grid-template-rows: auto 1fr auto;
   }
   .footer {
     display: grid;
-    grid-gap: 20px;
-    align-items: center;
-    grid-template-columns: 1fr auto auto;
-    padding: 30px 40px;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 50px;
-    background-color: var(--grey-1);
+    grid-gap: 15px;
+    grid-template-columns: auto auto;
+    justify-content: end;
   }
   .spinner-container {
     background: white;
@@ -183,9 +301,14 @@
   .spinner-text {
     font-size: 2em;
   }
-  .error {
-    color: var(--red);
-    font-weight: bold;
-    font-size: 0.8em;
+
+  .hidden {
+    display: none;
+  }
+  img {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    height: 40px;
   }
 </style>

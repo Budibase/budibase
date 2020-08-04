@@ -1,7 +1,7 @@
 import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import FlatButtonGroup from "./FlatButtonGroup.svelte"
-import Colorpicker from "./Colorpicker"
+import Colorpicker from "@budibase/colorpicker"
 /*
   TODO: Allow for default values for all properties
 */
@@ -85,6 +85,8 @@ export const margin = [
       { label: "20px", value: "20px" },
       { label: "32px", value: "32px" },
       { label: "64px", value: "64px" },
+      { label: "128px", value: "128px" },
+      { label: "256px", value: "256px" },
       { label: "Auto", value: "auto" },
       { label: "100%", value: "100%" },
     ],
@@ -101,6 +103,8 @@ export const margin = [
       { label: "20px", value: "20px" },
       { label: "32px", value: "32px" },
       { label: "64px", value: "64px" },
+      { label: "128px", value: "128px" },
+      { label: "256px", value: "256px" },
       { label: "Auto", value: "auto" },
       { label: "100%", value: "100%" },
     ],
@@ -133,6 +137,8 @@ export const margin = [
       { label: "20px", value: "20px" },
       { label: "32px", value: "32px" },
       { label: "64px", value: "64px" },
+      { label: "128px", value: "128px" },
+      { label: "256px", value: "256px" },
       { label: "Auto", value: "auto" },
       { label: "100%", value: "100%" },
     ],
@@ -149,6 +155,8 @@ export const margin = [
       { label: "20px", value: "20px" },
       { label: "32px", value: "32px" },
       { label: "64px", value: "64px" },
+      { label: "128px", value: "128px" },
+      { label: "256px", value: "256px" },
       { label: "Auto", value: "auto" },
       { label: "100%", value: "100%" },
     ],
