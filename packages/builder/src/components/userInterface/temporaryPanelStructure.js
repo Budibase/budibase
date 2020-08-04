@@ -247,6 +247,66 @@ export default {
       isCategory: true,
       children: [
         {
+          name: "List",
+          _component: "@budibase/standard-components/list",
+          description: "Renders all children once per record, of a given table",
+          icon: "ri-file-list-line",
+          properties: {
+            design: { ...all },
+            settings: [{ label: "Table", key: "model", control: ModelSelect }],
+          },
+          children: [],
+        },
+        {
+          _component: "@budibase/standard-components/stackedlist",
+          name: "Stacked List",
+          description:
+            "A basic card component that can contain content and actions.",
+          icon: "ri-archive-drawer-line",
+          children: [],
+          properties: {
+            design: { ...all },
+            settings: [
+              {
+                label: "Image",
+                key: "imageUrl",
+                control: Input,
+                placeholder: "{{{context.Image}}}",
+              },
+              {
+                label: "Heading",
+                key: "heading",
+                control: Input,
+                placeholder: "{{context.Heading}}",
+              },
+              {
+                label: "Text 1",
+                key: "text1",
+                control: Input,
+                placeholder: "{{context.Text 1}}",
+              },
+              {
+                label: "Text 2",
+                key: "text2",
+                control: Input,
+                placeholder: "{{context.Text 2}}",
+              },
+              {
+                label: "Text 3",
+                key: "text3",
+                control: Input,
+                placeholder: "{{context.Text 3}}",
+              },
+              {
+                label: "destinationUrl",
+                key: "destinationUrl",
+                control: Input,
+                placeholder: "/table/_id",
+              },
+            ],
+          },
+        },
+        {
           _component: "@budibase/materialdesign-components/BasicCard",
           name: "Card",
           description:
@@ -290,7 +350,14 @@ export default {
           icon: "ri-archive-drawer-line",
           properties: {
             design: { ...all },
-            settings: [{ label: "Table", key: "model", control: ModelSelect }],
+            settings: [
+              { label: "Model", key: "model", control: ModelSelect },
+              { label: "Stripe Color", key: "stripeColor", control: Input },
+              { label: "Border Color", key: "borderColor", control: Input },
+              { label: "TH Color", key: "backgroundColor", control: Input },
+              { label: "TH Font Color", key: "color", control: Input },
+              { label: "Table", key: "model", control: ModelSelect },
+            ],
           },
           children: [],
         },
@@ -400,17 +467,6 @@ export default {
         //  },
         //  children: [],
         // },
-        {
-          name: "List",
-          _component: "@budibase/standard-components/list",
-          description: "Renders all children once per record, of a given table",
-          icon: "ri-file-list-line",
-          properties: {
-            design: { ...all },
-            settings: [{ label: "Table", key: "model", control: ModelSelect }],
-          },
-          children: [],
-        },
         {
           name: "Record Detail",
           _component: "@budibase/standard-components/recorddetail",

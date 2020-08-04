@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -57,11 +57,12 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "^1.16.0",
+    "@budibase/bbui": "^1.18.0",
     "@budibase/client": "^0.1.1",
     "@budibase/colorpicker": "^1.0.1",
     "@nx-js/compiler-util": "^2.0.0",
     "@sentry/browser": "5.19.1",
+    "@svelteschool/svelte-forms": "^0.7.0",
     "codemirror": "^5.51.0",
     "date-fns": "^1.29.0",
     "deepmerge": "^4.2.2",
@@ -76,7 +77,8 @@
     "string_decoder": "^1.2.0",
     "svelte-portal": "^0.1.0",
     "svelte-simple-modal": "^0.4.2",
-    "uikit": "^3.1.7"
+    "uikit": "^3.1.7",
+    "yup": "^0.29.2"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",

@@ -52,7 +52,6 @@
   }
 
   .label {
-    flex: 0 0 50px;
     display: flex;
     align-items: center;
     font-size: 12px;

@@ -99,9 +99,7 @@
     {selectedCategory} />
 
   {#if displayName}
-    <div class="instance-name">
-      <strong>{componentInstance._instanceName}</strong>
-    </div>
+    <div class="instance-name">{componentInstance._instanceName}</div>
   {/if}
 
   <div class="component-props-container">
@@ -142,13 +140,15 @@
   }
 
   .component-props-container {
-    margin-top: 10px;
+    margin-top: 16px;
     flex: 1 1 auto;
     min-height: 0;
   }
 
   .instance-name {
-    margin-top: 10px;
-    font-size: 12px;
+    margin-top: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--grey-7);
   }
 </style>

@@ -191,16 +191,22 @@
 	"icon": {
 		"description": "A HTML icon tag",
 		"props": {
-			"icon": "string",
-			"fontSize": "string",
-			"color": "string"
+			"url": "string",
+			"className": "string",
+			"description": "string",
+			"height": "string",
+			"width": "string"
 		}
 	},
 	"datatable": {
 		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
-			"model": "models" 
+			"model": "models",
+			"stripeColor": "string",
+			"borderColor": "string",
+			"backgroundColor": "string",
+			"color": "string"
 		}
 	},
 	"dataform": {
@@ -241,6 +247,18 @@
 		"data": true,
 		"props": {
 			"model": "models"
+		}
+	},
+	"stackedlist": {
+		"name": "Stacked List",
+		"description": "A stacked list component for displaying information",
+		"props": {
+			"imageUrl": "string",
+			"heading": "string",
+			"text1": "string",
+			"text2": "string",
+			"text3": "string",
+			"destinationUrl": "string"
 		}
 	},
 	"recorddetail": {
