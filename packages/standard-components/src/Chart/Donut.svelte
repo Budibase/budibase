@@ -1,5 +1,6 @@
 <script>
   import { getColorSchema, notNull } from "./utils.js"
+  import Legend from "./Legend.svelte"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
 
@@ -44,7 +45,6 @@
   export let internalRadius = 25
   export let isAnimated = true
   export let radiusHoverOffset = 0
-  export let useLegend = true
 
   async function fetchData() {
     const FETCH_RECORDS_URL = `/api/views/all_${model}`
@@ -59,9 +59,6 @@
       throw new Error("Failed to fetch records.", response)
     }
   }
-
-  $: _data = model ? $store[model] : data
-  $: console.log("_data", _data)
 
   onMount(async () => {
     if (chart) {
@@ -144,10 +141,9 @@
     }
   }
 
+  $: _data = model ? $store[model] : data
   $: colorSchema = getColorSchema(color)
 </script>
 
 <div bind:this={chartElement} class={chartClass} />
-{#if useLegend}
-  <div class={legendClass} />
-{/if}
+<Legend useLegend {chartClass} {width} data={_data} />
