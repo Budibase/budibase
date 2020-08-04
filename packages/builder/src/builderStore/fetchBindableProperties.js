@@ -1,3 +1,23 @@
+const stubBindings = [
+  {
+    // type: instance represents a bindable property of a component
+    type: "instance",
+    instance: {} /** a component instance **/,
+    // how the binding expression persists, and is used in the app at runtime
+    runtimeBinding: "state.<component instance Id>.<component property name>",
+    // how the binding exressions looks to the user of the builder
+    readableBinding: "<component instance name>",
+  },
+  {
+    type: "context",
+    instance: { /** a component instance **/},
+    // how the binding expression persists, and is used in the app at runtime
+    runtimeBinding: "context._parent.<key of model/record>",
+    // how the binding exressions looks to the user of the builder
+    readableBinding: "<component instance name>.<model/view name>.<key>",
+  },
+]
+
 export default function({ componentInstanceId, screen, components, models }) {
   const { target, targetAncestors, bindableInstances, bindableContexts } = walk(
     {
@@ -70,7 +90,7 @@ const walk = ({ instance, targetId, components, models, result }) => {
     // found it
     result.target = instance
   } else {
-    if (instance.bindable) {
+    if (component.bindable) {
       // pushing all components in here initially
       // but this will not be correct, as some of
       // these components will be in another context
@@ -78,12 +98,10 @@ const walk = ({ instance, targetId, components, models, result }) => {
       // so we will filter in another metod
       result.bindableInstances.push({
         instance,
-        prop: instance.bindable,
+        prop: component.bindable,
       })
     }
   }
-  console.log(instance._component)
-  console.debug(components)
   // a component that provides context to it's children
   const contextualInstance = component.context && instance[component.context]
 
@@ -98,7 +116,7 @@ const walk = ({ instance, targetId, components, models, result }) => {
   for (let child of instance._children || []) {
     result.parentMap[child._id] = parentInstance._id
     result.currentAncestors.push(instance)
-    walk({ instance, targetId, components, models, result })
+    walk({ instance: child, targetId, components, models, result })
     result.currentAncestors.pop()
   }
 

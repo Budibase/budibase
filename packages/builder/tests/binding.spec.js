@@ -1,20 +1,26 @@
-import fetchbindableProperties from "../src/builderStore/fetchBindableProperties"
-
+import fetchBindableProperties from "../src/builderStore/fetchBindableProperties"
 describe("fetch bindable properties", () => {
 
   it("should return bindable properties from screen components", () => {
-    const result = fetchbindableProperties({
+    const result = fetchBindableProperties({
       componentInstanceId: "heading-id",
       ...testData()
     })
     const componentBinding = result.find(r => r.instance._id === "search-input-id")
+    console.debug(componentBinding)
+    console.debug("result:" + JSON.stringify(result))
     expect(componentBinding).toBeDefined()
     expect(componentBinding.type).toBe("instance")
     expect(componentBinding.runtimeBinding).toBe("state.search-input-id.value")
   })
 
   it("should not return bindable components when not in their context", () => {
-
+    const result = fetchBindableProperties({
+      componentInstanceId: "heading-id",
+      ...testData()
+    })
+    const componentBinding = result.find(r => r.instance._id === "list-item-input-id")
+    expect(componentBinding).not.toBeDefined()
   })
 
   it("should return model schema, when inside a context", () => {
@@ -70,7 +76,13 @@ const testData = () => {
               _instanceName: "list item heading",
               _component: "@budibase/standard-components/heading",
               text: "hello"
-            }
+            },
+            {
+              _id: "list-item-input-id",
+              _instanceName: "List Item Input",
+              _component: "@budibase/standard-components/input",
+              value: "list item"
+            },
           ]
         },
       ]
@@ -78,7 +90,7 @@ const testData = () => {
   }
 
   const models = [{
-    id: "test-model-id",
+    _id: "test-model-id",
     name: "Test Model",
       schema: {
         name: {

@@ -16,38 +16,7 @@
     "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run"
   },
   "jest": {
-    "globals": {
-      "GLOBALS": {
-        "client": "web"
-      }
-    },
-    "testURL": "http://jest-breaks-if-this-does-not-exist",
-    "moduleNameMapper": {
-      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
-      "\\.(css|less|sass|scss)$": "identity-obj-proxy",
-      "components(.*)$": "<rootDir>/src/components$1",
-      "builderStore(.*)$": "<rootDir>/src/builderStore$1"
-    },
-    "moduleFileExtensions": [
-      "js",
-      "svelte"
-    ],
-    "moduleDirectories": [
-      "node_modules"
-    ],
-    "transform": {
-      "^.+js$": "babel-jest",
-      "^.+.svelte$": "svelte-jester"
-    },
-    "transformIgnorePatterns": [
-      "/node_modules/(?!svelte).+\\.js$"
-    ],
-    "modulePathIgnorePatterns": [
-      "<rootDir>/cypress/"
-    ],
-    "setupFilesAfterEnv": [
-      "@testing-library/jest-dom/extend-expect"
-    ]
+   "testEnvironment": "node"
   },
   "eslintConfig": {
     "extends": [
@@ -86,12 +55,12 @@
     "@sveltech/routify": "1.7.11",
     "@testing-library/jest-dom": "^5.11.0",
     "@testing-library/svelte": "^3.0.0",
-    "babel-jest": "^24.8.0",
+    "babel-jest": "^26.2.2",
     "browser-sync": "^2.26.7",
     "cypress": "^4.8.0",
     "eslint-plugin-cypress": "^2.11.1",
     "http-proxy-middleware": "^0.19.1",
-    "jest": "^24.8.0",
+    "jest": "^26.2.2",
     "ncp": "^2.0.0",
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
