@@ -6,9 +6,7 @@ describe("fetch bindable properties", () => {
       componentInstanceId: "heading-id",
       ...testData()
     })
-    const componentBinding = result.find(r => r.instance._id === "search-input-id")
-    console.debug(componentBinding)
-    console.debug("result:" + JSON.stringify(result))
+    const componentBinding = result.find(r => r.instance._id === "search-input-id" && r.type === "instance")
     expect(componentBinding).toBeDefined()
     expect(componentBinding.type).toBe("instance")
     expect(componentBinding.runtimeBinding).toBe("state.search-input-id.value")
@@ -24,19 +22,73 @@ describe("fetch bindable properties", () => {
   })
 
   it("should return model schema, when inside a context", () => {
-
+    const result = fetchBindableProperties({
+      componentInstanceId: "list-item-input-id",
+      ...testData()
+    })
+    const contextBindings = result.filter(r => r.instance._id === "list-id" && r.type==="context")
+    expect(contextBindings.length).toBe(2)
+    
+    const namebinding = contextBindings.find(b => b.runtimeBinding === "context.data.name")
+    expect(namebinding).toBeDefined()
+    expect(namebinding.readableBinding).toBe("list-name.Test Model.name")
+    
+    const descriptionbinding = contextBindings.find(b => b.runtimeBinding === "context.data.description")
+    expect(descriptionbinding).toBeDefined()
+    expect(descriptionbinding.readableBinding).toBe("list-name.Test Model.description")
   })
 
   it("should return model schema, for grantparent context", () => {
-
+    const result = fetchBindableProperties({
+      componentInstanceId: "child-list-item-input-id",
+      ...testData()
+    })
+    const contextBindings = result.filter(r => r.type==="context")
+    expect(contextBindings.length).toBe(4)
+    
+    const namebinding_parent = contextBindings.find(b => b.runtimeBinding === "context._parent.data.name")
+    expect(namebinding_parent).toBeDefined()
+    expect(namebinding_parent.readableBinding).toBe("list-name.Test Model.name")
+    
+    const descriptionbinding_parent = contextBindings.find(b => b.runtimeBinding === "context._parent.data.description")
+    expect(descriptionbinding_parent).toBeDefined()
+    expect(descriptionbinding_parent.readableBinding).toBe("list-name.Test Model.description")
+    
+    const namebinding_own = contextBindings.find(b => b.runtimeBinding === "context.data.name")
+    expect(namebinding_own).toBeDefined()
+    expect(namebinding_own.readableBinding).toBe("child-list-name.Test Model.name")
+    
+    const descriptionbinding_own = contextBindings.find(b => b.runtimeBinding === "context.data.description")
+    expect(descriptionbinding_own).toBeDefined()
+    expect(descriptionbinding_own.readableBinding).toBe("child-list-name.Test Model.description")
   })
 
   it("should return bindable component props, from components in same context", () => {
-
+    const result = fetchBindableProperties({
+      componentInstanceId: "list-item-heading-id",
+      ...testData()
+    })
+    const componentBinding = result.find(r => r.instance._id === "list-item-input-id" && r.type === "instance")
+    expect(componentBinding).toBeDefined()
+    expect(componentBinding.runtimeBinding).toBe("context.list-item-input-id.value")
   })
 
-  it("should not return model props from child context", () => {
-
+  it("should not return components from child context", () => {
+    const result = fetchBindableProperties({
+      componentInstanceId: "list-item-heading-id",
+      ...testData()
+    })
+    const componentBinding = result.find(r => r.instance._id === "child-list-item-input-id" && r.type === "instance")
+    expect(componentBinding).not.toBeDefined()
+  })
+  
+  it("should return bindable component props, from components in same context (when nested context)", () => {
+    const result = fetchBindableProperties({
+      componentInstanceId: "child-list-item-heading-id",
+      ...testData()
+    })
+    const componentBinding = result.find(r => r.instance._id === "child-list-item-input-id" && r.type === "instance")
+    expect(componentBinding).toBeDefined()
   })
 
   
@@ -82,6 +134,26 @@ const testData = () => {
               _instanceName: "List Item Input",
               _component: "@budibase/standard-components/input",
               value: "list item"
+            },
+            {
+              _id: "child-list-id",
+              _component: "@budibase/standard-components/list",
+              _instanceName: "child-list-name",
+              model: "test-model-id",
+              _children: [
+                {
+                  _id: "child-list-item-heading-id",
+                  _instanceName: "child list item heading",
+                  _component: "@budibase/standard-components/heading",
+                  text: "hello"
+                },
+                {
+                  _id: "child-list-item-input-id",
+                  _instanceName: "Child List Item Input",
+                  _component: "@budibase/standard-components/input",
+                  value: "child list item"
+                },
+              ]
             },
           ]
         },

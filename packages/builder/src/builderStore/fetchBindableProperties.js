@@ -1,3 +1,5 @@
+import { cloneDeep, difference, fill } from "lodash"
+
 const stubBindings = [
   {
     // type: instance represents a bindable property of a component
@@ -10,7 +12,9 @@ const stubBindings = [
   },
   {
     type: "context",
-    instance: { /** a component instance **/},
+    instance: {
+      /** a component instance **/
+    },
     // how the binding expression persists, and is used in the app at runtime
     runtimeBinding: "context._parent.<key of model/record>",
     // how the binding exressions looks to the user of the builder
@@ -19,74 +23,97 @@ const stubBindings = [
 ]
 
 export default function({ componentInstanceId, screen, components, models }) {
-  const { target, targetAncestors, bindableInstances, bindableContexts } = walk(
-    {
-      instance: screen.props,
-      targetId: componentInstanceId,
-      components,
-      models,
-    }
-  )
+  const walkResult = walk({
+    // cloning so we are free to mutate props (e.g. by adding _contexts)
+    instance: cloneDeep(screen.props),
+    targetId: componentInstanceId,
+    components,
+    models,
+  })
 
   return [
-    ...bindableInstances
-      .filter(isComponentInstanceAvailable)
-      .map(componentInstanceToBindable),
-    ...bindableContexts.map(contextToBindables),
+    ...walkResult.bindableInstances
+      .filter(isInstanceInSharedContext(walkResult))
+      .map(componentInstanceToBindable(walkResult)),
+
+    ...walkResult.target._contexts.map(contextToBindables(walkResult)).flat(),
   ]
 }
 
-const isComponentInstanceAvailable = i => true
+const isInstanceInSharedContext = walkResult => i =>
+  // should cover
+  // - neither are in any context
+  // - both in same context
+  // - instance is in ancestor context of target
+  i.instance._contexts.length <= walkResult.target._contexts.length &&
+  difference(i.instance._contexts, walkResult.target._contexts).length === 0
 
 // turns a component instance prop into binding expressions
 // used by the UI
-const componentInstanceToBindable = i => ({
-  type: "instance",
-  instance: i.instance,
-  // how the binding expression persists, and is used in the app at runtime
-  runtimeBinding: `state.${i.instance._id}.${i.prop}`,
-  // how the binding exressions looks to the user of the builder
-  readableBinding: `${i.instance._instanceName}`,
-})
+const componentInstanceToBindable = walkResult => i => {
+  const lastContext =
+    i.instance._contexts.length &&
+    i.instance._contexts[i.instance._contexts.length - 1]
+  const contextParentPath = lastContext
+    ? getParentPath(walkResult, lastContext)
+    : ""
 
-const contextToBindables = c => {
-  const contextParentNumber = 0
-  const contextParentPath = Array[contextParentNumber]
-    .map(() => "_parent")
-    .join(".")
-  return Object.keys(c.schema).map(k => ({
+  // if component is inside context, then the component lives
+  // in context at runtime (otherwise, in state)
+  const stateOrContext = lastContext ? "context" : "state"
+  return {
+    type: "instance",
+    instance: i.instance,
+    // how the binding expression persists, and is used in the app at runtime
+    runtimeBinding: `${stateOrContext}.${contextParentPath}${i.instance._id}.${i.prop}`,
+    // how the binding exressions looks to the user of the builder
+    readableBinding: `${i.instance._instanceName}`,
+  }
+}
+
+const contextToBindables = walkResult => c => {
+  const contextParentPath = getParentPath(walkResult, c)
+
+  return Object.keys(c.model.schema).map(k => ({
     type: "context",
     instance: c.instance,
     // how the binding expression persists, and is used in the app at runtime
-    runtimeBinding: `context.${contextParentPath}.${k}`,
+    runtimeBinding: `context.${contextParentPath}data.${k}`,
     // how the binding exressions looks to the user of the builder
-    readableBinding: `${c.instance._instanceName}.${c.schema.name}.${k}`,
+    readableBinding: `${c.instance._instanceName}.${c.model.name}.${k}`,
   }))
+}
+
+const getParentPath = (walkResult, context) => {
+  // describes the number of "_parent" in the path
+  // clone array first so original array is not mtated
+  const contextParentNumber = [...walkResult.target._contexts]
+    .reverse()
+    .indexOf(context)
+
+  return (
+    new Array(contextParentNumber).fill("_parent").join(".") +
+    // trailing . if has parents
+    (contextParentNumber ? "." : "")
+  )
 }
 
 const walk = ({ instance, targetId, components, models, result }) => {
   if (!result) {
     result = {
-      currentAncestors: [],
-      currentContexts: [],
       target: null,
-      targetAncestors: [],
       bindableInstances: [],
-      bindableContexts: [],
-      parentMap: {},
+      allContexts: [],
+      currentContexts: [],
     }
   }
 
+  if (!instance._contexts) instance._contexts = []
+
   // "component" is the component definition (object in component.json)
   const component = components[instance._component]
-  const parentInstance =
-    result.currentAncestors.length > 0 &&
-    result.currentAncestors[result.currentAncestors.length - 1]
 
   if (instance._id === targetId) {
-    // set currentParents to be result parents
-    result.targetAncestors = result.currentAncestors
-    result.bindableContexts = result.currentContexts
     // found it
     result.target = instance
   } else {
@@ -102,22 +129,24 @@ const walk = ({ instance, targetId, components, models, result }) => {
       })
     }
   }
+
   // a component that provides context to it's children
   const contextualInstance = component.context && instance[component.context]
 
   if (contextualInstance) {
     // add to currentContexts (ancestory of context)
     // before walking children
-    const schema = models.find(m => m._id === instance[component.context])
-      .schema
-    result.currentContexts.push({ instance, schema })
+    const model = models.find(m => m._id === instance[component.context])
+    result.currentContexts.push({ instance, model })
   }
 
+  const currentContexts = [...result.currentContexts]
   for (let child of instance._children || []) {
-    result.parentMap[child._id] = parentInstance._id
-    result.currentAncestors.push(instance)
+    // attaching _contexts of components, for eas comparison later
+    // these have been deep cloned above, so shouln't modify the
+    // original component instances
+    child._contexts = currentContexts
     walk({ instance: child, targetId, components, models, result })
-    result.currentAncestors.pop()
   }
 
   if (contextualInstance) {
