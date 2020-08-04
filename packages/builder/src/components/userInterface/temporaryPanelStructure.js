@@ -429,6 +429,11 @@ export default {
                 },
                 settings: [
                   {
+                    label: "Table",
+                    key: "model",
+                    control: ModelSelect,
+                  },
+                  {
                     label: "Fix Highlight Slice",
                     key: "hasFixedHighlightedSlice",
                     valueKey: "checked",

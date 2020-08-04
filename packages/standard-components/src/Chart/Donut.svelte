@@ -15,6 +15,11 @@
   let chartElement = null
   let chartContainer = null
 
+  export let _bb
+  export let model
+
+  let store = _bb.store
+
   export let customMouseOver = null
   export let customMouseMove = null
   export let customMouseOut = null
@@ -22,7 +27,7 @@
 
   export let orderingFunction = null
 
-  export let data = []
+  export let data = model ? $store[model] : []
   export let color = "britecharts"
   export let height = 200
   export let width = 200
@@ -40,6 +45,27 @@
   export let isAnimated = true
   export let radiusHoverOffset = 0
   export let useLegend = true
+
+  async function fetchData() {
+    const FETCH_RECORDS_URL = `/api/views/all_${model}`
+    const response = await _bb.api.get(FETCH_RECORDS_URL)
+    if (response.status === 200) {
+      const json = await response.json()
+      store.update(state => {
+        state[model] = json
+        return state
+      })
+    } else {
+      throw new Error("Failed to fetch records.", response)
+    }
+  }
+
+  onMount(async () => {
+    await fetchData()
+  })
+
+  $: _data = model ? $store[model] : data
+  $: console.log("_data", _data)
 
   onMount(() => {
     if (chart) {
