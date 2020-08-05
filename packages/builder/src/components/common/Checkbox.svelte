@@ -27,7 +27,7 @@
     height: 20px;
     /* background-color: #5e17e9; */
     background-color: var(--grey-2);
-    transform: translateY(-50%);
+    /* transform: translateY(-50%); */
     cursor: pointer;
     transition: 0.2s ease transform, 0.2s ease background-color,
       0.2s ease box-shadow;

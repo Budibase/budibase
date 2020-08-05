@@ -291,8 +291,11 @@
 			"externalRadius": "number",
 			"internalRadius": "number",
 			"radiusHoverOffset": "number",
+			"percentageFormat": "string",
 			"useLegend": "bool",
-			"percentageFormat": "string"
+			"horizontalLegend": "bool",
+			"legendWidth": "number",
+			"legendHeight": "number"
 		}
 	},
 	"sparkline": {

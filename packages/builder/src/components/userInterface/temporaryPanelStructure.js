@@ -498,13 +498,7 @@ export default {
                     control: ModelSelect,
                   },
                   {
-                    label: "Fix Highlight Slice",
-                    key: "hasFixedHighlightedSlice",
-                    valueKey: "checked",
-                    control: Checkbox,
-                  },
-                  {
-                    label: "Hover highlight",
+                    label: "Keep Last Hover",
                     key: "hasLastHoverSliceHighlighted",
                     valueKey: "checked",
                     control: Checkbox,
@@ -516,7 +510,7 @@ export default {
                     control: Checkbox,
                   },
                   {
-                    label: "Has Hover",
+                    label: "Hover Highlight",
                     key: "hasHoverAnimation",
                     valueKey: "checked",
                     control: Checkbox,
@@ -558,6 +552,28 @@ export default {
                     key: "useLegend ",
                     valueKey: "checked",
                     control: Checkbox,
+                  },
+                  {
+                    label: "Show Legend",
+                    key: "useLegend",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Horizontal Legend",
+                    key: "horizontalLegend",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Legend Width",
+                    key: "legendWidth",
+                    control: Input,
+                  },
+                  {
+                    label: "Legend Height",
+                    key: "legendHeight",
+                    control: Input,
                   },
                 ],
               },
