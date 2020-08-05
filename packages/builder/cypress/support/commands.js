@@ -51,7 +51,6 @@ Cypress.Commands.add("createApp", name => {
         .click()
         .type("test")
       cy.contains("Submit").click()
-      cy.contains("Create New Table").should("be.visible")
     })
 })
 
