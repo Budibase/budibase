@@ -498,14 +498,14 @@ export default {
                     control: ModelSelect,
                   },
                   {
-                    label: "Keep Last Hover",
-                    key: "hasLastHoverSliceHighlighted",
+                    label: "Animate Chart",
+                    key: "isAnimated",
                     valueKey: "checked",
                     control: Checkbox,
                   },
                   {
-                    label: "Is Animated",
-                    key: "isAnimated",
+                    label: "Keep Last Hover",
+                    key: "hasLastHoverSliceHighlighted",
                     valueKey: "checked",
                     control: Checkbox,
                   },
@@ -550,12 +550,6 @@ export default {
                   {
                     label: "Show Legend",
                     key: "useLegend ",
-                    valueKey: "checked",
-                    control: Checkbox,
-                  },
-                  {
-                    label: "Show Legend",
-                    key: "useLegend",
                     valueKey: "checked",
                     control: Checkbox,
                   },
