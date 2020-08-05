@@ -48,6 +48,7 @@
   .property-control {
     display: flex;
     flex-flow: row;
+    width: 260px;
     margin: 8px 0px;
     align-items: center;
   }
@@ -57,6 +58,7 @@
     align-items: center;
     font-size: 12px;
     font-weight: 400;
+    width: 100px;
     text-align: left;
     color: var(--ink);
     margin-right: auto;

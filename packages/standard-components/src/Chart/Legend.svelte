@@ -19,7 +19,7 @@
   export let numberFormat = null
   export let unit = null
 
-  let legend = britecharts.legend()
+  export let legend = britecharts.legend() //exported it can be bound to
   let legendContainer = null
   let legendElement = null
 
