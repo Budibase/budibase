@@ -12,6 +12,7 @@
   const chart = britecharts.donut()
   const chartClass = `donut-container-${_id}`
   const legendClass = `legend-container-${_id}`
+  let legendChart
 
   let chartElement = null
   let chartContainer = null
@@ -62,7 +63,9 @@
 
   onMount(async () => {
     if (chart) {
-      await fetchData()
+      if (model) {
+        await fetchData()
+      }
 
       chart.emptyDataConfig({
         showEmptySlice: true,
@@ -133,17 +136,28 @@
     if (customMouseMove) {
       chart.on("customMouseMove", customMouseMove)
     }
-    if (customMouseOut) {
-      chart.on("customMouseOut", customMouseOut)
-    }
-    if (customMouseOver) {
-      chart.on("customMouseOver", customMouseOver)
+
+    if (legendChart) {
+      chart.on("customMouseOut", function() {
+        legendChart.clearHighlight()
+      })
+      chart.on("customMouseOver", function(data) {
+        console.log("DATA", data.data)
+        legendChart.highlight(data.data.id)
+      })
     }
   }
 
   $: _data = model ? $store[model] : data
+
   $: colorSchema = getColorSchema(color)
 </script>
 
 <div bind:this={chartElement} class={chartClass} />
-<Legend useLegend {chartClass} {width} data={_data} />
+<Legend
+  bind:legend={legendChart}
+  {colorSchema}
+  useLegend
+  {chartClass}
+  {width}
+  data={_data} />

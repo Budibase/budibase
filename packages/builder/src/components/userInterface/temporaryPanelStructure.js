@@ -539,16 +539,6 @@ export default {
                     ],
                   },
                   {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Width",
-                    key: "width",
-                    control: Input,
-                  },
-                  {
                     label: "External Radius",
                     key: "externalRadius",
                     control: Input,
