@@ -3,6 +3,7 @@
   "video": false,
   "projectId": "bmbemn",
   "env": {
-    "BUDIBASE_API_KEY": "test"
+    "BUDIBASE_API_KEY": "test",
+    "NODE_ENV": "cypress"
   }
 }

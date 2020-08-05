@@ -25,7 +25,6 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 Cypress.Commands.add("createApp", name => {
-  // first time pop up
   cy.contains("Create New Web App").click()
 
   cy.get("input[name=applicationName]")
@@ -41,7 +40,9 @@ Cypress.Commands.add("createApp", name => {
     .click()
     .type("test")
   cy.contains("Submit").click()
+  cy.contains("Create New Table").should("be.visible")
 })
+
 Cypress.Commands.add("createModel", modelName => {
   // Enter model name
   cy.contains("Create New Table").click()
