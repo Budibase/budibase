@@ -1,4 +1,4 @@
-context('Create a workflow', () => {
+xcontext('Create a workflow', () => {
 
     before(() => {
         cy.server()
