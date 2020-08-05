@@ -27,20 +27,32 @@
 Cypress.Commands.add("createApp", name => {
   cy.contains("Create New Web App").click()
 
-  cy.get("input[name=applicationName]")
-    .type(name)
-    .should("have.value", name)
+  cy.get("body")
+    .then($body => {
+      if ($body.find("input[name=apiKey]").length) {
+        // input was found, do something else here
+        cy.get("input[name=apiKey]")
+          .type(name)
+          .should("have.value", name)
+        cy.contains("Next").click()
+      }
+    })
+    .then(() => {
+      cy.get("input[name=applicationName]")
+        .type(name)
+        .should("have.value", name)
 
-  cy.contains("Next").click()
+      cy.contains("Next").click()
 
-  cy.get("input[name=username]")
-    .click()
-    .type("test")
-  cy.get("input[name=password]")
-    .click()
-    .type("test")
-  cy.contains("Submit").click()
-  cy.contains("Create New Table").should("be.visible")
+      cy.get("input[name=username]")
+        .click()
+        .type("test")
+      cy.get("input[name=password]")
+        .click()
+        .type("test")
+      cy.contains("Submit").click()
+      cy.contains("Create New Table").should("be.visible")
+    })
 })
 
 Cypress.Commands.add("createModel", modelName => {
