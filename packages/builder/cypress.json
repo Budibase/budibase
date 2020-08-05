@@ -1,9 +1,5 @@
 {
   "baseUrl": "http://localhost:4001/_builder/",
   "video": false,
-  "projectId": "bmbemn",
-  "env": {
-    "BUDIBASE_API_KEY": "test",
-    "NODE_ENV": "cypress"
-  }
+  "projectId": "bmbemn"
 }
