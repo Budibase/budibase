@@ -13,7 +13,7 @@ const homedir = join(require("os").homedir(), ".budibase")
 rimraf.sync(homedir)
 
 process.env.BUDIBASE_API_KEY = "6BE826CB-6B30-4AEC-8777-2E90464633DE"
-process.env.NODE_ENV = "production"
+process.env.NODE_ENV = "cypress"
 
 initialiseBudibase({ dir: homedir, clientId: "cypress-test" })
   .then(() => {
