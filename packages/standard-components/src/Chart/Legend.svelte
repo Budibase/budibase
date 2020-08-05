@@ -47,6 +47,10 @@
         legend.highlightByEntryId(highlightByEntryId)
       }
 
+      if (notNull(isHorizontal)) {
+        legend.isHorizontal(isHorizontal)
+      }
+
       if (notNull(margin)) {
         legend.margin(margin)
       }
@@ -68,11 +72,6 @@
       }
       legendContainer.datum(data).call(legend)
     }
-  }
-
-  $: if (notNull(isHorizontal)) {
-    debugger
-    legend.isHorizontal(isHorizontal)
   }
 
   const legendClass = `legend-container`
