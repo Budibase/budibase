@@ -1,6 +1,7 @@
 context('Create a workflow', () => {
 
     before(() => {
+        cy.server()
         cy.visit('localhost:4001/_builder')
 
         cy.createApp('Workflow Test App', 'This app is used to test that workflows do in fact work!')

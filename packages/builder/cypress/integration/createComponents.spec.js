@@ -1,6 +1,7 @@
 context('Create Components', () => {
 
     before(() => {
+        cy.server()
         cy.visit('localhost:4001/_builder')
         // https://on.cypress.io/type
         cy.createApp('Model App', 'Model App Description')
