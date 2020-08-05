@@ -4,7 +4,6 @@
   import { select } from "d3-selection"
   import { onMount } from "svelte"
 
-  export let chartClass = ""
   export let useLegend = true
   export let data = []
   export let width = null
@@ -23,69 +22,57 @@
   let legendContainer = null
   let legendElement = null
 
-  let chartSvgWidth = 0
-  let chartSvg = null
-
-  onMount(() => {
-    if (chartClass) {
-      chartSvg = document.querySelector(`.${chartClass} .britechart`)
-    }
-  })
-
-  function bindChartUIProps() {
-    if (width) {
-      legend.width(width)
-    } else if (chartSvg) {
-      legend.width(chartSvg.clientWidth)
-    }
-
-    if (notNull(height)) {
-      legend.height(height)
-    }
-
-    if (notNull(colorSchema)) {
-      legend.colorSchema(colorSchema)
-    }
-
-    if (notNull(highlight)) {
-      legend.highlight(highlight)
-    }
-
-    if (notNull(highlightByEntryId)) {
-      legend.highlightByEntryId(highlightByEntryId)
-    }
-
-    if (notNull(isHorizontal)) {
-      legend.isHorizontal(isHorizontal)
-    }
-
-    if (notNull(margin)) {
-      legend.margin(margin)
-    }
-
-    if (notNull(marginRatio)) {
-      legend.marginRatio(marginRatio)
-    }
-
-    if (notNull(markerSize)) {
-      legend.markerSize(markerSize)
-    }
-
-    if (notNull(numberFormat)) {
-      legend.numberFormat(numberFormat)
-    }
-
-    if (notNull(unit)) {
-      legend.unit(unit)
-    }
-  }
-
   $: {
     if (legendElement) {
       legendContainer = select(legendElement)
-      bindChartUIProps()
+      legend.numberFormat(".0f")
+
+      if (width) {
+        legend.width(width)
+      }
+
+      if (notNull(height)) {
+        legend.height(height)
+      }
+
+      if (notNull(colorSchema)) {
+        legend.colorSchema(colorSchema)
+      }
+
+      if (notNull(highlight)) {
+        legend.highlight(highlight)
+      }
+
+      if (notNull(highlightByEntryId)) {
+        legend.highlightByEntryId(highlightByEntryId)
+      }
+
+      if (notNull(margin)) {
+        legend.margin(margin)
+      }
+
+      if (notNull(marginRatio)) {
+        legend.marginRatio(marginRatio)
+      }
+
+      if (notNull(markerSize)) {
+        legend.markerSize(markerSize)
+      }
+
+      if (notNull(numberFormat)) {
+        legend.numberFormat(numberFormat)
+      }
+
+      if (notNull(unit)) {
+        legend.unit(unit)
+      }
       legendContainer.datum(data).call(legend)
     }
+  }
+
+  $: if (notNull(isHorizontal)) {
+    debugger
+    legend.isHorizontal(isHorizontal)
   }
 
   const legendClass = `legend-container`

@@ -17,14 +17,15 @@
   let chartElement = null
   let chartContainer = null
 
+  let chartSvgWidth = 0
+  let chartSvg = null
+
   export let _bb
   export let model
 
   let store = _bb.store
 
-  export let customMouseOver = null
   export let customMouseMove = null
-  export let customMouseOut = null
   export let customClick = null
 
   export let orderingFunction = null
@@ -46,6 +47,10 @@
   export let internalRadius = 25
   export let isAnimated = true
   export let radiusHoverOffset = 0
+  export let useLegend = true
+  export let horizontalLegend = false
+  export let legendWidth = null
+  export let legendHeight = null
 
   async function fetchData() {
     const FETCH_RECORDS_URL = `/api/views/all_${model}`
@@ -79,6 +84,8 @@
   })
 
   function bindChartUIProps() {
+    chart.percentageFormat(".0f")
+
     if (notNull(color)) {
       chart.colorSchema(getColorSchema(color))
     }
@@ -127,6 +134,8 @@
     if (notNull(orderingFunction)) {
       chart.orderingFunction(orderingFunction)
     }
+    chartContainer.datum(_data).call(chart)
+    chartSvg = document.querySelector(`.${chartClass} .britechart`)
   }
 
   function bindChartEvents() {
@@ -142,10 +151,15 @@
         legendChart.clearHighlight()
       })
       chart.on("customMouseOver", function(data) {
-        console.log("DATA", data.data)
         legendChart.highlight(data.data.id)
       })
     }
+  }
+
+  $: if (!width && chartSvg) {
+    width = chartSvg.clientWidth
+    chart.width(width)
+    chartContainer.datum(_data).call(chart)
   }
 
   $: _data = model ? $store[model] : data
@@ -153,11 +167,17 @@
   $: colorSchema = getColorSchema(color)
 </script>
 
-<div bind:this={chartElement} class={chartClass} />
-<Legend
-  bind:legend={legendChart}
-  {colorSchema}
-  useLegend
-  {chartClass}
-  {width}
-  data={_data} />
+<div>
+  <div bind:this={chartElement} class={chartClass} />
+  {#if useLegend}
+    <Legend
+      bind:legend={legendChart}
+      {colorSchema}
+      useLegend
+      isHorizontal={horizontalLegend}
+      width={legendWidth || width}
+      height={legendHeight}
+      {chartClass}
+      data={_data} />
+  {/if}
+</div>
