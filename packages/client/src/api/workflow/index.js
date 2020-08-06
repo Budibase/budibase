@@ -1,6 +1,5 @@
-import { get } from "svelte/store"
 import mustache from "mustache"
-import { appStore } from "../../state/store"
+import appStore from "../../state/store"
 import Orchestrator from "./orchestrator"
 import clientActions from "./actions"
 
@@ -20,7 +19,7 @@ export const clientStrategy = ({ api }) => ({
       // Render the string with values from the workflow context and state
       mappedArgs[arg] = mustache.render(argValue, {
         context: this.context,
-        state: get(appStore),
+        state: appStore.get(),
       })
     }
 

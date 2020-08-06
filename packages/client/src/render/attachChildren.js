@@ -1,7 +1,7 @@
-import { split, last, compose } from "lodash/fp"
 import { prepareRenderComponent } from "./prepareRenderComponent"
 import { isScreenSlot } from "./builtinComponents"
 import deepEqual from "deep-equal"
+import appStore from "../state/store"
 
 export const attachChildren = initialiseOpts => (htmlElement, options) => {
   const {
@@ -30,11 +30,28 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
     }
   }
 
-  const contextArray = Array.isArray(context) ? context : [context]
+  const contextStoreKeys = []
+
+  // create new context if supplied
+  if (context) {
+    let childIndex = 0
+    // if context is an array,  map to new structure
+    const contextArray = Array.isArray(context) ? context : [context]
+    for (let ctx of contextArray) {
+      const key = appStore.create(
+        ctx,
+        treeNode.props._id,
+        childIndex,
+        treeNode.contextStoreKey
+      )
+      contextStoreKeys.push(key)
+      childIndex++
+    }
+  }
 
   const childNodes = []
 
-  for (let context of contextArray) {
+  const createChildNodes = contextStoreKey => {
     for (let childProps of treeNode.props._children) {
       const { componentName, libName } = splitName(childProps._component)
 
@@ -42,25 +59,33 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
 
       const ComponentConstructor = componentLibraries[libName][componentName]
 
-      const prepareNodes = ctx => {
-        const childNodesThisIteration = prepareRenderComponent({
-          props: childProps,
-          parentNode: treeNode,
-          ComponentConstructor,
-          htmlElement,
-          anchor,
-          context: ctx,
-        })
+      const childNode = prepareRenderComponent({
+        props: childProps,
+        parentNode: treeNode,
+        ComponentConstructor,
+        htmlElement,
+        anchor,
+        // in same context as parent, unless a new one was supplied
+        contextStoreKey,
+      })
 
-        for (let childNode of childNodesThisIteration) {
-          childNodes.push(childNode)
-        }
-      }
-
-      prepareNodes(context)
+      childNodes.push(childNode)
     }
   }
 
+  if (context) {
+    // if new context(s) is supplied, then create nodes
+    // with keys to new context stores
+    for (let contextStoreKey of contextStoreKeys) {
+      createChildNodes(contextStoreKey)
+    }
+  } else {
+    // otherwise, use same context store as parent
+    // which maybe undefined (therfor using the root state)
+    createChildNodes(treeNode.contextStoreKey)
+  }
+
+  // if everything is equal, then don't re-render
   if (areTreeNodesEqual(treeNode.children, childNodes)) return treeNode.children
 
   for (let node of childNodes) {
@@ -81,9 +106,9 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
 }
 
 const splitName = fullname => {
-  const getComponentName = compose(last, split("/"))
+  const nameParts = fullname.split("/")
 
-  const componentName = getComponentName(fullname)
+  const componentName = nameParts[nameParts.length - 1]
 
   const libName = fullname.substring(
     0,

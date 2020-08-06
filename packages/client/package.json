@@ -21,28 +21,24 @@
       "\\.(css|less|sass|scss)$": "identity-obj-proxy"
     },
     "moduleFileExtensions": [
-      "js"
+      "js",
+      "svelte"
     ],
     "moduleDirectories": [
       "node_modules"
     ],
     "transform": {
-      "^.+js$": "babel-jest"
+      "^.+js$": "babel-jest",
+      "^.+.svelte$": "svelte-jester"
     },
     "transformIgnorePatterns": [
       "/node_modules/(?!svelte).+\\.js$"
     ]
   },
   "dependencies": {
-    "@nx-js/compiler-util": "^2.0.0",
-    "bcryptjs": "^2.4.3",
     "deep-equal": "^2.0.1",
-    "lodash": "^4.17.15",
-    "lunr": "^2.3.5",
     "mustache": "^4.0.1",
-    "regexparam": "^1.3.0",
-    "shortid": "^2.2.8",
-    "svelte": "^3.9.2"
+    "regexparam": "^1.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
@@ -58,7 +54,9 @@
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^4.0.4"
+    "rollup-plugin-terser": "^4.0.4",
+    "svelte": "3.23.x",
+    "svelte-jester": "^1.0.6"
   },
   "gitHead": "e4e053cb6ff9a0ddc7115b44ccaa24b8ec41fb9a"
 }
