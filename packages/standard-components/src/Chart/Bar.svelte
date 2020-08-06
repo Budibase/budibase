@@ -7,8 +7,10 @@
   import shortid from "shortid"
   /*
     ISSUES:
-    nameLabel, valueLabel - what are these? Seem to break whenever passed a string or number. What type?
-    https://github.com/britecharts/britecharts/blob/a2c45ab023112b36e14f47c278e3a1e1c05f8383/src/charts/bar.js#L145
+    - x and y axis label set and appear in the dom but do not display next to the axis
+    - x and y axis label offset - does effect position of labels but does not render text (see above)
+    - x tick label overlaps bar, seems to be no apu method to change this? Could do it by querying for it in the dom
+      specifically and doing this: <tspan x="-10" dy="0.32em">4.0</tspan>
   */
 
   let tooltip
@@ -30,7 +32,7 @@
   export let data = []
   export let xAxisLabel = ""
   export let yAxisLabel = ""
-  export let betweenBarsPadding = 5
+  export let betweenBarsPadding = 0.1 //takes decimal values 0.1, 0.5 etc
   export let gradient = null
   export let color = "britecharts"
   export let enableLabels = true
@@ -63,7 +65,9 @@
 
   onMount(async () => {
     if (chartElement) {
-      await fetchData()
+      if (model) {
+        await fetchData()
+      }
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
@@ -87,6 +91,9 @@
   }
 
   function bindChartUIProps() {
+    chart.numberFormat(".1f")
+    chart.labelsNumberFormat(".1f")
+
     if (color) {
       chart.colorSchema(colorSchema)
     }
@@ -130,7 +137,7 @@
       chart.isHorizontal(isHorizontal)
     }
     if (yAxisLabelOffset) {
-      chart.yAxisLabelOffset(Number(yAxisLabelOffset))
+      chart.yAxisLabelOffset(yAxisLabelOffset)
     }
     if (xAxisLabelOffset) {
       chart.xAxisLabelOffset(Number(xAxisLabelOffset))
@@ -162,6 +169,7 @@
     if (percentageAxisToMaxRatio) {
       chart.percentageAxisToMaxRatio(percentageAxisToMaxRatio)
     }
+    chartContainer.datum(_data).call(chart)
   }
 
   function bindChartEvents() {
@@ -181,6 +189,7 @@
 
   function bindChartTooltip() {
     tooltip = britecharts.miniTooltip()
+    tooltip.numberFormat(".0f")
     tooltipContainer = select(`.${chartClass} .metadata-group`)
     tooltipContainer.datum([]).call(tooltip)
   }
@@ -191,7 +200,19 @@
   $: chartGradient = getChartGradient(gradient)
 </script>
 
+<!-- SVG Test 
+  <svg viewBox="6 -8 200 22">
+    <text x="5" y="10" class="text-svg">Hello World</text>
+  </svg>-->
+
 <div bind:this={chartElement} class={chartClass} />
 {#if useLegend}
   <div class={legendClass} />
 {/if}
+
+<style>
+  .text-svg {
+    font: italic 15px serif;
+    fill: red;
+  }
+</style>
