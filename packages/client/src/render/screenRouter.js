@@ -1,5 +1,5 @@
 import regexparam from "regexparam"
-import { appStore } from "../state/store"
+import appStore from "../state/store"
 import { parseAppIdFromCookie } from "./getAppId"
 
 export const screenRouter = ({ screens, onScreenSelected, window }) => {

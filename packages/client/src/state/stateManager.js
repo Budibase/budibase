@@ -5,8 +5,8 @@ import {
 } from "./eventHandlers"
 import { bbFactory } from "./bbComponentApi"
 import mustache from "mustache"
-import { get } from "svelte/store"
-import { appStore } from "./store"
+import appStore from "./store"
+import hasBinding from "./hasBinding"
 
 const doNothing = () => {}
 doNothing.isPlaceholder = true
@@ -37,41 +37,34 @@ export const createStateManager = ({
   const getCurrentState = () => currentState
 
   const bb = bbFactory({
-    store: appStore,
     getCurrentState,
     componentLibraries,
     onScreenSlotRendered,
   })
 
-  const setup = _setup({ handlerTypes, getCurrentState, bb, store: appStore })
+  const setup = _setup({ handlerTypes, getCurrentState, bb })
 
   return {
     setup,
     destroy: () => {},
     getCurrentState,
-    store: appStore,
   }
 }
 
-const _setup = ({ handlerTypes, getCurrentState, bb, store }) => node => {
+const _setup = ({ handlerTypes, getCurrentState, bb }) => node => {
   const props = node.props
-  const context = node.context || {}
   const initialProps = { ...props }
-  const currentStoreState = get(appStore)
 
   for (let propName in props) {
     if (isMetaProp(propName)) continue
 
     const propValue = props[propName]
 
-    // A little bit of a hack - won't bind if the string doesn't start with {{
-    const isBound = typeof propValue === "string" && propValue.includes("{{")
+    const isBound = hasBinding(propValue)
 
     if (isBound) {
-      initialProps[propName] = mustache.render(propValue, {
-        state: currentStoreState,
-        context,
-      })
+      const state = appStore.getState(node.contextStoreKey)
+      initialProps[propName] = mustache.render(propValue, state)
 
       if (!node.stateBound) {
         node.stateBound = true
@@ -79,6 +72,7 @@ const _setup = ({ handlerTypes, getCurrentState, bb, store }) => node => {
     }
 
     if (isEventType(propValue)) {
+      const state = appStore.getState(node.contextStoreKey)
       const handlersInfos = []
       for (let event of propValue) {
         const handlerInfo = {
@@ -89,11 +83,7 @@ const _setup = ({ handlerTypes, getCurrentState, bb, store }) => node => {
         const resolvedParams = {}
         for (let paramName in handlerInfo.parameters) {
           const paramValue = handlerInfo.parameters[paramName]
-          resolvedParams[paramName] = () =>
-            mustache.render(paramValue, {
-              state: getCurrentState(),
-              context,
-            })
+          resolvedParams[paramName] = () => mustache.render(paramValue, state)
         }
 
         handlerInfo.parameters = resolvedParams
@@ -113,7 +103,7 @@ const _setup = ({ handlerTypes, getCurrentState, bb, store }) => node => {
     }
   }
 
-  const setup = _setup({ handlerTypes, getCurrentState, bb, store })
+  const setup = _setup({ handlerTypes, getCurrentState, bb })
   initialProps._bb = bb(node, setup)
 
   return initialProps
