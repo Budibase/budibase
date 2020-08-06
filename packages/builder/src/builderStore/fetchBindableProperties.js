@@ -59,14 +59,11 @@ const componentInstanceToBindable = walkResult => i => {
     ? getParentPath(walkResult, lastContext)
     : ""
 
-  // if component is inside context, then the component lives
-  // in context at runtime (otherwise, in state)
-  const stateOrContext = lastContext ? "context" : "state"
   return {
     type: "instance",
     instance: i.instance,
     // how the binding expression persists, and is used in the app at runtime
-    runtimeBinding: `${stateOrContext}.${contextParentPath}${i.instance._id}.${i.prop}`,
+    runtimeBinding: `${contextParentPath}${i.instance._id}.${i.prop}`,
     // how the binding exressions looks to the user of the builder
     readableBinding: `${i.instance._instanceName}`,
   }
@@ -79,21 +76,21 @@ const contextToBindables = walkResult => c => {
     type: "context",
     instance: c.instance,
     // how the binding expression persists, and is used in the app at runtime
-    runtimeBinding: `context.${contextParentPath}data.${k}`,
+    runtimeBinding: `${contextParentPath}data.${k}`,
     // how the binding exressions looks to the user of the builder
     readableBinding: `${c.instance._instanceName}.${c.model.name}.${k}`,
   }))
 }
 
 const getParentPath = (walkResult, context) => {
-  // describes the number of "_parent" in the path
+  // describes the number of "parent" in the path
   // clone array first so original array is not mtated
   const contextParentNumber = [...walkResult.target._contexts]
     .reverse()
     .indexOf(context)
 
   return (
-    new Array(contextParentNumber).fill("_parent").join(".") +
+    new Array(contextParentNumber).fill("parent").join(".") +
     // trailing . if has parents
     (contextParentNumber ? "." : "")
   )
