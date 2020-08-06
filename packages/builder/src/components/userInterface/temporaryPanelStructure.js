@@ -1069,6 +1069,16 @@ export default {
                     control: ModelSelect,
                   },
                   {
+                    label: "Name Label",
+                    key: "nameLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Value Label",
+                    key: "valueLabel",
+                    control: Input,
+                  },
+                  {
                     label: "Y Axis Label",
                     key: "yAxisLabel",
                     control: Input,
@@ -1079,9 +1089,20 @@ export default {
                     control: Input,
                   },
                   {
-                    label: "Bar Padding",
-                    key: "betweenBarsPadding",
+                    label: "X Axis Label Offset",
+                    key: "xAxisLabelOffset",
                     control: Input,
+                  },
+                  {
+                    label: "Y Axis Label Offset",
+                    key: "yAxisLabelOffset",
+                    control: Input,
+                  },
+                  {
+                    label: "Enable Labels",
+                    key: "enableLabels",
+                    control: Checkbox,
+                    valueKey: "checked",
                   },
                   {
                     label: "Colors",
@@ -1112,12 +1133,6 @@ export default {
                     ],
                   },
                   {
-                    label: "Enable Labels",
-                    key: "enableLabels",
-                    control: Checkbox,
-                    valueKey: "checked",
-                  },
-                  {
                     label: "Highlight Single Bar",
                     key: "hasSingleBarHighlight",
                     control: Checkbox,
@@ -1146,16 +1161,6 @@ export default {
                     valueKey: "checked",
                   },
                   {
-                    label: "X Axis Label Offset",
-                    key: "xAxisLabelOffset",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis Label Offset",
-                    key: "yAxisLabelOffset",
-                    control: Input,
-                  },
-                  {
                     label: "Label Number Format",
                     key: "labelsNumberFormat",
                     control: Input,
@@ -1164,32 +1169,6 @@ export default {
                     label: "Label Size",
                     key: "labelSize",
                     control: Input,
-                  },
-                  {
-                    label: "Locale",
-                    key: "locale",
-                    control: Input,
-                  },
-                  {
-                    label: "Name Label",
-                    key: "nameLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Value Label",
-                    key: "valueLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Number Format",
-                    key: "numberFormat",
-                    control: Input,
-                  },
-                  {
-                    label: "Use Legend",
-                    key: "useLegend",
-                    keyValue: "checked",
-                    control: Checkbox,
                   },
                 ],
               },
