@@ -57,7 +57,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "^1.18.0",
+    "@budibase/bbui": "^1.22.3",
     "@budibase/client": "^0.1.1",
     "@budibase/colorpicker": "^1.0.1",
     "@nx-js/compiler-util": "^2.0.0",
@@ -96,6 +96,7 @@
     "cypress-terminal-report": "^1.4.1",
     "eslint-plugin-cypress": "^2.11.1",
     "http-proxy-middleware": "^0.19.1",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^24.8.0",
     "ncp": "^2.0.0",
     "npm-run-all": "^4.1.5",

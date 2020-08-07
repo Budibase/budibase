@@ -61,7 +61,6 @@ export const getBackendUiStore = () => {
           state.draftModel = cloneDeep(model)
           state.selectedField = ""
           state.selectedView = `all_${model._id}`
-          state.tabs.SETUP_PANEL = "SETUP"
           return state
         }),
       save: async ({ model }) => {
@@ -95,7 +94,6 @@ export const getBackendUiStore = () => {
             [field.name]: cloneDeep(field),
           }
           state.selectedField = field.name
-          state.tabs.NAVIGATION_PANEL = "NAVIGATE"
 
           return state
         })

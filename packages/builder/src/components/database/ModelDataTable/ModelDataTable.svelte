@@ -1,12 +1,15 @@
 <script>
   import { onMount, getContext } from "svelte"
   import { store, backendUiStore } from "builderStore"
-  import { Button } from "@budibase/bbui"
+  import { Button, Icon } from "@budibase/bbui"
   import Select from "components/common/Select.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import LinkedRecord from "./LinkedRecord.svelte"
   import TablePagination from "./TablePagination.svelte"
   import { DeleteRecordModal, CreateEditRecordModal } from "./modals"
+  import RowPopover from "./popovers/Row.svelte"
+  import ColumnPopover from "./popovers/Column.svelte"
+  import ColumnHeaderPopover from "./popovers/ColumnHeader.svelte"
   import * as api from "./api"
 
   const { open, close } = getContext("simple-modal")
@@ -43,6 +46,7 @@
   let views = []
   let currentPage = 0
   let search
+  let dropdownLeft
 
   $: {
     if ($backendUiStore.selectedView) {
@@ -85,16 +89,26 @@
 <section>
   <div class="table-controls">
     <h2 class="title">{$backendUiStore.selectedModel.name}</h2>
-    <Button primary on:click={createNewRecord}>
-      <span class="button-inner">Create New Record</span>
-    </Button>
+    <div class="popovers">
+      <!-- <Button text small on:click={() => alert('Clicked!')}>
+        <Icon name="view" />
+        Create New View
+      </Button> -->
+      <ColumnPopover />
+      <RowPopover />
+    </div>
   </div>
   <table class="uk-table">
     <thead>
       <tr>
-        <th>Edit</th>
+        <th>
+          <div>Edit</div>
+        </th>
         {#each headers as header}
-          <th>{$backendUiStore.selectedModel.schema[header].name}</th>
+          <th>
+            <ColumnHeaderPopover
+              field={$backendUiStore.selectedModel.schema[header]} />
+          </th>
         {/each}
       </tr>
     </thead>
@@ -103,7 +117,7 @@
         <div class="no-data">No Data.</div>
       {/if}
       {#each paginatedData as row}
-        <tr class="hoverable">
+        <tr>
           <td>
             <div class="uk-inline">
               <i class="ri-more-line" />
@@ -128,10 +142,10 @@
             </div>
           </td>
           {#each headers as header}
-            <td>
+            <td class="hoverable">
               {#if schema[header].type === 'link'}
                 <LinkedRecord field={schema[header]} ids={row[header]} />
-              {:else}{row[header]}{/if}
+              {:else}{row[header] || ''}{/if}
             </td>
           {/each}
         </tr>
@@ -164,7 +178,8 @@
   }
 
   thead {
-    background: var(--blue-light);
+    height: 40px;
+    background: var(--grey-3);
     border: 1px solid var(--grey-4);
   }
 
@@ -174,6 +189,23 @@
     font-weight: 500;
     font-size: 14px;
     text-rendering: optimizeLegibility;
+    transition: 0.5s all;
+  }
+
+  /* thead th div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  } */
+
+  th:hover {
+    color: var(--blue);
+  }
+
+  td {
+    max-width: 200px;
+    text-overflow: ellipsis;
+    border: 1px solid var(--grey-4);
   }
 
   tbody tr {
@@ -188,10 +220,11 @@
   }
 
   .table-controls {
+    width: 100%;
+  }
+
+  .popovers {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-top: 10px;
   }
 
   .ri-more-line:hover,
@@ -201,11 +234,6 @@
 
   .no-data {
     padding: 20px;
-  }
-
-  .button-inner {
-    display: flex;
-    align-items: center;
   }
 
   li {
