@@ -2,25 +2,30 @@ import { walkProps } from "./storeUtils"
 import { get_capitalised_name } from "../helpers"
 
 export default function(component, state) {
-  const screen =
-    state.currentFrontEndType === "screen" ? state.currentPreviewItem : null
-  const page = state.pages[state.currentPageName]
   const capitalised = get_capitalised_name(component)
 
   const matchingComponents = []
 
-  if (screen)
-    walkProps(screen.props, c => {
+  const findMatches = props => {
+    walkProps(props, c => {
       if ((c._instanceName || "").startsWith(capitalised)) {
         matchingComponents.push(c._instanceName)
       }
     })
+  }
 
-  walkProps(page.props, c => {
-    if ((c._instanceName || "").startsWith(capitalised)) {
-      matchingComponents.push(c._instanceName)
+  // check page first
+  findMatches(state.pages[state.currentPageName].props)
+
+  // if viewing screen, check current screen for duplicate
+  if (state.currentFrontEndType === "screen") {
+    findMatches(state.currentPreviewItem.props)
+  } else {
+    // viewing master page - need to find against all screens
+    for (let screen of state.screens) {
+      findMatches(screen.props)
     }
-  })
+  }
 
   let index = 1
   let name
