@@ -63,7 +63,7 @@ export const getBackendUiStore = () => {
           state.selectedView = `all_${model._id}`
           return state
         }),
-      save: async ({ model }) => {
+      save: async model => {
         const updatedModel = cloneDeep(model)
 
         // update any renamed schema keys to reflect their names
@@ -97,14 +97,14 @@ export const getBackendUiStore = () => {
             ...state.draftModel.schema,
             [field.name]: cloneDeep(field),
           }
-          store.actions.models.save({ model: state.draftModel })
+          store.actions.models.save(state.draftModel)
           return state
         })
       },
       deleteField: field => {
         store.update(state => {
           delete state.draftModel.schema[field.name]
-          store.actions.models.save({ model: state.draftModel })
+          store.actions.models.save(state.draftModel)
           return state
         })
       } 

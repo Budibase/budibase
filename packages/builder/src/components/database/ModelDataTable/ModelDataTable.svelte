@@ -1,5 +1,6 @@
 <script>
-  import { onMount, getContext } from "svelte"
+  import { onMount } from "svelte"
+  import fsort from "fast-sort";
   import { store, backendUiStore } from "builderStore"
   import { Button, Icon } from "@budibase/bbui"
   import Select from "components/common/Select.svelte"
@@ -10,31 +11,8 @@
   import RowPopover from "./popovers/Row.svelte"
   import ColumnPopover from "./popovers/Column.svelte"
   import ColumnHeaderPopover from "./popovers/ColumnHeader.svelte"
+  import EditRowPopover from "./popovers/EditRow.svelte"
   import * as api from "./api"
-
-  const { open, close } = getContext("simple-modal")
-
-  const editRecord = async row => {
-    open(
-      CreateEditRecordModal,
-      {
-        onClosed: close,
-        record: row,
-      },
-      { styleContent: { padding: "0" } }
-    )
-  }
-
-  const deleteRecord = async row => {
-    open(
-      DeleteRecordModal,
-      {
-        onClosed: close,
-        record: row,
-      },
-      { styleContent: { padding: "0" } }
-    )
-  }
 
   const ITEMS_PER_PAGE = 10
   // Internal headers we want to hide from the user
@@ -62,6 +40,8 @@
         currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
       )
     : []
+  $: sort = $backendUiStore.sort
+  $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
 
   $: headers = Object.keys($backendUiStore.selectedModel.schema).filter(
     id => !INTERNAL_HEADERS.includes(id)
@@ -90,10 +70,6 @@
   <div class="table-controls">
     <h2 class="title">{$backendUiStore.selectedModel.name}</h2>
     <div class="popovers">
-      <!-- <Button text small on:click={() => alert('Clicked!')}>
-        <Icon name="view" />
-        Create New View
-      </Button> -->
       <ColumnPopover />
       <RowPopover />
     </div>
@@ -113,33 +89,13 @@
       </tr>
     </thead>
     <tbody>
-      {#if paginatedData.length === 0}
+      {#if sorted.length === 0}
         <div class="no-data">No Data.</div>
       {/if}
-      {#each paginatedData as row}
+      {#each sorted as row}
         <tr>
           <td>
-            <div class="uk-inline">
-              <i class="ri-more-line" />
-              <div uk-dropdown="mode: click">
-                <ul class="uk-nav uk-dropdown-nav">
-                  <li
-                    on:click={() => {
-                      editRecord(row)
-                    }}>
-                    <i class="ri-edit-line" />
-                    <div class="label">Edit</div>
-                  </li>
-                  <li
-                    on:click={() => {
-                      deleteRecord(row)
-                    }}>
-                    <i class="ri-delete-bin-2-line" />
-                    <div class="label">Delete</div>
-                  </li>
-                </ul>
-              </div>
-            </div>
+            <EditRowPopover {row} />
           </td>
           {#each headers as header}
             <td class="hoverable">

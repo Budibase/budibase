@@ -1,24 +1,24 @@
 import "@testing-library/jest-dom/extend-expect"
 import { render, fireEvent } from "@testing-library/svelte"
-import CreateEditTable from "../CreateEditTable.svelte"; 
+import CreateEditColumn from "../CreateEditColumn.svelte"; 
 
 const testField = {
   field: {},
   name: "Yeet"
 };
 
-describe("<CreateEditTable />", () => {
+describe("<CreateEditColumn />", () => {
 
   describe("New Column", () => {
     it("shows proper heading when rendered", () => {
-      const { getByText } = render(CreateEditTable, { name: 'World' })
+      const { getByText } = render(CreateEditColumn, { name: 'World' })
 
       expect(getByText('Hello World!')).toBeInTheDocument()
     })
   })
 
   describe("Edit Existing Column", () => {
-      const { getByText } = render(CreateEditTable, testField)
+      const { getByText } = render(CreateEditColumn, testField)
 
   })
 

@@ -4,7 +4,7 @@
   import { FIELDS } from "constants/backend"
   import { ModelSetupNav } from "components/nav/ModelSetupNav"
   import ModelFieldEditor from "components/nav/ModelSetupNav/ModelFieldEditor.svelte"
-  import CreateEditTable from "../modals/CreateEditTable.svelte"
+  import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 
   let anchor
   let dropdown
@@ -18,10 +18,13 @@
   </Button>
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
-  <h5>Create Column</h5>
-  <CreateEditTable onClosed={dropdown.hide} />
+  <h4>Create Column</h4>
+  <CreateEditColumn onClosed={dropdown.hide} />
 </DropdownMenu>
 
 <style>
-
+  h4 {
+    padding: var(--spacing-l);
+    margin: 0;
+  }
 </style>

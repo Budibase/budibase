@@ -4,9 +4,9 @@
   import { Switcher } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { store, backendUiStore } from "builderStore"
-  import BlockNavigator from "./BlockNavigator.svelte"
   import ListItem from "./ListItem.svelte"
   import { Button } from "@budibase/bbui"
+  import CreateTablePopover from "./CreateEditTable.svelte"
 
   const { open, close } = getContext("simple-modal")
 
@@ -37,14 +37,6 @@
       })
     }
   }
-
-  function setupForNewModel() {
-    backendUiStore.update(state => {
-      state.selectedModel = {}
-      state.draftModel = { schema: {} }
-      return state
-    })
-  }
 </script>
 
 <div class="items-root">
@@ -52,16 +44,16 @@
     <div class="hierarchy">
       <div class="components-list-container">
         <h3>Tables</h3>
-        <Button primary wide on:click={setupForNewModel}>
-          Create New Table
-        </Button>
+        <CreateTablePopover />
         <div class="hierarchy-items-container">
           {#each $backendUiStore.models as model}
             <ListItem
               selected={!$backendUiStore.selectedField && model._id === $backendUiStore.selectedModel._id}
               title={model.name}
               icon="ri-table-fill"
-              on:click={() => selectModel(model)} />
+              on:click={() => selectModel(model)}>
+
+              </ListItem>
           {/each}
         </div>
       </div>
