@@ -287,6 +287,8 @@
 			"hasLastHoverSliceHighlighted": "bool",
 			"hasHoverAnimation": "bool",
 			"numberFormat": "string",
+			"nameKey": "string",
+			"valueKey": "string",
 			"isAnimated": "bool",
 			"externalRadius": "number",
 			"internalRadius": "number",

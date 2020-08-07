@@ -477,6 +477,16 @@ export default {
                 ],
               },
               {
+                label: "Name Field",
+                key: "nameKey",
+                control: Input,
+              },
+              {
+                label: "Value Field",
+                key: "valueKey",
+                control: Input,
+              },
+              {
                 label: "External Radius",
                 key: "externalRadius",
                 control: Input,
