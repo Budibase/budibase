@@ -51,26 +51,19 @@
   {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
     <div class="hierarchy">
       <div class="components-list-container">
-        <Switcher
-          headings={HEADINGS}
-          bind:value={$backendUiStore.tabs.NAVIGATION_PANEL}>
-          {#if selectedTab === 'NAVIGATE'}
-            <Button purple wide on:click={setupForNewModel}>
-              Create New Table
-            </Button>
-            <div class="hierarchy-items-container">
-              {#each $backendUiStore.models as model}
-                <ListItem
-                  selected={!$backendUiStore.selectedField && model._id === $backendUiStore.selectedModel._id}
-                  title={model.name}
-                  icon="ri-table-fill"
-                  on:click={() => selectModel(model)} />
-              {/each}
-            </div>
-          {:else if selectedTab === 'ADD'}
-            <BlockNavigator />
-          {/if}
-        </Switcher>
+        <h3>Tables</h3>
+        <Button primary wide on:click={setupForNewModel}>
+          Create New Table
+        </Button>
+        <div class="hierarchy-items-container">
+          {#each $backendUiStore.models as model}
+            <ListItem
+              selected={!$backendUiStore.selectedField && model._id === $backendUiStore.selectedModel._id}
+              title={model.name}
+              icon="ri-table-fill"
+              on:click={() => selectModel(model)} />
+          {/each}
+        </div>
       </div>
     </div>
   {/if}

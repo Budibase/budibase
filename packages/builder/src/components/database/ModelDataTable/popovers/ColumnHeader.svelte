@@ -23,7 +23,7 @@
   }
 
   function deleteField() {
-    alert("Delete Field Not Implemented")
+    backendUiStore.actions.models.deleteField(field)
   }
 
   function save() {}
@@ -87,28 +87,5 @@
 
   li:active {
     color: var(--blue);
-  }
-
-  .editor {
-    padding: var(--spacing-xl);
-  }
-
-  footer {
-    padding: var(--spacing-xl);
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 20px;
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-left-radius: 0.5rem;
-  }
-
-  .button-margin-3 {
-    grid-column-start: 3;
-    display: grid;
-  }
-
-  .button-margin-4 {
-    grid-column-start: 4;
-    display: grid;
   }
 </style>
