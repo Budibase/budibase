@@ -293,7 +293,6 @@
 			"radiusHoverOffset": "number",
 			"percentageFormat": "string",
 			"useLegend": "bool",
-			"horizontalLegend": "bool",
 			"legendWidth": "number",
 			"legendHeight": "number"
 		}
