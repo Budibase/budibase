@@ -3,7 +3,7 @@
   import { uuid } from "builderStore/uuid"
   import { fade } from "svelte/transition"
   import { notifier } from "builderStore/store/notifications"
-  import { FIELDS, BLOCKS, MODELS } from "constants/backend"
+  import { FIELDS, BLOCKS } from "constants/backend"
   import Block from "components/common/Block.svelte"
 
   function addNewField(field) {
@@ -53,20 +53,6 @@
           title={field.name}
           icon={field.icon}
           on:click={() => addNewField(field)} />
-      {/each}
-    </div>
-  </div>
-
-  <div class="block-row">
-    <span class="block-row-title">Tables</span>
-    <p>Blocks are pre-made fields and help you build your table quicker.</p>
-    <div class="blocks">
-      {#each Object.values(MODELS) as model}
-        <Block
-          tertiary
-          title={model.name}
-          icon={model.icon}
-          on:click={() => createModel(model)} />
       {/each}
     </div>
   </div>
