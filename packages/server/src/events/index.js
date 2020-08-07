@@ -18,7 +18,7 @@ async function executeRelevantWorkflows(event, eventType) {
   workflowOrchestrator.strategy = serverStrategy
 
   for (let workflow of workflows) {
-    workflowOrchestrator.execute(workflow)
+    workflowOrchestrator.execute(workflow, event)
   }
 }
 
