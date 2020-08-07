@@ -36,8 +36,6 @@
   export let width = 200
   export let margin = null
 
-  $: console.log("DATA", data)
-
   export let centeredTextFunction = null
   export let externalRadius = 25
   export let percentageFormat = null
@@ -75,6 +73,11 @@
       if (model) {
         await fetchData()
         data = checkAndReformatData($store[model])
+        if (data.length === 0) {
+          console.error(
+            "Donut - please provide a valid name and value field for the chart"
+          )
+        }
       }
 
       chart.emptyDataConfig({
@@ -107,13 +110,16 @@
     let ignoreList = ["_id", "_rev", "id"]
     if (dataKey && data.every(d => d[dataKey])) {
       return data.map(d => {
-        let obj = { ...d }
-        let value = obj[dataKey]
-        if (!ignoreList.includes(dataKey)) {
-          delete obj[dataKey]
+        let clonedRecord = { ...d }
+        if (clonedRecord[formatKey]) {
+          delete clonedRecord[formatKey]
         }
-        obj[formatKey] = value
-        return obj
+        let value = clonedRecord[dataKey]
+        if (!ignoreList.includes(dataKey)) {
+          delete clonedRecord[dataKey]
+        }
+        clonedRecord[formatKey] = value
+        return clonedRecord
       })
     } else {
       return data
