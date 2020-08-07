@@ -20,10 +20,6 @@
     ? Object.entries($backendUiStore.selectedModel.schema)
     : []
 
-  function closed() {
-    onClosed()
-  }
-
   const isSelect = meta =>
     meta.type === "string" &&
     meta.constraints &&
@@ -68,7 +64,6 @@
 </script>
 
 <div class="actions">
-  <h5>Add New Row</h5>
   <ErrorsBox {errors} />
   <form on:submit|preventDefault class="uk-form-stacked">
     {#each modelSchema as [key, meta]}

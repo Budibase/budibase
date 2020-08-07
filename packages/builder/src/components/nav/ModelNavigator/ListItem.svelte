@@ -9,6 +9,7 @@
 <div class:selected on:click class={className}>
   <i class:indented class={icon} />
   <span>{title}</span>
+  <slot />
 </div>
 
 <style>

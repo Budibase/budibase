@@ -1,12 +1,14 @@
 <script>
+  import { getContext } from "svelte"
   import { backendUiStore } from "builderStore"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import { ModelSetupNav } from "components/nav/ModelSetupNav"
-  import ModelFieldEditor from "components/nav/ModelSetupNav/ModelFieldEditor.svelte"
-  import CreateEditColumn from "../modals/CreateEditColumn.svelte"
+  import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import DeleteRecordModal from "../modals/DeleteRecord.svelte"
 
-  export let field
+  const { open, close } = getContext("simple-modal")
+
+  export let row
 
   let anchor
   let dropdown
@@ -20,49 +22,39 @@
   function hideEditor() {
     dropdown.hide()
     editing = false
+    close()
   }
 
-  function deleteField() {
-    backendUiStore.actions.models.deleteField(field)
+  const deleteRow = () => {
+    open(
+      DeleteRecordModal,
+      {
+        onClosed: hideEditor,
+        record: row,
+      },
+      { styleContent: { padding: "0" } }
+    )
   }
 
-  function sort(direction, column) {
-    backendUiStore.update(state => {
-      state.sort = { direction, column }
-      return state
-    })
-    hideEditor()
-  }
+  function save() {}
 </script>
 
 <div bind:this={anchor} on:click={dropdown.show}>
-  {field.name}
-  <Icon name="arrowdown" />
+  <i class="ri-more-line" />
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   {#if editing}
-    <h4>Edit Column</h4>
-    <CreateEditColumn
-      onClosed={hideEditor}
-      field={field.field}
-      columnName={field.name} />
+    <h4>Edit Row</h4>
+    <CreateEditRecord onClosed={hideEditor} record={row} />
   {:else}
     <ul>
       <li on:click={showEditor}>
         <Icon name="edit" />
         Edit
       </li>
-      <li on:click={deleteField}>
+      <li on:click={deleteRow}>
         <Icon name="delete" />
         Delete
-      </li>
-      <li on:click={() => sort('asc', field.name)}>
-        <Icon name="sortascending" />
-        Sort A - Z
-      </li>
-      <li on:click={() => sort('desc', field.name)}>
-        <Icon name="sortdescending" />
-        Sort Z - A
       </li>
     </ul>
   {/if}

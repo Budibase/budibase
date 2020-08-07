@@ -30,10 +30,6 @@
     field.constraints = FIELDS[field.type.toUpperCase()].constraints
   }
 
-  function closed() {
-    onClosed()
-  }
-
   async function saveColumn() {
     // if existing
     // update the name and type
