@@ -22,7 +22,7 @@ export default function(component, state) {
     }
   })
 
-  let index = 0
+  let index = 1
   let name
   while (!name) {
     const tryName = `${capitalised} ${index}`
