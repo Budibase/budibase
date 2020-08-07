@@ -69,7 +69,6 @@ exports.create = async function(ctx) {
       "@budibase/materialdesign-components",
     ],
     name: ctx.request.body.name,
-    description: ctx.request.body.description,
   }
 
   const { rev } = await db.put(newApplication)
@@ -208,7 +207,7 @@ const getClientId = ctx => {
     env.CLIENT_ID
 
   if (!clientId) {
-    ctx.throw(400, "ClientId not suplied")
+    ctx.throw(400, "ClientId not supplied")
   }
   return clientId
 }

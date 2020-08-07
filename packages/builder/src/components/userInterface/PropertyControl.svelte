@@ -32,7 +32,7 @@
 
 <div class="property-control">
   <div class="label">{label}</div>
-  <div class="control">
+  <div data-cy={`${key}-prop-control`} class="control">
     <svelte:component
       this={control}
       {...handlevalueKey(value)}

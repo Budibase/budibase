@@ -1,13 +1,14 @@
 
 context('Screen Tests', () => {
     before(() => {
+        cy.server()
         cy.visit('localhost:4001/_builder')
         cy.createApp('Conor Cy App', 'Model App Description')
         cy.navigateToFrontend()
     })
 
     it('Should successful create a screen', () => { 
-        cy.createScreen("test Screen")        
+        cy.createScreen("test Screen", "/test")        
     })
 
     it('Should rename a screen', () => {
