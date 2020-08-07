@@ -18,8 +18,10 @@
   </Button>
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
+  <h5>Create Column</h5>
   <CreateEditTable onClosed={dropdown.hide} />
 </DropdownMenu>
 
 <style>
+
 </style>

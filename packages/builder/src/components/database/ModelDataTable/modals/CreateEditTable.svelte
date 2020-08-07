@@ -20,6 +20,8 @@
   export let field = {}
   export let columnName
 
+  let originalName = columnName
+
   $: required =
     field.constraints &&
     field.constraints.presence &&
@@ -33,13 +35,18 @@
   }
 
   async function saveColumn() {
-    backendUiStore.actions.models.addField({
-      name: columnName,
-      field,
-    })
+    // if existing
+    // update the name and type
+    backendUiStore.update(state => {
+      backendUiStore.actions.models.saveField({
+        originalName,
+        field: {
+          ...field,
+          name: columnName
+        }
+      })
 
-    backendUiStore.actions.models.save({
-      model: $backendUiStore.draftModel,
+      return state
     })
     onClosed()
   }
