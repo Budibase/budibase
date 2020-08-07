@@ -68,7 +68,9 @@ exports.save = async function(ctx) {
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emit(`record:save`, {
-      record,
+      args: {
+        record,
+      },
       instanceId: ctx.user.instanceId,
     })
   ctx.body = record

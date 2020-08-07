@@ -24,7 +24,7 @@
   }
 </script>
 
-<span class="topnavitemright" on:click={showSettingsModal}>
+<span class="topnavitemright settings" on:click={showSettingsModal}>
   <SettingsIcon />
 </span>
 

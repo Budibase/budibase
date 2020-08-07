@@ -249,6 +249,18 @@
 			"model": "models"
 		}
 	},
+	"stackedlist": {
+		"name": "Stacked List",
+		"description": "A stacked list component for displaying information",
+		"props": {
+			"imageUrl": "string",
+			"heading": "string",
+			"text1": "string",
+			"text2": "string",
+			"text3": "string",
+			"destinationUrl": "string"
+		}
+	},
 	"recorddetail": {
 		"description": "Loads a record, using an ID in the url",
 		"data": true,
