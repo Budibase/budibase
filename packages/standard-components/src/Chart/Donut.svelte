@@ -36,6 +36,8 @@
   export let width = 200
   export let margin = null
 
+  $: console.log("DATA", data)
+
   export let centeredTextFunction = null
   export let externalRadius = 25
   export let percentageFormat = null
@@ -47,6 +49,8 @@
   export let internalRadius = 25
   export let isAnimated = true
   export let radiusHoverOffset = 0
+  export let nameKey = null
+  export let valueKey = null
   // export let useLegend = true
   export let horizontalLegend = false
   export let legendWidth = null
@@ -70,19 +74,51 @@
     if (chart) {
       if (model) {
         await fetchData()
-        data = model ? $store[model] : []
+        data = checkAndReformatData($store[model])
       }
 
       chart.emptyDataConfig({
         showEmptySlice: true,
         emptySliceColor: "#F0F0F0",
       })
+
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
       chartContainer.datum(data).call(chart)
     }
   })
+
+  function checkAndReformatData(data) {
+    let _data = [...data]
+
+    if (valueKey) {
+      _data = reformatDataKey(_data, valueKey, "quantity")
+    }
+
+    if (nameKey) {
+      _data = reformatDataKey(_data, nameKey, "name")
+    }
+
+    return _data.every(d => d.quantity) && _data.every(d => d.name) ? _data : []
+  }
+
+  function reformatDataKey(data = [], dataKey = null, formatKey = null) {
+    let ignoreList = ["_id", "_rev", "id"]
+    if (dataKey && data.every(d => d[dataKey])) {
+      return data.map(d => {
+        let obj = { ...d }
+        let value = obj[dataKey]
+        if (!ignoreList.includes(dataKey)) {
+          delete obj[dataKey]
+        }
+        obj[formatKey] = value
+        return obj
+      })
+    } else {
+      return data
+    }
+  }
 
   function bindChartUIProps() {
     chart.percentageFormat(".0f")
@@ -160,24 +196,23 @@
   $: if (!width && chartSvg) {
     width = chartSvg.clientWidth
     chart.width(width)
-    debugger
     chartContainer.datum(data).call(chart)
   }
-
-  // $: _data = model ? $store[model] : data
 
   $: colorSchema = getColorSchema(color)
 </script>
 
 <div>
   <div bind:this={chartElement} class={chartClass} />
-  <Legend
-    bind:legend={legendChart}
-    {colorSchema}
-    useLegend
-    isHorizontal={horizontalLegend}
-    width={legendWidth || width}
-    height={legendHeight}
-    {chartClass}
-    {data} />
+  {#if data.length > 0}
+    <Legend
+      bind:legend={legendChart}
+      {colorSchema}
+      useLegend
+      isHorizontal={horizontalLegend}
+      width={legendWidth || width}
+      height={legendHeight}
+      {chartClass}
+      {data} />
+  {/if}
 </div>
