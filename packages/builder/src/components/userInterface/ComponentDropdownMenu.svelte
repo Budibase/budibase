@@ -2,6 +2,7 @@
   import { MoreIcon } from "components/common/Icons"
   import { store } from "builderStore"
   import { getComponentDefinition } from "builderStore/store"
+  import getNewComponentName from "builderStore/getNewComponentName"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { last, cloneDeep } from "lodash/fp"
   import UIkit from "uikit"
@@ -80,9 +81,7 @@
     store.update(s => {
       const parent = getParent(s.currentPreviewItem.props, component)
       const copiedComponent = cloneDeep(component)
-      walkProps(copiedComponent, p => {
-        p._id = uuid()
-      })
+      generateNewIdsForComponent(copiedComponent, s)
       parent._children = [...parent._children, copiedComponent]
       saveCurrentPreviewItem(s)
       s.currentComponentInfo = copiedComponent
@@ -105,9 +104,10 @@
     })
   }
 
-  const generateNewIdsForComponent = c =>
+  const generateNewIdsForComponent = (c, state) =>
     walkProps(c, p => {
       p._id = uuid()
+      p._instanceName = getNewComponentName(p._component, state)
     })
 
   const storeComponentForCopy = (cut = false) => {
@@ -129,7 +129,7 @@
       if (!s.componentToPaste) return s
 
       const componentToPaste = cloneDeep(s.componentToPaste)
-      generateNewIdsForComponent(componentToPaste)
+      generateNewIdsForComponent(componentToPaste, s)
       delete componentToPaste._cutId
 
       if (mode === "inside") {
