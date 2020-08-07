@@ -12,7 +12,7 @@
 
   const onchange = ev => {
     if (_bb) {
-      _bb.setStateFromBinding(_bb.props.value, ev.target.value)
+      _bb.setBinding("value", ev.target.value)
     }
   }
 </script>
