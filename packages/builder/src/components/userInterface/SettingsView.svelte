@@ -126,5 +126,7 @@
   .duplicate-name {
     color: var(--red);
     font-size: var(--font-size-xs);
+    position: relative;
+    top: -10px;
   }
 </style>
