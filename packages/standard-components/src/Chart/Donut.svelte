@@ -30,7 +30,7 @@
 
   export let orderingFunction = null
 
-  export let data = model ? $store[model] : []
+  let data = []
   export let color = "britecharts"
   export let height = 200
   export let width = 200
@@ -47,7 +47,7 @@
   export let internalRadius = 25
   export let isAnimated = true
   export let radiusHoverOffset = 0
-  export let useLegend = true
+  // export let useLegend = true
   export let horizontalLegend = false
   export let legendWidth = null
   export let legendHeight = null
@@ -70,16 +70,17 @@
     if (chart) {
       if (model) {
         await fetchData()
+        data = model ? $store[model] : []
       }
 
       chart.emptyDataConfig({
         showEmptySlice: true,
-        emptySliceColor: "#000000",
+        emptySliceColor: "#F0F0F0",
       })
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
-      chartContainer.datum(_data).call(chart)
+      chartContainer.datum(data).call(chart)
     }
   })
 
@@ -134,7 +135,7 @@
     if (notNull(orderingFunction)) {
       chart.orderingFunction(orderingFunction)
     }
-    chartContainer.datum(_data).call(chart)
+    chartContainer.datum(data).call(chart)
     chartSvg = document.querySelector(`.${chartClass} .britechart`)
   }
 
@@ -159,25 +160,24 @@
   $: if (!width && chartSvg) {
     width = chartSvg.clientWidth
     chart.width(width)
-    chartContainer.datum(_data).call(chart)
+    debugger
+    chartContainer.datum(data).call(chart)
   }
 
-  $: _data = model ? $store[model] : data
+  // $: _data = model ? $store[model] : data
 
   $: colorSchema = getColorSchema(color)
 </script>
 
 <div>
   <div bind:this={chartElement} class={chartClass} />
-  {#if useLegend}
-    <Legend
-      bind:legend={legendChart}
-      {colorSchema}
-      useLegend
-      isHorizontal={horizontalLegend}
-      width={legendWidth || width}
-      height={legendHeight}
-      {chartClass}
-      data={_data} />
-  {/if}
+  <Legend
+    bind:legend={legendChart}
+    {colorSchema}
+    useLegend
+    isHorizontal={horizontalLegend}
+    width={legendWidth || width}
+    height={legendHeight}
+    {chartClass}
+    {data} />
 </div>
