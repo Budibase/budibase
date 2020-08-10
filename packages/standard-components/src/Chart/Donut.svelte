@@ -30,7 +30,7 @@
 
   export let orderingFunction = null
 
-  export let data = model ? $store[model] : []
+  let data = []
   export let color = "britecharts"
   export let height = 200
   export let width = 200
@@ -47,7 +47,9 @@
   export let internalRadius = 25
   export let isAnimated = true
   export let radiusHoverOffset = 0
-  export let useLegend = true
+  export let nameKey = null
+  export let valueKey = null
+  // export let useLegend = true
   export let horizontalLegend = false
   export let legendWidth = null
   export let legendHeight = null
@@ -70,18 +72,59 @@
     if (chart) {
       if (model) {
         await fetchData()
+        data = checkAndReformatData($store[model])
+        if (data.length === 0) {
+          console.error(
+            "Donut - please provide a valid name and value field for the chart"
+          )
+        }
       }
 
       chart.emptyDataConfig({
         showEmptySlice: true,
-        emptySliceColor: "#000000",
+        emptySliceColor: "#F0F0F0",
       })
+
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
-      chartContainer.datum(_data).call(chart)
+      chartContainer.datum(data).call(chart)
     }
   })
+
+  function checkAndReformatData(data) {
+    let _data = [...data]
+
+    if (valueKey) {
+      _data = reformatDataKey(_data, valueKey, "quantity")
+    }
+
+    if (nameKey) {
+      _data = reformatDataKey(_data, nameKey, "name")
+    }
+
+    return _data.every(d => d.quantity) && _data.every(d => d.name) ? _data : []
+  }
+
+  function reformatDataKey(data = [], dataKey = null, formatKey = null) {
+    let ignoreList = ["_id", "_rev", "id"]
+    if (dataKey && data.every(d => d[dataKey])) {
+      return data.map(d => {
+        let clonedRecord = { ...d }
+        if (clonedRecord[formatKey]) {
+          delete clonedRecord[formatKey]
+        }
+        let value = clonedRecord[dataKey]
+        if (!ignoreList.includes(dataKey)) {
+          delete clonedRecord[dataKey]
+        }
+        clonedRecord[formatKey] = value
+        return clonedRecord
+      })
+    } else {
+      return data
+    }
+  }
 
   function bindChartUIProps() {
     chart.percentageFormat(".0f")
@@ -134,7 +177,7 @@
     if (notNull(orderingFunction)) {
       chart.orderingFunction(orderingFunction)
     }
-    chartContainer.datum(_data).call(chart)
+    chartContainer.datum(data).call(chart)
     chartSvg = document.querySelector(`.${chartClass} .britechart`)
   }
 
@@ -159,17 +202,15 @@
   $: if (!width && chartSvg) {
     width = chartSvg.clientWidth
     chart.width(width)
-    chartContainer.datum(_data).call(chart)
+    chartContainer.datum(data).call(chart)
   }
-
-  $: _data = model ? $store[model] : data
 
   $: colorSchema = getColorSchema(color)
 </script>
 
 <div>
   <div bind:this={chartElement} class={chartClass} />
-  {#if useLegend}
+  {#if data.length > 0}
     <Legend
       bind:legend={legendChart}
       {colorSchema}
@@ -178,6 +219,6 @@
       width={legendWidth || width}
       height={legendHeight}
       {chartClass}
-      data={_data} />
+      {data} />
   {/if}
 </div>

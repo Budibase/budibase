@@ -1290,15 +1290,6 @@ export default {
               _component: "@budibase/standard-components/groupedbar",
               description: "Groupedbar chart",
               icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: [
-                  {
-                    name: "2011-01",
-                    group: "Direct",
-                    value: 0,
-                  },
-                ],
-              },
               properties: {
                 settings: [
                   {
@@ -1339,11 +1330,6 @@ export default {
                     control: Input,
                   },
                   {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
                     label: "Grid",
                     key: "grid",
                     control: OptionSelect,
@@ -1357,6 +1343,11 @@ export default {
                   {
                     label: "Name Label",
                     key: "nameLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Value Label",
+                    key: "valueLabel",
                     control: Input,
                   },
                   {
