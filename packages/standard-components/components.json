@@ -508,8 +508,7 @@
 			"color": "string",
 			"height": "string",
 			"width": "string",
-			"margin": "string",
-			"aspectRatio": "number",
+			"margin":"string",
 			"grid":"string",
 			"groupLabel": "string",
 			"isAnimated": "bool",
@@ -517,7 +516,6 @@
 			"nameLabel": "string",
 			"valueLabel":"string",
 			"yTicks": "string",
-			"yTickTextOffset": "string",
 			"useLegend": "bool"
 		}
 	},
