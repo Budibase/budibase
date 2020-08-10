@@ -4,6 +4,11 @@ import Checkbox from "../common/Checkbox.svelte"
 import ModelSelect from "components/userInterface/ModelSelect.svelte"
 
 import { all } from "./propertyCategories.js"
+/* 
+{ label: "N/A ", value: "N/A" },
+{ label: "Flex", value: "flex" },
+{ label: "Inline Flex", value: "inline-flex" }, 
+*/
 
 export default {
   categories: [
@@ -301,7 +306,7 @@ export default {
                 label: "destinationUrl",
                 key: "destinationUrl",
                 control: Input,
-                placeholder: "/table/_id",
+                placeholder: "/table/{{context._id}}",
               },
             ],
           },
@@ -425,36 +430,131 @@ export default {
           ],
         },
         {
-          name: "Chart",
-          _component: "@budibase/standard-components/datachart",
-          description: "Shiny chart",
-          icon: "ri-bar-chart-line",
+          name: "Donut Chart",
+          _component: "@budibase/standard-components/donut",
+          description: "Donut chart",
+          icon: "ri-pie-chart-fill",
           properties: {
-            design: { ...all },
             settings: [
-              { label: "Table", key: "model", control: ModelSelect },
               {
-                label: "Chart Type",
-                key: "type",
+                label: "Table",
+                key: "model",
+                control: ModelSelect,
+              },
+              {
+                label: "Animate Chart",
+                key: "isAnimated",
+                valueKey: "checked",
+                control: Checkbox,
+              },
+              {
+                label: "Hover Highlight",
+                key: "hasHoverAnimation",
+                valueKey: "checked",
+                control: Checkbox,
+              },
+              {
+                label: "Keep Last Hover",
+                key: "hasLastHoverSliceHighlighted",
+                valueKey: "checked",
+                control: Checkbox,
+              },
+              {
+                label: "Colors",
+                key: "color",
                 control: OptionSelect,
                 options: [
-                  "column2d",
-                  "column3d",
-                  "line",
-                  "area2d",
-                  "bar2d",
-                  "bar3d",
-                  "pie2d",
-                  "pie3d",
-                  "doughnut2d",
-                  "doughnut3d",
-                  "pareto2d",
-                  "pareto3d",
+                  "britecharts",
+                  "blueGreen",
+                  "green",
+                  "grey",
+                  "orange",
+                  "pink",
+                  "purple",
+                  "red",
+                  "teal",
+                  "yellow",
                 ],
+              },
+              {
+                label: "Name Field",
+                key: "nameKey",
+                control: Input,
+              },
+              {
+                label: "Value Field",
+                key: "valueKey",
+                control: Input,
+              },
+              {
+                label: "External Radius",
+                key: "externalRadius",
+                control: Input,
+              },
+              {
+                label: "Internal Radius",
+                key: "internalRadius",
+                control: Input,
+              },
+              {
+                label: "Radius Offset",
+                key: "radiusHoverOffset ",
+                control: Input,
+              },
+              {
+                label: "Show Legend",
+                key: "useLegend ",
+                valueKey: "checked",
+                control: Checkbox,
+              },
+              {
+                label: "Horizontal Legend",
+                key: "horizontalLegend",
+                valueKey: "checked",
+                control: Checkbox,
+              },
+              {
+                label: "Legend Width",
+                key: "legendWidth",
+                control: Input,
+              },
+              {
+                label: "Legend Height",
+                key: "legendHeight",
+                control: Input,
               },
             ],
           },
           children: [],
+        },
+        {
+          name: "Data List",
+          _component: "@budibase/standard-components/datalist",
+          description: "Shiny list",
+          icon: "ri-file-list-fill",
+          properties: {
+            design: { ...all },
+            settings: [{ label: "Table", key: "model", control: ModelSelect }],
+          },
+          children: [],
+        },
+        {
+          name: "List",
+          _component: "@budibase/standard-components/list",
+          description: "Renders all children once per record, of a given table",
+          icon: "ri-file-list-fill",
+          properties: {
+            design: { ...all },
+            settings: [{ label: "Table", key: "model", control: ModelSelect }],
+          },
+          children: [
+            {
+              _component: "@budibase/standard-components/heading",
+              name: "Headline",
+              description: "A component for displaying heading text",
+              icon: "ri-heading",
+            },
+          ],
         },
         // {
         //  name: "Data List",
