@@ -10,28 +10,25 @@
   import Input from "../../common/Input.svelte"
   import getIcon from "../../common/icon"
   import { CloseIcon } from "components/common/Icons/"
-
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
 
-  export let event
-  export let eventOptions = []
+  export let event = []
+  export let eventType
   export let onClose
+  export let onChange
 
-  let eventType = ""
   let draftEventHandler = { parameters: [] }
 
-  $: eventData = event || { handlers: [] }
-  $: if (!eventOptions.includes(eventType) && eventOptions.length > 0)
-    eventType = eventOptions[0].name
+  $: handlers = event || []
 
   const closeModal = () => {
     onClose()
     draftEventHandler = { parameters: [] }
-    eventData = { handlers: [] }
+    handlers = []
   }
 
   const updateEventHandler = (updatedHandler, index) => {
-    eventData.handlers[index] = updatedHandler
+    handlers[index] = updatedHandler
   }
 
   const updateDraftEventHandler = updatedHandler => {
@@ -39,8 +36,7 @@
   }
 
   const deleteEventHandler = index => {
-    eventData.handlers.splice(index, 1)
-    eventData = eventData
+    handlers.splice(index, 1)
   }
 
   const createNewEventHandler = handler => {
@@ -48,17 +44,18 @@
       parameters: {},
       [EVENT_TYPE_MEMBER_NAME]: "",
     }
-    eventData.handlers.push(newHandler)
-    eventData = eventData
+    handlers.push(newHandler)
+    handlers = handlers
   }
 
   const deleteEvent = () => {
-    store.setComponentProp(eventType, [])
+    handlers = []
+    onChange([])
     closeModal()
   }
 
   const saveEventData = () => {
-    store.setComponentProp(eventType, eventData.handlers)
+    onChange(handlers)
     closeModal()
   }
 </script>
@@ -66,19 +63,7 @@
 <div class="container">
   <div class="body">
     <div class="heading">
-      <h3>
-        {eventData.name ? `${eventData.name} Event` : 'Create a New Component Event'}
-      </h3>
-    </div>
-    <div class="event-options">
-      <div class="section">
-        <h4>Event Type</h4>
-        <Select bind:value={eventType}>
-          {#each eventOptions as option}
-            <option value={option.name}>{option.name}</option>
-          {/each}
-        </Select>
-      </div>
+      <h3>{eventType} Event</h3>
     </div>
 
     <div class="section">
@@ -92,31 +77,23 @@
         }}
         handler={draftEventHandler} />
     </div>
-    {#if eventData}
-      {#each eventData.handlers as handler, index}
-        <HandlerSelector
-          {index}
-          onChanged={updateEventHandler}
-          onRemoved={() => deleteEventHandler(index)}
-          {handler} />
-      {/each}
-    {/if}
+    {#each handlers as handler, index}
+      <HandlerSelector
+        {index}
+        onChanged={updateEventHandler}
+        onRemoved={() => deleteEventHandler(index)}
+        {handler} />
+    {/each}
 
   </div>
   <div class="footer">
-    {#if eventData.name}
-      <Button
-        outline
-        on:click={deleteEvent}
-        disabled={eventData.handlers.length === 0}>
-        Delete
-      </Button>
-    {/if}
+
+    <Button outline on:click={deleteEvent} disabled={handlers.length === 0}>
+      Delete
+    </Button>
+
     <div class="save">
-      <Button
-        primary
-        on:click={saveEventData}
-        disabled={eventData.handlers.length === 0}>
+      <Button primary on:click={saveEventData} disabled={handlers.length === 0}>
         Save
       </Button>
     </div>
