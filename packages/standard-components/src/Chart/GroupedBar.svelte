@@ -159,5 +159,11 @@
 
 <div bind:this={chartElement} class={chartClass} />
 {#if chartDrawn}
-  <Tooltip bind:tooltip {chartDrawn} {chartClass} {data} />
+  <Tooltip
+    bind:tooltip
+    {chartDrawn}
+    {nameLabel}
+    {valueLabel}
+    {chartClass}
+    {data} />
 {/if}
