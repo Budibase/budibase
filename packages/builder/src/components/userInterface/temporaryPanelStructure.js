@@ -2,6 +2,7 @@ import Input from "../common/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import Checkbox from "../common/Checkbox.svelte"
 import ModelSelect from "components/userInterface/ModelSelect.svelte"
+import Event from "components/userInterface/EventsEditor/EventPropertyControl.svelte"
 
 import { all } from "./propertyCategories.js"
 
@@ -196,6 +197,7 @@ export default {
                 valueKey: "checked",
                 control: Checkbox,
               },
+              { label: "onClick", key: "onClick", control: Event },
             ],
           },
         },
