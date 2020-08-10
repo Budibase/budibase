@@ -65,15 +65,15 @@ export const FIELDS = {
   //     presence: { allowEmpty: true },
   //   },
   // },
-  LINKED_FIELDS: {
-    name: "Linked Fields",
-    icon: "ri-link",
-    type: "link",
-    modelId: null,
-    constraints: {
-      type: "array",
-    },
-  },
+  // LINKED_FIELDS: {
+  //   name: "Linked Fields",
+  //   icon: "ri-link",
+  //   type: "link",
+  //   modelId: null,
+  //   constraints: {
+  //     type: "array",
+  //   },
+  // },
 }
 
 export const BLOCKS = {

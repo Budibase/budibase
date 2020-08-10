@@ -13,6 +13,9 @@
 
   let editing
 
+  $: sortColumn = $backendUiStore.sort && $backendUiStore.sort.column
+  $: sortDirection = $backendUiStore.sort && $backendUiStore.sort.direction
+
   function showEditor() {
     editing = true
   }
@@ -44,8 +47,8 @@
     <h4>Edit Column</h4>
     <CreateEditColumn
       onClosed={hideEditor}
-      field={field.field}
-      columnName={field.name} />
+      field={field}
+    />
   {:else}
     <ul>
       <li on:click={showEditor}>
@@ -56,14 +59,18 @@
         <Icon name="delete" />
         Delete
       </li>
-      <li on:click={() => sort('asc', field.name)}>
-        <Icon name="sortascending" />
-        Sort A - Z
-      </li>
-      <li on:click={() => sort('desc', field.name)}>
-        <Icon name="sortdescending" />
-        Sort Z - A
-      </li>
+      {#if sortDirection === 'desc' || sortColumn !== field.name}
+        <li on:click={() => sort('asc', field.name)}>
+          <Icon name="sortascending" />
+          Sort A - Z
+        </li>
+      {/if}
+      {#if sortDirection === 'asc' || sortColumn !== field.name}
+        <li on:click={() => sort('desc', field.name)}>
+          <Icon name="sortdescending" />
+          Sort Z - A
+        </li>
+      {/if}
     </ul>
   {/if}
 </DropdownMenu>

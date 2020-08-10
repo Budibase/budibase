@@ -18,9 +18,8 @@
 
   export let onClosed
   export let field = {}
-  export let columnName
 
-  let originalName = columnName
+  let originalName = field.name
 
   $: required =
     field.constraints &&
@@ -36,10 +35,7 @@
     backendUiStore.update(state => {
       backendUiStore.actions.models.saveField({
         originalName,
-        field: {
-          ...field,
-          name: columnName
-        }
+        field
       })
 
       return state
@@ -49,7 +45,7 @@
 </script>
 
 <div class="actions">
-  <Input placeholder="Name" thin bind:value={columnName} />
+  <Input placeholder="Name" thin bind:value={field.name} />
 
   <Select secondary thin bind:value={field.type}>
     {#each Object.values(FIELDS) as field}

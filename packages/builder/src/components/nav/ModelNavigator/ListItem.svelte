@@ -21,7 +21,8 @@
     padding: 0 10px 0 10px;
     height: 36px;
     border-radius: 5px;
-    display: flex;
+    display: grid;
+    grid-template-columns: 30px 1fr 20px;
     align-items: center;
     transition: 0.3s background-color;
     color: var(--ink);
