@@ -6375,10 +6375,10 @@ posix-character-classes@^0.1.0:
   resolved "https://registry.yarnpkg.com/posix-character-classes/-/posix-character-classes-0.1.1.tgz#01eac0fe3b5af71a2a6c02feabb8c1fef7e00eab"
   integrity sha1-AerA/jta9xoqbAL+q7jB/vfgDqs=
 
-posthog-js@^1.4.1:
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/posthog-js/-/posthog-js-1.4.1.tgz#c1bfa740720503c36a0666a04d433315d7f34bb3"
-  integrity sha512-8awo5wsBw4cPBCHc5klXo0z09ZQj0bpwAmKsYtr7c4irVC8lF/hPvLX65oSvTXLicB+ULZlmiJtXUau5pLD2fA==
+posthog-js@1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/posthog-js/-/posthog-js-1.3.1.tgz#970acec1423eaa5dba0d2603410c9c70294e16da"
+  integrity sha512-Oqvk7ifPCXFhcM8k3l2vnO7OZJtq5A8M3kPjnywVY/oMX0XXu8Nf/9DF45ZYExSaVb06N8fuLAzyPpIv5cQzmg==
 
 prelude-ls@~1.1.2:
   version "1.1.2"
