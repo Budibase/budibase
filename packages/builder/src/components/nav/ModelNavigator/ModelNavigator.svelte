@@ -6,7 +6,8 @@
   import { store, backendUiStore } from "builderStore"
   import ListItem from "./ListItem.svelte"
   import { Button } from "@budibase/bbui"
-  import CreateTablePopover from "./CreateEditTable.svelte"
+  import CreateTablePopover from "./CreateTable.svelte"
+  import EditTablePopover from "./EditTable.svelte"
 
   const { open, close } = getContext("simple-modal")
 
@@ -52,8 +53,8 @@
               title={model.name}
               icon="ri-table-fill"
               on:click={() => selectModel(model)}>
-
-              </ListItem>
+              <EditTablePopover table={model} />
+            </ListItem>
           {/each}
         </div>
       </div>

@@ -83,13 +83,16 @@ export const getBackendUiStore = () => {
         await store.actions.models.fetch()
         store.actions.models.select(savedModel)
       },
+      delete: async model => {
+        await api.delete(`/api/models/${model._id}/${model._rev}`)
+        store.update(state => {
+          state.selectedModel = state.models[0] || {} 
+          state.models = state.models.filter(existing => existing._id !== model._id)
+          return state
+        })
+      },
       saveField: ({ originalName, field }) => {
         store.update(state => {
-          // TODO: is this necessary?
-          // if (!state.draftModel.schema) {
-          //   state.draftModel.schema = {}
-          // }
-
           // delete the original if renaming
           delete state.draftModel.schema[originalName]
 

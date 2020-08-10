@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import fsort from "fast-sort";
+  import fsort from "fast-sort"
   import { store, backendUiStore } from "builderStore"
   import { Button, Icon } from "@budibase/bbui"
   import Select from "components/common/Select.svelte"
@@ -71,13 +71,15 @@
     <h2 class="title">{$backendUiStore.selectedModel.name}</h2>
     <div class="popovers">
       <ColumnPopover />
-      <RowPopover />
+      {#if Object.keys($backendUiStore.selectedModel.schema).length > 0}
+        <RowPopover />
+      {/if}
     </div>
   </div>
   <table class="uk-table">
     <thead>
       <tr>
-        <th>
+        <th class="edit-header">
           <div>Edit</div>
         </th>
         {#each headers as header}
@@ -146,16 +148,21 @@
     font-size: 14px;
     text-rendering: optimizeLegibility;
     transition: 0.5s all;
+    vertical-align: middle;
   }
 
-  /* thead th div {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  } */
+  .edit-header {
+    width: 100px;
+    cursor: default;
+  }
+
+  .edit-header:hover {
+    color: var(--ink);
+  }
 
   th:hover {
     color: var(--blue);
+    cursor: pointer;
   }
 
   td {
@@ -183,36 +190,7 @@
     display: flex;
   }
 
-  .ri-more-line:hover,
-  .uk-dropdown-nav li:hover {
-    cursor: pointer;
-  }
-
   .no-data {
-    padding: 20px;
-  }
-
-  li {
-    display: flex;
-    align-items: center;
-    border-radius: 5px;
-  }
-
-  i {
-    color: var(--grey-7);
-    margin-right: 8px;
-    font-size: 20px;
-  }
-
-  .label {
-    color: var(--grey-7);
-    font-size: 14px;
-    font-family: inter;
-    font-weight: 400;
-    margin: 12px 0px;
-  }
-  .label:hover {
-    color: var(--ink);
-    cursor: pointer;
+    padding: 14px;
   }
 </style>

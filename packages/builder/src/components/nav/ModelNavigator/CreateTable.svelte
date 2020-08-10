@@ -25,7 +25,10 @@
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <div class="container">
     <h4>Create Table</h4>
-    <Input placeholder="Table Name" thin bind:value={name} />
+    <Input
+      placeholder="Table Name"
+      thin
+      bind:value={name} />
   </div>
   <footer>
     <div class="button-margin-3">
