@@ -70,22 +70,22 @@ Cypress.Commands.add("createTable", tableName => {
 Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
   // Select Table
   cy.contains(tableName).click()
+  cy.contains("Create New Column").click()
 
-  // Click "Create New Column"
-  // Fill in dropdown
-  //hit save 
-  // assertions
+  cy.get("[placeholder=Name]").type(columnName)
+  cy.get("select").select(type)
 
-  // Add 'name' field
+  cy.contains("Save Column")
+
   cy.contains("Save").click()
-  cy.contains(modelName).should("be.visible").click()
 })
 
-Cypress.Commands.add("addRecord", (firstField, secondField) => {
-  cy.contains("Create New Record").click()
+Cypress.Commands.add("addRecord", values => {
+  cy.contains("Create New Row").click()
 
-  cy.get("[data-cy='Plain Text-input']").type(firstField)
-  cy.get("[data-cy=Number-input]").type(secondField)
+  for (let i = 0; i < values.length; i++) {
+    cy.get("input").eq(i).type(values[i])
+  }
 
   // Save
   cy.contains("Save").click()

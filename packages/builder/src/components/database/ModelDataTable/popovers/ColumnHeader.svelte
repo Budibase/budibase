@@ -45,17 +45,14 @@
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   {#if editing}
     <h4>Edit Column</h4>
-    <CreateEditColumn
-      onClosed={hideEditor}
-      field={field}
-    />
+    <CreateEditColumn onClosed={hideEditor} {field} />
   {:else}
     <ul>
-      <li on:click={showEditor}>
+      <li data-cy="edit-column-header" on:click={showEditor}>
         <Icon name="edit" />
         Edit
       </li>
-      <li on:click={deleteField}>
+      <li data-cy="delete-column-header" on:click={deleteField}>
         <Icon name="delete" />
         Delete
       </li>

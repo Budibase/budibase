@@ -61,7 +61,7 @@
         <Icon name="edit" />
         Edit
       </li>
-      <li on:click={deleteTable}>
+      <li data-cy="delete-table" on:click={deleteTable}>
         <Icon name="delete" />
         Delete
       </li>

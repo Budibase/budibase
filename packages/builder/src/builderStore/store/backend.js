@@ -82,12 +82,13 @@ export const getBackendUiStore = () => {
         const savedModel = await response.json()
         await store.actions.models.fetch()
         store.actions.models.select(savedModel)
+        return savedModel
       },
       delete: async model => {
         await api.delete(`/api/models/${model._id}/${model._rev}`)
         store.update(state => {
-          state.selectedModel = state.models[0] || {} 
           state.models = state.models.filter(existing => existing._id !== model._id)
+          state.selectedModel = state.models[0] || {} 
           return state
         })
       },
