@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -61,9 +61,9 @@
     "@budibase/client": "^0.1.1",
     "@budibase/colorpicker": "^1.0.1",
     "@nx-js/compiler-util": "^2.0.0",
-    "britecharts": "^2.16.0",
     "@sentry/browser": "5.19.1",
     "@svelteschool/svelte-forms": "^0.7.0",
+    "britecharts": "^2.16.0",
     "codemirror": "^5.51.0",
     "d3-selection": "^1.4.1",
     "date-fns": "^1.29.0",
