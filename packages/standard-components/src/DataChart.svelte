@@ -23,6 +23,8 @@
     },
   }
 
+  $: console.log("CHART CONFIGS", chartConfigs)
+
   async function fetchData() {
     const FETCH_RECORDS_URL = `/api/views/all_${model}`
     const response = await _bb.api.get(FETCH_RECORDS_URL)
