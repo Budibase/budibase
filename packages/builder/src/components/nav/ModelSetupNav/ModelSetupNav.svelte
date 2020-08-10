@@ -129,7 +129,7 @@
   }
 
   footer {
-    width: 100%;
+    width: 260px;
     position: fixed;
     bottom: 20px;
   }
