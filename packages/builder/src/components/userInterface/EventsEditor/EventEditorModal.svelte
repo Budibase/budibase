@@ -1,14 +1,7 @@
 <script>
   import { store } from "builderStore"
   import { Button } from "@budibase/bbui"
-  import Modal from "../../common/Modal.svelte"
   import HandlerSelector from "./HandlerSelector.svelte"
-  import IconButton from "../../common/IconButton.svelte"
-  import ActionButton from "../../common/ActionButton.svelte"
-  import PlusButton from "../../common/PlusButton.svelte"
-  import Select from "../../common/Select.svelte"
-  import Input from "../../common/Input.svelte"
-  import getIcon from "../../common/icon"
   import { CloseIcon } from "components/common/Icons/"
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
 
