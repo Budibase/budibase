@@ -48,11 +48,11 @@
     <CreateEditRecord onClosed={hideEditor} record={row} />
   {:else}
     <ul>
-      <li on:click={showEditor}>
+      <li data-cy="edit-row" on:click={showEditor}>
         <Icon name="edit" />
         Edit
       </li>
-      <li on:click={deleteRow}>
+      <li data-cy="delete-row" on:click={deleteRow}>
         <Icon name="delete" />
         Delete
       </li>

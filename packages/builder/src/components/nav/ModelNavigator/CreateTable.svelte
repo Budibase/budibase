@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
@@ -10,11 +11,12 @@
   let name
 
   async function saveTable() {
-    await backendUiStore.actions.models.save({
+    const model = await backendUiStore.actions.models.save({
       name,
       schema: {},
     })
     notifier.success(`Table ${name} created successfully.`)
+    $goto(`./model/${model._id}`)
     dropdown.hide()
   }
 </script>
@@ -26,6 +28,7 @@
   <div class="container">
     <h4>Create Table</h4>
     <Input
+      data-cy="table-name-input"
       placeholder="Table Name"
       thin
       bind:value={name} />
