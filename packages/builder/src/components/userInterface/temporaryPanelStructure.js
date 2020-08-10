@@ -301,7 +301,7 @@ export default {
                 label: "destinationUrl",
                 key: "destinationUrl",
                 control: Input,
-                placeholder: "/table/_id",
+                placeholder: "/table/{{context._id}}",
               },
             ],
           },
