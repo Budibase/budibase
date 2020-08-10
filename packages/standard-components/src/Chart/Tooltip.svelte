@@ -19,10 +19,10 @@
   export let locale = null
   export let nameLabel = null
   export let numberFormat = null
-  export let shouldShowDateInTitle = null
-  export let title = "My tooltip"
+  export let shouldShowDateInTitle = false
+  export let title = "My Tooltip"
   export let tooltipOffset = null
-  export let topicLabel = "Topics"
+  export let topicLabel = "values"
   export let topicsOrder = null
   export let valueLabel = null
   export let xAxisValueType = null
