@@ -12,22 +12,24 @@
 </script>
 
 <input type="checkbox" class="checkbox" id="_checkbox" />
-<label for="_checkbox" class:checked on:click={handleChange}>
-  <div class="tick_mark" />
-</label>
+<div on:click={handleChange}>
+  <div class="check-div" class:checked>
+    <div class="tick_mark" />
+  </div>
+</div>
 
 <style>
   .checkbox {
     display: none;
   }
 
-  label {
+  .check-div {
     position: relative;
     width: 20px;
     height: 20px;
     /* background-color: #5e17e9; */
     background-color: var(--grey-2);
-    transform: translateY(-50%);
+    /* transform: translateY(-50%); */
     cursor: pointer;
     transition: 0.2s ease transform, 0.2s ease background-color,
       0.2s ease box-shadow;
@@ -36,7 +38,7 @@
     border-radius: 4px;
   }
 
-  label:before {
+  .check-div:before {
     content: "";
     position: absolute;
     top: 50%;
@@ -51,7 +53,7 @@
     border-radius: 2px;
   }
 
-  label:active {
+  .check-div:active {
     transform: translateY(-50%) scale(0.9);
   }
 
