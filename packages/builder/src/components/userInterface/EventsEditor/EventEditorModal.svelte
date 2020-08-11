@@ -4,24 +4,25 @@
   import HandlerSelector from "./HandlerSelector.svelte"
   import { CloseIcon } from "components/common/Icons/"
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
+  import { createEventDispatcher } from "svelte"
 
   export let event = []
   export let eventType
-  export let onClose
-  export let onChange
 
+  const dispatch = createEventDispatcher()
   let draftEventHandler = { parameters: [] }
 
-  $: handlers = event || []
+  $: handlers = (event && [...event]) || []
 
   const closeModal = () => {
-    onClose()
+    dispatch("close")
     draftEventHandler = { parameters: [] }
     handlers = []
   }
 
   const updateEventHandler = (updatedHandler, index) => {
     handlers[index] = updatedHandler
+    dispatch("change", handlers)
   }
 
   const updateDraftEventHandler = updatedHandler => {
@@ -30,6 +31,7 @@
 
   const deleteEventHandler = index => {
     handlers.splice(index, 1)
+    dispatch("change", handlers)
   }
 
   const createNewEventHandler = handler => {
@@ -38,18 +40,7 @@
       [EVENT_TYPE_MEMBER_NAME]: "",
     }
     handlers.push(newHandler)
-    handlers = handlers
-  }
-
-  const deleteEvent = () => {
-    handlers = []
-    onChange([])
-    closeModal()
-  }
-
-  const saveEventData = () => {
-    onChange(handlers)
-    closeModal()
+    dispatch("change", handlers)
   }
 </script>
 
@@ -79,18 +70,7 @@
     {/each}
 
   </div>
-  <div class="footer">
 
-    <Button outline on:click={deleteEvent} disabled={handlers.length === 0}>
-      Delete
-    </Button>
-
-    <div class="save">
-      <Button primary on:click={saveEventData} disabled={handlers.length === 0}>
-        Save
-      </Button>
-    </div>
-  </div>
   <div class="close-button" on:click={closeModal}>
     <CloseIcon />
   </div>
@@ -99,6 +79,7 @@
 <style>
   .container {
     position: relative;
+    width: 600px;
   }
   .heading {
     margin-bottom: 20px;
