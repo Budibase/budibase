@@ -66,7 +66,7 @@
 
 <div class="header">
   <div class="welcome">Welcome to the Budibase Beta</div>
-  <Button primary purple medium on:click={showCreateAppModal}>
+  <Button primary purple on:click={showCreateAppModal}>
     Create New Web App
   </Button>
 </div>

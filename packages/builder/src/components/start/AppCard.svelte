@@ -50,10 +50,11 @@
     justify-content: center;
     padding: 8px 16px;
     border-radius: var(--border-radius-s);
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-xs);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
     box-sizing: border-box;
+    font-family: var(--font-sans);
   }
 </style>
