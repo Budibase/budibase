@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@budibase/bbui": "^1.23.1",
-    "@budibase/client": "^0.1.1",
+    "@budibase/client": "^0.1.17",
     "@budibase/colorpicker": "^1.0.1",
     "@nx-js/compiler-util": "^2.0.0",
     "@sentry/browser": "5.19.1",
@@ -68,6 +68,7 @@
     "d3-selection": "^1.4.1",
     "date-fns": "^1.29.0",
     "deepmerge": "^4.2.2",
+    "fast-sort": "^2.2.0",
     "feather-icons": "^4.21.0",
     "flatpickr": "^4.5.7",
     "lodash": "^4.17.13",
@@ -98,6 +99,7 @@
     "cypress-terminal-report": "^1.4.1",
     "eslint-plugin-cypress": "^2.11.1",
     "http-proxy-middleware": "^0.19.1",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^26.2.2",
     "ncp": "^2.0.0",
     "npm-run-all": "^4.1.5",

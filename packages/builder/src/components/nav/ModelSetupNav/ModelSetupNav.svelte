@@ -35,7 +35,7 @@
     if (field) {
       const name = model.schema[field].name
       delete model.schema[field]
-      backendUiStore.actions.models.save({ model })
+      backendUiStore.actions.models.save(model)
       notifier.danger(`Field ${name} deleted.`)
       return
     }
@@ -81,9 +81,7 @@
       return
     }
 
-    await backendUiStore.actions.models.save({
-      model: $backendUiStore.draftModel,
-    })
+    await backendUiStore.actions.models.save($backendUiStore.draftModel)
     notifier.success(
       "Success! Your changes have been saved. Please continue on with your greatness."
     )
