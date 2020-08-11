@@ -24,7 +24,6 @@
   let views = []
   let currentPage = 0
   let search
-  let dropdownLeft
 
   $: {
     if ($backendUiStore.selectedView) {

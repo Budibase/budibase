@@ -26,7 +26,7 @@
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <div class="container">
-    <h4>Create Table</h4>
+    <h5>Create Table</h5>
     <Input
       data-cy="table-name-input"
       placeholder="Table Name"
@@ -44,6 +44,12 @@
 </DropdownMenu>
 
 <style>
+  h5 {
+    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
+    margin: 0;
+    font-weight: 500;
+  }
+
   .container {
     padding: var(--spacing-l);
     margin: 0;

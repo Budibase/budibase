@@ -12,14 +12,15 @@
     Create New Row
   </Button>
 </div>
-<DropdownMenu bind:this={dropdown} anchor={anchor} align="left">
-  <h4>Add New Row</h4>
+<DropdownMenu bind:this={dropdown} {anchor} align="left">
+  <h5>Add New Row</h5>
   <CreateEditRecord onClosed={dropdown.hide} />
 </DropdownMenu>
 
 <style>
-  h4 {
-    padding: var(--spacing-l);
+  h5 {
+    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
     margin: 0;
+    font-weight: 500;
   }
 </style>

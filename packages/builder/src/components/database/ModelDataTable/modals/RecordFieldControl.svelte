@@ -24,7 +24,7 @@
 </script>
 
 {#if type === 'select'}
-  <Select data-cy="{label}-select" bind:value>
+  <Select thin secondary data-cy="{label}-select" bind:value>
     <option />
     {#each options as opt}
       <option value={opt}>{opt}</option>
