@@ -18,13 +18,14 @@
   </Button>
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
-  <h4>Create Column</h4>
+  <h5>Create Column</h5>
   <CreateEditColumn onClosed={dropdown.hide} />
 </DropdownMenu>
 
 <style>
-  h4 {
-    padding: var(--spacing-l);
+  h5 {
+    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
     margin: 0;
+    font-weight: 500;
   }
 </style>

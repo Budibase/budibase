@@ -84,7 +84,9 @@ Cypress.Commands.add("addRecord", values => {
   cy.contains("Create New Row").click()
 
   for (let i = 0; i < values.length; i++) {
-    cy.get("input").eq(i).type(values[i])
+    cy.get("input")
+      .eq(i)
+      .type(values[i])
   }
 
   // Save

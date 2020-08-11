@@ -30,12 +30,10 @@
   }
 
   async function saveColumn() {
-    // if existing
-    // update the name and type
     backendUiStore.update(state => {
       backendUiStore.actions.models.saveField({
         originalName,
-        field
+        field,
       })
 
       return state
@@ -110,7 +108,7 @@
 
 <style>
   .actions {
-    padding: 20px;
+    padding: var(--spacing-l) var(--spacing-xl);
     display: grid;
     grid-gap: var(--spacing-xl);
   }

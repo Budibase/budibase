@@ -95,7 +95,7 @@
 
 <style>
   .actions {
-    padding: 30px;
+    padding: var(--spacing-l) var(--spacing-xl);
   }
 
   footer {

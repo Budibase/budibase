@@ -35,7 +35,10 @@
     )
   }
 
-  function save() {}
+  function save() {
+    backendUiStore.actions.models.save(table)
+    hideEditor()
+  }
 </script>
 
 <div bind:this={anchor} on:click={dropdown.show}>
@@ -43,8 +46,8 @@
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   {#if editing}
+    <h5>Edit Table</h5>
     <div class="container">
-      <h4>Edit Table</h4>
       <Input placeholder="Table Name" thin bind:value={table.name} />
     </div>
     <footer>
@@ -70,12 +73,18 @@
 </DropdownMenu>
 
 <style>
-  h4 {
-    padding: var(--spacing-l);
+  h5 {
+    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
     margin: 0;
+    font-weight: 500;
+  }
+
+  .container {
+    padding: var(--spacing-xl);
   }
 
   ul {
+    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
     list-style: none;
     padding-left: 0;
     margin: 0;
@@ -99,11 +108,6 @@
 
   li:active {
     color: var(--blue);
-  }
-
-  .container {
-    padding: var(--spacing-l);
-    margin: 0;
   }
 
   footer {

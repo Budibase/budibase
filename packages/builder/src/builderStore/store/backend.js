@@ -87,8 +87,10 @@ export const getBackendUiStore = () => {
       delete: async model => {
         await api.delete(`/api/models/${model._id}/${model._rev}`)
         store.update(state => {
-          state.models = state.models.filter(existing => existing._id !== model._id)
-          state.selectedModel = state.models[0] || {} 
+          state.models = state.models.filter(
+            existing => existing._id !== model._id
+          )
+          state.selectedModel = state.models[0] || {}
           return state
         })
       },
@@ -111,7 +113,7 @@ export const getBackendUiStore = () => {
           store.actions.models.save(state.draftModel)
           return state
         })
-      } 
+      },
     },
     views: {
       select: view =>

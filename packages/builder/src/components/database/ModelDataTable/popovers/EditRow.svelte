@@ -35,8 +35,6 @@
       { styleContent: { padding: "0" } }
     )
   }
-
-  function save() {}
 </script>
 
 <div bind:this={anchor} on:click={dropdown.show}>
@@ -44,7 +42,7 @@
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   {#if editing}
-    <h4>Edit Row</h4>
+    <h5>Edit Row</h5>
     <CreateEditRecord onClosed={hideEditor} record={row} />
   {:else}
     <ul>
@@ -61,9 +59,14 @@
 </DropdownMenu>
 
 <style>
-  h4 {
-    padding: var(--spacing-l);
+  .ri-more-line:hover {
+    cursor: pointer;
+  }
+
+  h5 {
+    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
     margin: 0;
+    font-weight: 500;
   }
 
   ul {

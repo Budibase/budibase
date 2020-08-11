@@ -44,7 +44,7 @@
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   {#if editing}
-    <h4>Edit Column</h4>
+    <h5>Edit Column</h5>
     <CreateEditColumn onClosed={hideEditor} {field} />
   {:else}
     <ul>
@@ -73,9 +73,10 @@
 </DropdownMenu>
 
 <style>
-  h4 {
-    padding: var(--spacing-l);
+  h5 {
+    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
     margin: 0;
+    font-weight: 500;
   }
 
   ul {
