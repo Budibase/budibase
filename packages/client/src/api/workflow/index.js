@@ -1,4 +1,4 @@
-import mustache from "mustache"
+import renderTemplateString from "../../state/renderTemplateString"
 import appStore from "../../state/store"
 import Orchestrator from "./orchestrator"
 import clientActions from "./actions"
@@ -17,7 +17,7 @@ export const clientStrategy = ({ api }) => ({
       if (typeof argValue !== "string") continue
 
       // Render the string with values from the workflow context and state
-      mappedArgs[arg] = mustache.render(argValue, {
+      mappedArgs[arg] = renderTemplateString(argValue, {
         context: this.context,
         state: appStore.get(),
       })
