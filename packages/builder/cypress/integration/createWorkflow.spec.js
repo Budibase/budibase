@@ -9,7 +9,7 @@ xcontext('Create a workflow', () => {
 
     // https://on.cypress.io/interacting-with-elements
     it('should create a workflow', () => {
-        cy.createModel('dog', 'name', 'age')
+        cy.createTable('dog', 'name', 'age')
 
         cy.contains('workflow').click()
         cy.contains('Create New Workflow').click()

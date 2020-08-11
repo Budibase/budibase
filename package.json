@@ -19,7 +19,7 @@
     "build": "lerna run build",
     "initialise": "lerna run initialise",
     "publishdev": "lerna run publishdev",
-    "publishnpm": "yarn build && lerna publish",
+    "publishnpm": "yarn build && lerna publish --force-publish",
     "clean": "lerna clean",
     "dev": "node ./scripts/symlinkDev.js && lerna run --parallel --stream dev:builder",
     "test": "lerna run test",
