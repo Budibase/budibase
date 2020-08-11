@@ -99,7 +99,7 @@
             <EditRowPopover {row} />
           </td>
           {#each headers as header}
-            <td class="hoverable">
+            <td>
               {#if schema[header].type === 'link'}
                 <LinkedRecord field={schema[header]} ids={row[header]} />
               {:else}{row[header] || ''}{/if}

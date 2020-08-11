@@ -31,6 +31,9 @@
     {/each}
   </Select>
 {:else}
+  {#if type === 'checkbox'}
+    <label>{label}</label>
+  {/if}
   <Input
     thin
     placeholder={label}
@@ -41,3 +44,12 @@
     on:input={handleInput}
     on:change={handleInput} />
 {/if}
+
+<style>
+  label {
+    font-weight: 500;
+    font-size: var(--font-size-s);
+    float: left;
+    margin-right: 8px;
+  }
+</style>

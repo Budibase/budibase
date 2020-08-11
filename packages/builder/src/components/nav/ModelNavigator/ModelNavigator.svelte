@@ -11,21 +11,6 @@
 
   const { open, close } = getContext("simple-modal")
 
-  let HEADINGS = [
-    {
-      title: "Tables",
-      key: "TABLES",
-    },
-    {
-      title: "Tables",
-      key: "NAVIGATE",
-    },
-    {
-      title: "Add",
-      key: "ADD",
-    },
-  ]
-
   $: selectedTab = $backendUiStore.tabs.NAVIGATION_PANEL
 
   function selectModel(model, fieldId) {
@@ -44,7 +29,7 @@
   {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
     <div class="hierarchy">
       <div class="components-list-container">
-        <h3>Tables</h3>
+        <h4>Tables</h4>
         <CreateTablePopover />
         <div class="hierarchy-items-container">
           {#each $backendUiStore.models as model}
@@ -63,6 +48,10 @@
 </div>
 
 <style>
+  h4 {
+    font-weight: 500;
+  }
+
   .items-root {
     display: flex;
     flex-direction: column;
