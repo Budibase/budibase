@@ -4,7 +4,7 @@ import {
   EVENT_TYPE_MEMBER_NAME,
 } from "./eventHandlers"
 import { bbFactory } from "./bbComponentApi"
-import mustache from "mustache"
+import renderTemplateString from "./renderTemplateString"
 import appStore from "./store"
 import hasBinding from "./hasBinding"
 
@@ -64,7 +64,7 @@ const _setup = ({ handlerTypes, getCurrentState, bb }) => node => {
 
     if (isBound) {
       const state = appStore.getState(node.contextStoreKey)
-      initialProps[propName] = mustache.render(propValue, state)
+      initialProps[propName] = renderTemplateString(propValue, state)
 
       if (!node.stateBound) {
         node.stateBound = true
@@ -83,7 +83,8 @@ const _setup = ({ handlerTypes, getCurrentState, bb }) => node => {
         const resolvedParams = {}
         for (let paramName in handlerInfo.parameters) {
           const paramValue = handlerInfo.parameters[paramName]
-          resolvedParams[paramName] = () => mustache.render(paramValue, state)
+          resolvedParams[paramName] = () =>
+            renderTemplateString(paramValue, state)
         }
 
         handlerInfo.parameters = resolvedParams

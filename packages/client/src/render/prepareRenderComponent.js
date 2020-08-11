@@ -1,4 +1,4 @@
-import mustache from "mustache"
+import renderTemplateString from "../state/renderTemplateString"
 import appStore from "../state/store"
 import hasBinding from "../state/hasBinding"
 
@@ -46,7 +46,7 @@ export const prepareRenderComponent = ({
           const toSet = {}
           for (let prop of storeBoundProps) {
             const propValue = initialProps._bb.props[prop]
-            toSet[prop] = mustache.render(propValue, state)
+            toSet[prop] = renderTemplateString(propValue, state)
           }
           thisNode.component.$set(toSet)
         }
