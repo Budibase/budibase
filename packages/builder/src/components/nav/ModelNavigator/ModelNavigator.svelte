@@ -4,15 +4,20 @@
   import { Switcher } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { store, backendUiStore } from "builderStore"
-  import BlockNavigator from "./BlockNavigator.svelte"
   import ListItem from "./ListItem.svelte"
   import { Button } from "@budibase/bbui"
+  import CreateTablePopover from "./CreateTable.svelte"
+  import EditTablePopover from "./EditTable.svelte"
 
   const { open, close } = getContext("simple-modal")
 
   let HEADINGS = [
     {
-      title: "Navigate",
+      title: "Tables",
+      key: "TABLES",
+    },
+    {
+      title: "Tables",
       key: "NAVIGATE",
     },
     {
@@ -33,53 +38,25 @@
       })
     }
   }
-
-  function setupForNewModel() {
-    backendUiStore.update(state => {
-      state.selectedModel = {}
-      state.draftModel = { schema: {} }
-      state.tabs.SETUP_PANEL = "SETUP"
-      return state
-    })
-  }
 </script>
 
 <div class="items-root">
   {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
     <div class="hierarchy">
       <div class="components-list-container">
-        <Switcher
-          headings={HEADINGS}
-          bind:value={$backendUiStore.tabs.NAVIGATION_PANEL}>
-          {#if selectedTab === 'NAVIGATE'}
-            <Button purple wide on:click={setupForNewModel}>
-              Create New Table
-            </Button>
-            <div class="hierarchy-items-container">
-              {#each $backendUiStore.models as model}
-                <ListItem
-                  selected={!$backendUiStore.selectedField && model._id === $backendUiStore.selectedModel._id}
-                  title={model.name}
-                  icon="ri-table-fill"
-                  on:click={() => selectModel(model)} />
-                {#if model._id === $backendUiStore.selectedModel._id}
-                  <div in:slide>
-                    {#each Object.keys(model.schema) as fieldName}
-                      <ListItem
-                        selected={model._id === $backendUiStore.selectedModel._id && fieldName === $backendUiStore.selectedField}
-                        indented
-                        icon="ri-layout-column-line"
-                        title={model.schema[fieldName].name}
-                        on:click={() => selectModel(model, fieldName)} />
-                    {/each}
-                  </div>
-                {/if}
-              {/each}
-            </div>
-          {:else if selectedTab === 'ADD'}
-            <BlockNavigator />
-          {/if}
-        </Switcher>
+        <h3>Tables</h3>
+        <CreateTablePopover />
+        <div class="hierarchy-items-container">
+          {#each $backendUiStore.models as model}
+            <ListItem
+              selected={!$backendUiStore.selectedField && model._id === $backendUiStore.selectedModel._id}
+              title={model.name}
+              icon="ri-table-fill"
+              on:click={() => selectModel(model)}>
+              <EditTablePopover table={model} />
+            </ListItem>
+          {/each}
+        </div>
       </div>
     </div>
   {/if}
