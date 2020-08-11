@@ -66,7 +66,9 @@
 
 <div class="header">
   <div class="welcome">Welcome to the Budibase Beta</div>
-  <Button purple large on:click={showCreateAppModal}>Create New Web App</Button>
+  <Button primary purple medium on:click={showCreateAppModal}>
+    Create New Web App
+  </Button>
 </div>
 
 <div class="banner">
@@ -95,9 +97,9 @@
   }
 
   .welcome {
-    font-size: 42px;
+    font-size: var(--font-size-3xl);
     color: var(--ink);
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .banner {
@@ -108,7 +110,7 @@
     text-align: center;
     color: white;
     margin: 20px 80px 40px 80px;
-    border-radius: 10px;
+    border-radius: 16px;
   }
 
   .banner img {

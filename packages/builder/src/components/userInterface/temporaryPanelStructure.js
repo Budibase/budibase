@@ -433,7 +433,7 @@ export default {
           name: "Donut Chart",
           _component: "@budibase/standard-components/donut",
           description: "Donut chart",
-          icon: "ri-pie-chart-fill",
+          icon: "ri-pie-chart-line",
           properties: {
             settings: [
               {
@@ -526,35 +526,6 @@ export default {
             ],
           },
           children: [],
-        },
-        {
-          name: "Data List",
-          _component: "@budibase/standard-components/datalist",
-          description: "Shiny list",
-          icon: "ri-file-list-fill",
-          properties: {
-            design: { ...all },
-            settings: [{ label: "Table", key: "model", control: ModelSelect }],
-          },
-          children: [],
-        },
-        {
-          name: "List",
-          _component: "@budibase/standard-components/list",
-          description: "Renders all children once per record, of a given table",
-          icon: "ri-file-list-fill",
-          properties: {
-            design: { ...all },
-            settings: [{ label: "Table", key: "model", control: ModelSelect }],
-          },
-          children: [
-            {
-              _component: "@budibase/standard-components/heading",
-              name: "Headline",
-              description: "A component for displaying heading text",
-              icon: "ri-heading",
-            },
-          ],
         },
         // {
         //  name: "Data List",

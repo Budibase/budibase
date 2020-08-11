@@ -783,9 +783,9 @@
     sirv-cli "^0.4.6"
 
 "@budibase/client@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.1.tgz#6df65bef641d956dea6d648e5dcd7e95622a24fc"
-  integrity sha512-z5CYj/4wahV9Kg7GwYi1knRZdm60uspkjOX7b3GXy85Zam1+m4ObSQ1aT6857WCXgl2+CQ3hIb2QGqSZfOTFuA==
+  version "0.1.17"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.17.tgz#9ec8848c75711751c9d088361122f181e8eb44e1"
+  integrity sha512-6O9iWHkpIWksUMm+/ysN/Yb8QufF3FE4CfxCEFUVWaeYqyIXZifiqZxeAR380JIqwxjHltSC/23wgCWzhhiMUw==
   dependencies:
     "@nx-js/compiler-util" "^2.0.0"
     bcryptjs "^2.4.3"
@@ -7775,9 +7775,9 @@ svelte@3.23.x:
   integrity sha512-cnyd96bK/Nw5DnYuB1hzm5cl6+I1fpmdKOteA7KLzU9KGLsLmvWsSkSKbcntzODCLmSySN3HjcgTHRo6/rJNTw==
 
 svelte@^3.9.2:
-  version "3.24.0"
-  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.24.0.tgz#6565a42c9705796fa66c6abb4fedc09f4323a4a8"
-  integrity sha512-VFXom6EP2DK83kxy4ZlBbaZklSbZIrpNH3oNXlPYHJUuW4q1OuAr3ZoYbfIVTVYPDgrI7Yq0gQcOhDlAtO4qfw==
+  version "3.24.1"
+  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.24.1.tgz#aca364937dd1df27fe131e2a4c234acb6061db4b"
+  integrity sha512-OX/IBVUJSFo1rnznXdwf9rv6LReJ3qQ0PwRjj76vfUWyTfbHbR9OXqJBnUrpjyis2dwYcbT2Zm1DFjOOF1ZbbQ==
 
 symbol-observable@1.0.1:
   version "1.0.1"
