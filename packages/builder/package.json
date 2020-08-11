@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -58,7 +58,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "^1.23.0",
+    "@budibase/bbui": "^1.23.1",
     "@budibase/client": "^0.1.1",
     "@budibase/colorpicker": "^1.0.1",
     "@nx-js/compiler-util": "^2.0.0",
