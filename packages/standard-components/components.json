@@ -244,6 +244,7 @@
 	},
 	"list": {
 		"description": "A configurable data list that attaches to your backend models.",
+		"children": true,
 		"data": true,
 		"props": {
 			"model": "models"
@@ -263,6 +264,7 @@
 	},
 	"recorddetail": {
 		"description": "Loads a record, using an ID in the url",
+		"children": true,
 		"data": true,
 		"props": {
 			"model": "models"
@@ -599,6 +601,7 @@
 	},
 	"container": {
 		"name": "Container",
+		"children": true,
 		"description": "An element that contains and lays out other elements. e.g. <div>, <header> etc",
 		"props": {
 			"className": "string",
