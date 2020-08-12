@@ -18,7 +18,7 @@ describe("createDefaultProps", () => {
     expect(props.fieldName).toBeDefined()
     expect(props.fieldName).toBe("something")
     stripStandardProps(props)
-    expect(keys(props).length).toBe(3)
+    expect(keys(props).length).toBe(2)
   })
 
   it("should set component _component", () => {
@@ -104,14 +104,13 @@ describe("createDefaultProps", () => {
     expect(props._children).toEqual([])
   })
 
-  it("should create a _children array when children not defined ", () => {
+  it("should not create a _children array when children not defined ", () => {
     const comp = getcomponent()
 
     const { props, errors } = createProps(comp)
 
     expect(errors).toEqual([])
-    expect(props._children).toBeDefined()
-    expect(props._children).toEqual([])
+    expect(props._children).not.toBeDefined()
   })
 
   it("should not create _children array when children=false ", () => {
