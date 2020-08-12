@@ -1,6 +1,7 @@
 import { makePropsSafe } from "components/userInterface/pagesParsing/createProps"
 import api from "./api"
 import { generate_screen_css } from "./generate_css"
+import { uuid } from "./uuid"
 
 export const selectComponent = (state, component) => {
   const componentDef = component._component.startsWith("##")
@@ -79,3 +80,8 @@ export const regenerateCssForCurrentScreen = state => {
   ])
   return state
 }
+
+export const generateNewIdsForComponent = c =>
+  walkProps(c, p => {
+    p._id = uuid()
+  })
