@@ -130,6 +130,7 @@
 	},
 	"select": {
 		"name": "Select",
+		"bindable": "value",
 		"description": "An HTML <select> (dropdown)",
 		"props": {
 			"value": "string",
@@ -170,6 +171,7 @@
 	},
 	"checkbox": {
 		"name": "Checkbox",
+		"bindable": "value",
 		"description": "A selectable checkbox component",
 		"props": {
 			"label": "string",
@@ -180,6 +182,7 @@
 	},
 	"radiobutton": {
 		"name": "Radiobutton",
+		"bindable": "value",
 		"description": "A selectable radiobutton component",
 		"props": {
 			"label": "string",
@@ -244,6 +247,7 @@
 	},
 	"list": {
 		"description": "A configurable data list that attaches to your backend models.",
+		"context": "model",
 		"data": true,
 		"props": {
 			"model": "models"
@@ -263,6 +267,7 @@
 	},
 	"recorddetail": {
 		"description": "Loads a record, using an ID in the url",
+		"context": "model",
 		"data": true,
 		"props": {
 			"model": "models"
