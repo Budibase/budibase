@@ -1580,74 +1580,12 @@ export default {
               _component: "@budibase/standard-components/line",
               description: "Line chart",
               icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: {
-                  data: [
-                    {
-                      topicName: "San Francisco",
-                      name: 1,
-                      date: "2020-01-16",
-                      value: 1,
-                    },
-                    {
-                      topicName: "San Fran",
-                      name: 2,
-                      date: "2020-01-17",
-                      value: 2,
-                    },
-                    {
-                      topicName: "LA",
-                      name: 3,
-                      date: "2020-01-18",
-                      value: 3,
-                    },
-                    {
-                      topicName: "Toronto",
-                      name: 4,
-                      date: "2020-01-19",
-                      value: 7,
-                    },
-                    {
-                      topicName: "Van",
-                      name: 4,
-                      date: "2020-01-20",
-                      value: 12,
-                    },
-                    {
-                      topicName: "Dundee",
-                      name: 4,
-                      date: "2020-01-21",
-                      value: 16,
-                    },
-                    {
-                      topicName: "Dublin",
-                      name: 4,
-                      date: "2020-01-22",
-                      value: 31,
-                    },
-                  ],
-                },
-                aspectRatio: 0.5,
-                grid: "horizontal",
-                dateLabel: "fullDate",
-                shouldShowAllDataPoints: true,
-              },
               properties: {
                 settings: [
                   {
                     label: "Table",
                     key: "model",
                     control: ModelSelect,
-                  },
-                  {
-                    label: "X Axis Combo",
-                    key: "axisTimeCombinations",
-                    control: Input,
-                  },
-                  {
-                    label: "X Axis Combo",
-                    key: "axisTimeCombinations",
-                    control: Input,
                   },
                   {
                     label: "Colors",
@@ -1689,6 +1627,16 @@ export default {
                     control: Input,
                   },
                   {
+                    label: "Topic Label",
+                    key: "topicLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Value Label",
+                    key: "valueLabel",
+                    control: Input,
+                  },
+                  {
                     label: "Width",
                     key: "width",
                     control: Input,
@@ -1720,21 +1668,6 @@ export default {
                       "cardinal",
                       "catmullRom",
                     ],
-                  },
-                  {
-                    label: "Locale",
-                    key: "locale",
-                    control: Input,
-                  },
-                  {
-                    label: "Topic Label",
-                    key: "topicLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Value Label",
-                    key: "valueLabel",
-                    control: Input,
                   },
                   {
                     label: "X Axis Label",

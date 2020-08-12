@@ -10,8 +10,6 @@
   export let chartClass = ""
   let tooltipContainer
 
-  export let data = []
-
   export let axisTimeCombinations = null
   export let dateCustomFormat = null
   export let dateFormat = null
@@ -31,11 +29,6 @@
     tooltipContainer = select(`.${chartClass} .metadata-group`)
     tooltipContainer.datum([]).call(tooltip)
   })
-
-  //   $: if (chartDrawn) {
-  //     tooltipContainer = select(`.${chartClass} .metadata-group`)
-  //     tooltipContainer.datum([]).call(tooltip)
-  //   }
 
   $: if (tooltipContainer) {
     if (notNull(axisTimeCombinations)) {

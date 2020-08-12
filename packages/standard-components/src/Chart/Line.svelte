@@ -1,5 +1,6 @@
 <script>
   import { getColorSchema, getChartGradient, notNull } from "./utils"
+  import Tooltip from "./Tooltip.svelte"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
 
@@ -17,18 +18,56 @@
   const chartClass = `line-container-${_id}`
   const legendClass = `legend-container-${_id}`
 
+  const testData = {
+    data: [
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-16T16:00:00-08:00",
+        value: 3,
+      },
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-17T16:00:00-08:00",
+        value: 7,
+      },
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-18T16:00:00-08:00",
+        value: 5,
+      },
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-19T16:00:00-08:00",
+        value: 6,
+      },
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-20T16:00:00-08:00",
+        value: 1,
+      },
+    ],
+  }
+
+  let data = testData
+
   let chartElement
   let chartContainer
   let tooltip
   let tooltipContainer
 
-  export let customMouseHover = null
-  export let customMouseMove = null
-  export let customMouseOut = null
+  export let customMouseOver = null //() => tooltip.show()
+  export let customMouseMove = null //(dataPoint, topicColorMap, dataPointXPosition) =>
+  //tooltip.update(dataPoint, topicColorMap, dataPointXPosition)
+  export let customMouseOut = null //() => tooltip.hide()
+
   export let customDataEntryClick = null
   export let customTouchMove = null
 
-  export let data = []
   export let color = "britecharts"
   export let axisTimeCombinations = ""
   export let grid = "horizontal"
@@ -38,6 +77,7 @@
   export let height = null
   export let isAnimated = true
   export let lineCurve = "linear" //see api for possible opts
+  export let lineGradient = null
   export let locale = "en-GB"
   export let numberFormat = ""
   export let shouldShowAllDataPoints = true
@@ -49,21 +89,20 @@
   export let xAxisFormat = "day-month"
   export let xAxisCustomFormat = "%H"
   export let yAxisLabel = null
-  export let useLegend = true
   export let yAxisLabelPadding = null
   export let lines = null //not handled by setting prop
   export let tooltipThreshold = null
 
+  let chartDrawn = false
+
   onMount(async () => {
     if (chart) {
-      if (model) {
-        await fetchData()
-      }
+      // data = await getAndPrepareData()
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
-      chartContainer.datum(_data).call(chart)
-      bindChartTooltip()
+      chartContainer.datum(data).call(chart)
+      chartDrawn = true
     }
   })
 
@@ -81,75 +120,100 @@
     }
   }
 
+  async function getAndPrepareData() {
+    let data = []
+    if (model) {
+      await fetchData()
+      data = $store[model]
+    }
+    return { data }
+  }
+
+  $: console.log("DATA", data)
+
   function bindChartUIProps() {
-    if (notNull(color)) {
-      chart.colorSchema(colorSchema)
-    }
-    if (notNull(axisTimeCombinations)) {
-      chart.axisTimeCombinations(axisTimeCombinations)
-    }
-    if (notNull(grid)) {
-      chart.grid(grid)
-    }
-    if (notNull(aspectRatio)) {
-      chart.aspectRatio(aspectRatio)
-    }
-    if (notNull(dateLabel)) {
-      chart.dateLabel(dateLabel)
-    }
-    if (notNull(width)) {
-      chart.width(width)
-    }
-    if (notNull(height)) {
-      chart.height(height)
-    }
-    if (notNull(isAnimated)) {
-      chart.isAnimated(isAnimated)
-    }
-    if (notNull(lineCurve)) {
-      chart.lineCurve(lineCurve)
-    }
-    if (notNull(locale)) {
-      chart.locale(locale)
-    }
-    if (notNull(numberFormat)) {
-      chart.numberFormat(numberFormat)
-    }
-    if (notNull(shouldShowAllDataPoints)) {
-      chart.shouldShowAllDataPoints(shouldShowAllDataPoints)
-    }
-    if (notNull(topicLabel)) {
-      chart.topicLabel(topicLabel)
-    }
-    if (notNull(valueLabel)) {
-      chart.valueLabel(valueLabel)
-    }
-    if (notNull(xAxisLabel)) {
-      chart.xAxisLabel(xAxisLabel)
-    }
-    if (notNull(xAxisValueType)) {
-      chart.xAxisValueType(xAxisValueType)
-    }
-    if (notNull(xAxisScale)) {
-      chart.xAxisScale(xAxisScale)
-    }
-    if (notNull(xAxisFormat)) {
-      chart.xAxisFormat(xAxisFormat)
-    }
-    if (notNull(xAxisCustomFormat)) {
-      chart.xAxisCustomFormat(xAxisCustomFormat)
-    }
-    if (notNull(yAxisLabel)) {
-      chart.yAxisLabel(yAxisLabel)
-    }
-    if (notNull(yAxisLabelPadding)) {
-      chart.yAxisLabelPadding(yAxisLabelPadding)
-    }
+    chart.grid("horizontal")
+    chart.dateLabel("date")
+    chart.aspectRatio(0.5)
+    chart.isAnimated(true)
+
+    // if (notNull(color)) {
+    //   //chart.colorSchema(colorSchema)
+    // }
+    // if (notNull(lineGradient)) {
+    //   chart.lineGradient(chartGradient)
+    // }
+    // if (notNull(axisTimeCombinations)) {
+    //   chart.axisTimeCombinations(axisTimeCombinations)
+    // }
+    // if (notNull(grid)) {
+    //   chart.grid(grid)
+    // }
+    // if (notNull(aspectRatio)) {
+    //   chart.aspectRatio(aspectRatio)
+    // }
+    // if (notNull(dateLabel)) {
+    //   chart.dateLabel(dateLabel)
+    // }
+    // if (notNull(width)) {
+    //   chart.width(width)
+    // }
+    // if (notNull(height)) {
+    //   chart.height(height)
+    // }
+    // if (notNull(isAnimated)) {
+    //   chart.isAnimated(isAnimated)
+    // }
+    // if (notNull(lineCurve)) {
+    //   chart.lineCurve(lineCurve)
+    // }
+    // if (notNull(locale)) {
+    //   chart.locale(locale)
+    // }
+    // if (notNull(numberFormat)) {
+    //   chart.numberFormat(numberFormat)
+    // }
+    // if (notNull(shouldShowAllDataPoints)) {
+    //   chart.shouldShowAllDataPoints(shouldShowAllDataPoints)
+    // }
+    // if (notNull(topicLabel)) {
+    //   chart.topicLabel(topicLabel)
+    // }
+    // if (notNull(valueLabel)) {
+    //   chart.valueLabel(valueLabel)
+    // }
+    // if (notNull(xAxisLabel)) {
+    //   chart.xAxisLabel(xAxisLabel)
+    // }
+    // if (notNull(xAxisValueType)) {
+    //   chart.xAxisValueType(xAxisValueType)
+    // }
+    // if (notNull(xAxisScale)) {
+    //   chart.xAxisScale(xAxisScale)
+    // }
+    // if (notNull(xAxisFormat)) {
+    //   chart.xAxisFormat(xAxisFormat)
+    // }
+    // if (notNull(xAxisCustomFormat)) {
+    //   chart.xAxisCustomFormat(xAxisCustomFormat)
+    // }
+    // if (notNull(yAxisLabel)) {
+    //   chart.yAxisLabel(yAxisLabel)
+    // }
+    // if (notNull(yAxisLabelPadding)) {
+    //   chart.yAxisLabelPadding(yAxisLabelPadding)
+    // }
+    // if (notNull(tooltipThreshold)) {
+    //   chart.tooltipThreshold(tooltipThreshold)
+    // }
+    // if (notNull(lines)) {
+    //   chart.lines(lines)
+    // }
   }
 
   function bindChartEvents() {
-    if (customMouseHover) {
-      chart.on("customMouseHover", customMouseHover)
+    if (customMouseOver) {
+      chart.on("customMouseOver", customMouseOver)
     }
     if (customMouseMove) {
       chart.on("customMouseMove", customMouseMove)
@@ -165,45 +229,11 @@
     }
   }
 
-  function bindChartTooltip() {
-    tooltip = britecharts.miniTooltip()
-
-    tooltipContainer = select(`.${chartClass} .metadata-group`)
-    tooltipContainer.datum([]).call(tooltip)
-  }
-
-  $: _data = model ? $store[model] : data
-
   $: colorSchema = getColorSchema(color)
+  $: chartGradient = getChartGradient(lineGradient)
 </script>
 
 <div bind:this={chartElement} class={chartClass} />
-{#if useLegend}
-  <div class={legendClass} />
-{/if}
-
-<!-- 
-
-isAnimated={true}
-aspectRatio={0.5}
-grid='horizontal'
-tooltipThreshold={600}
-width={600}
-dateLabel='fullDate'
-
- {type}
-  {data}
-  {colorSchema}
-  {axisTimeCombinations}
-  {lineCurve}
-  {numberFormat}
-  {height}
-  {topicLabel}
-  {shouldShowAllDataPoints}
-  {xAxisLabel}
-  {valueLabel}
-  {xAxisValueType}
-  {xAxisScale}
-  {xAxisCustomFormat}
-
- -->
+<!-- {#if chartDrawn}
+  <Tooltip bind:tooltip {valueLabel} {chartClass} />
+{/if} -->
