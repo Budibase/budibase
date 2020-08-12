@@ -12,9 +12,9 @@ exports.Orchestrator = class Orchestrator {
     this._strategy = strategy()
   }
 
-  async execute(workflow) {
+  async execute(workflow, context) {
     if (workflow.live) {
-      this._strategy.run(workflow.definition)
+      this._strategy.run(workflow.definition, context)
     }
   }
 }
@@ -35,12 +35,15 @@ exports.serverStrategy = () => ({
 
     return mappedArgs
   },
-  run: async function(workflow) {
+  run: async function(workflow, context) {
     for (let block of workflow.steps) {
       if (block.type === "CLIENT") continue
 
       const action = require(`../api/controllers/workflow/actions/${block.actionId}`)
-      const response = await action({ args: this.bindContextArgs(block.args) })
+      const response = await action({
+        args: this.bindContextArgs(block.args),
+        context,
+      })
 
       this.context = {
         ...this.context,

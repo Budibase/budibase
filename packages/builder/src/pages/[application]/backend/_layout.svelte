@@ -14,16 +14,13 @@
   <div class="content">
     <slot />
   </div>
-  <div class="nav">
-    <ModelSetupNav />
-  </div>
 </div>
 
 <style>
   .root {
     height: 100%;
     display: grid;
-    grid-template-columns: 300px minmax(0, 1fr) 300px;
+    grid-template-columns: 300px minmax(0, 1fr);
     background: var(--grey-1);
     line-height: 1;
   }

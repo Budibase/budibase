@@ -306,7 +306,7 @@ export default {
                 label: "destinationUrl",
                 key: "destinationUrl",
                 control: Input,
-                placeholder: "/table/_id",
+                placeholder: "/table/{{context._id}}",
               },
             ],
           },
@@ -430,38 +430,6 @@ export default {
           ],
         },
         {
-          name: "Data Chart",
-          _component: "@budibase/standard-components/datachart",
-          description: "Shiny chart",
-          icon: "ri-bar-chart-line",
-          properties: {
-            design: { ...all },
-            settings: [
-              { label: "Table", key: "model", control: ModelSelect },
-              {
-                label: "Chart Type",
-                key: "type",
-                control: OptionSelect,
-                options: [
-                  "column2d",
-                  "column3d",
-                  "line",
-                  "area2d",
-                  "bar2d",
-                  "bar3d",
-                  "pie2d",
-                  "pie3d",
-                  "doughnut2d",
-                  "doughnut3d",
-                  "pareto2d",
-                  "pareto3d",
-                ],
-              },
-            ],
-          },
-          children: [],
-        },
-        {
           name: "Chart",
           description: "Shiny chart",
           icon: "ri-bar-chart-fill",
@@ -471,26 +439,7 @@ export default {
               _component: "@budibase/standard-components/donut",
               description: "Donut chart",
               icon: "ri-donut-chart-line",
-              presetProps: {
-                data: [
-                  {
-                    quantity: 1,
-                    percentage: 50,
-                    name: "glittering",
-                    id: 1,
-                  },
-                  {
-                    quantity: 1,
-                    percentage: 50,
-                    name: "luminous",
-                    id: 2,
-                  },
-                ],
-              },
               properties: {
-                design: {
-                  ...all,
-                },
                 settings: [
                   {
                     label: "Table",
@@ -504,14 +453,14 @@ export default {
                     control: Checkbox,
                   },
                   {
-                    label: "Keep Last Hover",
-                    key: "hasLastHoverSliceHighlighted",
+                    label: "Hover Highlight",
+                    key: "hasHoverAnimation",
                     valueKey: "checked",
                     control: Checkbox,
                   },
                   {
-                    label: "Hover Highlight",
-                    key: "hasHoverAnimation",
+                    label: "Keep Last Hover",
+                    key: "hasLastHoverSliceHighlighted",
                     valueKey: "checked",
                     control: Checkbox,
                   },
@@ -531,6 +480,16 @@ export default {
                       "teal",
                       "yellow",
                     ],
+                  },
+                  {
+                    label: "Name Field",
+                    key: "nameKey",
+                    control: Input,
+                  },
+                  {
+                    label: "Value Field",
+                    key: "valueKey",
+                    control: Input,
                   },
                   {
                     label: "External Radius",
@@ -564,12 +523,8 @@ export default {
                     key: "legendWidth",
                     control: Input,
                   },
-                  {
-                    label: "Legend Height",
-                    key: "legendHeight",
-                    control: Input,
-                  },
-                ],
+                  ],
+                }
               },
             },
             {
@@ -1290,6 +1245,15 @@ export default {
               _component: "@budibase/standard-components/groupedbar",
               description: "Groupedbar chart",
               icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: [
+                  {
+                    name: "2011-01",
+                    group: "Direct",
+                    value: 0,
+                  },
+                ],
+              },
               properties: {
                 settings: [
                   {
@@ -1330,6 +1294,11 @@ export default {
                     control: Input,
                   },
                   {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
                     label: "Grid",
                     key: "grid",
                     control: OptionSelect,
@@ -1343,11 +1312,6 @@ export default {
                   {
                     label: "Name Label",
                     key: "nameLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Value Label",
-                    key: "valueLabel",
                     control: Input,
                   },
                   {
@@ -1580,12 +1544,74 @@ export default {
               _component: "@budibase/standard-components/line",
               description: "Line chart",
               icon: "ri-bar-chart-fill",
+              presetProps: {
+                data: {
+                  data: [
+                    {
+                      topicName: "San Francisco",
+                      name: 1,
+                      date: "2020-01-16",
+                      value: 1,
+                    },
+                    {
+                      topicName: "San Fran",
+                      name: 2,
+                      date: "2020-01-17",
+                      value: 2,
+                    },
+                    {
+                      topicName: "LA",
+                      name: 3,
+                      date: "2020-01-18",
+                      value: 3,
+                    },
+                    {
+                      topicName: "Toronto",
+                      name: 4,
+                      date: "2020-01-19",
+                      value: 7,
+                    },
+                    {
+                      topicName: "Van",
+                      name: 4,
+                      date: "2020-01-20",
+                      value: 12,
+                    },
+                    {
+                      topicName: "Dundee",
+                      name: 4,
+                      date: "2020-01-21",
+                      value: 16,
+                    },
+                    {
+                      topicName: "Dublin",
+                      name: 4,
+                      date: "2020-01-22",
+                      value: 31,
+                    },
+                  ],
+                },
+                aspectRatio: 0.5,
+                grid: "horizontal",
+                dateLabel: "fullDate",
+                shouldShowAllDataPoints: true,
+              },
               properties: {
                 settings: [
                   {
                     label: "Table",
                     key: "model",
                     control: ModelSelect,
+                  },
+                  {
+                    label: "X Axis Combo",
+                    key: "axisTimeCombinations",
+                    control: Input,
+                  },
+                  {
+                    label: "X Axis Combo",
+                    key: "axisTimeCombinations",
+                    control: Input,
                   },
                   {
                     label: "Colors",
@@ -1627,16 +1653,6 @@ export default {
                     control: Input,
                   },
                   {
-                    label: "Topic Label",
-                    key: "topicLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Value Label",
-                    key: "valueLabel",
-                    control: Input,
-                  },
-                  {
                     label: "Width",
                     key: "width",
                     control: Input,
@@ -1668,6 +1684,21 @@ export default {
                       "cardinal",
                       "catmullRom",
                     ],
+                  },
+                  {
+                    label: "Locale",
+                    key: "locale",
+                    control: Input,
+                  },
+                  {
+                    label: "Topic Label",
+                    key: "topicLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Value Label",
+                    key: "valueLabel",
+                    control: Input,
                   },
                   {
                     label: "X Axis Label",

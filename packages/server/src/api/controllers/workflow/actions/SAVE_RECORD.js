@@ -1,17 +1,17 @@
 const recordController = require("../../record")
 
-module.exports = async function saveRecord({ args, instanceId }) {
+module.exports = async function saveRecord({ args, context }) {
   const { model, ...record } = args.record
 
   const ctx = {
     params: {
-      instanceId,
+      instanceId: context.instanceId,
       modelId: model._id,
     },
     request: {
       body: record,
     },
-    user: { instanceId },
+    user: { instanceId: context.instanceId },
   }
 
   await recordController.save(ctx)
