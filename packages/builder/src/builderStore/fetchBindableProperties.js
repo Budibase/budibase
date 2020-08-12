@@ -1,4 +1,4 @@
-import { cloneDeep, difference } from "lodash"
+import { cloneDeep, difference } from "lodash/fp"
 
 /**
  * parameter for fetchBindableProperties function
@@ -23,7 +23,7 @@ import { cloneDeep, difference } from "lodash"
  * @param {fetchBindablePropertiesParameter} param
  * @returns {Array.<BindableProperty>}
  */
-export default function({ componentInstanceId, screen, components, models }) {
+export default function ({ componentInstanceId, screen, components, models }) {
   const walkResult = walk({
     // cloning so we are free to mutate props (e.g. by adding _contexts)
     instance: cloneDeep(screen.props),
