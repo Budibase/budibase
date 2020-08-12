@@ -19,14 +19,15 @@
     "build": "lerna run build",
     "initialise": "lerna run initialise",
     "publishdev": "lerna run publishdev",
-    "publishnpm": "yarn build && lerna publish",
+    "publishnpm": "yarn build && lerna publish --force-publish",
     "clean": "lerna clean",
     "dev": "node ./scripts/symlinkDev.js && lerna run --parallel --stream dev:builder",
     "test": "lerna run test",
     "lint": "eslint packages",
     "lint:fix": "eslint --fix packages",
     "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\"",
-    "test:e2e": "lerna run cy:test"
+    "test:e2e": "lerna run cy:test",
+    "test:e2e:ci": "lerna run cy:ci"
   },
   "dependencies": {
     "@material/icon-button": "4.0.0",

@@ -18,7 +18,6 @@ exports.downloadExtractComponentLibraries = async appFolder => {
   // Need to download tarballs directly from NPM as our users may not have node on their machine
   for (let lib of LIBRARIES) {
     // download tarball
-    // TODO: make sure the latest version is always downloaded
     const registryUrl = `https://registry.npmjs.org/@budibase/${lib}/-/${lib}-${packageJson.version}.tgz`
     const response = await fetch(registryUrl)
     if (!response.ok)
