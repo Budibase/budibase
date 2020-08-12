@@ -1,4 +1,6 @@
 <script>
+  import { DropdownMenu } from "@budibase/bbui"
+  import BindingDropdown from "components/userInterface/BindingDropdown.svelte"
   import { onMount, getContext } from "svelte"
 
   export let label = ""
@@ -7,6 +9,8 @@
   export let value
   export let props = {}
   export let onChange = () => {}
+  let anchor
+  let dropdown
 
   function handleChange(key, v) {
     let innerVal = v
@@ -42,7 +46,13 @@
       {...props}
       name={key} />
   </div>
+  <div bind:this={anchor}>
+    <button on:click={dropdown.show}>Dropdown</button>
+  </div>
 </div>
+<DropdownMenu bind:this={dropdown} {anchor} align="right">
+  <BindingDropdown />
+</DropdownMenu>
 
 <style>
   .property-control {
