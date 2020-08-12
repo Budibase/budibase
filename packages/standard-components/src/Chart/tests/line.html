@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Line</title>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-selection/1.2.0/d3-selection.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/britecharts@2.10.0/dist/umd/line.min.js"
+        type="text/javascript"></script> -->
+
+            <script src="../../../node_modules/britecharts/dist/umd/line.min.js" type="text/javascript"></script>
+
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/britecharts/dist/css/britecharts.min.css" type="text/css" />
+</head>
+<body>
+
+    <article>
+        <div class="js-line-chart-container line-chart-container card--chart"></div>
+    </article>
+    
+    <script>
+
+const data = {
+    data: [
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-16T16:00:00-08:00",
+        value: 3,
+      },
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-17T16:00:00-08:00",
+        value: 7,
+      },
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-18T16:00:00-08:00",
+        value: 5,
+      },
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-19T16:00:00-08:00",
+        value: 6,
+      },
+      {
+        topicName: "Oakland",
+        name: 2,
+        date: "2017-01-20T16:00:00-08:00",
+        value: 1,
+      },
+    ],
+  }
+
+    const lineContainer = d3.select('.js-line-chart-container');
+
+    const lineChart = britecharts.line()
+
+    lineChart.grid("horizontal").dateLabel("date").aspectRatio(0.5).isAnimated(true)
+
+    lineContainer.datum(data).call(lineChart);
+    
+    </script>
+    
+</body>
+</html>

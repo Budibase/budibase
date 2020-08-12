@@ -8,7 +8,6 @@
   /*
     ISSUES:
     - x and y axis label set and appear in the dom but do not display next to the axis
-    - x and y axis label offset - does effect position of labels but does not render text (see above)
     - x tick label overlaps bar, seems to be no apu method to change this? Could do it by querying for it in the dom
       for this element: <tspan x="-10" dy="0.32em">4.0</tspan>
   */
