@@ -306,7 +306,7 @@ export default {
                 label: "destinationUrl",
                 key: "destinationUrl",
                 control: Input,
-                placeholder: "/table/{{context._id}}",
+                placeholder: "/table/_id",
               },
             ],
           },
@@ -430,6 +430,38 @@ export default {
           ],
         },
         {
+          name: "Data Chart",
+          _component: "@budibase/standard-components/datachart",
+          description: "Shiny chart",
+          icon: "ri-bar-chart-line",
+          properties: {
+            design: { ...all },
+            settings: [
+              { label: "Table", key: "model", control: ModelSelect },
+              {
+                label: "Chart Type",
+                key: "type",
+                control: OptionSelect,
+                options: [
+                  "column2d",
+                  "column3d",
+                  "line",
+                  "area2d",
+                  "bar2d",
+                  "bar3d",
+                  "pie2d",
+                  "pie3d",
+                  "doughnut2d",
+                  "doughnut3d",
+                  "pareto2d",
+                  "pareto3d",
+                ],
+              },
+            ],
+          },
+          children: [],
+        },
+        {
           name: "Chart",
           description: "Shiny chart",
           icon: "ri-bar-chart-fill",
@@ -440,6 +472,9 @@ export default {
               description: "Donut chart",
               icon: "ri-donut-chart-line",
               properties: {
+                design: {
+                  ...all,
+                },
                 settings: [
                   {
                     label: "Table",
@@ -523,8 +558,7 @@ export default {
                     key: "legendWidth",
                     control: Input,
                   },
-                  ],
-                }
+                ],
               },
             },
             {
@@ -1245,15 +1279,6 @@ export default {
               _component: "@budibase/standard-components/groupedbar",
               description: "Groupedbar chart",
               icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: [
-                  {
-                    name: "2011-01",
-                    group: "Direct",
-                    value: 0,
-                  },
-                ],
-              },
               properties: {
                 settings: [
                   {
@@ -1294,11 +1319,6 @@ export default {
                     control: Input,
                   },
                   {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
                     label: "Grid",
                     key: "grid",
                     control: OptionSelect,
@@ -1312,6 +1332,11 @@ export default {
                   {
                     label: "Name Label",
                     key: "nameLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Value Label",
+                    key: "valueLabel",
                     control: Input,
                   },
                   {
