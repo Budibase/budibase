@@ -194,4 +194,47 @@ const maketestlib = window => ({
     set(opts.props)
     opts.target.appendChild(node)
   },
+
+  list: function(opts) {
+    const node = window.document.createElement("DIV")
+
+    let currentProps = { ...opts.props }
+
+    const set = props => {
+      currentProps = Object.assign(currentProps, props)
+      if (currentProps._children && currentProps._children.length > 0) {
+        currentProps._bb.attachChildren(node, {
+          context: currentProps.data || {},
+        })
+      }
+    }
+
+    this.$destroy = () => opts.target.removeChild(node)
+
+    this.$set = set
+    this._element = node
+    set(opts.props)
+    opts.target.appendChild(node)
+  },
+
+  input: function(opts) {
+    const node = window.document.createElement("INPUT")
+    let currentProps = { ...opts.props }
+
+    const set = props => {
+      currentProps = Object.assign(currentProps, props)
+      opts.props._bb.setBinding("value", props.value)
+    }
+
+    node.addEventListener("change", e => {
+      opts.props._bb.setBinding("value", e.target.value)
+    })
+
+    this.$destroy = () => opts.target.removeChild(node)
+
+    this.$set = set
+    this._element = node
+    set(opts.props)
+    opts.target.appendChild(node)
+  },
 })
