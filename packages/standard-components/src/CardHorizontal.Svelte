@@ -1,7 +1,7 @@
 <script>
   import { cssVars, createClasses } from "./cssVars"
 
-  export let className = ""
+  export const className = ""
   export let imageUrl = ""
   export let heading = ""
   export let description = ""
