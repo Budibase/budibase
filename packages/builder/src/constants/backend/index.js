@@ -1,5 +1,5 @@
 export const FIELDS = {
-  PLAIN_TEXT: {
+  STRING: {
     name: "Plain Text",
     icon: "ri-text",
     type: "string",
@@ -65,15 +65,15 @@ export const FIELDS = {
   //     presence: { allowEmpty: true },
   //   },
   // },
-  LINKED_FIELDS: {
-    name: "Linked Fields",
-    icon: "ri-link",
-    type: "link",
-    modelId: null,
-    constraints: {
-      type: "array",
-    },
-  },
+  // LINKED_FIELDS: {
+  //   name: "Linked Fields",
+  //   icon: "ri-link",
+  //   type: "link",
+  //   modelId: null,
+  //   constraints: {
+  //     type: "array",
+  //   },
+  // },
 }
 
 export const BLOCKS = {
@@ -194,37 +194,4 @@ export const BLOCKS = {
   //     presence: { allowEmpty: true },
   //   },
   // },
-}
-
-export const MODELS = {
-  CONTACTS: {
-    icon: "ri-contacts-book-line",
-    name: "Contacts",
-    schema: {
-      Name: BLOCKS.NAME,
-      "Phone Number": BLOCKS.PHONE_NUMBER,
-    },
-  },
-  RECIPES: {
-    icon: "ri-link",
-    name: "Recipes",
-    schema: {
-      Name: BLOCKS.NAME,
-      Cuisine: {
-        ...FIELDS.PLAIN_TEXT,
-        name: "Cuisine",
-      },
-    },
-  },
-  SPORTS_TEAM: {
-    icon: "ri-basketball-line",
-    name: "Sports Team",
-    schema: {
-      Name: BLOCKS.NAME,
-      Championships: {
-        ...FIELDS.NUMBER,
-        name: "Championships",
-      },
-    },
-  },
 }
