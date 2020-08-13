@@ -16,15 +16,12 @@
   const joinPath = join("/")
 
   const normalizedName = name =>
-    pipe(
-      name,
-      [
-        trimCharsStart("./"),
-        trimCharsStart("~/"),
-        trimCharsStart("../"),
-        trimChars(" "),
-      ]
-    )
+    pipe(name, [
+      trimCharsStart("./"),
+      trimCharsStart("~/"),
+      trimCharsStart("../"),
+      trimChars(" "),
+    ])
 
   const changeScreen = screen => {
     store.setCurrentScreen(screen.props._instanceName)
