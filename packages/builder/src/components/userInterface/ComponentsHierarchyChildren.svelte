@@ -10,6 +10,7 @@
     ChevronDownIcon,
     CopyIcon,
   } from "../common/Icons"
+  import { getComponentDefinition } from "builderStore/storeUtils"
 
   export let components = []
   export let currentComponent
@@ -51,7 +52,7 @@
 
   const dragover = (component, index) => e => {
     const canHaveChildrenButIsEmpty =
-      $store.components[component._component].children &&
+      getComponentDefinition($store, component._component).children &&
       component._children.length === 0
 
     e.dataTransfer.dropEffect = "copy"
