@@ -18,7 +18,7 @@ describe("createDefaultProps", () => {
     expect(props.fieldName).toBeDefined()
     expect(props.fieldName).toBe("something")
     stripStandardProps(props)
-    expect(keys(props).length).toBe(2)
+    expect(keys(props).length).toBe(3)
   })
 
   it("should set component _component", () => {
@@ -72,16 +72,6 @@ describe("createDefaultProps", () => {
     expect(props._children).toEqual([])
   })
 
-  it("should create a object without _children array, when children===false ", () => {
-    const comp = getcomponent()
-    comp.children = false
-
-    const { props, errors } = createProps(comp)
-
-    expect(errors).toEqual([])
-    expect(props._children).not.toBeDefined()
-  })
-
   it("should create a object with single empty array, when prop definition is 'event' ", () => {
     const comp = getcomponent()
     comp.props.onClick = "event"
@@ -104,23 +94,22 @@ describe("createDefaultProps", () => {
     expect(props._children).toEqual([])
   })
 
-  it("should not create a _children array when children not defined ", () => {
-    const comp = getcomponent()
-
-    const { props, errors } = createProps(comp)
-
-    expect(errors).toEqual([])
-    expect(props._children).not.toBeDefined()
-  })
-
-  it("should not create _children array when children=false ", () => {
+  it("should always create _children ", () => {
     const comp = getcomponent()
     comp.children = false
 
-    const { props, errors } = createProps(comp)
+    const createRes1 = createProps(comp)
 
-    expect(errors).toEqual([])
-    expect(props._children).not.toBeDefined()
+    expect(createRes1.errors).toEqual([])
+    expect(createRes1.props._children).toBeDefined()
+
+    const comp2 = getcomponent()
+    comp2.children = true
+
+    const createRes2 = createProps(comp)
+
+    expect(createRes2.errors).toEqual([])
+    expect(createRes2.props._children).toBeDefined()
   })
 
   it("should create an object with multiple prop names", () => {
