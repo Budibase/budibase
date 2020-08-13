@@ -16,12 +16,15 @@
   const joinPath = join("/")
 
   const normalizedName = name =>
-    pipe(name, [
-      trimCharsStart("./"),
-      trimCharsStart("~/"),
-      trimCharsStart("../"),
-      trimChars(" "),
-    ])
+    pipe(
+      name,
+      [
+        trimCharsStart("./"),
+        trimCharsStart("~/"),
+        trimCharsStart("../"),
+        trimChars(" "),
+      ]
+    )
 
   const changeScreen = screen => {
     store.setCurrentScreen(screen.props._instanceName)
@@ -92,10 +95,6 @@
   .icon:nth-of-type(2) {
     width: 14px;
     margin: 0 0 0 5px;
-  }
-
-  :global(svg) {
-    transition: 0.2s;
   }
 
   .rotate :global(svg) {
