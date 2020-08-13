@@ -102,6 +102,15 @@
       return s
     })
   }
+
+  const dragend = () => {
+    dragDropStore.update(s => {
+      s.dropPosition = ""
+      s.targetComponent = null
+      s.componentToDrop = null
+      return s
+    })
+  }
 </script>
 
 <ul>
@@ -122,6 +131,7 @@
         class:selected={currentComponent === component}
         style="padding-left: {level * 20 + 40}px"
         draggable={true}
+        on:dragend={dragend}
         on:dragstart={dragstart(component)}
         on:dragover={dragover(component, index)}
         on:drop={drop}
