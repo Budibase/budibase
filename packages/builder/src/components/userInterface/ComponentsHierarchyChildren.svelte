@@ -107,7 +107,7 @@
   {#each components as component, index (component._id)}
     <li on:click|stopPropagation={() => selectComponent(component)}>
 
-      {#if $dragDropStore && $dragDropStore.targetComponent === component && $dragDropStore.dropPosition == 'above'}
+      {#if $dragDropStore && $dragDropStore.targetComponent === component && $dragDropStore.dropPosition === 'above'}
         <div
           on:drop={drop}
           ondragover="return false"
@@ -144,22 +144,13 @@
           level={level + 1} />
       {/if}
 
-      {#if $dragDropStore && $dragDropStore.targetComponent === component && $dragDropStore.dropPosition == 'inside'}
+      {#if $dragDropStore && $dragDropStore.targetComponent === component && ($dragDropStore.dropPosition === 'inside' || $dragDropStore.dropPosition === 'below')}
         <div
           on:drop={drop}
           ondragover="return false"
           ondragenter="return false"
           class="budibase__nav-item item drop-item"
-          style="margin-left: {(level + 2) * 20 + 40}px" />
-      {/if}
-
-      {#if $dragDropStore && $dragDropStore.targetComponent === component && $dragDropStore.dropPosition == 'below'}
-        <div
-          on:drop={drop}
-          ondragover="return false"
-          ondragenter="return false"
-          class="budibase__nav-item item drop-item"
-          style="margin-left: {level * 20 + 40}px" />
+          style="margin-left: {(level + ($dragDropStore.dropPosition === 'inside' ? 2 : 0)) * 20 + 40}px" />
       {/if}
     </li>
   {/each}
