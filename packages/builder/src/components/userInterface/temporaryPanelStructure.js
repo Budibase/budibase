@@ -322,7 +322,7 @@ export default {
               name: "Vertical",
               description:
                 "A basic card component that can contain content and actions.",
-              icon: "ri-layout-bottom-line",
+              icon: "ri-layout-column-line",
               children: [],
               properties: {
                 design: { ...all },
@@ -391,7 +391,7 @@ export default {
               name: "Horizontal",
               description:
                 "A basic card component that can contain content and actions.",
-              icon: "ri-layout-bottom-line",
+              icon: "ri-layout-row-line",
               children: [],
               properties: {
                 design: { ...all },
