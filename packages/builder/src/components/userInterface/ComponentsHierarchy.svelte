@@ -11,6 +11,8 @@
 
   export let screens = []
 
+  const dragDropStore = writable({})
+
   let confirmDeleteDialog
   let componentToDelete = ""
 
@@ -62,7 +64,7 @@
       <ComponentsHierarchyChildren
         components={screen.props._children}
         currentComponent={$store.currentComponentInfo}
-        dragDropStore={writable({})} />
+        {dragDropStore} />
     {/if}
   {/each}
 
