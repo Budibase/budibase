@@ -17,6 +17,12 @@
     })
     notifier.success(`Table ${name} created successfully.`)
     $goto(`./model/${model._id}`)
+    name = ""
+    dropdown.hide()
+  }
+
+  const onClosed = () => {
+    name = ""
     dropdown.hide()
   }
 </script>
@@ -35,7 +41,7 @@
   </div>
   <footer>
     <div class="button-margin-3">
-      <Button secondary on:click={dropdown.hide}>Cancel</Button>
+      <Button secondary on:click={onClosed}>Cancel</Button>
     </div>
     <div class="button-margin-4">
       <Button primary on:click={saveTable}>Save</Button>
