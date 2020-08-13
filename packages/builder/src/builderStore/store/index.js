@@ -25,6 +25,7 @@ import {
   saveScreenApi as _saveScreenApi,
   regenerateCssForCurrentScreen,
   generateNewIdsForComponent,
+  getComponentDefinition,
 } from "../storeUtils"
 export const getStore = () => {
   const initial = {
@@ -76,9 +77,6 @@ export const getStore = () => {
 }
 
 export default getStore
-
-export const getComponentDefinition = (state, name) =>
-  name.startsWith("##") ? getBuiltin(name) : state.components[name]
 
 const setPackage = (store, initial) => async pkg => {
   const [main_screens, unauth_screens] = await Promise.all([
