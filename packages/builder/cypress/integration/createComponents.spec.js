@@ -5,7 +5,7 @@ xcontext('Create Components', () => {
         cy.visit('localhost:4001/_builder')
         // https://on.cypress.io/type
         cy.createApp('Model App', 'Model App Description')
-        cy.createModel('dog', 'name', 'age')
+        cy.createTable('dog', 'name', 'age')
         cy.addRecord('bob', '15')
     })
 

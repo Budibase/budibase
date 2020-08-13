@@ -94,10 +94,6 @@
     margin: 0 0 0 5px;
   }
 
-  :global(svg) {
-    transition: 0.2s;
-  }
-
   .rotate :global(svg) {
     transform: rotate(-90deg);
   }

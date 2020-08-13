@@ -1,7 +1,6 @@
 <script>
   import { getContext } from "svelte"
   import { Button } from "@budibase/bbui"
-  import EmptyModel from "components/nav/ModelNavigator/EmptyModel.svelte"
   import ModelDataTable from "components/database/ModelDataTable"
   import { backendUiStore } from "builderStore"
   import ActionButton from "components/common/ActionButton.svelte"
@@ -11,16 +10,6 @@
   const { open, close } = getContext("simple-modal")
 
   $: selectedModel = $backendUiStore.selectedModel
-
-  const createNewRecord = () => {
-    open(
-      CreateEditRecordModal,
-      {
-        onClosed: close,
-      },
-      { styleContent: { padding: "0" } }
-    )
-  }
 </script>
 
 {#if $backendUiStore.selectedDatabase._id && selectedModel.name}
