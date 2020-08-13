@@ -86,7 +86,7 @@
     font-size: 0.85rem;
     margin: 0;
     font-weight: 400;
-    color: #757575;
+    color: #707070;
   }
 
   a {
