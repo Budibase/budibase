@@ -16,6 +16,7 @@
 	"Navigation": {
 		"name": "Navigation",
 		"description": "A basic header navigation component",
+		"children": true,
 		"props": {
 			"logoUrl": "string",
 			"title": "string",
