@@ -2,7 +2,6 @@
   import { store } from "builderStore"
   import Checkbox from "../common/Checkbox.svelte"
   import Textbox from "../common/Textbox.svelte"
-  import Dropdown from "../common/Dropdown.svelte"
   import StateBindingControl from "./StateBindingControl.svelte"
 
   export let index
