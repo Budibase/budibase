@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { Input, TextArea, Button, Select } from "@budibase/bbui"
+  import { cloneDeep, merge } from "lodash/fp"
   import { store, backendUiStore } from "builderStore"
   import { FIELDS } from "constants/backend"
   import { notifier } from "builderStore/store/notifications"
@@ -19,6 +20,7 @@
   export let onClosed
   export let field = {}
 
+  let fieldDefinitions = cloneDeep(FIELDS)
   let originalName = field.name
 
   $: required =
@@ -26,7 +28,10 @@
     field.constraints.presence &&
     !field.constraints.presence.allowEmpty
   $: if (field.type) {
-    field.constraints = FIELDS[field.type.toUpperCase()].constraints
+    field.constraints = merge(
+      fieldDefinitions[field.type.toUpperCase()].constraints,
+      field.constraints
+    )
   }
 
   async function saveColumn() {
@@ -46,7 +51,7 @@
   <Input placeholder="Name" thin bind:value={field.name} />
 
   <Select secondary thin bind:value={field.type}>
-    {#each Object.values(FIELDS) as field}
+    {#each Object.values(fieldDefinitions) as field}
       <option value={field.type}>{field.name}</option>
     {/each}
   </Select>
