@@ -2,7 +2,6 @@
   import Textbox from "components/common/Textbox.svelte"
   import CodeArea from "components/common/CodeArea.svelte"
   import Button from "components/common/Button.svelte"
-  import Dropdown from "components/common/Dropdown.svelte"
   import { store, backendUiStore } from "builderStore"
   import { filter, some, map, compose } from "lodash/fp"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
