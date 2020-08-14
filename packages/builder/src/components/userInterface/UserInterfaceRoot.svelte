@@ -8,7 +8,6 @@
   import NewScreen from "./NewScreen.svelte"
   import CurrentItemPreview from "./CurrentItemPreview.svelte"
   import SettingsView from "./SettingsView.svelte"
-  import PageView from "./PageView.svelte"
   import ComponentsPaneSwitcher from "./ComponentsPaneSwitcher.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { last } from "lodash/fp"
