@@ -1,27 +1,9 @@
 <script>
-  import api from "builderStore/api"
-
-  import { store } from "builderStore"
-  import fetchBindableProperties from "builderStore/fetchBindableProperties"
   export let value = "Something is wrong"
-
-  async function getBindableProperties() {
-    const modelResponse = await api.get(`/api/models/`)
-    const models = await modelResponse.json()
-
-    const result = fetchBindableProperties({
-      componentInstanceId: $store.currentComponentInfo._id,
-      components: $store.components,
-      screen: $store.currentPreviewItem,
-      models: [],
-    })
-
-    console.log("Result: ", result)
-  }
 </script>
 
 <div class="container">{value}</div>
-<button on:click={getBindableProperties}>Get stuff!</button>
+<button on:click>Get stuff!</button>
 <ul>
   <li>1</li>
   <li>2</li>
