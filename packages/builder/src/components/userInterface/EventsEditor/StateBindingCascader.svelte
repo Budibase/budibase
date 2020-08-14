@@ -1,7 +1,6 @@
 <script>
   import { Input } from "@budibase/bbui"
   import IconButton from "components/common/IconButton.svelte"
-  import PlusButton from "components/common/PlusButton.svelte"
   import Select from "components/common/Select.svelte"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
