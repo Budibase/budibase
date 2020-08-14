@@ -1,8 +1,5 @@
 {
-  "componentLibraries": [
-    "@budibase/standard-components",
-    "@budibase/materialdesign-components"
-  ],
+  "componentLibraries": ["@budibase/standard-components"],
   "title": "{{ name }}",
   "favicon": "./_shared/favicon.png",
   "stylesheets": [],
