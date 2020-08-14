@@ -13,12 +13,8 @@
   },
   "devDependencies": {
     "@budibase/client": "^0.1.17",
-    "@nx-js/compiler-util": "^2.0.0",
     "@rollup/plugin-commonjs": "^11.1.0",
-    "bcryptjs": "2.4.3",
-    "fs-extra": "^8.1.0",
     "lodash": "^4.17.15",
-    "npm-run-all": "^4.1.5",
     "rollup": "^1.11.0",
     "rollup-plugin-commonjs": "^10.0.2",
     "rollup-plugin-json": "^4.0.0",
