@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import fsort from "fast-sort"
+  import getOr from "lodash/fp/getOr"
   import { store, backendUiStore } from "builderStore"
   import { Button, Icon } from "@budibase/bbui"
   import Select from "components/common/Select.svelte"
@@ -10,6 +11,7 @@
   import { DeleteRecordModal, CreateEditRecordModal } from "./modals"
   import RowPopover from "./popovers/Row.svelte"
   import ColumnPopover from "./popovers/Column.svelte"
+  import ViewPopover from "./popovers/View.svelte"
   import ColumnHeaderPopover from "./popovers/ColumnHeader.svelte"
   import EditRowPopover from "./popovers/EditRow.svelte"
   import * as api from "./api"
@@ -72,6 +74,7 @@
       <ColumnPopover />
       {#if Object.keys($backendUiStore.selectedModel.schema).length > 0}
         <RowPopover />
+        <ViewPopover />
       {/if}
     </div>
   </div>
@@ -102,7 +105,7 @@
             <td>
               {#if schema[header].type === 'link'}
                 <LinkedRecord field={schema[header]} ids={row[header]} />
-              {:else}{row[header] || ''}{/if}
+              {:else}{getOr("", header, row)}{/if}
             </td>
           {/each}
         </tr>

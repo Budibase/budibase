@@ -59,7 +59,6 @@ export const getBackendUiStore = () => {
         store.update(state => {
           state.selectedModel = model
           state.draftModel = cloneDeep(model)
-          state.selectedField = ""
           state.selectedView = `all_${model._id}`
           return state
         }),
@@ -87,10 +86,8 @@ export const getBackendUiStore = () => {
       delete: async model => {
         await api.delete(`/api/models/${model._id}/${model._rev}`)
         store.update(state => {
-          state.models = state.models.filter(
-            existing => existing._id !== model._id
-          )
-          state.selectedModel = state.models[0] || {}
+          state.models = state.models.filter(existing => existing._id !== model._id)
+          state.selectedModel = state.models[0] || {} 
           return state
         })
       },
@@ -113,14 +110,24 @@ export const getBackendUiStore = () => {
           store.actions.models.save(state.draftModel)
           return state
         })
-      },
+      } 
     },
     views: {
       select: view =>
         store.update(state => {
           state.selectedView = view
+          state.selectedModel = {}
           return state
         }),
+      save: async view => {
+        const response = await api.post(`/api/views`, view)
+        const savedView = await response.json()
+        await store.actions.models.fetch()
+        store.update(state => {
+          state.selectedView = view.name
+          return state
+        })
+      }
     },
     users: {
       create: user =>

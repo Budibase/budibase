@@ -8,20 +8,20 @@
   import { Button } from "@budibase/bbui"
   import CreateTablePopover from "./CreateTable.svelte"
   import EditTablePopover from "./EditTable.svelte"
+  import EditViewPopover from "./EditView.svelte"
 
   const { open, close } = getContext("simple-modal")
 
   $: selectedTab = $backendUiStore.tabs.NAVIGATION_PANEL
 
-  function selectModel(model, fieldId) {
+  function selectModel(model) {
     backendUiStore.actions.models.select(model)
     $goto(`./model/${model._id}`)
-    if (fieldId) {
-      backendUiStore.update(state => {
-        state.selectedField = fieldId
-        return state
-      })
-    }
+  }
+
+  function selectView(view) {
+    backendUiStore.actions.views.select(view)
+    $goto(`./view/${view}`)
   }
 </script>
 
@@ -34,12 +34,22 @@
         <div class="hierarchy-items-container">
           {#each $backendUiStore.models as model}
             <ListItem
-              selected={!$backendUiStore.selectedField && model._id === $backendUiStore.selectedModel._id}
+              selected={$backendUiStore.selectedView === `all_${model._id}`}
               title={model.name}
               icon="ri-table-fill"
               on:click={() => selectModel(model)}>
               <EditTablePopover table={model} />
             </ListItem>
+            {#each Object.keys(model.views || {}) as view}
+              <ListItem
+                indented
+                selected={$backendUiStore.selectedView === view}
+                title={view}
+                icon="ri-eye-line"
+                on:click={() => selectView(view)}>
+                <EditViewPopover {view} />
+              </ListItem>
+            {/each}
           {/each}
         </div>
       </div>
