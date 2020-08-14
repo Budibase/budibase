@@ -13,9 +13,7 @@ router
     recordController.fetchView
   )
   .get("/api/views", viewController.fetch)
-  .get("/api/views/query/:viewName", viewController.query)
-  // .patch("/api/:databaseId/views", controller.update);
-  // .delete("/api/:instanceId/views/:viewId/:revId", controller.destroy);
-  .post("/api/views", viewController.create)
+  .post("/api/views/query/:viewName", viewController.query)
+  .post("/api/views", viewController.save)
 
 module.exports = router
