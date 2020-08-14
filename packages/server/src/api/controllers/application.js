@@ -64,10 +64,7 @@ exports.create = async function(ctx) {
     type: "app",
     instances: [],
     userInstanceMap: {},
-    componentLibraries: [
-      "@budibase/standard-components",
-      "@budibase/materialdesign-components",
-    ],
+    componentLibraries: ["@budibase/standard-components"],
     name: ctx.request.body.name,
   }
 
