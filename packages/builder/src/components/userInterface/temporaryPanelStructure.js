@@ -478,44 +478,6 @@ export default {
             },
           ],
         },
-
-        {
-          _component: "@budibase/materialdesign-components/BasicCard",
-          name: "Card",
-          description:
-            "A basic card component that can contain content and actions.",
-          icon: "ri-layout-bottom-line",
-          children: [],
-          properties: {
-            design: { ...all },
-            settings: [
-              {
-                label: "Heading",
-                key: "heading",
-                control: Input,
-                placeholder: "text",
-              },
-              {
-                label: "Subheading",
-                key: "subheading",
-                control: Input,
-                placeholder: "text",
-              },
-              {
-                label: "Content",
-                key: "content",
-                control: Input,
-                placeholder: "text",
-              },
-              {
-                label: "Image",
-                key: "imageUrl",
-                control: Input,
-                placeholder: "src",
-              },
-            ],
-          },
-        },
         {
           name: "Table",
           _component: "@budibase/standard-components/datatable",
@@ -563,11 +525,6 @@ export default {
                     control: Input,
                   },
                 ],
-              },
-              template: {
-                component: "@budibase/materialdesign-components/Form",
-                description: "Form for saving a record",
-                name: "@budibase/materialdesign-components/recordForm",
               },
             },
             {
