@@ -16,6 +16,23 @@
   export let currentComponent
   export let onSelect = () => {}
   export let level = 0
+
+  /*
+  "dragDropStore" is a svelte store.
+  This component is recursive... a tree.
+  Using a single, shared store, all the nodes in the tree can subscribe to state that is changed by other nodes, in the same tree.
+
+  e.g. Say i have the structure
+  - Heading 1
+  - Container 
+    - Heading 2
+    - Heading 3
+  - Heading 4
+
+  1. When I dragover "Heading 1", a placeholder drop-slot appears below it
+  2. I drag down a bit so the cursor is INSIDE the container (i.e. now in a child <ComponentsHierarchyChildren />)
+  3. Using store subscribes... the original drop-slot now knows that it should disappear, and a new one is created inside the container.
+  */
   export let dragDropStore
 
   let dropUnderComponent
