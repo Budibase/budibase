@@ -13,9 +13,6 @@
   } from "lodash/fp"
   import { pipe } from "components/common/core"
   import Checkbox from "components/common/Checkbox.svelte"
-  import Textbox from "components/common/Textbox.svelte"
-  import Dropdown from "components/common/Dropdown.svelte"
-  import PlusButton from "components/common/PlusButton.svelte"
   import IconButton from "components/common/IconButton.svelte"
   import EventEditorModal from "./EventEditorModal.svelte"
 
