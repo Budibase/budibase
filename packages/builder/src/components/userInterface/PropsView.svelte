@@ -1,7 +1,5 @@
 <script>
   import { some, includes, filter } from "lodash/fp"
-  import Textbox from "../common/Textbox.svelte"
-  import Dropdown from "../common/Dropdown.svelte"
   import PropControl from "./PropControl.svelte"
   import IconButton from "../common/IconButton.svelte"
 
