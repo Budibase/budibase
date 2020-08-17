@@ -68,7 +68,22 @@ const controller = {
   },
   destroy: async ctx => {
     const db = new CouchDB(ctx.user.instanceId)
-    ctx.body = await db.destroy(ctx.params.userId)
+    const designDoc = await db.get("_design/database")
+
+    const viewName = decodeURI(ctx.params.viewName)
+
+    const view = designDoc.views[viewName]
+
+    delete designDoc.views[viewName]
+
+    await db.put(designDoc)
+
+    const model = await db.get(view.meta.modelId)
+    delete model.views[viewName]
+    await db.put(model)
+
+    ctx.body = view
+    ctx.message = `View ${ctx.params.viewName} saved successfully.`
   },
 }
 

@@ -12,7 +12,7 @@
 
   const { open, close } = getContext("simple-modal")
 
-  $: selectedTab = $backendUiStore.tabs.NAVIGATION_PANEL
+  $: selectedView = $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
   function selectModel(model) {
     backendUiStore.actions.models.select(model)
@@ -21,7 +21,7 @@
 
   function selectView(view) {
     backendUiStore.actions.views.select(view)
-    $goto(`./view/${view}`)
+    $goto(`./view/${view.name}`)
   }
 </script>
 
@@ -34,7 +34,7 @@
         <div class="hierarchy-items-container">
           {#each $backendUiStore.models as model}
             <ListItem
-              selected={$backendUiStore.selectedView === `all_${model._id}`}
+              selected={selectedView === `all_${model._id}`}
               title={model.name}
               icon="ri-table-fill"
               on:click={() => selectModel(model)}>
@@ -43,10 +43,13 @@
             {#each Object.keys(model.views || {}) as view}
               <ListItem
                 indented
-                selected={$backendUiStore.selectedView === view}
+                selected={selectedView === view}
                 title={view}
                 icon="ri-eye-line"
-                on:click={() => selectView(view)}>
+                on:click={() => selectView({
+                  name: view,
+                  ...model.views[view]
+                })}>
                 <EditViewPopover {view} />
               </ListItem>
             {/each}

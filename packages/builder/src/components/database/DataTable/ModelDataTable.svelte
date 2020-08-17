@@ -23,12 +23,11 @@
   let modalOpen = false
   let data = []
   let headers = []
-  let views = []
   let currentPage = 0
   let search
 
   $: {
-    if ($backendUiStore.selectedView) {
+    if ($backendUiStore.selectedView && $backendUiStore.selectedView.name.startsWith("all_")) {
       api.fetchDataForView($backendUiStore.selectedView).then(records => {
         data = records || []
       })
@@ -49,22 +48,6 @@
   )
 
   $: schema = $backendUiStore.selectedModel.schema
-
-  const createNewRecord = () => {
-    open(
-      CreateEditRecordModal,
-      {
-        onClosed: close,
-      },
-      { styleContent: { padding: "0" } }
-    )
-  }
-
-  onMount(() => {
-    if (views.length) {
-      backendUiStore.actions.views.select(views[0])
-    }
-  })
 </script>
 
 <section>
@@ -105,7 +88,7 @@
             <td>
               {#if schema[header].type === 'link'}
                 <LinkedRecord field={schema[header]} ids={row[header]} />
-              {:else}{getOr("", header, row)}{/if}
+              {:else}{getOr('', header, row)}{/if}
             </td>
           {/each}
         </tr>

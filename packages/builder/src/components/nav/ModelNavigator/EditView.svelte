@@ -3,11 +3,11 @@
   import { backendUiStore } from "builderStore"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import DeleteTableModal from "components/database/ModelDataTable/modals/DeleteTable.svelte"
+  import DeleteViewModal from "components/database/DataTable/modals/DeleteView.svelte"
 
   const { open, close } = getContext("simple-modal")
 
-  export let table
+  export let view
 
   let anchor
   let dropdown
@@ -24,19 +24,19 @@
     close()
   }
 
-  const deleteTable = () => {
+  const deleteView = () => {
     open(
-      DeleteTableModal,
+      DeleteViewModal,
       {
         onClosed: close,
-        table,
+        view,
       },
       { styleContent: { padding: "0" } }
     )
   }
 
   function save() {
-    backendUiStore.actions.models.save(table)
+    backendUiStore.actions.views.save(view)
     hideEditor()
   }
 </script>
@@ -48,7 +48,7 @@
   {#if editing}
     <h5>Edit View</h5>
     <div class="container">
-      <Input placeholder="Table Name" thin bind:value={table.name} />
+      <Input placeholder="Table Name" thin bind:value={view} />
     </div>
     <footer>
       <div class="button-margin-3">
@@ -64,7 +64,7 @@
         <Icon name="edit" />
         Edit
       </li>
-      <li data-cy="delete-table" on:click={deleteTable}>
+      <li data-cy="delete-view" on:click={deleteView}>
         <Icon name="delete" />
         Delete
       </li>

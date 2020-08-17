@@ -23,13 +23,10 @@ export const getBackendUiStore = () => {
     database: {
       select: async db => {
         const modelsResponse = await api.get(`/api/models`)
-        const viewsResponse = await api.get(`/api/views`)
         const models = await modelsResponse.json()
-        const views = await viewsResponse.json()
         store.update(state => {
           state.selectedDatabase = db
           state.models = models
-          state.views = views
           return state
         })
       },
@@ -59,7 +56,7 @@ export const getBackendUiStore = () => {
         store.update(state => {
           state.selectedModel = model
           state.draftModel = cloneDeep(model)
-          state.selectedView = `all_${model._id}`
+          state.selectedView = { name: `all_${model._id}` }
           return state
         }),
       save: async model => {
@@ -119,12 +116,19 @@ export const getBackendUiStore = () => {
           state.selectedModel = {}
           return state
         }),
-      save: async view => {
-        const response = await api.post(`/api/views`, view)
-        const savedView = await response.json()
-        await store.actions.models.fetch()
+      delete: async view => {
+        await api.delete(`/api/views/${view}`)
         store.update(state => {
-          state.selectedView = view.name
+          store.actions.models.select(state.models[0])
+          return state
+        })
+        await store.actions.models.fetch()
+      },
+      save: async view => {
+        await api.post(`/api/views`, view)
+        store.update(state => {
+          state.selectedModel.views[view.name] = view 
+          state.selectedView = view
           return state
         })
       }
