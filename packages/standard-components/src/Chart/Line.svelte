@@ -1,11 +1,13 @@
 <script>
   import { getColorSchema, getChartGradient, notNull } from "./utils"
+  import sort from "fast-sort"
   import Tooltip from "./Tooltip.svelte"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
 
   import { select } from "d3-selection"
   import shortid from "shortid"
+  import { log } from "console"
 
   const _id = shortid.generate()
 
@@ -18,52 +20,22 @@
   const chartClass = `line-container-${_id}`
   const legendClass = `legend-container-${_id}`
 
-  const testData = {
-    data: [
-      {
-        topicName: "Oakland",
-        name: 2,
-        date: "2017-01-16T16:00:00-08:00",
-        value: 3,
-      },
-      {
-        topicName: "Oakland",
-        name: 2,
-        date: "2017-01-17T16:00:00-08:00",
-        value: 7,
-      },
-      {
-        topicName: "Oakland",
-        name: 2,
-        date: "2017-01-18T16:00:00-08:00",
-        value: 5,
-      },
-      {
-        topicName: "Oakland",
-        name: 2,
-        date: "2017-01-19T16:00:00-08:00",
-        value: 6,
-      },
-      {
-        topicName: "Oakland",
-        name: 2,
-        date: "2017-01-20T16:00:00-08:00",
-        value: 1,
-      },
-    ],
-  }
-
-  let data = testData
+  let data = { data: [] }
 
   let chartElement
   let chartContainer
   let tooltip
   let tooltipContainer
 
-  export let customMouseOver = null //() => tooltip.show()
-  export let customMouseMove = null //(dataPoint, topicColorMap, dataPointXPosition) =>
-  //tooltip.update(dataPoint, topicColorMap, dataPointXPosition)
-  export let customMouseOut = null //() => tooltip.hide()
+  export let customMouseOver = () => tooltip.show()
+  export let customMouseMove = (
+    dataPoint,
+    topicColorMap,
+    dataPointXPosition
+  ) => {
+    tooltip.update(dataPoint, topicColorMap, dataPointXPosition)
+  }
+  export let customMouseOut = () => tooltip.hide()
 
   export let customDataEntryClick = null
   export let customTouchMove = null
@@ -72,7 +44,6 @@
   export let axisTimeCombinations = ""
   export let grid = "horizontal"
   export let aspectRatio = 0.5
-  export let dateLabel = "date"
   export let width = null
   export let height = null
   export let isAnimated = true
@@ -82,6 +53,7 @@
   export let numberFormat = ""
   export let shouldShowAllDataPoints = true
   export let topicLabel = null
+  export let dateLabel = "date"
   export let valueLabel = null
   export let xAxisLabel = ""
   export let xAxisValueType = "date"
@@ -92,12 +64,13 @@
   export let yAxisLabelPadding = null
   export let lines = null //not handled by setting prop
   export let tooltipThreshold = null
+  export let tooltipTitle = ""
 
   let chartDrawn = false
 
   onMount(async () => {
     if (chart) {
-      // data = await getAndPrepareData()
+      data = await getAndPrepareData()
       chartContainer = select(`.${chartClass}`)
       bindChartUIProps()
       bindChartEvents()
@@ -121,94 +94,114 @@
   }
 
   async function getAndPrepareData() {
-    let data = []
+    let dataByTopic = []
+    let _data = []
+
+    if (!topicLabel) {
+      topicLabel = "topic"
+    }
+
+    if (!valueLabel) {
+      valueLabel = "value"
+    }
+
+    if (!dateLabel) {
+      dateLabel = "date"
+    }
+
     if (model) {
       await fetchData()
-      data = $store[model]
+      _data = $store[model]
     }
-    return { data }
+
+    _data.forEach((data, idx, arr) => {
+      let topicName = data[topicLabel]
+      if (!dataByTopic.some(dt => dt.topicName === topicName)) {
+        let d = {
+          topicName,
+          topic: dataByTopic.length + 1,
+          dates: arr
+            .filter(d => d[topicLabel] === topicName)
+            .map(d => ({ date: new Date(d[dateLabel]), value: d[valueLabel] })),
+        }
+        d.dates = d.dates.sort((a, b) => a.date - b.date)
+        dataByTopic.push(d)
+      }
+    })
+
+    return { dataByTopic }
   }
 
-  $: console.log("DATA", data)
+  $: console.table("DATA", data)
 
   function bindChartUIProps() {
     chart.grid("horizontal")
-    chart.dateLabel("date")
-    chart.aspectRatio(0.5)
     chart.isAnimated(true)
+    // chart.tooltipThreshold(800)
 
-    // if (notNull(color)) {
-    //   //chart.colorSchema(colorSchema)
-    // }
-    // if (notNull(lineGradient)) {
-    //   chart.lineGradient(chartGradient)
-    // }
-    // if (notNull(axisTimeCombinations)) {
-    //   chart.axisTimeCombinations(axisTimeCombinations)
-    // }
-    // if (notNull(grid)) {
-    //   chart.grid(grid)
-    // }
-    // if (notNull(aspectRatio)) {
-    //   chart.aspectRatio(aspectRatio)
-    // }
-    // if (notNull(dateLabel)) {
-    //   chart.dateLabel(dateLabel)
-    // }
-    // if (notNull(width)) {
-    //   chart.width(width)
-    // }
-    // if (notNull(height)) {
-    //   chart.height(height)
-    // }
-    // if (notNull(isAnimated)) {
-    //   chart.isAnimated(isAnimated)
-    // }
-    // if (notNull(lineCurve)) {
-    //   chart.lineCurve(lineCurve)
-    // }
-    // if (notNull(locale)) {
-    //   chart.locale(locale)
-    // }
-    // if (notNull(numberFormat)) {
-    //   chart.numberFormat(numberFormat)
-    // }
-    // if (notNull(shouldShowAllDataPoints)) {
-    //   chart.shouldShowAllDataPoints(shouldShowAllDataPoints)
-    // }
-    // if (notNull(topicLabel)) {
-    //   chart.topicLabel(topicLabel)
-    // }
-    // if (notNull(valueLabel)) {
-    //   chart.valueLabel(valueLabel)
-    // }
-    // if (notNull(xAxisLabel)) {
-    //   chart.xAxisLabel(xAxisLabel)
-    // }
-    // if (notNull(xAxisValueType)) {
-    //   chart.xAxisValueType(xAxisValueType)
-    // }
-    // if (notNull(xAxisScale)) {
-    //   chart.xAxisScale(xAxisScale)
-    // }
-    // if (notNull(xAxisFormat)) {
-    //   chart.xAxisFormat(xAxisFormat)
-    // }
-    // if (notNull(xAxisCustomFormat)) {
-    //   chart.xAxisCustomFormat(xAxisCustomFormat)
-    // }
-    // if (notNull(yAxisLabel)) {
-    //   chart.yAxisLabel(yAxisLabel)
-    // }
-    // if (notNull(yAxisLabelPadding)) {
-    //   chart.yAxisLabelPadding(yAxisLabelPadding)
-    // }
-    // if (notNull(tooltipThreshold)) {
-    //   chart.tooltipThreshold(tooltipThreshold)
-    // }
-    // if (notNull(lines)) {
-    //   chart.lines(lines)
-    // }
+    if (notNull(color)) {
+      chart.colorSchema(colorSchema)
+    }
+    if (notNull(lineGradient)) {
+      chart.lineGradient(chartGradient)
+    }
+    if (notNull(axisTimeCombinations)) {
+      chart.axisTimeCombinations(axisTimeCombinations)
+    }
+    if (notNull(grid)) {
+      chart.grid(grid)
+    }
+    if (notNull(aspectRatio)) {
+      chart.aspectRatio(aspectRatio)
+    }
+    if (notNull(width)) {
+      chart.width(width)
+    }
+    if (notNull(height)) {
+      chart.height(height)
+    }
+    if (notNull(isAnimated)) {
+      chart.isAnimated(isAnimated)
+    }
+    if (notNull(lineCurve)) {
+      chart.lineCurve(lineCurve)
+    }
+    if (notNull(locale)) {
+      chart.locale(locale)
+    }
+    if (notNull(numberFormat)) {
+      chart.numberFormat(numberFormat)
+    }
+    if (notNull(shouldShowAllDataPoints)) {
+      chart.shouldShowAllDataPoints(shouldShowAllDataPoints)
+    }
+    if (notNull(xAxisLabel)) {
+      chart.xAxisLabel(xAxisLabel)
+    }
+    if (notNull(xAxisValueType)) {
+      chart.xAxisValueType(xAxisValueType)
+    }
+    if (notNull(xAxisScale)) {
+      chart.xAxisScale(xAxisScale)
+    }
+    if (notNull(xAxisFormat)) {
+      chart.xAxisFormat(xAxisFormat)
+    }
+    if (notNull(xAxisCustomFormat)) {
+      chart.xAxisCustomFormat(xAxisCustomFormat)
+    }
+    if (notNull(yAxisLabel)) {
+      chart.yAxisLabel(yAxisLabel)
+    }
+    if (notNull(yAxisLabelPadding)) {
+      chart.yAxisLabelPadding(yAxisLabelPadding)
+    }
+    if (notNull(tooltipThreshold)) {
+      chart.tooltipThreshold(tooltipThreshold)
+    }
+    if (notNull(lines)) {
+      chart.lines(lines)
+    }
   }
 
   function bindChartEvents() {
@@ -234,6 +227,10 @@
 </script>
 
 <div bind:this={chartElement} class={chartClass} />
-<!-- {#if chartDrawn}
-  <Tooltip bind:tooltip {valueLabel} {chartClass} />
-{/if} -->
+{#if chartDrawn}
+  <Tooltip
+    bind:tooltip
+    title={tooltipTitle || 'Line Tooltip'}
+    topicLabel="topics"
+    {chartClass} />
+{/if}

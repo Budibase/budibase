@@ -22,6 +22,153 @@
     
     <script>
 
+const testData = {
+  data: [
+  {
+amount: 8,
+audited: new Date("2020-01-01T16:00:00-08:00"),
+city: "Belfast",
+name: 1,
+modelId: "2334751ac0764c1a931bff5b6b6767eb",
+type: "record",
+_id: "ceb87054790f480e80512368545755bb",
+_rev: "2-56e401ebaf59e6310b85fb0c6c2fece5",
+},
+{
+amount: 12,
+audited: new Date("2020-01-03T16:00:00-08:00"),
+city: "Belfast",
+name: 1,
+modelId: "2334751ac0764c1a931bff5b6b6767eb",
+type: "record",
+_id: "0a36103b55124f348a23d10b2f3ed0e3",
+_rev: "2-50d62530b2edfc63d5fd0b3719dbb286",
+},
+{
+amount: 6,
+audited: new Date("2020-01-04T16:00:00-08:00"),
+city: "Belfast",
+name: 1,
+modelId: "2334751ac0764c1a931bff5b6b6767eb",
+type: "record",
+_id: "68ade2bb94754caa8fc62c7084e3cef7",
+_rev: "2-a03fe02f3595920adfbcd9c70564fe9d",
+},
+{
+amount: 2,
+audited: new Date("2020-01-01T16:00:00-08:00"),
+city: "Dublin",
+name: 2,
+modelId: "2334751ac0764c1a931bff5b6b6767eb",
+type: "record",
+_id: "2ab6dabf833f4d99b3438fa4353ba429",
+_rev: "2-45b190489e76842981902cc9f04369ec",
+},
+{
+amount: 16,
+audited: new Date("2020-01-02T16:00:00-08:00"),
+city: "Dublin",
+name: 2,
+modelId: "2334751ac0764c1a931bff5b6b6767eb",
+type: "record",
+_id: "1b2ca36db1724427a98ba95547f946e0",
+_rev: "2-c43def17ada959948b9af5484ad5b6b7",
+},
+{
+amount: 7,
+audited: new Date("2020-01-03T16:00:00-08:00"),
+city: "Dublin",
+name: 2,
+modelId: "2334751ac0764c1a931bff5b6b6767eb",
+type: "record",
+_id: "d9235d884a224ca68ac30cefdbb8ae53",
+_rev: "2-695e426a261a25474cbf6b1f069dccb4",
+},
+{
+amount: 3,
+audited: new Date("2020-01-04T16:00:00-08:00"),
+city: "Dublin",
+name: 2,
+modelId: "2334751ac0764c1a931bff5b6b6767eb",
+type: "record",
+_id: "9f8bc39a9cfb4f779da8c998d7622927",
+_rev: "2-8ae1aff82e1ffc6ffa75f6b9d074e003",
+},
+{
+amount: 4,
+audited: new Date("2020-01-02T16:00:00-08:00"),
+city: "London",
+name: 3,
+modelId: "2334751ac0764c1a931bff5b6b6767eb",
+type: "record",
+_id: "75274e906073493bbf75cda8656e8db0",
+_rev: "2-6cfc6bb2fccb83c92b50aa5507f2a092"
+},
+{
+amount: 22,
+audited: new Date("2020-01-06T16:00:00-08:00"),
+city: "London",
+name: 3,
+modelId: "2334751ac0764c1a931bff5b6b6767eb",
+type: "record",
+_id: "da3d4b151bc641f4ace487a2314d2550",
+_rev: "2-ac18490eaa016be0e71bd4c4ea332981",
+}
+  ]
+}
+
+const topicLabel = "city"
+const valueLabel = "amount"
+const dateLabel = "audited"
+
+function prepareData() {
+  let dataByTopic = []
+  testData.data.forEach((data, idx, arr) => {
+    let topicName = data[topicLabel]
+    if(!dataByTopic.some(dt => dt.topicName === topicName)) {
+      let d = {topicName, topic: dataByTopic.length + 1, dates: arr.filter(d => d[topicLabel] === topicName).map(d => ({date: d[dateLabel], value: d[valueLabel]}))}
+      dataByTopic.push(d)
+    }
+  })
+  return {dataByTopic}
+}
+
+const newData = prepareData()
+debugger
+
+const dataByTopic = {
+  dataByTopic: [
+    {
+      topicName: 'San Francisco',
+      topic: 123,
+      dates: [
+          {
+              date: '2017-01-16T16:00:00-08:00',
+              value: 1
+          },
+          {
+              date: '2017-01-16T17:00:00-08:00',
+              value: 2
+          }
+      ]
+  },
+  {
+      topicName: 'Belfast',
+      topic: 456,
+      dates: [
+          {
+              date: '2017-01-16T16:00:00-08:00',
+              value: 5
+          },
+          {
+              date: '2017-01-16T17:00:00-08:00',
+              value: 8
+          }
+      ]
+  }
+ ]
+}
+
 const data = {
     data: [
       {
@@ -61,9 +208,9 @@ const data = {
 
     const lineChart = britecharts.line()
 
-    lineChart.grid("horizontal").dateLabel("date").aspectRatio(0.5).isAnimated(true)
+    lineChart.grid("horizontal").aspectRatio(0.5).isAnimated(true).shouldShowAllDataPoints(true)
 
-    lineContainer.datum(data).call(lineChart);
+    lineContainer.datum(newData).call(lineChart);
     
     </script>
     

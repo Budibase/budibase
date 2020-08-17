@@ -468,7 +468,8 @@
 			"xAxisScale": "string",
 			"xAxisFormat": "string",
 			"xAxisCustomFormat": "string",
-			"xAxisLabel": "string"
+			"xAxisLabel": "string",
+			"tooltipTitle": "string"
 		}
 	},
 	"brush":{

@@ -470,11 +470,8 @@ export default {
               name: "Donut",
               _component: "@budibase/standard-components/donut",
               description: "Donut chart",
-              icon: "ri-donut-chart-line",
+              icon: "ri-pie-chart-fill",
               properties: {
-                design: {
-                  ...all,
-                },
                 settings: [
                   {
                     label: "Table",
@@ -562,494 +559,10 @@ export default {
               },
             },
             {
-              name: "Heatmap",
-              _component: "@budibase/standard-components/heatmap",
-              description: "Heatmap chart",
-              icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: [
-                  {
-                    day: 0,
-                    hour: 0,
-                    value: 7,
-                  },
-                  {
-                    day: 0,
-                    hour: 1,
-                    value: 10,
-                  },
-                ],
-              },
-              properties: {
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Color",
-                    key: "color",
-                    control: OptionSelect,
-                    options: [
-                      "britecharts",
-                      "blueGreen",
-                      "green",
-                      "grey",
-                      "orange",
-                      "pink",
-                      "purple",
-                      "red",
-                      "teal",
-                      "yellow",
-                    ],
-                  },
-                  {
-                    label: "Show Legend",
-                    key: "useLegend ",
-                    valueKey: "checked",
-                    control: Checkbox,
-                  },
-                  {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Width",
-                    key: "width",
-                    control: Input,
-                  },
-                  {
-                    label: "Boxsize",
-                    key: "boxSize",
-                    control: Input,
-                  },
-                ],
-              },
-            },
-            {
-              name: "Scatterplot",
-              _component: "@budibase/standard-components/scatterplot",
-              description: "Scatterplot chart",
-              icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: [
-                  {
-                    name: "topic",
-                    x: 123,
-                    y: 24,
-                  },
-                  {
-                    name: "topic1",
-                    x: 53,
-                    y: 31,
-                  },
-                  {
-                    name: "topic2",
-                    x: 631,
-                    y: 321,
-                  },
-                  {
-                    name: "topic1",
-                    x: 231,
-                    y: 111,
-                  },
-                ],
-              },
-              properties: {
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Colors",
-                    key: "color",
-                    control: OptionSelect,
-                    options: [
-                      { label: "Normal", value: "britecharts" },
-                      { label: "Blue Green", value: "blueGreen" },
-                      { label: "Green", value: "green" },
-                      { label: "Grey", value: "grey" },
-                      { label: "Orange", value: "orange" },
-                      { label: "Pink", value: "pink" },
-                      { label: "Purple", value: "purple" },
-                      { label: "Red", value: "red" },
-                      { label: "Teal", value: "teal" },
-                      { label: "Yellow", value: "yellow" },
-                    ],
-                  },
-                  {
-                    label: "height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Width",
-                    key: "width",
-                    control: Input,
-                  },
-                  {
-                    label: "Aspect Ratio",
-                    key: "aspectRatio",
-                    control: Input,
-                  },
-                  {
-                    label: "Circle Opacity",
-                    key: "circleOpacity",
-                    control: Input,
-                  },
-                  {
-                    label: "Grid",
-                    key: "grid",
-                    control: OptionSelect,
-                    options: ["vertical", "horizontal", "full"],
-                  },
-                  {
-                    label: "Has Crosshairs",
-                    key: "hasCrossHairs",
-                    valueKey: "checked",
-                    control: Checkbox,
-                  },
-                  {
-                    label: "Is Animated",
-                    key: "isAnimated",
-                    valueKey: "checked",
-                    control: Checkbox,
-                  },
-                  {
-                    label: "Max Circle Area",
-                    key: "maxCircleArea",
-                    control: Input,
-                  },
-                  {
-                    label: "X Axis Label",
-                    key: "xAxisLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "X Axis Label Offset",
-                    key: "xAxisLabelOffset",
-                    control: Input,
-                  },
-                  {
-                    label: "X Axis",
-                    key: "xTicks",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis Format",
-                    key: "yAxisFormat",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis Label",
-                    key: "yAxisLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis Label Offset",
-                    key: "yAxisLabelOffset",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Ticks",
-                    key: "yTicks",
-                    control: Input,
-                  },
-                ],
-              },
-            },
-            {
-              name: "StackedArea",
-              _component: "@budibase/standard-components/stackedarea",
-              description: "StackedArea chart",
-              icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: [
-                  {
-                    date: "2011-01-05T00:00:00Z",
-                    name: "Direct",
-                    value: 0,
-                  },
-                ],
-              },
-              properties: {
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Color",
-                    key: "color",
-                    control: OptionSelect,
-                    options: [
-                      "britecharts",
-                      "blueGreen",
-                      "green",
-                      "grey",
-                      "orange",
-                      "pink",
-                      "purple",
-                      "red",
-                      "teal",
-                      "yellow",
-                    ],
-                  },
-                  {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Width",
-                    key: "width",
-                    control: Input,
-                  },
-                  {
-                    label: "Aspect Ratio",
-                    key: "aspectRatio",
-                    control: Input,
-                  },
-                  {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Grid",
-                    key: "grid",
-                    control: OptionSelect,
-                    options: ["vertical", "horizontal", "full"],
-                  },
-                  {
-                    label: "X Axis Label",
-                    key: "xAxisLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "X Axis Label Offset",
-                    key: "xAxisLabelOffset",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis",
-                    key: "yAxisLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis Label Offset",
-                    key: "yAxisLabelOffset",
-                    control: Input,
-                  },
-                  {
-                    label: "Area Curve",
-                    key: "areaCurve",
-                    control: Input,
-                  },
-                  {
-                    label: "Area Opacity",
-                    key: "areaOpacity",
-                    control: Input,
-                  },
-                  {
-                    label: "Area Opacity",
-                    key: "areaOpacity",
-                    control: Input,
-                  },
-                  {
-                    label: "dateLabel",
-                    key: "dateLabel",
-                    control: Input,
-                  },
-                  {
-                    key: "isAnimated",
-                    label: "Is Animated",
-                    valueKey: "checked",
-                    control: Checkbox,
-                  },
-                  {
-                    label: "Key Label",
-                    key: "keyLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Locale",
-                    key: "locale",
-                    control: Input,
-                  },
-                  {
-                    label: "Value Label",
-                    key: "valueLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Use Legend",
-                    key: "useLegend",
-                    keyValue: "checked",
-                    control: Checkbox,
-                  },
-                ],
-              },
-            },
-            {
-              name: "Step",
-              _component: "@budibase/standard-components/step",
-              description: "Step chart",
-              icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: [
-                  {
-                    value: 1,
-                    key: "glittering",
-                  },
-                  {
-                    value: 2,
-                    key: "luminous",
-                  },
-                ],
-              },
-              properties: {
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Width",
-                    key: "width",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis Label",
-                    key: "yAxisLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis Label Offset",
-                    key: "yAxisLabelOffset",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Ticks",
-                    key: "yTicks",
-                    control: Input,
-                  },
-                  {
-                    label: "X Axis Label Offset",
-                    key: "xAxisLabelOffset",
-                    control: Input,
-                  },
-                ],
-              },
-            },
-            {
-              name: "Sparkline",
-              _component: "@budibase/standard-components/sparkline",
-              description: "Sparkline chart",
-              icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: [
-                  {
-                    value: 1,
-                    date: "2011-01-06T00:00:00Z",
-                  },
-                  {
-                    value: 2,
-                    date: "2011-01-07T00:00:00Z",
-                  },
-                ],
-              },
-              properties: {
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Line Gradient",
-                    key: "lineGradient",
-                    control: OptionSelect,
-                    options: [
-                      { value: "", label: "None" },
-                      { value: "bluePurple", label: "Blue Purple" },
-                      { value: "greenBlue", label: "Green Blue" },
-                      { value: "orangePink", label: "Orange Pink" },
-                    ],
-                  },
-                  {
-                    label: "Area Gradient",
-                    key: "areaGradient",
-                    control: OptionSelect,
-                    options: [
-                      { value: "", label: "None" },
-                      { value: "bluePurple", label: "Blue Purple" },
-                      { value: "greenBlue", label: "Green Blue" },
-                      { value: "orangePink", label: "Orange Pink" },
-                    ],
-                  },
-                  {
-                    key: "height",
-                    label: "Height",
-                    control: Input,
-                  },
-                  {
-                    key: "width",
-                    label: "Width",
-                    control: Input,
-                  },
-                  {
-                    key: "dateLabel",
-                    label: "Date Label",
-                    control: Input,
-                  },
-                  {
-                    key: "isAnimated",
-                    label: "Is Animated",
-                    valueKey: "checked",
-                    control: Checkbox,
-                  },
-                  {
-                    key: "titleText",
-                    label: "Title Text",
-                    control: Input,
-                  },
-                  {
-                    key: "valueLabel",
-                    label: "Value Label",
-                    control: Input,
-                  },
-                ],
-              },
-            },
-            {
               name: "Bar",
               _component: "@budibase/standard-components/bar",
               description: "Bar chart",
               icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: [
-                  {
-                    value: 1,
-                    name: "glittering",
-                  },
-                  {
-                    value: 1,
-                    name: "luminous",
-                  },
-                ],
-              },
               properties: {
                 settings: [
                   {
@@ -1163,122 +676,10 @@ export default {
               },
             },
             {
-              name: "Brush",
-              _component: "@budibase/standard-components/brush",
-              description: "Brush chart",
-              icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: [
-                  {
-                    value: 1,
-                    date: "2011-01-06T00:00:00Z",
-                  },
-                  {
-                    value: 2,
-                    date: "2011-01-07T00:00:00Z",
-                  },
-                ],
-              },
-              properties: {
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Gradient",
-                    key: "gradient",
-                    control: OptionSelect,
-                    options: [
-                      { value: "", label: "None" },
-                      { value: "bluePurple", label: "Blue Purple" },
-                      { value: "greenBlue", label: "Green Blue" },
-                      { value: "orangePink", label: "Orange Pink" },
-                    ],
-                  },
-                  {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Width",
-                    key: "width",
-                    control: Input,
-                  },
-                  {
-                    label: "Date Range",
-                    key: "dateRange",
-                    control: Input,
-                  },
-                  {
-                    label: "Locale",
-                    key: "locale",
-                    control: Input,
-                  },
-                  {
-                    label: "Time Interval",
-                    key: "roundingTimeInterval",
-                    control: OptionSelect,
-                    options: [
-                      "timeDay",
-                      "timeMillisecond",
-                      "utcMillisecond",
-                      "timeSecond",
-                      "utcSecond",
-                      "timeMinute",
-                      "utcMinute",
-                      "timeHour",
-                      "utcHour",
-                      "utcDay",
-                      "timeWeek",
-                      "utcWeek",
-                      "timeSunday",
-                      "utcSunday",
-                      "timeMonday",
-                      "utcMonday",
-                      "timeTuesday",
-                      "utcTuesday",
-                      "timeWednesday",
-                      "utcWednesday",
-                      "timeThursday",
-                      "utcThursday",
-                      "timeFriday",
-                      "utcFriday",
-                      "timeSaturday",
-                      "utcSaturday",
-                      "timeMonth",
-                      "utcMonth",
-                      "timeYear",
-                      "utcYear",
-                    ],
-                  },
-                  {
-                    label: "X Axis Format",
-                    key: "xAxisFormat",
-                    control: OptionSelect,
-                    options: [
-                      "day-month",
-                      "minute-hour",
-                      "hour-daymonth",
-                      "month-year",
-                      "custom",
-                    ],
-                  },
-                  {
-                    label: "X Ticks",
-                    key: "xTicks",
-                    control: Input,
-                  },
-                ],
-              },
-            },
-            {
               name: "Groupedbar",
               _component: "@budibase/standard-components/groupedbar",
               description: "Groupedbar chart",
-              icon: "ri-bar-chart-fill",
+              icon: "ri-bar-chart-grouped-fill",
               properties: {
                 settings: [
                   {
@@ -1365,278 +766,16 @@ export default {
               },
             },
             {
-              name: "Bullet",
-              _component: "@budibase/standard-components/bullet",
-              description: "Bullet chart",
-              icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: {
-                  ranges: [130, 160, 250],
-                  measures: [150, 180],
-                  markers: [175],
-                },
-              },
-              properties: {
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Color",
-                    key: "color",
-                    control: OptionSelect,
-                    options: [
-                      "britecharts",
-                      "blueGreen",
-                      "green",
-                      "grey",
-                      "orange",
-                      "pink",
-                      "purple",
-                      "red",
-                      "teal",
-                      "yellow",
-                    ],
-                  },
-                  {
-                    label: "Title",
-                    key: "title",
-                    control: Input,
-                  },
-                  {
-                    label: "Subtitle",
-                    key: "subtitle",
-                    control: Input,
-                  },
-                  {
-                    label: "Axis Padding",
-                    key: "paddingBetweenAxisAndChart",
-                    control: Input,
-                  },
-                  {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Width",
-                    key: "width",
-                    control: Input,
-                  },
-                ],
-              },
-            },
-            {
-              name: "Stacked Bar",
-              _component: "@budibase/standard-components/stackedbar",
-              description: "Stacked Bar Chart",
-              icon: "ri-file-list-fill",
-              presetProps: {
-                data: [
-                  {
-                    name: "2011-01",
-                    stack: "Direct",
-                    value: 0,
-                  },
-                ],
-              },
-              properties: {
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Colors",
-                    key: "color",
-                    control: OptionSelect,
-                    options: [
-                      "britecharts",
-                      "blueGreen",
-                      "green",
-                      "grey",
-                      "orange",
-                      "pink",
-                      "purple",
-                      "red",
-                      "teal",
-                      "yellow",
-                    ],
-                  },
-                  {
-                    label: "Grid",
-                    key: "grid",
-                    control: OptionSelect,
-                    options: ["vertical", "horizontal", "full"],
-                  },
-                  {
-                    label: "Aspect Ratio",
-                    key: "aspectRatio",
-                    control: Input,
-                  },
-                  {
-                    label: "Between Bars Padding",
-                    key: "betweenBarsPadding",
-                    control: Input,
-                  },
-                  {
-                    label: "Max Ratio Percentage",
-                    key: "percentageToMaxRatio",
-                    control: Input,
-                  },
-                  {
-                    label: "Date Label",
-                    key: "dateLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Name Label",
-                    key: "nameLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Stack Label",
-                    key: "stackLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Width",
-                    key: "width",
-                    control: Input,
-                  },
-                  {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Locale",
-                    key: "locale",
-                    control: Input,
-                  },
-                  {
-                    label: "Is Animated",
-                    key: "isAnimated",
-                    control: Checkbox,
-                    valueKey: "checked",
-                  },
-                  {
-                    label: "Is Horizontal",
-                    key: "isHorizontal",
-                    control: Checkbox,
-                    valueKey: "checked",
-                  },
-                  {
-                    label: "Has Reversed Stacks",
-                    key: "hasReversedStacks",
-                    control: Checkbox,
-                    valueKey: "checked",
-                  },
-                  {
-                    label: "Has Percentage",
-                    key: "hasPercentage",
-                    control: Checkbox,
-                    valueKey: "checked",
-                  },
-                  {
-                    label: "X Ticks",
-                    key: "xTicks",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Ticks",
-                    key: "yTicks",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis Label",
-                    key: "yTicksLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Y Axis Label Offset",
-                    key: "yAxisLabelOffset",
-                    control: Input,
-                  },
-                ],
-              },
-            },
-            {
               name: "Line",
               _component: "@budibase/standard-components/line",
               description: "Line chart",
-              icon: "ri-bar-chart-fill",
-              presetProps: {
-                data: {
-                  data: [
-                    {
-                      topicName: "San Francisco",
-                      name: 1,
-                      date: "2020-01-16",
-                      value: 1,
-                    },
-                    {
-                      topicName: "San Fran",
-                      name: 2,
-                      date: "2020-01-17",
-                      value: 2,
-                    },
-                    {
-                      topicName: "LA",
-                      name: 3,
-                      date: "2020-01-18",
-                      value: 3,
-                    },
-                    {
-                      topicName: "Toronto",
-                      name: 4,
-                      date: "2020-01-19",
-                      value: 7,
-                    },
-                    {
-                      topicName: "Van",
-                      name: 4,
-                      date: "2020-01-20",
-                      value: 12,
-                    },
-                    {
-                      topicName: "Dundee",
-                      name: 4,
-                      date: "2020-01-21",
-                      value: 16,
-                    },
-                    {
-                      topicName: "Dublin",
-                      name: 4,
-                      date: "2020-01-22",
-                      value: 31,
-                    },
-                  ],
-                },
-                aspectRatio: 0.5,
-                grid: "horizontal",
-                dateLabel: "fullDate",
-                shouldShowAllDataPoints: true,
-              },
+              icon: "ri-line-chart-fill",
               properties: {
                 settings: [
                   {
                     label: "Table",
                     key: "model",
                     control: ModelSelect,
-                  },
-                  {
-                    label: "X Axis Combo",
-                    key: "axisTimeCombinations",
-                    control: Input,
-                  },
-                  {
-                    label: "X Axis Combo",
-                    key: "axisTimeCombinations",
-                    control: Input,
                   },
                   {
                     label: "Colors",
@@ -1656,42 +795,15 @@ export default {
                     ],
                   },
                   {
-                    label: "X Axis Value Type",
-                    key: "xAxisValueType",
+                    label: "Gradients",
+                    key: "lineGradient",
                     control: OptionSelect,
-                    options: ["date", "number"],
-                  },
-                  {
-                    label: "Grid",
-                    key: "grid",
-                    control: OptionSelect,
-                    options: ["vertical", "horizontal", "full"],
-                  },
-                  {
-                    label: "Aspect Ratio",
-                    key: "aspectRatio",
-                    control: Input,
-                  },
-                  {
-                    label: "Date Label",
-                    key: "dateLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Width",
-                    key: "width",
-                    control: Input,
-                  },
-                  {
-                    label: "Height",
-                    key: "height",
-                    control: Input,
-                  },
-                  {
-                    label: "Is Animated",
-                    key: "isAnimated",
-                    control: Checkbox,
-                    valueKey: "checked",
+                    options: [
+                      { value: "", label: "None" },
+                      { value: "bluePurple", label: "Blue Purple" },
+                      { value: "greenBlue", label: "Green Blue" },
+                      { value: "orangePink", label: "Orange Pink" },
+                    ],
                   },
                   {
                     label: "Line Curve",
@@ -1711,8 +823,20 @@ export default {
                     ],
                   },
                   {
-                    label: "Locale",
-                    key: "locale",
+                    label: "X Axis Value Type",
+                    key: "xAxisValueType",
+                    control: OptionSelect,
+                    options: ["date", "number"],
+                  },
+                  {
+                    label: "Grid",
+                    key: "grid",
+                    control: OptionSelect,
+                    options: ["vertical", "horizontal", "full"],
+                  },
+                  {
+                    label: "Date Label",
+                    key: "dateLabel",
                     control: Input,
                   },
                   {
@@ -1731,16 +855,43 @@ export default {
                     control: Input,
                   },
                   {
+                    label: "Y Axis Label",
+                    key: "yAxisLabel",
+                    control: Input,
+                  },
+                  {
+                    label: "Show All Datapoints",
+                    key: "shouldShowAllDataPoints",
+                    valueKey: "checked",
+                    control: Checkbox,
+                  },
+                  {
+                    label: "Width",
+                    key: "width",
+                    control: Input,
+                  },
+                  {
+                    label: "Height",
+                    key: "height",
+                    control: Input,
+                  },
+                  {
+                    label: "Is Animated",
+                    key: "isAnimated",
+                    control: Checkbox,
+                    valueKey: "checked",
+                  },
+                  {
+                    label: "Locale",
+                    key: "locale",
+                    control: OptionSelect,
+                    options: ["en-GB", "en-US"],
+                  },
+                  {
                     label: "X Axis Value Type",
                     key: "xAxisValueType",
                     control: OptionSelect,
-                    options: ["date", "number"],
-                  },
-                  {
-                    label: "X Axis Scale",
-                    key: "xAxisScale",
-                    control: OptionSelect,
-                    options: ["linear", "logarithmic"],
+                    options: ["date", "numeric"],
                   },
                   {
                     label: "X Axis Format",
@@ -1760,8 +911,8 @@ export default {
                     control: Input,
                   },
                   {
-                    label: "X Axis Label",
-                    key: "xAxisLabel",
+                    label: "Tooltip Title",
+                    key: "tooltipTitle",
                     control: Input,
                   },
                 ],
