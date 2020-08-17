@@ -11,7 +11,6 @@
     CircleIndicator,
     EventsIcon,
   } from "components/common/Icons/"
-  import LayoutEditor from "./LayoutEditor.svelte"
   import EventsEditor from "./EventsEditor"
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
