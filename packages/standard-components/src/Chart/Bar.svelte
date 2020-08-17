@@ -199,19 +199,7 @@
   $: chartGradient = getChartGradient(gradient)
 </script>
 
-<!-- SVG Test 
-  <svg viewBox="6 -8 200 22">
-    <text x="5" y="10" class="text-svg">Hello World</text>
-  </svg>-->
-
 <div bind:this={chartElement} class={chartClass} />
 {#if useLegend}
   <div class={legendClass} />
 {/if}
-
-<style>
-  .text-svg {
-    font: italic 15px serif;
-    fill: red;
-  }
-</style>
