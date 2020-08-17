@@ -7,7 +7,15 @@ function statsViewTemplate({
     meta: {
       field,
       modelId,
-      groupBy
+      groupBy,
+      schema: {
+        sum: "number",
+        min: "number",
+        max: "number",
+        count: "number",
+        sumsqr: "number",
+        avg: "number"
+      }
     },
     map: `function (doc) {
       if (doc.modelId === "${modelId}") {

@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { Button } from "@budibase/bbui"
-  import ModelDataTable from "components/database/DataTable"
+  import ViewDataTable from "components/database/DataTable/ViewDataTable"
   import { backendUiStore } from "builderStore"
   import ActionButton from "components/common/ActionButton.svelte"
   import * as api from "components/database/DataTable/api"
@@ -9,18 +9,19 @@
 
   const { open, close } = getContext("simple-modal")
 
-  $: selectedModel = $backendUiStore.selectedModel
+  $: selectedView = $backendUiStore.selectedView
 </script>
 
-{#if $backendUiStore.selectedDatabase._id && selectedModel.name}
-  <ModelDataTable />
+{#if $backendUiStore.selectedDatabase._id && selectedView}
+  <ViewDataTable />
 {:else}
-  <i style="color: var(--grey-4)">create your first table to start building</i>
+  <i>create your first table to start building</i>
 {/if}
 
 <style>
   i {
     font-size: 20px;
     margin-right: 10px;
+    color: var(--grey-4);
   }
 </style>

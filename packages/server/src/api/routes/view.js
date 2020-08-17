@@ -12,8 +12,9 @@ router
     authorized(READ_VIEW, ctx => ctx.params.viewName),
     recordController.fetchView
   )
-  .get("/api/views", viewController.fetch)
-  .post("/api/views/query/:viewName", viewController.query)
-  .post("/api/views", viewController.save)
+  .get("/api/views", authorized(BUILDER), viewController.fetch)
+  // .post("/api/views/query/:viewName", authorized(BUILDER), viewController.query)
+  .delete("/api/views/:viewName", authorized(BUILDER), viewController.destroy)
+  .post("/api/views", authorized(BUILDER), viewController.save)
 
 module.exports = router
