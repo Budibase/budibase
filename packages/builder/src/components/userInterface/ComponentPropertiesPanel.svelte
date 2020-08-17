@@ -1,6 +1,5 @@
 <script>
   import { setContext, onMount } from "svelte"
-  import PropsView from "./PropsView.svelte"
 
   import { store } from "builderStore"
   import IconButton from "components/common/IconButton.svelte"
