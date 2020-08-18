@@ -3,7 +3,7 @@ import OptionSelect from "./OptionSelect.svelte"
 import FlatButtonGroup from "./FlatButtonGroup.svelte"
 import Colorpicker from "@budibase/colorpicker"
 /*
-  TODO: Allow for default values for all proproperties
+  TODO: Allow for default values for all properties
 */
 
 export const layout = [
