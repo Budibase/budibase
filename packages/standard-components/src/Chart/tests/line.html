@@ -10,6 +10,8 @@
         type="text/javascript"></script> -->
 
             <script src="../../../node_modules/britecharts/dist/umd/line.min.js" type="text/javascript"></script>
+            <script src="../../../node_modules/britecharts/dist/umd/tooltip.min.js" type="text/javascript"></script>
+
 
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/britecharts/dist/css/britecharts.min.css" type="text/css" />
@@ -133,8 +135,10 @@ function prepareData() {
   return {dataByTopic}
 }
 
+
+    
+
 const newData = prepareData()
-debugger
 
 const dataByTopic = {
   dataByTopic: [
@@ -207,10 +211,23 @@ const data = {
     const lineContainer = d3.select('.js-line-chart-container');
 
     const lineChart = britecharts.line()
+    const tooltip = britecharts.tooltip()
 
     lineChart.grid("horizontal").aspectRatio(0.5).isAnimated(true).shouldShowAllDataPoints(true)
 
     lineContainer.datum(newData).call(lineChart);
+    
+    const tooltipContainer = d3.select(`.js-line-chart-container .metadata-group .vertical-marker-container`)
+
+    tooltip.title("yeooo")
+    tooltip.topicLabel("topics")
+    lineChart.on("customMouseOver", tooltip.show)
+    lineChart.on("customMouseMove", tooltip.update)
+    lineChart.on("customMouseOut", tooltip.hide)
+
+
+    tooltipContainer.datum([]).call(tooltip)
+
     
     </script>
     

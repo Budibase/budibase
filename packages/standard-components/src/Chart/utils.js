@@ -2,6 +2,8 @@ import britecharts from "britecharts"
 
 export const notNull = value => value || value === false
 
+export const hasProp = (data, prop) => data.every(d => prop in d)
+
 export const chartTypes = britecharts ? Object.keys(britecharts) : null
 
 //expose chart color schemas for use or reference outside compnent
