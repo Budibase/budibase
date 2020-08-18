@@ -29,8 +29,9 @@
   }
 
   const ok = () => {
+    const result = onOk()
+    if (result === false) return
     hide()
-    onOk()
   }
 </script>
 
