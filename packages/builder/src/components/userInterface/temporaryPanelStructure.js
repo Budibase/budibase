@@ -1,4 +1,4 @@
-import Input from "../common/Input.svelte"
+import Input from "./PropertyPanelControls/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import Checkbox from "../common/Checkbox.svelte"
 import ModelSelect from "components/userInterface/ModelSelect.svelte"
