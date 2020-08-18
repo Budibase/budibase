@@ -79,7 +79,7 @@
   onOk={save}
   okText="Create Screen">
 
-  <div>
+  <div data-cy="new-screen-dialog">
     <div class="uk-margin">
       <Input label="Name" bind:value={name} />
     </div>
