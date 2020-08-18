@@ -5,7 +5,6 @@
   import { compose, map, get, flatten } from "lodash/fp"
   import { Input, TextArea, Button } from "@budibase/bbui"
   import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"
-  import Select from "components/common/Select.svelte"
   import RecordFieldControl from "./RecordFieldControl.svelte"
   import * as api from "../api"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
