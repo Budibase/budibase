@@ -1,13 +1,10 @@
 <script>
-  import { getColorSchema, getChartGradient, notNull } from "./utils"
-  import sort from "fast-sort"
-  import Tooltip from "./Tooltip.svelte"
+  import { getColorSchema, getChartGradient, notNull, hasProp } from "./utils"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
 
   import { select } from "d3-selection"
   import shortid from "shortid"
-  import { log } from "console"
 
   const _id = shortid.generate()
 
@@ -18,22 +15,23 @@
 
   const chart = britecharts.line()
   const chartClass = `line-container-${_id}`
-  const legendClass = `legend-container-${_id}`
 
-  let data = { data: [] }
+  let data = { dataByTopic: [] }
 
   let chartElement
   let chartContainer
-  let tooltip
   let tooltipContainer
+
+  let tooltip = britecharts.tooltip()
 
   export let customMouseOver = () => tooltip.show()
   export let customMouseMove = (
     dataPoint,
     topicColorMap,
-    dataPointXPosition
+    dataPointXPosition,
+    yPosition
   ) => {
-    tooltip.update(dataPoint, topicColorMap, dataPointXPosition)
+    tooltip.update(dataPoint, topicColorMap, dataPointXPosition, yPosition)
   }
   export let customMouseOut = () => tooltip.hide()
 
@@ -69,15 +67,30 @@
   let chartDrawn = false
 
   onMount(async () => {
-    if (chart) {
+    if (model) {
       data = await getAndPrepareData()
-      chartContainer = select(`.${chartClass}`)
-      bindChartUIProps()
-      bindChartEvents()
-      chartContainer.datum(data).call(chart)
-      chartDrawn = true
+      if (data.dataByTopic.length > 0) {
+        chartContainer = select(`.${chartClass}`)
+        bindChartUIProps()
+        bindChartEvents()
+        chartContainer.datum(data).call(chart)
+        chartDrawn = true
+        bindTooltip()
+      } else {
+        console.error(
+          "Line Chart - Please provide valid name, value and topic labels"
+        )
+      }
     }
   })
+
+  function bindTooltip() {
+    tooltipContainer = select(
+      `.${chartClass} .metadata-group .vertical-marker-container`
+    )
+    tooltip.topicLabel("topics")
+    tooltipContainer.datum([]).call(tooltip)
+  }
 
   async function fetchData() {
     const FETCH_RECORDS_URL = `/api/views/all_${model}`
@@ -93,12 +106,17 @@
     }
   }
 
+  const schemaIsValid = data =>
+    hasProp(data, valueLabel) &&
+    hasProp(data, dateLabel) &&
+    hasProp(data, topicLabel)
+
   async function getAndPrepareData() {
     let dataByTopic = []
     let _data = []
 
     if (!topicLabel) {
-      topicLabel = "topic"
+      topicLabel = "topicName"
     }
 
     if (!valueLabel) {
@@ -109,35 +127,38 @@
       dateLabel = "date"
     }
 
-    if (model) {
-      await fetchData()
-      _data = $store[model]
-    }
+    await fetchData()
+    _data = $store[model]
 
-    _data.forEach((data, idx, arr) => {
-      let topicName = data[topicLabel]
-      if (!dataByTopic.some(dt => dt.topicName === topicName)) {
-        let d = {
-          topicName,
-          topic: dataByTopic.length + 1,
-          dates: arr
-            .filter(d => d[topicLabel] === topicName)
-            .map(d => ({ date: new Date(d[dateLabel]), value: d[valueLabel] })),
+    if (schemaIsValid(_data)) {
+      _data.forEach((data, idx, arr) => {
+        let topicName = data[topicLabel]
+        if (!dataByTopic.some(dt => dt.topicName === topicName)) {
+          let d = {
+            topicName,
+            topic: dataByTopic.length + 1,
+            dates: arr
+              .filter(d => d[topicLabel] === topicName)
+              .map(d => ({
+                date: new Date(d[dateLabel]),
+                value: d[valueLabel],
+              }))
+              .sort((a, b) => a.date - b.date),
+          }
+          dataByTopic.push(d)
         }
-        d.dates = d.dates.sort((a, b) => a.date - b.date)
-        dataByTopic.push(d)
-      }
-    })
+      })
+    }
 
     return { dataByTopic }
   }
 
-  $: console.table("DATA", data)
-
   function bindChartUIProps() {
     chart.grid("horizontal")
     chart.isAnimated(true)
-    // chart.tooltipThreshold(800)
+    chart.tooltipThreshold(800)
+    chart.aspectRatio(0.5)
+    chart.xAxisCustomFormat("custom")
 
     if (notNull(color)) {
       chart.colorSchema(colorSchema)
@@ -202,17 +223,19 @@
     if (notNull(lines)) {
       chart.lines(lines)
     }
+
+    tooltip.title(tooltipTitle || "Line Tooltip")
   }
 
   function bindChartEvents() {
     if (customMouseOver) {
-      chart.on("customMouseOver", customMouseOver)
+      chart.on("customMouseOver", tooltip.show)
     }
     if (customMouseMove) {
-      chart.on("customMouseMove", customMouseMove)
+      chart.on("customMouseMove", tooltip.update)
     }
     if (customMouseOut) {
-      chart.on("customMouseOut", customMouseOut)
+      chart.on("customMouseOut", tooltip.hide)
     }
     if (customDataEntryClick) {
       chart.on("customDataEntryClick", customDataEntryClick)
@@ -227,10 +250,3 @@
 </script>
 
 <div bind:this={chartElement} class={chartClass} />
-{#if chartDrawn}
-  <Tooltip
-    bind:tooltip
-    title={tooltipTitle || 'Line Tooltip'}
-    topicLabel="topics"
-    {chartClass} />
-{/if}

@@ -26,7 +26,9 @@
   export let xAxisValueType = null
 
   onMount(() => {
-    tooltipContainer = select(`.${chartClass} .metadata-group`)
+    tooltipContainer = select(
+      `.${chartClass} .metadata-group .vertical-marker-container`
+    )
     tooltipContainer.datum([]).call(tooltip)
   })
 

@@ -1,14 +1,10 @@
 <script>
-  import { getColorSchema, getChartGradient, notNull } from "./utils"
+  import { getColorSchema, getChartGradient, notNull, hasProp } from "./utils"
   import Tooltip from "./Tooltip.svelte"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
   import { select } from "d3-selection"
   import shortid from "shortid"
-  /* 
-    ISSUES
-    - Renders but seems to be a problem with tooltip hover
-  */
 
   const _id = shortid.generate()
 
@@ -21,15 +17,11 @@
   const chartClass = `groupedbar-container-${_id}`
   const legendClass = `legend-container-${_id}`
 
-  let tooltip
+  let tooltip = britecharts.tooltip()
   let tooltipContainer
   let chartElement = null
   let chartContainer = null
 
-  export let customMouseOver = () => tooltip.show()
-  export let customMouseMove = (dataPoint, topicColorMap, dataPointXPosition) =>
-    tooltip.update(dataPoint, topicColorMap, dataPointXPosition)
-  export let customMouseOut = () => tooltip.hide()
   export let customClick = null
 
   let data = []
@@ -50,22 +42,33 @@
   export let yAxisLabelOffset = null
   export let yTicks = null
   export let yTickTextOffset = null
+  export let tooltipTitle = ""
 
   $: console.log("DATA", data)
 
   let chartDrawn = false
 
+  const schemaIsValid = () =>
+    (hasProp(data, "name") || hasProp(data, nameLabel)) &&
+    (hasProp(data, "group") || hasProp(data, groupLabel)) &&
+    (hasProp(data, "value") || hasProp(data, valueLabel))
+
   onMount(async () => {
-    if (chart) {
-      if (model) {
-        await fetchData()
-        data = $store[model]
+    if (model) {
+      await fetchData()
+      data = $store[model]
+      if (schemaIsValid()) {
+        chartContainer = select(`.${chartClass}`)
+        bindChartUIProps()
+        bindChartEvents()
+        chartContainer.datum(data).call(chart)
+        bindTooltip()
+        chartDrawn = true
+      } else {
+        console.error(
+          "Grouped bar - Please provide valid name, value and group labels"
+        )
       }
-      chartContainer = select(`.${chartClass}`)
-      bindChartUIProps()
-      bindChartEvents()
-      chartContainer.datum(data).call(chart)
-      chartDrawn = true
     }
   })
 
@@ -81,6 +84,13 @@
     } else {
       throw new Error("Failed to fetch records.", response)
     }
+  }
+
+  function bindTooltip() {
+    tooltipContainer = select(`.${chartClass} .metadata-group`)
+    tooltip.topicLabel("values")
+    tooltip.shouldShowDateInTitle(false)
+    tooltipContainer.datum([]).call(tooltip)
   }
 
   function bindChartUIProps() {
@@ -135,29 +145,23 @@
     if (notNull(yTickTextOffset)) {
       chart.yTickTextOffset(yTickTextOffset)
     }
+    tooltip.title(tooltipTitle || "Groupedbar Title")
+    debugger
   }
 
   function bindChartEvents() {
     if (customClick) {
       chart.on("customClick", customClick)
     }
-    if (customMouseMove) {
-      chart.on("customMouseMove", customMouseMove)
-    }
-    if (customMouseOut) {
-      chart.on("customMouseOut", customMouseOut)
-    }
-    if (customMouseOver) {
-      chart.on("customMouseOver", customMouseOver)
-    }
+    chart.on("customMouseMove", tooltip.update)
+    chart.on("customMouseOut", tooltip.hide)
+    chart.on("customMouseOver", tooltip.show)
   }
-
-  $: _data = model ? $store[model] : data
 
   $: colorSchema = getColorSchema(color)
 </script>
 
 <div bind:this={chartElement} class={chartClass} />
-{#if chartDrawn}
+<!-- {#if chartDrawn}
   <Tooltip bind:tooltip {nameLabel} {valueLabel} {chartClass} />
-{/if}
+{/if} -->

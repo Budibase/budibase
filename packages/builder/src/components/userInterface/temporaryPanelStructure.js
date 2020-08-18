@@ -667,11 +667,6 @@ export default {
                     key: "labelsNumberFormat",
                     control: Input,
                   },
-                  {
-                    label: "Label Size",
-                    key: "labelSize",
-                    control: Input,
-                  },
                 ],
               },
             },
@@ -761,6 +756,11 @@ export default {
                     key: "isHorizontal",
                     valueKey: "checked",
                     control: Checkbox,
+                  },
+                  {
+                    label: "Tooltip Title",
+                    key: "tooltipTitle",
+                    control: Input,
                   },
                 ],
               },
