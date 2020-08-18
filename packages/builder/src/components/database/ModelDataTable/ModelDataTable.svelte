@@ -3,7 +3,6 @@
   import fsort from "fast-sort"
   import { store, backendUiStore } from "builderStore"
   import { Button, Icon } from "@budibase/bbui"
-  import Select from "components/common/Select.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import LinkedRecord from "./LinkedRecord.svelte"
   import TablePagination from "./TablePagination.svelte"
