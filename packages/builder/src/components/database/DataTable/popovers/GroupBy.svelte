@@ -19,8 +19,7 @@
   $: viewModel = $backendUiStore.models.find(
     ({ _id }) => _id === $backendUiStore.selectedView.modelId
   )
-  $: fields =
-    viewModel && Object.keys(viewModel.schema)
+  $: fields = viewModel && Object.keys(viewModel.schema)
 
   function saveView() {
     backendUiStore.actions.views.save(view)
@@ -40,7 +39,7 @@
   <div class="input-group-row">
     <p>Group By</p>
     <Select secondary thin bind:value={view.groupBy}>
-      <option value={false}>None</option>
+      <option value={false}>Remove Group By</option>
       {#each fields as field}
         <option value={field}>{field}</option>
       {/each}

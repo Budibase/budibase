@@ -1,8 +1,4 @@
-function statsViewTemplate({
-  field,
-  modelId,
-  groupBy
-}) {
+function statsViewTemplate({ field, modelId, groupBy }) {
   return {
     meta: {
       field,
@@ -14,15 +10,15 @@ function statsViewTemplate({
         max: "number",
         count: "number",
         sumsqr: "number",
-        avg: "number"
-      }
+        avg: "number",
+      },
     },
     map: `function (doc) {
       if (doc.modelId === "${modelId}") {
         emit(doc["${groupBy || "_id"}"], doc["${field}"]);  
       }
     }`,
-    reduce: "_stats" 
+    reduce: "_stats",
   }
 }
 
