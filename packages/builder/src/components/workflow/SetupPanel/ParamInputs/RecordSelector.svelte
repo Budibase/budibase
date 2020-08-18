@@ -1,5 +1,6 @@
 <script>
   import { backendUiStore } from "builderStore"
+  import { Input } from "@budibase/bbui"
 
   export let value
 </script>
@@ -19,8 +20,7 @@
     <label class="uk-form-label fields">Fields</label>
     {#each Object.keys(value.model.schema) as field}
       <div class="uk-form-controls uk-margin">
-        <label class="uk-form-label">{field}</label>
-        <input type="text" class="budibase__input" bind:value={value[field]} />
+        <Input bind:value={value[field]} label={field} />
       </div>
     {/each}
   </div>
