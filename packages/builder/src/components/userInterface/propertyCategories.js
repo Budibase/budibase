@@ -70,6 +70,20 @@ export const layout = [
       { label: "no wrap", value: "noWrap" },
     ],
   },
+  {
+    label: "Gap",
+    key: "gap",
+    control: OptionSelect,
+    options: [
+      { label: "None", value: "0px" },
+      { label: "4px", value: "4px" },
+      { label: "8px", value: "8px" },
+      { label: "16px", value: "16px" },
+      { label: "20px", value: "20px" },
+      { label: "32px", value: "32px" },
+      { label: "64px", value: "64px" },
+    ],
+  },
 ]
 
 export const margin = [

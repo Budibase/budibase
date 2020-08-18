@@ -226,7 +226,7 @@
     position: absolute;
     bottom: 20px;
     display: grid;
-    width: 100%;
+    width: 260px;
     gap: 12px;
   }
 
