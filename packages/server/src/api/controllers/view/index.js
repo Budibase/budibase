@@ -1,5 +1,5 @@
 const CouchDB = require("../../../db")
-const statsViewTemplate = require("./viewBuilder");
+const statsViewTemplate = require("./viewBuilder")
 
 const controller = {
   fetch: async ctx => {
@@ -29,7 +29,7 @@ const controller = {
 
     const designDoc = await db.get("_design/database")
 
-    const view = statsViewTemplate(newView) 
+    const view = statsViewTemplate(newView)
 
     designDoc.views = {
       ...designDoc.views,
@@ -43,12 +43,11 @@ const controller = {
 
     await db.put(designDoc)
 
-
     // add views to model document
     const model = await db.get(ctx.request.body.modelId)
     model.views = {
       ...(model.views ? model.views : {}),
-      [newView.name]: view.meta
+      [newView.name]: view.meta,
     }
 
     if (originalName) {

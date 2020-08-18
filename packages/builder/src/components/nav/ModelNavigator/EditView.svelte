@@ -40,7 +40,7 @@
   function save() {
     backendUiStore.actions.views.save({
       originalName,
-      ...view
+      ...view,
     })
     notifier.success("Renamed View Successfully.")
     hideEditor()

@@ -27,7 +27,10 @@
   let search
 
   $: {
-    if ($backendUiStore.selectedView && $backendUiStore.selectedView.name.startsWith("all_")) {
+    if (
+      $backendUiStore.selectedView &&
+      $backendUiStore.selectedView.name.startsWith("all_")
+    ) {
       api.fetchDataForView($backendUiStore.selectedView).then(records => {
         data = records || []
       })

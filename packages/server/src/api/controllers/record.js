@@ -83,14 +83,14 @@ exports.fetchView = async function(ctx) {
   const { stats, group } = ctx.query
   const response = await db.query(`database/${ctx.params.viewName}`, {
     include_docs: !stats,
-    group
+    group,
   })
 
   if (stats) {
-    for (row of response.rows) {
+    for (let row of response.rows) {
       row.value = {
         ...row.value,
-        avg: row.value.sum / row.value.count
+        avg: row.value.sum / row.value.count,
       }
     }
   } else {
@@ -98,7 +98,6 @@ exports.fetchView = async function(ctx) {
   }
 
   ctx.body = response.rows
-
 }
 
 exports.fetchModelRecords = async function(ctx) {

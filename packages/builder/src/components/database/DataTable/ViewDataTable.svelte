@@ -30,37 +30,36 @@
     },
     {
       name: "min",
-      key: "value.min"
+      key: "value.min",
     },
     {
       name: "max",
-      key: "value.max"
+      key: "value.max",
     },
     {
       name: "sumsqr",
-      key: "value.sumsqr"
+      key: "value.sumsqr",
     },
     {
       name: "count",
-      key: "value.count"
+      key: "value.count",
     },
     {
       name: "avg",
-      key: "value.avg"
-    }
+      key: "value.avg",
+    },
   ]
 
   export let view = {}
 
   let data = []
 
-  $: viewName = view.name
-  $: !viewName.startsWith("all_") && fetchViewData(viewName)
+  $: !view.name.startsWith("all_") && fetchViewData(view)
 
-  async function fetchViewData(viewName) {
-    let QUERY_VIEW_URL = `/api/views/${viewName}?stats=true`
-    if (view.groupBy) {
-      QUERY_VIEW_URL += `&group=${view.groupBy}`
+  async function fetchViewData({ name, groupBy }) {
+    let QUERY_VIEW_URL = `/api/views/${name}?stats=true`
+    if (groupBy) {
+      QUERY_VIEW_URL += `&group=${groupBy}`
     }
 
     const response = await api.get(QUERY_VIEW_URL)
@@ -68,11 +67,7 @@
   }
 </script>
 
-<Table 
-  title={decodeURI(view.name)}
-  columns={COLUMNS}
-  {data}
->
-    <CalculationPopover {view} />
-    <GroupByPopover {view} />
+<Table title={decodeURI(view.name)} columns={COLUMNS} {data}>
+  <CalculationPopover {view} />
+  <GroupByPopover {view} />
 </Table>
