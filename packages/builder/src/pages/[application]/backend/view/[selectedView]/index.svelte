@@ -13,7 +13,7 @@
 </script>
 
 {#if $backendUiStore.selectedDatabase._id && selectedView}
-  <ViewDataTable />
+  <ViewDataTable view={selectedView} />
 {:else}
   <i>create your first table to start building</i>
 {/if}
