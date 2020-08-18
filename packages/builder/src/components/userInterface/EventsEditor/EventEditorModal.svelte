@@ -6,7 +6,6 @@
   import IconButton from "../../common/IconButton.svelte"
   import ActionButton from "../../common/ActionButton.svelte"
   import Select from "../../common/Select.svelte"
-  import Input from "../../common/Input.svelte"
   import getIcon from "../../common/icon"
   import { CloseIcon } from "components/common/Icons/"
 
