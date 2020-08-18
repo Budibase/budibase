@@ -2,8 +2,6 @@
   import { backendUiStore } from "builderStore"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import { ModelSetupNav } from "components/nav/ModelSetupNav"
-  import ModelFieldEditor from "components/nav/ModelSetupNav/ModelFieldEditor.svelte"
   import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 
   export let field
@@ -27,6 +25,7 @@
 
   function deleteField() {
     backendUiStore.actions.models.deleteField(field)
+    hideEditor()
   }
 
   function sort(direction, column) {

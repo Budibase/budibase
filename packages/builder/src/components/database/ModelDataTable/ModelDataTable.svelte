@@ -168,6 +168,9 @@
     max-width: 200px;
     text-overflow: ellipsis;
     border: 1px solid var(--grey-4);
+    overflow: hidden;
+    white-space: pre;
+    box-sizing: border-box;
   }
 
   tbody tr {
@@ -187,6 +190,7 @@
 
   .popovers {
     display: flex;
+    gap: var(--spacing-m);
   }
 
   .no-data {

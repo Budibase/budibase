@@ -1,7 +1,6 @@
 <script>
   import { store } from "builderStore"
   import PropsView from "./PropsView.svelte"
-  import Textbox from "components/common/Textbox.svelte"
   import Button from "components/common/Button.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import ButtonGroup from "components/common/ButtonGroup.svelte"
