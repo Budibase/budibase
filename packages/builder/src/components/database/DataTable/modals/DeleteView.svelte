@@ -4,7 +4,7 @@
   import { store, backendUiStore } from "builderStore"
   import * as api from "../api"
 
-  export let view
+  export let viewName
   export let onClosed
 </script>
 
@@ -24,7 +24,7 @@
     <ActionButton
       alert
       on:click={async () => {
-        await backendUiStore.actions.views.delete(view)
+        await backendUiStore.actions.views.delete(viewName)
         notifier.danger('View deleted')
         onClosed()
       }}>

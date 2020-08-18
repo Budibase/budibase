@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { backendUiStore } from "builderStore"
+  import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import DeleteViewModal from "components/database/DataTable/modals/DeleteView.svelte"
@@ -13,6 +14,7 @@
   let dropdown
 
   let editing
+  let originalName = view.name
 
   function showEditor() {
     editing = true
@@ -29,14 +31,18 @@
       DeleteViewModal,
       {
         onClosed: close,
-        view,
+        viewName: view.name,
       },
       { styleContent: { padding: "0" } }
     )
   }
 
   function save() {
-    backendUiStore.actions.views.save(view)
+    backendUiStore.actions.views.save({
+      originalName,
+      ...view
+    })
+    notifier.success("Renamed View Successfully.")
     hideEditor()
   }
 </script>
@@ -48,7 +54,7 @@
   {#if editing}
     <h5>Edit View</h5>
     <div class="container">
-      <Input placeholder="Table Name" thin bind:value={view} />
+      <Input placeholder="Table Name" thin bind:value={view.name} />
     </div>
     <footer>
       <div class="button-margin-3">

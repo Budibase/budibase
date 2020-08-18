@@ -93,10 +93,8 @@ export const getBackendUiStore = () => {
           // delete the original if renaming
           delete state.draftModel.schema[originalName]
 
-          state.draftModel.schema = {
-            ...state.draftModel.schema,
-            [field.name]: cloneDeep(field),
-          }
+          state.draftModel.schema[field.name] = cloneDeep(field)
+
           store.actions.models.save(state.draftModel)
           return state
         })
@@ -126,8 +124,15 @@ export const getBackendUiStore = () => {
       },
       save: async view => {
         await api.post(`/api/views`, view)
+
         store.update(state => {
-          state.selectedModel.views[view.name] = view 
+          const viewModel = state.models.find(model => model._id === view.modelId)
+          // TODO: Cleaner?
+          if (!viewModel.views) viewModel.views = {}
+          if (view.originalName) delete viewModel.views[view.originalName]
+          viewModel.views[view.name] = view
+
+          state.models = state.models
           state.selectedView = view
           return state
         })

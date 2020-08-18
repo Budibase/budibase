@@ -2,22 +2,6 @@ const CouchDB = require("../../../db")
 const statsViewTemplate = require("./viewBuilder");
 
 const controller = {
-  query: async ctx => {
-    const db = new CouchDB(ctx.user.instanceId)
-    const { meta } = ctx.request.body
-    const response = await db.query(`database/${ctx.params.viewName}`, {
-      group: !!meta.groupBy
-    })
-
-    for (row of response.rows) {
-      row.value = {
-        ...row.value,
-        avg: row.value.sum / row.value.count
-      }
-    }
-
-    ctx.body = response.rows
-  },
   fetch: async ctx => {
     const db = new CouchDB(ctx.user.instanceId)
     const designDoc = await db.get("_design/database")
@@ -41,7 +25,7 @@ const controller = {
   },
   save: async ctx => {
     const db = new CouchDB(ctx.user.instanceId)
-    const newView = ctx.request.body
+    const { originalName, ...newView } = ctx.request.body
 
     const designDoc = await db.get("_design/database")
 
@@ -50,6 +34,11 @@ const controller = {
     designDoc.views = {
       ...designDoc.views,
       [newView.name]: view,
+    }
+
+    // view has been renamed
+    if (originalName) {
+      delete designDoc.views[originalName]
     }
 
     await db.put(designDoc)
@@ -61,6 +50,11 @@ const controller = {
       ...(model.views ? model.views : {}),
       [newView.name]: view.meta
     }
+
+    if (originalName) {
+      delete model.views[originalName]
+    }
+
     await db.put(model)
 
     ctx.body = view

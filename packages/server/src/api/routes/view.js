@@ -13,7 +13,6 @@ router
     recordController.fetchView
   )
   .get("/api/views", authorized(BUILDER), viewController.fetch)
-  // .post("/api/views/query/:viewName", authorized(BUILDER), viewController.query)
   .delete("/api/views/:viewName", authorized(BUILDER), viewController.destroy)
   .post("/api/views", authorized(BUILDER), viewController.save)
 

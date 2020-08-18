@@ -12,7 +12,8 @@
 
   const { open, close } = getContext("simple-modal")
 
-  $: selectedView = $backendUiStore.selectedView && $backendUiStore.selectedView.name
+  $: selectedView =
+    $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
   function selectModel(model) {
     backendUiStore.actions.models.select(model)
@@ -40,17 +41,18 @@
               on:click={() => selectModel(model)}>
               <EditTablePopover table={model} />
             </ListItem>
-            {#each Object.keys(model.views || {}) as view}
+            {#each Object.keys(model.views || {}) as viewName}
               <ListItem
                 indented
-                selected={selectedView === view}
-                title={view}
+                selected={selectedView === viewName}
+                title={viewName}
                 icon="ri-eye-line"
                 on:click={() => selectView({
-                  name: view,
-                  ...model.views[view]
-                })}>
-                <EditViewPopover {view} />
+                    name: viewName,
+                    ...model.views[viewName],
+                  })}>
+                <EditViewPopover
+                  view={{ name: viewName, ...model.views[viewName] }} />
               </ListItem>
             {/each}
           {/each}

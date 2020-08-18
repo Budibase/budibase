@@ -28,7 +28,7 @@
     open(
       DeleteTableModal,
       {
-        onClosed: hideEditor,
+        onClosed: close,
         table,
       },
       { styleContent: { padding: "0" } }

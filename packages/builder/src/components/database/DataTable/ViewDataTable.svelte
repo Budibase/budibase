@@ -17,47 +17,62 @@
   import ColumnHeaderPopover from "./popovers/ColumnHeader.svelte"
   import EditRowPopover from "./popovers/EditRow.svelte"
   import CalculationPopover from "./popovers/Calculate.svelte"
+  import GroupByPopover from "./popovers/GroupBy.svelte"
 
-  const COLUMNS = [
+  let COLUMNS = [
+    {
+      name: "Group",
+      key: "key",
+    },
     {
       name: "sum",
       key: "value.sum",
     },
     {
       name: "min",
-      key: "value.min",
+      key: "value.min"
     },
     {
       name: "max",
-      key: "value.max",
+      key: "value.max"
     },
     {
       name: "sumsqr",
-      key: "value.sumsqr",
+      key: "value.sumsqr"
     },
     {
       name: "count",
-      key: "value.count",
+      key: "value.count"
     },
     {
       name: "avg",
-      key: "value.avg",
-    },
+      key: "value.avg"
+    }
   ]
+
+  export let view = {}
 
   let data = []
 
-  $: selectedView = $backendUiStore.selectedView
-  $: !selectedView.name.startsWith("all_") && fetchViewData(selectedView)
+  $: viewName = view.name
+  $: !viewName.startsWith("all_") && fetchViewData(viewName)
 
-  async function fetchViewData() {
-    const QUERY_VIEW_URL = `/api/views/${$backendUiStore.selectedView.name}?stats=true`
+  async function fetchViewData(viewName) {
+    let QUERY_VIEW_URL = `/api/views/${viewName}?stats=true`
+    if (view.groupBy) {
+      QUERY_VIEW_URL += `&group=${view.groupBy}`
+    }
 
     const response = await api.get(QUERY_VIEW_URL)
     data = await response.json()
   }
 </script>
 
-<Table title={decodeURI(selectedView.name)} columns={COLUMNS} {data}>
-  <CalculationPopover view={selectedView} />
+<Table 
+  title={decodeURI(view.name)}
+  columns={COLUMNS}
+  {data}
+>
+    <CalculationPopover {view} />
+    <GroupByPopover {view} />
 </Table>
