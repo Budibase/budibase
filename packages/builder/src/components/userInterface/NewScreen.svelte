@@ -22,10 +22,7 @@
   let layoutComponent
   let screens
   let name = ""
-  let nameError = ""
   let routeError
-
-  let saveAttempted = false
 
   $: layoutComponents = Object.values($store.components).filter(
     componentDefinition => componentDefinition.container
@@ -40,44 +37,26 @@
   $: route = !route && $store.screens.length === 0 ? "*" : route
 
   const save = () => {
-    saveAttempted = true
-
-    if (name.length === 0) {
-      nameError = "Name is required"
-    } else {
-      if (screenNameExists(name)) {
-        nameError = "This name is already taken"
-      } else {
-        nameError = ""
-      }
-    }
-
-    if (route.length === 0) {
+    if (!route) {
       routeError = "Url is required"
     } else {
-      if (routeNameExists(name)) {
+      if (routeNameExists(route)) {
         routeError = "This url is already taken"
       } else {
         routeError = ""
       }
     }
 
-    const isValid = !routeError && !nameError
-
-    if (!isValid) return
+    if (routeError) return false
 
     store.createScreen(name, route, layoutComponent._component)
+    name = ""
+    route = ""
     dialog.hide()
   }
 
   const cancel = () => {
     dialog.hide()
-  }
-
-  const screenNameExists = name => {
-    return $store.screens.some(
-      screen => screen.name.toLowerCase() === name.toLowerCase()
-    )
   }
 
   const routeNameExists = route => {
@@ -102,7 +81,7 @@
 
   <div>
     <div class="uk-margin">
-      <Input label="Name" error={nameError} bind:value={name} />
+      <Input label="Name" bind:value={name} />
     </div>
 
     <div class="uk-margin">
@@ -115,7 +94,7 @@
 
     <div class="uk-margin">
       <label>Layout Component</label>
-      <Select bind:value={layoutComponent}>
+      <Select bind:value={layoutComponent} secondary>
         {#each layoutComponents as { _component, name }}
           <option value={_component}>{name}</option>
         {/each}
