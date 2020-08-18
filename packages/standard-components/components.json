@@ -502,16 +502,12 @@
 			"betweenBarsPadding": "number",
 			"gradient": "string",
 			"color": "string",
-			"enableLabels": "bool",
 			"hasSingleBarHighlight": "bool",
 			"height": "number",
 			"width": "number",
 			"isAnimated": "bool",
 			"isHorizontal": "bool",
-			"xAxisLabelOffset": "number",
-			"yAxisLabelOffset": "number",
 			"labelNumberFormat": "number",
-			"labelSize": "number",
 			"locale": "string",
 			"nameLabel": "string",
 			"valueLabel": "string",
@@ -546,7 +542,9 @@
 			"xAxisScale": "string",
 			"xAxisFormat": "string",
 			"xAxisCustomFormat": "string",
-			"xAxisLabel": "string"
+			"xAxisLabel": "string",
+			"yAxisLabel": "string",
+			"tooltipTitle": "string"
 		}
 	},
 	"brush":{
@@ -567,7 +565,7 @@
 		}
 	},
 	"heatmap": {
-		"description": "Groupedbar chart",
+		"description": "Heatmap chart",
 		"data": true,
 		"props": {
 			"model": "string",
@@ -587,8 +585,7 @@
 			"color": "string",
 			"height": "string",
 			"width": "string",
-			"margin": "string",
-			"aspectRatio": "number",
+			"margin":"string",
 			"grid":"string",
 			"groupLabel": "string",
 			"isAnimated": "bool",
@@ -596,8 +593,8 @@
 			"nameLabel": "string",
 			"valueLabel":"string",
 			"yTicks": "string",
-			"yTickTextOffset": "string",
-			"useLegend": "bool"
+			"useLegend": "bool",
+			"tooltipTitle": "string"
 		}
 	},
 	"bullet": {
