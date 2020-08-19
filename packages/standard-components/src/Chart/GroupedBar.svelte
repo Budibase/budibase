@@ -44,10 +44,6 @@
   export let yTickTextOffset = null
   export let tooltipTitle = ""
 
-  $: console.log("DATA", data)
-
-  let chartDrawn = false
-
   const schemaIsValid = () =>
     (hasProp(data, "name") || hasProp(data, nameLabel)) &&
     (hasProp(data, "group") || hasProp(data, groupLabel)) &&
@@ -63,7 +59,6 @@
         bindChartEvents()
         chartContainer.datum(data).call(chart)
         bindTooltip()
-        chartDrawn = true
       } else {
         console.error(
           "Grouped bar - Please provide valid name, value and group labels"
@@ -146,7 +141,6 @@
       chart.yTickTextOffset(yTickTextOffset)
     }
     tooltip.title(tooltipTitle || "Groupedbar Title")
-    debugger
   }
 
   function bindChartEvents() {
@@ -162,6 +156,3 @@
 </script>
 
 <div bind:this={chartElement} class={chartClass} />
-<!-- {#if chartDrawn}
-  <Tooltip bind:tooltip {nameLabel} {valueLabel} {chartClass} />
-{/if} -->
