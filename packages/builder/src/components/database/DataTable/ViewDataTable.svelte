@@ -21,7 +21,7 @@
 
   let COLUMNS = [
     {
-      name: "Group",
+      name: "group",
       key: "key",
     },
     {
@@ -54,9 +54,10 @@
 
   let data = []
 
-  $: !view.name.startsWith("all_") && fetchViewData(view)
+  $: ({ name, groupBy } = view)
+  $: !name.startsWith("all_") && fetchViewData(name, groupBy)
 
-  async function fetchViewData({ name, groupBy }) {
+  async function fetchViewData(name, groupBy) {
     let QUERY_VIEW_URL = `/api/views/${name}?stats=true`
     if (groupBy) {
       QUERY_VIEW_URL += `&group=${groupBy}`

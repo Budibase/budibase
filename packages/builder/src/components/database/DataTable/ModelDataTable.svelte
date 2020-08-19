@@ -176,6 +176,7 @@
 
   .popovers {
     display: flex;
+    gap: var(--spacing-l);
   }
 
   .no-data {

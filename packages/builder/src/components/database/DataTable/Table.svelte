@@ -105,15 +105,6 @@
     vertical-align: middle;
   }
 
-  .edit-header {
-    width: 100px;
-    cursor: default;
-  }
-
-  .edit-header:hover {
-    color: var(--ink);
-  }
-
   th:hover {
     color: var(--blue);
     cursor: pointer;
@@ -142,6 +133,7 @@
 
   .popovers {
     display: flex;
+    gap: var(--spacing-l);
   }
 
   .no-data {

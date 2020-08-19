@@ -1,5 +1,5 @@
 <script>
-  import { Popover, Button, Icon, Input, Select } from "@budibase/bbui"
+  import { Popover, TextButton, Button, Icon, Input, Select } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
@@ -33,10 +33,10 @@
 </script>
 
 <div bind:this={anchor}>
-  <Button text small on:click={dropdown.show}>
+  <TextButton text small on:click={dropdown.show}>
     <Icon name="addrow" />
     Create New View
-  </Button>
+  </TextButton>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <h5>Create View</h5>
