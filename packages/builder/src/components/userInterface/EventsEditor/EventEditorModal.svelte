@@ -1,12 +1,10 @@
 <script>
   import { store } from "builderStore"
-  import { Button } from "@budibase/bbui"
+  import { Button, Select } from "@budibase/bbui"
   import Modal from "../../common/Modal.svelte"
   import HandlerSelector from "./HandlerSelector.svelte"
   import IconButton from "../../common/IconButton.svelte"
   import ActionButton from "../../common/ActionButton.svelte"
-  import Select from "../../common/Select.svelte"
-  import Input from "../../common/Input.svelte"
   import getIcon from "../../common/icon"
   import { CloseIcon } from "components/common/Icons/"
 
