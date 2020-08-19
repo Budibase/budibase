@@ -208,16 +208,17 @@
     </div>
     <div class="footer">
       {#if $createAppStore.currentStep > 0}
-        <Button secondary on:click={back}>Back</Button>
+        <Button medium secondary on:click={back}>Back</Button>
       {/if}
       {#if $createAppStore.currentStep < steps.length - 1}
-        <Button secondary on:click={next} disabled={!currentStepIsValid}>
+        <Button medium blue on:click={next} disabled={!currentStepIsValid}>
           Next
         </Button>
       {/if}
       {#if $createAppStore.currentStep === steps.length - 1}
         <Button
-          secondary
+          medium
+          blue
           on:click={signUp}
           disabled={!fullFormIsValid || submitting}>
           {submitting ? 'Loading...' : 'Submit'}

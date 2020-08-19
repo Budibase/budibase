@@ -16,6 +16,7 @@
 	"Navigation": {
 		"name": "Navigation",
 		"description": "A basic header navigation component",
+		"children": true,
 		"props": {
 			"logoUrl": "string",
 			"title": "string",
@@ -244,6 +245,7 @@
 	},
 	"list": {
 		"description": "A configurable data list that attaches to your backend models.",
+		"children": true,
 		"data": true,
 		"props": {
 			"model": "models"
@@ -263,9 +265,85 @@
 	},
 	"recorddetail": {
 		"description": "Loads a record, using an ID in the url",
+		"children": true,
 		"data": true,
 		"props": {
 			"model": "models"
+		}
+	},
+	"card": {
+		"name": "Card",
+		"props": {
+			"imageUrl": "string",
+			"heading": "string",
+			"description": "string",
+			"linkText": "string",
+			"linkUrl": "string",
+			"color": "string",
+			"linkHoverColor": "string",
+			"imageHeight": {
+				"type": "options",
+				"default": "20rem",
+				"options": [
+					"12rem",
+					"16rem",
+					"20rem",
+					"24rem"				
+				]
+			},
+			"cardWidth": {
+				"type": "options",
+				"default": "20rem",
+				"options": [
+					"16rem",
+					"20rem",
+					"24rem"				
+				]
+			}
+		}
+	},
+	"cardhorizontal": {
+		"name": "Horizontal Card",
+		"props": {
+			"imageUrl": "string",
+			"heading": "string",
+			"description": "string",
+			"subtext": "string",
+			"linkText": "string",
+			"linkUrl": "string",
+			"color": "string",
+			"linkHoverColor": "string",
+			"imageWidth": {
+				"type": "options",
+				"default": "8rem",
+				"options": [
+					"8rem",
+					"12rem",
+					"16rem"			
+				]
+			},
+			"cardWidth": {
+				"type": "options",
+				"default": "32rem",
+				"options": [
+					"24rem",
+					"28rem",
+					"32rem",
+					"40rem",
+					"48rem",
+					"60rem",
+					"100%"		
+				]
+			},
+			"imageHeight": {
+				"type": "options",
+				"default": "8rem",
+				"options": [
+					"8rem",
+					"12rem",
+					"16rem"			
+				]
+			}
 		}
 	},
 	"datamap": {
@@ -424,16 +502,12 @@
 			"betweenBarsPadding": "number",
 			"gradient": "string",
 			"color": "string",
-			"enableLabels": "bool",
 			"hasSingleBarHighlight": "bool",
 			"height": "number",
 			"width": "number",
 			"isAnimated": "bool",
 			"isHorizontal": "bool",
-			"xAxisLabelOffset": "number",
-			"yAxisLabelOffset": "number",
 			"labelNumberFormat": "number",
-			"labelSize": "number",
 			"locale": "string",
 			"nameLabel": "string",
 			"valueLabel": "string",
@@ -468,7 +542,9 @@
 			"xAxisScale": "string",
 			"xAxisFormat": "string",
 			"xAxisCustomFormat": "string",
-			"xAxisLabel": "string"
+			"xAxisLabel": "string",
+			"yAxisLabel": "string",
+			"tooltipTitle": "string"
 		}
 	},
 	"brush":{
@@ -489,7 +565,7 @@
 		}
 	},
 	"heatmap": {
-		"description": "Groupedbar chart",
+		"description": "Heatmap chart",
 		"data": true,
 		"props": {
 			"model": "string",
@@ -509,8 +585,7 @@
 			"color": "string",
 			"height": "string",
 			"width": "string",
-			"margin": "string",
-			"aspectRatio": "number",
+			"margin":"string",
 			"grid":"string",
 			"groupLabel": "string",
 			"isAnimated": "bool",
@@ -518,14 +593,14 @@
 			"nameLabel": "string",
 			"valueLabel":"string",
 			"yTicks": "string",
-			"yTickTextOffset": "string",
-			"useLegend": "bool"
+			"useLegend": "bool",
+			"tooltipTitle": "string"
 		}
 	},
 	"bullet": {
 		"description": "Bullet chart",
 		"data": true,
-		"props": {
+		"props": { 
 			"model": "string",
 			"color": "string",
 			"customSubtitle": "string",
@@ -599,6 +674,7 @@
 	},
 	"container": {
 		"name": "Container",
+		"children": true,
 		"description": "An element that contains and lays out other elements. e.g. <div>, <header> etc",
 		"props": {
 			"className": "string",

@@ -2,6 +2,7 @@
   import { store, backendUiStore, workflowStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import ActionButton from "components/common/ActionButton.svelte"
+  import { Input } from "@budibase/bbui"
 
   export let onClosed
 
@@ -26,8 +27,7 @@
   Create Workflow
 </header>
 <div>
-  <label class="uk-form-label" for="form-stacked-text">Name</label>
-  <input class="uk-input" type="text" bind:value={name} />
+  <Input bind:value={name} label="Name" />
 </div>
 <footer>
   <a href="https://docs.budibase.com">

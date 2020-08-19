@@ -29,8 +29,10 @@
   }
 
   const ok = () => {
+    const result = onOk()
+    // allow caller to return false, to cancel the "ok"
+    if (result === false) return
     hide()
-    onOk()
   }
 </script>
 
