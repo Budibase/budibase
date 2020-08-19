@@ -1,6 +1,12 @@
 <script>
   import { backendUiStore } from "builderStore"
-  import { DropdownMenu, TextButton as Button, Icon, Input, Select } from "@budibase/bbui"
+  import {
+    DropdownMenu,
+    TextButton as Button,
+    Icon,
+    Input,
+    Select,
+  } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 

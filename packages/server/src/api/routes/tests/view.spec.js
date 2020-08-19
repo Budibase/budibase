@@ -65,7 +65,15 @@ describe("/views", () => {
       expect(updatedModel.views).toEqual({
         TestView: {
           field: "Price",
-          modelId: model._id
+          modelId: model._id,
+          schema: {
+            sum: "number",
+            min: "number",
+            max: "number",
+            count: "number",
+            sumsqr: "number",
+            avg: "number"
+          }
         }
       });
     })
@@ -108,10 +116,7 @@ describe("/views", () => {
         Price: 4000
       })
       const res = await request
-        .post(`/api/views/query/TestView`)
-        .send({
-          meta: {}
-        })
+        .get(`/api/views/TestView?stats=true`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
@@ -142,12 +147,7 @@ describe("/views", () => {
         Category: "Two"
       })
       const res = await request
-        .post(`/api/views/query/TestView`)
-        .send({
-          meta: {
-            groupBy: "Category"
-          }
-        })
+        .get(`/api/views/TestView?stats=true&group=Category`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
