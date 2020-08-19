@@ -11,10 +11,10 @@
 
 <section>
   <div class="content">
-    <heading>
+    <header>
       <i class="ri-information-line alert" />
       <h4 class="budibase__title--4">Delete View</h4>
-    </heading>
+    </header>
     <p>
       Are you sure you want to delete this view? All of your data will be
       permanently removed. This action cannot be undone.
@@ -48,7 +48,7 @@
     border-top: 1px solid #ccc;
   }
 
-  heading {
+  header {
     display: flex;
     align-items: center;
   }

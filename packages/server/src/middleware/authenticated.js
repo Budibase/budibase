@@ -14,10 +14,6 @@ module.exports = async (ctx, next) => {
     return
   }
 
-  // ctx.user = {
-  //   instanceId: "inst_4e6f424_970ca7f2b9e24ec8896eb10862d7f22b"
-  // }
-
   const appToken = ctx.cookies.get("budibase:token")
   const builderToken = ctx.cookies.get("builder:token")
 

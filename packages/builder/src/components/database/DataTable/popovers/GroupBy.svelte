@@ -1,5 +1,12 @@
 <script>
-  import { Popover, TextButton, Button, Icon, Input, Select } from "@budibase/bbui"
+  import {
+    Popover,
+    TextButton,
+    Button,
+    Icon,
+    Input,
+    Select,
+  } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
@@ -39,7 +46,7 @@
   <div class="input-group-row">
     <p>Group By</p>
     <Select secondary thin bind:value={view.groupBy}>
-      <option value={false}/>
+      <option value={false} />
       {#each fields as field}
         <option value={field}>{field}</option>
       {/each}
