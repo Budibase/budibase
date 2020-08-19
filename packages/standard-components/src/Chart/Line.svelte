@@ -64,8 +64,6 @@
   export let tooltipThreshold = null
   export let tooltipTitle = ""
 
-  let chartDrawn = false
-
   onMount(async () => {
     if (model) {
       data = await getAndPrepareData()
@@ -74,7 +72,6 @@
         bindChartUIProps()
         bindChartEvents()
         chartContainer.datum(data).call(chart)
-        chartDrawn = true
         bindTooltip()
       } else {
         console.error(
