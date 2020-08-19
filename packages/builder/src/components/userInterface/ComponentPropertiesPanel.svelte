@@ -1,6 +1,5 @@
 <script>
   import { setContext, onMount } from "svelte"
-  import PropsView from "./PropsView.svelte"
 
   import { store } from "builderStore"
   import IconButton from "components/common/IconButton.svelte"
@@ -11,8 +10,6 @@
     CircleIndicator,
     EventsIcon,
   } from "components/common/Icons/"
-  import CodeEditor from "./CodeEditor.svelte"
-  import LayoutEditor from "./LayoutEditor.svelte"
   import EventsEditor from "./EventsEditor"
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"

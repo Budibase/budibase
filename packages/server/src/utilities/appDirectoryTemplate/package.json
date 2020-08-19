@@ -5,7 +5,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@budibase/standard-components": "0.x",
-    "@budibase/materialdesign-components": "0.x"
+    "@budibase/standard-components": "0.x"
   }
 }

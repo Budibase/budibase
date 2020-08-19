@@ -1,23 +1,20 @@
 <script>
-  import { getColorSchema, getChartGradient } from "./Chart.svelte"
+  import {
+    getColorSchema,
+    getChartGradient,
+    notNull,
+    hasProp,
+  } from "./utils.js"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
 
   import { select } from "d3-selection"
   import shortid from "shortid"
-  /*
-    ISSUES:
-    - x and y axis label set and appear in the dom but do not display next to the axis
-    - x and y axis label offset - does effect position of labels but does not render text (see above)
-    - x tick label overlaps bar, seems to be no apu method to change this? Could do it by querying for it in the dom
-      specifically and doing this: <tspan x="-10" dy="0.32em">4.0</tspan>
-  */
 
   let tooltip
   const _id = shortid.generate()
   const chart = britecharts.bar()
   const chartClass = `bar-container-${_id}`
-  const legendClass = `legend-container-${_id}`
 
   let chartElement = null
   let chartContainer = null
@@ -29,13 +26,13 @@
   export let customMouseOut = () => tooltip.hide()
   export let customClick = null
 
-  export let data = []
+  let data = []
   export let xAxisLabel = ""
   export let yAxisLabel = ""
   export let betweenBarsPadding = 0.1 //takes decimal values 0.1, 0.5 etc
   export let gradient = null
   export let color = "britecharts"
-  export let enableLabels = true
+  export let enableLabels = false
   export let hasPercentage = null
   export let hasSingleBarHighlight = true
   export let highlightBarFunction = null
@@ -64,17 +61,24 @@
   let store = _bb.store
 
   onMount(async () => {
-    if (chartElement) {
-      if (model) {
-        await fetchData()
+    if (model) {
+      await fetchData()
+      data = $store[model]
+      if (schemaIsValid()) {
+        chartContainer = select(`.${chartClass}`)
+        bindChartUIProps()
+        bindChartEvents()
+        chartContainer.datum(data).call(chart)
+        bindChartTooltip()
+      } else {
+        console.error("Bar Chart - Please provide a valid name and value label")
       }
-      chartContainer = select(`.${chartClass}`)
-      bindChartUIProps()
-      bindChartEvents()
-      chartContainer.datum(_data).call(chart)
-      bindChartTooltip()
     }
   })
+
+  const schemaIsValid = () =>
+    (hasProp(data, "name") || hasProp(data, nameLabel)) &&
+    (hasProp(data, "value") || hasProp(data, valueLabel))
 
   async function fetchData() {
     const FETCH_RECORDS_URL = `/api/views/all_${model}`
@@ -91,85 +95,85 @@
   }
 
   function bindChartUIProps() {
-    chart.numberFormat(".1f")
+    chart.numberFormat(".0f")
     chart.labelsNumberFormat(".1f")
 
-    if (color) {
+    if (notNull(color)) {
       chart.colorSchema(colorSchema)
     }
-    if (gradient) {
+    if (notNull(gradient)) {
       chart.chartGradient(chartGradient)
     }
-    if (xAxisLabel) {
+    if (notNull(xAxisLabel)) {
       chart.xAxisLabel(xAxisLabel)
     }
-    if (yAxisLabel) {
+    if (notNull(yAxisLabel)) {
       chart.yAxisLabel(yAxisLabel)
     }
-    if (betweenBarsPadding) {
+    if (notNull(betweenBarsPadding)) {
       chart.betweenBarsPadding(Number(betweenBarsPadding))
     }
-    if (enableLabels) {
+    if (notNull(enableLabels)) {
       chart.enableLabels(enableLabels)
     }
-    if (hasPercentage) {
+    if (notNull(hasPercentage)) {
       chart.hasPercentage(hasPercentage)
     }
-    if (hasSingleBarHighlight) {
+    if (notNull(hasSingleBarHighlight)) {
       chart.hasSingleBarHighlight(hasSingleBarHighlight)
     }
-    if (labelsMargin) {
+    if (notNull(labelsMargin)) {
       chart.labelsMargin(labelsMargin)
     }
-    if (height) {
+    if (notNull(height)) {
       chart.height(height)
     }
-    if (highlightBarFunction) {
+    if (notNull(highlightBarFunction)) {
       chart.highlightBarFunction(highlightBarFunction)
     }
-    if (width) {
+    if (notNull(width)) {
       chart.width(width)
     }
-    if (isAnimated) {
+    if (notNull(isAnimated)) {
       chart.isAnimated(isAnimated)
     }
-    if (isHorizontal) {
+    if (notNull(isHorizontal)) {
       chart.isHorizontal(isHorizontal)
     }
-    if (yAxisLabelOffset) {
+    if (notNull(yAxisLabelOffset)) {
       chart.yAxisLabelOffset(yAxisLabelOffset)
     }
-    if (xAxisLabelOffset) {
+    if (notNull(xAxisLabelOffset)) {
       chart.xAxisLabelOffset(Number(xAxisLabelOffset))
     }
-    if (labelsNumberFormat) {
+    if (notNull(labelsNumberFormat)) {
       chart.labelsNumberFormat(labelsNumberFormat)
     }
-    if (valueLabel) {
+    if (notNull(valueLabel)) {
       chart.valueLabel(valueLabel)
     }
-    if (locale) {
+    if (notNull(locale)) {
       chart.locale(locale)
     }
-    if (nameLabel) {
+    if (notNull(nameLabel)) {
       chart.nameLabel(nameLabel)
     }
-    if (numberFormat) {
+    if (notNull(numberFormat)) {
       chart.numberFormat(numberFormat)
     }
-    if (labelsSize) {
+    if (notNull(labelsSize)) {
       chart.labelsSize(labelsSize)
     }
-    if (xTicks) {
+    if (notNull(xTicks)) {
       chart.xTicks(xTicks)
     }
-    if (yTicks) {
+    if (notNull(yTicks)) {
       chart.yTicks(yTicks)
     }
-    if (percentageAxisToMaxRatio) {
+    if (notNull(percentageAxisToMaxRatio)) {
       chart.percentageAxisToMaxRatio(percentageAxisToMaxRatio)
     }
-    chartContainer.datum(_data).call(chart)
+    chartContainer.datum(data).call(chart)
   }
 
   function bindChartEvents() {
@@ -194,25 +198,8 @@
     tooltipContainer.datum([]).call(tooltip)
   }
 
-  $: _data = model ? $store[model] : data
-
   $: colorSchema = getColorSchema(color)
   $: chartGradient = getChartGradient(gradient)
 </script>
 
-<!-- SVG Test 
-  <svg viewBox="6 -8 200 22">
-    <text x="5" y="10" class="text-svg">Hello World</text>
-  </svg>-->
-
 <div bind:this={chartElement} class={chartClass} />
-{#if useLegend}
-  <div class={legendClass} />
-{/if}
-
-<style>
-  .text-svg {
-    font: italic 15px serif;
-    fill: red;
-  }
-</style>
