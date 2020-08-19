@@ -54,7 +54,7 @@
   {#if editing}
     <h5>Edit View</h5>
     <div class="container">
-      <Input placeholder="Table Name" thin bind:value={view.name} />
+      <Input placeholder="View Name" thin bind:value={view.name} />
     </div>
     <footer>
       <div class="button-margin-3">

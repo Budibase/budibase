@@ -118,10 +118,6 @@ export const getBackendUiStore = () => {
         }),
       delete: async view => {
         await api.delete(`/api/views/${view}`)
-        store.update(state => {
-          store.actions.models.select(state.models[0])
-          return state
-        })
         await store.actions.models.fetch()
       },
       save: async view => {

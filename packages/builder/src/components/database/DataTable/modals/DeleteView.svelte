@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "@sveltech/routify"
   import ActionButton from "components/common/ActionButton.svelte"
   import { notifier } from "builderStore/store/notifications"
   import { store, backendUiStore } from "builderStore"
@@ -25,7 +26,8 @@
       alert
       on:click={async () => {
         await backendUiStore.actions.views.delete(viewName)
-        notifier.danger('View deleted')
+        notifier.danger(`View ${viewName} deleted.`)
+        $goto(`./backend`)
         onClosed()
       }}>
       Delete

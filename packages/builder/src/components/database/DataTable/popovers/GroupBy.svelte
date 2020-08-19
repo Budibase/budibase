@@ -1,5 +1,5 @@
 <script>
-  import { Popover, Button, Icon, Input, Select } from "@budibase/bbui"
+  import { Popover, TextButton, Button, Icon, Input, Select } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
@@ -29,17 +29,17 @@
 </script>
 
 <div bind:this={anchor}>
-  <Button text small on:click={dropdown.show}>
-    <Icon name="calculate" />
+  <TextButton text small active={!!view.groupBy} on:click={dropdown.show}>
+    <Icon name="group" />
     Group By
-  </Button>
+  </TextButton>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <h5>Group By</h5>
   <div class="input-group-row">
     <p>Group By</p>
     <Select secondary thin bind:value={view.groupBy}>
-      <option value={false}>Remove Group By</option>
+      <option value={false}/>
       {#each fields as field}
         <option value={field}>{field}</option>
       {/each}

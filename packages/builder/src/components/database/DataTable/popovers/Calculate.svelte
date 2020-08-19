@@ -1,5 +1,5 @@
 <script>
-  import { Popover, Button, Icon, Input, Select } from "@budibase/bbui"
+  import { Popover, TextButton, Button, Icon, Input, Select } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
@@ -33,10 +33,10 @@
 </script>
 
 <div bind:this={anchor}>
-  <Button text small on:click={dropdown.show}>
+  <TextButton text small on:click={dropdown.show} active={!!view.field}>
     <Icon name="calculate" />
     Calculate
-  </Button>
+  </TextButton>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <h5>Calculate</h5>
