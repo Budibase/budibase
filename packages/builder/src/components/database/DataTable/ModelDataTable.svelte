@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import fsort from "fast-sort"
+  import getOr from "lodash/fp/getOr"
   import { store, backendUiStore } from "builderStore"
   import { Button, Icon } from "@budibase/bbui"
   import ActionButton from "components/common/ActionButton.svelte"
@@ -9,6 +10,7 @@
   import { DeleteRecordModal, CreateEditRecordModal } from "./modals"
   import RowPopover from "./popovers/Row.svelte"
   import ColumnPopover from "./popovers/Column.svelte"
+  import ViewPopover from "./popovers/View.svelte"
   import ColumnHeaderPopover from "./popovers/ColumnHeader.svelte"
   import EditRowPopover from "./popovers/EditRow.svelte"
   import * as api from "./api"
@@ -20,12 +22,14 @@
   let modalOpen = false
   let data = []
   let headers = []
-  let views = []
   let currentPage = 0
   let search
 
   $: {
-    if ($backendUiStore.selectedView) {
+    if (
+      $backendUiStore.selectedView &&
+      $backendUiStore.selectedView.name.startsWith("all_")
+    ) {
       api.fetchDataForView($backendUiStore.selectedView).then(records => {
         data = records || []
       })
@@ -46,22 +50,6 @@
   )
 
   $: schema = $backendUiStore.selectedModel.schema
-
-  const createNewRecord = () => {
-    open(
-      CreateEditRecordModal,
-      {
-        onClosed: close,
-      },
-      { styleContent: { padding: "0" } }
-    )
-  }
-
-  onMount(() => {
-    if (views.length) {
-      backendUiStore.actions.views.select(views[0])
-    }
-  })
 </script>
 
 <section>
@@ -71,6 +59,7 @@
       <ColumnPopover />
       {#if Object.keys($backendUiStore.selectedModel.schema).length > 0}
         <RowPopover />
+        <ViewPopover />
       {/if}
     </div>
   </div>
@@ -101,7 +90,7 @@
             <td>
               {#if schema[header].type === 'link'}
                 <LinkedRecord field={schema[header]} ids={row[header]} />
-              {:else}{row[header] || ''}{/if}
+              {:else}{getOr('', header, row)}{/if}
             </td>
           {/each}
         </tr>

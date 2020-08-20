@@ -193,9 +193,6 @@ const createUserWithPermissions = async (
       accessLevelId: accessRes.body._id,
     })
 
-  //const db = new CouchDB(instanceId)
-  //const designDoc = await db.get("_design/database")
-
   const anonUser = {
     userId: "ANON",
     accessLevelId: ANON_LEVEL_ID,

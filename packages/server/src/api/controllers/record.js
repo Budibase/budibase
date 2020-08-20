@@ -80,10 +80,24 @@ exports.save = async function(ctx) {
 
 exports.fetchView = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
+  const { stats, group } = ctx.query
   const response = await db.query(`database/${ctx.params.viewName}`, {
-    include_docs: true,
+    include_docs: !stats,
+    group,
   })
-  ctx.body = response.rows.map(row => row.doc)
+
+  if (stats) {
+    for (let row of response.rows) {
+      row.value = {
+        ...row.value,
+        avg: row.value.sum / row.value.count,
+      }
+    }
+  } else {
+    response.rows = response.rows.map(row => row.doc)
+  }
+
+  ctx.body = response.rows
 }
 
 exports.fetchModelRecords = async function(ctx) {
