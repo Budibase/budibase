@@ -6,15 +6,24 @@
   export let indented
 </script>
 
-<div class:selected on:click class={className}>
-  <i class:indented class={icon} />
+<div
+  data-cy="model-nav-item"
+  class:indented
+  class:selected
+  on:click
+  class={className}>
+  <i class={icon} />
   <span>{title}</span>
   <slot />
 </div>
 
 <style>
   .indented {
-    margin-left: 10px;
+    grid-template-columns: 50px 1fr 20px;
+  }
+
+  .indented i {
+    justify-self: end;
   }
 
   div {

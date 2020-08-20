@@ -23,13 +23,10 @@ export const getBackendUiStore = () => {
     database: {
       select: async db => {
         const modelsResponse = await api.get(`/api/models`)
-        const viewsResponse = await api.get(`/api/views`)
         const models = await modelsResponse.json()
-        const views = await viewsResponse.json()
         store.update(state => {
           state.selectedDatabase = db
           state.models = models
-          state.views = views
           return state
         })
       },
@@ -59,8 +56,7 @@ export const getBackendUiStore = () => {
         store.update(state => {
           state.selectedModel = model
           state.draftModel = cloneDeep(model)
-          state.selectedField = ""
-          state.selectedView = `all_${model._id}`
+          state.selectedView = { name: `all_${model._id}` }
           return state
         }),
       save: async model => {
@@ -99,10 +95,8 @@ export const getBackendUiStore = () => {
           // delete the original if renaming
           delete state.draftModel.schema[originalName]
 
-          state.draftModel.schema = {
-            ...state.draftModel.schema,
-            [field.name]: cloneDeep(field),
-          }
+          state.draftModel.schema[field.name] = cloneDeep(field)
+
           store.actions.models.save(state.draftModel)
           return state
         })
@@ -119,8 +113,30 @@ export const getBackendUiStore = () => {
       select: view =>
         store.update(state => {
           state.selectedView = view
+          state.selectedModel = {}
           return state
         }),
+      delete: async view => {
+        await api.delete(`/api/views/${view}`)
+        await store.actions.models.fetch()
+      },
+      save: async view => {
+        await api.post(`/api/views`, view)
+
+        store.update(state => {
+          const viewModel = state.models.find(
+            model => model._id === view.modelId
+          )
+          // TODO: Cleaner?
+          if (!viewModel.views) viewModel.views = {}
+          if (view.originalName) delete viewModel.views[view.originalName]
+          viewModel.views[view.name] = view
+
+          state.models = state.models
+          state.selectedView = view
+          return state
+        })
+      },
     },
     users: {
       create: user =>
