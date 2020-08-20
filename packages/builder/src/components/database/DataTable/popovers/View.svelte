@@ -21,7 +21,9 @@
   $: fields = Object.keys($backendUiStore.selectedModel.schema).filter(key => {
     return $backendUiStore.selectedModel.schema[key].type === "number"
   })
-  $: views = $backendUiStore.models.flatMap(model => Object.keys(model.views))
+  $: views = $backendUiStore.models.flatMap(model =>
+    Object.keys(model.views || {})
+  )
 
   function saveView() {
     if (views.includes(name)) {
