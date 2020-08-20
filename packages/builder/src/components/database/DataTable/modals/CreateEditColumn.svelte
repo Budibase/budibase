@@ -15,22 +15,20 @@
   import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"
   import * as api from "../api"
 
-  export let onClosed
-  export let field = {}
-
   let fieldDefinitions = cloneDeep(FIELDS)
+
+  export let onClosed
+  export let field = {
+    type: "string",
+    constraints: fieldDefinitions.STRING.constraints,
+  }
+
   let originalName = field.name
 
   $: required =
     field.constraints &&
     field.constraints.presence &&
     !field.constraints.presence.allowEmpty
-  $: if (field.type) {
-    field.constraints = merge(
-      fieldDefinitions[field.type.toUpperCase()].constraints,
-      field.constraints
-    )
-  }
 
   async function saveColumn() {
     backendUiStore.update(state => {
@@ -43,14 +41,26 @@
     })
     onClosed()
   }
+
+  function handleFieldConstraints(event) {
+    const { type, constraints } = fieldDefinitions[
+      event.target.value.toUpperCase()
+    ]
+    field.type = type
+    field.constraints = constraints
+  }
 </script>
 
 <div class="actions">
   <Input placeholder="Name" thin bind:value={field.name} />
 
-  <Select secondary thin bind:value={field.type}>
+  <Select
+    secondary
+    thin
+    on:change={handleFieldConstraints}
+    bind:value={field.value}>
     {#each Object.values(fieldDefinitions) as field}
-      <option value={field.type}>{field.name}</option>
+      <option value={field.value}>{field.name}</option>
     {/each}
   </Select>
 
@@ -63,28 +73,28 @@
         on:change={() => (field.constraints.presence.allowEmpty = required)} />
     </div>
 
-    {#if field.type === 'string'}
+    {#if field.value === 'string' && field.constraints}
       <NumberBox
         label="Max Length"
         bind:value={field.constraints.length.maximum} />
       <ValuesList
         label="Categories"
         bind:values={field.constraints.inclusion} />
-    {:else if field.type === 'datetime'}
+    {:else if field.value === 'datetime' && field.constraints}
       <DatePicker
         label="Min Value"
         bind:value={field.constraints.datetime.earliest} />
       <DatePicker
         label="Max Value"
         bind:value={field.constraints.datetime.latest} />
-    {:else if field.type === 'number'}
+    {:else if field.value === 'number' && field.constraints}
       <NumberBox
         label="Min Value"
         bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
       <NumberBox
         label="Max Value"
         bind:value={field.constraints.numericality.lessThanOrEqualTo} />
-    {:else if field.type === 'link'}
+    {:else if field.value === 'link'}
       <div class="field">
         <label>Link</label>
         <select class="budibase__input" bind:value={field.modelId}>
