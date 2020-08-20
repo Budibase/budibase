@@ -40,21 +40,21 @@ export const FIELDS = {
   //     presence: { allowEmpty: true },
   //   },
   // },
-  DATETIME: {
-    name: "Date/Time",
-    icon: "ri-calendar-event-fill",
-    type: "string",
-    value: "datetime",
-    constraints: {
-      type: "string",
-      length: {},
-      presence: { allowEmpty: true },
-      datetime: {
-        latest: "",
-        earliest: "",
-      },
-    },
-  },
+  // DATETIME: {
+  //   name: "Date/Time",
+  //   icon: "ri-calendar-event-fill",
+  //   type: "string",
+  //   value: "datetime",
+  //   constraints: {
+  //     type: "string",
+  //     length: {},
+  //     presence: { allowEmpty: true },
+  //     datetime: {
+  //       latest: "",
+  //       earliest: "",
+  //     },
+  //   },
+  // },
   // IMAGE: {
   //   name: "File",
   //   icon: "ri-image-line",
