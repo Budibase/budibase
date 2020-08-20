@@ -45,9 +45,9 @@
   $: sort = $backendUiStore.sort
   $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
 
-  $: headers = Object.keys($backendUiStore.selectedModel.schema).filter(
-    id => !INTERNAL_HEADERS.includes(id)
-  )
+  $: headers = Object.keys($backendUiStore.selectedModel.schema)
+    .sort()
+    .filter(id => !INTERNAL_HEADERS.includes(id))
 
   $: schema = $backendUiStore.selectedModel.schema
 </script>
