@@ -9,8 +9,5 @@
   <option value="" />
   {#each $backendUiStore.models as model}
     <option value={model._id}>{model.name}</option>
-    {#each Object.keys(model.views) as view}
-      <option value={view}>{view}</option>
-    {/each}
   {/each}
 </Select>

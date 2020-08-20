@@ -6,7 +6,6 @@
   import api from "builderStore/api"
   import { Button, Icon } from "@budibase/bbui"
   import Table from "./Table.svelte"
-  import Select from "components/common/Select.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import LinkedRecord from "./LinkedRecord.svelte"
   import TablePagination from "./TablePagination.svelte"
@@ -23,6 +22,7 @@
     {
       name: "group",
       key: "key",
+      default: "All Records",
     },
     {
       name: "sum",

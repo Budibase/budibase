@@ -5,7 +5,6 @@
   import { store, backendUiStore } from "builderStore"
   import api from "builderStore/api"
   import { Button, Icon } from "@budibase/bbui"
-  import Select from "components/common/Select.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import LinkedRecord from "./LinkedRecord.svelte"
   import TablePagination from "./TablePagination.svelte"
@@ -58,7 +57,7 @@
       {#each paginatedData as row}
         <tr>
           {#each columns as header}
-            <td>{getOr('', header.key, row)}</td>
+            <td>{getOr(row.default || '', header.key, row)}</td>
           {/each}
         </tr>
       {/each}
