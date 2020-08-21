@@ -43,7 +43,7 @@
 
 <div bind:this={anchor}>
   <TextButton text small on:click={dropdown.show}>
-    <Icon name="addrow" />
+    <Icon name="view" />
     Create New View
   </TextButton>
 </div>
