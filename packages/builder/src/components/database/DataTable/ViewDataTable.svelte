@@ -17,6 +17,7 @@
   import EditRowPopover from "./popovers/EditRow.svelte"
   import CalculationPopover from "./popovers/Calculate.svelte"
   import GroupByPopover from "./popovers/GroupBy.svelte"
+  import FilterPopover from "./popovers/Filter.svelte"
 
   let COLUMNS = [
     {
@@ -54,8 +55,8 @@
 
   let data = []
 
-  $: ({ name, groupBy } = view)
-  $: !name.startsWith("all_") && fetchViewData(name, groupBy)
+  $: ({ name, groupBy, filters } = view)
+  $: !name.startsWith("all_") && filters && fetchViewData(name, groupBy)
 
   async function fetchViewData(name, groupBy) {
     let QUERY_VIEW_URL = `/api/views/${name}?stats=true`
@@ -69,6 +70,7 @@
 </script>
 
 <Table title={decodeURI(view.name)} columns={COLUMNS} {data}>
+  <FilterPopover {view} />
   <CalculationPopover {view} />
   <GroupByPopover {view} />
 </Table>
