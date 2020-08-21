@@ -38,10 +38,10 @@ context('Create a Table', () => {
     it('edits a record', () => {
         cy.get("tbody .ri-more-line").click()
         cy.get("[data-cy=edit-row]").click()
-        cy.get(".actions input").type("updatedRecord")
+        cy.get(".actions input").type("Updated")
         cy.contains("Save").click()
 
-        cy.contains('updatedRecord').should('have.text', 'updatedRecord')
+        cy.contains('RoverUpdated').should('have.text', 'RoverUpdated')
     })
 
     it('deletes a record', () => {
@@ -49,7 +49,7 @@ context('Create a Table', () => {
         cy.get("[data-cy=delete-row]").click()
         cy.get(".modal-actions").contains("Delete").click()
 
-        cy.contains('updatedRecord').should('not.exist')
+        cy.contains('RoverUpdated').should('not.exist')
     })
 
     it('deletes a column', () => {
