@@ -93,7 +93,13 @@ export const getBackendUiStore = () => {
       saveField: ({ originalName, field }) => {
         store.update(state => {
           // delete the original if renaming
-          delete state.draftModel.schema[originalName]
+          if (originalName) {
+            delete state.draftModel.schema[originalName]
+            state.draftModel._rename = {
+              old: originalName,
+              updated: field.name,
+            }
+          }
 
           state.draftModel.schema[field.name] = cloneDeep(field)
 
