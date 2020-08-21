@@ -4,42 +4,55 @@ const TOKEN_MAP = {
   LTE: "<=",
   MT: ">",
   MTE: ">=",
-  CONTAINS: "includes()",
+  CONTAINS: "includes",
   AND: "&&",
-  OR: "||"
+  OR: "||",
 }
 
-function parseFilters(filters) {
-  const expression = filters.map(filter => {
-    if (filter.conjunction) return TOKEN_MAP[filter.conjunction];
-    
-    return `doc["${filter.key}"] ${TOKEN_MAP[filter.condition]} "${filter.value}"`
-  })
-  
+/**
+ * Iterates through the array of filters to create a JS
+ * expression that gets used in a CouchDB view.
+ * @param {Array} filters - an array of filter objects
+ * @returns {String} JS Expression
+ */
+function parseFilterExpression(filters) {
+  const expression = []
+
+  for (let filter of filters) {
+    if (filter.conjunction) expression.push(TOKEN_MAP[filter.conjunction]);
+
+    if (filter.condition === "CONTAINS") {
+      expression.push(
+        `doc["${filter.key}"].${TOKEN_MAP[filter.condition]}("${
+        filter.value
+      }")`)
+      return
+    }
+
+    expression.push(`doc["${filter.key}"] ${TOKEN_MAP[filter.condition]} "${
+      filter.value
+    }"`)
+  }
+
   return expression.join(" ")
 }
 
-function statsViewTemplate({ field, modelId, groupBy }) {
+function parseEmitExpression(field, groupBy) {
+  if (field) return `emit(doc["${groupBy || "_id"}"], doc["${field}"]);`
+  return `emit(doc._id);`
+}
+
+function statsViewTemplate({ field, modelId, groupBy, filters = [] }) {
+  const filterExpression = parseFilterExpression(filters)
+
+  const emitExpression = parseEmitExpression(field, groupBy)
+
   return {
     meta: {
       field,
       modelId,
       groupBy,
-      filter: [
-        {
-          key: "Status",
-          condition: "Equals",
-          value: "VIP",
-        },
-        {
-          conjunction: "AND"
-        },
-        {
-          key: "Status",
-          condition: "Equals",
-          value: "VIP",
-        }
-      ],
+      filters,
       schema: {
         sum: "number",
         min: "number",
@@ -50,8 +63,10 @@ function statsViewTemplate({ field, modelId, groupBy }) {
       },
     },
     map: `function (doc) {
-      if (doc.modelId === "${modelId}") {
-        emit(doc["${groupBy || "_id"}"], doc["${field}"]);  
+      if (doc.modelId === "${modelId}" ${
+      filterExpression ? `&& ${filterExpression}` : ""
+    }) {
+        ${emitExpression}
       }
     }`,
     reduce: "_stats",
