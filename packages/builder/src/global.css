@@ -95,3 +95,18 @@ textarea {
 .hoverable:hover {
     cursor: pointer;
 }
+
+.bb-margin-m {
+    margin-bottom: var(--spacing-m);
+}
+* + .bb-margin-m {
+    margin-top: var(--spacing-m);
+}
+
+.bb-margin-xl {
+    margin-bottom: var(--spacing-xl);
+}
+
+* + .bb-margin-xl {
+    margin-top: var(--spacing-xl);
+}
