@@ -80,11 +80,11 @@
   okText="Create Screen">
 
   <div data-cy="new-screen-dialog">
-    <div class="uk-margin">
+    <div class="bb-margin-xl">
       <Input label="Name" bind:value={name} />
     </div>
 
-    <div class="uk-margin">
+    <div class="bb-margin-xl">
       <Input
         label="Url"
         error={routeError}
@@ -92,7 +92,7 @@
         on:change={routeChanged} />
     </div>
 
-    <div class="uk-margin">
+    <div class="bb-margin-xl">
       <label>Layout Component</label>
       <Select bind:value={layoutComponent} secondary>
         {#each layoutComponents as { _component, name }}
@@ -103,10 +103,3 @@
   </div>
 
 </ConfirmDialog>
-
-<style>
-  .uk-margin {
-    display: flex;
-    flex-direction: column;
-  }
-</style>
