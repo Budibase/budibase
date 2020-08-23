@@ -42,7 +42,7 @@
       <slot />
     </div>
   </div>
-  <table class="uk-table">
+  <table class="bb-table">
     <thead>
       <tr>
         {#each columns as header}
