@@ -4,7 +4,7 @@
   export let value
 </script>
 
-<div class="uk-margin block-field">
+<div class="bb-margin-xl block-field">
   <div class="uk-form-controls">
     <select class="budibase__input" bind:value>
       <option value="" />
