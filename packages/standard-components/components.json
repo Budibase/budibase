@@ -203,7 +203,7 @@
 		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
 		"props": {
-			"model": "models",
+			"datasource": "models",
 			"stripeColor": "string",
 			"borderColor": "string",
 			"backgroundColor": "string",
@@ -248,7 +248,7 @@
 		"children": true,
 		"data": true,
 		"props": {
-			"model": "models"
+			"datasource": "models"
 		}
 	},
 	"stackedlist": {
@@ -357,7 +357,7 @@
 		"description": "Donut Chart",
 		"data": true,
 		"props": {
-			"model": "string",
+			"datasource": "string",
 			"color": "string",
 			"height": "number",
 			"width": "number",
@@ -397,7 +397,7 @@
 		"description": "Stacked Bar Chart",
 		"data": true,
 		"props": {
-			"model": "string",
+			"datasource": "models",
 			"color": "string",
 			"height": "number",
 			"width": "number",
@@ -498,7 +498,7 @@
 		"description": "Bar Chart",
 		"data": true,
 		"props": {
-			"model": "string",
+			"datasource": "models",
 			"betweenBarsPadding": "number",
 			"gradient": "string",
 			"color": "string",
@@ -523,7 +523,7 @@
 		"description": "Line Chart",
 		"data": true,
 		"props": {
-			"model": "string",
+			"datasource": "models",
 			"width": "number",
 			"height": "number",
 			"axisTimeCombinations": "string",
@@ -581,7 +581,7 @@
 		"description": "Groupedbar chart",
 		"data": true,
 		"props": {
-			"model": "string",
+			"datasource": "models",
 			"color": "string",
 			"height": "string",
 			"width": "string",
