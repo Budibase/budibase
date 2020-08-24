@@ -1,18 +1,28 @@
 <script>
   import { Button, Icon, DropdownMenu } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
   import { backendUiStore } from "builderStore"
 
-  let anchorLeft, dropdownLeft
+  const dispatch = createEventDispatcher()
+  let anchor, dropdown
 
-  export let selected = {}
+  export let value = {}
+
+  function handleSelected(selected) {
+    dispatch("change", selected)
+    dropdown.hide()
+  }
 
   const models = $backendUiStore.models.map(m => ({
-    name: m.name,
+    label: m.name,
+    name: `all_${m._id}`,
     modelId: m._id,
+    isModel: true,
   }))
 
   const views = $backendUiStore.models.reduce((acc, cur) => {
     let viewsArr = Object.entries(cur.views).map(([key, value]) => ({
+      label: key,
       name: key,
       modelId: value.modelId,
     }))
@@ -20,26 +30,26 @@
   }, [])
 </script>
 
-<div bind:this={anchorLeft}>
-  <Button secondary small on:click={dropdownLeft.show}>
-    <span>{selected.name ? selected.name : 'Model / View'}</span>
+<div bind:this={anchor}>
+  <Button secondary small on:click={dropdown.show}>
+    <span>{value.label ? value.label : 'Model / View'}</span>
     <Icon name="arrowdown" />
   </Button>
 </div>
 <DropdownMenu
-  bind:this={dropdownLeft}
+  bind:this={dropdown}
   width="175px"
   borderColor="#d1d1d1ff"
-  anchor={anchorLeft}
+  {anchor}
   align="right">
   <div class="model-view-container">
     <p>Tables</p>
     <ul>
       {#each models as model}
         <li
-          class:selected={selected === model}
-          on:click={() => (selected = model)}>
-          {model.name}
+          class:selected={value === model}
+          on:click={() => handleSelected(model)}>
+          {model.label}
         </li>
       {/each}
     </ul>
@@ -48,9 +58,9 @@
     <ul>
       {#each views as view}
         <li
-          class:selected={selected === view}
-          on:click={() => (selected = view)}>
-          {view.name}
+          class:selected={value === view}
+          on:click={() => handleSelected(view)}>
+          {view.label}
         </li>
       {/each}
     </ul>

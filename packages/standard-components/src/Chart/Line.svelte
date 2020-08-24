@@ -1,5 +1,6 @@
 <script>
   import { getColorSchema, getChartGradient, notNull, hasProp } from "./utils"
+  import fetchData from "../fetchData.js"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
 
@@ -9,7 +10,7 @@
   const _id = shortid.generate()
 
   export let _bb
-  export let model
+  export let datasource = {}
 
   let store = _bb.store
 
@@ -65,7 +66,7 @@
   export let tooltipTitle = ""
 
   onMount(async () => {
-    if (model) {
+    if (datasource) {
       data = await getAndPrepareData()
       if (data.dataByTopic.length > 0) {
         chartContainer = select(`.${chartClass}`)
@@ -89,20 +90,6 @@
     tooltipContainer.datum([]).call(tooltip)
   }
 
-  async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/views/all_${model}`
-    const response = await _bb.api.get(FETCH_RECORDS_URL)
-    if (response.status === 200) {
-      const json = await response.json()
-      store.update(state => {
-        state[model] = json
-        return state
-      })
-    } else {
-      throw new Error("Failed to fetch records.", response)
-    }
-  }
-
   const schemaIsValid = data =>
     hasProp(data, valueLabel) &&
     hasProp(data, dateLabel) &&
@@ -124,8 +111,7 @@
       dateLabel = "date"
     }
 
-    await fetchData()
-    _data = $store[model]
+    _data = await fetchData(datasource)
 
     if (schemaIsValid(_data)) {
       _data.forEach((data, idx, arr) => {
