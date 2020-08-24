@@ -1,7 +1,5 @@
 
 context('Create a View', () => {
-    const TOTAL_RECORDS = 6
-
     before(() => {
         cy.visit('localhost:4001/_builder')
         cy.createApp('View App', 'View App Description')
