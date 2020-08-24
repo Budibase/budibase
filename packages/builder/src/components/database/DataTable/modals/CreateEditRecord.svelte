@@ -47,7 +47,7 @@
   <ErrorsBox {errors} />
   <form on:submit|preventDefault class="uk-form-stacked">
     {#each modelSchema as [key, meta]}
-      <div class="uk-margin">
+      <div class="bb-margin-xl">
         {#if meta.type === 'link'}
           <LinkedRecordSelector
             bind:linked={record[key]}
