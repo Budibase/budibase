@@ -15,7 +15,7 @@
     {
       name: "Statistics",
       key: "stats",
-    }
+    },
   ]
 
   export let view = {}

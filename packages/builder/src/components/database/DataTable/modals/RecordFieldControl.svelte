@@ -1,31 +1,23 @@
 <script>
   import { Input, Select } from "@budibase/bbui"
 
-  export let value
   export let meta
+  export let value = meta.type === "boolean" ? false : ""
 
-  const isSelect = meta =>
+  let isSelect =
     meta.type === "string" &&
     meta.constraints &&
     meta.constraints.inclusion &&
     meta.constraints.inclusion.length > 0
-
   let type = determineInputType(meta)
-  let options = determineOptions(meta)
-
-  value = value || type === "checkbox" ? false : ""
 
   function determineInputType(meta) {
     if (meta.type === "datetime") return "date"
     if (meta.type === "number") return "number"
     if (meta.type === "boolean") return "checkbox"
-    if (isSelect(meta)) return "select"
+    if (isSelect) return "select"
 
     return "text"
-  }
-
-  function determineOptions(meta) {
-    return isSelect(meta) ? meta.constraints.inclusion : []
   }
 
   const handleInput = event => {
@@ -46,7 +38,7 @@
 {#if type === 'select'}
   <Select thin secondary data-cy="{meta.name}-select" bind:value>
     <option />
-    {#each options as opt}
+    {#each meta.constraints.inclusion as opt}
       <option value={opt}>{opt}</option>
     {/each}
   </Select>

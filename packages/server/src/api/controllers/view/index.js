@@ -46,10 +46,10 @@ const controller = {
     // add views to model document
     const model = await db.get(ctx.request.body.modelId)
     if (!model.views) model.views = {}
-    if (!view.meta.schema) { 
+    if (!view.meta.schema) {
       view.meta.schema = model.schema
     }
-    model.views[viewToSave.name] = view.meta 
+    model.views[viewToSave.name] = view.meta
 
     if (originalName) {
       delete model.views[originalName]
