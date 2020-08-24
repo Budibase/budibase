@@ -73,7 +73,7 @@
 
   .input-group-row {
     display: grid;
-    grid-template-columns: 50px 1fr 20px 1fr;
+    grid-template-columns: 75px 1fr 20px 1fr;
     gap: var(--spacing-s);
     margin-bottom: var(--spacing-l);
     align-items: center;

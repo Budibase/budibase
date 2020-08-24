@@ -19,19 +19,21 @@
   import GroupByPopover from "./popovers/GroupBy.svelte"
   import FilterPopover from "./popovers/Filter.svelte"
 
-
   export let view = {}
 
   let data = []
 
-  $: ({ name, groupBy, filters, field } = view)
+  $: name = view.name
+  $: filters = view.filters
+  $: field = view.field
+  $: groupBy = view.groupBy
   $: !name.startsWith("all_") && filters && fetchViewData(name, field, groupBy)
 
   async function fetchViewData(name, field, groupBy) {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams()
 
-    if (field) params.set("stats", true); 
-    if (groupBy) params.set("group", groupBy); 
+    if (field) params.set("stats", true)
+    if (groupBy) params.set("group", groupBy)
 
     let QUERY_VIEW_URL = `/api/views/${name}?${params}`
 

@@ -1,5 +1,46 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`viewBuilder Calculate creates a view with the calculation statistics schema 1`] = `
+Object {
+  "map": "function (doc) {
+      if (doc.modelId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" ) {
+        emit(doc[\\"_id\\"], doc[\\"myField\\"]);
+      }
+    }",
+  "meta": Object {
+    "calculation": "stats",
+    "field": "myField",
+    "filters": Array [],
+    "groupBy": undefined,
+    "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
+    "schema": Object {
+      "avg": Object {
+        "type": "number",
+      },
+      "count": Object {
+        "type": "number",
+      },
+      "group": Object {
+        "type": "string",
+      },
+      "max": Object {
+        "type": "number",
+      },
+      "min": Object {
+        "type": "number",
+      },
+      "sum": Object {
+        "type": "number",
+      },
+      "sumsqr": Object {
+        "type": "number",
+      },
+    },
+  },
+  "reduce": "_stats",
+}
+`;
+
 exports[`viewBuilder Filter creates a view with multiple filters and conjunctions 1`] = `
 Object {
   "map": "function (doc) {
@@ -8,6 +49,7 @@ Object {
       }
     }",
   "meta": Object {
+    "calculation": undefined,
     "field": undefined,
     "filters": Array [
       Object {
@@ -24,16 +66,8 @@ Object {
     ],
     "groupBy": undefined,
     "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
-    "schema": Object {
-      "avg": "number",
-      "count": "number",
-      "max": "number",
-      "min": "number",
-      "sum": "number",
-      "sumsqr": "number",
-    },
+    "schema": undefined,
   },
-  "reduce": "_stats",
 }
 `;
 
@@ -45,18 +79,12 @@ Object {
       }
     }",
   "meta": Object {
+    "calculation": undefined,
     "field": "score",
     "filters": Array [],
     "groupBy": "age",
     "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
-    "schema": Object {
-      "avg": "number",
-      "count": "number",
-      "max": "number",
-      "min": "number",
-      "sum": "number",
-      "sumsqr": "number",
-    },
+    "schema": undefined,
   },
   "reduce": "_stats",
 }

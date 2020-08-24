@@ -9,10 +9,6 @@ const INITIAL_BACKEND_UI_STATE = {
   selectedDatabase: {},
   selectedModel: {},
   draftModel: {},
-  tabs: {
-    SETUP_PANEL: "SETUP",
-    NAVIGATION_PANEL: "NAVIGATE",
-  },
 }
 
 export const getBackendUiStore = () => {
@@ -128,7 +124,12 @@ export const getBackendUiStore = () => {
       },
       save: async view => {
         const response = await api.post(`/api/views`, view)
-        const viewMeta = await response.json()
+        const json = await response.json()
+
+        const viewMeta = {
+          name: view.name,
+          ...json,
+        }
 
         store.update(state => {
           const viewModel = state.models.find(
@@ -136,13 +137,10 @@ export const getBackendUiStore = () => {
           )
 
           if (view.originalName) delete viewModel.views[view.originalName]
-          viewModel.views[view.name] = viewMeta 
+          viewModel.views[view.name] = viewMeta
 
           state.models = state.models
-          state.selectedView = {
-            name: view.name,
-            ...viewMeta
-          }
+          state.selectedView = viewMeta
           return state
         })
       },
@@ -158,12 +156,4 @@ export const getBackendUiStore = () => {
   }
 
   return store
-}
-
-// Store Actions
-export const createDatabaseForApp = store => appInstance => {
-  store.update(state => {
-    state.appInstances.push(appInstance)
-    return state
-  })
 }
