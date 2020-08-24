@@ -19,57 +19,28 @@
   import GroupByPopover from "./popovers/GroupBy.svelte"
   import FilterPopover from "./popovers/Filter.svelte"
 
-  let COLUMNS = [
-    {
-      name: "group",
-      key: "key",
-      default: "All Records",
-    },
-    {
-      name: "sum",
-      key: "value.sum",
-    },
-    {
-      name: "min",
-      key: "value.min",
-    },
-    {
-      name: "max",
-      key: "value.max",
-    },
-    {
-      name: "sumsqr",
-      key: "value.sumsqr",
-    },
-    {
-      name: "count",
-      key: "value.count",
-    },
-    {
-      name: "avg",
-      key: "value.avg",
-    },
-  ]
 
   export let view = {}
 
   let data = []
 
-  $: ({ name, groupBy, filters } = view)
-  $: !name.startsWith("all_") && filters && fetchViewData(name, groupBy)
+  $: ({ name, groupBy, filters, field } = view)
+  $: !name.startsWith("all_") && filters && fetchViewData(name, field, groupBy)
 
-  async function fetchViewData(name, groupBy) {
-    let QUERY_VIEW_URL = `/api/views/${name}?stats=true`
-    if (groupBy) {
-      QUERY_VIEW_URL += `&group=${groupBy}`
-    }
+  async function fetchViewData(name, field, groupBy) {
+    const params = new URLSearchParams();
+
+    if (field) params.set("stats", true); 
+    if (groupBy) params.set("group", groupBy); 
+
+    let QUERY_VIEW_URL = `/api/views/${name}?${params}`
 
     const response = await api.get(QUERY_VIEW_URL)
     data = await response.json()
   }
 </script>
 
-<Table title={decodeURI(view.name)} columns={COLUMNS} {data}>
+<Table title={decodeURI(view.name)} schema={view.schema} {data}>
   <FilterPopover {view} />
   <CalculationPopover {view} />
   <GroupByPopover {view} />

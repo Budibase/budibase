@@ -5,7 +5,7 @@ describe("viewBuilder", () => {
   describe("Filter", () => {
     it("creates a view with multiple filters and conjunctions", () => {
       expect(statsViewTemplate({
-        "name": "yeety",
+        "name": "Test View",
         "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
         "filters": [{
           "value": "Test",
@@ -22,7 +22,12 @@ describe("viewBuilder", () => {
   })
 
   describe("Calculate", () => {
-
+      expect(statsViewTemplate({
+        "name": "Calculate View",
+        "field": "myField",
+        "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
+        "filters": []
+      })).toMatchSnapshot()
   })
 
   describe("Group By", () => {

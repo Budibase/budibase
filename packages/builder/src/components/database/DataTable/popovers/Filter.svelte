@@ -53,7 +53,7 @@
 
   let anchor
   let dropdown
-  let filters = view.filters
+  let filters = view.filters || []
 
   $: viewModel = $backendUiStore.models.find(
     ({ _id }) => _id === $backendUiStore.selectedView.modelId

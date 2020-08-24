@@ -9,6 +9,32 @@ const TOKEN_MAP = {
   OR: "||",
 }
 
+const SCHEMA_MAP = {
+  stats: {
+    group: {
+      type: "string"
+    },
+    sum: { 
+      type: "number"
+    },
+    min: { 
+      type: "number"
+    },
+    max: { 
+      type: "number"
+    },
+    count: { 
+      type: "number"
+    },
+    sumsqr: { 
+      type: "number"
+    },
+    avg: { 
+      type: "number"
+    }
+  }
+}
+
 /**
  * Iterates through the array of filters to create a JS
  * expression that gets used in a CouchDB view.
@@ -42,10 +68,19 @@ function parseEmitExpression(field, groupBy) {
   return `emit(doc._id);`
 }
 
-function statsViewTemplate({ field, modelId, groupBy, filters = [] }) {
-  const filterExpression = parseFilterExpression(filters)
+function viewTemplate({ 
+  field, 
+  modelId, 
+  groupBy, 
+  filters = [],
+  calculation
+}) {
+  const parsedFilters = parseFilterExpression(filters) 
+  const filterExpression = parsedFilters ? `&& ${parsedFilters}` : ""
 
   const emitExpression = parseEmitExpression(field, groupBy)
+
+  const reduction = field ? { reduce: "_stats" } : {}
 
   return {
     meta: {
@@ -53,24 +88,16 @@ function statsViewTemplate({ field, modelId, groupBy, filters = [] }) {
       modelId,
       groupBy,
       filters,
-      schema: {
-        sum: "number",
-        min: "number",
-        max: "number",
-        count: "number",
-        sumsqr: "number",
-        avg: "number",
-      },
+      schema: SCHEMA_MAP[calculation],
+      calculation
     },
     map: `function (doc) {
-      if (doc.modelId === "${modelId}" ${
-      filterExpression ? `&& ${filterExpression}` : ""
-    }) {
+      if (doc.modelId === "${modelId}" ${filterExpression}) {
         ${emitExpression}
       }
     }`,
-    reduce: "_stats",
+    ...reduction
   }
 }
 
-module.exports = statsViewTemplate
+module.exports = viewTemplate

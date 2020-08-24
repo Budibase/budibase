@@ -127,19 +127,22 @@ export const getBackendUiStore = () => {
         await store.actions.models.fetch()
       },
       save: async view => {
-        await api.post(`/api/views`, view)
+        const response = await api.post(`/api/views`, view)
+        const viewMeta = await response.json()
 
         store.update(state => {
           const viewModel = state.models.find(
             model => model._id === view.modelId
           )
-          // TODO: Cleaner?
-          if (!viewModel.views) viewModel.views = {}
+
           if (view.originalName) delete viewModel.views[view.originalName]
-          viewModel.views[view.name] = view
+          viewModel.views[view.name] = viewMeta 
 
           state.models = state.models
-          state.selectedView = view
+          state.selectedView = {
+            name: view.name,
+            ...viewMeta
+          }
           return state
         })
       },
