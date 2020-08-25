@@ -15,10 +15,11 @@
 
 <div class="container">
   <div class="text">
+
     <TextArea
       bind:value
-      placeholder="Enter your name"
-      label="Construct your text" />
+      placeholder=""
+      label="Select bindable properties from the right." />
   </div>
   <div class="list">
     <ul>
@@ -31,12 +32,11 @@
 
 <style>
   .container {
-    grid-gap: 20px;
-    padding: 20px;
     display: grid;
     grid-template-columns: auto auto;
   }
   .text {
+    padding: var(--spacing-s) 0 var(--spacing-s) var(--spacing-s);
     width: 600px;
     display: grid;
   }
@@ -47,8 +47,9 @@
     list-style: none;
     padding-left: 0;
     margin: 0;
-    padding: var(--spacing-s) 0;
+    padding: 0;
   }
+
   li {
     display: flex;
     font-family: var(--font-sans);
@@ -58,5 +59,13 @@
     margin: auto 0px;
     align-items: center;
     cursor: pointer;
+  }
+
+  li:hover {
+    background-color: var(--grey-2);
+  }
+
+  li:active {
+    color: var(--blue);
   }
 </style>
