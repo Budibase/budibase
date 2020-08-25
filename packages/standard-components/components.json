@@ -358,6 +358,7 @@
 		"data": true,
 		"props": {
 			"datasource": "string",
+			"data": "string",
 			"color": "string",
 			"height": "number",
 			"width": "number",
