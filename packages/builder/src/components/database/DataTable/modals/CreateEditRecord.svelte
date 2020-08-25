@@ -19,25 +19,6 @@
     ? Object.entries($backendUiStore.selectedModel.schema)
     : []
 
-  const isSelect = meta =>
-    meta.type === "string" &&
-    meta.constraints &&
-    meta.constraints.inclusion &&
-    meta.constraints.inclusion.length > 0
-
-  function determineInputType(meta) {
-    if (meta.type === "datetime") return "date"
-    if (meta.type === "number") return "number"
-    if (meta.type === "boolean") return "checkbox"
-    if (isSelect(meta)) return "select"
-
-    return "text"
-  }
-
-  function determineOptions(meta) {
-    return isSelect(meta) ? meta.constraints.inclusion : []
-  }
-
   async function saveRecord() {
     const recordResponse = await api.saveRecord(
       {
@@ -73,11 +54,7 @@
             linkName={meta.name}
             modelId={meta.modelId} />
         {:else}
-          <RecordFieldControl
-            type={determineInputType(meta)}
-            options={determineOptions(meta)}
-            label={meta.name}
-            bind:value={record[key]} />
+          <RecordFieldControl {meta} bind:value={record[key]} />
         {/if}
       </div>
     {/each}
