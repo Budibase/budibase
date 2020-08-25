@@ -115,7 +115,7 @@ const walk = ({ instance, targetId, components, models, result }) => {
     // found it
     result.target = instance
   } else {
-    if (component.bindable) {
+    if (component && component.bindable) {
       // pushing all components in here initially
       // but this will not be correct, as some of
       // these components will be in another context
@@ -129,7 +129,7 @@ const walk = ({ instance, targetId, components, models, result }) => {
   }
 
   // a component that provides context to it's children
-  const contextualInstance = component.context && instance[component.context]
+  const contextualInstance = component && component.context && instance[component.context]
 
   if (contextualInstance) {
     // add to currentContexts (ancestory of context)
