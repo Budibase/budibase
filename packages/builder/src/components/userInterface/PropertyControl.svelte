@@ -1,4 +1,6 @@
 <script>
+  import { Icon } from "@budibase/bbui"
+  import Input from "components/common/Input.svelte"
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import { DropdownMenu } from "@budibase/bbui"
@@ -12,12 +14,16 @@
   export let props = {}
   export let onChange = () => {}
 
+  let temporaryBindableValue = value
+
+  function handleClose() {
+    handleChange(key, temporaryBindableValue)
+  }
+
   let bindableProperties
 
   let anchor
   let dropdown
-
-  $: console.log()
 
   async function getBindableProperties() {
     // Get all bindableProperties
@@ -98,14 +104,24 @@
       {...props}
       name={key} />
   </div>
-  <button on:click={dropdown.show}>O</button>
+  {#if control == Input}
+    <button on:click={dropdown.show}>
+      <Icon name="edit" />
+    </button>
+  {/if}
 </div>
-<DropdownMenu bind:this={dropdown} {anchor} align="right">
-  <BindingDropdown
-    {...handlevalueKey(value)}
-    on:update={e => handleChange(key, e.detail)}
-    {bindableProperties} />
-</DropdownMenu>
+{#if control == Input}
+  <DropdownMenu
+    on:close={handleClose}
+    bind:this={dropdown}
+    {anchor}
+    align="right">
+    <BindingDropdown
+      {...handlevalueKey(value)}
+      on:update={e => (temporaryBindableValue = e.detail)}
+      {bindableProperties} />
+  </DropdownMenu>
+{/if}
 
 <style>
   .property-control {
@@ -139,8 +155,11 @@
     position: absolute;
     background: none;
     border: none;
-    right: 0px;
-    top: 0;
-    bottom: 0;
+    border-radius: 50%;
+    height: 24px;
+    width: 24px;
+    background: rgb(224, 224, 224);
+    right: 5px;
+    --spacing-s: 0;
   }
 </style>

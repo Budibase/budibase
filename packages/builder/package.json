@@ -17,7 +17,7 @@
     "cy:test": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run",
     "cy:ci": "start-server-and-test cy:setup http://localhost:4001/_builder cy:run:ci"
   },
- "jest": {
+  "jest": {
     "globals": {
       "GLOBALS": {
         "client": "web"
@@ -57,7 +57,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "^1.23.1",
+    "@budibase/bbui": "^1.27.0",
     "@budibase/client": "^0.1.17",
     "@budibase/colorpicker": "^1.0.1",
     "@nx-js/compiler-util": "^2.0.0",
