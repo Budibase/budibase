@@ -4,15 +4,17 @@
   import ArrowUp from "./icons/ArrowUp.svelte"
   import ArrowDown from "./icons/ArrowDown.svelte"
   import fsort from "fast-sort"
+  import fetchData from "./fetchData.js"
 
   export let _bb
-  export let onLoad
-  export let model
+
   export let backgroundColor
   export let color
   export let stripeColor
   export let borderColor
+  export let datasource = {}
 
+  let data = []
   let headers = []
   let store = _bb.store
   let sort = {}
@@ -25,9 +27,16 @@
     borderColor,
   }
 
-  $: data = $store[model] || []
   $: sorted = sort.direction ? fsort(data)[sort.direction](sort.column) : data
-  $: if (model) fetchData()
+
+  onMount(async () => {
+    if (datasource) {
+      data = await fetchData(datasource)
+      if (data) {
+        headers = Object.keys(data[0]).filter(shouldDisplayField)
+      }
+    }
+  })
 
   const shouldDisplayField = name => {
     if (name.startsWith("_")) return false
@@ -37,24 +46,6 @@
     if (name === "modelId") return false
 
     return true
-  }
-
-  async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/views/all_${model}`
-
-    const response = await _bb.api.get(FETCH_RECORDS_URL)
-    if (response.status === 200) {
-      const json = await response.json()
-
-      store.update(state => {
-        state[model] = json
-        return state
-      })
-
-      headers = Object.keys(json[0]).filter(shouldDisplayField)
-    } else {
-      throw new Error("Failed to fetch records.", response)
-    }
   }
 
   function sortColumn(column) {
@@ -71,10 +62,6 @@
       direction: "asc",
     }
   }
-
-  onMount(async () => {
-    await fetchData()
-  })
 </script>
 
 <table use:cssVars={cssVariables}>
