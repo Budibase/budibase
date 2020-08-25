@@ -16,6 +16,7 @@
 	"Navigation": {
 		"name": "Navigation",
 		"description": "A basic header navigation component",
+		"children": true,
 		"props": {
 			"logoUrl": "string",
 			"title": "string",
@@ -250,7 +251,8 @@
 		}
 	},
 	"list": {
-		"description": "A configurable data list that attaches to your backend models.",
+		"description": "configurable data list that attaches to your backend models.",
+		"children": true,
 		"context": "model",
 		"data": true,
 		"props": {
@@ -271,10 +273,86 @@
 	},
 	"recorddetail": {
 		"description": "Loads a record, using an ID in the url",
+		"children": true,
 		"context": "model",
 		"data": true,
 		"props": {
 			"model": "models"
+		}
+	},
+	"card": {
+		"name": "Card",
+		"props": {
+			"imageUrl": "string",
+			"heading": "string",
+			"description": "string",
+			"linkText": "string",
+			"linkUrl": "string",
+			"color": "string",
+			"linkHoverColor": "string",
+			"imageHeight": {
+				"type": "options",
+				"default": "20rem",
+				"options": [
+					"12rem",
+					"16rem",
+					"20rem",
+					"24rem"				
+				]
+			},
+			"cardWidth": {
+				"type": "options",
+				"default": "20rem",
+				"options": [
+					"16rem",
+					"20rem",
+					"24rem"				
+				]
+			}
+		}
+	},
+	"cardhorizontal": {
+		"name": "Horizontal Card",
+		"props": {
+			"imageUrl": "string",
+			"heading": "string",
+			"description": "string",
+			"subtext": "string",
+			"linkText": "string",
+			"linkUrl": "string",
+			"color": "string",
+			"linkHoverColor": "string",
+			"imageWidth": {
+				"type": "options",
+				"default": "8rem",
+				"options": [
+					"8rem",
+					"12rem",
+					"16rem"			
+				]
+			},
+			"cardWidth": {
+				"type": "options",
+				"default": "32rem",
+				"options": [
+					"24rem",
+					"28rem",
+					"32rem",
+					"40rem",
+					"48rem",
+					"60rem",
+					"100%"		
+				]
+			},
+			"imageHeight": {
+				"type": "options",
+				"default": "8rem",
+				"options": [
+					"8rem",
+					"12rem",
+					"16rem"			
+				]
+			}
 		}
 	},
 	"datamap": {
@@ -534,7 +612,7 @@
 	"bullet": {
 		"description": "Bullet chart",
 		"data": true,
-		"props": {
+		"props": { 
 			"model": "string",
 			"color": "string",
 			"customSubtitle": "string",
@@ -608,6 +686,7 @@
 	},
 	"container": {
 		"name": "Container",
+		"children": true,
 		"description": "An element that contains and lays out other elements. e.g. <div>, <header> etc",
 		"props": {
 			"className": "string",

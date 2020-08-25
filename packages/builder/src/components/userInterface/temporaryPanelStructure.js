@@ -314,6 +314,174 @@ export default {
           },
         },
         {
+          name: "Card",
+          description: "Card components",
+          icon: "ri-layout-bottom-line",
+          commonProps: {},
+          children: [
+            {
+              _component: "@budibase/standard-components/card",
+              name: "Vertical",
+              description:
+                "A basic card component that can contain content and actions.",
+              icon: "ri-layout-column-line",
+              children: [],
+              properties: {
+                design: { ...all },
+                settings: [
+                  {
+                    label: "Image",
+                    key: "imageUrl",
+                    control: Input,
+                    placeholder: "Image",
+                  },
+                  {
+                    label: "Heading",
+                    key: "heading",
+                    control: Input,
+                    placeholder: "Heading",
+                  },
+                  {
+                    label: "Description",
+                    key: "description",
+                    control: Input,
+                    placeholder: "Description",
+                  },
+                  {
+                    label: "Link Text",
+                    key: "linkText",
+                    control: Input,
+                    placeholder: "Link Text",
+                  },
+                  {
+                    label: "Link Url",
+                    key: "linkUrl",
+                    control: Input,
+                    placeholder: "Link URL",
+                  },
+                  {
+                    label: "Link Color",
+                    key: "color",
+                    control: Input,
+                    placeholder: "Link Color",
+                  },
+                  {
+                    label: "Hover Color",
+                    key: "linkHoverColor",
+                    control: Input,
+                    placeholder: "Hover Color",
+                  },
+                  {
+                    label: "Image Height",
+                    key: "imageHeight",
+                    control: OptionSelect,
+                    options: ["12rem", "16rem", "20rem", "24rem"],
+                    placeholder: "Image Height",
+                  },
+                  {
+                    label: "Card Width",
+                    key: "cardWidth",
+                    control: OptionSelect,
+                    options: ["16rem", "20rem", "24rem"],
+                    placeholder: "Card Width",
+                  },
+                ],
+              },
+            },
+            {
+              _component: "@budibase/standard-components/cardhorizontal",
+              name: "Horizontal",
+              description:
+                "A basic card component that can contain content and actions.",
+              icon: "ri-layout-row-line",
+              children: [],
+              properties: {
+                design: { ...all },
+                settings: [
+                  {
+                    label: "Image",
+                    key: "imageUrl",
+                    control: Input,
+                    placeholder: "Image",
+                  },
+                  {
+                    label: "Heading",
+                    key: "heading",
+                    control: Input,
+                    placeholder: "Heading",
+                  },
+                  {
+                    label: "Description",
+                    key: "description",
+                    control: Input,
+                    placeholder: "Description",
+                  },
+                  {
+                    label: "Subtext",
+                    key: "subtext",
+                    control: Input,
+                    placeholder: "Subtext",
+                  },
+                  {
+                    label: "Link Text",
+                    key: "linkText",
+                    control: Input,
+                    placeholder: "Link Text",
+                  },
+                  {
+                    label: "Link Url",
+                    key: "linkUrl",
+                    control: Input,
+                    placeholder: "Link URL",
+                  },
+                  {
+                    label: "Link Color",
+                    key: "color",
+                    control: Input,
+                    placeholder: "Link Color",
+                  },
+                  {
+                    label: "Hover Color",
+                    key: "linkHoverColor",
+                    control: Input,
+                    placeholder: "Hover Color",
+                  },
+                  {
+                    label: "Card Width",
+                    key: "cardWidth",
+                    control: OptionSelect,
+                    options: [
+                      "24rem",
+                      "28rem",
+                      "32rem",
+                      "40rem",
+                      "48rem",
+                      "60rem",
+                      "100%",
+                    ],
+                    placeholder: "Card Height",
+                  },
+                  {
+                    label: "Image Width",
+                    key: "imageWidth",
+                    control: OptionSelect,
+                    options: ["8rem", "12rem", "16rem"],
+                    placeholder: "Image Width",
+                  },
+                  {
+                    label: "Image Height",
+                    key: "imageHeight",
+                    control: OptionSelect,
+                    options: ["8rem", "12rem", "16rem", "auto"],
+                    placeholder: "Image Height",
+                  },
+                ],
+              },
+            },
+          ],
+        },
+
+        {
           _component: "@budibase/materialdesign-components/BasicCard",
           name: "Card",
           description:

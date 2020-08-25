@@ -45,8 +45,7 @@
 
 <style>
   h5 {
-    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
-    margin: 0;
+    margin-bottom: var(--spacing-l);
     font-weight: 500;
   }
 
