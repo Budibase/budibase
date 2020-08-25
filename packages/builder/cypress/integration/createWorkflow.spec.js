@@ -31,8 +31,10 @@ context('Create a workflow', () => {
 
         // Activate Workflow
         cy.get('[data-cy=activate-workflow]').click()
-
+        cy.contains("Add Record").should("be.visible")
+        cy.get(".stop-button.highlighted").should("be.visible")
     })
+
     it('should add record when a new record is added', () => {
         cy.contains('backend').click()
 
