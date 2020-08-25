@@ -35,14 +35,15 @@
     const boundValues = val.match(/{{([^}]+)}}/g)
 
     // Replace with names:
-    boundValues.forEach(v => {
-      const binding = bindableProperties.find(({ readableBinding }) => {
-        return v === `{{ ${readableBinding} }}`
+    boundValues &&
+      boundValues.forEach(v => {
+        const binding = bindableProperties.find(({ readableBinding }) => {
+          return v === `{{ ${readableBinding} }}`
+        })
+        if (binding) {
+          val = val.replace(v, `{{ ${binding.runtimeBinding} }}`)
+        }
       })
-      if (binding) {
-        val = val.replace(v, `{{ ${binding.runtimeBinding} }}`)
-      }
-    })
     onChange(key, val)
   }
 
@@ -61,7 +62,7 @@
   const safeValue = () => {
     getBindableProperties()
     let temp = value
-    const boundValues = value.match(/{{([^}]+)}}/g) || []
+    const boundValues = (value && value.match(/{{([^}]+)}}/g)) || []
     console.log(boundValues)
 
     // Replace with names:
@@ -100,7 +101,10 @@
   <button on:click={dropdown.show}>O</button>
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="right">
-  <BindingDropdown />
+  <BindingDropdown
+    {...handlevalueKey(value)}
+    on:update={e => handleChange(key, e.detail)}
+    {bindableProperties} />
 </DropdownMenu>
 
 <style>
