@@ -987,10 +987,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/bbui@^1.23.1":
-  version "1.23.1"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.23.1.tgz#232b0d31379ef64afe5e76f477d5489e67defc22"
-  integrity sha512-L5KbkBPbTaPUGUEM33hxV2G8R6e+ckBZmph6LnjLsI6a5Bs0hWPv6pYHukeiOMXLPyGlF+ShIfYgoFHi+GRRGA==
+"@budibase/bbui@^1.27.0":
+  version "1.27.0"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.27.0.tgz#948102a29c203c503745c69c2cdea4440e257a74"
+  integrity sha512-7YPWD9gASfUiAmPsvYdGvBtVOdVoOKFRV+q3on8mZ9v/NlupZ2gVJy4m6NsRuoCJBhRF1Uq6bR716KFFxqZXVg==
   dependencies:
     sirv-cli "^0.4.6"
 
