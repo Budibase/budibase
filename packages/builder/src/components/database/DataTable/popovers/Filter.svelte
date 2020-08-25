@@ -53,7 +53,6 @@
 
   let anchor
   let dropdown
-  let filters = view.filters || []
 
   $: viewModel = $backendUiStore.models.find(
     ({ _id }) => _id === $backendUiStore.selectedView.modelId
@@ -61,19 +60,18 @@
   $: fields = viewModel && Object.keys(viewModel.schema)
 
   function saveView() {
-    view.filters = filters
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
     dropdown.hide()
   }
 
   function removeFilter(idx) {
-    filters.splice(idx, 1)
-    filters = filters
+    view.filters.splice(idx, 1)
+    view.filters = view.filters
   }
 
   function addFilter() {
-    filters = [...filters, {}]
+    view.filters = [...view.filters, {}]
   }
 </script>
 
@@ -82,7 +80,7 @@
     text
     small
     on:click={dropdown.show}
-    active={filters && filters.length}>
+    active={view.filters && view.filters.length}>
     <Icon name="filter" />
     Filter
   </TextButton>
@@ -90,7 +88,7 @@
 <Popover bind:this={dropdown} {anchor} align="left">
   <h5>Filter</h5>
   <div class="input-group-row">
-    {#each filters as filter, idx}
+    {#each view.filters as filter, idx}
       {#if idx === 0}
         <p>Where</p>
       {:else}
