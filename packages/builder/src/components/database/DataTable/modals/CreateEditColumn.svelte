@@ -46,6 +46,7 @@
     const { type, constraints } = fieldDefinitions[
       event.target.value.toUpperCase()
     ]
+
     field.type = type
     field.constraints = constraints
   }
@@ -58,9 +59,9 @@
     secondary
     thin
     on:change={handleFieldConstraints}
-    bind:value={field.value}>
+    bind:value={field.type}>
     {#each Object.values(fieldDefinitions) as field}
-      <option value={field.value}>{field.name}</option>
+      <option value={field.type}>{field.name}</option>
     {/each}
   </Select>
 
@@ -73,28 +74,28 @@
         on:change={() => (field.constraints.presence.allowEmpty = required)} />
     </div>
 
-    {#if field.value === 'string' && field.constraints}
+    {#if field.type === 'string' && field.constraints}
       <NumberBox
         label="Max Length"
         bind:value={field.constraints.length.maximum} />
       <ValuesList
         label="Categories"
         bind:values={field.constraints.inclusion} />
-    {:else if field.value === 'datetime' && field.constraints}
+    {:else if field.type === 'datetime' && field.constraints}
       <DatePicker
         label="Min Value"
         bind:value={field.constraints.datetime.earliest} />
       <DatePicker
         label="Max Value"
         bind:value={field.constraints.datetime.latest} />
-    {:else if field.value === 'number' && field.constraints}
+    {:else if field.type === 'number' && field.constraints}
       <NumberBox
         label="Min Value"
         bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
       <NumberBox
         label="Max Value"
         bind:value={field.constraints.numericality.lessThanOrEqualTo} />
-    {:else if field.value === 'link'}
+    {:else if field.type === 'link'}
       <div class="field">
         <label>Link</label>
         <select class="budibase__input" bind:value={field.modelId}>
