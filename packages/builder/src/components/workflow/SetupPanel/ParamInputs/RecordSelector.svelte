@@ -8,7 +8,6 @@
     const fieldSchema = value.model.schema[field]
     if (fieldSchema.type === "number") {
       value[field] = parseInt(evt.target.value)
-      console.log(field, value)
       return
     }
 
