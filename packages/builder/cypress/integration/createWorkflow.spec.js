@@ -37,7 +37,7 @@ context('Create a workflow', () => {
         cy.contains('backend').click()
 
         cy.addRecord(["Rover", 15])
-
+        cy.reload()
         cy.contains('goodboy').should('have.text', 'goodboy')
 
     })

@@ -58,9 +58,9 @@ Cypress.Commands.add("createApp", name => {
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {
-  cy.createTable('dog')
-  cy.addColumn('dog', 'name', 'Plain Text')
-  cy.addColumn('dog', 'age', 'Number')
+  cy.createTable("dog")
+  cy.addColumn("dog", "name", "Plain Text")
+  cy.addColumn("dog", "age", "Number")
 })
 
 Cypress.Commands.add("createTable", tableName => {
