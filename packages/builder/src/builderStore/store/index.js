@@ -1,7 +1,6 @@
 import { values, cloneDeep } from "lodash/fp"
 import { get_capitalised_name } from "../../helpers"
 import { backendUiStore } from "builderStore"
-import * as backendStoreActions from "./backend"
 import { writable, get } from "svelte/store"
 import api from "../api"
 import { DEFAULT_PAGES_OBJECT } from "../../constants"
@@ -49,8 +48,6 @@ export const getStore = () => {
   const store = writable(initial)
 
   store.setPackage = setPackage(store, initial)
-
-  store.createDatabaseForApp = backendStoreActions.createDatabaseForApp(store)
 
   store.saveScreen = saveScreen(store)
   store.setCurrentScreen = setCurrentScreen(store)

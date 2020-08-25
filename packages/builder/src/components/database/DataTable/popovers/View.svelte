@@ -51,11 +51,6 @@
   <h5>Create View</h5>
   <div class="input-group-column">
     <Input placeholder="View Name" thin bind:value={name} />
-    <Select thin secondary bind:value={field}>
-      {#each fields as field}
-        <option value={field}>{field}</option>
-      {/each}
-    </Select>
   </div>
   <div class="button-group">
     <Button secondary on:click={dropdown.hide}>Cancel</Button>

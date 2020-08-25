@@ -47,10 +47,10 @@
                 selected={selectedView === viewName}
                 title={viewName}
                 icon="ri-eye-line"
-                on:click={() => selectView({
-                    name: viewName,
-                    ...model.views[viewName],
-                  })}>
+                on:click={() => (selectedView === viewName ? {} : selectView({
+                        name: viewName,
+                        ...model.views[viewName],
+                      }))}>
                 <EditViewPopover
                   view={{ name: viewName, ...model.views[viewName] }} />
               </ListItem>
