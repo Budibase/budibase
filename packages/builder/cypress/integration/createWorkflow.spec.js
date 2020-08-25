@@ -1,4 +1,4 @@
-xcontext('Create a workflow', () => {
+context('Create a workflow', () => {
 
     before(() => {
         cy.server()
@@ -9,7 +9,7 @@ xcontext('Create a workflow', () => {
 
     // https://on.cypress.io/interacting-with-elements
     it('should create a workflow', () => {
-        cy.createTable('dog', 'name', 'age')
+        cy.createTestTableWithData()
 
         cy.contains('workflow').click()
         cy.contains('Create New Workflow').click()
@@ -23,8 +23,8 @@ xcontext('Create a workflow', () => {
 
         // Create action
         cy.get('[data-cy=SAVE_RECORD]').click()
-        cy.get(':nth-child(2) > .budibase__input').type('goodboy')
-        cy.get(':nth-child(3) > .budibase__input').type('11')
+        cy.get('.container input').first().type('goodboy')
+        cy.get('.container input').eq(1).type('11')
 
         // Save
         cy.contains('Save Workflow').click()
@@ -33,10 +33,10 @@ xcontext('Create a workflow', () => {
         cy.get('[data-cy=activate-workflow]').click()
 
     })
-    xit('should add record when a new record is added', () => {
+    it('should add record when a new record is added', () => {
         cy.contains('backend').click()
 
-        cy.addRecord('bob', '15')
+        cy.addRecord(["Rover", 15])
 
         cy.contains('goodboy').should('have.text', 'goodboy')
 
