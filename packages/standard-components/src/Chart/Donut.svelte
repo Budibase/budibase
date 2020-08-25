@@ -59,7 +59,7 @@
 
   onMount(async () => {
     if (chart) {
-      if (model) {
+      if (datasource) {
         let _data = await fetchData(datasource)
         data = checkAndReformatData(_data)
         if (data.length === 0) {

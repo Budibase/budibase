@@ -3,6 +3,7 @@ import OptionSelect from "./OptionSelect.svelte"
 import Checkbox from "../common/Checkbox.svelte"
 import ModelSelect from "components/userInterface/ModelSelect.svelte"
 import ModelViewSelect from "components/userInterface/ModelViewSelect.svelte"
+import ModelViewFieldSelect from "components/userInterface/ModelViewFieldSelect.svelte"
 
 import { all } from "./propertyCategories.js"
 /* 
@@ -583,6 +584,18 @@ export default {
                     control: ModelViewSelect,
                   },
                   {
+                    label: "Name Field",
+                    key: "nameKey",
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
+                  },
+                  {
+                    label: "Value Field",
+                    key: "valueKey",
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
+                  },
+                  {
                     label: "Animate Chart",
                     key: "isAnimated",
                     valueKey: "checked",
@@ -616,16 +629,6 @@ export default {
                       "teal",
                       "yellow",
                     ],
-                  },
-                  {
-                    label: "Name Field",
-                    key: "nameKey",
-                    control: Input,
-                  },
-                  {
-                    label: "Value Field",
-                    key: "valueKey",
-                    control: Input,
                   },
                   {
                     label: "External Radius",
