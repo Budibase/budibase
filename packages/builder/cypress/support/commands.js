@@ -131,9 +131,9 @@ Cypress.Commands.add("navigateToFrontend", () => {
 
 Cypress.Commands.add("createScreen", (screenName, route) => {
   cy.get(".newscreen").click()
-  cy.get(".uk-input:first").type(screenName)
+  cy.get("[data-cy=new-screen-dialog] input:first").type(screenName)
   if (route) {
-    cy.get(".uk-input:last").type(route)
+    cy.get("[data-cy=new-screen-dialog] input:last").type(route)
   }
   cy.get(".uk-modal-footer").within(() => {
     cy.contains("Create Screen").click()

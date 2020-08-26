@@ -1,6 +1,6 @@
 {
   "name": "@budibase/client",
-  "version": "0.1.17",
+  "version": "0.1.19",
   "license": "MPL-2.0",
   "main": "dist/budibase-client.js",
   "module": "dist/budibase-client.esm.mjs",

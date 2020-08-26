@@ -1,4 +1,4 @@
-import Input from "../common/Input.svelte"
+import Input from "./PropertyPanelControls/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import FlatButtonGroup from "./FlatButtonGroup.svelte"
 import Colorpicker from "@budibase/colorpicker"

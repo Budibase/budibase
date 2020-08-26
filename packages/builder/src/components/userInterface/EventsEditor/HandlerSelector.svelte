@@ -1,5 +1,6 @@
 <script>
   import { Button, Select } from "@budibase/bbui"
+  import IconButton from "components/common/IconButton.svelte"
   import StateBindingCascader from "./StateBindingCascader.svelte"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
@@ -93,7 +94,7 @@
         {#if newHandler}
           <Button primary thin on:click={onCreate}>Add Action</Button>
         {:else}
-          <Button secondary thin on:click={onRemoved}>Remove Action</Button>
+          <Button outline thin on:click={onRemoved}>Remove Action</Button>
         {/if}
       </div>
     {/if}

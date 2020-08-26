@@ -95,6 +95,7 @@ exports.serveComponentLibrary = async function(ctx) {
     )
   }
 
+  // TODO: component libs should be versioned based on app version
   if (process.env.CLOUD) {
     const appId = ctx.user.appId
     const S3_URL = encodeURI(

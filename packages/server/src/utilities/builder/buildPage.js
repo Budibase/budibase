@@ -96,10 +96,7 @@ const buildFrontendAppDefinition = async (config, appId, pageName, pkg) => {
   const clientUiDefinition = JSON.stringify({
     page: pkg.page,
     screens: pkg.screens,
-    libraries: [
-      "@budibase/materialdesign-components",
-      "@budibase/standard-components",
-    ],
+    libraries: ["@budibase/standard-components"],
   })
 
   await writeFile(
