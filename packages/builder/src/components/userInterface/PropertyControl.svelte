@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import Input from "components/common/Input.svelte"
+  import Input from "./PropertyPanelControls/Input.svelte"
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import { DropdownMenu } from "@budibase/bbui"
@@ -69,17 +69,14 @@
     getBindableProperties()
     let temp = value
     const boundValues = (value && value.match(/{{([^}]+)}}/g)) || []
-    console.log(boundValues)
 
     // Replace with names:
     boundValues.forEach(v => {
-      const { readableBinding } = bindableProperties.find(
-        ({ runtimeBinding }) => {
-          return v === `{{ ${runtimeBinding} }}`
-        }
-      )
-      if (readableBinding) {
-        temp = temp.replace(v, `{{ ${readableBinding} }}`)
+      const binding = bindableProperties.find(({ runtimeBinding }) => {
+        return v === `{{ ${runtimeBinding} }}`
+      })
+      if (binding) {
+        temp = temp.replace(v, `{{ ${binding.readableBinding} }}`)
       }
     })
     // console.log(temp)

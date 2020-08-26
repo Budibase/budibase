@@ -1,11 +1,11 @@
 <script>
   import { getContext } from "svelte"
   import { Button } from "@budibase/bbui"
-  import ModelDataTable from "components/database/ModelDataTable"
+  import ModelDataTable from "components/database/DataTable"
   import { backendUiStore } from "builderStore"
   import ActionButton from "components/common/ActionButton.svelte"
-  import * as api from "components/database/ModelDataTable/api"
-  import { CreateEditRecordModal } from "components/database/ModelDataTable/modals"
+  import * as api from "components/database/DataTable/api"
+  import { CreateEditRecordModal } from "components/database/DataTable/modals"
 
   const { open, close } = getContext("simple-modal")
 

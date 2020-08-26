@@ -45,6 +45,8 @@ const server = http.createServer(app.callback())
 
 server.on("close", () => console.log("Server Closed"))
 
+process.on("SIGINT", () => process.exit(1))
+
 module.exports = server.listen(env.PORT || 4001, () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
 })

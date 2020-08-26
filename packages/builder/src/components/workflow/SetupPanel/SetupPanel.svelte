@@ -5,7 +5,7 @@
   import { notifier } from "builderStore/store/notifications"
   import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte"
   import DeleteWorkflowModal from "./DeleteWorkflowModal.svelte"
-  import { Button } from "@budibase/bbui"
+  import { Button, Input } from "@budibase/bbui"
 
   const { open, close } = getContext("simple-modal")
 
@@ -81,7 +81,7 @@
     {/if}
   </header>
   {#if selectedTab === 'TEST'}
-    <div class="uk-margin config-item">
+    <div class="bb-margin-m">
       {#if testResult}
         <button
           transition:fade
@@ -112,17 +112,9 @@
         <div class="panel-body">
           <div class="block-label">Workflow: {workflow.name}</div>
           <div class="config-item">
-            <label>Name</label>
-            <div class="form">
-              <input
-                type="text"
-                class="budibase_input"
-                bind:value={workflow.name} />
-            </div>
-          </div>
-          <div class="config-item">
             <label class="uk-form-label">User Access</label>
             <div class="access-levels">
+
               {#each ACCESS_LEVELS as level}
                 <span class="access-level">
                   <label>{level.name}</label>
@@ -194,26 +186,10 @@
     margin-bottom: 20px;
   }
 
-  .budibase_input {
-    height: 36px;
-    width: 244px;
-    border-radius: 3px;
-    background-color: var(--grey-2);
-    border: 1px solid var(--grey-2);
-    text-align: left;
-    color: var(--ink);
-    font-size: 14px;
-    padding-left: 12px;
-  }
-
   header > span {
     color: var(--grey-5);
     margin-right: 20px;
     cursor: pointer;
-  }
-
-  .form {
-    margin-top: 12px;
   }
 
   label {
@@ -226,7 +202,7 @@
     position: absolute;
     bottom: 20px;
     display: grid;
-    width: 100%;
+    width: 260px;
     gap: 12px;
   }
 

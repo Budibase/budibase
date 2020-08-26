@@ -3,7 +3,7 @@
   import { backendUiStore } from "builderStore"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import DeleteTableModal from "components/database/ModelDataTable/modals/DeleteTable.svelte"
+  import DeleteTableModal from "components/database/DataTable/modals/DeleteTable.svelte"
 
   const { open, close } = getContext("simple-modal")
 

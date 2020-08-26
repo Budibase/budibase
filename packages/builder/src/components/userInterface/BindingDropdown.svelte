@@ -15,7 +15,6 @@
 
 <div class="container">
   <div class="text">
-
     <TextArea
       bind:value
       placeholder=""

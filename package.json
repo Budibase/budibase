@@ -28,9 +28,5 @@
     "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\"",
     "test:e2e": "lerna run cy:test",
     "test:e2e:ci": "lerna run cy:ci"
-  },
-  "dependencies": {
-    "@material/icon-button": "4.0.0",
-    "date-fns": "^2.10.0"
   }
 }

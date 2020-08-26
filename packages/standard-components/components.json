@@ -251,9 +251,9 @@
 		}
 	},
 	"list": {
-		"description": "configurable data list that attaches to your backend models.",
-		"children": true,
+		"description": "A configurable data list that attaches to your backend models.",
 		"context": "model",
+		"children": true,
 		"data": true,
 		"props": {
 			"model": "models"
@@ -273,8 +273,8 @@
 	},
 	"recorddetail": {
 		"description": "Loads a record, using an ID in the url",
-		"children": true,
 		"context": "model",
+		"children": true,
 		"data": true,
 		"props": {
 			"model": "models"
@@ -297,7 +297,7 @@
 					"12rem",
 					"16rem",
 					"20rem",
-					"24rem"				
+					"24rem"
 				]
 			},
 			"cardWidth": {
@@ -306,7 +306,7 @@
 				"options": [
 					"16rem",
 					"20rem",
-					"24rem"				
+					"24rem"
 				]
 			}
 		}
@@ -328,7 +328,7 @@
 				"options": [
 					"8rem",
 					"12rem",
-					"16rem"			
+					"16rem"
 				]
 			},
 			"cardWidth": {
@@ -341,7 +341,7 @@
 					"40rem",
 					"48rem",
 					"60rem",
-					"100%"		
+					"100%"
 				]
 			},
 			"imageHeight": {
@@ -350,7 +350,7 @@
 				"options": [
 					"8rem",
 					"12rem",
-					"16rem"			
+					"16rem"
 				]
 			}
 		}
@@ -511,16 +511,12 @@
 			"betweenBarsPadding": "number",
 			"gradient": "string",
 			"color": "string",
-			"enableLabels": "bool",
 			"hasSingleBarHighlight": "bool",
 			"height": "number",
 			"width": "number",
 			"isAnimated": "bool",
 			"isHorizontal": "bool",
-			"xAxisLabelOffset": "number",
-			"yAxisLabelOffset": "number",
 			"labelNumberFormat": "number",
-			"labelSize": "number",
 			"locale": "string",
 			"nameLabel": "string",
 			"valueLabel": "string",
@@ -555,7 +551,9 @@
 			"xAxisScale": "string",
 			"xAxisFormat": "string",
 			"xAxisCustomFormat": "string",
-			"xAxisLabel": "string"
+			"xAxisLabel": "string",
+			"yAxisLabel": "string",
+			"tooltipTitle": "string"
 		}
 	},
 	"brush": {
@@ -576,7 +574,7 @@
 		}
 	},
 	"heatmap": {
-		"description": "Groupedbar chart",
+		"description": "Heatmap chart",
 		"data": true,
 		"props": {
 			"model": "string",
@@ -597,7 +595,6 @@
 			"height": "string",
 			"width": "string",
 			"margin": "string",
-			"aspectRatio": "number",
 			"grid": "string",
 			"groupLabel": "string",
 			"isAnimated": "bool",
@@ -605,14 +602,14 @@
 			"nameLabel": "string",
 			"valueLabel": "string",
 			"yTicks": "string",
-			"yTickTextOffset": "string",
-			"useLegend": "bool"
+			"useLegend": "bool",
+			"tooltipTitle": "string"
 		}
 	},
 	"bullet": {
 		"description": "Bullet chart",
 		"data": true,
-		"props": { 
+		"props": {
 			"model": "string",
 			"color": "string",
 			"customSubtitle": "string",
