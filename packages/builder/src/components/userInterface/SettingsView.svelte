@@ -1,4 +1,5 @@
 <script>
+  import { isEmpty } from "lodash/fp"
   import PropertyControl from "./PropertyControl.svelte"
   import Input from "./PropertyPanelControls/Input.svelte"
   import { goto } from "@sveltech/routify"
@@ -30,9 +31,14 @@
     { key: "favicon", label: "Favicon", control: Input },
   ]
 
-  const canRenderControl = (key, dependsOn) =>
-    propExistsOnComponentDef(key) &&
-    (!dependsOn || componentInstance[dependsOn])
+  const canRenderControl = (key, dependsOn) => {
+    let test = !isEmpty(componentInstance[dependsOn])
+
+    return (
+      propExistsOnComponentDef(key) &&
+      (!dependsOn || !isEmpty(componentInstance[dependsOn]))
+    )
+  }
 
   $: isPage = screenOrPageInstance && screenOrPageInstance.favicon
   $: screenOrPageDefinition = isPage ? pageDefinition : screenDefinition
@@ -68,11 +74,9 @@
         label={definition.label}
         key={definition.key}
         value={componentInstance[definition.key]}
+        {componentInstance}
         {onChange}
-        props={{ componentInstance, ...excludeProps(definition, [
-            'control',
-            'label',
-          ]) }} />
+        props={{ ...excludeProps(definition, ['control', 'label']) }} />
     {/if}
   {/each}
 {:else}

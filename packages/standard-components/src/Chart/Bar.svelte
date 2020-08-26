@@ -8,6 +8,7 @@
   import britecharts from "britecharts"
   import fetchData from "../fetchData.js"
   import { onMount } from "svelte"
+  import { isEmpty } from "lodash/fp"
 
   import { select } from "d3-selection"
   import shortid from "shortid"
@@ -28,6 +29,7 @@
   export let customClick = null
 
   let data = []
+  export let datasource = null
   export let xAxisLabel = ""
   export let yAxisLabel = ""
   export let betweenBarsPadding = 0.1 //takes decimal values 0.1, 0.5 etc
@@ -54,11 +56,11 @@
   export let yTicks = null
   export let percentageAxisToMaxRatio = null
 
-  export let _bb
-
   onMount(async () => {
-    if (datasource) {
+    if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
+      console.log("DATA", data)
+
       if (schemaIsValid()) {
         chartContainer = select(`.${chartClass}`)
         bindChartUIProps()

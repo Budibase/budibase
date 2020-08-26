@@ -688,15 +688,15 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.24.2":
-  version "1.24.2"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.24.2.tgz#d3416062d6d17c4f346686984d4da3c595106c87"
+"@budibase/bbui@^1.27.1":
+  version "1.27.1"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.27.1.tgz#79625cb4235a6f0dad07338a05f1525de7ccade3"
   dependencies:
     sirv-cli "^0.4.6"
 
-"@budibase/client@^0.1.17":
-  version "0.1.18"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.18.tgz#10cf733ed3e912d7a93f06c0f152a1dd7cff50a2"
+"@budibase/client@^0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.19.tgz#3906781423ab4626118c981657ecf7a4578c547c"
   dependencies:
     "@nx-js/compiler-util" "^2.0.0"
     bcryptjs "^2.4.3"

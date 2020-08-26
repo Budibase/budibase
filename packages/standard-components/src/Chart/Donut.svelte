@@ -4,6 +4,7 @@
   import Legend from "./Legend.svelte"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
+  import { isEmpty } from "lodash/fp"
 
   import { select } from "d3-selection"
   import shortid from "shortid"
@@ -22,7 +23,6 @@
   let chartSvg = null
 
   export let _bb
-  export let model
 
   let store = _bb.store
 
@@ -59,7 +59,7 @@
 
   onMount(async () => {
     if (chart) {
-      if (datasource) {
+      if (!isEmpty(datasource)) {
         let _data = await fetchData(datasource)
         data = checkAndReformatData(_data)
         if (data.length === 0) {
@@ -84,11 +84,11 @@
   function checkAndReformatData(data) {
     let _data = [...data]
 
-    if (valueKey) {
+    if (valueKey && valueKey !== "quantity") {
       _data = reformatDataKey(_data, valueKey, "quantity")
     }
 
-    if (nameKey) {
+    if (nameKey && nameKey !== "name") {
       _data = reformatDataKey(_data, nameKey, "name")
     }
 
