@@ -3,16 +3,14 @@
   import fetchData from "../fetchData.js"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
+  import { isEmpty } from "lodash/fp"
 
   import { select } from "d3-selection"
   import shortid from "shortid"
 
   const _id = shortid.generate()
 
-  export let _bb
   export let datasource = {}
-
-  let store = _bb.store
 
   const chart = britecharts.line()
   const chartClass = `line-container-${_id}`
@@ -66,8 +64,9 @@
   export let tooltipTitle = ""
 
   onMount(async () => {
-    if (datasource) {
+    if (!isEmpty(datasource)) {
       data = await getAndPrepareData()
+      console.log("DATA", data)
       if (data.dataByTopic.length > 0) {
         chartContainer = select(`.${chartClass}`)
         bindChartUIProps()

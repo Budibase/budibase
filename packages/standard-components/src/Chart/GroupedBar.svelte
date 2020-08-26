@@ -6,13 +6,9 @@
   import { onMount } from "svelte"
   import { select } from "d3-selection"
   import shortid from "shortid"
+  import { isEmpty } from "lodash/fp"
 
   const _id = shortid.generate()
-
-  export let _bb
-  export let datasource = {}
-
-  let store = _bb.store
 
   const chart = britecharts.groupedBar()
   const chartClass = `groupedbar-container-${_id}`
@@ -26,6 +22,7 @@
   export let customClick = null
 
   let data = []
+  export let datasource = {}
   export let color = "britecharts"
   export let height = 200
   export let width = 200
@@ -51,7 +48,7 @@
     (hasProp(data, "value") || hasProp(data, valueLabel))
 
   onMount(async () => {
-    if (model) {
+    if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
       if (schemaIsValid()) {
         chartContainer = select(`.${chartClass}`)

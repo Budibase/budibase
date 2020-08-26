@@ -4,19 +4,22 @@
   import { onMount } from "svelte"
 
   export let componentInstance = {}
+  export let value = ""
+  export let onChange = (val = {})
 
-  let datasource = componentInstance.datasource
   const models = $backendUiStore.models
 
   let options = []
 
-  $: model = datasource ? models.find(m => m._id === datasource.modelId) : null
+  $: model = componentInstance.datasource
+    ? models.find(m => m._id === componentInstance.datasource.modelId)
+    : null
 
   $: if (model) {
-    options = datasource.isModel
+    options = componentInstance.datasource.isModel
       ? Object.keys(model.schema)
-      : Object.keys(model.views[datasource.name].schema)
+      : Object.keys(model.views[componentInstance.datasource.name].schema)
   }
 </script>
 
-<OptionSelect {options} />
+<OptionSelect {value} {onChange} {options} />

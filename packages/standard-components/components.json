@@ -500,6 +500,8 @@
 		"data": true,
 		"props": {
 			"datasource": "models",
+			"nameLabel": "string",
+			"valueLabel": "string",
 			"betweenBarsPadding": "number",
 			"gradient": "string",
 			"color": "string",
@@ -510,9 +512,6 @@
 			"isHorizontal": "bool",
 			"labelNumberFormat": "number",
 			"locale": "string",
-			"nameLabel": "string",
-			"valueLabel": "string",
-			"numberLabel": "string",
 			"xAxisLabel": "string",
 			"yAxisLabel": "string",
 			"useLegend": "bool",
@@ -583,6 +582,8 @@
 		"data": true,
 		"props": {
 			"datasource": "models",
+			"nameLabel": "string",
+			"valueLabel": "string",
 			"color": "string",
 			"height": "string",
 			"width": "string",
@@ -591,8 +592,6 @@
 			"groupLabel": "string",
 			"isAnimated": "bool",
 			"isHorizontal": "bool",
-			"nameLabel": "string",
-			"valueLabel":"string",
 			"yTicks": "string",
 			"useLegend": "bool",
 			"tooltipTitle": "string"

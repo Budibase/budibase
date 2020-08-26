@@ -24,7 +24,7 @@
     let viewsArr = Object.entries(cur.views).map(([key, value]) => ({
       label: key,
       name: key,
-      modelId: value.modelId,
+      ...value,
     }))
     return [...acc, ...viewsArr]
   }, [])
@@ -44,6 +44,7 @@
   align="right">
   <div class="model-view-container">
     <p>Tables</p>
+
     <ul>
       {#each models as model}
         <li

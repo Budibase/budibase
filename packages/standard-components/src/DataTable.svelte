@@ -5,8 +5,7 @@
   import ArrowDown from "./icons/ArrowDown.svelte"
   import fsort from "fast-sort"
   import fetchData from "./fetchData.js"
-
-  export let _bb
+  import { isEmpty } from "lodash/fp"
 
   export let backgroundColor
   export let color
@@ -16,7 +15,6 @@
 
   let data = []
   let headers = []
-  let store = _bb.store
   let sort = {}
   let sorted = []
 
@@ -30,7 +28,7 @@
   $: sorted = sort.direction ? fsort(data)[sort.direction](sort.column) : data
 
   onMount(async () => {
-    if (datasource) {
+    if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
       if (data) {
         headers = Object.keys(data[0]).filter(shouldDisplayField)

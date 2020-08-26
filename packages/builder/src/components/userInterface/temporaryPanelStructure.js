@@ -680,12 +680,14 @@ export default {
                   {
                     label: "Name Label",
                     key: "nameLabel",
-                    control: Input,
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
                   },
                   {
                     label: "Value Label",
                     key: "valueLabel",
-                    control: Input,
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
                   },
                   {
                     label: "Y Axis Label",
@@ -790,6 +792,24 @@ export default {
                     control: ModelViewSelect,
                   },
                   {
+                    label: "Name Label",
+                    key: "nameLabel",
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
+                  },
+                  {
+                    label: "Group Label",
+                    key: "groupLabel",
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
+                  },
+                  {
+                    label: "Value Label",
+                    key: "valueLabel",
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
+                  },
+                  {
                     label: "Color",
                     key: "color",
                     control: OptionSelect,
@@ -826,16 +846,6 @@ export default {
                     key: "grid",
                     control: OptionSelect,
                     options: ["vertical", "horizontal", "full"],
-                  },
-                  {
-                    label: "Group Label",
-                    key: "groupLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Name Label",
-                    key: "nameLabel",
-                    control: Input,
                   },
                   {
                     label: "Value Label",
@@ -883,6 +893,24 @@ export default {
                     label: "Table",
                     key: "datasource",
                     control: ModelViewSelect,
+                  },
+                  {
+                    label: "Value Label",
+                    key: "valueLabel",
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
+                  },
+                  {
+                    label: "Topic Label",
+                    key: "topicLabel",
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
+                  },
+                  {
+                    label: "Date Label",
+                    key: "dateLabel",
+                    dependsOn: "datasource",
+                    control: ModelViewFieldSelect,
                   },
                   {
                     label: "Colors",
@@ -940,21 +968,6 @@ export default {
                     key: "grid",
                     control: OptionSelect,
                     options: ["vertical", "horizontal", "full"],
-                  },
-                  {
-                    label: "Date Label",
-                    key: "dateLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Topic Label",
-                    key: "topicLabel",
-                    control: Input,
-                  },
-                  {
-                    label: "Value Label",
-                    key: "valueLabel",
-                    control: Input,
                   },
                   {
                     label: "X Axis Label",
