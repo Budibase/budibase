@@ -128,3 +128,29 @@
     justify-content: center;
     font-size: 20px;
 }
+
+/* Table styles */
+.bb-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+    margin-bottom: var(--spacing-xl);
+}
+
+* + .bb-table { 
+    margin-top: var(--spacing-xl)
+}
+
+.bb-table th {
+    padding: var(--spacing-l) var(--spacing-m);
+    text-align: left;
+    vertical-align: bottom;
+}
+
+.bb-table td {
+    padding: var(--spacing-l) var(--spacing-m);
+    vertical-align: top;
+}
+
+.bb-table td > :last-child { margin-bottom: 0; }
+

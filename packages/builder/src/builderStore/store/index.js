@@ -1,7 +1,6 @@
 import { values, cloneDeep } from "lodash/fp"
 import getNewComponentName from "../getNewComponentName"
 import { backendUiStore } from "builderStore"
-import * as backendStoreActions from "./backend"
 import { writable, get } from "svelte/store"
 import api from "../api"
 import { DEFAULT_PAGES_OBJECT } from "../../constants"
@@ -25,6 +24,7 @@ import {
   saveScreenApi as _saveScreenApi,
   regenerateCssForCurrentScreen,
   generateNewIdsForComponent,
+  getComponentDefinition,
 } from "../storeUtils"
 export const getStore = () => {
   const initial = {
@@ -50,8 +50,6 @@ export const getStore = () => {
 
   store.setPackage = setPackage(store, initial)
 
-  store.createDatabaseForApp = backendStoreActions.createDatabaseForApp(store)
-
   store.saveScreen = saveScreen(store)
   store.setCurrentScreen = setCurrentScreen(store)
   store.setCurrentPage = setCurrentPage(store)
@@ -76,9 +74,6 @@ export const getStore = () => {
 }
 
 export default getStore
-
-export const getComponentDefinition = (state, name) =>
-  name.startsWith("##") ? getBuiltin(name) : state.components[name]
 
 const setPackage = (store, initial) => async pkg => {
   const [main_screens, unauth_screens] = await Promise.all([

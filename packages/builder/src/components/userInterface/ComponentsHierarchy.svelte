@@ -11,6 +11,11 @@
 
   export let screens = []
 
+  /* 
+  Using a store here seems odd.... 
+  have a look in the <ComponentsHierarchyChildren /> code file to find out why. 
+  I have commented the dragDropStore parameter
+  */
   const dragDropStore = writable({})
 
   let confirmDeleteDialog
