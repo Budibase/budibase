@@ -59,7 +59,6 @@
   onMount(async () => {
     if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
-      console.log("DATA", data)
 
       if (schemaIsValid()) {
         chartContainer = select(`.${chartClass}`)
