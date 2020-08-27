@@ -1,10 +1,4 @@
 import fetchBindableProperties from "../src/builderStore/fetchBindableProperties"
-import { flat } from "lodash"
-
-// supports running jest on Node 10.x
-if (!Array.flat) {
-  Array.flat = flat
-}
 
 describe("fetch bindable properties", () => {
 
