@@ -66,7 +66,7 @@
   onMount(async () => {
     if (!isEmpty(datasource)) {
       data = await getAndPrepareData()
-      console.log("DATA", data)
+
       if (data.dataByTopic.length > 0) {
         chartContainer = select(`.${chartClass}`)
         bindChartUIProps()
