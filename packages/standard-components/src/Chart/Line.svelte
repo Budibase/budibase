@@ -205,8 +205,11 @@
     if (notNull(lines)) {
       chart.lines(lines)
     }
-
-    tooltip.title(tooltipTitle || "Line Tooltip")
+    if (notNull(tooltipTitle)) {
+      tooltip.title(tooltipTitle)
+    } else if (datasource.label) {
+      tooltip.title(datasource.label)
+    }
   }
 
   function bindChartEvents() {

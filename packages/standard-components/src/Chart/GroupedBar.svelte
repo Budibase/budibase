@@ -123,7 +123,11 @@
     if (notNull(yTickTextOffset)) {
       chart.yTickTextOffset(yTickTextOffset)
     }
-    tooltip.title(tooltipTitle || "Groupedbar Title")
+    if (notNull(tooltipTitle)) {
+      tooltip.title(tooltipTitle)
+    } else if (datasource.label) {
+      tooltip.title(datasource.label)
+    }
   }
 
   function bindChartEvents() {
