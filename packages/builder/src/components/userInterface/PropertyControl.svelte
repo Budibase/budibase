@@ -121,6 +121,7 @@
     align="right">
     <BindingDropdown
       {...handlevalueKey(value)}
+      close={dropdown.hide}
       on:update={e => (temporaryBindableValue = e.detail)}
       {bindableProperties} />
   </DropdownMenu>
