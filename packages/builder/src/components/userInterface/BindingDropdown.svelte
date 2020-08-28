@@ -1,17 +1,25 @@
 <script>
-  import { Button, TextArea, Label } from "@budibase/bbui"
+  import { Button, TextArea, Label, Body } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
   export let bindableProperties
   console.log("Bindable Props: ", bindableProperties)
   export let value = ""
+  export let close
 
   function addToText(readableBinding) {
     value = value + `{{ ${readableBinding} }}`
   }
+  let originalValue = value
 
   $: dispatch("update", value)
+
+  function cancel() {
+    dispatch("update", originalValue)
+    close()
+    console.log("test")
+  }
 </script>
 
 <div class="container">
@@ -25,13 +33,17 @@
   </div>
   <div class="text">
     <Label size="l" color="dark">Data binding</Label>
+    <Body size="s" color="dark">
+      Binding connects one piece of data to another and makes it dynamic. Click
+      the objects on the left, to add them to the textbox.
+    </Body>
     <TextArea bind:value placeholder="" />
     <div class="controls">
       <a href="#">
-        <Label size="s" color="light">Objects</Label>
+        <Label size="s" color="light">Learn more about binding</Label>
       </a>
-      <Button>Test</Button>
-      <Button>Test</Button>
+      <Button on:click={cancel} secondary>Cancel</Button>
+      <Button on:click={close} primary>Done</Button>
     </div>
   </div>
 </div>
@@ -45,6 +57,12 @@
   .text {
     padding: var(--spacing-m);
   }
+  .controls {
+    margin-top: var(--spacing-m);
+    display: grid;
+    grid-gap: var(--spacing-l);
+    grid-template-columns: 1fr auto auto;
+  }
   .list {
     width: 150px;
     border-right: 1.5px solid blue;
@@ -52,6 +70,9 @@
   .text {
     width: 600px;
     display: grid;
+  }
+  .text :global(p) {
+    margin: 0;
   }
   ul {
     list-style: none;
