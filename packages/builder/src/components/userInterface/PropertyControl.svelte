@@ -102,7 +102,7 @@
       name={key} />
   </div>
   {#if control == Input}
-    <button on:click={dropdown.show}>
+    <button data-cy={`${key}-binding-button`} on:click={dropdown.show}>
       <Icon name="edit" />
     </button>
   {/if}
