@@ -96,6 +96,8 @@ textarea {
     cursor: pointer;
 }
 
+/* Top bottom spacing */
+
 .bb-margin-m {
     margin-bottom: var(--spacing-m);
 }

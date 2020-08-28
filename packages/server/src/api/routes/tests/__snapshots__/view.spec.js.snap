@@ -3,15 +3,13 @@
 exports[`/views query returns data for the created view 1`] = `
 Array [
   Object {
-    "key": null,
-    "value": Object {
-      "avg": 2333.3333333333335,
-      "count": 3,
-      "max": 4000,
-      "min": 1000,
-      "sum": 7000,
-      "sumsqr": 21000000,
-    },
+    "avg": 2333.3333333333335,
+    "count": 3,
+    "group": null,
+    "max": 4000,
+    "min": 1000,
+    "sum": 7000,
+    "sumsqr": 21000000,
   },
 ]
 `;
@@ -19,26 +17,22 @@ Array [
 exports[`/views query returns data for the created view using a group by 1`] = `
 Array [
   Object {
-    "key": "One",
-    "value": Object {
-      "avg": 1500,
-      "count": 2,
-      "max": 2000,
-      "min": 1000,
-      "sum": 3000,
-      "sumsqr": 5000000,
-    },
+    "avg": 1500,
+    "count": 2,
+    "group": "One",
+    "max": 2000,
+    "min": 1000,
+    "sum": 3000,
+    "sumsqr": 5000000,
   },
   Object {
-    "key": "Two",
-    "value": Object {
-      "avg": 4000,
-      "count": 1,
-      "max": 4000,
-      "min": 4000,
-      "sum": 4000,
-      "sumsqr": 16000000,
-    },
+    "avg": 4000,
+    "count": 1,
+    "group": "Two",
+    "max": 4000,
+    "min": 4000,
+    "sum": 4000,
+    "sumsqr": 16000000,
   },
 ]
 `;
