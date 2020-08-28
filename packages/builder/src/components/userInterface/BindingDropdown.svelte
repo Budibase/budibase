@@ -1,9 +1,10 @@
 <script>
-  import { TextArea } from "@budibase/bbui"
+  import { Button, TextArea, Label } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
   export let bindableProperties
+  console.log("Bindable Props: ", bindableProperties)
   export let value = ""
 
   function addToText(readableBinding) {
@@ -14,18 +15,24 @@
 </script>
 
 <div class="container">
-  <div class="text">
-    <TextArea
-      bind:value
-      placeholder=""
-      label="Select bindable properties from the right." />
-  </div>
   <div class="list">
+    <Label size="l" color="dark">Objects</Label>
     <ul>
       {#each bindableProperties as { readableBinding }}
         <li on:click={() => addToText(readableBinding)}>{readableBinding}</li>
       {/each}
     </ul>
+  </div>
+  <div class="text">
+    <Label size="l" color="dark">Data binding</Label>
+    <TextArea bind:value placeholder="" />
+    <div class="controls">
+      <a href="#">
+        <Label size="s" color="light">Objects</Label>
+      </a>
+      <Button>Test</Button>
+      <Button>Test</Button>
+    </div>
   </div>
 </div>
 
@@ -34,13 +41,17 @@
     display: grid;
     grid-template-columns: auto auto;
   }
+  .list,
   .text {
-    padding: var(--spacing-s) 0 var(--spacing-s) var(--spacing-s);
-    width: 600px;
-    display: grid;
+    padding: var(--spacing-m);
   }
   .list {
     width: 150px;
+    border-right: 1.5px solid blue;
+  }
+  .text {
+    width: 600px;
+    display: grid;
   }
   ul {
     list-style: none;
