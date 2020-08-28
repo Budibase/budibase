@@ -3,7 +3,7 @@ import { cloneDeep, difference } from "lodash/fp"
 /**
  * parameter for fetchBindableProperties function
  * @typedef {Object} fetchBindablePropertiesParameter
- * @property {string}  componentInstanceId - an _id of a component that has been added to a screen, whihc you want to fetch bindable props for
+ * @property {string}  componentInstanceId - an _id of a component that has been added to a screen, which you want to fetch bindable props for
  * @propperty {Object} screen - current screen - where componentInstanceId lives
  * @property {Object} components - dictionary of component definitions
  * @property {Array} models - array of all models
@@ -23,7 +23,7 @@ import { cloneDeep, difference } from "lodash/fp"
  * @param {fetchBindablePropertiesParameter} param
  * @returns {Array.<BindableProperty>}
  */
-export default function ({ componentInstanceId, screen, components, models }) {
+export default function({ componentInstanceId, screen, components, models }) {
   const walkResult = walk({
     // cloning so we are free to mutate props (e.g. by adding _contexts)
     instance: cloneDeep(screen.props),
@@ -69,16 +69,16 @@ const componentInstanceToBindable = walkResult => i => {
   }
 }
 
-const contextToBindables = walkResult => c => {
-  const contextParentPath = getParentPath(walkResult, c)
+const contextToBindables = walkResult => context => {
+  const contextParentPath = getParentPath(walkResult, context)
 
-  return Object.keys(c.model.schema).map(k => ({
+  return Object.keys(context.model.schema).map(k => ({
     type: "context",
-    instance: c.instance,
+    instance: context.instance,
     // how the binding expression persists, and is used in the app at runtime
     runtimeBinding: `${contextParentPath}data.${k}`,
     // how the binding exressions looks to the user of the builder
-    readableBinding: `${c.instance._instanceName}.${c.model.name}.${k}`,
+    readableBinding: `${context.instance._instanceName}.${context.model.name}.${k}`,
   }))
 }
 
@@ -120,7 +120,7 @@ const walk = ({ instance, targetId, components, models, result }) => {
       // but this will not be correct, as some of
       // these components will be in another context
       // but we dont know this until the end of the walk
-      // so we will filter in another metod
+      // so we will filter in another method
       result.bindableInstances.push({
         instance,
         prop: component.bindable,
@@ -129,7 +129,8 @@ const walk = ({ instance, targetId, components, models, result }) => {
   }
 
   // a component that provides context to it's children
-  const contextualInstance = component && component.context && instance[component.context]
+  const contextualInstance =
+    component && component.context && instance[component.context]
 
   if (contextualInstance) {
     // add to currentContexts (ancestory of context)

@@ -40,7 +40,7 @@ const subscribe = (subscription, storeKey) => {
   const contextStore = contextStores[storeKey]
 
   // we are subscribing to multiple stores,
-  // we dont want to each subscription the first time
+  // we dont want to run our listener for every subscription, the first time
   // as this could repeatedly run $set on the same component
   // ... which already has its initial properties set properly
   const ignoreFirstSubscription = () => {
