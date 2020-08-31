@@ -1,4 +1,5 @@
 <script>
+  import groupBy from "lodash/fp/groupBy"
   import { Button, TextArea, Label, Body } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
@@ -18,18 +19,30 @@
   function cancel() {
     dispatch("update", originalValue)
     close()
-    console.log("test")
   }
+
+  $: ({ instance, context } = groupBy("type", bindableProperties))
 </script>
 
 <div class="container">
   <div class="list">
     <Label size="l" color="dark">Objects</Label>
-    <ul>
-      {#each bindableProperties as { readableBinding }}
-        <li on:click={() => addToText(readableBinding)}>{readableBinding}</li>
-      {/each}
-    </ul>
+    {#if context}
+      <Label size="s" color="dark">Table</Label>
+      <ul>
+        {#each context as { readableBinding }}
+          <li on:click={() => addToText(readableBinding)}>{readableBinding}</li>
+        {/each}
+      </ul>
+    {/if}
+    {#if instance}
+      <Label size="s" color="dark">Components</Label>
+      <ul>
+        {#each instance as { readableBinding }}
+          <li on:click={() => addToText(readableBinding)}>{readableBinding}</li>
+        {/each}
+      </ul>
+    {/if}
   </div>
   <div class="text">
     <Label size="l" color="dark">Data binding</Label>
@@ -40,7 +53,7 @@
     <TextArea bind:value placeholder="" />
     <div class="controls">
       <a href="#">
-        <Label size="s" color="light">Learn more about binding</Label>
+        <Body size="s" color="light">Learn more about binding</Body>
       </a>
       <Button on:click={cancel} secondary>Cancel</Button>
       <Button on:click={close} primary>Done</Button>
@@ -60,6 +73,7 @@
   .controls {
     margin-top: var(--spacing-m);
     display: grid;
+    align-items: center;
     grid-gap: var(--spacing-l);
     grid-template-columns: 1fr auto auto;
   }
