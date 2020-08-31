@@ -79,7 +79,7 @@
   }
   .list {
     width: 150px;
-    border-right: 1.5px solid blue;
+    border-right: 1.5px solid var(--grey-4);
   }
   .text {
     width: 600px;
