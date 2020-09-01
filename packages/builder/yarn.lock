@@ -688,10 +688,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.28.0":
-  version "1.28.0"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.28.0.tgz#200adca026bc3498eafdc17dd0f7da39af4bb732"
-  integrity sha512-KyzW0BLFl6CWYr4w/U3SoEJlUuMqL0i5wfZ6kdejfHhiou4yS9v4cul1tc0IPUNKioQLpnW1A6NpuVmGc1e16Q==
+"@budibase/bbui@^1.28.2":
+  version "1.28.2"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.28.2.tgz#b86d10c2c4489e352a391ee55cc6fc5b24492e4c"
+  integrity sha512-8Mrh1ZrkGEl7syqMbsalI3pAy/V6Xh4tx14h3SXKx/XKXlzqxS4vq/+3DaphLbLn+0WZmHrxI5MkdfkSIh7nvw==
   dependencies:
     sirv-cli "^0.4.6"
 
