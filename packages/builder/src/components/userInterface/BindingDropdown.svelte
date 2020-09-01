@@ -24,7 +24,7 @@
   $: ({ instance, context } = groupBy("type", bindableProperties))
 </script>
 
-<div class="container">
+<div class="container" data-cy="binding-dropdown-modal">
   <div class="list">
     <Label size="l" color="dark">Objects</Label>
     {#if context}
