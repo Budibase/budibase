@@ -112,7 +112,7 @@
         <div class="panel-body">
           <div class="block-label">Workflow: {workflow.name}</div>
           <div class="config-item">
-            <Label size="s" forAttr={'useraccess'}>User Access</Label>
+            <Label small forAttr={'useraccess'}>User Access</Label>
             <div class="access-levels">
 
               {#each ACCESS_LEVELS as level}

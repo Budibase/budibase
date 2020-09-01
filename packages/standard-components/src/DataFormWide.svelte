@@ -168,7 +168,7 @@
   <div class="form-content">
     {#each fields as field}
       <div class="form-item">
-        <Label size="s" forAttr={'form-stacked-text'}>{field}</Label>
+        <Label small forAttr={'form-stacked-text'}>{field}</Label>
         {#if schema[field].type === 'string' && schema[field].constraints.inclusion}
           <select on:blur={handleInput(field)} bind:this={inputElements[field]}>
             {#each schema[field].constraints.inclusion as opt}

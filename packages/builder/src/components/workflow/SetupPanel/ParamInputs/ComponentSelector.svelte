@@ -25,7 +25,7 @@
 </script>
 
 <div class="bb-margin-xl block-field">
-  <Label size="s" forAttr={'page'}>Page</Label>
+  <Label small forAttr={'page'}>Page</Label>
   <div class="uk-form-controls">
     <select class="budibase__input" bind:value={pageName}>
       {#each Object.keys(pages) as page}
@@ -34,7 +34,7 @@
     </select>
   </div>
   {#if components.length > 0}
-    <Label size="s" forAttr={'component'}>Component</Label>
+    <Label small forAttr={'component'}>Component</Label>
     <div class="uk-form-controls">
       <select class="budibase__input" bind:value>
         {#each components as component}
