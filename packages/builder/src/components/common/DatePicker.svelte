@@ -27,9 +27,7 @@
 
 <div class="bb-margin-m">
   <Label small forAttr={'datepicker-label'}>{label}</Label>
-  <div class="uk-form-controls">
-    <input
-      class="uk-input uk-form-width-{width} uk-form-{size}"
-      bind:this={input} />
-  </div>
+  <input
+    class="uk-input uk-form-width-{width} uk-form-{size}"
+    bind:this={input} />
 </div>
