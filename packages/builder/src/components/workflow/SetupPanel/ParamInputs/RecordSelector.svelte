@@ -15,7 +15,7 @@
 
 {#if value.model}
   <div class="bb-margin-xl block-field">
-    <Label size="s" forAttr={'fields'}>Fields</Label>
+    <Label small forAttr={'fields'}>Fields</Label>
     {#each Object.keys(value.model.schema) as field}
       <div class="bb-margin-xl">
         <Input bind:value={value[field]} label={field} />

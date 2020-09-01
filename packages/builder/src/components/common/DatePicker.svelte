@@ -26,7 +26,7 @@
 </script>
 
 <div class="bb-margin-m">
-  <Label size="s" forAttr={'datepicker-label'}>{label}</Label>
+  <Label small forAttr={'datepicker-label'}>{label}</Label>
   <div class="uk-form-controls">
     <input
       class="uk-input uk-form-width-{width} uk-form-{size}"
