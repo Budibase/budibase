@@ -1,25 +1,22 @@
 <script>
-  import { Button, DropdownMenu } from "@budibase/bbui"
+  import { Button, Modal } from "@budibase/bbui"
   import EventEditorModal from "./EventEditorModal.svelte"
-  import { getContext } from "svelte"
 
   export let value
   export let name
 
-  let button
-  let dropdown
+  let eventsModal
 </script>
 
-<div bind:this={button}>
-  <Button secondary small on:click={dropdown.show}>Define Actions</Button>
-</div>
-<DropdownMenu bind:this={dropdown} align="right" anchor={button}>
+<Button secondary small on:click={eventsModal.show}>Define Actions</Button>
+
+<Modal bind:this={eventsModal} maxWidth="100vw" hideCloseButton>
   <EventEditorModal
     event={value}
     eventType={name}
     on:change
-    on:close={dropdown.hide} />
-</DropdownMenu>
+    on:close={eventsModal.hide} />
+</Modal>
 
 <style>
 
