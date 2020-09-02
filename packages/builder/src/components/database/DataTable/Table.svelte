@@ -25,6 +25,7 @@
   let currentPage = 0
 
   $: columns = schema ? Object.keys(schema) : []
+
   $: paginatedData =
     data && data.length
       ? data.slice(
