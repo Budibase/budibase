@@ -14,9 +14,8 @@ module.exports = async function saveRecord({ args, context }) {
     user: { instanceId: context.instanceId },
   }
 
-  await recordController.save(ctx)
-
   try {
+    await recordController.save(ctx)
     return {
       record: ctx.body,
     }

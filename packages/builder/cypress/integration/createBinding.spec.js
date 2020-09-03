@@ -1,4 +1,4 @@
-context('Create a Binding', () => {
+xcontext('Create a Binding', () => {
     before(() => {
         cy.visit('localhost:4001/_builder')
         cy.createApp('Binding App', 'Binding App Description')
