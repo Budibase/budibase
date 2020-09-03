@@ -1,8 +1,6 @@
 <script>
-  import Button from "./Button.svelte"
-  import ActionButton from "./ActionButton.svelte"
-  import ButtonGroup from "./ButtonGroup.svelte"
   import UIkit from "uikit"
+  import { Modal, Button, Heading } from "@budibase/bbui"
 
   export let title = ""
   export let body = ""
@@ -12,16 +10,14 @@
   export let onCancel = () => {}
 
   export const show = () => {
-    uiKitModal.hide()
-    uiKitModal.show()
+    theModal.show()
   }
 
   export const hide = () => {
-    uiKitModal.hide()
+    theModal.hide()
   }
 
   let theModal
-  $: uiKitModal = theModal && UIkit.modal(theModal)
 
   const cancel = () => {
     hide()
@@ -36,31 +32,36 @@
   }
 </script>
 
-<div id={title} uk-modal bind:this={theModal}>
-  <div class="uk-modal-dialog">
-    <button class="uk-modal-close-default" type="button" uk-close />
-    <div class="uk-modal-header">
-      <h4 class="budibase__title--4">{title}</h4>
-    </div>
-    <div class="uk-modal-body">
-      <slot class="rows">{body}</slot>
-    </div>
-    <div class="uk-modal-footer">
-      <ButtonGroup>
-        <ActionButton cancel on:click={cancel}>{cancelText}</ActionButton>
-        <ActionButton primary on:click={ok}>{okText}</ActionButton>
-      </ButtonGroup>
-    </div>
+<Modal id={title} bind:this={theModal}>
+
+  <h2>{title}</h2>
+
+  <div class="modal-body">
+    <slot class="rows">{body}</slot>
   </div>
-</div>
+
+  <div class="modal-footer">
+    <Button red wide on:click={ok}>{okText}</Button>
+    <Button secondary wide on:click={cancel}>{cancelText}</Button>
+  </div>
+
+</Modal>
 
 <style>
-  .uk-modal-footer {
-    background: var(--grey-1);
+  h2 {
+    font-size: var(--font-size-xl);
+    margin: 0;
+    font-family: var(--font-sans);
+    font-weight: 600;
   }
 
-  .uk-modal-dialog {
-    width: 400px;
-    border-radius: 5px;
+  .modal-body {
+    margin-top: var(--spacing-m);
+    margin-bottom: var(--spacing-m);
+  }
+
+  .modal-footer {
+    display: grid;
+    grid-gap: var(--spacing-s);
   }
 </style>
