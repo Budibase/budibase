@@ -20,12 +20,12 @@
     handleChange(key, temporaryBindableValue)
   }
 
-  let bindableProperties
+  let bindableProperties = []
 
   let anchor
   let dropdown
 
-  async function getBindableProperties() {
+  function getBindableProperties() {
     // Get all bindableProperties
     bindableProperties = fetchBindableProperties({
       componentInstanceId: $store.currentComponentInfo._id,
@@ -36,7 +36,7 @@
   }
 
   const CAPTURE_VAR_INSIDE_MUSTACHE = /{{([^}]+)}}/g
-  async function replaceBindings(textWithBindings) {
+  function replaceBindings(textWithBindings) {
     getBindableProperties()
     // Find all instances of mustasche
     const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE)
