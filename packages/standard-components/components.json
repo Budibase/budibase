@@ -93,6 +93,7 @@
 	},
 	"input": {
 		"name": "Input",
+		"bindable": "value",
 		"description": "An HTML input",
 		"props": {
 			"value": "string",
@@ -131,6 +132,7 @@
 	},
 	"select": {
 		"name": "Select",
+		"bindable": "value",
 		"description": "An HTML <select> (dropdown)",
 		"props": {
 			"value": "string",
@@ -152,7 +154,10 @@
 		"children": false,
 		"props": {
 			"text": "string",
-			"type": {"type": "string", "default": "none"}
+			"type": {
+				"type": "string",
+				"default": "none"
+			}
 		},
 		"tags": [
 			"div",
@@ -171,6 +176,7 @@
 	},
 	"checkbox": {
 		"name": "Checkbox",
+		"bindable": "value",
 		"description": "A selectable checkbox component",
 		"props": {
 			"label": "string",
@@ -181,6 +187,7 @@
 	},
 	"radiobutton": {
 		"name": "Radiobutton",
+		"bindable": "value",
 		"description": "A selectable radiobutton component",
 		"props": {
 			"label": "string",
@@ -245,6 +252,7 @@
 	},
 	"list": {
 		"description": "A configurable data list that attaches to your backend models.",
+		"context": "model",
 		"children": true,
 		"data": true,
 		"props": {
@@ -265,6 +273,7 @@
 	},
 	"recorddetail": {
 		"description": "Loads a record, using an ID in the url",
+		"context": "model",
 		"children": true,
 		"data": true,
 		"props": {
@@ -288,7 +297,7 @@
 					"12rem",
 					"16rem",
 					"20rem",
-					"24rem"				
+					"24rem"
 				]
 			},
 			"cardWidth": {
@@ -297,7 +306,7 @@
 				"options": [
 					"16rem",
 					"20rem",
-					"24rem"				
+					"24rem"
 				]
 			}
 		}
@@ -319,7 +328,7 @@
 				"options": [
 					"8rem",
 					"12rem",
-					"16rem"			
+					"16rem"
 				]
 			},
 			"cardWidth": {
@@ -332,7 +341,7 @@
 					"40rem",
 					"48rem",
 					"60rem",
-					"100%"		
+					"100%"
 				]
 			},
 			"imageHeight": {
@@ -341,7 +350,7 @@
 				"options": [
 					"8rem",
 					"12rem",
-					"16rem"			
+					"16rem"
 				]
 			}
 		}
@@ -392,7 +401,7 @@
 			"lineGradient": "string",
 			"titleText": "string",
 			"valueLabel": "string"
-		}	
+		}
 	},
 	"stackedbar": {
 		"description": "Stacked Bar Chart",
@@ -421,7 +430,7 @@
 			"yAxisLabel": "string",
 			"yAxisLabelOffset": "number",
 			"useLegend": "bool"
-		}		
+		}
 	},
 	"stackarea": {
 		"description": "Step Chart",
@@ -450,7 +459,7 @@
 			"xAxisCustomFormat": "string",
 			"xAxisFormat": "string",
 			"xAxisScale": "string",
-			"xAxisValueType":"string",
+			"xAxisValueType": "string",
 			"yTicks": "number",
 			"xTicks": "number",
 			"yAxisBaseline": "string",
@@ -468,14 +477,14 @@
 			"xAxisLabel": "string",
 			"xAxisLabelOffset": "string",
 			"yAxisLabel": "string",
-			"yAxisLabelOffset": "string",	
+			"yAxisLabelOffset": "string",
 			"yTicks": "string"
 		}
 	},
 	"scatterplot": {
 		"description": "Scatterplot Chart",
 		"data": true,
-		"props": { 
+		"props": {
 			"model": "string",
 			"color": "string",
 			"height": "number",
@@ -491,7 +500,7 @@
 			"xTicks": "string",
 			"yAxisFormat": "string",
 			"yAxisLabel": "string",
-			"yAxisLabelOffset": "string",	
+			"yAxisLabelOffset": "string",
 			"yTicks": "string"
 		}
 	},
@@ -547,7 +556,7 @@
 			"tooltipTitle": "string"
 		}
 	},
-	"brush":{
+	"brush": {
 		"description": "brush chart",
 		"data": true,
 		"props": {
@@ -575,7 +584,7 @@
 			"useLegend": "bool",
 			"yAxisLabel": "string",
 			"boxSize": "number"
-		}		
+		}
 	},
 	"groupedbar": {
 		"description": "Groupedbar chart",
@@ -587,8 +596,8 @@
 			"color": "string",
 			"height": "string",
 			"width": "string",
-			"margin":"string",
-			"grid":"string",
+			"margin": "string",
+			"grid": "string",
 			"groupLabel": "string",
 			"isAnimated": "bool",
 			"isHorizontal": "bool",
@@ -600,7 +609,7 @@
 	"bullet": {
 		"description": "Bullet chart",
 		"data": true,
-		"props": { 
+		"props": {
 			"model": "string",
 			"color": "string",
 			"customSubtitle": "string",
@@ -651,12 +660,12 @@
 				"styleBindingProperty": "font-family",
 				"options": [
 					"initial",
-					"Times New Roman",	
+					"Times New Roman",
 					"Georgia",
 					"Arial",
-					"Arial Black",	
+					"Arial Black",
 					"Comic Sans MS",
-					"Impact",	
+					"Impact",
 					"Lucida Sans Unicode"
 				]
 			}
@@ -698,7 +707,7 @@
 				],
 				"default": "div"
 			}
-		},		
+		},
 		"container": true,
 		"tags": [
 			"div",
@@ -712,7 +721,7 @@
 		"props": {
 			"className": "string",
 			"text": "string",
-		"type": {
+			"type": {
 				"type": "options",
 				"default": "h1",
 				"options": [

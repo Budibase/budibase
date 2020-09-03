@@ -135,4 +135,38 @@ describe("initialiseApp", () => {
     expect(screenRoot.children[0].children[0].innerText).toBe("header one")
     expect(screenRoot.children[0].children[1].innerText).toBe("header two")
   })
+
+  it("should repeat elements that pass an array of contexts", async () => {
+    const { dom } = await load(
+      makePage({
+        _component: "testlib/div",
+        _children: [
+          {
+            _component: "##builtin/screenslot",
+            text: "header one",
+          },
+        ],
+      }),
+      [
+        makeScreen("/", {
+          _component: "testlib/list",
+          data: [1,2,3,4],
+          _children: [
+            {
+              _component: "testlib/h1",
+              text: "header",
+            }
+          ],
+        }),
+      ]
+    )
+
+    const rootDiv = dom.window.document.body.children[0]
+    expect(rootDiv.children.length).toBe(1)
+
+    const screenRoot = rootDiv.children[0]
+
+    expect(screenRoot.children[0].children.length).toBe(4)
+    expect(screenRoot.children[0].children[0].innerText).toBe("header")
+  })
 })
