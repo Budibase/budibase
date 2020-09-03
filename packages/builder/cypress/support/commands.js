@@ -109,7 +109,9 @@ Cypress.Commands.add("createUser", (username, password, accessLevel) => {
   cy.get("[name=Password]")
     .first()
     .type(password)
-  cy.get("select").first().select(accessLevel)
+  cy.get("select")
+    .first()
+    .select(accessLevel)
 
   // Save
   cy.get(".create-button > button").click()
