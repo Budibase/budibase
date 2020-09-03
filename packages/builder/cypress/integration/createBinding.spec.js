@@ -2,9 +2,6 @@ context('Create a Binding', () => {
     before(() => {
         cy.visit('localhost:4001/_builder')
         cy.createApp('Binding App', 'Binding App Description')
-        cy.createTable('dog')
-        cy.addColumn('dog', 'name', 'Plain Text')
-        cy.addRecord(["Rover"])
         cy.navigateToFrontend()
     })
 
@@ -16,7 +13,6 @@ context('Create a Binding', () => {
         cy.contains("Heading").click()
         cy.get("[data-cy=text-binding-button]").click()
         cy.get("[data-cy=binding-dropdown-modal]").contains('Input 1').click()
-        cy.contains('Home{{ Input 1 }}')
-
+        cy.get("[data-cy=binding-dropdown-modal] textarea").should('have.value', 'Home{{ Input 1 }}')
     })
 })
