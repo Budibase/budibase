@@ -57,7 +57,10 @@
   "eslintConfig": {
     "extends": [
       "plugin:cypress/recommended"
-    ]
+    ],
+    "rules": {
+      "cypress/no-unnecessary-waiting": "off"
+    }
   },
   "dependencies": {
     "@budibase/bbui": "^1.29.1",
