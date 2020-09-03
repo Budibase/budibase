@@ -111,8 +111,7 @@ Cypress.Commands.add("createUser", (username, password) => {
     .type(password)
 
   // Save
-  cy.wait(500)
-  cy.get(".create-button").click()
+  cy.get(".create-button > button").click()
 })
 
 Cypress.Commands.add("addHeadlineComponent", text => {
