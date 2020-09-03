@@ -10,6 +10,8 @@
   export let onStyleChanged = () => {}
   export let open = false
 
+  $: console.log(properties)
+
   $: style = componentInstance["_styles"][styleCategory] || {}
 </script>
 
