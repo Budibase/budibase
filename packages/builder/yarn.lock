@@ -688,10 +688,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.24.1":
-  version "1.24.1"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.24.1.tgz#d1c527990c3dcdef78080abfe6aaeef6e8fb2d66"
-  integrity sha512-yZE4Uk6EB3MoIUd2oNN50u8KOXRX65yRFv49gN0T6iCjTjEAdEk8JtsQR9AL3VWn3EdPz5xOkrGsIvNtxqaAFw==
+"@budibase/bbui@^1.29.1":
+  version "1.29.1"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.29.1.tgz#edaa6c7ce43a71d94460f7a3669ade1d4523333e"
+  integrity sha512-t8zxP7IIHQ4CMT+CRZWUvMgD6NC01J/dwH+pBerR8lJPSygmCOmrDy3ySfSmqcIhzjCbPIVtk32UKnXFqHtzRQ==
   dependencies:
     sirv-cli "^0.4.6"
 
@@ -2828,6 +2828,7 @@ for-in@^1.0.2:
 foreach@~2.0.1:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/foreach/-/foreach-2.0.5.tgz#0bee005018aeb260d0a3af3ae658dd0136ec1b99"
+  integrity sha1-C+4AUBiusmDQo6865ljdATbsG5k=
 
 forever-agent@~0.6.1:
   version "0.6.1"
@@ -5393,6 +5394,7 @@ shellwords@^0.1.1:
 shortid@^2.2.15:
   version "2.2.15"
   resolved "https://registry.yarnpkg.com/shortid/-/shortid-2.2.15.tgz#2b902eaa93a69b11120373cd42a1f1fe4437c122"
+  integrity sha512-5EaCy2mx2Jgc/Fdn9uuDuNIIfWBpzY4XIlhoqtXF6qsf+/+SGZ+FxDdX/ZsMZiWupIWNqAEmiNY4RC+LSmCeOw==
   dependencies:
     nanoid "^2.1.0"
 

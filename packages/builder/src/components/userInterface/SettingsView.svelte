@@ -3,6 +3,8 @@
   import Input from "./PropertyPanelControls/Input.svelte"
   import { goto } from "@sveltech/routify"
   import { excludeProps } from "./propertyCategories.js"
+  import { store } from "builderStore"
+  import { walkProps } from "builderStore/storeUtils"
 
   export let panelDefinition = []
   export let componentDefinition = {}
@@ -12,6 +14,7 @@
   export let screenOrPageInstance
 
   let pageScreenProps = ["title", "favicon", "description", "route"]
+  let duplicateName = false
 
   const propExistsOnComponentDef = prop =>
     pageScreenProps.includes(prop) || prop in componentDefinition.props
@@ -32,6 +35,43 @@
 
   $: isPage = screenOrPageInstance && screenOrPageInstance.favicon
   $: screenOrPageDefinition = isPage ? pageDefinition : screenDefinition
+
+  const isDuplicateName = name => {
+    let duplicate = false
+
+    const lookForDuplicate = rootPops => {
+      walkProps(rootPops, (inst, cancel) => {
+        if (inst._instanceName === name && inst._id !== componentInstance._id) {
+          duplicate = true
+          cancel()
+        }
+      })
+    }
+    // check page first
+    lookForDuplicate($store.pages[$store.currentPageName].props)
+    if (duplicate) return true
+
+    // if viwing screen, check current screen for duplicate
+    if ($store.currentFrontEndType === "screen") {
+      lookForDuplicate($store.currentPreviewItem.props)
+    } else {
+      // viewing master page - need to dedupe against all screens
+      for (let screen of $store.screens) {
+        lookForDuplicate(screen.props)
+      }
+    }
+
+    return duplicate
+  }
+
+  const onInstanceNameChange = (_, name) => {
+    if (isDuplicateName(name)) {
+      duplicateName = true
+    } else {
+      duplicateName = false
+      onChange("_instanceName", name)
+    }
+  }
 </script>
 
 {#if screenOrPageInstance}
@@ -53,7 +93,10 @@
     label="Name"
     key="_instanceName"
     value={componentInstance._instanceName}
-    {onChange} />
+    onChange={onInstanceNameChange} />
+  {#if duplicateName}
+    <span class="duplicate-name">Name must be unique</span>
+  {/if}
 {/if}
 
 {#if panelDefinition && panelDefinition.length > 0}
@@ -77,5 +120,12 @@
 <style>
   div {
     text-align: center;
+  }
+
+  .duplicate-name {
+    color: var(--red);
+    font-size: var(--font-size-xs);
+    position: relative;
+    top: -10px;
   }
 </style>
