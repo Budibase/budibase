@@ -1,14 +1,9 @@
 <script>
   import { store } from "builderStore"
-  import Button from "components/common/Button.svelte"
-  import ActionButton from "components/common/ActionButton.svelte"
-  import ButtonGroup from "components/common/ButtonGroup.svelte"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { pipe } from "components/common/core"
-  import UIkit from "uikit"
   import { isRootComponent } from "./pagesParsing/searchComponents"
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
-  import { Input, Select } from "@budibase/bbui"
+  import { Input, Select, Modal, Button } from "@budibase/bbui"
 
   import { find, filter, some, map, includes } from "lodash/fp"
   import { assign } from "lodash"
@@ -72,34 +67,49 @@
   }
 </script>
 
-<ConfirmDialog
-  bind:this={dialog}
-  title="New Screen"
-  onCancel={cancel}
-  onOk={save}
-  okText="Create Screen">
+<Modal bind:this={dialog}>
+  <h2>New Screen</h2>
 
-  <div data-cy="new-screen-dialog">
-    <div class="bb-margin-xl">
-      <Input label="Name" bind:value={name} />
-    </div>
+  <div class="modal-body">
+    <div data-cy="new-screen-dialog">
+      <div class="bb-margin-xl">
+        <Input label="Name" bind:value={name} />
+      </div>
 
-    <div class="bb-margin-xl">
-      <Input
-        label="Url"
-        error={routeError}
-        bind:value={route}
-        on:change={routeChanged} />
-    </div>
+      <div class="bb-margin-xl">
+        <Input
+          label="Url"
+          error={routeError}
+          bind:value={route}
+          on:change={routeChanged} />
+      </div>
 
-    <div class="bb-margin-xl">
-      <label>Layout Component</label>
-      <Select bind:value={layoutComponent} secondary>
-        {#each layoutComponents as { _component, name }}
-          <option value={_component}>{name}</option>
-        {/each}
-      </Select>
+      <div class="bb-margin-xl">
+        <label>Layout Component</label>
+        <Select bind:value={layoutComponent} secondary>
+          {#each layoutComponents as { _component, name }}
+            <option value={_component}>{name}</option>
+          {/each}
+        </Select>
+      </div>
     </div>
   </div>
 
-</ConfirmDialog>
+  <Button secondary medium on:click={cancel}>Cancel</Button>
+  <Button blue medium on:click={save}>Create Screen</Button>
+
+</Modal>
+
+<style>
+  h2 {
+    font-size: var(--font-size-xl);
+    margin: 0;
+    font-family: var(--font-sans);
+    font-weight: 600;
+  }
+
+  .modal-body {
+    margin-top: var(--spacing-m);
+    margin-bottom: var(--spacing-m);
+  }
+</style>
