@@ -49,6 +49,9 @@
     ],
     "setupFilesAfterEnv": [
       "@testing-library/jest-dom/extend-expect"
+    ],
+    "setupFiles": [
+      "./scripts/jestSetup.js"
     ]
   },
   "eslintConfig": {
@@ -57,7 +60,7 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "^1.24.1",
+    "@budibase/bbui": "^1.29.1",
     "@budibase/client": "^0.1.19",
     "@budibase/colorpicker": "^1.0.1",
     "@sentry/browser": "5.19.1",
