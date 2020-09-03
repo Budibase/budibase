@@ -1,5 +1,5 @@
 import { values, cloneDeep } from "lodash/fp"
-import { get_capitalised_name } from "../../helpers"
+import getNewComponentName from "../getNewComponentName"
 import { backendUiStore } from "builderStore"
 import { writable, get } from "svelte/store"
 import api from "../api"
@@ -276,7 +276,7 @@ const addChildComponent = store => (componentToAdd, presetProps = {}) => {
     const component = getComponentDefinition(state, componentToAdd)
 
     const instanceId = get(backendUiStore).selectedDatabase._id
-    const instanceName = get_capitalised_name(componentToAdd)
+    const instanceName = getNewComponentName(componentToAdd, state)
 
     const newComponent = createProps(
       component,
@@ -482,7 +482,7 @@ const pasteComponent = store => (targetComponent, mode) => {
       // in case we paste a second time
       s.componentToPaste.isCut = false
     } else {
-      generateNewIdsForComponent(componentToPaste)
+      generateNewIdsForComponent(componentToPaste, s)
     }
     delete componentToPaste.isCut
 

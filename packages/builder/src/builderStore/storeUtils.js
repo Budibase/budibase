@@ -5,6 +5,7 @@ import {
 import api from "./api"
 import { generate_screen_css } from "./generate_css"
 import { uuid } from "./uuid"
+import getNewComponentName from "./getNewComponentName"
 
 export const selectComponent = (state, component) => {
   const componentDef = component._component.startsWith("##")
@@ -84,9 +85,10 @@ export const regenerateCssForCurrentScreen = state => {
   return state
 }
 
-export const generateNewIdsForComponent = c =>
+export const generateNewIdsForComponent = (c, state) =>
   walkProps(c, p => {
     p._id = uuid()
+    p._instanceName = getNewComponentName(p._component, state)
   })
 
 export const getComponentDefinition = (state, name) =>
