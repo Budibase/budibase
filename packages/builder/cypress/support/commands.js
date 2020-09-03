@@ -98,7 +98,7 @@ Cypress.Commands.add("addRecord", values => {
   cy.contains("Save").click()
 })
 
-Cypress.Commands.add("createUser", (username, password) => {
+Cypress.Commands.add("createUser", (username, password, accessLevel) => {
   // Create User
   cy.get(".toprightnav > .settings").click()
   cy.contains("Users").click()
@@ -109,12 +109,9 @@ Cypress.Commands.add("createUser", (username, password) => {
   cy.get("[name=Password]")
     .first()
     .type(password)
+  cy.get("select").first().select(accessLevel)
 
   // Save
-  cy.get(".create-button > button").click()
-  cy.get(".create-button > button").click()
-  cy.get(".create-button > button").click()
-  cy.get(".create-button > button").click()
   cy.get(".create-button > button").click()
 })
 
