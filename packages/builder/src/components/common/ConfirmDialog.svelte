@@ -1,6 +1,6 @@
 <script>
   import UIkit from "uikit"
-  import { Modal, Button, Heading } from "@budibase/bbui"
+  import { Modal, Button, Heading, Spacer } from "@budibase/bbui"
 
   export let title = ""
   export let body = ""
@@ -33,18 +33,14 @@
 </script>
 
 <Modal id={title} bind:this={theModal}>
-
   <h2>{title}</h2>
-
-  <div class="modal-body">
-    <slot class="rows">{body}</slot>
-  </div>
-
+  <Spacer extraLarge />
+  <slot class="rows">{body}</slot>
+  <Spacer extraLarge />
   <div class="modal-footer">
     <Button red wide on:click={ok}>{okText}</Button>
     <Button secondary wide on:click={cancel}>{cancelText}</Button>
   </div>
-
 </Modal>
 
 <style>
@@ -53,11 +49,6 @@
     margin: 0;
     font-family: var(--font-sans);
     font-weight: 600;
-  }
-
-  .modal-body {
-    margin-top: var(--spacing-m);
-    margin-bottom: var(--spacing-m);
   }
 
   .modal-footer {
