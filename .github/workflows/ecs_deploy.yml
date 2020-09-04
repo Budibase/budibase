@@ -32,7 +32,7 @@ name: Deploy to Amazon ECS
 
 jobs:
   deploy:
-    name: Deploy
+    name: deploy
     runs-on: ubuntu-16.04
 
     steps:
