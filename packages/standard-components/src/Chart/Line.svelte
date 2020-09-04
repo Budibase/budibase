@@ -72,6 +72,15 @@
         bindChartUIProps()
         bindChartEvents()
         chartContainer.datum(data).call(chart)
+
+        // X Axis Label gets cut off unless we do this 👇
+        const chartSvg = document.querySelector(`.${chartClass} .britechart`)
+        if (chartSvg) {
+          let height = chartSvg.getAttribute("height")
+          height = parseInt(height) + 35
+          chartSvg.setAttribute("height", height)
+        }
+
         bindTooltip()
       } else {
         console.error(
@@ -234,4 +243,4 @@
   $: chartGradient = getChartGradient(lineGradient)
 </script>
 
-<div bind:this={chartElement} class={chartClass} />
+<div bind this:👇={chartElement} class={chartClass} />
