@@ -23,7 +23,7 @@ Object {
       "field": Object {
         "type": "string",
       },
-      "max": Object {l
+      "max": Object {
         "type": "number",
       },
       "min": Object {
