@@ -8,6 +8,7 @@
   import { onMount, getContext } from "svelte"
 
   export let label = ""
+  export let componentInstance = {}
   export let control = null
   export let key = ""
   export let value
@@ -101,6 +102,7 @@
   <div data-cy={`${key}-prop-control`} class="control">
     <svelte:component
       this={control}
+      {componentInstance}
       {...handlevalueKey(value)}
       on:change={val => handleChange(key, val)}
       onChange={val => handleChange(key, val)}
