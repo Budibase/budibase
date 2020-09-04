@@ -3,7 +3,7 @@
   import { pipe } from "components/common/core"
   import { isRootComponent } from "./pagesParsing/searchComponents"
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
-  import { Input, Select, Modal, Button } from "@budibase/bbui"
+  import { Input, Select, Modal, Button, Spacer } from "@budibase/bbui"
 
   import { find, filter, some, map, includes } from "lodash/fp"
   import { assign } from "lodash"
@@ -67,37 +67,39 @@
   }
 </script>
 
-<Modal bind:this={dialog}>
+<Modal bind:this={dialog} minWidth="500px">
   <h2>New Screen</h2>
+  <Spacer extraLarge />
 
-  <div class="modal-body">
-    <div data-cy="new-screen-dialog">
-      <div class="bb-margin-xl">
-        <Input label="Name" bind:value={name} />
-      </div>
+  <div data-cy="new-screen-dialog">
+    <div class="bb-margin-xl">
+      <Input label="Name" bind:value={name} />
+    </div>
 
-      <div class="bb-margin-xl">
-        <Input
-          label="Url"
-          error={routeError}
-          bind:value={route}
-          on:change={routeChanged} />
-      </div>
+    <div class="bb-margin-xl">
+      <Input
+        label="Url"
+        error={routeError}
+        bind:value={route}
+        on:change={routeChanged} />
+    </div>
 
-      <div class="bb-margin-xl">
-        <label>Layout Component</label>
-        <Select bind:value={layoutComponent} secondary>
-          {#each layoutComponents as { _component, name }}
-            <option value={_component}>{name}</option>
-          {/each}
-        </Select>
-      </div>
+    <div class="bb-margin-xl">
+      <label>Layout Component</label>
+      <Select bind:value={layoutComponent} secondary>
+        {#each layoutComponents as { _component, name }}
+          <option value={_component}>{name}</option>
+        {/each}
+      </Select>
     </div>
   </div>
 
-  <Button secondary medium on:click={cancel}>Cancel</Button>
-  <Button blue medium on:click={save}>Create Screen</Button>
+  <Spacer extraLarge />
 
+  <div class="modal-footer">
+    <Button secondary medium on:click={cancel}>Cancel</Button>
+    <Button blue medium on:click={save}>Create Screen</Button>
+  </div>
 </Modal>
 
 <style>
@@ -108,8 +110,8 @@
     font-weight: 600;
   }
 
-  .modal-body {
-    margin-top: var(--spacing-m);
-    margin-bottom: var(--spacing-m);
+  .modal-footer {
+    display: flex;
+    justify-content: space-between;
   }
 </style>
