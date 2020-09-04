@@ -21,6 +21,6 @@ export const TYPE_MAP = {
     },
   },
   models: {
-    default: [],
+    default: {},
   },
 }

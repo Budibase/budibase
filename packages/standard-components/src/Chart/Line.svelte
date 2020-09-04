@@ -1,17 +1,16 @@
 <script>
   import { getColorSchema, getChartGradient, notNull, hasProp } from "./utils"
+  import fetchData from "../fetchData.js"
   import britecharts from "britecharts"
   import { onMount } from "svelte"
+  import { isEmpty } from "lodash/fp"
 
   import { select } from "d3-selection"
   import shortid from "shortid"
 
   const _id = shortid.generate()
 
-  export let _bb
-  export let model
-
-  let store = _bb.store
+  export let datasource = {}
 
   const chart = britecharts.line()
   const chartClass = `line-container-${_id}`
@@ -65,8 +64,9 @@
   export let tooltipTitle = ""
 
   onMount(async () => {
-    if (model) {
+    if (!isEmpty(datasource)) {
       data = await getAndPrepareData()
+
       if (data.dataByTopic.length > 0) {
         chartContainer = select(`.${chartClass}`)
         bindChartUIProps()
@@ -87,20 +87,6 @@
     )
     tooltip.topicLabel("topics")
     tooltipContainer.datum([]).call(tooltip)
-  }
-
-  async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/views/all_${model}`
-    const response = await _bb.api.get(FETCH_RECORDS_URL)
-    if (response.status === 200) {
-      const json = await response.json()
-      store.update(state => {
-        state[model] = json
-        return state
-      })
-    } else {
-      throw new Error("Failed to fetch records.", response)
-    }
   }
 
   const schemaIsValid = data =>
@@ -124,8 +110,7 @@
       dateLabel = "date"
     }
 
-    await fetchData()
-    _data = $store[model]
+    _data = await fetchData(datasource)
 
     if (schemaIsValid(_data)) {
       _data.forEach((data, idx, arr) => {
@@ -220,8 +205,11 @@
     if (notNull(lines)) {
       chart.lines(lines)
     }
-
-    tooltip.title(tooltipTitle || "Line Tooltip")
+    if (notNull(tooltipTitle)) {
+      tooltip.title(tooltipTitle)
+    } else if (datasource.label) {
+      tooltip.title(datasource.label)
+    }
   }
 
   function bindChartEvents() {
