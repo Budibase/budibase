@@ -52,7 +52,7 @@ Cypress.Commands.add("createApp", name => {
         .type("test")
       cy.contains("Submit").click()
       cy.contains("Create New Table", {
-        timeout: 10000,
+        timeout: 20000,
       }).should("be.visible")
     })
 })
@@ -143,7 +143,7 @@ Cypress.Commands.add("createScreen", (screenName, route) => {
   if (route) {
     cy.get("[data-cy=new-screen-dialog] input:last").type(route)
   }
-  cy.get(".uk-modal-footer").within(() => {
+  cy.get("[data-cy=create-screen-footer]").within(() => {
     cy.contains("Create Screen").click()
   })
   cy.get(".nav-items-container").within(() => {

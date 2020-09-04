@@ -1,4 +1,5 @@
 <script>
+  import Modal from "./Modal.svelte"
   import { SettingsIcon } from "components/common/Icons/"
   import { getContext } from "svelte"
   import { isActive, goto, layout } from "@sveltech/routify"
