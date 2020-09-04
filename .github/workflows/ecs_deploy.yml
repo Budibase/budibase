@@ -27,9 +27,6 @@ on:
   push:
     tags:
       - 'v*'
-  pull_request:
-      branches:
-        - master
 
 name: Deploy to Amazon ECS
 
