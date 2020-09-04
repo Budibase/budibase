@@ -96,7 +96,7 @@
 
   <Spacer extraLarge />
 
-  <div class="modal-footer">
+  <div data-cy="create-screen-footer" class="modal-footer">
     <Button secondary medium on:click={cancel}>Cancel</Button>
     <Button blue medium on:click={save}>Create Screen</Button>
   </div>
