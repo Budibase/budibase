@@ -1,34 +1,21 @@
 <script>
   import { onMount } from "svelte"
+  import fetchData from "./fetchData.js"
+  import { isEmpty } from "lodash/fp"
 
   export let _bb
-  export let model
+  export let datasource = []
 
-  let headers = []
-  let store = _bb.store
   let target
 
-  async function fetchData() {
-    if (!model || !model.length) return
-
-    const FETCH_RECORDS_URL = `/api/views/all_${model}`
-    const response = await _bb.api.get(FETCH_RECORDS_URL)
-    if (response.status === 200) {
-      const json = await response.json()
-
+  onMount(async () => {
+    if (!isEmpty(datasource)) {
+      const data = await fetchData(datasource)
       _bb.attachChildren(target, {
         hydrate: false,
-        context: json,
+        context: data,
       })
-    } else {
-      throw new Error("Failed to fetch records.", response)
     }
-  }
-
-  $: if (model) fetchData()
-
-  onMount(async () => {
-    await fetchData()
   })
 </script>
 

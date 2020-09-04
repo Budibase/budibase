@@ -44,7 +44,7 @@
     {:else if type === 'model'}
       <ModelSelector bind:value={workflowBlock.args[parameter]} />
     {:else if type === 'record'}
-      <RecordSelector bind:value={workflowBlock.args[parameter]} />
+      <RecordSelector value={workflowBlock.args[parameter]} />
     {:else if type === 'string'}
       <Input type="text" thin bind:value={workflowBlock.args[parameter]} />
     {/if}

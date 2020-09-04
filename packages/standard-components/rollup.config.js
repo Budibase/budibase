@@ -3,6 +3,8 @@ import resolve from "rollup-plugin-node-resolve"
 import commonjs from "@rollup/plugin-commonjs"
 import postcss from "rollup-plugin-postcss"
 
+const lodash_fp_exports = ["isEmpty"]
+
 export default {
   input: "src/index.js",
   output: [
@@ -23,6 +25,10 @@ export default {
     resolve({
       browser: true,
     }),
-    commonjs(),
+    commonjs({
+      namedExports: {
+        "lodash/fp": lodash_fp_exports,
+      },
+    }),
   ],
 }
