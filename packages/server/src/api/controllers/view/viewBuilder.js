@@ -9,11 +9,20 @@ const TOKEN_MAP = {
   OR: "||",
 }
 
+const GROUP_PROPERTY = {
+  group: {
+    type: "string",
+  },
+}
+
+const FIELD_PROPERTY = {
+  field: {
+    type: "string",
+  },
+}
+
 const SCHEMA_MAP = {
   stats: {
-    group: {
-      type: "string",
-    },
     sum: {
       type: "number",
     },
@@ -91,13 +100,21 @@ function viewTemplate({ field, modelId, groupBy, filters = [], calculation }) {
 
   const reduction = field ? { reduce: "_stats" } : {}
 
+  let schema = null
+
+  if (calculation) {
+    schema = groupBy
+      ? { ...GROUP_PROPERTY, ...SCHEMA_MAP[calculation] }
+      : { ...FIELD_PROPERTY, ...SCHEMA_MAP[calculation] }
+  }
+
   return {
     meta: {
       field,
       modelId,
       groupBy,
       filters,
-      schema: SCHEMA_MAP[calculation],
+      schema,
       calculation,
     },
     map: `function (doc) {
