@@ -7,7 +7,7 @@
     Heading,
     DropdownMenu,
   } from "@budibase/bbui"
-  import { AddIcon } from "components/common/Icons/"
+  import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
   import actionTypes from "./actions"
   import { createEventDispatcher } from "svelte"
@@ -95,9 +95,11 @@
       {#each actions as action, index}
         <div class="action-container">
           <div on:click={selectAction(action)}>
-            <Body size="medium">
+            <p
+              class="bb-body bb-body--small bb-body--color-dark"
+              style="margin: var(--spacing-s) 0;">
               {index + 1}. {action[EVENT_TYPE_MEMBER_NAME]}
-            </Body>
+            </p>
           </div>
           {#if action === selectedAction}
             <div class="selected-action-container">
@@ -154,16 +156,25 @@
   .actions-container {
     flex: 1;
     min-height: 0px;
-    padding: var(--spacing-xl);
-    padding-bottom: var(--spacing-m);
-    padding-top: var(--spacing-m);
+    padding-bottom: var(--spacing-s);
+    padding-top: 0;
     border: var(--border-light);
     border-width: 0 0 1px 0;
+    overflow-y: auto;
   }
 
   .action-container {
     border: var(--border-light);
     border-width: 1px 0 0 0;
+    padding-left: var(--spacing-xl);
+    padding-right: var(--spacing-xl);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .selected-action-container {
+    padding-bottom: var(--spacing-s);
+    padding-top: var(--spacing-s);
   }
 
   .delete-action-button {
@@ -190,5 +201,9 @@
 
   .footer > a:hover {
     color: var(--blue);
+  }
+
+  .rotate :global(svg) {
+    transform: rotate(-90deg);
   }
 </style>

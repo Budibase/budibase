@@ -5,12 +5,25 @@
   export let parameters
 </script>
 
-<div>
+<div class="root">
   <Label size="m" color="dark">Screen</Label>
-  <Select outline bind:value={parameters.url}>
+  <Select secondary bind:value={parameters.url}>
     <option value="" />
     {#each $store.screens as screen}
-      <option value={screen.url}>{screen.props._instanceName}</option>
+      <option value={screen.route}>{screen.props._instanceName}</option>
     {/each}
   </Select>
 </div>
+
+<style>
+  .root {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+  }
+
+  .root :global(.relative) {
+    flex: 1;
+    margin-left: var(--spacing-l);
+  }
+</style>
