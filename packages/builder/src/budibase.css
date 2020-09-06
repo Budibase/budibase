@@ -85,11 +85,6 @@
      box-sizing: border-box; 
 }
 
-.uk-text-right {
-    display: flex;
-    justify-content: flex-start;
-}
-
 .preview-pane {
     grid-column: 2;
     margin: 80px 60px;
