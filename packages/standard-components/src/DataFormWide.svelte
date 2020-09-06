@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { fade } from "svelte/transition"
+  import { Label } from "@budibase/bbui"
 
   export let _bb
   export let model
@@ -167,7 +168,7 @@
   <div class="form-content">
     {#each fields as field}
       <div class="form-item">
-        <label class="form-label" for="form-stacked-text">{field}</label>
+        <Label small forAttr={'form-stacked-text'}>{field}</Label>
         {#if schema[field].type === 'string' && schema[field].constraints.inclusion}
           <select on:blur={handleInput(field)} bind:this={inputElements[field]}>
             {#each schema[field].constraints.inclusion as opt}
