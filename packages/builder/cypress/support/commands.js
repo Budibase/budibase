@@ -52,7 +52,7 @@ Cypress.Commands.add("createApp", name => {
         .type("test")
       cy.contains("Submit").click()
       cy.contains("Create New Table", {
-        timeout: 10000,
+        timeout: 20000,
       }).should("be.visible")
     })
 })
