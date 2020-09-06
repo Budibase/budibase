@@ -2,11 +2,10 @@
   import flatpickr from "flatpickr"
   import "flatpickr/dist/flatpickr.css"
   import { onMount } from "svelte"
+  import { Label, Input } from "@budibase/bbui"
 
   export let value
   export let label
-  export let width = "medium"
-  export let size = "small"
 
   let input
   let fpInstance
@@ -25,8 +24,9 @@
 </script>
 
 <div class="bb-margin-m">
-  <label class="uk-form-label">{label}</label>
-  <input
-    class="uk-input uk-form-width-{width} uk-form-{size}"
-    bind:this={input} />
+  <Label small forAttr={'datepicker-label'}>{label}</Label>
+  <Input thin bind:this={input} />
 </div>
+
+<!-- TODO: Verify DatePicker Input works as expected when datetime property used again
+in CreateEditColumn -->

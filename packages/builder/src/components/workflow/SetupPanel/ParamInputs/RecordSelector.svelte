@@ -1,6 +1,6 @@
 <script>
   import { backendUiStore } from "builderStore"
-  import { Input } from "@budibase/bbui"
+  import { Input, Label } from "@budibase/bbui"
 
   export let value
 
@@ -25,7 +25,7 @@
 
 {#if value.model}
   <div class="bb-margin-xl block-field">
-    <label class="uk-form-label fields">Fields</label>
+    <Label small forAttr={'fields'}>Fields</Label>
     {#each Object.keys(value.model.schema) as field}
       <div class="bb-margin-xl">
         <Input
@@ -37,9 +37,3 @@
     {/each}
   </div>
 {/if}
-
-<style>
-  .fields {
-    font-weight: 500;
-  }
-</style>
