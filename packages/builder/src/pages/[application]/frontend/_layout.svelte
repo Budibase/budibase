@@ -3,7 +3,6 @@
   import { goto } from "@sveltech/routify"
   import { onMount } from "svelte"
   import ComponentsHierarchyChildren from "components/userInterface/ComponentsHierarchyChildren.svelte"
-  import IconButton from "components/common/IconButton.svelte"
   import CurrentItemPreview from "components/userInterface/AppPreview"
   import ComponentPropertiesPanel from "components/userInterface/ComponentPropertiesPanel.svelte"
   import ComponentSelectionList from "components/userInterface/ComponentSelectionList.svelte"
