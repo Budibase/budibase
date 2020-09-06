@@ -3,7 +3,6 @@
   import { Button, Select } from "@budibase/bbui"
   import Modal from "../../common/Modal.svelte"
   import HandlerSelector from "./HandlerSelector.svelte"
-  import IconButton from "../../common/IconButton.svelte"
   import ActionButton from "../../common/ActionButton.svelte"
   import getIcon from "../../common/icon"
   import { CloseIcon } from "components/common/Icons/"
