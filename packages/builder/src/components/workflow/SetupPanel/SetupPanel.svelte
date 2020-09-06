@@ -5,7 +5,7 @@
   import { notifier } from "builderStore/store/notifications"
   import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte"
   import DeleteWorkflowModal from "./DeleteWorkflowModal.svelte"
-  import { Button, Input } from "@budibase/bbui"
+  import { Button, Input, Label } from "@budibase/bbui"
 
   const { open, close } = getContext("simple-modal")
 
@@ -112,14 +112,13 @@
         <div class="panel-body">
           <div class="block-label">Workflow: {workflow.name}</div>
           <div class="config-item">
-            <label class="uk-form-label">User Access</label>
+            <Label small forAttr={'useraccess'}>User Access</Label>
             <div class="access-levels">
 
               {#each ACCESS_LEVELS as level}
                 <span class="access-level">
                   <label>{level.name}</label>
                   <input
-                    class="uk-checkbox"
                     type="checkbox"
                     disabled={!level.editable}
                     bind:checked={level.canExecute} />

@@ -1,6 +1,7 @@
 <script>
   import { store } from "builderStore"
   import deepmerge from "deepmerge"
+  import { Label } from "@budibase/bbui"
 
   export let value
 
@@ -24,16 +25,14 @@
 </script>
 
 <div class="bb-margin-xl block-field">
-  <label class="uk-form-label">Page</label>
-
+  <Label small forAttr={'page'}>Page</Label>
   <select class="budibase__input" bind:value={pageName}>
     {#each Object.keys(pages) as page}
       <option value={page}>{page}</option>
     {/each}
   </select>
-
   {#if components.length > 0}
-    <label class="uk-form-label">Component</label>
+    <Label small forAttr={'component'}>Component</Label>
     <select class="budibase__input" bind:value>
       {#each components as component}
         <option value={component._id}>{component._id}</option>

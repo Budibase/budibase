@@ -143,7 +143,7 @@ Cypress.Commands.add("createScreen", (screenName, route) => {
   if (route) {
     cy.get("[data-cy=new-screen-dialog] input:last").type(route)
   }
-  cy.get(".uk-modal-footer").within(() => {
+  cy.get("[data-cy=create-screen-footer]").within(() => {
     cy.contains("Create Screen").click()
   })
   cy.get(".nav-items-container").within(() => {
