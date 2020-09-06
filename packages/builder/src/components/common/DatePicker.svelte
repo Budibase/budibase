@@ -2,11 +2,10 @@
   import flatpickr from "flatpickr"
   import "flatpickr/dist/flatpickr.css"
   import { onMount } from "svelte"
+  import { Input } from "@budibase/bbui"
 
   export let value
   export let label
-  export let width = "medium"
-  export let size = "small"
 
   let input
   let fpInstance
@@ -26,7 +25,5 @@
 
 <div class="bb-margin-m">
   <label class="uk-form-label">{label}</label>
-  <input
-    class="uk-input uk-form-width-{width} uk-form-{size}"
-    bind:this={input} />
+  <Input bind:this={input} />
 </div>
