@@ -154,3 +154,13 @@
 
 .bb-table td > :last-child { margin-bottom: 0; }
 
+.bb__alert {
+    position: relative;
+    margin-bottom: var(--spacing-m);
+    padding: var(--spacing-l);
+}
+
+.bb__alert--danger {
+    background: #fef4f6;
+    color: #f0506e;
+}
