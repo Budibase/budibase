@@ -2,7 +2,6 @@
   import { MoreIcon } from "components/common/Icons"
   import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import UIkit from "uikit"
   import api from "builderStore/api"
   import Portal from "svelte-portal"
   import { DropdownMenu } from "@budibase/bbui"
