@@ -4,7 +4,6 @@
   import { getComponentDefinition } from "builderStore/storeUtils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { last, cloneDeep } from "lodash/fp"
-  import UIkit from "uikit"
   import {
     selectComponent,
     getParent,
@@ -13,20 +12,14 @@
     regenerateCssForCurrentScreen,
   } from "builderStore/storeUtils"
   import { uuid } from "builderStore/uuid"
+  import { Popover } from "@budibase/bbui"
 
   export let component
 
   let confirmDeleteDialog
-  let dropdownEl
+  let dropdown
 
-  $: dropdown = UIkit.dropdown(dropdownEl, {
-    mode: "click",
-    offset: 0,
-    pos: "bottom-right",
-    "delay-hide": 0,
-    animation: false,
-  })
-  $: dropdown && UIkit.util.on(dropdown, "shown", () => (hidden = false))
+  console.log("hisisis")
   $: noChildrenAllowed =
     !component || !getComponentDefinition($store, component._component).children
   $: noPaste = !$store.componentToPaste
@@ -119,7 +112,12 @@
   <button>
     <MoreIcon />
   </button>
-  <ul class="menu" bind:this={dropdownEl} on:click={hideDropdown}>
+
+  <Popover
+    class="menu"
+    bind:this={dropdown}
+    on:click={hideDropdown}
+    align="left">
     <li class="item" on:click={() => confirmDeleteDialog.show()}>
       <i class="icon ri-delete-bin-2-line" />
       Delete
@@ -166,7 +164,7 @@
       <i class="icon ri-insert-column-right" />
       Paste inside
     </li>
-  </ul>
+  </Popover>
 </div>
 
 <ConfirmDialog
@@ -192,23 +190,6 @@
     outline: none;
   }
 
-  .menu {
-    z-index: 100000;
-    overflow: visible;
-    padding: 12px 0px;
-    border-radius: 5px;
-  }
-
-  .menu li {
-    border-style: none;
-    background-color: transparent;
-    list-style-type: none;
-    padding: 4px 16px;
-    margin: 0;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
   .item {
     display: flex;
     align-items: center;
@@ -217,16 +198,6 @@
 
   .icon {
     margin-right: 8px;
-  }
-
-  .menu li:not(.disabled) {
-    cursor: pointer;
-    color: var(--grey-7);
-  }
-
-  .menu li:not(.disabled):hover {
-    color: var(--ink);
-    background-color: var(--grey-1);
   }
 
   .disabled {
