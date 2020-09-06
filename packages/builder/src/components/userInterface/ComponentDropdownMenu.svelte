@@ -12,14 +12,14 @@
     regenerateCssForCurrentScreen,
   } from "builderStore/storeUtils"
   import { uuid } from "builderStore/uuid"
-  import { Popover } from "@budibase/bbui"
+  import { DropdownMenu } from "@budibase/bbui"
 
   export let component
 
   let confirmDeleteDialog
   let dropdown
+  let anchor
 
-  console.log("hisisis")
   $: noChildrenAllowed =
     !component || !getComponentDefinition($store, component._component).children
   $: noPaste = !$store.componentToPaste
@@ -108,16 +108,19 @@
   }
 </script>
 
-<div class="root boundary" on:click|stopPropagation={() => {}}>
-  <button>
+<div bind:this={anchor} on:click|stopPropagation={() => {}}>
+  <button on:click={dropdown.show}>
     <MoreIcon />
   </button>
-
-  <Popover
-    class="menu"
-    bind:this={dropdown}
-    on:click={hideDropdown}
-    align="left">
+</div>
+<DropdownMenu
+  class="menu"
+  bind:this={dropdown}
+  on:click={hideDropdown}
+  width="170px"
+  {anchor}
+  align="left">
+  <ul>
     <li class="item" on:click={() => confirmDeleteDialog.show()}>
       <i class="icon ri-delete-bin-2-line" />
       Delete
@@ -164,8 +167,8 @@
       <i class="icon ri-insert-column-right" />
       Paste inside
     </li>
-  </Popover>
-</div>
+  </ul>
+</DropdownMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
@@ -175,12 +178,12 @@
   onOk={deleteComponent} />
 
 <style>
-  .root {
+  /* .root {
     overflow: hidden;
     z-index: 9;
-  }
+  } */
 
-  .root button {
+  /* .root button {
     border-style: none;
     border-radius: 2px;
     padding: 5px;
@@ -188,6 +191,31 @@
     cursor: pointer;
     color: var(--ink);
     outline: none;
+  } */
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    display: flex;
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    color: var(--ink);
+    padding: var(--spacing-s) var(--spacing-m);
+    margin: auto 0px;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  li:hover {
+    background-color: var(--grey-2);
+  }
+
+  li:active {
+    color: var(--blue);
   }
 
   .item {
