@@ -85,11 +85,6 @@
      box-sizing: border-box; 
 }
 
-.uk-text-right {
-    display: flex;
-    justify-content: flex-start;
-}
-
 .preview-pane {
     grid-column: 2;
     margin: 80px 60px;
@@ -154,3 +149,13 @@
 
 .bb-table td > :last-child { margin-bottom: 0; }
 
+.bb__alert {
+    position: relative;
+    margin-bottom: var(--spacing-m);
+    padding: var(--spacing-l);
+}
+
+.bb__alert--danger {
+    background: #fef4f6;
+    color: #f0506e;
+}

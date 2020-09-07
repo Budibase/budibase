@@ -1,5 +1,4 @@
 <script>
-  import UIkit from "uikit"
   import { Modal, Button, Heading, Spacer } from "@budibase/bbui"
 
   export let title = ""
