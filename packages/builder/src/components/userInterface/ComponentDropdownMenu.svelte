@@ -178,21 +178,6 @@
   onOk={deleteComponent} />
 
 <style>
-  /* .root {
-    overflow: hidden;
-    z-index: 9;
-  } */
-
-  /* .root button {
-    border-style: none;
-    border-radius: 2px;
-    padding: 5px;
-    background: transparent;
-    cursor: pointer;
-    color: var(--ink);
-    outline: none;
-  } */
-
   ul {
     list-style: none;
     padding: 0;
