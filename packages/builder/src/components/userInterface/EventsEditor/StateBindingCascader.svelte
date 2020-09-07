@@ -1,6 +1,5 @@
 <script>
   import { Input, Select } from "@budibase/bbui"
-  import IconButton from "components/common/IconButton.svelte"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
   import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"

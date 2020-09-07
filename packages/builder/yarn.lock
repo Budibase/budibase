@@ -688,9 +688,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.29.1":
-  version "1.29.1"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.29.1.tgz#edaa6c7ce43a71d94460f7a3669ade1d4523333e"
+"@budibase/bbui@^1.29.3":
+  version "1.29.3"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.29.3.tgz#02d84d5e0f9ca936d62b1e0e9bc943711d124f7a"
+  integrity sha512-X5QBZX2CNccRiW6fbj6/fnUYhlilc6I6ae0QT8oIuv9DozDnUUbdd6j4RMxW1DQBZuvWH54OGq4nwkq9f37hKg==
   dependencies:
     sirv-cli "^0.4.6"
 
@@ -2857,6 +2858,7 @@ for-in@^1.0.2:
 foreach@~2.0.1:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/foreach/-/foreach-2.0.5.tgz#0bee005018aeb260d0a3af3ae658dd0136ec1b99"
+  integrity sha1-C+4AUBiusmDQo6865ljdATbsG5k=
 
 forever-agent@~0.6.1:
   version "0.6.1"
@@ -5439,6 +5441,7 @@ shellwords@^0.1.1:
 shortid@^2.2.15:
   version "2.2.15"
   resolved "https://registry.yarnpkg.com/shortid/-/shortid-2.2.15.tgz#2b902eaa93a69b11120373cd42a1f1fe4437c122"
+  integrity sha512-5EaCy2mx2Jgc/Fdn9uuDuNIIfWBpzY4XIlhoqtXF6qsf+/+SGZ+FxDdX/ZsMZiWupIWNqAEmiNY4RC+LSmCeOw==
   dependencies:
     nanoid "^2.1.0"
 
@@ -5784,6 +5787,11 @@ svelte-jester@^1.0.6:
   dependencies:
     cosmiconfig "^6.0.0"
 
+svelte-loading-spinners@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/svelte-loading-spinners/-/svelte-loading-spinners-0.1.1.tgz#a35a811b7db0389ec2a5de6904c718c58c36e1f9"
+  integrity sha512-or4zs10VOdczOJo3u25IINXQOkZbLNAxMrXK0PRbzVoJtPQq/QZPNxI32383bpe+soYcEKmESbmW+JlW3MbUKQ==
+
 svelte-portal@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-0.1.0.tgz#cc2821cc84b05ed5814e0218dcdfcbebc53c1742"
@@ -5941,10 +5949,6 @@ typedarray-to-buffer@~1.0.0:
 typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
-
-uikit@^3.1.7:
-  version "3.4.6"
-  resolved "https://registry.yarnpkg.com/uikit/-/uikit-3.4.6.tgz#39d59620aeb42d53ba905a67e99e2015d4aaaf9c"
 
 unicode-canonical-property-names-ecmascript@^1.0.4:
   version "1.0.4"
