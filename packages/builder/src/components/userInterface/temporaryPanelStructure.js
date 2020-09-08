@@ -5,6 +5,7 @@ import ModelSelect from "components/userInterface/ModelSelect.svelte"
 import ModelViewSelect from "components/userInterface/ModelViewSelect.svelte"
 import ModelViewFieldSelect from "components/userInterface/ModelViewFieldSelect.svelte"
 import Event from "components/userInterface/EventsEditor/EventPropertyControl.svelte"
+import ScreenSelect from "components/userInterface/ScreenSelect.svelte"
 
 import { all } from "./propertyCategories.js"
 /* 
@@ -239,7 +240,7 @@ export default {
             design: { ...all },
             settings: [
               { label: "Text", key: "text", control: Input },
-              { label: "Url", key: "url", control: Input },
+              { label: "Url", key: "url", control: ScreenSelect },
               {
                 label: "Open New Tab",
                 key: "openInNewTab",
