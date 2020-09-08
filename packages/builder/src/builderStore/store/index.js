@@ -116,18 +116,6 @@ const setPackage = (store, initial) => async pkg => {
   return initial
 }
 
-// const getAllScreens = store => async pkg => {
-//   const [main_screens, unauth_screens] = await Promise.all([
-//     api
-//       .get(`/_builder/api/${pkg.application._id}/pages/main/screens`)
-//       .then(r => r.json()),
-//     api
-//       .get(`/_builder/api/${pkg.application._id}/pages/unauthenticated/screens`)
-//       .then(r => r.json()),
-//   ])
-//   return { main_screens, unauth_screens }
-// }
-
 const saveScreen = store => screen => {
   store.update(state => {
     return _saveScreen(store, state, screen)
