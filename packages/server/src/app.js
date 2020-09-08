@@ -47,6 +47,6 @@ server.on("close", () => console.log("Server Closed"))
 
 process.on("SIGINT", () => process.exit(1))
 
-module.exports = server.listen(env.PORT || 4001, () => {
+module.exports = server.listen(env.PORT || 4001, { host: "localhost" }, () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
 })
