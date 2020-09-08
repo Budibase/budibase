@@ -204,8 +204,6 @@
 
   .actions {
     display: none;
-    height: 24px;
-    width: 24px;
     color: var(--ink);
     padding: 0px 5px;
     border-style: none;
