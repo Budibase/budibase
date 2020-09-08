@@ -28,6 +28,13 @@
         <option value={workflow._id}>{workflow.name}</option>
       {/each}
     </Select>
+  {:else if parameter.name === 'url'}
+    <Select on:change bind:value={parameter.value}>
+      <option value="" />
+      {#each $store.allScreens as screen}
+        <option value={screen.route}>{screen.props._instanceName}</option>
+      {/each}
+    </Select>
   {:else}
     <Input
       name={parameter.name}
