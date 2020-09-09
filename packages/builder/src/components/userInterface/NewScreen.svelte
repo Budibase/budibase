@@ -1,14 +1,9 @@
 <script>
   import { store } from "builderStore"
-  import Button from "components/common/Button.svelte"
-  import ActionButton from "components/common/ActionButton.svelte"
-  import ButtonGroup from "components/common/ButtonGroup.svelte"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { pipe } from "components/common/core"
-  import UIkit from "uikit"
   import { isRootComponent } from "./pagesParsing/searchComponents"
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
-  import { Input, Select } from "@budibase/bbui"
+  import { Input, Select, Modal, Button, Spacer } from "@budibase/bbui"
 
   import { find, filter, some, map, includes } from "lodash/fp"
   import { assign } from "lodash"
@@ -72,12 +67,9 @@
   }
 </script>
 
-<ConfirmDialog
-  bind:this={dialog}
-  title="New Screen"
-  onCancel={cancel}
-  onOk={save}
-  okText="Create Screen">
+<Modal bind:this={dialog} minWidth="500px">
+  <h2>New Screen</h2>
+  <Spacer extraLarge />
 
   <div data-cy="new-screen-dialog">
     <div class="bb-margin-xl">
@@ -102,4 +94,24 @@
     </div>
   </div>
 
-</ConfirmDialog>
+  <Spacer extraLarge />
+
+  <div data-cy="create-screen-footer" class="modal-footer">
+    <Button secondary medium on:click={cancel}>Cancel</Button>
+    <Button blue medium on:click={save}>Create Screen</Button>
+  </div>
+</Modal>
+
+<style>
+  h2 {
+    font-size: var(--font-size-xl);
+    margin: 0;
+    font-family: var(--font-sans);
+    font-weight: 600;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: space-between;
+  }
+</style>

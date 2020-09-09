@@ -2,7 +2,6 @@
   import { MoreIcon } from "components/common/Icons"
   import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import UIkit from "uikit"
   import api from "builderStore/api"
   import Portal from "svelte-portal"
   import { DropdownMenu } from "@budibase/bbui"
@@ -65,7 +64,7 @@
   .root button {
     border-style: none;
     border-radius: 2px;
-    padding: 5px;
+    padding: 0;
     background: transparent;
     cursor: pointer;
     color: var(--ink);

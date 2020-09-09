@@ -109,10 +109,10 @@
 
   .dropdown-menu {
     display: none;
-    height: 24px;
-    width: 24px;
     color: var(--ink);
-    padding: 0px 5px;
+    padding: 0 5px;
+    width: 24px;
+    height: 24px;
     border-style: none;
     background: rgba(0, 0, 0, 0);
     cursor: pointer;
