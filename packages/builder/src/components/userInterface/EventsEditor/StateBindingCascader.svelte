@@ -29,7 +29,7 @@
       {/each}
     </Select>
   {:else if parameter.name === 'url'}
-    <Select on:change bind:value={parameter.value}>
+    <Select editable on:change bind:value={parameter.value}>
       <option value="" />
       {#each $store.allScreens as screen}
         <option value={screen.route}>{screen.props._instanceName}</option>
