@@ -104,6 +104,10 @@ const setPackage = (store, initial) => async pkg => {
   initial.pages = pkg.pages
   initial.hasAppPackage = true
   initial.screens = values(pkg.screens)
+  initial.allScreens = [
+    ...Object.values(main_screens),
+    ...Object.values(unauth_screens),
+  ]
   initial.builtins = [getBuiltin("##builtin/screenslot")]
   initial.appInstances = pkg.application.instances
   initial.appId = pkg.application._id
@@ -132,6 +136,7 @@ const _saveScreen = async (store, s, screen) => {
         innerState.pages[s.currentPageName]._screens = screens
         innerState.screens = screens
         innerState.currentPreviewItem = screen
+        innerState.allScreens = [...innerState.allScreens, screen]
         const safeProps = makePropsSafe(
           innerState.components[screen.props._component],
           screen.props
