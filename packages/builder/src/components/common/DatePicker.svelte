@@ -7,8 +7,7 @@
   export let value
 
   const PICKER_OPTIONS = {
-    enableTime: true,
-    // element: "#date-picker"
+    enableTime: true
   }
 
 </script>
