@@ -8,8 +8,10 @@ import { terser } from "rollup-plugin-terser"
 import builtins from "rollup-plugin-node-builtins"
 import nodeglobals from "rollup-plugin-node-globals"
 import copy from "rollup-plugin-copy"
+import css from "rollup-plugin-css-only"
 import replace from "rollup-plugin-replace"
 import json from "@rollup/plugin-json"
+import fs from "fs"
 
 import path from "path"
 
@@ -200,6 +202,11 @@ export default {
       },
     }),
 
+    // export all CSS imported in the JS to it's own bundle 
+    css({
+      output: `${outputpath}/external.css` 
+    }),
+
     resolve({
       browser: true,
       dedupe: importee => {
@@ -221,12 +228,6 @@ export default {
       limit: 0,
       include: ["**/*.woff2", "**/*.png"],
       fileName: "[dirname][name][extname]",
-      emitFiles: true,
-    }),
-    url({
-      limit: 0,
-      include: ["**/*.css"],
-      fileName: "[name][extname]",
       emitFiles: true,
     }),
     builtins(),
