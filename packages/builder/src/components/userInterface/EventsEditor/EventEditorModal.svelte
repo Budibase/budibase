@@ -10,7 +10,7 @@
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
   import actionTypes from "./actions"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -38,7 +38,7 @@
     actions[index] = updatedHandler
   }
 
-  const deleteEventHandler = index => {
+  const deleteAction = index => {
     actions.splice(index, 1)
     actions = actions
   }
@@ -107,7 +107,9 @@
                 this={selectedActionComponent}
                 parameters={selectedAction.parameters} />
               <div class="delete-action-button">
-                <TextButton text medium>Delete</TextButton>
+                <TextButton text medium on:click={() => deleteAction(index)}>
+                  Delete
+                </TextButton>
               </div>
             </div>
           {/if}
