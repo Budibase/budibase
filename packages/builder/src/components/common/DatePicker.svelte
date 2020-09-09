@@ -1,23 +1,21 @@
 <script>
-  // import flatpickr from "flatpickr"
-  // import "flatpickr/dist/flatpickr.css"
-  // import { onMount } from "svelte"
+  import Flatpickr from "svelte-flatpickr"
   import { Label, Input } from "@budibase/bbui"
+  import 'flatpickr/dist/flatpickr.css'
+
+  const PICKER_OPTIONS = {
+    enableTime: true
+  }
 
   export let label
-  export let datetime
-
-  let date = datetime.substring(0, 10)
-  let time = datetime.substring(11, 16)
-
-  $: console.log({ datetime, date, time })
-
-  // TODO: update to use proper date parsing logic - dayJS or similar
-  $: datetime = `${date}T${time}:00.000Z`
+  export let value
 </script>
 
 <div class="bb-margin-m">
   <Label small forAttr={'datepicker-label'}>{label}</Label>
-  <input type="date" bind:value={date} />
-  <input type="time" bind:value={time} />
+  <Flatpickr 
+    options={PICKER_OPTIONS}
+    placeholder={label}
+    bind:value
+  />
 </div>

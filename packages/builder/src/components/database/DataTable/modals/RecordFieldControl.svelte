@@ -45,7 +45,7 @@
     {/each}
   </Select>
 {:else if type === 'date'}
-  <DatePicker label={meta.name} bind:datetime={value} />
+  <DatePicker label={meta.name} bind:value />
 {:else}
   {#if type === 'checkbox'}
     <label>{meta.name}</label>
