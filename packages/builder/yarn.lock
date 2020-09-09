@@ -688,11 +688,13 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.31.0":
-  version "1.31.0"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.31.0.tgz#5645875abb4a722c0fae7bd980bc71f40d234f2f"
+"@budibase/bbui@^1.32.0":
+  version "1.32.0"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.32.0.tgz#4b099e51cf8aebfc963a763bb9687994a2ee26a8"
+  integrity sha512-pY4bhoBhE3EAdaO/wWkbOXaHtGpPxaRFFVUBe9DyoLZ6bv6Pg6y3SDMoMNaKtr3ybtum7pk9eDZOjMMYlGC4AQ==
   dependencies:
     sirv-cli "^0.4.6"
+    svelte-flatpickr "^2.4.0"
 
 "@budibase/client@^0.1.19":
   version "0.1.19"
@@ -2937,6 +2939,11 @@ find-up@^3.0.0:
   resolved "https://registry.yarnpkg.com/find-up/-/find-up-3.0.0.tgz#49169f1d7993430646da61ecc5ae355c21c97b73"
   dependencies:
     locate-path "^3.0.0"
+
+flatpickr@^4.5.2:
+  version "4.6.6"
+  resolved "https://registry.yarnpkg.com/flatpickr/-/flatpickr-4.6.6.tgz#34d2ad80adfa34254e62583a34264d472f1038d6"
+  integrity sha512-EZ48CJMttMg3maMhJoX+GvTuuEhX/RbA1YeuI19attP3pwBdbYy6+yqAEVm0o0hSBFYBiLbVxscLW6gJXq6H3A==
 
 flatpickr@^4.5.7:
   version "4.6.3"
@@ -5969,6 +5976,13 @@ supports-color@^7.1.0:
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-7.1.0.tgz#68e32591df73e25ad1c4b49108a2ec507962bfd1"
   dependencies:
     has-flag "^4.0.0"
+
+svelte-flatpickr@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-2.4.0.tgz#190871fc3305956c8c8fd3601cd036b8ac71ef49"
+  integrity sha512-UUC5Te+b0qi4POg7VDwfGh0m5W3Hf64OwkfOTj6FEe/dYZN4cBzpQ82EuuQl0CTbbBAsMkcjJcixV1d2V6EHCQ==
+  dependencies:
+    flatpickr "^4.5.2"
 
 svelte-jester@^1.0.6:
   version "1.0.6"
