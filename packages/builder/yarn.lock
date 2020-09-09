@@ -2957,7 +2957,7 @@ find-up@^3.0.0:
   dependencies:
     locate-path "^3.0.0"
 
-flatpickr@^4.5.2, flatpickr@^4.6.6:
+flatpickr@^4.5.2:
   version "4.6.6"
   resolved "https://registry.yarnpkg.com/flatpickr/-/flatpickr-4.6.6.tgz#34d2ad80adfa34254e62583a34264d472f1038d6"
   integrity sha512-EZ48CJMttMg3maMhJoX+GvTuuEhX/RbA1YeuI19attP3pwBdbYy6+yqAEVm0o0hSBFYBiLbVxscLW6gJXq6H3A==

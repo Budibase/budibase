@@ -3,17 +3,12 @@ const validateJs = require("validate.js")
 const newid = require("../../db/newid")
 
 validateJs.extend(validateJs.validators.datetime, {
-  // The value is guaranteed not to be null or undefined but otherwise it
-  // could be anything.
   parse: function(value, options) {
-    // return +moment.utc(value);
     return new Date(value).getTime()
   },
   // Input is a unix timestamp
   format: function(value, options) {
     return new Date(value).toISOString()
-    // var format = options.dateOnly ? "YYYY-MM-DD" : "YYYY-MM-DD hh:mm:ss";
-    // return moment.utc(value).format(format);
   }
 });
 
