@@ -13,6 +13,5 @@
 
 <div class="bb-margin-m">
   <Label small forAttr={'datepicker-label'}>{label}</Label>
-  YEET
   <DatePicker placeholder={label} on:change={onChange} {value} />
 </div>
