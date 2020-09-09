@@ -195,6 +195,16 @@
     cursor: pointer;
   }
 
+  button {
+    border-style: none;
+    border-radius: 2px;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    color: var(--ink);
+    outline: none;
+  }
+
   li:hover {
     background-color: var(--grey-2);
   }

@@ -64,7 +64,7 @@
   .root button {
     border-style: none;
     border-radius: 2px;
-    padding: 5px;
+    padding: 0;
     background: transparent;
     cursor: pointer;
     color: var(--ink);
