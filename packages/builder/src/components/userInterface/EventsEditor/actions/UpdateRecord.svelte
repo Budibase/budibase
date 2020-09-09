@@ -1,8 +1,12 @@
 <script>
-  import { Select, Label, TextButton } from "@budibase/bbui"
+  import { Select, Label, TextButton, Spacer } from "@budibase/bbui"
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
-  import { CloseCircleIcon } from "components/common/icons"
+  import { CloseCircleIcon, AddIcon } from "components/common/icons"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "builderStore/replaceBindings"
 
   export let parameters
 
@@ -14,7 +18,13 @@
     (parameters &&
       Object.keys(parameters.fields || { "": "" }).map(name => ({
         name,
-        value: (parameters.fields && parameters.fields[name]) || "",
+        value:
+          (parameters.fields &&
+            runtimeToReadableBinding(
+              bindableProperties,
+              parameters.fields[name]
+            )) ||
+          "",
       })))
 
   $: bindableProperties = fetchBindableProperties({
@@ -42,6 +52,10 @@
     fields = newFields
   }
 
+  const removeField = field => () => {
+    fields = fields.filter(f => f !== field)
+  }
+
   const bindablePropertyName = prop => {
     if (prop.type === "instance") return prop.instance._instanceName
     return prop.readableBinding.split(".")[
@@ -56,7 +70,10 @@
     parameters.fields = {}
     for (let field of fields) {
       if (field.name) {
-        parameters.fields[field.name] = field.value
+        parameters.fields[field.name] = readableToRuntimeBinding(
+          bindableProperties,
+          field.value
+        )
       }
     }
   }
@@ -134,11 +151,22 @@
         {/each}
       </Select>
       <div class="remove-field-container">
-        <TextButton text small>
+        <TextButton text small on:click={removeField(field)}>
           <CloseCircleIcon />
         </TextButton>
       </div>
     {/each}
+
+    <div>
+      <Spacer small />
+
+      <TextButton text small blue on:click={addField}>
+        Add Field
+        <div style="height: 20px; width: 20px;">
+          <AddIcon />
+        </div>
+      </TextButton>
+    </div>
   {/if}
 
 </div>

@@ -1,12 +1,6 @@
 <script>
   import { store } from "builderStore"
-  import {
-    TextButton,
-    Button,
-    Body,
-    Heading,
-    DropdownMenu,
-  } from "@budibase/bbui"
+  import { TextButton, Button, Heading, DropdownMenu } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
   import actionTypes from "./actions"
@@ -67,7 +61,7 @@
 <div class="root">
 
   <div class="header">
-    <Heading size="s" color="dark">Actions</Heading>
+    <Heading small dark>Actions</Heading>
     <div bind:this={addActionButton}>
       <TextButton text small blue on:click={addActionDropdown.show}>
         Add Action
@@ -94,12 +88,15 @@
     {#if actions && actions.length > 0}
       {#each actions as action, index}
         <div class="action-container">
-          <div on:click={selectAction(action)}>
+          <div class="action-header" on:click={selectAction(action)}>
             <p
               class="bb-body bb-body--small bb-body--color-dark"
               style="margin: var(--spacing-s) 0;">
               {index + 1}. {action[EVENT_TYPE_MEMBER_NAME]}
             </p>
+            <div class="row-expander" class:rotate={action !== selectedAction}>
+              <ArrowDownIcon />
+            </div>
           </div>
           {#if action === selectedAction}
             <div class="selected-action-container">
@@ -136,13 +133,25 @@
   .header {
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     padding: var(--spacing-xl);
     padding-bottom: 0;
   }
 
-  .available-actions-container {
+  .action-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .action-header > p {
+    flex: 1;
+  }
+
+  .row-expander {
+    height: 30px;
+    width: 30px;
   }
 
   .available-action {
@@ -206,6 +215,6 @@
   }
 
   .rotate :global(svg) {
-    transform: rotate(-90deg);
+    transform: rotate(90deg);
   }
 </style>
