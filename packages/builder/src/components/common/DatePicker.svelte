@@ -4,9 +4,15 @@
 
   export let label
   export let value
+
+  function onChange(event) {
+    const [selectedDates] = event.detail
+    value = selectedDates[0]
+  }
 </script>
 
 <div class="bb-margin-m">
   <Label small forAttr={'datepicker-label'}>{label}</Label>
-  <DatePicker placeholder={label} bind:value />
+  YEET
+  <DatePicker placeholder={label} on:change={onChange} {value} />
 </div>
