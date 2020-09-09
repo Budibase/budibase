@@ -31,11 +31,11 @@
 <style>
   .workflow-block {
     display: grid;
-    grid-template-columns: 40px auto;
+    grid-template-columns: 20px auto;
     align-items: center;
     margin-top: 16px;
-    padding: 16px 0px;
-    border-radius: var(--border);
+    padding: 12px;
+    border-radius: var(--border-radius-m);
   }
 
   .workflow-block:hover {
@@ -43,7 +43,7 @@
   }
 
   .workflow-text {
-    margin-left: 12px;
+    margin-left: 16px;
   }
 
   .icon {
@@ -64,6 +64,7 @@
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 5px;
+    margin-top: 0;
   }
 
   p {
