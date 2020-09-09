@@ -1,21 +1,18 @@
 <script>
+  import { Select } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store } from "builderStore"
-  import OptionSelect from "./OptionSelect.svelte"
 
   const dispatch = createEventDispatcher()
 
   export let value = ""
 
-  function handleSelect(selected) {
-    value = selected
-    dispatch("change", value)
-  }
-
-  let options = $store.allScreens.map(s => ({
-    value: s.route,
-    label: s.props._instanceName,
-  }))
+  const handleBlur = () => dispatch("change", value)
 </script>
 
-<OptionSelect {options} {value} onChange={handleSelect} />
+<Select editable secondary on:blur={handleBlur} on:change bind:value>
+  <option value="" />
+  {#each $store.allScreens as screen}
+    <option value={screen.route}>{screen.props._instanceName}</option>
+  {/each}
+</Select>
