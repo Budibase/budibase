@@ -5,7 +5,7 @@
 </script>
 
 {#if hasErrors}
-  <div uk-alert class="uk-alert-danger">
+  <div class="bb__alert bb__alert--danger">
     {#each errors as error}
       <div>{error.dataPath} {error.message}</div>
     {/each}

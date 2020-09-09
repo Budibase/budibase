@@ -1,6 +1,5 @@
 <script>
   import { Input, Select } from "@budibase/bbui"
-  import IconButton from "components/common/IconButton.svelte"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
   import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
@@ -27,6 +26,13 @@
       <option value="" />
       {#each $workflowStore.workflows.filter(wf => wf.live) as workflow}
         <option value={workflow._id}>{workflow.name}</option>
+      {/each}
+    </Select>
+  {:else if parameter.name === 'url'}
+    <Select editable on:change bind:value={parameter.value}>
+      <option value="" />
+      {#each $store.allScreens as screen}
+        <option value={screen.route}>{screen.props._instanceName}</option>
       {/each}
     </Select>
   {:else}

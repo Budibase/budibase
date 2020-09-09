@@ -4,7 +4,6 @@
   import PageLayout from "./PageLayout.svelte"
   import PagesList from "./PagesList.svelte"
   import { store } from "builderStore"
-  import IconButton from "components/common/IconButton.svelte"
   import NewScreen from "./NewScreen.svelte"
   import CurrentItemPreview from "./CurrentItemPreview.svelte"
   import SettingsView from "./SettingsView.svelte"

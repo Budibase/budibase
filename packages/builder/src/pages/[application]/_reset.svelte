@@ -8,7 +8,6 @@
   import { isActive, goto, layout, url } from "@sveltech/routify"
 
   import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
-  import IconButton from "components/common/IconButton.svelte"
 
   // Get Package and set store
   export let application
@@ -69,9 +68,6 @@
             {title}
           </span>
         {/each}
-        <!-- <IconButton icon="home"
-                      color="var(--grey-2)"
-                      hoverColor="var(--secondary75)"/> -->
       </div>
       <div class="toprightnav">
         <SettingsLink />

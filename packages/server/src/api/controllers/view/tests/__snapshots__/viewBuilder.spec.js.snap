@@ -20,7 +20,7 @@ Object {
       "count": Object {
         "type": "number",
       },
-      "group": Object {
+      "field": Object {
         "type": "string",
       },
       "max": Object {
@@ -66,7 +66,7 @@ Object {
     ],
     "groupBy": undefined,
     "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
-    "schema": undefined,
+    "schema": null,
   },
 }
 `;
@@ -84,7 +84,7 @@ Object {
     "filters": Array [],
     "groupBy": "age",
     "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
-    "schema": undefined,
+    "schema": null,
   },
   "reduce": "_stats",
 }

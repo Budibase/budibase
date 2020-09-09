@@ -2,7 +2,6 @@
   import { setContext, onMount } from "svelte"
 
   import { store } from "builderStore"
-  import IconButton from "components/common/IconButton.svelte"
   import {
     LayoutIcon,
     PaintIcon,
