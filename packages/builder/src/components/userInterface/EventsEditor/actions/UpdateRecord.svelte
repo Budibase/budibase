@@ -1,31 +1,10 @@
 <script>
-  import { Select, Label, TextButton, Spacer } from "@budibase/bbui"
+  import { Select, Label } from "@budibase/bbui"
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
-  import { CloseCircleIcon, AddIcon } from "components/common/icons"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "builderStore/replaceBindings"
+  import SaveFields from "./SaveFields.svelte"
 
   export let parameters
-
-  const emptyField = () => ({ name: "", value: "" })
-
-  // this statement initialises fields from parameters.fields
-  $: fields =
-    fields ||
-    (parameters &&
-      Object.keys(parameters.fields || { "": "" }).map(name => ({
-        name,
-        value:
-          (parameters.fields &&
-            runtimeToReadableBinding(
-              bindableProperties,
-              parameters.fields[name]
-            )) ||
-          "",
-      })))
 
   $: bindableProperties = fetchBindableProperties({
     componentInstanceId: $store.currentComponentInfo._id,
@@ -43,38 +22,7 @@
     // ensure recordId is always defaulted - there is usually only one option
     if (idFields.length > 0 && !parameters.recordId) {
       parameters.recordId = idFields[0].runtimeBinding
-    }
-  }
-
-  const addField = () => {
-    const newFields = fields.filter(f => f.name)
-    newFields.push(emptyField())
-    fields = newFields
-  }
-
-  const removeField = field => () => {
-    fields = fields.filter(f => f !== field)
-  }
-
-  const bindablePropertyName = prop => {
-    if (prop.type === "instance") return prop.instance._instanceName
-    return prop.readableBinding.split(".")[
-      prop.readableBinding.lastIndexOf(".")
-    ]
-  }
-
-  const fieldNameChanged = e => {}
-
-  const rebuildParameters = () => {
-    // rebuilds paramters.fields every time a field name or value is added
-    parameters.fields = {}
-    for (let field of fields) {
-      if (field.name) {
-        parameters.fields[field.name] = readableToRuntimeBinding(
-          bindableProperties,
-          field.value
-        )
-      }
+      parameters = parameters
     }
   }
 
@@ -108,7 +56,14 @@
     return Object.keys(model.schema)
   }
 
-  $: fieldNames = parameters ? fieldNamesFromIdBinding(parameters.recordId) : []
+  $: fieldNames =
+    parameters && parameters.recordId
+      ? fieldNamesFromIdBinding(parameters.recordId)
+      : []
+
+  const onFieldsChanged = e => {
+    parameters.fields = e.detail
+  }
 </script>
 
 <div class="root">
@@ -128,45 +83,11 @@
     </Select>
   {/if}
 
-  {#if parameters.recordId && fields}
-    {#each fields as field}
-      <Label size="m" color="dark">Field</Label>
-      <Select secondary bind:value={field.name} on:blur={rebuildParameters}>
-        <option value="" />
-        {#each fieldNames as fieldName}
-          <option value={fieldName}>{fieldName}</option>
-        {/each}
-      </Select>
-      <Label size="m" color="dark">Value</Label>
-      <Select
-        editable
-        secondary
-        bind:value={field.value}
-        on:blur={rebuildParameters}>
-        <option value="" />
-        {#each bindableProperties as bindableProp}
-          <option value={toBindingExpression(bindableProp.readableBinding)}>
-            {bindableProp.readableBinding}
-          </option>
-        {/each}
-      </Select>
-      <div class="remove-field-container">
-        <TextButton text small on:click={removeField(field)}>
-          <CloseCircleIcon />
-        </TextButton>
-      </div>
-    {/each}
-
-    <div>
-      <Spacer small />
-
-      <TextButton text small blue on:click={addField}>
-        Add Field
-        <div style="height: 20px; width: 20px;">
-          <AddIcon />
-        </div>
-      </TextButton>
-    </div>
+  {#if parameters.recordId}
+    <SaveFields
+      parameterFields={parameters.fields}
+      schemaFields={fieldNames}
+      on:fieldschanged={onFieldsChanged} />
   {/if}
 
 </div>
@@ -183,10 +104,6 @@
   .root :global(.relative:nth-child(2)) {
     grid-column-start: 2;
     grid-column-end: 6;
-  }
-
-  .remove-field-container :global(button) {
-    vertical-align: bottom;
   }
 
   .cannot-use {
