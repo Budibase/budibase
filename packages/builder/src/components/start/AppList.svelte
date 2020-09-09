@@ -1,11 +1,6 @@
 <script>
   import AppCard from "./AppCard.svelte"
   export let apps
-
-  function myFunction() {
-    var x = new Date(document.lastModified)
-    document.getElementById("demo").innerHTML = x
-  }
 </script>
 
 <div class="root">
