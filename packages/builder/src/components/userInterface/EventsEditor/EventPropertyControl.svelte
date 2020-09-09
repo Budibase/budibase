@@ -1,6 +1,8 @@
 <script>
   import { Button, Modal } from "@budibase/bbui"
   import EventEditorModal from "./EventEditorModal.svelte"
+  import { createEventDispatcher, onMount } from "svelte"
+  const dispatch = createEventDispatcher()
 
   export let value
   export let name

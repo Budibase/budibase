@@ -1,0 +1,41 @@
+export const CAPTURE_VAR_INSIDE_MUSTACHE = /{{([^}]+)}}/g
+
+export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
+  // Find all instances of mustasche
+  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE)
+
+  // Replace with names:
+  boundValues &&
+    boundValues.forEach(boundValue => {
+      const binding = bindableProperties.find(({ readableBinding }) => {
+        return boundValue === `{{ ${readableBinding} }}`
+      })
+      if (binding) {
+        textWithBindings = textWithBindings.replace(
+          boundValue,
+          `{{ ${binding.runtimeBinding} }}`
+        )
+      }
+    })
+  return textWithBindings
+}
+
+export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
+  let temp = textWithBindings
+  const boundValues =
+    (typeof textWithBindings === "string" &&
+      textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE)) ||
+    []
+
+  // Replace with names:
+  boundValues.forEach(v => {
+    const binding = bindableProperties.find(({ runtimeBinding }) => {
+      return v === `{{ ${runtimeBinding} }}`
+    })
+    if (binding) {
+      temp = temp.replace(v, `{{ ${binding.readableBinding} }}`)
+    }
+  })
+
+  return temp
+}
