@@ -5,3 +5,5 @@ Contributors
 * Daniel Loudon - [@danbudi](https://github.com/marblekirby)
 * Joe  - [@joebudi](https://github.com/joebudi)
 * Martin McKeaveney - [@shogunpurple](https://github.com/shogunpurple)
+* Andrew Kingston - [@aptkingston](https://github.com/aptkingston)
+* Michael Drury - [@mike12345567](https://github.com/mike12345567)
