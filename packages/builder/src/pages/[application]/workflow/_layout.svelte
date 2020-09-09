@@ -41,7 +41,6 @@
   .nav {
     overflow: auto;
     width: 300px;
-    border-right: 1px solid var(--grey-2);
     background: var(--white);
   }
 
