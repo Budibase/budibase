@@ -1,7 +1,6 @@
 <script>
   import Flatpickr from "svelte-flatpickr"
   import { DatePicker } from "@budibase/bbui"
-  import "flatpickr/dist/flatpickr.css"
 
   export let placeholder
   export let value

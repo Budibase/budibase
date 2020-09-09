@@ -1,5 +1,4 @@
 import "britecharts/dist/css/britecharts.min.css"
-import "flatpickr/dist/flatpickr.css"
 
 export { default as donut } from "./Donut.svelte"
 export { default as bar } from "./Bar.svelte"
