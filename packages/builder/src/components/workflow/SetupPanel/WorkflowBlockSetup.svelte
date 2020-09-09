@@ -27,7 +27,7 @@
     {:else if type === 'component'}
       <ComponentSelector bind:value={workflowBlock.args[parameter]} />
     {:else if type === 'accessLevel'}
-      <Select bind:value={workflowBlock.args[parameter]} thin>
+      <Select bind:value={workflowBlock.args[parameter]} thin secondary>
         <option value="ADMIN">Admin</option>
         <option value="POWER_USER">Power User</option>
       </Select>
@@ -57,9 +57,12 @@
   }
 
   label {
-    text-transform: capitalize;
     font-size: 14px;
+    font-family: sans-serif;
     font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 12px;
+    text-transform: capitalize;
     margin-top: 20px;
   }
 
