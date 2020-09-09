@@ -11,7 +11,6 @@ import copy from "rollup-plugin-copy"
 import css from "rollup-plugin-css-only"
 import replace from "rollup-plugin-replace"
 import json from "@rollup/plugin-json"
-import fs from "fs"
 
 import path from "path"
 
