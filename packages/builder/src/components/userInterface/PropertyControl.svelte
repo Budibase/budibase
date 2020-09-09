@@ -66,7 +66,7 @@
         innerVal = props.valueKey ? v.target[props.valueKey] : v.target.value
       }
     }
-    replaceBindings(innerVal)
+    if (typeof innerVal === "string") replaceBindings(innerVal)
   }
 
   const safeValue = () => {
