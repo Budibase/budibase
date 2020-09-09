@@ -201,9 +201,9 @@ export default {
       },
     }),
 
-    // export all CSS imported in the JS to it's own bundle 
+    // export all CSS imported in the JS to it's own bundle
     css({
-      output: `${outputpath}/external.css` 
+      output: `${outputpath}/external.css`,
     }),
 
     resolve({
