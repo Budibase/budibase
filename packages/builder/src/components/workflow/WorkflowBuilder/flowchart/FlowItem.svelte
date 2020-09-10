@@ -13,8 +13,6 @@
   $: selected =
     $workflowStore.selectedWorkflowBlock != null &&
     $workflowStore.selectedWorkflowBlock.id === block.id
-
-  console.log(selected)
 </script>
 
 <div

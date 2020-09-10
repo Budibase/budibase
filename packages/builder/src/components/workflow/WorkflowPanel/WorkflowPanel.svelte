@@ -1,12 +1,9 @@
 <script>
-  import { onMount } from "svelte"
-  import { backendUiStore, workflowStore } from "builderStore"
+  import { workflowStore } from "builderStore"
   import WorkflowList from "./WorkflowList/WorkflowList.svelte"
   import BlockList from "./BlockList/BlockList.svelte"
-  import blockDefinitions from "./blockDefinitions"
 
   let selectedTab = "WORKFLOWS"
-  let definitions = []
 </script>
 
 <header>
