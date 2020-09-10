@@ -1,6 +1,7 @@
 const CouchDB = require("../../../db")
 const newid = require("../../../db/newid")
 const blockDefinitions = require("./blockDefinitions")
+const triggers = require("../../../workflows/triggers")
 
 /*************************
  *                       *
@@ -60,22 +61,9 @@ exports.find = async function(ctx) {
   ctx.body = await db.get(ctx.params.id)
 }
 
-exports.fetchActionScript = async function(ctx) {
-  ctx.body = require(`./actions/${ctx.action}`)
-}
-
 exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
-}
-
-exports.executeAction = async function(ctx) {
-  const { args, action } = ctx.request.body
-  const workflowAction = require(`./actions/${action}`)
-  ctx.body = await workflowAction({
-    args,
-    instanceId: ctx.user.instanceId,
-  })
 }
 
 exports.getActionList = async function(ctx) {
@@ -87,7 +75,7 @@ exports.getTriggerList = async function(ctx) {
 }
 
 exports.getLogicList = async function(ctx) {
-  ctx.body = blockDefinitions.ACTION
+  ctx.body = blockDefinitions.LOGIC
 }
 
 /*********************
@@ -97,4 +85,7 @@ exports.getLogicList = async function(ctx) {
  *********************/
 
 exports.trigger = async function(ctx) {
+  const db = new CouchDB(ctx.user.instanceId)
+  let workflow = await db.get(ctx.params.id)
+  await triggers.externalTrigger(workflow, ctx.request.body)
 }
