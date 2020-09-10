@@ -35,6 +35,9 @@ const ACTION = {
       password: "password",
       accessLevelId: "accessLevel",
     },
+    args: {
+      accessLevelId: "POWER_USER",
+    },
     type: "ACTION",
   },
   SEND_EMAIL: {

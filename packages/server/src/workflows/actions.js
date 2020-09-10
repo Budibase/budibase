@@ -5,13 +5,14 @@ const sgMail = require("@sendgrid/mail")
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 let BUILTIN_ACTIONS = {
-  CREATE_USER: async function({ args, instanceId }) {
+  CREATE_USER: async function({ args, context }) {
+    const { username, password, accessLevelId } = args
     const ctx = {
-      params: {
-        instanceId,
+      user: {
+        instanceId: context.instanceId,
       },
       request: {
-        body: args.user,
+        body: { username, password, accessLevelId },
       },
     }
 
