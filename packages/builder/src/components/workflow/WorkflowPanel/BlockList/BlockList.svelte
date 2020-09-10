@@ -4,23 +4,23 @@
   import FlatButtonGroup from "components/userInterface/FlatButtonGroup.svelte"
 
   let selectedTab = "TRIGGER"
-  let definitions = []
+  let buttonProps = []
+  $: blocks = Object.entries($workflowStore.blockDefinitions[selectedTab])
 
-  $: buttonProps = [
-    ...($workflowStore.currentWorkflow.hasTrigger()
-      ? []
-      : [{ value: "TRIGGER", text: "Trigger" }]),
-    { value: "ACTION", text: "Action" },
-    { value: "LOGIC", text: "Logic" },
-  ]
-
-  $: definitions = Object.entries($workflowStore.blockDefinitions[selectedTab])
   $: {
-    if (
-      $workflowStore.currentWorkflow.hasTrigger() &&
-      selectedTab === "TRIGGER"
-    ) {
-      selectedTab = "ACTION"
+    if ($workflowStore.currentWorkflow.hasTrigger()) {
+      buttonProps = [
+        { value: "ACTION", text: "Action" },
+        { value: "LOGIC", text: "Logic" },
+      ]
+      if (selectedTab === "TRIGGER") {
+        selectedTab = "ACTION"
+      }
+    } else {
+      buttonProps = [{ value: "TRIGGER", text: "Trigger" }]
+      if (selectedTab !== "TRIGGER") {
+        selectedTab = "TRIGGER"
+      }
     }
   }
 
@@ -32,8 +32,8 @@
 <section>
   <FlatButtonGroup value={selectedTab} {buttonProps} onChange={onChangeTab} />
   <div id="blocklist">
-    {#each definitions as [actionId, blockDefinition]}
-      <WorkflowBlock {blockDefinition} {actionId} blockType={selectedTab} />
+    {#each blocks as [stepId, blockDefinition]}
+      <WorkflowBlock {blockDefinition} {stepId} blockType={selectedTab} />
     {/each}
   </div>
 </section>

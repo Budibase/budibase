@@ -67,16 +67,16 @@ export default class Workflow {
 
     return [...steps, ...definition.steps].map(step => {
       // The client side display definition for the block
-      const definition = blockDefinitions[step.type][step.actionId]
+      const definition = blockDefinitions[step.type][step.stepId]
       if (!definition) {
         throw new Error(
-          `No block definition exists for the chosen block. Check there's an entry in the block definitions for ${step.actionId}`
+          `No block definition exists for the chosen block. Check there's an entry in the block definitions for ${step.stepId}`
         )
       }
 
       if (!definition.params) {
         throw new Error(
-          `Blocks should always have parameters. Ensure that the block definition is correct for ${step.actionId}`
+          `Blocks should always have parameters. Ensure that the block definition is correct for ${step.stepId}`
         )
       }
 
@@ -88,7 +88,7 @@ export default class Workflow {
         type: step.type,
         params: step.params,
         args,
-        heading: step.actionId,
+        heading: step.stepId,
         body: mustache.render(tagline, args),
         name: definition.name,
       }

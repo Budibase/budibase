@@ -1,15 +1,15 @@
 <script>
   import { workflowStore } from "builderStore"
 
-  export let blockType
   export let blockDefinition
-  export let actionId
+  export let stepId
+  export let blockType
 
   function addBlockToWorkflow() {
     workflowStore.actions.addBlockToWorkflow({
       ...blockDefinition,
       args: blockDefinition.args || {},
-      actionId,
+      stepId,
       type: blockType,
     })
   }
@@ -18,7 +18,7 @@
 <div
   class="workflow-block hoverable"
   on:click={addBlockToWorkflow}
-  data-cy={actionId}>
+  data-cy={stepId}>
   <div>
     <i class={blockDefinition.icon} />
   </div>
