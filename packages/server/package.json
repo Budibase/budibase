@@ -55,6 +55,7 @@
     "electron-updater": "^4.3.1",
     "fix-path": "^3.0.0",
     "fs-extra": "^8.1.0",
+    "joi": "^17.2.1",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",
