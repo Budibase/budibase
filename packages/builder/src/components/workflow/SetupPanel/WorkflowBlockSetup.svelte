@@ -14,44 +14,49 @@
     : []
 </script>
 
-<label class="selected-label">{workflowBlock.type}: {workflowBlock.name}</label>
-{#each workflowParams as [parameter, type]}
-  <div class="block-field">
-    <label class="label">{parameter}</label>
-    {#if Array.isArray(type)}
-      <Select bind:value={workflowBlock.args[parameter]} thin>
-        {#each type as option}
-          <option value={option}>{option}</option>
-        {/each}
-      </Select>
-    {:else if type === 'component'}
-      <ComponentSelector bind:value={workflowBlock.args[parameter]} />
-    {:else if type === 'accessLevel'}
-      <Select bind:value={workflowBlock.args[parameter]} thin secondary>
-        <option value="ADMIN">Admin</option>
-        <option value="POWER_USER">Power User</option>
-      </Select>
-    {:else if type === 'password'}
-      <Input type="password" thin bind:value={workflowBlock.args[parameter]} />
-    {:else if type === 'number'}
-      <Input type="number" thin bind:value={workflowBlock.args[parameter]} />
-    {:else if type === 'longText'}
-      <TextArea
-        type="text"
-        thin
-        bind:value={workflowBlock.args[parameter]}
-        label="" />
-    {:else if type === 'model'}
-      <ModelSelector bind:value={workflowBlock.args[parameter]} />
-    {:else if type === 'record'}
-      <RecordSelector value={workflowBlock.args[parameter]} />
-    {:else if type === 'string'}
-      <Input type="text" thin bind:value={workflowBlock.args[parameter]} />
-    {/if}
-  </div>
-{/each}
+<div class="container">
+  <!-- <label class="selected-label">{workflowBlock.type}: {workflowBlock.name}</label> -->
+  {#each workflowParams as [parameter, type]}
+    <div class="block-field">
+      <label class="label">{parameter}</label>
+      {#if Array.isArray(type)}
+        <Select bind:value={workflowBlock.args[parameter]} thin secondary>
+          {#each type as option}
+            <option value={option}>{option}</option>
+          {/each}
+        </Select>
+      {:else if type === 'component'}
+        <ComponentSelector bind:value={workflowBlock.args[parameter]} />
+      {:else if type === 'accessLevel'}
+        <Select bind:value={workflowBlock.args[parameter]} thin secondary>
+          <option value="ADMIN">Admin</option>
+          <option value="POWER_USER">Power User</option>
+        </Select>
+      {:else if type === 'password'}
+        <Input
+          type="password"
+          thin
+          bind:value={workflowBlock.args[parameter]} />
+      {:else if type === 'number'}
+        <Input type="number" thin bind:value={workflowBlock.args[parameter]} />
+      {:else if type === 'longText'}
+        <TextArea type="text" thin bind:value={workflowBlock.args[parameter]} />
+      {:else if type === 'model'}
+        <ModelSelector bind:value={workflowBlock.args[parameter]} />
+      {:else if type === 'record'}
+        <RecordSelector value={workflowBlock.args[parameter]} />
+      {:else if type === 'string'}
+        <Input type="text" thin bind:value={workflowBlock.args[parameter]} />
+      {/if}
+    </div>
+  {/each}
+</div>
 
 <style>
+  .container {
+    margin-top: -20px;
+  }
+
   .block-field {
     display: grid;
   }

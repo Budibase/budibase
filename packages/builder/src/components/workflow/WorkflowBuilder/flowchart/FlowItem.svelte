@@ -1,15 +1,27 @@
 <script>
   import { fade } from "svelte/transition"
+  import { workflowStore } from "builderStore"
 
   export let onSelect
   export let block
+  let selected = false
 
   function selectBlock() {
     onSelect(block)
   }
+
+  $: selected =
+    $workflowStore.selectedWorkflowBlock != null &&
+    $workflowStore.selectedWorkflowBlock.id === block.id
+
+  console.log(selected)
 </script>
 
-<div transition:fade class={`${block.type} hoverable`} on:click={selectBlock}>
+<div
+  transition:fade
+  class={`${block.type} hoverable`}
+  class:selected
+  on:click={selectBlock}>
   <header>
     {#if block.type === 'TRIGGER'}
       <i class="ri-lightbulb-fill" />
@@ -32,8 +44,8 @@
   div {
     width: 320px;
     padding: 20px;
-    border-radius: 5px;
-    transition: 0.3s all;
+    border-radius: var(--border-radius-m);
+    transition: 0.3s all ease;
     box-shadow: 0 4px 30px 0 rgba(57, 60, 68, 0.08);
     background-color: var(--ink);
     font-size: 16px;
@@ -69,9 +81,12 @@
 
   p {
     color: inherit;
+    margin-bottom: 0;
   }
 
+  div.selected,
   div:hover {
-    transform: scale(1.05);
+    transform: scale(1.1);
+    box-shadow: 0 4px 30px 0 rgba(57, 60, 68, 0.15);
   }
 </style>
