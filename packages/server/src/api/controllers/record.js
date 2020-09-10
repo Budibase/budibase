@@ -2,6 +2,16 @@ const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const newid = require("../../db/newid")
 
+validateJs.extend(validateJs.validators.datetime, {
+  parse: function(value) {
+    return new Date(value).getTime()
+  },
+  // Input is a unix timestamp
+  format: function(value) {
+    return new Date(value).toISOString()
+  },
+})
+
 exports.patch = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const record = await db.get(ctx.params.id)
@@ -12,7 +22,6 @@ exports.patch = async function(ctx) {
     if (!model.schema[key]) continue
     record[key] = patchfields[key]
   }
-
   coerceFieldsToCorrectType(record, model)
 
   const validateResult = await validate({
