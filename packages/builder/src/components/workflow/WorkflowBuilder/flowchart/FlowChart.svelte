@@ -7,7 +7,7 @@
 </script>
 
 <section class="canvas">
-  {#each blocks as block, idx}
+  {#each blocks as block, idx (block.id)}
     <FlowItem {onSelect} {block} />
     {#if idx !== blocks.length - 1}
       <Arrow />
@@ -16,6 +16,11 @@
 </section>
 
 <style>
+  section {
+    position: absolute;
+    padding: 20px 40px;
+  }
+
   .canvas {
     display: flex;
     align-items: center;
