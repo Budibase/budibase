@@ -62,6 +62,8 @@
   export let lines = null //not handled by setting prop
   export let tooltipThreshold = null
   export let tooltipTitle = ""
+  export let xTicks = ""
+  export let yTicks = ""
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
@@ -73,12 +75,15 @@
         bindChartEvents()
         chartContainer.datum(data).call(chart)
 
-        // X Axis Label gets cut off unless we do this 👇
+        // Hack 🤮 X Axis Label and last tick label gets cut off unless we do this 👇
         const chartSvg = document.querySelector(`.${chartClass} .britechart`)
         if (chartSvg) {
           let height = chartSvg.getAttribute("height")
+          let width = chartSvg.getAttribute("width")
           height = parseInt(height) + 35
+          width = parseInt(width) + 15
           chartSvg.setAttribute("height", height)
+          chartSvg.setAttribute("width", width)
         }
 
         bindTooltip()
@@ -145,11 +150,10 @@
   }
 
   function bindChartUIProps() {
-    chart.grid("horizontal")
-    chart.isAnimated(true)
     chart.tooltipThreshold(800)
     chart.aspectRatio(0.5)
-    chart.xAxisCustomFormat("custom")
+    chart.xAxisCustomFormat("%e %b %Y")
+    chart.xTicks(data.dataByTopic.length)
 
     if (notNull(color)) {
       chart.colorSchema(colorSchema)
@@ -214,6 +218,12 @@
     if (notNull(lines)) {
       chart.lines(lines)
     }
+    if (notNull(xTicks)) {
+      chart.xTicks(Number(xTicks))
+    }
+    if (notNull(yTicks)) {
+      chart.yTicks(Number(yTicks))
+    }
     if (notNull(tooltipTitle)) {
       tooltip.title(tooltipTitle)
     } else if (datasource.label) {
@@ -243,4 +253,4 @@
   $: chartGradient = getChartGradient(lineGradient)
 </script>
 
-<div bind this:👇={chartElement} class={chartClass} />
+<div bind:this={chartElement} class={chartClass} />
