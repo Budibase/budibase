@@ -1,5 +1,4 @@
 import mustache from "mustache"
-import blockDefinitions from "components/workflow/WorkflowPanel/blockDefinitions"
 import { generate } from "shortid"
 
 /**
@@ -7,8 +6,9 @@ import { generate } from "shortid"
  * Workflow definitions are stored in linked lists.
  */
 export default class Workflow {
-  constructor(workflow) {
+  constructor(workflow, blockDefinitions) {
     this.workflow = workflow
+    this.blockDefinitions = blockDefinitions
   }
 
   hasTrigger() {
@@ -56,12 +56,14 @@ export default class Workflow {
 
   createUiTree() {
     if (!this.workflow.definition) return []
-    return Workflow.buildUiTree(this.workflow.definition)
+    return Workflow.buildUiTree(this.workflow.definition, this.blockDefinitions)
   }
 
-  static buildUiTree(definition) {
+  static buildUiTree(definition, blockDefinitions) {
     const steps = []
-    if (definition.trigger) steps.push(definition.trigger)
+    if (definition.trigger) {
+      steps.push(definition.trigger)
+    }
 
     return [...steps, ...definition.steps].map(step => {
       // The client side display definition for the block
