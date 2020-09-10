@@ -34,8 +34,8 @@ class Orchestrator {
     if (!workflow.live) {
       return
     }
-    for (let block of workflow.steps) {
-      let step = this.getStep(block.type, block.stepId)
+    for (let block of workflow.definition.steps) {
+      let step = await this.getStep(block.type, block.stepId)
       let args = { ...block.args }
       // bind the workflow action args to the workflow context, if required
       for (let arg of Object.keys(args)) {
