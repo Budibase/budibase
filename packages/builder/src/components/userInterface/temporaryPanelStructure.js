@@ -1051,6 +1051,16 @@ export default {
                     key: "tooltipTitle",
                     control: Input,
                   },
+                  {
+                    label: "X Ticks",
+                    key: "xTicks",
+                    control: Input,
+                  },
+                  {
+                    label: "Y Ticks",
+                    key: "yTicks",
+                    control: Input,
+                  },
                 ],
               },
             },
