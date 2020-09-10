@@ -83,7 +83,7 @@ const TRIGGER = {
     event: "record:save",
     icon: "ri-save-line",
     tagline: "Record is added to <b>{{model.name}}</b>",
-    description: "Save a record to your database.",
+    description: "Fired when a record is saved to your database.",
     params: {
       model: "model",
     },
