@@ -127,7 +127,7 @@
         {:else if schema[field].type === 'datetime'}
           <DatePicker bind:value={record[field]} />
         {:else if schema[field].type === 'boolean'}
-          <input class="input" type="checkbox" bind:value={record[field]} />
+          <input class="input" type="checkbox" bind:checked={record[field]} />
         {:else if schema[field].type === 'number'}
           <input class="input" type="number" bind:value={record[field]} />
         {:else if schema[field].type === 'string'}
