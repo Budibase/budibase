@@ -15,7 +15,6 @@
 </script>
 
 <div class="container">
-  <!-- <label class="selected-label">{workflowBlock.type}: {workflowBlock.name}</label> -->
   {#each workflowParams as [parameter, type]}
     <div class="block-field">
       <label class="label">{parameter}</label>
