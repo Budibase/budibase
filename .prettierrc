@@ -4,5 +4,6 @@
   "singleQuote": false,
   "trailingComma": "es5",
   "plugins": ["prettier-plugin-svelte"],
-  "svelteSortOrder" : "scripts-markup-styles"
+  "svelteSortOrder" : "scripts-markup-styles",
+  "printWidth": 100
 }

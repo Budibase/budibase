@@ -1,5 +1,12 @@
 const CouchDB = require("../../../db")
 const newid = require("../../../db/newid")
+const blockDefinitions = require("./blockDefinitions")
+
+/*************************
+ *                       *
+ *   BUILDER FUNCTIONS   *
+ *                       *
+ *************************/
 
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
@@ -53,22 +60,41 @@ exports.find = async function(ctx) {
   ctx.body = await db.get(ctx.params.id)
 }
 
-exports.executeAction = async function(ctx) {
-  const { args, action } = ctx.request.body
-  const workflowAction = require(`./actions/${action}`)
-  const response = await workflowAction({
-    args,
-    instanceId: ctx.user.instanceId,
-  })
-  ctx.body = response
-}
-
 exports.fetchActionScript = async function(ctx) {
-  const workflowAction = require(`./actions/${ctx.action}`)
-  ctx.body = workflowAction
+  ctx.body = require(`./actions/${ctx.action}`)
 }
 
 exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
+}
+
+exports.executeAction = async function(ctx) {
+  const { args, action } = ctx.request.body
+  const workflowAction = require(`./actions/${action}`)
+  ctx.body = await workflowAction({
+    args,
+    instanceId: ctx.user.instanceId,
+  })
+}
+
+exports.getActionList = async function(ctx) {
+  ctx.body = blockDefinitions.ACTION
+}
+
+exports.getTriggerList = async function(ctx) {
+  ctx.body = blockDefinitions.TRIGGER
+}
+
+exports.getLogicList = async function(ctx) {
+  ctx.body = blockDefinitions.ACTION
+}
+
+/*********************
+ *                   *
+ *   API FUNCTIONS   *
+ *                   *
+ *********************/
+
+exports.trigger = async function(ctx) {
 }
