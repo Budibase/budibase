@@ -14,7 +14,7 @@
     if (containerElement) {
       _bb.attachChildren(containerElement)
       if (!hasLoaded) {
-        _bb.call(onLoad)
+        _bb.call("onLoad")
         hasLoaded = true
       }
     }

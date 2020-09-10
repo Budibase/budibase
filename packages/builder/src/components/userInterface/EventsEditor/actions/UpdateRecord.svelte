@@ -3,6 +3,10 @@
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import SaveFields from "./SaveFields.svelte"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "builderStore/replaceBindings"
 
   export let parameters
 
@@ -14,25 +18,36 @@
   })
 
   let idFields
+  let recordId
   $: {
     idFields = bindableProperties.filter(
       bindable =>
         bindable.type === "context" && bindable.runtimeBinding.endsWith("._id")
     )
     // ensure recordId is always defaulted - there is usually only one option
-    if (idFields.length > 0 && !parameters.recordId) {
-      parameters.recordId = idFields[0].runtimeBinding
+    if (idFields.length > 0 && !parameters._id) {
+      recordId = idFields[0].runtimeBinding
       parameters = parameters
+    } else if (!recordId && parameters._id) {
+      recordId = parameters._id
+        .replace("{{", "")
+        .replace("}}", "")
+        .trim()
     }
   }
 
+  $: parameters._id = `{{ ${recordId} }}`
+
   // just wraps binding in {{ ... }}
-  const toBindingExpression = bindingPath => `{{ ${bindingPath} }}`
+  const toBindingExpression = bindingPath => {
+    console.log("yeo")
+    return `{{ ${bindingPath} }}`
+  }
 
   // finds the selected idBinding, then reads the table/view
   // from the component instance that it belongs to.
   // then returns the field names for that schema
-  const fieldNamesFromIdBinding = recordId => {
+  const modelInfoFromIdBinding = recordId => {
     if (!recordId) return []
 
     const idBinding = bindableProperties.find(
@@ -52,14 +67,18 @@
     const model = $backendUiStore.models.find(
       m => m._id === instance[component.context]
     )
-
+    parameters.modelId = modelId
     return Object.keys(model.schema)
   }
 
-  $: fieldNames =
-    parameters && parameters.recordId
-      ? fieldNamesFromIdBinding(parameters.recordId)
-      : []
+  let fieldNames
+  $: {
+    if (parameters && recordId) {
+      fieldNames = modelInfoFromIdBinding(recordId)
+    } else {
+      fieldNames = []
+    }
+  }
 
   const onFieldsChanged = e => {
     parameters.fields = e.detail
@@ -74,16 +93,17 @@
     </div>
   {:else}
     <Label size="m" color="dark">Record Id</Label>
-    <Select secondary bind:value={parameters.recordId}>
+    <Select secondary bind:value={recordId}>
+      <option value="" />
       {#each idFields as idField}
-        <option value={toBindingExpression(idField.runtimeBinding)}>
+        <option value={idField.runtimeBinding}>
           {idField.readableBinding}
         </option>
       {/each}
     </Select>
   {/if}
 
-  {#if parameters.recordId}
+  {#if recordId}
     <SaveFields
       parameterFields={parameters.fields}
       schemaFields={fieldNames}
