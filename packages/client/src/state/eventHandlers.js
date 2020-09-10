@@ -1,5 +1,3 @@
-import api from "../api"
-
 export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType"
 
 export const eventHandlers = routeTo => {
@@ -10,7 +8,6 @@ export const eventHandlers = routeTo => {
 
   return {
     "Navigate To": handler(["url"], param => routeTo(param && param.url)),
-    "Trigger Workflow": handler(["workflow"], api.triggerWorkflow),
   }
 }
 

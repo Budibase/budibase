@@ -37,8 +37,6 @@ exports.serverStrategy = () => ({
   },
   run: async function(workflow, context) {
     for (let block of workflow.steps) {
-      if (block.type === "CLIENT") continue
-
       const action = require(`../api/controllers/workflow/actions/${block.actionId}`)
       const response = await action({
         args: this.bindContextArgs(block.args),
