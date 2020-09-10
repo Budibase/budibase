@@ -620,6 +620,13 @@
 			"width": "number"
 		}
 	},
+	"datepicker": {
+		"description": "Date Picker",
+		"bindable": "value",
+		"props": {
+			"placeholder": "string"
+		}
+	},
 	"datachart": {
 		"description": "shiny chart",
 		"data": true,

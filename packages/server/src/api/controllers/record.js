@@ -2,6 +2,16 @@ const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const newid = require("../../db/newid")
 
+validateJs.extend(validateJs.validators.datetime, {
+  parse: function(value) {
+    return new Date(value).getTime()
+  },
+  // Input is a unix timestamp
+  format: function(value) {
+    return new Date(value).toISOString()
+  },
+})
+
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const record = ctx.request.body
