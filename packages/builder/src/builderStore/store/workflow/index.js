@@ -95,14 +95,33 @@ const workflowActions = store => ({
   addBlockToWorkflow: block => {
     store.update(state => {
       state.currentWorkflow.addBlock(block)
-      state.selectedWorkflowBlock = block
+      const steps = state.currentWorkflow.workflow.definition.steps
+      state.selectedWorkflowBlock = steps.length
+        ? steps[steps.length - 1]
+        : state.currentWorkflow.workflow.definition.trigger
       return state
     })
   },
   deleteWorkflowBlock: block => {
     store.update(state => {
+      console.log(state.currentWorkflow.workflow)
+      const idx = state.currentWorkflow.workflow.definition.steps.findIndex(
+        x => x.id === block.id
+      )
       state.currentWorkflow.deleteBlock(block.id)
-      state.selectedWorkflowBlock = null
+
+      // Select next closest step
+      const steps = state.currentWorkflow.workflow.definition.steps
+      let nextSelectedBlock
+      if (steps[idx] != null) {
+        nextSelectedBlock = steps[idx]
+      } else if (steps[idx - 1] != null) {
+        nextSelectedBlock = steps[idx - 1]
+      } else {
+        nextSelectedBlock =
+          state.currentWorkflow.workflow.definition.trigger || null
+      }
+      state.selectedWorkflowBlock = nextSelectedBlock
       return state
     })
   },
