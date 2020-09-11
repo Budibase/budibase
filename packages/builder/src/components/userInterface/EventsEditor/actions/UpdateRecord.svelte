@@ -60,14 +60,12 @@
     const component = $store.components[instance._component]
 
     // component.context is the name of the prop that holds the modelId
-    const modelId = instance[component.context]
+    const modelInfo = instance[component.context]
 
-    if (!modelId) return []
+    if (!modelInfo) return []
 
-    const model = $backendUiStore.models.find(
-      m => m._id === instance[component.context]
-    )
-    parameters.modelId = modelId
+    const model = $backendUiStore.models.find(m => m._id === modelInfo.modelId)
+    parameters.modelId = modelInfo.modelId
     return Object.keys(model.schema)
   }
 
