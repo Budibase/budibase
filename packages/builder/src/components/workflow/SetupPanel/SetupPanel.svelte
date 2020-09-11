@@ -29,7 +29,7 @@
   }
 
   function testWorkflow() {
-    testResult = "PASSED"
+    testResult = "Workflow passed"
   }
 
   async function saveWorkflow() {
@@ -52,32 +52,33 @@
       }}>
       Setup
     </span>
-    {#if !$workflowStore.selectedBlock}
-      <span
-        class="test-tab"
-        class:selected={selectedTab === 'TEST'}
-        on:click={() => (selectedTab = 'TEST')}>
-        Test
-      </span>
-    {/if}
   </header>
-  {#if selectedTab === 'TEST'}
-    <div class="bb-margin-m">
+  {#if $workflowStore.selectedBlock}
+    <WorkflowBlockSetup bind:block={$workflowStore.selectedBlock} />
+    <div class="buttons">
+      <Button green wide data-cy="save-workflow-setup" on:click={saveWorkflow}>
+        Save Workflow
+      </Button>
+      <Button red wide on:click={deleteWorkflowBlock}>Delete Block</Button>
+    </div>
+  {:else if $workflowStore.selectedWorkflow}
+    <div class="panel">
+      <div class="panel-body">
+        <div class="block-label">
+          Workflow
+          <b>{workflow.name}</b>
+        </div>
+      </div>
       {#if testResult}
         <button
-          transition:fade
-          class:passed={testResult === 'PASSED'}
-          class:failed={testResult === 'FAILED'}
+          transition:fade|local
+          class:passed={true}
+          class:failed={false}
           class="test-result">
           {testResult}
         </button>
       {/if}
       <Button secondary wide on:click={testWorkflow}>Test Workflow</Button>
-    </div>
-  {/if}
-  {#if selectedTab === 'SETUP'}
-    {#if $workflowStore.selectedBlock}
-      <WorkflowBlockSetup bind:block={$workflowStore.selectedBlock} />
       <div class="buttons">
         <Button
           green
@@ -86,25 +87,9 @@
           on:click={saveWorkflow}>
           Save Workflow
         </Button>
-        <Button red wide on:click={deleteWorkflowBlock}>Delete Block</Button>
+        <Button red wide on:click={deleteWorkflow}>Delete Workflow</Button>
       </div>
-    {:else if $workflowStore.selectedWorkflow}
-      <div class="panel">
-        <div class="panel-body">
-          <div class="block-label">Workflow: {workflow.name}</div>
-        </div>
-        <div class="buttons">
-          <Button
-            green
-            wide
-            data-cy="save-workflow-setup"
-            on:click={saveWorkflow}>
-            Save Workflow
-          </Button>
-          <Button red wide on:click={deleteWorkflow}>Delete Workflow</Button>
-        </div>
-      </div>
-    {/if}
+    </div>
   {/if}
 </section>
 
