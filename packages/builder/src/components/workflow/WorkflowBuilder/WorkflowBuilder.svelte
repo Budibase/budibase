@@ -4,8 +4,6 @@
   import { notifier } from "builderStore/store/notifications"
   import Flowchart from "./flowchart/FlowChart.svelte"
 
-  let section
-
   $: workflow =
     $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
   $: workflowLive = workflow && workflow.live
@@ -27,13 +25,9 @@
       notifier.danger(`Workflow ${workflow.name} disabled.`)
     }
   }
-
-  afterUpdate(() => {
-    section.scrollTo(0, section.scrollHeight)
-  })
 </script>
 
-<section bind:this={section}>
+<section>
   <Flowchart {workflow} {onSelect} />
 </section>
 <footer>

@@ -3,6 +3,8 @@
   import { Input, Label } from "@budibase/bbui"
 
   export let value
+  let modelId = value && value.model ? value.model._id : ""
+  $: value.model = $backendUiStore.models.find(x => x._id === modelId)
 
   function setParsedValue(evt, field) {
     const fieldSchema = value.model.schema[field]
@@ -10,15 +12,15 @@
       value[field] = parseInt(evt.target.value)
       return
     }
-
     value[field] = evt.target.value
   }
 </script>
 
 <div class="block-field">
-  <select class="budibase__input" bind:value={value.model}>
+  <select class="budibase__input" bind:value={modelId}>
+    <option value="">Choose an option</option>
     {#each $backendUiStore.models as model}
-      <option value={model}>{model.name}</option>
+      <option value={model._id}>{model.name}</option>
     {/each}
   </select>
 </div>

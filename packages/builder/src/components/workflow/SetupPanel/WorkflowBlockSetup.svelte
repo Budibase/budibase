@@ -15,6 +15,7 @@
       <label class="label">{parameter}</label>
       {#if Array.isArray(type)}
         <Select bind:value={block.args[parameter]} thin secondary>
+          <option value="">Choose an option</option>
           {#each type as option}
             <option value={option}>{option}</option>
           {/each}
@@ -35,7 +36,7 @@
       {:else if type === 'model'}
         <ModelSelector bind:value={block.args[parameter]} />
       {:else if type === 'record'}
-        <RecordSelector value={block.args[parameter]} />
+        <RecordSelector bind:value={block.args[parameter]} />
       {:else if type === 'string'}
         <Input type="text" thin bind:value={block.args[parameter]} />
       {/if}

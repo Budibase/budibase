@@ -24,8 +24,8 @@
     <div
       class="block"
       animate:flip={{ duration: 600 }}
-      in:fade
-      out:fly={{ x: 100 }}>
+      in:fade|local
+      out:fly|local={{ x: 100 }}>
       <FlowItem {onSelect} {block} />
       {#if idx !== blocks.length - 1}
         <Arrow />

@@ -8,7 +8,7 @@
 
 <div class="block-field">
   <select class="budibase__input" bind:value={modelId}>
-    <option value="" />
+    <option value="">Choose an option</option>
     {#each $backendUiStore.models as model}
       <option value={model._id}>{model.name}</option>
     {/each}
