@@ -14,6 +14,7 @@ export const eventHandlers = routeTo => {
   // when an event is called, this is what gets run
   const runEventActions = async (actions, state) => {
     if (!actions) return
+    // calls event handlers sequentially
     for (let action of actions) {
       const handler = handlers[action[EVENT_TYPE_MEMBER_NAME]]
       const parameters = createParameters(action.parameters, state)
@@ -26,6 +27,8 @@ export const eventHandlers = routeTo => {
   return runEventActions
 }
 
+// this will take a parameters obj, iterate all keys, and do a mustache render
+// for every string. It will work recursively if it encounnters an {}
 const createParameters = (parameterTemplateObj, state) => {
   const parameters = {}
   for (let key in parameterTemplateObj) {

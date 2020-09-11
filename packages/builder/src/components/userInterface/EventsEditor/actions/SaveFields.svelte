@@ -1,4 +1,5 @@
 <script>
+  // accepts an array of field names, and outputs an object of { FieldName: value }
   import { Select, Label, TextButton, Spacer } from "@budibase/bbui"
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
@@ -51,6 +52,7 @@
 
   const rebuildParameters = () => {
     // rebuilds paramters.fields every time a field name or value is added
+    // as UI below is bound to "fields" array, but we need to output a { key: value }
     const newParameterFields = {}
     for (let field of fields) {
       if (field.name) {

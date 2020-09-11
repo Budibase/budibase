@@ -83,6 +83,8 @@ const contextToBindables = (models, walkResult) => context => {
     readableBinding: `${context.instance._instanceName}.${context.model.label}.${key}`,
   })
 
+  // see ModelViewSelect.svelte for the format of context.model
+  // ... this allows us to bind to Model scheams, or View schemas
   const model = models.find(m => m._id === context.model.modelId)
   const schema = context.model.isModel
     ? model.schema
