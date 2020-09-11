@@ -1,9 +1,4 @@
-<script>
-  import { fade } from "svelte/transition"
-</script>
-
 <svg
-  transition:fade
   width="9"
   height="75"
   viewBox="0 0 9 75"
