@@ -1,6 +1,5 @@
 <script>
   import mustache from "mustache"
-  import { fade } from "svelte/transition"
   import { workflowStore } from "builderStore"
 
   export let onSelect
@@ -16,11 +15,7 @@
   }
 </script>
 
-<div
-  transition:fade
-  class={`${block.type} hoverable`}
-  class:selected
-  on:click={selectBlock}>
+<div class={`${block.type} hoverable`} class:selected on:click={selectBlock}>
   <header>
     {#if block.type === 'TRIGGER'}
       <i class="ri-lightbulb-fill" />
