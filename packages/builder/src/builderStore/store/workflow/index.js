@@ -1,6 +1,7 @@
 import { writable } from "svelte/store"
 import api from "../../api"
 import Workflow from "./Workflow"
+import { cloneDeep } from "lodash/fp"
 
 const workflowActions = store => ({
   fetch: async () => {
@@ -32,11 +33,8 @@ const workflowActions = store => ({
     const response = await api.post(CREATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
-      state.workflows = state.workflows.concat(json.workflow)
-      state.currentWorkflow = new Workflow(
-        json.workflow,
-        state.blockDefinitions
-      )
+      state.workflows = [...state.workflows, json.workflow]
+      store.actions.select(json.workflow)
       return state
     })
   },
@@ -50,23 +48,7 @@ const workflowActions = store => ({
       )
       state.workflows.splice(existingIdx, 1, json.workflow)
       state.workflows = state.workflows
-      state.currentWorkflow = new Workflow(
-        json.workflow,
-        state.blockDefinitions
-      )
-      return state
-    })
-  },
-  update: async ({ workflow }) => {
-    const UPDATE_WORKFLOW_URL = `/api/workflows`
-    const response = await api.put(UPDATE_WORKFLOW_URL, workflow)
-    const json = await response.json()
-    store.update(state => {
-      const existingIdx = state.workflows.findIndex(
-        existing => existing._id === workflow._id
-      )
-      state.workflows.splice(existingIdx, 1, json.workflow)
-      state.workflows = state.workflows
+      store.actions.select(json.workflow)
       return state
     })
   },
@@ -81,37 +63,34 @@ const workflowActions = store => ({
       )
       state.workflows.splice(existingIdx, 1)
       state.workflows = state.workflows
-      state.currentWorkflow = null
+      state.selectedWorkflow = null
+      state.selectedBlock = null
       return state
     })
   },
   select: workflow => {
     store.update(state => {
-      state.currentWorkflow = new Workflow(workflow, state.blockDefinitions)
-      state.selectedWorkflowBlock = null
+      state.selectedWorkflow = new Workflow(cloneDeep(workflow))
+      state.selectedBlock = null
       return state
     })
   },
   addBlockToWorkflow: block => {
     store.update(state => {
-      state.currentWorkflow.addBlock(block)
-      const steps = state.currentWorkflow.workflow.definition.steps
-      state.selectedWorkflowBlock = steps.length
-        ? steps[steps.length - 1]
-        : state.currentWorkflow.workflow.definition.trigger
+      const newBlock = state.selectedWorkflow.addBlock(block)
+      state.selectedBlock = newBlock
       return state
     })
   },
   deleteWorkflowBlock: block => {
     store.update(state => {
-      console.log(state.currentWorkflow.workflow)
-      const idx = state.currentWorkflow.workflow.definition.steps.findIndex(
+      const idx = state.selectedWorkflow.workflow.definition.steps.findIndex(
         x => x.id === block.id
       )
-      state.currentWorkflow.deleteBlock(block.id)
+      state.selectedWorkflow.deleteBlock(block.id)
 
       // Select next closest step
-      const steps = state.currentWorkflow.workflow.definition.steps
+      const steps = state.selectedWorkflow.workflow.definition.steps
       let nextSelectedBlock
       if (steps[idx] != null) {
         nextSelectedBlock = steps[idx]
@@ -119,9 +98,9 @@ const workflowActions = store => ({
         nextSelectedBlock = steps[idx - 1]
       } else {
         nextSelectedBlock =
-          state.currentWorkflow.workflow.definition.trigger || null
+          state.selectedWorkflow.workflow.definition.trigger || null
       }
-      state.selectedWorkflowBlock = nextSelectedBlock
+      state.selectedBlock = nextSelectedBlock
       return state
     })
   },
@@ -135,8 +114,8 @@ export const getWorkflowStore = () => {
       ACTION: [],
       LOGIC: [],
     },
+    selectedWorkflow: null,
   }
-
   const store = writable(INITIAL_WORKFLOW_STATE)
   store.actions = workflowActions(store)
   return store

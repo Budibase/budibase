@@ -1,30 +1,24 @@
 <script>
-  import { onMount } from "svelte"
+  import { afterUpdate } from "svelte"
   import { workflowStore, backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import Flowchart from "./flowchart/FlowChart.svelte"
 
-  let selectedWorkflow
-  let uiTree
-  let instanceId = $backendUiStore.selectedDatabase._id
+  let section
 
-  $: selectedWorkflow = $workflowStore.currentWorkflow
-
-  $: workflowLive = selectedWorkflow && selectedWorkflow.workflow.live
-
-  $: uiTree = selectedWorkflow ? selectedWorkflow.createUiTree() : []
-
+  $: workflow =
+    $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
+  $: workflowLive = workflow && workflow.live
   $: instanceId = $backendUiStore.selectedDatabase._id
 
   function onSelect(block) {
     workflowStore.update(state => {
-      state.selectedWorkflowBlock = block
+      state.selectedBlock = block
       return state
     })
   }
 
   function setWorkflowLive(live) {
-    const { workflow } = selectedWorkflow
     workflow.live = live
     workflowStore.actions.save({ instanceId, workflow })
     if (live) {
@@ -33,13 +27,17 @@
       notifier.danger(`Workflow ${workflow.name} disabled.`)
     }
   }
+
+  afterUpdate(() => {
+    section.scrollTo(0, section.scrollHeight)
+  })
 </script>
 
-<section>
-  <Flowchart blocks={uiTree} {onSelect} />
+<section bind:this={section}>
+  <Flowchart {workflow} {onSelect} />
 </section>
 <footer>
-  {#if selectedWorkflow}
+  {#if workflow}
     <button
       class:highlighted={workflowLive}
       class:hoverable={workflowLive}

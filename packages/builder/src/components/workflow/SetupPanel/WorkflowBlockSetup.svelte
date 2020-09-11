@@ -1,51 +1,43 @@
 <script>
-  import { backendUiStore, store } from "builderStore"
   import ComponentSelector from "./ParamInputs/ComponentSelector.svelte"
   import ModelSelector from "./ParamInputs/ModelSelector.svelte"
   import RecordSelector from "./ParamInputs/RecordSelector.svelte"
   import { Input, TextArea, Select } from "@budibase/bbui"
 
-  export let workflowBlock
+  export let block
 
-  let params
-
-  $: workflowParams = workflowBlock.params
-    ? Object.entries(workflowBlock.params)
-    : []
+  $: params = block.params ? Object.entries(block.params) : []
 </script>
 
 <div class="container">
-  {#each workflowParams as [parameter, type]}
+  {#each params as [parameter, type]}
     <div class="block-field">
       <label class="label">{parameter}</label>
       {#if Array.isArray(type)}
-        <Select bind:value={workflowBlock.args[parameter]} thin secondary>
+        <Select bind:value={block.args[parameter]} thin secondary>
           {#each type as option}
             <option value={option}>{option}</option>
           {/each}
         </Select>
       {:else if type === 'component'}
-        <ComponentSelector bind:value={workflowBlock.args[parameter]} />
+        <ComponentSelector bind:value={block.args[parameter]} />
       {:else if type === 'accessLevel'}
-        <Select bind:value={workflowBlock.args[parameter]} thin secondary>
+        <Select bind:value={block.args[parameter]} thin secondary>
           <option value="ADMIN">Admin</option>
           <option value="POWER_USER">Power User</option>
         </Select>
       {:else if type === 'password'}
-        <Input
-          type="password"
-          thin
-          bind:value={workflowBlock.args[parameter]} />
+        <Input type="password" thin bind:value={block.args[parameter]} />
       {:else if type === 'number'}
-        <Input type="number" thin bind:value={workflowBlock.args[parameter]} />
+        <Input type="number" thin bind:value={block.args[parameter]} />
       {:else if type === 'longText'}
-        <TextArea type="text" thin bind:value={workflowBlock.args[parameter]} />
+        <TextArea type="text" thin bind:value={block.args[parameter]} />
       {:else if type === 'model'}
-        <ModelSelector bind:value={workflowBlock.args[parameter]} />
+        <ModelSelector bind:value={block.args[parameter]} />
       {:else if type === 'record'}
-        <RecordSelector value={workflowBlock.args[parameter]} />
+        <RecordSelector value={block.args[parameter]} />
       {:else if type === 'string'}
-        <Input type="text" thin bind:value={workflowBlock.args[parameter]} />
+        <Input type="text" thin bind:value={block.args[parameter]} />
       {/if}
     </div>
   {/each}

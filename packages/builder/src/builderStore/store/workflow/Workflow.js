@@ -1,4 +1,3 @@
-import mustache from "mustache"
 import { generate } from "shortid"
 
 /**
@@ -6,9 +5,8 @@ import { generate } from "shortid"
  * Workflow definitions are stored in linked lists.
  */
 export default class Workflow {
-  constructor(workflow, blockDefinitions) {
+  constructor(workflow) {
     this.workflow = workflow
-    this.blockDefinitions = blockDefinitions
   }
 
   hasTrigger() {
@@ -22,23 +20,26 @@ export default class Workflow {
       return
     }
 
-    this.workflow.definition.steps.push({
-      id: generate(),
-      ...block,
-    })
+    const newBlock = { id: generate(), ...block }
+    this.workflow.definition.steps = [
+      ...this.workflow.definition.steps,
+      newBlock,
+    ]
+    return newBlock
   }
 
   updateBlock(updatedBlock, id) {
     const { steps, trigger } = this.workflow.definition
 
     if (trigger && trigger.id === id) {
-      this.workflow.definition.trigger = null
+      this.workflow.definition.trigger = updatedBlock
       return
     }
 
     const stepIdx = steps.findIndex(step => step.id === id)
     if (stepIdx < 0) throw new Error("Block not found.")
     steps.splice(stepIdx, 1, updatedBlock)
+    this.workflow.definition.steps = steps
   }
 
   deleteBlock(id) {
@@ -52,46 +53,6 @@ export default class Workflow {
     const stepIdx = steps.findIndex(step => step.id === id)
     if (stepIdx < 0) throw new Error("Block not found.")
     steps.splice(stepIdx, 1)
-  }
-
-  createUiTree() {
-    if (!this.workflow.definition) return []
-    return Workflow.buildUiTree(this.workflow.definition, this.blockDefinitions)
-  }
-
-  static buildUiTree(definition, blockDefinitions) {
-    const steps = []
-    if (definition.trigger) {
-      steps.push(definition.trigger)
-    }
-
-    return [...steps, ...definition.steps].map(step => {
-      // The client side display definition for the block
-      const definition = blockDefinitions[step.type][step.stepId]
-      if (!definition) {
-        throw new Error(
-          `No block definition exists for the chosen block. Check there's an entry in the block definitions for ${step.stepId}`
-        )
-      }
-
-      if (!definition.params) {
-        throw new Error(
-          `Blocks should always have parameters. Ensure that the block definition is correct for ${step.stepId}`
-        )
-      }
-
-      const tagline = definition.tagline || ""
-      const args = step.args || {}
-
-      return {
-        id: step.id,
-        type: step.type,
-        params: step.params,
-        args,
-        heading: step.stepId,
-        body: mustache.render(tagline, args),
-        name: definition.name,
-      }
-    })
+    this.workflow.definition.steps = steps
   }
 }
