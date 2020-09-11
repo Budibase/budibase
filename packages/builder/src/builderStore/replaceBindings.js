@@ -4,6 +4,7 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
   // Find all instances of mustasche
   const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE)
 
+  let result = textWithBindings
   // Replace readableBindings with runtimeBindings
   boundValues &&
     boundValues.forEach(boundValue => {
@@ -11,13 +12,13 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
         return boundValue === `{{ ${readableBinding} }}`
       })
       if (binding) {
-        textWithBindings = textWithBindings.replace(
+        result = textWithBindings.replace(
           boundValue,
           `{{ ${binding.runtimeBinding} }}`
         )
       }
     })
-  return textWithBindings
+  return result
 }
 
 export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
