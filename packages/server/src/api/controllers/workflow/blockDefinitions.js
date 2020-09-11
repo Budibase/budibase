@@ -58,13 +58,16 @@ const ACTION = {
 const LOGIC = {
   FILTER: {
     name: "Filter",
-    tagline: "{{field}} <b>{{condition}}</b> {{value}}",
+    tagline: "{{filter}} <b>{{condition}}</b> {{value}}",
     icon: "ri-git-branch-line",
     description: "Filter any workflows which do not meet certain conditions.",
     params: {
       filter: "string",
       condition: ["equals"],
       value: "string",
+    },
+    args: {
+      condition: "equals",
     },
     type: "LOGIC",
   },
