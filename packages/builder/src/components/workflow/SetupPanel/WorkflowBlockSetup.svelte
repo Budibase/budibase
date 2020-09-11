@@ -10,6 +10,7 @@
 </script>
 
 <div class="container">
+  <div class="selected-label">{block.name}</div>
   {#each params as [parameter, type]}
     <div class="block-field">
       <label class="label">{parameter}</label>
@@ -45,10 +46,6 @@
 </div>
 
 <style>
-  .container {
-    margin-top: -20px;
-  }
-
   .block-field {
     display: grid;
   }
@@ -64,9 +61,9 @@
   }
 
   .selected-label {
-    text-transform: capitalize;
-    font-size: 14px;
     font-weight: 500;
+    font-size: 14px;
+    color: var(--grey-7);
   }
 
   textarea {
