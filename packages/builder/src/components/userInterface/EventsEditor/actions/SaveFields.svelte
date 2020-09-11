@@ -3,7 +3,7 @@
   import { Select, Label, TextButton, Spacer } from "@budibase/bbui"
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
-  import { CloseCircleIcon, AddIcon } from "components/common/icons"
+  import { CloseCircleIcon, AddIcon } from "components/common/Icons"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
