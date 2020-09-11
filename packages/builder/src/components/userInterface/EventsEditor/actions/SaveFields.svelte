@@ -26,7 +26,7 @@
         (parameterFields &&
           runtimeToReadableBinding(
             bindableProperties,
-            parameterFields[name]
+            parameterFields[name].value
           )) ||
         "",
     }))
@@ -56,10 +56,12 @@
     const newParameterFields = {}
     for (let field of fields) {
       if (field.name) {
-        newParameterFields[field.name] = readableToRuntimeBinding(
-          bindableProperties,
-          field.value
-        )
+        // value and type is needed by the client, so it can parse
+        // a string into a correct type
+        newParameterFields[field.name] = {
+          type: schemaFields.find(f => f.name === field.name).type,
+          value: readableToRuntimeBinding(bindableProperties, field.value),
+        }
       }
     }
     dispatch("fieldschanged", newParameterFields)
@@ -74,8 +76,8 @@
     <Label size="m" color="dark">Field</Label>
     <Select secondary bind:value={field.name} on:blur={rebuildParameters}>
       <option value="" />
-      {#each schemaFields as fieldName}
-        <option value={fieldName}>{fieldName}</option>
+      {#each schemaFields as schemaField}
+        <option value={schemaField.name}>{schemaField.name}</option>
       {/each}
     </Select>
     <Label size="m" color="dark">Value</Label>

@@ -39,15 +39,12 @@
   $: parameters._id = `{{ ${recordId} }}`
 
   // just wraps binding in {{ ... }}
-  const toBindingExpression = bindingPath => {
-    console.log("yeo")
-    return `{{ ${bindingPath} }}`
-  }
+  const toBindingExpression = bindingPath => `{{ ${bindingPath} }}`
 
   // finds the selected idBinding, then reads the table/view
   // from the component instance that it belongs to.
   // then returns the field names for that schema
-  const modelInfoFromIdBinding = recordId => {
+  const schemaFromIdBinding = recordId => {
     if (!recordId) return []
 
     const idBinding = bindableProperties.find(
@@ -66,15 +63,18 @@
 
     const model = $backendUiStore.models.find(m => m._id === modelInfo.modelId)
     parameters.modelId = modelInfo.modelId
-    return Object.keys(model.schema)
+    return Object.keys(model.schema).map(k => ({
+      name: k,
+      type: model.schema[k].type,
+    }))
   }
 
-  let fieldNames
+  let schemaFields
   $: {
     if (parameters && recordId) {
-      fieldNames = modelInfoFromIdBinding(recordId)
+      schemaFields = schemaFromIdBinding(recordId)
     } else {
-      fieldNames = []
+      schemaFields = []
     }
   }
 
@@ -104,7 +104,7 @@
   {#if recordId}
     <SaveFields
       parameterFields={parameters.fields}
-      schemaFields={fieldNames}
+      {schemaFields}
       on:fieldschanged={onFieldsChanged} />
   {/if}
 
