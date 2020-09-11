@@ -12,11 +12,13 @@
   <div class="content">
     <slot />
   </div>
-  <div class="nav">
-    <div class="inner">
-      <SetupPanel />
+  {#if $workflowStore.selectedWorkflow}
+    <div class="nav">
+      <div class="inner">
+        <SetupPanel />
+      </div>
     </div>
-  </div>
+  {/if}
 </div>
 
 <style>
