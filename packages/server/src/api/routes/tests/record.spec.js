@@ -160,7 +160,7 @@ describe("/records", () => {
       const existing = rec.body
 
       const res = await request
-        .patch(`/api/${model._id}/records/${rec._id}`)
+        .patch(`/api/${model._id}/records/${existing._id}`)
         .send({
           _id: existing._id,
           _rev: existing._rev,
@@ -173,11 +173,11 @@ describe("/records", () => {
       
       expect(res.res.statusMessage).toEqual(`${model.name} updated successfully.`)
       expect(res.body.name).toEqual("Updated Name")
-      expect(res.body.description).toEqual(rec.description)
+      expect(res.body.description).toEqual(existing.description)
 
       const savedRecord = await loadRecord(res.body._id)
 
-      expect(savedRecord.body.description).toEqual(rec.description)
+      expect(savedRecord.body.description).toEqual(existing.description)
       expect(savedRecord.body.name).toEqual("Updated Name")
         
     })

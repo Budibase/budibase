@@ -50,11 +50,11 @@ exports.createModel = async (request, appId, instanceId, model) => {
         constraints: {
           type: "string",
         },
-        description: {
-          type: "text",
-          constraints: {
-            type: "string",
-          },
+      },
+      description: {
+        type: "text",
+        constraints: {
+          type: "string",
         },
       },
     },
@@ -64,6 +64,18 @@ exports.createModel = async (request, appId, instanceId, model) => {
     .post(`/api/models`)
     .set(exports.defaultHeaders(appId, instanceId))
     .send(model)
+  return res.body
+}
+
+exports.createView = async (request, appId, instanceId, view) => {
+  view = view || {
+    map: "function(doc) { emit(doc[doc.key], doc._id); } ",
+  }
+
+  const res = await request
+    .post(`/api/views`)
+    .set(exports.defaultHeaders(appId, instanceId))
+    .send(view)
   return res.body
 }
 
