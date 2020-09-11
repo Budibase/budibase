@@ -19,10 +19,13 @@
   const modelFields = modelId => {
     const model = $backendUiStore.models.find(m => m._id === modelId)
 
-    return Object.keys(model.schema)
+    return Object.keys(model.schema).map(k => ({
+      name: k,
+      type: model.schema[k].type,
+    }))
   }
 
-  $: fieldNames =
+  $: schemaFields =
     parameters && parameters.modelId ? modelFields(parameters.modelId) : []
 
   const onFieldsChanged = e => {
@@ -42,7 +45,7 @@
   {#if parameters.modelId}
     <SaveFields
       parameterFields={parameters.fields}
-      schemaFields={fieldNames}
+      {schemaFields}
       on:fieldschanged={onFieldsChanged} />
   {/if}
 
