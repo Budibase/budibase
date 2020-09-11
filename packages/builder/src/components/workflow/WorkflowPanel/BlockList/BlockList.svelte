@@ -8,7 +8,7 @@
   $: blocks = Object.entries($workflowStore.blockDefinitions[selectedTab])
 
   $: {
-    if ($workflowStore.currentWorkflow.hasTrigger()) {
+    if ($workflowStore.selectedWorkflow.hasTrigger()) {
       buttonProps = [
         { value: "ACTION", text: "Action" },
         { value: "LOGIC", text: "Logic" },

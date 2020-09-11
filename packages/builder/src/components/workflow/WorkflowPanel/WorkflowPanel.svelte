@@ -14,7 +14,7 @@
     on:click={() => (selectedTab = 'WORKFLOWS')}>
     Workflows
   </span>
-  {#if $workflowStore.currentWorkflow}
+  {#if $workflowStore.selectedWorkflow}
     <span
       data-cy="add-workflow-component"
       class="hoverable"

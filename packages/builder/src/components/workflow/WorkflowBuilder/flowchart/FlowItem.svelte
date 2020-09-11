@@ -1,18 +1,19 @@
 <script>
+  import mustache from "mustache"
   import { fade } from "svelte/transition"
   import { workflowStore } from "builderStore"
 
   export let onSelect
   export let block
-  let selected = false
+  let selected
+
+  $: selected =
+    $workflowStore.selectedBlock != null &&
+    $workflowStore.selectedBlock.id === block.id
 
   function selectBlock() {
     onSelect(block)
   }
-
-  $: selected =
-    $workflowStore.selectedWorkflowBlock != null &&
-    $workflowStore.selectedWorkflowBlock.id === block.id
 </script>
 
 <div
@@ -34,7 +35,7 @@
   </header>
   <hr />
   <p>
-    {@html block.body}
+    {@html mustache.render(block.tagline, block.args)}
   </p>
 </div>
 

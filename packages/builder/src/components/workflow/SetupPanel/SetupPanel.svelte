@@ -1,6 +1,6 @@
 <script>
   import { fade } from "svelte/transition"
-  import { onMount, getContext } from "svelte"
+  import { getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte"
@@ -9,40 +9,22 @@
 
   const { open, close } = getContext("simple-modal")
 
-  const ACCESS_LEVELS = [
-    {
-      name: "Admin",
-      key: "ADMIN",
-      canExecute: true,
-      editable: false,
-    },
-    {
-      name: "Power User",
-      key: "POWER_USER",
-      canExecute: true,
-      editable: false,
-    },
-  ]
-
   let selectedTab = "SETUP"
   let testResult
 
   $: workflow =
-    $workflowStore.currentWorkflow && $workflowStore.currentWorkflow.workflow
-  $: workflowBlock = $workflowStore.selectedWorkflowBlock
+    $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
 
   function deleteWorkflow() {
     open(
       DeleteWorkflowModal,
-      {
-        onClosed: close,
-      },
+      { onClosed: close },
       { styleContent: { padding: "0" } }
     )
   }
 
   function deleteWorkflowBlock() {
-    workflowStore.actions.deleteWorkflowBlock(workflowBlock)
+    workflowStore.actions.deleteWorkflowBlock($workflowStore.selectedBlock)
     notifier.info("Workflow block deleted.")
   }
 
@@ -51,7 +33,6 @@
   }
 
   async function saveWorkflow() {
-    const workflow = $workflowStore.currentWorkflow.workflow
     await workflowStore.actions.save({
       instanceId: $backendUiStore.selectedDatabase._id,
       workflow,
@@ -71,7 +52,7 @@
       }}>
       Setup
     </span>
-    {#if !workflowBlock}
+    {#if !$workflowStore.selectedBlock}
       <span
         class="test-tab"
         class:selected={selectedTab === 'TEST'}
@@ -95,8 +76,8 @@
     </div>
   {/if}
   {#if selectedTab === 'SETUP'}
-    {#if workflowBlock}
-      <WorkflowBlockSetup {workflowBlock} />
+    {#if $workflowStore.selectedBlock}
+      <WorkflowBlockSetup bind:block={$workflowStore.selectedBlock} />
       <div class="buttons">
         <Button
           green
@@ -107,25 +88,10 @@
         </Button>
         <Button red wide on:click={deleteWorkflowBlock}>Delete Block</Button>
       </div>
-    {:else if $workflowStore.currentWorkflow}
+    {:else if $workflowStore.selectedWorkflow}
       <div class="panel">
         <div class="panel-body">
           <div class="block-label">Workflow: {workflow.name}</div>
-          <div class="config-item">
-            <Label small forAttr={'useraccess'}>User Access</Label>
-            <div class="access-levels">
-
-              {#each ACCESS_LEVELS as level}
-                <span class="access-level">
-                  <label>{level.name}</label>
-                  <input
-                    type="checkbox"
-                    disabled={!level.editable}
-                    bind:checked={level.canExecute} />
-                </span>
-              {/each}
-            </div>
-          </div>
         </div>
         <div class="buttons">
           <Button
@@ -181,10 +147,6 @@
     margin-bottom: 20px;
   }
 
-  .config-item {
-    margin-bottom: 20px;
-  }
-
   header > span {
     color: var(--grey-5);
     margin-right: 20px;
@@ -203,13 +165,6 @@
     display: grid;
     width: 260px;
     gap: 12px;
-  }
-
-  .access-level {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 20px;
   }
 
   .access-level label {
