@@ -30,20 +30,30 @@ describe("/records", () => {
     model = await createModel(request, app._id, instance._id)
     record = {
       name: "Test Contact",
+      description: "original description",
       status: "new",
       modelId: model._id
     }
   })
 
+  const createRecord = async r => 
+    await request
+      .post(`/api/${model._id}/records`)
+      .send(r || record)
+      .set(defaultHeaders(app._id, instance._id))
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+  const loadRecord = async id => 
+    await request
+      .get(`/api/${model._id}/records/${id}`)
+      .set(defaultHeaders(app._id, instance._id))
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+
   describe("save, load, update, delete", () => {
 
-    const createRecord = async r => 
-      await request
-        .post(`/api/${model._id}/records`)
-        .send(r || record)
-        .set(defaultHeaders(app._id, instance._id))
-        .expect('Content-Type', /json/)
-        .expect(200)
 
     it("returns a success message when the record is created", async () => {
       const res = await createRecord()
@@ -141,6 +151,35 @@ describe("/records", () => {
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(404)
+    })
+  })
+
+  describe("patch", () => {
+    it("should update only the fields that are supplied", async () => {
+      const rec = await createRecord()
+      const existing = rec.body
+
+      const res = await request
+        .patch(`/api/${model._id}/records/${existing._id}`)
+        .send({
+          _id: existing._id,
+          _rev: existing._rev,
+          modelId: model._id,
+          name: "Updated Name",
+        })
+        .set(defaultHeaders(app._id, instance._id))
+        .expect('Content-Type', /json/)
+        .expect(200)
+      
+      expect(res.res.statusMessage).toEqual(`${model.name} updated successfully.`)
+      expect(res.body.name).toEqual("Updated Name")
+      expect(res.body.description).toEqual(existing.description)
+
+      const savedRecord = await loadRecord(res.body._id)
+
+      expect(savedRecord.body.description).toEqual(existing.description)
+      expect(savedRecord.body.name).toEqual("Updated Name")
+        
     })
   })
 

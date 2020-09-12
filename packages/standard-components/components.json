@@ -252,7 +252,7 @@
 	},
 	"list": {
 		"description": "A configurable data list that attaches to your backend models.",
-		"context": "model",
+		"context": "datasource",
 		"children": true,
 		"data": true,
 		"props": {

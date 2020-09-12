@@ -11,7 +11,10 @@
   export let _bb
 
   const rowClickHandler = row => () => {
-    _bb.call(onRowClick, row)
+    // call currently only accepts one argument, so passing row does nothing
+    // however, we do not expose this event anyway. I am leaving this
+    // in for the future, as can and probably should hande this
+    _bb.call("onRowClick", row)
   }
 
   const cellValue = (colIndex, row) => {

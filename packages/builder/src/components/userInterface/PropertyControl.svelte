@@ -3,6 +3,11 @@
   import Input from "./PropertyPanelControls/Input.svelte"
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+    CAPTURE_VAR_INSIDE_MUSTACHE,
+  } from "builderStore/replaceBindings"
   import { DropdownMenu } from "@budibase/bbui"
   import BindingDropdown from "components/userInterface/BindingDropdown.svelte"
   import { onMount, getContext } from "svelte"
@@ -36,25 +41,12 @@
     })
   }
 
-  const CAPTURE_VAR_INSIDE_MUSTACHE = /{{([^}]+)}}/g
   function replaceBindings(textWithBindings) {
     getBindableProperties()
-    // Find all instances of mustasche
-    const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE)
-
-    // Replace with names:
-    boundValues &&
-      boundValues.forEach(boundValue => {
-        const binding = bindableProperties.find(({ readableBinding }) => {
-          return boundValue === `{{ ${readableBinding} }}`
-        })
-        if (binding) {
-          textWithBindings = textWithBindings.replace(
-            boundValue,
-            `{{ ${binding.runtimeBinding} }}`
-          )
-        }
-      })
+    textWithBindings = readableToRuntimeBinding(
+      bindableProperties,
+      textWithBindings
+    )
     onChange(key, textWithBindings)
   }
 
@@ -76,21 +68,9 @@
 
   const safeValue = () => {
     getBindableProperties()
-    let temp = value
-    const boundValues =
-      (typeof value === "string" && value.match(CAPTURE_VAR_INSIDE_MUSTACHE)) ||
-      []
 
-    // Replace with names:
-    boundValues.forEach(v => {
-      const binding = bindableProperties.find(({ runtimeBinding }) => {
-        return v === `{{ ${runtimeBinding} }}`
-      })
-      if (binding) {
-        temp = temp.replace(v, `{{ ${binding.readableBinding} }}`)
-      }
-    })
-    // console.log(temp)
+    let temp = runtimeToReadableBinding(bindableProperties, value)
+
     return value === undefined && props.defaultValue !== undefined
       ? props.defaultValue
       : temp

@@ -12,6 +12,40 @@ validateJs.extend(validateJs.validators.datetime, {
   },
 })
 
+exports.patch = async function(ctx) {
+  const db = new CouchDB(ctx.user.instanceId)
+  const record = await db.get(ctx.params.id)
+  const model = await db.get(record.modelId)
+  const patchfields = ctx.request.body
+
+  for (let key in patchfields) {
+    if (!model.schema[key]) continue
+    record[key] = patchfields[key]
+  }
+
+  const validateResult = await validate({
+    record,
+    model,
+  })
+
+  if (!validateResult.valid) {
+    ctx.status = 400
+    ctx.body = {
+      status: 400,
+      errors: validateResult.errors,
+    }
+    return
+  }
+
+  const response = await db.put(record)
+  record._rev = response.rev
+  record.type = "record"
+  ctx.body = record
+  ctx.status = 200
+  ctx.message = `${model.name} updated successfully.`
+  return
+}
+
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const record = ctx.request.body
