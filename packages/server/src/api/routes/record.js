@@ -22,6 +22,11 @@ router
     authorized(WRITE_MODEL, ctx => ctx.params.modelId),
     recordController.save
   )
+  .patch(
+    "/api/:modelId/records/:id",
+    authorized(WRITE_MODEL, ctx => ctx.params.modelId),
+    recordController.patch
+  )
   .post(
     "/api/:modelId/records/validate",
     authorized(WRITE_MODEL, ctx => ctx.params.modelId),

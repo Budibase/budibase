@@ -1,20 +1,42 @@
 import api from "../api"
+import renderTemplateString from "./renderTemplateString"
 
 export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType"
 
 export const eventHandlers = routeTo => {
-  const handler = (parameters, execute) => ({
-    execute,
-    parameters,
-  })
-
-  return {
-    "Navigate To": handler(["url"], param => routeTo(param && param.url)),
-    "Trigger Workflow": handler(["workflow"], api.triggerWorkflow),
+  const handlers = {
+    "Navigate To": param => routeTo(param && param.url),
+    "Create Record": api.createRecord,
+    "Update Record": api.updateRecord,
+    "Trigger Workflow": api.triggerWorkflow,
   }
+
+  // when an event is called, this is what gets run
+  const runEventActions = async (actions, state) => {
+    if (!actions) return
+    // calls event handlers sequentially
+    for (let action of actions) {
+      const handler = handlers[action[EVENT_TYPE_MEMBER_NAME]]
+      const parameters = createParameters(action.parameters, state)
+      if (handler) {
+        await handler(parameters)
+      }
+    }
+  }
+
+  return runEventActions
 }
 
-export const isEventType = prop =>
-  Array.isArray(prop) &&
-  prop.length > 0 &&
-  !prop[0][EVENT_TYPE_MEMBER_NAME] === undefined
+// this will take a parameters obj, iterate all keys, and do a mustache render
+// for every string. It will work recursively if it encounnters an {}
+const createParameters = (parameterTemplateObj, state) => {
+  const parameters = {}
+  for (let key in parameterTemplateObj) {
+    if (typeof parameterTemplateObj[key] === "string") {
+      parameters[key] = renderTemplateString(parameterTemplateObj[key], state)
+    } else if (typeof parameterTemplateObj[key] === "object") {
+      parameters[key] = createParameters(parameterTemplateObj[key], state)
+    }
+  }
+  return parameters
+}

@@ -72,8 +72,14 @@ describe("/views", () => {
               type: "text",
               constraints: {
                 type: "string" 
-              }
-            }
+              },
+            },
+            description: {
+              type: "text",
+              constraints: {
+                type: "string" 
+              },
+            },
           }
         }
       });
