@@ -2,6 +2,16 @@ const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const newid = require("../../db/newid")
 
+function emitEvent(eventType, ctx, record) {
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emit(eventType, {
+      args: {
+        record,
+      },
+      instanceId: ctx.user.instanceId,
+    })
+}
+
 validateJs.extend(validateJs.validators.datetime, {
   parse: function(value) {
     return new Date(value).getTime()
@@ -100,9 +110,7 @@ exports.save = async function(ctx) {
         const doc = row.doc
         return {
           ...doc,
-          [model.name]: doc[model.name]
-            ? [...doc[model.name], record._id]
-            : [record._id],
+          [model.name]: doc[model.name] ? [...doc[model.name], record._id] : [record._id],
         }
       })
 
@@ -110,13 +118,7 @@ exports.save = async function(ctx) {
     }
   }
 
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emit(`record:save`, {
-      args: {
-        record,
-      },
-      instanceId: ctx.user.instanceId,
-    })
+  emitEvent(`record:save`, ctx, record)
   ctx.body = record
   ctx.status = 200
   ctx.message = `${model.name} created successfully`
@@ -179,7 +181,7 @@ exports.destroy = async function(ctx) {
     return
   }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
-  ctx.eventEmitter && ctx.eventEmitter.emit(`record:delete`, record)
+  emitEvent(`record:delete`, ctx, record)
 }
 
 exports.validate = async function(ctx) {
@@ -199,10 +201,7 @@ async function validate({ instanceId, modelId, record, model }) {
   }
   const errors = {}
   for (let fieldName in model.schema) {
-    const res = validateJs.single(
-      record[fieldName],
-      model.schema[fieldName].constraints
-    )
+    const res = validateJs.single(record[fieldName], model.schema[fieldName].constraints)
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
