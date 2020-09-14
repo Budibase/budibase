@@ -1,5 +1,4 @@
 <script>
-  import { fade } from "svelte/transition"
   import { getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
@@ -10,7 +9,6 @@
   const { open, close } = getContext("simple-modal")
 
   let selectedTab = "SETUP"
-  let testResult
 
   $: workflow =
     $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
@@ -25,14 +23,17 @@
 
   function deleteWorkflowBlock() {
     workflowStore.actions.deleteWorkflowBlock($workflowStore.selectedBlock)
-    notifier.info("Workflow block deleted.")
   }
 
   async function testWorkflow() {
     const result = await workflowStore.actions.trigger({
       workflow: $workflowStore.selectedWorkflow.workflow,
     })
-    testResult = "Workflow passed"
+    if (result.status === 200) {
+      notifier.success(`Workflow ${workflow.name} triggered successfully.`)
+    } else {
+      notifier.danger(`Failed to trigger workflow ${workflow.name}.`)
+    }
   }
 
   async function saveWorkflow() {
@@ -49,10 +50,7 @@
     <span
       class="hoverable"
       class:selected={selectedTab === 'SETUP'}
-      on:click={() => {
-        selectedTab = 'SETUP'
-        testResult = null
-      }}>
+      on:click={() => (selectedTab = 'SETUP')}>
       Setup
     </span>
   </header>
@@ -72,15 +70,6 @@
           <b>{workflow.name}</b>
         </div>
       </div>
-      {#if testResult}
-        <button
-          transition:fade|local
-          class:passed={true}
-          class:failed={false}
-          class="test-result">
-          {testResult}
-        </button>
-      {/if}
       <Button secondary wide on:click={testWorkflow}>Test Workflow</Button>
       <div class="buttons">
         <Button
@@ -158,25 +147,5 @@
   .access-level label {
     font-weight: normal;
     color: var(--ink);
-  }
-
-  .test-result {
-    border: none;
-    width: 100%;
-    border-radius: 3px;
-    height: 32px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--white);
-    text-align: center;
-    margin-bottom: 10px;
-  }
-
-  .passed {
-    background: var(--green);
-  }
-
-  .failed {
-    background: var(--red);
   }
 </style>
