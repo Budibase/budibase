@@ -1,4 +1,5 @@
 const triggers = require("./triggers")
+const environment = require("../environment")
 const workerFarm = require("worker-farm")
 const singleThread = require("./thread")
 
@@ -21,7 +22,7 @@ function runWorker(job) {
  */
 module.exports.init = function() {
   triggers.workflowQueue.process(async job => {
-    if (process.env.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
+    if (environment.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
       await runWorker(job)
     } else {
       await singleThread(job)
