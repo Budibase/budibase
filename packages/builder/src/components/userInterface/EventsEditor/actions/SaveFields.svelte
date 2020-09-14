@@ -1,6 +1,6 @@
 <script>
   // accepts an array of field names, and outputs an object of { FieldName: value }
-  import { DataList, Label, TextButton, Spacer } from "@budibase/bbui"
+  import { DataList, Label, TextButton, Spacer, Select } from "@budibase/bbui"
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import { CloseCircleIcon, AddIcon } from "components/common/Icons"
@@ -81,8 +81,7 @@
       {/each}
     </Select>
     <Label size="m" color="dark">Value</Label>
-    <Select
-      editable
+    <DataList
       secondary
       bind:value={field.value}
       on:blur={rebuildParameters}>
@@ -92,7 +91,7 @@
           {bindableProp.readableBinding}
         </option>
       {/each}
-    </Select>
+    </DataList>
     <div class="remove-field-container">
       <TextButton text small on:click={removeField(field)}>
         <CloseCircleIcon />
