@@ -1,5 +1,5 @@
 <script>
-  import { Input, DataList } from "@budibase/bbui"
+  import { Input, DataList, Select } from "@budibase/bbui"
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
   import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
@@ -29,7 +29,7 @@
       {/each}
     </Select>
   {:else if parameter.name === 'url'}
-    <DataList editable on:change bind:value={parameter.value}>
+    <DataList on:change bind:value={parameter.value}>
       <option value="" />
       {#each $store.allScreens as screen}
         <option value={screen.route}>{screen.props._instanceName}</option>
