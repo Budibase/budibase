@@ -1,11 +1,9 @@
 <script>
-  import ComponentSelector from "./ParamInputs/ComponentSelector.svelte"
   import ModelSelector from "./ParamInputs/ModelSelector.svelte"
   import RecordSelector from "./ParamInputs/RecordSelector.svelte"
   import { Input, TextArea, Select } from "@budibase/bbui"
 
   export let block
-
   $: params = block.params ? Object.entries(block.params) : []
 </script>
 
@@ -21,8 +19,6 @@
             <option value={option}>{option}</option>
           {/each}
         </Select>
-      {:else if type === 'component'}
-        <ComponentSelector bind:value={block.args[parameter]} />
       {:else if type === 'accessLevel'}
         <Select bind:value={block.args[parameter]} thin secondary>
           <option value="ADMIN">Admin</option>
