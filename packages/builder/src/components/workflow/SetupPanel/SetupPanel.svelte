@@ -28,7 +28,10 @@
     notifier.info("Workflow block deleted.")
   }
 
-  function testWorkflow() {
+  async function testWorkflow() {
+    const result = await workflowStore.actions.trigger({
+      workflow: $workflowStore.selectedWorkflow.workflow,
+    })
     testResult = "Workflow passed"
   }
 
