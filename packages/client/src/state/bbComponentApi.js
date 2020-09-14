@@ -47,6 +47,7 @@ export const bbFactory = ({
       setBinding: setBindableComponentProp(treeNode),
       api,
       parent,
+      store: store.getStore(treeNode.contextStoreKey),
       // these parameters are populated by screenRouter
       routeParams: () => store.getState()["##routeParams"],
     }
