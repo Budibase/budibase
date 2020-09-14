@@ -78,6 +78,14 @@ exports.getLogicList = async function(ctx) {
   ctx.body = blockDefinitions.LOGIC
 }
 
+module.exports.getDefinitionList = async function(ctx) {
+  ctx.body = {
+    logic: blockDefinitions.LOGIC,
+    trigger: blockDefinitions.TRIGGER,
+    action: blockDefinitions.ACTION,
+  }
+}
+
 /*********************
  *                   *
  *   API FUNCTIONS   *

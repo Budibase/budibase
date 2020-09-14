@@ -52,6 +52,11 @@ router
     authorized(BUILDER),
     controller.getLogicList
   )
+  .get(
+    "/api/workflows/definitions/list",
+    authorized(BUILDER),
+    controller.getDefinitionList
+  )
   .get("/api/workflows", authorized(BUILDER), controller.fetch)
   .get("/api/workflows/:id", authorized(BUILDER), controller.find)
   .put(
