@@ -4,8 +4,6 @@ on:
  # Trigger the workflow on push with tags,
  # but only for the master branch
  push:
-  branches:
-    - master
   tags:
     - 'v*'
 
