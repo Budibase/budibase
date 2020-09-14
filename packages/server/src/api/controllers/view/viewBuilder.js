@@ -105,7 +105,7 @@ function viewTemplate({ field, modelId, groupBy, filters = [], calculation }) {
   if (calculation) {
     schema = {
       ...(groupBy ? GROUP_PROPERTY : FIELD_PROPERTY),
-      ...SCHEMA_MAP[calculation]
+      ...SCHEMA_MAP[calculation],
     }
   }
 
