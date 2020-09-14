@@ -91,4 +91,9 @@ exports.trigger = async function(ctx) {
     ...ctx.request.body,
     instanceId: ctx.user.instanceId,
   })
+  ctx.status = 200
+  ctx.body = {
+    message: `Workflow ${workflow._id} has been triggered.`,
+    workflow,
+  }
 }

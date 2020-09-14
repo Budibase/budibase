@@ -1,6 +1,5 @@
 const triggers = require("./triggers")
 const workerFarm = require("worker-farm")
-const CouchDB = require("../db/client")
 const singleThread = require("./thread")
 
 let workers = workerFarm(require.resolve("./thread"))
@@ -22,7 +21,7 @@ function runWorker(job) {
  */
 module.exports.init = function() {
   triggers.workflowQueue.process(async job => {
-    if (CouchDB.preferredAdapters != null && CouchDB.preferredAdapters[0] !== "leveldb") {
+    if (process.env.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
       await runWorker(job)
     } else {
       await singleThread(job)
