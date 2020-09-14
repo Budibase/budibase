@@ -68,6 +68,11 @@ const workflowActions = store => ({
       return state
     })
   },
+  trigger: async ({ workflow }) => {
+    const { _id } = workflow
+    const TRIGGER_WORKFLOW_URL = `/api/workflows/${_id}/trigger`
+    return await api.post(TRIGGER_WORKFLOW_URL)
+  },
   select: workflow => {
     store.update(state => {
       state.selectedWorkflow = new Workflow(cloneDeep(workflow))
