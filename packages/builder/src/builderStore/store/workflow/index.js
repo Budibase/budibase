@@ -7,17 +7,15 @@ const workflowActions = store => ({
   fetch: async () => {
     const responses = await Promise.all([
       api.get(`/api/workflows`),
-      api.get(`/api/workflows/trigger/list`),
-      api.get(`/api/workflows/action/list`),
-      api.get(`/api/workflows/logic/list`),
+      api.get(`/api/workflows/definition/list`),
     ])
     const jsonResponses = await Promise.all(responses.map(x => x.json()))
     store.update(state => {
       state.workflows = jsonResponses[0]
       state.blockDefinitions = {
-        TRIGGER: jsonResponses[1],
-        ACTION: jsonResponses[2],
-        LOGIC: jsonResponses[3],
+        TRIGGER: jsonResponses[1].trigger,
+        ACTION: jsonResponses[1].action,
+        LOGIC: jsonResponses[1].logic,
       }
       return state
     })
