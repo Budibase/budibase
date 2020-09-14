@@ -5,4 +5,5 @@ package-lock.json
 release/
 dist/
 cypress/screenshots
+cypress/videos
 routify

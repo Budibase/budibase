@@ -21,7 +21,7 @@
     "publishdev": "lerna run publishdev",
     "publishnpm": "yarn build && lerna publish --force-publish",
     "clean": "lerna clean",
-    "dev": "node ./scripts/symlinkDev.js && lerna run --parallel --stream dev:builder",
+    "dev": "node ./scripts/symlinkDev.js && lerna run --parallel dev:builder",
     "test": "lerna run test",
     "lint": "eslint packages",
     "lint:fix": "eslint --fix packages",

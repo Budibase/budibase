@@ -52,6 +52,49 @@ const apiOpts = {
   delete: del,
 }
 
+const createRecord = async params =>
+  await post({
+    url: `/api/${params.modelId}/records`,
+    body: makeRecordRequestBody(params),
+  })
+
+const updateRecord = async params => {
+  const record = makeRecordRequestBody(params)
+  record._id = params._id
+  await patch({
+    url: `/api/${params.modelId}/records/${params._id}`,
+    body: record,
+  })
+}
+
+const makeRecordRequestBody = parameters => {
+  const body = {}
+  for (let fieldName in parameters.fields) {
+    const field = parameters.fields[fieldName]
+
+    // ensure fields sent are of the correct type
+    if (field.type === "boolean") {
+      if (field.value === "true") body[fieldName] = true
+      if (field.value === "false") body[fieldName] = false
+    } else if (field.type === "number") {
+      const val = parseFloat(field.value)
+      if (!isNaN(val)) {
+        body[fieldName] = val
+      }
+    } else if (field.type === "datetime") {
+      const date = new Date(field.value)
+      if (!isNaN(date.getTime())) {
+        body[fieldName] = date.toISOString()
+      }
+    } else {
+      body[fieldName] = field.value
+    }
+  }
+  return body
+}
+
 export default {
   authenticate: authenticate(apiOpts),
+  createRecord,
+  updateRecord,
 }
