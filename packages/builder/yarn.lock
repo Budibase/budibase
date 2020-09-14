@@ -688,9 +688,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.32.0":
-  version "1.32.0"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.32.0.tgz#4b099e51cf8aebfc963a763bb9687994a2ee26a8"
+"@budibase/bbui@^1.33.0":
+  version "1.33.0"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.33.0.tgz#216b24dd815f45880e9795e66b04848329b0390f"
+  integrity sha512-Rrt5eLbea014TIfAbT40kP0D0AWNUi8Q0kDr3UZO6Aq4UXgjc0f53ZuJ7Kb66YRDWrqiucjf1FtvOUs3/YaD6g==
   dependencies:
     sirv-cli "^0.4.6"
     svelte-flatpickr "^2.4.0"
