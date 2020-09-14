@@ -5,7 +5,7 @@
   $: modelId = value ? value._id : ""
 
   function onChange(e) {
-    value = $backendUiStore.models.find(x => x._id === e.target.value)
+    value = $backendUiStore.models.find(model => model._id === e.target.value)
   }
 </script>
 
