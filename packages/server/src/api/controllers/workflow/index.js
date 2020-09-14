@@ -87,5 +87,8 @@ exports.getLogicList = async function(ctx) {
 exports.trigger = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   let workflow = await db.get(ctx.params.id)
-  await triggers.externalTrigger(workflow, ctx.request.body)
+  await triggers.externalTrigger(workflow, {
+    ...ctx.request.body,
+    instanceId: ctx.user.instanceId,
+  })
 }
