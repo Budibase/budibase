@@ -77,6 +77,31 @@ let BUILTIN_ACTIONS = {
       }
     }
   },
+  DELETE_RECORD: async function({ args, context }) {
+    const { model, ...record } = args.record
+    // TODO: better logging of when actions are missed due to missing parameters
+    if (record.recordId == null || record.revId == null) {
+      return
+    }
+    let ctx = {
+      params: {
+        modelId: model._id,
+        recordId: record.recordId,
+        revId: record.revId,
+      },
+      user: { instanceId: context.instanceId },
+    }
+
+    try {
+      await recordController.destroy(ctx)
+    } catch (err) {
+      console.error(err)
+      return {
+        record: null,
+        error: err.message,
+      }
+    }
+  },
 }
 
 module.exports.getAction = async function(actionName) {
