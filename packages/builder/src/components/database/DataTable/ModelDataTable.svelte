@@ -36,14 +36,14 @@
     }
   }
 
-  $: paginatedData = data
-    ? data.slice(
+  $: sort = $backendUiStore.sort
+  $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
+  $: paginatedData = sorted
+    ? sorted.slice(
         currentPage * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
       )
     : []
-  $: sort = $backendUiStore.sort
-  $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
 
   $: headers = Object.keys($backendUiStore.selectedModel.schema)
     .sort()
@@ -78,10 +78,10 @@
       </tr>
     </thead>
     <tbody>
-      {#if sorted.length === 0}
+      {#if paginatedData.length === 0}
         <div class="no-data">No Data.</div>
       {/if}
-      {#each sorted as row}
+      {#each paginatedData as row}
         <tr>
           <td>
             <EditRowPopover {row} />
@@ -100,7 +100,7 @@
   <TablePagination
     {data}
     bind:currentPage
-    pageItemCount={data.length}
+    pageItemCount={paginatedData.length}
     {ITEMS_PER_PAGE} />
 </section>
 
