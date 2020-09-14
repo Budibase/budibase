@@ -16,8 +16,9 @@ export default class Workflow {
   addBlock(block) {
     // Make sure to add trigger if doesn't exist
     if (!this.hasTrigger() && block.type === "TRIGGER") {
-      this.workflow.definition.trigger = { id: generate(), ...block }
-      return
+      const trigger = { id: generate(), ...block }
+      this.workflow.definition.trigger = trigger
+      return trigger
     }
 
     const newBlock = { id: generate(), ...block }
