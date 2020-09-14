@@ -11,6 +11,7 @@ const contextStoreKey = (dataProviderId, childIndex) =>
   `${dataProviderId}${childIndex >= 0 ? ":" + childIndex : ""}`
 
 // creates a store for a datacontext (e.g. each item in a list component)
+// overrides store if already exists
 const create = (data, dataProviderId, childIndex, parentContextStoreId) => {
   const key = contextStoreKey(dataProviderId, childIndex)
   const state = { data }
@@ -22,14 +23,13 @@ const create = (data, dataProviderId, childIndex, parentContextStoreId) => {
     ? contextStores[parentContextStoreId].state
     : rootState
 
-  if (!contextStores[key]) {
-    contextStores[key] = {
-      store: writable(state),
-      subscriberCount: 0,
-      state,
-      parentContextStoreId,
-    }
+  contextStores[key] = {
+    store: writable(state),
+    subscriberCount: 0,
+    state,
+    parentContextStoreId,
   }
+
   return key
 }
 
@@ -94,6 +94,9 @@ const set = (value, dataProviderId, childIndex) =>
 const getState = contextStoreKey =>
   contextStoreKey ? contextStores[contextStoreKey].state : rootState
 
+const getStore = contextStoreKey =>
+  contextStoreKey ? contextStores[contextStoreKey] : rootStore
+
 export default {
   subscribe,
   update,
@@ -101,4 +104,5 @@ export default {
   getState,
   create,
   contextStoreKey,
+  getStore,
 }
