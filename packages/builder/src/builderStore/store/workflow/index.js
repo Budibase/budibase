@@ -82,7 +82,7 @@ const workflowActions = store => ({
   },
   addBlockToWorkflow: block => {
     store.update(state => {
-      const newBlock = state.selectedWorkflow.addBlock(block)
+      const newBlock = state.selectedWorkflow.addBlock(cloneDeep(block))
       state.selectedBlock = newBlock
       return state
     })
