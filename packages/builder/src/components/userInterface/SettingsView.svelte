@@ -116,7 +116,7 @@
         control={definition.control}
         label={definition.label}
         key={definition.key}
-        value={componentInstance[definition.key]}
+        value={componentInstance[definition.key] || componentInstance[definition.key].defaultValue}
         {componentInstance}
         {onChange}
         props={{ ...excludeProps(definition, ['control', 'label']) }} />
