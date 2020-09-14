@@ -13,7 +13,7 @@
     "dev:builder": "rollup -cw"
   },
   "devDependencies": {
-    "@budibase/client": "^0.1.20",
+    "@budibase/client": "^0.1.21",
     "@rollup/plugin-commonjs": "^11.1.0",
     "lodash": "^4.17.15",
     "rollup": "^1.11.0",
@@ -31,7 +31,7 @@
   "keywords": [
     "svelte"
   ],
-  "version": "0.1.20",
+  "version": "0.1.21",
   "license": "MIT",
   "gitHead": "284cceb9b703c38566c6e6363c022f79a08d5691",
   "dependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -64,7 +64,7 @@
   },
   "dependencies": {
     "@budibase/bbui": "^1.33.0",
-    "@budibase/client": "^0.1.20",
+    "@budibase/client": "^0.1.21",
     "@budibase/colorpicker": "^1.0.1",
     "@sentry/browser": "5.19.1",
     "@svelteschool/svelte-forms": "^0.7.0",
