@@ -110,7 +110,9 @@ exports.save = async function(ctx) {
         const doc = row.doc
         return {
           ...doc,
-          [model.name]: doc[model.name] ? [...doc[model.name], record._id] : [record._id],
+          [model.name]: doc[model.name]
+            ? [...doc[model.name], record._id]
+            : [record._id],
         }
       })
 
@@ -201,7 +203,10 @@ async function validate({ instanceId, modelId, record, model }) {
   }
   const errors = {}
   for (let fieldName in model.schema) {
-    const res = validateJs.single(record[fieldName], model.schema[fieldName].constraints)
+    const res = validateJs.single(
+      record[fieldName],
+      model.schema[fieldName].constraints
+    )
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
