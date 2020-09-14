@@ -25,7 +25,7 @@ exports.save = async function(ctx) {
     ...ctx.request.body,
   }
 
-  // update renamed record fields when model is updated
+  // rename record fields when table column is renamed 
   const { _rename } = modelToSave
   if (_rename) {
     const records = await db.query(`database/all_${modelToSave._id}`, {
@@ -39,6 +39,15 @@ exports.save = async function(ctx) {
 
     await db.bulkDocs(docs)
     delete modelToSave._rename
+  }
+
+  // update schema of non-statistics views when new columns are added 
+  for (let view in modelToSave.views) {
+    const modelView = modelToSave.views[view]
+    if (!modelView) continue
+
+    if (modelView.schema.group || modelView.schema.field) continue
+    modelView.schema = modelToSave.schema
   }
 
   const result = await db.post(modelToSave)
