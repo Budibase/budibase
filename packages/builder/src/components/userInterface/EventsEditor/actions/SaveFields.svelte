@@ -81,10 +81,7 @@
       {/each}
     </Select>
     <Label size="m" color="dark">Value</Label>
-    <DataList
-      secondary
-      bind:value={field.value}
-      on:blur={rebuildParameters}>
+    <DataList secondary bind:value={field.value} on:blur={rebuildParameters}>
       <option value="" />
       {#each bindableProperties as bindableProp}
         <option value={toBindingExpression(bindableProp.readableBinding)}>
