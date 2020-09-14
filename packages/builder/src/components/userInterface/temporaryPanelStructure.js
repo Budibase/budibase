@@ -6,6 +6,7 @@ import ModelViewSelect from "components/userInterface/ModelViewSelect.svelte"
 import ModelViewFieldSelect from "components/userInterface/ModelViewFieldSelect.svelte"
 import Event from "components/userInterface/EventsEditor/EventPropertyControl.svelte"
 import ScreenSelect from "components/userInterface/ScreenSelect.svelte"
+import IconSelect from "components/userInterface/IconSelect.svelte"
 
 import { all } from "./propertyCategories.js"
 /* 
@@ -220,16 +221,17 @@ export default {
             settings: [{ label: "URL", key: "url", control: Input }],
           },
         },
-        // {
-        // _component: "@budibase/standard-components/icon",
-        // name: "Icon",
-        // description: "A basic component for displaying icons",
-        // icon: "ri-sun-fill",
-        // children: [],
-        // properties: {
-        // design: { ...all },
-        // },
-        // },
+        {
+          _component: "@budibase/standard-components/iconnew",
+          name: "Icon New",
+          description: "A basic component for displaying icons",
+          icon: "ri-sun-fill",
+          children: [],
+          properties: {
+            design: { ...all },
+            settings: [{ label: "Icon", key: "icon", control: IconSelect }],
+          },
+        },
         {
           _component: "@budibase/standard-components/link",
           name: "Link",
