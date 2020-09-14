@@ -5,6 +5,9 @@ const InMemoryQueue = require("./queue/inMemoryQueue")
 let workflowQueue = new InMemoryQueue()
 
 async function queueRelevantWorkflows(event, eventType) {
+  if (event.instanceId == null) {
+    throw `No instanceId specified for ${eventType} - check event emitters.`
+  }
   const db = new CouchDB(event.instanceId)
   const workflowsToTrigger = await db.query("database/by_workflow_trigger", {
     key: [eventType],

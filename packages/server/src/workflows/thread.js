@@ -52,6 +52,7 @@ class Orchestrator {
   }
 }
 
+// callback is required for worker-farm to state that the worker thread has completed
 module.exports = async (job, cb = null) => {
   try {
     const workflowOrchestrator = new Orchestrator(job.data.workflow)
