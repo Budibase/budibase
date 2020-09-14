@@ -51,6 +51,12 @@ exports.createModel = async (request, appId, instanceId, model) => {
           type: "string",
         },
       },
+      description: {
+        type: "text",
+        constraints: {
+          type: "string",
+        },
+      },
     },
   }
 

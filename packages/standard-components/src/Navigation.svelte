@@ -28,7 +28,7 @@
     if (itemContainer) {
       _bb.attachChildren(itemContainer)
       if (!hasLoaded) {
-        _bb.call(onLoad)
+        _bb.call("onLoad")
         hasLoaded = true
       }
     }
