@@ -7,7 +7,9 @@
   $: schemaFields = Object.keys(value && value.model ? value.model.schema : {})
 
   function onChangeModel(e) {
-    value.model = $backendUiStore.models.find(x => x._id === e.target.value)
+    value.model = $backendUiStore.models.find(
+      model => model._id === e.target.value
+    )
   }
 
   function setParsedValue(evt, field) {
