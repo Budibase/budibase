@@ -263,7 +263,11 @@ exports.builderEndpointShouldBlockNormalUsers = async ({
   appId,
   instanceId,
 }) => {
-  const headers = await createUserWithAdminPermissions(request, appId, instanceId)
+  const headers = await createUserWithAdminPermissions(
+    request,
+    appId,
+    instanceId
+  )
 
   await createRequest(request, method, url, body)
     .set(headers)

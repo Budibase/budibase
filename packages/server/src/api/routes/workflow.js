@@ -37,13 +37,35 @@ const workflowValidator = joiValidator.body(Joi.object({
 }).unknown(true))
 
 router
-  .get("/api/workflows/trigger/list", authorized(BUILDER), controller.getTriggerList)
-  .get("/api/workflows/action/list", authorized(BUILDER), controller.getActionList)
-  .get("/api/workflows/logic/list", authorized(BUILDER), controller.getLogicList)
+  .get(
+    "/api/workflows/trigger/list",
+    authorized(BUILDER),
+    controller.getTriggerList
+  )
+  .get(
+    "/api/workflows/action/list",
+    authorized(BUILDER),
+    controller.getActionList
+  )
+  .get(
+    "/api/workflows/logic/list",
+    authorized(BUILDER),
+    controller.getLogicList
+  )
   .get("/api/workflows", authorized(BUILDER), controller.fetch)
   .get("/api/workflows/:id", authorized(BUILDER), controller.find)
-  .put("/api/workflows", authorized(BUILDER), workflowValidator, controller.update)
-  .post("/api/workflows", authorized(BUILDER), workflowValidator, controller.create)
+  .put(
+    "/api/workflows",
+    authorized(BUILDER),
+    workflowValidator,
+    controller.update
+  )
+  .post(
+    "/api/workflows",
+    authorized(BUILDER),
+    workflowValidator,
+    controller.create
+  )
   .post("/api/workflows/:id/trigger", controller.trigger)
   .delete("/api/workflows/:id/:rev", authorized(BUILDER), controller.destroy)
 
