@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "0.1.19",
+  "version": "0.1.21",
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
@@ -63,8 +63,8 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.32.0",
-    "@budibase/client": "^0.1.19",
+    "@budibase/bbui": "^1.33.0",
+    "@budibase/client": "^0.1.21",
     "@budibase/colorpicker": "^1.0.1",
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@sentry/browser": "5.19.1",

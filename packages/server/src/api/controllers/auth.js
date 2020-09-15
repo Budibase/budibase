@@ -16,7 +16,7 @@ exports.authenticate = async ctx => {
   const { clientId } = await masterDb.get(ctx.user.appId)
 
   if (!clientId) {
-    ctx.throw(400, "ClientId not suplied")
+    ctx.throw(400, "ClientId not supplied")
   }
   // find the instance that the user is associated with
   const db = new CouchDB(ClientDb.name(clientId))

@@ -1,3 +1,5 @@
+import "@budibase/bbui/dist/bbui.css"
+
 export { default as container } from "./Container.svelte"
 export { default as text } from "./Text.svelte"
 export { default as heading } from "./Heading.svelte"

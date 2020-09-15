@@ -2,6 +2,16 @@ const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const newid = require("../../db/newid")
 
+function emitEvent(eventType, ctx, record) {
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emit(eventType, {
+      args: {
+        record,
+      },
+      instanceId: ctx.user.instanceId,
+    })
+}
+
 validateJs.extend(validateJs.validators.datetime, {
   parse: function(value) {
     return new Date(value).getTime()
@@ -110,13 +120,7 @@ exports.save = async function(ctx) {
     }
   }
 
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emit(`record:save`, {
-      args: {
-        record,
-      },
-      instanceId: ctx.user.instanceId,
-    })
+  emitEvent(`record:save`, ctx, record)
   ctx.body = record
   ctx.status = 200
   ctx.message = `${model.name} created successfully`
@@ -179,7 +183,7 @@ exports.destroy = async function(ctx) {
     return
   }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
-  ctx.eventEmitter && ctx.eventEmitter.emit(`record:delete`, record)
+  emitEvent(`record:delete`, ctx, record)
 }
 
 exports.validate = async function(ctx) {

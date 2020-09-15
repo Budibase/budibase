@@ -1,5 +1,13 @@
 const CouchDB = require("../../../db")
 const newid = require("../../../db/newid")
+const blockDefinitions = require("./blockDefinitions")
+const triggers = require("../../../workflows/triggers")
+
+/*************************
+ *                       *
+ *   BUILDER FUNCTIONS   *
+ *                       *
+ *************************/
 
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
@@ -53,22 +61,47 @@ exports.find = async function(ctx) {
   ctx.body = await db.get(ctx.params.id)
 }
 
-exports.executeAction = async function(ctx) {
-  const { args, action } = ctx.request.body
-  const workflowAction = require(`./actions/${action}`)
-  const response = await workflowAction({
-    args,
-    instanceId: ctx.user.instanceId,
-  })
-  ctx.body = response
-}
-
-exports.fetchActionScript = async function(ctx) {
-  const workflowAction = require(`./actions/${ctx.action}`)
-  ctx.body = workflowAction
-}
-
 exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
+}
+
+exports.getActionList = async function(ctx) {
+  ctx.body = blockDefinitions.ACTION
+}
+
+exports.getTriggerList = async function(ctx) {
+  ctx.body = blockDefinitions.TRIGGER
+}
+
+exports.getLogicList = async function(ctx) {
+  ctx.body = blockDefinitions.LOGIC
+}
+
+module.exports.getDefinitionList = async function(ctx) {
+  ctx.body = {
+    logic: blockDefinitions.LOGIC,
+    trigger: blockDefinitions.TRIGGER,
+    action: blockDefinitions.ACTION,
+  }
+}
+
+/*********************
+ *                   *
+ *   API FUNCTIONS   *
+ *                   *
+ *********************/
+
+exports.trigger = async function(ctx) {
+  const db = new CouchDB(ctx.user.instanceId)
+  let workflow = await db.get(ctx.params.id)
+  await triggers.externalTrigger(workflow, {
+    ...ctx.request.body,
+    instanceId: ctx.user.instanceId,
+  })
+  ctx.status = 200
+  ctx.body = {
+    message: `Workflow ${workflow._id} has been triggered.`,
+    workflow,
+  }
 }
