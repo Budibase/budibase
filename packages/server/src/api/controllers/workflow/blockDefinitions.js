@@ -4,11 +4,11 @@ let conditions = require("../../../workflows/logic").LogicConditions
 const ACTION = {
   SAVE_RECORD: {
     name: "Save Record",
-    tagline: "<b>Save</b> a <b>{{record.model.name}}</b> record",
+    tagline: "Save a {{inputs.record.model.name}} record",
     icon: "ri-save-3-fill",
     description: "Save a record to your database",
     type: "ACTION",
-    input: {
+    inputs: {
       record: {
         type: "record",
         label: "The record to be written",
@@ -16,10 +16,10 @@ const ACTION = {
       },
       model: {
         type: "model",
-        label: "The table to save a record to",
+        label: "Table",
       },
     },
-    output: {
+    outputs: {
       response: {
         type: "object",
         label: "The response from the table",
@@ -42,19 +42,19 @@ const ACTION = {
     description: "Delete a record from your database",
     icon: "ri-delete-bin-line",
     name: "Delete Record",
-    tagline: "<b>Delete</b> a <b>{{record.model.name}}</b> record",
+    tagline: "Delete a {{inputs.record.model.name}} record",
     type: "ACTION",
-    input: {
+    inputs: {
       id: {
         type: "string",
-        label: "The identifier of the record to be deleted",
+        label: "Record ID",
       },
       revision: {
         type: "string",
-        label: "The revision of the record to be deleted",
+        label: "Record Revision",
       },
     },
-    output: {
+    outputs: {
       response: {
         type: "object",
         label: "The response from the table",
@@ -67,35 +67,27 @@ const ACTION = {
   },
   CREATE_USER: {
     description: "Create a new user",
-    tagline: "Create user <b>{{username}}</b>",
+    tagline: "Create user {{inputs.username}}",
     icon: "ri-user-add-fill",
     name: "Create User",
-    params: {
-      username: "string",
-      password: "password",
-      accessLevelId: "accessLevel",
-    },
-    args: {
-      accessLevelId: "POWER_USER",
-    },
     type: "ACTION",
-    input: {
+    inputs: {
       username: {
         type: "string",
-        label: "The username of the new user to create",
+        label: "Username",
       },
       password: {
         type: "password",
-        label: "The password of the new user to create",
+        label: "Password",
       },
       accessLevelId: {
         type: "string",
-        label: "The level of access to the system the new user will have",
+        label: "Access Level",
         default: accessLevels.POWERUSER_LEVEL_ID,
         options: accessLevels.ACCESS_LEVELS,
       },
     },
-    output: {
+    outputs: {
       id: {
         type: "string",
         label: "The identifier of the new user",
@@ -116,35 +108,29 @@ const ACTION = {
   },
   SEND_EMAIL: {
     description: "Send an email.",
-    tagline: "Send email to <b>{{to}}</b>",
+    tagline: "Send email to {{inputs.to}}",
     icon: "ri-mail-open-fill",
     name: "Send Email",
-    params: {
-      to: "string",
-      from: "string",
-      subject: "longText",
-      text: "longText",
-    },
     type: "ACTION",
-    input: {
+    inputs: {
       to: {
         type: "string",
-        label: "Email address to send email to",
+        label: "Send To",
       },
       from: {
         type: "string",
-        label: "Email address to send email from",
+        label: "Send From",
       },
       subject: {
         type: "string",
-        label: "The subject of the email",
+        label: "Email Subject",
       },
       contents: {
         type: "string",
-        label: "The contents of the email",
+        label: "Email Contents",
       },
     },
-    output: {
+    outputs: {
       success: {
         type: "boolean",
         label: "Whether the email was sent",
@@ -160,34 +146,27 @@ const ACTION = {
 const LOGIC = {
   FILTER: {
     name: "Filter",
-    tagline: "{{filter}} <b>{{condition}}</b> {{value}}",
+    tagline: "{{inputs.filter}} {{inputs.condition}} {{inputs.value}}",
     icon: "ri-git-branch-line",
     description: "Filter any workflows which do not meet certain conditions",
-    params: {
-      filter: "string",
-      condition: ["equals"],
-      value: "string",
-    },
-    args: {
-      condition: "equals",
-    },
     type: "LOGIC",
-    input: {
-      field: {
+    inputs: {
+      filter: {
         type: "string",
-        label: "The input to filter on",
+        label: "Reference Value",
       },
       condition: {
         type: "string",
-        label: "The condition to use for filtering",
+        label: "Condition",
         options: conditions,
+        default: "equals",
       },
       value: {
         type: "string",
-        label: "The value to compare against",
+        label: "Comparison Value",
       },
     },
-    output: {
+    outputs: {
       success: {
         type: "boolean",
         label: "Whether the logic block passed",
@@ -197,12 +176,12 @@ const LOGIC = {
   DELAY: {
     name: "Delay",
     icon: "ri-time-fill",
-    tagline: "Delay for <b>{{time}}</b> milliseconds",
+    tagline: "Delay for {{inputs.time}} milliseconds",
     description: "Delay the workflow until an amount of time has passed",
-    input: {
+    inputs: {
       time: {
         type: "number",
-        label: "The duration of the delay in milliseconds",
+        label: "Delay in milliseconds",
       },
     },
     type: "LOGIC",
@@ -214,15 +193,15 @@ const TRIGGER = {
     name: "Record Saved",
     event: "record:save",
     icon: "ri-save-line",
-    tagline: "Record is added to <b>{{model.name}}</b>",
+    tagline: "Record is added to {{inputs.model.name}}",
     description: "Fired when a record is saved to your database",
-    input: {
+    inputs: {
       model: {
         type: "model",
-        label: "The table to trigger on when a new record is saved",
+        label: "Table",
       },
     },
-    output: {
+    outputs: {
       record: {
         type: "record",
         label: "The new record that was saved",
@@ -234,15 +213,15 @@ const TRIGGER = {
     name: "Record Deleted",
     event: "record:delete",
     icon: "ri-delete-bin-line",
-    tagline: "Record is deleted from <b>{{model.name}}</b>",
+    tagline: "Record is deleted from {{inputs.model.name}}",
     description: "Fired when a record is deleted from your database",
-    input: {
+    inputs: {
       model: {
         type: "model",
-        label: "The table to trigger on when a record is deleted",
+        label: "Table",
       },
     },
-    output: {
+    outputs: {
       record: {
         type: "record",
         label: "The record that was deleted",
