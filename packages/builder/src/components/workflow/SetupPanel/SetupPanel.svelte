@@ -1,6 +1,5 @@
 <script>
-  import { fade } from "svelte/transition"
-  import { onMount, getContext } from "svelte"
+  import { getContext } from "svelte"
   import { backendUiStore, workflowStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import WorkflowBlockSetup from "./WorkflowBlockSetup.svelte"
@@ -9,49 +8,35 @@
 
   const { open, close } = getContext("simple-modal")
 
-  const ACCESS_LEVELS = [
-    {
-      name: "Admin",
-      key: "ADMIN",
-      canExecute: true,
-      editable: false,
-    },
-    {
-      name: "Power User",
-      key: "POWER_USER",
-      canExecute: true,
-      editable: false,
-    },
-  ]
-
   let selectedTab = "SETUP"
-  let testResult
 
   $: workflow =
-    $workflowStore.currentWorkflow && $workflowStore.currentWorkflow.workflow
-  $: workflowBlock = $workflowStore.selectedWorkflowBlock
+    $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
 
   function deleteWorkflow() {
     open(
       DeleteWorkflowModal,
-      {
-        onClosed: close,
-      },
+      { onClosed: close },
       { styleContent: { padding: "0" } }
     )
   }
 
   function deleteWorkflowBlock() {
-    workflowStore.actions.deleteWorkflowBlock(workflowBlock)
-    notifier.info("Workflow block deleted.")
+    workflowStore.actions.deleteWorkflowBlock($workflowStore.selectedBlock)
   }
 
-  function testWorkflow() {
-    testResult = "PASSED"
+  async function testWorkflow() {
+    const result = await workflowStore.actions.trigger({
+      workflow: $workflowStore.selectedWorkflow.workflow,
+    })
+    if (result.status === 200) {
+      notifier.success(`Workflow ${workflow.name} triggered successfully.`)
+    } else {
+      notifier.danger(`Failed to trigger workflow ${workflow.name}.`)
+    }
   }
 
   async function saveWorkflow() {
-    const workflow = $workflowStore.currentWorkflow.workflow
     await workflowStore.actions.save({
       instanceId: $backendUiStore.selectedDatabase._id,
       workflow,
@@ -65,38 +50,27 @@
     <span
       class="hoverable"
       class:selected={selectedTab === 'SETUP'}
-      on:click={() => {
-        selectedTab = 'SETUP'
-        testResult = null
-      }}>
+      on:click={() => (selectedTab = 'SETUP')}>
       Setup
     </span>
-    {#if !workflowBlock}
-      <span
-        class="test-tab"
-        class:selected={selectedTab === 'TEST'}
-        on:click={() => (selectedTab = 'TEST')}>
-        Test
-      </span>
-    {/if}
   </header>
-  {#if selectedTab === 'TEST'}
-    <div class="bb-margin-m">
-      {#if testResult}
-        <button
-          transition:fade
-          class:passed={testResult === 'PASSED'}
-          class:failed={testResult === 'FAILED'}
-          class="test-result">
-          {testResult}
-        </button>
-      {/if}
-      <Button secondary wide on:click={testWorkflow}>Test Workflow</Button>
+  {#if $workflowStore.selectedBlock}
+    <WorkflowBlockSetup bind:block={$workflowStore.selectedBlock} />
+    <div class="buttons">
+      <Button green wide data-cy="save-workflow-setup" on:click={saveWorkflow}>
+        Save Workflow
+      </Button>
+      <Button red wide on:click={deleteWorkflowBlock}>Delete Block</Button>
     </div>
-  {/if}
-  {#if selectedTab === 'SETUP'}
-    {#if workflowBlock}
-      <WorkflowBlockSetup {workflowBlock} />
+  {:else if $workflowStore.selectedWorkflow}
+    <div class="panel">
+      <div class="panel-body">
+        <div class="block-label">
+          Workflow
+          <b>{workflow.name}</b>
+        </div>
+      </div>
+      <Button secondary wide on:click={testWorkflow}>Test Workflow</Button>
       <div class="buttons">
         <Button
           green
@@ -105,40 +79,9 @@
           on:click={saveWorkflow}>
           Save Workflow
         </Button>
-        <Button red wide on:click={deleteWorkflowBlock}>Delete Block</Button>
+        <Button red wide on:click={deleteWorkflow}>Delete Workflow</Button>
       </div>
-    {:else if $workflowStore.currentWorkflow}
-      <div class="panel">
-        <div class="panel-body">
-          <div class="block-label">Workflow: {workflow.name}</div>
-          <div class="config-item">
-            <Label small forAttr={'useraccess'}>User Access</Label>
-            <div class="access-levels">
-
-              {#each ACCESS_LEVELS as level}
-                <span class="access-level">
-                  <label>{level.name}</label>
-                  <input
-                    type="checkbox"
-                    disabled={!level.editable}
-                    bind:checked={level.canExecute} />
-                </span>
-              {/each}
-            </div>
-          </div>
-        </div>
-        <div class="buttons">
-          <Button
-            green
-            wide
-            data-cy="save-workflow-setup"
-            on:click={saveWorkflow}>
-            Save Workflow
-          </Button>
-          <Button red wide on:click={deleteWorkflow}>Delete Workflow</Button>
-        </div>
-      </div>
-    {/if}
+    </div>
   {/if}
 </section>
 
@@ -181,10 +124,6 @@
     margin-bottom: 20px;
   }
 
-  .config-item {
-    margin-bottom: 20px;
-  }
-
   header > span {
     color: var(--grey-5);
     margin-right: 20px;
@@ -205,35 +144,8 @@
     gap: 12px;
   }
 
-  .access-level {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 20px;
-  }
-
   .access-level label {
     font-weight: normal;
     color: var(--ink);
-  }
-
-  .test-result {
-    border: none;
-    width: 100%;
-    border-radius: 3px;
-    height: 32px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--white);
-    text-align: center;
-    margin-bottom: 10px;
-  }
-
-  .passed {
-    background: var(--green);
-  }
-
-  .failed {
-    background: var(--red);
   }
 </style>

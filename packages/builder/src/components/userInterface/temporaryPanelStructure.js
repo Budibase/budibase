@@ -7,9 +7,9 @@ import ModelViewFieldSelect from "components/userInterface/ModelViewFieldSelect.
 import Event from "components/userInterface/EventsEditor/EventPropertyControl.svelte"
 import ScreenSelect from "components/userInterface/ScreenSelect.svelte"
 import { IconSelect } from "components/userInterface/IconSelect"
+import Colorpicker from "@budibase/colorpicker"
 
 import { all } from "./propertyCategories.js"
-import Colorpicker from "@budibase/colorpicker"
 /* 
 { label: "N/A ", value: "N/A" },
 { label: "Flex", value: "flex" },
@@ -542,10 +542,30 @@ export default {
                 key: "datasource",
                 control: ModelViewSelect,
               },
-              { label: "Stripe Color", key: "stripeColor", control: Input },
-              { label: "Border Color", key: "borderColor", control: Input },
-              { label: "TH Color", key: "backgroundColor", control: Input },
-              { label: "TH Font Color", key: "color", control: Input },
+              {
+                label: "Stripe Color",
+                key: "stripeColor",
+                control: Colorpicker,
+                defaultValue: "#FFFFFF",
+              },
+              {
+                label: "Border Color",
+                key: "borderColor",
+                control: Colorpicker,
+                defaultValue: "#FFFFFF",
+              },
+              {
+                label: "TH Color",
+                key: "backgroundColor",
+                control: Colorpicker,
+                defaultValue: "#FFFFFF",
+              },
+              {
+                label: "TH Font Color",
+                key: "color",
+                control: Colorpicker,
+                defaultValue: "#FFFFFF",
+              },
               { label: "Table", key: "model", control: ModelSelect },
             ],
           },

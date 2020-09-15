@@ -1,33 +1,11 @@
 const EventEmitter = require("events").EventEmitter
-const CouchDB = require("../db")
-const { Orchestrator, serverStrategy } = require("./workflow")
+
+/**
+ * keeping event emitter in one central location as it might be used for things other than
+ * workflows (what it was for originally) - having a central emitter will be useful in the
+ * future.
+ */
 
 const emitter = new EventEmitter()
-
-async function executeRelevantWorkflows(event, eventType) {
-  const db = new CouchDB(event.instanceId)
-  const workflowsToTrigger = await db.query("database/by_workflow_trigger", {
-    key: [eventType],
-    include_docs: true,
-  })
-
-  const workflows = workflowsToTrigger.rows.map(wf => wf.doc)
-
-  // Create orchestrator
-  const workflowOrchestrator = new Orchestrator()
-  workflowOrchestrator.strategy = serverStrategy
-
-  for (let workflow of workflows) {
-    workflowOrchestrator.execute(workflow, event)
-  }
-}
-
-emitter.on("record:save", async function(event) {
-  await executeRelevantWorkflows(event, "record:save")
-})
-
-emitter.on("record:delete", async function(event) {
-  await executeRelevantWorkflows(event, "record:delete")
-})
 
 module.exports = emitter

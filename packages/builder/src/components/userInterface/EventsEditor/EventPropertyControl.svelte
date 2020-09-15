@@ -12,7 +12,7 @@
 
 <Button secondary small on:click={eventsModal.show}>Define Actions</Button>
 
-<Modal bind:this={eventsModal} maxWidth="100vw" hideCloseButton>
+<Modal bind:this={eventsModal} maxWidth="100vw" hideCloseButton padding="0">
   <EventEditorModal
     event={value}
     eventType={name}

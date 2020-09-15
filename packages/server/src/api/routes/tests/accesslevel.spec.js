@@ -37,7 +37,7 @@ describe("/accesslevels", () => {
   beforeEach(async () => {
     instanceId = (await createInstance(request, appId))._id
     model = await createModel(request, appId, instanceId)
-    view = await createView(request, appId, instanceId)
+    view = await createView(request, appId, instanceId, model._id)
   })
 
   describe("create", () => {
@@ -111,7 +111,7 @@ describe("/accesslevels", () => {
       await request
         .get(`/api/accesslevels/${customLevel._id}`)
         .set(defaultHeaders(appId, instanceId))
-        .expect(404)      
+        .expect(404)
     })
   })
 
