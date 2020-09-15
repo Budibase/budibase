@@ -59,7 +59,7 @@
     loading = true
     selectedLetter = letter
     filteredIcons = findIconByTerm(letter)
-    await tick()
+    await tick() //svg icons do not update without tick
     loading = false
   }
 
@@ -69,7 +69,7 @@
     if (iconIdx !== -1) {
       currentPage = Math.ceil(iconIdx / maxIconsPerPage)
     }
-    await tick()
+    await tick() //svg icons do not update without tick
     loading = false
   }
 
@@ -88,7 +88,7 @@
     } else if (!next && currentPage > 1) {
       currentPage--
     }
-    await tick()
+    await tick() //svg icons do not update without tick
     loading = false
   }
 
@@ -96,7 +96,7 @@
     currentPage = 1
     loading = true
     filteredIcons = findIconByTerm(searchTerm)
-    await tick()
+    await tick() //svg icons do not update without tick
     loading = false
   }
 
