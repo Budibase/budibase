@@ -1,4 +1,3 @@
-import api from "../api"
 import renderTemplateString from "./renderTemplateString"
 
 export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType"
@@ -6,9 +5,6 @@ export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType"
 export const eventHandlers = routeTo => {
   const handlers = {
     "Navigate To": param => routeTo(param && param.url),
-    "Create Record": api.createRecord,
-    "Update Record": api.updateRecord,
-    "Trigger Workflow": api.triggerWorkflow,
   }
 
   // when an event is called, this is what gets run

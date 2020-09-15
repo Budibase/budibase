@@ -1,5 +1,4 @@
 import { authenticate } from "./authenticate"
-import { triggerWorkflow } from "./workflow"
 import appStore from "../state/store"
 
 const apiCall = method => async ({ url, body }) => {
@@ -96,7 +95,6 @@ const makeRecordRequestBody = parameters => {
 
 export default {
   authenticate: authenticate(apiOpts),
-  triggerWorkflow: triggerWorkflow(apiOpts),
   createRecord,
   updateRecord,
 }
