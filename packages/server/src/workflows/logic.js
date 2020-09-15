@@ -22,3 +22,10 @@ module.exports.getLogic = function(logicName) {
     return LOGIC[logicName]
   }
 }
+
+module.exports.LogicConditions = [
+  "equals",
+  "notEquals",
+  "greaterThan",
+  "lessThan",
+]

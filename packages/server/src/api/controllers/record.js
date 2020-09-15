@@ -53,7 +53,6 @@ exports.patch = async function(ctx) {
   ctx.body = record
   ctx.status = 200
   ctx.message = `${model.name} updated successfully.`
-  return
 }
 
 exports.save = async function(ctx) {

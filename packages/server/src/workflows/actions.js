@@ -17,14 +17,18 @@ let BUILTIN_ACTIONS = {
     }
 
     try {
-      const response = await userController.create(ctx)
+      await userController.create(ctx)
       return {
-        user: response,
+        response: ctx.body,
+        id: ctx.body._id,
+        revision: ctx.body._rev,
+        success: ctx.status === 200,
       }
     } catch (err) {
       console.error(err)
       return {
-        user: null,
+        success: false,
+        response: err,
       }
     }
   },
@@ -45,13 +49,16 @@ let BUILTIN_ACTIONS = {
     try {
       await recordController.save(ctx)
       return {
-        record: ctx.body,
+        response: ctx.body,
+        id: ctx.body._id,
+        revision: ctx.body._rev,
+        success: ctx.status === 200,
       }
     } catch (err) {
       console.error(err)
       return {
-        record: null,
-        error: err.message,
+        success: false,
+        response: err,
       }
     }
   },
@@ -67,13 +74,12 @@ let BUILTIN_ACTIONS = {
       await sgMail.send(msg)
       return {
         success: true,
-        ...args,
       }
     } catch (err) {
       console.error(err)
       return {
         success: false,
-        error: err.message,
+        response: err,
       }
     }
   },
@@ -94,11 +100,15 @@ let BUILTIN_ACTIONS = {
 
     try {
       await recordController.destroy(ctx)
+      return {
+        response: ctx.body,
+        success: ctx.status === 200,
+      }
     } catch (err) {
       console.error(err)
       return {
-        record: null,
-        error: err.message,
+        success: false,
+        response: err,
       }
     }
   },
