@@ -6,6 +6,7 @@ import ModelViewSelect from "components/userInterface/ModelViewSelect.svelte"
 import ModelViewFieldSelect from "components/userInterface/ModelViewFieldSelect.svelte"
 import Event from "components/userInterface/EventsEditor/EventPropertyControl.svelte"
 import ScreenSelect from "components/userInterface/ScreenSelect.svelte"
+import { IconSelect } from "components/userInterface/IconSelect"
 import Colorpicker from "@budibase/colorpicker"
 
 import { all } from "./propertyCategories.js"
@@ -221,16 +222,41 @@ export default {
             settings: [{ label: "URL", key: "url", control: Input }],
           },
         },
-        // {
-        // _component: "@budibase/standard-components/icon",
-        // name: "Icon",
-        // description: "A basic component for displaying icons",
-        // icon: "ri-sun-fill",
-        // children: [],
-        // properties: {
-        // design: { ...all },
-        // },
-        // },
+        {
+          _component: "@budibase/standard-components/icon",
+          name: "Icon",
+          description: "A basic component for displaying icons",
+          icon: "ri-sun-fill",
+          children: [],
+          properties: {
+            design: {},
+            settings: [
+              { label: "Icon", key: "icon", control: IconSelect },
+              {
+                label: "Size",
+                key: "size",
+                control: OptionSelect,
+                defaultValue: "fa-lg",
+                options: [
+                  { value: "fa-xs", label: "xs" },
+                  { value: "fa-sm", label: "sm" },
+                  { value: "fa-lg", label: "lg" },
+                  { value: "fa-2x", label: "2x" },
+                  { value: "fa-3x", label: "3x" },
+                  { value: "fa-5x", label: "5x" },
+                  { value: "fa-7x", label: "7x" },
+                  { value: "fa-10x", label: "10x" },
+                ],
+              },
+              {
+                label: "Color",
+                key: "color",
+                control: Colorpicker,
+                defaultValue: "#000",
+              },
+            ],
+          },
+        },
         {
           _component: "@budibase/standard-components/link",
           name: "Link",
