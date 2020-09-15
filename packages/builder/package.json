@@ -66,6 +66,7 @@
     "@budibase/bbui": "^1.32.0",
     "@budibase/client": "^0.1.19",
     "@budibase/colorpicker": "^1.0.1",
+    "@fortawesome/fontawesome-free": "^5.14.0",
     "@sentry/browser": "5.19.1",
     "@svelteschool/svelte-forms": "^0.7.0",
     "britecharts": "^2.16.0",
