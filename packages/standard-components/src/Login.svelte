@@ -53,26 +53,16 @@
 
     <div class="form-root">
       <div class="control">
-        <input
-          bind:value={username}
-          type="text"
-          placeholder="Username"
-          class={_inputClass} />
+        <input bind:value={username} type="text" placeholder="Username" class={_inputClass} />
       </div>
 
       <div class="control">
-        <input
-          bind:value={password}
-          type="password"
-          placeholder="Password"
-          class={_inputClass} />
+        <input bind:value={password} type="password" placeholder="Password" class={_inputClass} />
       </div>
     </div>
 
     <div class="login-button-container">
-      <button disabled={loading} on:click={login} class={_buttonClass}>
-        {buttonText || 'Login'}
-      </button>
+      <button disabled={loading} on:click={login} class={_buttonClass}>{buttonText || 'Login'}</button>
     </div>
 
     {#if error}

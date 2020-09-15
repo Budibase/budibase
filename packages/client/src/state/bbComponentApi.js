@@ -4,11 +4,7 @@ import store from "../state/store"
 
 export const trimSlash = str => str.replace(/^\/+|\/+$/g, "")
 
-export const bbFactory = ({
-  componentLibraries,
-  onScreenSlotRendered,
-  runEventActions,
-}) => {
+export const bbFactory = ({ componentLibraries, onScreenSlotRendered, runEventActions }) => {
   const apiCall = method => (url, body) => {
     return fetch(url, {
       method: method,
@@ -39,11 +35,7 @@ export const bbFactory = ({
       attachChildren: attachChildren(attachParams),
       props: treeNode.props,
       call: async eventName =>
-        eventName &&
-        (await runEventActions(
-          treeNode.props[eventName],
-          store.getState(treeNode.contextStoreKey)
-        )),
+        eventName && (await runEventActions(treeNode.props[eventName], store.getState(treeNode.contextStoreKey))),
       setBinding: setBindableComponentProp(treeNode),
       api,
       parent,

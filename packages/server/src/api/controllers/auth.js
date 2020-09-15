@@ -23,12 +23,7 @@ exports.authenticate = async ctx => {
   const app = await db.get(ctx.user.appId)
   const instanceId = app.userInstanceMap[username]
 
-  if (!instanceId)
-    ctx.throw(
-      500,
-      "User is not associated with an instance of app",
-      ctx.user.appId
-    )
+  if (!instanceId) ctx.throw(500, "User is not associated with an instance of app", ctx.user.appId)
 
   // Check the user exists in the instance DB by username
   const instanceDb = new CouchDB(instanceId)

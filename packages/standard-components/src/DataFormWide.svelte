@@ -37,9 +37,7 @@
 
   $: fields = schema ? Object.keys(schema) : []
 
-  $: errorMessages = Object.entries(errors).map(
-    ([field, message]) => `${field} ${message}`
-  )
+  $: errorMessages = Object.entries(errors).map(([field, message]) => `${field} ${message}`)
 
   async function fetchModel() {
     const FETCH_MODEL_URL = `/api/models/${model}`
@@ -54,8 +52,7 @@
   const save = debounce(async () => {
     for (let field of fields) {
       // Assign defaults to empty fields to prevent validation issues
-      if (!(field in record))
-        record[field] = DEFAULTS_FOR_TYPE[schema[field].type]
+      if (!(field in record)) record[field] = DEFAULTS_FOR_TYPE[schema[field].type]
     }
 
     const SAVE_RECORD_URL = `/api/${model}/records`
@@ -90,8 +87,7 @@
 
   onMount(async () => {
     const routeParams = _bb.routeParams()
-    recordId =
-      Object.keys(routeParams).length > 0 && (routeParams.id || routeParams[0])
+    recordId = Object.keys(routeParams).length > 0 && (routeParams.id || routeParams[0])
     isNew = !recordId || recordId === "new"
 
     if (isNew) {
@@ -212,8 +208,7 @@
   }
 
   button:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
   input[type="checkbox"] {

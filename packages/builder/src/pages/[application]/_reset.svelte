@@ -38,9 +38,7 @@
     if (!activeTopNav) return
     store.update(state => {
       if (!state.previousTopNavPath) state.previousTopNavPath = {}
-      state.previousTopNavPath[
-        activeTopNav.path
-      ] = window.location.pathname.replace("/_builder", "")
+      state.previousTopNavPath[activeTopNav.path] = window.location.pathname.replace("/_builder", "")
       $goto(state.previousTopNavPath[path] || path)
       return state
     })
@@ -53,28 +51,17 @@
     <div class="top-nav">
       <div class="topleftnav">
         <button class="home-logo">
-          <img
-            src="/_builder/assets/bb-logo.svg"
-            alt="budibase icon"
-            on:click={() => $goto(`/`)} />
+          <img src="/_builder/assets/bb-logo.svg" alt="budibase icon" on:click={() => $goto(`/`)} />
         </button>
 
         <!-- This gets all indexable subroutes and sticks them in the top nav. -->
         {#each $layout.children as { path, title }}
-          <span
-            class:active={$isActive(path)}
-            class="topnavitem"
-            on:click={topItemNavigate(path)}>
-            {title}
-          </span>
+          <span class:active={$isActive(path)} class="topnavitem" on:click={topItemNavigate(path)}>{title}</span>
         {/each}
       </div>
       <div class="toprightnav">
         <SettingsLink />
-        <span
-          class:active={false}
-          class="topnavitemright"
-          on:click={() => window.open(`/${application}`)}>
+        <span class:active={false} class="topnavitemright" on:click={() => window.open(`/${application}`)}>
           <PreviewIcon />
         </span>
       </div>

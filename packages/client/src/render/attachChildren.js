@@ -4,12 +4,7 @@ import deepEqual from "deep-equal"
 import appStore from "../state/store"
 
 export const attachChildren = initialiseOpts => (htmlElement, options) => {
-  const {
-    componentLibraries,
-    treeNode,
-    onScreenSlotRendered,
-    setupState,
-  } = initialiseOpts
+  const { componentLibraries, treeNode, onScreenSlotRendered, setupState } = initialiseOpts
 
   const anchor = options && options.anchor ? options.anchor : null
   const force = options ? options.force : false
@@ -38,12 +33,7 @@ export const attachChildren = initialiseOpts => (htmlElement, options) => {
     // if context is an array,  map to new structure
     const contextArray = Array.isArray(context) ? context : [context]
     for (let ctx of contextArray) {
-      const key = appStore.create(
-        ctx,
-        treeNode.props._id,
-        childIndex,
-        treeNode.contextStoreKey
-      )
+      const key = appStore.create(ctx, treeNode.props._id, childIndex, treeNode.contextStoreKey)
       contextStoreKeys.push(key)
       childIndex++
     }
@@ -110,10 +100,7 @@ const splitName = fullname => {
 
   const componentName = nameParts[nameParts.length - 1]
 
-  const libName = fullname.substring(
-    0,
-    fullname.length - componentName.length - 1
-  )
+  const libName = fullname.substring(0, fullname.length - componentName.length - 1)
 
   return { libName, componentName }
 }

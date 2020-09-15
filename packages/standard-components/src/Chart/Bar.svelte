@@ -1,10 +1,5 @@
 <script>
-  import {
-    getColorSchema,
-    getChartGradient,
-    notNull,
-    hasProp,
-  } from "./utils.js"
+  import { getColorSchema, getChartGradient, notNull, hasProp } from "./utils.js"
   import britecharts from "britecharts"
   import fetchData from "../fetchData.js"
   import { onMount } from "svelte"
@@ -23,8 +18,7 @@
   let tooltipContainer = null
 
   export let customMouseOver = () => tooltip.show()
-  export let customMouseMove = (datapoint, colorMapping, x, y) =>
-    tooltip.update(datapoint, colorMapping, x, y)
+  export let customMouseMove = (datapoint, colorMapping, x, y) => tooltip.update(datapoint, colorMapping, x, y)
   export let customMouseOut = () => tooltip.hide()
   export let customClick = null
 
@@ -73,8 +67,7 @@
   })
 
   const schemaIsValid = () =>
-    (hasProp(data, "name") || hasProp(data, nameLabel)) &&
-    (hasProp(data, "value") || hasProp(data, valueLabel))
+    (hasProp(data, "name") || hasProp(data, nameLabel)) && (hasProp(data, "value") || hasProp(data, valueLabel))
 
   function bindChartUIProps() {
     chart.numberFormat(".0f")

@@ -1,11 +1,5 @@
 const { appPackageFolder } = require("../createAppPackage")
-const {
-  constants,
-  copyFile,
-  writeFile,
-  readFile,
-  writeJSON,
-} = require("fs-extra")
+const { constants, copyFile, writeFile, readFile, writeJSON } = require("fs-extra")
 const { join, resolve } = require("path")
 const sqrl = require("squirrelly")
 const { convertCssToFiles } = require("./convertCssToFiles")
@@ -36,18 +30,13 @@ const copyClientLib = async (appPath, pageName) => {
 
   await copyFile(sourcepath, destPath, constants.COPYFILE_FICLONE)
 
-  await copyFile(
-    sourcepath + ".map",
-    destPath + ".map",
-    constants.COPYFILE_FICLONE
-  )
+  await copyFile(sourcepath + ".map", destPath + ".map", constants.COPYFILE_FICLONE)
 }
 
 const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
   const appPublicPath = publicPath(appPath, pageName)
 
-  const stylesheetUrl = s =>
-    s.startsWith("http") ? s : `/${rootPath(config, appId)}/${s}`
+  const stylesheetUrl = s => (s.startsWith("http") ? s : `/${rootPath(config, appId)}/${s}`)
 
   const templateObj = {
     title: pkg.page.title || "Budibase App",
@@ -59,10 +48,7 @@ const buildIndexHtml = async (config, appId, pageName, appPath, pkg) => {
     pageName,
   }
 
-  const indexHtmlTemplate = await readFile(
-    resolve(__dirname, "index.template.html"),
-    "utf8"
-  )
+  const indexHtmlTemplate = await readFile(resolve(__dirname, "index.template.html"), "utf8")
 
   const indexHtmlPath = join(appPublicPath, "index.html")
   const deployableHtmlPath = join(appPublicPath, "index.production.html")

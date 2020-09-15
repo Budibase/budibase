@@ -1,16 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import {
-    keys,
-    map,
-    some,
-    includes,
-    cloneDeep,
-    isEqual,
-    sortBy,
-    filter,
-    difference,
-  } from "lodash/fp"
+  import { keys, map, some, includes, cloneDeep, isEqual, sortBy, filter, difference } from "lodash/fp"
   import { pipe } from "components/common/core"
   import Checkbox from "components/common/Checkbox.svelte"
   import EventEditorModal from "./EventEditorModal.svelte"

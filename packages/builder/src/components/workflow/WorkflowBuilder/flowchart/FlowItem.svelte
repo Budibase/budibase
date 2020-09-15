@@ -6,9 +6,7 @@
   export let block
   let selected
 
-  $: selected =
-    $workflowStore.selectedBlock != null &&
-    $workflowStore.selectedBlock.id === block.id
+  $: selected = $workflowStore.selectedBlock != null && $workflowStore.selectedBlock.id === block.id
 
   function selectBlock() {
     onSelect(block)

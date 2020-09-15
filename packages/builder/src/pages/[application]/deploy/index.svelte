@@ -41,9 +41,7 @@
   <div>
     <h4>It's time to shine!</h4>
     {#if deployed}
-      <a target="_blank" href={`https://${appId}.app.budi.live/${appId}`}>
-        View App
-      </a>
+      <a target="_blank" href={`https://${appId}.app.budi.live/${appId}`}>View App</a>
     {:else}
       <Button secondary medium on:click={deployApp}>
         Deploy App

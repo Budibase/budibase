@@ -8,12 +8,7 @@ const controller = {
     const response = []
 
     for (let name in designDoc.views) {
-      if (
-        !name.startsWith("all") &&
-        name !== "by_type" &&
-        name !== "by_username" &&
-        name !== "by_workflow_trigger"
-      ) {
+      if (!name.startsWith("all") && name !== "by_type" && name !== "by_username" && name !== "by_workflow_trigger") {
         response.push({
           name,
           ...designDoc.views[name],

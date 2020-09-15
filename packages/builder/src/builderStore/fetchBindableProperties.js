@@ -37,9 +37,7 @@ export default function({ componentInstanceId, screen, components, models }) {
       .filter(isInstanceInSharedContext(walkResult))
       .map(componentInstanceToBindable(walkResult)),
 
-    ...walkResult.target._contexts
-      .map(contextToBindables(models, walkResult))
-      .flat(),
+    ...walkResult.target._contexts.map(contextToBindables(models, walkResult)).flat(),
   ]
 }
 
@@ -54,12 +52,8 @@ const isInstanceInSharedContext = walkResult => i =>
 // turns a component instance prop into binding expressions
 // used by the UI
 const componentInstanceToBindable = walkResult => i => {
-  const lastContext =
-    i.instance._contexts.length &&
-    i.instance._contexts[i.instance._contexts.length - 1]
-  const contextParentPath = lastContext
-    ? getParentPath(walkResult, lastContext)
-    : ""
+  const lastContext = i.instance._contexts.length && i.instance._contexts[i.instance._contexts.length - 1]
+  const contextParentPath = lastContext ? getParentPath(walkResult, lastContext) : ""
 
   return {
     type: "instance",
@@ -86,9 +80,7 @@ const contextToBindables = (models, walkResult) => context => {
   // see ModelViewSelect.svelte for the format of context.model
   // ... this allows us to bind to Model scheams, or View schemas
   const model = models.find(m => m._id === context.model.modelId)
-  const schema = context.model.isModel
-    ? model.schema
-    : model.views[context.model.name].schema
+  const schema = context.model.isModel ? model.schema : model.views[context.model.name].schema
 
   return (
     Object.keys(schema)
@@ -101,9 +93,7 @@ const contextToBindables = (models, walkResult) => context => {
 const getParentPath = (walkResult, context) => {
   // describes the number of "parent" in the path
   // clone array first so original array is not mtated
-  const contextParentNumber = [...walkResult.target._contexts]
-    .reverse()
-    .indexOf(context)
+  const contextParentNumber = [...walkResult.target._contexts].reverse().indexOf(context)
 
   return (
     new Array(contextParentNumber).fill("parent").join(".") +
@@ -145,8 +135,7 @@ const walk = ({ instance, targetId, components, models, result }) => {
   }
 
   // a component that provides context to it's children
-  const contextualInstance =
-    component && component.context && instance[component.context]
+  const contextualInstance = component && component.context && instance[component.context]
 
   if (contextualInstance) {
     // add to currentContexts (ancestory of context)

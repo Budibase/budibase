@@ -6,10 +6,7 @@
   export let value = meta.type === "boolean" ? false : ""
 
   let isSelect =
-    meta.type === "string" &&
-    meta.constraints &&
-    meta.constraints.inclusion &&
-    meta.constraints.inclusion.length > 0
+    meta.type === "string" && meta.constraints && meta.constraints.inclusion && meta.constraints.inclusion.length > 0
 
   let type = determineInputType(meta)
 

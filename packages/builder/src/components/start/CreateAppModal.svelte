@@ -34,12 +34,8 @@
     },
     {
       username: string().required("Your application needs a first user."),
-      password: string().required(
-        "Please enter a password for your first user."
-      ),
-      accessLevelId: string().required(
-        "You need to select an access level for your user."
-      ),
+      password: string().required("Please enter a password for your first user."),
+      accessLevelId: string().required("You need to select an access level for your user."),
     },
   ]
 
@@ -76,10 +72,7 @@
   }
 
   // $: errors = validationSchemas.validate(values);
-  $: getErrors(
-    $createAppStore.values,
-    validationSchemas[$createAppStore.currentStep]
-  )
+  $: getErrors($createAppStore.values, validationSchemas[$createAppStore.currentStep])
 
   async function getErrors(values, schema) {
     try {
@@ -183,10 +176,7 @@
 <div class="container">
   <div class="sidebar">
     {#each steps as { active, done }, i}
-      <Indicator
-        active={$createAppStore.currentStep === i}
-        done={i < $createAppStore.currentStep}
-        step={i + 1} />
+      <Indicator active={$createAppStore.currentStep === i} done={i < $createAppStore.currentStep} step={i + 1} />
     {/each}
   </div>
   <div class="body">
@@ -197,11 +187,7 @@
       <Form bind:values={$createAppStore.values}>
         {#each steps as step, i (i)}
           <div class:hidden={$createAppStore.currentStep !== i}>
-            <svelte:component
-              this={step.component}
-              {validationErrors}
-              options={step.options}
-              name={step.name} />
+            <svelte:component this={step.component} {validationErrors} options={step.options} name={step.name} />
           </div>
         {/each}
       </Form>
@@ -211,16 +197,10 @@
         <Button medium secondary on:click={back}>Back</Button>
       {/if}
       {#if $createAppStore.currentStep < steps.length - 1}
-        <Button medium blue on:click={next} disabled={!currentStepIsValid}>
-          Next
-        </Button>
+        <Button medium blue on:click={next} disabled={!currentStepIsValid}>Next</Button>
       {/if}
       {#if $createAppStore.currentStep === steps.length - 1}
-        <Button
-          medium
-          blue
-          on:click={signUp}
-          disabled={!fullFormIsValid || submitting}>
+        <Button medium blue on:click={signUp} disabled={!fullFormIsValid || submitting}>
           {submitting ? 'Loading...' : 'Submit'}
         </Button>
       {/if}

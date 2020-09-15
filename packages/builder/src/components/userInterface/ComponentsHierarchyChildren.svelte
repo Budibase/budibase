@@ -4,12 +4,7 @@
   import { last } from "lodash/fp"
   import { pipe } from "components/common/core"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
-  import {
-    XCircleIcon,
-    ChevronUpIcon,
-    ChevronDownIcon,
-    CopyIcon,
-  } from "../common/Icons"
+  import { XCircleIcon, ChevronUpIcon, ChevronDownIcon, CopyIcon } from "../common/Icons"
   import { getComponentDefinition } from "builderStore/storeUtils"
 
   export let components = []
@@ -65,8 +60,7 @@
 
   const dragover = (component, index) => e => {
     const canHaveChildrenButIsEmpty =
-      getComponentDefinition($store, component._component).children &&
-      component._children.length === 0
+      getComponentDefinition($store, component._component).children && component._children.length === 0
 
     e.dataTransfer.dropEffect = "copy"
     dragDropStore.update(s => {
@@ -103,10 +97,7 @@
   const drop = () => {
     if ($dragDropStore.targetComponent !== $dragDropStore.componentToDrop) {
       store.storeComponentForCopy($dragDropStore.componentToDrop, true)
-      store.pasteComponent(
-        $dragDropStore.targetComponent,
-        $dragDropStore.dropPosition
-      )
+      store.pasteComponent($dragDropStore.targetComponent, $dragDropStore.dropPosition)
     }
     dragDropStore.update(s => {
       s.dropPosition = ""
@@ -160,12 +151,7 @@
       </div>
 
       {#if component._children}
-        <svelte:self
-          components={component._children}
-          {currentComponent}
-          {onSelect}
-          {dragDropStore}
-          level={level + 1} />
+        <svelte:self components={component._children} {currentComponent} {onSelect} {dragDropStore} level={level + 1} />
       {/if}
 
       {#if $dragDropStore && $dragDropStore.targetComponent === component && ($dragDropStore.dropPosition === 'inside' || $dragDropStore.dropPosition === 'below')}

@@ -70,9 +70,7 @@
           <span>
             {header}
             {#if sort.column === header}
-              <svelte:component
-                this={sort.direction === 'asc' ? ArrowDown : ArrowUp}
-                style="height: 1em;" />
+              <svelte:component this={sort.direction === 'asc' ? ArrowDown : ArrowUp} style="height: 1em;" />
             {/if}
           </span>
         </th>
@@ -125,8 +123,7 @@
     text-align: left;
   }
 
-  @media only screen and (max-width: 760px),
-    (min-device-width: 768px) and (max-device-width: 1024px) {
+  @media only screen and (max-width: 760px), (min-device-width: 768px) and (max-device-width: 1024px) {
     table {
       width: 100%;
     }

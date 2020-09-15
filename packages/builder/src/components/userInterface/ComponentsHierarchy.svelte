@@ -24,12 +24,7 @@
   const joinPath = join("/")
 
   const normalizedName = name =>
-    pipe(name, [
-      trimCharsStart("./"),
-      trimCharsStart("~/"),
-      trimCharsStart("../"),
-      trimChars(" "),
-    ])
+    pipe(name, [trimCharsStart("./"), trimCharsStart("~/"), trimCharsStart("../"), trimChars(" ")])
 
   const changeScreen = screen => {
     store.setCurrentScreen(screen.props._instanceName)
@@ -45,9 +40,7 @@
       class:selected={$store.currentComponentInfo._id === screen.props._id}
       on:click|stopPropagation={() => changeScreen(screen)}>
 
-      <span
-        class="icon"
-        class:rotate={$store.currentPreviewItem.name !== screen.props._instanceName}>
+      <span class="icon" class:rotate={$store.currentPreviewItem.name !== screen.props._instanceName}>
         {#if screen.props._children.length}
           <ArrowDownIcon />
         {/if}

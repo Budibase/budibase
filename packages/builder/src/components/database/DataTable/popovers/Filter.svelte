@@ -1,12 +1,5 @@
 <script>
-  import {
-    Popover,
-    TextButton,
-    Button,
-    Icon,
-    Input,
-    Select,
-  } from "@budibase/bbui"
+  import { Popover, TextButton, Button, Icon, Input, Select } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
@@ -54,9 +47,7 @@
   let anchor
   let dropdown
 
-  $: viewModel = $backendUiStore.models.find(
-    ({ _id }) => _id === $backendUiStore.selectedView.modelId
-  )
+  $: viewModel = $backendUiStore.models.find(({ _id }) => _id === $backendUiStore.selectedView.modelId)
   $: fields = viewModel && Object.keys(viewModel.schema)
 
   function saveView() {
@@ -85,11 +76,7 @@
 </script>
 
 <div bind:this={anchor}>
-  <TextButton
-    text
-    small
-    on:click={dropdown.show}
-    active={view.filters && view.filters.length}>
+  <TextButton text small on:click={dropdown.show} active={view.filters && view.filters.length}>
     <Icon name="filter" />
     Filter
   </TextButton>
@@ -124,10 +111,7 @@
           {/each}
         </Select>
       {:else}
-        <Input
-          thin
-          placeholder={filter.key || fields[0]}
-          bind:value={filter.value} />
+        <Input thin placeholder={filter.key || fields[0]} bind:value={filter.value} />
       {/if}
       <i class="ri-close-circle-fill" on:click={() => removeFilter(idx)} />
     {/each}

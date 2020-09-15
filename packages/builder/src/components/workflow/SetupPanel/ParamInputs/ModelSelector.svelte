@@ -10,11 +10,7 @@
 </script>
 
 <div class="block-field">
-  <select
-    class="budibase__input"
-    value={modelId}
-    on:blur={onChange}
-    on:change={onChange}>
+  <select class="budibase__input" value={modelId} on:blur={onChange} on:change={onChange}>
     <option value="">Choose an option</option>
     {#each $backendUiStore.models as model}
       <option value={model._id}>{model.name}</option>

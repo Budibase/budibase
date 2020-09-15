@@ -7,9 +7,7 @@
   $: schemaFields = Object.keys(value && value.model ? value.model.schema : {})
 
   function onChangeModel(e) {
-    value.model = $backendUiStore.models.find(
-      model => model._id === e.target.value
-    )
+    value.model = $backendUiStore.models.find(model => model._id === e.target.value)
   }
 
   function setParsedValue(evt, field) {
@@ -23,11 +21,7 @@
 </script>
 
 <div class="block-field">
-  <select
-    class="budibase__input"
-    value={modelId}
-    on:blur={onChangeModel}
-    on:change={onChangeModel}>
+  <select class="budibase__input" value={modelId} on:blur={onChangeModel} on:change={onChangeModel}>
     <option value="">Choose an option</option>
     {#each $backendUiStore.models as model}
       <option value={model._id}>{model.name}</option>
@@ -40,11 +34,7 @@
     <Label small forAttr={'fields'}>Fields</Label>
     {#each schemaFields as field}
       <div class="bb-margin-xl">
-        <Input
-          thin
-          value={value[field]}
-          label={field}
-          on:change={e => setParsedValue(e, field)} />
+        <Input thin value={value[field]} label={field} on:change={e => setParsedValue(e, field)} />
       </div>
     {/each}
   </div>

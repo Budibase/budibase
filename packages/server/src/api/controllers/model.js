@@ -100,9 +100,7 @@ exports.destroy = async function(ctx) {
 
   // Delete all records for that model
   const records = await db.query(`database/${modelViewId}`)
-  await db.bulkDocs(
-    records.rows.map(record => ({ _id: record.id, _deleted: true }))
-  )
+  await db.bulkDocs(records.rows.map(record => ({ _id: record.id, _deleted: true })))
 
   // Delete linked record fields in dependent models
   for (let key in modelToDelete.schema) {

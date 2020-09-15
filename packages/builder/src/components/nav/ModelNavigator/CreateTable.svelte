@@ -33,11 +33,7 @@
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <div class="container">
     <h5>Create Table</h5>
-    <Input
-      data-cy="table-name-input"
-      placeholder="Table Name"
-      thin
-      bind:value={name} />
+    <Input data-cy="table-name-input" placeholder="Table Name" thin bind:value={name} />
   </div>
   <footer>
     <div class="button-margin-3">

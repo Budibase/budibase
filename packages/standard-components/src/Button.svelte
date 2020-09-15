@@ -6,19 +6,14 @@
   export let _bb
   let theButton
 
-  $: if (_bb.props._children && _bb.props._children.length > 0)
-    theButton && _bb.attachChildren(theButton)
+  $: if (_bb.props._children && _bb.props._children.length > 0) theButton && _bb.attachChildren(theButton)
 
   const clickHandler = () => {
     _bb.call("onClick")
   }
 </script>
 
-<button
-  bind:this={theButton}
-  class="default"
-  disabled={disabled || false}
-  on:click={clickHandler}>
+<button bind:this={theButton} class="default" disabled={disabled || false} on:click={clickHandler}>
   {#if !_bb.props._children || _bb.props._children.length === 0}{text}{/if}
 </button>
 

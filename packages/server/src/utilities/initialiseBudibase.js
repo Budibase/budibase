@@ -21,8 +21,7 @@ const setCouchDbUrl = async opts => {
   if (!opts.couchDbUrl) {
     const dataDir = join(opts.dir, ".data")
     await ensureDir(dataDir)
-    opts.couchDbUrl =
-      dataDir + (dataDir.endsWith("/") || dataDir.endsWith("\\") ? "" : "/")
+    opts.couchDbUrl = dataDir + (dataDir.endsWith("/") || dataDir.endsWith("\\") ? "" : "/")
   }
 }
 
@@ -30,12 +29,9 @@ const createDevEnvFile = async opts => {
   const destConfigFile = join(opts.dir, "./.env")
   let createConfig = !(await exists(destConfigFile)) || opts.quiet
   if (createConfig) {
-    const template = await readFile(
-      resolve(__dirname, "..", "..", ".env.template"),
-      {
-        encoding: "utf8",
-      }
-    )
+    const template = await readFile(resolve(__dirname, "..", "..", ".env.template"), {
+      encoding: "utf8",
+    })
     opts.cookieKey1 = opts.cookieKey1 || uuid.v4()
     const config = Sqrl.Render(template, opts)
     await writeFile(destConfigFile, config, { flag: "w+" })

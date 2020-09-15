@@ -57,13 +57,9 @@ function parseFilterExpression(filters) {
     if (filter.conjunction) expression.push(TOKEN_MAP[filter.conjunction])
 
     if (filter.condition === "CONTAINS") {
-      expression.push(
-        `doc["${filter.key}"].${TOKEN_MAP[filter.condition]}("${filter.value}")`
-      )
+      expression.push(`doc["${filter.key}"].${TOKEN_MAP[filter.condition]}("${filter.value}")`)
     } else {
-      expression.push(
-        `doc["${filter.key}"] ${TOKEN_MAP[filter.condition]} "${filter.value}"`
-      )
+      expression.push(`doc["${filter.key}"] ${TOKEN_MAP[filter.condition]} "${filter.value}"`)
     }
   }
 

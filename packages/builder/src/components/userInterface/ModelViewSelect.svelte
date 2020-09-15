@@ -36,33 +36,20 @@
     <Icon name="arrowdown" />
   </Button>
 </div>
-<DropdownMenu
-  bind:this={dropdown}
-  width="175px"
-  borderColor="#d1d1d1ff"
-  {anchor}
-  align="right">
+<DropdownMenu bind:this={dropdown} width="175px" borderColor="#d1d1d1ff" {anchor} align="right">
   <div class="model-view-container">
     <p>Tables</p>
 
     <ul>
       {#each models as model}
-        <li
-          class:selected={value === model}
-          on:click={() => handleSelected(model)}>
-          {model.label}
-        </li>
+        <li class:selected={value === model} on:click={() => handleSelected(model)}>{model.label}</li>
       {/each}
     </ul>
     <hr />
     <p>Views</p>
     <ul>
       {#each views as view}
-        <li
-          class:selected={value === view}
-          on:click={() => handleSelected(view)}>
-          {view.label}
-        </li>
+        <li class:selected={value === view} on:click={() => handleSelected(view)}>{view.label}</li>
       {/each}
     </ul>
   </div>

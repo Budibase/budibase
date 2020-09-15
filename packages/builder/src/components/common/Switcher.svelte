@@ -16,9 +16,7 @@
   <div class="switcher">
 
     {#each tabs as tab}
-      <button class:selected={selected === tab} on:click={() => selectTab(tab)}>
-        {tab}
-      </button>
+      <button class:selected={selected === tab} on:click={() => selectTab(tab)}>{tab}</button>
     {/each}
 
   </div>

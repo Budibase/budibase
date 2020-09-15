@@ -15,9 +15,7 @@
   let errors = []
   let selectedModel
 
-  $: modelSchema = $backendUiStore.selectedModel
-    ? Object.entries($backendUiStore.selectedModel.schema)
-    : []
+  $: modelSchema = $backendUiStore.selectedModel ? Object.entries($backendUiStore.selectedModel.schema) : []
 
   async function saveRecord() {
     const recordResponse = await api.saveRecord(
@@ -49,10 +47,7 @@
     {#each modelSchema as [key, meta]}
       <div class="bb-margin-xl">
         {#if meta.type === 'link'}
-          <LinkedRecordSelector
-            bind:linked={record[key]}
-            linkName={meta.name}
-            modelId={meta.modelId} />
+          <LinkedRecordSelector bind:linked={record[key]} linkName={meta.name} modelId={meta.modelId} />
         {:else}
           <RecordFieldControl {meta} bind:value={record[key]} />
         {/if}

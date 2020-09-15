@@ -19,8 +19,8 @@
       <h4 class="budibase__title--4">Delete Table</h4>
     </header>
     <p>
-      Are you sure you want to delete this table? All of your data will be
-      permanently removed. This action cannot be undone.
+      Are you sure you want to delete this table? All of your data will be permanently removed. This action cannot be
+      undone.
     </p>
   </div>
   <div class="modal-actions">

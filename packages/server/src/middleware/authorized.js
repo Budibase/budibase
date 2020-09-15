@@ -46,11 +46,7 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
     return
   }
 
-  if (
-    ctx.user.accessLevel.permissions
-      .map(permissionId)
-      .includes(thisPermissionId)
-  ) {
+  if (ctx.user.accessLevel.permissions.map(permissionId).includes(thisPermissionId)) {
     await next()
     return
   }

@@ -23,10 +23,7 @@
 </script>
 
 <div class="background">
-  <p>
-    Type DELETE into the textbox, then click the following button to delete your
-    web app:
-  </p>
+  <p>Type DELETE into the textbox, then click the following button to delete your web app:</p>
   <Input
     on:change={e => (value = e.target.value)}
     on:input={e => (value = e.target.value)}
@@ -34,13 +31,7 @@
     disabled={loading}
     placeholder="" />
 
-  <Button
-    disabled={value !== 'DELETE' || loading}
-    red
-    wide
-    on:click={deleteApp}>
-    Delete Entire Web App
-  </Button>
+  <Button disabled={value !== 'DELETE' || loading} red wide on:click={deleteApp}>Delete Entire Web App</Button>
 </div>
 
 <style>

@@ -15,11 +15,7 @@
 
 <div class="numberbox">
   <label>{label}</label>
-  <input
-    class="budibase__input"
-    type="number"
-    {value}
-    on:change={inputChanged} />
+  <input class="budibase__input" type="number" {value} on:change={inputChanged} />
 </div>
 
 <style>

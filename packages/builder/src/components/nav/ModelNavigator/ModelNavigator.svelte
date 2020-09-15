@@ -12,8 +12,7 @@
 
   const { open, close } = getContext("simple-modal")
 
-  $: selectedView =
-    $backendUiStore.selectedView && $backendUiStore.selectedView.name
+  $: selectedView = $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
   function selectModel(model) {
     backendUiStore.actions.models.select(model)
@@ -51,8 +50,7 @@
                         name: viewName,
                         ...model.views[viewName],
                       }))}>
-                <EditViewPopover
-                  view={{ name: viewName, ...model.views[viewName] }} />
+                <EditViewPopover view={{ name: viewName, ...model.views[viewName] }} />
               </ListItem>
             {/each}
           {/each}

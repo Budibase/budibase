@@ -3,10 +3,7 @@
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import SaveFields from "./SaveFields.svelte"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "builderStore/replaceBindings"
+  import { readableToRuntimeBinding, runtimeToReadableBinding } from "builderStore/replaceBindings"
 
   export let parameters
 
@@ -21,8 +18,7 @@
   let recordId
   $: {
     idFields = bindableProperties.filter(
-      bindable =>
-        bindable.type === "context" && bindable.runtimeBinding.endsWith("._id")
+      bindable => bindable.type === "context" && bindable.runtimeBinding.endsWith("._id")
     )
     // ensure recordId is always defaulted - there is usually only one option
     if (idFields.length > 0 && !parameters._id) {
@@ -47,9 +43,7 @@
   const schemaFromIdBinding = recordId => {
     if (!recordId) return []
 
-    const idBinding = bindableProperties.find(
-      prop => prop.runtimeBinding === recordId
-    )
+    const idBinding = bindableProperties.find(prop => prop.runtimeBinding === recordId)
     if (!idBinding) return []
 
     const { instance } = idBinding
@@ -85,27 +79,19 @@
 
 <div class="root">
   {#if idFields.length === 0}
-    <div class="cannot-use">
-      Update record can only be used within a component that provides data, such
-      as a List
-    </div>
+    <div class="cannot-use">Update record can only be used within a component that provides data, such as a List</div>
   {:else}
     <Label size="m" color="dark">Record Id</Label>
     <Select secondary bind:value={recordId}>
       <option value="" />
       {#each idFields as idField}
-        <option value={idField.runtimeBinding}>
-          {idField.readableBinding}
-        </option>
+        <option value={idField.runtimeBinding}>{idField.readableBinding}</option>
       {/each}
     </Select>
   {/if}
 
   {#if recordId}
-    <SaveFields
-      parameterFields={parameters.fields}
-      {schemaFields}
-      on:fieldschanged={onFieldsChanged} />
+    <SaveFields parameterFields={parameters.fields} {schemaFields} on:fieldschanged={onFieldsChanged} />
   {/if}
 
 </div>

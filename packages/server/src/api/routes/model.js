@@ -13,10 +13,6 @@ router
     modelController.find
   )
   .post("/api/models", authorized(BUILDER), modelController.save)
-  .delete(
-    "/api/models/:modelId/:revId",
-    authorized(BUILDER),
-    modelController.destroy
-  )
+  .delete("/api/models/:modelId/:revId", authorized(BUILDER), modelController.destroy)
 
 module.exports = router

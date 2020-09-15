@@ -2,13 +2,7 @@
   import { setContext, onMount } from "svelte"
 
   import { store } from "builderStore"
-  import {
-    LayoutIcon,
-    PaintIcon,
-    TerminalIcon,
-    CircleIndicator,
-    EventsIcon,
-  } from "components/common/Icons/"
+  import { LayoutIcon, PaintIcon, TerminalIcon, CircleIndicator, EventsIcon } from "components/common/Icons/"
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
@@ -37,9 +31,7 @@
 
   let panelDefinition = {}
 
-  $: panelDefinition =
-    componentPropDefinition.properties &&
-    componentPropDefinition.properties[selectedCategory.value]
+  $: panelDefinition = componentPropDefinition.properties && componentPropDefinition.properties[selectedCategory.value]
 
   const onStyleChanged = store.setComponentStyle
 
@@ -51,13 +43,10 @@
     store.setComponentProp(key, value)
   }
 
-  $: isComponentOrScreen =
-    $store.currentView === "component" ||
-    $store.currentFrontEndType === "screen"
+  $: isComponentOrScreen = $store.currentView === "component" || $store.currentFrontEndType === "screen"
   $: isNotScreenslot = componentInstance._component !== "##builtin/screenslot"
 
-  $: displayName =
-    isComponentOrScreen && componentInstance._instanceName && isNotScreenslot
+  $: displayName = isComponentOrScreen && componentInstance._instanceName && isNotScreenslot
 
   function walkProps(component, action) {
     action(component)
@@ -87,10 +76,7 @@
 
 <div class="root">
 
-  <CategoryTab
-    onClick={category => (selectedCategory = category)}
-    {categories}
-    {selectedCategory} />
+  <CategoryTab onClick={category => (selectedCategory = category)} {categories} {selectedCategory} />
 
   {#if displayName}
     <div class="instance-name">{componentInstance._instanceName}</div>

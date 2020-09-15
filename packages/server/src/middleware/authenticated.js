@@ -1,12 +1,7 @@
 const jwt = require("jsonwebtoken")
 const STATUS_CODES = require("../utilities/statusCodes")
 const accessLevelController = require("../api/controllers/accesslevel")
-const {
-  ADMIN_LEVEL_ID,
-  POWERUSER_LEVEL_ID,
-  BUILDER_LEVEL_ID,
-  ANON_LEVEL_ID,
-} = require("../utilities/accessLevels")
+const { ADMIN_LEVEL_ID, POWERUSER_LEVEL_ID, BUILDER_LEVEL_ID, ANON_LEVEL_ID } = require("../utilities/accessLevels")
 
 module.exports = async (ctx, next) => {
   if (ctx.path === "/_builder") {
@@ -23,10 +18,7 @@ module.exports = async (ctx, next) => {
       ctx.isAuthenticated = jwtPayload.accessLevelId === BUILDER_LEVEL_ID
       ctx.user = {
         ...jwtPayload,
-        accessLevel: await getAccessLevel(
-          jwtPayload.instanceId,
-          jwtPayload.accessLevelId
-        ),
+        accessLevel: await getAccessLevel(jwtPayload.instanceId, jwtPayload.accessLevelId),
       }
     } catch (_) {
       // empty: do nothing
@@ -47,10 +39,7 @@ module.exports = async (ctx, next) => {
 
     ctx.user = {
       ...jwtPayload,
-      accessLevel: await getAccessLevel(
-        jwtPayload.instanceId,
-        jwtPayload.accessLevelId
-      ),
+      accessLevel: await getAccessLevel(jwtPayload.instanceId, jwtPayload.accessLevelId),
     }
     ctx.isAuthenticated = ctx.user.accessLevelId !== ANON_LEVEL_ID
   } catch (err) {

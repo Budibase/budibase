@@ -1,13 +1,7 @@
 <script>
   import Modal from "svelte-simple-modal"
   import { Home as Link } from "@budibase/bbui"
-  import {
-    AppsIcon,
-    HostingIcon,
-    DocumentationIcon,
-    CommunityIcon,
-    BugIcon,
-  } from "components/common/Icons/"
+  import { AppsIcon, HostingIcon, DocumentationIcon, CommunityIcon, BugIcon } from "components/common/Icons/"
 </script>
 
 <Modal>
@@ -19,23 +13,11 @@
 
       <div class="nav-section">
         <Link icon={AppsIcon} title="Apps" href="/" active />
-        <Link
-          icon={HostingIcon}
-          title="Hosting"
-          href="https://portal.budi.live/" />
-        <Link
-          icon={DocumentationIcon}
-          title="Documentation"
-          href="https://docs.budibase.com/" />
-        <Link
-          icon={CommunityIcon}
-          title="Community"
-          href="https://forum.budibase.com/" />
+        <Link icon={HostingIcon} title="Hosting" href="https://portal.budi.live/" />
+        <Link icon={DocumentationIcon} title="Documentation" href="https://docs.budibase.com/" />
+        <Link icon={CommunityIcon} title="Community" href="https://forum.budibase.com/" />
 
-        <Link
-          icon={BugIcon}
-          title="Raise an issue"
-          href="https://github.com/Budibase/budibase" />
+        <Link icon={BugIcon} title="Raise an issue" href="https://github.com/Budibase/budibase" />
       </div>
     </div>
 

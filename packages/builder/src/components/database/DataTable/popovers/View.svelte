@@ -1,12 +1,5 @@
 <script>
-  import {
-    Popover,
-    TextButton,
-    Button,
-    Icon,
-    Input,
-    Select,
-  } from "@budibase/bbui"
+  import { Popover, TextButton, Button, Icon, Input, Select } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
@@ -21,9 +14,7 @@
   $: fields = Object.keys($backendUiStore.selectedModel.schema).filter(key => {
     return $backendUiStore.selectedModel.schema[key].type === "number"
   })
-  $: views = $backendUiStore.models.flatMap(model =>
-    Object.keys(model.views || {})
-  )
+  $: views = $backendUiStore.models.flatMap(model => Object.keys(model.views || {}))
 
   function saveView() {
     if (views.includes(name)) {

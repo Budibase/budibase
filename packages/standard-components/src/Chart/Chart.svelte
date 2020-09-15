@@ -3,20 +3,14 @@
   export const chartTypes = britecharts ? Object.keys(britecharts) : null
 
   //expose chart color schemas for use or reference outside compnent
-  export const colorSchemas = britecharts
-    ? britecharts.colors.colorSchemas
-    : null
+  export const colorSchemas = britecharts ? britecharts.colors.colorSchemas : null
 
   //export color gradients for use or reference outside the component
-  export const colorGradients = britecharts
-    ? britecharts.colors.colorGradients
-    : null
+  export const colorGradients = britecharts ? britecharts.colors.colorGradients : null
 
-  export const getColorSchema = color =>
-    color ? colorSchemas[color] : colorSchemas["britecharts"]
+  export const getColorSchema = color => (color ? colorSchemas[color] : colorSchemas["britecharts"])
 
-  export const getChartGradient = gradient =>
-    gradient ? colorGradients[gradient] : null
+  export const getChartGradient = gradient => (gradient ? colorGradients[gradient] : null)
 </script>
 
 <script>
@@ -110,16 +104,7 @@
   }
 
   function bindChartUIProps() {
-    const excludeProps = [
-      "data",
-      "type",
-      "on",
-      "useTooltip",
-      "tooltip",
-      "tooltipProps",
-      "legendProps",
-      "useLegend",
-    ]
+    const excludeProps = ["data", "type", "on", "useTooltip", "tooltip", "tooltipProps", "legendProps", "useLegend"]
 
     if (!$$props.width) {
       chart.width(chartElement.getBoundingClientRect().width)
@@ -130,9 +115,7 @@
 
   function bindProps(element, elProps, excludeArray) {
     if (elProps) {
-      const props = excludeArray
-        ? Object.entries(excludeProps(elProps, excludeArray))
-        : Object.entries(elProps)
+      const props = excludeArray ? Object.entries(excludeProps(elProps, excludeArray)) : Object.entries(elProps)
 
       const validElementProps = Object.getOwnPropertyNames(element)
 
@@ -142,9 +125,7 @@
             chart[prop](value)
           }
         } else {
-          console.warn(
-            `${type} - ${prop} is an unrecognised chart prop and wont be applied`
-          )
+          console.warn(`${type} - ${prop} is an unrecognised chart prop and wont be applied`)
         }
       }
     }

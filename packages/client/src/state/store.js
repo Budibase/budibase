@@ -7,8 +7,7 @@ const rootStore = writable(rootState)
 const contextStores = {}
 
 // contextProviderId is the component id that provides the data for the context
-const contextStoreKey = (dataProviderId, childIndex) =>
-  `${dataProviderId}${childIndex >= 0 ? ":" + childIndex : ""}`
+const contextStoreKey = (dataProviderId, childIndex) => `${dataProviderId}${childIndex >= 0 ? ":" + childIndex : ""}`
 
 // creates a store for a datacontext (e.g. each item in a list component)
 // overrides store if already exists
@@ -19,9 +18,7 @@ const create = (data, dataProviderId, childIndex, parentContextStoreId) => {
   // add reference to parent state object,
   // so we can use bindings like state.parent.parent
   // (if no parent, then parent is rootState )
-  state.parent = parentContextStoreId
-    ? contextStores[parentContextStoreId].state
-    : rootState
+  state.parent = parentContextStoreId ? contextStores[parentContextStoreId].state : rootState
 
   contextStores[key] = {
     store: writable(state),
@@ -81,21 +78,15 @@ const subscribe = (subscription, storeKey) => {
 }
 
 const findStore = (dataProviderId, childIndex) =>
-  dataProviderId
-    ? contextStores[contextStoreKey(dataProviderId, childIndex)].store
-    : rootStore
+  dataProviderId ? contextStores[contextStoreKey(dataProviderId, childIndex)].store : rootStore
 
-const update = (updatefunc, dataProviderId, childIndex) =>
-  findStore(dataProviderId, childIndex).update(updatefunc)
+const update = (updatefunc, dataProviderId, childIndex) => findStore(dataProviderId, childIndex).update(updatefunc)
 
-const set = (value, dataProviderId, childIndex) =>
-  findStore(dataProviderId, childIndex).set(value)
+const set = (value, dataProviderId, childIndex) => findStore(dataProviderId, childIndex).set(value)
 
-const getState = contextStoreKey =>
-  contextStoreKey ? contextStores[contextStoreKey].state : rootState
+const getState = contextStoreKey => (contextStoreKey ? contextStores[contextStoreKey].state : rootState)
 
-const getStore = contextStoreKey =>
-  contextStoreKey ? contextStores[contextStoreKey] : rootStore
+const getStore = contextStoreKey => (contextStoreKey ? contextStores[contextStoreKey] : rootStore)
 
 export default {
   subscribe,

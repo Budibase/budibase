@@ -20,8 +20,7 @@
   let components = {}
   let componentElements = {}
 
-  const hasComponentElements = () =>
-    Object.getOwnPropertyNames(componentElements).length > 0
+  const hasComponentElements = () => Object.getOwnPropertyNames(componentElements).length > 0
 
   $: {
     styleVars = {
@@ -36,8 +35,7 @@
     }
 
     if (_children && _children.length > 0 && hasComponentElements()) {
-      const currentSelectedItem =
-        selectedIndex > 0 ? _children[selectedIndex].title : ""
+      const currentSelectedItem = selectedIndex > 0 ? _children[selectedIndex].title : ""
       if (selectedItem && currentSelectedItem !== selectedItem) {
         let i = 0
         for (let child of _children) {
@@ -65,10 +63,7 @@
   {#if !hideNavBar}
     <div class="navbar">
       {#each _children as navItem, index}
-        <div
-          class="navitem"
-          on:click={onSelectItem(index)}
-          class:selected={selectedIndex === index}>
+        <div class="navitem" on:click={onSelectItem(index)} class:selected={selectedIndex === index}>
           {navItem.title}
         </div>
       {/each}

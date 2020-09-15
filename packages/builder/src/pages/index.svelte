@@ -65,16 +65,12 @@
 
 <div class="header">
   <div class="welcome">Welcome to the Budibase Beta</div>
-  <Button primary purple on:click={showCreateAppModal}>
-    Create New Web App
-  </Button>
+  <Button primary purple on:click={showCreateAppModal}>Create New Web App</Button>
 </div>
 
 <div class="banner">
   <img src="/_builder/assets/orange-landscape.png" alt="rocket" />
-  <div class="banner-content">
-    Every accomplishment starts with a decision to try.
-  </div>
+  <div class="banner-content">Every accomplishment starts with a decision to try.</div>
 </div>
 
 {#await promise}

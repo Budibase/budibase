@@ -79,8 +79,5 @@
 </script>
 
 {#if useLegend}
-  <div
-    bind:this={legendElement}
-    style={`width: ${width}px`}
-    class={legendClass} />
+  <div bind:this={legendElement} style={`width: ${width}px`} class={legendClass} />
 {/if}

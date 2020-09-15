@@ -79,9 +79,7 @@ export const getBackendUiStore = () => {
       delete: async model => {
         await api.delete(`/api/models/${model._id}/${model._rev}`)
         store.update(state => {
-          state.models = state.models.filter(
-            existing => existing._id !== model._id
-          )
+          state.models = state.models.filter(existing => existing._id !== model._id)
           state.selectedModel = state.models[0] || {}
           return state
         })
@@ -132,9 +130,7 @@ export const getBackendUiStore = () => {
         }
 
         store.update(state => {
-          const viewModel = state.models.find(
-            model => model._id === view.modelId
-          )
+          const viewModel = state.models.find(model => model._id === view.modelId)
 
           if (view.originalName) delete viewModel.views[view.originalName]
           viewModel.views[view.name] = viewMeta

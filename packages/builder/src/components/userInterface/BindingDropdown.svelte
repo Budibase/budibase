@@ -47,8 +47,8 @@
   <div class="text">
     <Label size="l" color="dark">Data binding</Label>
     <Body size="s" color="dark">
-      Binding connects one piece of data to another and makes it dynamic. Click
-      the objects on the left, to add them to the textbox.
+      Binding connects one piece of data to another and makes it dynamic. Click the objects on the left, to add them to
+      the textbox.
     </Body>
     <TextArea bind:value placeholder="" />
     <div class="controls">

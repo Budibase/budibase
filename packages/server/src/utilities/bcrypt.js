@@ -9,5 +9,4 @@ exports.hash = async data => {
   return result
 }
 
-exports.compare = async (data, encrypted) =>
-  await bcrypt.compare(data, encrypted)
+exports.compare = async (data, encrypted) => await bcrypt.compare(data, encrypted)

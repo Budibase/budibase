@@ -36,11 +36,7 @@
       {/each}
     </DataList>
   {:else}
-    <Input
-      name={parameter.name}
-      label={capitalize(parameter.name)}
-      on:change
-      value={parameter.value} />
+    <Input name={parameter.name} label={capitalize(parameter.name)} on:change value={parameter.value} />
   {/if}
 </div>
 

@@ -21,11 +21,7 @@
 
 <section class="canvas">
   {#each blocks as block, idx (block.id)}
-    <div
-      class="block"
-      animate:flip={{ duration: 600 }}
-      in:fade|local
-      out:fly|local={{ x: 100 }}>
+    <div class="block" animate:flip={{ duration: 600 }} in:fade|local out:fly|local={{ x: 100 }}>
       <FlowItem {onSelect} {block} />
       {#if idx !== blocks.length - 1}
         <Arrow />

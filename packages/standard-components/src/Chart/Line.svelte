@@ -24,12 +24,7 @@
   let tooltip = britecharts.tooltip()
 
   export let customMouseOver = () => tooltip.show()
-  export let customMouseMove = (
-    dataPoint,
-    topicColorMap,
-    dataPointXPosition,
-    yPosition
-  ) => {
+  export let customMouseMove = (dataPoint, topicColorMap, dataPointXPosition, yPosition) => {
     tooltip.update(dataPoint, topicColorMap, dataPointXPosition, yPosition)
   }
   export let customMouseOut = () => tooltip.hide()
@@ -88,25 +83,18 @@
 
         bindTooltip()
       } else {
-        console.error(
-          "Line Chart - Please provide valid name, value and topic labels"
-        )
+        console.error("Line Chart - Please provide valid name, value and topic labels")
       }
     }
   })
 
   function bindTooltip() {
-    tooltipContainer = select(
-      `.${chartClass} .metadata-group .vertical-marker-container`
-    )
+    tooltipContainer = select(`.${chartClass} .metadata-group .vertical-marker-container`)
     tooltip.topicLabel("topics")
     tooltipContainer.datum([]).call(tooltip)
   }
 
-  const schemaIsValid = data =>
-    hasProp(data, valueLabel) &&
-    hasProp(data, dateLabel) &&
-    hasProp(data, topicLabel)
+  const schemaIsValid = data => hasProp(data, valueLabel) && hasProp(data, dateLabel) && hasProp(data, topicLabel)
 
   async function getAndPrepareData() {
     let dataByTopic = []

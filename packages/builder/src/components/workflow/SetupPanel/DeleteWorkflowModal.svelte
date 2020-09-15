@@ -25,9 +25,7 @@
   Delete Workflow
 </header>
 <div>
-  <p>
-    Are you sure you want to delete this workflow? This action can't be undone.
-  </p>
+  <p>Are you sure you want to delete this workflow? This action can't be undone.</p>
 </div>
 <footer>
   <a href="https://docs.budibase.com">

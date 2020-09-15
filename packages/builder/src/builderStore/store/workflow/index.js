@@ -5,10 +5,7 @@ import { cloneDeep } from "lodash/fp"
 
 const workflowActions = store => ({
   fetch: async () => {
-    const responses = await Promise.all([
-      api.get(`/api/workflows`),
-      api.get(`/api/workflows/definitions/list`),
-    ])
+    const responses = await Promise.all([api.get(`/api/workflows`), api.get(`/api/workflows/definitions/list`)])
     const jsonResponses = await Promise.all(responses.map(x => x.json()))
     store.update(state => {
       state.workflows = jsonResponses[0]
@@ -41,9 +38,7 @@ const workflowActions = store => ({
     const response = await api.put(UPDATE_WORKFLOW_URL, workflow)
     const json = await response.json()
     store.update(state => {
-      const existingIdx = state.workflows.findIndex(
-        existing => existing._id === workflow._id
-      )
+      const existingIdx = state.workflows.findIndex(existing => existing._id === workflow._id)
       state.workflows.splice(existingIdx, 1, json.workflow)
       state.workflows = state.workflows
       store.actions.select(json.workflow)
@@ -56,9 +51,7 @@ const workflowActions = store => ({
     await api.delete(DELETE_WORKFLOW_URL)
 
     store.update(state => {
-      const existingIdx = state.workflows.findIndex(
-        existing => existing._id === _id
-      )
+      const existingIdx = state.workflows.findIndex(existing => existing._id === _id)
       state.workflows.splice(existingIdx, 1)
       state.workflows = state.workflows
       state.selectedWorkflow = null
@@ -87,9 +80,7 @@ const workflowActions = store => ({
   },
   deleteWorkflowBlock: block => {
     store.update(state => {
-      const idx = state.selectedWorkflow.workflow.definition.steps.findIndex(
-        x => x.id === block.id
-      )
+      const idx = state.selectedWorkflow.workflow.definition.steps.findIndex(x => x.id === block.id)
       state.selectedWorkflow.deleteBlock(block.id)
 
       // Select next closest step
@@ -100,8 +91,7 @@ const workflowActions = store => ({
       } else if (steps[idx - 1] != null) {
         nextSelectedBlock = steps[idx - 1]
       } else {
-        nextSelectedBlock =
-          state.selectedWorkflow.workflow.definition.trigger || null
+        nextSelectedBlock = state.selectedWorkflow.workflow.definition.trigger || null
       }
       state.selectedBlock = nextSelectedBlock
       return state

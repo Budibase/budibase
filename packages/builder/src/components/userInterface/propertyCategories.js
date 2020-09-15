@@ -391,20 +391,7 @@ export const typography = [
     label: "size",
     key: "font-size",
     control: OptionSelect,
-    options: [
-      "8px",
-      "10px",
-      "12px",
-      "14px",
-      "16px",
-      "18px",
-      "20px",
-      "24px",
-      "32px",
-      "48px",
-      "60px",
-      "72px",
-    ],
+    options: ["8px", "10px", "12px", "14px", "16px", "18px", "20px", "24px", "32px", "48px", "60px", "72px"],
     textAlign: "center",
   },
   {
@@ -566,18 +553,7 @@ export const border = [
     key: "border-style",
     control: OptionSelect,
     defaultValue: "None",
-    options: [
-      "None",
-      "Hidden",
-      "Dotted",
-      "Dashed",
-      "Solid",
-      "Double",
-      "Groove",
-      "Ridge",
-      "Inset",
-      "Outset",
-    ],
+    options: ["None", "Hidden", "Dotted", "Dashed", "Solid", "Double", "Groove", "Ridge", "Inset", "Outset"],
   },
 ]
 
@@ -616,23 +592,19 @@ export const effects = [
       { label: "X Small", value: "0 1px 2px 0 rgba(0, 0, 0, 0.05)" },
       {
         label: "Small",
-        value:
-          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+        value: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
       },
       {
         label: "Medium",
-        value:
-          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        value: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
       },
       {
         label: "Large",
-        value:
-          "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+        value: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
       },
       {
         label: "X Large",
-        value:
-          "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        value: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
       },
     ],
   },

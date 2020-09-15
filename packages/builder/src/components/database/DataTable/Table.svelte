@@ -30,10 +30,7 @@
   $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
   $: paginatedData =
     sorted && sorted.length
-      ? sorted.slice(
-          currentPage * ITEMS_PER_PAGE,
-          currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-        )
+      ? sorted.slice(currentPage * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE)
       : []
 </script>
 
@@ -65,11 +62,7 @@
       {/each}
     </tbody>
   </table>
-  <TablePagination
-    {data}
-    bind:currentPage
-    pageItemCount={paginatedData.length}
-    {ITEMS_PER_PAGE} />
+  <TablePagination {data} bind:currentPage pageItemCount={paginatedData.length} {ITEMS_PER_PAGE} />
 </section>
 
 <style>

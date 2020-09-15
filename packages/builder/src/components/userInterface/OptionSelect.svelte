@@ -22,8 +22,7 @@
   let scrollTop = 0
   let containerEl = null
 
-  const handleStyleBind = value =>
-    !!styleBindingProperty ? { style: `${styleBindingProperty}: ${value}` } : {}
+  const handleStyleBind = value => (!!styleBindingProperty ? { style: `${styleBindingProperty}: ${value}` } : {})
 
   onMount(() => {
     if (select) {
@@ -42,11 +41,7 @@
   }
 
   function getDimensions() {
-    const {
-      bottom,
-      top: spaceAbove,
-      left,
-    } = selectAnchor.getBoundingClientRect()
+    const { bottom, top: spaceAbove, left } = selectAnchor.getBoundingClientRect()
     const spaceBelow = window.innerHeight - bottom
 
     let y
@@ -95,23 +90,16 @@
 
   $: isOptionsObject = options.every(o => typeof o === "object")
 
-  $: selectedOption = isOptionsObject
-    ? options.find(o => o.value === value)
-    : {}
+  $: selectedOption = isOptionsObject ? options.find(o => o.value === value) : {}
 
   $: if (open && selectMenu) {
     selectMenu.focus()
   }
 
-  $: displayLabel =
-    selectedOption && selectedOption.label ? selectedOption.label : value || ""
+  $: displayLabel = selectedOption && selectedOption.label ? selectedOption.label : value || ""
 </script>
 
-<div
-  tabindex="0"
-  bind:this={select}
-  class="bb-select-container"
-  on:click={() => toggleSelect(!open)}>
+<div tabindex="0" bind:this={select} class="bb-select-container" on:click={() => toggleSelect(!open)}>
   <div bind:this={selectAnchor} title={value} class="bb-select-anchor selected">
     <span>{displayLabel}</span>
     <i bind:this={icon} class="ri-arrow-down-s-fill" />
@@ -128,21 +116,11 @@
         <ul>
           {#if isOptionsObject}
             {#each options as { value: v, label }}
-              <li
-                {...handleStyleBind(v)}
-                on:click|self={handleClick(v)}
-                class:selected={value === v}>
-                {label}
-              </li>
+              <li {...handleStyleBind(v)} on:click|self={handleClick(v)} class:selected={value === v}>{label}</li>
             {/each}
           {:else}
             {#each options as v}
-              <li
-                {...handleStyleBind(v)}
-                on:click|self={handleClick(v)}
-                class:selected={value === v}>
-                {v}
-              </li>
+              <li {...handleStyleBind(v)} on:click|self={handleClick(v)} class:selected={value === v}>{v}</li>
             {/each}
           {/if}
         </ul>

@@ -65,9 +65,7 @@ exports.destroy = async function(ctx) {
   const { metadata } = designDoc
   const clientDb = new CouchDB(client.name(metadata.clientId))
   const budibaseApp = await clientDb.get(metadata.applicationId)
-  budibaseApp.instances = budibaseApp.instances.filter(
-    instance => instance !== ctx.params.instanceId
-  )
+  budibaseApp.instances = budibaseApp.instances.filter(instance => instance !== ctx.params.instanceId)
   await clientDb.put(budibaseApp)
 
   ctx.status = 200

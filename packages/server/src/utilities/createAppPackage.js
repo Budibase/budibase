@@ -9,8 +9,7 @@ const packageJson = require("../../package.json")
 
 const streamPipeline = promisify(stream.pipeline)
 
-exports.appPackageFolder = (config, appname) =>
-  resolve(cwd(), config.latestPackagesFolder, appname)
+exports.appPackageFolder = (config, appname) => resolve(cwd(), config.latestPackagesFolder, appname)
 
 exports.downloadExtractComponentLibraries = async appFolder => {
   const LIBRARIES = ["standard-components"]
@@ -20,13 +19,8 @@ exports.downloadExtractComponentLibraries = async appFolder => {
     // download tarball
     const registryUrl = `https://registry.npmjs.org/@budibase/${lib}/-/${lib}-${packageJson.version}.tgz`
     const response = await fetch(registryUrl)
-    if (!response.ok)
-      throw new Error(`unexpected response ${response.statusText}`)
+    if (!response.ok) throw new Error(`unexpected response ${response.statusText}`)
 
-    await streamPipeline(
-      response.body,
-      zlib.Unzip(),
-      tar.extract(`${appFolder}/node_modules/@budibase/${lib}`)
-    )
+    await streamPipeline(response.body, zlib.Unzip(), tar.extract(`${appFolder}/node_modules/@budibase/${lib}`))
   }
 }

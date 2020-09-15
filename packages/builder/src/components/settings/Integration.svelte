@@ -10,9 +10,7 @@
     </div>
     <div class="body">
       <div class="title">Zoom</div>
-      <div class="description">
-        Lorem, ipsum dolor sit amet consectetur adipisicing elit
-      </div>
+      <div class="description">Lorem, ipsum dolor sit amet consectetur adipisicing elit</div>
     </div>
   </div>
   <div class="footer">

@@ -44,9 +44,7 @@ router
       useAppRootPath: true,
     }
     ctx.isDev =
-      process.env.NODE_ENV !== "production" &&
-      process.env.NODE_ENV !== "jest" &&
-      process.env.NODE_ENV !== "cypress"
+      process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "jest" && process.env.NODE_ENV !== "cypress"
     await next()
   })
   .use(authenticated)

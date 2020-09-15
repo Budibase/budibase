@@ -10,15 +10,10 @@
 
   let selectedTab = "SETUP"
 
-  $: workflow =
-    $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
+  $: workflow = $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
 
   function deleteWorkflow() {
-    open(
-      DeleteWorkflowModal,
-      { onClosed: close },
-      { styleContent: { padding: "0" } }
-    )
+    open(DeleteWorkflowModal, { onClosed: close }, { styleContent: { padding: "0" } })
   }
 
   function deleteWorkflowBlock() {
@@ -47,19 +42,14 @@
 
 <section>
   <header>
-    <span
-      class="hoverable"
-      class:selected={selectedTab === 'SETUP'}
-      on:click={() => (selectedTab = 'SETUP')}>
+    <span class="hoverable" class:selected={selectedTab === 'SETUP'} on:click={() => (selectedTab = 'SETUP')}>
       Setup
     </span>
   </header>
   {#if $workflowStore.selectedBlock}
     <WorkflowBlockSetup bind:block={$workflowStore.selectedBlock} />
     <div class="buttons">
-      <Button green wide data-cy="save-workflow-setup" on:click={saveWorkflow}>
-        Save Workflow
-      </Button>
+      <Button green wide data-cy="save-workflow-setup" on:click={saveWorkflow}>Save Workflow</Button>
       <Button red wide on:click={deleteWorkflowBlock}>Delete Block</Button>
     </div>
   {:else if $workflowStore.selectedWorkflow}
@@ -72,13 +62,7 @@
       </div>
       <Button secondary wide on:click={testWorkflow}>Test Workflow</Button>
       <div class="buttons">
-        <Button
-          green
-          wide
-          data-cy="save-workflow-setup"
-          on:click={saveWorkflow}>
-          Save Workflow
-        </Button>
+        <Button green wide data-cy="save-workflow-setup" on:click={saveWorkflow}>Save Workflow</Button>
         <Button red wide on:click={deleteWorkflow}>Delete Workflow</Button>
       </div>
     </div>

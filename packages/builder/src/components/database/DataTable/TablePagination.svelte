@@ -30,11 +30,7 @@
     <button on:click={previous}>Previous</button>
     <button on:click={next}>Next</button>
     {#each Array(numPages) as _, idx}
-      <button
-        class:selected={idx === currentPage}
-        on:click={() => selectPage(idx)}>
-        {idx + 1}
-      </button>
+      <button class:selected={idx === currentPage} on:click={() => selectPage(idx)}>{idx + 1}</button>
     {/each}
   </div>
   <p>Showing {pageItemCount} of {data.length} entries</p>

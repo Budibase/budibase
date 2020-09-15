@@ -16,8 +16,7 @@ export const buildStateOrigins = screenDefinition => {
       if (key === "_children") propValue[key].forEach(traverse)
 
       for (let element of propValue[key]) {
-        if (element["##eventHandlerType"] === "Set State")
-          origins[element.parameters.path] = element
+        if (element["##eventHandlerType"] === "Set State") origins[element.parameters.path] = element
       }
     }
   }

@@ -108,11 +108,7 @@ export default {
     resolve({
       browser: true,
       dedupe: importee => {
-        return (
-          importee === "svelte" ||
-          importee.startsWith("svelte/") ||
-          coreExternal.includes(importee)
-        )
+        return importee === "svelte" || importee.startsWith("svelte/") || coreExternal.includes(importee)
       },
     }),
     commonjs({

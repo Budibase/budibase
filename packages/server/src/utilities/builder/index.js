@@ -1,13 +1,5 @@
 const { appPackageFolder } = require("../createAppPackage")
-const {
-  readJSON,
-  writeJSON,
-  readdir,
-  ensureDir,
-  rename,
-  unlink,
-  rmdir,
-} = require("fs-extra")
+const { readJSON, writeJSON, readdir, ensureDir, rename, unlink, rmdir } = require("fs-extra")
 const { join, dirname, resolve } = require("path")
 const env = require("../../environment")
 
@@ -19,8 +11,7 @@ const deleteCodeMeta = require("./deleteCodeMeta")
 module.exports.buildPage = buildPage
 module.exports.listScreens = listScreens
 
-const getAppDefinition = async appPath =>
-  await readJSON(`${appPath}/appDefinition.json`)
+const getAppDefinition = async appPath => await readJSON(`${appPath}/appDefinition.json`)
 
 module.exports.getPackageForBuilder = async (config, application) => {
   const appPath = resolve(config.latestPackagesFolder, application._id)
@@ -36,8 +27,7 @@ module.exports.getPackageForBuilder = async (config, application) => {
   }
 }
 
-const screenPath = (appPath, pageName, name) =>
-  join(appPath, "pages", pageName, "screens", name + ".json")
+const screenPath = (appPath, pageName, name) => join(appPath, "pages", pageName, "screens", name + ".json")
 
 module.exports.saveScreen = async (config, appname, pagename, screen) => {
   const appPath = appPackageFolder(config, appname)
@@ -58,13 +48,7 @@ module.exports.saveScreen = async (config, appname, pagename, screen) => {
   return screen
 }
 
-module.exports.renameScreen = async (
-  config,
-  appname,
-  pagename,
-  oldName,
-  newName
-) => {
+module.exports.renameScreen = async (config, appname, pagename, oldName, newName) => {
   const appPath = appPackageFolder(config, appname)
 
   const oldComponentPath = screenPath(appPath, pagename, oldName)

@@ -12,26 +12,18 @@
 
   const selectTab = tab => (selected = tab)
 
-  const toggleTab = () =>
-    (selected =
-      selected === PROPERTIES_TAB ? COMPONENT_SELECTION_TAB : PROPERTIES_TAB)
+  const toggleTab = () => (selected = selected === PROPERTIES_TAB ? COMPONENT_SELECTION_TAB : PROPERTIES_TAB)
 </script>
 
 <div class="root">
   {#if $store.currentFrontEndType === 'page' || $store.screens.length}
     <div class="switcher">
 
-      <button
-        class:selected={selected === COMPONENT_SELECTION_TAB}
-        on:click={() => selectTab(COMPONENT_SELECTION_TAB)}>
+      <button class:selected={selected === COMPONENT_SELECTION_TAB} on:click={() => selectTab(COMPONENT_SELECTION_TAB)}>
         Add
       </button>
 
-      <button
-        class:selected={selected === PROPERTIES_TAB}
-        on:click={() => selectTab(PROPERTIES_TAB)}>
-        Edit
-      </button>
+      <button class:selected={selected === PROPERTIES_TAB} on:click={() => selectTab(PROPERTIES_TAB)}>Edit</button>
 
     </div>
 

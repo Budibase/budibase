@@ -3,15 +3,7 @@
   // import { tick } from "svelte"
   import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
 
-  import {
-    last,
-    sortBy,
-    map,
-    trimCharsStart,
-    trimChars,
-    join,
-    compose,
-  } from "lodash/fp"
+  import { last, sortBy, map, trimCharsStart, trimChars, join, compose } from "lodash/fp"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { pipe } from "components/common/core"
   import { store } from "builderStore"
@@ -26,8 +18,7 @@
   const dragDropStore = writable({})
   const joinPath = join("/")
 
-  const lastPartOfName = c =>
-    c && last(c.name ? c.name.split("/") : c._component.split("/"))
+  const lastPartOfName = c => c && last(c.name ? c.name.split("/") : c._component.split("/"))
 
   const isComponentSelected = (current, comp) => current === comp
 
@@ -46,9 +37,7 @@
   class="budibase__nav-item root"
   class:selected={$store.currentComponentInfo._id === _layout.component.props._id}
   on:click|stopPropagation={setCurrentScreenToLayout}>
-  <span
-    class="icon"
-    class:rotate={$store.currentPreviewItem.name !== _layout.title}>
+  <span class="icon" class:rotate={$store.currentPreviewItem.name !== _layout.title}>
     <ArrowDownIcon />
   </span>
   <i class="ri-layout-3-fill icon-big" />

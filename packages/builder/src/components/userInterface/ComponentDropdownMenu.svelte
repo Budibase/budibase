@@ -20,8 +20,7 @@
   let dropdown
   let anchor
 
-  $: noChildrenAllowed =
-    !component || !getComponentDefinition($store, component._component).children
+  $: noChildrenAllowed = !component || !getComponentDefinition($store, component._component).children
   $: noPaste = !$store.componentToPaste
 
   const lastPartOfName = c => (c ? last(c._component.split("/")) : "")
@@ -113,13 +112,7 @@
     <MoreIcon />
   </button>
 </div>
-<DropdownMenu
-  class="menu"
-  bind:this={dropdown}
-  on:click={hideDropdown}
-  width="170px"
-  {anchor}
-  align="left">
+<DropdownMenu class="menu" bind:this={dropdown} on:click={hideDropdown} width="170px" {anchor} align="left">
   <ul>
     <li class="item" on:click={() => confirmDeleteDialog.show()}>
       <i class="icon ri-delete-bin-2-line" />
@@ -146,24 +139,15 @@
       Copy
     </li>
     <hr class="hr-style" />
-    <li
-      class="item"
-      class:disabled={noPaste}
-      on:click={() => pasteComponent('above')}>
+    <li class="item" class:disabled={noPaste} on:click={() => pasteComponent('above')}>
       <i class="icon ri-insert-row-top" />
       Paste above
     </li>
-    <li
-      class="item"
-      class:disabled={noPaste}
-      on:click={() => pasteComponent('below')}>
+    <li class="item" class:disabled={noPaste} on:click={() => pasteComponent('below')}>
       <i class="icon ri-insert-row-bottom" />
       Paste below
     </li>
-    <li
-      class="item"
-      class:disabled={noPaste || noChildrenAllowed}
-      on:click={() => pasteComponent('inside')}>
+    <li class="item" class:disabled={noPaste || noChildrenAllowed} on:click={() => pasteComponent('inside')}>
       <i class="icon ri-insert-column-right" />
       Paste inside
     </li>

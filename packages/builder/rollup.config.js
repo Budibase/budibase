@@ -111,27 +111,10 @@ const lodash_exports = [
 
 const outputpath = "../server/builder"
 
-const coreExternal = [
-  "lodash",
-  "lodash/fp",
-  "date-fns",
-  "lunr",
-  "safe-buffer",
-  "shortid",
-  "@nx-js/compiler-util",
-]
+const coreExternal = ["lodash", "lodash/fp", "date-fns", "lunr", "safe-buffer", "shortid", "@nx-js/compiler-util"]
 
 const customResolver = resolve({
-  extensions: [
-    ".mjs",
-    ".js",
-    ".jsx",
-    ".json",
-    ".sass",
-    ".scss",
-    ".svelte",
-    ".css",
-  ],
+  extensions: [".mjs", ".js", ".jsx", ".json", ".sass", ".scss", ".svelte", ".css"],
 })
 const projectRootDir = path.resolve(__dirname)
 
@@ -178,9 +161,7 @@ export default {
     }),
 
     replace({
-      "process.env.NODE_ENV": JSON.stringify(
-        production ? "production" : "development"
-      ),
+      "process.env.NODE_ENV": JSON.stringify(production ? "production" : "development"),
       "process.env.POSTHOG_TOKEN": JSON.stringify(process.env.POSTHOG_TOKEN),
       "process.env.POSTHOG_URL": JSON.stringify(process.env.POSTHOG_URL),
       "process.env.SENTRY_DSN": JSON.stringify(process.env.SENTRY_DSN),
@@ -189,11 +170,7 @@ export default {
     svelte({
       // enable run-time checks when not in production
       dev: !production,
-      include: [
-        "src/**/*.svelte",
-        "node_modules/**/*.svelte",
-        "../../../bbui/src/**/*.svelte",
-      ],
+      include: ["src/**/*.svelte", "node_modules/**/*.svelte", "../../../bbui/src/**/*.svelte"],
       // we'll extract any component CSS out into
       // a separate file — better for performance
       css: css => {
@@ -209,11 +186,7 @@ export default {
     resolve({
       browser: true,
       dedupe: importee => {
-        return (
-          importee === "svelte" ||
-          importee.startsWith("svelte/") ||
-          coreExternal.includes(importee)
-        )
+        return importee === "svelte" || importee.startsWith("svelte/") || coreExternal.includes(importee)
       },
     }),
     commonjs({

@@ -21,6 +21,4 @@
   })
 </script>
 
-{#if $backendUiStore.models.length === 0}
-  Please create a table
-{:else}Please select a table{/if}
+{#if $backendUiStore.models.length === 0}Please create a table{:else}Please select a table{/if}

@@ -58,21 +58,13 @@ exports.patch = async function(ctx) {
 
   if (removedPermissions) {
     level.permissions = level.permissions.filter(
-      p =>
-        !removedPermissions.some(
-          rem => rem.name === p.name && rem.itemId === p.itemId
-        )
+      p => !removedPermissions.some(rem => rem.name === p.name && rem.itemId === p.itemId)
     )
   }
 
   if (addedPermissions) {
     level.permissions = [
-      ...level.permissions.filter(
-        p =>
-          !addedPermissions.some(
-            add => add.name === p.name && add.itemId === p.itemId
-          )
-      ),
+      ...level.permissions.filter(p => !addedPermissions.some(add => add.name === p.name && add.itemId === p.itemId)),
       ...addedPermissions,
     ]
   }

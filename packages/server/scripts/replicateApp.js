@@ -27,14 +27,10 @@ const run = async () => {
     key: ["app"],
   })
 
-  const app = body.rows
-    .map(r => r.doc)
-    .find(a => a.name == appName || a.name.toLowerCase() === appName)
+  const app = body.rows.map(r => r.doc).find(a => a.name == appName || a.name.toLowerCase() === appName)
 
   if (!app) {
-    console.log(
-      `Could not find app... apps: ${body.rows.map(r => r.doc.name).join(", ")}`
-    )
+    console.log(`Could not find app... apps: ${body.rows.map(r => r.doc.name).join(", ")}`)
     return
   }
 

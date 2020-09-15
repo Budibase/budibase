@@ -25,20 +25,10 @@
 
 <div class="container">
   <div class="background">
-    <Input
-      on:save={e => updateKey(['budibase', e.detail])}
-      thin
-      edit
-      value={keys.budibase}
-      label="Budibase" />
+    <Input on:save={e => updateKey(['budibase', e.detail])} thin edit value={keys.budibase} label="Budibase" />
   </div>
   <div class="background">
-    <Input
-      on:save={e => updateKey(['sendgrid', e.detail])}
-      thin
-      edit
-      value={keys.sendgrid}
-      label="Sendgrid" />
+    <Input on:save={e => updateKey(['sendgrid', e.detail])} thin edit value={keys.sendgrid} label="Sendgrid" />
   </div>
 </div>
 

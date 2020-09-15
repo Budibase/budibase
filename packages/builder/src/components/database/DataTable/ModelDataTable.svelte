@@ -26,10 +26,7 @@
   let search
 
   $: {
-    if (
-      $backendUiStore.selectedView &&
-      $backendUiStore.selectedView.name.startsWith("all_")
-    ) {
+    if ($backendUiStore.selectedView && $backendUiStore.selectedView.name.startsWith("all_")) {
       api.fetchDataForView($backendUiStore.selectedView).then(records => {
         data = records || []
       })
@@ -39,10 +36,7 @@
   $: sort = $backendUiStore.sort
   $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
   $: paginatedData = sorted
-    ? sorted.slice(
-        currentPage * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-      )
+    ? sorted.slice(currentPage * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE)
     : []
 
   $: headers = Object.keys($backendUiStore.selectedModel.schema)
@@ -71,8 +65,7 @@
         </th>
         {#each headers as header}
           <th>
-            <ColumnHeaderPopover
-              field={$backendUiStore.selectedModel.schema[header]} />
+            <ColumnHeaderPopover field={$backendUiStore.selectedModel.schema[header]} />
           </th>
         {/each}
       </tr>
@@ -97,11 +90,7 @@
       {/each}
     </tbody>
   </table>
-  <TablePagination
-    {data}
-    bind:currentPage
-    pageItemCount={paginatedData.length}
-    {ITEMS_PER_PAGE} />
+  <TablePagination {data} bind:currentPage pageItemCount={paginatedData.length} {ITEMS_PER_PAGE} />
 </section>
 
 <style>

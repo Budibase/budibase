@@ -7,10 +7,7 @@ export const notificationStore = writable({
 
 export function send(message, type = "default") {
   notificationStore.update(state => {
-    state.notifications = [
-      ...state.notifications,
-      { id: generate(), type, message },
-    ]
+    state.notifications = [...state.notifications, { id: generate(), type, message }]
     return state
   })
 }

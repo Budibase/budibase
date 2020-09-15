@@ -39,9 +39,7 @@ export const prepareRenderComponent = ({
     // make this node listen to the store
     if (thisNode.stateBound) {
       const unsubscribe = appStore.subscribe(state => {
-        const storeBoundProps = Object.keys(initialProps._bb.props).filter(p =>
-          hasBinding(initialProps._bb.props[p])
-        )
+        const storeBoundProps = Object.keys(initialProps._bb.props).filter(p => hasBinding(initialProps._bb.props[p]))
         if (storeBoundProps.length > 0) {
           const toSet = {}
           for (let prop of storeBoundProps) {

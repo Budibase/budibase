@@ -18,8 +18,7 @@
     },
   ]
 
-  if (!$store.currentPageName)
-    store.setCurrentPage($params.page ? $params.page : "main")
+  if (!$store.currentPageName) store.setCurrentPage($params.page ? $params.page : "main")
 
   const changePage = id => {
     store.setCurrentPage(id)
@@ -29,9 +28,7 @@
 
 <div class="root">
   {#each pages as { title, id }}
-    <button class:active={id === $params.page} on:click={() => changePage(id)}>
-      {title}
-    </button>
+    <button class:active={id === $params.page} on:click={() => changePage(id)}>{title}</button>
   {/each}
 </div>
 

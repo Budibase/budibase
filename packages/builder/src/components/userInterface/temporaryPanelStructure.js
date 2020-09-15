@@ -139,8 +139,7 @@ export default {
             {
               _component: "@budibase/standard-components/input",
               name: "Textfield",
-              description:
-                "A textfield component that allows the user to input text.",
+              description: "A textfield component that allows the user to input text.",
               icon: "ri-edit-box-line",
               properties: {
                 design: { ...all },
@@ -178,8 +177,7 @@ export default {
             {
               _component: "@budibase/standard-components/select",
               name: "Select",
-              description:
-                "A select component for choosing from different options",
+              description: "A select component for choosing from different options",
               icon: "ri-file-list-line",
               properties: {
                 design: { ...all },
@@ -259,9 +257,7 @@ export default {
           children: [],
           properties: {
             design: { ...all },
-            settings: [
-              { label: "Placeholder", key: "placeholder", control: Input },
-            ],
+            settings: [{ label: "Placeholder", key: "placeholder", control: Input }],
           },
         },
       ],
@@ -290,8 +286,7 @@ export default {
         {
           _component: "@budibase/standard-components/stackedlist",
           name: "Stacked List",
-          description:
-            "A basic card component that can contain content and actions.",
+          description: "A basic card component that can contain content and actions.",
           icon: "ri-archive-drawer-line",
           children: [],
           properties: {
@@ -345,8 +340,7 @@ export default {
             {
               _component: "@budibase/standard-components/card",
               name: "Vertical",
-              description:
-                "A basic card component that can contain content and actions.",
+              description: "A basic card component that can contain content and actions.",
               icon: "ri-layout-column-line",
               children: [],
               properties: {
@@ -414,8 +408,7 @@ export default {
             {
               _component: "@budibase/standard-components/cardhorizontal",
               name: "Horizontal",
-              description:
-                "A basic card component that can contain content and actions.",
+              description: "A basic card component that can contain content and actions.",
               icon: "ri-layout-row-line",
               children: [],
               properties: {
@@ -473,15 +466,7 @@ export default {
                     label: "Card Width",
                     key: "cardWidth",
                     control: OptionSelect,
-                    options: [
-                      "24rem",
-                      "28rem",
-                      "32rem",
-                      "40rem",
-                      "48rem",
-                      "60rem",
-                      "100%",
-                    ],
+                    options: ["24rem", "28rem", "32rem", "40rem", "48rem", "60rem", "100%"],
                     placeholder: "Card Height",
                   },
                   {
@@ -1054,13 +1039,7 @@ export default {
                     label: "X Axis Format",
                     key: "xAxisFormat",
                     control: OptionSelect,
-                    options: [
-                      "day-month",
-                      "minute-hour",
-                      "hour-daymonth",
-                      "month-year",
-                      "custom",
-                    ],
+                    options: ["day-month", "minute-hour", "hour-daymonth", "month-year", "custom"],
                   },
                   {
                     label: "X Axis Custom Format",
@@ -1101,8 +1080,7 @@ export default {
         {
           name: "Record Detail",
           _component: "@budibase/standard-components/recorddetail",
-          description:
-            "Loads a record, using an id from the URL, which can be used with {{ context }}, in children",
+          description: "Loads a record, using an id from the URL, which can be used with {{ context }}, in children",
           icon: "ri-profile-line",
           properties: {
             design: { ...all },
@@ -1127,8 +1105,7 @@ export default {
         {
           _component: "##builtin/screenslot",
           name: "Screen Slot",
-          description:
-            "This component is a placeholder for the rendering of a screen within a page.",
+          description: "This component is a placeholder for the rendering of a screen within a page.",
           icon: "ri-crop-2-line",
           properties: { design: { ...all } },
           commonProps: {},
@@ -1137,8 +1114,7 @@ export default {
         {
           name: "Nav Bar",
           _component: "@budibase/standard-components/Navigation",
-          description:
-            "A component for handling the navigation within your app.",
+          description: "A component for handling the navigation within your app.",
           icon: "ri-navigation-line",
           children: [],
           properties: {
@@ -1154,8 +1130,7 @@ export default {
         {
           name: "Login",
           _component: "@budibase/standard-components/login",
-          description:
-            "A component that automatically generates a login screen for your app.",
+          description: "A component that automatically generates a login screen for your app.",
           icon: "ri-login-box-line",
           children: [],
           properties: {

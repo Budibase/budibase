@@ -17,12 +17,7 @@
 </script>
 
 <div class="container">
-  <Input
-    on:save={e => updateApplication({ name: e.detail })}
-    thin
-    edit
-    value={$store.name}
-    label="Name" />
+  <Input on:save={e => updateApplication({ name: e.detail })} thin edit value={$store.name} label="Name" />
   <TextArea
     on:save={e => updateApplication({ description: e.detail })}
     thin

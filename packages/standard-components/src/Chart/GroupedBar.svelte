@@ -57,9 +57,7 @@
         chartContainer.datum(data).call(chart)
         bindTooltip()
       } else {
-        console.error(
-          "Grouped bar - Please provide valid name, value and group labels"
-        )
+        console.error("Grouped bar - Please provide valid name, value and group labels")
       }
     }
   })

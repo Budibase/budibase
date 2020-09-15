@@ -25,18 +25,13 @@ const fetchscreens = async (appPath, pagename, relativePath = "") => {
 
       const component = await readJSON(itemFullPath)
 
-      component.name = itemRelativePath
-        .substring(0, itemRelativePath.length - 5)
-        .replace(/\\/g, "/")
+      component.name = itemRelativePath.substring(0, itemRelativePath.length - 5).replace(/\\/g, "/")
 
       component.props = component.props || {}
 
       screens.push(component)
     } else {
-      const childComponents = await fetchscreens(
-        appPath,
-        join(relativePath, item)
-      )
+      const childComponents = await fetchscreens(appPath, join(relativePath, item))
 
       for (let c of childComponents) {
         screens.push(c)

@@ -10,10 +10,6 @@ router
   .get("/api/users/:username", authorized(USER_MANAGEMENT), controller.find)
   .put("/api/users/", authorized(USER_MANAGEMENT), controller.update)
   .post("/api/users", authorized(USER_MANAGEMENT), controller.create)
-  .delete(
-    "/api/users/:username",
-    authorized(USER_MANAGEMENT),
-    controller.destroy
-  )
+  .delete("/api/users/:username", authorized(USER_MANAGEMENT), controller.destroy)
 
 module.exports = router

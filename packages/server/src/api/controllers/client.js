@@ -20,10 +20,7 @@ exports.destroy = async function(ctx) {
 }
 
 const getClientId = ctx => {
-  const clientId =
-    (ctx.query && ctx.query.clientId) ||
-    (ctx.body && ctx.body.clientId) ||
-    env.CLIENT_ID
+  const clientId = (ctx.query && ctx.query.clientId) || (ctx.body && ctx.body.clientId) || env.CLIENT_ID
   if (!clientId) {
     ctx.throw(400, "ClientId not suplied")
   }

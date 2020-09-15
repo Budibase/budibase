@@ -25,8 +25,7 @@
     }))
   }
 
-  $: schemaFields =
-    parameters && parameters.modelId ? modelFields(parameters.modelId) : []
+  $: schemaFields = parameters && parameters.modelId ? modelFields(parameters.modelId) : []
 
   const onFieldsChanged = e => {
     parameters.fields = e.detail
@@ -43,10 +42,7 @@
   </Select>
 
   {#if parameters.modelId}
-    <SaveFields
-      parameterFields={parameters.fields}
-      {schemaFields}
-      on:fieldschanged={onFieldsChanged} />
+    <SaveFields parameterFields={parameters.fields} {schemaFields} on:fieldschanged={onFieldsChanged} />
   {/if}
 
 </div>

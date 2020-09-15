@@ -4,10 +4,7 @@
   import { store, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
   import { CloseCircleIcon, AddIcon } from "components/common/Icons"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "builderStore/replaceBindings"
+  import { readableToRuntimeBinding, runtimeToReadableBinding } from "builderStore/replaceBindings"
   import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
@@ -22,13 +19,7 @@
     fields ||
     Object.keys(parameterFields || { "": "" }).map(name => ({
       name,
-      value:
-        (parameterFields &&
-          runtimeToReadableBinding(
-            bindableProperties,
-            parameterFields[name].value
-          )) ||
-        "",
+      value: (parameterFields && runtimeToReadableBinding(bindableProperties, parameterFields[name].value)) || "",
     }))
 
   $: bindableProperties = fetchBindableProperties({
@@ -84,9 +75,7 @@
     <DataList secondary bind:value={field.value} on:blur={rebuildParameters}>
       <option value="" />
       {#each bindableProperties as bindableProp}
-        <option value={toBindingExpression(bindableProp.readableBinding)}>
-          {bindableProp.readableBinding}
-        </option>
+        <option value={toBindingExpression(bindableProp.readableBinding)}>{bindableProp.readableBinding}</option>
       {/each}
     </DataList>
     <div class="remove-field-container">

@@ -17,8 +17,7 @@
   let pageScreenProps = ["title", "favicon", "description", "route"]
   let duplicateName = false
 
-  const propExistsOnComponentDef = prop =>
-    pageScreenProps.includes(prop) || prop in componentDefinition.props
+  const propExistsOnComponentDef = prop => pageScreenProps.includes(prop) || prop in componentDefinition.props
 
   function handleChange(key, data) {
     data.target ? onChange(key, data.target.value) : onChange(key, data)
@@ -37,10 +36,7 @@
   const canRenderControl = (key, dependsOn) => {
     let test = !isEmpty(componentInstance[dependsOn])
 
-    return (
-      propExistsOnComponentDef(key) &&
-      (!dependsOn || !isEmpty(componentInstance[dependsOn]))
-    )
+    return propExistsOnComponentDef(key) && (!dependsOn || !isEmpty(componentInstance[dependsOn]))
   }
 
   $: isPage = screenOrPageInstance && screenOrPageInstance.favicon

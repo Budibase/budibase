@@ -4,16 +4,7 @@
   import components from "./temporaryPanelStructure.js"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CategoryTab from "./CategoryTab.svelte"
-  import {
-    find,
-    sortBy,
-    groupBy,
-    values,
-    filter,
-    map,
-    uniqBy,
-    flatten,
-  } from "lodash/fp"
+  import { find, sortBy, groupBy, values, filter, map, uniqBy, flatten } from "lodash/fp"
 
   import { pipe } from "components/common/core"
 
@@ -46,16 +37,10 @@
 
 <div class="root">
 
-  <CategoryTab
-    onClick={category => (selectedCategory = category)}
-    {selectedCategory}
-    {categories} />
+  <CategoryTab onClick={category => (selectedCategory = category)} {selectedCategory} {categories} />
 
   <div class="panel">
-    <Tab
-      list={selectedCategory}
-      on:selectItem={e => onComponentChosen(e.detail)}
-      {toggleTab} />
+    <Tab list={selectedCategory} on:selectItem={e => onComponentChosen(e.detail)} {toggleTab} />
   </div>
 </div>
 

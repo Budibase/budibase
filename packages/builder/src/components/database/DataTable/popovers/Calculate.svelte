@@ -1,12 +1,5 @@
 <script>
-  import {
-    Popover,
-    TextButton,
-    Button,
-    Icon,
-    Input,
-    Select,
-  } from "@budibase/bbui"
+  import { Popover, TextButton, Button, Icon, Input, Select } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
@@ -23,14 +16,8 @@
   let anchor
   let dropdown
 
-  $: viewModel = $backendUiStore.models.find(
-    ({ _id }) => _id === $backendUiStore.selectedView.modelId
-  )
-  $: fields =
-    viewModel &&
-    Object.keys(viewModel.schema).filter(
-      field => viewModel.schema[field].type === "number"
-    )
+  $: viewModel = $backendUiStore.models.find(({ _id }) => _id === $backendUiStore.selectedView.modelId)
+  $: fields = viewModel && Object.keys(viewModel.schema).filter(field => viewModel.schema[field].type === "number")
 
   function saveView() {
     backendUiStore.actions.views.save(view)

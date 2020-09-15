@@ -26,10 +26,7 @@
 
 <ul class="notifications">
   {#each $notificationStore.notifications as notification (notification.id)}
-    <li
-      class="toast"
-      style="background: {themes[notification.type]};"
-      transition:fade>
+    <li class="toast" style="background: {themes[notification.type]};" transition:fade>
       <div class="content">{notification.message}</div>
       {#if notification.icon}
         <i class={notification.icon} />

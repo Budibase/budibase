@@ -5,10 +5,7 @@
   export let href
 </script>
 
-<div
-  on:click={() => $goto(href)}
-  class="budibase__nav-item backend-nav-item"
-  class:selected={$isActive(href)}>
+<div on:click={() => $goto(href)} class="budibase__nav-item backend-nav-item" class:selected={$isActive(href)}>
   {label}
 </div>
 

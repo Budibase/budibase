@@ -25,9 +25,7 @@ export default async function fetchData(datasource) {
     }
     if (groupBy) params.set("group", groupBy)
 
-    let QUERY_VIEW_URL = field
-      ? `/api/views/${name}?${params}`
-      : `/api/views/${name}`
+    let QUERY_VIEW_URL = field ? `/api/views/${name}?${params}` : `/api/views/${name}`
 
     const response = await api.get(QUERY_VIEW_URL)
     return await response.json()

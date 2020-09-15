@@ -7,9 +7,7 @@ module.exports = async appPath => {
   const pageFolders = await readdir(join(appPath, "pages"))
   for (let pageFolder of pageFolders) {
     try {
-      pages[pageFolder] = await readJSON(
-        join(appPath, "pages", pageFolder, "page.json")
-      )
+      pages[pageFolder] = await readJSON(join(appPath, "pages", pageFolder, "page.json"))
       pages[pageFolder].name = pageFolder
     } catch (_) {
       // ignore error

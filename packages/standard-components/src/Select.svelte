@@ -16,8 +16,4 @@
   }
 </script>
 
-<select
-  class={className}
-  {value}
-  on:change={onchange}
-  bind:this={selectElement} />
+<select class={className} {value} on:change={onchange} bind:this={selectElement} />

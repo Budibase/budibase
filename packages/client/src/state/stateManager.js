@@ -16,11 +16,7 @@ const isMetaProp = propName =>
   propName === "_codeMeta" ||
   propName === "_styles"
 
-export const createStateManager = ({
-  componentLibraries,
-  onScreenSlotRendered,
-  routeTo,
-}) => {
+export const createStateManager = ({ componentLibraries, onScreenSlotRendered, routeTo }) => {
   let runEventActions = eventHandlers(routeTo)
 
   const bb = bbFactory({

@@ -56,11 +56,7 @@
     <div class="title">Create new user</div>
     <div class="inputs">
       <Input thin bind:value={username} name="Name" placeholder="Username" />
-      <Input
-        thin
-        bind:value={password}
-        name="Password"
-        placeholder="Password" />
+      <Input thin bind:value={password} name="Password" placeholder="Password" />
       <Select bind:value={accessLevelId} thin>
         <option value="ADMIN">Admin</option>
         <option value="POWER_USER">Power User</option>
@@ -85,8 +81,7 @@
         {/each}
       </ul>
     {:catch error}
-      Something went wrong when trying to fetch users. Please refresh (CMD + R /
-      CTRL + R) the page and try again.
+      Something went wrong when trying to fetch users. Please refresh (CMD + R / CTRL + R) the page and try again.
     {/await}
   </div>
 </div>

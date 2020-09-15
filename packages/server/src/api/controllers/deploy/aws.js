@@ -29,9 +29,7 @@ exports.fetchTemporaryCredentials = async function() {
   })
 
   if (response.status !== 200) {
-    throw new Error(
-      `Error fetching temporary credentials for api key: ${process.env.BUDIBASE_API_KEY}`
-    )
+    throw new Error(`Error fetching temporary credentials for api key: ${process.env.BUDIBASE_API_KEY}`)
   }
 
   const json = await response.json()
@@ -63,13 +61,7 @@ function walkDir(dirPath, callback) {
   }
 }
 
-exports.uploadAppAssets = async function({
-  appId,
-  credentials,
-  bucket,
-  cfDistribution,
-  accountId,
-}) {
+exports.uploadAppAssets = async function({ appId, credentials, bucket, cfDistribution, accountId }) {
   AWS.config.update({
     accessKeyId: credentials.AccessKeyId,
     secretAccessKey: credentials.SecretAccessKey,

@@ -25,9 +25,7 @@
         s.currentFrontEndType = "page"
       }
 
-      api.delete(
-        `/_builder/api/pages/${s.currentPageName}/screens/${screen.name}`
-      )
+      api.delete(`/_builder/api/pages/${s.currentPageName}/screens/${screen.name}`)
 
       return s
     })

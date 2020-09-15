@@ -63,9 +63,7 @@
         let _data = await fetchData(datasource)
         data = checkAndReformatData(_data)
         if (data.length === 0) {
-          console.error(
-            "Donut - please provide a valid name and value field for the chart"
-          )
+          console.error("Donut - please provide a valid name and value field for the chart")
         }
       }
 

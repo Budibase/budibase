@@ -16,14 +16,11 @@ async function replicateCouch({ instanceId, clientId, credentials }) {
 
   const replications = databases.map(localDbName => {
     const localDb = new PouchDB(localDbName)
-    const remoteDb = new CouchDB(
-      `${process.env.DEPLOYMENT_DB_URL}/${localDbName}`,
-      {
-        auth: {
-          ...credentials,
-        },
-      }
-    )
+    const remoteDb = new CouchDB(`${process.env.DEPLOYMENT_DB_URL}/${localDbName}`, {
+      auth: {
+        ...credentials,
+      },
+    })
 
     return replicate(localDb, remoteDb)
   })

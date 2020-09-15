@@ -19,14 +19,10 @@
   let name = ""
   let routeError
 
-  $: layoutComponents = Object.values($store.components).filter(
-    componentDefinition => componentDefinition.container
-  )
+  $: layoutComponents = Object.values($store.components).filter(componentDefinition => componentDefinition.container)
 
   $: layoutComponent = layoutComponent
-    ? layoutComponents.find(
-        component => component._component === layoutComponent._component
-      )
+    ? layoutComponents.find(component => component._component === layoutComponent._component)
     : layoutComponents[0]
 
   $: route = !route && $store.screens.length === 0 ? "*" : route
@@ -55,9 +51,7 @@
   }
 
   const routeNameExists = route => {
-    return $store.screens.some(
-      screen => screen.route.toLowerCase() === route.toLowerCase()
-    )
+    return $store.screens.some(screen => screen.route.toLowerCase() === route.toLowerCase())
   }
 
   const routeChanged = event => {
@@ -77,11 +71,7 @@
     </div>
 
     <div class="bb-margin-xl">
-      <Input
-        label="Url"
-        error={routeError}
-        bind:value={route}
-        on:change={routeChanged} />
+      <Input label="Url" error={routeError} bind:value={route} on:change={routeChanged} />
     </div>
 
     <div class="bb-margin-xl">

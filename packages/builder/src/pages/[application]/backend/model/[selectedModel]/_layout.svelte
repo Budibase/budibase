@@ -3,9 +3,7 @@
   import { backendUiStore } from "builderStore"
 
   if ($params.selectedModel) {
-    const model = $backendUiStore.models.find(
-      m => m._id === $params.selectedModel
-    )
+    const model = $backendUiStore.models.find(m => m._id === $params.selectedModel)
     if (model) {
       backendUiStore.actions.models.select(model)
     }

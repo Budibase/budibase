@@ -93,8 +93,7 @@
                 selected: {},
               },
               _code: "",
-              text:
-                "The screens that you create will be displayed inside this box.",
+              text: "The screens that you create will be displayed inside this box.",
               type: "none",
               _instanceId: "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
               _instanceName: "Text",
@@ -114,8 +113,7 @@
                 selected: {},
               },
               _code: "",
-              text:
-                "This box is just a placeholder, to show you the position of screens.",
+              text: "This box is just a placeholder, to show you the position of screens.",
               type: "none",
               _instanceId: "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
               _instanceName: "Text",
@@ -140,31 +138,20 @@
     styles = styles
   }
 
-  $: stylesheetLinks = pipe($store.pages.stylesheets, [
-    map(s => `<link rel="stylesheet" href="${s}"/>`),
-    join("\n"),
-  ])
+  $: stylesheetLinks = pipe($store.pages.stylesheets, [map(s => `<link rel="stylesheet" href="${s}"/>`), join("\n")])
 
-  $: screensExist =
-    $store.currentPreviewItem._screens &&
-    $store.currentPreviewItem._screens.length > 0
+  $: screensExist = $store.currentPreviewItem._screens && $store.currentPreviewItem._screens.length > 0
 
   $: frontendDefinition = {
     appId: $store.appId,
     libraries: $store.libraries,
     page: $store.pages[$store.currentPageName],
-    screens: [
-      $store.currentFrontEndType === "page"
-        ? screenPlaceholder
-        : $store.currentPreviewItem,
-    ],
+    screens: [$store.currentFrontEndType === "page" ? screenPlaceholder : $store.currentPreviewItem],
   }
 
   $: selectedComponentType = getComponentTypeName($store.currentComponentInfo)
 
-  $: selectedComponentId = $store.currentComponentInfo
-    ? $store.currentComponentInfo._id
-    : ""
+  $: selectedComponentId = $store.currentComponentInfo ? $store.currentComponentInfo._id : ""
 
   const refreshContent = () => {
     iframe.contentWindow.postMessage(
@@ -192,11 +179,7 @@
 
 <div class="component-container">
   {#if hasComponent && $store.currentPreviewItem}
-    <iframe
-      style="height: 100%; width: 100%"
-      title="componentPreview"
-      bind:this={iframe}
-      srcdoc={iframeTemplate} />
+    <iframe style="height: 100%; width: 100%" title="componentPreview" bind:this={iframe} srcdoc={iframeTemplate} />
   {/if}
 </div>
 

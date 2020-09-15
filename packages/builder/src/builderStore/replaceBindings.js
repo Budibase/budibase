@@ -12,10 +12,7 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
         return boundValue === `{{ ${readableBinding} }}`
       })
       if (binding) {
-        result = textWithBindings.replace(
-          boundValue,
-          `{{ ${binding.runtimeBinding} }}`
-        )
+        result = textWithBindings.replace(boundValue, `{{ ${binding.runtimeBinding} }}`)
       }
     })
   return result
@@ -24,9 +21,7 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
 export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
   let temp = textWithBindings
   const boundValues =
-    (typeof textWithBindings === "string" &&
-      textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE)) ||
-    []
+    (typeof textWithBindings === "string" && textWithBindings.match(CAPTURE_VAR_INSIDE_MUSTACHE)) || []
 
   // Replace runtimeBindings with readableBindings:
   boundValues.forEach(v => {

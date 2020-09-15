@@ -8,12 +8,7 @@
 </script>
 
 <div class="inputs">
-  <Input
-    disabled
-    thin
-    bind:value={user.username}
-    name="Name"
-    placeholder="Username" />
+  <Input disabled thin bind:value={user.username} name="Name" placeholder="Username" />
   <Select disabled={!editMode} bind:value={user.accessLevelId} thin>
     <option value="ADMIN">Admin</option>
     <option value="POWER_USER">Power User</option>

@@ -22,10 +22,7 @@ export default class Workflow {
     }
 
     const newBlock = { id: generate(), ...block }
-    this.workflow.definition.steps = [
-      ...this.workflow.definition.steps,
-      newBlock,
-    ]
+    this.workflow.definition.steps = [...this.workflow.definition.steps, newBlock]
     return newBlock
   }
 

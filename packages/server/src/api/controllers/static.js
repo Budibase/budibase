@@ -1,9 +1,6 @@
 const send = require("koa-send")
 const { resolve, join } = require("path")
-const {
-  budibaseAppsDir,
-  budibaseTempDir,
-} = require("../../utilities/budibaseDir")
+const { budibaseAppsDir, budibaseTempDir } = require("../../utilities/budibaseDir")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const { ANON_LEVEL_ID } = require("../../utilities/accessLevels")
 const jwt = require("jsonwebtoken")
@@ -21,12 +18,7 @@ exports.serveApp = async function(ctx) {
   const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated"
 
   // default to homedir
-  const appPath = resolve(
-    budibaseAppsDir(),
-    ctx.params.appId,
-    "public",
-    mainOrAuth
-  )
+  const appPath = resolve(budibaseAppsDir(), ctx.params.appId, "public", mainOrAuth)
 
   let appId = ctx.params.appId
   if (process.env.CLOUD) {
@@ -50,8 +42,7 @@ exports.serveApp = async function(ctx) {
   }
 
   if (process.env.CLOUD) {
-    const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file ||
-      "index.production.html"}`
+    const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file || "index.production.html"}`
 
     const response = await fetch(S3_URL)
     const body = await response.text()
@@ -66,12 +57,7 @@ exports.serveAppAsset = async function(ctx) {
   // default to homedir
   const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated"
 
-  const appPath = resolve(
-    budibaseAppsDir(),
-    ctx.user.appId,
-    "public",
-    mainOrAuth
-  )
+  const appPath = resolve(budibaseAppsDir(), ctx.user.appId, "public", mainOrAuth)
 
   await send(ctx, ctx.file, { root: ctx.devPath || appPath })
 }
@@ -88,11 +74,7 @@ exports.serveComponentLibrary = async function(ctx) {
   )
 
   if (ctx.isDev) {
-    componentLibraryPath = join(
-      budibaseTempDir(),
-      decodeURI(ctx.query.library),
-      "dist"
-    )
+    componentLibraryPath = join(budibaseTempDir(), decodeURI(ctx.query.library), "dist")
   }
 
   // TODO: component libs should be versioned based on app version

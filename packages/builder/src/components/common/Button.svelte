@@ -8,13 +8,7 @@
   $: borderClass = grouped ? "" : "border-normal"
 </script>
 
-<button
-  class="{color}
-  {className}
-  {borderClass}
-  {grouped ? 'grouped' : ''}"
-  {style}
-  on:click>
+<button class="{color} {className} {borderClass} {grouped ? 'grouped' : ''}" {style} on:click>
   <slot />
 </button>
 

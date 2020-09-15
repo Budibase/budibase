@@ -27,12 +27,8 @@
   let tooltipContainer
 
   export let customMouseOver = () => tooltip.show()
-  export let customMouseMove = (
-    dataPoint,
-    colorMapping,
-    xPosition,
-    yPosition = null
-  ) => tooltip.update(dataPoint, colorMapping, xPosition, (yPosition = null))
+  export let customMouseMove = (dataPoint, colorMapping, xPosition, yPosition = null) =>
+    tooltip.update(dataPoint, colorMapping, xPosition, (yPosition = null))
   export let customMouseOut = () => tooltip.hide()
 
   export let data = []

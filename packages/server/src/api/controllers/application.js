@@ -12,9 +12,7 @@ const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const fs = require("fs-extra")
 const { promisify } = require("util")
 const chmodr = require("chmodr")
-const {
-  downloadExtractComponentLibraries,
-} = require("../../utilities/createAppPackage")
+const { downloadExtractComponentLibraries } = require("../../utilities/createAppPackage")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ClientDb.name(getClientId(ctx)))
@@ -35,15 +33,12 @@ exports.fetchAppPackage = async function(ctx) {
   instance is hardcoded now - this can only change when we move
   pages and screens into the database 
   */
-  const devInstance = application.instances.find(
-    i => i.name === `dev-${clientId}`
-  )
+  const devInstance = application.instances.find(i => i.name === `dev-${clientId}`)
   setBuilderToken(ctx, ctx.params.applicationId, devInstance._id)
 }
 
 exports.create = async function(ctx) {
-  const clientId =
-    (ctx.request.body && ctx.request.body.clientId) || env.CLIENT_ID
+  const clientId = (ctx.request.body && ctx.request.body.clientId) || env.CLIENT_ID
 
   if (!clientId) {
     ctx.throw(400, "ClientId not suplied")
@@ -121,13 +116,7 @@ exports.delete = async function(ctx) {
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
-  const templateFolder = resolve(
-    __dirname,
-    "..",
-    "..",
-    "utilities",
-    "appDirectoryTemplate"
-  )
+  const templateFolder = resolve(__dirname, "..", "..", "utilities", "appDirectoryTemplate")
 
   const appsFolder = budibaseAppsDir()
   const newAppFolder = resolve(appsFolder, app._id)
@@ -137,10 +126,7 @@ const createEmptyAppPackage = async (ctx, app) => {
   }
 
   await fs.ensureDir(join(newAppFolder, "pages", "main", "screens"), 0o777)
-  await fs.ensureDir(
-    join(newAppFolder, "pages", "unauthenticated", "screens"),
-    0o777
-  )
+  await fs.ensureDir(join(newAppFolder, "pages", "unauthenticated", "screens"), 0o777)
 
   await copy(templateFolder, newAppFolder)
 
@@ -154,10 +140,7 @@ const createEmptyAppPackage = async (ctx, app) => {
     name: npmFriendlyAppName(app.name),
   })
 
-  const mainJson = await updateJsonFile(
-    join(appsFolder, app._id, "pages", "main", "page.json"),
-    app
-  )
+  const mainJson = await updateJsonFile(join(appsFolder, app._id, "pages", "main", "page.json"), app)
 
   await buildPage(ctx.config, app._id, "main", {
     page: mainJson,
@@ -180,9 +163,7 @@ const createEmptyAppPackage = async (ctx, app) => {
 const loadScreens = async (appFolder, page) => {
   const screensFolder = join(appFolder, "pages", page, "screens")
 
-  const screenFiles = (await fs.readdir(screensFolder)).filter(s =>
-    s.endsWith(".json")
-  )
+  const screenFiles = (await fs.readdir(screensFolder)).filter(s => s.endsWith(".json"))
 
   let screens = []
   for (let file of screenFiles) {
@@ -198,10 +179,7 @@ const lookupClientId = async appId => {
 }
 
 const getClientId = ctx => {
-  const clientId =
-    (ctx.request.body && ctx.request.body.clientId) ||
-    (ctx.query && ctx.query.clientId) ||
-    env.CLIENT_ID
+  const clientId = (ctx.request.body && ctx.request.body.clientId) || (ctx.query && ctx.query.clientId) || env.CLIENT_ID
 
   if (!clientId) {
     ctx.throw(400, "ClientId not supplied")

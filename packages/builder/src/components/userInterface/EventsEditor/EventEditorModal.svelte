@@ -18,9 +18,7 @@
 
   $: actions = event || []
   $: selectedActionComponent =
-    selectedAction &&
-    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_MEMBER_NAME])
-      .component
+    selectedAction && actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_MEMBER_NAME]).component
 
   const closeModal = () => {
     dispatch("close")
@@ -70,10 +68,7 @@
         </div>
       </TextButton>
     </div>
-    <DropdownMenu
-      bind:this={addActionDropdown}
-      anchor={addActionButton}
-      align="right">
+    <DropdownMenu bind:this={addActionDropdown} anchor={addActionButton} align="right">
       <div class="available-actions-container">
         {#each actionTypes as actionType}
           <div class="available-action" on:click={addAction(actionType)}>
@@ -89,9 +84,7 @@
       {#each actions as action, index}
         <div class="action-container">
           <div class="action-header" on:click={selectAction(action)}>
-            <p
-              class="bb-body bb-body--small bb-body--color-dark"
-              style="margin: var(--spacing-s) 0;">
+            <p class="bb-body bb-body--small bb-body--color-dark" style="margin: var(--spacing-s) 0;">
               {index + 1}. {action[EVENT_TYPE_MEMBER_NAME]}
             </p>
             <div class="row-expander" class:rotate={action !== selectedAction}>
@@ -100,13 +93,9 @@
           </div>
           {#if action === selectedAction}
             <div class="selected-action-container">
-              <svelte:component
-                this={selectedActionComponent}
-                parameters={selectedAction.parameters} />
+              <svelte:component this={selectedActionComponent} parameters={selectedAction.parameters} />
               <div class="delete-action-button">
-                <TextButton text medium on:click={() => deleteAction(index)}>
-                  Delete
-                </TextButton>
+                <TextButton text medium on:click={() => deleteAction(index)}>Delete</TextButton>
               </div>
             </div>
           {/if}

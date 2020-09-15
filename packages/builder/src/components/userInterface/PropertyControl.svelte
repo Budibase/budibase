@@ -43,10 +43,7 @@
 
   function replaceBindings(textWithBindings) {
     getBindableProperties()
-    textWithBindings = readableToRuntimeBinding(
-      bindableProperties,
-      textWithBindings
-    )
+    textWithBindings = readableToRuntimeBinding(bindableProperties, textWithBindings)
     onChange(key, textWithBindings)
   }
 
@@ -71,14 +68,11 @@
 
     let temp = runtimeToReadableBinding(bindableProperties, value)
 
-    return value === undefined && props.defaultValue !== undefined
-      ? props.defaultValue
-      : temp
+    return value === undefined && props.defaultValue !== undefined ? props.defaultValue : temp
   }
 
   //Incase the component has a different value key name
-  const handlevalueKey = value =>
-    props.valueKey ? { [props.valueKey]: safeValue() } : { value: safeValue() }
+  const handlevalueKey = value => (props.valueKey ? { [props.valueKey]: safeValue() } : { value: safeValue() })
 </script>
 
 <div class="property-control" bind:this={anchor}>
@@ -100,11 +94,7 @@
   {/if}
 </div>
 {#if control == Input}
-  <DropdownMenu
-    on:close={handleClose}
-    bind:this={dropdown}
-    {anchor}
-    align="right">
+  <DropdownMenu on:close={handleClose} bind:this={dropdown} {anchor} align="right">
     <BindingDropdown
       {...handlevalueKey(value)}
       close={dropdown.hide}

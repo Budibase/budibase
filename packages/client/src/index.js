@@ -20,29 +20,19 @@ export const loadBudibase = async opts => {
 
   for (let library of libraries) {
     // fetch the JavaScript for the component libraries from the server
-    componentLibraryModules[library] = await import(
-      `/componentlibrary?library=${encodeURI(library)}`
-    )
+    componentLibraryModules[library] = await import(`/componentlibrary?library=${encodeURI(library)}`)
   }
 
   componentLibraryModules[builtinLibName] = builtins(_window)
 
-  const {
-    initialisePage,
-    screenStore,
-    pageStore,
-    routeTo,
-    rootNode,
-  } = createApp({
+  const { initialisePage, screenStore, pageStore, routeTo, rootNode } = createApp({
     componentLibraries: componentLibraryModules,
     frontendDefinition,
     user,
     window: _window,
   })
 
-  const route = _window.location
-    ? _window.location.pathname.replace(`${appId}/`, "").replace(appId, "")
-    : ""
+  const route = _window.location ? _window.location.pathname.replace(`${appId}/`, "").replace(appId, "") : ""
 
   initialisePage(frontendDefinition.page, _window.document.body, route)
 

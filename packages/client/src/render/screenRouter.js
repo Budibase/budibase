@@ -4,11 +4,7 @@ import { parseAppIdFromCookie } from "./getAppId"
 
 export const screenRouter = ({ screens, onScreenSelected, window }) => {
   const makeRootedPath = url => {
-    if (
-      window.location &&
-      (window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1")
-    ) {
+    if (window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
       const appId = parseAppIdFromCookie(window.document.cookie)
       if (url) {
         if (url.startsWith(appId)) return url
@@ -27,9 +23,7 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
 
   function route(url) {
     const _url = makeRootedPath(url.state || url)
-    current = routes.findIndex(
-      p => p !== "*" && new RegExp("^" + p + "$").test(_url)
-    )
+    current = routes.findIndex(p => p !== "*" && new RegExp("^" + p + "$").test(_url))
 
     const params = {}
 
@@ -69,15 +63,7 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
     const x = e.target.closest("a")
     const y = x && x.getAttribute("href")
 
-    if (
-      e.ctrlKey ||
-      e.metaKey ||
-      e.altKey ||
-      e.shiftKey ||
-      e.button ||
-      e.defaultPrevented
-    )
-      return
+    if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.button || e.defaultPrevented) return
 
     const target = (x && x.target) || "_self"
     if (!y || target !== "_self" || x.host !== location.host) return

@@ -4,8 +4,7 @@
   import { notifier } from "builderStore/store/notifications"
   import Flowchart from "./flowchart/FlowChart.svelte"
 
-  $: workflow =
-    $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
+  $: workflow = $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
   $: workflowLive = workflow && workflow.live
   $: instanceId = $backendUiStore.selectedDatabase._id
 
@@ -32,10 +31,7 @@
 </section>
 <footer>
   {#if workflow}
-    <button
-      class:highlighted={workflowLive}
-      class:hoverable={workflowLive}
-      class="stop-button hoverable">
+    <button class:highlighted={workflowLive} class:hoverable={workflowLive} class="stop-button hoverable">
       <i class="ri-stop-fill" on:click={() => setWorkflowLive(false)} />
     </button>
     <button

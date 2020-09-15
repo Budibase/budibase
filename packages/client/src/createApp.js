@@ -4,11 +4,7 @@ import { screenRouter } from "./render/screenRouter"
 import { createStateManager } from "./state/stateManager"
 import { parseAppIdFromCookie } from "./render/getAppId"
 
-export const createApp = ({
-  componentLibraries,
-  frontendDefinition,
-  window,
-}) => {
+export const createApp = ({ componentLibraries, frontendDefinition, window }) => {
   let routeTo
   let currentUrl
   let screenStateManager
@@ -37,10 +33,7 @@ export const createApp = ({
       onScreenSelected,
       window,
     })
-    const fallbackPath = window.location.pathname.replace(
-      parseAppIdFromCookie(window.document.cookie),
-      ""
-    )
+    const fallbackPath = window.location.pathname.replace(parseAppIdFromCookie(window.document.cookie), "")
     routeTo(currentUrl || fallbackPath)
   }
 

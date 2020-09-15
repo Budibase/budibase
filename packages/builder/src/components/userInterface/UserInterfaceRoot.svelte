@@ -48,9 +48,7 @@
 
     <div class="components-list-container">
       <div class="nav-group-header">
-        <span class="components-nav-header" style="margin-top: 0;">
-          Screens
-        </span>
+        <span class="components-nav-header" style="margin-top: 0;">Screens</span>
         <div>
           <button on:click={newScreen}>
             <AddIcon />

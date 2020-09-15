@@ -25,10 +25,7 @@
 
   let originalName = field.name
 
-  $: required =
-    field.constraints &&
-    field.constraints.presence &&
-    !field.constraints.presence.allowEmpty
+  $: required = field.constraints && field.constraints.presence && !field.constraints.presence.allowEmpty
 
   async function saveColumn() {
     backendUiStore.update(state => {
@@ -43,9 +40,7 @@
   }
 
   function handleFieldConstraints(event) {
-    const { type, constraints } = fieldDefinitions[
-      event.target.value.toUpperCase()
-    ]
+    const { type, constraints } = fieldDefinitions[event.target.value.toUpperCase()]
 
     field.type = type
     field.constraints = constraints
@@ -55,11 +50,7 @@
 <div class="actions">
   <Input placeholder="Name" thin bind:value={field.name} />
 
-  <Select
-    secondary
-    thin
-    on:change={handleFieldConstraints}
-    bind:value={field.type}>
+  <Select secondary thin on:change={handleFieldConstraints} bind:value={field.type}>
     {#each Object.values(fieldDefinitions) as field}
       <option value={field.type}>{field.name}</option>
     {/each}
@@ -75,26 +66,14 @@
     </div>
 
     {#if field.type === 'string' && field.constraints}
-      <NumberBox
-        label="Max Length"
-        bind:value={field.constraints.length.maximum} />
-      <ValuesList
-        label="Categories"
-        bind:values={field.constraints.inclusion} />
+      <NumberBox label="Max Length" bind:value={field.constraints.length.maximum} />
+      <ValuesList label="Categories" bind:values={field.constraints.inclusion} />
     {:else if field.type === 'datetime' && field.constraints}
-      <DatePicker
-        label="Earliest"
-        bind:value={field.constraints.datetime.earliest} />
-      <DatePicker
-        label="Latest"
-        bind:value={field.constraints.datetime.latest} />
+      <DatePicker label="Earliest" bind:value={field.constraints.datetime.earliest} />
+      <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
     {:else if field.type === 'number' && field.constraints}
-      <NumberBox
-        label="Min Value"
-        bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
-      <NumberBox
-        label="Max Value"
-        bind:value={field.constraints.numericality.lessThanOrEqualTo} />
+      <NumberBox label="Min Value" bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
+      <NumberBox label="Max Value" bind:value={field.constraints.numericality.lessThanOrEqualTo} />
     {:else if field.type === 'link'}
       <div class="field">
         <label>Link</label>

@@ -11,9 +11,7 @@
 
   let options = []
 
-  $: model = componentInstance.datasource
-    ? models.find(m => m._id === componentInstance.datasource.modelId)
-    : null
+  $: model = componentInstance.datasource ? models.find(m => m._id === componentInstance.datasource.modelId) : null
 
   $: if (model) {
     options = componentInstance.datasource.isModel
