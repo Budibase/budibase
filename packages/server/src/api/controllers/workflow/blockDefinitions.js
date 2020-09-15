@@ -8,33 +8,44 @@ const ACTION = {
     icon: "ri-save-3-fill",
     description: "Save a record to your database",
     type: "ACTION",
-    inputs: {
-      record: {
-        type: "record",
-        label: "The record to be written",
-        default: {},
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          record: {
+            type: "object",
+            customType: "record",
+            title: "The record to be written",
+            default: {},
+          },
+          model: {
+            type: "object",
+            customType: "model",
+            title: "Table",
+          },
+        },
+        required: ["record", "model"],
       },
-      model: {
-        type: "model",
-        label: "Table",
-      },
-    },
-    outputs: {
-      response: {
-        type: "object",
-        label: "The response from the table",
-      },
-      success: {
-        type: "boolean",
-        label: "Whether the action was successful",
-      },
-      id: {
-        type: "string",
-        label: "The identifier of the new record",
-      },
-      revision: {
-        type: "string",
-        label: "The revision of the new record",
+      outputs: {
+        properties: {
+          response: {
+            type: "object",
+            description: "The response from the table",
+          },
+          success: {
+            type: "boolean",
+            description: "Whether the action was successful",
+          },
+          id: {
+            type: "string",
+            description: "The identifier of the new record",
+          },
+          revision: {
+            type: "string",
+            description: "The revision of the new record",
+          },
+        },
+        required: ["success", "id", "revision"],
       },
     },
   },
@@ -44,24 +55,33 @@ const ACTION = {
     name: "Delete Record",
     tagline: "Delete a {{inputs.record.model.name}} record",
     type: "ACTION",
-    inputs: {
-      id: {
-        type: "string",
-        label: "Record ID",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          id: {
+            type: "string",
+            title: "Record ID",
+          },
+          revision: {
+            type: "string",
+            title: "Record Revision",
+          },
+        },
+        required: ["id", "revision"],
       },
-      revision: {
-        type: "string",
-        label: "Record Revision",
-      },
-    },
-    outputs: {
-      response: {
-        type: "object",
-        label: "The response from the table",
-      },
-      success: {
-        type: "boolean",
-        label: "Whether the action was successful",
+      outputs: {
+        properties: {
+          response: {
+            type: "object",
+            description: "The response from the table",
+          },
+          success: {
+            type: "boolean",
+            description: "Whether the action was successful",
+          },
+        },
+        required: ["success"],
       },
     },
   },
@@ -71,38 +91,48 @@ const ACTION = {
     icon: "ri-user-add-fill",
     name: "Create User",
     type: "ACTION",
-    inputs: {
-      username: {
-        type: "string",
-        label: "Username",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          username: {
+            type: "string",
+            title: "Username",
+          },
+          password: {
+            type: "string",
+            customType: "password",
+            title: "Password",
+          },
+          accessLevelId: {
+            type: "string",
+            title: "Access Level",
+            default: accessLevels.POWERUSER_LEVEL_ID,
+            enum: accessLevels.ACCESS_LEVELS,
+          },
+        },
+        required: ["username", "password", "accessLevelId"],
       },
-      password: {
-        type: "password",
-        label: "Password",
-      },
-      accessLevelId: {
-        type: "string",
-        label: "Access Level",
-        default: accessLevels.POWERUSER_LEVEL_ID,
-        options: accessLevels.ACCESS_LEVELS,
-      },
-    },
-    outputs: {
-      id: {
-        type: "string",
-        label: "The identifier of the new user",
-      },
-      revision: {
-        type: "string",
-        label: "The revision of the new user",
-      },
-      response: {
-        type: "object",
-        label: "The response from the user table",
-      },
-      success: {
-        type: "boolean",
-        label: "Whether the action was successful",
+      outputs: {
+        properties: {
+          id: {
+            type: "string",
+            description: "The identifier of the new user",
+          },
+          revision: {
+            type: "string",
+            description: "The revision of the new user",
+          },
+          response: {
+            type: "object",
+            description: "The response from the user table",
+          },
+          success: {
+            type: "boolean",
+            description: "Whether the action was successful",
+          },
+        },
+        required: ["id", "revision", "success"],
       },
     },
   },
@@ -112,32 +142,42 @@ const ACTION = {
     icon: "ri-mail-open-fill",
     name: "Send Email",
     type: "ACTION",
-    inputs: {
-      to: {
-        type: "string",
-        label: "Send To",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          to: {
+            type: "string",
+            title: "Send To",
+          },
+          from: {
+            type: "string",
+            title: "Send From",
+          },
+          subject: {
+            type: "string",
+            title: "Email Subject",
+          },
+          contents: {
+            type: "string",
+            title: "Email Contents",
+          },
+        },
+        required: ["to", "from", "subject", "contents"],
       },
-      from: {
-        type: "string",
-        label: "Send From",
-      },
-      subject: {
-        type: "string",
-        label: "Email Subject",
-      },
-      contents: {
-        type: "string",
-        label: "Email Contents",
-      },
-    },
-    outputs: {
-      success: {
-        type: "boolean",
-        label: "Whether the email was sent",
-      },
-      response: {
-        type: "object",
-        label: "A response from the email client, this may be an error",
+      outputs: {
+        properties: {
+          success: {
+            type: "boolean",
+            description: "Whether the email was sent",
+          },
+          response: {
+            type: "object",
+            description:
+              "A response from the email client, this may be an error",
+          },
+        },
+        required: ["success"],
       },
     },
   },
@@ -150,26 +190,33 @@ const LOGIC = {
     icon: "ri-git-branch-line",
     description: "Filter any workflows which do not meet certain conditions",
     type: "LOGIC",
-    inputs: {
-      filter: {
-        type: "string",
-        label: "Reference Value",
+    inputs: {},
+    schema: {
+      inputs: {
+        filter: {
+          type: "string",
+          title: "Reference Value",
+        },
+        condition: {
+          type: "string",
+          title: "Condition",
+          enum: conditions,
+          default: "equals",
+        },
+        value: {
+          type: "string",
+          title: "Comparison Value",
+        },
+        required: ["filter", "condition", "value"],
       },
-      condition: {
-        type: "string",
-        label: "Condition",
-        options: conditions,
-        default: "equals",
-      },
-      value: {
-        type: "string",
-        label: "Comparison Value",
-      },
-    },
-    outputs: {
-      success: {
-        type: "boolean",
-        label: "Whether the logic block passed",
+      outputs: {
+        properties: {
+          success: {
+            type: "boolean",
+            description: "Whether the logic block passed",
+          },
+        },
+        required: ["success"],
       },
     },
   },
@@ -178,10 +225,16 @@ const LOGIC = {
     icon: "ri-time-fill",
     tagline: "Delay for {{inputs.time}} milliseconds",
     description: "Delay the workflow until an amount of time has passed",
-    inputs: {
-      time: {
-        type: "number",
-        label: "Delay in milliseconds",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          time: {
+            type: "number",
+            title: "Delay in milliseconds",
+          },
+        },
+        required: ["time"],
       },
     },
     type: "LOGIC",
@@ -195,16 +248,27 @@ const TRIGGER = {
     icon: "ri-save-line",
     tagline: "Record is added to {{inputs.model.name}}",
     description: "Fired when a record is saved to your database",
-    inputs: {
-      model: {
-        type: "model",
-        label: "Table",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          model: {
+            type: "object",
+            customType: "model",
+            title: "Table",
+          },
+        },
+        required: ["model"],
       },
-    },
-    outputs: {
-      record: {
-        type: "record",
-        label: "The new record that was saved",
+      outputs: {
+        properties: {
+          record: {
+            type: "object",
+            customType: "record",
+            description: "The new record that was saved",
+          },
+        },
+        required: ["record"],
       },
     },
     type: "TRIGGER",
@@ -215,16 +279,27 @@ const TRIGGER = {
     icon: "ri-delete-bin-line",
     tagline: "Record is deleted from {{inputs.model.name}}",
     description: "Fired when a record is deleted from your database",
-    inputs: {
-      model: {
-        type: "model",
-        label: "Table",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          model: {
+            type: "object",
+            customType: "model",
+            title: "Table",
+          },
+        },
+        required: ["model"],
       },
-    },
-    outputs: {
-      record: {
-        type: "record",
-        label: "The record that was deleted",
+      outputs: {
+        properties: {
+          record: {
+            type: "object",
+            customType: "record",
+            description: "The record that was deleted",
+          },
+        },
+        required: ["record"],
       },
     },
     type: "TRIGGER",

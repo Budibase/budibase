@@ -5,11 +5,11 @@ const sgMail = require("@sendgrid/mail")
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 let BUILTIN_ACTIONS = {
-  CREATE_USER: async function({ args, context }) {
-    const { username, password, accessLevelId } = args
+  CREATE_USER: async function(inputs) {
+    const { username, password, accessLevelId } = inputs
     const ctx = {
       user: {
-        instanceId: context.instanceId,
+        instanceId: inputs.instanceId,
       },
       request: {
         body: { username, password, accessLevelId },
@@ -32,18 +32,16 @@ let BUILTIN_ACTIONS = {
       }
     }
   },
-  SAVE_RECORD: async function({ args, context }) {
-    const { model, ...record } = args.record
-
+  SAVE_RECORD: async function(inputs) {
     const ctx = {
       params: {
-        instanceId: context.instanceId,
-        modelId: model._id,
+        instanceId: inputs.instanceId,
+        modelId: inputs.model._id,
       },
       request: {
-        body: record,
+        body: inputs.record,
       },
-      user: { instanceId: context.instanceId },
+      user: { instanceId: inputs.instanceId },
     }
 
     try {
@@ -62,12 +60,12 @@ let BUILTIN_ACTIONS = {
       }
     }
   },
-  SEND_EMAIL: async function({ args }) {
+  SEND_EMAIL: async function(inputs) {
     const msg = {
-      to: args.to,
-      from: args.from,
-      subject: args.subject,
-      text: args.text,
+      to: inputs.to,
+      from: inputs.from,
+      subject: inputs.subject,
+      text: inputs.text,
     }
 
     try {
@@ -83,8 +81,8 @@ let BUILTIN_ACTIONS = {
       }
     }
   },
-  DELETE_RECORD: async function({ args, context }) {
-    const { model, ...record } = args.record
+  DELETE_RECORD: async function(inputs) {
+    const { model, ...record } = inputs.record
     // TODO: better logging of when actions are missed due to missing parameters
     if (record.recordId == null || record.revId == null) {
       return
@@ -95,7 +93,7 @@ let BUILTIN_ACTIONS = {
         recordId: record.recordId,
         revId: record.revId,
       },
-      user: { instanceId: context.instanceId },
+      user: { instanceId: inputs.instanceId },
     }
 
     try {

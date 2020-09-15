@@ -1,12 +1,12 @@
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 let LOGIC = {
-  DELAY: async function delay({ args }) {
-    await wait(args.time)
+  DELAY: async function delay(inputs) {
+    await wait(inputs.time)
   },
 
-  FILTER: async function filter({ args }) {
-    const { field, condition, value } = args
+  FILTER: async function filter(inputs) {
+    const { field, condition, value } = inputs
     switch (condition) {
       case "equals":
         if (field !== value) return
