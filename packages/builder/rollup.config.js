@@ -158,13 +158,6 @@ export default {
           find: "constants",
           replacement: path.resolve(projectRootDir, "src/constants"),
         },
-        {
-          find: "standard-components",
-          replacement: path.resolve(
-            projectRootDir,
-            "../standard-components/src"
-          ),
-        },
       ],
       customResolver,
     }),
