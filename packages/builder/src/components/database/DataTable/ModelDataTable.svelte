@@ -92,7 +92,7 @@
                 <LinkedRecord field={schema[header]} ids={row[header]} />
               {:else if schema[header].type === 'attachment'}
                 {#each row[header] || [] as img}
-                  <img width="100" height="100" src={`file://${img}`} />
+                  <img width="100" height="100" src={img.clientUrl} />
                 {/each}
               {:else}{getOr('', header, row)}{/if}
             </td>

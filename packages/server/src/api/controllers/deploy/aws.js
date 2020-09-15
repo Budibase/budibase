@@ -63,6 +63,42 @@ function walkDir(dirPath, callback) {
   }
 }
 
+/**
+ * Walk a directory and return an array of promises for uploading all the files
+ * inside that directory to s3.
+ * @param {Object} config
+ * path: path to read files from on disk  
+ * s3Key: the path in s3 to upload the directory files to
+ * s3: s3 client object
+ */
+function uploadFiles({
+  path,
+  s3Key,
+  s3,
+  metadata
+}) {
+  const uploads = []
+
+  walkDir(path, function prepareUploadsForS3(filePath) {
+    const fileExtension = [...filePath.split(".")].pop()
+    const fileBytes = fs.readFileSync(filePath)
+
+    const upload = s3
+      .upload({
+        Key: filePath.replace(path, s3Key),
+        Body: fileBytes,
+        ContentType: CONTENT_TYPE_MAP[fileExtension],
+        Metadata: metadata,
+      })
+      .promise()
+
+    uploads.push(upload)
+  })
+
+  return uploads
+}
+
+
 exports.uploadAppAssets = async function({
   appId,
   credentials,
@@ -86,30 +122,33 @@ exports.uploadAppAssets = async function({
 
   const appPages = fs.readdirSync(appAssetsPath)
 
-  const uploads = []
+  let uploads = []
 
   for (let page of appPages) {
-    walkDir(`${appAssetsPath}/${page}`, function prepareUploadsForS3(filePath) {
-      const fileExtension = [...filePath.split(".")].pop()
-      const fileBytes = fs.readFileSync(filePath)
+    // Upload HTML, CSS and JS for each page of the web app
+    const pageAssetUploads = uploadFiles({
+      path: `${appAssetsPath}/${page}`,
+      s3Key: `assets/${appId}`,
+      s3,
+      metadata: { accountId }
+    });
 
-      const upload = s3
-        .upload({
-          Key: filePath.replace(appAssetsPath, `assets/${appId}`),
-          Body: fileBytes,
-          ContentType: CONTENT_TYPE_MAP[fileExtension],
-          Metadata: {
-            accountId,
-          },
-        })
-        .promise()
-
-      uploads.push(upload)
-    })
+    uploads = [...uploads, ...pageAssetUploads];
   }
+
+  // Upload file attachments
+  const attachmentUploads = uploadFiles({
+    path: `${budibaseAppsDir()}/${appId}/attachments`,
+    s3Key: `assets/${appId}/attachments`,
+    s3,
+    metadata: { accountId }
+  })
+
+  uploads = [...uploads, ...attachmentUploads]
 
   try {
     await Promise.all(uploads)
+    // TODO: update dynamoDB with a synopsis of the app deployment for historical purposes
     await invalidateCDN(cfDistribution, appId)
   } catch (err) {
     console.error("Error uploading budibase app assets to s3", err)

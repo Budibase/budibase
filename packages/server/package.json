@@ -69,6 +69,7 @@
     "pino-pretty": "^4.0.0",
     "pouchdb": "^7.2.1",
     "pouchdb-all-dbs": "^1.0.2",
+    "sharp": "^0.26.0",
     "squirrelly": "^7.5.0",
     "tar-fs": "^2.1.0",
     "uuid": "^3.3.2",

@@ -57,8 +57,7 @@
   <DatePicker bind:value />
 {:else if type === 'file'}
   <Label small forAttr={'dropzone-label'}>{meta.name}</Label>
-  <Dropzone />
-  <!-- <input type="file" multiple on:change={handleInput} /> -->
+  <Dropzone bind:files={value} />
 {:else}
   {#if type === 'checkbox'}
     <label>{meta.name}</label>
