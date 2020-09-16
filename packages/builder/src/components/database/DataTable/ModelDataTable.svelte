@@ -112,6 +112,11 @@
   section {
     margin-bottom: 20px;
   }
+
+  img {
+    object-fit: contain;
+  }
+
   .title {
     font-size: 24px;
     font-weight: 600;
