@@ -7,6 +7,7 @@ module.exports.definition = {
   icon: "ri-mail-open-fill",
   name: "Send Email",
   type: "ACTION",
+  stepId: "SEND_EMAIL",
   inputs: {},
   schema: {
     inputs: {

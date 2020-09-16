@@ -5,6 +5,7 @@ module.exports.definition = {
   icon: "ri-time-fill",
   tagline: "Delay for {{inputs.time}} milliseconds",
   description: "Delay the workflow until an amount of time has passed",
+  stepId: "DELAY",
   inputs: {},
   schema: {
     inputs: {

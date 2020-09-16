@@ -11,6 +11,7 @@ module.exports.definition = {
   icon: "ri-git-branch-line",
   description: "Filter any workflows which do not meet certain conditions",
   type: "LOGIC",
+  stepId: "FILTER",
   inputs: {},
   schema: {
     inputs: {

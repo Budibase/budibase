@@ -11,6 +11,7 @@ const BUILTIN_DEFINITIONS = {
     icon: "ri-save-line",
     tagline: "Record is added to {{inputs.enriched.model.name}}",
     description: "Fired when a record is saved to your database",
+    stepId: "RECORD_SAVED",
     inputs: {},
     schema: {
       inputs: {
@@ -42,6 +43,7 @@ const BUILTIN_DEFINITIONS = {
     icon: "ri-delete-bin-line",
     tagline: "Record is deleted from {{inputs.enriched.model.name}}",
     description: "Fired when a record is deleted from your database",
+    stepId: "RECORD_DELETED",
     inputs: {},
     schema: {
       inputs: {
