@@ -1,115 +1,20 @@
-const userController = require("../api/controllers/user")
-const recordController = require("../api/controllers/record")
-const sgMail = require("@sendgrid/mail")
+const sendEmail = require("./steps/sendEmail")
+const saveRecord = require("./steps/saveRecord")
+const deleteRecord = require("./steps/deleteRecord")
+const createUser = require("./steps/createUser")
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+const BUILTIN_ACTIONS = {
+  SEND_EMAIL: sendEmail.run,
+  SAVE_RECORD: saveRecord.run,
+  DELETE_RECORD: deleteRecord.run,
+  CREATE_USER: createUser.run,
+}
 
-let BUILTIN_ACTIONS = {
-  CREATE_USER: async function(inputs) {
-    const { username, password, accessLevelId } = inputs
-    const ctx = {
-      user: {
-        instanceId: inputs.instanceId,
-      },
-      request: {
-        body: { username, password, accessLevelId },
-      },
-    }
-
-    try {
-      await userController.create(ctx)
-      return {
-        response: ctx.body,
-        id: ctx.body._id,
-        revision: ctx.body._rev,
-        success: ctx.status === 200,
-      }
-    } catch (err) {
-      console.error(err)
-      return {
-        success: false,
-        response: err,
-      }
-    }
-  },
-  SAVE_RECORD: async function(inputs) {
-    const ctx = {
-      params: {
-        instanceId: inputs.instanceId,
-        modelId: inputs.model._id,
-      },
-      request: {
-        body: inputs.record,
-      },
-      user: { instanceId: inputs.instanceId },
-    }
-
-    try {
-      await recordController.save(ctx)
-      return {
-        response: ctx.body,
-        id: ctx.body._id,
-        revision: ctx.body._rev,
-        success: ctx.status === 200,
-      }
-    } catch (err) {
-      console.error(err)
-      return {
-        success: false,
-        response: err,
-      }
-    }
-  },
-  SEND_EMAIL: async function(inputs) {
-    const msg = {
-      to: inputs.to,
-      from: inputs.from,
-      subject: inputs.subject,
-      text: inputs.text,
-    }
-
-    try {
-      await sgMail.send(msg)
-      return {
-        success: true,
-      }
-    } catch (err) {
-      console.error(err)
-      return {
-        success: false,
-        response: err,
-      }
-    }
-  },
-  DELETE_RECORD: async function(inputs) {
-    const { model, ...record } = inputs.record
-    // TODO: better logging of when actions are missed due to missing parameters
-    if (record.recordId == null || record.revId == null) {
-      return
-    }
-    let ctx = {
-      params: {
-        modelId: model._id,
-        recordId: record.recordId,
-        revId: record.revId,
-      },
-      user: { instanceId: inputs.instanceId },
-    }
-
-    try {
-      await recordController.destroy(ctx)
-      return {
-        response: ctx.body,
-        success: ctx.status === 200,
-      }
-    } catch (err) {
-      console.error(err)
-      return {
-        success: false,
-        response: err,
-      }
-    }
-  },
+const BUILTIN_DEFINITIONS = {
+  SEND_EMAIL: sendEmail.definition,
+  SAVE_RECORD: saveRecord.definition,
+  DELETE_RECORD: deleteRecord.definition,
+  CREATE_USER: createUser.definition,
 }
 
 module.exports.getAction = async function(actionName) {
@@ -118,3 +23,5 @@ module.exports.getAction = async function(actionName) {
   }
   // TODO: load async actions here
 }
+
+module.exports.BUILTIN_DEFINITIONS = BUILTIN_DEFINITIONS

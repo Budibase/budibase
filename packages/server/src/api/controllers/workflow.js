@@ -1,7 +1,8 @@
-const CouchDB = require("../../../db")
-const newid = require("../../../db/newid")
-const blockDefinitions = require("./blockDefinitions")
-const triggers = require("../../../workflows/triggers")
+const CouchDB = require("../../db")
+const newid = require("../../db/newid")
+const actions = require("../../workflows/actions")
+const logic = require("../../workflows/logic")
+const triggers = require("../../workflows/triggers")
 
 /*************************
  *                       *
@@ -67,22 +68,22 @@ exports.destroy = async function(ctx) {
 }
 
 exports.getActionList = async function(ctx) {
-  ctx.body = blockDefinitions.ACTION
+  ctx.body = actions.BUILTIN_DEFINITIONS
 }
 
 exports.getTriggerList = async function(ctx) {
-  ctx.body = blockDefinitions.TRIGGER
+  ctx.body = triggers.BUILTIN_DEFINITIONS
 }
 
 exports.getLogicList = async function(ctx) {
-  ctx.body = blockDefinitions.LOGIC
+  ctx.body = logic.BUILTIN_DEFINITIONS
 }
 
 module.exports.getDefinitionList = async function(ctx) {
   ctx.body = {
-    logic: blockDefinitions.LOGIC,
-    trigger: blockDefinitions.TRIGGER,
-    action: blockDefinitions.ACTION,
+    logic: logic.BUILTIN_DEFINITIONS,
+    trigger: triggers.BUILTIN_DEFINITIONS,
+    action: actions.BUILTIN_DEFINITIONS,
   }
 }
 
