@@ -12,7 +12,7 @@
   {#each inputs as [key, value]}
     <div class="bb-margin-xl block-field">
       <div class="field-label">{value.title}</div>
-      {#if value.type === 'string' && value.enum}
+      {#if value.type === 'string' && value.enum?.length}
         <Select bind:value={block.inputs[key]} thin secondary>
           <option value="">Choose an option</option>
           {#each value.enum as option}
