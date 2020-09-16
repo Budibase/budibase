@@ -24,8 +24,8 @@ module.exports.getLogic = function(logicName) {
 }
 
 module.exports.LogicConditions = [
-  "equals",
-  "notEquals",
-  "greaterThan",
-  "lessThan",
+  "Equals",
+  "Not equals",
+  "Greater than",
+  "Less than",
 ]
