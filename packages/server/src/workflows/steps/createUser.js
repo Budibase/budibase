@@ -1,5 +1,5 @@
+const accessLevels = require("../../utilities/accessLevels")
 const userController = require("../../api/controllers/user")
-let accessLevels = require("../../utilities/accessLevels")
 
 module.exports.definition = {
   description: "Create a new user",
