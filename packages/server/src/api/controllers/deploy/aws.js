@@ -2,6 +2,7 @@ const fs = require("fs")
 const AWS = require("aws-sdk")
 const fetch = require("node-fetch")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
+const PouchDB = require("../../../db")
 
 async function invalidateCDN(cfDistribution, appId) {
   const cf = new AWS.CloudFront({})
@@ -62,7 +63,6 @@ function walkDir(dirPath, callback) {
     }
   }
 }
-
 /**
  * Walk a directory and return an array of promises for uploading all the files
  * inside that directory to s3.
@@ -79,19 +79,8 @@ function uploadFiles({
 }) {
   const uploads = []
 
-  walkDir(path, function prepareUploadsForS3(filePath) {
-    const fileExtension = [...filePath.split(".")].pop()
-    const fileBytes = fs.readFileSync(filePath)
-
-    const upload = s3
-      .upload({
-        Key: filePath.replace(path, s3Key),
-        Body: fileBytes,
-        ContentType: CONTENT_TYPE_MAP[fileExtension],
-        Metadata: metadata,
-      })
-      .promise()
-
+  walkDir(path, function(filePath) {
+    const upload = prepareUploadForS3(filePath, metadata)
     uploads.push(upload)
   })
 
@@ -99,8 +88,24 @@ function uploadFiles({
 }
 
 
+function prepareUploadForS3({ filePath, s3Key, metadata }) {
+  const fileExtension = [...filePath.split(".")].pop()
+  const fileBytes = fs.readFileSync(filePath)
+  return s3
+    .upload({
+      Key: s3Key,
+      Body: fileBytes,
+      ContentType: CONTENT_TYPE_MAP[fileExtension],
+      Metadata: metadata,
+    })
+    .promise()
+}
+
+
+
 exports.uploadAppAssets = async function({
   appId,
+  instanceId,
   credentials,
   bucket,
   cfDistribution,
@@ -126,25 +131,40 @@ exports.uploadAppAssets = async function({
 
   for (let page of appPages) {
     // Upload HTML, CSS and JS for each page of the web app
-    const pageAssetUploads = uploadFiles({
-      path: `${appAssetsPath}/${page}`,
-      s3Key: `assets/${appId}`,
-      s3,
-      metadata: { accountId }
-    });
+    walkDir(path, function(filePath) {
+      const appAssetUpload = prepareUploadForS3({
+        filePath,
+        s3Key: filePath.replace(path, `assets/${appId}`),
+        s3,
+        metadata: { accountId }
+      })
+      uploads.push(appAssetUpload)
+    })
 
     uploads = [...uploads, ...pageAssetUploads];
   }
 
   // Upload file attachments
-  const attachmentUploads = uploadFiles({
-    path: `${budibaseAppsDir()}/${appId}/attachments`,
-    s3Key: `assets/${appId}/attachments`,
-    s3,
-    metadata: { accountId }
-  })
+  const db = new PouchDB(instanceId)
+  const fileUploads = await db.get("_local/fileuploads")
+  if (fileUploads) {
+    fileUploads.awaitingUpload.forEach((file, idx) => {
 
-  uploads = [...uploads, ...attachmentUploads]
+      const attachmentUpload = prepareUploadForS3({
+        filePath: file.path,
+        s3Key: `assets/${appId}/${file.name}`,
+        s3,
+        metadata: { accountId }
+      })
+
+      uploads.push(attachmentUpload)
+
+      // move the pending upload to the uploaded array
+      fileUploads.awaitingUpload.splice(idx, 1);
+      fileUploads.uploaded.push(awaitingUpload);
+    })
+    db.put(fileUploads);
+  }
 
   try {
     await Promise.all(uploads)
