@@ -6,6 +6,7 @@ module.exports.definition = {
   name: "Delete Record",
   tagline: "Delete a {{inputs.enriched.model.name}} record",
   type: "ACTION",
+  stepId: "DELETE_RECORD",
   inputs: {},
   schema: {
     inputs: {

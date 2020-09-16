@@ -7,6 +7,7 @@ module.exports.definition = {
   icon: "ri-user-add-fill",
   name: "Create User",
   type: "ACTION",
+  stepId: "CREATE_USER",
   inputs: {},
   schema: {
     inputs: {

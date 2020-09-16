@@ -25,7 +25,7 @@ class Orchestrator {
   constructor(workflow, triggerOutput) {
     this._instanceId = triggerOutput.instanceId
     // block zero is never used as the mustache is zero indexed for customer facing
-    this._context = { blocks: [{}, triggerOutput] }
+    this._context = { blocks: [{}], trigger: triggerOutput }
     this._workflow = workflow
   }
 
