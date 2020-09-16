@@ -4,7 +4,7 @@ let conditions = require("../../../workflows/logic").LogicConditions
 const ACTION = {
   SAVE_RECORD: {
     name: "Save Record",
-    tagline: "Save a {{inputs.record.model.name}} record",
+    tagline: "Save a {{inputs.enriched.model.name}} record",
     icon: "ri-save-3-fill",
     description: "Save a record to your database",
     type: "ACTION",
@@ -14,17 +14,20 @@ const ACTION = {
         properties: {
           record: {
             type: "object",
+            properties: {
+              modelId: {
+                type: "string",
+                customType: "model",
+                title: "Table",
+              },
+            },
             customType: "record",
             title: "The record to be written",
             default: {},
-          },
-          model: {
-            type: "object",
-            customType: "model",
-            title: "Table",
+            required: ["modelId"],
           },
         },
-        required: ["record", "model"],
+        required: ["record"],
       },
       outputs: {
         properties: {
@@ -53,12 +56,17 @@ const ACTION = {
     description: "Delete a record from your database",
     icon: "ri-delete-bin-line",
     name: "Delete Record",
-    tagline: "Delete a {{inputs.record.model.name}} record",
+    tagline: "Delete a {{inputs.enriched.model.name}} record",
     type: "ACTION",
     inputs: {},
     schema: {
       inputs: {
         properties: {
+          modelId: {
+            type: "string",
+            customType: "model",
+            title: "Table",
+          },
           id: {
             type: "string",
             title: "Record ID",
@@ -68,10 +76,15 @@ const ACTION = {
             title: "Record Revision",
           },
         },
-        required: ["id", "revision"],
+        required: ["modelId", "id", "revision"],
       },
       outputs: {
         properties: {
+          record: {
+            type: "object",
+            customType: "record",
+            description: "The deleted record",
+          },
           response: {
             type: "object",
             description: "The response from the table",
@@ -81,7 +94,7 @@ const ACTION = {
             description: "Whether the action was successful",
           },
         },
-        required: ["success"],
+        required: ["record", "success"],
       },
     },
   },
@@ -246,19 +259,19 @@ const TRIGGER = {
     name: "Record Saved",
     event: "record:save",
     icon: "ri-save-line",
-    tagline: "Record is added to {{inputs.model.name}}",
+    tagline: "Record is added to {{inputs.enriched.model.name}}",
     description: "Fired when a record is saved to your database",
     inputs: {},
     schema: {
       inputs: {
         properties: {
-          model: {
-            type: "object",
+          modelId: {
+            type: "string",
             customType: "model",
             title: "Table",
           },
         },
-        required: ["model"],
+        required: ["modelId"],
       },
       outputs: {
         properties: {
@@ -277,19 +290,19 @@ const TRIGGER = {
     name: "Record Deleted",
     event: "record:delete",
     icon: "ri-delete-bin-line",
-    tagline: "Record is deleted from {{inputs.model.name}}",
+    tagline: "Record is deleted from {{inputs.enriched.model.name}}",
     description: "Fired when a record is deleted from your database",
     inputs: {},
     schema: {
       inputs: {
         properties: {
-          model: {
-            type: "object",
+          modelId: {
+            type: "string",
             customType: "model",
             title: "Table",
           },
         },
-        required: ["model"],
+        required: ["modelId"],
       },
       outputs: {
         properties: {
