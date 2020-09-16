@@ -22,7 +22,7 @@ const ACTION = {
               },
             },
             customType: "record",
-            title: "The record to be written",
+            title: "Table",
             default: {},
             required: ["modelId"],
           },
@@ -206,19 +206,21 @@ const LOGIC = {
     inputs: {},
     schema: {
       inputs: {
-        filter: {
-          type: "string",
-          title: "Reference Value",
-        },
-        condition: {
-          type: "string",
-          title: "Condition",
-          enum: conditions,
-          default: "equals",
-        },
-        value: {
-          type: "string",
-          title: "Comparison Value",
+        properties: {
+          filter: {
+            type: "string",
+            title: "Reference Value",
+          },
+          condition: {
+            type: "string",
+            title: "Condition",
+            enum: conditions,
+            default: "equals",
+          },
+          value: {
+            type: "string",
+            title: "Comparison Value",
+          },
         },
         required: ["filter", "condition", "value"],
       },
