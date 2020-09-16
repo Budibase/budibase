@@ -3,31 +3,24 @@
   import { Input, Label } from "@budibase/bbui"
 
   export let value
-  $: modelId = value && value.model ? value.model._id : ""
-  $: schemaFields = Object.keys(value && value.model ? value.model.schema : {})
-
-  function onChangeModel(e) {
-    value.model = $backendUiStore.models.find(
-      model => model._id === e.target.value
-    )
-  }
+  $: value = value || {}
+  $: model = $backendUiStore.models.find(model => model._id === value?.modelId)
+  $: schemaFields = Object.keys(model?.schema ?? {})
 
   function setParsedValue(evt, field) {
-    const fieldSchema = value.model.schema[field]
-    if (fieldSchema.type === "number") {
-      value[field] = parseInt(evt.target.value)
-      return
+    const fieldSchema = model?.schema[field]
+    if (fieldSchema) {
+      if (fieldSchema.type === "number") {
+        value[field] = parseInt(evt.target.value)
+        return
+      }
     }
     value[field] = evt.target.value
   }
 </script>
 
 <div class="block-field">
-  <select
-    class="budibase__input"
-    value={modelId}
-    on:blur={onChangeModel}
-    on:change={onChangeModel}>
+  <select class="budibase__input" bind:value={value.modelId}>
     <option value="">Choose an option</option>
     {#each $backendUiStore.models as model}
       <option value={model._id}>{model.name}</option>
@@ -37,9 +30,8 @@
 
 {#if schemaFields.length}
   <div class="bb-margin-xl block-field">
-    <Label small forAttr={'fields'}>Fields</Label>
     {#each schemaFields as field}
-      <div class="bb-margin-xl">
+      <div class="bb-margin-xl capitalise">
         <Input
           thin
           value={value[field]}
@@ -49,3 +41,9 @@
     {/each}
   </div>
 {/if}
+
+<style>
+  .capitalise :global(label) {
+    text-transform: capitalize !important;
+  }
+</style>

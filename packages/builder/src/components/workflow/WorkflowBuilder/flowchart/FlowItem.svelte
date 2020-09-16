@@ -1,6 +1,6 @@
 <script>
   import mustache from "mustache"
-  import { workflowStore } from "builderStore"
+  import { workflowStore, backendUiStore } from "builderStore"
 
   export let onSelect
   export let block
@@ -13,6 +13,22 @@
   function selectBlock() {
     onSelect(block)
   }
+
+  function enrichInputs(inputs) {
+    let enrichedInputs = { ...inputs, enriched: {} }
+    const modelId = inputs.modelId || inputs.record?.modelId
+    if (modelId) {
+      enrichedInputs.enriched.model = $backendUiStore.models.find(
+        model => model._id === modelId
+      )
+    }
+    return enrichedInputs
+  }
+
+  $: inputs = enrichInputs(block.inputs)
+  $: tagline = block.tagline
+    .replaceAll("{{", "<b>{{")
+    .replaceAll("}}", "}}</b>")
 </script>
 
 <div class={`${block.type} hoverable`} class:selected on:click={selectBlock}>
@@ -30,7 +46,7 @@
   </header>
   <hr />
   <p>
-    {@html mustache.render(block.tagline, block.args)}
+    {@html mustache.render(tagline, { inputs })}
   </p>
 </div>
 

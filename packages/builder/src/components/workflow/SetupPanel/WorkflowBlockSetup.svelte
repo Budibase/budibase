@@ -1,41 +1,36 @@
 <script>
   import ModelSelector from "./ParamInputs/ModelSelector.svelte"
   import RecordSelector from "./ParamInputs/RecordSelector.svelte"
-  import { Input, TextArea, Select } from "@budibase/bbui"
+  import { Input, TextArea, Select, Label } from "@budibase/bbui"
 
   export let block
-  $: params = block.params ? Object.entries(block.params) : []
+  $: inputs = Object.entries(block.schema?.inputs?.properties || {})
 </script>
 
 <div class="container">
-  <div class="selected-label">{block.name}</div>
-  {#each params as [parameter, type]}
-    <div class="block-field">
-      <label class="label">{parameter}</label>
-      {#if Array.isArray(type)}
-        <Select bind:value={block.args[parameter]} thin secondary>
+  <div class="block-label">{block.name}</div>
+  {#each inputs as [key, value]}
+    <div class="bb-margin-xl block-field">
+      <div class="field-label">{value.title}</div>
+      {#if value.type === 'string' && value.enum}
+        <Select bind:value={block.inputs[key]} thin secondary>
           <option value="">Choose an option</option>
-          {#each type as option}
+          {#each value.enum as option}
             <option value={option}>{option}</option>
           {/each}
         </Select>
-      {:else if type === 'accessLevel'}
-        <Select bind:value={block.args[parameter]} thin secondary>
-          <option value="ADMIN">Admin</option>
-          <option value="POWER_USER">Power User</option>
-        </Select>
-      {:else if type === 'password'}
-        <Input type="password" thin bind:value={block.args[parameter]} />
-      {:else if type === 'number'}
-        <Input type="number" thin bind:value={block.args[parameter]} />
-      {:else if type === 'longText'}
-        <TextArea type="text" thin bind:value={block.args[parameter]} />
-      {:else if type === 'model'}
-        <ModelSelector bind:value={block.args[parameter]} />
-      {:else if type === 'record'}
-        <RecordSelector bind:value={block.args[parameter]} />
-      {:else if type === 'string'}
-        <Input type="text" thin bind:value={block.args[parameter]} />
+      {:else if value.customType === 'password'}
+        <Input type="password" thin bind:value={block.inputs[key]} />
+      {:else if value.type === 'number'}
+        <Input type="number" thin bind:value={block.inputs[key]} />
+      {:else if value.customType === 'longText'}
+        <TextArea type="text" thin bind:value={block.inputs[key]} />
+      {:else if value.customType === 'model'}
+        <ModelSelector bind:value={block.inputs[key]} />
+      {:else if value.customType === 'record'}
+        <RecordSelector bind:value={block.inputs[key]} />
+      {:else if value.type === 'string'}
+        <Input type="text" thin bind:value={block.inputs[key]} />
       {/if}
     </div>
   {/each}
@@ -46,17 +41,16 @@
     display: grid;
   }
 
-  label {
-    font-size: 14px;
-    font-family: sans-serif;
-    font-weight: 500;
+  .field-label {
     color: var(--ink);
     margin-bottom: 12px;
-    text-transform: capitalize;
-    margin-top: 20px;
+    display: flex;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: sans-serif;
   }
 
-  .selected-label {
+  .block-label {
     font-weight: 500;
     font-size: 14px;
     color: var(--grey-7);
