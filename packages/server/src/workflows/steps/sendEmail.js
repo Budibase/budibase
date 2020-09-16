@@ -2,7 +2,7 @@ const sgMail = require("@sendgrid/mail")
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 module.exports.definition = {
-  description: "Send an email.",
+  description: "Send an email",
   tagline: "Send email to {{inputs.to}}",
   icon: "ri-mail-open-fill",
   name: "Send Email",
