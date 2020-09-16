@@ -6,13 +6,16 @@
   export let files = []
 
   let selectedImageIdx = 0
+  let fileDragged = false
 
   $: selectedImage = files[selectedImageIdx]
 
-  async function processFiles(evt) {
-    const filesToProcess = Array.from(evt.target.files).map(
-      ({ name, path, size }) => ({ name, path, size })
-    )
+  async function processFiles(fileList) {
+    const filesToProcess = Array.from(fileList).map(({ name, path, size }) => ({
+      name,
+      path,
+      size,
+    }))
 
     const response = await api.post(`/api/files/process`, {
       files: filesToProcess,
@@ -29,12 +32,37 @@
   function navigateRight() {
     selectedImageIdx += 1
   }
+
+  function handleFile(evt) {
+    processFiles(evt.target.files)
+  }
+
+  function handleDragOver(evt) {
+    evt.preventDefault()
+    fileDragged = true
+  }
+
+  function handleDragLeave(evt) {
+    evt.preventDefault()
+    fileDragged = false
+  }
+
+  function handleDrop(evt) {
+    evt.preventDefault()
+    processFiles(evt.dataTransfer.files)
+    fileDragged = false
+  }
 </script>
 
-<div class="dropzone">
+<div
+  class="dropzone"
+  on:dragover={handleDragOver}
+  on:dragleave={handleDragLeave}
+  on:dragenter={handleDragOver}
+  on:drop={handleDrop}
+  class:fileDragged>
   <ul>
     {#if selectedImage}
-      <!-- if block necessary for svelte transitions to work -->
       <li transition:fade>
         <header>
           <span>
@@ -58,7 +86,7 @@
     {/if}
   </ul>
   <i class="ri-folder-upload-line" />
-  <input id="file-upload" type="file" multiple on:change={processFiles} />
+  <input id="file-upload" type="file" multiple on:change={handleFile} />
   <label for="file-upload">Upload</label>
 </div>
 
@@ -71,6 +99,13 @@
     align-items: center;
     flex-direction: column;
     border-radius: 10px;
+    transition: all 0.2s;
+  }
+
+  .fileDragged {
+    border: 2px dashed var(--grey-7);
+    transform: scale(1.02);
+    background: var(--blue-light);
   }
 
   input[type="file"] {
