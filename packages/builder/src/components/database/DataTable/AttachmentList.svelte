@@ -7,17 +7,17 @@
 </script>
 
 <div class="file-list">
-{#each files as file}
-  <div class="file">
-    {#if FILE_TYPES.IMAGE.includes(file.extension)}
-      <img {width} {height} src={file.clientUrl} />
-    {:else}
-      <i class="ri-file-line" />
-      <span class="extension">.{file.extension}</span>
-      <span>{file.name}</span>
-    {/if}
-  </div>
-{/each}
+  {#each files as file}
+    <div class="file">
+      {#if FILE_TYPES.IMAGE.includes(file.extension)}
+        <img {width} {height} src={file.clientUrl} />
+      {:else}
+        <i class="ri-file-line" />
+        <span class="extension">.{file.extension}</span>
+        <span>{file.name}</span>
+      {/if}
+    </div>
+  {/each}
 </div>
 
 <style>
@@ -27,7 +27,7 @@
     grid-gap: var(--spacing-m);
     grid-template-columns: repeat(10, 1fr);
   }
-  
+
   img {
     object-fit: contain;
   }

@@ -110,7 +110,7 @@ exports.uploadAppAssets = async function({
         filePath,
         s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
         s3,
-        metadata: { accountId }
+        metadata: { accountId },
       })
       uploads.push(appAssetUpload)
     })
@@ -123,20 +123,20 @@ exports.uploadAppAssets = async function({
     for (let file of fileUploads.uploads) {
       if (file.uploaded) continue
 
-        const attachmentUpload = prepareUploadForS3({
-          filePath: file.path,
-          s3Key: `assets/${appId}/attachments/${file.name}`,
-          s3,
-          metadata: { accountId }
-        })
+      const attachmentUpload = prepareUploadForS3({
+        filePath: file.path,
+        s3Key: `assets/${appId}/attachments/${file.name}`,
+        s3,
+        metadata: { accountId },
+      })
 
-        uploads.push(attachmentUpload)
+      uploads.push(attachmentUpload)
 
-        // mark file as uploaded
-        file.uploaded = true
+      // mark file as uploaded
+      file.uploaded = true
     }
 
-    db.put(fileUploads);
+    db.put(fileUploads)
   }
 
   try {

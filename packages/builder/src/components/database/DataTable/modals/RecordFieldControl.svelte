@@ -4,6 +4,7 @@
 
   export let meta
   export let value = meta.type === "boolean" ? false : ""
+  export let saveRecord
 
   let isSelect =
     meta.type === "string" &&
@@ -24,7 +25,6 @@
   }
 
   const handleInput = event => {
-    console.log(event.target.value)
     if (event.target.type === "checkbox") {
       value = event.target.checked
       return
@@ -34,12 +34,6 @@
       value = parseInt(event.target.value)
       return
     }
-
-    // if (event.target.type === "file") {
-    //   value = Array.from(event.target.files).map(file => file.path)
-    //   console.log(value)
-    //   return
-    // }
 
     value = event.target.value
   }

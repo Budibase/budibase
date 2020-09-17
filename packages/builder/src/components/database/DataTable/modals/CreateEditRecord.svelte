@@ -37,7 +37,7 @@
     backendUiStore.update(state => {
       state.selectedView = state.selectedView
       onClosed()
-      notifier.success("Record created successfully.")
+      notifier.success("Record saved successfully.")
       return state
     })
   }
