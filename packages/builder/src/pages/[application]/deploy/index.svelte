@@ -53,7 +53,9 @@
       </Button>
     {/if}
   </div>
-  <img src="/_builder/assets/deploy-rocket.jpg" alt="Rocket flying through sky"/>
+  <img
+    src="/_builder/assets/deploy-rocket.jpg"
+    alt="Rocket flying through sky" />
 </section>
 
 <style>

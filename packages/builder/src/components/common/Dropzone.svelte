@@ -36,9 +36,12 @@
   }
 
   async function removeFile() {
-    const response = await api.delete(`/api/attachments/${selectedImage.fileName}`)
+    const response = await api.delete(
+      `/api/attachments/${selectedImage.fileName}`
+    )
     files.splice(selectedImageIdx, 1)
     files = files
+    selectedImageIdx = 0
   }
 
   function navigateLeft() {
