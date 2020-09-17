@@ -27,8 +27,8 @@ function generateValidator(existing = false) {
   // prettier-ignore
   return joiValidator.body(Joi.object({
     live: Joi.bool(),
-    id: existing ? Joi.string().required() : Joi.string(),
-    rev: existing ? Joi.string().required() : Joi.string(),
+    _id: existing ? Joi.string().required() : Joi.string(),
+    _rev: existing ? Joi.string().required() : Joi.string(),
     name: Joi.string().required(),
     type: Joi.string().valid("workflow").required(),
     definition: Joi.object({
