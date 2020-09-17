@@ -71,7 +71,7 @@ exports.processLocalFileUpload = async function(ctx) {
 
   try {
     // TODO: get file sizes of images after resize
-    const responses = await Promise.all(fileProcessOperations)
+    await Promise.all(fileProcessOperations)
 
     let pendingFileUploads
     // local document used to track which files need to be uploaded
@@ -87,8 +87,8 @@ exports.processLocalFileUpload = async function(ctx) {
         pendingFileUploads = { _id: "_local/fileuploads", uploads: [] }
       })
 
-    fileUploads.uploads = [...filesToProcess, ...pendingFileUploads.uploads]
-    await db.put(fileUploads)
+    pendingFileUploads.uploads = [...filesToProcess, ...pendingFileUploads.uploads]
+    await db.put(pendingFileUploads)
 
     ctx.body = filesToProcess
   } catch (err) {
