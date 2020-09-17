@@ -4,6 +4,11 @@ const InMemoryQueue = require("./queue/inMemoryQueue")
 
 let workflowQueue = new InMemoryQueue()
 
+const FAKE_STRING = "TEST"
+const FAKE_BOOL = false
+const FAKE_NUMBER = 1
+const FAKE_DATETIME = "1970-01-01T00:00:00.000Z"
+
 const BUILTIN_DEFINITIONS = {
   RECORD_SAVED: {
     name: "Record Saved",
@@ -98,7 +103,48 @@ emitter.on("record:delete", async function(event) {
   await queueRelevantWorkflows(event, "record:delete")
 })
 
+async function fillRecordOutput(workflow, params) {
+  let triggerSchema = workflow.definition.trigger
+  let modelId = triggerSchema.inputs.modelId
+  const db = new CouchDB(params.instanceId)
+  try {
+    let model = await db.get(modelId)
+    for (let schemaKey of Object.keys(model.schema)) {
+      if (params[schemaKey] != null) {
+        continue
+      }
+      let propSchema = model.schema[schemaKey]
+      switch (propSchema.constraints.type) {
+        case "string":
+          params[schemaKey] = FAKE_STRING
+          break
+        case "boolean":
+          params[schemaKey] = FAKE_BOOL
+          break
+        case "number":
+          params[schemaKey] = FAKE_NUMBER
+          break
+        case "datetime":
+          params[schemaKey] = FAKE_DATETIME
+          break
+      }
+    }
+  } catch (err) {
+    throw "Failed to find model for trigger"
+  }
+  return params
+}
+
 module.exports.externalTrigger = async function(workflow, params) {
+  // TODO: replace this with allowing user in builder to input values in future
+  if (
+    workflow.definition != null &&
+    workflow.definition.trigger != null &&
+    workflow.definition.trigger.inputs.modelId != null
+  ) {
+    params = await fillRecordOutput(workflow, params)
+  }
+
   workflowQueue.add({ workflow, event: params })
 }
 
