@@ -20,7 +20,7 @@
       class="hoverable"
       class:selected={selectedTab === 'ADD'}
       on:click={() => (selectedTab = 'ADD')}>
-      Add
+      Add step
     </span>
   {/if}
 </header>
