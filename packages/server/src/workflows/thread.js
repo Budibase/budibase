@@ -2,11 +2,34 @@ const mustache = require("mustache")
 const actions = require("./actions")
 const logic = require("./logic")
 
+function cleanMustache(string) {
+  let charToReplace = {
+    "[": ".",
+    "]": "",
+  }
+  let regex = new RegExp(/{{[^}}]*}}/g)
+  let match
+  while ((match = regex.exec(string)) !== null) {
+    let baseIdx = string.indexOf(match)
+    for (let key of Object.keys(charToReplace)) {
+      let idxChar = match[0].indexOf(key)
+      if (idxChar !== -1) {
+        string =
+          string.slice(baseIdx, baseIdx + idxChar) +
+          charToReplace[key] +
+          string.slice(baseIdx + idxChar + 1)
+      }
+    }
+  }
+  return string
+}
+
 function recurseMustache(inputs, context) {
-  for (let key in Object.keys(inputs)) {
+  for (let key of Object.keys(inputs)) {
     let val = inputs[key]
     if (typeof val === "string") {
-      inputs[key] = mustache.render(val, { context })
+      val = cleanMustache(inputs[key])
+      inputs[key] = mustache.render(val, context)
     }
     // this covers objects and arrays
     else if (typeof val === "object") {
@@ -24,8 +47,8 @@ function recurseMustache(inputs, context) {
 class Orchestrator {
   constructor(workflow, triggerOutput) {
     this._instanceId = triggerOutput.instanceId
-    // block zero is never used as the mustache is zero indexed for customer facing
-    this._context = { blocks: [{}], trigger: triggerOutput }
+    // step zero is never used as the mustache is zero indexed for customer facing
+    this._context = { steps: [{}], trigger: triggerOutput }
     this._workflow = workflow
   }
 
@@ -44,15 +67,15 @@ class Orchestrator {
 
   async execute() {
     let workflow = this._workflow
-    for (let block of workflow.definition.steps) {
-      let stepFn = await this.getStepFunctionality(block.type, block.stepId)
-      block.inputs = recurseMustache(block.inputs, this._context)
+    for (let step of workflow.definition.steps) {
+      let stepFn = await this.getStepFunctionality(step.type, step.stepId)
+      step.inputs = recurseMustache(step.inputs, this._context)
       // instanceId is always passed
       const outputs = await stepFn({
-        inputs: block.inputs,
+        inputs: step.inputs,
         instanceId: this._instanceId,
       })
-      this._context.blocks.push(outputs)
+      this._context.steps.push(outputs)
     }
   }
 }

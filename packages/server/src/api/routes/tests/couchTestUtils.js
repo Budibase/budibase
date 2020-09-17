@@ -67,6 +67,13 @@ exports.createModel = async (request, appId, instanceId, model) => {
   return res.body
 }
 
+exports.getAllFromModel = async (request, appId, instanceId, modelId) => {
+  const res = await request
+    .get(`/api/${modelId}/records`)
+    .set(exports.defaultHeaders(appId, instanceId))
+  return res.body
+}
+
 exports.createView = async (request, appId, instanceId, modelId, view) => {
   view = view || {
     map: "function(doc) { emit(doc[doc.key], doc._id); } ",

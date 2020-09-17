@@ -3,12 +3,15 @@ const {
   createApplication,
   createInstance,
   createModel,
+  getAllFromModel,
   defaultHeaders,
   supertest,
   insertDocument,
   destroyDocument,
   builderEndpointShouldBlockNormalUsers
 } = require("./couchTestUtils")
+
+const { delay } = require("./testUtils")
 
 const TEST_WORKFLOW = {
   _id: "Test Workflow",
@@ -37,7 +40,7 @@ describe("/workflows", () => {
   let app
   let instance
   let workflow
-  let model
+  let workflowId
 
   beforeAll(async () => {
     ({ request, server } = await supertest())
@@ -48,7 +51,6 @@ describe("/workflows", () => {
   beforeEach(async () => {
     if (workflow) await destroyDocument(workflow.id)
     instance = await createInstance(request, app._id)
-    model = await createModel(request, app._id, instance._id)
   })
 
   afterAll(async () => {
@@ -59,7 +61,7 @@ describe("/workflows", () => {
     workflow = await insertDocument(instance._id, {
       type: "workflow",
       ...TEST_WORKFLOW
-    });
+    })
     workflow = { ...workflow, ...TEST_WORKFLOW }
   }
 
@@ -113,21 +115,14 @@ describe("/workflows", () => {
   describe("create", () => {
     it("should setup the workflow fully", () => {
       let trigger = TRIGGER_DEFINITIONS["RECORD_SAVED"]
-      trigger.inputs.modelId = model._id
       trigger.id = "wadiawdo34"
       let saveAction = ACTION_DEFINITIONS["SAVE_RECORD"]
       saveAction.inputs.record = {
-        modelId: model._id,
-        name: "Testing",
+        name: "{{trigger.name}}",
       }
       saveAction.id = "awde444wk"
-      let deleteAction = ACTION_DEFINITIONS["DELETE_RECORD"]
-      deleteAction.inputs.id = "{{blocks[1].id}}"
-      deleteAction.inputs.revision = "{{blocks[1].revision}}"
-      deleteAction.id = "78MOt8nQO"
 
       TEST_WORKFLOW.definition.steps.push(saveAction)
-      TEST_WORKFLOW.definition.steps.push(deleteAction)
       TEST_WORKFLOW.definition.trigger = trigger
     })
 
@@ -139,8 +134,10 @@ describe("/workflows", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(res.body.message).toEqual("Workflow created successfully");
-        expect(res.body.workflow.name).toEqual("My Workflow");
+      expect(res.body.message).toEqual("Workflow created successfully")
+      expect(res.body.workflow.name).toEqual("My Workflow")
+      expect(res.body.workflow._id).not.toEqual(null)
+      workflowId = res.body.workflow._id
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -155,12 +152,34 @@ describe("/workflows", () => {
     })
   })
 
+  describe("trigger", () => {
+    it("trigger the workflow successfully", async () => {
+      let model = await createModel(request, app._id, instance._id)
+      TEST_WORKFLOW.definition.trigger.inputs.modelId = model._id
+      TEST_WORKFLOW.definition.steps[0].inputs.record.modelId = model._id
+      await createWorkflow()
+      const res = await request
+        .post(`/api/workflows/${workflow._id}/trigger`)
+        .send({ name: "Test", description: "Test" })
+        .set(defaultHeaders(app._id, instance._id))
+        .expect('Content-Type', /json/)
+        .expect(200)
+      expect(res.body.message).toEqual(`Workflow ${workflow._id} has been triggered.`)
+      expect(res.body.workflow.name).toEqual(TEST_WORKFLOW.name)
+      // wait for workflow to complete in background
+      await delay(500)
+      let elements = await getAllFromModel(request, app._id, instance._id, model._id)
+      expect(elements.length).toEqual(1)
+      expect(elements[0].name).toEqual("Test")
+    })
+  })
+
   describe("update", () => {
     it("updates a workflows data", async () => {
-      await createWorkflow();
+      await createWorkflow()
       workflow._id = workflow.id
       workflow._rev = workflow.rev
-      workflow.name = "Updated Name";
+      workflow.name = "Updated Name"
       workflow.type = "workflow"
 
       const res = await request
@@ -170,21 +189,21 @@ describe("/workflows", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(res.body.message).toEqual("Workflow Test Workflow updated successfully.");
-        expect(res.body.workflow.name).toEqual("Updated Name");
+        expect(res.body.message).toEqual("Workflow Test Workflow updated successfully.")
+        expect(res.body.workflow.name).toEqual("Updated Name")
     })
   })
 
   describe("fetch", () => {
     it("return all the workflows for an instance", async () => {
-      await createWorkflow();
+      await createWorkflow()
       const res = await request
         .get(`/api/workflows`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(res.body[0]).toEqual(expect.objectContaining(TEST_WORKFLOW));
+        expect(res.body[0]).toEqual(expect.objectContaining(TEST_WORKFLOW))
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -200,18 +219,18 @@ describe("/workflows", () => {
 
   describe("destroy", () => {
     it("deletes a workflow by its ID", async () => {
-      await createWorkflow();
+      await createWorkflow()
       const res = await request
         .delete(`/api/workflows/${workflow.id}/${workflow.rev}`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(res.body.id).toEqual(TEST_WORKFLOW._id);
+        expect(res.body.id).toEqual(TEST_WORKFLOW._id)
     })
 
     it("should apply authorization to endpoint", async () => {
-      await createWorkflow();
+      await createWorkflow()
       await builderEndpointShouldBlockNormalUsers({
         request,
         method: "DELETE",
@@ -221,4 +240,4 @@ describe("/workflows", () => {
       })
     })
   })
-});
+})
