@@ -52,7 +52,7 @@
         {:else}
           <BindableInput
             thin
-            value={value[field]}
+            bind:value={value[field]}
             on:change={e => setParsedValue(e, field)}
             label={field}
             {bindings} />
