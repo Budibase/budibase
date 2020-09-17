@@ -119,6 +119,7 @@ describe("/workflows", () => {
       let saveAction = ACTION_DEFINITIONS["SAVE_RECORD"]
       saveAction.inputs.record = {
         name: "{{trigger.name}}",
+        description: "{{trigger.description}}"
       }
       saveAction.id = "awde444wk"
 
@@ -160,7 +161,7 @@ describe("/workflows", () => {
       await createWorkflow()
       const res = await request
         .post(`/api/workflows/${workflow._id}/trigger`)
-        .send({ name: "Test", description: "Test" })
+        .send({ name: "Test" })
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
@@ -171,6 +172,7 @@ describe("/workflows", () => {
       let elements = await getAllFromModel(request, app._id, instance._id, model._id)
       expect(elements.length).toEqual(1)
       expect(elements[0].name).toEqual("Test")
+      expect(elements[0].description).toEqual("TEST")
     })
   })
 
