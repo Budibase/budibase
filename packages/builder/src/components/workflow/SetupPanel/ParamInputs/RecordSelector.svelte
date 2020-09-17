@@ -1,8 +1,11 @@
 <script>
   import { backendUiStore } from "builderStore"
   import { Input, Select, Label } from "@budibase/bbui"
+  import BindableInput from "../../../userInterface/BindableInput.svelte"
 
   export let value
+  export let bindings
+
   $: model = $backendUiStore.models.find(model => model._id === value?.modelId)
   $: schemaFields = Object.entries(model?.schema ?? {})
 
@@ -47,11 +50,12 @@
             {/each}
           </Select>
         {:else}
-          <Input
+          <BindableInput
             thin
             value={value[field]}
+            on:change={e => setParsedValue(e, field)}
             label={field}
-            on:change={e => setParsedValue(e, field)} />
+            {bindings} />
         {/if}
       </div>
     {/each}
