@@ -182,6 +182,7 @@ exports.destroy = async function(ctx) {
     return
   }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
+  ctx.status = 200
   emitEvent(`record:delete`, ctx, record)
 }
 
