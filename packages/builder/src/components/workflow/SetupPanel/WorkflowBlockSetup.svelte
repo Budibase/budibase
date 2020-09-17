@@ -7,7 +7,7 @@
 
   export let block
   $: inputs = Object.entries(block.schema?.inputs?.properties || {})
-  $: availableBindings = getAvailableBindings(
+  $: bindings = getAvailableBindings(
     block,
     $workflowStore.selectedWorkflow?.workflow?.definition
   )
@@ -16,8 +16,15 @@
     if (!block || !workflow) {
       return []
     }
-    const allSteps = [workflow.trigger, ...workflow.steps]
+
+    // Find previous steps to the selected one
+    let allSteps = [...workflow.steps]
+    if (workflow.trigger) {
+      allSteps = [workflow.trigger, ...allSteps]
+    }
     const blockIdx = allSteps.findIndex(step => step.id === block.id)
+
+    // Extract all outputs from all previous steps as available bindings
     let bindings = []
     for (let idx = 0; idx < blockIdx; idx++) {
       const outputs = Object.entries(allSteps[idx].schema?.outputs?.properties)
@@ -43,26 +50,24 @@
       {#if value.type === 'string' && value.enum}
         <Select bind:value={block.inputs[key]} thin secondary>
           <option value="">Choose an option</option>
-          {#each value.enum as option}
-            <option value={option}>{option}</option>
+          {#each value.enum as option, idx}
+            <option value={option}>
+              {value.pretty ? value.pretty[idx] : option}
+            </option>
           {/each}
         </Select>
       {:else if value.customType === 'password'}
         <Input type="password" thin bind:value={block.inputs[key]} />
-      {:else if value.type === 'number'}
-        <Input type="number" thin bind:value={block.inputs[key]} />
-      {:else if value.customType === 'longText'}
-        <TextArea type="text" thin bind:value={block.inputs[key]} />
       {:else if value.customType === 'model'}
         <ModelSelector bind:value={block.inputs[key]} />
       {:else if value.customType === 'record'}
-        <RecordSelector bind:value={block.inputs[key]} />
-      {:else if value.type === 'string'}
+        <RecordSelector bind:value={block.inputs[key]} {bindings} />
+      {:else if value.type === 'string' || value.type === 'number'}
         <BindableInput
-          type="text"
+          type={value.type}
           thin
           bind:value={block.inputs[key]}
-          bindings={availableBindings} />
+          {bindings} />
       {/if}
     </div>
   {/each}
