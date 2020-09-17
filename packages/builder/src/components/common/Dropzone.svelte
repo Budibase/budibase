@@ -2,7 +2,6 @@
   import { Heading, Body, Button } from "@budibase/bbui"
   import { FILE_TYPES } from "constants/backend"
   import api from "builderStore/api"
-  import { fade } from "svelte/transition"
 
   export let files = []
 
@@ -80,9 +79,10 @@
   on:dragenter={handleDragOver}
   on:drop={handleDrop}
   class:fileDragged>
+
   <ul>
     {#if selectedImage}
-      <li transition:fade>
+      <li>
         <header>
           <div>
             <i
