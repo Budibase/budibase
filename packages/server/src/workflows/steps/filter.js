@@ -25,7 +25,7 @@ module.exports.definition = {
   schema: {
     inputs: {
       properties: {
-        filter: {
+        field: {
           type: "string",
           title: "Reference Value",
         },
@@ -40,7 +40,7 @@ module.exports.definition = {
           title: "Comparison Value",
         },
       },
-      required: ["filter", "condition", "value"],
+      required: ["field", "condition", "value"],
     },
     outputs: {
       properties: {
@@ -59,10 +59,10 @@ module.exports.run = async function filter({ inputs }) {
   let success
   if (typeof field !== "object" && typeof value !== "object") {
     switch (condition) {
-      case LogicConditions.EQUALS:
+      case LogicConditions.EQUAL:
         success = field === value
         break
-      case LogicConditions.NOT_EQUALS:
+      case LogicConditions.NOT_EQUAL:
         success = field !== value
         break
       case LogicConditions.GREATER_THAN:

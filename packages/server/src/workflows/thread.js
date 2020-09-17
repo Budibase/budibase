@@ -2,6 +2,8 @@ const mustache = require("mustache")
 const actions = require("./actions")
 const logic = require("./logic")
 
+const FILTER_STEP_ID = logic.BUILTIN_DEFINITIONS.FILTER.stepId
+
 function cleanMustache(string) {
   let charToReplace = {
     "[": ".",
@@ -47,6 +49,8 @@ function recurseMustache(inputs, context) {
 class Orchestrator {
   constructor(workflow, triggerOutput) {
     this._instanceId = triggerOutput.instanceId
+    // remove from context
+    delete triggerOutput.instanceId
     // step zero is never used as the mustache is zero indexed for customer facing
     this._context = { steps: [{}], trigger: triggerOutput }
     this._workflow = workflow
@@ -75,6 +79,9 @@ class Orchestrator {
         inputs: step.inputs,
         instanceId: this._instanceId,
       })
+      if (step.stepId === FILTER_STEP_ID && !outputs.success) {
+        break
+      }
       this._context.steps.push(outputs)
     }
   }
