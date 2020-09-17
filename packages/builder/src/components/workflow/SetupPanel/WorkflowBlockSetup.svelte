@@ -27,7 +27,9 @@
     // Extract all outputs from all previous steps as available bindings
     let bindings = []
     for (let idx = 0; idx < blockIdx; idx++) {
-      const outputs = Object.entries(allSteps[idx].schema?.outputs?.properties)
+      const outputs = Object.entries(
+        allSteps[idx].schema?.outputs?.properties ?? {}
+      )
       bindings = bindings.concat(
         outputs.map(([name, value]) => ({
           label: name,
