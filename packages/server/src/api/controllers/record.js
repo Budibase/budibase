@@ -183,11 +183,13 @@ exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const record = await db.get(ctx.params.recordId)
   if (record.modelId !== ctx.params.modelId) {
-    ctx.throw(400, "Supplied modelId doe not match the record's modelId")
+    ctx.throw(400, "Supplied modelId doesn't match the record's modelId")
     return
   }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
   ctx.status = 200
+  // for workflows
+  ctx.record = record
   emitEvent(`record:delete`, ctx, record)
 }
 

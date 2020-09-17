@@ -66,6 +66,7 @@ module.exports.run = async function({ inputs, instanceId }) {
     await recordController.destroy(ctx)
     return {
       response: ctx.body,
+      record: ctx.record,
       success: ctx.status === 200,
     }
   } catch (err) {
