@@ -26,9 +26,7 @@
   }
 
   $: inputs = enrichInputs(block.inputs)
-  $: tagline = block.tagline
-    .replaceAll("{{", "<b>{{")
-    .replaceAll("}}", "}}</b>")
+  $: tagline = block.tagline.replace(/{{/g, "<b>{{").replace(/}}/, "}}</b>")
 </script>
 
 <div
