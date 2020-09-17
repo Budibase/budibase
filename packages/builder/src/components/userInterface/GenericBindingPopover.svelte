@@ -4,11 +4,11 @@
   import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
-  export let value
+  export let value = ""
   export let bindings = []
   export let anchor
   export let align
-  export let popover
+  export let popover = null
 
   $: categories = Object.entries(groupBy("category", bindings))
 
@@ -46,7 +46,7 @@
       <TextArea thin bind:value placeholder="..." />
       <div class="controls">
         <a href="#">
-          <Body small color="light">Learn more about binding</Body>
+          <Body small>Learn more about binding</Body>
         </a>
         <Button on:click={popover.hide} primary>Done</Button>
       </div>

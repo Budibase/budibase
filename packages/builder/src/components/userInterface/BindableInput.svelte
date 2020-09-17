@@ -5,12 +5,19 @@
   export let bindings = []
   export let value
   let anchor
-  let popover
+  let popover = undefined
   let enrichedValue
+  let inputProps
+
+  // Extract all other props to pass to input component
+  $: {
+    let { bindings, ...otherProps } = $$props
+    inputProps = otherProps
+  }
 </script>
 
 <div class="container" bind:this={anchor}>
-  <Input {...$$props} bind:value />
+  <Input {...inputProps} bind:value />
   <button on:click={popover.show}>
     <Icon name="edit" />
   </button>
