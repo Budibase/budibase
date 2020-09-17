@@ -34,7 +34,7 @@
           type: value.type,
           description: value.description,
           category: idx === 0 ? "Trigger outputs" : `Step ${idx} outputs`,
-          path: idx === 0 ? `trigger.${name}` : `blocks.${idx}.${name}`,
+          path: idx === 0 ? `trigger.${name}` : `steps.${idx}.${name}`,
         }))
       )
     }
