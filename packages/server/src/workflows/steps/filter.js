@@ -14,7 +14,7 @@ const PrettyLogicConditions = {
 
 module.exports.definition = {
   name: "Filter",
-  tagline: "{{inputs.filter}} {{inputs.condition}} {{inputs.value}}",
+  tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
   icon: "ri-git-branch-line",
   description: "Filter any workflows which do not meet certain conditions",
   type: "LOGIC",
