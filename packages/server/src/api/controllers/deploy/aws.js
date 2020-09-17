@@ -63,32 +63,8 @@ function walkDir(dirPath, callback) {
     }
   }
 }
-/**
- * Walk a directory and return an array of promises for uploading all the files
- * inside that directory to s3.
- * @param {Object} config
- * path: path to read files from on disk  
- * s3Key: the path in s3 to upload the directory files to
- * s3: s3 client object
- */
-function uploadFiles({
-  path,
-  s3Key,
-  s3,
-  metadata
-}) {
-  const uploads = []
 
-  walkDir(path, function(filePath) {
-    const upload = prepareUploadForS3(filePath, metadata)
-    uploads.push(upload)
-  })
-
-  return uploads
-}
-
-
-function prepareUploadForS3({ filePath, s3Key, metadata }) {
+function prepareUploadForS3({ filePath, s3Key, metadata, s3 }) {
   const fileExtension = [...filePath.split(".")].pop()
   const fileBytes = fs.readFileSync(filePath)
   return s3
@@ -100,8 +76,6 @@ function prepareUploadForS3({ filePath, s3Key, metadata }) {
     })
     .promise()
 }
-
-
 
 exports.uploadAppAssets = async function({
   appId,
@@ -131,17 +105,15 @@ exports.uploadAppAssets = async function({
 
   for (let page of appPages) {
     // Upload HTML, CSS and JS for each page of the web app
-    walkDir(path, function(filePath) {
+    walkDir(`${appAssetsPath}/${page}`, function(filePath) {
       const appAssetUpload = prepareUploadForS3({
         filePath,
-        s3Key: filePath.replace(path, `assets/${appId}`),
+        s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
         s3,
         metadata: { accountId }
       })
       uploads.push(appAssetUpload)
     })
-
-    uploads = [...uploads, ...pageAssetUploads];
   }
 
   // Upload file attachments

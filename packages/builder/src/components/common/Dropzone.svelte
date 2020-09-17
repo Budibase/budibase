@@ -1,5 +1,6 @@
 <script>
   import { Heading, Body, Button } from "@budibase/bbui"
+  import { FILE_TYPES } from "constants/backend"
   import api from "builderStore/api"
   import { fade } from "svelte/transition"
 
@@ -9,6 +10,15 @@
   let fileDragged = false
 
   $: selectedImage = files[selectedImageIdx]
+
+  function determineFileIcon(extension) {
+    const ext = extension.toLowerCase()
+
+    if (FILE_TYPES.IMAGE.includes(ext)) return "ri-image-2-line"
+    if (FILE_TYPES.CODE.includes(ext)) return "ri-terminal-box-line"
+
+    return "ri-file-line"
+  }
 
   async function processFiles(fileList) {
     const filesToProcess = Array.from(fileList).map(({ name, path, size }) => ({
@@ -22,10 +32,15 @@
     })
     const processedFiles = await response.json()
     files = [...processedFiles, ...files]
+    selectedImageIdx = 0
+  }
+
+  function removeFile() {
+    files.splice(selectedImageIdx, 1)
+    files = files
   }
 
   function navigateLeft() {
-    if (selectedImageIdx === 0) return
     selectedImageIdx -= 1
   }
 
@@ -65,12 +80,16 @@
     {#if selectedImage}
       <li transition:fade>
         <header>
-          <span>
-            <i class="ri-image-2-line file-icon" />
-            {selectedImage.extension}
-          </span>
+          <div>
+            <i
+              class={`file-icon ${determineFileIcon(selectedImage.extension)}`} />
+            <span class="filename">{selectedImage.name}</span>
+          </div>
           <p>{selectedImage.size / 1000}KB</p>
         </header>
+        <div class="delete-button" on:click={removeFile}>
+          <i class="ri-close-line" />
+        </div>
         {#if selectedImageIdx !== 0}
           <div class="nav left" on:click={navigateLeft}>
             <i class="ri-arrow-left-line" />
@@ -99,12 +118,12 @@
     align-items: center;
     flex-direction: column;
     border-radius: 10px;
-    transition: all 0.2s;
+    transition: all 0.3s;
   }
 
   .fileDragged {
     border: 2px dashed var(--grey-7);
-    transform: scale(1.02);
+    transform: scale(1.03);
     background: var(--blue-light);
   }
 
@@ -144,7 +163,7 @@
     color: var(--white);
     display: flex;
     align-items: center;
-    bottom: 5px;
+    bottom: var(--spacing-s);
     border-radius: 10px;
     transition: 0.2s transform;
   }
@@ -155,11 +174,11 @@
   }
 
   .left {
-    left: 5px;
+    left: var(--spacing-s);
   }
 
   .right {
-    right: 5px;
+    right: var(--spacing-s);
   }
 
   li {
@@ -174,7 +193,7 @@
   img {
     border-radius: 10px;
     width: 100%;
-    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 var(--spacing-s) 12px rgba(0, 0, 0, 0.15);
     object-fit: contain;
   }
 
@@ -185,13 +204,13 @@
   .file-icon {
     color: var(--white);
     font-size: 2em;
-    margin-right: 5px;
+    margin-right: var(--spacing-s);
   }
 
   ul {
     padding: 0;
     display: grid;
-    grid-gap: 5px;
+    grid-gap: var(--spacing-s);
     list-style-type: none;
     width: 100%;
   }
@@ -212,16 +231,50 @@
     height: 60px;
   }
 
-  header span {
+  header > div {
     color: var(--white);
     display: flex;
     align-items: center;
     font-size: 15px;
     margin-left: var(--spacing-m);
+    width: 60%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
-  header p {
+  .filename {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  header > p {
     color: var(--grey-5);
     margin-right: var(--spacing-m);
+  }
+
+  .delete-button {
+    position: absolute;
+    top: var(--spacing-s);
+    right: var(--spacing-s);
+    padding: var(--spacing-s);
+    border-radius: 10px;
+    opacity: 0;
+    transition: all 0.3s;
+    color: var(--white);
+  }
+
+  .delete-button i {
+    font-size: 2em;
+  }
+
+  .delete-button:hover {
+    opacity: 1;
+    cursor: pointer;
+    background: linear-gradient(
+      to top right,
+      rgba(60, 60, 60, 0),
+      rgba(255, 0, 0, 0.2)
+    );
   }
 </style>
