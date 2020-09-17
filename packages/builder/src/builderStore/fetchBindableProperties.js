@@ -37,7 +37,9 @@ export default function({ componentInstanceId, screen, components, models }) {
       .filter(isInstanceInSharedContext(walkResult))
       .map(componentInstanceToBindable(walkResult)),
 
-    ...walkResult.target._contexts.map(contextToBindables(walkResult)).flat(),
+    ...walkResult.target._contexts
+      .map(contextToBindables(models, walkResult))
+      .flat(),
   ]
 }
 
@@ -69,17 +71,31 @@ const componentInstanceToBindable = walkResult => i => {
   }
 }
 
-const contextToBindables = walkResult => context => {
+const contextToBindables = (models, walkResult) => context => {
   const contextParentPath = getParentPath(walkResult, context)
 
-  return Object.keys(context.model.schema).map(k => ({
+  const newBindable = key => ({
     type: "context",
     instance: context.instance,
     // how the binding expression persists, and is used in the app at runtime
-    runtimeBinding: `${contextParentPath}data.${k}`,
+    runtimeBinding: `${contextParentPath}data.${key}`,
     // how the binding exressions looks to the user of the builder
-    readableBinding: `${context.instance._instanceName}.${context.model.name}.${k}`,
-  }))
+    readableBinding: `${context.instance._instanceName}.${context.model.label}.${key}`,
+  })
+
+  // see ModelViewSelect.svelte for the format of context.model
+  // ... this allows us to bind to Model scheams, or View schemas
+  const model = models.find(m => m._id === context.model.modelId)
+  const schema = context.model.isModel
+    ? model.schema
+    : model.views[context.model.name].schema
+
+  return (
+    Object.keys(schema)
+      .map(newBindable)
+      // add _id and _rev fields - not part of schema, but always valid
+      .concat([newBindable("_id"), newBindable("_rev")])
+  )
 }
 
 const getParentPath = (walkResult, context) => {
@@ -135,7 +151,7 @@ const walk = ({ instance, targetId, components, models, result }) => {
   if (contextualInstance) {
     // add to currentContexts (ancestory of context)
     // before walking children
-    const model = models.find(m => m._id === instance[component.context])
+    const model = instance[component.context]
     result.currentContexts.push({ instance, model })
   }
 

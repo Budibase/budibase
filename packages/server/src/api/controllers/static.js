@@ -87,7 +87,10 @@ exports.processLocalFileUpload = async function(ctx) {
         pendingFileUploads = { _id: "_local/fileuploads", uploads: [] }
       })
 
-    pendingFileUploads.uploads = [...filesToProcess, ...pendingFileUploads.uploads]
+    pendingFileUploads.uploads = [
+      ...filesToProcess,
+      ...pendingFileUploads.uploads,
+    ]
     await db.put(pendingFileUploads)
 
     ctx.body = filesToProcess

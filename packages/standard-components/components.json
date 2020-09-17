@@ -199,11 +199,9 @@
 	"icon": {
 		"description": "A HTML icon tag",
 		"props": {
-			"url": "string",
-			"className": "string",
-			"description": "string",
-			"height": "string",
-			"width": "string"
+			"icon": "string",	
+			"size": {"type": "string", "default": "fa-lg"},
+			"color": {"type": "string", "default": "#000"}
 		}
 	},
 	"datatable": {
@@ -252,7 +250,7 @@
 	},
 	"list": {
 		"description": "A configurable data list that attaches to your backend models.",
-		"context": "model",
+		"context": "datasource",
 		"children": true,
 		"data": true,
 		"props": {

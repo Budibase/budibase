@@ -6,6 +6,7 @@ const http = require("http")
 const api = require("./api")
 const env = require("./environment")
 const eventEmitter = require("./events")
+const workflows = require("./workflows/index")
 const Sentry = require("@sentry/node")
 
 const app = new Koa()
@@ -49,4 +50,5 @@ process.on("SIGINT", () => process.exit(1))
 
 module.exports = server.listen(env.PORT || 4001, () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
+  workflows.init()
 })
