@@ -10,8 +10,10 @@
 
   let selectedTab = "SETUP"
 
-  $: workflow =
-    $workflowStore.selectedWorkflow && $workflowStore.selectedWorkflow.workflow
+  $: workflow = $workflowStore.selectedWorkflow?.workflow
+  $: allowDeleteBlock =
+    $workflowStore.selectedBlock?.type !== "TRIGGER" ||
+    !workflow?.definition?.steps?.length
 
   function deleteWorkflow() {
     open(
@@ -60,7 +62,13 @@
       <Button green wide data-cy="save-workflow-setup" on:click={saveWorkflow}>
         Save Workflow
       </Button>
-      <Button red wide on:click={deleteWorkflowBlock}>Delete Block</Button>
+      <Button
+        disabled={!allowDeleteBlock}
+        red
+        wide
+        on:click={deleteWorkflowBlock}>
+        Delete Block
+      </Button>
     </div>
   {:else if $workflowStore.selectedWorkflow}
     <div class="panel">
