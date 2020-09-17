@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, tick } from "svelte"
   import { store, backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { compose, map, get, flatten } from "lodash/fp"
@@ -34,12 +34,9 @@
       return
     }
 
-    backendUiStore.update(state => {
-      state.selectedView = state.selectedView
-      onClosed()
-      notifier.success("Record saved successfully.")
-      return state
-    })
+    onClosed()
+    notifier.success("Record saved successfully.")
+    backendUiStore.actions.records.save(recordResponse)
   }
 </script>
 
