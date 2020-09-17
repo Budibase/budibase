@@ -3,9 +3,12 @@
   import { Input, Select, Label } from "@budibase/bbui"
 
   export let value
-  $: value = value || {}
   $: model = $backendUiStore.models.find(model => model._id === value?.modelId)
   $: schemaFields = Object.entries(model?.schema ?? {})
+
+  // Ensure any nullish modelId values get set to empty string so
+  // that the select works
+  $: if (value?.modelId == null) value = { modelId: "" }
 
   function setParsedValue(evt, field) {
     const fieldSchema = model?.schema[field]
