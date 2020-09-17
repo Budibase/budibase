@@ -17,11 +17,10 @@ module.exports.definition = {
             modelId: {
               type: "string",
               customType: "model",
-              title: "Table",
             },
           },
           customType: "record",
-          title: "The record to be written",
+          title: "Table",
           required: ["modelId"],
         },
       },
