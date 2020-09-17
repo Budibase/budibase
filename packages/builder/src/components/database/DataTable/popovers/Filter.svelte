@@ -71,7 +71,16 @@
   }
 
   function addFilter() {
-    view.filters = [...view.filters, {}]
+    view.filters.push({})
+    view.filters = view.filters
+  }
+
+  function isMultipleChoice(field) {
+    return (
+      viewModel.schema[field].constraints &&
+      viewModel.schema[field].constraints.inclusion &&
+      viewModel.schema[field].constraints.inclusion.length
+    )
   }
 </script>
 
@@ -108,10 +117,18 @@
           <option value={condition.key}>{condition.name}</option>
         {/each}
       </Select>
-      <Input
-        thin
-        placeholder={filter.key || fields[0]}
-        bind:value={filter.value} />
+      {#if filter.key && isMultipleChoice(filter.key)}
+        <Select secondary thin bind:value={filter.value}>
+          {#each viewModel.schema[filter.key].constraints.inclusion as option}
+            <option value={option}>{option}</option>
+          {/each}
+        </Select>
+      {:else}
+        <Input
+          thin
+          placeholder={filter.key || fields[0]}
+          bind:value={filter.value} />
+      {/if}
       <i class="ri-close-circle-fill" on:click={() => removeFilter(idx)} />
     {/each}
   </div>

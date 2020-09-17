@@ -2,7 +2,6 @@
   export let className = "default"
   export let disabled = false
   export let text
-  export let onClick
 
   export let _bb
   let theButton
@@ -11,7 +10,7 @@
     theButton && _bb.attachChildren(theButton)
 
   const clickHandler = () => {
-    _bb.call(onClick)
+    _bb.call("onClick")
   }
 </script>
 

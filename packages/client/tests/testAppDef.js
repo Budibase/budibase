@@ -181,8 +181,7 @@ const maketestlib = window => ({
       currentProps = Object.assign(currentProps, props)
       if (currentProps.onClick) {
         node.addEventListener("click", () => {
-          const testText = currentProps.testText || "hello"
-          currentProps._bb.call(props.onClick, { testText })
+          currentProps._bb.call("onClick")
         })
       }
     }

@@ -1,12 +1,13 @@
 import setBindableComponentProp from "./setBindableComponentProp"
 import { attachChildren } from "../render/attachChildren"
+import store from "../state/store"
 
 export const trimSlash = str => str.replace(/^\/+|\/+$/g, "")
 
 export const bbFactory = ({
   componentLibraries,
   onScreenSlotRendered,
-  getCurrentState,
+  runEventActions,
 }) => {
   const apiCall = method => (url, body) => {
     return fetch(url, {
@@ -26,13 +27,6 @@ export const bbFactory = ({
     delete: apiCall("DELETE"),
   }
 
-  const safeCallEvent = (event, context) => {
-    const isFunction = obj =>
-      !!(obj && obj.constructor && obj.call && obj.apply)
-
-    if (isFunction(event)) event(context)
-  }
-
   return (treeNode, setupState) => {
     const attachParams = {
       componentLibraries,
@@ -44,12 +38,18 @@ export const bbFactory = ({
     return {
       attachChildren: attachChildren(attachParams),
       props: treeNode.props,
-      call: safeCallEvent,
+      call: async eventName =>
+        eventName &&
+        (await runEventActions(
+          treeNode.props[eventName],
+          store.getState(treeNode.contextStoreKey)
+        )),
       setBinding: setBindableComponentProp(treeNode),
       api,
       parent,
+      store: store.getStore(treeNode.contextStoreKey),
       // these parameters are populated by screenRouter
-      routeParams: () => getCurrentState()["##routeParams"],
+      routeParams: () => store.getState()["##routeParams"],
     }
   }
 }
