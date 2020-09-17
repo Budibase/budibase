@@ -1,6 +1,6 @@
 <script>
-  import mustache from "mustache"
   import { workflowStore, backendUiStore } from "builderStore"
+  import WorkflowBlockTagline from "./WorkflowBlockTagline.svelte"
 
   export let onSelect
   export let block
@@ -26,7 +26,6 @@
   }
 
   $: inputs = enrichInputs(block.inputs)
-  $: tagline = block.tagline.replace(/{{/g, "<b>{{").replace(/}}/, "}}</b>")
 </script>
 
 <div
@@ -41,7 +40,7 @@
       <i class="ri-flashlight-fill" />
       <span>Do this...</span>
     {:else if block.type === 'LOGIC'}
-      <i class="ri-pause-fill" />
+      <i class="ri-git-branch-line" />
       <span>Only continue if...</span>
     {/if}
     <div class="label">
@@ -50,7 +49,7 @@
   </header>
   <hr />
   <p>
-    {@html mustache.render(tagline, { inputs })}
+    <WorkflowBlockTagline tagline={block.tagline} {inputs} />
   </p>
 </div>
 
@@ -87,7 +86,7 @@
     padding: var(--spacing-s);
     color: var(--grey-8);
     border-radius: var(--border-radius-m);
-    background-color: var(--grey-2);
+    background-color: rgba(0, 0, 0, 0.05);
   }
   header i {
     font-size: 20px;
