@@ -22,7 +22,6 @@ module.exports.definition = {
           },
           customType: "record",
           title: "The record to be written",
-          default: {},
           required: ["modelId"],
         },
       },

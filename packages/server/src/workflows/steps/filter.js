@@ -1,8 +1,15 @@
 const LogicConditions = {
-  EQUALS: "Equals",
-  NOT_EQUALS: "Not equals",
-  GREATER_THAN: "Greater than",
-  LESS_THAN: "Less than",
+  EQUAL: "EQUAL",
+  NOT_EQUAL: "NOT_EQUAL",
+  GREATER_THAN: "GREATER_THAN",
+  LESS_THAN: "LESS_THAN",
+}
+
+const PrettyLogicConditions = {
+  [LogicConditions.EQUAL]: "Equals",
+  [LogicConditions.NOT_EQUAL]: "Not equals",
+  [LogicConditions.GREATER_THAN]: "Greater than",
+  [LogicConditions.LESS_THAN]: "Less than",
 }
 
 module.exports.definition = {
@@ -12,7 +19,9 @@ module.exports.definition = {
   description: "Filter any workflows which do not meet certain conditions",
   type: "LOGIC",
   stepId: "FILTER",
-  inputs: {},
+  inputs: {
+    condition: LogicConditions.EQUALS,
+  },
   schema: {
     inputs: {
       properties: {
@@ -24,7 +33,7 @@ module.exports.definition = {
           type: "string",
           title: "Condition",
           enum: Object.values(LogicConditions),
-          default: "equals",
+          pretty: Object.values(PrettyLogicConditions),
         },
         value: {
           type: "string",
