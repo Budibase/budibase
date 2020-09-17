@@ -9,7 +9,7 @@ const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const { ANON_LEVEL_ID } = require("../../../utilities/accessLevels")
 const jwt = require("jsonwebtoken")
 const fetch = require("node-fetch")
-const imageProcessing = require("./imageProcessing")
+const fileProcessor = require("./fileProcessor")
 const fs = require("fs")
 const uuid = require("uuid")
 
@@ -36,19 +36,19 @@ exports.processLocalFileUpload = async function(ctx) {
 
     return {
       ...file,
-      name: fileName,
       extension: fileExtension,
       outputPath: join(attachmentsPath, fileName),
-      clientUrl: join("/attachments", fileName)
+      clientUrl: join("/attachments", fileName),
+      // productionUrl: `https://cdn.app.budi.live/assets/${appId}/attachments/${fileName}`
     }
   })
 
   // TODO: read the file (into memory first, then we will stream it)
-  const imageProcessOperations = filesToProcess.map(file => imageProcessing.processImage(file))
+  const fileProcessOperations = filesToProcess.map(file => fileProcessor.process(file))
   
   try {
     // TODO: get file sizes of images after resize
-    const responses = await Promise.all(imageProcessOperations);
+    const responses = await Promise.all(fileProcessOperations);
 
     let fileUploads
     // local document used to track which files need to be uploaded
