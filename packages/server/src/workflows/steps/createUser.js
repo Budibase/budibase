@@ -8,7 +8,9 @@ module.exports.definition = {
   name: "Create User",
   type: "ACTION",
   stepId: "CREATE_USER",
-  inputs: {},
+  inputs: {
+    accessLevelId: accessLevels.POWERUSER_LEVEL_ID,
+  },
   schema: {
     inputs: {
       properties: {
@@ -24,8 +26,8 @@ module.exports.definition = {
         accessLevelId: {
           type: "string",
           title: "Access Level",
-          default: accessLevels.POWERUSER_LEVEL_ID,
           enum: accessLevels.ACCESS_LEVELS,
+          pretty: Object.values(accessLevels.PRETTY_ACCESS_LEVELS),
         },
       },
       required: ["username", "password", "accessLevelId"],
