@@ -21,6 +21,21 @@ exports.serveBuilder = async function(ctx) {
   await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
 }
 
+exports.deleteLocalFileUpload = async function(ctx) {
+  try {
+    const db = new CouchDB(ctx.user.instanceId);
+    let fileUploads = await db.get("_local/fileuploads")
+    fileUploads.uploads = fileUploads.uploads.filter(upload => upload.fileName !== ctx.fileName)
+    // TODO: possibly remove the file as well
+    await db.put(fileUploads);
+    ctx.body = {
+      message: `${ctx.fileName} deleted.`
+    }
+  } catch (err) {
+    ctx.throw(500, err)
+  }
+}
+
 exports.processLocalFileUpload = async function(ctx) {
   const { files } = ctx.request.body
 
@@ -36,6 +51,7 @@ exports.processLocalFileUpload = async function(ctx) {
 
     return {
       ...file,
+      fileName,
       extension: fileExtension,
       outputPath: join(attachmentsPath, fileName),
       clientUrl: join("/attachments", fileName),
@@ -59,11 +75,10 @@ exports.processLocalFileUpload = async function(ctx) {
       .then(data => fileUploads = data)
       .catch(() => fileUploads = {
         _id: "_local/fileuploads",
-        awaitingUpload: [],
-        uploaded: []
+        uploads: []
       })
 
-    fileUploads.awaitingUpload = [...filesToProcess, ...fileUploads.awaitingUpload]
+    fileUploads.uploads = [...filesToProcess, ...fileUploads.uploads]
     await db.put(fileUploads)
 
     ctx.body = filesToProcess 

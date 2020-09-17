@@ -120,21 +120,22 @@ exports.uploadAppAssets = async function({
   const db = new PouchDB(instanceId)
   const fileUploads = await db.get("_local/fileuploads")
   if (fileUploads) {
-    fileUploads.awaitingUpload.forEach((file, idx) => {
+    for (let file of fileUploads.uploads) {
+      if (file.uploaded) continue
 
-      const attachmentUpload = prepareUploadForS3({
-        filePath: file.path,
-        s3Key: `assets/${appId}/${file.name}`,
-        s3,
-        metadata: { accountId }
-      })
+        const attachmentUpload = prepareUploadForS3({
+          filePath: file.path,
+          s3Key: `assets/${appId}/attachments/${file.name}`,
+          s3,
+          metadata: { accountId }
+        })
 
-      uploads.push(attachmentUpload)
+        uploads.push(attachmentUpload)
 
-      // move the pending upload to the uploaded array
-      fileUploads.awaitingUpload.splice(idx, 1);
-      fileUploads.uploaded.push(awaitingUpload);
-    })
+        // mark file as uploaded
+        file.uploaded = true
+    }
+
     db.put(fileUploads);
   }
 

@@ -27,7 +27,7 @@
       size,
     }))
 
-    const response = await api.post(`/api/files/process`, {
+    const response = await api.post(`/api/attachments/process`, {
       files: filesToProcess,
     })
     const processedFiles = await response.json()
@@ -35,7 +35,8 @@
     selectedImageIdx = 0
   }
 
-  function removeFile() {
+  async function removeFile() {
+    const response = await api.delete(`/api/attachments/${selectedImage.fileName}`)
     files.splice(selectedImageIdx, 1)
     files = files
   }
