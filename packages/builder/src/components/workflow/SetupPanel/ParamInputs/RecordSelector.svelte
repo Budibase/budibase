@@ -12,17 +12,6 @@
   // Ensure any nullish modelId values get set to empty string so
   // that the select works
   $: if (value?.modelId == null) value = { modelId: "" }
-
-  function setParsedValue(evt, field) {
-    const fieldSchema = model?.schema[field]
-    if (fieldSchema) {
-      if (fieldSchema.type === "number") {
-        value[field] = parseInt(evt.target.value)
-        return
-      }
-    }
-    value[field] = evt.target.value
-  }
 </script>
 
 <div class="block-field">
@@ -49,12 +38,12 @@
               <option value={option}>{option}</option>
             {/each}
           </Select>
-        {:else}
+        {:else if schema.type === "string"}
           <BindableInput
             thin
             bind:value={value[field]}
-            on:change={e => setParsedValue(e, field)}
             label={field}
+            type={schema.type}
             {bindings} />
         {/if}
       </div>

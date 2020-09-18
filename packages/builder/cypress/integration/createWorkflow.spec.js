@@ -21,17 +21,25 @@ context("Create a workflow", () => {
     // Add trigger
     cy.get("[data-cy=add-workflow-component]").click()
     cy.get("[data-cy=RECORD_SAVED]").click()
-    cy.get(".budibase__input").select("dog")
+    cy.get("[data-cy=workflow-block-setup]").within(() => {
+      cy.get("select")
+        .first()
+        .select("dog")
+    })
 
     // Create action
     cy.get("[data-cy=SAVE_RECORD]").click()
-    cy.get(".budibase__input").select("dog")
-    cy.get(".container input")
-      .first()
-      .type("goodboy")
-    cy.get(".container input")
-      .eq(1)
-      .type("11")
+    cy.get("[data-cy=workflow-block-setup]").within(() => {
+      cy.get("select")
+        .first()
+        .select("dog")
+      cy.get("input")
+        .first()
+        .type("goodboy")
+      cy.get("input")
+        .eq(1)
+        .type("11")
+    })
 
     // Save
     cy.contains("Save Workflow").click()
@@ -44,7 +52,6 @@ context("Create a workflow", () => {
 
   it("should add record when a new record is added", () => {
     cy.contains("backend").click()
-
     cy.addRecord(["Rover", 15])
     cy.reload()
     cy.contains("goodboy").should("have.text", "goodboy")

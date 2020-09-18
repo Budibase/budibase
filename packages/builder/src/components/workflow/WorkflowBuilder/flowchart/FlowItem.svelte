@@ -1,5 +1,5 @@
 <script>
-  import { workflowStore, backendUiStore } from "builderStore"
+  import { workflowStore } from "builderStore"
   import WorkflowBlockTagline from "./WorkflowBlockTagline.svelte"
 
   export let onSelect
@@ -9,29 +9,12 @@
   $: selected = $workflowStore.selectedBlock?.id === block.id
   $: steps = $workflowStore.selectedWorkflow?.workflow?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
-
-  function selectBlock() {
-    onSelect(block)
-  }
-
-  function enrichInputs(inputs) {
-    let enrichedInputs = { ...inputs, enriched: {} }
-    const modelId = inputs.modelId || inputs.record?.modelId
-    if (modelId) {
-      enrichedInputs.enriched.model = $backendUiStore.models.find(
-        model => model._id === modelId
-      )
-    }
-    return enrichedInputs
-  }
-
-  $: inputs = enrichInputs(block.inputs)
 </script>
 
 <div
   class={`block ${block.type} hoverable`}
   class:selected
-  on:click={selectBlock}>
+  on:click={() => onSelect(block)}>
   <header>
     {#if block.type === 'TRIGGER'}
       <i class="ri-lightbulb-fill" />
@@ -49,13 +32,13 @@
   </header>
   <hr />
   <p>
-    <WorkflowBlockTagline tagline={block.tagline} {inputs} />
+    <WorkflowBlockTagline {block} />
   </p>
 </div>
 
 <style>
   .block {
-    width: 320px;
+    width: 360px;
     padding: 20px;
     border-radius: var(--border-radius-m);
     transition: 0.3s all ease;
