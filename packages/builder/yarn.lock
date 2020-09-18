@@ -696,19 +696,14 @@
     sirv-cli "^0.4.6"
     svelte-flatpickr "^2.4.0"
 
-"@budibase/client@^0.1.19":
-  version "0.1.19"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.19.tgz#3906781423ab4626118c981657ecf7a4578c547c"
+"@budibase/client@^0.1.21":
+  version "0.1.21"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.21.tgz#db414445c132b373f6c25e39d62628eb60cd8ac3"
+  integrity sha512-/ju0vYbWh9MUjmxkGNlOL4S/VQd4p5mbz5rHu0yt55ak9t/yyzI6PzBBxlucBeRbXYd9OFynFjy1pvYt1v+z9Q==
   dependencies:
-    "@nx-js/compiler-util" "^2.0.0"
-    bcryptjs "^2.4.3"
     deep-equal "^2.0.1"
-    lodash "^4.17.15"
-    lunr "^2.3.5"
     mustache "^4.0.1"
     regexparam "^1.3.0"
-    shortid "^2.2.8"
-    svelte "^3.9.2"
 
 "@budibase/colorpicker@^1.0.1":
   version "1.0.1"
@@ -962,10 +957,6 @@
   dependencies:
     "@nodelib/fs.scandir" "2.1.3"
     fastq "^1.6.0"
-
-"@nx-js/compiler-util@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@nx-js/compiler-util/-/compiler-util-2.0.0.tgz#c74c12165fa2f017a292bb79af007e8fce0af297"
 
 "@polka/url@^0.5.0":
   version "0.5.0"
@@ -1530,10 +1521,6 @@ bcrypt-pbkdf@^1.0.0:
   resolved "https://registry.yarnpkg.com/bcrypt-pbkdf/-/bcrypt-pbkdf-1.0.2.tgz#a4301d389b6a43f9b67ff3ca11a3f6637e360e9e"
   dependencies:
     tweetnacl "^0.14.3"
-
-bcryptjs@^2.4.3:
-  version "2.4.3"
-  resolved "https://registry.yarnpkg.com/bcryptjs/-/bcryptjs-2.4.3.tgz#9ab5627b93e60621ff7cdac5da9733027df1d0cb"
 
 binary-extensions@^2.0.0:
   version "2.0.0"
@@ -2952,6 +2939,7 @@ for-in@^1.0.2:
 foreach@^2.0.5, foreach@~2.0.1:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/foreach/-/foreach-2.0.5.tgz#0bee005018aeb260d0a3af3ae658dd0136ec1b99"
+  integrity sha1-C+4AUBiusmDQo6865ljdATbsG5k=
 
 forever-agent@~0.6.1:
   version "0.6.1"
@@ -4397,10 +4385,6 @@ ltgt@^2.1.2:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/ltgt/-/ltgt-2.2.1.tgz#f35ca91c493f7b73da0e07495304f17b31f87ee5"
 
-lunr@^2.3.5:
-  version "2.3.9"
-  resolved "https://registry.yarnpkg.com/lunr/-/lunr-2.3.9.tgz#18b123142832337dd6e964df1a5a7707b25d35e1"
-
 magic-string@^0.22.5:
   version "0.22.5"
   resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.22.5.tgz#8e9cf5afddf44385c1da5bc2a6a0dbd10b03657e"
@@ -5627,9 +5611,10 @@ shellwords@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/shellwords/-/shellwords-0.1.1.tgz#d6b9181c1a48d397324c84871efbcfc73fc0654b"
 
-shortid@^2.2.15, shortid@^2.2.8:
+shortid@^2.2.15:
   version "2.2.15"
   resolved "https://registry.yarnpkg.com/shortid/-/shortid-2.2.15.tgz#2b902eaa93a69b11120373cd42a1f1fe4437c122"
+  integrity sha512-5EaCy2mx2Jgc/Fdn9uuDuNIIfWBpzY4XIlhoqtXF6qsf+/+SGZ+FxDdX/ZsMZiWupIWNqAEmiNY4RC+LSmCeOw==
   dependencies:
     nanoid "^2.1.0"
 
@@ -6003,10 +5988,6 @@ svelte-simple-modal@^0.4.2:
 svelte@3.23.x:
   version "3.23.0"
   resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.23.0.tgz#bbcd6887cf588c24a975b14467455abfff9acd3f"
-
-svelte@^3.9.2:
-  version "3.25.0"
-  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.25.0.tgz#e7f89d11a2223ac02d29f75f82b2a9cca7fd7a54"
 
 symbol-observable@^1.1.0:
   version "1.2.0"
