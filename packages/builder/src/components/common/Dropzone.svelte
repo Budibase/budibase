@@ -1,4 +1,5 @@
 <script>
+  import { notifier } from "builderStore/store/notifications"
   import { Heading, Body, Button } from "@budibase/bbui"
   import { FILE_TYPES } from "constants/backend"
   import api from "builderStore/api"
@@ -7,6 +8,7 @@
   const BYTES_IN_MB = 1000000
 
   export let files = []
+  export let fileSizeLimit = BYTES_IN_MB * 20
 
   let selectedImageIdx = 0
   let fileDragged = false
@@ -23,7 +25,17 @@
   }
 
   async function processFiles(fileList) {
-    const filesToProcess = Array.from(fileList).map(({ name, path, size }) => ({
+    const fileArray = Array.from(fileList)
+
+    if (fileArray.some(file => file.size >= fileSizeLimit)) {
+      notifier.danger(
+        `Files cannot exceed ${fileSizeLimit /
+          BYTES_IN_MB}MB. Please try again with smaller files.`
+      )
+      return
+    }
+
+    const filesToProcess = fileArray.map(({ name, path, size }) => ({
       name,
       path,
       size,
