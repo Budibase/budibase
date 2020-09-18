@@ -63,7 +63,7 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.33.0",
+    "@budibase/bbui": "^1.34.0",
     "@budibase/client": "^0.1.21",
     "@budibase/colorpicker": "^1.0.1",
     "@sentry/browser": "5.19.1",
