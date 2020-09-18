@@ -8,4 +8,5 @@ module.exports = {
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
+  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
 }
