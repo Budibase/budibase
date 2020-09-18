@@ -90,7 +90,7 @@ exports.destroy = async function(ctx) {
 }
 
 exports.getActionList = async function(ctx) {
-  ctx.body = actions.BUILTIN_DEFINITIONS
+  ctx.body = actions.DEFINITIONS
 }
 
 exports.getTriggerList = async function(ctx) {
@@ -105,7 +105,7 @@ module.exports.getDefinitionList = async function(ctx) {
   ctx.body = {
     logic: logic.BUILTIN_DEFINITIONS,
     trigger: triggers.BUILTIN_DEFINITIONS,
-    action: actions.BUILTIN_DEFINITIONS,
+    action: actions.DEFINITIONS,
   }
 }
 
