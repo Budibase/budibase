@@ -9,8 +9,8 @@
 <div class="file-list">
   {#each files as file}
     <div class="file">
-      {#if FILE_TYPES.IMAGE.includes(file.extension)}
-        <img {width} {height} src={file.clientUrl} />
+      {#if FILE_TYPES.IMAGE.includes(file.extension.toLowerCase())}
+        <img {width} {height} src={file.url} />
       {:else}
         <i class="ri-file-line" />
         <span class="extension">.{file.extension}</span>

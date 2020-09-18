@@ -38,9 +38,6 @@
   }
 
   async function removeFile() {
-    const response = await api.delete(
-      `/api/attachments/${selectedImage.fileName}`
-    )
     files.splice(selectedImageIdx, 1)
     files = files
     selectedImageIdx = 0
@@ -82,7 +79,6 @@
   on:dragenter={handleDragOver}
   on:drop={handleDrop}
   class:fileDragged>
-
   <ul>
     {#if selectedImage}
       <li>
@@ -106,7 +102,7 @@
             <i class="ri-arrow-left-line" />
           </div>
         {/if}
-        <img src={selectedImage.clientUrl} />
+        <img src={selectedImage.url} />
         {#if selectedImageIdx !== files.length - 1}
           <div class="nav right" on:click={navigateRight}>
             <i class="ri-arrow-right-line" />
