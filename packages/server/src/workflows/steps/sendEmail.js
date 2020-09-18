@@ -1,5 +1,6 @@
+const environment = require("../../environment")
 const sgMail = require("@sendgrid/mail")
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+sgMail.setApiKey(environment.SENDGRID_API_KEY)
 
 module.exports.definition = {
   description: "Send an email",
@@ -52,7 +53,7 @@ module.exports.run = async function({ inputs }) {
     to: inputs.to,
     from: inputs.from,
     subject: inputs.subject,
-    text: inputs.text,
+    text: inputs.text ? inputs.text : "Empty",
   }
 
   try {
