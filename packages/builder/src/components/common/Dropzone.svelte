@@ -89,7 +89,11 @@
               class={`file-icon ${determineFileIcon(selectedImage.extension)}`} />
             <span class="filename">{selectedImage.name}</span>
           </div>
-          <p>{selectedImage.size / 1000}KB</p>
+          <p>
+            {#if selectedImage.size <= 1000000}
+              {selectedImage.size / 1000}KB
+            {:else}{selectedImage.size / 1000000}MB{/if}
+          </p>
         </header>
         <div class="delete-button" on:click={removeFile}>
           <i class="ri-close-line" />
