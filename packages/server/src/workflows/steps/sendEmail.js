@@ -53,7 +53,7 @@ module.exports.run = async function({ inputs }) {
     to: inputs.to,
     from: inputs.from,
     subject: inputs.subject,
-    text: inputs.text ? inputs.text : "Empty",
+    text: inputs.contents ? inputs.contents : "Empty",
   }
 
   try {

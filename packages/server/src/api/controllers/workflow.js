@@ -10,13 +10,34 @@ const triggers = require("../../workflows/triggers")
  *                       *
  *************************/
 
+function cleanWorkflowInputs(workflow) {
+  if (workflow == null) {
+    return workflow
+  }
+  let steps = workflow.definition.steps
+  let trigger = workflow.definition.trigger
+  let allSteps = [...steps, trigger]
+  for (let step of allSteps) {
+    if (step == null) {
+      continue
+    }
+    for (let inputName of Object.keys(step.inputs)) {
+      if (!step.inputs[inputName] || step.inputs[inputName] === "") {
+        delete step.inputs[inputName]
+      }
+    }
+  }
+  return workflow
+}
+
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
-  const workflow = ctx.request.body
+  let workflow = ctx.request.body
 
   workflow._id = newid()
 
   workflow.type = "workflow"
+  workflow = cleanWorkflowInputs(workflow)
   const response = await db.post(workflow)
   workflow._rev = response.rev
 
@@ -32,8 +53,9 @@ exports.create = async function(ctx) {
 
 exports.update = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
-  const workflow = ctx.request.body
+  let workflow = ctx.request.body
 
+  workflow = cleanWorkflowInputs(workflow)
   const response = await db.put(workflow)
   workflow._rev = response.rev
 
