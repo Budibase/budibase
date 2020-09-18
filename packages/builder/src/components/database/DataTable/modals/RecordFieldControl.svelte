@@ -4,7 +4,7 @@
 
   export let meta
   export let value = meta.type === "boolean" ? false : ""
-  export let saveRecord
+  export let originalValue
 
   let isSelect =
     meta.type === "string" &&
@@ -51,7 +51,7 @@
   <DatePicker bind:value />
 {:else if type === 'file'}
   <Label small forAttr={'dropzone-label'}>{meta.name}</Label>
-  <Dropzone bind:files={value} />
+  <Dropzone bind:files={value} savedFiles={originalValue} />
 {:else}
   {#if type === 'checkbox'}
     <label>{meta.name}</label>

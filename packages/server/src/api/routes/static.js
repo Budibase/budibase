@@ -28,11 +28,6 @@ router
     authorized(BUILDER),
     controller.processLocalFileUpload
   )
-  .delete(
-    "/api/attachments/:fileName",
-    authorized(BUILDER),
-    controller.deleteLocalFileUpload
-  )
   .get("/componentlibrary", controller.serveComponentLibrary)
   .get("/assets/:file*", controller.serveAppAsset)
   .get("/attachments/:file*", controller.serveAttachment)

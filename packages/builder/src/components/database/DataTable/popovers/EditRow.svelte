@@ -1,7 +1,14 @@
 <script>
   import { getContext } from "svelte"
   import { backendUiStore } from "builderStore"
-  import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
+  import {
+    DropdownMenu,
+    Button,
+    Icon,
+    Input,
+    Select,
+    Heading,
+  } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
   import DeleteRecordModal from "../modals/DeleteRecord.svelte"
@@ -48,11 +55,11 @@
     <ul>
       <li data-cy="edit-row" on:click={showEditor}>
         <Icon name="edit" />
-        Edit
+        <span>Edit</span>
       </li>
       <li data-cy="delete-row" on:click={deleteRow}>
         <Icon name="delete" />
-        Delete
+        <span>Delete</span>
       </li>
     </ul>
   {/if}
@@ -79,7 +86,6 @@
   li {
     display: flex;
     font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
     color: var(--ink);
     padding: var(--spacing-s) var(--spacing-m);
     margin: auto 0px;
