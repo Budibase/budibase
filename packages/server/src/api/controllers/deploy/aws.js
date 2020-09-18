@@ -71,7 +71,7 @@ function prepareUploadForS3({ filePath, s3Key, metadata, s3 }) {
     .upload({
       Key: s3Key,
       Body: fileBytes,
-      ContentType: CONTENT_TYPE_MAP[fileExtension],
+      ContentType: CONTENT_TYPE_MAP[fileExtension.toLowerCase()],
       Metadata: metadata,
     })
     .promise()
