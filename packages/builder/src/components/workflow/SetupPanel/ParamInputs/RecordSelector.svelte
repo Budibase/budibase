@@ -38,7 +38,7 @@
               <option value={option}>{option}</option>
             {/each}
           </Select>
-        {:else if schema.type === "string"}
+        {:else if schema.type === "string" || schema.type === "number"}
           <BindableInput
             thin
             bind:value={value[field]}
