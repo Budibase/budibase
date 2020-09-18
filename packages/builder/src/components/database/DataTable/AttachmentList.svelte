@@ -42,7 +42,7 @@
     height: 75px;
     width: 75px;
     border: 2px dashed var(--grey-7);
-    padding: var(--spacing-xl);
+    padding: var(--spacing-m);
     display: flex;
     flex-direction: column;
     align-items: center;
