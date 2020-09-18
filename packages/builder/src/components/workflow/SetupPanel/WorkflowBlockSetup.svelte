@@ -44,7 +44,7 @@
   }
 </script>
 
-<div class="container">
+<div class="container" data-cy="workflow-block-setup">
   <div class="block-label">{block.name}</div>
   {#each inputs as [key, value]}
     <div class="bb-margin-xl block-field">
