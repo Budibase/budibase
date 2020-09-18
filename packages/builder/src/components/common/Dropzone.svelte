@@ -3,6 +3,9 @@
   import { FILE_TYPES } from "constants/backend"
   import api from "builderStore/api"
 
+  const BYTES_IN_KB = 1000
+  const BYTES_IN_MB = 1000000
+
   export let files = []
 
   let selectedImageIdx = 0
@@ -90,9 +93,9 @@
             <span class="filename">{selectedImage.name}</span>
           </div>
           <p>
-            {#if selectedImage.size <= 1000000}
-              {selectedImage.size / 1000}KB
-            {:else}{selectedImage.size / 1000000}MB{/if}
+            {#if selectedImage.size <= BYTES_IN_MB}
+              {selectedImage.size / BYTES_IN_KB}KB
+            {:else}{selectedImage.size / BYTES_IN_MB}MB{/if}
           </p>
         </header>
         <div class="delete-button" on:click={removeFile}>
