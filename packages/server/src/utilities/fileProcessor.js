@@ -6,19 +6,25 @@ const FORMATS = {
   IMAGES: ["png", "jpg", "jpeg", "gif", "svg", "tiff", "raw"],
 }
 
-function processImage({ path, outputPath }) {
-  return sharp(path)
+async function processImage(file) {
+  const imgMeta = await sharp(file.path)
     .resize(300)
-    .toFile(outputPath)
+    .toFile(file.outputPath)
+
+  return {
+    ...file,
+    ...imgMeta,
+  }
 }
 
-function process(file) {
+async function process(file) {
   if (FORMATS.IMAGES.includes(file.extension.toLowerCase())) {
-    return processImage(file)
+    return await processImage(file)
   }
 
   // No processing required
-  return fsPromises.copyFile(file.path, file.outputPath)
+  await fsPromises.copyFile(file.path, file.outputPath)
+  return file
 }
 
 exports.process = process
