@@ -76,7 +76,7 @@ const BUILTIN_DEFINITIONS = {
   },
 }
 
-async function queueRelevantWorkflows(event, eventType) {
+async function queueRelevantRecordWorkflows(event, eventType) {
   if (event.instanceId == null) {
     throw `No instanceId specified for ${eventType} - check event emitters.`
   }
@@ -88,7 +88,13 @@ async function queueRelevantWorkflows(event, eventType) {
 
   const workflows = workflowsToTrigger.rows.map(wf => wf.doc)
   for (let workflow of workflows) {
-    if (!workflow.live) {
+    let workflowDef = workflow.definition
+    let workflowTrigger = workflowDef ? workflowDef.trigger : {}
+    if (
+      !workflow.live ||
+      !workflowTrigger.inputs ||
+      workflowTrigger.inputs.modelId !== event.record.modelId
+    ) {
       continue
     }
     workflowQueue.add({ workflow, event })
@@ -96,11 +102,17 @@ async function queueRelevantWorkflows(event, eventType) {
 }
 
 emitter.on("record:save", async function(event) {
-  await queueRelevantWorkflows(event, "record:save")
+  if (!event || !event.record || !event.record.modelId) {
+    return
+  }
+  await queueRelevantRecordWorkflows(event, "record:save")
 })
 
 emitter.on("record:delete", async function(event) {
-  await queueRelevantWorkflows(event, "record:delete")
+  if (!event || !event.record || !event.record.modelId) {
+    return
+  }
+  await queueRelevantRecordWorkflows(event, "record:delete")
 })
 
 async function fillRecordOutput(workflow, params) {
