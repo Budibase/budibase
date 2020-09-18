@@ -36,7 +36,7 @@
   "gitHead": "284cceb9b703c38566c6e6363c022f79a08d5691",
   "dependencies": {
     "@beyonk/svelte-googlemaps": "^2.2.0",
-    "@budibase/bbui": "^1.34.0",
+    "@budibase/bbui": "^1.34.2",
     "britecharts": "^2.16.1",
     "d3-selection": "^1.4.2",
     "fast-sort": "^2.2.0",
