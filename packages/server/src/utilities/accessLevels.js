@@ -32,4 +32,5 @@ module.exports.adminPermissions = [
 // to avoid circular dependencies this is included later, after exporting all enums
 const permissions = require("./permissions")
 module.exports.generateAdminPermissions = permissions.generateAdminPermissions
-module.exports.generatePowerUserPermissions = permissions.generatePowerUserPermissions
+module.exports.generatePowerUserPermissions =
+  permissions.generatePowerUserPermissions
