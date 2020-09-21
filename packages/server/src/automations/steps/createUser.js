@@ -71,7 +71,8 @@ module.exports.run = async function({ inputs, instanceId }) {
     await userController.create(ctx)
     return {
       response: ctx.body,
-      id: ctx.body._id,
+      // internal property not returned through the API
+      id: ctx.userId,
       revision: ctx.body._rev,
       success: ctx.status === 200,
     }
