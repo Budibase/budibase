@@ -1,13 +1,18 @@
 const send = require("koa-send")
 const { resolve, join } = require("path")
+const jwt = require("jsonwebtoken")
+const fetch = require("node-fetch")
+const fs = require("fs")
+const uuid = require("uuid")
+
 const {
   budibaseAppsDir,
   budibaseTempDir,
 } = require("../../utilities/budibaseDir")
+const CouchDB = require("../../db")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const { ANON_LEVEL_ID } = require("../../utilities/accessLevels")
-const jwt = require("jsonwebtoken")
-const fetch = require("node-fetch")
+const fileProcessor = require("../../utilities/fileProcessor")
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(__dirname, "../../../builder")
@@ -15,6 +20,66 @@ exports.serveBuilder = async function(ctx) {
     setBuilderToken(ctx)
   }
   await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
+}
+
+exports.processLocalFileUpload = async function(ctx) {
+  const { files } = ctx.request.body
+
+  const attachmentsPath = resolve(
+    budibaseAppsDir(),
+    ctx.user.appId,
+    "attachments"
+  )
+
+  // create attachments dir if it doesnt exist
+  !fs.existsSync(attachmentsPath) &&
+    fs.mkdirSync(attachmentsPath, { recursive: true })
+
+  const filesToProcess = files.map(file => {
+    const fileExtension = [...file.path.split(".")].pop()
+    // filenames converted to UUIDs so they are unique
+    const fileName = `${uuid.v4()}.${fileExtension}`
+
+    return {
+      ...file,
+      fileName,
+      extension: fileExtension,
+      outputPath: join(attachmentsPath, fileName),
+      url: join("/attachments", fileName),
+    }
+  })
+
+  const fileProcessOperations = filesToProcess.map(file =>
+    fileProcessor.process(file)
+  )
+
+  try {
+    const processedFiles = await Promise.all(fileProcessOperations)
+
+    let pendingFileUploads
+    // local document used to track which files need to be uploaded
+    // db.get throws an error if the document doesn't exist
+    // need to use a promise to default
+    const db = new CouchDB(ctx.user.instanceId)
+    await db
+      .get("_local/fileuploads")
+      .then(data => {
+        pendingFileUploads = data
+      })
+      .catch(() => {
+        pendingFileUploads = { _id: "_local/fileuploads", uploads: [] }
+      })
+
+    pendingFileUploads.uploads = [
+      ...processedFiles,
+      ...pendingFileUploads.uploads,
+    ]
+    await db.put(pendingFileUploads)
+
+    ctx.body = processedFiles
+  } catch (err) {
+    ctx.throw(500, err)
+  }
 }
 
 exports.serveApp = async function(ctx) {
@@ -60,6 +125,24 @@ exports.serveApp = async function(ctx) {
   }
 
   await send(ctx, ctx.file || "index.html", { root: ctx.devPath || appPath })
+}
+
+exports.serveAttachment = async function(ctx) {
+  const appId = ctx.user.appId
+
+  const attachmentsPath = resolve(budibaseAppsDir(), appId, "attachments")
+
+  // Serve from CloudFront
+  if (process.env.CLOUD) {
+    const S3_URL = `https://cdn.app.budi.live/assets/${appId}/attachments/${ctx.file}`
+
+    const response = await fetch(S3_URL)
+    const body = await response.text()
+    ctx.body = body
+    return
+  }
+
+  await send(ctx, ctx.file, { root: attachmentsPath })
 }
 
 exports.serveAppAsset = async function(ctx) {

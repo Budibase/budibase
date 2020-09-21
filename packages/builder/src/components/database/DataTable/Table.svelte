@@ -6,7 +6,7 @@
   import api from "builderStore/api"
   import { Button, Icon } from "@budibase/bbui"
   import ActionButton from "components/common/ActionButton.svelte"
-  import LinkedRecord from "./LinkedRecord.svelte"
+  import AttachmentList from "./AttachmentList.svelte"
   import TablePagination from "./TablePagination.svelte"
   import { DeleteRecordModal, CreateEditRecordModal } from "./modals"
   import RowPopover from "./popovers/Row.svelte"
@@ -59,7 +59,11 @@
       {#each paginatedData as row}
         <tr>
           {#each columns as header}
-            <td>{getOr('', header, row)}</td>
+            <td>
+              {#if schema[header].type === 'attachment'}
+                <AttachmentList files={row[header] || []} />
+              {:else}{getOr('', header, row)}{/if}
+            </td>
           {/each}
         </tr>
       {/each}
