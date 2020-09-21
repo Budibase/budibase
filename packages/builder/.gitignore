@@ -4,6 +4,6 @@ node_modules_win
 package-lock.json
 release/
 dist/
-cypress/screenshots
-cypress/videos
 routify
+cypress/videos
+cypress/screenshots

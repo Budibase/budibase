@@ -2,7 +2,7 @@
 module.exports.READ_MODEL = "read-model"
 module.exports.WRITE_MODEL = "write-model"
 module.exports.READ_VIEW = "read-view"
-module.exports.EXECUTE_WORKFLOW = "execute-workflow"
+module.exports.EXECUTE_AUTOMATION = "execute-automation"
 module.exports.USER_MANAGEMENT = "user-management"
 module.exports.BUILDER = "builder"
 module.exports.LIST_USERS = "list-users"
@@ -32,4 +32,5 @@ module.exports.adminPermissions = [
 // to avoid circular dependencies this is included later, after exporting all enums
 const permissions = require("./permissions")
 module.exports.generateAdminPermissions = permissions.generateAdminPermissions
-module.exports.generatePowerUserPermissions = permissions.generatePowerUserPermissions
+module.exports.generatePowerUserPermissions =
+  permissions.generatePowerUserPermissions
