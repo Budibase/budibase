@@ -48,12 +48,14 @@
       <Button secondary medium on:click={deployApp}>
         Deploy App
         {#if loading}
-          <Spinner ratio={'0.5'} />
+          <Spinner size="10" />
         {/if}
       </Button>
     {/if}
   </div>
-  <img src="/_builder/assets/deploy-rocket.jpg" />
+  <img
+    src="/_builder/assets/deploy-rocket.jpg"
+    alt="Rocket flying through sky" />
 </section>
 
 <style>
