@@ -1,11 +1,11 @@
 import { getStore } from "./store"
 import { getBackendUiStore } from "./store/backend"
-import { getWorkflowStore } from "./store/workflow/"
+import { getAutomationStore } from "./store/automation/"
 import analytics from "../analytics"
 
 export const store = getStore()
 export const backendUiStore = getBackendUiStore()
-export const workflowStore = getWorkflowStore()
+export const automationStore = getAutomationStore()
 
 export const initialise = async () => {
   try {
