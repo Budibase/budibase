@@ -709,10 +709,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.33.0":
-  version "1.33.0"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.33.0.tgz#216b24dd815f45880e9795e66b04848329b0390f"
-  integrity sha512-Rrt5eLbea014TIfAbT40kP0D0AWNUi8Q0kDr3UZO6Aq4UXgjc0f53ZuJ7Kb66YRDWrqiucjf1FtvOUs3/YaD6g==
+"@budibase/bbui@^1.34.2":
+  version "1.34.2"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.34.2.tgz#e4fcc728dc8d51a918f8ebd5c3f0b0afacfa4047"
+  integrity sha512-6RusGPZnEpHx1gtGcjk/lFLgMgFdDpSIxB8v2MiA+kp+uP1pFlzegbaDh+/JXyqFwK7HO91I0yXXBoPjibi7Aw==
   dependencies:
     sirv-cli "^0.4.6"
     svelte-flatpickr "^2.4.0"
