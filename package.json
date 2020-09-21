@@ -28,5 +28,8 @@
     "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,svelte}\"",
     "test:e2e": "lerna run cy:test",
     "test:e2e:ci": "lerna run cy:ci"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome": "^1.1.8"
   }
 }
