@@ -1,9 +1,9 @@
 const triggers = require("./triggers")
 const environment = require("../environment")
-const workerFarm = require("worker-farm")
+//const workerFarm = require("worker-farm")
 const singleThread = require("./thread")
 
-let workers = workerFarm(require.resolve("./thread"))
+//let workers = workerFarm(require.resolve("./thread"))
 
 // function runWorker(job) {
 //   return new Promise((resolve, reject) => {
