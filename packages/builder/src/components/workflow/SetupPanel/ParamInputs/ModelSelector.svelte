@@ -1,23 +1,15 @@
 <script>
   import { backendUiStore } from "builderStore"
+  import { Select } from "@budibase/bbui"
 
   export let value
-  $: modelId = value ? value._id : ""
-
-  function onChange(e) {
-    value = $backendUiStore.models.find(model => model._id === e.target.value)
-  }
 </script>
 
 <div class="block-field">
-  <select
-    class="budibase__input"
-    value={modelId}
-    on:blur={onChange}
-    on:change={onChange}>
+  <Select bind:value secondary thin>
     <option value="">Choose an option</option>
     {#each $backendUiStore.models as model}
       <option value={model._id}>{model.name}</option>
     {/each}
-  </select>
+  </Select>
 </div>

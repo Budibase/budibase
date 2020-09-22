@@ -25,6 +25,7 @@ module.exports.init = function() {
     if (environment.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
       await runWorker(job)
     } else {
+      console.log("Testing standard thread")
       await singleThread(job)
     }
   })
