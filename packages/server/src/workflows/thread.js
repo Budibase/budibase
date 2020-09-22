@@ -10,10 +10,10 @@ function cleanMustache(string) {
     "]": "",
   }
   let regex = new RegExp(/{{[^}}]*}}/g)
-  for (let match of string.matchAll(regex)) {
+  for (let match of string.match(regex)) {
     let baseIdx = string.indexOf(match)
     for (let key of Object.keys(charToReplace)) {
-      let idxChar = match[0].indexOf(key)
+      let idxChar = match.indexOf(key)
       if (idxChar !== -1) {
         string =
           string.slice(baseIdx, baseIdx + idxChar) +
