@@ -12,6 +12,10 @@
   // Ensure any nullish modelId values get set to empty string so
   // that the select works
   $: if (value?.modelId == null) value = { modelId: "" }
+
+  function schemaHasOptions(schema) {
+    return !!schema.constraints?.inclusion?.length
+  }
 </script>
 
 <div class="block-field">
@@ -27,18 +31,15 @@
   <div class="bb-margin-xl block-field">
     {#each schemaFields as [field, schema]}
       <div class="bb-margin-xl capitalise">
-        {#if schema.constraints?.inclusion?.length}
+        {#if schemaHasOptions(schema)}
           <div class="field-label">{field}</div>
-          <Select
-            thin
-            secondary
-            bind:value={value[field]}>
+          <Select thin secondary bind:value={value[field]}>
             <option value="">Choose an option</option>
             {#each schema.constraints.inclusion as option}
               <option value={option}>{option}</option>
             {/each}
           </Select>
-        {:else if schema.type === "string" || schema.type === "number"}
+        {:else if schema.type === 'string' || schema.type === 'number'}
           <BindableInput
             thin
             bind:value={value[field]}
@@ -61,7 +62,8 @@
     font-family: sans-serif;
   }
 
-  .capitalise :global(label), .field-label {
+  .capitalise :global(label),
+  .field-label {
     text-transform: capitalize;
   }
 </style>
