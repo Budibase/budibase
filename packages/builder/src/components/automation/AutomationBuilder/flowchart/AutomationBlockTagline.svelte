@@ -29,10 +29,11 @@
       .replace(/}}/, "}}</b>")
 
     // Extract schema paths for any input bindings
-    const inputPaths = formattedTagline
-      .match(/{{\s*\S+\s*}}/g)
-      .map(x => x.replace(/[{}]/g, "").trim())
-    const schemaPaths = inputPaths.map(x => x.replace(/\./g, ".properties."))
+    let inputPaths = formattedTagline.match(/{{\s*\S+\s*}}/g) || []
+    inputPaths = inputPaths.map(path => path.replace(/[{}]/g, "").trim())
+    const schemaPaths = inputPaths.map(path =>
+      path.replace(/\./g, ".properties.")
+    )
 
     // Replace any enum bindings with their pretty equivalents
     schemaPaths.forEach((path, idx) => {
