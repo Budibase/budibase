@@ -9,7 +9,6 @@ const path = require("path")
 const Sentry = require("@sentry/node")
 
 const AUTOMATION_MANIFEST = "manifest.json"
-const AUTOMATION_BUNDLE = "bundle.js"
 const BUILTIN_ACTIONS = {
   SEND_EMAIL: sendEmail.run,
   SAVE_RECORD: saveRecord.run,
@@ -25,12 +24,16 @@ const BUILTIN_DEFINITIONS = {
 
 let MANIFEST = null
 
-async function downloadPackage(name, version, pathToInstall) {
+function buildBundleName(pkgName, version) {
+  return `${pkgName}@${version}.min.js`
+}
+
+async function downloadPackage(name, version, bundleName) {
   await download(
-    `${environment.AUTOMATION_BUCKET}/${name}/${version}/${AUTOMATION_BUNDLE}`,
-    pathToInstall
+    `${environment.AUTOMATION_BUCKET}/${name}/${version}/${bundleName}`,
+    environment.AUTOMATION_DIRECTORY
   )
-  return require(path.join(pathToInstall, AUTOMATION_BUNDLE))
+  return require(path.join(environment.AUTOMATION_DIRECTORY, bundleName))
 }
 
 module.exports.getAction = async function(actionName) {
@@ -41,16 +44,12 @@ module.exports.getAction = async function(actionName) {
   if (!MANIFEST || !MANIFEST.packages || !MANIFEST.packages[actionName]) {
     return null
   }
-  let pkg = MANIFEST.packages[actionName]
-  let toInstall = path.join(
-    environment.AUTOMATION_DIRECTORY,
-    pkg.stepId,
-    pkg.version
-  )
+  const pkg = MANIFEST.packages[actionName]
+  const bundleName = buildBundleName(pkg.stepId, pkg.version)
   try {
-    return require(path.join(toInstall, AUTOMATION_BUNDLE))
+    return require(path.join(environment.AUTOMATION_DIRECTORY, bundleName))
   } catch (err) {
-    return downloadPackage(pkg.stepId, pkg.version, toInstall)
+    return downloadPackage(pkg.stepId, pkg.version, bundleName)
   }
 }
 
