@@ -10,7 +10,11 @@ function cleanMustache(string) {
     "]": "",
   }
   let regex = new RegExp(/{{[^}}]*}}/g)
-  for (let match of string.match(regex)) {
+  let matches = string.match(regex)
+  if (matches == null) {
+    return string
+  }
+  for (let match of matches) {
     let baseIdx = string.indexOf(match)
     for (let key of Object.keys(charToReplace)) {
       let idxChar = match.indexOf(key)
