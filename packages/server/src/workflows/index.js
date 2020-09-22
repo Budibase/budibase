@@ -5,17 +5,17 @@ const singleThread = require("./thread")
 
 let workers = workerFarm(require.resolve("./thread"))
 
-function runWorker(job) {
-  return new Promise((resolve, reject) => {
-    workers(job, err => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve()
-      }
-    })
-  })
-}
+// function runWorker(job) {
+//   return new Promise((resolve, reject) => {
+//     workers(job, err => {
+//       if (err) {
+//         reject(err)
+//       } else {
+//         resolve()
+//       }
+//     })
+//   })
+// }
 
 /**
  * This module is built purely to kick off the worker farm and manage the inputs/outputs
