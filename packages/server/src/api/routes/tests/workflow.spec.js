@@ -13,6 +13,7 @@ const {
 
 const { delay } = require("./testUtils")
 
+const MAX_RETRIES = 4
 const TEST_WORKFLOW = {
   _id: "Test Workflow",
   name: "My Workflow",
@@ -168,11 +169,18 @@ describe("/workflows", () => {
       expect(res.body.message).toEqual(`Workflow ${workflow._id} has been triggered.`)
       expect(res.body.workflow.name).toEqual(TEST_WORKFLOW.name)
       // wait for workflow to complete in background
-      await delay(500)
-      let elements = await getAllFromModel(request, app._id, instance._id, model._id)
-      expect(elements.length).toEqual(1)
-      expect(elements[0].name).toEqual("Test")
-      expect(elements[0].description).toEqual("TEST")
+      for (let tries = 0; tries < MAX_RETRIES; tries++) {
+        await delay(500)
+        let elements = await getAllFromModel(request, app._id, instance._id, model._id)
+        // don't test it unless there are values to test
+        if (elements.length === 1) {
+          expect(elements.length).toEqual(1)
+          expect(elements[0].name).toEqual("Test")
+          expect(elements[0].description).toEqual("TEST")
+          return
+        }
+      }
+      throw "Failed to find the records"
     })
   })
 
