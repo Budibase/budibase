@@ -8,7 +8,7 @@
   function addBlockToAutomation() {
     automationStore.actions.addBlockToAutomation({
       ...blockDefinition,
-      args: blockDefinition.args || {},
+      inputs: blockDefinition.inputs || {},
       stepId,
       type: blockType,
     })
