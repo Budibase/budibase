@@ -23,6 +23,7 @@ const workflowActions = store => ({
   create: async ({ name }) => {
     const workflow = {
       name,
+      type: "workflow",
       definition: {
         steps: [],
       },

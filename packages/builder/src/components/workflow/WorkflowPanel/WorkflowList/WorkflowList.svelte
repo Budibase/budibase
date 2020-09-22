@@ -8,9 +8,7 @@
 
   const { open, close } = getContext("simple-modal")
 
-  $: selectedWorkflowId =
-    $workflowStore.selectedWorkflow &&
-    $workflowStore.selectedWorkflow.workflow._id
+  $: selectedWorkflowId = $workflowStore.selectedWorkflow?.workflow?._id
 
   function newWorkflow() {
     open(
