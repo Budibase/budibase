@@ -6,8 +6,12 @@ const environment = require("../environment")
 const download = require("download")
 const fetch = require("node-fetch")
 const path = require("path")
+const os = require("os")
+const fs = require("fs")
 const Sentry = require("@sentry/node")
 
+const DEFAULT_BUCKET = "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
+const DEFAULT_DIRECTORY = ".budibase-automations"
 const AUTOMATION_MANIFEST = "manifest.json"
 const BUILTIN_ACTIONS = {
   SEND_EMAIL: sendEmail.run,
@@ -22,6 +26,8 @@ const BUILTIN_DEFINITIONS = {
   CREATE_USER: createUser.definition,
 }
 
+let AUTOMATION_BUCKET = environment.AUTOMATION_BUCKET
+let AUTOMATION_DIRECTORY = environment.AUTOMATION_DIRECTORY
 let MANIFEST = null
 
 function buildBundleName(pkgName, version) {
@@ -30,10 +36,10 @@ function buildBundleName(pkgName, version) {
 
 async function downloadPackage(name, version, bundleName) {
   await download(
-    `${environment.AUTOMATION_BUCKET}/${name}/${version}/${bundleName}`,
-    environment.AUTOMATION_DIRECTORY
+    `${AUTOMATION_BUCKET}/${name}/${version}/${bundleName}`,
+    AUTOMATION_DIRECTORY
   )
-  return require(path.join(environment.AUTOMATION_DIRECTORY, bundleName))
+  return require(path.join(AUTOMATION_DIRECTORY, bundleName))
 }
 
 module.exports.getAction = async function(actionName) {
@@ -47,28 +53,34 @@ module.exports.getAction = async function(actionName) {
   const pkg = MANIFEST.packages[actionName]
   const bundleName = buildBundleName(pkg.stepId, pkg.version)
   try {
-    return require(path.join(environment.AUTOMATION_DIRECTORY, bundleName))
+    return require(path.join(AUTOMATION_DIRECTORY, bundleName))
   } catch (err) {
     return downloadPackage(pkg.stepId, pkg.version, bundleName)
   }
 }
 
 module.exports.init = async function() {
+  // set defaults
+  if (!AUTOMATION_DIRECTORY) {
+    AUTOMATION_DIRECTORY = path.join(os.homedir(), DEFAULT_DIRECTORY)
+  }
+  if (!AUTOMATION_BUCKET) {
+    AUTOMATION_BUCKET = DEFAULT_BUCKET
+  }
+  if (!fs.existsSync(AUTOMATION_DIRECTORY)) {
+    fs.mkdirSync(AUTOMATION_DIRECTORY, { recursive: true })
+  }
   // env setup to get async packages
   try {
-    if (environment.AUTOMATION_DIRECTORY && environment.AUTOMATION_BUCKET) {
-      let response = await fetch(
-        `${environment.AUTOMATION_BUCKET}/${AUTOMATION_MANIFEST}`
-      )
-      MANIFEST = await response.json()
-    }
+    let response = await fetch(`${AUTOMATION_BUCKET}/${AUTOMATION_MANIFEST}`)
+    MANIFEST = await response.json()
+    module.exports.DEFINITIONS =
+      MANIFEST && MANIFEST.packages
+        ? Object.assign(MANIFEST.packages, BUILTIN_DEFINITIONS)
+        : BUILTIN_DEFINITIONS
   } catch (err) {
     Sentry.captureException(err)
   }
-  module.exports.DEFINITIONS =
-    MANIFEST && MANIFEST.packages
-      ? Object.assign(MANIFEST.packages, BUILTIN_DEFINITIONS)
-      : BUILTIN_DEFINITIONS
 }
 
 module.exports.DEFINITIONS = BUILTIN_DEFINITIONS
