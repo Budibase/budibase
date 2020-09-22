@@ -23,7 +23,8 @@ function runWorker(job) {
 module.exports.init = function() {
   triggers.workflowQueue.process(async job => {
     if (environment.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
-      await runWorker(job)
+      //await runWorker(job)
+      await singleThread(job)
     } else {
       await singleThread(job)
     }
