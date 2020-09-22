@@ -10,7 +10,8 @@ const os = require("os")
 const fs = require("fs")
 const Sentry = require("@sentry/node")
 
-const DEFAULT_BUCKET = "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
+const DEFAULT_BUCKET =
+  "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
 const DEFAULT_DIRECTORY = ".budibase-automations"
 const AUTOMATION_MANIFEST = "manifest.json"
 const BUILTIN_ACTIONS = {
