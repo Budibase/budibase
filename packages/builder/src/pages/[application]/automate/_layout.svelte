@@ -1,23 +1,19 @@
-<!-- routify:options index=3 -->
 <script>
   import { automationStore } from "builderStore"
   import { AutomationPanel, SetupPanel } from "components/automation"
 </script>
 
+<!-- routify:options index=3 -->
 <div class="root">
   <div class="nav">
-    <div class="inner">
-      <AutomationPanel />
-    </div>
+    <AutomationPanel />
   </div>
   <div class="content">
     <slot />
   </div>
   {#if $automationStore.selectedAutomation}
     <div class="nav">
-      <div class="inner">
-        <SetupPanel />
-      </div>
+      <SetupPanel />
     </div>
   {/if}
 </div>
@@ -25,28 +21,19 @@
 <style>
   .content {
     position: relative;
-    background: var(--grey-1);
   }
 
   .root {
-    height: 100%;
+    height: calc(100% - 60px);
     display: grid;
-    grid-template-columns: 300px minmax(0, 1fr) 300px;
+    grid-template-columns: 300px minmax(510px, 1fr) 300px;
     background: var(--grey-1);
     line-height: 1;
   }
 
-  .content {
-    flex: 1 1 auto;
-  }
-
   .nav {
-    overflow: auto;
-    width: 300px;
+    overflow-y: auto;
     background: var(--white);
-  }
-
-  .inner {
-    padding: 20px;
+    padding: var(--spacing-xl);
   }
 </style>

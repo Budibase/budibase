@@ -61,7 +61,7 @@
 
   footer {
     position: absolute;
-    bottom: 20px;
+    bottom: var(--spacing-xl);
     right: 30px;
     display: flex;
     align-items: flex-end;
@@ -80,7 +80,7 @@
     justify-content: center;
   }
   footer > button:first-child {
-    margin-right: 20px;
+    margin-right: var(--spacing-m);
   }
 
   .play-button.highlighted {

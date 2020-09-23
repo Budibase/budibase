@@ -2,37 +2,34 @@ const recordController = require("../../api/controllers/record")
 const automationUtils = require("../automationUtils")
 
 module.exports.definition = {
-  name: "Save Record",
-  tagline: "Save a {{inputs.enriched.model.name}} record",
-  icon: "ri-save-3-fill",
-  description: "Save a record to your database",
+  name: "Update Record",
+  tagline: "Update a {{inputs.enriched.model.name}} record",
+  icon: "ri-refresh-fill",
+  description: "Update a record to your database",
   type: "ACTION",
-  stepId: "SAVE_RECORD",
+  stepId: "UPDATE_RECORD",
   inputs: {},
   schema: {
     inputs: {
       properties: {
         record: {
           type: "object",
-          properties: {
-            modelId: {
-              type: "string",
-              customType: "model",
-            },
-          },
           customType: "record",
-          title: "Table",
-          required: ["modelId"],
+          title: "Record",
+        },
+        recordId: {
+          type: "string",
+          title: "Record ID",
         },
       },
-      required: ["record"],
+      required: ["record", "recordId"],
     },
     outputs: {
       properties: {
         record: {
           type: "object",
           customType: "record",
-          description: "The new record",
+          description: "The updated record",
         },
         response: {
           type: "object",
@@ -44,11 +41,11 @@ module.exports.definition = {
         },
         id: {
           type: "string",
-          description: "The identifier of the new record",
+          description: "The identifier of the updated record",
         },
         revision: {
           type: "string",
-          description: "The revision of the new record",
+          description: "The revision of the updated record",
         },
       },
       required: ["success", "id", "revision"],
@@ -57,19 +54,26 @@ module.exports.definition = {
 }
 
 module.exports.run = async function({ inputs, instanceId }) {
-  // TODO: better logging of when actions are missed due to missing parameters
-  if (inputs.record == null || inputs.record.modelId == null) {
+  if (inputs.recordId == null || inputs.record == null) {
     return
   }
-  inputs.record = await automationUtils.cleanUpRecord(
+
+  inputs.record = await automationUtils.cleanUpRecordById(
     instanceId,
-    inputs.record.modelId,
+    inputs.recordId,
     inputs.record
   )
+  // clear any falsy properties so that they aren't updated
+  for (let propKey of Object.keys(inputs.record)) {
+    if (!inputs.record[propKey] || inputs.record[propKey] === "") {
+      delete inputs.record[propKey]
+    }
+  }
+
   // have to clean up the record, remove the model from it
   const ctx = {
     params: {
-      modelId: inputs.record.modelId,
+      id: inputs.recordId,
     },
     request: {
       body: inputs.record,
@@ -78,10 +82,10 @@ module.exports.run = async function({ inputs, instanceId }) {
   }
 
   try {
-    await recordController.save(ctx)
+    await recordController.patch(ctx)
     return {
-      record: inputs.record,
-      response: ctx.body,
+      record: ctx.body,
+      response: ctx.message,
       id: ctx.body._id,
       revision: ctx.body._rev,
       success: ctx.status === 200,

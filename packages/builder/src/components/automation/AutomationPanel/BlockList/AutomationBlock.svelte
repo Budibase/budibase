@@ -8,7 +8,7 @@
   function addBlockToAutomation() {
     automationStore.actions.addBlockToAutomation({
       ...blockDefinition,
-      args: blockDefinition.args || {},
+      inputs: blockDefinition.inputs || {},
       stepId,
       type: blockType,
     })
@@ -33,26 +33,15 @@
     display: grid;
     grid-template-columns: 20px auto;
     align-items: center;
-    margin-top: 16px;
-    padding: 12px;
+    margin-top: var(--spacing-s);
+    padding: var(--spacing-m);
     border-radius: var(--border-radius-m);
   }
-
   .automation-block:hover {
     background-color: var(--grey-1);
   }
-
-  .automation-text {
-    margin-left: 16px;
-  }
-
-  .icon {
-    height: 40px;
-    width: 40px;
-    background: var(--blue-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .automation-block:first-child {
+    margin-top: 0;
   }
 
   i {
@@ -60,14 +49,16 @@
     font-size: 20px;
   }
 
-  h4 {
+  .automation-text {
+    margin-left: 16px;
+  }
+  .automation-text h4 {
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 5px;
     margin-top: 0;
   }
-
-  p {
+  .automation-text p {
     font-size: 12px;
     color: var(--grey-7);
     margin: 0;

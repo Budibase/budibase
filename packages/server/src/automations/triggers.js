@@ -36,8 +36,16 @@ const BUILTIN_DEFINITIONS = {
             customType: "record",
             description: "The new record that was saved",
           },
+          id: {
+            type: "string",
+            description: "Record ID - can be used for updating",
+          },
+          revision: {
+            type: "string",
+            description: "Revision of record",
+          },
         },
-        required: ["record"],
+        required: ["record", "id"],
       },
     },
     type: "TRIGGER",
@@ -69,7 +77,7 @@ const BUILTIN_DEFINITIONS = {
             description: "The record that was deleted",
           },
         },
-        required: ["record"],
+        required: ["record", "id"],
       },
     },
     type: "TRIGGER",
@@ -124,6 +132,7 @@ async function fillRecordOutput(automation, params) {
   const db = new CouchDB(params.instanceId)
   try {
     let model = await db.get(modelId)
+    let record = {}
     for (let schemaKey of Object.keys(model.schema)) {
       if (params[schemaKey] != null) {
         continue
@@ -131,19 +140,20 @@ async function fillRecordOutput(automation, params) {
       let propSchema = model.schema[schemaKey]
       switch (propSchema.constraints.type) {
         case "string":
-          params[schemaKey] = FAKE_STRING
+          record[schemaKey] = FAKE_STRING
           break
         case "boolean":
-          params[schemaKey] = FAKE_BOOL
+          record[schemaKey] = FAKE_BOOL
           break
         case "number":
-          params[schemaKey] = FAKE_NUMBER
+          record[schemaKey] = FAKE_NUMBER
           break
         case "datetime":
-          params[schemaKey] = FAKE_DATETIME
+          record[schemaKey] = FAKE_DATETIME
           break
       }
     }
+    params.record = record
   } catch (err) {
     throw "Failed to find model for trigger"
   }
