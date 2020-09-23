@@ -1,5 +1,4 @@
 <script>
-  // import { notifier } from "builderStore/store/notifications"
   import { Heading, Body, Button } from "@budibase/bbui"
   import { FILE_TYPES } from "./fileTypes"
   import api from "../api"
@@ -124,7 +123,7 @@
       </li>
     {/if}
   </ul>
-  <i class="ri-folder-upload-line" />
+  <i class="fas fa-upload" />
   <input id="file-upload" type="file" multiple on:change={handleFile} />
   <label for="file-upload">Upload</label>
 </div>
