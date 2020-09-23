@@ -68,7 +68,6 @@ exports.uploadFile = async function(ctx) {
 }
 
 async function processLocalFileUploads({ files, outputPath, instanceId }) {
-  console.log("files", files)
   // create attachments dir if it doesnt exist
   !fs.existsSync(outputPath) && fs.mkdirSync(outputPath, { recursive: true })
 
@@ -77,20 +76,13 @@ async function processLocalFileUploads({ files, outputPath, instanceId }) {
     // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`
 
-    // {
-    //   name: 'backspace-solid.svg',
-    //   path: '/Users/martinmckeaveney/Downloads/backspace-solid.svg',
-    //   size: 813,
-    //   type: 'image/svg+xml'
-    // }
-
     return {
       name: file.name,
       path: file.path,
       size: file.size,
       type: file.type,
       processedFileName,
-      // extension: fileExtension,
+      extension: fileExtension,
       outputPath: join(outputPath, processedFileName),
       url: join("/attachments", processedFileName),
     }
