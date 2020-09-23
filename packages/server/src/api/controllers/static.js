@@ -31,8 +31,6 @@ exports.uploadFile = async function(ctx) {
       ? Array.from(ctx.request.files.file)
       : [ctx.request.files.file]
 
-  console.log(files)
-
   let uploads = []
 
   const attachmentsPath = resolve(
@@ -45,37 +43,40 @@ exports.uploadFile = async function(ctx) {
     // remote upload
     const s3 = new AWS.S3({
       params: {
-        // TODO: Don't hardcode
-        Bucket: "",
+        Bucket: "prod-budi-app-assets",
       },
     })
 
-    // TODO: probably need to UUID this too, so that we don't override by name
-    uploads = files.map(file =>
-      prepareUploadForS3({
-        fileType: file.type,
-        filePath: file.path,
-        s3Key: `assets/${ctx.user.appId}/attachments/${file.name}`,
-        s3,
-      })
-    )
-  } else {
     uploads = files.map(file => {
       const fileExtension = [...file.name.split(".")].pop()
       const processedFileName = `${uuid.v4()}.${fileExtension}`
 
-      return fileProcessor.process({
-        format: file.format,
-        type: file.type,
-        name: file.name,
-        size: file.size,
-        path: file.path,
-        processedFileName,
-        extension: fileExtension,
-        outputPath: `${attachmentsPath}/${processedFileName}`,
-        url: `/attachments/${processedFileName}`,
+      return prepareUploadForS3({
+        ...file,
+        fileType: file.type,
+        filePath: file.path,
+        s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
+        s3,
       })
     })
+  } else {
+    uploads = processLocalFileUploads(files, attachmentsPath)
+    // uploads = files.map(file => {
+    //   const fileExtension = [...file.name.split(".")].pop()
+    //   const processedFileName = `${uuid.v4()}.${fileExtension}`
+
+    //   return fileProcessor.process({
+    //     format: file.format,
+    //     type: file.type,
+    //     name: file.name,
+    //     size: file.size,
+    //     path: file.path,
+    //     processedFileName,
+    //     extension: fileExtension,
+    //     outputPath: `${attachmentsPath}/${processedFileName}`,
+    //     url: `/attachments/${processedFileName}`,
+    //   })
+    // })
   }
 
   const responses = await Promise.all(uploads)
@@ -83,21 +84,13 @@ exports.uploadFile = async function(ctx) {
   ctx.body = responses
 }
 
-exports.processLocalFileUpload = async function(ctx) {
-  const { files } = ctx.request.body
-
-  const attachmentsPath = resolve(
-    budibaseAppsDir(),
-    ctx.user.appId,
-    "attachments"
-  )
-
+function processLocalFileUploads(files, attachmentsPath) {
   // create attachments dir if it doesnt exist
   !fs.existsSync(attachmentsPath) &&
     fs.mkdirSync(attachmentsPath, { recursive: true })
 
   const filesToProcess = files.map(file => {
-    const fileExtension = [...file.path.split(".")].pop()
+    const fileExtension = [...file.name.split(".")].pop()
     // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`
 
@@ -110,9 +103,42 @@ exports.processLocalFileUpload = async function(ctx) {
     }
   })
 
-  const fileProcessOperations = filesToProcess.map(file =>
-    fileProcessor.process(file)
+  return filesToProcess.map(fileProcessor.process)
+}
+
+exports.performLocalFileProcessing = async function(ctx) {
+  const { files } = ctx.request.body
+
+  const processedFileOutputPath = resolve(
+    budibaseAppsDir(),
+    ctx.user.appId,
+    "attachments"
   )
+
+  const fileProcessOperations = processLocalFileUploads(
+    files,
+    processedFileOutputPath
+  )
+
+  // // create attachments dir if it doesnt exist
+  // !fs.existsSync(attachmentsPath) &&
+  //   fs.mkdirSync(attachmentsPath, { recursive: true })
+
+  // const filesToProcess = files.map(file => {
+  //   const fileExtension = [...file.path.split(".")].pop()
+  //   // filenames converted to UUIDs so they are unique
+  //   const processedFileName = `${uuid.v4()}.${fileExtension}`
+
+  //   return {
+  //     ...file,
+  //     processedFileName,
+  //     extension: fileExtension,
+  //     outputPath: join(attachmentsPath, processedFileName),
+  //     url: join("/attachments", processedFileName),
+  //   }
+  // })
+
+  // const fileProcessOperations = filesToProcess.map(fileProcessor.process)
 
   try {
     const processedFiles = await Promise.all(fileProcessOperations)

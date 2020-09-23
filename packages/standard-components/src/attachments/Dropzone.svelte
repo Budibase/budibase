@@ -3,7 +3,6 @@
   import { Heading, Body, Button } from "@budibase/bbui"
   import { FILE_TYPES } from "./fileTypes"
   import api from "../api"
-  // import api from "builderStore/api"
 
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
@@ -29,6 +28,14 @@
     let data = new FormData()
     for (var i = 0; i < fileList.length; i++) {
       data.append("file", fileList[i])
+    }
+
+    if (Array.from(fileList).some(file => file.size >= fileSizeLimit)) {
+      alert(
+        `Files cannot exceed ${fileSizeLimit /
+          BYTES_IN_MB}MB. Please try again with smaller files.`
+      )
+      return
     }
 
     const response = await fetch("/api/attachments/upload", {
@@ -118,12 +125,7 @@
     {/if}
   </ul>
   <i class="ri-folder-upload-line" />
-  <input
-    id="file-upload"
-    name="uploads"
-    type="file"
-    multiple
-    on:change={handleFile} />
+  <input id="file-upload" type="file" multiple on:change={handleFile} />
   <label for="file-upload">Upload</label>
 </div>
 
@@ -183,7 +185,7 @@
     display: flex;
     align-items: center;
     bottom: var(--spacing-s);
-    border-radius: 10px;
+    border-radius: 5px;
     transition: 0.2s transform;
   }
 
@@ -264,6 +266,7 @@
 
   .filename {
     overflow: hidden;
+    margin-left: 5px;
     text-overflow: ellipsis;
   }
 
