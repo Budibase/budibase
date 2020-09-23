@@ -109,14 +109,18 @@ class Orchestrator {
       step.inputs = recurseMustache(step.inputs, this._context)
       step.inputs = cleanInputValue(step.inputs, step.schema.inputs)
       // instanceId is always passed
-      const outputs = await stepFn({
-        inputs: step.inputs,
-        instanceId: this._instanceId,
-      })
-      if (step.stepId === FILTER_STEP_ID && !outputs.success) {
-        break
+      try {
+        const outputs = await stepFn({
+          inputs: step.inputs,
+          instanceId: this._instanceId,
+        })
+        if (step.stepId === FILTER_STEP_ID && !outputs.success) {
+          break
+        }
+        this._context.steps.push(outputs)
+      } catch (err) {
+        console.error(`Automation error - ${step.stepId} - ${err}`)
       }
-      this._context.steps.push(outputs)
     }
   }
 }
