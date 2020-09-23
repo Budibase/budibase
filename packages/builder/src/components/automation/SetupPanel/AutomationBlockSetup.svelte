@@ -66,7 +66,7 @@
         <RecordSelector bind:value={block.inputs[key]} {bindings} />
       {:else if value.type === 'string' || value.type === 'number'}
         <BindableInput
-          type={value.type}
+          type="string"
           thin
           bind:value={block.inputs[key]}
           {bindings} />
