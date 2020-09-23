@@ -13,7 +13,7 @@ const {
 
 const { delay } = require("./testUtils")
 
-const MAX_RETRIES = 10
+const MAX_RETRIES = 4
 const TEST_AUTOMATION = {
   _id: "Test Automation",
   name: "My Automation",
@@ -64,6 +64,15 @@ describe("/automations", () => {
       ...TEST_AUTOMATION
     })
     automation = { ...automation, ...TEST_AUTOMATION }
+  }
+
+  const triggerWorkflow = async (automationId) => {
+    return await request
+      .post(`/api/automations/${automationId}/trigger`)
+      .send({ name: "Test", description: "TEST" })
+      .set(defaultHeaders(app._id, instance._id))
+      .expect('Content-Type', /json/)
+      .expect(200)
   }
 
   describe("get definitions", () => {
@@ -160,16 +169,14 @@ describe("/automations", () => {
       TEST_AUTOMATION.definition.trigger.inputs.modelId = model._id
       TEST_AUTOMATION.definition.steps[0].inputs.record.modelId = model._id
       await createAutomation()
-      const res = await request
-        .post(`/api/automations/${automation._id}/trigger`)
-        .send({ name: "Test", description: "TEST" })
-        .set(defaultHeaders(app._id, instance._id))
-        .expect('Content-Type', /json/)
-        .expect(200)
-      expect(res.body.message).toEqual(`Automation ${automation._id} has been triggered.`)
-      expect(res.body.automation.name).toEqual(TEST_AUTOMATION.name)
-      // wait for automation to complete in background
+      // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
+      // know that it has finished all of its actions - this is currently the best way
+      // also when this runs in CI it is very temper-mental so for now trying to make run stable by repeating until it works
+      // TODO: update when workflow logs are a thing
       for (let tries = 0; tries < MAX_RETRIES; tries++) {
+        const res = await triggerWorkflow(automation._id)
+        expect(res.body.message).toEqual(`Automation ${automation._id} has been triggered.`)
+        expect(res.body.automation.name).toEqual(TEST_AUTOMATION.name)
         await delay(500)
         let elements = await getAllFromModel(request, app._id, instance._id, model._id)
         // don't test it unless there are values to test
