@@ -162,7 +162,7 @@ describe("/automations", () => {
       await createAutomation()
       const res = await request
         .post(`/api/automations/${automation._id}/trigger`)
-        .send({ name: "Test" })
+        .send({ name: "Test", description: "TEST" })
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
