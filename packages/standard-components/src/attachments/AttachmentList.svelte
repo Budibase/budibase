@@ -1,5 +1,5 @@
 <script>
-  import { FILE_TYPES } from "./fileTypes";
+  import { FILE_TYPES } from "./fileTypes"
 
   export let files
   export let height = "70"

@@ -28,7 +28,7 @@ export const getBackendUiStore = () => {
       },
     },
     records: {
-      save: record =>
+      save: () =>
         store.update(state => {
           state.selectedView = state.selectedView
           return state
