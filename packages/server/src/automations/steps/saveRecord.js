@@ -1,4 +1,5 @@
 const recordController = require("../../api/controllers/record")
+const automationUtils = require("../automationUtils")
 
 module.exports.definition = {
   name: "Save Record",
@@ -60,6 +61,11 @@ module.exports.run = async function({ inputs, instanceId }) {
   if (inputs.record == null || inputs.record.modelId == null) {
     return
   }
+  inputs.record = await automationUtils.cleanUpRecord(
+    instanceId,
+    inputs.record.modelId,
+    inputs.record
+  )
   // have to clean up the record, remove the model from it
   const ctx = {
     params: {
