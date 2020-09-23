@@ -64,29 +64,23 @@ function walkDir(dirPath, callback) {
   }
 }
 
-async function prepareUploadForS3({
-  filePath,
-  s3Key,
-  metadata,
-  fileType,
-  s3,
-  ...file
-}) {
-  const contentType =
-    fileType || CONTENT_TYPE_MAP[[...filePath.split(".")].pop().toLowerCase()]
-  const fileBytes = fs.readFileSync(filePath)
+async function prepareUploadForS3({ s3Key, metadata, s3, file }) {
+  const extension = [...file.name.split(".")].pop()
+  const fileBytes = fs.readFileSync(file.path)
 
   const upload = await s3
     .upload({
       Key: s3Key,
       Body: fileBytes,
-      ContentType: contentType,
+      ContentType: file.type || CONTENT_TYPE_MAP[extension.toLowerCase()],
       Metadata: metadata,
     })
     .promise()
 
   return {
-    ...file,
+    size: file.size,
+    name: file.name,
+    extension,
     url: upload.Location,
     key: upload.Key,
   }
@@ -124,7 +118,10 @@ exports.uploadAppAssets = async function({
     // Upload HTML, CSS and JS for each page of the web app
     walkDir(`${appAssetsPath}/${page}`, function(filePath) {
       const appAssetUpload = prepareUploadForS3({
-        filePath,
+        file: {
+          path: filePath,
+          name: [...filePath.split("/")].pop(),
+        },
         s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
         s3,
         metadata: { accountId },
@@ -141,8 +138,7 @@ exports.uploadAppAssets = async function({
       if (file.uploaded) continue
 
       const attachmentUpload = prepareUploadForS3({
-        fileType: file.type,
-        filePath: file.path,
+        file,
         s3Key: `assets/${appId}/attachments/${file.processedFileName}`,
         s3,
         metadata: { accountId },
