@@ -29,6 +29,36 @@ function cleanMustache(string) {
   return string
 }
 
+// looks for inputs that need cleanup to the correct type
+function cleanInputValue(inputs, schema) {
+  if (schema == null) {
+    return inputs
+  }
+  for (let inputKey of Object.keys(inputs)) {
+    let input = inputs[inputKey]
+    if (typeof input !== "string") {
+      continue
+    }
+    let propSchema = schema.properties[inputKey]
+    if (propSchema.type === "boolean") {
+      let lcInput = input.toLowerCase()
+      if (lcInput === "true") {
+        inputs[inputKey] = true
+      }
+      if (lcInput === "false") {
+        inputs[inputKey] = false
+      }
+    }
+    if (propSchema.type === "number") {
+      let floatInput = parseFloat(input)
+      if (!isNaN(floatInput)) {
+        inputs[inputKey] = floatInput
+      }
+    }
+  }
+  return inputs
+}
+
 function recurseMustache(inputs, context) {
   for (let key of Object.keys(inputs)) {
     let val = inputs[key]
@@ -77,6 +107,7 @@ class Orchestrator {
     for (let step of automation.definition.steps) {
       let stepFn = await this.getStepFunctionality(step.type, step.stepId)
       step.inputs = recurseMustache(step.inputs, this._context)
+      step.inputs = cleanInputValue(step.inputs, step.schema.inputs)
       // instanceId is always passed
       const outputs = await stepFn({
         inputs: step.inputs,
