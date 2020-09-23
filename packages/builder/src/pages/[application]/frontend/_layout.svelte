@@ -1,4 +1,3 @@
-<!-- routify:options index=1 -->
 <script>
   import { store, backendUiStore } from "builderStore"
   import { goto } from "@sveltech/routify"
@@ -38,6 +37,7 @@
   const lastPartOfName = c => (c ? last(c.split("/")) : "")
 </script>
 
+<!-- routify:options index=1 -->
 <div class="root">
 
   <div class="ui-nav">

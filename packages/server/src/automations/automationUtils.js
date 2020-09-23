@@ -103,7 +103,7 @@ module.exports.cleanUpRecord = async (instanceId, modelId, record) => {
 /**
  * A utility function for the cleanUpRecord, which can be used if only the record ID is known (not the model ID) to clean
  * up a record after mustache statements have been replaced. This is specifically useful for the update record action.
- * 
+ *
  * @param {string} instanceId The instance which the Table/Model is contained under.
  * @param {string} recordId The ID of the record from which the modelId will be extracted, to get the Table/Model schema.
  * @param {object} record The input record structure which requires clean-up after having been through mustache statements.
