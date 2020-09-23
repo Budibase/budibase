@@ -12,6 +12,7 @@
   import RowPopover from "./popovers/Row.svelte"
   import ColumnPopover from "./popovers/Column.svelte"
   import ViewPopover from "./popovers/View.svelte"
+  import ExportPopover from "./popovers/Export.svelte"
   import ColumnHeaderPopover from "./popovers/ColumnHeader.svelte"
   import EditRowPopover from "./popovers/EditRow.svelte"
   import * as api from "./api"
@@ -51,6 +52,10 @@
     .filter(id => !INTERNAL_HEADERS.includes(id))
 
   $: schema = $backendUiStore.selectedModel.schema
+  $: modelView = {
+    schema: $backendUiStore.selectedModel.schema,
+    name: $backendUiStore.selectedView.name,
+  }
 </script>
 
 <section>
@@ -61,6 +66,7 @@
       {#if Object.keys($backendUiStore.selectedModel.schema).length > 0}
         <RowPopover />
         <ViewPopover />
+        <ExportPopover view={modelView} />
       {/if}
     </div>
   </div>
