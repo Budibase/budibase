@@ -3,18 +3,18 @@ const validateJs = require("validate.js")
 const newid = require("../../db/newid")
 
 function emitEvent(eventType, ctx, record) {
+  let event = {
+    record,
+    instanceId: ctx.user.instanceId,
+  }
   // add syntactic sugar for mustache later
   if (record._id) {
-    record.id = record._id
+    event.id = record._id
   }
   if (record._rev) {
-    record.revision = record._rev
+    event.revision = record._rev
   }
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emit(eventType, {
-      record,
-      instanceId: ctx.user.instanceId,
-    })
+  ctx.eventEmitter && ctx.eventEmitter.emit(eventType, event)
 }
 
 validateJs.extend(validateJs.validators.datetime, {
