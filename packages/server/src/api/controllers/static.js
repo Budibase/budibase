@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken")
 const fetch = require("node-fetch")
 const fs = require("fs")
 const uuid = require("uuid")
+const AWS = require("aws-sdk")
+const { prepareUploadForS3 } = require("./deploy/aws")
 
 const {
   budibaseAppsDir,
@@ -22,6 +24,65 @@ exports.serveBuilder = async function(ctx) {
   await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
 }
 
+exports.uploadFile = async function(ctx) {
+  let files
+  files =
+    ctx.request.files.file.length > 1
+      ? Array.from(ctx.request.files.file)
+      : [ctx.request.files.file]
+
+  console.log(files)
+
+  let uploads = []
+
+  const attachmentsPath = resolve(
+    budibaseAppsDir(),
+    ctx.user.appId,
+    "attachments"
+  )
+
+  if (process.env.CLOUD) {
+    // remote upload
+    const s3 = new AWS.S3({
+      params: {
+        // TODO: Don't hardcode
+        Bucket: "",
+      },
+    })
+
+    // TODO: probably need to UUID this too, so that we don't override by name
+    uploads = files.map(file =>
+      prepareUploadForS3({
+        fileType: file.type,
+        filePath: file.path,
+        s3Key: `assets/${ctx.user.appId}/attachments/${file.name}`,
+        s3,
+      })
+    )
+  } else {
+    uploads = files.map(file => {
+      const fileExtension = [...file.name.split(".")].pop()
+      const processedFileName = `${uuid.v4()}.${fileExtension}`
+
+      return fileProcessor.process({
+        format: file.format,
+        type: file.type,
+        name: file.name,
+        size: file.size,
+        path: file.path,
+        processedFileName,
+        extension: fileExtension,
+        outputPath: `${attachmentsPath}/${processedFileName}`,
+        url: `/attachments/${processedFileName}`,
+      })
+    })
+  }
+
+  const responses = await Promise.all(uploads)
+
+  ctx.body = responses
+}
+
 exports.processLocalFileUpload = async function(ctx) {
   const { files } = ctx.request.body
 
@@ -38,14 +99,14 @@ exports.processLocalFileUpload = async function(ctx) {
   const filesToProcess = files.map(file => {
     const fileExtension = [...file.path.split(".")].pop()
     // filenames converted to UUIDs so they are unique
-    const fileName = `${uuid.v4()}.${fileExtension}`
+    const processedFileName = `${uuid.v4()}.${fileExtension}`
 
     return {
       ...file,
-      fileName,
+      processedFileName,
       extension: fileExtension,
-      outputPath: join(attachmentsPath, fileName),
-      url: join("/attachments", fileName),
+      outputPath: join(attachmentsPath, processedFileName),
+      url: join("/attachments", processedFileName),
     }
   })
 

@@ -1,8 +1,9 @@
 <script>
-  import { notifier } from "builderStore/store/notifications"
+  // import { notifier } from "builderStore/store/notifications"
   import { Heading, Body, Button } from "@budibase/bbui"
-  import { FILE_TYPES } from "constants/backend"
-  import api from "builderStore/api"
+  import { FILE_TYPES } from "./fileTypes"
+  import api from "../api"
+  // import api from "builderStore/api"
 
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
@@ -13,38 +14,31 @@
   let selectedImageIdx = 0
   let fileDragged = false
 
-  $: selectedImage = files[selectedImageIdx]
+  $: selectedImage = files ? files[selectedImageIdx] : null
 
   function determineFileIcon(extension) {
     const ext = extension.toLowerCase()
 
-    if (FILE_TYPES.IMAGE.includes(ext)) return "ri-image-2-line"
-    if (FILE_TYPES.CODE.includes(ext)) return "ri-terminal-box-line"
+    if (FILE_TYPES.IMAGE.includes(ext)) return "fas fa-file-image"
+    if (FILE_TYPES.CODE.includes(ext)) return "fas fa-file-code"
 
-    return "ri-file-line"
+    return "fas fa-file"
   }
 
   async function processFiles(fileList) {
-    const fileArray = Array.from(fileList)
-
-    if (fileArray.some(file => file.size >= fileSizeLimit)) {
-      notifier.danger(
-        `Files cannot exceed ${fileSizeLimit /
-          BYTES_IN_MB}MB. Please try again with smaller files.`
-      )
-      return
+    let data = new FormData()
+    for (var i = 0; i < fileList.length; i++) {
+      data.append("file", fileList[i])
     }
 
-    const filesToProcess = fileArray.map(({ name, path, size, type }) => ({
-      name,
-      path,
-      size,
-      type,
-    }))
-
-    const response = await api.post(`/api/attachments/process`, {
-      files: filesToProcess,
+    const response = await fetch("/api/attachments/upload", {
+      method: "POST",
+      body: data,
+      headers: {
+        Accept: "application/json",
+      },
     })
+
     const processedFiles = await response.json()
     files = [...processedFiles, ...files]
     selectedImageIdx = 0
@@ -97,8 +91,7 @@
       <li>
         <header>
           <div>
-            <i
-              class={`file-icon ${determineFileIcon(selectedImage.extension)}`} />
+            <i class={determineFileIcon(selectedImage.extension)} />
             <span class="filename">{selectedImage.name}</span>
           </div>
           <p>
@@ -108,24 +101,29 @@
           </p>
         </header>
         <div class="delete-button" on:click={removeFile}>
-          <i class="ri-close-line" />
+          <i class="fas fa-times" />
         </div>
         {#if selectedImageIdx !== 0}
           <div class="nav left" on:click={navigateLeft}>
-            <i class="ri-arrow-left-line" />
+            <i class="fas fa-arrow-left" />
           </div>
         {/if}
         <img src={selectedImage.url} />
         {#if selectedImageIdx !== files.length - 1}
           <div class="nav right" on:click={navigateRight}>
-            <i class="ri-arrow-right-line" />
+            <i class="fas fa-arrow-right" />
           </div>
         {/if}
       </li>
     {/if}
   </ul>
   <i class="ri-folder-upload-line" />
-  <input id="file-upload" type="file" multiple on:change={handleFile} />
+  <input
+    id="file-upload"
+    name="uploads"
+    type="file"
+    multiple
+    on:change={handleFile} />
   <label for="file-upload">Upload</label>
 </div>
 
@@ -178,6 +176,7 @@
   }
 
   div.nav {
+    padding: var(--spacing-xs);
     position: absolute;
     background: black;
     color: var(--white);
