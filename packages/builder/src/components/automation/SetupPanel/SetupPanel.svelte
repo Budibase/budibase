@@ -24,7 +24,9 @@
   }
 
   function deleteAutomationBlock() {
-    automationStore.actions.deleteAutomationBlock($automationStore.selectedBlock)
+    automationStore.actions.deleteAutomationBlock(
+      $automationStore.selectedBlock
+    )
   }
 
   async function testAutomation() {
@@ -56,10 +58,24 @@
       Setup
     </span>
   </header>
-  {#if $automationStore.selectedBlock}
-    <AutomationBlockSetup bind:block={$automationStore.selectedBlock} />
-    <div class="buttons">
-      <Button green wide data-cy="save-automation-setup" on:click={saveAutomation}>
+  <div class="content">
+    {#if $automationStore.selectedBlock}
+      <AutomationBlockSetup bind:block={$automationStore.selectedBlock} />
+    {:else if $automationStore.selectedAutomation}
+      <div class="block-label">
+        Automation
+        <b>{automation.name}</b>
+      </div>
+      <Button secondary wide on:click={testAutomation}>Test Automation</Button>
+    {/if}
+  </div>
+  <div class="buttons">
+    {#if $automationStore.selectedBlock}
+      <Button
+        green
+        wide
+        data-cy="save-automation-setup"
+        on:click={saveAutomation}>
         Save Automation
       </Button>
       <Button
@@ -67,30 +83,20 @@
         red
         wide
         on:click={deleteAutomationBlock}>
-        Delete Block
+        Delete Step
       </Button>
-    </div>
-  {:else if $automationStore.selectedAutomation}
-    <div class="panel">
-      <div class="panel-body">
-        <div class="block-label">
-          Automation
-          <b>{automation.name}</b>
-        </div>
-      </div>
-      <Button secondary wide on:click={testAutomation}>Test Automation</Button>
-      <div class="buttons">
-        <Button
-          green
-          wide
-          data-cy="save-automation-setup"
-          on:click={saveAutomation}>
-          Save Automation
-        </Button>
-        <Button red wide on:click={deleteAutomation}>Delete Automation</Button>
-      </div>
-    </div>
-  {/if}
+    {:else if $automationStore.selectedAutomation}
+      <Button
+        green
+        wide
+        data-cy="save-automation-setup"
+        on:click={saveAutomation}>
+        Save Automation
+      </Button>
+      <Button red wide on:click={deleteAutomation}>Delete Automation</Button>
+    {/if}
+  </div>
+
 </section>
 
 <style>
@@ -98,29 +104,24 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    justify-content: space-between;
-  }
-
-  .panel-body {
-    flex: 1;
-  }
-
-  .panel {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
+    align-items: stretch;
   }
 
   header {
     font-size: 18px;
     font-weight: 600;
-    font-family: inter;
+    font-family: inter, sans-serif;
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-xl);
     color: var(--ink);
   }
-
+  header > span {
+    color: var(--grey-5);
+    margin-right: var(--spacing-xl);
+    cursor: pointer;
+  }
   .selected {
     color: var(--ink);
   }
@@ -129,31 +130,15 @@
     font-weight: 500;
     font-size: 14px;
     color: var(--grey-7);
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-xl);
   }
 
-  header > span {
-    color: var(--grey-5);
-    margin-right: 20px;
-    cursor: pointer;
-  }
-
-  label {
-    font-weight: 500;
-    font-size: 14px;
-    color: var(--ink);
+  .content {
+    flex: 1 0 auto;
   }
 
   .buttons {
-    position: absolute;
-    bottom: 20px;
     display: grid;
-    width: 260px;
-    gap: 12px;
-  }
-
-  .access-level label {
-    font-weight: normal;
-    color: var(--ink);
+    gap: var(--spacing-m);
   }
 </style>

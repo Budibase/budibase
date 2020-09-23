@@ -22,67 +22,74 @@
   }
 </script>
 
-<header>
-  <i class="ri-stackshare-line" />
-  Create Automation
-</header>
-<div>
-  <Input bind:value={name} label="Name" />
+<div class="container">
+  <header>
+    <i class="ri-stackshare-line" />
+    Create Automation
+  </header>
+  <div class="content">
+    <Input bind:value={name} label="Name" />
+  </div>
+  <footer>
+    <a href="https://docs.budibase.com">
+      <i class="ri-information-line" />
+      <span>Learn about automations</span>
+    </a>
+    <ActionButton secondary on:click={onClosed}>Cancel</ActionButton>
+    <ActionButton disabled={!valid} on:click={createAutomation}>
+      Save
+    </ActionButton>
+  </footer>
 </div>
-<footer>
-  <a href="https://docs.budibase.com">
-    <i class="ri-information-line" />
-    Learn about automations
-  </a>
-  <ActionButton secondary on:click={onClosed}>Cancel</ActionButton>
-  <ActionButton disabled={!valid} on:click={createAutomation}>Save</ActionButton>
-</footer>
 
 <style>
+  .container {
+    padding: var(--spacing-xl);
+  }
+
   header {
-    font-size: 24px;
+    font-size: var(--font-size-xl);
     color: var(--ink);
     font-weight: bold;
-    padding: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
   }
-
   header i {
-    margin-right: 10px;
+    margin-right: var(--spacing-m);
     font-size: 20px;
-    background: var(--blue-light);
-    color: var(--grey-4);
-    padding: 8px;
+    background: var(--purple);
+    color: var(--white);
+    padding: var(--spacing-s);
+    border-radius: var(--border-radius-m);
+    display: inline-block;
   }
 
-  div {
-    padding: 0 30px 30px 30px;
-  }
-
-  label {
-    font-size: 18px;
-    font-weight: 500;
+  .content {
+    padding: var(--spacing-xl) 0;
   }
 
   footer {
     display: grid;
     grid-auto-flow: column;
-    grid-gap: 5px;
+    grid-gap: var(--spacing-m);
     grid-auto-columns: 3fr 1fr 1fr;
-    padding: 20px;
-    background: var(--grey-1);
-    border-radius: 0.5rem;
   }
-
   footer a {
-    color: var(--primary);
+    color: var(--ink);
     font-size: 14px;
     vertical-align: middle;
     display: flex;
     align-items: center;
+    text-decoration: none;
   }
-
+  footer a span {
+    text-decoration: underline;
+  }
   footer i {
     font-size: 20px;
-    margin-right: 10px;
+    margin-right: var(--spacing-m);
+    text-decoration: none;
   }
 </style>
