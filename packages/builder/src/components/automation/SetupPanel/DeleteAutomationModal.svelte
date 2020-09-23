@@ -26,7 +26,8 @@
 </header>
 <div>
   <p>
-    Are you sure you want to delete this automation? This action can't be undone.
+    Are you sure you want to delete this automation? This action can't be
+    undone.
   </p>
 </div>
 <footer>

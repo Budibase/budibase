@@ -7,7 +7,8 @@
   let selected
 
   $: selected = $automationStore.selectedBlock?.id === block.id
-  $: steps = $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
+  $: steps =
+    $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
 </script>
 
