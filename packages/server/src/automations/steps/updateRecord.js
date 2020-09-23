@@ -1,4 +1,5 @@
 const recordController = require("../../api/controllers/record")
+const automationUtils = require("../automationUtils")
 
 module.exports.definition = {
   name: "Update Record",
@@ -57,6 +58,11 @@ module.exports.run = async function({ inputs, instanceId }) {
     return
   }
 
+  inputs.record = await automationUtils.cleanUpRecordById(
+    instanceId,
+    inputs.recordId,
+    inputs.record
+  )
   // clear any falsy properties so that they aren't updated
   for (let propKey of Object.keys(inputs.record)) {
     if (!inputs.record[propKey] || inputs.record[propKey] === "") {
