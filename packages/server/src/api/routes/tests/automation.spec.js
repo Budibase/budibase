@@ -13,7 +13,7 @@ const {
 
 const { delay } = require("./testUtils")
 
-const MAX_RETRIES = 4
+const MAX_RETRIES = 10
 const TEST_AUTOMATION = {
   _id: "Test Automation",
   name: "My Automation",
