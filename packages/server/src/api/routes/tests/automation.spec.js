@@ -170,6 +170,7 @@ describe("/automations", () => {
       expect(res.body.automation.name).toEqual(TEST_AUTOMATION.name)
       // wait for automation to complete in background
       for (let tries = 0; tries < MAX_RETRIES; tries++) {
+        await delay(500)
         let elements = await getAllFromModel(request, app._id, instance._id, model._id)
         // don't test it unless there are values to test
         if (elements.length === 1) {
@@ -178,7 +179,6 @@ describe("/automations", () => {
           expect(elements[0].description).toEqual("TEST")
           return
         }
-        await delay(500)
       }
       throw "Failed to find the records"
     })
