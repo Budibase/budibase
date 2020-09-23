@@ -64,7 +64,14 @@ function walkDir(dirPath, callback) {
   }
 }
 
-async function prepareUploadForS3({ filePath, s3Key, metadata, fileType, s3 }) {
+async function prepareUploadForS3({
+  filePath,
+  s3Key,
+  metadata,
+  fileType,
+  s3,
+  ...file
+}) {
   const contentType =
     fileType || CONTENT_TYPE_MAP[[...filePath.split(".")].pop().toLowerCase()]
   const fileBytes = fs.readFileSync(filePath)
@@ -79,8 +86,7 @@ async function prepareUploadForS3({ filePath, s3Key, metadata, fileType, s3 }) {
     .promise()
 
   return {
-    // TODO: return all the passed in file info
-    ...upload,
+    ...file,
     url: upload.Location,
     key: upload.Key,
   }
@@ -137,7 +143,7 @@ exports.uploadAppAssets = async function({
       const attachmentUpload = prepareUploadForS3({
         fileType: file.type,
         filePath: file.path,
-        s3Key: `assets/${appId}/attachments/${file.name}`,
+        s3Key: `assets/${appId}/attachments/${file.processedFileName}`,
         s3,
         metadata: { accountId },
       })
