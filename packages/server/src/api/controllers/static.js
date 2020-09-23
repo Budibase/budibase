@@ -31,8 +31,6 @@ exports.uploadFile = async function(ctx) {
       ? Array.from(ctx.request.files.file)
       : [ctx.request.files.file]
 
-  let uploads = []
-
   const attachmentsPath = resolve(
     budibaseAppsDir(),
     ctx.user.appId,
@@ -47,7 +45,7 @@ exports.uploadFile = async function(ctx) {
       },
     })
 
-    uploads = files.map(file => {
+    const uploads = files.map(file => {
       const fileExtension = [...file.name.split(".")].pop()
       const processedFileName = `${uuid.v4()}.${fileExtension}`
 
@@ -59,51 +57,63 @@ exports.uploadFile = async function(ctx) {
         s3,
       })
     })
-  } else {
-    uploads = processLocalFileUploads(files, attachmentsPath)
-    // uploads = files.map(file => {
-    //   const fileExtension = [...file.name.split(".")].pop()
-    //   const processedFileName = `${uuid.v4()}.${fileExtension}`
 
-    //   return fileProcessor.process({
-    //     format: file.format,
-    //     type: file.type,
-    //     name: file.name,
-    //     size: file.size,
-    //     path: file.path,
-    //     processedFileName,
-    //     extension: fileExtension,
-    //     outputPath: `${attachmentsPath}/${processedFileName}`,
-    //     url: `/attachments/${processedFileName}`,
-    //   })
-    // })
+    ctx.body = await Promise.all(uploads)
+    return
   }
 
-  const responses = await Promise.all(uploads)
-
-  ctx.body = responses
+  ctx.body = await processLocalFileUploads({
+    files,
+    outputPath: attachmentsPath,
+    instanceId: ctx.user.instanceId,
+  })
 }
 
-function processLocalFileUploads(files, attachmentsPath) {
+async function processLocalFileUploads({ files, outputPath, instanceId }) {
   // create attachments dir if it doesnt exist
-  !fs.existsSync(attachmentsPath) &&
-    fs.mkdirSync(attachmentsPath, { recursive: true })
+  !fs.existsSync(outputPath) && fs.mkdirSync(outputPath, { recursive: true })
 
   const filesToProcess = files.map(file => {
     const fileExtension = [...file.name.split(".")].pop()
     // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`
 
+    console.log(file)
+
     return {
       ...file,
       processedFileName,
       extension: fileExtension,
-      outputPath: join(attachmentsPath, processedFileName),
+      outputPath: join(outputPath, processedFileName),
       url: join("/attachments", processedFileName),
     }
   })
 
-  return filesToProcess.map(fileProcessor.process)
+  const fileProcessOperations = filesToProcess.map(fileProcessor.process)
+
+  const processedFiles = await Promise.all(fileProcessOperations)
+
+  let pendingFileUploads
+  // local document used to track which files need to be uploaded
+  // db.get throws an error if the document doesn't exist
+  // need to use a promise to default
+  const db = new CouchDB(instanceId)
+  await db
+    .get("_local/fileuploads")
+    .then(data => {
+      pendingFileUploads = data
+    })
+    .catch(() => {
+      pendingFileUploads = { _id: "_local/fileuploads", uploads: [] }
+    })
+
+  pendingFileUploads.uploads = [
+    ...processedFiles,
+    ...pendingFileUploads.uploads,
+  ]
+  await db.put(pendingFileUploads)
+
+  return processedFiles
 }
 
 exports.performLocalFileProcessing = async function(ctx) {
@@ -115,55 +125,12 @@ exports.performLocalFileProcessing = async function(ctx) {
     "attachments"
   )
 
-  const fileProcessOperations = processLocalFileUploads(
-    files,
-    processedFileOutputPath
-  )
-
-  // // create attachments dir if it doesnt exist
-  // !fs.existsSync(attachmentsPath) &&
-  //   fs.mkdirSync(attachmentsPath, { recursive: true })
-
-  // const filesToProcess = files.map(file => {
-  //   const fileExtension = [...file.path.split(".")].pop()
-  //   // filenames converted to UUIDs so they are unique
-  //   const processedFileName = `${uuid.v4()}.${fileExtension}`
-
-  //   return {
-  //     ...file,
-  //     processedFileName,
-  //     extension: fileExtension,
-  //     outputPath: join(attachmentsPath, processedFileName),
-  //     url: join("/attachments", processedFileName),
-  //   }
-  // })
-
-  // const fileProcessOperations = filesToProcess.map(fileProcessor.process)
-
   try {
-    const processedFiles = await Promise.all(fileProcessOperations)
-
-    let pendingFileUploads
-    // local document used to track which files need to be uploaded
-    // db.get throws an error if the document doesn't exist
-    // need to use a promise to default
-    const db = new CouchDB(ctx.user.instanceId)
-    await db
-      .get("_local/fileuploads")
-      .then(data => {
-        pendingFileUploads = data
-      })
-      .catch(() => {
-        pendingFileUploads = { _id: "_local/fileuploads", uploads: [] }
-      })
-
-    pendingFileUploads.uploads = [
-      ...processedFiles,
-      ...pendingFileUploads.uploads,
-    ]
-    await db.put(pendingFileUploads)
-
-    ctx.body = processedFiles
+    ctx.body = await processLocalFileUploads({
+      files,
+      outputPath: processedFileOutputPath,
+      instanceId: ctx.user.instanceId,
+    })
   } catch (err) {
     ctx.throw(500, err)
   }
