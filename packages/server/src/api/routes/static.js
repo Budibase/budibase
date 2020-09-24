@@ -26,8 +26,9 @@ router
   .post(
     "/api/attachments/process",
     authorized(BUILDER),
-    controller.processLocalFileUpload
+    controller.performLocalFileProcessing
   )
+  .post("/api/attachments/upload", controller.uploadFile)
   .get("/componentlibrary", controller.serveComponentLibrary)
   .get("/assets/:file*", controller.serveAppAsset)
   .get("/attachments/:file*", controller.serveAttachment)
