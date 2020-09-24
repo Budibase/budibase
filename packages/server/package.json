@@ -59,7 +59,7 @@
     "joi": "^17.2.1",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.7.0",
-    "koa-body": "^4.1.0",
+    "koa-body": "^4.2.0",
     "koa-compress": "^4.0.1",
     "koa-pino-logger": "^3.0.0",
     "koa-send": "^5.0.0",
