@@ -47,13 +47,13 @@
   }
 </script>
 
-<div bind:this={anchor} on:click={dropdown.show}>
+<div class="icon" bind:this={anchor} on:click={dropdown.show}>
   <i class="ri-more-line" />
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   {#if editing}
-    <h5>Edit View</h5>
     <div class="container">
+      <h5>Edit View</h5>
       <Input placeholder="View Name" thin bind:value={view.name} />
     </div>
     <footer>
@@ -79,20 +79,37 @@
 </DropdownMenu>
 
 <style>
-  h5 {
-    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
-    margin: 0;
-    font-weight: 500;
+  div.icon {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  div.icon i {
+    font-size: 16px;
   }
 
   .container {
     padding: var(--spacing-xl);
+    display: grid;
+    grid-gap: var(--spacing-xl);
+  }
+
+  h5 {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  footer {
+    padding: var(--spacing-xl);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: var(--spacing-m);
+    background: var(--grey-1);
   }
 
   ul {
-    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
     list-style: none;
-    padding-left: 0;
     margin: 0;
     padding: var(--spacing-s) 0;
   }
@@ -114,16 +131,6 @@
 
   li:active {
     color: var(--blue);
-  }
-
-  footer {
-    padding: 20px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 20px;
-    background: var(--grey-1);
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-left-radius: 0.5rem;
   }
 
   .button-margin-1 {

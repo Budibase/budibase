@@ -50,24 +50,23 @@
 </DropdownMenu>
 
 <style>
+  .container {
+    padding: var(--spacing-xl);
+    display: grid;
+    grid-gap: var(--spacing-xl);
+  }
+
   h5 {
-    margin-bottom: var(--spacing-l);
+    margin: 0;
     font-weight: 500;
   }
 
-  .container {
-    padding: var(--spacing-l);
-    margin: 0;
-  }
-
   footer {
-    padding: 20px;
+    padding: var(--spacing-xl);
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 20px;
+    gap: var(--spacing-m);
     background: var(--grey-1);
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-left-radius: 0.5rem;
   }
 
   .button-margin-3 {
