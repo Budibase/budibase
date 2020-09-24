@@ -8,7 +8,8 @@
 
   let numPages = 0
 
-  $: numPages = Math.ceil(data.length / ITEMS_PER_PAGE)
+  $: numPages = Math.ceil((data?.length ?? 0) / ITEMS_PER_PAGE)
+  $: console.log(numPages)
 
   const next = () => {
     if (currentPage + 1 === numPages) return
