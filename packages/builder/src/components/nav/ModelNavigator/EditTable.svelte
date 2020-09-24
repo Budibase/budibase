@@ -1,18 +1,17 @@
 <script>
   import { getContext } from "svelte"
   import { backendUiStore } from "builderStore"
+  import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import DeleteTableModal from "components/database/DataTable/modals/DeleteTable.svelte"
-
-  const { open, close } = getContext("simple-modal")
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let table
 
   let anchor
   let dropdown
-
   let editing
+  let confirmDeleteDialog
 
   function showEditor() {
     editing = true
@@ -24,27 +23,22 @@
     close()
   }
 
-  const deleteTable = () => {
-    open(
-      DeleteTableModal,
-      {
-        onClosed: close,
-        table,
-      },
-      { styleContent: { padding: "0" } }
-    )
+  async function deleteTable() {
+    await backendUiStore.actions.models.delete(table)
+    notifier.success("Table deleted")
   }
 
-  function save() {
-    backendUiStore.actions.models.save(table)
+  async function save() {
+    await backendUiStore.actions.models.save(table)
+    notifier.success("Table renamed successfully")
     hideEditor()
   }
 </script>
 
-<div class="icon" bind:this={anchor} on:click={dropdown.show}>
+<div bind:this={anchor} class="icon" on:click={dropdown.show}>
   <i class="ri-more-line" />
 </div>
-<DropdownMenu bind:this={dropdown} {anchor} align="left">
+<DropdownMenu align="left" {anchor} bind:this={dropdown}>
   {#if editing}
     <div class="container">
       <h5>Edit Table</h5>
@@ -64,13 +58,19 @@
         <Icon name="edit" />
         Edit
       </li>
-      <li data-cy="delete-table" on:click={deleteTable}>
+      <li data-cy="delete-table" on:click={() => confirmDeleteDialog.show()}>
         <Icon name="delete" />
         Delete
       </li>
     </ul>
   {/if}
 </DropdownMenu>
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  body={`Are you sure you wish to delete the table '${table.name}'? Your data will be deleted and this action cannot be undone.`}
+  okText="Delete Table"
+  onOk={deleteTable}
+  title="Confirm Delete" />
 
 <style>
   div.icon {
@@ -79,6 +79,7 @@
     justify-content: flex-end;
     align-items: center;
   }
+
   div.icon i {
     font-size: 16px;
   }
