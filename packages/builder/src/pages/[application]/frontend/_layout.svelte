@@ -37,6 +37,7 @@
   const lastPartOfName = c => (c ? last(c.split("/")) : "")
 </script>
 
+<!-- routify:options index=1 -->
 <div class="root">
 
   <div class="ui-nav">

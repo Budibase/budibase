@@ -12,7 +12,7 @@ const controller = {
         !name.startsWith("all") &&
         name !== "by_type" &&
         name !== "by_username" &&
-        name !== "by_workflow_trigger"
+        name !== "by_automation_trigger"
       ) {
         response.push({
           name,
