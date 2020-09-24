@@ -40,7 +40,7 @@
 
 <div bind:this={anchor}>
   <TextButton text small on:click={dropdown.show}>
-    <Icon name="calculate" />
+    <Icon name="download" />
     Export
   </TextButton>
 </div>
