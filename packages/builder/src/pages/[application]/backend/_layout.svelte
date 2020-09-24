@@ -5,6 +5,7 @@
   import ModelNavigator from "components/nav/ModelNavigator/ModelNavigator.svelte"
 </script>
 
+<!-- routify:options index=1 -->
 <div class="root">
   <div class="nav">
     <ModelNavigator />

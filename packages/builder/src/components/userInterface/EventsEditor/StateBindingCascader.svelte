@@ -3,7 +3,7 @@
   import { find, map, keys, reduce, keyBy } from "lodash/fp"
   import { pipe } from "components/common/core"
   import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
-  import { store, workflowStore } from "builderStore"
+  import { store, automationStore } from "builderStore"
   import { ArrowDownIcon } from "components/common/Icons/"
   import { createEventDispatcher } from "svelte"
 
@@ -18,14 +18,14 @@
 </script>
 
 <div class="handler-option">
-  {#if parameter.name === 'workflow'}
+  {#if parameter.name === 'automation'}
     <span>{parameter.name}</span>
   {/if}
-  {#if parameter.name === 'workflow'}
+  {#if parameter.name === 'automation'}
     <Select on:change bind:value={parameter.value}>
       <option value="" />
-      {#each $workflowStore.workflows.filter(wf => wf.live) as workflow}
-        <option value={workflow._id}>{workflow.name}</option>
+      {#each $automationStore.automations.filter(wf => wf.live) as automation}
+        <option value={automation._id}>{automation.name}</option>
       {/each}
     </Select>
   {:else if parameter.name === 'url'}

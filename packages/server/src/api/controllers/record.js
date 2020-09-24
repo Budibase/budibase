@@ -3,13 +3,18 @@ const validateJs = require("validate.js")
 const newid = require("../../db/newid")
 
 function emitEvent(eventType, ctx, record) {
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emit(eventType, {
-      args: {
-        record,
-      },
-      instanceId: ctx.user.instanceId,
-    })
+  let event = {
+    record,
+    instanceId: ctx.user.instanceId,
+  }
+  // add syntactic sugar for mustache later
+  if (record._id) {
+    event.id = record._id
+  }
+  if (record._rev) {
+    event.revision = record._rev
+  }
+  ctx.eventEmitter && ctx.eventEmitter.emit(eventType, event)
 }
 
 validateJs.extend(validateJs.validators.datetime, {
@@ -53,7 +58,6 @@ exports.patch = async function(ctx) {
   ctx.body = record
   ctx.status = 200
   ctx.message = `${model.name} updated successfully.`
-  return
 }
 
 exports.save = async function(ctx) {
@@ -179,10 +183,13 @@ exports.destroy = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const record = await db.get(ctx.params.recordId)
   if (record.modelId !== ctx.params.modelId) {
-    ctx.throw(400, "Supplied modelId doe not match the record's modelId")
+    ctx.throw(400, "Supplied modelId doesn't match the record's modelId")
     return
   }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
+  ctx.status = 200
+  // for automations
+  ctx.record = record
   emitEvent(`record:delete`, ctx, record)
 }
 

@@ -50,6 +50,7 @@
     "bcryptjs": "^2.4.3",
     "chmodr": "^1.2.0",
     "dotenv": "^8.2.0",
+    "download": "^8.0.0",
     "electron-is-dev": "^1.2.0",
     "electron-unhandled": "^3.0.2",
     "electron-updater": "^4.3.1",
