@@ -39,6 +39,7 @@
     "@budibase/bbui": "^1.34.6",
     "@budibase/svelte-ag-grid": "^0.0.6",
     "@fortawesome/fontawesome-free": "^5.14.0",
+    "@svelteschool/svelte-forms": "^0.7.0",
     "britecharts": "^2.16.1",
     "d3-selection": "^1.4.2",
     "fast-sort": "^2.2.0",
