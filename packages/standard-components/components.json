@@ -199,9 +199,15 @@
 	"icon": {
 		"description": "A HTML icon tag",
 		"props": {
-			"icon": "string",	
-			"size": {"type": "string", "default": "fa-lg"},
-			"color": {"type": "string", "default": "#000"}
+			"icon": "string",
+			"size": {
+				"type": "string",
+				"default": "fa-lg"
+			},
+			"color": {
+				"type": "string",
+				"default": "#000"
+			}
 		}
 	},
 	"datatable": {
@@ -213,6 +219,13 @@
 			"borderColor": "string",
 			"backgroundColor": "string",
 			"color": "string"
+		}
+	},
+	"datagrid": {
+		"description": "a datagrid component with functionality to add, remove and edit rows.",
+		"data": true,
+		"props": {
+			"datasource": "models"
 		}
 	},
 	"dataform": {
@@ -535,19 +548,34 @@
 			"height": "number",
 			"axisTimeCombinations": "string",
 			"color": "string",
-			"grid": {"type":"string", "default": "horizontal"},
+			"grid": {
+				"type": "string",
+				"default": "horizontal"
+			},
 			"aspectRatio": "number",
 			"dateLabel": "string",
-			"isAnimated": {"type": "bool", "default": true},
+			"isAnimated": {
+				"type": "bool",
+				"default": true
+			},
 			"lineCurve": "string",
 			"locale": "string",
 			"numberFormat": "string",
-			"shouldShowAllDataPoints": {"type": "bool", "default": true},
+			"shouldShowAllDataPoints": {
+				"type": "bool",
+				"default": true
+			},
 			"topicLabel": "string",
 			"valueLabel": "string",
-			"xAxisValueType": {"type":"string", "default": "date"},
+			"xAxisValueType": {
+				"type": "string",
+				"default": "date"
+			},
 			"xAxisScale": "string",
-			"xAxisFormat": {"type":"string", "default": "custom"},
+			"xAxisFormat": {
+				"type": "string",
+				"default": "custom"
+			},
 			"xAxisCustomFormat": "string",
 			"xAxisLabel": "string",
 			"yAxisLabel": "string",

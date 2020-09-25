@@ -314,6 +314,23 @@ export default {
           children: [],
         },
         {
+          name: "Grid",
+          _component: "@budibase/standard-components/datagrid",
+          description: "a datagrid component with functionality to add, remove and edit rows.",
+          icon: "ri-file-list-line",
+          properties: {
+            design: { ...all },
+            settings: [
+              {
+                label: "Source",
+                key: "datasource",
+                control: ModelViewSelect,
+              },
+            ],
+          },
+          children: [],
+        },
+        {
           _component: "@budibase/standard-components/stackedlist",
           name: "Stacked List",
           description:
