@@ -31,7 +31,7 @@
   <Button primary wide on:click={dropdown.show}>Create New Table</Button>
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
-  <div class="container">
+  <div class="actions">
     <h5>Create Table</h5>
     <Input
       data-cy="table-name-input"
@@ -46,7 +46,7 @@
 </DropdownMenu>
 
 <style>
-  .container {
+  .actions {
     padding: var(--spacing-xl);
     display: grid;
     grid-gap: var(--spacing-xl);

@@ -26,11 +26,7 @@
   $: viewModel = $backendUiStore.models.find(
     ({ _id }) => _id === $backendUiStore.selectedView.modelId
   )
-  $: fields =
-    viewModel &&
-    Object.keys(viewModel.schema).filter(
-      field => viewModel.schema[field].type === "number"
-    )
+  $: fields = viewModel && Object.keys(viewModel.schema)
 
   function saveView() {
     backendUiStore.actions.views.save(view)
@@ -40,24 +36,17 @@
 </script>
 
 <div bind:this={anchor}>
-  <TextButton text small on:click={dropdown.show} active={!!view.field}>
-    <Icon name="calculate" />
-    Calculate
+  <TextButton text small active={!!view.groupBy} on:click={dropdown.show}>
+    <Icon name="group" />
+    Group By
   </TextButton>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
-  <div class="container">
-    <h5>Calculate</h5>
+  <div class="actions">
+    <h5>Group By</h5>
     <div class="input-group-row">
-      <p>The</p>
-      <Select secondary thin bind:value={view.calculation}>
-        <option value="">Choose an option</option>
-        {#each CALCULATIONS as calculation}
-          <option value={calculation.key}>{calculation.name}</option>
-        {/each}
-      </Select>
-      <p>of</p>
-      <Select secondary thin bind:value={view.field}>
+      <p>Group By</p>
+      <Select secondary thin bind:value={view.groupBy}>
         <option value="">Choose an option</option>
         {#each fields as field}
           <option value={field}>{field}</option>
@@ -72,7 +61,7 @@
 </Popover>
 
 <style>
-  .container {
+  .actions {
     display: grid;
     grid-gap: var(--spacing-xl);
   }
@@ -90,7 +79,7 @@
 
   .input-group-row {
     display: grid;
-    grid-template-columns: 50px 1fr 20px 1fr;
+    grid-template-columns: 75px 1fr;
     gap: var(--spacing-s);
     align-items: center;
   }

@@ -48,7 +48,7 @@
 </div>
 <DropdownMenu align="left" {anchor} bind:this={dropdown}>
   {#if editing}
-    <div class="container">
+    <div class="actions">
       <h5>Edit View</h5>
       <Input placeholder="View Name" thin bind:value={view.name} />
       <footer>
@@ -88,7 +88,7 @@
     font-size: 16px;
   }
 
-  .container {
+  .actions {
     padding: var(--spacing-xl);
     display: grid;
     grid-gap: var(--spacing-xl);

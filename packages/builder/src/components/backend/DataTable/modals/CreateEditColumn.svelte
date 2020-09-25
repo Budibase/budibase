@@ -52,7 +52,7 @@
   }
 </script>
 
-<div class="container">
+<div class="actions">
   <Input placeholder="Name" thin bind:value={field.name} />
 
   <Select
@@ -110,7 +110,7 @@
 </div>
 
 <style>
-  .container {
+  .actions {
     padding: var(--spacing-xl);
     display: grid;
     grid-gap: var(--spacing-xl);

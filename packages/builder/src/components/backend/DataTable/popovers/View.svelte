@@ -48,7 +48,7 @@
   </TextButton>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
-  <div class="container">
+  <div class="actions">
     <h5>Create View</h5>
     <Input placeholder="View Name" thin bind:value={name} />
     <div class="footer">
@@ -64,7 +64,7 @@
     font-weight: 500;
   }
 
-  .container {
+  .actions {
     display: grid;
     grid-gap: var(--spacing-xl);
   }
