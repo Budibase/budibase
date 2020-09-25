@@ -74,9 +74,8 @@
   .menu {
     z-index: 100000;
     overflow: visible;
-    padding: 12px 0px;
-    border-radius: 5px;
-    margin: 0;
+    padding: var(--spacing-xs) 0;
+    border-radius: var(--border-radius-s);
   }
 
   .menu li {
@@ -92,7 +91,7 @@
   .item {
     display: flex;
     align-items: center;
-    font-size: 14px;
+    font-size: var(--font-size-s);
   }
 
   .icon {
@@ -101,7 +100,7 @@
 
   .menu li:not(.disabled) {
     cursor: pointer;
-    color: var(--grey-7);
+    color: var(--ink);
   }
 
   .menu li:not(.disabled):hover {

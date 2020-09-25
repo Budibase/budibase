@@ -4,6 +4,8 @@
   import PageLayout from "components/userInterface/PageLayout.svelte"
   import PagesList from "components/userInterface/PagesList.svelte"
   import NewScreen from "components/userInterface/NewScreen.svelte"
+  import { Button } from "@budibase/bbui"
+  import { Spacer } from "@budibase/bbui"
 
   const newScreen = () => {
     newScreenPicker.show()
@@ -14,8 +16,9 @@
 
 <PagesList />
 
-<button class="newscreen" on:click={newScreen}>Create New Screen</button>
-
+<Spacer medium />
+<Button primary wide on:click={newScreen}>Create New Screen</Button>
+<Spacer medium />
 <PageLayout layout={$store.pages[$store.currentPageName]} />
 
 <div class="nav-items-container">

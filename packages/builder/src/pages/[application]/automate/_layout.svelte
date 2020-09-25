@@ -34,6 +34,6 @@
   .nav {
     overflow-y: auto;
     background: var(--white);
-    padding: var(--spacing-xl);
+    padding: var(--spacing-xl) var(--spacing-xl);
   }
 </style>

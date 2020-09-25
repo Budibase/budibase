@@ -1,6 +1,14 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { TextArea, Label, Body, Button, Popover } from "@budibase/bbui"
+  import {
+    TextArea,
+    Label,
+    Heading,
+    Body,
+    Spacer,
+    Button,
+    Popover,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
@@ -24,7 +32,7 @@
       <div class="bindings__wrapper">
         <div class="bindings__list">
           {#each categories as [categoryName, bindings]}
-            <Label small>{categoryName}</Label>
+            <Heading extraSmall>{categoryName}</Heading>
             {#each bindings as binding}
               <div class="binding" on:click={() => onClickBinding(binding)}>
                 <span class="binding__label">{binding.label}</span>
@@ -38,14 +46,16 @@
       </div>
     </div>
     <div class="editor">
-      <Label large>Data binding</Label>
-      <Body small>
+      <Heading large>Data binding</Heading>
+      <Spacer small />
+      <Body small lh black>
         Binding connects one piece of data to another and makes it dynamic.
         Click the objects on the left to add them to the textbox.
       </Body>
+      <Spacer medium />
       <TextArea thin bind:value placeholder="..." />
       <div class="controls">
-        <a href="#">
+        <a href="https://docs.budibase.com">
           <Body small>Learn more about binding</Body>
         </a>
         <Button on:click={popover.hide} primary>Done</Button>
