@@ -66,6 +66,7 @@ exports.create = async function(ctx) {
     userInstanceMap: {},
     componentLibraries: ["@budibase/standard-components"],
     name: ctx.request.body.name,
+    template: ctx.request.body.template,
   }
 
   const { rev } = await db.put(newApplication)
@@ -75,12 +76,17 @@ exports.create = async function(ctx) {
       appId: newApplication._id,
     },
     request: {
-      body: { name: `dev-${clientId}` },
+      body: {
+        name: `dev-${clientId}`,
+        template: ctx.request.body.template,
+      },
     },
   }
+  // TODO: pass template into here from create InstCtx
   await instanceController.create(createInstCtx)
   newApplication.instances.push(createInstCtx.body)
 
+  // TODO: if template is passed, create the app package from the template and seed the instance database
   if (process.env.NODE_ENV !== "jest") {
     const newAppFolder = await createEmptyAppPackage(ctx, newApplication)
     await downloadExtractComponentLibraries(newAppFolder)
@@ -153,6 +159,13 @@ const createEmptyAppPackage = async (ctx, app) => {
   await updateJsonFile(join(appsFolder, app._id, "package.json"), {
     name: npmFriendlyAppName(app.name),
   })
+
+  // Copy the frontend page definition files from the template directory
+  // if this app is being created from a template.
+  if (app.template) {
+    const templatePageDefinitions = join(appsFolder, app.template.name, "pages")
+    await copy(templatePageDefinitions, join(appsFolder, app._id, "pages"))
+  }
 
   const mainJson = await updateJsonFile(
     join(appsFolder, app._id, "pages", "main", "page.json"),

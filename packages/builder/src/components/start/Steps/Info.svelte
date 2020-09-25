@@ -1,9 +1,15 @@
 <script>
   import { Input } from "@budibase/bbui"
   export let validationErrors
+  export let template
 
   let blurred = { appName: false }
 </script>
+
+{#if template}
+  <h2>Selected Template</h2>
+  <h4>{template.name}</h4>
+{/if}
 
 <h2>Create your web app</h2>
 <div class="container">
