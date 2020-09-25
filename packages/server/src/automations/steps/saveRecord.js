@@ -2,10 +2,10 @@ const recordController = require("../../api/controllers/record")
 const automationUtils = require("../automationUtils")
 
 module.exports.definition = {
-  name: "Save Record",
-  tagline: "Save a {{inputs.enriched.model.name}} record",
+  name: "Create Row",
+  tagline: "Create a {{inputs.enriched.model.name}} row",
   icon: "ri-save-3-fill",
-  description: "Save a record to your database",
+  description: "Add a row to your database",
   type: "ACTION",
   stepId: "SAVE_RECORD",
   inputs: {},
@@ -32,7 +32,7 @@ module.exports.definition = {
         record: {
           type: "object",
           customType: "record",
-          description: "The new record",
+          description: "The new row",
         },
         response: {
           type: "object",
@@ -44,11 +44,11 @@ module.exports.definition = {
         },
         id: {
           type: "string",
-          description: "The identifier of the new record",
+          description: "The identifier of the new row",
         },
         revision: {
           type: "string",
-          description: "The revision of the new record",
+          description: "The revision of the new row",
         },
       },
       required: ["success", "id", "revision"],
