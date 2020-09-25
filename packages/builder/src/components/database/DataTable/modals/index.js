@@ -1,2 +1,3 @@
-export { default as DeleteRecordModal } from "./DeleteRecord.svelte"
 export { default as CreateEditRecordModal } from "./CreateEditRecord.svelte"
+export { default as CreateEditColumnModal } from "./CreateEditColumn.svelte"
+export { default as RecordFieldControlModal } from "./RecordFieldControl.svelte"

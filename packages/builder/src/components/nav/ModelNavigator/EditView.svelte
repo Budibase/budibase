@@ -51,15 +51,11 @@
     <div class="container">
       <h5>Edit View</h5>
       <Input placeholder="View Name" thin bind:value={view.name} />
-    </div>
-    <footer>
-      <div class="button-margin-3">
+      <footer>
         <Button secondary on:click={hideEditor}>Cancel</Button>
-      </div>
-      <div class="button-margin-4">
         <Button primary on:click={save}>Save</Button>
-      </div>
-    </footer>
+      </footer>
+    </div>
   {:else}
     <ul>
       <li on:click={showEditor}>
@@ -96,6 +92,7 @@
     padding: var(--spacing-xl);
     display: grid;
     grid-gap: var(--spacing-xl);
+    min-width: 400px;
   }
 
   h5 {
@@ -104,11 +101,9 @@
   }
 
   footer {
-    padding: var(--spacing-xl);
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    display: flex;
+    justify-content: flex-end;
     gap: var(--spacing-m);
-    background: var(--grey-1);
   }
 
   ul {
@@ -134,20 +129,5 @@
 
   li:active {
     color: var(--blue);
-  }
-
-  .button-margin-1 {
-    grid-column-start: 1;
-    display: grid;
-  }
-
-  .button-margin-3 {
-    grid-column-start: 3;
-    display: grid;
-  }
-
-  .button-margin-4 {
-    grid-column-start: 4;
-    display: grid;
   }
 </style>

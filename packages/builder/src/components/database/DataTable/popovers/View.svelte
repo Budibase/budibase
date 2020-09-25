@@ -48,32 +48,30 @@
   </TextButton>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
-  <h5>Create View</h5>
-  <div class="input-group-column">
+  <div class="container">
+    <h5>Create View</h5>
     <Input placeholder="View Name" thin bind:value={name} />
-  </div>
-  <div class="button-group">
-    <Button secondary on:click={dropdown.hide}>Cancel</Button>
-    <Button primary on:click={saveView}>Save View</Button>
+    <div class="footer">
+      <Button secondary on:click={dropdown.hide}>Cancel</Button>
+      <Button primary on:click={saveView}>Save View</Button>
+    </div>
   </div>
 </Popover>
 
 <style>
   h5 {
-    margin-bottom: var(--spacing-l);
+    margin: 0;
     font-weight: 500;
   }
 
-  .button-group {
-    margin-top: var(--spacing-l);
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-s);
+  .container {
+    display: grid;
+    grid-gap: var(--spacing-xl);
   }
 
-  .input-group-column {
+  .footer {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
+    justify-content: flex-end;
+    gap: var(--spacing-m);
   }
 </style>
