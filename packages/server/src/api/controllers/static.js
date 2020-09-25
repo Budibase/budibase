@@ -138,6 +138,8 @@ exports.performLocalFileProcessing = async function(ctx) {
 exports.serveApp = async function(ctx) {
   const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated"
 
+  console.log(ctx.user)
+
   // default to homedir
   const appPath = resolve(
     budibaseAppsDir(),

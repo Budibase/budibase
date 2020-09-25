@@ -8,6 +8,7 @@
   import { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
+  import TemplateList from "components/start/TemplateList.svelte"
   import { Button } from "@budibase/bbui"
 
   let promise = getApps()
@@ -44,11 +45,12 @@
   // Handle create app modal
   const { open } = getContext("simple-modal")
 
-  const showCreateAppModal = () => {
+  const showCreateAppModal = template => {
     open(
       CreateAppModal,
       {
         hasKey,
+        template,
       },
       {
         closeButton: false,
@@ -65,7 +67,7 @@
 
 <div class="header">
   <div class="welcome">Welcome to the Budibase Beta</div>
-  <Button primary purple on:click={showCreateAppModal}>
+  <Button primary purple on:click={() => showCreateAppModal()}>
     Create New Web App
   </Button>
 </div>
@@ -82,6 +84,8 @@
     <Spinner />
   </div>
 {:then result}
+  <!-- TODO: organise async for template list - make sure the template list is loaded when the app list is being loaded  -->
+  <TemplateList onSelect={showCreateAppModal} />
   <AppList apps={result} />
 {:catch err}
   <h1 style="color:red">{err}</h1>
