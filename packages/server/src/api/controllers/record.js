@@ -2,21 +2,6 @@ const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const newid = require("../../db/newid")
 
-function emitEvent(eventType, ctx, record) {
-  let event = {
-    record,
-    instanceId: ctx.user.instanceId,
-  }
-  // add syntactic sugar for mustache later
-  if (record._id) {
-    event.id = record._id
-  }
-  if (record._rev) {
-    event.revision = record._rev
-  }
-  ctx.eventEmitter && ctx.eventEmitter.emit(eventType, event)
-}
-
 validateJs.extend(validateJs.validators.datetime, {
   parse: function(value) {
     return new Date(value).getTime()
@@ -28,7 +13,8 @@ validateJs.extend(validateJs.validators.datetime, {
 })
 
 exports.patch = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const instanceId = ctx.user.instanceId
+  const db = new CouchDB(instanceId)
   const record = await db.get(ctx.params.id)
   const model = await db.get(record.modelId)
   const patchfields = ctx.request.body
@@ -55,13 +41,16 @@ exports.patch = async function(ctx) {
   const response = await db.put(record)
   record._rev = response.rev
   record.type = "record"
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRecord(`record:update`, instanceId, record, model)
   ctx.body = record
   ctx.status = 200
   ctx.message = `${model.name} updated successfully.`
 }
 
 exports.save = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const instanceId = ctx.user.instanceId
+  const db = new CouchDB(instanceId)
   const record = ctx.request.body
   record.modelId = ctx.params.modelId
 
@@ -124,7 +113,8 @@ exports.save = async function(ctx) {
     }
   }
 
-  emitEvent(`record:save`, ctx, record)
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRecord(`record:save`, instanceId, record, model)
   ctx.body = record
   ctx.status = 200
   ctx.message = `${model.name} created successfully`
@@ -180,7 +170,8 @@ exports.find = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const instanceId = ctx.user.instanceId
+  const db = new CouchDB()
   const record = await db.get(ctx.params.recordId)
   if (record.modelId !== ctx.params.modelId) {
     ctx.throw(400, "Supplied modelId doesn't match the record's modelId")
@@ -188,9 +179,10 @@ exports.destroy = async function(ctx) {
   }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
   ctx.status = 200
-  // for automations
+  // for automations include the record that was deleted
   ctx.record = record
-  emitEvent(`record:delete`, ctx, record)
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRecord(`record:delete`, instanceId, record)
 }
 
 exports.validate = async function(ctx) {

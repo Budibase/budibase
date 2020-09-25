@@ -1,8 +1,8 @@
 const CouchDB = require("../db")
 const emitter = require("../events/index")
-const InMemoryQueue = require("./queue/inMemoryQueue")
+const InMemoryQueue = require("../utilities/queue/inMemoryQueue")
 
-let automationQueue = new InMemoryQueue()
+let automationQueue = new InMemoryQueue("automationQueue")
 
 const FAKE_STRING = "TEST"
 const FAKE_BOOL = false
