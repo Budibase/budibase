@@ -10,17 +10,17 @@
     Heading,
   } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import CreateEditRecord from "../modals/CreateEditRecord.svelte"
-  import DeleteRecordModal from "../modals/DeleteRecord.svelte"
-
-  const { open, close } = getContext("simple-modal")
+  import { CreateEditRecordModal } from "../modals"
+  import * as api from "../api"
+  import { notifier } from "builderStore/store/notifications"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let row
 
   let anchor
   let dropdown
-
   let editing
+  let confirmDeleteDialog
 
   function showEditor() {
     editing = true
@@ -32,15 +32,11 @@
     close()
   }
 
-  const deleteRow = () => {
-    open(
-      DeleteRecordModal,
-      {
-        onClosed: hideEditor,
-        record: row,
-      },
-      { styleContent: { padding: "0" } }
-    )
+  async function deleteRow() {
+    await api.deleteRecord(row)
+    notifier.success("Record deleted")
+    backendUiStore.actions.records.delete(row)
+    hideEditor()
   }
 </script>
 
@@ -50,20 +46,26 @@
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   {#if editing}
     <h5>Edit Row</h5>
-    <CreateEditRecord onClosed={hideEditor} record={row} />
+    <CreateEditRecordModal onClosed={hideEditor} record={row} />
   {:else}
     <ul>
       <li data-cy="edit-row" on:click={showEditor}>
         <Icon name="edit" />
         <span>Edit</span>
       </li>
-      <li data-cy="delete-row" on:click={deleteRow}>
+      <li data-cy="delete-row" on:click={() => confirmDeleteDialog.show()}>
         <Icon name="delete" />
         <span>Delete</span>
       </li>
     </ul>
   {/if}
 </DropdownMenu>
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  body={`Are you sure you wish to delete this row? Your data will be deleted and this action cannot be undone.`}
+  okText="Delete Row"
+  onOk={deleteRow}
+  title="Confirm Delete" />
 
 <style>
   .ri-more-line:hover {
@@ -91,6 +93,7 @@
     margin: auto 0px;
     align-items: center;
     cursor: pointer;
+    font-size: var(--font-size-xs);
   }
 
   li:hover {

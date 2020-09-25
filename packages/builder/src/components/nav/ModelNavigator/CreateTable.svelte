@@ -38,15 +38,11 @@
       placeholder="Table Name"
       thin
       bind:value={name} />
-  </div>
-  <footer>
-    <div class="button-margin-3">
+    <footer>
       <Button secondary on:click={onClosed}>Cancel</Button>
-    </div>
-    <div class="button-margin-4">
       <Button primary on:click={saveTable}>Save</Button>
-    </div>
-  </footer>
+    </footer>
+  </div>
 </DropdownMenu>
 
 <style>
@@ -54,6 +50,7 @@
     padding: var(--spacing-xl);
     display: grid;
     grid-gap: var(--spacing-xl);
+    min-width: 400px;
   }
 
   h5 {
@@ -62,20 +59,8 @@
   }
 
   footer {
-    padding: var(--spacing-xl);
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    display: flex;
+    justify-content: flex-end;
     gap: var(--spacing-m);
-    background: var(--grey-1);
-  }
-
-  .button-margin-3 {
-    grid-column-start: 3;
-    display: grid;
-  }
-
-  .button-margin-4 {
-    grid-column-start: 4;
-    display: grid;
   }
 </style>
