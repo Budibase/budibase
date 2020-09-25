@@ -30,7 +30,7 @@
   {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
     <div class="hierarchy">
       <div class="components-list-container">
-        <div class="title">Tables</div>
+        <h5>Tables</h5>
         <CreateTablePopover />
         <div class="hierarchy-items-container">
           {#each $backendUiStore.models as model}
@@ -63,9 +63,10 @@
 </div>
 
 <style>
-  .title {
+  h5 {
     font-size: 18px;
     font-weight: 600;
+    margin-top: 0;
     margin-bottom: var(--spacing-xl);
   }
 

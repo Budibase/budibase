@@ -1,8 +1,8 @@
 <script>
   import { getContext } from "svelte"
   import { store, backendUiStore } from "builderStore"
-  import * as api from "components/database/DataTable/api"
-  import ModelNavigator from "components/nav/ModelNavigator/ModelNavigator.svelte"
+  import * as api from "components/backend/DataTable/api"
+  import ModelNavigator from "components/backend/ModelNavigator/ModelNavigator.svelte"
 </script>
 
 <!-- routify:options index=1 -->

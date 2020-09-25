@@ -95,7 +95,7 @@
   </TextButton>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
-  <div class="container">
+  <div class="actions">
     <h5>Filter</h5>
     {#if view.filters.length}
       <div class="input-group-row">
@@ -150,7 +150,7 @@
 </Popover>
 
 <style>
-  .container {
+  .actions {
     display: grid;
     grid-gap: var(--spacing-xl);
   }

@@ -40,7 +40,7 @@
   }
 </script>
 
-<div class="container">
+<div class="actions">
   <ErrorsBox {errors} />
   <form on:submit|preventDefault>
     {#each modelSchema as [key, meta]}
@@ -63,7 +63,7 @@
 </div>
 
 <style>
-  .container {
+  .actions {
     padding: var(--spacing-xl);
     display: grid;
     grid-gap: var(--spacing-xl);
