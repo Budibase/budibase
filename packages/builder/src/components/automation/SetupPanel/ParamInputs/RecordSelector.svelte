@@ -28,9 +28,9 @@
 </div>
 
 {#if schemaFields.length}
-  <div class="bb-margin-xl block-field">
+  <div class="schema-fields">
     {#each schemaFields as [field, schema]}
-      <div class="bb-margin-xl capitalise">
+      <div class="capitalise">
         {#if schemaHasOptions(schema)}
           <div class="field-label">{field}</div>
           <Select thin secondary bind:value={value[field]}>
@@ -65,5 +65,11 @@
   .capitalise :global(label),
   .field-label {
     text-transform: capitalize;
+  }
+
+  .schema-fields {
+    display: grid;
+    grid-gap: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
   }
 </style>

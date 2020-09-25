@@ -2,10 +2,10 @@ const recordController = require("../../api/controllers/record")
 const automationUtils = require("../automationUtils")
 
 module.exports.definition = {
-  name: "Update Record",
+  name: "Update Row",
   tagline: "Update a {{inputs.enriched.model.name}} record",
   icon: "ri-refresh-fill",
-  description: "Update a record to your database",
+  description: "Update a row in your database",
   type: "ACTION",
   stepId: "UPDATE_RECORD",
   inputs: {},
@@ -15,11 +15,11 @@ module.exports.definition = {
         record: {
           type: "object",
           customType: "record",
-          title: "Record",
+          title: "Table",
         },
         recordId: {
           type: "string",
-          title: "Record ID",
+          title: "Row ID",
         },
       },
       required: ["record", "recordId"],
