@@ -1,9 +1,10 @@
 <script>
-  import fetchData from "./fetchData.js"
+  import fetchData from "../fetchData.js"
   import { isEmpty } from "lodash/fp"
   import { onMount } from "svelte"
 
   import AgGrid from "@budibase/svelte-ag-grid"
+  import InputForm from "./InputForm.svelte"
 
   export let datasource = {}
 
@@ -39,10 +40,26 @@
 
     return false
   }
+
+  const handleSubmit = e => {
+    // Send off data here and update to display in grid component
+    console.log("Submitting:", e.detail)
+  }
 </script>
 
-{#if dataLoaded}
-  <AgGrid bind:data {columnDefs} />
-{/if}
+<div class="container">
+  {#if dataLoaded}
+    <AgGrid bind:data {columnDefs} />
+    <InputForm fields={columnDefs} on:submit={handleSubmit} />
+  {/if}
+</div>
 
-<pre>{JSON.stringify(data, 0, 2)}</pre>
+<style>
+  .container {
+    --grid-height: 400px;
+  }
+  .container :global(form) {
+    display: grid;
+    grid-template-columns: repeat(2);
+  }
+</style>
