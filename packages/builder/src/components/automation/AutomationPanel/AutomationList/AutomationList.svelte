@@ -26,7 +26,7 @@
 </script>
 
 <section>
-  <Button purple wide on:click={newAutomation}>Create New Automation</Button>
+  <Button primary wide on:click={newAutomation}>Create New Automation</Button>
   <ul>
     {#each $automationStore.automations as automation}
       <li
