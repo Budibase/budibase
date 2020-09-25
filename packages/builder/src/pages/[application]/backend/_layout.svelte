@@ -25,7 +25,8 @@
   }
   .content {
     flex: 1 1 auto;
-    margin: var(--spacing-xl) 40px;
+    padding: var(--spacing-xl) 40px;
+    overflow-y: auto;
   }
   .nav {
     overflow-y: auto;
