@@ -26,8 +26,10 @@
     const { schema } = await jsonModel.json()
     if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
-      columnDefs = Object.keys(schema).map(key => {
+      columnDefs = Object.keys(schema).map((key, i) => {
         return {
+          headerCheckboxSelection: i === 0,
+          checkboxSelection: i === 0,
           valueSetter: setters.get(schema[key].type),
           headerName: key.charAt(0).toUpperCase() + key.slice(1), // Capitalise first letter
           field: key,
