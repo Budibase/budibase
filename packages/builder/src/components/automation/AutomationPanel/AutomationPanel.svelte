@@ -2,11 +2,13 @@
   import { automationStore } from "builderStore"
   import AutomationList from "./AutomationList/AutomationList.svelte"
   import BlockList from "./BlockList/BlockList.svelte"
+  import { Heading } from "@budibase/bbui"
+  import { Spacer } from "@budibase/bbui"
 
   let selectedTab = "AUTOMATIONS"
 </script>
 
-<header>
+<Heading black small>
   <span
     data-cy="automation-list"
     class="hoverable automation-header"
@@ -23,7 +25,8 @@
       Steps
     </span>
   {/if}
-</header>
+</Heading>
+<Spacer medium />
 {#if selectedTab === 'AUTOMATIONS'}
   <AutomationList />
 {:else if selectedTab === 'ADD'}
