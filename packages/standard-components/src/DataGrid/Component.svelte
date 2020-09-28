@@ -1,4 +1,10 @@
 <script>
+  // Import valueSetters
+  import { number } from "./valueSetters"
+  import { booleanRenderer } from "./customRenderer"
+
+  const setters = new Map([["number", number]])
+
   import fetchData from "../fetchData.js"
   import { isEmpty } from "lodash/fp"
   import { onMount } from "svelte"
@@ -17,17 +23,21 @@
     console.log(datasource)
     const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
     const { schema } = await jsonModel.json()
+    console.log(schema)
     if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
       if (data) {
         // Construct column definitions
         columnDefs = Object.keys(schema).map(key => {
           return {
+            valueSetter: setters.get(schema[key].type),
             headerName: key.charAt(0).toUpperCase() + key.slice(1), // Capitalise first letter
             field: key,
             hide: shouldHideField(key),
             sortable: true,
-            editable: true,
+            editable: schema[key].type !== "boolean",
+            cellRenderer:
+              schema[key].type === "boolean" ? booleanRenderer : null,
           }
         })
       }
