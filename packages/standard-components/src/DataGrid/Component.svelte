@@ -16,13 +16,12 @@
   onMount(async () => {
     console.log(datasource)
     const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
-    const model = await jsonModel.json()
-    console.log(model)
+    const { schema } = await jsonModel.json()
     if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
       if (data) {
         // Construct column definitions
-        columnDefs = Object.keys(data[0]).map(key => {
+        columnDefs = Object.keys(schema).map(key => {
           return {
             headerName: key.charAt(0).toUpperCase() + key.slice(1), // Capitalise first letter
             field: key,
