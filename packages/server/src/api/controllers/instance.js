@@ -3,6 +3,7 @@ const CouchDB = require("../../db")
 const client = require("../../db/clientDb")
 const newid = require("../../db/newid")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
+const { downloadTemplate } = require("../../utilities/templates")
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name
@@ -54,13 +55,10 @@ exports.create = async function(ctx) {
   budibaseApp.instances.push(instance)
   await clientDb.put(budibaseApp)
 
-  // TODO: download the chosen template tar file from s3 and unpack it
   // replicate the template data to the instance DB
-  // TODO: templates should be downloaded to .budibase/templates/something
   if (template) {
-    const dbDumpReadStream = fs.createReadStream(
-      `${budibaseAppsDir()}/${template.name}/dump.txt`
-    )
+    const templatePath = await downloadTemplate(...template.key.split("/"))
+    const dbDumpReadStream = fs.createReadStream(`${templatePath}/db/dump.txt`)
     const { ok } = await db.load(dbDumpReadStream)
     if (!ok) {
       ctx.throw(500, "Error loading database dump from template.")
