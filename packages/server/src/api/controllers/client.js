@@ -25,7 +25,7 @@ const getClientId = ctx => {
     (ctx.body && ctx.body.clientId) ||
     env.CLIENT_ID
   if (!clientId) {
-    ctx.throw(400, "ClientId not suplied")
+    ctx.throw(400, "ClientId not supplied")
   }
   return clientId
 }

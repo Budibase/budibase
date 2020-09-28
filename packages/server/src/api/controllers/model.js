@@ -63,9 +63,6 @@ exports.save = async function(ctx) {
         name: modelToSave.name,
         type: "link",
         modelId: modelToSave._id,
-        constraints: {
-          type: "array",
-        },
       }
       await db.put(linkedModel)
     }
