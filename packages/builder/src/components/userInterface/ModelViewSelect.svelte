@@ -72,6 +72,7 @@
   }
   .dropdown {
     padding: var(--spacing-m) 0;
+    z-index: 99999999;
   }
   .title {
     padding: 0 var(--spacing-m) var(--spacing-xs) var(--spacing-m);

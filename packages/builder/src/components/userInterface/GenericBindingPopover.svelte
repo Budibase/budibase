@@ -28,11 +28,12 @@
 <Popover {anchor} {align} bind:this={popover}>
   <div class="container">
     <div class="bindings">
-      <Label large>Available bindings</Label>
+      <Heading small>Available bindings</Heading>
       <div class="bindings__wrapper">
         <div class="bindings__list">
           {#each categories as [categoryName, bindings]}
             <Heading extraSmall>{categoryName}</Heading>
+            <Spacer extraSmall />
             {#each bindings as binding}
               <div class="binding" on:click={() => onClickBinding(binding)}>
                 <span class="binding__label">{binding.label}</span>
@@ -46,16 +47,17 @@
       </div>
     </div>
     <div class="editor">
-      <Heading large>Data binding</Heading>
-      <Spacer small />
+      <Heading small>Data binding</Heading>
       <Body small lh black>
         Binding connects one piece of data to another and makes it dynamic.
         Click the objects on the left to add them to the textbox.
       </Body>
-      <Spacer medium />
-      <TextArea thin bind:value placeholder="..." />
+      <TextArea
+        thin
+        bind:value
+        placeholder="Add options from the left, type text, or do both" />
       <div class="controls">
-        <a href="https://docs.budibase.com">
+        <a href="https://docs.budibase.com/design/binding">
           <Body small>Learn more about binding</Body>
         </a>
         <Button on:click={popover.hide} primary>Done</Button>
