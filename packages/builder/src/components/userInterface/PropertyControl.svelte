@@ -118,7 +118,7 @@
     position: relative;
     display: flex;
     flex-flow: row;
-    width: 260px;
+    min-width: 260px;
     margin: 8px 0px;
     align-items: center;
   }
@@ -143,13 +143,15 @@
   }
   button {
     position: absolute;
+    cursor: pointer;
     background: none;
     border: none;
-    border-radius: 50%;
-    height: 24px;
-    width: 24px;
-    background: rgb(224, 224, 224);
-    right: 5px;
+    height: 90%;
+    width: 2rem;
+    background: var(--grey-2);
+    right: 10px;
     --spacing-s: 0;
+    border-left: 0.5px solid var(--grey-3);
+    outline-color: var(--blue);
   }
 </style>

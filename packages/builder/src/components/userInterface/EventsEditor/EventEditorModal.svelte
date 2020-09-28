@@ -1,6 +1,13 @@
 <script>
   import { store } from "builderStore"
-  import { TextButton, Button, Heading, DropdownMenu } from "@budibase/bbui"
+  import {
+    TextButton,
+    Button,
+    Heading,
+    Body,
+    Spacer,
+    DropdownMenu,
+  } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
   import actionTypes from "./actions"
@@ -89,11 +96,9 @@
       {#each actions as action, index}
         <div class="action-container">
           <div class="action-header" on:click={selectAction(action)}>
-            <p
-              class="bb-body bb-body--small bb-body--color-dark"
-              style="margin: var(--spacing-s) 0;">
+            <Body extraSmall lh>
               {index + 1}. {action[EVENT_TYPE_MEMBER_NAME]}
-            </p>
+            </Body>
             <div class="row-expander" class:rotate={action !== selectedAction}>
               <ArrowDownIcon />
             </div>

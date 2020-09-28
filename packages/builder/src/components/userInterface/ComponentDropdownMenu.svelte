@@ -181,7 +181,7 @@
   ul {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: var(--spacing-xs) 0;
   }
 
   li {

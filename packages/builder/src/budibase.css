@@ -159,3 +159,7 @@
     background: #fef4f6;
     color: #f0506e;
 }
+
+a {
+    text-decoration: none;
+}
