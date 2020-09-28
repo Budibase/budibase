@@ -4,6 +4,7 @@
   import { booleanRenderer } from "./customRenderer"
 
   const setters = new Map([["number", number]])
+  const renderers = new Map([["boolean", booleanRenderer]])
 
   import fetchData from "../fetchData.js"
   import { isEmpty } from "lodash/fp"
@@ -36,8 +37,7 @@
             hide: shouldHideField(key),
             sortable: true,
             editable: schema[key].type !== "boolean",
-            cellRenderer:
-              schema[key].type === "boolean" ? booleanRenderer : null,
+            cellRenderer: renderers.get(schema[key].type),
           }
         })
       }

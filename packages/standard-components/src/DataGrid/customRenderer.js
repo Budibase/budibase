@@ -1,3 +1,6 @@
+// Custom renderers to handle special types
+// https://www.ag-grid.com/javascript-grid-cell-rendering-components/
+
 export const booleanRenderer = (params) => {
     const toggle = (e) => {
         params.value = !params.value
