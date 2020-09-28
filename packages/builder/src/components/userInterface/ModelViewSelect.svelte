@@ -1,10 +1,10 @@
 <script>
-  import { Button, Icon, DropdownMenu } from "@budibase/bbui"
+  import { Button, Icon, DropdownMenu, Spacer, Heading } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { backendUiStore } from "builderStore"
 
   const dispatch = createEventDispatcher()
-  let anchor, dropdown
+  let anchorRight, dropdownRight
 
   export let value = {}
 
@@ -30,21 +30,17 @@
   }, [])
 </script>
 
-<div bind:this={anchor}>
-  <Button secondary small on:click={dropdown.show}>
+<div class="dropdownbutton" bind:this={anchorRight}>
+  <Button secondary wide on:click={dropdownRight.show}>
     <span>{value.label ? value.label : 'Model / View'}</span>
     <Icon name="arrowdown" />
   </Button>
 </div>
-<DropdownMenu
-  bind:this={dropdown}
-  width="175px"
-  borderColor="#d1d1d1ff"
-  {anchor}
-  align="right">
-  <div class="model-view-container">
-    <p>Tables</p>
-
+<DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
+  <div class="dropdown">
+    <div class="title">
+      <Heading extraSmall>Tables</Heading>
+    </div>
     <ul>
       {#each models as model}
         <li
@@ -55,7 +51,9 @@
       {/each}
     </ul>
     <hr />
-    <p>Views</p>
+    <div class="title">
+      <Heading extraSmall>Views</Heading>
+    </div>
     <ul>
       {#each views as view}
         <li
@@ -69,23 +67,18 @@
 </DropdownMenu>
 
 <style>
-  .model-view-container {
-    padding-bottom: 8px;
-    font: var(--smallheavybodytext);
+  .dropdownbutton {
+    width: 100%;
   }
-
-  p {
-    color: var(--grey-7);
-    margin: 0px;
-    padding: 8px;
+  .dropdown {
+    padding: var(--spacing-m) 0;
   }
-
-  span {
-    text-transform: capitalize;
+  .title {
+    padding: 0 var(--spacing-m) var(--spacing-xs) var(--spacing-m);
   }
 
   hr {
-    margin: 10px 0px 5px 0px;
+    margin: var(--spacing-m) 0 var(--spacing-xl) 0;
   }
 
   ul {
@@ -97,7 +90,8 @@
   li {
     cursor: pointer;
     margin: 0px;
-    padding: 5px 8px;
+    padding: var(--spacing-s) var(--spacing-m);
+    font-size: var(--font-size-xs);
   }
 
   .selected {
