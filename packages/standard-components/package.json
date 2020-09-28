@@ -37,7 +37,7 @@
   "dependencies": {
     "@beyonk/svelte-googlemaps": "^2.2.0",
     "@budibase/bbui": "^1.34.6",
-    "@budibase/svelte-ag-grid": "^0.0.10",
+    "@budibase/svelte-ag-grid": "^0.0.11",
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@svelteschool/svelte-forms": "^0.7.0",
     "britecharts": "^2.16.1",

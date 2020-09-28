@@ -20,6 +20,7 @@
   let dataLoaded = false
   let data
   let columnDefs
+  let selectedRows = []
 
   onMount(async () => {
     const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
@@ -72,11 +73,33 @@
     const json = await response.json()
     console.log(json)
   }
+
+  const deleteRecords = async () => {
+    console.log(_bb.api)
+    const response = await _bb.api.post(`/api/${datasource.name}/records`, {
+      records: selectedRows,
+      type: "delete",
+    })
+    data = data.filter(record => !selectedRows.includes(record))
+    selectedRows = []
+  }
 </script>
 
 <div class="container">
+  <div class="controls">
+    <button>Add Row</button>
+    {#if selectedRows.length > 0}
+      <button on:click={deleteRecords}>
+        Delete {selectedRows.length} row(s)
+      </button>
+    {/if}
+  </div>
   {#if dataLoaded}
-    <AgGrid {data} {columnDefs} on:update={handleUpdate} />
+    <AgGrid
+      {data}
+      {columnDefs}
+      on:update={handleUpdate}
+      on:select={({ detail }) => (selectedRows = detail)} />
     <InputForm fields={columnDefs} on:submit={handleSubmit} />
   {/if}
 </div>
@@ -89,5 +112,9 @@
   .container :global(form) {
     display: grid;
     grid-template-columns: repeat(2);
+  }
+  .controls {
+    display: flex;
+    flex-direction: row;
   }
 </style>
