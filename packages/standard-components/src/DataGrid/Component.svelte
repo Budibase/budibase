@@ -1,8 +1,9 @@
 <script>
-  // Import valueSetters
+  // Import valueSetters and custom renderers
   import { number } from "./valueSetters"
   import { booleanRenderer } from "./customRenderer"
 
+  // These maps need to be set up to handle whatever types that are used in the models.
   const setters = new Map([["number", number]])
   const renderers = new Map([["boolean", booleanRenderer]])
 
@@ -27,20 +28,17 @@
     console.log(schema)
     if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
-      if (data) {
-        // Construct column definitions
-        columnDefs = Object.keys(schema).map(key => {
-          return {
-            valueSetter: setters.get(schema[key].type),
-            headerName: key.charAt(0).toUpperCase() + key.slice(1), // Capitalise first letter
-            field: key,
-            hide: shouldHideField(key),
-            sortable: true,
-            editable: schema[key].type !== "boolean",
-            cellRenderer: renderers.get(schema[key].type),
-          }
-        })
-      }
+      columnDefs = Object.keys(schema).map(key => {
+        return {
+          valueSetter: setters.get(schema[key].type),
+          headerName: key.charAt(0).toUpperCase() + key.slice(1), // Capitalise first letter
+          field: key,
+          hide: shouldHideField(key),
+          sortable: true,
+          editable: schema[key].type !== "boolean",
+          cellRenderer: renderers.get(schema[key].type),
+        }
+      })
     }
     dataLoaded = true
   })
