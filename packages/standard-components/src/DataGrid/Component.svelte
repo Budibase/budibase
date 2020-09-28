@@ -22,10 +22,8 @@
   let columnDefs
 
   onMount(async () => {
-    console.log(datasource)
     const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
     const { schema } = await jsonModel.json()
-    console.log(schema)
     if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
       columnDefs = Object.keys(schema).map(key => {
