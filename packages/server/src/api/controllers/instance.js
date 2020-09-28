@@ -19,6 +19,8 @@ exports.create = async function(ctx) {
       applicationId: appId,
     },
     views: {
+      // view collation information, read before writing any complex views:
+      // https://docs.couchdb.org/en/master/ddocs/views/collation.html#collation-specification
       by_username: {
         map: function(doc) {
           if (doc.type === "user") {
@@ -29,6 +31,22 @@ exports.create = async function(ctx) {
       by_type: {
         map: function(doc) {
           emit([doc.type], doc._id)
+        }.toString(),
+      },
+      by_link: {
+        map: function(doc) {
+          if (doc.type === "link") {
+            let doc1 = doc.doc1
+            let doc2 = doc.doc2
+            emit([doc1.modelId, 1, doc1.fieldName, doc1.recordId], {
+              _id: doc2.recordId,
+            })
+            emit([doc2.modelId, 1, doc2.fieldName, doc2.recordId], {
+              _id: doc1.recordId,
+            })
+            emit([doc1.modelId, 2, doc1.recordId], { _id: doc2.recordId })
+            emit([doc2.modelId, 2, doc2.recordId], { _id: doc1.recordId })
+          }
         }.toString(),
       },
       by_automation_trigger: {
