@@ -34,6 +34,7 @@
 <div class="container" data-cy="binding-dropdown-modal">
   <div class="list">
     <Heading extraSmall>Objects</Heading>
+    <Spacer medium />
     {#if context}
       <Heading extraSmall>Tables</Heading>
       <ul>
@@ -59,9 +60,13 @@
       the objects on the left, to add them to the textbox.
     </Body>
     <Spacer large />
-    <TextArea bind:value placeholder="" />
+    <TextArea
+      thin
+      bind:value
+      placeholder="Add text, or lick the objects on the left to add them to the
+      textbox." />
     <div class="controls">
-      <a href="https://docs.budibase.com">
+      <a href="https://docs.budibase.com/design/binding">
         <Body small grey>Learn more about binding</Body>
       </a>
       <Button on:click={cancel} secondary>Cancel</Button>
@@ -110,15 +115,16 @@
     display: flex;
     font-family: var(--font-sans);
     font-size: var(--font-size-xs);
-    color: var(--ink);
-    padding: var(--spacing-s) var(--spacing-m);
+    color: var(--grey-7);
+    padding: var(--spacing-s) 0;
     margin: auto 0px;
     align-items: center;
     cursor: pointer;
   }
 
   li:hover {
-    background-color: var(--grey-2);
+    color: var(--ink);
+    font-weight: 500;
   }
 
   li:active {
