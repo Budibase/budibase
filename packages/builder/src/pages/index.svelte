@@ -9,6 +9,7 @@
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import { Button } from "@budibase/bbui"
+  import analytics from "../analytics"
 
   let promise = getApps()
 
@@ -36,6 +37,7 @@
     const apps = await getApps()
     if (key) {
       hasKey = true
+      analytics.identify(key.userId)
     } else {
       showCreateAppModal()
     }
