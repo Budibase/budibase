@@ -2,7 +2,7 @@ const send = require("koa-send")
 const { resolve, join } = require("path")
 const jwt = require("jsonwebtoken")
 const fetch = require("node-fetch")
-const fs = require("fs")
+const fs = require("fs-extra")
 const uuid = require("uuid")
 const AWS = require("aws-sdk")
 const { prepareUploadForS3 } = require("./deploy/aws")
@@ -137,8 +137,6 @@ exports.performLocalFileProcessing = async function(ctx) {
 
 exports.serveApp = async function(ctx) {
   const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated"
-
-  console.log(ctx.user)
 
   // default to homedir
   const appPath = resolve(

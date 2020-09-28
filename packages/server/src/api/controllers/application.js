@@ -82,11 +82,10 @@ exports.create = async function(ctx) {
       },
     },
   }
-  // TODO: pass template into here from create InstCtx
+
   await instanceController.create(createInstCtx)
   newApplication.instances.push(createInstCtx.body)
 
-  // TODO: if template is passed, create the app package from the template and seed the instance database
   if (process.env.NODE_ENV !== "jest") {
     const newAppFolder = await createEmptyAppPackage(ctx, newApplication)
     await downloadExtractComponentLibraries(newAppFolder)
@@ -160,10 +159,16 @@ const createEmptyAppPackage = async (ctx, app) => {
     name: npmFriendlyAppName(app.name),
   })
 
-  // Copy the frontend page definition files from the template directory
-  // if this app is being created from a template.
+  // if this app is being created from a template,
+  // copy the frontend page definition files from
+  // the template directory.
   if (app.template) {
-    const templatePageDefinitions = join(appsFolder, app.template.name, "pages")
+    const templatePageDefinitions = join(
+      appsFolder,
+      "templates",
+      app.template.key,
+      "pages"
+    )
     await copy(templatePageDefinitions, join(appsFolder, app._id, "pages"))
   }
 

@@ -2,19 +2,13 @@
   import { Button, Heading } from "@budibase/bbui"
   import AppCard from "./AppCard.svelte"
   import Spinner from "components/common/Spinner.svelte"
+  import api from "builderStore/api"
 
   export let onSelect
 
-  let templates = []
-
-  function fetchTemplates() {
-    return Promise.resolve([
-      {
-        name: "Funky",
-        description: "Funky ass template",
-        minBuilderVersion: "",
-      },
-    ])
+  async function fetchTemplates() {
+    const response = await api.get("/api/templates?type=app")
+    return await response.json()
   }
 
   let templatesPromise = fetchTemplates()
