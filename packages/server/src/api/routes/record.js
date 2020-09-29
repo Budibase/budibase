@@ -7,6 +7,16 @@ const router = Router()
 
 router
   .get(
+    "/api/:modelId/:recordId/:fieldName/links",
+    authorized(READ_MODEL, ctx => ctx.params.modelId),
+    recordController.fetchLinkedRecords
+  )
+  .get(
+    "/api/:modelId/:recordId/links",
+    authorized(READ_MODEL, ctx => ctx.params.modelId),
+    recordController.fetchLinkedRecords
+  )
+  .get(
     "/api/:modelId/records",
     authorized(READ_MODEL, ctx => ctx.params.modelId),
     recordController.fetchModelRecords
