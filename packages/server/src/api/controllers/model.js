@@ -73,8 +73,6 @@ exports.save = async function(ctx) {
   })
   await db.put(designDoc)
 
-  // syntactic sugar for event emission
-  modelToSave.modelId = modelToSave._id
   ctx.eventEmitter &&
     ctx.eventEmitter.emitModel(`model:save`, instanceId, modelToSave)
   ctx.status = 200
@@ -109,8 +107,6 @@ exports.destroy = async function(ctx) {
   delete designDoc.views[modelViewId]
   await db.put(designDoc)
 
-  // syntactic sugar for event emission
-  modelToDelete.modelId = modelToDelete._id
   ctx.eventEmitter &&
     ctx.eventEmitter.emitModel(`model:delete`, instanceId, modelToDelete)
   ctx.status = 200
