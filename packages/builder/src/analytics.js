@@ -2,15 +2,20 @@ import * as Sentry from "@sentry/browser"
 import posthog from "posthog-js"
 import api from "builderStore/api"
 
+const analyticsEnabled = process.env.NODE_ENV === "production"
+
 function activate() {
+  if (!analyticsEnabled) return
   Sentry.init({ dsn: process.env.SENTRY_DSN })
   if (!process.env.POSTHOG_TOKEN) return
   posthog.init(process.env.POSTHOG_TOKEN, {
     api_host: process.env.POSTHOG_URL,
   })
+  posthog.set_config({ persistence: "cookie" })
 }
 
 function identify(id) {
+  if (!analyticsEnabled) return
   if (!id) return
   posthog.identify(id)
   Sentry.configureScope(scope => {
@@ -19,6 +24,7 @@ function identify(id) {
 }
 
 async function identifyByApiKey(apiKey) {
+  if (!analyticsEnabled) return true
   const response = await fetch(
     `https://03gaine137.execute-api.eu-west-1.amazonaws.com/prod/account/id?api_key=${apiKey.trim()}`
   )
@@ -35,12 +41,14 @@ async function identifyByApiKey(apiKey) {
 }
 
 function captureException(err) {
+  if (!analyticsEnabled) return
   Sentry.captureException(err)
 }
 
-function captureEvent(event) {
-  if (!process.env.POSTHOG_TOKEN) return
-  posthog.capture(event)
+function captureEvent(eventName, props = {}) {
+  if (!analyticsEnabled || !process.env.POSTHOG_TOKEN) return
+  props.sourceApp = "builder"
+  posthog.capture(eventName, props)
 }
 
 export default {

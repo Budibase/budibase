@@ -10,6 +10,7 @@
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import analytics from "analytics"
 
   const CONDITIONS = [
     {
@@ -63,6 +64,7 @@
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
     dropdown.hide()
+    analytics.captureEvent("Added View Filter")
   }
 
   function removeFilter(idx) {
