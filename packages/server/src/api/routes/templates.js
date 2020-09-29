@@ -9,7 +9,7 @@ router
   .get("/api/templates", authorized(BUILDER), controller.fetch)
   .get(
     "/api/templates/:type/:name",
-    // authorized(BUILDER),
+    authorized(BUILDER),
     controller.downloadTemplate
   )
   .post("/api/templates", authorized(BUILDER), controller.exportTemplateFromApp)
