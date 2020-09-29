@@ -1,6 +1,7 @@
 const CouchDB = require("../../db")
 const client = require("../../db/clientDb")
 const newid = require("../../db/newid")
+const { createLinkView } = require("../../db/linkedRecords")
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name
@@ -33,22 +34,6 @@ exports.create = async function(ctx) {
           emit([doc.type], doc._id)
         }.toString(),
       },
-      by_link: {
-        map: function(doc) {
-          if (doc.type === "link") {
-            let doc1 = doc.doc1
-            let doc2 = doc.doc2
-            emit([doc1.modelId, 1, doc1.fieldName, doc1.recordId], {
-              _id: doc2.recordId,
-            })
-            emit([doc2.modelId, 1, doc2.fieldName, doc2.recordId], {
-              _id: doc1.recordId,
-            })
-            emit([doc1.modelId, 2, doc1.recordId], { _id: doc2.recordId })
-            emit([doc2.modelId, 2, doc2.recordId], { _id: doc1.recordId })
-          }
-        }.toString(),
-      },
       by_automation_trigger: {
         map: function(doc) {
           if (doc.type === "automation") {
@@ -61,6 +46,8 @@ exports.create = async function(ctx) {
       },
     },
   })
+  // add view for linked records
+  await createLinkView(instanceId)
 
   // Add the new instance under the app clientDB
   const clientDb = new CouchDB(client.name(clientId))

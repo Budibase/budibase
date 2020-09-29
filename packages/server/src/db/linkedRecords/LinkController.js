@@ -67,7 +67,7 @@ class LinkController {
    */
   async doesModelHaveLinkedFields() {
     const model = await this.model()
-    for (const fieldName of Object.keys(model.schema)) {
+    for (let fieldName of Object.keys(model.schema)) {
       const { type } = model.schema[fieldName]
       if (type === "link") {
         return true
@@ -79,12 +79,13 @@ class LinkController {
   /**
    * Utility function for main getLinkDocuments function - refer to it for functionality.
    */
-  getLinkDocs(fieldName, recordId) {
+  getLinkDocs(includeDocs, fieldName = null, recordId = null) {
     return linkedRecords.getLinkDocuments({
       instanceId: this._instanceId,
       modelId: this._modelId,
       fieldName,
       recordId,
+      includeDocs,
     })
   }
 
@@ -93,22 +94,23 @@ class LinkController {
   /**
    * When a record is saved this will carry out the necessary operations to make sure
    * the link has been created/updated.
-   * @returns {Promise<null>} The operation has been completed and the link documents should now
-   * be accurate.
+   * @returns {Promise<object>} returns the record that has been cleaned and prepared to be written to the DB - links
+   * have also been created.
    */
   async recordSaved() {
     const model = await this.model()
     const record = this._record
-    let operations = []
+    const operations = []
     for (let fieldName of Object.keys(model.schema)) {
       const field = model.schema[fieldName]
       if (field.type === "link") {
         // get link docs to compare against
-        let linkDocs = await this.getLinkDocs(fieldName, record._id)
-        let currentLinkIds = linkDocs.map(doc => doc._id)
-        let toLinkIds = record[fieldName]
+        const linkDocIds = await this.getLinkDocs(false, fieldName, record._id)
+        // get the links this record wants to make
+        const toLinkIds = record[fieldName]
+        // iterate through them and find any which don't exist, create them
         for (let linkId of toLinkIds) {
-          if (currentLinkIds.indexOf(linkId) === -1) {
+          if (linkDocIds.indexOf(linkId) === -1) {
             operations.push(
               new LinkDocument(
                 model._id,
@@ -120,96 +122,104 @@ class LinkController {
               )
             )
           }
-          const toDeleteIds = currentLinkIds.filter(
+          // work out any that need to be deleted
+          const toDeleteIds = linkDocIds.filter(
             id => toLinkIds.indexOf(id) === -1
           )
           operations.concat(
             toDeleteIds.map(id => ({ _id: id, _deleted: true }))
           )
         }
+        // remove the field from the record, shouldn't store it
+        delete record[fieldName]
       }
     }
     await this._db.bulkDocs(operations)
+    return record
   }
 
   /**
    * When a record is deleted this will carry out the necessary operations to make sure
    * any links that existed have been removed.
-   * @returns {Promise<null>} The operation has been completed and the link documents should now
-   * be accurate.
+   * @returns {Promise<object>} The operation has been completed and the link documents should now
+   * be accurate. This also returns the record that was deleted.
    */
   async recordDeleted() {
     const record = this._record
-    // get link docs to compare against
-    let linkDocs = await this.getLinkDocs(null, record._id)
+    // need to get the full link docs to be be able to delete it
+    const linkDocs = await this.getLinkDocs(true, null, record._id)
     if (linkDocs.length === 0) {
       return null
     }
-    let toDelete = linkDocs.map(doc => {
+    const toDelete = linkDocs.map(doc => {
       return {
         ...doc,
         _deleted: true,
       }
     })
     await this._db.bulkDocs(toDelete)
+    return record
   }
 
   /**
    * When a model is saved this will carry out the necessary operations to make sure
    * any linked models are notified and updated correctly.
-   * @returns {Promise<null>} The operation has been completed and the link documents should now
-   * be accurate.
+   * @returns {Promise<object>} The operation has been completed and the link documents should now
+   * be accurate. Also returns the model that was operated on.
    */
   async modelSaved() {
     const model = await this.model()
     const schema = model.schema
-    for (const fieldName of Object.keys(schema)) {
+    for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       if (field.type === "link") {
         // create the link field in the other model
         const linkedModel = await this._db.get(field.modelId)
         linkedModel.schema[field.fieldName] = {
-          name: model.name,
+          name: field.fieldName,
           type: "link",
+          // these are the props of the table that initiated the link
           modelId: model._id,
           fieldName: fieldName,
         }
         await this._db.put(linkedModel)
       }
     }
+    return model
   }
 
   /**
    * When a model is deleted this will carry out the necessary operations to make sure
    * any linked models have the joining column correctly removed as well as removing any
    * now stale linking documents.
-   * @returns {Promise<null>} The operation has been completed and the link documents should now
-   * be accurate.
+   * @returns {Promise<object>} The operation has been completed and the link documents should now
+   * be accurate. Also returns the model that was operated on.
    */
   async modelDeleted() {
     const model = await this.model()
     const schema = model.schema
-    for (const fieldName of Object.keys(schema)) {
-      let field = schema[fieldName]
+    for (let fieldName of Object.keys(schema)) {
+      const field = schema[fieldName]
       if (field.type === "link") {
         const linkedModel = await this._db.get(field.modelId)
         delete linkedModel.schema[model.name]
         await this._db.put(linkedModel)
       }
     }
-    // get link docs to compare against
-    let linkDocs = await this.getLinkDocs()
+    // need to get the full link docs to delete them
+    const linkDocs = await this.getLinkDocs(true)
     if (linkDocs.length === 0) {
       return null
     }
     // get link docs for this model and configure for deletion
-    let toDelete = linkDocs.map(doc => {
+    const toDelete = linkDocs.map(doc => {
       return {
         ...doc,
         _deleted: true,
       }
     })
     await this._db.bulkDocs(toDelete)
+    return model
   }
 }
 

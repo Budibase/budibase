@@ -65,13 +65,13 @@ exports.save = async function(ctx) {
       }`,
     },
   }
-  await db.put(designDoc)
   // update linked records
   await updateLinksForModel({
     instanceId,
     eventType: EventType.MODEL_SAVE,
     model: modelToSave,
   })
+  await db.put(designDoc)
 
   // syntactic sugar for event emission
   modelToSave.modelId = modelToSave._id
@@ -98,16 +98,16 @@ exports.destroy = async function(ctx) {
     records.rows.map(record => ({ _id: record.id, _deleted: true }))
   )
 
-  // delete the "all" view
-  const designDoc = await db.get("_design/database")
-  delete designDoc.views[modelViewId]
-  await db.put(designDoc)
   // update linked records
   await updateLinksForModel({
     instanceId,
     eventType: EventType.MODEL_DELETE,
     model: modelToDelete,
   })
+  // delete the "all" view
+  const designDoc = await db.get("_design/database")
+  delete designDoc.views[modelViewId]
+  await db.put(designDoc)
 
   // syntactic sugar for event emission
   modelToDelete.modelId = modelToDelete._id
