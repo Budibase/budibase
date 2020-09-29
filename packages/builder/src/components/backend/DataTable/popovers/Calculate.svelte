@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import CreateEditRecord from "./CreateEditRecord.svelte"
 
   const CALCULATIONS = [
     {
@@ -90,7 +90,7 @@
 
   .input-group-row {
     display: grid;
-    grid-template-columns: 50px 1fr 20px 1fr;
+    grid-template-columns: 30px 1fr 20px 1fr;
     gap: var(--spacing-s);
     align-items: center;
   }

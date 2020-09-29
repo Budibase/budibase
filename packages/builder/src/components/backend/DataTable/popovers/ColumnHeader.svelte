@@ -2,14 +2,16 @@
   import { backendUiStore } from "builderStore"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import { CreateEditColumnModal } from "../modals"
+  import CreateEditColumnModal from "./CreateEditColumn.svelte"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { notifier } from "../../../../builderStore/store/notifications"
 
   export let field
 
   let anchor
   let dropdown
-
   let editing
+  let confirmDeleteDialog
 
   $: sortColumn = $backendUiStore.sort && $backendUiStore.sort.column
   $: sortDirection = $backendUiStore.sort && $backendUiStore.sort.direction
@@ -23,8 +25,13 @@
     editing = false
   }
 
-  function deleteField() {
-    backendUiStore.actions.models.deleteField(field)
+  function deleteColumn() {
+    if (field.name === $backendUiStore.selectedModel.primaryDisplay) {
+      notifier.danger("You cannot delete the primary display column")
+    } else {
+      backendUiStore.actions.models.deleteField(field)
+      notifier.success("Column deleted")
+    }
     hideEditor()
   }
 
@@ -38,7 +45,7 @@
 </script>
 
 <div class="container" bind:this={anchor} on:click={dropdown.show}>
-  {field.name}
+  <span>{field.name}</span>
   <Icon name="arrowdown" />
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
@@ -51,7 +58,9 @@
         <Icon name="edit" />
         Edit
       </li>
-      <li data-cy="delete-column-header" on:click={deleteField}>
+      <li
+        data-cy="delete-column-header"
+        on:click={() => confirmDeleteDialog.show()}>
         <Icon name="delete" />
         Delete
       </li>
@@ -70,6 +79,12 @@
     </ul>
   {/if}
 </DropdownMenu>
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  body={`Are you sure you wish to delete this column? Your data will be deleted and this action cannot be undone.`}
+  okText="Delete Column"
+  onOk={deleteColumn}
+  title="Confirm Delete" />
 
 <style>
   .container {
@@ -78,6 +93,9 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xs);
+  }
+  .container span {
+    text-transform: capitalize;
   }
 
   h5 {

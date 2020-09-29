@@ -35,8 +35,8 @@
     <h5>Create Table</h5>
     <Input
       data-cy="table-name-input"
-      placeholder="Table Name"
       thin
+      label="Table Name"
       bind:value={name} />
     <footer>
       <Button secondary on:click={onClosed}>Cancel</Button>

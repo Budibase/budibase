@@ -8,7 +8,7 @@
     Select,
   } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import CreateEditColumn from "../modals/CreateEditColumn.svelte"
+  import CreateEditColumn from "./CreateEditColumn.svelte"
 
   let anchor
   let dropdown

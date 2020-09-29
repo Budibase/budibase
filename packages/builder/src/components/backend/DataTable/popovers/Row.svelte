@@ -1,6 +1,6 @@
 <script>
   import { DropdownMenu, TextButton as Button, Icon } from "@budibase/bbui"
-  import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import CreateEditRecord from "./CreateEditRecord.svelte"
 
   let anchor
   let dropdown

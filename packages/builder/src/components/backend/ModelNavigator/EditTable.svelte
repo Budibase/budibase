@@ -13,6 +13,8 @@
   let editing
   let confirmDeleteDialog
 
+  $: fields = Object.keys(table.schema)
+
   function showEditor() {
     editing = true
   }
@@ -20,7 +22,6 @@
   function hideEditor() {
     dropdown.hide()
     editing = false
-    close()
   }
 
   async function deleteTable() {
@@ -42,7 +43,17 @@
   {#if editing}
     <div class="actions">
       <h5>Edit Table</h5>
-      <Input placeholder="Table Name" thin bind:value={table.name} />
+      <Input label="Table Name" thin bind:value={table.name} />
+      <Select
+        label="Primary Display Column"
+        thin
+        secondary
+        bind:value={table.primaryDisplay}>
+        <option value="">Choose an option</option>
+        {#each fields as field}
+          <option value={field}>{field}</option>
+        {/each}
+      </Select>
       <footer>
         <Button secondary on:click={hideEditor}>Cancel</Button>
         <Button primary on:click={save}>Save</Button>

@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import CreateEditRecord from "./CreateEditRecord.svelte"
 
   const CALCULATIONS = [
     {
@@ -38,14 +38,14 @@
 <div bind:this={anchor}>
   <TextButton text small active={!!view.groupBy} on:click={dropdown.show}>
     <Icon name="group" />
-    Group By
+    Group
   </TextButton>
 </div>
 <Popover bind:this={dropdown} {anchor} align="left">
   <div class="actions">
-    <h5>Group By</h5>
+    <h5>Group</h5>
     <div class="input-group-row">
-      <p>Group By</p>
+      <p>By</p>
       <Select secondary thin bind:value={view.groupBy}>
         <option value="">Choose an option</option>
         {#each fields as field}
@@ -79,7 +79,7 @@
 
   .input-group-row {
     display: grid;
-    grid-template-columns: 75px 1fr;
+    grid-template-columns: 20px 1fr;
     gap: var(--spacing-s);
     align-items: center;
   }
