@@ -31,6 +31,9 @@
   }
 
   let originalName = field.name
+  $: modelOptions = $backendUiStore.models.filter(
+    model => model._id !== $backendUiStore.draftModel._id
+  )
 
   async function saveColumn() {
     backendUiStore.update(state => {
@@ -67,23 +70,27 @@
   </Select>
 
   <Toggle
-    bind:checked={field.constraints.presence.allowEmpty}
+    checked={!field.constraints.presence.allowEmpty}
+    on:change={e => (field.constraints.presence.allowEmpty = !e.target.checked)}
     thin
     text="Required" />
 
-  {#if field.type === 'string' && field.constraints}
+  {#if field.type === 'string'}
     <Input
       thin
       type="number"
       label="Max Length"
       bind:value={field.constraints.length.maximum} />
-    <ValuesList label="Categories" bind:values={field.constraints.inclusion} />
-  {:else if field.type === 'datetime' && field.constraints}
+  {:else if field.type === 'options'}
+    <ValuesList
+      label="Options (one per line)"
+      bind:values={field.constraints.inclusion} />
+  {:else if field.type === 'datetime'}
     <DatePicker
       label="Earliest"
       bind:value={field.constraints.datetime.earliest} />
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
-  {:else if field.type === 'number' && field.constraints}
+  {:else if field.type === 'number'}
     <Input
       thin
       type="number"
@@ -95,17 +102,16 @@
       label="Max Value"
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
-    <div class="field">
-      <label>Link</label>
-      <Select bind:value={field.modelId}>
-        <option value="">Choose an option</option>
-        {#each $backendUiStore.models as model}
-          {#if model._id !== $backendUiStore.draftModel._id}
-            <option value={model._id}>{model.name}</option>
-          {/if}
-        {/each}
-      </Select>
-    </div>
+    <Select label="Table" thin secondary bind:value={field.modelId}>
+      <option value="">Choose an option</option>
+      {#each modelOptions as model}
+        <option value={model._id}>{model.name}</option>
+      {/each}
+    </Select>
+    <Input
+      label={`Column Name in Other Table`}
+      thin
+      bind:value={field.fieldName} />
   {/if}
   <footer>
     <Button secondary on:click={onClosed}>Cancel</Button>

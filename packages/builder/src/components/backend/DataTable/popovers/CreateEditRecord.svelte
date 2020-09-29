@@ -47,9 +47,8 @@
       <div>
         {#if meta.type === 'link'}
           <LinkedRecordSelector
-            bind:linked={record[key]}
-            linkName={meta.name}
-            modelId={meta.modelId} />
+            bind:linkedRecords={record[key]}
+            schema={meta} />
         {:else}
           <RecordFieldControl {meta} bind:value={record[key]} />
         {/if}
