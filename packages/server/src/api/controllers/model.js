@@ -1,6 +1,6 @@
 const CouchDB = require("../../db")
 const newid = require("../../db/newid")
-const { EventType, updateLinksForModel } = require("../../db/linkedRecords")
+const linkRecords = require("../../db/linkedRecords")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
@@ -66,9 +66,9 @@ exports.save = async function(ctx) {
     },
   }
   // update linked records
-  await updateLinksForModel({
+  await linkRecords.updateLinks({
     instanceId,
-    eventType: EventType.MODEL_SAVE,
+    eventType: linkRecords.EventType.MODEL_SAVE,
     model: modelToSave,
   })
   await db.put(designDoc)
@@ -99,9 +99,9 @@ exports.destroy = async function(ctx) {
   )
 
   // update linked records
-  await updateLinksForModel({
+  await linkRecords.updateLinks({
     instanceId,
-    eventType: EventType.MODEL_DELETE,
+    eventType: linkRecords.EventType.MODEL_DELETE,
     model: modelToDelete,
   })
   // delete the "all" view

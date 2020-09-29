@@ -17,124 +17,12 @@ const EventType = {
 exports.EventType = EventType
 
 /**
- * Update link documents for a model - this is to be called by the model controller when a model is being changed.
- * @param {EventType} eventType states what type of model change is occurring, means this can be expanded upon in the
- * future quite easily (all updates go through one function).
- * @param {string} instanceId The ID of the instance in which the model change is occurring.
- * @param {object} model The model which is changing, whether it is being deleted, created or updated.
- * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the model that was
- * operated upon.
+ * Creates the link view for the instance, this will overwrite the existing one, but this should only
+ * be called if it is found that the view does not exist.
+ * @param {string} instanceId The instance to which the view should be added.
+ * @returns {Promise<void>} The view now exists, please note that the next view of this query will actually build it,
+ * so it may be slow.
  */
-exports.updateLinksForModel = async ({ eventType, instanceId, model }) => {
-  // can't operate without these properties
-  if (instanceId == null || model == null) {
-    return model
-  }
-  let linkController = new LinkController({
-    instanceId,
-    modelId: model._id,
-    model,
-  })
-  if (!(await linkController.doesModelHaveLinkedFields())) {
-    return model
-  }
-  switch (eventType) {
-    case EventType.MODEL_SAVE:
-      return await linkController.modelSaved()
-    case EventType.MODEL_DELETE:
-      return await linkController.modelDeleted()
-    default:
-      throw "Type of event is not known, linked record handler requires update."
-  }
-}
-
-/**
- * Update link documents for a record - this is to be called by the record controller when a record is being changed.
- * @param {EventType} eventType states what type of record change is occurring, means this can be expanded upon in the
- * future quite easily (all updates go through one function).
- * @param {string} instanceId The ID of the instance in which the record update is occurring.
- * @param {object} record The record which is changing, e.g. created, updated or deleted.
- * @param {string} modelId The ID of the of the model which is being updated.
- * @param {object|null} model If the model has already been retrieved this can be used to reduce database gets.
- * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the record that was
- * operated upon, cleaned up and prepared for writing to DB.
- */
-exports.updateLinksForRecord = async ({
-  eventType,
-  instanceId,
-  record,
-  modelId,
-  model,
-}) => {
-  // can't operate without these properties
-  if (instanceId == null || modelId == null || record == null) {
-    return record
-  }
-  let linkController = new LinkController({
-    instanceId,
-    modelId,
-    model,
-    record,
-  })
-  if (!(await linkController.doesModelHaveLinkedFields())) {
-    return record
-  }
-  switch (eventType) {
-    case EventType.RECORD_SAVE:
-    case EventType.RECORD_UPDATE:
-      return await linkController.recordSaved()
-    case EventType.RECORD_DELETE:
-      return await linkController.recordDeleted()
-    default:
-      throw "Type of event is not known, linked record handler requires update."
-  }
-}
-
-/**
- * Utility function to in parallel up a list of records with link info.
- * @param {string} instanceId The instance in which this record has been created.
- * @param {object[]} records A list records to be updated with link info.
- * @returns {Promise<object[]>} The updated records (this may be the same if no links were found).
- */
-exports.attachLinkInfoToRecords = async (instanceId, records) => {
-  let recordPromises = []
-  for (let record of records) {
-    recordPromises.push(exports.attachLinkInfoToRecord(instanceId, record))
-  }
-  return await Promise.all(recordPromises)
-}
-
-/**
- * Update a record with information about the links that pertain to it.
- * @param {string} instanceId The instance in which this record has been created.
- * @param {object} record The record itself which is to be updated with info (if applicable).
- * @returns {Promise<object>} The updated record (this may be the same if no links were found).
- */
-exports.attachLinkInfoToRecord = async (instanceId, record) => {
-  const recordId = record._id
-  const modelId = record.modelId
-  // get all links for record, ignore fieldName for now
-  const linkDocs = await exports.getLinkDocuments({
-    instanceId,
-    modelId,
-    recordId,
-    includeDocs: true,
-  })
-  if (linkDocs == null || linkDocs.length === 0) {
-    return record
-  }
-  for (let linkDoc of linkDocs) {
-    // work out which link pertains to this record
-    const doc = linkDoc.doc1.recordId === recordId ? linkDoc.doc1 : linkDoc.doc2
-    if (record[doc.fieldName] == null || record[doc.fieldName].count == null) {
-      record[doc.fieldName] = { type: "link", count: 1 }
-    } else {
-      record[doc.fieldName].count++
-    }
-  }
-  return record
-}
-
 exports.createLinkView = async instanceId => {
   const db = new CouchDB(instanceId)
   const designDoc = await db.get("_design/database")
@@ -155,6 +43,110 @@ exports.createLinkView = async instanceId => {
     by_link: view,
   }
   await db.put(designDoc)
+}
+
+/**
+ * Update link documents for a record or model - this is to be called by the API controller when a change is occurring.
+ * @param {string} eventType states what type of change which is occurring, means this can be expanded upon in the
+ * future quite easily (all updates go through one function).
+ * @param {string} instanceId The ID of the instance in which the change is occurring.
+ * @param {string} modelId The ID of the of the model which is being changed.
+ * * @param {object|null} record The record which is changing, e.g. created, updated or deleted.
+ * @param {object|null} model If the model has already been retrieved this can be used to reduce database gets.
+ * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the record for
+ * record operations and the model for model operations.
+ */
+exports.updateLinks = async ({
+  eventType,
+  instanceId,
+  record,
+  modelId,
+  model,
+}) => {
+  // make sure model ID is set
+  if (model != null) {
+    modelId = model._id
+  }
+  let linkController = new LinkController({
+    instanceId,
+    modelId,
+    model,
+    record,
+  })
+  if (!(await linkController.doesModelHaveLinkedFields())) {
+    return record
+  }
+  switch (eventType) {
+    case EventType.RECORD_SAVE:
+    case EventType.RECORD_UPDATE:
+      return await linkController.recordSaved()
+    case EventType.RECORD_DELETE:
+      return await linkController.recordDeleted()
+    case EventType.MODEL_SAVE:
+      return await linkController.modelSaved()
+    case EventType.MODEL_DELETE:
+      return await linkController.modelDeleted()
+    default:
+      throw "Type of event is not known, linked record handler requires update."
+  }
+}
+
+/**
+ * Utility function to in parallel up a list of records with link info.
+ * @param {string} instanceId The instance in which this record has been created.
+ * @param {object[]} records A list records to be updated with link info.
+ * @returns {Promise<object[]>} The updated records (this may be the same if no links were found).
+ */
+exports.attachLinkInfo = async (instanceId, records) => {
+  let recordPromises = []
+  for (let record of records) {
+    recordPromises.push(exports.attachLinkInfo(instanceId, record))
+  }
+  return await Promise.all(recordPromises)
+}
+
+/**
+ * Update a record with information about the links that pertain to it.
+ * @param {string} instanceId The instance in which this record has been created.
+ * @param {object} record The record itself which is to be updated with info (if applicable).
+ * @returns {Promise<object>} The updated record (this may be the same if no links were found).
+ */
+exports.attachLinkInfo = async (instanceId, record) => {
+  // first check if the record has any link fields
+  let hasLinkedRecords = false
+  for (let fieldName of Object.keys(record)) {
+    let field = record[fieldName]
+    if (field != null && field.type === "link") {
+      hasLinkedRecords = true
+      break
+    }
+  }
+  // no linked records, can simply return
+  if (!hasLinkedRecords) {
+    return record
+  }
+  const recordId = record._id
+  const modelId = record.modelId
+  // get all links for record, ignore fieldName for now
+  const linkDocs = await exports.getLinkDocuments({
+    instanceId,
+    modelId,
+    recordId,
+    includeDocs: true,
+  })
+  if (linkDocs == null || linkDocs.length === 0) {
+    return record
+  }
+  for (let linkDoc of linkDocs) {
+    // work out which link pertains to this record
+    const doc = linkDoc.doc1.recordId === recordId ? linkDoc.doc1 : linkDoc.doc2
+    if (record[doc.fieldName].count == null) {
+      record[doc.fieldName].count = 1
+    } else {
+      record[doc.fieldName].count++
+    }
+  }
+  return record
 }
 
 /**

@@ -1,13 +1,7 @@
 const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const newid = require("../../db/newid")
-const {
-  EventType,
-  updateLinksForRecord,
-  getLinkDocuments,
-  attachLinkInfoToRecord,
-  attachLinkInfoToRecords,
-} = require("../../db/linkedRecords")
+const linkRecords = require("../../db/linkedRecords")
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function(value) {
@@ -46,9 +40,9 @@ exports.patch = async function(ctx) {
   }
 
   // returned record is cleaned and prepared for writing to DB
-  record = await updateLinksForRecord({
+  record = await linkRecords.updateLinks({
     instanceId,
-    eventType: EventType.RECORD_UPDATE,
+    eventType: linkRecords.EventType.RECORD_UPDATE,
     record,
     modelId: record.modelId,
     model,
@@ -102,9 +96,9 @@ exports.save = async function(ctx) {
     return
   }
 
-  record = await updateLinksForRecord({
+  record = await linkRecords.updateLinks({
     instanceId,
-    eventType: EventType.RECORD_SAVE,
+    eventType: linkRecords.EventType.RECORD_SAVE,
     record,
     modelId: record.modelId,
     model,
@@ -140,7 +134,7 @@ exports.fetchView = async function(ctx) {
     response.rows = response.rows.map(row => row.doc)
   }
 
-  ctx.body = await attachLinkInfoToRecords(instanceId, response.rows)
+  ctx.body = await linkRecords.attachLinkInfo(instanceId, response.rows)
 }
 
 exports.fetchModelRecords = async function(ctx) {
@@ -149,7 +143,7 @@ exports.fetchModelRecords = async function(ctx) {
   const response = await db.query(`database/all_${ctx.params.modelId}`, {
     include_docs: true,
   })
-  ctx.body = await attachLinkInfoToRecords(
+  ctx.body = await linkRecords.attachLinkInfo(
     instanceId,
     response.rows.map(row => row.doc)
   )
@@ -162,7 +156,7 @@ exports.search = async function(ctx) {
     include_docs: true,
     ...ctx.request.body,
   })
-  ctx.body = await attachLinkInfoToRecords(
+  ctx.body = await linkRecords.attachLinkInfo(
     instanceId,
     response.rows.map(row => row.doc)
   )
@@ -176,7 +170,7 @@ exports.find = async function(ctx) {
     ctx.throw(400, "Supplied modelId does not match the records modelId")
     return
   }
-  ctx.body = await attachLinkInfoToRecord(instanceId, record)
+  ctx.body = await linkRecords.attachLinkInfo(instanceId, record)
 }
 
 exports.destroy = async function(ctx) {
@@ -187,9 +181,9 @@ exports.destroy = async function(ctx) {
     ctx.throw(400, "Supplied modelId doesn't match the record's modelId")
     return
   }
-  await updateLinksForRecord({
+  await linkRecords.updateLinks({
     instanceId,
-    eventType: EventType.RECORD_DELETE,
+    eventType: linkRecords.EventType.RECORD_DELETE,
     record,
     modelId: record.modelId,
   })
@@ -244,7 +238,7 @@ exports.fetchLinkedRecords = async function(ctx) {
     return
   }
   // get the link docs
-  const linkDocIds = await getLinkDocuments({
+  const linkDocIds = await linkRecords.getLinkDocuments({
     instanceId,
     modelId,
     fieldName,
