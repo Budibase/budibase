@@ -28,8 +28,10 @@
   const validateApiKey = async apiKey => {
     if (!apiKey) return false
 
-    // make sure we only fetch once
+    // make sure we only fetch once, unless API Key is changed
     if (isApiKeyValid === undefined || apiKey !== lastApiKey) {
+      // svelte reactivity was causing a requst to get fired mutiple times
+      // so, we make everything await the same promise, if one exists
       if (!fetchApiKeyPromise) {
         fetchApiKeyPromise = analytics.identifyByApiKey(apiKey)
       }
