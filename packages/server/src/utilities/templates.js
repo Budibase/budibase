@@ -15,7 +15,6 @@ const DEFAULT_TEMPLATES_BUCKET =
 
 exports.downloadTemplate = async function(type, name) {
   const templateUrl = `https://${DEFAULT_TEMPLATES_BUCKET}/templates/${type}/${name}.tar.gz`
-  console.log(templateUrl, type, name)
   const response = await fetch(templateUrl)
 
   if (!response.ok) {
@@ -40,7 +39,6 @@ exports.exportTemplateFromApp = async function({
   instanceId,
 }) {
   // Copy frontend files
-  console.log("Copying frontend definition...")
   const appToExport = path.join(os.homedir(), ".budibase", appId, "pages")
   const templatesDir = path.join(os.homedir(), ".budibase", "templates")
   fs.ensureDirSync(templatesDir)
@@ -54,7 +52,6 @@ exports.exportTemplateFromApp = async function({
   // perform couch dump
   const instanceDb = new CouchDB(instanceId)
 
-  console.log("Performing database dump..")
   await instanceDb.dump(writeStream)
-  console.log("Export complete!")
+  return templateOutputPath
 }

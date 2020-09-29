@@ -1,12 +1,40 @@
 #!/usr/bin/env node
 const { exportTemplateFromApp } = require("../src/utilities/templates")
+const yargs = require("yargs")
 
 // Script to export a chosen budibase app into a package
+// Usage: ./scripts/exportAppTemplate.js export --name=Funky --instanceId=someInstanceId --appId=appId
 
-const [name, instanceId, appId] = process.argv.slice(1)
-
-exportTemplateFromApp({
-  templateName: "Funky",
-  instanceId: "inst_b70abba_16feb394866140a1ac3f2e450e99f28a",
-  appId: "b70abba3874546bf99a339911b579937",
-})
+yargs
+  .command(
+    "export",
+    "Export an existing budibase application to the .budibase/templates directory",
+    {
+      name: {
+        description: "The name of the newly exported template",
+        alias: "n",
+        type: "string",
+      },
+      instanceId: {
+        description: "The instanceId to dump the database for",
+        alias: "inst",
+        type: "string",
+      },
+      appId: {
+        description: "The appId of the application you want to export",
+        alias: "app",
+        type: "string",
+      },
+    },
+    async args => {
+      console.log("Exporting app..")
+      const exportPath = await exportTemplateFromApp({
+        templateName: args.name,
+        instanceId: args.instanceId,
+        appId: args.appId,
+      })
+      console.log(`Template ${args.name} exported to ${exportPath}`)
+    }
+  )
+  .help()
+  .alias("help", "h").argv
