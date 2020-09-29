@@ -36,7 +36,7 @@
   function saveView() {
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
-    analytics.captureEvent("Added View Calculate")
+    analytics.captureEvent("Added View Calculate", { field: view.field })
     dropdown.hide()
   }
 </script>

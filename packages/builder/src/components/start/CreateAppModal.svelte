@@ -30,6 +30,7 @@
 
     // make sure we only fetch once, unless API Key is changed
     if (isApiKeyValid === undefined || apiKey !== lastApiKey) {
+      lastApiKey = apiKey
       // svelte reactivity was causing a requst to get fired mutiple times
       // so, we make everything await the same promise, if one exists
       if (!fetchApiKeyPromise) {
