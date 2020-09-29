@@ -1,5 +1,5 @@
 <script>
-  import { Input } from "@budibase/bbui"
+  import { Input, Heading, Body } from "@budibase/bbui"
   export let validationErrors
   export let template
 
@@ -7,10 +7,9 @@
 </script>
 
 {#if template}
-  <h2>Selected Template</h2>
-  <h4>{template.name}</h4>
+  <Heading small black>Selected Template</Heading>
+  <Body>{template.name}</Body>
 {/if}
-
 <h2>Create your web app</h2>
 <div class="container">
   <Input

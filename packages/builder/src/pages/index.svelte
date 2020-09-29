@@ -5,24 +5,10 @@
   import AppList from "components/start/AppList.svelte"
   import { onMount } from "svelte"
   import ActionButton from "components/common/ActionButton.svelte"
-  import { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateList from "components/start/TemplateList.svelte"
   import { Button } from "@budibase/bbui"
-
-  let promise = getApps()
-
-  async function getApps() {
-    const res = await get("/api/applications")
-    const json = await res.json()
-
-    if (res.ok) {
-      return json
-    } else {
-      throw new Error(json)
-    }
-  }
 
   let hasKey
 
@@ -34,7 +20,6 @@
 
   async function checkIfKeysAndApps() {
     const key = await fetchKeys()
-    const apps = await getApps()
     if (key) {
       hasKey = true
     } else {
@@ -79,17 +64,8 @@
   </div>
 </div>
 
-{#await promise}
-  <div class="spinner-container">
-    <Spinner />
-  </div>
-{:then result}
-  <!-- TODO: organise async for template list - make sure the template list is loaded when the app list is being loaded  -->
-  <TemplateList onSelect={showCreateAppModal} />
-  <AppList apps={result} />
-{:catch err}
-  <h1 style="color:red">{err}</h1>
-{/await}
+<TemplateList onSelect={showCreateAppModal} />
+<AppList />
 
 <style>
   .header {
@@ -127,13 +103,5 @@
     font-size: 24px;
     color: var(--white);
     font-weight: 500;
-  }
-
-  .spinner-container {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 </style>
