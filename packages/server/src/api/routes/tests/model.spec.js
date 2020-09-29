@@ -45,7 +45,7 @@ describe("/models", () => {
         .expect(200)
         .end(async (err, res) => {
             expect(res.res.statusMessage).toEqual("Model TestModel saved successfully.");            
-            expect(res.body.name).toEqual("TestModel");            
+            expect(res.body.name).toEqual("TestModel");
             done();
         });
       })
@@ -201,10 +201,10 @@ describe("/models", () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
-            expect(res.res.statusMessage).toEqual(`Model ${testModel._id} deleted.`);            
-            const dependentModel = await getDocument(instance._id, linkedModel._id)
-            expect(dependentModel.schema.TestModel).not.toBeDefined();
-            done();
+          expect(res.res.statusMessage).toEqual(`Model ${testModel._id} deleted.`);
+          const dependentModel = await getDocument(instance._id, linkedModel._id)
+          expect(dependentModel.schema.TestModel).not.toBeDefined();
+          done();
         });
       })
 
