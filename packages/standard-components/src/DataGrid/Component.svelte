@@ -13,6 +13,8 @@
 
   import AgGrid from "@budibase/svelte-ag-grid"
   import InputForm from "./InputForm.svelte"
+  import CreateRowButton from "./CreateRow/Button.svelte"
+  import { TextButton as DeleteButton, Icon } from "@budibase/bbui"
 
   export let _bb
   export let datasource = {}
@@ -87,11 +89,12 @@
 
 <div class="container">
   <div class="controls">
-    <button>Add Row</button>
+    <CreateRowButton />
     {#if selectedRows.length > 0}
-      <button on:click={deleteRecords}>
+      <DeleteButton text small on:click={deleteRecords}>
+        <Icon name="addrow" />
         Delete {selectedRows.length} row(s)
-      </button>
+      </DeleteButton>
     {/if}
   </div>
   {#if dataLoaded}
@@ -100,10 +103,8 @@
       {columnDefs}
       on:update={handleUpdate}
       on:select={({ detail }) => (selectedRows = detail)} />
-    <InputForm fields={columnDefs} on:submit={handleSubmit} />
   {/if}
 </div>
-<pre>{JSON.stringify(data, 0, 2)}</pre>
 
 <style>
   .container {
@@ -114,7 +115,10 @@
     grid-template-columns: repeat(2);
   }
   .controls {
-    display: flex;
-    flex-direction: row;
+    margin-bottom: var(--spacing-s);
+    display: grid;
+    grid-gap: var(--spacing-s);
+    grid-template-columns: auto auto;
+    justify-content: start;
   }
 </style>

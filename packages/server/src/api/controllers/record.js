@@ -159,24 +159,19 @@ async function validate({ instanceId, modelId, record, model }) {
 
 async function bulkDelete(ctx) {
   const { records } = ctx.request.body
-  console.log(records)
   const db = new CouchDB(ctx.user.instanceId)
 
   await db.bulkDocs(
-    records.map(record => ({ ...record, _deleted: true })), console.log)
-  // await db.bulkDocs(
-  //   records.rows.map(record => ({ _id: record.id, _deleted: true }))
-  // )
-  // const record = await db.get(ctx.params.recordId)
-  // if (record.modelId !== ctx.params.modelId) {
-  //   ctx.throw(400, "Supplied modelId doesn't match the record's modelId")
-  //   return
-  // }
-  // ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
-  ctx.status = 200
-  // // for automations
-  // ctx.record = record
-  // emitEvent(`record:delete`, ctx, record)
+    records.map(record => ({ ...record, _deleted: true }), (err, res) => {
+      if (err) {
+        ctx.status = 500
+      } else {
+        records.forEach(record => {
+          emitEvent(`record:delete`, ctx, record)
+        })
+        ctx.status = 200
+      }
+    }))
 }
 
 async function saveRecords(ctx) {
