@@ -14,7 +14,7 @@
   import { getContext } from "svelte"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
-  import analytics from "../../analytics"
+  import analytics from "analytics"
 
   const { open, close } = getContext("simple-modal")
   //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
@@ -141,7 +141,7 @@
         name: $createAppStore.values.applicationName,
       })
       const appJson = await appResp.json()
-      analytics.captureEvent("web_app_created", {
+      analytics.captureEvent("App Created", {
         name,
         appId: appJson._id,
       })

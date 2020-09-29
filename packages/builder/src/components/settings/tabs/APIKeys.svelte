@@ -3,7 +3,7 @@
   import { store } from "builderStore"
   import api from "builderStore/api"
   import posthog from "posthog-js"
-  import analytics from "../../../analytics"
+  import analytics from "analytics"
 
   let keys = { budibase: "", sendGrid: "" }
 
