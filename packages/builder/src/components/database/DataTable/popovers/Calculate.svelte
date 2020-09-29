@@ -10,6 +10,7 @@
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import analytics from "analytics"
 
   const CALCULATIONS = [
     {
@@ -35,6 +36,7 @@
   function saveView() {
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
+    analytics.captureEvent("Added View Calculate", { field: view.field })
     dropdown.hide()
   }
 </script>

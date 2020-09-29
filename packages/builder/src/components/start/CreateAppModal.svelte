@@ -14,7 +14,7 @@
   import { getContext } from "svelte"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
-  import analytics from "../../analytics"
+  import analytics from "analytics"
 
   const { open, close } = getContext("simple-modal")
   //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
@@ -22,12 +22,34 @@
 
   export let hasKey
 
+  let isApiKeyValid
+  let lastApiKey
+  let fetchApiKeyPromise
+  const validateApiKey = async apiKey => {
+    if (!apiKey) return false
+
+    // make sure we only fetch once, unless API Key is changed
+    if (isApiKeyValid === undefined || apiKey !== lastApiKey) {
+      lastApiKey = apiKey
+      // svelte reactivity was causing a requst to get fired mutiple times
+      // so, we make everything await the same promise, if one exists
+      if (!fetchApiKeyPromise) {
+        fetchApiKeyPromise = analytics.identifyByApiKey(apiKey)
+      }
+      isApiKeyValid = await fetchApiKeyPromise
+      fetchApiKeyPromise = undefined
+    }
+    return isApiKeyValid
+  }
+
   let submitting = false
   let errors = {}
   let validationErrors = {}
   let validationSchemas = [
     {
-      apiKey: string().required("Please enter your API key."),
+      apiKey: string()
+        .required("Please enter your API key.")
+        .test("valid-apikey", "This API key is invalid", validateApiKey),
     },
     {
       applicationName: string().required("Your application must have a name."),
@@ -122,7 +144,7 @@
         name: $createAppStore.values.applicationName,
       })
       const appJson = await appResp.json()
-      analytics.captureEvent("web_app_created", {
+      analytics.captureEvent("App Created", {
         name,
         appId: appJson._id,
       })
@@ -160,6 +182,7 @@
   }
 
   function extractErrors({ inner }) {
+    if (!inner) return {}
     return inner.reduce((acc, err) => {
       return { ...acc, [err.path]: err.message }
     }, {})
