@@ -1,20 +1,44 @@
 <script>
   import AppCard from "./AppCard.svelte"
-  export let apps
+  import { Heading } from "@budibase/bbui"
+  import Spinner from "components/common/Spinner.svelte"
+  import { get } from "builderStore/api"
+
+  let promise = getApps()
+
+  async function getApps() {
+    const res = await get("/api/applications")
+    const json = await res.json()
+
+    if (res.ok) {
+      return json
+    } else {
+      throw new Error(json)
+    }
+  }
 </script>
 
 <div class="root">
-  <div class="inner">
-    <div>
+  <Heading medium black>Your Apps</Heading>
+  {#await promise}
+    <div class="spinner-container">
+      <Spinner size="30" />
+    </div>
+  {:then apps}
+    <div class="inner">
       <div>
-        <div class="apps">
-          {#each apps as app}
-            <AppCard {...app} />
-          {/each}
+        <div>
+          <div class="apps">
+            {#each apps as app}
+              <AppCard {...app} />
+            {/each}
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  {:catch err}
+    <h1 style="color:red">{err}</h1>
+  {/await}
 </div>
 
 <style>
