@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import CreateEditRecord from "./CreateEditRecord.svelte"
 
   const CONDITIONS = [
     {
@@ -130,10 +130,7 @@
               {/each}
             </Select>
           {:else}
-            <Input
-              thin
-              placeholder={filter.key || fields[0]}
-              bind:value={filter.value} />
+            <Input thin placeholder="Value" bind:value={filter.value} />
           {/if}
           <i class="ri-close-circle-fill" on:click={() => removeFilter(idx)} />
         {/each}

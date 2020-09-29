@@ -11,4 +11,4 @@
   }
 </script>
 
-<DatePicker placeholder={label} on:change={onChange} {value} />
+<DatePicker {label} on:change={onChange} {value} />

@@ -1,6 +1,13 @@
 <script>
   import { onMount } from "svelte"
-  import { Input, TextArea, Button, Select } from "@budibase/bbui"
+  import {
+    Input,
+    TextArea,
+    Button,
+    Select,
+    Toggle,
+    Label,
+  } from "@budibase/bbui"
   import { cloneDeep, merge } from "lodash/fp"
   import { store, backendUiStore } from "builderStore"
   import { FIELDS } from "constants/backend"
@@ -25,18 +32,12 @@
 
   let originalName = field.name
 
-  $: required =
-    field.constraints &&
-    field.constraints.presence &&
-    !field.constraints.presence.allowEmpty
-
   async function saveColumn() {
     backendUiStore.update(state => {
       backendUiStore.actions.models.saveField({
         originalName,
         field,
       })
-
       return state
     })
     onClosed()
@@ -46,18 +47,18 @@
     const { type, constraints } = fieldDefinitions[
       event.target.value.toUpperCase()
     ]
-
     field.type = type
     field.constraints = constraints
   }
 </script>
 
 <div class="actions">
-  <Input placeholder="Name" thin bind:value={field.name} />
+  <Input label="Name" thin bind:value={field.name} />
 
   <Select
     secondary
     thin
+    label="Type"
     on:change={handleFieldConstraints}
     bind:value={field.type}>
     {#each Object.values(fieldDefinitions) as field}
@@ -65,16 +66,15 @@
     {/each}
   </Select>
 
-  <div class="field">
-    <label>Required</label>
-    <input
-      type="checkbox"
-      bind:checked={required}
-      on:change={() => (field.constraints.presence.allowEmpty = required)} />
-  </div>
+  <Toggle
+    bind:checked={field.constraints.presence.allowEmpty}
+    thin
+    text="Required" />
 
   {#if field.type === 'string' && field.constraints}
-    <NumberBox
+    <Input
+      thin
+      type="number"
       label="Max Length"
       bind:value={field.constraints.length.maximum} />
     <ValuesList label="Categories" bind:values={field.constraints.inclusion} />
@@ -84,23 +84,27 @@
       bind:value={field.constraints.datetime.earliest} />
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
   {:else if field.type === 'number' && field.constraints}
-    <NumberBox
+    <Input
+      thin
+      type="number"
       label="Min Value"
       bind:value={field.constraints.numericality.greaterThanOrEqualTo} />
-    <NumberBox
+    <Input
+      thin
+      type="number"
       label="Max Value"
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
     <div class="field">
       <label>Link</label>
-      <select class="budibase__input" bind:value={field.modelId}>
+      <Select bind:value={field.modelId}>
         <option value="">Choose an option</option>
         {#each $backendUiStore.models as model}
           {#if model._id !== $backendUiStore.draftModel._id}
             <option value={model._id}>{model.name}</option>
           {/if}
         {/each}
-      </select>
+      </Select>
     </div>
   {/if}
   <footer>
@@ -121,15 +125,5 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-m);
-  }
-
-  .field {
-    display: grid;
-    grid-template-columns: auto 20px 1fr;
-    align-items: center;
-    grid-gap: 5px;
-    font-size: 14px;
-    font-weight: 500;
-    font-family: var(--font-normal);
   }
 </style>

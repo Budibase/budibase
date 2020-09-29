@@ -10,7 +10,7 @@
     Heading,
   } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import { CreateEditRecordModal } from "../modals"
+  import CreateEditRecordModal from "./CreateEditRecord.svelte"
   import * as api from "../api"
   import { notifier } from "builderStore/store/notifications"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -29,7 +29,6 @@
   function hideEditor() {
     dropdown.hide()
     editing = false
-    close()
   }
 
   async function deleteRow() {

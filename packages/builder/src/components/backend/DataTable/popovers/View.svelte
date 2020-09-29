@@ -10,7 +10,7 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import CreateEditRecord from "./CreateEditRecord.svelte"
 
   let anchor
   let dropdown
@@ -50,7 +50,7 @@
 <Popover bind:this={dropdown} {anchor} align="left">
   <div class="actions">
     <h5>Create View</h5>
-    <Input placeholder="View Name" thin bind:value={name} />
+    <Input label="View Name" thin bind:value={name} />
     <div class="footer">
       <Button secondary on:click={dropdown.hide}>Cancel</Button>
       <Button primary on:click={saveView}>Save View</Button>

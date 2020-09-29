@@ -8,7 +8,7 @@
   import LinkedRecord from "./LinkedRecord.svelte"
   import AttachmentList from "./AttachmentList.svelte"
   import TablePagination from "./TablePagination.svelte"
-  import { CreateEditRecordModal } from "./modals"
+  import CreateEditRecordModal from "./popovers/CreateEditRecord.svelte"
   import RowPopover from "./popovers/Row.svelte"
   import ColumnPopover from "./popovers/Column.svelte"
   import ViewPopover from "./popovers/View.svelte"
@@ -136,7 +136,6 @@
   }
   thead th {
     color: var(--ink);
-    text-transform: capitalize;
     font-weight: 500;
     font-size: 14px;
     text-rendering: optimizeLegibility;

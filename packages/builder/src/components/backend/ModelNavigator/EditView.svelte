@@ -22,7 +22,6 @@
   function hideEditor() {
     dropdown.hide()
     editing = false
-    close()
   }
 
   async function save() {
@@ -50,7 +49,7 @@
   {#if editing}
     <div class="actions">
       <h5>Edit View</h5>
-      <Input placeholder="View Name" thin bind:value={view.name} />
+      <Input label="View Name" thin bind:value={view.name} />
       <footer>
         <Button secondary on:click={hideEditor}>Cancel</Button>
         <Button primary on:click={save}>Save</Button>
