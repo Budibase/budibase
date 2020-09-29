@@ -91,7 +91,7 @@
           {#each headers as header}
             <td>
               {#if schema[header].type === 'link'}
-                <LinkedRecord field={schema[header]} ids={row[header]} />
+                {JSON.stringify(row[header])}
               {:else if schema[header].type === 'attachment'}
                 <AttachmentList files={row[header] || []} />
               {:else}{getOr('', header, row)}{/if}
