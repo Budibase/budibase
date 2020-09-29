@@ -9,6 +9,7 @@
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import { Button } from "@budibase/bbui"
+  import analytics from "analytics"
 
   let promise = getApps()
 
@@ -27,15 +28,15 @@
 
   async function fetchKeys() {
     const response = await api.get(`/api/keys/`)
-    const res = await response.json()
-    return res.budibase
+    return await response.json()
   }
 
   async function checkIfKeysAndApps() {
-    const key = await fetchKeys()
+    const keys = await fetchKeys()
     const apps = await getApps()
-    if (key) {
+    if (keys.userId) {
       hasKey = true
+      analytics.identify(keys.userId)
     } else {
       showCreateAppModal()
     }
