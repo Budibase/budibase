@@ -21,6 +21,10 @@ function LinkDocument(
   fieldName2,
   recordId2
 ) {
+  // build the ID out of unique references to this link document
+  this._id = `${modelId1}/${modelId2}/${fieldName1}/${fieldName2}/${recordId1}/${recordId2}`
+  // required for referencing in view
+  this.type = "link"
   this.doc1 = {
     modelId: modelId1,
     fieldName: fieldName1,
@@ -34,18 +38,12 @@ function LinkDocument(
 }
 
 class LinkController {
-  /**
-   * Create a new link controller which can be used to handle link updates for an event.
-   * @param {string} instanceId The instance in which updates will be carried out.
-   * @param {{modelId: string, model: object|undefined, record: object|undefined}} eventData data about
-   * what has occurred to drive this update - events are emitted when an operation that matters occurs.
-   */
-  constructor(instanceId, eventData) {
+  constructor({ instanceId, modelId, record, model }) {
     this._instanceId = instanceId
     this._db = new CouchDB(instanceId)
-    this._modelId = eventData.modelId
-    this._record = eventData.record
-    this._model = eventData.model
+    this._modelId = modelId
+    this._record = record
+    this._model = model
   }
 
   /**
@@ -106,9 +104,8 @@ class LinkController {
       const field = model.schema[fieldName]
       if (field.type === "link") {
         // get link docs to compare against
-        let currentLinkIds = await this.getLinkDocs(fieldName, record._id).map(
-          doc => doc._id
-        )
+        let linkDocs = await this.getLinkDocs(fieldName, record._id)
+        let currentLinkIds = linkDocs.map(doc => doc._id)
         let toLinkIds = record[fieldName]
         for (let linkId of toLinkIds) {
           if (currentLinkIds.indexOf(linkId) === -1) {
@@ -144,7 +141,11 @@ class LinkController {
   async recordDeleted() {
     const record = this._record
     // get link docs to compare against
-    let toDelete = await this.getLinkDocs(null, record._id).map(doc => {
+    let linkDocs = await this.getLinkDocs(null, record._id)
+    if (linkDocs.length === 0) {
+      return null
+    }
+    let toDelete = linkDocs.map(doc => {
       return {
         ...doc,
         _deleted: true,
@@ -196,8 +197,13 @@ class LinkController {
         await this._db.put(linkedModel)
       }
     }
+    // get link docs to compare against
+    let linkDocs = await this.getLinkDocs()
+    if (linkDocs.length === 0) {
+      return null
+    }
     // get link docs for this model and configure for deletion
-    let toDelete = await this.getLinkDocs().map(doc => {
+    let toDelete = linkDocs.map(doc => {
       return {
         ...doc,
         _deleted: true,

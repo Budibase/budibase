@@ -1,6 +1,11 @@
 const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const newid = require("../../db/newid")
+const {
+  EventType,
+  updateLinksForRecord,
+  getLinkDocuments,
+} = require("../../db/linkedRecords")
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function(value) {
@@ -41,6 +46,14 @@ exports.patch = async function(ctx) {
   const response = await db.put(record)
   record._rev = response.rev
   record.type = "record"
+  await updateLinksForRecord({
+    instanceId,
+    eventType: EventType.RECORD_UPDATE,
+    record,
+    modelId: record.modelId,
+    model,
+  })
+
   ctx.eventEmitter &&
     ctx.eventEmitter.emitRecord(`record:update`, instanceId, record, model)
   ctx.body = record
@@ -89,29 +102,13 @@ exports.save = async function(ctx) {
   record.type = "record"
   const response = await db.post(record)
   record._rev = response.rev
-
-  // create links in other tables
-  for (let key in record) {
-    if (model.schema[key] && model.schema[key].type === "link") {
-      const linked = await db.allDocs({
-        include_docs: true,
-        keys: record[key],
-      })
-
-      // add this record to the linked records in attached models
-      const linkedDocs = linked.rows.map(row => {
-        const doc = row.doc
-        return {
-          ...doc,
-          [model.name]: doc[model.name]
-            ? [...doc[model.name], record._id]
-            : [record._id],
-        }
-      })
-
-      await db.bulkDocs(linkedDocs)
-    }
-  }
+  await updateLinksForRecord({
+    instanceId,
+    eventType: EventType.RECORD_SAVE,
+    record,
+    modelId: record.modelId,
+    model,
+  })
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitRecord(`record:save`, instanceId, record, model)
@@ -179,6 +176,13 @@ exports.destroy = async function(ctx) {
   }
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
   ctx.status = 200
+  await updateLinksForRecord({
+    instanceId,
+    eventType: EventType.RECORD_DELETE,
+    record,
+    modelId: record.modelId,
+  })
+
   // for automations include the record that was deleted
   ctx.record = record
   ctx.eventEmitter &&
@@ -201,7 +205,7 @@ async function validate({ instanceId, modelId, record, model }) {
     model = await db.get(modelId)
   }
   const errors = {}
-  for (let fieldName in model.schema) {
+  for (let fieldName of Object.keys(model.schema)) {
     const res = validateJs.single(
       record[fieldName],
       model.schema[fieldName].constraints
@@ -209,4 +213,29 @@ async function validate({ instanceId, modelId, record, model }) {
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
+}
+
+exports.fetchLinkedRecords = async function(ctx) {
+  const instanceId = ctx.user.instanceId
+  const modelId = ctx.params.modelId
+  const fieldName = ctx.params.fieldName
+  const recordId = ctx.params.recordId
+  if (instanceId == null || modelId == null || recordId == null) {
+    ctx.status = 400
+    ctx.body = {
+      status: 400,
+      error:
+        "Cannot handle request, URI params have not been successfully prepared.",
+    }
+    return
+  }
+  let records = await getLinkDocuments({
+    instanceId,
+    modelId,
+    fieldName,
+    recordId,
+    includeDoc: true,
+  })
+  ctx.status = 200
+  ctx.body = { records: records }
 }

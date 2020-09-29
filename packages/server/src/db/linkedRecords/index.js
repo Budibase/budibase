@@ -1,5 +1,3 @@
-const emitter = require("../../events")
-const InMemoryQueue = require("../../utilities/queue/inMemoryQueue")
 const LinkController = require("./LinkController")
 const CouchDB = require("../index")
 
@@ -16,55 +14,85 @@ const EventType = {
   MODEL_DELETE: "model:delete",
 }
 
-const linkedRecordQueue = new InMemoryQueue("linkedRecordQueue")
+module.exports.EventType = EventType
 
-function createEmitterCallback(eventName) {
-  emitter.on(eventName, function(event) {
-    if (!event || !event.record || !event.record.modelId) {
-      return
-    }
-    linkedRecordQueue.add({
-      type: eventName,
-      event,
-    })
-  })
-}
-
-for (let typeKey of Object.keys(EventType)) {
-  createEmitterCallback(EventType[typeKey])
-}
-
-linkedRecordQueue.process(async job => {
-  let data = job.data
+/**
+ * Update link documents for a model - this is to be called by the model controller when a model is being changed.
+ * @param {EventType} eventType states what type of model change is occurring, means this can be expanded upon in the
+ * future quite easily (all updates go through one function).
+ * @param {string} instanceId The ID of the instance in which the model change is occurring.
+ * @param {object} model The model which is changing, whether it is being deleted, created or updated.
+ * @returns {Promise<null>} When the update is complete this will respond successfully.
+ */
+module.exports.updateLinksForModel = async ({
+  eventType,
+  instanceId,
+  model,
+}) => {
   // can't operate without these properties
-  if (data.instanceId == null || data.modelId == null) {
-    return
+  if (instanceId == null || model == null) {
+    return null
   }
-  // link controller exists to help manage state, the operation
-  // of updating links is a particularly stateful task
-  let linkController = new LinkController(data.instanceId, data)
-  // model doesn't have links, can stop here
+  let linkController = new LinkController({
+    instanceId,
+    modelId: model._id,
+    model,
+  })
   if (!(await linkController.doesModelHaveLinkedFields())) {
-    return
+    return null
   }
-  // carry out the logic at a top level so that we can handle
-  // multiple operations for a single queue entry if desired
-  switch (data.type) {
-    case EventType.RECORD_SAVE:
-    case EventType.RECORD_UPDATE:
-      await linkController.recordSaved()
-      break
-    case EventType.RECORD_DELETE:
-      await linkController.recordDeleted()
-      break
+  switch (eventType) {
     case EventType.MODEL_SAVE:
       await linkController.modelSaved()
       break
     case EventType.MODEL_DELETE:
       await linkController.modelDeleted()
       break
+    default:
+      throw "Type of event is not known, linked record handler requires update."
   }
-})
+}
+
+/**
+ * Update link documents for a record - this is to be called by the record controller when a record is being changed.
+ * @param {EventType} eventType states what type of record change is occurring, means this can be expanded upon in the
+ * future quite easily (all updates go through one function).
+ * @param {string} instanceId The ID of the instance in which the record update is occurring.
+ * @param {object} record The record which is changing, e.g. created, updated or deleted.
+ * @param {string} modelId The ID of the of the model which is being updated.
+ * @param {object|null} model If the model has already been retrieved this can be used to reduce database gets.
+ * @returns {Promise<null>} When the update is complete this will respond successfully.
+ */
+module.exports.updateLinksForRecord = async ({
+  eventType,
+  instanceId,
+  record,
+  modelId,
+  model,
+}) => {
+  // can't operate without these properties
+  if (instanceId == null || modelId == null) {
+    return null
+  }
+  let linkController = new LinkController({
+    instanceId,
+    modelId,
+    model,
+    record,
+  })
+  if (!(await linkController.doesModelHaveLinkedFields())) {
+    return null
+  }
+  switch (eventType) {
+    case EventType.RECORD_SAVE:
+    case EventType.RECORD_UPDATE:
+      return await linkController.recordSaved()
+    case EventType.RECORD_DELETE:
+      return await linkController.recordDeleted()
+    default:
+      throw "Type of event is not known, linked record handler requires update."
+  }
+}
 
 /**
  * Gets the linking documents, not the linked documents themselves.
@@ -104,6 +132,10 @@ module.exports.getLinkDocuments = async ({
     params = { startKey: [modelId, 1], endKey: [modelId, 1, {}] }
   }
   params.include_docs = !!includeDoc
-  const response = await db.query("database/by_link", params)
-  return response.rows.map(row => row.doc)
+  try {
+    const response = await db.query("database/by_link", params)
+    return response.rows.map(row => row.doc)
+  } catch (err) {
+    console.error(err)
+  }
 }
