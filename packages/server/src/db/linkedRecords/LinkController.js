@@ -102,14 +102,18 @@ class LinkController {
     const record = this._record
     const operations = []
     for (let fieldName of Object.keys(model.schema)) {
+      // get the links this record wants to make
+      const recordField = record[fieldName]
       const field = model.schema[fieldName]
-      if (field.type === "link") {
+      if (
+        field.type === "link" &&
+        recordField != null &&
+        recordField.length !== 0
+      ) {
         // get link docs to compare against
         const linkDocIds = await this.getLinkDocs(false, fieldName, record._id)
-        // get the links this record wants to make
-        const toLinkIds = record[fieldName]
-        // iterate through them and find any which don't exist, create them
-        for (let linkId of toLinkIds) {
+        // iterate through the link IDs in the record field, see if any don't exist already
+        for (let linkId of recordField) {
           if (linkDocIds.indexOf(linkId) === -1) {
             operations.push(
               new LinkDocument(
@@ -124,14 +128,14 @@ class LinkController {
           }
           // work out any that need to be deleted
           const toDeleteIds = linkDocIds.filter(
-            id => toLinkIds.indexOf(id) === -1
+            id => recordField.indexOf(id) === -1
           )
           operations.concat(
             toDeleteIds.map(id => ({ _id: id, _deleted: true }))
           )
         }
-        // remove the field from the record, shouldn't store it
-        delete record[fieldName]
+        // replace this field with a simple entry to denote there are links
+        record[fieldName] = { type: "link" }
       }
     }
     await this._db.bulkDocs(operations)
