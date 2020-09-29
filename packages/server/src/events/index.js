@@ -20,9 +20,7 @@ class BudibaseEmitter extends EventEmitter {
     if (model) {
       event.model = model
     }
-    if (record._id) {
-      event.id = record._id
-    }
+    event.id = record._id
     if (record._rev) {
       event.revision = record._rev
     }
@@ -30,14 +28,16 @@ class BudibaseEmitter extends EventEmitter {
   }
 
   emitModel(eventName, instanceId, model = null) {
+    const modelId = model._id
     let event = {
-      model,
+      model: {
+        ...model,
+        modelId: modelId,
+      },
       instanceId,
-      modelId: model._id,
+      modelId: modelId,
     }
-    if (model._id) {
-      event.id = model._id
-    }
+    event.id = modelId
     if (model._rev) {
       event.revision = model._rev
     }
