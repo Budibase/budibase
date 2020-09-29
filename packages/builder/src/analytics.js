@@ -2,9 +2,16 @@ import * as Sentry from "@sentry/browser"
 import posthog from "posthog-js"
 import api from "builderStore/api"
 
-const analyticsEnabled = process.env.NODE_ENV === "production"
+let analyticsEnabled
 
-function activate() {
+async function activate() {
+  if (analyticsEnabled === undefined) {
+    // only the server knows the true NODE_ENV
+    // this was an issue as NODE_ENV = 'cypress' on the server,
+    // but 'production' on the client
+    const response = await api.get("/api/analytics")
+    analyticsEnabled = (await response.json()) === true
+  }
   if (!analyticsEnabled) return
   Sentry.init({ dsn: process.env.SENTRY_DSN })
   if (!process.env.POSTHOG_TOKEN) return
