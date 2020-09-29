@@ -50,6 +50,7 @@ async function identifyByApiKey(apiKey) {
 function captureException(err) {
   if (!analyticsEnabled) return
   Sentry.captureException(err)
+  captureEvent("Error", { error: err.message ? err.message : err })
 }
 
 function captureEvent(eventName, props = {}) {

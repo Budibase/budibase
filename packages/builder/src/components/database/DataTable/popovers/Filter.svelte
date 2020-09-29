@@ -64,7 +64,9 @@
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
     dropdown.hide()
-    analytics.captureEvent("Added View Filter")
+    analytics.captureEvent("Added View Filter", {
+      filters: JSON.stringify(view.filters),
+    })
   }
 
   function removeFilter(idx) {
