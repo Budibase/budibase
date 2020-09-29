@@ -2,7 +2,6 @@ const fs = require("fs")
 const CouchDB = require("../../db")
 const client = require("../../db/clientDb")
 const newid = require("../../db/newid")
-const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const { downloadTemplate } = require("../../utilities/templates")
 
 exports.create = async function(ctx) {
