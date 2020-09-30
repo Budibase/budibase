@@ -114,7 +114,7 @@ class LinkController {
         const linkDocIds = await this.getLinkDocs(false, fieldName, record._id)
         // iterate through the link IDs in the record field, see if any don't exist already
         for (let linkId of recordField) {
-          if (linkDocIds.indexOf(linkId) === -1) {
+          if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
             operations.push(
               new LinkDocument(
                 model._id,
