@@ -170,7 +170,7 @@ exports.find = async function(ctx) {
     ctx.throw(400, "Supplied modelId does not match the records modelId")
     return
   }
-  ctx.body = await linkRecords.attachLinkInfoSingleRecord(instanceId, record)
+  ctx.body = await linkRecords.attachLinkInfo(instanceId, record)
 }
 
 exports.destroy = async function(ctx) {
@@ -222,11 +222,10 @@ async function validate({ instanceId, modelId, record, model }) {
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-exports.fetchLinkedRecords = async function(ctx) {
+exports.fetchEnrichedRecord = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const modelId = ctx.params.modelId
-  const fieldName = ctx.params.fieldName
   const recordId = ctx.params.recordId
   if (instanceId == null || modelId == null || recordId == null) {
     ctx.status = 400
@@ -237,18 +236,35 @@ exports.fetchLinkedRecords = async function(ctx) {
     }
     return
   }
+  // // need model to work out where links go in record
+  const modelAndRecord = await Promise.all([db.get(modelId), db.get(recordId)])
+  const model = modelAndRecord[0]
+  const record = modelAndRecord[1]
   // get the link docs
-  const linkDocIds = await linkRecords.getLinkDocuments({
+  const linkVals = await linkRecords.getLinkDocuments({
     instanceId,
     modelId,
-    fieldName,
     recordId,
   })
-  // now get the docs from the all docs index
+  // look up the actual records based on the ids
   const response = await db.allDocs({
     include_docs: true,
-    keys: linkDocIds,
+    keys: linkVals.map(linkVal => linkVal.id),
   })
-  ctx.body = response.rows.map(row => row.doc)
+  // need to include the IDs in these records for any links they may have
+  let linkedRecords = await linkRecords.attachLinkInfo(
+    instanceId,
+    response.rows.map(row => row.doc)
+  )
+  // insert the link records in the correct place throughout the main record
+  for (let fieldName of Object.keys(model.schema)) {
+    let field = model.schema[fieldName]
+    if (field.type === "link") {
+      record[fieldName] = linkedRecords.filter(
+        linkRecord => linkRecord.modelId === field.modelId
+      )
+    }
+  }
+  ctx.body = record
   ctx.status = 200
 }
