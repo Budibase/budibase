@@ -3,6 +3,7 @@
   import Arrow from "./Arrow.svelte"
   import { flip } from "svelte/animate"
   import { fade, fly } from "svelte/transition"
+  import { automationStore } from "builderStore"
 
   export let automation
   export let onSelect
@@ -17,8 +18,14 @@
       blocks = blocks.concat(automation.definition.steps || [])
     }
   }
+  $: automationCount = $automationStore.automations?.length ?? 0
 </script>
 
+{#if automationCount === 0}
+  <i>Create your first automation to get started</i>
+{:else if automation == null}
+  <i>Select an automation to edit</i>
+{/if}
 <section class="canvas">
   {#each blocks as block, idx (block.id)}
     <div
@@ -35,6 +42,13 @@
 </section>
 
 <style>
+  i {
+    font-size: var(--font-size-xl);
+    color: var(--grey-4);
+    padding: var(--spacing-xl) 40px;
+    align-self: flex-start;
+  }
+
   section {
     position: absolute;
     padding: 40px;

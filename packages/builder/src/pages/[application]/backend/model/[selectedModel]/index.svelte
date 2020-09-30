@@ -20,8 +20,7 @@
 
 <style>
   i {
-    font-size: 20px;
-    padding-bottom: 10px;
+    font-size: var(--font-size-xl);
     color: var(--grey-4);
   }
 </style>

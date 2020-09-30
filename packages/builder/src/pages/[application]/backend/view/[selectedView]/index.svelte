@@ -15,13 +15,12 @@
 {#if $backendUiStore.selectedDatabase._id && selectedView}
   <ViewDataTable view={selectedView} />
 {:else}
-  <i>create your first table to start building</i>
+  <i>Create your first table to start building</i>
 {/if}
 
 <style>
   i {
-    font-size: 20px;
-    margin-right: 10px;
+    font-size: var(--font-size-xl);
     color: var(--grey-4);
   }
 </style>
