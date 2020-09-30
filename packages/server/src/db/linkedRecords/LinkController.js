@@ -187,6 +187,36 @@ class LinkController {
   }
 
   /**
+   * Remove a field from a model as well as any linked records that pertained to it.
+   * @param {string} fieldName The field to be removed from the model.
+   * @returns {Promise<void>} The model has now been updated.
+   */
+  async removeFieldFromModel(fieldName) {
+    let model = await this.model()
+    let field = model.schema[fieldName]
+    const linkDocs = await this.getModelLinkDocs(IncludeDocs.INCLUDE)
+    let toDelete = linkDocs.filter(linkDoc => {
+      let correctFieldName =
+        linkDoc.doc1.modelId === model._id
+          ? linkDoc.doc1.fieldName
+          : linkDoc.doc2.fieldName
+      return correctFieldName === fieldName
+    })
+    await this._db.bulkDocs(
+      toDelete.map(doc => {
+        return {
+          ...doc,
+          _deleted: true,
+        }
+      })
+    )
+    // remove schema from other model
+    let linkedModel = this._db.get(field.modelId)
+    delete linkedModel[field.fieldName]
+    this._db.put(linkedModel)
+  }
+
+  /**
    * When a model is saved this will carry out the necessary operations to make sure
    * any linked models are notified and updated correctly.
    * @returns {Promise<object>} The operation has been completed and the link documents should now
@@ -213,31 +243,24 @@ class LinkController {
     return model
   }
 
+  /**
+   * Update a model, this means if a field is removed need to handle removing from other table and removing
+   * any link docs that pertained to it.
+   * @param {object} oldModel The model before it was updated which can be used for differencing.
+   * @returns {Promise<Object>} The model which has been saved, same response as with the modelSaved function.
+   */
   async modelUpdated(oldModel) {
     // first start by checking if any link columns have been deleted
-    // TODO: need to delete link column deletion
     const newModel = await this.model()
-    const modelId = newModel._id
-    const linkDocs = await this.getModelLinkDocs(IncludeDocs.INCLUDE)
     for (let fieldName of Object.keys(oldModel.schema)) {
       const field = oldModel.schema[fieldName]
       // this field has been removed from the model schema
       if (field.type === "link" && newModel.schema[fieldName] == null) {
-        let toDelete = linkDocs.filter(linkDoc => {
-          let correctDoc =
-            linkDoc.doc1.modelId === modelId ? linkDoc.doc1 : linkDoc.doc2
-          return correctDoc.fieldName === fieldName
-        })
-        await this._db.bulkDocs(
-          toDelete.map(doc => {
-            return {
-              ...doc,
-              _deleted: true,
-            }
-          })
-        )
+        await this.removeFieldFromModel(fieldName)
       }
     }
+    // now handle as if its a new save
+    return this.modelSaved()
   }
 
   /**
