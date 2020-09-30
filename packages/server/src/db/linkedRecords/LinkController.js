@@ -79,13 +79,12 @@ class LinkController {
   /**
    * Utility function for main getLinkDocuments function - refer to it for functionality.
    */
-  getLinkDocs(includeDocs, fieldName = null, recordId = null) {
+  getLinkDocs(recordId = null) {
     return linkedRecords.getLinkDocuments({
       instanceId: this._instanceId,
       modelId: this._modelId,
-      fieldName,
       recordId,
-      includeDocs,
+      includeDocs: false,
     })
   }
 
@@ -101,6 +100,8 @@ class LinkController {
     const model = await this.model()
     const record = this._record
     const operations = []
+    // get link docs to compare against
+    const linkVals = await this.getLinkDocs(record._id)
     for (let fieldName of Object.keys(model.schema)) {
       // get the links this record wants to make
       const recordField = record[fieldName]
@@ -110,8 +111,11 @@ class LinkController {
         recordField != null &&
         recordField.length !== 0
       ) {
-        // get link docs to compare against
-        const linkDocIds = await this.getLinkDocs(false, fieldName, record._id)
+        // check which links actual pertain to the update in this record
+        let linkDocIds = linkVals.filter(
+          linkVal => linkVal.fieldName === fieldName
+        )
+        linkDocIds = linkDocIds.map(linkVal => linkVal.id)
         // iterate through the link IDs in the record field, see if any don't exist already
         for (let linkId of recordField) {
           if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
@@ -135,7 +139,7 @@ class LinkController {
           )
         }
         // replace this field with a simple entry to denote there are links
-        record[fieldName] = { type: "link" }
+        delete record[fieldName]
       }
     }
     await this._db.bulkDocs(operations)
@@ -151,13 +155,15 @@ class LinkController {
   async recordDeleted() {
     const record = this._record
     // need to get the full link docs to be be able to delete it
-    const linkDocs = await this.getLinkDocs(true, null, record._id)
-    if (linkDocs.length === 0) {
+    const linkDocIds = await this.getLinkDocs(record._id).map(
+      linkVal => linkVal.id
+    )
+    if (linkDocIds.length === 0) {
       return null
     }
-    const toDelete = linkDocs.map(doc => {
+    const toDelete = linkDocIds.map(id => {
       return {
-        ...doc,
+        _id: id,
         _deleted: true,
       }
     })
@@ -211,14 +217,14 @@ class LinkController {
       }
     }
     // need to get the full link docs to delete them
-    const linkDocs = await this.getLinkDocs(true)
-    if (linkDocs.length === 0) {
+    const linkDocIds = await this.getLinkDocs().map(linkVal => linkVal.id)
+    if (linkDocIds.length === 0) {
       return null
     }
     // get link docs for this model and configure for deletion
-    const toDelete = linkDocs.map(doc => {
+    const toDelete = linkDocIds.map(id => {
       return {
-        ...doc,
+        _id: id,
         _deleted: true,
       }
     })

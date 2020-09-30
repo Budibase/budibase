@@ -32,10 +32,14 @@ exports.createLinkView = async instanceId => {
       if (doc.type === "link") {
         let doc1 = doc.doc1
         let doc2 = doc.doc2
-        emit([doc1.modelId, 1, doc1.fieldName, doc1.recordId], doc2.recordId)
-        emit([doc2.modelId, 1, doc2.fieldName, doc2.recordId], doc1.recordId)
-        emit([doc1.modelId, 2, doc1.recordId], doc2.recordId)
-        emit([doc2.modelId, 2, doc2.recordId], doc1.recordId)
+        emit([doc1.modelId, doc1.recordId], {
+          id: doc2.recordId,
+          fieldName: doc1.fieldName,
+        })
+        emit([doc2.modelId, doc2.recordId], {
+          id: doc1.recordId,
+          fieldName: doc2.fieldName,
+        })
       }
     }.toString(),
   }
@@ -93,61 +97,49 @@ exports.updateLinks = async ({
 }
 
 /**
- * Utility function to in parallel up a list of records with link info.
- * @param {string} instanceId The instance in which this record has been created.
- * @param {object[]} records A list records to be updated with link info.
- * @returns {Promise<object[]>} The updated records (this may be the same if no links were found).
- */
-exports.attachLinkInfo = async (instanceId, records) => {
-  let recordPromises = []
-  for (let record of records) {
-    recordPromises.push(exports.attachLinkInfoSingleRecord(instanceId, record))
-  }
-  return await Promise.all(recordPromises)
-}
-
-/**
  * Update a record with information about the links that pertain to it.
  * @param {string} instanceId The instance in which this record has been created.
- * @param {object} record The record itself which is to be updated with info (if applicable).
- * @returns {Promise<object>} The updated record (this may be the same if no links were found).
+ * @param {object} records The record(s) themselves which is to be updated with info (if applicable). This can be
+ * a single record object or an array of records - both will be handled.
+ * @returns {Promise<object>} The updated record (this may be the same if no links were found). If an array was input
+ * then an array will be output, object input -> object output.
  */
-exports.attachLinkInfoSingleRecord = async (instanceId, record) => {
-  // first check if the record has any link fields and set counts to zero
-  let hasLinkedRecords = false
-  for (let fieldName of Object.keys(record)) {
-    let field = record[fieldName]
-    if (field != null && field.type === "link") {
-      hasLinkedRecords = true
-      field.count = 0
+exports.attachLinkInfo = async (instanceId, records) => {
+  // handle a single record as well as multiple
+  let wasArray = true
+  if (!(records instanceof Array)) {
+    records = [records]
+    wasArray = false
+  }
+  // start by getting all the link values for performance reasons
+  let responses = await Promise.all(
+    records.map(record =>
+      exports.getLinkDocuments({
+        instanceId,
+        modelId: record.modelId,
+        recordId: record._id,
+        includeDocs: false,
+      })
+    )
+  )
+  // can just use an index to access responses, order maintained
+  let index = 0
+  // now iterate through the records and all field information
+  for (let record of records) {
+    // get all links for record, ignore fieldName for now
+    const linkVals = responses[index++]
+    for (let linkVal of linkVals) {
+      // work out which link pertains to this record
+      if (!(record[linkVal.fieldName] instanceof Array)) {
+        record[linkVal.fieldName] = [linkVal.id]
+      } else {
+        record[linkVal.fieldName].push(linkVal.id)
+      }
     }
   }
-  // no linked records, can simply return
-  if (!hasLinkedRecords) {
-    return record
-  }
-  const recordId = record._id
-  const modelId = record.modelId
-  // get all links for record, ignore fieldName for now
-  const linkDocs = await exports.getLinkDocuments({
-    instanceId,
-    modelId,
-    recordId,
-    includeDocs: true,
-  })
-  if (linkDocs == null || linkDocs.length === 0) {
-    return record
-  }
-  for (let linkDoc of linkDocs) {
-    // work out which link pertains to this record
-    const doc = linkDoc.doc1.recordId === recordId ? linkDoc.doc1 : linkDoc.doc2
-    if (record[doc.fieldName] == null || isNaN(record[doc.fieldName].count)) {
-      record[doc.fieldName] = { type: "link", count: 1 }
-    } else {
-      record[doc.fieldName].count++
-    }
-  }
-  return record
+  // if it was an array when it came in then handle it as an array in response
+  // otherwise return the first element as there was only one input
+  return wasArray ? records : records[0]
 }
 
 /**
@@ -167,25 +159,17 @@ exports.attachLinkInfoSingleRecord = async (instanceId, record) => {
 exports.getLinkDocuments = async ({
   instanceId,
   modelId,
-  fieldName,
   recordId,
   includeDocs,
 }) => {
   const db = new CouchDB(instanceId)
   let params
-  if (fieldName != null && recordId != null) {
-    params = { key: [modelId, 1, fieldName, recordId] }
-  } else if (fieldName != null && recordId == null) {
-    params = {
-      startKey: [modelId, 1, fieldName],
-      endKey: [modelId, 1, fieldName, {}],
-    }
-  } else if (fieldName == null && recordId != null) {
-    params = { key: [modelId, 2, recordId] }
+  if (recordId != null) {
+    params = { key: [modelId, recordId] }
   }
   // only model is known
   else {
-    params = { startKey: [modelId, 1], endKey: [modelId, 1, {}] }
+    params = { startKey: [modelId], endKey: [modelId, {}] }
   }
   params.include_docs = !!includeDocs
   try {

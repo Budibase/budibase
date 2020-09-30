@@ -7,14 +7,9 @@ const router = Router()
 
 router
   .get(
-    "/api/:modelId/:recordId/:fieldName/links",
+    "/api/:modelId/:recordId/enrich",
     authorized(READ_MODEL, ctx => ctx.params.modelId),
-    recordController.fetchLinkedRecords
-  )
-  .get(
-    "/api/:modelId/:recordId/links",
-    authorized(READ_MODEL, ctx => ctx.params.modelId),
-    recordController.fetchLinkedRecords
+    recordController.fetchEnrichedRecord
   )
   .get(
     "/api/:modelId/records",
