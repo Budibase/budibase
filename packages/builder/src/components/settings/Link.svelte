@@ -5,7 +5,7 @@
   import { isActive, goto, layout } from "@sveltech/routify"
 
   // Handle create app modal
-  const { open } = getContext("simple-modal")
+  const { open, close } = getContext("simple-modal")
 
   const showSettingsModal = () => {
     open(
@@ -15,7 +15,6 @@
         description: "This is a hardcoded description that needs to change",
       },
       {
-        closeButton: false,
         closeOnEsc: true,
         styleContent: { padding: 0 },
         closeOnOuterClick: true,
