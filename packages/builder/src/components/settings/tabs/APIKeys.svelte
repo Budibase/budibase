@@ -24,31 +24,23 @@
 </script>
 
 <div class="container">
-  <div class="background">
-    <Input
-      on:save={e => updateKey(['budibase', e.detail])}
-      thin
-      edit
-      value={keys.budibase}
-      label="Budibase" />
-  </div>
-  <div class="background">
-    <Input
-      on:save={e => updateKey(['sendgrid', e.detail])}
-      thin
-      edit
-      value={keys.sendgrid}
-      label="Sendgrid" />
-  </div>
+  <Input
+    on:save={e => updateKey(['budibase', e.detail])}
+    thin
+    edit
+    value={keys.budibase}
+    label="Budibase API Key" />
+  <Input
+    on:save={e => updateKey(['sendgrid', e.detail])}
+    thin
+    edit
+    value={keys.sendgrid}
+    label="Sendgrid API Key" />
 </div>
 
 <style>
   .container {
     display: grid;
-    grid-gap: var(--space);
-  }
-  .background {
-    border-radius: 5px;
-    padding: 12px 0px;
+    grid-gap: var(--spacing-xl);
   }
 </style>

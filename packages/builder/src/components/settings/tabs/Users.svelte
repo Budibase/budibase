@@ -1,5 +1,5 @@
 <script>
-  import { Input, Select, Button } from "@budibase/bbui"
+  import { Input, Select, Button, Label } from "@budibase/bbui"
   import UserRow from "../UserRow.svelte"
 
   import { store, backendUiStore } from "builderStore"
@@ -8,7 +8,7 @@
 
   let username = ""
   let password = ""
-  let accessLevelId
+  let accessLevelId = "ADMIN"
 
   $: valid = username && password && accessLevelId
   $: appId = $store.appId
@@ -52,8 +52,8 @@
 </script>
 
 <div class="container">
-  <div class="background">
-    <div class="title">Create new user</div>
+  <div>
+    <Label extraSmall grey>Create New User</Label>
     <div class="inputs">
       <Input thin bind:value={username} name="Name" placeholder="Username" />
       <Input
@@ -61,19 +61,17 @@
         bind:value={password}
         name="Password"
         placeholder="Password" />
-      <Select bind:value={accessLevelId} thin>
+      <Select secondary bind:value={accessLevelId} thin>
         <option value="ADMIN">Admin</option>
         <option value="POWER_USER">Power User</option>
       </Select>
-    </div>
-    <div class="create-button">
-      <Button on:click={createUser} small primary>Create</Button>
+      <Button on:click={createUser} primary>Create</Button>
     </div>
   </div>
-  <div class="background-users">
-    <div class="title">Current Users</div>
+  <div>
+    <Label extraSmall grey>Current Users</Label>
     {#await fetchUsersPromise}
-      Loading state!
+      Loading...
     {:then users}
       <ul>
         {#each users as user}
@@ -94,57 +92,21 @@
 <style>
   .container {
     display: grid;
-    grid-gap: 32px;
-    margin-top: 32px;
-  }
-  .background {
-    position: relative;
-    display: grid;
-    grid-gap: 12px;
-    border-radius: 5px;
+    grid-gap: var(--spacing-xl);
   }
 
-  .background-users {
-    position: relative;
-    display: grid;
-    grid-gap: 12px;
-    border-radius: 5px;
-  }
-
-  .create-button {
-    position: absolute;
-    top: 0px;
-    right: 0px;
-  }
-  .create-button :global(button) {
-    font-size: var(--font-size-sm);
-    min-width: 100px;
-    border-radius: var(--rounded-small);
-  }
-  .title {
-    font-size: 14px;
-    font-weight: 500;
-  }
   .inputs {
     display: grid;
-    margin-top: 12px;
-    grid-gap: 18px;
-    grid-template-columns: 1fr 1fr 1fr;
+    justify-items: stretch;
+    grid-gap: var(--spacing-m);
+    grid-template-columns: 1fr 1fr 1fr 140px;
   }
-  .inputs :global(input) {
-    padding: 10px 12px;
-    border-radius: var(--rounded-small);
-  }
-  .inputs :global(select) {
-    padding: 10px 12px;
-    border-radius: var(--rounded-small);
-    background-color: var(--grey-2);
-  }
+
   ul {
     list-style: none;
     padding: 0;
     display: grid;
-    grid-gap: 8px;
-    margin-top: 0;
+    grid-gap: var(--spacing-m);
+    margin: 0;
   }
 </style>
