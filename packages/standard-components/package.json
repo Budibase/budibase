@@ -37,7 +37,7 @@
   "dependencies": {
     "@beyonk/svelte-googlemaps": "^2.2.0",
     "@fortawesome/fontawesome-free": "^5.14.0",
-    "@budibase/bbui": "^1.37.1",
+    "@budibase/bbui": "^1.39.0",
     "britecharts": "^2.16.1",
     "d3-selection": "^1.4.2",
     "fast-sort": "^2.2.0",
