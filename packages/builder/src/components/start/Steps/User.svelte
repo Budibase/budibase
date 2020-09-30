@@ -22,7 +22,6 @@
     type="pasword"
     error={blurred.password && validationErrors.password} />
   <Select secondary name="accessLevelId">
-    <option value="">Choose an option</option>
     <option value="ADMIN">Admin</option>
     <option value="POWER_USER">Power User</option>
   </Select>
