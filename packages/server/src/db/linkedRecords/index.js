@@ -1,5 +1,6 @@
 const LinkController = require("./LinkController")
 const CouchDB = require("../index")
+const Sentry = require("@sentry/node")
 
 /**
  * This functionality makes sure that when records with links are created, updated or deleted they are processed
@@ -100,7 +101,7 @@ exports.updateLinks = async ({
 exports.attachLinkInfo = async (instanceId, records) => {
   let recordPromises = []
   for (let record of records) {
-    recordPromises.push(exports.attachLinkInfo(instanceId, record))
+    recordPromises.push(exports.attachLinkInfoSingleRecord(instanceId, record))
   }
   return await Promise.all(recordPromises)
 }
@@ -111,14 +112,14 @@ exports.attachLinkInfo = async (instanceId, records) => {
  * @param {object} record The record itself which is to be updated with info (if applicable).
  * @returns {Promise<object>} The updated record (this may be the same if no links were found).
  */
-exports.attachLinkInfo = async (instanceId, record) => {
-  // first check if the record has any link fields
+exports.attachLinkInfoSingleRecord = async (instanceId, record) => {
+  // first check if the record has any link fields and set counts to zero
   let hasLinkedRecords = false
   for (let fieldName of Object.keys(record)) {
     let field = record[fieldName]
     if (field != null && field.type === "link") {
       hasLinkedRecords = true
-      break
+      field.count = 0
     }
   }
   // no linked records, can simply return
@@ -140,8 +141,8 @@ exports.attachLinkInfo = async (instanceId, record) => {
   for (let linkDoc of linkDocs) {
     // work out which link pertains to this record
     const doc = linkDoc.doc1.recordId === recordId ? linkDoc.doc1 : linkDoc.doc2
-    if (record[doc.fieldName].count == null) {
-      record[doc.fieldName].count = 1
+    if (record[doc.fieldName] == null || isNaN(record[doc.fieldName].count)) {
+      record[doc.fieldName] = { type: "link", count: 1 }
     } else {
       record[doc.fieldName].count++
     }
@@ -189,13 +190,17 @@ exports.getLinkDocuments = async ({
   params.include_docs = !!includeDocs
   try {
     const response = await db.query("database/by_link", params)
-    return response.rows.map(row => row.doc)
+    if (includeDocs) {
+      return response.rows.map(row => row.doc)
+    } else {
+      return response.rows.map(row => row.value)
+    }
   } catch (err) {
     // check if the view doesn't exist, it should for all new instances
     if (err != null && err.name === "not_found") {
       await exports.createLinkView(instanceId)
     } else {
-      console.error(err)
+      Sentry.captureException(err)
     }
   }
 }

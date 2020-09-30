@@ -55,6 +55,8 @@ exports.save = async function(ctx) {
   modelToSave._rev = result.rev
 
   const designDoc = await db.get("_design/database")
+  /** TODO: should we include the doc type here - currently it is possible for anything
+      with a modelId in it to be returned */
   designDoc.views = {
     ...designDoc.views,
     [`all_${modelToSave._id}`]: {

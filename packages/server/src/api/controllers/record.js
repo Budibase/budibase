@@ -170,7 +170,7 @@ exports.find = async function(ctx) {
     ctx.throw(400, "Supplied modelId does not match the records modelId")
     return
   }
-  ctx.body = await linkRecords.attachLinkInfo(instanceId, record)
+  ctx.body = await linkRecords.attachLinkInfoSingleRecord(instanceId, record)
 }
 
 exports.destroy = async function(ctx) {
@@ -245,7 +245,7 @@ exports.fetchLinkedRecords = async function(ctx) {
     recordId,
   })
   // now get the docs from the all docs index
-  const response = await db.query(`database/_all_docs`, {
+  const response = await db.allDocs({
     include_docs: true,
     keys: linkDocIds,
   })
