@@ -86,6 +86,15 @@ exports.save = async function(ctx) {
 
   const existingRecord = record._rev && (await db.get(record._id))
 
+  // make sure link records are up to date
+  record = await linkRecords.updateLinks({
+    instanceId,
+    eventType: linkRecords.EventType.RECORD_SAVE,
+    record,
+    modelId: record.modelId,
+    model,
+  })
+
   if (existingRecord) {
     const response = await db.put(record)
     record._rev = response.rev
@@ -96,13 +105,6 @@ exports.save = async function(ctx) {
     return
   }
 
-  record = await linkRecords.updateLinks({
-    instanceId,
-    eventType: linkRecords.EventType.RECORD_SAVE,
-    record,
-    modelId: record.modelId,
-    model,
-  })
   record.type = "record"
   const response = await db.post(record)
   record._rev = response.rev
