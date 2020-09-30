@@ -25,7 +25,7 @@
 <div class="container">
   <header>
     <i class="ri-stackshare-line" />
-    Create Automation
+    <h3>Create Automation</h3>
   </header>
   <div class="content">
     <Input bind:value={name} label="Name" />
@@ -48,22 +48,21 @@
   }
 
   header {
-    font-size: var(--font-size-xl);
-    color: var(--ink);
-    font-weight: 600;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
   }
+  header h3 {
+    font-size: var(--font-size-xl);
+    color: var(--ink);
+    font-weight: 600;
+    margin: 0;
+  }
   header i {
     margin-right: var(--spacing-m);
-    font-size: 20px;
-    background: var(--purple);
-    color: var(--white);
-    padding: var(--spacing-s);
-    border-radius: var(--border-radius-m);
-    display: inline-block;
+    font-size: 28px;
+    color: var(--grey-6);
   }
 
   .content {
