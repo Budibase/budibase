@@ -1,5 +1,5 @@
 const CouchDB = require("../index")
-const linkedRecords = require("./index")
+const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -62,11 +62,14 @@ class LinkController {
   /**
    * Checks if the model this was constructed with has any linking columns currently.
    * If the model has not been retrieved this will retrieve it based on the eventData.
+   * @params {object|null} model If a model that is not known to the link controller is to be tested.
    * @returns {Promise<boolean>} True if there are any linked fields, otherwise it will return
    * false.
    */
-  async doesModelHaveLinkedFields() {
-    const model = await this.model()
+  async doesModelHaveLinkedFields(model = null) {
+    if (model == null) {
+      model = await this.model()
+    }
     for (let fieldName of Object.keys(model.schema)) {
       const { type } = model.schema[fieldName]
       if (type === "link") {
@@ -79,12 +82,23 @@ class LinkController {
   /**
    * Utility function for main getLinkDocuments function - refer to it for functionality.
    */
-  getLinkDocs(recordId = null) {
-    return linkedRecords.getLinkDocuments({
+  getRecordLinkDocs(recordId, includeDocs = IncludeDocs.EXCLUDE) {
+    return getLinkDocuments({
       instanceId: this._instanceId,
       modelId: this._modelId,
       recordId,
-      includeDocs: false,
+      includeDocs,
+    })
+  }
+
+  /**
+   * Utility function for main getLinkDocuments function - refer to it for functionality.
+   */
+  getModelLinkDocs(includeDocs = IncludeDocs.EXCLUDE) {
+    return getLinkDocuments({
+      instanceId: this._instanceId,
+      modelId: this._modelId,
+      includeDocs,
     })
   }
 
@@ -101,7 +115,7 @@ class LinkController {
     const record = this._record
     const operations = []
     // get link docs to compare against
-    const linkVals = await this.getLinkDocs(record._id)
+    const linkVals = await this.getRecordLinkDocs(record._id)
     for (let fieldName of Object.keys(model.schema)) {
       // get the links this record wants to make
       const recordField = record[fieldName]
@@ -155,15 +169,16 @@ class LinkController {
   async recordDeleted() {
     const record = this._record
     // need to get the full link docs to be be able to delete it
-    const linkDocIds = await this.getLinkDocs(record._id).map(
-      linkVal => linkVal.id
+    const linkDocs = await this.getRecordLinkDocs(
+      record._id,
+      IncludeDocs.INCLUDE
     )
-    if (linkDocIds.length === 0) {
+    if (linkDocs.length === 0) {
       return null
     }
-    const toDelete = linkDocIds.map(id => {
+    const toDelete = linkDocs.map(doc => {
       return {
-        _id: id,
+        ...doc,
         _deleted: true,
       }
     })
@@ -198,6 +213,33 @@ class LinkController {
     return model
   }
 
+  async modelUpdated(oldModel) {
+    // first start by checking if any link columns have been deleted
+    // TODO: need to delete link column deletion
+    const newModel = await this.model()
+    const modelId = newModel._id
+    const linkDocs = await this.getModelLinkDocs(IncludeDocs.INCLUDE)
+    for (let fieldName of Object.keys(oldModel.schema)) {
+      const field = oldModel.schema[fieldName]
+      // this field has been removed from the model schema
+      if (field.type === "link" && newModel.schema[fieldName] == null) {
+        let toDelete = linkDocs.filter(linkDoc => {
+          let correctDoc =
+            linkDoc.doc1.modelId === modelId ? linkDoc.doc1 : linkDoc.doc2
+          return correctDoc.fieldName === fieldName
+        })
+        await this._db.bulkDocs(
+          toDelete.map(doc => {
+            return {
+              ...doc,
+              _deleted: true,
+            }
+          })
+        )
+      }
+    }
+  }
+
   /**
    * When a model is deleted this will carry out the necessary operations to make sure
    * any linked models have the joining column correctly removed as well as removing any
@@ -217,14 +259,14 @@ class LinkController {
       }
     }
     // need to get the full link docs to delete them
-    const linkDocIds = await this.getLinkDocs().map(linkVal => linkVal.id)
-    if (linkDocIds.length === 0) {
+    const linkDocs = await this.getModelLinkDocs(IncludeDocs.INCLUDE)
+    if (linkDocs.length === 0) {
       return null
     }
     // get link docs for this model and configure for deletion
-    const toDelete = linkDocIds.map(id => {
+    const toDelete = linkDocs.map(doc => {
       return {
-        _id: id,
+        ...doc,
         _deleted: true,
       }
     })

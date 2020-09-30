@@ -19,11 +19,17 @@ exports.find = async function(ctx) {
 exports.save = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
+  const oldModelId = ctx.request.body._id
   const modelToSave = {
     type: "model",
     _id: newid(),
     views: {},
     ...ctx.request.body,
+  }
+  // get the model in its previous state for differencing
+  let oldModel = null
+  if (oldModelId) {
+    oldModel = await db.get(oldModelId)
   }
 
   // rename record fields when table column is renamed
@@ -70,8 +76,11 @@ exports.save = async function(ctx) {
   // update linked records
   await linkRecords.updateLinks({
     instanceId,
-    eventType: linkRecords.EventType.MODEL_SAVE,
+    eventType: oldModel
+      ? linkRecords.EventType.MODEL_UPDATED
+      : linkRecords.EventType.MODEL_SAVE,
     model: modelToSave,
+    oldModel: oldModel,
   })
   await db.put(designDoc)
 
