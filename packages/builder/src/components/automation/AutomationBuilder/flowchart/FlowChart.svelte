@@ -25,6 +25,8 @@
   <i>Create your first automation to get started</i>
 {:else if automation == null}
   <i>Select an automation to edit</i>
+{:else if !blocks.length}
+  <i>Add some steps to your automation to get started</i>
 {/if}
 <section class="canvas">
   {#each blocks as block, idx (block.id)}
