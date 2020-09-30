@@ -51,9 +51,9 @@
 <style>
   section {
     display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
     overflow: auto;
     height: 100%;
     position: relative;
