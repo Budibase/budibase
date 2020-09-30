@@ -52,14 +52,14 @@
   <div class="input-group-row">
     <p>The</p>
     <Select secondary thin bind:value={view.calculation}>
-      <option value={null} />
+      <option value="">Choose an option</option>
       {#each CALCULATIONS as calculation}
         <option value={calculation.key}>{calculation.name}</option>
       {/each}
     </Select>
     <p>of</p>
     <Select secondary thin bind:value={view.field}>
-      <option value={null} />
+      <option value="">Choose an option</option>
       {#each fields as field}
         <option value={field}>{field}</option>
       {/each}
