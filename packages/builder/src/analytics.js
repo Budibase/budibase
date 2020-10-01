@@ -3,6 +3,8 @@ import posthog from "posthog-js"
 import api from "builderStore/api"
 
 let analyticsEnabled
+const posthogConfigured = process.env.POSTHOG_TOKEN && process.env.POSTHOG_URL
+const sentryConfigured = process.env.SENTRY_DSN
 
 async function activate() {
   if (analyticsEnabled === undefined) {
@@ -13,21 +15,22 @@ async function activate() {
     analyticsEnabled = (await response.json()) === true
   }
   if (!analyticsEnabled) return
-  Sentry.init({ dsn: process.env.SENTRY_DSN })
-  if (!process.env.POSTHOG_TOKEN) return
-  posthog.init(process.env.POSTHOG_TOKEN, {
-    api_host: process.env.POSTHOG_URL,
-  })
-  posthog.set_config({ persistence: "cookie" })
+  if (sentryConfigured) Sentry.init({ dsn: process.env.SENTRY_DSN })
+  if (posthogConfigured) {
+    posthog.init(process.env.POSTHOG_TOKEN, {
+      api_host: process.env.POSTHOG_URL,
+    })
+    posthog.set_config({ persistence: "cookie" })
+  }
 }
 
 function identify(id) {
-  if (!analyticsEnabled) return
-  if (!id) return
-  posthog.identify(id)
-  Sentry.configureScope(scope => {
-    scope.setUser({ id: id })
-  })
+  if (!analyticsEnabled || !id) return
+  if (posthogConfigured) posthog.identify(id)
+  if (sentryConfigured)
+    Sentry.configureScope(scope => {
+      scope.setUser({ id: id })
+    })
 }
 
 async function identifyByApiKey(apiKey) {
