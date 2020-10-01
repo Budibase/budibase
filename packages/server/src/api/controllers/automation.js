@@ -3,6 +3,7 @@ const newid = require("../../db/newid")
 const actions = require("../../automations/actions")
 const logic = require("../../automations/logic")
 const triggers = require("../../automations/triggers")
+const { getAutomationParams, generateAutomationID } = require("../../db/utils")
 
 /*************************
  *                       *
@@ -34,7 +35,7 @@ exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   let automation = ctx.request.body
 
-  automation._id = newid()
+  automation._id = generateAutomationID(newid())
 
   automation.type = "automation"
   automation = cleanAutomationInputs(automation)
@@ -72,10 +73,11 @@ exports.update = async function(ctx) {
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
-  const response = await db.query(`database/by_type`, {
-    key: ["automation"],
-    include_docs: true,
-  })
+  const response = await db.allDocs(
+    getAutomationParams(null, {
+      include_docs: true,
+    })
+  )
   ctx.body = response.rows.map(row => row.doc)
 }
 
