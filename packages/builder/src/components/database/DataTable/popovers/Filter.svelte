@@ -81,10 +81,17 @@
 
   function isMultipleChoice(field) {
     return (
-      viewModel.schema[field].constraints &&
-      viewModel.schema[field].constraints.inclusion &&
-      viewModel.schema[field].constraints.inclusion.length
+      (viewModel.schema[field].constraints &&
+        viewModel.schema[field].constraints.inclusion &&
+        viewModel.schema[field].constraints.inclusion.length) ||
+      viewModel.schema[field].type === "boolean"
     )
+  }
+
+  function fieldOptions(field) {
+    return viewModel.schema[field].type === "string"
+      ? viewModel.schema[field].constraints.inclusion
+      : [true, false]
   }
 </script>
 
@@ -126,8 +133,8 @@
       </Select>
       {#if filter.key && isMultipleChoice(filter.key)}
         <Select secondary thin bind:value={filter.value}>
-          {#each viewModel.schema[filter.key].constraints.inclusion as option}
-            <option value={option}>{option}</option>
+          {#each fieldOptions(filter.key) as option}
+            <option value={option}>{option.toString()}</option>
           {/each}
         </Select>
       {:else}
