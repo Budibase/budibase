@@ -15,6 +15,7 @@
 
   $: sortColumn = $backendUiStore.sort && $backendUiStore.sort.column
   $: sortDirection = $backendUiStore.sort && $backendUiStore.sort.direction
+  $: type = field?.type
 
   function showEditor() {
     editing = true
@@ -54,10 +55,12 @@
     <CreateEditColumnModal onClosed={hideEditor} {field} />
   {:else}
     <ul>
-      <li data-cy="edit-column-header" on:click={showEditor}>
-        <Icon name="edit" />
-        Edit
-      </li>
+      {#if type !== 'link'}
+        <li data-cy="edit-column-header" on:click={showEditor}>
+          <Icon name="edit" />
+          Edit
+        </li>
+      {/if}
       <li
         data-cy="delete-column-header"
         on:click={() => confirmDeleteDialog.show()}>
