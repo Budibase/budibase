@@ -6,6 +6,7 @@
     Icon,
     Input,
     Select,
+    DatePicker,
   } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
@@ -93,6 +94,10 @@
       ? viewModel.schema[field].constraints.inclusion
       : [true, false]
   }
+
+  function isDate(field) {
+    return viewModel.schema[field].type === "datetime"
+  }
 </script>
 
 <div bind:this={anchor}>
@@ -137,6 +142,10 @@
             <option value={option}>{option.toString()}</option>
           {/each}
         </Select>
+      {:else if filter.key && isDate(filter.key)}
+        <DatePicker
+          bind:value={filter.value}
+          placeholder={filter.key || fields[0]} />
       {:else}
         <Input
           thin
