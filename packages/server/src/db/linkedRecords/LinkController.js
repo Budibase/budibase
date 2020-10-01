@@ -38,12 +38,13 @@ function LinkDocument(
 }
 
 class LinkController {
-  constructor({ instanceId, modelId, record, model }) {
+  constructor({ instanceId, modelId, record, model, oldModel }) {
     this._instanceId = instanceId
     this._db = new CouchDB(instanceId)
     this._modelId = modelId
     this._record = record
     this._model = model
+    this._oldModel = oldModel
   }
 
   /**
@@ -192,12 +193,12 @@ class LinkController {
    * @returns {Promise<void>} The model has now been updated.
    */
   async removeFieldFromModel(fieldName) {
-    let model = await this.model()
-    let field = model.schema[fieldName]
+    let oldModel = this._oldModel
+    let field = oldModel.schema[fieldName]
     const linkDocs = await this.getModelLinkDocs(IncludeDocs.INCLUDE)
     let toDelete = linkDocs.filter(linkDoc => {
       let correctFieldName =
-        linkDoc.doc1.modelId === model._id
+        linkDoc.doc1.modelId === oldModel._id
           ? linkDoc.doc1.fieldName
           : linkDoc.doc2.fieldName
       return correctFieldName === fieldName
@@ -211,8 +212,8 @@ class LinkController {
       })
     )
     // remove schema from other model
-    let linkedModel = this._db.get(field.modelId)
-    delete linkedModel[field.fieldName]
+    let linkedModel = await this._db.get(field.modelId)
+    delete linkedModel.schema[field.fieldName]
     this._db.put(linkedModel)
   }
 
@@ -246,10 +247,10 @@ class LinkController {
   /**
    * Update a model, this means if a field is removed need to handle removing from other table and removing
    * any link docs that pertained to it.
-   * @param {object} oldModel The model before it was updated which can be used for differencing.
    * @returns {Promise<Object>} The model which has been saved, same response as with the modelSaved function.
    */
-  async modelUpdated(oldModel) {
+  async modelUpdated() {
+    const oldModel = this._oldModel
     // first start by checking if any link columns have been deleted
     const newModel = await this.model()
     for (let fieldName of Object.keys(oldModel.schema)) {
