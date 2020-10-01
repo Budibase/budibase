@@ -46,7 +46,7 @@
 
 <style>
   .container {
-    padding: var(--spacing-xl);
+    padding: 30px;
     display: grid;
     grid-gap: var(--spacing-xl);
   }
