@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@sveltech/routify"
+  import { goto, params } from "@sveltech/routify"
   import { onMount } from "svelte"
   import fsort from "fast-sort"
   import getOr from "lodash/fp/getOr"
@@ -32,13 +32,17 @@
   $: paginatedData =
     sorted && sorted.length
       ? sorted.slice(
-          currentPage * ITEMS_PER_PAGE,
-          currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-        )
+      currentPage * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE,
+      )
       : []
+  $: modelId = data?.length ? data[0].modelId : null
 
-  function selectRelationship(recordId, fieldName) {
-    $goto(`../relationship/${recordId}/${fieldName}`)
+  function selectRelationship(record, fieldName) {
+    if (!record?.[fieldName]?.length) {
+      return
+    }
+    $goto(`/${$params.application}/backend/model/${modelId}/relationship/${record._id}/${fieldName}`)
   }
 </script>
 
@@ -46,66 +50,68 @@
   <div class="table-controls">
     <h2 class="title">{title}</h2>
     <div class="popovers">
-      <slot />
+      <slot/>
     </div>
   </div>
   <table class="bb-table">
     <thead>
-      <tr>
-        {#if allowEditing}
-          <th class="edit-header">
-            <div>Edit</div>
-          </th>
-        {/if}
-        {#each columns as header}
-          <th>
-            {#if allowEditing}
-              <ColumnHeaderPopover field={schema[header]} />
-            {:else}{header}{/if}
-          </th>
-        {/each}
-      </tr>
+    <tr>
+      {#if allowEditing}
+        <th class="edit-header">
+          <div>Edit</div>
+        </th>
+      {/if}
+      {#each columns as header}
+        <th>
+          {#if allowEditing}
+            <ColumnHeaderPopover field={schema[header]}/>
+          {:else}
+            <div class="header">{header}</div>
+          {/if}
+        </th>
+      {/each}
+    </tr>
     </thead>
     <tbody>
-      {#if paginatedData.length === 0}
+    {#if paginatedData.length === 0}
+      {#if allowEditing}
+        <td class="no-border">No data.</td>
+      {/if}
+      {#each columns as header, idx}
+        <td class="no-border">
+          {#if idx === 0}No data.{/if}
+        </td>
+      {/each}
+    {/if}
+    {#each paginatedData as row}
+      <tr>
         {#if allowEditing}
-          <td class="no-border">No data.</td>
+          <td>
+            <EditRowPopover {row}/>
+          </td>
         {/if}
-        {#each columns as header, idx}
-          <td class="no-border">
-            {#if idx === 0}No data.{/if}
+        {#each columns as header}
+          <td>
+            {#if schema[header].type === 'link'}
+              <div
+                  class:link={row[header] && row[header].length}
+                  on:click={() => selectRelationship(row, header)}>
+                {row[header] ? row[header].length : 0} linked row(s)
+              </div>
+            {:else if schema[header].type === 'attachment'}
+              <AttachmentList files={row[header] || []}/>
+            {:else}{getOr('', header, row)}{/if}
           </td>
         {/each}
-      {/if}
-      {#each paginatedData as row}
-        <tr>
-          {#if allowEditing}
-            <td>
-              <EditRowPopover {row} />
-            </td>
-          {/if}
-          {#each columns as header}
-            <td>
-              {#if schema[header].type === 'link'}
-                <div
-                  class="link"
-                  on:click={() => selectRelationship(row._id, header)}>
-                  {row[header] ? row[header].length : 0} linked row(s)
-                </div>
-              {:else if schema[header].type === 'attachment'}
-                <AttachmentList files={row[header] || []} />
-              {:else}{getOr('', header, row)}{/if}
-            </td>
-          {/each}
-        </tr>
-      {/each}
+      </tr>
+    {/each}
     </tbody>
   </table>
   <TablePagination
-    {data}
-    bind:currentPage
-    pageItemCount={paginatedData.length}
-    {ITEMS_PER_PAGE} />
+      {data}
+      bind:currentPage
+      pageItemCount={paginatedData.length}
+      {ITEMS_PER_PAGE}/>
 </section>
 
 <style>
@@ -121,12 +127,14 @@
     border: 1px solid var(--grey-4);
     background: #fff;
     border-collapse: collapse;
+    margin-top: 0;
   }
 
   thead {
     background: var(--grey-3);
     border: 1px solid var(--grey-4);
   }
+
   thead th {
     color: var(--ink);
     font-weight: 500;
@@ -138,9 +146,14 @@
     padding-top: 0;
     padding-bottom: 0;
   }
+
   thead th:hover {
     color: var(--blue);
     cursor: pointer;
+  }
+
+  .header {
+    text-transform: capitalize;
   }
 
   td {
@@ -152,6 +165,7 @@
     padding: var(--spacing-l) var(--spacing-m);
     font-size: var(--font-size-xs);
   }
+
   td.no-border {
     border: none;
   }
@@ -161,6 +175,7 @@
     transition: 0.3s background-color;
     color: var(--ink);
   }
+
   tbody tr:hover {
     background: var(--grey-1);
   }
@@ -175,11 +190,13 @@
 
   :global(.popovers > div) {
     margin-right: var(--spacing-m);
+    margin-bottom: var(--spacing-xl);
   }
 
   .edit-header {
     width: 60px;
   }
+
   .edit-header:hover {
     cursor: default;
     color: var(--ink);
@@ -188,6 +205,7 @@
   .link {
     text-decoration: underline;
   }
+
   .link:hover {
     color: var(--grey-6);
     cursor: pointer;

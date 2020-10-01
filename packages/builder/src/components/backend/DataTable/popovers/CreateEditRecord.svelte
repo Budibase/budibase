@@ -13,19 +13,17 @@
   export let onClosed
 
   let errors = []
-  let selectedModel
-
-  $: modelSchema = $backendUiStore.selectedModel
-    ? Object.entries($backendUiStore.selectedModel.schema)
-    : []
+  $: model = record.modelId ? $backendUiStore.models.find(model => model._id === record?.modelId) : $backendUiStore.selectedModel
+  $: modelSchema = Object.entries(model?.schema ?? {})
+  $: console.log(modelSchema)
 
   async function saveRecord() {
     const recordResponse = await api.saveRecord(
       {
         ...record,
-        modelId: $backendUiStore.selectedModel._id,
+        modelId: model._id,
       },
-      $backendUiStore.selectedModel._id
+      model._id
     )
     if (recordResponse.errors) {
       errors = Object.keys(recordResponse.errors)
