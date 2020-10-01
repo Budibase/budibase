@@ -1,7 +1,11 @@
 const Router = require("@koa/router")
 const recordController = require("../controllers/record")
 const authorized = require("../../middleware/authorized")
-const { READ_MODEL, WRITE_MODEL } = require("../../utilities/accessLevels")
+const {
+  READ_MODEL,
+  WRITE_MODEL,
+  BUILDER,
+} = require("../../utilities/accessLevels")
 
 const router = Router()
 
