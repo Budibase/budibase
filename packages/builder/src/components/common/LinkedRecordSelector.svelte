@@ -9,7 +9,6 @@
   export let schema
   export let linkedRecords = []
 
-
   $: label = capitalise(schema.name)
   $: linkedModelId = schema.modelId
   $: linkedModel = $backendUiStore.models.find(
@@ -18,7 +17,7 @@
   $: promise = fetchRecords(linkedModelId)
 
   async function fetchRecords(linkedModelId) {
-    const FETCH_RECORDS_URL = `/api/${}/records`
+    const FETCH_RECORDS_URL = `/api/${linkedModelId}/records`
     const response = await api.get(FETCH_RECORDS_URL)
     const result = await response.json()
     console.log(result)
