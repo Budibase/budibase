@@ -34,7 +34,11 @@ exports.save = async function(ctx) {
 
   // rename record fields when table column is renamed
   const { _rename } = modelToSave
-  if (_rename) {
+  if (_rename && modelToSave.schema[_rename.updated].type === "link") {
+    throw "Cannot rename a linked field."
+  } else if (_rename && modelToSave.primaryDisplay === _rename.old) {
+    throw "Cannot rename the primary display field."
+  } else if (_rename) {
     const records = await db.query(`database/all_${modelToSave._id}`, {
       include_docs: true,
     })

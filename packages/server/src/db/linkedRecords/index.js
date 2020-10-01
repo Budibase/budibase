@@ -33,24 +33,22 @@ exports.createLinkView = createLinkView
  * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the record for
  * record operations and the model for model operations.
  */
-exports.updateLinks = async ({
+exports.updateLinks = async function({
   eventType,
   instanceId,
   record,
   modelId,
   model,
   oldModel,
-}) => {
-  // make sure model ID is set
-  if (model != null) {
-    modelId = model._id
+}) {
+  if (instanceId == null) {
+    throw "Cannot operate without an instance ID."
   }
-  let linkController = new LinkController({
-    instanceId,
-    modelId,
-    model,
-    record,
-  })
+  // make sure model ID is set
+  if (modelId == null && model != null) {
+    arguments[0].modelId = model._id
+  }
+  let linkController = new LinkController(arguments[0])
   if (
     !(await linkController.doesModelHaveLinkedFields()) &&
     (oldModel == null ||
@@ -67,7 +65,7 @@ exports.updateLinks = async ({
     case EventType.MODEL_SAVE:
       return await linkController.modelSaved()
     case EventType.MODEL_UPDATED:
-      return await linkController.modelUpdated(oldModel)
+      return await linkController.modelUpdated()
     case EventType.MODEL_DELETE:
       return await linkController.modelDeleted()
     default:
