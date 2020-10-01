@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "@sveltech/routify"
   import { onMount } from "svelte"
   import fsort from "fast-sort"
   import getOr from "lodash/fp/getOr"
@@ -16,16 +17,16 @@
   import EditRowPopover from "./popovers/EditRow.svelte"
   import CalculationPopover from "./popovers/Calculate.svelte"
 
+  const ITEMS_PER_PAGE = 10
+
   export let schema = []
   export let data = []
   export let title
-
-  const ITEMS_PER_PAGE = 10
+  export let allowEditing = false
 
   let currentPage = 0
 
   $: columns = schema ? Object.keys(schema) : []
-
   $: sort = $backendUiStore.sort
   $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
   $: paginatedData =
@@ -35,6 +36,10 @@
           currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
         )
       : []
+
+  function selectRelationship(recordId, fieldName) {
+    $goto(`../relationship/${recordId}/${fieldName}`)
+  }
 </script>
 
 <section>
@@ -47,13 +52,25 @@
   <table class="bb-table">
     <thead>
       <tr>
+        {#if allowEditing}
+          <th class="edit-header">
+            <div>Edit</div>
+          </th>
+        {/if}
         {#each columns as header}
-          <th>{header}</th>
+          <th>
+            {#if allowEditing}
+              <ColumnHeaderPopover field={schema[header]} />
+            {:else}{header}{/if}
+          </th>
         {/each}
       </tr>
     </thead>
     <tbody>
       {#if paginatedData.length === 0}
+        {#if allowEditing}
+          <td class="no-border">No data.</td>
+        {/if}
         {#each columns as header, idx}
           <td class="no-border">
             {#if idx === 0}No data.{/if}
@@ -62,9 +79,20 @@
       {/if}
       {#each paginatedData as row}
         <tr>
+          {#if allowEditing}
+            <td>
+              <EditRowPopover {row} />
+            </td>
+          {/if}
           {#each columns as header}
             <td>
-              {#if schema[header].type === 'attachment'}
+              {#if schema[header].type === 'link'}
+                <div
+                  class="link"
+                  on:click={() => selectRelationship(row._id, header)}>
+                  {row[header] ? row[header].length : 0} linked row(s)
+                </div>
+              {:else if schema[header].type === 'attachment'}
                 <AttachmentList files={row[header] || []} />
               {:else}{getOr('', header, row)}{/if}
             </td>
@@ -101,7 +129,6 @@
   }
   thead th {
     color: var(--ink);
-    text-transform: capitalize;
     font-weight: 500;
     font-size: 14px;
     text-rendering: optimizeLegibility;
@@ -148,5 +175,21 @@
 
   :global(.popovers > div) {
     margin-right: var(--spacing-m);
+  }
+
+  .edit-header {
+    width: 60px;
+  }
+  .edit-header:hover {
+    cursor: default;
+    color: var(--ink);
+  }
+
+  .link {
+    text-decoration: underline;
+  }
+  .link:hover {
+    color: var(--grey-6);
+    cursor: pointer;
   }
 </style>

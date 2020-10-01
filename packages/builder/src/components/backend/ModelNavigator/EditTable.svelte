@@ -20,13 +20,14 @@
   }
 
   function hideEditor() {
-    dropdown.hide()
+    dropdown?.hide()
     editing = false
   }
 
   async function deleteTable() {
     await backendUiStore.actions.models.delete(table)
     notifier.success("Table deleted")
+    hideEditor()
   }
 
   async function save() {
@@ -77,6 +78,7 @@
   body={`Are you sure you wish to delete the table '${table.name}'? Your data will be deleted and this action cannot be undone.`}
   okText="Delete Table"
   onOk={deleteTable}
+  onCancel={hideEditor}
   title="Confirm Delete" />
 
 <style>
