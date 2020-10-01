@@ -37,7 +37,9 @@
     if (keys.userId) {
       hasKey = true
       analytics.identify(keys.userId)
-    } else {
+    }
+
+    if (!keys.budibase) {
       showCreateAppModal()
     }
   }
