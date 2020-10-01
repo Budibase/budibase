@@ -1,6 +1,5 @@
 const LinkController = require("./LinkController")
-const CouchDB = require("../index")
-const Sentry = require("@sentry/node")
+const { IncludeDocs, getLinkDocuments, createLinkView } = require("./linkUtils")
 
 /**
  * This functionality makes sure that when records with links are created, updated or deleted they are processed
@@ -12,43 +11,15 @@ const EventType = {
   RECORD_UPDATE: "record:update",
   RECORD_DELETE: "record:delete",
   MODEL_SAVE: "model:save",
+  MODEL_UPDATED: "model:updated",
   MODEL_DELETE: "model:delete",
 }
 
 exports.EventType = EventType
-
-/**
- * Creates the link view for the instance, this will overwrite the existing one, but this should only
- * be called if it is found that the view does not exist.
- * @param {string} instanceId The instance to which the view should be added.
- * @returns {Promise<void>} The view now exists, please note that the next view of this query will actually build it,
- * so it may be slow.
- */
-exports.createLinkView = async instanceId => {
-  const db = new CouchDB(instanceId)
-  const designDoc = await db.get("_design/database")
-  const view = {
-    map: function(doc) {
-      if (doc.type === "link") {
-        let doc1 = doc.doc1
-        let doc2 = doc.doc2
-        emit([doc1.modelId, doc1.recordId], {
-          id: doc2.recordId,
-          fieldName: doc1.fieldName,
-        })
-        emit([doc2.modelId, doc2.recordId], {
-          id: doc1.recordId,
-          fieldName: doc2.fieldName,
-        })
-      }
-    }.toString(),
-  }
-  designDoc.views = {
-    ...designDoc.views,
-    by_link: view,
-  }
-  await db.put(designDoc)
-}
+// re-export utils here for ease of use
+exports.IncludeDocs = IncludeDocs
+exports.getLinkDocuments = getLinkDocuments
+exports.createLinkView = createLinkView
 
 /**
  * Update link documents for a record or model - this is to be called by the API controller when a change is occurring.
@@ -56,8 +27,9 @@ exports.createLinkView = async instanceId => {
  * future quite easily (all updates go through one function).
  * @param {string} instanceId The ID of the instance in which the change is occurring.
  * @param {string} modelId The ID of the of the model which is being changed.
- * * @param {object|null} record The record which is changing, e.g. created, updated or deleted.
+ * @param {object|null} record The record which is changing, e.g. created, updated or deleted.
  * @param {object|null} model If the model has already been retrieved this can be used to reduce database gets.
+ * @param {object|null} oldModel If the model is being updated then the old model can be provided for differencing.
  * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the record for
  * record operations and the model for model operations.
  */
@@ -67,6 +39,7 @@ exports.updateLinks = async ({
   record,
   modelId,
   model,
+  oldModel,
 }) => {
   // make sure model ID is set
   if (model != null) {
@@ -78,7 +51,11 @@ exports.updateLinks = async ({
     model,
     record,
   })
-  if (!(await linkController.doesModelHaveLinkedFields())) {
+  if (
+    !(await linkController.doesModelHaveLinkedFields()) &&
+    (oldModel == null ||
+      !(await linkController.doesModelHaveLinkedFields(oldModel)))
+  ) {
     return record
   }
   switch (eventType) {
@@ -89,6 +66,8 @@ exports.updateLinks = async ({
       return await linkController.recordDeleted()
     case EventType.MODEL_SAVE:
       return await linkController.modelSaved()
+    case EventType.MODEL_UPDATED:
+      return await linkController.modelUpdated(oldModel)
     case EventType.MODEL_DELETE:
       return await linkController.modelDeleted()
     default:
@@ -114,11 +93,11 @@ exports.attachLinkInfo = async (instanceId, records) => {
   // start by getting all the link values for performance reasons
   let responses = await Promise.all(
     records.map(record =>
-      exports.getLinkDocuments({
+      getLinkDocuments({
         instanceId,
         modelId: record.modelId,
         recordId: record._id,
-        includeDocs: false,
+        includeDocs: IncludeDocs.EXCLUDE,
       })
     )
   )
@@ -140,51 +119,4 @@ exports.attachLinkInfo = async (instanceId, records) => {
   // if it was an array when it came in then handle it as an array in response
   // otherwise return the first element as there was only one input
   return wasArray ? records : records[0]
-}
-
-/**
- * Gets the linking documents, not the linked documents themselves.
- * @param {string} instanceId The instance in which we are searching for linked records.
- * @param {string} modelId The model which we are searching for linked records against.
- * @param {string|null} fieldName The name of column/field which is being altered, only looking for
- * linking documents that are related to it. If this is not specified then the table level will be assumed.
- * @param {string|null} recordId The ID of the record which we want to find linking documents for -
- * if this is not specified then it will assume model or field level depending on whether the
- * field name has been specified.
- * @param {boolean|null} includeDocs whether to include docs in the response call, this is considerably slower so only
- * use this if actually interested in the docs themselves.
- * @returns {Promise<object[]>} This will return an array of the linking documents that were found
- * (if any).
- */
-exports.getLinkDocuments = async ({
-  instanceId,
-  modelId,
-  recordId,
-  includeDocs,
-}) => {
-  const db = new CouchDB(instanceId)
-  let params
-  if (recordId != null) {
-    params = { key: [modelId, recordId] }
-  }
-  // only model is known
-  else {
-    params = { startKey: [modelId], endKey: [modelId, {}] }
-  }
-  params.include_docs = !!includeDocs
-  try {
-    const response = await db.query("database/by_link", params)
-    if (includeDocs) {
-      return response.rows.map(row => row.doc)
-    } else {
-      return response.rows.map(row => row.value)
-    }
-  } catch (err) {
-    // check if the view doesn't exist, it should for all new instances
-    if (err != null && err.name === "not_found") {
-      await exports.createLinkView(instanceId)
-    } else {
-      Sentry.captureException(err)
-    }
-  }
 }
