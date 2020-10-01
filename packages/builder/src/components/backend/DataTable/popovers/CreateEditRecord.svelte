@@ -13,9 +13,10 @@
   export let onClosed
 
   let errors = []
-  $: model = record.modelId ? $backendUiStore.models.find(model => model._id === record?.modelId) : $backendUiStore.selectedModel
+  $: model = record.modelId
+    ? $backendUiStore.models.find(model => model._id === record?.modelId)
+    : $backendUiStore.selectedModel
   $: modelSchema = Object.entries(model?.schema ?? {})
-  $: console.log(modelSchema)
 
   async function saveRecord() {
     const recordResponse = await api.saveRecord(
