@@ -4,31 +4,30 @@
   import api from "builderStore/api"
   import { Select, Label } from "@budibase/bbui"
   import { capitalise } from "../../helpers"
+  import MultiSelect from "components/common/MultiSelect.svelte"
 
   export let schema
   export let linkedRecords = []
 
-  let records = []
 
   $: label = capitalise(schema.name)
   $: linkedModelId = schema.modelId
   $: linkedModel = $backendUiStore.models.find(
     model => model._id === linkedModelId
   )
+  $: promise = fetchRecords(linkedModelId)
 
-  async function fetchRecords() {
-    const FETCH_RECORDS_URL = `/api/${linkedModelId}/records`
+  async function fetchRecords(linkedModelId) {
+    const FETCH_RECORDS_URL = `/api/${}/records`
     const response = await api.get(FETCH_RECORDS_URL)
-    records = await response.json()
+    const result = await response.json()
+    console.log(result)
+    return result
   }
 
   function getPrettyName(record) {
     return record[linkedModel.primaryDisplay || "_id"]
   }
-
-  onMount(() => {
-    fetchRecords()
-  })
 </script>
 
 {#if linkedModel.primaryDisplay == null}
@@ -39,10 +38,16 @@
     table.
   </Label>
 {:else}
-  <Select thin secondary bind:value={linkedRecords[0]} {label}>
-    <option value="">Choose an option</option>
-    {#each records as record}
-      <option value={record._id}>{getPrettyName(record)}</option>
-    {/each}
-  </Select>
+  {#await promise then records}
+    <MultiSelect
+      thin
+      secondary
+      bind:value={linkedRecords}
+      {label}
+      placeholder="Choose an option">
+      {#each records as record}
+        <option value={record._id}>{getPrettyName(record)}</option>
+      {/each}
+    </MultiSelect>
+  {/await}
 {/if}
