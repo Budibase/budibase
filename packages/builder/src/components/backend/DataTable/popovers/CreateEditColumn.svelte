@@ -69,11 +69,13 @@
     {/each}
   </Select>
 
-  <Toggle
-    checked={!field.constraints.presence.allowEmpty}
-    on:change={e => (field.constraints.presence.allowEmpty = !e.target.checked)}
-    thin
-    text="Required" />
+  {#if field.type !== 'link'}
+    <Toggle
+      checked={!field.constraints.presence.allowEmpty}
+      on:change={e => (field.constraints.presence.allowEmpty = !e.target.checked)}
+      thin
+      text="Required" />
+  {/if}
 
   {#if field.type === 'string'}
     <Input

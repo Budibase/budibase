@@ -1,18 +1,7 @@
 <script>
-  import { onMount } from "svelte"
   import { params } from "@sveltech/routify"
-  import { backendUiStore } from "builderStore"
-  import api from "../../../../../../../../builderStore/api"
-
-  console.log($params)
-  let data
-
-  onMount(async () => {
-    const QUERY_VIEW_URL = `/api/${$params.selectedModel}/${$params.selectedRecord}/enrich`
-    const response = await api.get(QUERY_VIEW_URL)
-    data = await response.json()
-    console.log(data)
-  })
+  import RelationshipDataTable from "components/backend/DataTable/RelationshipDataTable.svelte"
 </script>
 
-<div>hello world!</div>
+<RelationshipDataTable modelId={$params.selectedModel} recordId={$params.selectedRecord}
+                       fieldName={$params.selectedField}/>
