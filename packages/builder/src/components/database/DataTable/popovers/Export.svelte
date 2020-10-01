@@ -47,6 +47,7 @@
 <Popover bind:this={dropdown} {anchor} align="left">
   <h5>Export Format</h5>
   <Select secondary thin bind:value={exportFormat}>
+    <option value={''}>Select an option</option>
     {#each FORMATS as format}
       <option value={format.key}>{format.name}</option>
     {/each}
@@ -66,6 +67,5 @@
     margin-top: var(--spacing-l);
     display: flex;
     justify-content: flex-end;
-    gap: var(--spacing-s);
   }
 </style>
