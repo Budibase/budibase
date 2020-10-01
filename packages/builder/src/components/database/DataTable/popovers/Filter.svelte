@@ -98,6 +98,22 @@
   function isDate(field) {
     return viewModel.schema[field].type === "datetime"
   }
+
+  function isNumber(field) {
+    return viewModel.schema[field].type === "number"
+  }
+
+  const fieldChanged = filter => ev => {
+    // reset if type changed
+    if (
+      filter.key &&
+      ev.target.value &&
+      viewModel.schema[filter.key].type !==
+        viewModel.schema[ev.target.value].type
+    ) {
+      filter.value = ""
+    }
+  }
 </script>
 
 <div bind:this={anchor}>
@@ -124,7 +140,11 @@
           {/each}
         </Select>
       {/if}
-      <Select secondary thin bind:value={filter.key}>
+      <Select
+        secondary
+        thin
+        bind:value={filter.key}
+        on:change={fieldChanged(filter)}>
         <option value="">Choose an option</option>
         {#each fields as field}
           <option value={field}>{field}</option>
@@ -138,6 +158,7 @@
       </Select>
       {#if filter.key && isMultipleChoice(filter.key)}
         <Select secondary thin bind:value={filter.value}>
+          <option value="">Choose an option</option>
           {#each fieldOptions(filter.key) as option}
             <option value={option}>{option.toString()}</option>
           {/each}
@@ -146,6 +167,12 @@
         <DatePicker
           bind:value={filter.value}
           placeholder={filter.key || fields[0]} />
+      {:else if filter.key && isNumber(filter.key)}
+        <Input
+          thin
+          bind:value={filter.value}
+          placeholder={filter.key || fields[0]}
+          type="number" />
       {:else}
         <Input
           thin
