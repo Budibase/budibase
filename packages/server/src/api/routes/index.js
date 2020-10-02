@@ -13,6 +13,7 @@ const automationRoutes = require("./automation")
 const accesslevelRoutes = require("./accesslevel")
 const deployRoutes = require("./deploy")
 const apiKeysRoutes = require("./apikeys")
+const templatesRoutes = require("./templates")
 const analyticsRoutes = require("./analytics")
 
 module.exports = {
@@ -31,5 +32,6 @@ module.exports = {
   automationRoutes,
   accesslevelRoutes,
   apiKeysRoutes,
+  templatesRoutes,
   analyticsRoutes,
 }
