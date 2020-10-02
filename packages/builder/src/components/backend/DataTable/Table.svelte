@@ -98,7 +98,7 @@
                 <div
                   class:link={row[header] && row[header].length}
                   on:click={() => selectRelationship(row, header)}>
-                  {row[header] ? row[header].length : 0} linked row(s)
+                  {row[header] ? row[header].length : 0} related row(s)
                 </div>
               {:else if schema[header].type === 'attachment'}
                 <AttachmentList files={row[header] || []} />
