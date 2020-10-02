@@ -1,7 +1,9 @@
 const CouchDB = require("../../db")
 const validateJs = require("validate.js")
-const newid = require("../../db/newid")
 const linkRecords = require("../../db/linkedRecords")
+const { getRecordParams, generateRecordID } = require("../../db/utils")
+
+const MODEL_VIEW_BEGINS_WITH = "all_model:"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function(value) {
@@ -65,7 +67,7 @@ exports.save = async function(ctx) {
   record.modelId = ctx.params.modelId
 
   if (!record._rev && !record._id) {
-    record._id = newid()
+    record._id = generateRecordID(record.modelId)
   }
 
   const model = await db.get(record.modelId)
@@ -120,7 +122,16 @@ exports.fetchView = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const { stats, group, field } = ctx.query
-  const response = await db.query(`database/${ctx.params.viewName}`, {
+  const viewName = ctx.params.viewName
+
+  // if this is a model view being looked for just transfer to that
+  if (viewName.indexOf(MODEL_VIEW_BEGINS_WITH) === 0) {
+    ctx.params.modelId = viewName.substring(4)
+    await exports.fetchModelRecords(ctx)
+    return
+  }
+
+  const response = await db.query(`database/${viewName}`, {
     include_docs: !stats,
     group,
   })
@@ -141,11 +152,14 @@ exports.fetchView = async function(ctx) {
 
 exports.fetchModelRecords = async function(ctx) {
   const instanceId = ctx.user.instanceId
-  const db = new CouchDB(instanceId)
-  const response = await db.query(`database/all_${ctx.params.modelId}`, {
-    include_docs: true,
-  })
-  ctx.body = await linkRecords.attachLinkInfo(
+  const db = new CouchDB(instanceId)	
+  const response = await db.allDocs(
+    getRecordParams(ctx.params.modelId, null, {
+      include_docs: true,
+    })
+  )
+  ctx.body = response.rows.map(row => row.doc)
+    ctx.body = await linkRecords.attachLinkInfo(
     instanceId,
     response.rows.map(row => row.doc)
   )

@@ -3,6 +3,7 @@
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
+  import analytics from "analytics"
 
   export let table
 
@@ -19,6 +20,7 @@
     $goto(`./model/${model._id}`)
     name = ""
     dropdown.hide()
+    analytics.captureEvent("Table Created", { name })
   }
 
   const onClosed = () => {
