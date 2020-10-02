@@ -1,8 +1,8 @@
 <script>
   import { backendUiStore } from "builderStore"
-  import RowPopover from "./popovers/Row.svelte"
-  import ColumnPopover from "./popovers/Column.svelte"
-  import ViewPopover from "./popovers/View.svelte"
+  import CreateRowButton from "./buttons/CreateRowButton.svelte"
+  import CreateColumnButton from "./buttons/CreateColumnButton.svelte"
+  import CreateViewButton from "./buttons/CreateViewButton.svelte"
   import * as api from "./api"
   import Table from "./Table.svelte"
 
@@ -22,9 +22,9 @@
 </script>
 
 <Table {title} {schema} {data} allowEditing={true}>
-  <ColumnPopover />
+  <CreateColumnButton />
   {#if Object.keys(schema).length > 0}
-    <RowPopover />
-    <ViewPopover />
+    <CreateRowButton />
+    <CreateViewButton />
   {/if}
 </Table>

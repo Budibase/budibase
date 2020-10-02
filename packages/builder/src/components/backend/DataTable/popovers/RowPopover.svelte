@@ -1,41 +1,33 @@
 <script>
-  import { getContext } from "svelte"
   import { backendUiStore } from "builderStore"
-  import {
-    DropdownMenu,
-    Button,
-    Icon,
-    Input,
-    Select,
-    Heading,
-  } from "@budibase/bbui"
-  import { FIELDS } from "constants/backend"
-  import CreateEditRecordModal from "./CreateEditRecord.svelte"
+  import { DropdownMenu, Icon } from "@budibase/bbui"
+  import CreateEditRecordModal from "../modals/CreateEditRecordModal.svelte"
   import * as api from "../api"
   import { notifier } from "builderStore/store/notifications"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { Modal } from "components/common/Modal"
 
   export let row
 
   let anchor
   let dropdown
-  let editing
   let confirmDeleteDialog
+  let modal
 
-  function showEditor() {
-    editing = true
+  function showModal() {
+    dropdown.hide()
+    modal.show()
   }
 
-  function hideEditor() {
+  function showDelete() {
     dropdown.hide()
-    editing = false
+    confirmDeleteDialog.show()
   }
 
   async function deleteRow() {
     await api.deleteRecord(row)
     notifier.success("Record deleted")
     backendUiStore.actions.records.delete(row)
-    hideEditor()
   }
 </script>
 
@@ -43,21 +35,16 @@
   <i class="ri-more-line" />
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
-  {#if editing}
-    <h5>Edit Row</h5>
-    <CreateEditRecordModal onClosed={hideEditor} record={row} />
-  {:else}
-    <ul>
-      <li data-cy="edit-row" on:click={showEditor}>
-        <Icon name="edit" />
-        <span>Edit</span>
-      </li>
-      <li data-cy="delete-row" on:click={() => confirmDeleteDialog.show()}>
-        <Icon name="delete" />
-        <span>Delete</span>
-      </li>
-    </ul>
-  {/if}
+  <ul>
+    <li data-cy="edit-row" on:click={showModal}>
+      <Icon name="edit" />
+      <span>Edit</span>
+    </li>
+    <li data-cy="delete-row" on:click={showDelete}>
+      <Icon name="delete" />
+      <span>Delete</span>
+    </li>
+  </ul>
 </DropdownMenu>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
@@ -65,6 +52,9 @@
   okText="Delete Row"
   onOk={deleteRow}
   title="Confirm Delete" />
+<Modal bind:this={modal}>
+  <CreateEditRecordModal record={row} />
+</Modal>
 
 <style>
   .ri-more-line:hover {

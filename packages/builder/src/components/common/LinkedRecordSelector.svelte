@@ -20,7 +20,6 @@
     const FETCH_RECORDS_URL = `/api/${linkedModelId}/records`
     const response = await api.get(FETCH_RECORDS_URL)
     const result = await response.json()
-    console.log(result)
     return result
   }
 

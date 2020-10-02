@@ -1,7 +1,7 @@
 <script>
   import { Input, Select, Label, DatePicker, Toggle } from "@budibase/bbui"
   import Dropzone from "components/common/Dropzone.svelte"
-  import { capitalise } from "../../../../helpers"
+  import { capitalise } from "../../../helpers"
 
   export let meta
   export let value = meta.type === "boolean" ? false : ""

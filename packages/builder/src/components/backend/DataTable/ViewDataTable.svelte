@@ -1,9 +1,9 @@
 <script>
   import api from "builderStore/api"
   import Table from "./Table.svelte"
-  import CalculationPopover from "./popovers/Calculate.svelte"
-  import GroupByPopover from "./popovers/GroupBy.svelte"
-  import FilterPopover from "./popovers/Filter.svelte"
+  import CalculateButton from "./buttons/CalculateButton.svelte"
+  import GroupByButton from "./buttons/GroupByButton.svelte"
+  import FilterButton from "./buttons/FilterButton.svelte"
 
   export let view = {}
 
@@ -34,9 +34,9 @@
 </script>
 
 <Table title={decodeURI(name)} schema={view.schema} {data}>
-  <FilterPopover {view} />
-  <CalculationPopover {view} />
+  <FilterButton {view} />
+  <CalculateButton {view} />
   {#if view.calculation}
-    <GroupByPopover {view} />
+    <GroupByButton {view} />
   {/if}
 </Table>

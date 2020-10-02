@@ -24,6 +24,11 @@
     editing = false
   }
 
+  function showDelete() {
+    dropdown.hide()
+    confirmDeleteDialog.show()
+  }
+
   async function save() {
     await backendUiStore.actions.views.save({
       originalName,
@@ -61,7 +66,7 @@
         <Icon name="edit" />
         Edit
       </li>
-      <li data-cy="delete-view" on:click={() => confirmDeleteDialog.show()}>
+      <li data-cy="delete-view" on:click={showDelete}>
         <Icon name="delete" />
         Delete
       </li>
