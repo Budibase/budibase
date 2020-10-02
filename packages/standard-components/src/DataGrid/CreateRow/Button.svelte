@@ -1,6 +1,9 @@
 <script>
+  import { createEventDispatcher } from "svelte"
   import { DropdownMenu, TextButton as Button, Icon } from "@budibase/bbui"
   import Modal from "./Modal.svelte"
+
+  const dispatch = createEventDispatcher()
 
   let anchor
   let dropdown
@@ -16,7 +19,11 @@
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <h5>Add New Row</h5>
-  <Modal {_bb} {model} onClosed={dropdown.hide} />
+  <Modal
+    {_bb}
+    {model}
+    onClosed={dropdown.hide}
+    on:newRecord={() => dispatch('newRecord')} />
 </DropdownMenu>
 
 <style>

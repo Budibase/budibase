@@ -1,9 +1,10 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, createEventDispatcher } from "svelte"
   import { fade } from "svelte/transition"
   import { Button, Label, DatePicker } from "@budibase/bbui"
   import Dropzone from "../../attachments/Dropzone.svelte"
   import debounce from "lodash.debounce"
+  const dispatch = createEventDispatcher()
 
   const DEFAULTS_FOR_TYPE = {
     string: "",
@@ -43,8 +44,6 @@
 
     const json = await response.json()
 
-    console.log(json)
-
     if (response.status === 200) {
       store.update(state => {
         state[model._id] = state[model._id]
@@ -60,6 +59,7 @@
       record = isNew ? { modelId: model._id } : json
 
       onClosed()
+      dispatch("newRecord")
     }
 
     if (response.status === 400) {

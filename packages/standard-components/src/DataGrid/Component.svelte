@@ -57,13 +57,11 @@
     return false
   }
 
-  const handleSubmit = e => {
-    // Send off data here and update to display in grid component
-    console.log("Submitting:", e.detail)
+  const handleNewRecord = async () => {
+    data = await fetchData(datasource)
   }
 
   const handleUpdate = ({ detail }) => {
-    console.log(detail)
     data[detail.row] = detail.data
     updateRecord(detail.data)
   }
@@ -74,11 +72,9 @@
       record
     )
     const json = await response.json()
-    console.log(json)
   }
 
   const deleteRecords = async () => {
-    console.log(_bb.api)
     const response = await _bb.api.post(`/api/${datasource.name}/records`, {
       records: selectedRows,
       type: "delete",
@@ -91,7 +87,7 @@
 <div class="container">
   {#if dataLoaded}
     <div class="controls">
-      <CreateRowButton {_bb} {model} />
+      <CreateRowButton {_bb} {model} on:newRecord={handleNewRecord} />
       {#if selectedRows.length > 0}
         <DeleteButton text small on:click={deleteRecords}>
           <Icon name="addrow" />
