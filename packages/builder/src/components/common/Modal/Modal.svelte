@@ -15,6 +15,8 @@
   import { ContextKey } from "./context"
   const dispatch = createEventDispatcher()
 
+  export let wide
+
   let visible
 
   export function show() {
@@ -47,7 +49,7 @@
         on:click|self={hide}
         transition:fly={{ y: 100 }}>
         <div class="content-wrapper" on:click|self={hide}>
-          <div class="content">
+          <div class="content" class:wide>
             <slot />
           </div>
         </div>
@@ -107,5 +109,8 @@
     border-radius: var(--border-radius-m);
     gap: var(--spacing-xl);
     padding: var(--spacing-xl);
+  }
+  .content.wide {
+    flex: 0 0 600px;
   }
 </style>
