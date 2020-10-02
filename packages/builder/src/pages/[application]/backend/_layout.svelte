@@ -1,5 +1,4 @@
 <script>
-  import { getContext } from "svelte"
   import { store, backendUiStore } from "builderStore"
   import * as api from "components/backend/DataTable/api"
   import ModelNavigator from "components/backend/ModelNavigator/ModelNavigator.svelte"

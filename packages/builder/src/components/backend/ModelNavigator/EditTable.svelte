@@ -1,5 +1,4 @@
 <script>
-  import { getContext } from "svelte"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
