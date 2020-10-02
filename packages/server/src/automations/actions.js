@@ -1,5 +1,5 @@
 const sendEmail = require("./steps/sendEmail")
-const saveRecord = require("./steps/saveRecord")
+const createRecord = require("./steps/createRecord")
 const updateRecord = require("./steps/updateRecord")
 const deleteRecord = require("./steps/deleteRecord")
 const createUser = require("./steps/createUser")
@@ -17,14 +17,14 @@ const DEFAULT_DIRECTORY = ".budibase-automations"
 const AUTOMATION_MANIFEST = "manifest.json"
 const BUILTIN_ACTIONS = {
   SEND_EMAIL: sendEmail.run,
-  SAVE_RECORD: saveRecord.run,
+  CREATE_RECORD: createRecord.run,
   UPDATE_RECORD: updateRecord.run,
   DELETE_RECORD: deleteRecord.run,
   CREATE_USER: createUser.run,
 }
 const BUILTIN_DEFINITIONS = {
   SEND_EMAIL: sendEmail.definition,
-  SAVE_RECORD: saveRecord.definition,
+  CREATE_RECORD: createRecord.definition,
   UPDATE_RECORD: updateRecord.definition,
   DELETE_RECORD: deleteRecord.definition,
   CREATE_USER: createUser.definition,
