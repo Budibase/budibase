@@ -47,7 +47,7 @@
       <div
         class="scroll-wrapper"
         on:click|self={hide}
-        transition:fly={{ y: 100 }}>
+        transition:fly={{ y: 50 }}>
         <div class="content-wrapper" on:click|self={hide}>
           <div class="content" class:wide>
             <slot />
