@@ -10,7 +10,6 @@
   } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import CreateEditRecord from "../modals/CreateEditRecord.svelte"
   import analytics from "analytics"
 
   const CONDITIONS = [
