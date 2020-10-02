@@ -81,7 +81,7 @@
         {/if}
         {#each columns as header, idx}
           <td class="no-border">
-            {#if idx === 0}No data.{/if}
+            {#if idx === 0 && !allowEditing}No data.{/if}
           </td>
         {/each}
       {/if}
