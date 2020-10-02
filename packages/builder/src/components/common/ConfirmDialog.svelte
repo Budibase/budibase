@@ -2,11 +2,11 @@
   import { Modal, ModalTitle, ModalFooter } from "components/common/Modal"
 
   export let title = ""
-  export let body
-  export let okText
-  export let cancelText
-  export let onOk
-  export let onCancel
+  export let body = ""
+  export let okText = "Confirm"
+  export let cancelText = "Cancel"
+  export let onOk = () => {}
+  export let onCancel = () => {}
 
   let modal
 
