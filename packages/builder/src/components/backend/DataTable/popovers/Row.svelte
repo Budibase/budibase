@@ -1,6 +1,7 @@
 <script>
   import { DropdownMenu, TextButton as Button, Icon } from "@budibase/bbui"
   import CreateEditRecord from "./CreateEditRecord.svelte"
+  import { Modal } from "components/common/Modal"
 
   let anchor
   let dropdown
@@ -12,10 +13,10 @@
     Create New Row
   </Button>
 </div>
-<DropdownMenu bind:this={dropdown} {anchor} align="left">
+<Modal bind:this={dropdown}>
   <h5>Add New Row</h5>
   <CreateEditRecord onClosed={dropdown.hide} />
-</DropdownMenu>
+</Modal>
 
 <style>
   h5 {
