@@ -10,6 +10,7 @@
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import analytics from "analytics"
 
   const CALCULATIONS = [
     {
@@ -35,6 +36,7 @@
   function saveView() {
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
+    analytics.captureEvent("Added View Calculate", { field: view.field })
     dropdown.hide()
   }
 </script>
@@ -50,14 +52,14 @@
   <div class="input-group-row">
     <p>The</p>
     <Select secondary thin bind:value={view.calculation}>
-      <option value={null} />
+      <option value="">Choose an option</option>
       {#each CALCULATIONS as calculation}
         <option value={calculation.key}>{calculation.name}</option>
       {/each}
     </Select>
     <p>of</p>
     <Select secondary thin bind:value={view.field}>
-      <option value={null} />
+      <option value="">Choose an option</option>
       {#each fields as field}
         <option value={field}>{field}</option>
       {/each}
