@@ -12,7 +12,6 @@
   import { onMount } from "svelte"
 
   import AgGrid from "@budibase/svelte-ag-grid"
-  import InputForm from "./InputForm.svelte"
   import CreateRowButton from "./CreateRow/Button.svelte"
   import { TextButton as DeleteButton, Icon } from "@budibase/bbui"
 
@@ -23,10 +22,12 @@
   let data
   let columnDefs
   let selectedRows = []
+  let model
 
   onMount(async () => {
     const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
-    const { schema } = await jsonModel.json()
+    model = await jsonModel.json()
+    const { schema } = model
     if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
       columnDefs = Object.keys(schema).map((key, i) => {
@@ -34,7 +35,7 @@
           headerCheckboxSelection: i === 0,
           checkboxSelection: i === 0,
           valueSetter: setters.get(schema[key].type),
-          headerName: key.charAt(0).toUpperCase() + key.slice(1), // Capitalise first letter
+          headerName: key.charAt(0).toUpperCase() + key.slice(1),
           field: key,
           hide: shouldHideField(key),
           sortable: true,
@@ -88,16 +89,16 @@
 </script>
 
 <div class="container">
-  <div class="controls">
-    <CreateRowButton />
-    {#if selectedRows.length > 0}
-      <DeleteButton text small on:click={deleteRecords}>
-        <Icon name="addrow" />
-        Delete {selectedRows.length} row(s)
-      </DeleteButton>
-    {/if}
-  </div>
   {#if dataLoaded}
+    <div class="controls">
+      <CreateRowButton {_bb} {model} />
+      {#if selectedRows.length > 0}
+        <DeleteButton text small on:click={deleteRecords}>
+          <Icon name="addrow" />
+          Delete {selectedRows.length} row(s)
+        </DeleteButton>
+      {/if}
+    </div>
     <AgGrid
       {data}
       {columnDefs}
