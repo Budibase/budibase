@@ -5,7 +5,6 @@ const fetch = require("node-fetch")
 const fs = require("fs")
 const uuid = require("uuid")
 const AWS = require("aws-sdk")
-const csv = require("csvtojson")
 const { prepareUploadForS3 } = require("./deploy/aws")
 
 const {
@@ -246,38 +245,4 @@ exports.serveComponentLibrary = async function(ctx) {
   }
 
   await send(ctx, "/index.js", { root: componentLibraryPath })
-}
-
-function schemaFromCSV(path) {
-  const result = csv().fromFile(path)
-  return new Promise((resolve, reject) => {
-    result.on("header", headers => {
-      const schema = {}
-      for (let header of headers) {
-        schema[header] = {
-          type: "string",
-          constraints: {
-            type: "string",
-            length: {},
-            presence: {
-              allowEmpty: true,
-            },
-          },
-          name: header,
-        }
-      }
-      resolve(schema)
-    })
-    result.on("error", reject)
-  })
-}
-
-exports.validateCSV = async function(ctx) {
-  const file = ctx.request.files.file
-  const schema = await schemaFromCSV(file.path)
-  // if (result.length === 0) ctx.throw(400, "CSV Invalid")
-  ctx.body = {
-    schema,
-    path: file.path,
-  }
 }
