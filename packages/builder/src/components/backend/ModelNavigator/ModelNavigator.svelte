@@ -1,18 +1,12 @@
 <script>
-  import { getContext } from "svelte"
-  import { slide } from "svelte/transition"
-  import { Switcher } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
-  import { store, backendUiStore } from "builderStore"
+  import { backendUiStore } from "builderStore"
   import ListItem from "./ListItem.svelte"
-  import { Button } from "@budibase/bbui"
   import CreateTablePopover from "./CreateTable.svelte"
   import EditTablePopover from "./EditTable.svelte"
   import EditViewPopover from "./EditView.svelte"
   import { Heading } from "@budibase/bbui"
   import { Spacer } from "@budibase/bbui"
-
-  const { open, close } = getContext("simple-modal")
 
   $: selectedView =
     $backendUiStore.selectedView && $backendUiStore.selectedView.name

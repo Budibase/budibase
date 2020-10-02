@@ -1,13 +1,6 @@
 <script>
-  import { getContext } from "svelte"
-  import { Button } from "@budibase/bbui"
-  import ModelDataTable from "components/backend/DataTable"
+  import ModelDataTable from "components/backend/DataTable/ModelDataTable.svelte"
   import { backendUiStore } from "builderStore"
-  import ActionButton from "components/common/ActionButton.svelte"
-  import * as api from "components/backend/DataTable/api"
-  import CreateEditRecordModal from "components/backend/DataTable/popovers/CreateEditRecord.svelte"
-
-  const { open, close } = getContext("simple-modal")
 
   $: selectedModel = $backendUiStore.selectedModel
 </script>
