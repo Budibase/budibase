@@ -2,6 +2,7 @@
   import { Button, Input, Select } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
+  import analytics from "analytics"
 
   const CONDITIONS = [
     {
@@ -53,6 +54,9 @@
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
     onClosed()
+    analytics.captureEvent("Added View Filter", {
+      filters: JSON.stringify(view.filters),
+    })
   }
 
   function removeFilter(idx) {
