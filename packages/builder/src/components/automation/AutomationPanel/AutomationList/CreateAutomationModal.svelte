@@ -1,11 +1,9 @@
 <script>
   import { store, backendUiStore, automationStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import ActionButton from "components/common/ActionButton.svelte"
   import { Input } from "@budibase/bbui"
   import analytics from "analytics"
-
-  export let onClosed
+  import { ModalTitle, ModalFooter } from "components/common/Modal"
 
   let name
 
@@ -13,71 +11,38 @@
   $: instanceId = $backendUiStore.selectedDatabase._id
   $: appId = $store.appId
 
+  function sleep(ms) {
+    return new Promise(resolve => {
+      setTimeout(resolve, ms)
+    })
+  }
+
   async function createAutomation() {
     await automationStore.actions.create({
       name,
       instanceId,
     })
-    onClosed()
     notifier.success(`Automation ${name} created.`)
     analytics.captureEvent("Automation Created", { name })
   }
 </script>
 
-<div class="container">
-  <header>
-    <i class="ri-stackshare-line" />
-    <h3>Create Automation</h3>
-  </header>
-  <div class="content">
-    <Input bind:value={name} label="Name" />
-  </div>
-  <footer>
-    <a href="https://docs.budibase.com">
-      <i class="ri-information-line" />
-      <span>Learn about automations</span>
-    </a>
-    <ActionButton secondary on:click={onClosed}>Cancel</ActionButton>
-    <ActionButton disabled={!valid} on:click={createAutomation}>
-      Save
-    </ActionButton>
-  </footer>
-</div>
+<ModalTitle>Create Automation</ModalTitle>
+<Input bind:value={name} label="Name" />
+<ModalFooter
+  confirmText="Create"
+  onConfirm={createAutomation}
+  disabled={!valid}>
+  <a
+    target="_blank"
+    href="https://docs.budibase.com/automate/introduction-to-automate">
+    <i class="ri-information-line" />
+    <span>Learn about automations</span>
+  </a>
+</ModalFooter>
 
 <style>
-  .container {
-    padding: var(--spacing-xl);
-  }
-
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-  }
-  header h3 {
-    font-size: var(--font-size-xl);
-    color: var(--ink);
-    font-weight: 600;
-    margin: 0;
-  }
-  header i {
-    margin-right: var(--spacing-m);
-    font-size: 28px;
-    color: var(--grey-6);
-  }
-
-  .content {
-    padding: var(--spacing-xl) 0;
-  }
-
-  footer {
-    display: grid;
-    grid-auto-flow: column;
-    grid-gap: var(--spacing-m);
-    grid-auto-columns: 3fr 1fr 1fr;
-  }
-  footer a {
+  a {
     color: var(--ink);
     font-size: 14px;
     vertical-align: middle;
@@ -85,10 +50,10 @@
     align-items: center;
     text-decoration: none;
   }
-  footer a span {
+  a span {
     text-decoration: underline;
   }
-  footer i {
+  i {
     font-size: 20px;
     margin-right: var(--spacing-m);
     text-decoration: none;
