@@ -1,13 +1,18 @@
 const CouchDB = require("../../db")
-const newid = require("../../db/newid")
 const linkRecords = require("../../db/linkedRecords")
+const {
+  getRecordParams,
+  getModelParams,
+  generateModelID,
+} = require("../../db/utils")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
-  const body = await db.query("database/by_type", {
-    include_docs: true,
-    key: ["model"],
-  })
+  const body = await db.allDocs(
+    getModelParams(null, {
+      include_docs: true,
+    })
+  )
   ctx.body = body.rows.map(row => row.doc)
 }
 
@@ -22,7 +27,7 @@ exports.save = async function(ctx) {
   const oldModelId = ctx.request.body._id
   const modelToSave = {
     type: "model",
-    _id: newid(),
+    _id: generateModelID(),
     views: {},
     ...ctx.request.body,
   }
@@ -39,9 +44,12 @@ exports.save = async function(ctx) {
   } else if (_rename && modelToSave.primaryDisplay === _rename.old) {
     throw "Cannot rename the primary display field."
   } else if (_rename) {
-    const records = await db.query(`database/all_${modelToSave._id}`, {
-      include_docs: true,
-    })
+    const records = await db.allDocs(
+      getRecordParams(modelToSave._id, null, {
+        include_docs: true,
+      })
+    )
+
     const docs = records.rows.map(({ doc }) => {
       doc[_rename.updated] = doc[_rename.old]
       delete doc[_rename.old]
@@ -64,19 +72,6 @@ exports.save = async function(ctx) {
   const result = await db.post(modelToSave)
   modelToSave._rev = result.rev
 
-  const designDoc = await db.get("_design/database")
-  /** TODO: should we include the doc type here - currently it is possible for anything
-      with a modelId in it to be returned */
-  designDoc.views = {
-    ...designDoc.views,
-    [`all_${modelToSave._id}`]: {
-      map: `function(doc) {
-        if (doc.modelId === "${modelToSave._id}") {
-          emit(doc._id); 
-        }
-      }`,
-    },
-  }
   // update linked records
   await linkRecords.updateLinks({
     instanceId,
@@ -86,7 +81,6 @@ exports.save = async function(ctx) {
     model: modelToSave,
     oldModel: oldModel,
   })
-  await db.put(designDoc)
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitModel(`model:save`, instanceId, modelToSave)
@@ -103,10 +97,12 @@ exports.destroy = async function(ctx) {
 
   await db.remove(modelToDelete)
 
-  const modelViewId = `all_${ctx.params.modelId}`
-
   // Delete all records for that model
-  const records = await db.query(`database/${modelViewId}`)
+  const records = await db.allDocs(
+    getRecordParams(ctx.params.modelId, null, {
+      include_docs: true,
+    })
+  )
   await db.bulkDocs(
     records.rows.map(record => ({ _id: record.id, _deleted: true }))
   )
@@ -117,10 +113,6 @@ exports.destroy = async function(ctx) {
     eventType: linkRecords.EventType.MODEL_DELETE,
     model: modelToDelete,
   })
-  // delete the "all" view
-  const designDoc = await db.get("_design/database")
-  delete designDoc.views[modelViewId]
-  await db.put(designDoc)
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitModel(`model:delete`, instanceId, modelToDelete)

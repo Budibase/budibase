@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken")
 const fetch = require("node-fetch")
 const fs = require("fs")
 const uuid = require("uuid")
+const AWS = require("aws-sdk")
+const { prepareUploadForS3 } = require("./deploy/aws")
 
 const {
   budibaseAppsDir,
@@ -22,8 +24,12 @@ exports.serveBuilder = async function(ctx) {
   await send(ctx, ctx.file, { root: ctx.devPath || builderPath })
 }
 
-exports.processLocalFileUpload = async function(ctx) {
-  const { files } = ctx.request.body
+exports.uploadFile = async function(ctx) {
+  let files
+  files =
+    ctx.request.files.file.length > 1
+      ? Array.from(ctx.request.files.file)
+      : [ctx.request.files.file]
 
   const attachmentsPath = resolve(
     budibaseAppsDir(),
@@ -31,52 +37,99 @@ exports.processLocalFileUpload = async function(ctx) {
     "attachments"
   )
 
+  if (process.env.CLOUD) {
+    // remote upload
+    const s3 = new AWS.S3({
+      params: {
+        Bucket: "prod-budi-app-assets",
+      },
+    })
+
+    const uploads = files.map(file => {
+      const fileExtension = [...file.name.split(".")].pop()
+      const processedFileName = `${uuid.v4()}.${fileExtension}`
+
+      return prepareUploadForS3({
+        file,
+        s3Key: `assets/${ctx.user.appId}/attachments/${processedFileName}`,
+        s3,
+      })
+    })
+
+    ctx.body = await Promise.all(uploads)
+    return
+  }
+
+  ctx.body = await processLocalFileUploads({
+    files,
+    outputPath: attachmentsPath,
+    instanceId: ctx.user.instanceId,
+  })
+}
+
+async function processLocalFileUploads({ files, outputPath, instanceId }) {
   // create attachments dir if it doesnt exist
-  !fs.existsSync(attachmentsPath) &&
-    fs.mkdirSync(attachmentsPath, { recursive: true })
+  !fs.existsSync(outputPath) && fs.mkdirSync(outputPath, { recursive: true })
 
   const filesToProcess = files.map(file => {
-    const fileExtension = [...file.path.split(".")].pop()
+    const fileExtension = [...file.name.split(".")].pop()
     // filenames converted to UUIDs so they are unique
-    const fileName = `${uuid.v4()}.${fileExtension}`
+    const processedFileName = `${uuid.v4()}.${fileExtension}`
 
     return {
-      ...file,
-      fileName,
+      name: file.name,
+      path: file.path,
+      size: file.size,
+      type: file.type,
+      processedFileName,
       extension: fileExtension,
-      outputPath: join(attachmentsPath, fileName),
-      url: join("/attachments", fileName),
+      outputPath: join(outputPath, processedFileName),
+      url: join("/attachments", processedFileName),
     }
   })
 
-  const fileProcessOperations = filesToProcess.map(file =>
-    fileProcessor.process(file)
+  const fileProcessOperations = filesToProcess.map(fileProcessor.process)
+
+  const processedFiles = await Promise.all(fileProcessOperations)
+
+  let pendingFileUploads
+  // local document used to track which files need to be uploaded
+  // db.get throws an error if the document doesn't exist
+  // need to use a promise to default
+  const db = new CouchDB(instanceId)
+  await db
+    .get("_local/fileuploads")
+    .then(data => {
+      pendingFileUploads = data
+    })
+    .catch(() => {
+      pendingFileUploads = { _id: "_local/fileuploads", uploads: [] }
+    })
+
+  pendingFileUploads.uploads = [
+    ...processedFiles,
+    ...pendingFileUploads.uploads,
+  ]
+  await db.put(pendingFileUploads)
+
+  return processedFiles
+}
+
+exports.performLocalFileProcessing = async function(ctx) {
+  const { files } = ctx.request.body
+
+  const processedFileOutputPath = resolve(
+    budibaseAppsDir(),
+    ctx.user.appId,
+    "attachments"
   )
 
   try {
-    const processedFiles = await Promise.all(fileProcessOperations)
-
-    let pendingFileUploads
-    // local document used to track which files need to be uploaded
-    // db.get throws an error if the document doesn't exist
-    // need to use a promise to default
-    const db = new CouchDB(ctx.user.instanceId)
-    await db
-      .get("_local/fileuploads")
-      .then(data => {
-        pendingFileUploads = data
-      })
-      .catch(() => {
-        pendingFileUploads = { _id: "_local/fileuploads", uploads: [] }
-      })
-
-    pendingFileUploads.uploads = [
-      ...processedFiles,
-      ...pendingFileUploads.uploads,
-    ]
-    await db.put(pendingFileUploads)
-
-    ctx.body = processedFiles
+    ctx.body = await processLocalFileUploads({
+      files,
+      outputPath: processedFileOutputPath,
+      instanceId: ctx.user.instanceId,
+    })
   } catch (err) {
     ctx.throw(500, err)
   }

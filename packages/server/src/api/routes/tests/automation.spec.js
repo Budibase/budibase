@@ -10,12 +10,14 @@ const {
   destroyDocument,
   builderEndpointShouldBlockNormalUsers
 } = require("./couchTestUtils")
+let { generateAutomationID } = require("../../../db/utils")
 
 const { delay } = require("./testUtils")
 
 const MAX_RETRIES = 4
+const AUTOMATION_ID = generateAutomationID()
 const TEST_AUTOMATION = {
-  _id: "Test Automation",
+  _id: AUTOMATION_ID,
   name: "My Automation",
   pageId: "123123123",
   screenId: "kasdkfldsafkl",
@@ -206,7 +208,7 @@ describe("/automations", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(res.body.message).toEqual("Automation Test Automation updated successfully.")
+        expect(res.body.message).toEqual(`Automation ${AUTOMATION_ID} updated successfully.`)
         expect(res.body.automation.name).toEqual("Updated Name")
     })
   })

@@ -1,6 +1,7 @@
 const CouchDB = require("../db")
 const emitter = require("../events/index")
 const InMemoryQueue = require("../utilities/queue/inMemoryQueue")
+const { getAutomationParams } = require("../db/utils")
 
 let automationQueue = new InMemoryQueue("automationQueue")
 
@@ -89,15 +90,18 @@ async function queueRelevantRecordAutomations(event, eventType) {
     throw `No instanceId specified for ${eventType} - check event emitters.`
   }
   const db = new CouchDB(event.instanceId)
-  const automationsToTrigger = await db.query(
-    "database/by_automation_trigger",
-    {
-      key: [eventType],
-      include_docs: true,
-    }
+  let automations = await db.allDocs(
+    getAutomationParams(null, { include_docs: true })
   )
 
-  const automations = automationsToTrigger.rows.map(wf => wf.doc)
+  // filter down to the correct event type
+  automations = automations.rows
+    .map(automation => automation.doc)
+    .filter(automation => {
+      const trigger = automation.definition.trigger
+      return trigger && trigger.event === eventType
+    })
+
   for (let automation of automations) {
     let automationDef = automation.definition
     let automationTrigger = automationDef ? automationDef.trigger : {}

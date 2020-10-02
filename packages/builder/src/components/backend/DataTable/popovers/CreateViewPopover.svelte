@@ -3,6 +3,7 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
+  import analytics from "analytics"
 
   export let onClosed
 
@@ -28,6 +29,7 @@
     })
     notifier.success(`View ${name} created`)
     onClosed()
+    analytics.captureEvent("View Created", { name })
     $goto(`../../../view/${name}`)
   }
 </script>
