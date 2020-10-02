@@ -57,12 +57,12 @@ exports.createLinkView = async instanceId => {
  * @returns {Promise<object[]>} This will return an array of the linking documents that were found
  * (if any).
  */
-exports.getLinkDocuments = async ({
+exports.getLinkDocuments = async function({
   instanceId,
   modelId,
   recordId,
   includeDocs,
-}) => {
+}) {
   const db = new CouchDB(instanceId)
   let params
   if (recordId != null) {
@@ -84,6 +84,7 @@ exports.getLinkDocuments = async ({
     // check if the view doesn't exist, it should for all new instances
     if (err != null && err.name === "not_found") {
       await exports.createLinkView(instanceId)
+      return exports.getLinkDocuments(arguments[0])
     } else {
       Sentry.captureException(err)
     }

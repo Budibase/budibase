@@ -81,7 +81,6 @@ exports.save = async function(ctx) {
     model: modelToSave,
     oldModel: oldModel,
   })
-  await db.put(designDoc)
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitModel(`model:save`, instanceId, modelToSave)
