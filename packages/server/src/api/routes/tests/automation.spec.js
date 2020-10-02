@@ -128,14 +128,14 @@ describe("/automations", () => {
     it("should setup the automation fully", () => {
       let trigger = TRIGGER_DEFINITIONS["RECORD_SAVED"]
       trigger.id = "wadiawdo34"
-      let saveAction = ACTION_DEFINITIONS["SAVE_RECORD"]
-      saveAction.inputs.record = {
+      let createAction = ACTION_DEFINITIONS["CREATE_RECORD"]
+      createAction.inputs.record = {
         name: "{{trigger.name}}",
         description: "{{trigger.description}}"
       }
-      saveAction.id = "awde444wk"
+      createAction.id = "awde444wk"
 
-      TEST_AUTOMATION.definition.steps.push(saveAction)
+      TEST_AUTOMATION.definition.steps.push(createAction)
       TEST_AUTOMATION.definition.trigger = trigger
     })
 
