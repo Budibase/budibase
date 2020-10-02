@@ -1,5 +1,4 @@
 const CouchDB = require("../../db")
-const newid = require("../../db/newid")
 const {
   generateAdminPermissions,
   generatePowerUserPermissions,
@@ -95,7 +94,7 @@ exports.create = async function(ctx) {
     name: ctx.request.body.name,
     _rev: ctx.request.body._rev,
     permissions: ctx.request.body.permissions || [],
-    _id: generateAccessLevelID(newid()),
+    _id: generateAccessLevelID(),
     type: "accesslevel",
   }
 

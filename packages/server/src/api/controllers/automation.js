@@ -1,5 +1,4 @@
 const CouchDB = require("../../db")
-const newid = require("../../db/newid")
 const actions = require("../../automations/actions")
 const logic = require("../../automations/logic")
 const triggers = require("../../automations/triggers")
@@ -35,7 +34,7 @@ exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   let automation = ctx.request.body
 
-  automation._id = generateAutomationID(newid())
+  automation._id = generateAutomationID()
 
   automation.type = "automation"
   automation = cleanAutomationInputs(automation)

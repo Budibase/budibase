@@ -1,7 +1,6 @@
 const CouchDB = require("../../db")
 const ClientDb = require("../../db/clientDb")
 const { getPackageForBuilder, buildPage } = require("../../utilities/builder")
-const newid = require("../../db/newid")
 const env = require("../../environment")
 const instanceController = require("./instance")
 const { resolve, join } = require("path")
@@ -49,7 +48,7 @@ exports.create = async function(ctx) {
   if (!clientId) {
     ctx.throw(400, "ClientId not suplied")
   }
-  const appId = generateAppID(newid())
+  const appId = generateAppID()
   // insert an appId -> clientId lookup
   const masterDb = new CouchDB("client_app_lookup")
 

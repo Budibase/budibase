@@ -1,6 +1,5 @@
 const CouchDB = require("../../db")
 const validateJs = require("validate.js")
-const newid = require("../../db/newid")
 const { getRecordParams, generateRecordID } = require("../../db/utils")
 
 const MODEL_VIEW_BEGINS_WITH = "all_model:"
@@ -69,7 +68,7 @@ exports.save = async function(ctx) {
   record.modelId = ctx.params.modelId
 
   if (!record._rev && !record._id) {
-    record._id = generateRecordID(record.modelId, newid())
+    record._id = generateRecordID(record.modelId)
   }
 
   const model = await db.get(record.modelId)

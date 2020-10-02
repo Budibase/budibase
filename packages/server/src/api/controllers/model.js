@@ -1,5 +1,4 @@
 const CouchDB = require("../../db")
-const newid = require("../../db/newid")
 const {
   getRecordParams,
   getModelParams,
@@ -25,7 +24,7 @@ exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const modelToSave = {
     type: "model",
-    _id: generateModelID(newid()),
+    _id: generateModelID(),
     views: {},
     ...ctx.request.body,
   }
