@@ -46,7 +46,7 @@
   <div class="input-group-row">
     <p>Group By</p>
     <Select secondary thin bind:value={view.groupBy}>
-      <option value={false} />
+      <option value="">Choose an option</option>
       {#each fields as field}
         <option value={field}>{field}</option>
       {/each}

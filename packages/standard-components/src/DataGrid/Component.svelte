@@ -1,11 +1,14 @@
 <script>
   // Import valueSetters and custom renderers
   import { number } from "./valueSetters"
-  import { booleanRenderer } from "./customRenderer"
+  import { booleanRenderer, attachmentRenderer } from "./customRenderer"
 
   // These maps need to be set up to handle whatever types that are used in the models.
   const setters = new Map([["number", number]])
-  const renderers = new Map([["boolean", booleanRenderer]])
+  const renderers = new Map([
+    ["boolean", booleanRenderer],
+    ["attachment", attachmentRenderer],
+  ])
 
   import fetchData from "../fetchData.js"
   import { isEmpty } from "lodash/fp"
@@ -39,8 +42,10 @@
           field: key,
           hide: shouldHideField(key),
           sortable: true,
-          editable: schema[key].type !== "boolean",
+          editable:
+            schema[key].type !== "boolean" || schema[key].type !== "attachment",
           cellRenderer: renderers.get(schema[key].type),
+          autoHeight: schema[key].type === "attachment",
         }
       })
     }

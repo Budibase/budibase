@@ -1,17 +1,23 @@
 <script>
+  import { cssVars } from "../cssVars.js"
   import { FILE_TYPES } from "./fileTypes"
 
   export let files
-  export let height = "70"
-  export let width = "70"
+  export let height = 70
+  export let width = 70
+
+  $: cssVariables = {
+    width,
+    height,
+  }
 </script>
 
-<div class="file-list">
+<div class="file-list" use:cssVars={cssVariables}>
   {#each files as file}
     <a href={file.url} target="_blank">
       <div class="file">
         {#if FILE_TYPES.IMAGE.includes(file.extension.toLowerCase())}
-          <img {width} {height} src={file.url} />
+          <img {width} {height} src={file.url} alt="preview of {file.name}" />
         {:else}
           <i class="far fa-file" />
         {/if}
