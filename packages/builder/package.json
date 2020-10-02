@@ -79,7 +79,6 @@
     "shortid": "^2.2.15",
     "svelte-loading-spinners": "^0.1.1",
     "svelte-portal": "^0.1.0",
-    "svelte-simple-modal": "^0.4.2",
     "yup": "^0.29.2"
   },
   "devDependencies": {

@@ -1,5 +1,4 @@
 <script>
-  import { getContext } from "svelte"
   import { store } from "builderStore"
   import api from "builderStore/api"
   import AppList from "components/start/AppList.svelte"
@@ -10,8 +9,11 @@
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import { Button, Heading } from "@budibase/bbui"
   import analytics from "analytics"
+  import { Modal } from "components/common/Modal"
 
   let promise = getApps()
+  let hasKey
+  let modal
 
   async function getApps() {
     const res = await get("/api/applications")
@@ -23,8 +25,6 @@
       throw new Error(json)
     }
   }
-
-  let hasKey
 
   async function fetchKeys() {
     const response = await api.get(`/api/keys/`)
@@ -40,27 +40,8 @@
     }
 
     if (!keys.budibase) {
-      showCreateAppModal()
+      modal.show()
     }
-  }
-
-  // Handle create app modal
-  const { open } = getContext("simple-modal")
-
-  const showCreateAppModal = () => {
-    open(
-      CreateAppModal,
-      {
-        hasKey,
-      },
-      {
-        closeButton: false,
-        closeOnEsc: false,
-        closeOnOuterClick: false,
-        styleContent: { padding: 0 },
-        closeOnOuterClick: true,
-      }
-    )
   }
 
   checkIfKeysAndApps()
@@ -68,9 +49,7 @@
 
 <div class="header">
   <Heading medium black>Welcome to the Budibase Beta</Heading>
-  <Button primary black on:click={showCreateAppModal}>
-    Create New Web App
-  </Button>
+  <Button primary black on:click={modal.show}>Create New Web App</Button>
 </div>
 
 <div class="banner">
@@ -79,6 +58,10 @@
     Every accomplishment starts with a decision to try.
   </div>
 </div>
+
+<Modal bind:this={modal} wide padded={false}>
+  <CreateAppModal {hasKey} />
+</Modal>
 
 {#await promise}
   <div class="spinner-container">
