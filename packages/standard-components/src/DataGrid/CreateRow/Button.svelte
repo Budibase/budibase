@@ -1,9 +1,11 @@
 <script>
   import { DropdownMenu, TextButton as Button, Icon } from "@budibase/bbui"
-  //   import CreateEditRecord from "../modals/CreateEditRecord.svelte"
+  import Modal from "./Modal.svelte"
 
   let anchor
   let dropdown
+
+  export let _bb, model
 </script>
 
 <div bind:this={anchor}>
@@ -14,8 +16,7 @@
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <h5>Add New Row</h5>
-  popup goes here!
-  <!-- <CreateEditRecord onClosed={dropdown.hide} /> -->
+  <Modal {_bb} {model} onClosed={dropdown.hide} />
 </DropdownMenu>
 
 <style>
