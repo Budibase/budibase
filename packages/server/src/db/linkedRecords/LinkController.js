@@ -1,5 +1,6 @@
 const CouchDB = require("../index")
 const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
+const { generateLinkID } = require("../utils")
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -22,7 +23,7 @@ function LinkDocument(
   recordId2
 ) {
   // build the ID out of unique references to this link document
-  this._id = `${modelId1}/${modelId2}/${fieldName1}/${fieldName2}/${recordId1}/${recordId2}`
+  this._id = generateLinkID(modelId1, modelId2, recordId1, recordId2)
   // required for referencing in view
   this.type = "link"
   this.doc1 = {

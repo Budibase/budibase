@@ -7,7 +7,7 @@ module.exports.definition = {
   icon: "ri-save-3-fill",
   description: "Add a row to your database",
   type: "ACTION",
-  stepId: "SAVE_RECORD",
+  stepId: "CREATE_RECORD",
   inputs: {},
   schema: {
     inputs: {
