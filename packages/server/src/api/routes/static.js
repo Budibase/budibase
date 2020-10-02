@@ -28,7 +28,6 @@ router
     authorized(BUILDER),
     controller.performLocalFileProcessing
   )
-  .post("/api/csv/validate", authorized(BUILDER), controller.validateCSV)
   .post("/api/attachments/upload", controller.uploadFile)
   .get("/componentlibrary", controller.serveComponentLibrary)
   .get("/assets/:file*", controller.serveAppAsset)
