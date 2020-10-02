@@ -9,20 +9,24 @@
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateList from "components/start/TemplateList.svelte"
   import { Button } from "@budibase/bbui"
+  import analytics from "analytics"
 
   let hasKey
 
   async function fetchKeys() {
     const response = await api.get(`/api/keys/`)
-    const res = await response.json()
-    return res.budibase
+    return await response.json()
   }
 
   async function checkIfKeysAndApps() {
-    const key = await fetchKeys()
-    if (key) {
+    const keys = await fetchKeys()
+    const apps = await getApps()
+    if (keys.userId) {
       hasKey = true
-    } else {
+      analytics.identify(keys.userId)
+    }
+
+    if (!keys.budibase) {
       showCreateAppModal()
     }
   }
