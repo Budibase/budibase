@@ -51,6 +51,7 @@
         <div class="content-wrapper" on:click|self={hide}>
           <div class="content" class:wide>
             <slot />
+            <i class="ri-close-line" on:click={hide} />
           </div>
         </div>
       </div>
@@ -112,5 +113,17 @@
   }
   .content.wide {
     flex: 0 0 600px;
+  }
+
+  i {
+    position: absolute;
+    top: var(--spacing-xl);
+    right: var(--spacing-xl);
+    color: var(--ink);
+    font-size: var(--font-size-xl);
+  }
+  i:hover {
+    color: var(--grey-6);
+    cursor: pointer;
   }
 </style>
