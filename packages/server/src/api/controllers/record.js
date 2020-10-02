@@ -33,6 +33,8 @@ exports.patch = async function(ctx) {
   const model = await db.get(record.modelId)
   const patchfields = ctx.request.body
 
+  coersceRecordValues(record, model)
+
   for (let key in patchfields) {
     if (!model.schema[key]) continue
     record[key] = patchfields[key]
@@ -70,6 +72,8 @@ exports.save = async function(ctx) {
   }
 
   const model = await db.get(record.modelId)
+
+  coersceRecordValues(record, model)
 
   const validateResult = await validate({
     record,
@@ -217,4 +221,53 @@ async function validate({ instanceId, modelId, record, model }) {
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
+}
+
+function coersceRecordValues(record, model) {
+  for (let [key, value] of Object.entries(record)) {
+    const field = model.schema[key]
+    if (!field) continue
+    const mapping = Object.prototype.hasOwnProperty.call(
+      TYPE_TRANSFORM_MAP,
+      value
+    )
+      ? TYPE_TRANSFORM_MAP[field.type][value]
+      : TYPE_TRANSFORM_MAP[field.type].parse
+
+    record[key] = typeof mapping === "function" ? mapping(value) : mapping
+  }
+}
+
+const TYPE_TRANSFORM_MAP = {
+  string: {
+    "": "",
+    [null]: "",
+    [undefined]: undefined,
+    parse: s => s.toString(),
+  },
+  number: {
+    "": null,
+    [undefined]: undefined,
+    parse: n => parseFloat(n),
+  },
+  datetime: {
+    "": null,
+    [undefined]: undefined,
+    [null]: null,
+    parse: d => new Date(d).getTime(),
+  },
+  attachments: {
+    [null]: [],
+    [undefined]: undefined,
+    parse: a => a,
+  },
+  boolean: {
+    [null]: null,
+    [undefined]: undefined,
+    parse: b => {
+      if (b === "false") return false
+      if (b === "true") return true
+      return b
+    },
+  },
 }
