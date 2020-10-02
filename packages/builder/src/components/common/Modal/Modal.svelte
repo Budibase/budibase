@@ -11,11 +11,12 @@
    */
   import { createEventDispatcher, setContext } from "svelte"
   import { fade, fly } from "svelte/transition"
-  import { portal } from "./portal"
+  import Portal from "svelte-portal"
   import { ContextKey } from "./context"
   const dispatch = createEventDispatcher()
 
-  export let wide
+  export let wide = false
+  export let padded = true
 
   let visible
 
@@ -39,7 +40,7 @@
 </script>
 
 {#if visible}
-  <div class="portal-wrapper" use:portal={'#modal-container'}>
+  <Portal target="#modal-container">
     <div
       class="overlay"
       on:click|self={hide}
@@ -49,14 +50,14 @@
         on:click|self={hide}
         transition:fly={{ y: 50 }}>
         <div class="content-wrapper" on:click|self={hide}>
-          <div class="content" class:wide>
+          <div class="content" class:wide class:padded>
             <slot />
             <i class="ri-close-line" on:click={hide} />
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </Portal>
 {/if}
 
 <style>
@@ -109,10 +110,12 @@
     margin: 2rem 0;
     border-radius: var(--border-radius-m);
     gap: var(--spacing-xl);
-    padding: var(--spacing-xl);
   }
   .content.wide {
     flex: 0 0 600px;
+  }
+  .content.padded {
+    padding: var(--spacing-xl);
   }
 
   i {
