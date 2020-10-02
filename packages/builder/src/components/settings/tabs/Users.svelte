@@ -62,6 +62,7 @@
         name="Password"
         placeholder="Password" />
       <Select bind:value={accessLevelId} thin>
+        <option value="">Choose an option</option>
         <option value="ADMIN">Admin</option>
         <option value="POWER_USER">Power User</option>
       </Select>
