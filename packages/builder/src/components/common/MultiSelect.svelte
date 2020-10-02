@@ -61,6 +61,9 @@
 
   function handleOptionMousedown(e) {
     const value = e.target.dataset.value
+    if (value == null) {
+      return
+    }
     if (selected[value]) {
       remove(value)
     } else {
@@ -118,7 +121,7 @@
           </li>
         {/each}
         {#if !options.length}
-          <li>No results</li>
+          <li class="no-results">No results</li>
         {/if}
       </ul>
     {/if}
@@ -263,6 +266,10 @@
   }
   li:not(.selected):hover {
     background-color: var(--grey-1);
+  }
+  li.no-results:hover {
+    background-color: white;
+    cursor: initial;
   }
 
   .hidden {
