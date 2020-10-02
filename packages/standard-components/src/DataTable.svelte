@@ -6,6 +6,7 @@
   import fsort from "fast-sort"
   import fetchData from "./fetchData.js"
   import { isEmpty } from "lodash/fp"
+  import AttachmentList from "./attachments/AttachmentList.svelte"
 
   export let backgroundColor
   export let color
@@ -17,6 +18,7 @@
   let headers = []
   let sort = {}
   let sorted = []
+  let schema = {}
 
   $: cssVariables = {
     backgroundColor,
@@ -83,7 +85,10 @@
     {#each sorted as row (row._id)}
       <tr>
         {#each headers as header}
-          {#if row[header]}
+          <!-- Rudimentary solution for attachments on array given this entire table will be replaced by AG Grid -->
+          {#if Array.isArray(row[header])}
+            <AttachmentList files={row[header]} />
+          {:else if row[header]}
             <td>{row[header]}</td>
           {/if}
         {/each}
