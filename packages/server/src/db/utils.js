@@ -15,30 +15,33 @@ exports.DocumentTypes = DocumentTypes
 const UNICODE_MAX = "\ufff0"
 
 /**
- * If creating DB allDocs/query params with only a single input this can be used, this
- * is usually the case for top level documents like models, automations, users etc.
+ * If creating DB allDocs/query params with only a single top level ID this can be used, this
+ * is usually the case as most of our docs are top level e.g. models, automations, users and so on.
+ * More complex cases such as link docs and records which have multiple levels of IDs that their
+ * ID consists of need their own functions to build the allDocs parameters.
  * @param {string} docType The type of document which input params are being built for, e.g. user,
  * link, app, model and so on.
- * @param {string|null} input The input if looking for a particular entry.
+ * @param {string|null} docId The ID of the document minus its type - this is only needed if looking
+ * for a singular document.
  * @param {object} otherProps Add any other properties onto the request, e.g. include_docs.
  * @returns {object} Parameters which can then be used with an allDocs request.
  */
-function singleInputParams(docType, input, otherProps = {}) {
-  if (input == null) {
-    input = ""
+function getDocParams(docType, docId = null, otherProps = {}) {
+  if (docId == null) {
+    docId = ""
   }
   return {
     ...otherProps,
-    startkey: `${docType}:${input}`,
-    endkey: `${docType}:${input}${UNICODE_MAX}`,
+    startkey: `${docType}:${docId}`,
+    endkey: `${docType}:${docId}${UNICODE_MAX}`,
   }
 }
 
 /**
- * Gets parameters for retrieving models, this is a utility function for the singleInputParams function.
+ * Gets parameters for retrieving models, this is a utility function for the getDocParams function.
  */
 exports.getModelParams = (modelId = null, otherProps = {}) => {
-  return singleInputParams(DocumentTypes.MODEL, modelId, otherProps)
+  return getDocParams(DocumentTypes.MODEL, modelId, otherProps)
 }
 
 /**
@@ -62,11 +65,7 @@ exports.getRecordParams = (modelId, recordId = null, otherProps = {}) => {
     throw "Cannot build params for records without a model ID"
   }
   const endOfKey = recordId == null ? `${modelId}:` : `${modelId}:${recordId}`
-  return {
-    ...otherProps,
-    startkey: `${DocumentTypes.RECORD}:${endOfKey}`,
-    endkey: `${DocumentTypes.RECORD}:${endOfKey}${UNICODE_MAX}`,
-  }
+  return getDocParams(DocumentTypes.RECORD, endOfKey, otherProps)
 }
 
 /**
@@ -79,10 +78,10 @@ exports.generateRecordID = modelId => {
 }
 
 /**
- * Gets parameters for retrieving users, this is a utility function for the singleInputParams function.
+ * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
 exports.getUserParams = (username = null, otherProps = {}) => {
-  return singleInputParams(DocumentTypes.USER, username, otherProps)
+  return getDocParams(DocumentTypes.USER, username, otherProps)
 }
 
 /**
@@ -95,10 +94,10 @@ exports.generateUserID = username => {
 }
 
 /**
- * Gets parameters for retrieving automations, this is a utility function for the singleInputParams function.
+ * Gets parameters for retrieving automations, this is a utility function for the getDocParams function.
  */
 exports.getAutomationParams = (automationId = null, otherProps = {}) => {
-  return singleInputParams(DocumentTypes.AUTOMATION, automationId, otherProps)
+  return getDocParams(DocumentTypes.AUTOMATION, automationId, otherProps)
 }
 
 /**
@@ -131,10 +130,10 @@ exports.generateAppID = () => {
 }
 
 /**
- * Gets parameters for retrieving apps, this is a utility function for the singleInputParams function.
+ * Gets parameters for retrieving apps, this is a utility function for the getDocParams function.
  */
 exports.getAppParams = (appId = null, otherProps = {}) => {
-  return singleInputParams(DocumentTypes.APP, appId, otherProps)
+  return getDocParams(DocumentTypes.APP, appId, otherProps)
 }
 
 /**
@@ -146,12 +145,8 @@ exports.generateAccessLevelID = () => {
 }
 
 /**
- * Gets parameters for retrieving an access level, this is a utility function for the singleInputParams function.
+ * Gets parameters for retrieving an access level, this is a utility function for the getDocParams function.
  */
 exports.getAccessLevelParams = (accessLevelId = null, otherProps = {}) => {
-  return singleInputParams(
-    DocumentTypes.ACCESS_LEVEL,
-    accessLevelId,
-    otherProps
-  )
+  return getDocParams(DocumentTypes.ACCESS_LEVEL, accessLevelId, otherProps)
 }
