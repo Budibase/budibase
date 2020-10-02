@@ -10,31 +10,50 @@
   export let onConfirm
 
   const modalContext = getContext(ContextKey)
+  let loading = false
 
   function hide() {
     modalContext.hide()
   }
 
   async function confirm() {
+    loading = true
     if (!onConfirm || (await onConfirm()) !== false) {
       hide()
     }
+    loading = false
   }
 </script>
 
-{#if showCancelButton || showConfirmButton}
-  <footer>
+<footer>
+  <div class="content">
+    <slot />
+  </div>
+  <div class="buttons">
     {#if showCancelButton}
       <Button secondary on:click={hide}>{cancelText}</Button>
     {/if}
     {#if showConfirmButton}
-      <Button primary {...$$restProps} on:click={confirm}>{confirmText}</Button>
+      <Button
+        primary
+        {...$$restProps}
+        disabled={$$props.disabled || loading}
+        on:click={confirm}>
+        {confirmText}
+      </Button>
     {/if}
-  </footer>
-{/if}
+  </div>
+</footer>
 
 <style>
   footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+  .buttons {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
