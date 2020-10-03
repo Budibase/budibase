@@ -3,6 +3,7 @@
   import CreateRowButton from "./buttons/CreateRowButton.svelte"
   import CreateColumnButton from "./buttons/CreateColumnButton.svelte"
   import CreateViewButton from "./buttons/CreateViewButton.svelte"
+  import ExportButton from "./buttons/ExportButton.svelte"
   import * as api from "./api"
   import Table from "./Table.svelte"
 
@@ -10,6 +11,10 @@
 
   $: title = $backendUiStore.selectedModel.name
   $: schema = $backendUiStore.selectedModel.schema
+  $: modelView = {
+    schema,
+    name: $backendUiStore.selectedView.name,
+  }
 
   // Fetch records for specified model
   $: {
@@ -26,5 +31,6 @@
   {#if Object.keys(schema).length > 0}
     <CreateRowButton />
     <CreateViewButton />
+    <ExportButton view={modelView} />
   {/if}
 </Table>
