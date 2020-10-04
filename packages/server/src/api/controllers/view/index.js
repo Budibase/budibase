@@ -13,6 +13,10 @@ const controller = {
     const response = []
 
     for (let name of Object.keys(designDoc.views)) {
+      // Only return custom views
+      if (name === "by_link") {
+        continue
+      }
       response.push({
         name,
         ...designDoc.views[name],
