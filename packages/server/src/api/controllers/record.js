@@ -18,8 +18,8 @@ validateJs.extend(validateJs.validators.datetime, {
 exports.patch = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-  const model = await db.get(record.modelId)
   let record = await db.get(ctx.params.id)
+  const model = await db.get(record.modelId)
   const patchfields = ctx.request.body
 
   for (let key of Object.keys(patchfields)) {
@@ -152,14 +152,14 @@ exports.fetchView = async function(ctx) {
 
 exports.fetchModelRecords = async function(ctx) {
   const instanceId = ctx.user.instanceId
-  const db = new CouchDB(instanceId)	
+  const db = new CouchDB(instanceId)
   const response = await db.allDocs(
     getRecordParams(ctx.params.modelId, null, {
       include_docs: true,
     })
   )
   ctx.body = response.rows.map(row => row.doc)
-    ctx.body = await linkRecords.attachLinkInfo(
+  ctx.body = await linkRecords.attachLinkInfo(
     instanceId,
     response.rows.map(row => row.doc)
   )
