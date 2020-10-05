@@ -4,6 +4,7 @@ const {
   getRecordParams,
   getModelParams,
   generateModelID,
+  generateRecordID,
 } = require("../../db/utils")
 
 exports.fetch = async function(ctx) {
@@ -83,7 +84,10 @@ exports.save = async function(ctx) {
     // Populate the table with records imported from CSV in a bulk update
     const data = await csvParser.transform(dataImport)
 
-    for (let row of data) row.modelId = modelToSave._id
+    for (let row of data) {
+      row._id = generateRecordID(modelToSave._id)
+      row.modelId = modelToSave._id
+    }
 
     await db.bulkDocs(data)
   }

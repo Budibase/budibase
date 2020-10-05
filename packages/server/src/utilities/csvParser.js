@@ -25,27 +25,18 @@ function parse(path, parsers) {
       }
     })
     result.fromFile(path).subscribe(row => {
-      // For each CSV row
-      // parse all the columns that need parsed
+      // For each CSV row parse all the columns that need parsed
       for (let key in parsers) {
-        // if the parsing has already failed for a column
-        // skip that column
-        if (
-          !schema[key] ||
-          !schema[key].success ||
-          schema[key].type === "omit"
-        ) {
-          continue
-        }
+        if (!schema[key] || schema[key].success) {
+          // get the validator for the column type
+          const validator = VALIDATORS[parsers[key].type]
 
-        // get the validator for the column type
-        const validator = VALIDATORS[parsers[key].type]
-
-        try {
-          // allow null/undefined values
-          schema[key].success = !row[key] || !!validator(row[key])
-        } catch (err) {
-          schema[key].success = false
+          try {
+            // allow null/undefined values
+            schema[key].success = !row[key] || validator(row[key])
+          } catch (err) {
+            schema[key].success = false
+          }
         }
       }
     })
