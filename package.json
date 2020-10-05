@@ -30,6 +30,7 @@
     "test:e2e:ci": "lerna run cy:ci"
   },
   "dependencies": {
-    "@fortawesome/fontawesome": "^1.1.8"
+    "@fortawesome/fontawesome": "^1.1.8",
+    "pouchdb-replication-stream": "^1.2.9"
   }
 }
