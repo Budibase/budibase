@@ -9,13 +9,13 @@
   import ActionButton from "components/common/ActionButton.svelte"
   import AttachmentList from "./AttachmentList.svelte"
   import TablePagination from "./TablePagination.svelte"
-  import CreateEditRecordModal from "./popovers/CreateEditRecord.svelte"
-  import RowPopover from "./popovers/Row.svelte"
-  import ColumnPopover from "./popovers/Column.svelte"
-  import ViewPopover from "./popovers/View.svelte"
-  import ColumnHeaderPopover from "./popovers/ColumnHeader.svelte"
-  import EditRowPopover from "./popovers/EditRow.svelte"
-  import CalculationPopover from "./popovers/Calculate.svelte"
+  import CreateEditRecordModal from "./modals/CreateEditRecordModal.svelte"
+  import RowPopover from "./buttons/CreateRowButton.svelte"
+  import ColumnPopover from "./buttons/CreateColumnButton.svelte"
+  import ViewPopover from "./buttons/CreateViewButton.svelte"
+  import ColumnHeaderPopover from "./popovers/ColumnPopover.svelte"
+  import EditRowPopover from "./popovers/RowPopover.svelte"
+  import CalculationPopover from "./buttons/CalculateButton.svelte"
 
   const ITEMS_PER_PAGE = 10
 
@@ -32,9 +32,9 @@
   $: paginatedData =
     sorted && sorted.length
       ? sorted.slice(
-      currentPage * ITEMS_PER_PAGE,
-      currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE,
-      )
+          currentPage * ITEMS_PER_PAGE,
+          currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+        )
       : []
   $: modelId = data?.length ? data[0].modelId : null
 
@@ -42,7 +42,9 @@
     if (!record?.[fieldName]?.length) {
       return
     }
-    $goto(`/${$params.application}/backend/model/${modelId}/relationship/${record._id}/${fieldName}`)
+    $goto(
+      `/${$params.application}/backend/model/${modelId}/relationship/${record._id}/${fieldName}`
+    )
   }
 </script>
 
@@ -50,68 +52,68 @@
   <div class="table-controls">
     <h2 class="title">{title}</h2>
     <div class="popovers">
-      <slot/>
+      <slot />
     </div>
   </div>
   <table class="bb-table">
     <thead>
-    <tr>
-      {#if allowEditing}
-        <th class="edit-header">
-          <div>Edit</div>
-        </th>
-      {/if}
-      {#each columns as header}
-        <th>
-          {#if allowEditing}
-            <ColumnHeaderPopover field={schema[header]}/>
-          {:else}
-            <div class="header">{header}</div>
-          {/if}
-        </th>
-      {/each}
-    </tr>
-    </thead>
-    <tbody>
-    {#if paginatedData.length === 0}
-      {#if allowEditing}
-        <td class="no-border">No data.</td>
-      {/if}
-      {#each columns as header, idx}
-        <td class="no-border">
-          {#if idx === 0}No data.{/if}
-        </td>
-      {/each}
-    {/if}
-    {#each paginatedData as row}
       <tr>
         {#if allowEditing}
-          <td>
-            <EditRowPopover {row}/>
-          </td>
+          <th class="edit-header">
+            <div>Edit</div>
+          </th>
         {/if}
         {#each columns as header}
-          <td>
-            {#if schema[header].type === 'link'}
-              <div
-                  class:link={row[header] && row[header].length}
-                  on:click={() => selectRelationship(row, header)}>
-                {row[header] ? row[header].length : 0} linked row(s)
-              </div>
-            {:else if schema[header].type === 'attachment'}
-              <AttachmentList files={row[header] || []}/>
-            {:else}{getOr('', header, row)}{/if}
-          </td>
+          <th>
+            {#if allowEditing}
+              <ColumnHeaderPopover field={schema[header]} />
+            {:else}
+              <div class="header">{header}</div>
+            {/if}
+          </th>
         {/each}
       </tr>
-    {/each}
+    </thead>
+    <tbody>
+      {#if paginatedData.length === 0}
+        {#if allowEditing}
+          <td class="no-border">No data.</td>
+        {/if}
+        {#each columns as header, idx}
+          <td class="no-border">
+            {#if idx === 0 && !allowEditing}No data.{/if}
+          </td>
+        {/each}
+      {/if}
+      {#each paginatedData as row}
+        <tr>
+          {#if allowEditing}
+            <td>
+              <EditRowPopover {row} />
+            </td>
+          {/if}
+          {#each columns as header}
+            <td>
+              {#if schema[header].type === 'link'}
+                <div
+                  class:link={row[header] && row[header].length}
+                  on:click={() => selectRelationship(row, header)}>
+                  {row[header] ? row[header].length : 0} related row(s)
+                </div>
+              {:else if schema[header].type === 'attachment'}
+                <AttachmentList files={row[header] || []} />
+              {:else}{getOr('', header, row)}{/if}
+            </td>
+          {/each}
+        </tr>
+      {/each}
     </tbody>
   </table>
   <TablePagination
-      {data}
-      bind:currentPage
-      pageItemCount={paginatedData.length}
-      {ITEMS_PER_PAGE}/>
+    {data}
+    bind:currentPage
+    pageItemCount={paginatedData.length}
+    {ITEMS_PER_PAGE} />
 </section>
 
 <style>

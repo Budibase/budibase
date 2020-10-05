@@ -2,7 +2,7 @@
   import { backendUiStore } from "builderStore"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import CreateEditColumnModal from "./CreateEditColumn.svelte"
+  import CreateEditColumnPopover from "./CreateEditColumnPopover.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { notifier } from "../../../../builderStore/store/notifications"
 
@@ -24,6 +24,11 @@
   function hideEditor() {
     dropdown.hide()
     editing = false
+  }
+
+  function showDelete() {
+    dropdown.hide()
+    confirmDeleteDialog.show()
   }
 
   function deleteColumn() {
@@ -52,7 +57,7 @@
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   {#if editing}
     <h5>Edit Column</h5>
-    <CreateEditColumnModal onClosed={hideEditor} {field} />
+    <CreateEditColumnPopover onClosed={hideEditor} {field} />
   {:else}
     <ul>
       {#if type !== 'link'}
@@ -61,9 +66,7 @@
           Edit
         </li>
       {/if}
-      <li
-        data-cy="delete-column-header"
-        on:click={() => confirmDeleteDialog.show()}>
+      <li data-cy="delete-column-header" on:click={showDelete}>
         <Icon name="delete" />
         Delete
       </li>

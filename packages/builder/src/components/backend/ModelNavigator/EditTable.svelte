@@ -1,5 +1,4 @@
 <script>
-  import { getContext } from "svelte"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
@@ -22,6 +21,11 @@
   function hideEditor() {
     dropdown?.hide()
     editing = false
+  }
+
+  function showModal() {
+    hideEditor()
+    confirmDeleteDialog.show()
   }
 
   async function deleteTable() {
@@ -66,7 +70,7 @@
         <Icon name="edit" />
         Edit
       </li>
-      <li data-cy="delete-table" on:click={() => confirmDeleteDialog.show()}>
+      <li data-cy="delete-table" on:click={showModal}>
         <Icon name="delete" />
         Delete
       </li>
@@ -78,7 +82,6 @@
   body={`Are you sure you wish to delete the table '${table.name}'? Your data will be deleted and this action cannot be undone.`}
   okText="Delete Table"
   onOk={deleteTable}
-  onCancel={hideEditor}
   title="Confirm Delete" />
 
 <style>

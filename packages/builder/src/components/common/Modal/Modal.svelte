@@ -1,17 +1,26 @@
 <script>
-  import { createEventDispatcher } from "svelte"
+  /**
+   * Confirmation is handled as a callback rather than an event to allow
+   * handling the result - meaning a parent can prevent the modal closing.
+   *
+   * A show/hide API is exposed as part of the modal and also via context for
+   * children inside the modal.
+   * "show" and "hide" events are emitted as visibility changes.
+   *
+   * Modals are rendered at the top of the DOM tree.
+   */
+  import { createEventDispatcher, setContext } from "svelte"
   import { fade, fly } from "svelte/transition"
-  import { portal } from "./portal"
+  import Portal from "svelte-portal"
+  import { ContextKey } from "./context"
   const dispatch = createEventDispatcher()
 
-  export let visible = false
-  export let cancelText = "Cancel"
-  export let confirmText = "Confirm"
-  export let showCancelButton = true
-  export let showConfirmButton = true
+  export let wide = false
+  export let padded = true
+
+  let visible
 
   export function show() {
-    console.log("show")
     if (visible) {
       return
     }
@@ -26,10 +35,12 @@
     visible = false
     dispatch("hide")
   }
+
+  setContext(ContextKey, { show, hide })
 </script>
 
 {#if visible}
-  <div class="portal-wrapper" use:portal={'#modal-container'}>
+  <Portal target="#modal-container">
     <div
       class="overlay"
       on:click|self={hide}
@@ -37,15 +48,16 @@
       <div
         class="scroll-wrapper"
         on:click|self={hide}
-        transition:fly={{ y: 100 }}>
+        transition:fly={{ y: 50 }}>
         <div class="content-wrapper" on:click|self={hide}>
-          <div class="content">
+          <div class="content" class:wide class:padded>
             <slot />
+            <i class="ri-close-line" on:click={hide} />
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </Portal>
 {/if}
 
 <style>
@@ -66,7 +78,6 @@
     justify-content: center;
     align-items: center;
     background-color: rgba(0, 0, 0, 0.25);
-    z-index: 999;
   }
 
   .scroll-wrapper {
@@ -98,5 +109,24 @@
     flex: 0 0 400px;
     margin: 2rem 0;
     border-radius: var(--border-radius-m);
+    gap: var(--spacing-xl);
+  }
+  .content.wide {
+    flex: 0 0 600px;
+  }
+  .content.padded {
+    padding: var(--spacing-xl);
+  }
+
+  i {
+    position: absolute;
+    top: var(--spacing-xl);
+    right: var(--spacing-xl);
+    color: var(--ink);
+    font-size: var(--font-size-xl);
+  }
+  i:hover {
+    color: var(--grey-6);
+    cursor: pointer;
   }
 </style>

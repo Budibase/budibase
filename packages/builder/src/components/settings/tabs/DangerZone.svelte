@@ -2,6 +2,7 @@
   import { params, goto } from "@sveltech/routify"
   import { Input, TextArea, Button, Body } from "@budibase/bbui"
   import { del } from "builderStore/api"
+  import { ModalFooter } from "components/common/Modal"
 
   let value = ""
   let loading = false
@@ -9,16 +10,9 @@
   async function deleteApp() {
     loading = true
     const id = $params.application
-    const res = await del(`/api/${id}`)
-    const json = await res.json()
-
+    await del(`/api/${id}`)
     loading = false
-    if (res.ok) {
-      $goto("/")
-      return json
-    } else {
-      throw new Error(json)
-    }
+    $goto("/")
   }
 </script>
 
@@ -35,13 +29,12 @@
     thin
     disabled={loading}
     placeholder="" />
-  <Button
+  <ModalFooter
     disabled={value !== 'DELETE' || loading}
     red
-    wide
-    on:click={deleteApp}>
-    Delete Entire Web App
-  </Button>
+    showCancelButton={false}
+    confirmText="Delete Entire App"
+    onConfirm={deleteApp} />
 </div>
 
 <style>
@@ -52,8 +45,5 @@
   .background :global(p) {
     line-height: 1.2;
     margin: 0;
-  }
-  .background :global(button) {
-    max-width: 100%;
   }
 </style>
