@@ -69,7 +69,7 @@
       <span>{$backendUiStore.selectedModel.name}</span>
       {#if loading}
         <div transition:fade>
-          <Spinner size="15" />
+          <Spinner size="10" />
         </div>
       {/if}
     </h2>

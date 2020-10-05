@@ -18,7 +18,7 @@
 
   $: schema = parseResult && parseResult.schema
   $: valid =
-    schema && Object.keys(schema).every(column => schema[column].success)
+    !schema || Object.keys(schema).every(column => schema[column].success)
   $: dataImport = {
     valid,
     schema: buildModelSchema(schema),
@@ -149,7 +149,7 @@
   label {
     font-family: var(--font-sans);
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 500;
     box-sizing: border-box;
     overflow: hidden;
     border-radius: var(--border-radius-s);
@@ -166,7 +166,6 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    margin-top: 10px;
     width: 100%;
     background-color: var(--grey-2);
   }

@@ -4,14 +4,15 @@
   import { notifier } from "builderStore/store/notifications"
   import Spinner from "components/common/Spinner.svelte"
   import {
-    Body,
     DropdownMenu,
     Button,
+    Label,
     Heading,
     Icon,
     Input,
     Select,
     Dropzone,
+    Spacer,
   } from "@budibase/bbui"
   import TableDataImport from "./TableDataImport.svelte"
   import api from "builderStore/api"
@@ -50,14 +51,14 @@
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <div class="container">
     <h5>Create Table</h5>
-    <Body grey small>Table Name</Body>
+    <Label grey extraSmall>Name</Label>
     <Input
       data-cy="table-name-input"
       placeholder="Table Name"
       thin
       bind:value={name} />
-
-    <Body grey small>Create Table from CSV (Optional)</Body>
+    <Spacer medium />
+    <Label grey extraSmall>Create Table from CSV (Optional)</Label>
     <TableDataImport bind:dataImport />
   </div>
   <footer>
@@ -66,7 +67,7 @@
     </div>
     <div class="button-margin-4">
       <Button
-        disabled={!name || !dataImport.valid}
+        disabled={!name || (dataImport && !dataImport.valid)}
         primary
         on:click={saveTable}>
         <span>Save</span>

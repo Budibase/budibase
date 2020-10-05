@@ -11,7 +11,7 @@ const PARSERS = {
 }
 
 function parse(path, parsers) {
-  const result = csv({ parsers }).fromFile(path)
+  const result = csv().fromFile(path)
 
   const schema = {}
 
