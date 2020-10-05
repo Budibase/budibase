@@ -2,6 +2,7 @@
   import { Heading, Body, Button, Select } from "@budibase/bbui"
   import { notifier } from "builderStore/store/notifications"
   import { FIELDS } from "constants/backend"
+  import api from "builderStore/api"
 
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
@@ -28,6 +29,9 @@
     const modelSchema = {}
     for (let key in schema) {
       const type = schema[key].type
+
+      if (type === "omit") continue
+
       modelSchema[key] = {
         name: key,
         type,
@@ -38,16 +42,9 @@
   }
 
   async function validateCSV() {
-    const response = await fetch("/api/models/csv/validate", {
-      method: "POST",
-      body: JSON.stringify({
-        file: files[0],
-        schema: schema || {},
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+    const response = await api.post("/api/models/csv/validate", {
+      file: files[0],
+      schema: schema || {},
     })
 
     parseResult = await response.json()
@@ -79,8 +76,9 @@
     await validateCSV()
   }
 
-  function omitColumn(columnName) {
-    parsers[columnName] = PARSERS.omit
+  async function omitColumn(columnName) {
+    schema[columnName].type = "omit"
+    await validateCSV()
   }
 
   const handleTypeChange = column => evt => {
@@ -97,7 +95,7 @@
 </div>
 <div class="schema-fields">
   {#if schema}
-    {#each Object.keys(schema) as columnName}
+    {#each Object.keys(schema).filter(key => schema[key].type !== 'omit') as columnName}
       <div class="field">
         <span>{columnName}</span>
         <Select
@@ -109,9 +107,7 @@
           <option value={'number'}>Number</option>
           <option value={'datetime'}>Date</option>
         </Select>
-        <span
-          class:success={schema[columnName].success}
-          class:error={!schema[columnName].success}>
+        <span class="field-status" class:error={!schema[columnName].success}>
           {schema[columnName].success ? 'Success' : 'Failure'}
         </span>
         <i
@@ -132,7 +128,7 @@
     transition: all 0.3s;
   }
 
-  .success {
+  .field-status {
     color: green;
   }
 
@@ -151,7 +147,7 @@
     box-sizing: border-box;
     overflow: hidden;
     border-radius: var(--border-radius-s);
-    color: var(--white);
+    color: var(--ink);
     padding: var(--spacing-s) var(--spacing-l);
     transition: all 0.2s ease 0s;
     display: inline-flex;
@@ -166,12 +162,8 @@
     justify-content: center;
     margin-top: 10px;
     width: 100%;
-    border: solid 1.5px var(--ink);
-    background-color: var(--ink);
+    background-color: var(--grey-2);
   }
-
-  /* .schema-fields {
-  } */
 
   .omit-button {
     font-size: 1.2em;
