@@ -20,6 +20,7 @@
 
   export let visible
   export let hasKey
+  export let template
 
   let isApiKeyValid
   let lastApiKey
@@ -141,11 +142,13 @@
       // Create App
       const appResp = await post("/api/applications", {
         name: $createAppStore.values.applicationName,
+        template,
       })
       const appJson = await appResp.json()
       analytics.captureEvent("App Created", {
         name,
         appId: appJson._id,
+        template,
       })
 
       // Select Correct Application/DB in prep for creating user
@@ -213,42 +216,38 @@
           step={i + 1} />
       {/each}
     </div>
-    <div class="body">
-      <div class="heading">
-        <h3 class="header">Get Started with Budibase</h3>
-      </div>
-      <div class="step">
-        <Form bind:values={$createAppStore.values}>
-          {#each steps as step, i (i)}
-            <div class:hidden={$createAppStore.currentStep !== i}>
-              <svelte:component
-                this={step.component}
-                {validationErrors}
-                options={step.options}
-                name={step.name} />
-            </div>
-          {/each}
-        </Form>
-      </div>
-      <div class="footer">
-        {#if $createAppStore.currentStep > 0}
-          <Button medium secondary on:click={back}>Back</Button>
-        {/if}
-        {#if $createAppStore.currentStep < steps.length - 1}
-          <Button medium blue on:click={next} disabled={!currentStepIsValid}>
-            Next
-          </Button>
-        {/if}
-        {#if $createAppStore.currentStep === steps.length - 1}
-          <Button
-            medium
-            blue
-            on:click={signUp}
-            disabled={!fullFormIsValid || submitting}>
-            {submitting ? 'Loading...' : 'Submit'}
-          </Button>
-        {/if}
-      </div>
+    <div class="step">
+      <Form bind:values={$createAppStore.values}>
+        {#each steps as step, i (i)}
+          <div class:hidden={$createAppStore.currentStep !== i}>
+            <svelte:component
+              this={step.component}
+              {template}
+              {validationErrors}
+              options={step.options}
+              name={step.name} />
+          </div>
+        {/each}
+      </Form>
+    </div>
+    <div class="footer">
+      {#if $createAppStore.currentStep > 0}
+        <Button medium secondary on:click={back}>Back</Button>
+      {/if}
+      {#if $createAppStore.currentStep < steps.length - 1}
+        <Button medium blue on:click={next} disabled={!currentStepIsValid}>
+          Next
+        </Button>
+      {/if}
+      {#if $createAppStore.currentStep === steps.length - 1}
+        <Button
+          medium
+          blue
+          on:click={signUp}
+          disabled={!fullFormIsValid || submitting}>
+          {submitting ? 'Loading...' : 'Submit'}
+        </Button>
+      {/if}
     </div>
     <img src="/_builder/assets/bb-logo.svg" alt="budibase icon" />
     {#if submitting}

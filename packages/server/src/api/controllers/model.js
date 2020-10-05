@@ -24,7 +24,6 @@ exports.find = async function(ctx) {
 exports.save = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-  const oldModelId = ctx.request.body._id
   const modelToSave = {
     type: "model",
     _id: generateModelID(),
@@ -32,9 +31,15 @@ exports.save = async function(ctx) {
     ...ctx.request.body,
   }
   // get the model in its previous state for differencing
-  let oldModel = null
+  let oldModel
+  let oldModelId = ctx.request.body._id
   if (oldModelId) {
-    oldModel = await db.get(oldModelId)
+    // if it errors then the oldModelId is invalid - can't diff it
+    try {
+      oldModel = await db.get(oldModelId)
+    } catch (err) {
+      oldModel = null
+    }
   }
 
   // rename record fields when table column is renamed
