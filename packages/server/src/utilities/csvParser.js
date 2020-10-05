@@ -7,13 +7,11 @@ const VALIDATORS = {
 }
 
 const PARSERS = {
-  string: attribute => attribute.toString(),
-  number: attribute => Number(attribute),
   datetime: attribute => new Date(attribute).toISOString(),
 }
 
 function parse(path, parsers) {
-  const result = csv().fromFile(path)
+  const result = csv({ parsers }).fromFile(path)
 
   const schema = {}
 
@@ -30,10 +28,17 @@ function parse(path, parsers) {
       // For each CSV row
       // parse all the columns that need parsed
       for (let key in parsers) {
-        // if the schema has already borked for a parser, skip this column
-        if (!schema[key] || !schema[key].success) continue
+        // if the parsing has already failed for a column
+        // skip that column
+        if (
+          !schema[key] ||
+          !schema[key].success ||
+          schema[key].type === "omit"
+        ) {
+          continue
+        }
 
-        // get the validator
+        // get the validator for the column type
         const validator = VALIDATORS[parsers[key].type]
 
         try {
@@ -54,12 +59,11 @@ function parse(path, parsers) {
   })
 }
 
-// TODO: significant refactor
 async function transform({ schema, path }) {
   const colParser = {}
 
   for (let key in schema) {
-    colParser[key] = PARSERS[schema[key].type]
+    colParser[key] = PARSERS[schema[key].type] || schema[key].type
   }
 
   try {
