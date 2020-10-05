@@ -71,6 +71,7 @@ async function transform({ schema, path }) {
     return json
   } catch (err) {
     console.error(`Error transforming CSV to JSON for data import`, err)
+    throw err
   }
 }
 
