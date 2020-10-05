@@ -1,3 +1,9 @@
+# Budibase is in Beta
+
+Budibase is currently beta software. Until our official launch, we cannot ensure backwards compatibility for your budibase applications between versions. Issues may arise when trying to edit apps created with old versions of the budibase builder.
+
+If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/master/CONTRIBUTING.md#troubleshooting) to clear down your environment.
+
 
 # What is Budibase?
 

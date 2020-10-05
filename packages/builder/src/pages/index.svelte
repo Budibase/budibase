@@ -5,24 +5,11 @@
   import AppList from "components/start/AppList.svelte"
   import { onMount } from "svelte"
   import ActionButton from "components/common/ActionButton.svelte"
-  import { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
+  import TemplateList from "components/start/TemplateList.svelte"
   import { Button } from "@budibase/bbui"
   import analytics from "analytics"
-
-  let promise = getApps()
-
-  async function getApps() {
-    const res = await get("/api/applications")
-    const json = await res.json()
-
-    if (res.ok) {
-      return json
-    } else {
-      throw new Error(json)
-    }
-  }
 
   let hasKey
 
@@ -37,7 +24,9 @@
     if (keys.userId) {
       hasKey = true
       analytics.identify(keys.userId)
-    } else {
+    }
+
+    if (!keys.budibase) {
       showCreateAppModal()
     }
   }
@@ -45,11 +34,12 @@
   // Handle create app modal
   const { open } = getContext("simple-modal")
 
-  const showCreateAppModal = () => {
+  const showCreateAppModal = template => {
     open(
       CreateAppModal,
       {
         hasKey,
+        template,
       },
       {
         closeButton: false,
@@ -66,7 +56,7 @@
 
 <div class="header">
   <div class="welcome">Welcome to the Budibase Beta</div>
-  <Button primary purple on:click={showCreateAppModal}>
+  <Button primary purple on:click={() => showCreateAppModal()}>
     Create New Web App
   </Button>
 </div>
@@ -78,15 +68,8 @@
   </div>
 </div>
 
-{#await promise}
-  <div class="spinner-container">
-    <Spinner />
-  </div>
-{:then result}
-  <AppList apps={result} />
-{:catch err}
-  <h1 style="color:red">{err}</h1>
-{/await}
+<TemplateList onSelect={showCreateAppModal} />
+<AppList />
 
 <style>
   .header {
@@ -124,13 +107,5 @@
     font-size: 24px;
     color: var(--white);
     font-weight: 500;
-  }
-
-  .spinner-container {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 </style>
