@@ -10,12 +10,14 @@ const {
   destroyDocument,
   builderEndpointShouldBlockNormalUsers
 } = require("./couchTestUtils")
+let { generateAutomationID } = require("../../../db/utils")
 
 const { delay } = require("./testUtils")
 
 const MAX_RETRIES = 4
+const AUTOMATION_ID = generateAutomationID()
 const TEST_AUTOMATION = {
-  _id: "Test Automation",
+  _id: AUTOMATION_ID,
   name: "My Automation",
   pageId: "123123123",
   screenId: "kasdkfldsafkl",
@@ -126,14 +128,14 @@ describe("/automations", () => {
     it("should setup the automation fully", () => {
       let trigger = TRIGGER_DEFINITIONS["RECORD_SAVED"]
       trigger.id = "wadiawdo34"
-      let saveAction = ACTION_DEFINITIONS["SAVE_RECORD"]
-      saveAction.inputs.record = {
+      let createAction = ACTION_DEFINITIONS["CREATE_RECORD"]
+      createAction.inputs.record = {
         name: "{{trigger.name}}",
         description: "{{trigger.description}}"
       }
-      saveAction.id = "awde444wk"
+      createAction.id = "awde444wk"
 
-      TEST_AUTOMATION.definition.steps.push(saveAction)
+      TEST_AUTOMATION.definition.steps.push(createAction)
       TEST_AUTOMATION.definition.trigger = trigger
     })
 
@@ -206,7 +208,7 @@ describe("/automations", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(res.body.message).toEqual("Automation Test Automation updated successfully.")
+        expect(res.body.message).toEqual(`Automation ${AUTOMATION_ID} updated successfully.`)
         expect(res.body.automation.name).toEqual("Updated Name")
     })
   })

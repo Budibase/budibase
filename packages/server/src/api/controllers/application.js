@@ -1,7 +1,6 @@
 const CouchDB = require("../../db")
 const ClientDb = require("../../db/clientDb")
 const { getPackageForBuilder, buildPage } = require("../../utilities/builder")
-const newid = require("../../db/newid")
 const env = require("../../environment")
 const instanceController = require("./instance")
 const { resolve, join } = require("path")
@@ -12,17 +11,18 @@ const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const fs = require("fs-extra")
 const { promisify } = require("util")
 const chmodr = require("chmodr")
+const { generateAppID, getAppParams } = require("../../db/utils")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
 
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ClientDb.name(getClientId(ctx)))
-  const body = await db.query("client/by_type", {
-    include_docs: true,
-    key: ["app"],
-  })
-
+  const body = await db.allDocs(
+    getAppParams(null, {
+      include_docs: true,
+    })
+  )
   ctx.body = body.rows.map(row => row.doc)
 }
 
@@ -48,7 +48,7 @@ exports.create = async function(ctx) {
   if (!clientId) {
     ctx.throw(400, "ClientId not suplied")
   }
-  const appId = newid()
+  const appId = generateAppID()
   // insert an appId -> clientId lookup
   const masterDb = new CouchDB("client_app_lookup")
 
