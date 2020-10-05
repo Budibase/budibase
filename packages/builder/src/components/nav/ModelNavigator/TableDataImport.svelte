@@ -22,7 +22,7 @@
   $: dataImport = {
     valid,
     schema: buildModelSchema(schema),
-    path: files.length && files[0].path,
+    path: files[0] && files[0].path,
   }
 
   function buildModelSchema(schema) {
@@ -89,7 +89,7 @@
 
 <div class="dropzone">
   <input id="file-upload" accept=".csv" type="file" on:change={handleFile} />
-  <label for="file-upload">
+  <label for="file-upload" class:uploaded={files[0]}>
     {#if files[0]}{files[0].name}{:else}Upload{/if}
   </label>
 </div>
@@ -129,11 +129,17 @@
   }
 
   .field-status {
-    color: green;
+    color: var(--green);
+    justify-self: center;
+    font-weight: 500;
   }
 
   .error {
-    color: red;
+    color: var(--red);
+  }
+
+  .uploaded {
+    color: var(--blue);
   }
 
   input[type="file"] {
@@ -169,6 +175,7 @@
     font-size: 1.2em;
     color: var(--grey-7);
     cursor: pointer;
+    justify-self: flex-end;
   }
 
   .field {

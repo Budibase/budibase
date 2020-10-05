@@ -2,6 +2,7 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
+  import Spinner from "components/common/Spinner.svelte"
   import {
     Body,
     DropdownMenu,
@@ -20,8 +21,10 @@
   let dropdown
   let name
   let dataImport
+  let loading
 
   async function saveTable() {
+    loading = true
     const model = await backendUiStore.actions.models.save({
       name,
       schema: dataImport.schema || {},
@@ -32,6 +35,7 @@
     name = ""
     dropdown.hide()
     analytics.captureEvent("Table Created", { name })
+    loading = false
   }
 
   const onClosed = () => {
@@ -65,7 +69,10 @@
         disabled={!name || !dataImport.valid}
         primary
         on:click={saveTable}>
-        Save
+        <span>Save</span>
+        {#if loading}
+          <Spinner size="10" />
+        {/if}
       </Button>
     </div>
   </footer>
@@ -73,8 +80,13 @@
 
 <style>
   h5 {
-    margin-bottom: var(--spacing-l);
+    margin-bottom: var(--spacing-m);
+    margin-top: 0;
     font-weight: 500;
+  }
+
+  span {
+    margin-right: 5px;
   }
 
   .container {

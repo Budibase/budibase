@@ -42,7 +42,8 @@ function parse(path, parsers) {
         const validator = VALIDATORS[parsers[key].type]
 
         try {
-          schema[key].success = !!validator(row[key])
+          // allow null/undefined values
+          schema[key].success = !row[key] || !!validator(row[key])
         } catch (err) {
           schema[key].success = false
         }
