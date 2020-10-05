@@ -1,7 +1,7 @@
 const CouchDB = require("../../db")
 const clientDb = require("../../db/clientDb")
 const bcrypt = require("../../utilities/bcrypt")
-const getUserId = userName => `user_${userName}`
+const { generateUserID, getUserParams } = require("../../db/utils")
 const {
   POWERUSER_LEVEL_ID,
   ADMIN_LEVEL_ID,
@@ -9,11 +9,11 @@ const {
 
 exports.fetch = async function(ctx) {
   const database = new CouchDB(ctx.user.instanceId)
-  const data = await database.query("database/by_type", {
-    include_docs: true,
-    key: ["user"],
-  })
-
+  const data = await database.allDocs(
+    getUserParams(null, {
+      include_docs: true,
+    })
+  )
   ctx.body = data.rows.map(row => row.doc)
 }
 
@@ -31,7 +31,7 @@ exports.create = async function(ctx) {
   if (!accessLevel) ctx.throw(400, "Invalid Access Level")
 
   const user = {
-    _id: getUserId(username),
+    _id: generateUserID(username),
     username,
     password: await bcrypt.hash(password),
     name: name || username,
@@ -80,14 +80,14 @@ exports.update = async function(ctx) {
 
 exports.destroy = async function(ctx) {
   const database = new CouchDB(ctx.user.instanceId)
-  await database.destroy(getUserId(ctx.params.username))
+  await database.destroy(generateUserID(ctx.params.username))
   ctx.message = `User ${ctx.params.username} deleted.`
   ctx.status = 200
 }
 
 exports.find = async function(ctx) {
   const database = new CouchDB(ctx.user.instanceId)
-  const user = await database.get(getUserId(ctx.params.username))
+  const user = await database.get(generateUserID(ctx.params.username))
   ctx.body = {
     username: user.username,
     name: user.name,
