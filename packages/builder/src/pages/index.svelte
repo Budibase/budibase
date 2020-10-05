@@ -4,10 +4,10 @@
   import AppList from "components/start/AppList.svelte"
   import { onMount } from "svelte"
   import ActionButton from "components/common/ActionButton.svelte"
-  import { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import { Button, Heading } from "@budibase/bbui"
+  import TemplateList from "components/start/TemplateList.svelte"
   import analytics from "analytics"
   import { Modal } from "components/common/Modal"
 
@@ -44,12 +44,34 @@
     }
   }
 
+  // Handle create app modal
+  const { open } = getContext("simple-modal")
+
+  const showCreateAppModal = template => {
+    open(
+      CreateAppModal,
+      {
+        hasKey,
+        template,
+      },
+      {
+        closeButton: false,
+        closeOnEsc: false,
+        closeOnOuterClick: false,
+        styleContent: { padding: 0 },
+        closeOnOuterClick: true,
+      }
+    )
+  }
+
   checkIfKeysAndApps()
 </script>
 
 <div class="header">
   <Heading medium black>Welcome to the Budibase Beta</Heading>
-  <Button primary black on:click={modal.show}>Create New Web App</Button>
+  <Button primary purple on:click={() => showCreateAppModal()}>
+    Create New Web App
+  </Button>
 </div>
 
 <div class="banner">
@@ -59,19 +81,8 @@
   </div>
 </div>
 
-<Modal bind:this={modal} wide padded={false}>
-  <CreateAppModal {hasKey} />
-</Modal>
-
-{#await promise}
-  <div class="spinner-container">
-    <Spinner />
-  </div>
-{:then result}
-  <AppList apps={result} />
-{:catch err}
-  <h1 style="color:red">{err}</h1>
-{/await}
+<TemplateList onSelect={showCreateAppModal} />
+<AppList />
 
 <style>
   .header {
@@ -109,13 +120,5 @@
     font-size: 24px;
     color: var(--white);
     font-weight: 500;
-  }
-
-  .spinner-container {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 </style>

@@ -66,6 +66,7 @@ exports.create = async function(ctx) {
     userInstanceMap: {},
     componentLibraries: ["@budibase/standard-components"],
     name: ctx.request.body.name,
+    template: ctx.request.body.template,
   }
 
   const { rev } = await db.put(newApplication)
@@ -75,9 +76,13 @@ exports.create = async function(ctx) {
       appId: newApplication._id,
     },
     request: {
-      body: { name: `dev-${clientId}` },
+      body: {
+        name: `dev-${clientId}`,
+        template: ctx.request.body.template,
+      },
     },
   }
+
   await instanceController.create(createInstCtx)
   newApplication.instances.push(createInstCtx.body)
 
@@ -153,6 +158,19 @@ const createEmptyAppPackage = async (ctx, app) => {
   await updateJsonFile(join(appsFolder, app._id, "package.json"), {
     name: npmFriendlyAppName(app.name),
   })
+
+  // if this app is being created from a template,
+  // copy the frontend page definition files from
+  // the template directory.
+  if (app.template) {
+    const templatePageDefinitions = join(
+      appsFolder,
+      "templates",
+      app.template.key,
+      "pages"
+    )
+    await copy(templatePageDefinitions, join(appsFolder, app._id, "pages"))
+  }
 
   const mainJson = await updateJsonFile(
     join(appsFolder, app._id, "pages", "main", "page.json"),

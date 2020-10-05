@@ -19,6 +19,7 @@
   const createAppStore = writable({ currentStep: 0, values: {} })
 
   export let hasKey
+  export let template
 
   let isApiKeyValid
   let lastApiKey
@@ -140,11 +141,13 @@
       // Create App
       const appResp = await post("/api/applications", {
         name: $createAppStore.values.applicationName,
+        template,
       })
       const appJson = await appResp.json()
       analytics.captureEvent("App Created", {
         name,
         appId: appJson._id,
+        template,
       })
 
       // Select Correct Application/DB in prep for creating user
@@ -216,6 +219,7 @@
           <div class:hidden={$createAppStore.currentStep !== i}>
             <svelte:component
               this={step.component}
+              {template}
               {validationErrors}
               options={step.options}
               name={step.name} />
