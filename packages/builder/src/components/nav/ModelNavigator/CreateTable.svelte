@@ -70,7 +70,7 @@
         disabled={!name || (dataImport && !dataImport.valid)}
         primary
         on:click={saveTable}>
-        <span>Save</span>
+        <span style={`margin-right: ${loading ? '10px' : 0};`}>Save</span>
         {#if loading}
           <Spinner size="10" />
         {/if}
@@ -84,10 +84,6 @@
     margin-bottom: var(--spacing-m);
     margin-top: 0;
     font-weight: 500;
-  }
-
-  span {
-    margin-right: 5px;
   }
 
   .container {

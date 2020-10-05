@@ -168,6 +168,7 @@
     justify-content: center;
     width: 100%;
     background-color: var(--grey-2);
+    font-size: var(--font-size-xs);
   }
 
   .omit-button {
@@ -183,5 +184,6 @@
     margin-top: var(--spacing-m);
     align-items: center;
     grid-gap: var(--spacing-m);
+    font-size: var(--font-size-xs);
   }
 </style>
