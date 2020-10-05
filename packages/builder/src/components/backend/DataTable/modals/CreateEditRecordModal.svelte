@@ -4,11 +4,11 @@
   import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"
   import RecordFieldControl from "../RecordFieldControl.svelte"
   import * as api from "../api"
-  import { ModalTitle, ModalFooter } from "components/common/Modal"
+  import { Modal } from "components/common/Modal"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
 
   export let record = {}
-  export let visible = false
+  export let visible
 
   let modal
   let errors = []
@@ -36,15 +36,19 @@
   }
 </script>
 
-<ModalTitle>{creating ? 'Create Row' : 'Edit Row'}</ModalTitle>
-<ErrorsBox {errors} />
-{#each modelSchema as [key, meta]}
-  <div>
-    {#if meta.type === 'link'}
-      <LinkedRecordSelector bind:linkedRecords={record[key]} schema={meta} />
-    {:else}
-      <RecordFieldControl {meta} bind:value={record[key]} />
-    {/if}
-  </div>
-{/each}
-<ModalFooter confirmText={creating ? 'Add' : 'Save'} onConfirm={saveRecord} />
+<Modal
+  bind:visible
+  title={creating ? 'Create Row' : 'Edit Row'}
+  confirmText={creating ? 'Create Row' : 'Save Row'}
+  onConfirm={saveRecord}>
+  <ErrorsBox {errors} />
+  {#each modelSchema as [key, meta]}
+    <div>
+      {#if meta.type === 'link'}
+        <LinkedRecordSelector bind:linkedRecords={record[key]} schema={meta} />
+      {:else}
+        <RecordFieldControl {meta} bind:value={record[key]} />
+      {/if}
+    </div>
+  {/each}
+</Modal>

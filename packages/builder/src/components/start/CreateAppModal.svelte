@@ -1,6 +1,6 @@
 <script>
   import { writable } from "svelte/store"
-
+  import { Modal } from "components/common/Modal"
   import { store, automationStore, backendUiStore } from "builderStore"
   import { string, object } from "yup"
   import api, { get } from "builderStore/api"
@@ -18,6 +18,7 @@
   //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
   const createAppStore = writable({ currentStep: 0, values: {} })
 
+  export let visible
   export let hasKey
 
   let isApiKeyValid
@@ -197,60 +198,67 @@
   }
 </script>
 
-<div class="container">
-  <div class="sidebar">
-    {#each steps as { active, done }, i}
-      <Indicator
-        active={$createAppStore.currentStep === i}
-        done={i < $createAppStore.currentStep}
-        step={i + 1} />
-    {/each}
+<Modal
+  bind:visible
+  wide
+  padded={false}
+  showCancelButton={false}
+  showConfirmButton={false}>
+  <div class="container">
+    <div class="sidebar">
+      {#each steps as { active, done }, i}
+        <Indicator
+          active={$createAppStore.currentStep === i}
+          done={i < $createAppStore.currentStep}
+          step={i + 1} />
+      {/each}
+    </div>
+    <div class="body">
+      <div class="heading">
+        <h3 class="header">Get Started with Budibase</h3>
+      </div>
+      <div class="step">
+        <Form bind:values={$createAppStore.values}>
+          {#each steps as step, i (i)}
+            <div class:hidden={$createAppStore.currentStep !== i}>
+              <svelte:component
+                this={step.component}
+                {validationErrors}
+                options={step.options}
+                name={step.name} />
+            </div>
+          {/each}
+        </Form>
+      </div>
+      <div class="footer">
+        {#if $createAppStore.currentStep > 0}
+          <Button medium secondary on:click={back}>Back</Button>
+        {/if}
+        {#if $createAppStore.currentStep < steps.length - 1}
+          <Button medium blue on:click={next} disabled={!currentStepIsValid}>
+            Next
+          </Button>
+        {/if}
+        {#if $createAppStore.currentStep === steps.length - 1}
+          <Button
+            medium
+            blue
+            on:click={signUp}
+            disabled={!fullFormIsValid || submitting}>
+            {submitting ? 'Loading...' : 'Submit'}
+          </Button>
+        {/if}
+      </div>
+    </div>
+    <img src="/_builder/assets/bb-logo.svg" alt="budibase icon" />
+    {#if submitting}
+      <div in:fade class="spinner-container">
+        <Spinner />
+        <span class="spinner-text">Creating your app...</span>
+      </div>
+    {/if}
   </div>
-  <div class="body">
-    <div class="heading">
-      <h3 class="header">Get Started with Budibase</h3>
-    </div>
-    <div class="step">
-      <Form bind:values={$createAppStore.values}>
-        {#each steps as step, i (i)}
-          <div class:hidden={$createAppStore.currentStep !== i}>
-            <svelte:component
-              this={step.component}
-              {validationErrors}
-              options={step.options}
-              name={step.name} />
-          </div>
-        {/each}
-      </Form>
-    </div>
-    <div class="footer">
-      {#if $createAppStore.currentStep > 0}
-        <Button medium secondary on:click={back}>Back</Button>
-      {/if}
-      {#if $createAppStore.currentStep < steps.length - 1}
-        <Button medium blue on:click={next} disabled={!currentStepIsValid}>
-          Next
-        </Button>
-      {/if}
-      {#if $createAppStore.currentStep === steps.length - 1}
-        <Button
-          medium
-          blue
-          on:click={signUp}
-          disabled={!fullFormIsValid || submitting}>
-          {submitting ? 'Loading...' : 'Submit'}
-        </Button>
-      {/if}
-    </div>
-  </div>
-  <img src="/_builder/assets/bb-logo.svg" alt="budibase icon" />
-  {#if submitting}
-    <div in:fade class="spinner-container">
-      <Spinner />
-      <span class="spinner-text">Creating your app...</span>
-    </div>
-  {/if}
-</div>
+</Modal>
 
 <style>
   .container {

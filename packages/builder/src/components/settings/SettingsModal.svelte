@@ -1,7 +1,7 @@
 <script>
   import { General, Users, DangerZone, APIKeys } from "./tabs"
   import { Switcher } from "@budibase/bbui"
-  import { ModalTitle } from "components/common/Modal"
+  import { Modal } from "components/common/Modal"
 
   const tabs = [
     {
@@ -26,25 +26,27 @@
     },
   ]
 
+  export let visible
+
   let value = "GENERAL"
 
   $: selectedTab = tabs.find(tab => tab.key === value).component
-
-  function hide() {}
 </script>
 
-<div class="container">
-  <ModalTitle>Settings</ModalTitle>
-  <Switcher headings={tabs} bind:value>
-    <svelte:component this={selectedTab} />
-  </Switcher>
-</div>
+<Modal
+  title="Settings"
+  wide
+  bind:visible
+  showConfirmButton={false}
+  showCancelButton={false}>
+  <div class="container">
+    <Switcher headings={tabs} bind:value>
+      <svelte:component this={selectedTab} />
+    </Switcher>
+  </div>
+</Modal>
 
 <style>
-  .container {
-    display: grid;
-    grid-gap: var(--spacing-xl);
-  }
   .container :global(section > header) {
     /* Fix margin defined in BBUI as L rather than XL */
     margin-bottom: var(--spacing-xl);

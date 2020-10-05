@@ -3,15 +3,15 @@
   import { SettingsIcon } from "components/common/Icons/"
   import { Modal } from "components/common/Modal"
 
-  let modal
+  let modalVisible
 </script>
 
-<span class="topnavitemright settings" on:click={modal.show}>
+<span class="topnavitemright settings" on:click={() => (modalVisible = true)}>
   <SettingsIcon />
 </span>
-<Modal bind:this={modal} wide>
-  <SettingsModal />
-</Modal>
+{#if modalVisible}
+  <SettingsModal bind:visible={modalVisible} />
+{/if}
 
 <style>
   span:first-letter {

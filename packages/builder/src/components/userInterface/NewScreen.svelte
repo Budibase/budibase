@@ -3,14 +3,12 @@
   import { pipe } from "components/common/core"
   import { isRootComponent } from "./pagesParsing/searchComponents"
   import { splitName } from "./pagesParsing/splitRootComponentName.js"
-  import { Input, Select, Modal, Button, Spacer } from "@budibase/bbui"
-
+  import { Input, Select, Button, Spacer } from "@budibase/bbui"
+  import { Modal } from "components/common/Modal"
   import { find, filter, some, map, includes } from "lodash/fp"
   import { assign } from "lodash"
 
-  export const show = () => {
-    dialog.show()
-  }
+  export let visible
 
   let dialog
   let layoutComponents
@@ -41,17 +39,12 @@
         routeError = ""
       }
     }
-
-    if (routeError) return false
-
+    if (routeError) {
+      return false
+    }
     store.createScreen(name, route, layoutComponent._component)
     name = ""
     route = ""
-    dialog.hide()
-  }
-
-  const cancel = () => {
-    dialog.hide()
   }
 
   const routeNameExists = route => {
@@ -67,51 +60,20 @@
   }
 </script>
 
-<Modal bind:this={dialog} minWidth="500px">
-  <h2>New Screen</h2>
-  <Spacer extraLarge />
-
-  <div data-cy="new-screen-dialog">
-    <div class="bb-margin-xl">
-      <Input label="Name" bind:value={name} />
-    </div>
-
-    <div class="bb-margin-xl">
-      <Input
-        label="Url"
-        error={routeError}
-        bind:value={route}
-        on:change={routeChanged} />
-    </div>
-
-    <div class="bb-margin-xl">
-      <label>Layout Component</label>
-      <Select bind:value={layoutComponent} secondary>
-        {#each layoutComponents as { _component, name }}
-          <option value={_component}>{name}</option>
-        {/each}
-      </Select>
-    </div>
-  </div>
-
-  <Spacer extraLarge />
-
-  <div data-cy="create-screen-footer" class="modal-footer">
-    <Button secondary medium on:click={cancel}>Cancel</Button>
-    <Button blue medium on:click={save}>Create Screen</Button>
-  </div>
+<Modal
+  bind:visible
+  title="New Screen"
+  confirmText="Create Screen"
+  onConfirm={save}>
+  <Input label="Name" bind:value={name} />
+  <Input
+    label="Url"
+    error={routeError}
+    bind:value={route}
+    on:change={routeChanged} />
+  <Select label="Layout Component" bind:value={layoutComponent} secondary>
+    {#each layoutComponents as { _component, name }}
+      <option value={_component}>{name}</option>
+    {/each}
+  </Select>
 </Modal>
-
-<style>
-  h2 {
-    font-size: var(--font-size-xl);
-    margin: 0;
-    font-family: var(--font-sans);
-    font-weight: 600;
-  }
-
-  .modal-footer {
-    display: flex;
-    justify-content: space-between;
-  }
-</style>

@@ -12,7 +12,7 @@ context("Create a Table", () => {
   })
 
   it("adds a new column to the table", () => {
-    cy.addColumn("dog", "name", "Plain Text")
+    cy.addColumn("dog", "name", "Text")
     cy.contains("name").should("be.visible")
   })
 
@@ -24,16 +24,18 @@ context("Create a Table", () => {
   it("updates a column on the table", () => {
     cy.contains("name").click()
     cy.get("[data-cy='edit-column-header']").click()
-    cy.get("[placeholder=Name]").type("updated")
-    cy.get("select").select("Plain Text")
+    cy.get(".actions input")
+      .first()
+      .type("updated")
+    cy.get("select").select("Text")
     cy.contains("Save Column").click()
-    cy.contains("nameupdated").should("have.text", "nameupdated ")
+    cy.contains("nameupdated").should("have.text", "nameupdated")
   })
 
   it("edits a record", () => {
     cy.get("tbody .ri-more-line").click()
     cy.get("[data-cy=edit-row]").click()
-    cy.get(".actions input").type("Updated")
+    cy.get(".modal input").type("Updated")
     cy.contains("Save").click()
     cy.contains("RoverUpdated").should("have.text", "RoverUpdated")
   })
@@ -48,6 +50,7 @@ context("Create a Table", () => {
   it("deletes a column", () => {
     cy.contains("name").click()
     cy.get("[data-cy='delete-column-header']").click()
+    cy.contains("Delete Column").click()
     cy.contains("nameupdated").should("not.exist")
   })
 

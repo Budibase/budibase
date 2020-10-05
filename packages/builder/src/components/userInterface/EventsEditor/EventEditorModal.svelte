@@ -12,10 +12,12 @@
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
   import actionTypes from "./actions"
   import { createEventDispatcher } from "svelte"
+  import { Modal } from "components/common/Modal"
 
   const dispatch = createEventDispatcher()
 
   export let event
+  export let visible
 
   let addActionButton
   let addActionDropdown
@@ -28,12 +30,6 @@
     selectedAction &&
     actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_MEMBER_NAME])
       .component
-
-  const closeModal = () => {
-    dispatch("close")
-    draftEventHandler = { parameters: [] }
-    actions = []
-  }
 
   const updateEventHandler = (updatedHandler, index) => {
     actions[index] = updatedHandler
@@ -61,20 +57,22 @@
 
   const saveEventData = () => {
     dispatch("change", actions)
-    closeModal()
   }
 </script>
 
-<div class="root">
-
-  <div class="header">
-    <Heading small dark>Actions</Heading>
+<Modal
+  bind:visible
+  title="Actions"
+  wide
+  confirmText="Save"
+  onConfirm={saveEventData}>
+  <div slot="header">
     <div bind:this={addActionButton}>
       <TextButton text small blue on:click={addActionDropdown.show}>
-        Add Action
         <div style="height: 20px; width: 20px;">
           <AddIcon />
         </div>
+        Add Action
       </TextButton>
     </div>
     <DropdownMenu
@@ -120,30 +118,12 @@
     {/if}
   </div>
 
-  <div class="footer">
+  <div slot="footer">
     <a href="https://docs.budibase.com">Learn more about Actions</a>
-    <Button secondary on:click={closeModal}>Cancel</Button>
-    <Button primary on:click={saveEventData}>Save</Button>
   </div>
-</div>
+</Modal>
 
 <style>
-  .root {
-    max-height: 50vh;
-    width: 700px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--spacing-xl);
-    padding-bottom: 0;
-  }
-
   .action-header {
     display: flex;
     flex-direction: row;
@@ -200,22 +180,13 @@
     flex-direction: row;
   }
 
-  .footer {
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-s);
-    padding: var(--spacing-xl);
-    padding-top: var(--spacing-m);
-  }
-
-  .footer > a {
+  a {
     flex: 1;
     color: var(--grey-5);
     font-size: var(--font-size-s);
     text-decoration: none;
   }
-
-  .footer > a:hover {
+  a:hover {
     color: var(--blue);
   }
 

@@ -2,10 +2,8 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
+  import { Popover, Button, Icon, Input, Select } from "@budibase/bbui"
   import analytics from "analytics"
-
-  export let table
 
   let anchor
   let dropdown
@@ -32,7 +30,7 @@
 <div bind:this={anchor}>
   <Button primary wide on:click={dropdown.show}>Create New Table</Button>
 </div>
-<DropdownMenu bind:this={dropdown} {anchor} align="left">
+<Popover bind:this={dropdown} {anchor} align="left">
   <div class="actions">
     <h5>Create Table</h5>
     <Input
@@ -45,11 +43,10 @@
       <Button primary on:click={saveTable}>Save</Button>
     </footer>
   </div>
-</DropdownMenu>
+</Popover>
 
 <style>
   .actions {
-    padding: var(--spacing-xl);
     display: grid;
     grid-gap: var(--spacing-xl);
     min-width: 400px;

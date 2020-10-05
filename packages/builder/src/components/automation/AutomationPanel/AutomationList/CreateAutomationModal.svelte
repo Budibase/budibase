@@ -3,7 +3,9 @@
   import { notifier } from "builderStore/store/notifications"
   import { Input } from "@budibase/bbui"
   import analytics from "analytics"
-  import { ModalTitle, ModalFooter } from "components/common/Modal"
+  import { Modal } from "components/common/Modal"
+
+  export let visible
 
   let name
 
@@ -27,19 +29,22 @@
   }
 </script>
 
-<ModalTitle>Create Automation</ModalTitle>
-<Input bind:value={name} label="Name" />
-<ModalFooter
+<Modal
+  bind:visible
+  title="Create Automation"
   confirmText="Create"
   onConfirm={createAutomation}
   disabled={!valid}>
-  <a
-    target="_blank"
-    href="https://docs.budibase.com/automate/introduction-to-automate">
-    <i class="ri-information-line" />
-    <span>Learn about automations</span>
-  </a>
-</ModalFooter>
+  <Input bind:value={name} label="Name" />
+  <slot name="footer">
+    <a
+      target="_blank"
+      href="https://docs.budibase.com/automate/introduction-to-automate">
+      <i class="ri-information-line" />
+      <span>Learn about automations</span>
+    </a>
+  </slot>
+</Modal>
 
 <style>
   a {
