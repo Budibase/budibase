@@ -6,83 +6,68 @@
     "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 
   export let value = []
-  export let readonly = false
   export let label
 
   let placeholder = "Type to search"
-  let input
-  let inputValue
   let options = []
-  let activeOption
   let optionsVisible = false
   let selected = {}
   let first = true
   let slot
 
   onMount(() => {
-    slot.querySelectorAll("option").forEach(o => {
-      o.selected && !value.includes(o.value) && (value = [...value, o.value])
-      options = [...options, { value: o.value, name: o.textContent }]
-    })
-    value &&
-      (selected = options.reduce(
-        (obj, op) =>
-          value.includes(op.value) ? { ...obj, [op.value]: op } : obj,
-        {}
-      ))
+    const domOptions = Array.from(slot.querySelectorAll("option"))
+    options = domOptions.map(option => ({
+      value: option.value,
+      name: option.textContent,
+    }))
+    if (value) {
+      options.forEach(option => {
+        if (value.includes(option.value)) {
+          selected[option.value] = option
+        }
+      })
+    }
     first = false
   })
 
-  $: if (!first) value = Object.values(selected).map(o => o.value)
-  $: filtered = options.filter(o =>
-    inputValue ? o.name.toLowerCase().includes(inputValue.toLowerCase()) : o
-  )
-  $: if (
-    (activeOption && !filtered.includes(activeOption)) ||
-    (!activeOption && inputValue)
-  )
-    activeOption = filtered[0]
+  // Keep value up to date with selected options
+  $: {
+    if (!first) {
+      value = Object.values(selected).map(option => option.value)
+    }
+  }
 
   function add(token) {
-    if (!readonly) selected[token.value] = token
+    selected[token.value] = token
   }
 
   function remove(value) {
-    if (!readonly) {
-      const { [value]: val, ...rest } = selected
-      selected = rest
-    }
+    const { [value]: val, ...rest } = selected
+    selected = rest
   }
 
   function removeAll() {
     selected = []
-    inputValue = ""
   }
 
   function showOptions(show) {
     optionsVisible = show
-    if (!show) {
-      activeOption = undefined
-    } else {
-      input.focus()
-    }
   }
 
-  function handleBlur() {
-    showOptions(false)
-  }
-
-  function handleFocus() {
-    showOptions(true)
+  function handleClick() {
+    showOptions(!optionsVisible)
   }
 
   function handleOptionMousedown(e) {
     const value = e.target.dataset.value
+    if (value == null) {
+      return
+    }
     if (selected[value]) {
       remove(value)
     } else {
       add(options.filter(option => option.value === value)[0])
-      input.focus()
     }
   }
 </script>
@@ -91,55 +76,33 @@
   {#if label}
     <Label extraSmall grey>{label}</Label>
   {/if}
-  <div class="multiselect" class:readonly>
+  <div class="multiselect">
     <div class="tokens-wrapper">
-      <div class="tokens" class:showOptions>
+      <div
+        class="tokens"
+        class:optionsVisible
+        on:click|self={handleClick}
+        class:empty={!value || !value.length}>
         {#each Object.values(selected) as option}
-          <div class="token" data-id={option.value}>
+          <div class="token" data-id={option.value} on:click|self={handleClick}>
             <span>{option.name}</span>
-            {#if !readonly}
-              <div
-                class="token-remove"
-                title="Remove {option.name}"
-                on:click={() => remove(option.value)}>
-                <svg
-                  class="icon-clear"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24">
-                  <path d={xPath} />
-                </svg>
-              </div>
-            {/if}
+            <div
+              class="token-remove"
+              title="Remove {option.name}"
+              on:click={() => remove(option.value)}>
+              <svg
+                class="icon-clear"
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24">
+                <path d={xPath} />
+              </svg>
+            </div>
           </div>
         {/each}
+        {#if !value || !value.length}&nbsp;{/if}
       </div>
-    </div>
-    <div class="actions">
-      {#if !readonly}
-        <input
-          autocomplete="off"
-          bind:value={inputValue}
-          bind:this={input}
-          on:blur={handleBlur}
-          on:focus={handleFocus}
-          {placeholder} />
-        <div
-          class="remove-all"
-          title="Remove All"
-          class:hidden={!Object.keys(selected).length}
-          on:click={removeAll}>
-          <svg
-            class="icon-clear"
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24">
-            <path d={xPath} />
-          </svg>
-        </div>
-      {/if}
     </div>
 
     <select bind:this={slot} type="multiple" class="hidden">
@@ -147,20 +110,18 @@
     </select>
 
     {#if optionsVisible}
+      <div class="options-overlay" on:click|self={() => showOptions(false)} />
       <ul
         class="options"
         transition:fly={{ duration: 200, y: 5 }}
         on:mousedown|preventDefault={handleOptionMousedown}>
-        {#each filtered as option}
-          <li
-            class:selected={selected[option.value]}
-            class:active={activeOption === option}
-            data-value={option.value}>
+        {#each options as option}
+          <li class:selected={selected[option.value]} data-value={option.value}>
             {option.name}
           </li>
         {/each}
-        {#if !filtered.length && inputValue.length}
-          <li>No results</li>
+        {#if !options.length}
+          <li class="no-results">No results</li>
         {/if}
       </ul>
     {/if}
@@ -175,7 +136,7 @@
     justify-content: flex-start;
     align-items: stretch;
   }
-  .multiselect:not(.readonly):hover {
+  .multiselect:hover {
     border-bottom-color: hsl(0, 0%, 50%);
   }
 
@@ -185,6 +146,7 @@
     justify-content: flex-start;
     align-items: center;
     flex: 0 1 auto;
+    z-index: 2;
   }
 
   .tokens {
@@ -194,6 +156,14 @@
     position: relative;
     width: 0;
     flex: 1 1 auto;
+    background-color: var(--grey-2);
+    border-radius: var(--border-radius-m);
+    padding: 0 var(--spacing-m) calc(var(--spacing-m) - var(--spacing-xs))
+      calc(var(--spacing-m) / 2);
+    border: var(--border-transparent);
+  }
+  .tokens:hover {
+    cursor: pointer;
   }
   .tokens::after {
     background: none repeat scroll 0 0 transparent;
@@ -206,74 +176,72 @@
     transition: width 0.3s ease 0s, left 0.3s ease 0s;
     width: 0;
   }
-  .tokens.showOptions::after {
+  .tokens.optionsVisible {
+    border: var(--border-blue);
+  }
+  .tokens.empty {
+    padding: var(--spacing-m);
+    font-size: var(--font-size-xs);
+    user-select: none;
+  }
+  .tokens::after {
     width: 100%;
     left: 0;
   }
   .token {
     font-size: var(--font-size-xs);
     align-items: center;
-    background-color: var(--grey-3);
+    background-color: white;
     border-radius: var(--border-radius-l);
     display: flex;
-    margin: 0.25rem 0.5rem 0.25rem 0;
+    margin: calc(var(--spacing-m) - var(--spacing-xs)) 0 0
+      calc(var(--spacing-m) / 2);
     max-height: 1.3rem;
-    padding: var(--spacing-s) var(--spacing-m);
+    padding: var(--spacing-xs) var(--spacing-s);
     transition: background-color 0.3s;
     white-space: nowrap;
   }
-  .token:hover {
-    background-color: var(--grey-4);
+  .token span {
+    pointer-events: none;
+    user-select: none;
   }
-  .readonly .token {
-    color: hsl(0, 0%, 40%);
-  }
-  .token-remove,
-  .remove-all {
+  .token-remove {
     align-items: center;
-    background-color: var(--grey-5);
+    background-color: var(--grey-4);
     border-radius: 50%;
     color: var(--white);
     display: flex;
     justify-content: center;
-    height: 1.25rem;
-    margin-left: 0.25rem;
-    min-width: 1.25rem;
+    height: 1rem;
+    width: 1rem;
+    margin: calc(-1 * var(--spacing-xs)) 0 calc(-1 * var(--spacing-xs))
+      var(--spacing-xs);
   }
-  .token-remove:hover,
-  .remove-all:hover {
-    background-color: var(--grey-6);
+  .token-remove:hover {
+    background-color: var(--grey-5);
     cursor: pointer;
-  }
-
-  .actions {
-    align-items: center;
-    display: flex;
-    flex: 1;
-  }
-  .actions > * {
-    flex: 0 0 auto;
-  }
-  .actions > input {
-    border: none;
-    font-size: var(--font-size-xs);
-    line-height: 1.5rem;
-    outline: none;
-    background-color: transparent;
-    flex: 1 1 auto;
   }
 
   .icon-clear path {
     fill: white;
   }
 
+  .options-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+  }
+
   .options {
+    z-index: 2;
     left: 0;
     list-style: none;
     margin-block-end: 0;
     margin-block-start: 0;
-    max-height: 70vh;
-    overflow: auto;
+    overflow-y: auto;
     padding-inline-start: 0;
     position: absolute;
     top: calc(100% + 1px);
@@ -283,8 +251,8 @@
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
     margin-top: var(--spacing-xs);
     padding: var(--spacing-s) 0;
-    z-index: 1;
     background-color: white;
+    max-height: 200px;
   }
   li {
     background-color: white;
@@ -298,6 +266,10 @@
   }
   li:not(.selected):hover {
     background-color: var(--grey-1);
+  }
+  li.no-results:hover {
+    background-color: white;
+    cursor: initial;
   }
 
   .hidden {

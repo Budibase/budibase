@@ -1,31 +1,17 @@
 <script>
-  import Modal from "./Modal.svelte"
+  import SettingsModal from "./SettingsModal.svelte"
   import { SettingsIcon } from "components/common/Icons/"
-  import { getContext } from "svelte"
-  import { isActive, goto, layout } from "@sveltech/routify"
+  import { Modal } from "components/common/Modal"
 
-  // Handle create app modal
-  const { open, close } = getContext("simple-modal")
-
-  const showSettingsModal = () => {
-    open(
-      Modal,
-      {
-        name: "Placeholder App Name",
-        description: "This is a hardcoded description that needs to change",
-      },
-      {
-        closeOnEsc: true,
-        styleContent: { padding: 0 },
-        closeOnOuterClick: true,
-      }
-    )
-  }
+  let modal
 </script>
 
-<span class="topnavitemright settings" on:click={showSettingsModal}>
+<span class="topnavitemright settings" on:click={modal.show}>
   <SettingsIcon />
 </span>
+<Modal bind:this={modal} wide>
+  <SettingsModal />
+</Modal>
 
 <style>
   span:first-letter {

@@ -11,12 +11,10 @@
   import { Input, TextArea, Button } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { AppsIcon, InfoIcon, CloseIcon } from "components/common/Icons/"
-  import { getContext } from "svelte"
   import { fade } from "svelte/transition"
   import { post } from "builderStore/api"
   import analytics from "analytics"
 
-  const { open, close } = getContext("simple-modal")
   //Move this to context="module" once svelte-forms is updated so that it can bind to stores correctly
   const createAppStore = writable({ currentStep: 0, values: {} })
 
@@ -169,7 +167,7 @@
       }
       const userResp = await api.post(`/api/users`, user)
       const json = await userResp.json()
-      $goto(`./${appJson._id}`)
+      $goto(`/${appJson._id}`)
     } catch (error) {
       console.error(error)
     }
@@ -193,10 +191,6 @@
   $: checkValidity($createAppStore.values, $createAppStore.currentStep)
 
   let onChange = () => {}
-
-  function _onCancel() {
-    close()
-  }
 
   async function _onOkay() {
     await createNewApp()
@@ -249,9 +243,6 @@
       {/if}
     </div>
   </div>
-  <div class="close-button" on:click={_onCancel}>
-    <CloseIcon />
-  </div>
   <img src="/_builder/assets/bb-logo.svg" alt="budibase icon" />
   {#if submitting}
     <div in:fade class="spinner-container">
@@ -275,16 +266,6 @@
     grid-gap: 30px;
     align-content: center;
     background: #f5f5f5;
-  }
-  .close-button {
-    cursor: pointer;
-    position: absolute;
-    top: 20px;
-    right: 20px;
-  }
-  .close-button :global(svg) {
-    width: 24px;
-    height: 24px;
   }
   .heading {
     display: flex;

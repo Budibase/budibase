@@ -10,7 +10,7 @@
   } from "builderStore/replaceBindings"
   import { DropdownMenu } from "@budibase/bbui"
   import BindingDropdown from "components/userInterface/BindingDropdown.svelte"
-  import { onMount, getContext } from "svelte"
+  import { onMount } from "svelte"
 
   export let label = ""
   export let componentInstance = {}

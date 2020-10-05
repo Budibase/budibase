@@ -13,6 +13,7 @@
   $: allowDeleteBlock =
     $automationStore.selectedBlock?.type !== "TRIGGER" ||
     !automation?.definition?.steps?.length
+  $: name = automation?.name ?? ""
 
   function deleteAutomationBlock() {
     automationStore.actions.deleteAutomationBlock(
@@ -101,7 +102,7 @@
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Delete"
-  body={`Are you sure you wish to delete the automation '${automation.name}'?`}
+  body={`Are you sure you wish to delete the automation '${name}'?`}
   okText="Delete Automation"
   onOk={deleteAutomation} />
 

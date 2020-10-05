@@ -1,6 +1,5 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { getContext } from "svelte"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
@@ -22,6 +21,11 @@
   function hideEditor() {
     dropdown.hide()
     editing = false
+  }
+
+  function showDelete() {
+    dropdown.hide()
+    confirmDeleteDialog.show()
   }
 
   async function save() {
@@ -61,7 +65,7 @@
         <Icon name="edit" />
         Edit
       </li>
-      <li data-cy="delete-view" on:click={() => confirmDeleteDialog.show()}>
+      <li data-cy="delete-view" on:click={showDelete}>
         <Icon name="delete" />
         Delete
       </li>

@@ -1,15 +1,7 @@
 <script>
-  import {
-    Popover,
-    TextButton,
-    Button,
-    Icon,
-    Input,
-    Select,
-  } from "@budibase/bbui"
+  import { Button, Input, Select } from "@budibase/bbui"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import CreateEditRecord from "./CreateEditRecord.svelte"
   import analytics from "analytics"
 
   const CONDITIONS = [
@@ -51,9 +43,7 @@
   ]
 
   export let view = {}
-
-  let anchor
-  let dropdown
+  export let onClosed
 
   $: viewModel = $backendUiStore.models.find(
     ({ _id }) => _id === $backendUiStore.selectedView.modelId
@@ -63,7 +53,7 @@
   function saveView() {
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
-    dropdown.hide()
+    onClosed()
     analytics.captureEvent("Added View Filter", {
       filters: JSON.stringify(view.filters),
     })
@@ -88,67 +78,55 @@
   }
 </script>
 
-<div bind:this={anchor}>
-  <TextButton
-    text
-    small
-    on:click={dropdown.show}
-    active={view.filters && view.filters.length}>
-    <Icon name="filter" />
-    Filter
-  </TextButton>
-</div>
-<Popover bind:this={dropdown} {anchor} align="left">
-  <div class="actions">
-    <h5>Filter</h5>
-    {#if view.filters.length}
-      <div class="input-group-row">
-        {#each view.filters as filter, idx}
-          {#if idx === 0}
-            <p>Where</p>
-          {:else}
-            <Select secondary thin bind:value={filter.conjunction}>
-              <option value="">Choose an option</option>
-              {#each CONJUNCTIONS as conjunction}
-                <option value={conjunction.key}>{conjunction.name}</option>
-              {/each}
-            </Select>
-          {/if}
-          <Select secondary thin bind:value={filter.key}>
+<div class="actions">
+  <h5>Filter</h5>
+  {#if view.filters.length}
+    <div class="input-group-row">
+      {#each view.filters as filter, idx}
+        {#if idx === 0}
+          <p>Where</p>
+        {:else}
+          <Select secondary thin bind:value={filter.conjunction}>
             <option value="">Choose an option</option>
-            {#each fields as field}
-              <option value={field}>{field}</option>
+            {#each CONJUNCTIONS as conjunction}
+              <option value={conjunction.key}>{conjunction.name}</option>
             {/each}
           </Select>
-          <Select secondary thin bind:value={filter.condition}>
+        {/if}
+        <Select secondary thin bind:value={filter.key}>
+          <option value="">Choose an option</option>
+          {#each fields as field}
+            <option value={field}>{field}</option>
+          {/each}
+        </Select>
+        <Select secondary thin bind:value={filter.condition}>
+          <option value="">Choose an option</option>
+          {#each CONDITIONS as condition}
+            <option value={condition.key}>{condition.name}</option>
+          {/each}
+        </Select>
+        {#if filter.key && isMultipleChoice(filter.key)}
+          <Select secondary thin bind:value={filter.value}>
             <option value="">Choose an option</option>
-            {#each CONDITIONS as condition}
-              <option value={condition.key}>{condition.name}</option>
+            {#each viewModel.schema[filter.key].constraints.inclusion as option}
+              <option value={option}>{option}</option>
             {/each}
           </Select>
-          {#if filter.key && isMultipleChoice(filter.key)}
-            <Select secondary thin bind:value={filter.value}>
-              <option value="">Choose an option</option>
-              {#each viewModel.schema[filter.key].constraints.inclusion as option}
-                <option value={option}>{option}</option>
-              {/each}
-            </Select>
-          {:else}
-            <Input thin placeholder="Value" bind:value={filter.value} />
-          {/if}
-          <i class="ri-close-circle-fill" on:click={() => removeFilter(idx)} />
-        {/each}
-      </div>
-    {/if}
-    <div class="footer">
-      <Button text on:click={addFilter}>Add Filter</Button>
-      <div class="buttons">
-        <Button secondary on:click={dropdown.hide}>Cancel</Button>
-        <Button primary on:click={saveView}>Save</Button>
-      </div>
+        {:else}
+          <Input thin placeholder="Value" bind:value={filter.value} />
+        {/if}
+        <i class="ri-close-circle-fill" on:click={() => removeFilter(idx)} />
+      {/each}
+    </div>
+  {/if}
+  <div class="footer">
+    <Button text on:click={addFilter}>Add Filter</Button>
+    <div class="buttons">
+      <Button secondary on:click={onClosed}>Cancel</Button>
+      <Button primary on:click={saveView}>Save</Button>
     </div>
   </div>
-</Popover>
+</div>
 
 <style>
   .actions {

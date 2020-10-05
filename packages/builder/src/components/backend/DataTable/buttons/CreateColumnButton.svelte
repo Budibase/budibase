@@ -1,22 +1,22 @@
 <script>
   import { DropdownMenu, TextButton as Button, Icon } from "@budibase/bbui"
-  import CreateEditRecord from "./CreateEditRecord.svelte"
-  import { Modal } from "components/common/Modal"
+  import CreateEditColumnPopover from "../popovers/CreateEditColumnPopover.svelte"
 
   let anchor
   let dropdown
+  let fieldName
 </script>
 
 <div bind:this={anchor}>
   <Button text small on:click={dropdown.show}>
-    <Icon name="addrow" />
-    Create New Row
+    <Icon name="addcolumn" />
+    Create New Column
   </Button>
 </div>
-<Modal bind:this={dropdown}>
-  <h5>Add New Row</h5>
-  <CreateEditRecord onClosed={dropdown.hide} />
-</Modal>
+<DropdownMenu bind:this={dropdown} {anchor} align="left">
+  <h5>Create Column</h5>
+  <CreateEditColumnPopover onClosed={dropdown.hide} />
+</DropdownMenu>
 
 <style>
   h5 {

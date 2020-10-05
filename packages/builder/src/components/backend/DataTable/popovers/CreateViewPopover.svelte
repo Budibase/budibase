@@ -1,20 +1,11 @@
 <script>
-  import {
-    Popover,
-    TextButton,
-    Button,
-    Icon,
-    Input,
-    Select,
-  } from "@budibase/bbui"
+  import { Button, Input, Select } from "@budibase/bbui"
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import CreateEditRecord from "./CreateEditRecord.svelte"
   import analytics from "analytics"
 
-  let anchor
-  let dropdown
+  export let onClosed
 
   let name
   let field
@@ -37,28 +28,20 @@
       field,
     })
     notifier.success(`View ${name} created`)
-    dropdown.hide()
+    onClosed()
     analytics.captureEvent("View Created", { name })
     $goto(`../../../view/${name}`)
   }
 </script>
 
-<div bind:this={anchor}>
-  <TextButton text small on:click={dropdown.show}>
-    <Icon name="view" />
-    Create New View
-  </TextButton>
-</div>
-<Popover bind:this={dropdown} {anchor} align="left">
-  <div class="actions">
-    <h5>Create View</h5>
-    <Input label="View Name" thin bind:value={name} />
-    <div class="footer">
-      <Button secondary on:click={dropdown.hide}>Cancel</Button>
-      <Button primary on:click={saveView}>Save View</Button>
-    </div>
+<div class="actions">
+  <h5>Create View</h5>
+  <Input label="View Name" thin bind:value={name} />
+  <div class="footer">
+    <Button secondary on:click={onClosed}>Cancel</Button>
+    <Button primary on:click={saveView}>Save View</Button>
   </div>
-</Popover>
+</div>
 
 <style>
   h5 {
