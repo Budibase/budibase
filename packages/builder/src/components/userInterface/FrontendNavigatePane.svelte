@@ -7,17 +7,15 @@
   import { Button } from "@budibase/bbui"
   import { Spacer } from "@budibase/bbui"
 
-  const newScreen = () => {
-    newScreenPicker.show()
-  }
-
-  let newScreenPicker
+  let modalVisible = false
 </script>
 
 <PagesList />
 
 <Spacer medium />
-<Button primary wide on:click={newScreen}>Create New Screen</Button>
+<Button primary wide on:click={() => (modalVisible = true)}>
+  Create New Screen
+</Button>
 <Spacer medium />
 <PageLayout layout={$store.pages[$store.currentPageName]} />
 
@@ -25,7 +23,9 @@
   <ComponentsHierarchy screens={$store.screens} />
 </div>
 
-<NewScreen bind:this={newScreenPicker} />
+{#if modalVisible}
+  <NewScreen bind:visible={modalVisible} />
+{/if}
 
 <style>
   .newscreen {

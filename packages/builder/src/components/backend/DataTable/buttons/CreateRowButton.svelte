@@ -3,15 +3,15 @@
   import CreateEditRecordModal from "../modals/CreateEditRecordModal.svelte"
   import { Modal } from "components/common/Modal"
 
-  let modal
+  let modalVisible
 </script>
 
 <div>
-  <Button text small on:click={modal.show}>
+  <Button text small on:click={() => (modalVisible = true)}>
     <Icon name="addrow" />
     Create New Row
   </Button>
 </div>
-<Modal bind:this={modal}>
-  <CreateEditRecordModal />
-</Modal>
+{#if modalVisible}
+  <CreateEditRecordModal bind:visible={modalVisible} />
+{/if}

@@ -13,7 +13,7 @@
 
   let promise = getApps()
   let hasKey
-  let modal
+  let modalVisible = false
 
   async function getApps() {
     const res = await get("/api/applications")
@@ -40,7 +40,7 @@
     }
 
     if (!keys.budibase) {
-      modal.show()
+      modalVisible = true
     }
   }
 
@@ -49,7 +49,9 @@
 
 <div class="header">
   <Heading medium black>Welcome to the Budibase Beta</Heading>
-  <Button primary black on:click={modal.show}>Create New Web App</Button>
+  <Button primary black on:click={() => (modalVisible = true)}>
+    Create New Web App
+  </Button>
 </div>
 
 <div class="banner">
@@ -59,9 +61,9 @@
   </div>
 </div>
 
-<Modal bind:this={modal} wide padded={false}>
-  <CreateAppModal {hasKey} />
-</Modal>
+{#if modalVisible}
+  <CreateAppModal bind:visible={modalVisible} {hasKey} />
+{/if}
 
 {#await promise}
   <div class="spinner-container">

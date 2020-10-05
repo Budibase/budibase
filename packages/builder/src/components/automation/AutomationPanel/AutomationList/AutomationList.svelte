@@ -5,7 +5,7 @@
   import { Button } from "@budibase/bbui"
   import { Modal } from "components/common/Modal"
 
-  let modal
+  let modalVisible = false
 
   $: selectedAutomationId = $automationStore.selectedAutomation?.automation?._id
 
@@ -15,7 +15,7 @@
 </script>
 
 <section>
-  <Button primary wide on:click={() => modal.show()}>
+  <Button primary wide on:click={() => (modalVisible = true)}>
     Create New Automation
   </Button>
   <ul>
@@ -30,9 +30,9 @@
     {/each}
   </ul>
 </section>
-<Modal bind:this={modal}>
-  <CreateAutomationModal />
-</Modal>
+{#if modalVisible}
+  <CreateAutomationModal bind:visible={modalVisible} />
+{/if}
 
 <style>
   section {

@@ -12,15 +12,23 @@
   import { createEventDispatcher, setContext } from "svelte"
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
+  import { Button } from "@budibase/bbui"
   import { ContextKey } from "./context"
   const dispatch = createEventDispatcher()
 
   export let wide = false
   export let padded = true
+  export let title = undefined
+  export let cancelText = "Cancel"
+  export let confirmText = "Confirm"
+  export let showCancelButton = true
+  export let showConfirmButton = true
+  export let onConfirm = () => {}
+  export let visible = false
 
-  let visible
+  let loading = false
 
-  export function show() {
+  function show() {
     if (visible) {
       return
     }
@@ -28,12 +36,20 @@
     dispatch("show")
   }
 
-  export function hide() {
+  function hide() {
     if (!visible) {
       return
     }
     visible = false
     dispatch("hide")
+  }
+
+  async function confirm() {
+    loading = true
+    if (!onConfirm || (await onConfirm()) !== false) {
+      hide()
+    }
+    loading = false
   }
 
   setContext(ContextKey, { show, hide })
@@ -50,8 +66,37 @@
         on:click|self={hide}
         transition:fly={{ y: 50 }}>
         <div class="content-wrapper" on:click|self={hide}>
-          <div class="content" class:wide class:padded>
+          <div class="modal" class:wide class:padded>
+            {#if title}
+              <header>
+                <h5>{title}</h5>
+                <div class="header-content">
+                  <slot name="header" />
+                </div>
+              </header>
+            {/if}
             <slot />
+            {#if showCancelButton || showConfirmButton}
+              <footer>
+                <div class="footer-content">
+                  <slot name="footer" />
+                </div>
+                <div class="buttons">
+                  {#if showCancelButton}
+                    <Button secondary on:click={hide}>{cancelText}</Button>
+                  {/if}
+                  {#if showConfirmButton}
+                    <Button
+                      primary
+                      {...$$restProps}
+                      disabled={$$restProps.disabled || loading}
+                      on:click={confirm}>
+                      {confirmText}
+                    </Button>
+                  {/if}
+                </div>
+              </footer>
+            {/if}
             <i class="ri-close-line" on:click={hide} />
           </div>
         </div>
@@ -61,10 +106,6 @@
 {/if}
 
 <style>
-  .portal-wrapper {
-    display: none;
-  }
-
   .overlay {
     position: fixed;
     left: 0;
@@ -98,7 +139,7 @@
     width: 0;
   }
 
-  .content {
+  .modal {
     background-color: white;
     display: flex;
     flex-direction: column;
@@ -111,11 +152,30 @@
     border-radius: var(--border-radius-m);
     gap: var(--spacing-xl);
   }
-  .content.wide {
+  .modal.wide {
     flex: 0 0 600px;
   }
-  .content.padded {
+  .modal.padded {
     padding: var(--spacing-xl);
+  }
+
+  header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-right: 40px;
+  }
+  header h5 {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .header-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
   }
 
   i {
@@ -128,5 +188,28 @@
   i:hover {
     color: var(--grey-6);
     cursor: pointer;
+  }
+
+  footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .footer-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

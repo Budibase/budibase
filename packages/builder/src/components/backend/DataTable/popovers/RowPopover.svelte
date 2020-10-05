@@ -12,11 +12,11 @@
   let anchor
   let dropdown
   let confirmDeleteDialog
-  let modal
+  let editModalVisible
 
   function showModal() {
     dropdown.hide()
-    modal.show()
+    editModalVisible = true
   }
 
   function showDelete() {
@@ -52,9 +52,9 @@
   okText="Delete Row"
   onOk={deleteRow}
   title="Confirm Delete" />
-<Modal bind:this={modal}>
-  <CreateEditRecordModal record={row} />
-</Modal>
+{#if editModalVisible}
+  <CreateEditRecordModal bind:visible={editModalVisible} record={row} />
+{/if}
 
 <style>
   .ri-more-line:hover {

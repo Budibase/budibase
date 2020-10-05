@@ -1,5 +1,5 @@
 <script>
-  import { Modal, ModalTitle, ModalFooter } from "components/common/Modal"
+  import { Modal } from "components/common/Modal"
 
   export let title = ""
   export let body = ""
@@ -8,20 +8,26 @@
   export let onOk = () => {}
   export let onCancel = () => {}
 
-  let modal
+  let visible = false
 
   export const show = () => {
-    modal.show()
+    visible = true
   }
   export const hide = () => {
-    modal.hide()
+    visible = false
   }
 </script>
 
-<Modal id={title} bind:this={modal} on:hide={onCancel}>
-  <ModalTitle>{title}</ModalTitle>
+<Modal
+  id={title}
+  bind:visible
+  on:hide={onCancel}
+  {title}
+  confirmText={okText}
+  {cancelText}
+  onConfirm={onOk}
+  red>
   <div class="body">{body}</div>
-  <ModalFooter confirmText={okText} {cancelText} onConfirm={onOk} red />
 </Modal>
 
 <style>

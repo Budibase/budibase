@@ -3,7 +3,7 @@ context("Create a View", () => {
     cy.visit("localhost:4001/_builder")
     cy.createApp("View App", "View App Description")
     cy.createTable("data")
-    cy.addColumn("data", "group", "Plain Text")
+    cy.addColumn("data", "group", "Text")
     cy.addColumn("data", "age", "Number")
     cy.addColumn("data", "rating", "Number")
 
@@ -18,10 +18,12 @@ context("Create a View", () => {
 
   it("creates a view", () => {
     cy.contains("Create New View").click()
-    cy.get("[placeholder='View Name']").type("Test View")
-    cy.contains("Save View").click()
+    cy.get(".menu-container").within(() => {
+      cy.get("input").type("Test View")
+      cy.contains("Save View").click()
+    })
     cy.get(".title").contains("Test View")
-    cy.get("thead th").should($headers => {
+    cy.get("thead th div").should($headers => {
       expect($headers).to.have.length(3)
       const headers = $headers.map((i, header) => Cypress.$(header).text())
       expect(headers.get()).to.deep.eq(["group", "age", "rating"])
@@ -39,7 +41,7 @@ context("Create a View", () => {
       .find("select")
       .eq(1)
       .select("More Than")
-    cy.get("input[placeholder='age']").type(18)
+    cy.get("input").type(18)
     cy.contains("Save").click()
     cy.get("tbody tr").should($values => {
       expect($values).to.have.length(5)
@@ -57,7 +59,7 @@ context("Create a View", () => {
       .eq(1)
       .select("age")
     cy.contains("Save").click()
-    cy.get("thead th").should($headers => {
+    cy.get("thead th div").should($headers => {
       expect($headers).to.have.length(7)
       const headers = $headers.map((i, header) => Cypress.$(header).text())
       expect(headers.get()).to.deep.eq([
@@ -113,8 +115,10 @@ context("Create a View", () => {
       .find(".ri-more-line")
       .click()
     cy.contains("Edit").click()
-    cy.get("[placeholder='View Name']").type(" Updated")
-    cy.contains("Save").click()
+    cy.get(".menu-container").within(() => {
+      cy.get("input").type(" Updated")
+      cy.contains("Save").click()
+    })
     cy.contains("Test View Updated").should("be.visible")
   })
 

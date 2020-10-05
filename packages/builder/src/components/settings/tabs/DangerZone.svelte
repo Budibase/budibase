@@ -2,7 +2,6 @@
   import { params, goto } from "@sveltech/routify"
   import { Input, TextArea, Button, Body } from "@budibase/bbui"
   import { del } from "builderStore/api"
-  import { ModalFooter } from "components/common/Modal"
 
   let value = ""
   let loading = false
@@ -29,12 +28,15 @@
     thin
     disabled={loading}
     placeholder="" />
-  <ModalFooter
-    disabled={value !== 'DELETE' || loading}
-    red
-    showCancelButton={false}
-    confirmText="Delete Entire App"
-    onConfirm={deleteApp} />
+  <div class="buttons">
+    <Button
+      primary
+      disabled={value !== 'DELETE' || loading}
+      red
+      on:click={deleteApp}>
+      Delete Entire App
+    </Button>
+  </div>
 </div>
 
 <style>
@@ -45,5 +47,12 @@
   .background :global(p) {
     line-height: 1.2;
     margin: 0;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
   }
 </style>

@@ -2,9 +2,9 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import ListItem from "./ListItem.svelte"
-  import CreateTablePopover from "./CreateTable.svelte"
-  import EditTablePopover from "./EditTable.svelte"
-  import EditViewPopover from "./EditView.svelte"
+  import CreateTablePopover from "./popovers/CreateTablePopover.svelte"
+  import EditTablePopover from "./popovers/EditTablePopover.svelte"
+  import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import { Heading } from "@budibase/bbui"
   import { Spacer } from "@budibase/bbui"
 
