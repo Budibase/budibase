@@ -1,10 +1,15 @@
 <script>
-  import { Input } from "@budibase/bbui"
+  import { Input, Heading, Body } from "@budibase/bbui"
   export let validationErrors
+  export let template
 
   let blurred = { appName: false }
 </script>
 
+{#if template}
+  <Heading small black>Selected Template</Heading>
+  <Body>{template.name}</Body>
+{/if}
 <h2>Create your web app</h2>
 <div class="container">
   <Input
