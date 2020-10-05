@@ -145,7 +145,7 @@
       })
       const appJson = await appResp.json()
       analytics.captureEvent("App Created", {
-        name,
+        name: $createAppStore.values.applicationName,
         appId: appJson._id,
       })
 
