@@ -4,10 +4,10 @@
   import AppList from "components/start/AppList.svelte"
   import { onMount } from "svelte"
   import ActionButton from "components/common/ActionButton.svelte"
-  import { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import { Button, Heading } from "@budibase/bbui"
+  import TemplateList from "components/start/TemplateList.svelte"
   import analytics from "analytics"
   import { Modal } from "components/common/Modal"
 
@@ -49,7 +49,7 @@
 
 <div class="header">
   <Heading medium black>Welcome to the Budibase Beta</Heading>
-  <Button primary black on:click={() => (modalVisible = true)}>
+  <Button primary purple on:click={() => (modalVisible = true)}>
     Create New Web App
   </Button>
 </div>
@@ -61,19 +61,11 @@
   </div>
 </div>
 
+<TemplateList onSelect={() => (modalVisible = true)} />
+<AppList />
 {#if modalVisible}
-  <CreateAppModal bind:visible={modalVisible} {hasKey} />
+  <CreateAppModal bind:visible={modalVisible} {hasKey} {template} />
 {/if}
-
-{#await promise}
-  <div class="spinner-container">
-    <Spinner />
-  </div>
-{:then result}
-  <AppList apps={result} />
-{:catch err}
-  <h1 style="color:red">{err}</h1>
-{/await}
 
 <style>
   .header {
@@ -111,13 +103,5 @@
     font-size: 24px;
     color: var(--white);
     font-weight: 500;
-  }
-
-  .spinner-container {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 </style>

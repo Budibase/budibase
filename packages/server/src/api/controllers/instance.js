@@ -1,10 +1,13 @@
+const fs = require("fs")
 const CouchDB = require("../../db")
 const client = require("../../db/clientDb")
 const newid = require("../../db/newid")
 const { createLinkView } = require("../../db/linkedRecords")
+const { downloadTemplate } = require("../../utilities/templates")
 
 exports.create = async function(ctx) {
   const instanceName = ctx.request.body.name
+  const template = ctx.request.body.template
   const { appId } = ctx.user
   const appShortId = appId.substring(0, 7)
   const instanceId = `inst_${appShortId}_${newid()}`
@@ -32,6 +35,16 @@ exports.create = async function(ctx) {
   const instance = { _id: instanceId, name: instanceName }
   budibaseApp.instances.push(instance)
   await clientDb.put(budibaseApp)
+
+  // replicate the template data to the instance DB
+  if (template) {
+    const templatePath = await downloadTemplate(...template.key.split("/"))
+    const dbDumpReadStream = fs.createReadStream(`${templatePath}/db/dump.txt`)
+    const { ok } = await db.load(dbDumpReadStream)
+    if (!ok) {
+      ctx.throw(500, "Error loading database dump from template.")
+    }
+  }
 
   ctx.status = 200
   ctx.message = `Instance Database ${instanceName} successfully provisioned.`
