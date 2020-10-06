@@ -1,19 +1,25 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, afterUpdate } from "svelte"
   import { fly } from "svelte/transition"
   import { Label } from "@budibase/bbui"
+  import buildStyle from "@budibase/bbui/src/utils/buildStyle"
   const xPath =
     "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 
   export let value = []
-  export let label
+  export let label = undefined
+  export let secondary = false
+  export let outline = false
+  export let disabled = false
+  export let placeholder = undefined
 
-  let placeholder = "Type to search"
   let options = []
   let optionsVisible = false
   let selected = {}
   let first = true
   let slot
+  let anchor
+  let dimensions = { top: 0, left: 0, minWidth: 0, maxHeight: 0 }
 
   onMount(() => {
     const domOptions = Array.from(slot.querySelectorAll("option"))
@@ -31,10 +37,35 @@
     first = false
   })
 
+  // Update dimensions after each dom update
+  afterUpdate(() => {
+    if (anchor) {
+      updateDimensions()
+    }
+  })
+
   // Keep value up to date with selected options
   $: {
     if (!first) {
       value = Object.values(selected).map(option => option.value)
+    }
+  }
+
+  // Build CSS styles for options dropdown
+  $: menuStyle = buildStyle({
+    "max-height": `${dimensions.maxHeight.toFixed(0)}px`,
+    "min-width": `${dimensions.minWidth.toFixed(0)}px`,
+    top: `${dimensions.top}px`,
+    left: `${dimensions.left}px`,
+  })
+
+  function updateDimensions() {
+    const { bottom, left, width } = anchor.getBoundingClientRect()
+    dimensions = {
+      top: bottom,
+      left,
+      minWidth: width - 4,
+      maxHeight: window.innerHeight - bottom - 30,
     }
   }
 
@@ -45,10 +76,6 @@
   function remove(value) {
     const { [value]: val, ...rest } = selected
     selected = rest
-  }
-
-  function removeAll() {
-    selected = []
   }
 
   function showOptions(show) {
@@ -79,12 +106,20 @@
   <div class="multiselect">
     <div class="tokens-wrapper">
       <div
+        bind:this={anchor}
         class="tokens"
+        class:outline
+        class:disabled
+        class:secondary
         class:optionsVisible
         on:click|self={handleClick}
         class:empty={!value || !value.length}>
         {#each Object.values(selected) as option}
-          <div class="token" data-id={option.value} on:click|self={handleClick}>
+          <div
+            class="token"
+            class:secondary
+            data-id={option.value}
+            on:click|self={handleClick}>
             <span>{option.name}</span>
             <div
               class="token-remove"
@@ -101,7 +136,13 @@
             </div>
           </div>
         {/each}
-        {#if !value || !value.length}&nbsp;{/if}
+        {#if !value || !value.length}
+          {#if placeholder && placeholder.length}
+            <div class:disabled class="placeholder">{placeholder}</div>
+          {:else}
+            <div class="placeholder">&nbsp;</div>
+          {/if}
+        {/if}
       </div>
     </div>
 
@@ -110,20 +151,24 @@
     </select>
 
     {#if optionsVisible}
-      <div class="options-overlay" on:click|self={() => showOptions(false)} />
-      <ul
-        class="options"
-        transition:fly={{ duration: 200, y: 5 }}
-        on:mousedown|preventDefault={handleOptionMousedown}>
-        {#each options as option}
-          <li class:selected={selected[option.value]} data-value={option.value}>
-            {option.name}
-          </li>
-        {/each}
-        {#if !options.length}
-          <li class="no-results">No results</li>
-        {/if}
-      </ul>
+      <div class="options-overlay" on:mousedown|self={() => showOptions(false)}>
+        <ul
+          class="options"
+          style={menuStyle}
+          transition:fly={{ duration: 200, y: 5 }}
+          on:mousedown|preventDefault={handleOptionMousedown}>
+          {#each options as option}
+            <li
+              class:selected={selected[option.value]}
+              data-value={option.value}>
+              {option.name}
+            </li>
+          {/each}
+          {#if !options.length}
+            <li class="no-results">No results</li>
+          {/if}
+        </ul>
+      </div>
     {/if}
   </div>
 </div>
@@ -135,6 +180,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    font-family: var(--font-sans);
   }
   .multiselect:hover {
     border-bottom-color: hsl(0, 0%, 50%);
@@ -146,7 +192,6 @@
     justify-content: flex-start;
     align-items: center;
     flex: 0 1 auto;
-    z-index: 2;
   }
 
   .tokens {
@@ -156,11 +201,21 @@
     position: relative;
     width: 0;
     flex: 1 1 auto;
-    background-color: var(--grey-2);
+    background-color: white;
     border-radius: var(--border-radius-m);
     padding: 0 var(--spacing-m) calc(var(--spacing-m) - var(--spacing-xs))
       calc(var(--spacing-m) / 2);
     border: var(--border-transparent);
+  }
+  .tokens.disabled {
+    background-color: var(--grey-4);
+    pointer-events: none;
+  }
+  .tokens.outline {
+    border: var(--border-dark);
+  }
+  .tokens.secondary {
+    background-color: var(--grey-2);
   }
   .tokens:hover {
     cursor: pointer;
@@ -188,24 +243,34 @@
     width: 100%;
     left: 0;
   }
+
   .token {
     font-size: var(--font-size-xs);
-    align-items: center;
-    background-color: white;
+    background-color: var(--grey-2);
     border-radius: var(--border-radius-l);
     display: flex;
+    flex-direction: row;
+    align-items: center;
     margin: calc(var(--spacing-m) - var(--spacing-xs)) 0 0
       calc(var(--spacing-m) / 2);
     max-height: 1.3rem;
     padding: var(--spacing-xs) var(--spacing-s);
     transition: background-color 0.3s;
     white-space: nowrap;
+    overflow: hidden;
+  }
+  .token.secondary {
+    background-color: white;
   }
   .token span {
     pointer-events: none;
     user-select: none;
+    flex: 1 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
-  .token-remove {
+  .token .token-remove {
     align-items: center;
     background-color: var(--grey-4);
     border-radius: 50%;
@@ -216,10 +281,18 @@
     width: 1rem;
     margin: calc(-1 * var(--spacing-xs)) 0 calc(-1 * var(--spacing-xs))
       var(--spacing-xs);
+    flex: 0 0 auto;
   }
-  .token-remove:hover {
+  .token .token-remove:hover {
     background-color: var(--grey-5);
     cursor: pointer;
+  }
+
+  .placeholder {
+    pointer-events: none;
+  }
+  .placeholder.disabled {
+    color: var(--grey-6);
   }
 
   .icon-clear path {
@@ -232,11 +305,10 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 1;
+    z-index: 999;
   }
 
   .options {
-    z-index: 2;
     left: 0;
     list-style: none;
     margin-block-end: 0;
@@ -244,12 +316,10 @@
     overflow-y: auto;
     padding-inline-start: 0;
     position: absolute;
-    top: calc(100% + 1px);
-    width: calc(100% - 4px);
     border: var(--border-dark);
     border-radius: var(--border-radius-m);
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
-    margin-top: var(--spacing-xs);
+    margin: var(--spacing-xs) 0;
     padding: var(--spacing-s) 0;
     background-color: white;
     max-height: 200px;
@@ -273,6 +343,12 @@
   }
 
   .hidden {
-    display: none;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    outline: 0;
   }
 </style>
