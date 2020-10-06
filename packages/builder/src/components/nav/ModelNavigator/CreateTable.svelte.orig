@@ -36,7 +36,11 @@
     analytics.captureEvent("Table Created", { name })
     name = ""
     dropdown.hide()
+<<<<<<< HEAD
+=======
+    analytics.captureEvent("Table Created", { name })
     loading = false
+>>>>>>> master
   }
 
   const onClosed = () => {
