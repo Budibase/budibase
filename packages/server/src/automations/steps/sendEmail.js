@@ -1,7 +1,3 @@
-const environment = require("../../environment")
-const sgMail = require("@sendgrid/mail")
-sgMail.setApiKey(environment.SENDGRID_API_KEY)
-
 module.exports.definition = {
   description: "Send an email",
   tagline: "Send email to {{inputs.to}}",
@@ -13,6 +9,10 @@ module.exports.definition = {
   schema: {
     inputs: {
       properties: {
+        apiKey: {
+          type: "string",
+          title: "SendGrid API key",
+        },
         to: {
           type: "string",
           title: "Send To",
@@ -49,6 +49,8 @@ module.exports.definition = {
 }
 
 module.exports.run = async function({ inputs }) {
+  const sgMail = require("@sendgrid/mail")
+  sgMail.setApiKey(inputs.apiKey)
   const msg = {
     to: inputs.to,
     from: inputs.from,
