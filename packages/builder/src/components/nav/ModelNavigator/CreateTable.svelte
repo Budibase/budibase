@@ -33,9 +33,9 @@
     })
     notifier.success(`Table ${name} created successfully.`)
     $goto(`./model/${model._id}`)
+    analytics.captureEvent("Table Created", { name })
     name = ""
     dropdown.hide()
-    analytics.captureEvent("Table Created", { name })
     loading = false
   }
 
