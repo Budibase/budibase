@@ -1,7 +1,6 @@
 <script>
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"
   import RecordFieldControl from "../RecordFieldControl.svelte"
   import * as api from "../api"
   import { Modal } from "components/common/Modal"
@@ -44,11 +43,7 @@
   <ErrorsBox {errors} />
   {#each modelSchema as [key, meta]}
     <div>
-      {#if meta.type === 'link'}
-        <LinkedRecordSelector bind:linkedRecords={record[key]} schema={meta} />
-      {:else}
-        <RecordFieldControl {meta} bind:value={record[key]} />
-      {/if}
+      <RecordFieldControl {meta} bind:value={record[key]} />
     </div>
   {/each}
 </Modal>
