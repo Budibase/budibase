@@ -1,9 +1,19 @@
 <script>
   import { onMount } from "svelte"
   import { fade } from "svelte/transition"
-  import { Label, DatePicker } from "@budibase/bbui"
+  import {
+    Label,
+    DatePicker,
+    Input,
+    Select,
+    Button,
+    Toggle,
+  } from "@budibase/bbui"
   import Dropzone from "./attachments/Dropzone.svelte"
+  import LinkedRecordSelector from "./LinkedRecordSelector.svelte"
   import debounce from "lodash.debounce"
+  import ErrorsBox from "./ErrorsBox.svelte"
+  import { capitalise } from "./helpers"
 
   export let _bb
   export let model
@@ -32,15 +42,10 @@
   let isNew = true
   let errors = {}
 
+  $: fields = schema ? Object.keys(schema) : []
   $: if (model && model.length !== 0) {
     fetchModel()
   }
-
-  $: fields = schema ? Object.keys(schema) : []
-
-  $: errorMessages = Object.entries(errors).map(
-    ([field, message]) => `${field} ${message}`
-  )
 
   async function fetchModel() {
     const FETCH_MODEL_URL = `/api/models/${model}`
@@ -82,11 +87,13 @@
       saved = true
       setTimeout(() => {
         saved = false
-      }, 1000)
+      }, 3000)
     }
 
     if (response.status === 400) {
-      errors = json.errors
+      errors = Object.keys(json.errors)
+        .map(k => ({ dataPath: k, message: json.errors[k] }))
+        .flat()
     }
   })
 
@@ -103,8 +110,7 @@
 
     const GET_RECORD_URL = `/api/${model}/records/${recordId}`
     const response = await _bb.api.get(GET_RECORD_URL)
-    const json = await response.json()
-    record = json
+    record = await response.json()
   })
 </script>
 
@@ -112,44 +118,52 @@
   {#if title}
     <h1>{title}</h1>
   {/if}
-  {#each errorMessages as error}
-    <p class="error">{error}</p>
-  {/each}
-  <hr />
   <div class="form-content">
+    <ErrorsBox {errors} />
     {#each fields as field}
-      <div class="form-item">
-        <Label small forAttr={'form-stacked-text'}>{field}</Label>
-        {#if schema[field].type === 'string' && schema[field].constraints.inclusion}
-          <select bind:value={record[field]}>
-            {#each schema[field].constraints.inclusion as opt}
-              <option>{opt}</option>
-            {/each}
-          </select>
-        {:else if schema[field].type === 'datetime'}
-          <DatePicker bind:value={record[field]} />
-        {:else if schema[field].type === 'boolean'}
-          <input class="input" type="checkbox" bind:checked={record[field]} />
-        {:else if schema[field].type === 'number'}
-          <input class="input" type="number" bind:value={record[field]} />
-        {:else if schema[field].type === 'string'}
-          <input class="input" type="text" bind:value={record[field]} />
-        {:else if schema[field].type === 'attachment'}
+      {#if schema[field].type === 'options'}
+        <Select
+          secondary
+          label={capitalise(schema[field].name)}
+          bind:value={record[field]}>
+          <option value="">Choose an option</option>
+          {#each schema[field].constraints.inclusion as opt}
+            <option>{opt}</option>
+          {/each}
+        </Select>
+      {:else if schema[field].type === 'datetime'}
+        <DatePicker
+          label={capitalise(schema[field].name)}
+          bind:value={record[field]} />
+      {:else if schema[field].type === 'boolean'}
+        <Toggle
+          text={capitalise(schema[field].name)}
+          bind:checked={record[field]} />
+      {:else if schema[field].type === 'number'}
+        <Input
+          label={capitalise(schema[field].name)}
+          type="number"
+          bind:value={record[field]} />
+      {:else if schema[field].type === 'string'}
+        <Input
+          label={capitalise(schema[field].name)}
+          bind:value={record[field]} />
+      {:else if schema[field].type === 'attachment'}
+        <div>
+          <Label extraSmall grey>{schema[field].name}</Label>
           <Dropzone bind:files={record[field]} />
-        {/if}
-      </div>
-      <hr />
+        </div>
+      {:else if schema[field].type === 'link'}
+        <LinkedRecordSelector
+          secondary
+          bind:linkedRecords={record[field]}
+          schema={schema[field]} />
+      {/if}
     {/each}
-    <div class="button-block">
-      <button on:click={save} class:saved>
-        {#if saved}
-          <div in:fade>
-            <span class:saved>Success</span>
-          </div>
-        {:else}
-          <div>{buttonText || 'Submit Form'}</div>
-        {/if}
-      </button>
+    <div class="buttons">
+      <Button primary on:click={save} green={saved}>
+        {#if saved}Success{:else}{buttonText || 'Submit Form'}{/if}
+      </Button>
     </div>
   </div>
 </form>
@@ -162,104 +176,14 @@
   }
 
   .form-content {
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-xl);
+    display: grid;
+    gap: var(--spacing-xl);
     width: 100%;
   }
 
-  .input {
-    border-radius: 5px;
-    border: 1px solid #e6e6e6;
-    padding: 1rem;
-    font-size: 16px;
-  }
-
-  .form-item {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 16px;
-  }
-
-  hr {
-    border: 1px solid var(--grey-1);
-    margin: 20px 0px;
-  }
-
-  hr:nth-last-child(2) {
-    border: 1px solid #fff;
-    margin: 20px 0px;
-  }
-
-  .button-block {
+  .buttons {
     display: flex;
     justify-content: flex-end;
-  }
-
-  button {
-    font-size: 16px;
-    padding: 0.4em;
-    box-sizing: border-box;
-    border-radius: 4px;
-    color: white;
-    background-color: #393c44;
-    outline: none;
-    width: 300px;
-    height: 40px;
-    cursor: pointer;
-    transition: all 0.2s ease 0s;
-    overflow: hidden;
-    outline: none;
-    user-select: none;
-    white-space: nowrap;
-    text-align: center;
-  }
-
-  button.saved {
-    background-color: #84c991;
-    border: none;
-  }
-
-  button:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  }
-
-  input[type="checkbox"] {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    margin: 0;
-    vertical-align: bottom;
-    position: relative;
-    top: -1px;
-    *overflow: hidden;
-  }
-
-  select::-ms-expand {
-    display: none;
-  }
-  select {
-    display: inline-block;
-    cursor: pointer;
-    align-items: baseline;
-    box-sizing: border-box;
-    padding: 1em 1em;
-    border: 1px solid #eaeaea;
-    border-radius: 5px;
-    font: inherit;
-    line-height: inherit;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    -ms-appearance: none;
-    appearance: none;
-    background-repeat: no-repeat;
-    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
-      linear-gradient(135deg, currentColor 50%, transparent 50%);
-    background-position: right 17px top 1.5em, right 10px top 1.5em;
-    background-size: 7px 7px, 7px 7px;
-  }
-
-  .error {
-    color: red;
-    font-weight: 500;
   }
 </style>
