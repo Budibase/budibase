@@ -13,6 +13,7 @@
   export let stripeColor
   export let borderColor
   export let datasource = {}
+  export let _bb
 
   let data = []
   let headers = []
@@ -29,10 +30,18 @@
 
   $: sorted = sort.direction ? fsort(data)[sort.direction](sort.column) : data
 
+  async function fetchModel(modelId) {
+    const FETCH_MODEL_URL = `/api/models/${modelId}`
+    const response = await _bb.api.get(FETCH_MODEL_URL)
+    const model = await response.json()
+    schema = model.schema
+  }
+
   onMount(async () => {
     if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
-      if (data) {
+      if (data && data.length) {
+        await fetchModel(data[0].modelId)
         headers = Object.keys(data[0]).filter(shouldDisplayField)
       }
     }
@@ -85,11 +94,15 @@
     {#each sorted as row (row._id)}
       <tr>
         {#each headers as header}
-          <!-- Rudimentary solution for attachments on array given this entire table will be replaced by AG Grid -->
-          {#if Array.isArray(row[header])}
-            <AttachmentList files={row[header]} />
-          {:else if row[header]}
-            <td>{row[header]}</td>
+          {#if schema[header]}
+            <!-- Rudimentary solution for attachments on array given this entire table will be replaced by AG Grid -->
+            {#if schema[header].type === 'attachment'}
+              <AttachmentList files={row[header]} />
+            {:else if schema[header].type === 'link'}
+              <td>{row[header] ? row[header].length : 0} related row(s)</td>
+            {:else if row[header]}
+              <td>{row[header]}</td>
+            {/if}
           {/if}
         {/each}
       </tr>
