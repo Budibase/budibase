@@ -1,6 +1,7 @@
 const Router = require("@koa/router")
 const recordController = require("../controllers/record")
 const authorized = require("../../middleware/authorized")
+const usage = require("../../middleware/usageQuota")
 const { READ_MODEL, WRITE_MODEL } = require("../../utilities/accessLevels")
 
 const router = Router()
@@ -25,6 +26,7 @@ router
   .post(
     "/api/:modelId/records",
     authorized(WRITE_MODEL, ctx => ctx.params.modelId),
+    usage,
     recordController.save
   )
   .patch(
@@ -40,6 +42,7 @@ router
   .delete(
     "/api/:modelId/records/:recordId/:revId",
     authorized(WRITE_MODEL, ctx => ctx.params.modelId),
+    usage,
     recordController.destroy
   )
 

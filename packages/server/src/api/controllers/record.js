@@ -70,6 +70,9 @@ exports.save = async function(ctx) {
     record._id = generateRecordID(record.modelId)
   }
 
+  // if the record obj had an _id then it will have been retrieved
+  const existingRecord = ctx.preExisting
+
   const model = await db.get(record.modelId)
 
   const validateResult = await validate({
@@ -85,8 +88,6 @@ exports.save = async function(ctx) {
     }
     return
   }
-
-  const existingRecord = record._rev && (await db.get(record._id))
 
   // make sure link records are up to date
   record = await linkRecords.updateLinks({
