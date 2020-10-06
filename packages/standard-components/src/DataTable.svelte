@@ -42,7 +42,7 @@
       data = await fetchData(datasource)
       if (data && data.length) {
         await fetchModel(data[0].modelId)
-        headers = Object.keys(data[0]).filter(shouldDisplayField)
+        headers = Object.keys(schema).filter(shouldDisplayField)
       }
     }
   })
@@ -71,6 +71,8 @@
       direction: "asc",
     }
   }
+
+  $: console.log(headers)
 </script>
 
 <table use:cssVars={cssVariables}>
