@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { cssVars, createClasses } from "./cssVars"
+  import { cssVars } from "./cssVars"
   import ArrowUp from "./icons/ArrowUp.svelte"
   import ArrowDown from "./icons/ArrowDown.svelte"
   import fsort from "fast-sort"
@@ -71,8 +71,6 @@
       direction: "asc",
     }
   }
-
-  $: console.log(headers)
 </script>
 
 <table use:cssVars={cssVariables}>
