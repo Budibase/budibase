@@ -1,6 +1,7 @@
 const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const { getRecordParams, generateRecordID } = require("../../db/utils")
+const { cloneDeep } = require("lodash")
 
 const MODEL_VIEW_BEGINS_WITH = "all_model:"
 
@@ -31,11 +32,11 @@ validateJs.extend(validateJs.validators.datetime, {
 
 exports.patch = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
-  const record = await db.get(ctx.params.id)
+  let record = await db.get(ctx.params.id)
   const model = await db.get(record.modelId)
   const patchfields = ctx.request.body
 
-  coerceRecordValues(record, model)
+  record = coerceRecordValues(record, model)
 
   for (let key in patchfields) {
     if (!model.schema[key]) continue
@@ -66,7 +67,7 @@ exports.patch = async function(ctx) {
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
-  const record = ctx.request.body
+  let record = ctx.request.body
   record.modelId = ctx.params.modelId
 
   if (!record._rev && !record._id) {
@@ -75,7 +76,7 @@ exports.save = async function(ctx) {
 
   const model = await db.get(record.modelId)
 
-  coerceRecordValues(record, model)
+  record = coerceRecordValues(record, model)
 
   const validateResult = await validate({
     record,
@@ -236,19 +237,20 @@ async function validate({ instanceId, modelId, record, model }) {
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-function coerceRecordValues(record, model) {
+function coerceRecordValues(rec, model) {
+  const record = cloneDeep(rec)
   for (let [key, value] of Object.entries(record)) {
     const field = model.schema[key]
     if (!field) continue
-    const mapping = Object.prototype.hasOwnProperty.call(
-      TYPE_TRANSFORM_MAP[field.type],
-      value
-    )
-      ? TYPE_TRANSFORM_MAP[field.type][value]
-      : TYPE_TRANSFORM_MAP[field.type].parse
 
-    record[key] = typeof mapping === "function" ? mapping(value) : mapping
+    // eslint-disable-next-line no-prototype-builtins
+    if (TYPE_TRANSFORM_MAP[field.type].hasOwnProperty(value)) {
+      record[key] = TYPE_TRANSFORM_MAP[field.type][value]
+    } else if (TYPE_TRANSFORM_MAP[field.type].parse) {
+      record[key] = TYPE_TRANSFORM_MAP[field.type].parse(value)
+    }
   }
+  return record
 }
 
 const TYPE_TRANSFORM_MAP = {
@@ -256,7 +258,6 @@ const TYPE_TRANSFORM_MAP = {
     "": "",
     [null]: "",
     [undefined]: undefined,
-    parse: s => s,
   },
   number: {
     "": null,
@@ -268,22 +269,17 @@ const TYPE_TRANSFORM_MAP = {
     "": null,
     [undefined]: undefined,
     [null]: null,
-    parse: d => d,
   },
   attachment: {
     "": [],
     [null]: [],
     [undefined]: undefined,
-    parse: a => a,
   },
   boolean: {
     "": null,
     [null]: null,
     [undefined]: undefined,
-    parse: b => {
-      if (b === "true") return true
-      if (b === "false") return false
-      return b
-    },
+    true: true,
+    false: false,
   },
 }
