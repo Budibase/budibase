@@ -1,8 +1,10 @@
 const CouchDB = require("../../db")
+const csvParser = require("../../utilities/csvParser")
 const {
   getRecordParams,
   getModelParams,
   generateModelID,
+  generateRecordID,
 } = require("../../db/utils")
 
 exports.fetch = async function(ctx) {
@@ -22,11 +24,12 @@ exports.find = async function(ctx) {
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
+  const { dataImport, ...rest } = ctx.request.body
   const modelToSave = {
     type: "model",
     _id: generateModelID(),
     views: {},
-    ...ctx.request.body,
+    ...rest,
   }
 
   // rename record fields when table column is renamed
@@ -77,6 +80,18 @@ exports.save = async function(ctx) {
     }
   }
 
+  if (dataImport && dataImport.path) {
+    // Populate the table with records imported from CSV in a bulk update
+    const data = await csvParser.transform(dataImport)
+
+    for (let row of data) {
+      row._id = generateRecordID(modelToSave._id)
+      row.modelId = modelToSave._id
+    }
+
+    await db.bulkDocs(data)
+  }
+
   ctx.status = 200
   ctx.message = `Model ${ctx.request.body.name} saved successfully.`
   ctx.body = modelToSave
@@ -111,4 +126,13 @@ exports.destroy = async function(ctx) {
 
   ctx.status = 200
   ctx.message = `Model ${ctx.params.modelId} deleted.`
+}
+
+exports.validateCSVSchema = async function(ctx) {
+  const { file, schema = {} } = ctx.request.body
+  const result = await csvParser.parse(file.path, schema)
+  ctx.body = {
+    schema: result,
+    path: file.path,
+  }
 }
