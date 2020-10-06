@@ -1,7 +1,7 @@
 <script>
   import { FILE_TYPES } from "./fileTypes"
 
-  export let files
+  export let files = []
   export let height = "70"
   export let width = "70"
 </script>
