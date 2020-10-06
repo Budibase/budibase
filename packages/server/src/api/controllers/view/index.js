@@ -1,7 +1,7 @@
 const CouchDB = require("../../../db")
 const viewTemplate = require("./viewBuilder")
 const fs = require("fs")
-const path = require("path")
+const { join } = require("../../../utilities/sanitisedPath")
 const os = require("os")
 const exporters = require("./exporters")
 
@@ -105,7 +105,7 @@ const controller = {
 
     const filename = `${view.name}.${format}`
 
-    fs.writeFileSync(path.join(os.tmpdir(), filename), exportedFile)
+    fs.writeFileSync(join(os.tmpdir(), filename), exportedFile)
 
     ctx.body = {
       url: `/api/views/export/download/${filename}`,
@@ -116,7 +116,7 @@ const controller = {
     const filename = ctx.params.fileName
 
     ctx.attachment(filename)
-    ctx.body = fs.createReadStream(path.join(os.tmpdir(), filename))
+    ctx.body = fs.createReadStream(join(os.tmpdir(), filename))
   },
 }
 
