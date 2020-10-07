@@ -27,3 +27,12 @@ exports.join = function(...args) {
 exports.resolve = function(...args) {
   return path.resolve(...sanitiseArgs(args))
 }
+
+/**
+ * Sanitise a single string
+ * @param string input string to sanitise
+ * @returns {string} the final sanitised string
+ */
+exports.sanitise = function(string) {
+  return sanitiseArgs([string])[0]
+}
