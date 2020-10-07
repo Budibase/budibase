@@ -1,7 +1,7 @@
 // Custom renderers to handle special types
 // https://www.ag-grid.com/javascript-grid-cell-rendering-components/
 
-import AttachmentList from '../attachments/AttachmentList.svelte'
+import AttachmentCell from './AttachmentCell/Button.svelte'
 
 export const booleanRenderer = (params) => {
     const toggle = (e) => {
@@ -18,11 +18,9 @@ export const booleanRenderer = (params) => {
 export const attachmentRenderer = (params) => {
     let container = document.createElement("div")
 
-    const app = new AttachmentList({
+    const attachment = new AttachmentCell({
         target: container,
         props: {
-            // assuming App.svelte contains something like
-            // `export let answer`:
             files: params.value || [],
         }
     });

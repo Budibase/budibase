@@ -31,6 +31,7 @@
     const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
     model = await jsonModel.json()
     const { schema } = model
+    console.log(schema)
     if (!isEmpty(datasource)) {
       data = await fetchData(datasource)
       columnDefs = Object.keys(schema).map((key, i) => {
@@ -43,7 +44,7 @@
           hide: shouldHideField(key),
           sortable: true,
           editable:
-            schema[key].type !== "boolean" || schema[key].type !== "attachment",
+            schema[key].type !== "boolean" && schema[key].type !== "attachment",
           cellRenderer: renderers.get(schema[key].type),
           autoHeight: schema[key].type === "attachment",
         }
