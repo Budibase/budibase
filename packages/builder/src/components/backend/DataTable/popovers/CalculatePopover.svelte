@@ -76,7 +76,7 @@
 
   .input-group-row {
     display: grid;
-    grid-template-columns: auto 1fr 20px 1fr;
+    grid-template-columns: auto 1fr;
     gap: var(--spacing-s);
     align-items: center;
   }
