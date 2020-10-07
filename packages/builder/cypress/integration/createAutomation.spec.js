@@ -28,7 +28,7 @@ context("Create a automation", () => {
     })
 
     // Create action
-    cy.get("[data-cy=SAVE_RECORD]").click()
+    cy.get("[data-cy=CREATE_RECORD]").click()
     cy.get("[data-cy=automation-block-setup]").within(() => {
       cy.get("select")
         .first()

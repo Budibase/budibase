@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte"
+  import { fade } from "svelte/transition"
   import fsort from "fast-sort"
   import getOr from "lodash/fp/getOr"
   import { store, backendUiStore } from "builderStore"
@@ -8,7 +9,7 @@
   import LinkedRecord from "./LinkedRecord.svelte"
   import AttachmentList from "./AttachmentList.svelte"
   import TablePagination from "./TablePagination.svelte"
-  import { DeleteRecordModal, CreateEditRecordModal } from "./modals"
+  import Spinner from "components/common/Spinner.svelte"
   import RowPopover from "./popovers/Row.svelte"
   import ColumnPopover from "./popovers/Column.svelte"
   import ViewPopover from "./popovers/View.svelte"
@@ -26,14 +27,17 @@
   let headers = []
   let currentPage = 0
   let search
+  let loading
 
   $: {
     if (
       $backendUiStore.selectedView &&
       $backendUiStore.selectedView.name.startsWith("all_")
     ) {
+      loading = true
       api.fetchDataForView($backendUiStore.selectedView).then(records => {
         data = records || []
+        loading = false
       })
     }
   }
@@ -60,7 +64,14 @@
 
 <section>
   <div class="table-controls">
-    <h2 class="title">{$backendUiStore.selectedModel.name}</h2>
+    <h2 class="title">
+      <span>{$backendUiStore.selectedModel.name}</span>
+      {#if loading}
+        <div transition:fade>
+          <Spinner size="10" />
+        </div>
+      {/if}
+    </h2>
     <div class="popovers">
       <ColumnPopover />
       {#if Object.keys($backendUiStore.selectedModel.schema).length > 0}
@@ -123,6 +134,12 @@
     font-weight: 600;
     text-rendering: optimizeLegibility;
     text-transform: capitalize;
+    display: flex;
+    align-items: center;
+  }
+
+  .title > span {
+    margin-right: var(--spacing-xs);
   }
 
   table {

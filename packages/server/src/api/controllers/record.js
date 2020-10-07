@@ -1,6 +1,9 @@
 const CouchDB = require("../../db")
 const validateJs = require("validate.js")
-const newid = require("../../db/newid")
+const { getRecordParams, generateRecordID } = require("../../db/utils")
+const { cloneDeep } = require("lodash")
+
+const MODEL_VIEW_BEGINS_WITH = "all_model:"
 
 function emitEvent(eventType, ctx, record) {
   let event = {
@@ -29,9 +32,11 @@ validateJs.extend(validateJs.validators.datetime, {
 
 exports.patch = async function (ctx) {
   const db = new CouchDB(ctx.user.instanceId)
-  const record = await db.get(ctx.params.id)
+  let record = await db.get(ctx.params.id)
   const model = await db.get(record.modelId)
   const patchfields = ctx.request.body
+
+  record = coerceRecordValues(record, model)
 
   for (let key in patchfields) {
     if (!model.schema[key]) continue
@@ -64,14 +69,88 @@ exports.save = async function (ctx) {
   if (ctx.request.body.type === 'delete') {
     await bulkDelete(ctx)
   } else {
-    await saveRecords(ctx)
+  }
+  exports.save = async function (ctx) {
+    const db = new CouchDB(ctx.user.instanceId)
+    let record = ctx.request.body
+    record.modelId = ctx.params.modelId
+
+    if (!record._rev && !record._id) {
+      record._id = generateRecordID(record.modelId)
+    }
+
+    const model = await db.get(record.modelId)
+
+    record = coerceRecordValues(record, model)
+
+    const validateResult = await validate({
+      record,
+      model,
+    })
+
+    if (!validateResult.valid) {
+      ctx.status = 400
+      ctx.body = {
+        status: 400,
+        errors: validateResult.errors,
+      }
+      return
+    }
+
+    const existingRecord = record._rev && (await db.get(record._id))
+
+    if (existingRecord) {
+      const response = await db.put(record)
+      record._rev = response.rev
+      record.type = "record"
+      ctx.body = record
+      ctx.status = 200
+      ctx.message = `${model.name} updated successfully.`
+      return
+    }
+
+    record.type = "record"
+    const response = await db.post(record)
+    record._rev = response.rev
+
+    // create links in other tables
+    for (let key in record) {
+      if (model.schema[key] && model.schema[key].type === "link") {
+        const linked = await db.allDocs({
+          include_docs: true,
+          keys: record[key],
+        })
+
+        // add this record to the linked records in attached models
+        const linkedDocs = linked.rows.map(row => {
+          const doc = row.doc
+          return {
+            ...doc,
+            [model.name]: doc[model.name]
+              ? [...doc[model.name], record._id]
+              : [record._id],
+          }
+        })
+
+        await db.bulkDocs(linkedDocs)
+      }
+    }
   }
 }
 
 exports.fetchView = async function (ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   const { stats, group, field } = ctx.query
-  const response = await db.query(`database/${ctx.params.viewName}`, {
+  const viewName = ctx.params.viewName
+
+  // if this is a model view being looked for just transfer to that
+  if (viewName.indexOf(MODEL_VIEW_BEGINS_WITH) === 0) {
+    ctx.params.modelId = viewName.substring(4)
+    await exports.fetchModelRecords(ctx)
+    return
+  }
+
+  const response = await db.query(`database/${viewName}`, {
     include_docs: !stats,
     group,
   })
@@ -92,9 +171,11 @@ exports.fetchView = async function (ctx) {
 
 exports.fetchModelRecords = async function (ctx) {
   const db = new CouchDB(ctx.user.instanceId)
-  const response = await db.query(`database/all_${ctx.params.modelId}`, {
-    include_docs: true,
-  })
+  const response = await db.allDocs(
+    getRecordParams(ctx.params.modelId, null, {
+      include_docs: true,
+    })
+  )
   ctx.body = response.rows.map(row => row.doc)
 }
 
@@ -131,6 +212,23 @@ exports.destroy = async function (ctx) {
   emitEvent(`record:delete`, ctx, record)
 }
 
+async function bulkDelete(ctx) {
+  const { records } = ctx.request.body
+  const db = new CouchDB(ctx.user.instanceId)
+
+  await db.bulkDocs(
+    records.map(record => ({ ...record, _deleted: true }), (err, res) => {
+      if (err) {
+        ctx.status = 500
+      } else {
+        records.forEach(record => {
+          emitEvent(`record:delete`, ctx, record)
+        })
+        ctx.status = 200
+      }
+    }))
+}
+
 exports.validate = async function (ctx) {
   const errors = await validate({
     instanceId: ctx.user.instanceId,
@@ -157,89 +255,49 @@ async function validate({ instanceId, modelId, record, model }) {
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-async function bulkDelete(ctx) {
-  const { records } = ctx.request.body
-  const db = new CouchDB(ctx.user.instanceId)
+function coerceRecordValues(rec, model) {
+  const record = cloneDeep(rec)
+  for (let [key, value] of Object.entries(record)) {
+    const field = model.schema[key]
+    if (!field) continue
 
-  await db.bulkDocs(
-    records.map(record => ({ ...record, _deleted: true }), (err, res) => {
-      if (err) {
-        ctx.status = 500
-      } else {
-        records.forEach(record => {
-          emitEvent(`record:delete`, ctx, record)
-        })
-        ctx.status = 200
-      }
-    }))
+    // eslint-disable-next-line no-prototype-builtins
+    if (TYPE_TRANSFORM_MAP[field.type].hasOwnProperty(value)) {
+      record[key] = TYPE_TRANSFORM_MAP[field.type][value]
+    } else if (TYPE_TRANSFORM_MAP[field.type].parse) {
+      record[key] = TYPE_TRANSFORM_MAP[field.type].parse(value)
+    }
+  }
+  return record
 }
 
-async function saveRecords(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
-  const record = ctx.request.body
-  record.modelId = ctx.params.modelId
-
-  if (!record._rev && !record._id) {
-    record._id = newid()
-  }
-
-  const model = await db.get(record.modelId)
-
-  const validateResult = await validate({
-    record,
-    model,
-  })
-
-  if (!validateResult.valid) {
-    ctx.status = 400
-    ctx.body = {
-      status: 400,
-      errors: validateResult.errors,
-    }
-    return
-  }
-
-  const existingRecord = record._rev && (await db.get(record._id))
-
-  if (existingRecord) {
-    const response = await db.put(record)
-    record._rev = response.rev
-    record.type = "record"
-    ctx.body = record
-    ctx.status = 200
-    ctx.message = `${model.name} updated successfully.`
-    return
-  }
-
-  record.type = "record"
-  const response = await db.post(record)
-  record._rev = response.rev
-
-  // create links in other tables
-  for (let key in record) {
-    if (model.schema[key] && model.schema[key].type === "link") {
-      const linked = await db.allDocs({
-        include_docs: true,
-        keys: record[key],
-      })
-
-      // add this record to the linked records in attached models
-      const linkedDocs = linked.rows.map(row => {
-        const doc = row.doc
-        return {
-          ...doc,
-          [model.name]: doc[model.name]
-            ? [...doc[model.name], record._id]
-            : [record._id],
-        }
-      })
-
-      await db.bulkDocs(linkedDocs)
-    }
-  }
-
-  emitEvent(`record:save`, ctx, record)
-  ctx.body = record
-  ctx.status = 200
-  ctx.message = `${model.name} created successfully`
+const TYPE_TRANSFORM_MAP = {
+  string: {
+    "": "",
+    [null]: "",
+    [undefined]: undefined,
+  },
+  number: {
+    "": null,
+    [null]: null,
+    [undefined]: undefined,
+    parse: n => parseFloat(n),
+  },
+  datetime: {
+    "": null,
+    [undefined]: undefined,
+    [null]: null,
+  },
+  attachment: {
+    "": [],
+    [null]: [],
+    [undefined]: undefined,
+  },
+  boolean: {
+    "": null,
+    [null]: null,
+    [undefined]: undefined,
+    true: true,
+    false: false,
+  },
 }

@@ -8,7 +8,7 @@ context('Create a Table', () => {
         cy.createTable('dog')
 
         // Check if Table exists
-        cy.get('.title').should('have.text', 'dog')
+        cy.get('.title').should('contain.text', 'dog')
     })
 
     it('adds a new column to the table', () => {

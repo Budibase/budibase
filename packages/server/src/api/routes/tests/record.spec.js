@@ -38,7 +38,7 @@ describe("/records", () => {
 
   const createRecord = async r => 
     await request
-      .post(`/api/${model._id}/records`)
+      .post(`/api/${r ? r.modelId : record.modelId}/records`)
       .send(r || record)
       .set(defaultHeaders(app._id, instance._id))
       .expect('Content-Type', /json/)
@@ -151,6 +151,95 @@ describe("/records", () => {
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(404)
+    })
+
+    it("record values are coerced", async () => {
+      const str = {type:"string", constraints: { type: "string", presence: false }}
+      const attachment = {type:"attachment", constraints: { type: "array", presence: false }}
+      const bool = {type:"boolean", constraints: { type: "boolean", presence: false }}
+      const number = {type:"number", constraints: { type: "number", presence: false }}
+      const datetime = {type:"datetime", constraints: { type: "string", presence: false, datetime: {earliest:"", latest: ""}  }}
+
+      model = await createModel(request, app._id, instance._id, {
+        name: "TestModel2",
+        type: "model",
+        key: "name",
+        schema: {
+          name: str,
+          stringUndefined: str,
+          stringNull: str,
+          stringString: str,
+          numberEmptyString: number,
+          numberNull: number,
+          numberUndefined: number,
+          numberString: number,
+          datetimeEmptyString: datetime,
+          datetimeNull: datetime,
+          datetimeUndefined: datetime,
+          datetimeString: datetime,
+          datetimeDate: datetime,
+          boolNull: bool,
+          boolEmpty: bool,
+          boolUndefined: bool,
+          boolString: bool,
+          boolBool: bool,
+          attachmentNull : attachment,
+          attachmentUndefined : attachment,
+          attachmentEmpty : attachment,
+        },
+      })
+
+      record = {
+        name: "Test Record",
+        stringUndefined: undefined,
+        stringNull: null,
+        stringString: "i am a string",
+        numberEmptyString: "",
+        numberNull: null,
+        numberUndefined: undefined,
+        numberString: "123",
+        numberNumber: 123,
+        datetimeEmptyString: "",
+        datetimeNull: null,
+        datetimeUndefined: undefined,
+        datetimeString: "1984-04-20T00:00:00.000Z",
+        datetimeDate: new Date("1984-04-20"),
+        boolNull: null,
+        boolEmpty: "",
+        boolUndefined: undefined,
+        boolString: "true",
+        boolBool: true,
+        modelId: model._id,
+        attachmentNull : null,
+        attachmentUndefined : undefined,
+        attachmentEmpty : "",
+      }
+
+      const id = (await createRecord(record)).body._id
+
+      const saved = (await loadRecord(id)).body
+
+      expect(saved.stringUndefined).toBe(undefined)
+      expect(saved.stringNull).toBe("")
+      expect(saved.stringString).toBe("i am a string")
+      expect(saved.numberEmptyString).toBe(null)
+      expect(saved.numberNull).toBe(null)
+      expect(saved.numberUndefined).toBe(undefined)
+      expect(saved.numberString).toBe(123)
+      expect(saved.numberNumber).toBe(123)
+      expect(saved.datetimeEmptyString).toBe(null)
+      expect(saved.datetimeNull).toBe(null)
+      expect(saved.datetimeUndefined).toBe(undefined)
+      expect(saved.datetimeString).toBe(new Date(record.datetimeString).toISOString())
+      expect(saved.datetimeDate).toBe(record.datetimeDate.toISOString())
+      expect(saved.boolNull).toBe(null)
+      expect(saved.boolEmpty).toBe(null)
+      expect(saved.boolUndefined).toBe(undefined)
+      expect(saved.boolString).toBe(true)
+      expect(saved.boolBool).toBe(true)
+      expect(saved.attachmentNull).toEqual([])
+      expect(saved.attachmentUndefined).toBe(undefined)
+      expect(saved.attachmentEmpty).toEqual([])
     })
   })
 
