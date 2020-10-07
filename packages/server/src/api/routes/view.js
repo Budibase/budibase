@@ -3,6 +3,7 @@ const viewController = require("../controllers/view")
 const recordController = require("../controllers/record")
 const authorized = require("../../middleware/authorized")
 const { BUILDER, READ_VIEW } = require("../../utilities/accessLevels")
+const usage = require("../../middleware/usageQuota")
 
 const router = Router()
 
@@ -13,8 +14,13 @@ router
     recordController.fetchView
   )
   .get("/api/views", authorized(BUILDER), viewController.fetch)
-  .delete("/api/views/:viewName", authorized(BUILDER), viewController.destroy)
-  .post("/api/views", authorized(BUILDER), viewController.save)
+  .delete(
+    "/api/views/:viewName",
+    authorized(BUILDER),
+    usage,
+    viewController.destroy
+  )
+  .post("/api/views", authorized(BUILDER), usage, viewController.save)
   .post("/api/views/export", authorized(BUILDER), viewController.exportView)
   .get(
     "/api/views/export/download/:fileName",
