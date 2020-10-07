@@ -3,7 +3,7 @@ const CouchDB = require("../../db")
 const ClientDb = require("../../db/clientDb")
 const bcrypt = require("../../utilities/bcrypt")
 const environment = require("../../environment")
-const { apiKeyTable } = require("../../db/dynamoClient")
+const { getAPIKey } = require("../../utilities/usageQuota")
 const { generateUserID } = require("../../db/utils")
 
 exports.authenticate = async ctx => {
@@ -55,7 +55,7 @@ exports.authenticate = async ctx => {
     }
     // if in cloud add the user api key
     if (environment.CLOUD) {
-      payload.apiKey = await apiKeyTable.get({ primary: ctx.user.appId })
+      payload.apiKey = getAPIKey(ctx.user.appId)
     }
 
     const token = jwt.sign(payload, ctx.config.jwtSecret, {
