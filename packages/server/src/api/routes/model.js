@@ -14,6 +14,11 @@ router
     modelController.find
   )
   .post("/api/models", authorized(BUILDER), usage, modelController.save)
+  .post(
+    "/api/models/csv/validate",
+    authorized(BUILDER),
+    modelController.validateCSVSchema
+  )
   .delete(
     "/api/models/:modelId/:revId",
     authorized(BUILDER),

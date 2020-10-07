@@ -24,6 +24,7 @@
     )
 
   function saveView() {
+    if (!view.calculation) view.calculation = "stats"
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
     onClosed()
@@ -34,14 +35,15 @@
 <div class="actions">
   <h5>Calculate</h5>
   <div class="input-group-row">
-    <p>The</p>
+    <!-- <p>The</p>
     <Select secondary thin bind:value={view.calculation}>
       <option value="">Choose an option</option>
       {#each CALCULATIONS as calculation}
         <option value={calculation.key}>{calculation.name}</option>
       {/each}
     </Select>
-    <p>of</p>
+    <p>of</p> -->
+    <p>The statistics of</p>
     <Select secondary thin bind:value={view.field}>
       <option value="">Choose an option</option>
       {#each fields as field}
@@ -74,7 +76,7 @@
 
   .input-group-row {
     display: grid;
-    grid-template-columns: 30px 1fr 20px 1fr;
+    grid-template-columns: auto 1fr;
     gap: var(--spacing-s);
     align-items: center;
   }

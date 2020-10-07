@@ -2,6 +2,7 @@ const CouchDB = require("../../db")
 const validateJs = require("validate.js")
 const linkRecords = require("../../db/linkedRecords")
 const { getRecordParams, generateRecordID } = require("../../db/utils")
+const { cloneDeep } = require("lodash")
 
 const MODEL_VIEW_BEGINS_WITH = "all_model:"
 
@@ -21,6 +22,7 @@ exports.patch = async function(ctx) {
   let record = await db.get(ctx.params.id)
   const model = await db.get(record.modelId)
   const patchfields = ctx.request.body
+  record = coerceRecordValues(record, model)
 
   for (let key of Object.keys(patchfields)) {
     if (!model.schema[key]) continue
@@ -74,6 +76,8 @@ exports.save = async function(ctx) {
   const existingRecord = ctx.preExisting
 
   const model = await db.get(record.modelId)
+
+  record = coerceRecordValues(record, model)
 
   const validateResult = await validate({
     record,
@@ -284,4 +288,51 @@ exports.fetchEnrichedRecord = async function(ctx) {
   }
   ctx.body = record
   ctx.status = 200
+}
+
+function coerceRecordValues(rec, model) {
+  const record = cloneDeep(rec)
+  for (let [key, value] of Object.entries(record)) {
+    const field = model.schema[key]
+    if (!field) continue
+
+    // eslint-disable-next-line no-prototype-builtins
+    if (TYPE_TRANSFORM_MAP[field.type].hasOwnProperty(value)) {
+      record[key] = TYPE_TRANSFORM_MAP[field.type][value]
+    } else if (TYPE_TRANSFORM_MAP[field.type].parse) {
+      record[key] = TYPE_TRANSFORM_MAP[field.type].parse(value)
+    }
+  }
+  return record
+}
+
+const TYPE_TRANSFORM_MAP = {
+  string: {
+    "": "",
+    [null]: "",
+    [undefined]: undefined,
+  },
+  number: {
+    "": null,
+    [null]: null,
+    [undefined]: undefined,
+    parse: n => parseFloat(n),
+  },
+  datetime: {
+    "": null,
+    [undefined]: undefined,
+    [null]: null,
+  },
+  attachment: {
+    "": [],
+    [null]: [],
+    [undefined]: undefined,
+  },
+  boolean: {
+    "": null,
+    [null]: null,
+    [undefined]: undefined,
+    true: true,
+    false: false,
+  },
 }

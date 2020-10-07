@@ -8,6 +8,7 @@
   import Table from "./Table.svelte"
 
   let data = []
+  let loading = false
 
   $: title = $backendUiStore.selectedModel.name
   $: schema = $backendUiStore.selectedModel.schema
@@ -19,14 +20,16 @@
   // Fetch records for specified model
   $: {
     if ($backendUiStore.selectedView?.name?.startsWith("all_")) {
+      loading = true
       api.fetchDataForView($backendUiStore.selectedView).then(records => {
         data = records || []
+        loading = false
       })
     }
   }
 </script>
 
-<Table {title} {schema} {data} allowEditing={true}>
+<Table {title} {schema} {data} allowEditing={true} {loading}>
   <CreateColumnButton />
   {#if Object.keys(schema).length > 0}
     <CreateRowButton />

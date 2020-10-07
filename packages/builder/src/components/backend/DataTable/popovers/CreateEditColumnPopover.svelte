@@ -34,6 +34,7 @@
   $: modelOptions = $backendUiStore.models.filter(
     model => model._id !== $backendUiStore.draftModel._id
   )
+  $: required = !!field?.constraints?.presence
 
   async function saveColumn() {
     backendUiStore.update(state => {
@@ -53,6 +54,12 @@
     field.type = type
     field.constraints = constraints
   }
+
+  function onChangeRequired(e) {
+    const req = e.target.checked
+    field.constraints.presence = req ? { allowEmpty: false } : false
+    required = req
+  }
 </script>
 
 <div class="actions">
@@ -71,8 +78,8 @@
 
   {#if field.type !== 'link'}
     <Toggle
-      checked={!field.constraints.presence.allowEmpty}
-      on:change={e => (field.constraints.presence.allowEmpty = !e.target.checked)}
+      checked={required}
+      on:change={onChangeRequired}
       thin
       text="Required" />
   {/if}

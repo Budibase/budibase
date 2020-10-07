@@ -1,11 +1,9 @@
 <script>
-  import { Input, Button } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { Input } from "@budibase/bbui"
   import api from "builderStore/api"
-  import posthog from "posthog-js"
   import analytics from "analytics"
 
-  let keys = { budibase: "", sendGrid: "" }
+  let keys = { budibase: "" }
 
   async function updateKey([key, value]) {
     if (key === "budibase") {
@@ -40,12 +38,6 @@
     edit
     value={keys.budibase}
     label="Budibase API Key" />
-  <Input
-    on:save={e => updateKey(['sendgrid', e.detail])}
-    thin
-    edit
-    value={keys.sendgrid}
-    label="Sendgrid API Key" />
 </div>
 
 <style>
