@@ -1,10 +1,17 @@
 const CouchDB = require("pouchdb")
 const PouchDB = require("../../../db")
-const { uploadAppAssets, fetchTemporaryCredentials } = require("./aws")
+const {
+  uploadAppAssets,
+  verifyDeployment,
+  determineDeploymentAllowed,
+} = require("./aws")
+const { getRecordParams } = require("../../db/utils")
 
 function replicate(local, remote) {
   return new Promise((resolve, reject) => {
-    const replication = local.sync(remote)
+    const replication = local.sync(remote, {
+      retry: true,
+    })
 
     replication.on("complete", () => resolve())
     replication.on("error", err => reject(err))
@@ -31,13 +38,37 @@ async function replicateCouch({ instanceId, clientId, credentials }) {
   await Promise.all(replications)
 }
 
+async function getCurrentInstanceQuota(instanceId) {
+  const db = new PouchDB(instanceId)
+  const records = await db.allDocs(
+    getRecordParams("", null, {
+      include_docs: true,
+    })
+  )
+  const existingRecords = records.rows.length
+  return {
+    records: existingRecords,
+  }
+}
+
 exports.deployApp = async function(ctx) {
   try {
     const clientAppLookupDB = new PouchDB("client_app_lookup")
     const { clientId } = await clientAppLookupDB.get(ctx.user.appId)
 
+    const instanceQuota = await getCurrentInstanceQuota(ctx.user.instanceId)
+    const credentials = await verifyDeployment({
+      instanceId: ctx.user.instanceId,
+      appId: ctx.user.appId,
+      quota: instanceQuota,
+    })
+
     ctx.log.info(`Uploading assets for appID ${ctx.user.appId} assets to s3..`)
-    const credentials = await fetchTemporaryCredentials()
+
+    if (credentials.errors) {
+      ctx.throw(500, credentials.errors)
+      return
+    }
 
     await uploadAppAssets({
       clientId,
