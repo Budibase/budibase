@@ -127,8 +127,7 @@
   .topnavitem {
     cursor: pointer;
     color: var(--grey-5);
-    margin: 0px 00px 0px 20px;
-    padding-top: 4px;
+    margin: 0 0 0 20px;
     font-weight: 500;
     font-size: var(--font-size-m);
     height: 100%;
@@ -149,8 +148,7 @@
   .topnavitemright {
     cursor: pointer;
     color: var(--grey-7);
-    margin: 0px 20px 0px 0px;
-    padding-top: 4px;
+    margin: 0 20px 0 0;
     font-weight: 500;
     font-size: 1rem;
     height: 100%;

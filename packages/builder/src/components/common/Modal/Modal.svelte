@@ -25,8 +25,10 @@
   export let showConfirmButton = true
   export let onConfirm = () => {}
   export let visible = false
+  export let loading = false
 
-  let loading = false
+  let confirmLoading = false
+  $: disabled = loading || confirmLoading || $$restProps.disabled
 
   function show() {
     if (visible) {
@@ -89,7 +91,7 @@
                     <Button
                       primary
                       {...$$restProps}
-                      disabled={$$restProps.disabled || loading}
+                      {disabled}
                       on:click={confirm}>
                       {confirmText}
                     </Button>
