@@ -51,7 +51,7 @@
     color: var(--grey-6);
   }
   i.live {
-    color: var(--purple);
+    color: var(--ink);
   }
 
   li {
