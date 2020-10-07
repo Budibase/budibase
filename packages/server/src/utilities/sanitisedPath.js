@@ -1,9 +1,11 @@
 const path = require("path")
 
+const regex = new RegExp(/:(?![\\/])/g)
+
 function sanitiseArgs(args) {
   let sanitised = []
   for (let arg of args) {
-    sanitised.push(arg.replace(":", ""))
+    sanitised.push(arg.replace(regex, ""))
   }
   return sanitised
 }
