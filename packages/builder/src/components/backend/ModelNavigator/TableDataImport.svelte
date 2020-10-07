@@ -154,7 +154,7 @@
     overflow: hidden;
     border-radius: var(--border-radius-s);
     color: var(--ink);
-    padding: var(--spacing-s) var(--spacing-l);
+    padding: var(--spacing-m) var(--spacing-l);
     transition: all 0.2s ease 0s;
     display: inline-flex;
     text-rendering: optimizeLegibility;
@@ -169,6 +169,8 @@
     width: 100%;
     background-color: var(--grey-2);
     font-size: var(--font-size-xs);
+    line-height: normal;
+    border: var(--border-transparent);
   }
 
   .omit-button {
