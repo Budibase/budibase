@@ -120,12 +120,6 @@
             {/each}
           </Select>
         {/if}
-        <Select secondary thin bind:value={filter.key}>
-          <option value="">Choose an option</option>
-          {#each fields as field}
-            <option value={field}>{field}</option>
-          {/each}
-        </Select>
         <Select
           secondary
           thin
