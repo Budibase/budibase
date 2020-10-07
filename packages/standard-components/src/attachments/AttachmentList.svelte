@@ -1,18 +1,12 @@
 <script>
-  import { cssVars } from "../cssVars.js"
   import { FILE_TYPES } from "./fileTypes"
 
   export let files
-  export let height = 70
-  export let width = 70
-
-  $: cssVariables = {
-    width,
-    height,
-  }
+  export let height
+  export let width
 </script>
 
-<div class="file-list" use:cssVars={cssVariables}>
+<div class="file-list">
   {#each files as file}
     <a href={file.url} target="_blank">
       <div class="file">
@@ -63,7 +57,7 @@
   }
 
   span {
-    width: 75px;
+    width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
   }
