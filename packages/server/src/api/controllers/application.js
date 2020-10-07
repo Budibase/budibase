@@ -3,12 +3,12 @@ const ClientDb = require("../../db/clientDb")
 const { getPackageForBuilder, buildPage } = require("../../utilities/builder")
 const env = require("../../environment")
 const instanceController = require("./instance")
-const { resolve, join } = require("path")
 const { copy, exists, readFile, writeFile } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const sqrl = require("squirrelly")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const fs = require("fs-extra")
+const { join, resolve } = require("../../utilities/sanitisedPath")
 const { promisify } = require("util")
 const chmodr = require("chmodr")
 const { generateAppID, getAppParams } = require("../../db/utils")
@@ -116,7 +116,7 @@ exports.delete = async function(ctx) {
   const db = new CouchDB(ClientDb.name(getClientId(ctx)))
   const app = await db.get(ctx.params.applicationId)
   const result = await db.remove(app)
-  await fs.rmdir(`${budibaseAppsDir()}/${ctx.params.applicationId}`, {
+  await fs.rmdir(join(budibaseAppsDir(), ctx.params.applicationId), {
     recursive: true,
   })
 
