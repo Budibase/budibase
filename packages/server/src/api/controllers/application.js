@@ -135,7 +135,7 @@ const createEmptyAppPackage = async (ctx, app) => {
   )
 
   const appsFolder = budibaseAppsDir()
-  const newAppFolder = resolve(join(appsFolder, app._id))
+  const newAppFolder = resolve(appsFolder, app._id)
 
   if (await exists(newAppFolder)) {
     ctx.throw(400, "App folder already exists for this application")
