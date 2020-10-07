@@ -11,18 +11,11 @@ const controller = {
     const designDoc = await db.get("_design/database")
     const response = []
 
-    for (let name in designDoc.views) {
-      if (
-        !name.startsWith("all") &&
-        name !== "by_type" &&
-        name !== "by_username" &&
-        name !== "by_automation_trigger"
-      ) {
-        response.push({
-          name,
-          ...designDoc.views[name],
-        })
-      }
+    for (let name of Object.keys(designDoc.views)) {
+      response.push({
+        name,
+        ...designDoc.views[name],
+      })
     }
 
     ctx.body = response

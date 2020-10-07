@@ -2,25 +2,41 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
+  import Spinner from "components/common/Spinner.svelte"
+  import {
+    DropdownMenu,
+    Button,
+    Label,
+    Heading,
+    Icon,
+    Input,
+    Select,
+    Dropzone,
+    Spacer,
+  } from "@budibase/bbui"
+  import TableDataImport from "./TableDataImport.svelte"
+  import api from "builderStore/api"
   import analytics from "analytics"
-
-  export let table
 
   let anchor
   let dropdown
   let name
+  let dataImport
+  let loading
 
   async function saveTable() {
+    loading = true
     const model = await backendUiStore.actions.models.save({
       name,
-      schema: {},
+      schema: dataImport.schema || {},
+      dataImport,
     })
     notifier.success(`Table ${name} created successfully.`)
     $goto(`./model/${model._id}`)
+    analytics.captureEvent("Table Created", { name })
     name = ""
     dropdown.hide()
-    analytics.captureEvent("Table Created", { name })
+    loading = false
   }
 
   const onClosed = () => {
@@ -35,25 +51,38 @@
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <div class="container">
     <h5>Create Table</h5>
+    <Label grey extraSmall>Name</Label>
     <Input
       data-cy="table-name-input"
       placeholder="Table Name"
       thin
       bind:value={name} />
+    <Spacer medium />
+    <Label grey extraSmall>Create Table from CSV (Optional)</Label>
+    <TableDataImport bind:dataImport />
   </div>
   <footer>
     <div class="button-margin-3">
       <Button secondary on:click={onClosed}>Cancel</Button>
     </div>
     <div class="button-margin-4">
-      <Button primary on:click={saveTable}>Save</Button>
+      <Button
+        disabled={!name || (dataImport && !dataImport.valid)}
+        primary
+        on:click={saveTable}>
+        <span style={`margin-right: ${loading ? '10px' : 0};`}>Save</span>
+        {#if loading}
+          <Spinner size="10" />
+        {/if}
+      </Button>
     </div>
   </footer>
 </DropdownMenu>
 
 <style>
   h5 {
-    margin-bottom: var(--spacing-l);
+    margin-bottom: var(--spacing-m);
+    margin-top: 0;
     font-weight: 500;
   }
 

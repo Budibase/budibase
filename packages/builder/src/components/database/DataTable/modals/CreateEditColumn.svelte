@@ -24,11 +24,7 @@
   }
 
   let originalName = field.name
-
-  $: required =
-    field.constraints &&
-    field.constraints.presence &&
-    !field.constraints.presence.allowEmpty
+  $: required = field && field.constraints && field.constraints.presence
 
   async function saveColumn() {
     backendUiStore.update(state => {
@@ -50,6 +46,14 @@
     field.type = type
     field.constraints = constraints
   }
+
+  const getPresence = required => (required ? { allowEmpty: false } : false)
+
+  const requiredChanged = ev => {
+    const req = ev.target.checked
+    field.constraints.presence = req ? { allowEmpty: false } : false
+    required = req
+  }
 </script>
 
 <div class="actions">
@@ -68,10 +72,7 @@
   <div class="info">
     <div class="field">
       <label>Required</label>
-      <input
-        type="checkbox"
-        bind:checked={required}
-        on:change={() => (field.constraints.presence.allowEmpty = required)} />
+      <input type="checkbox" checked={required} on:change={requiredChanged} />
     </div>
 
     {#if field.type === 'string' && field.constraints}
