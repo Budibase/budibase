@@ -1,4 +1,4 @@
-const { resolve } = require("path")
+const { resolve } = require("./sanitisedPath")
 const { cwd } = require("process")
 const stream = require("stream")
 const fetch = require("node-fetch")
