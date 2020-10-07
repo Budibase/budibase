@@ -50,7 +50,6 @@ context("Create a automation", () => {
 
     // Activate Automation
     cy.get("[data-cy=activate-automation]").click()
-    cy.contains("Add Record").should("be.visible")
     cy.get(".stop-button.highlighted").should("be.visible")
   })
 
