@@ -68,6 +68,7 @@ Cypress.Commands.add("createTable", tableName => {
   cy.contains("Create New Table").click()
   cy.get(".menu-container")
     .get("input")
+    .first()
     .type(tableName)
 
   cy.contains("Save").click()
