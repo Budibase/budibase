@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CSV Parser transformation transforms a CSV file into JSON 1`] = `
+Array [
+  Object {
+    "Address": "5 Sesame Street",
+    "Age": 4324,
+    "Name": "Bert",
+  },
+  Object {
+    "Address": "1 World Trade Center",
+    "Age": 34,
+    "Name": "Ernie",
+  },
+  Object {
+    "Address": "44 Second Avenue",
+    "Age": 23423,
+    "Name": "Big Bird",
+  },
+]
+`;

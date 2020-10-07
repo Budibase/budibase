@@ -1,9 +1,11 @@
 const CouchDB = require("../../db")
 const linkRecords = require("../../db/linkedRecords")
+const csvParser = require("../../utilities/csvParser")
 const {
   getRecordParams,
   getModelParams,
   generateModelID,
+  generateRecordID,
 } = require("../../db/utils")
 
 exports.fetch = async function(ctx) {
@@ -24,11 +26,12 @@ exports.find = async function(ctx) {
 exports.save = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
+  const { dataImport, ...rest } = ctx.request.body
   const modelToSave = {
     type: "model",
     _id: generateModelID(),
     views: {},
-    ...ctx.request.body,
+    ...rest,
   }
   // get the model in its previous state for differencing
   let oldModel
@@ -89,6 +92,19 @@ exports.save = async function(ctx) {
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitModel(`model:save`, instanceId, modelToSave)
+
+  if (dataImport && dataImport.path) {
+    // Populate the table with records imported from CSV in a bulk update
+    const data = await csvParser.transform(dataImport)
+
+    for (let row of data) {
+      row._id = generateRecordID(modelToSave._id)
+      row.modelId = modelToSave._id
+    }
+
+    await db.bulkDocs(data)
+  }
+
   ctx.status = 200
   ctx.message = `Model ${ctx.request.body.name} saved successfully.`
   ctx.body = modelToSave
@@ -123,4 +139,13 @@ exports.destroy = async function(ctx) {
     ctx.eventEmitter.emitModel(`model:delete`, instanceId, modelToDelete)
   ctx.status = 200
   ctx.message = `Model ${ctx.params.modelId} deleted.`
+}
+
+exports.validateCSVSchema = async function(ctx) {
+  const { file, schema = {} } = ctx.request.body
+  const result = await csvParser.parse(file.path, schema)
+  ctx.body = {
+    schema: result,
+    path: file.path,
+  }
 }

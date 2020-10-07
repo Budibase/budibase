@@ -172,10 +172,17 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
+<<<<<<< HEAD
+"@budibase/client@^0.1.23":
+  version "0.1.23"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.23.tgz#d72d2b26ff3a2d99f2b6c1b71020b1136880937d"
+  integrity sha512-pZdwdCq5kKLZfZYxasIHBNnqu3BFFrqJLxXMFs0K9ddCVZ0UNons59nn73nFGbeRgNVdWp6yyW71XyMQr8NOEw==
+=======
 "@budibase/client@^0.1.24":
   version "0.1.24"
   resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.24.tgz#d2967c050af9f559791e0189137f80e621ea2d69"
   integrity sha512-2Plu9PpF3TOPTDkAAIkPFEjZFolGkty0Sc0vbLk8lee4yqeonBj5paXT44O6kpxLFW47YjN5VCA4+EnwGl358w==
+>>>>>>> master
   dependencies:
     deep-equal "^2.0.1"
     mustache "^4.0.1"
@@ -3463,11 +3470,14 @@ is-typedarray@^1.0.0, is-typedarray@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/is-typedarray/-/is-typedarray-1.0.0.tgz#e479c80858df0c1b11ddda6940f96011fcda4a9a"
 
+<<<<<<< HEAD
+=======
 is-utf8@^0.2.0:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/is-utf8/-/is-utf8-0.2.1.tgz#4b0da1442104d1b336340e80797e865cf39f7d72"
   integrity sha1-Sw2hRCEE0bM2NA6AeX6GXPOffXI=
 
+>>>>>>> master
 is-weakmap@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/is-weakmap/-/is-weakmap-2.0.1.tgz#5008b59bdc43b698201d18f62b37b2ca243e8cf2"
