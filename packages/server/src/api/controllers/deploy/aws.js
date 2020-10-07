@@ -1,4 +1,5 @@
 const fs = require("fs")
+const { join } = require("../../../utilities/sanitisedPath")
 const AWS = require("aws-sdk")
 const fetch = require("node-fetch")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
@@ -108,7 +109,7 @@ exports.uploadAppAssets = async function({
     },
   })
 
-  const appAssetsPath = `${budibaseAppsDir()}/${appId}/public`
+  const appAssetsPath = join(budibaseAppsDir(), appId, "public")
 
   const appPages = fs.readdirSync(appAssetsPath)
 
@@ -116,7 +117,7 @@ exports.uploadAppAssets = async function({
 
   for (let page of appPages) {
     // Upload HTML, CSS and JS for each page of the web app
-    walkDir(`${appAssetsPath}/${page}`, function(filePath) {
+    walkDir(join(appAssetsPath, page), function(filePath) {
       const appAssetUpload = prepareUploadForS3({
         file: {
           path: filePath,
