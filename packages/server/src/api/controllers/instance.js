@@ -2,6 +2,7 @@ const fs = require("fs")
 const CouchDB = require("../../db")
 const client = require("../../db/clientDb")
 const newid = require("../../db/newid")
+const { join } = require("../../utilities/sanitisedPath")
 const { downloadTemplate } = require("../../utilities/templates")
 
 exports.create = async function(ctx) {
@@ -34,7 +35,9 @@ exports.create = async function(ctx) {
   // replicate the template data to the instance DB
   if (template) {
     const templatePath = await downloadTemplate(...template.key.split("/"))
-    const dbDumpReadStream = fs.createReadStream(`${templatePath}/db/dump.txt`)
+    const dbDumpReadStream = fs.createReadStream(
+      join(templatePath, "db", "dump.txt")
+    )
     const { ok } = await db.load(dbDumpReadStream)
     if (!ok) {
       ctx.throw(500, "Error loading database dump from template.")
