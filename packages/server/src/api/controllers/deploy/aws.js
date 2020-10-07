@@ -21,11 +21,21 @@ async function invalidateCDN(cfDistribution, appId) {
     .promise()
 }
 
-exports.fetchTemporaryCredentials = async function() {
+/**
+ * Verifies the users API key and
+ * Verifies that the deployment fits within the quota of the user,
+ * @param {String} instanceId - instanceId being deployed
+ * @param {String} appId - appId being deployed
+ * @param {quota} quota - current quota being changed with this application
+ */
+exports.verifyDeployment = async function({ instanceId, appId, quota }) {
   const response = await fetch(process.env.DEPLOYMENT_CREDENTIALS_URL, {
     method: "POST",
     body: JSON.stringify({
       apiKey: process.env.BUDIBASE_API_KEY,
+      instanceId,
+      appId,
+      quota,
     }),
   })
 
