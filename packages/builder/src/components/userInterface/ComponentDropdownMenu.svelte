@@ -69,18 +69,8 @@
   }
 
   const copyComponent = () => {
-    store.update(s => {
-      const parent = getParent(s.currentPreviewItem.props, component)
-      const copiedComponent = cloneDeep(component)
-      walkProps(copiedComponent, p => {
-        p._id = uuid()
-      })
-      parent._children = [...parent._children, copiedComponent]
-      saveCurrentPreviewItem(s)
-      s.currentComponentInfo = copiedComponent
-      regenerateCssForCurrentScreen(s)
-      return s
-    })
+    storeComponentForCopy(false)
+    pasteComponent("below")
   }
 
   const deleteComponent = () => {

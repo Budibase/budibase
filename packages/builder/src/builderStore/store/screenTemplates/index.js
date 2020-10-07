@@ -1,12 +1,22 @@
-import editRecordScreen from "./editRecordScreen"
+import newRecordScreen from "./newRecordScreen"
+import recordDetailScreen from "./recordDetailScreen"
 import { generateNewIdsForComponent } from "../../storeUtils"
+import { uuid } from "builderStore/uuid"
 
-const allTemplates = models => [...editRecordScreen(models)]
+const allTemplates = models => [
+  ...newRecordScreen(models),
+  ...recordDetailScreen(models),
+]
 
 // allows us to apply common behaviour to all create() functions
 const createTemplateOverride = (frontendState, create) => () => {
   const screen = create()
-  generateNewIdsForComponent(screen.props, frontendState)
+  for (let component in screen.props.children) {
+    generateNewIdsForComponent(component, frontendState)
+  }
+  screen.props._id = uuid()
+  screen.name = screen.props._id
+  screen.route = screen.route.toLowerCase()
   return screen
 }
 
