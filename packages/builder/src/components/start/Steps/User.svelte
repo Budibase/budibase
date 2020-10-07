@@ -19,7 +19,7 @@
     label="Password"
     name="password"
     placeholder="Password"
-    type="pasword"
+    type="password"
     error={blurred.password && validationErrors.password} />
   <Select label="Access Level" secondary name="accessLevelId">
     <option value="ADMIN">Admin</option>

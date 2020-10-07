@@ -1,6 +1,7 @@
 <script>
   import { goto, params } from "@sveltech/routify"
   import { onMount } from "svelte"
+  import { fade } from "svelte/transition"
   import fsort from "fast-sort"
   import getOr from "lodash/fp/getOr"
   import { store, backendUiStore } from "builderStore"
@@ -16,6 +17,7 @@
   import ColumnHeaderPopover from "./popovers/ColumnPopover.svelte"
   import EditRowPopover from "./popovers/RowPopover.svelte"
   import CalculationPopover from "./buttons/CalculateButton.svelte"
+  import Spinner from "components/common/Spinner.svelte"
 
   const ITEMS_PER_PAGE = 10
 
@@ -23,6 +25,7 @@
   export let data = []
   export let title
   export let allowEditing = false
+  export let loading = false
 
   let currentPage = 0
 
@@ -50,7 +53,14 @@
 
 <section>
   <div class="table-controls">
-    <h2 class="title">{title}</h2>
+    <h2 class="title">
+      <span>{title}</span>
+      {#if loading}
+        <div transition:fade>
+          <Spinner size="10" />
+        </div>
+      {/if}
+    </h2>
     <div class="popovers">
       <slot />
     </div>
@@ -123,6 +133,13 @@
     text-rendering: optimizeLegibility;
     text-transform: capitalize;
     margin-top: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .title > span {
+    margin-right: var(--spacing-xs);
   }
 
   table {
