@@ -2,6 +2,7 @@
   import { store, backendUiStore } from "builderStore"
   import { Input, Select, Button, Spacer } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
+  import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
   let screens
@@ -35,9 +36,11 @@
     <Select bind:value={template} secondary>
       <option value="">Choose an Option</option>
       <option value="none">No Template</option>
-      {#each templates as templates}
-        <option value={template}>{template.name}</option>
-      {/each}
+      {#if templates}
+        {#each templates as template}
+          <option value={template}>{template.name}</option>
+        {/each}
+      {/if}
     </Select>
   </div>
 </div>

@@ -9,6 +9,11 @@
     dialog.show()
   }
 
+  const finished = () => {
+    dialog.hide()
+    template = undefined
+  }
+
   let dialog
   let template
 </script>
@@ -19,12 +24,12 @@
 
   {#if template === 'none'}
     <div transition:slide={{ delay: 0, duration: 300 }}>
-      <NoTemplate on:finished={dialog.hide} />
+      <NoTemplate on:finished={finished} />
     </div>
   {:else}
-    <div transition:fade={{ delay: 100, duration: 200 }}>
+    <div transition:fade={{ delay: 0, duration: 100 }}>
       <ChooseTemplate
-        on:finished={dialog.hide}
+        on:finished={finished}
         on:next={() => (template = 'none')} />
     </div>
   {/if}

@@ -274,6 +274,17 @@
 		"context": "model",
 		"children": true,
 		"data": true,
+		"baseComponent": true,
+		"props": {
+			"model": "models"
+		}
+	},
+	"newrecord": {
+		"description": "Loads a record, using an ID in the url",
+		"context": "model",
+		"children": true,
+		"data": true,
+		"baseComponent": true,
 		"props": {
 			"model": "models"
 		}
@@ -715,7 +726,7 @@
 				"default": "div"
 			}
 		},
-		"container": true,
+		"baseComponent": true,
 		"tags": [
 			"div",
 			"container",
