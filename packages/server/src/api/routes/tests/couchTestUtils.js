@@ -49,13 +49,13 @@ exports.createModel = async (request, appId, instanceId, model) => {
     key: "name",
     schema: {
       name: {
-        type: "text",
+        type: "string",
         constraints: {
           type: "string",
         },
       },
       description: {
-        type: "text",
+        type: "string",
         constraints: {
           type: "string",
         },

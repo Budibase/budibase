@@ -2,9 +2,8 @@
   import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
   import api from "builderStore/api"
-  import { Select, Label } from "@budibase/bbui"
+  import { Select, Label, Multiselect } from "@budibase/bbui"
   import { capitalise } from "../../helpers"
-  import MultiSelect from "components/common/MultiSelect.svelte"
 
   export let schema
   export let linkedRecords = []
@@ -19,8 +18,7 @@
   async function fetchRecords(linkedModelId) {
     const FETCH_RECORDS_URL = `/api/${linkedModelId}/records`
     const response = await api.get(FETCH_RECORDS_URL)
-    const result = await response.json()
-    return result
+    return await response.json()
   }
 
   function getPrettyName(record) {
@@ -37,15 +35,14 @@
   </Label>
 {:else}
   {#await promise then records}
-    <MultiSelect
-      thin
+    <Multiselect
       secondary
       bind:value={linkedRecords}
       {label}
-      placeholder="Choose an option">
+      placeholder="Choose some options">
       {#each records as record}
         <option value={record._id}>{getPrettyName(record)}</option>
       {/each}
-    </MultiSelect>
+    </Multiselect>
   {/await}
 {/if}

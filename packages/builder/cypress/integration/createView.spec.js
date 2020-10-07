@@ -50,13 +50,11 @@ context("Create a View", () => {
 
   it("creates a stats calculation view based on age", () => {
     cy.contains("Calculate").click()
+    // we may reinstate this - have commented this dropdown for now as there is only one option
+    //cy.get(".menu-container").find("select").first().select("Statistics")
     cy.get(".menu-container")
       .find("select")
-      .first()
-      .select("Statistics")
-    cy.get(".menu-container")
-      .find("select")
-      .eq(1)
+      .eq(0)
       .select("age")
     cy.contains("Save").click()
     cy.get("thead th div").should($headers => {
