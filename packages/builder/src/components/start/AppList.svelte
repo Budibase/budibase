@@ -19,7 +19,7 @@
 </script>
 
 <div class="root">
-  <Heading medium black>Your Apps</Heading>
+  <Heading lh medium black>Your Apps</Heading>
   {#await promise}
     <div class="spinner-container">
       <Spinner size="30" />
@@ -47,9 +47,5 @@
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     grid-gap: var(--layout-m);
     justify-content: start;
-  }
-
-  .root {
-    margin: 20px 80px;
   }
 </style>

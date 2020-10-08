@@ -8,7 +8,12 @@
   let store = _bb.store
   let target
 
-  // this function should only get called when in builder preview mode
+  async function fetchModel(id) {
+    const FETCH_MODEL_URL = `/api/models/${id}`
+    const response = await _bb.api.get(FETCH_MODEL_URL)
+    return await response.json()
+  }
+
   async function fetchFirstRecord() {
     const FETCH_RECORDS_URL = `/api/views/all_${model}`
     const response = await _bb.api.get(FETCH_RECORDS_URL)
@@ -38,6 +43,14 @@
     }
 
     if (record) {
+      // Fetch model schema so we can check for linked records
+      const model = await fetchModel(record.modelId)
+      for (let key of Object.keys(model.schema)) {
+        if (model.schema[key].type === "link") {
+          record[key] = Array.isArray(record[key]) ? record[key].length : 0
+        }
+      }
+
       _bb.attachChildren(target, {
         context: record,
       })

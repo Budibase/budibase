@@ -42,8 +42,8 @@
     height: 24px;
     width: 24px;
     background: var(--grey-4);
-    right: 7px;
-    bottom: 7px;
+    right: var(--spacing-s);
+    bottom: 9px;
   }
   button:hover {
     background: var(--grey-5);

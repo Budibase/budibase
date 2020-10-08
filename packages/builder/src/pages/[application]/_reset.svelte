@@ -1,13 +1,9 @@
 <script>
-  import Modal from "svelte-simple-modal"
   import { store, automationStore, backendUiStore } from "builderStore"
   import SettingsLink from "components/settings/Link.svelte"
   import { get } from "builderStore/api"
-
-  import { fade } from "svelte/transition"
-  import { isActive, goto, layout, url } from "@sveltech/routify"
-
-  import { SettingsIcon, PreviewIcon } from "components/common/Icons/"
+  import { isActive, goto, layout } from "@sveltech/routify"
+  import { PreviewIcon } from "components/common/Icons/"
 
   // Get Package and set store
   export let application
@@ -47,50 +43,46 @@
   }
 </script>
 
-<Modal>
-  <div class="root">
+<div class="root">
+  <div class="top-nav">
+    <div class="topleftnav">
+      <button class="home-logo">
+        <img
+          src="/_builder/assets/bb-logo.svg"
+          alt="budibase icon"
+          on:click={() => $goto(`/`)} />
+      </button>
 
-    <div class="top-nav">
-      <div class="topleftnav">
-        <button class="home-logo">
-          <img
-            src="/_builder/assets/bb-logo.svg"
-            alt="budibase icon"
-            on:click={() => $goto(`/`)} />
-        </button>
-
-        <!-- This gets all indexable subroutes and sticks them in the top nav. -->
-        {#each $layout.children as { path, title }}
-          <span
-            class:active={$isActive(path)}
-            class="topnavitem"
-            on:click={topItemNavigate(path)}>
-            {title}
-          </span>
-        {/each}
-      </div>
-      <div class="toprightnav">
-        <SettingsLink />
+      <!-- This gets all indexable subroutes and sticks them in the top nav. -->
+      {#each $layout.children as { path, title }}
         <span
-          class:active={false}
-          class="topnavitemright"
-          on:click={() => window.open(`/${application}`)}>
-          <PreviewIcon />
+          class:active={$isActive(path)}
+          class="topnavitem"
+          on:click={topItemNavigate(path)}>
+          {title}
         </span>
-      </div>
+      {/each}
     </div>
-
-    {#await promise}
-      <!-- This should probably be some kind of loading state? -->
-      <div />
-    {:then}
-      <slot />
-    {:catch error}
-      <p>Something went wrong: {error.message}</p>
-    {/await}
-
+    <div class="toprightnav">
+      <SettingsLink />
+      <span
+        class:active={false}
+        class="topnavitemright"
+        on:click={() => window.open(`/${application}`)}>
+        <PreviewIcon />
+      </span>
+    </div>
   </div>
-</Modal>
+
+  {#await promise}
+    <!-- This should probably be some kind of loading state? -->
+    <div />
+  {:then _}
+    <slot />
+  {:catch error}
+    <p>Something went wrong: {error.message}</p>
+  {/await}
+</div>
 
 <style>
   .root {
@@ -135,10 +127,9 @@
   .topnavitem {
     cursor: pointer;
     color: var(--grey-5);
-    margin: 0px 00px 0px 20px;
-    padding-top: 4px;
+    margin: 0 0 0 20px;
     font-weight: 500;
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-m);
     height: 100%;
     align-items: center;
     box-sizing: border-box;
@@ -157,8 +148,7 @@
   .topnavitemright {
     cursor: pointer;
     color: var(--grey-7);
-    margin: 0px 20px 0px 0px;
-    padding-top: 4px;
+    margin: 0 20px 0 0;
     font-weight: 500;
     font-size: 1rem;
     height: 100%;
@@ -181,10 +171,6 @@
     height: 40px;
     padding: 0px 10px 8px 0;
     align-items: center;
-  }
-
-  .home-logo:hover {
-    color: var(--hovercolor);
   }
 
   .home-logo:active {

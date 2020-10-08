@@ -1,5 +1,4 @@
 <script>
-  import { MoreIcon } from "components/common/Icons"
   import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import api from "builderStore/api"
@@ -10,7 +9,7 @@
 
   let confirmDeleteDialog
   let dropdown
-  let buttonForDropdown
+  let anchor
 
   const hideDropdown = () => {
     dropdown.hide()
@@ -34,14 +33,17 @@
   }
 </script>
 
-<div class="root boundary" on:click|stopPropagation={() => {}}>
-  <button on:click={() => dropdown.show()} bind:this={buttonForDropdown}>
-    <MoreIcon />
-  </button>
-  <DropdownMenu bind:this={dropdown} anchor={buttonForDropdown}>
-    <ul class="menu" on:click={hideDropdown}>
-      <li class="item" on:click={() => confirmDeleteDialog.show()}>
-        <i class="icon ri-delete-bin-2-line" />
+<div
+  bind:this={anchor}
+  class="root boundary"
+  on:click|stopPropagation={() => {}}>
+  <div class="icon" on:click={() => dropdown.show()}>
+    <i class="ri-more-line" />
+  </div>
+  <DropdownMenu bind:this={dropdown} {anchor} align="left">
+    <ul on:click={hideDropdown}>
+      <li on:click={() => confirmDeleteDialog.show()}>
+        <i class="ri-delete-bin-2-line" />
         Delete
       </li>
     </ul>
@@ -71,41 +73,40 @@
     outline: none;
   }
 
-  .menu {
+  ul {
     z-index: 100000;
     overflow: visible;
-    padding: 12px 0px;
-    border-radius: 5px;
-    margin: 0;
+    margin: var(--spacing-s) 0;
+    border-radius: var(--border-radius-s);
+    padding: 0;
   }
 
-  .menu li {
-    border-style: none;
-    background-color: transparent;
-    list-style-type: none;
-    padding: 4px 16px;
-    margin: 0;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .item {
+  li {
     display: flex;
-    align-items: center;
-    font-size: 14px;
-  }
-
-  .icon {
-    margin-right: 8px;
-  }
-
-  .menu li:not(.disabled) {
-    cursor: pointer;
-    color: var(--grey-7);
-  }
-
-  .menu li:not(.disabled):hover {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
     color: var(--ink);
-    background-color: var(--grey-1);
+    padding: var(--spacing-s) var(--spacing-m);
+    margin: auto 0;
+    align-items: center;
+    cursor: pointer;
+  }
+  li:not(.disabled):hover {
+    background-color: var(--grey-2);
+  }
+  li:active {
+    color: var(--blue);
+  }
+  li i {
+    margin-right: 8px;
+    font-size: var(--font-size-s);
+  }
+  li.disabled {
+    color: var(--grey-4);
+    cursor: default;
+  }
+
+  .icon i {
+    font-size: 16px;
   }
 </style>
