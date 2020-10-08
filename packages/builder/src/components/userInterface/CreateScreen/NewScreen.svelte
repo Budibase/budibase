@@ -1,6 +1,7 @@
 <script>
   import { store, backendUiStore } from "builderStore"
   import { Input, Button, Spacer, Select, Modal } from "@budibase/bbui"
+  import getTemplates from "builderStore/store/screenTemplates"
   import { createEventDispatcher } from "svelte"
   import { some } from "lodash/fp"
 
@@ -11,17 +12,13 @@
     dialog.show()
   }
 
-  const finished = () => {
-    dialog.hide()
-    template = undefined
-  }
-
   let screens
   let name = ""
   let routeError
   let baseComponent = CONTAINER
   let dialog
-  let template
+  let templateIndex = 0
+  let draftScreen
 
   $: templates = getTemplates($store, $backendUiStore.models)
 
@@ -30,6 +27,24 @@
   $: baseComponents = Object.values($store.components)
     .filter(componentDefinition => componentDefinition.baseComponent)
     .map(c => c._component)
+
+  const templateChanged = ev => {
+    const newTemplateIndex = ev.target.value
+    if (!newTemplateIndex) return
+
+    draftScreen = templates[newTemplateIndex].create()
+    if (draftScreen.props._instanceName) {
+      name = draftScreen.props._instanceName
+    }
+
+    if (draftScreen.props._component) {
+      baseComponent = draftScreen.props._component
+    }
+
+    if (draftScreen.route) {
+      route = draftScreen.route
+    }
+  }
 
   const save = () => {
     if (!route) {
@@ -44,20 +59,21 @@
 
     if (routeError) return false
 
-    store.createScreen({
-      screenName: name,
-      route,
-      baseComponent,
-    })
+    draftScreen.props._instanceName = name
+    draftScreen.props._component = baseComponent
+    draftScreen.route = route
 
+    store.createScreen(draftScreen)
+
+    finished()
+  }
+
+  const finished = () => {
+    templateIndex = 0
     name = ""
     route = ""
     baseComponent = CONTAINER
-    dispatch("finished")
-  }
-
-  const cancel = () => {
-    dispatch("finished")
+    dialog.hide()
   }
 
   const routeNameExists = route => {
@@ -90,12 +106,10 @@
 
   <div class="bb-margin-xl">
     <label>Choose a Template</label>
-    <Select bind:value={template} secondary>
-      <option value="">Choose an Option</option>
-      <option value="none">No Template</option>
+    <Select bind:value={templateIndex} secondary on:change={templateChanged}>
       {#if templates}
-        {#each templates as template}
-          <option value={template}>{template.name}</option>
+        {#each templates as template, index}
+          <option value={index}>{template.name}</option>
         {/each}
       {/if}
     </Select>
@@ -127,7 +141,7 @@
   <Spacer extraLarge />
 
   <div data-cy="create-screen-footer" class="modal-footer">
-    <Button secondary medium on:click={cancel}>Cancel</Button>
+    <Button secondary medium on:click={finished}>Cancel</Button>
     <Button blue medium on:click={save}>Create Screen</Button>
   </div>
 

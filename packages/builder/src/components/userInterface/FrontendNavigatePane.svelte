@@ -3,7 +3,7 @@
   import ComponentsHierarchy from "components/userInterface/ComponentsHierarchy.svelte"
   import PageLayout from "components/userInterface/PageLayout.svelte"
   import PagesList from "components/userInterface/PagesList.svelte"
-  import CreateScreen from "components/userInterface/CreateScreen/CreateScreen.svelte"
+  import NewScreen from "components/userInterface/CreateScreen/NewScreen.svelte"
 
   const newScreen = () => {
     newScreenPicker.show()
@@ -22,7 +22,7 @@
   <ComponentsHierarchy screens={$store.screens} />
 </div>
 
-<CreateScreen bind:this={newScreenPicker} />
+<NewScreen bind:this={newScreenPicker} />
 
 <style>
   .newscreen {

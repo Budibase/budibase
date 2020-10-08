@@ -1,11 +1,17 @@
 import newRecordScreen from "./newRecordScreen"
 import recordDetailScreen from "./recordDetailScreen"
+import emptyNewRecordScreen from "./emptyNewRecordScreen"
+import emptyContainerScreen from "./emptyContainerScreen"
+import emptyRecordDetailScreen from "./emptyRecordDetailScreen"
 import { generateNewIdsForComponent } from "../../storeUtils"
 import { uuid } from "builderStore/uuid"
 
 const allTemplates = models => [
+  emptyContainerScreen,
   ...newRecordScreen(models),
+  emptyNewRecordScreen,
   ...recordDetailScreen(models),
+  emptyRecordDetailScreen,
 ]
 
 // allows us to apply common behaviour to all create() functions
