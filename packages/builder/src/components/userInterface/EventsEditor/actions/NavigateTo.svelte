@@ -22,7 +22,7 @@
     align-items: baseline;
   }
 
-  .root :global(.relative) {
+  .root :global(> div) {
     flex: 1;
     margin-left: var(--spacing-l);
   }

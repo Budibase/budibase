@@ -1,0 +1,66 @@
+<script>
+  import { Button, Input, Select } from "@budibase/bbui"
+  import { backendUiStore } from "builderStore"
+  import { notifier } from "builderStore/store/notifications"
+
+  export let view = {}
+  export let onClosed
+
+  $: viewModel = $backendUiStore.models.find(
+    ({ _id }) => _id === $backendUiStore.selectedView.modelId
+  )
+  $: fields = viewModel && Object.keys(viewModel.schema)
+
+  function saveView() {
+    backendUiStore.actions.views.save(view)
+    notifier.success(`View ${view.name} saved.`)
+    onClosed()
+  }
+</script>
+
+<div class="actions">
+  <h5>Group</h5>
+  <div class="input-group-row">
+    <p>By</p>
+    <Select secondary thin bind:value={view.groupBy}>
+      <option value="">Choose an option</option>
+      {#each fields as field}
+        <option value={field}>{field}</option>
+      {/each}
+    </Select>
+  </div>
+  <div class="footer">
+    <Button secondary on:click={onClosed}>Cancel</Button>
+    <Button primary on:click={saveView}>Save</Button>
+  </div>
+</div>
+
+<style>
+  .actions {
+    display: grid;
+    grid-gap: var(--spacing-xl);
+  }
+
+  h5 {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-m);
+  }
+
+  .input-group-row {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: var(--spacing-s);
+    align-items: center;
+  }
+
+  p {
+    margin: 0;
+    font-size: var(--font-size-xs);
+  }
+</style>

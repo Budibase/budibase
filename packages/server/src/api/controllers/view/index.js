@@ -1,9 +1,10 @@
 const CouchDB = require("../../../db")
 const viewTemplate = require("./viewBuilder")
 const fs = require("fs")
-const path = require("path")
+const { join } = require("../../../utilities/sanitisedPath")
 const os = require("os")
 const exporters = require("./exporters")
+const { fetchView } = require("../record")
 
 const controller = {
   fetch: async ctx => {
@@ -12,6 +13,10 @@ const controller = {
     const response = []
 
     for (let name of Object.keys(designDoc.views)) {
+      // Only return custom views
+      if (name === "by_link") {
+        continue
+      }
       response.push({
         name,
         ...designDoc.views[name],
@@ -77,35 +82,24 @@ const controller = {
     ctx.message = `View ${ctx.params.viewName} saved successfully.`
   },
   exportView: async ctx => {
-    const db = new CouchDB(ctx.user.instanceId)
     const view = ctx.request.body
     const format = ctx.query.format
 
-    // fetch records for the view
-    const response = await db.query(`database/${view.name}`, {
-      include_docs: !view.calculation,
-      group: view.groupBy,
-    })
-
-    if (view.calculation === "stats") {
-      response.rows = response.rows.map(row => ({
-        group: row.key,
-        field: view.field,
-        ...row.value,
-        avg: row.value.sum / row.value.count,
-      }))
-    } else {
-      response.rows = response.rows.map(row => row.doc)
+    // Fetch view records
+    ctx.params.viewName = view.name
+    ctx.query.group = view.groupBy
+    if (view.field) {
+      ctx.query.stats = true
+      ctx.query.field = view.field
     }
+    await fetchView(ctx)
 
+    // Export part
     let headers = Object.keys(view.schema)
-
     const exporter = exporters[format]
-    const exportedFile = exporter(headers, response.rows)
-
+    const exportedFile = exporter(headers, ctx.body)
     const filename = `${view.name}.${format}`
-
-    fs.writeFileSync(path.join(os.tmpdir(), filename), exportedFile)
+    fs.writeFileSync(join(os.tmpdir(), filename), exportedFile)
 
     ctx.body = {
       url: `/api/views/export/download/${filename}`,
@@ -116,7 +110,7 @@ const controller = {
     const filename = ctx.params.fileName
 
     ctx.attachment(filename)
-    ctx.body = fs.createReadStream(path.join(os.tmpdir(), filename))
+    ctx.body = fs.createReadStream(join(os.tmpdir(), filename))
   },
 }
 

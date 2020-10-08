@@ -6,7 +6,7 @@ const createUser = require("./steps/createUser")
 const environment = require("../environment")
 const download = require("download")
 const fetch = require("node-fetch")
-const path = require("path")
+const { join } = require("../utilities/sanitisedPath")
 const os = require("os")
 const fs = require("fs")
 const Sentry = require("@sentry/node")
@@ -43,7 +43,7 @@ async function downloadPackage(name, version, bundleName) {
     `${AUTOMATION_BUCKET}/${name}/${version}/${bundleName}`,
     AUTOMATION_DIRECTORY
   )
-  return require(path.join(AUTOMATION_DIRECTORY, bundleName))
+  return require(join(AUTOMATION_DIRECTORY, bundleName))
 }
 
 module.exports.getAction = async function(actionName) {
@@ -57,7 +57,7 @@ module.exports.getAction = async function(actionName) {
   const pkg = MANIFEST.packages[actionName]
   const bundleName = buildBundleName(pkg.stepId, pkg.version)
   try {
-    return require(path.join(AUTOMATION_DIRECTORY, bundleName))
+    return require(join(AUTOMATION_DIRECTORY, bundleName))
   } catch (err) {
     return downloadPackage(pkg.stepId, pkg.version, bundleName)
   }
@@ -66,7 +66,7 @@ module.exports.getAction = async function(actionName) {
 module.exports.init = async function() {
   // set defaults
   if (!AUTOMATION_DIRECTORY) {
-    AUTOMATION_DIRECTORY = path.join(os.homedir(), DEFAULT_DIRECTORY)
+    AUTOMATION_DIRECTORY = join(os.homedir(), DEFAULT_DIRECTORY)
   }
   if (!AUTOMATION_BUCKET) {
     AUTOMATION_BUCKET = DEFAULT_BUCKET
