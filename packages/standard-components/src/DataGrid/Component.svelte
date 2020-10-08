@@ -24,29 +24,32 @@
   let model
 
   onMount(async () => {
-    const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
-    model = await jsonModel.json()
-    const { schema } = model
-    console.log(schema)
-    if (!isEmpty(datasource)) {
-      data = await fetchData(datasource)
-      columnDefs = Object.keys(schema).map((key, i) => {
-        return {
-          headerCheckboxSelection: i === 0,
-          checkboxSelection: i === 0,
-          valueSetter: setters.get(schema[key].type),
-          headerName: key.charAt(0).toUpperCase() + key.slice(1),
-          field: key,
-          hide: shouldHideField(key),
-          sortable: true,
-          editable:
-            schema[key].type !== "boolean" && schema[key].type !== "attachment",
-          cellRenderer: renderers.get(schema[key].type),
-          autoHeight: schema[key].type === "attachment",
-        }
-      })
+    if (datasource.modelId) {
+      const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
+      model = await jsonModel.json()
+      const { schema } = model
+      console.log(schema)
+      if (!isEmpty(datasource)) {
+        data = await fetchData(datasource)
+        columnDefs = Object.keys(schema).map((key, i) => {
+          return {
+            headerCheckboxSelection: i === 0,
+            checkboxSelection: i === 0,
+            valueSetter: setters.get(schema[key].type),
+            headerName: key.charAt(0).toUpperCase() + key.slice(1),
+            field: key,
+            hide: shouldHideField(key),
+            sortable: true,
+            editable:
+              schema[key].type !== "boolean" &&
+              schema[key].type !== "attachment",
+            cellRenderer: renderers.get(schema[key].type),
+            autoHeight: schema[key].type === "attachment",
+          }
+        })
+      }
+      dataLoaded = true
     }
-    dataLoaded = true
   })
 
   const shouldHideField = name => {
