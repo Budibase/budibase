@@ -9,6 +9,7 @@
   export let fieldName
 
   let record
+  let title
 
   $: data = record?.[fieldName] ?? []
   $: linkedModelId = data?.length ? data[0].modelId : null
@@ -17,8 +18,15 @@
   )
   $: schema = linkedModel?.schema
   $: model = $backendUiStore.models.find(model => model._id === modelId)
-  $: title = `${record?.[model?.primaryDisplay]} - ${fieldName}`
   $: fetchData(modelId, recordId)
+  $: {
+    let recordLabel = record?.[model?.primaryDisplay]
+    if (recordLabel) {
+      title = `${recordLabel} - ${fieldName}`
+    } else {
+      title = fieldName
+    }
+  }
 
   async function fetchData(modelId, recordId) {
     const QUERY_VIEW_URL = `/api/${modelId}/${recordId}/enrich`
