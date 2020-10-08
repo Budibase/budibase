@@ -119,7 +119,7 @@
     align-items: baseline;
   }
 
-  .root :global(.relative:nth-child(2)) {
+  .root :global(> div:nth-child(2)) {
     grid-column-start: 2;
     grid-column-end: 6;
   }

@@ -7,15 +7,14 @@
   import { get } from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import { Button, Heading } from "@budibase/bbui"
+  import { Button, Heading, Modal } from "@budibase/bbui"
   import TemplateList from "components/start/TemplateList.svelte"
   import analytics from "analytics"
-  import { Modal } from "components/common/Modal"
 
   let promise = getApps()
   let hasKey
   let template
-  let modalVisible = false
+  let modal
 
   async function getApps() {
     const res = await get("/api/applications")
@@ -42,13 +41,13 @@
     }
 
     if (!keys.budibase) {
-      modalVisible = true
+      modal.show()
     }
   }
 
   function selectTemplate(newTemplate) {
     template = newTemplate
-    modalVisible = true
+    modal.show()
   }
 
   checkIfKeysAndApps()
@@ -57,9 +56,7 @@
 <div class="container">
   <div class="header">
     <Heading medium black>Welcome to the Budibase Beta</Heading>
-    <Button primary purple on:click={() => (modalVisible = true)}>
-      Create New Web App
-    </Button>
+    <Button primary purple on:click={modal.show}>Create New Web App</Button>
   </div>
 
   <div class="banner">
@@ -72,11 +69,11 @@
   <TemplateList onSelect={selectTemplate} />
 
   <AppList />
-
-  {#if modalVisible}
-    <CreateAppModal bind:visible={modalVisible} {hasKey} {template} />
-  {/if}
 </div>
+
+<Modal bind:this={modal} padding={false} width="600px">
+  <CreateAppModal {hasKey} {template} />
+</Modal>
 
 <style>
   .container {
