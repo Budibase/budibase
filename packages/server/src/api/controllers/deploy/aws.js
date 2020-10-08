@@ -21,6 +21,27 @@ async function invalidateCDN(cfDistribution, appId) {
     .promise()
 }
 
+exports.updateDeploymentQuota = async function(quota) {
+  const response = await fetch(
+    `${process.env.DEPLOYMENT_CREDENTIALS_URL}/deploy/success`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        apiKey: process.env.BUDIBASE_API_KEY,
+        quota,
+      }),
+    }
+  )
+
+  if (response.status !== 200) {
+    throw new Error(`Error updating deployment quota for app`)
+  }
+
+  const json = await response.json()
+
+  return json
+}
+
 /**
  * Verifies the users API key and
  * Verifies that the deployment fits within the quota of the user,

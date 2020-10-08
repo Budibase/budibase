@@ -3,7 +3,7 @@ const PouchDB = require("../../../db")
 const {
   uploadAppAssets,
   verifyDeployment,
-  determineDeploymentAllowed,
+  updateDeploymentQuota,
 } = require("./aws")
 const { getRecordParams } = require("../../db/utils")
 
@@ -84,6 +84,11 @@ exports.deployApp = async function(ctx) {
       clientId,
       credentials: credentials.couchDbCreds,
     })
+
+    const deployedInstanceQuota = await getCurrentInstanceQuota(
+      ctx.user.instanceId
+    )
+    updateDeploymentQuota(deployedInstanceQuota)
 
     ctx.body = {
       status: "SUCCESS",
