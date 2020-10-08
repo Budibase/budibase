@@ -1,7 +1,7 @@
 <script>
   import { keys, map, includes, filter } from "lodash/fp"
   import EventEditorModal from "./EventEditorModal.svelte"
-  import { Modal } from "components/common/Modal"
+  import { Modal } from "@budibase/bbui"
 
   export const EVENT_TYPE = "event"
   export let component
@@ -47,11 +47,8 @@
   </form>
 </div>
 
-<Modal bind:this={modal}>
-  <EventEditorModal
-    eventOptions={events}
-    event={selectedEvent}
-    on:hide={() => (selectedEvent = null)} />
+<Modal bind:this={modal} width="600px">
+  <EventEditorModal eventOptions={events} event={selectedEvent} />
 </Modal>
 
 <style>

@@ -1,11 +1,7 @@
 <script>
   import { store } from "builderStore"
-  import { pipe } from "components/common/core"
-  import { isRootComponent } from "./pagesParsing/searchComponents"
-  import { splitName } from "./pagesParsing/splitRootComponentName.js"
-  import { Input, Select, Button, Spacer, ModalContent } from "@budibase/bbui"
-  import { find, filter, some, map, includes } from "lodash/fp"
-  import { assign } from "lodash"
+  import { Input, Select, ModalContent } from "@budibase/bbui"
+  import { find, filter, some } from "lodash/fp"
 
   let dialog
   let layoutComponents

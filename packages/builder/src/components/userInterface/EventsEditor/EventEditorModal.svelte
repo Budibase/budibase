@@ -3,21 +3,18 @@
   import {
     TextButton,
     Button,
-    Heading,
     Body,
-    Spacer,
     DropdownMenu,
+    ModalContent,
   } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
   import actionTypes from "./actions"
   import { createEventDispatcher } from "svelte"
-  import { Modal } from "components/common/Modal"
 
   const dispatch = createEventDispatcher()
 
   export let event
-  export let visible
 
   let addActionButton
   let addActionDropdown
@@ -60,12 +57,7 @@
   }
 </script>
 
-<Modal
-  bind:visible
-  title="Actions"
-  wide
-  confirmText="Save"
-  onConfirm={saveEventData}>
+<ModalContent title="Actions" confirmText="Save" onConfirm={saveEventData}>
   <div slot="header">
     <div bind:this={addActionButton}>
       <TextButton text small blue on:click={addActionDropdown.show}>
@@ -121,7 +113,7 @@
   <div slot="footer">
     <a href="https://docs.budibase.com">Learn more about Actions</a>
   </div>
-</Modal>
+</ModalContent>
 
 <style>
   .action-header {
