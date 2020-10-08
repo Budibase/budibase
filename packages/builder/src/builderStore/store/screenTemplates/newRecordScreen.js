@@ -1,6 +1,6 @@
 export default function(models) {
   return models.map(model => ({
-    name: `New ${model.name}`,
+    name: `New Record - ${model.name}`,
     create: () => createScreen(model),
   }))
 }
@@ -8,16 +8,14 @@ export default function(models) {
 const createScreen = model => ({
   props: {
     _id: "f684460e-1f79-42b4-8ffd-1f708bca93ed",
-    _component: "@budibase/standard-components/container",
+    _component: "@budibase/standard-components/newrecord",
     _styles: {
       normal: {},
       hover: {},
       active: {},
       selected: {},
     },
-    className: "",
-    onLoad: [],
-    type: "div",
+    model: model._id,
     _children: [
       {
         _id: "7d1d6b43-b444-46a5-a75c-267fd6b5baf6",

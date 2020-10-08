@@ -1,6 +1,6 @@
 export default function(models) {
   return models.map(model => ({
-    name: `New ${model.name}`,
+    name: `Record Detail - ${model.name}`,
     create: () => createScreen(model),
   }))
 }
@@ -15,9 +15,7 @@ const createScreen = model => ({
       active: {},
       selected: {},
     },
-    className: "",
-    onLoad: [],
-    type: "div",
+    model: model._id,
     _children: [
       {
         _id: "7d1d6b43-b444-46a5-a75c-267fd6b5baf6",
@@ -39,6 +37,6 @@ const createScreen = model => ({
     ],
     _instanceName: `${model.name} Detail`,
   },
-  route: `/${model.name}/new`,
+  route: `/${model.name}/:id`,
   name: "screen-id",
 })
