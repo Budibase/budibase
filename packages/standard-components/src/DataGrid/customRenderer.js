@@ -36,6 +36,9 @@ function attachmentRenderer(params) {
 }
 function dateRenderer(params) {
     const container = document.createElement("div")
+    const toggle = (e) => {
+        params.setValue(e.detail[0][0])
+    }
 
     const datePickerInstance = new DatePicker({
         target: container,
@@ -43,6 +46,8 @@ function dateRenderer(params) {
             value: params.value,
         }
     });
+
+    datePickerInstance.$on('change', toggle)
 
     return container
 }
