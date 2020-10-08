@@ -1,6 +1,5 @@
 <script>
   import { onMount } from "svelte"
-  import { isEmpty } from "lodash/fp"
 
   export let _bb
   export let model
@@ -13,8 +12,17 @@
 
   let target
 
+  async function fetchModel(id) {
+    const FETCH_MODEL_URL = `/api/models/${id}`
+    const response = await _bb.api.get(FETCH_MODEL_URL)
+    return await response.json()
+  }
+
   onMount(async () => {
-    if (!isEmpty(record) && record.model) {
+    if (model) {
+      const modelObj = await fetchModel(modelId)
+      record.modelId = model
+      record._model = modelObj
       _bb.attachChildren(target, {
         context: record,
       })

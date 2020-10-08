@@ -583,23 +583,7 @@ export default {
               icon: "ri-file-edit-line",
               properties: {
                 design: { ...all },
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Title",
-                    key: "title",
-                    control: Input,
-                  },
-                  {
-                    label: "Button Text",
-                    key: "buttonText",
-                    control: Input,
-                  },
-                ],
+                settings: [],
               },
             },
             {
@@ -608,23 +592,7 @@ export default {
               icon: "ri-file-edit-line",
               properties: {
                 design: { ...all },
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Title",
-                    key: "title",
-                    control: Input,
-                  },
-                  {
-                    label: "Button Text",
-                    key: "buttonText",
-                    control: Input,
-                  },
-                ],
+                settings: [],
               },
             },
           ],
