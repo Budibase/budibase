@@ -26,7 +26,6 @@ exports.updateDeploymentQuota = async function(quota) {
   const DEPLOYMENT_SUCCESS_URL =
     process.env.DEPLOYMENT_CREDENTIALS_URL + "deploy/success"
 
-  console.log(DEPLOYMENT_SUCCESS_URL)
   const response = await fetch(DEPLOYMENT_SUCCESS_URL, {
     method: "POST",
     body: JSON.stringify({
