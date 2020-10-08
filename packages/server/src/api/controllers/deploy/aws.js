@@ -22,19 +22,20 @@ async function invalidateCDN(cfDistribution, appId) {
 }
 
 exports.updateDeploymentQuota = async function(quota) {
-  const response = await fetch(
-    `${process.env.DEPLOYMENT_CREDENTIALS_URL}/deploy/success`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        apiKey: process.env.BUDIBASE_API_KEY,
-        quota,
-      }),
-    }
-  )
+  const DEPLOYMENT_SUCCESS_URL =
+    process.env.DEPLOYMENT_CREDENTIALS_URL + "deploy/success"
+
+  console.log(DEPLOYMENT_SUCCESS_URL)
+  const response = await fetch(DEPLOYMENT_SUCCESS_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      apiKey: process.env.BUDIBASE_API_KEY,
+      quota,
+    }),
+  })
 
   if (response.status !== 200) {
-    throw new Error(`Error updating deployment quota for app`)
+    throw new Error(`Error updating deployment quota for API Key`)
   }
 
   const json = await response.json()
@@ -163,30 +164,33 @@ exports.uploadAppAssets = async function({
 
   // Upload file attachments
   const db = new PouchDB(instanceId)
-  const fileUploads = await db.get("_local/fileuploads")
-  if (fileUploads) {
-    for (let file of fileUploads.uploads) {
-      if (file.uploaded) continue
-
-      const attachmentUpload = prepareUploadForS3({
-        file,
-        s3Key: `assets/${appId}/attachments/${file.processedFileName}`,
-        s3,
-        metadata: { accountId },
-      })
-
-      uploads.push(attachmentUpload)
-
-      // mark file as uploaded
-      file.uploaded = true
-    }
-
-    db.put(fileUploads)
+  let fileUploads
+  try {
+    fileUploads = await db.get("_local/fileuploads")
+  } catch (err) {
+    fileUploads = { _id: "_local/fileuploads", uploads: [] }
   }
+
+  for (let file of fileUploads.uploads) {
+    if (file.uploaded) continue
+
+    const attachmentUpload = prepareUploadForS3({
+      file,
+      s3Key: `assets/${appId}/attachments/${file.processedFileName}`,
+      s3,
+      metadata: { accountId },
+    })
+
+    uploads.push(attachmentUpload)
+
+    // mark file as uploaded
+    file.uploaded = true
+  }
+
+  db.put(fileUploads)
 
   try {
     await Promise.all(uploads)
-    // TODO: update dynamoDB with a synopsis of the app deployment for historical purposes
     await invalidateCDN(cfDistribution, appId)
   } catch (err) {
     console.error("Error uploading budibase app assets to s3", err)
