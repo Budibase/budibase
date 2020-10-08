@@ -2,7 +2,7 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import ListItem from "./ListItem.svelte"
-  import CreateTablePopover from "./popovers/CreateTablePopover.svelte"
+  import CreateTableModal from "./modals/CreateTableModal.svelte"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import { Heading } from "@budibase/bbui"
@@ -28,7 +28,7 @@
       <div class="components-list-container">
         <Heading small>Tables</Heading>
         <Spacer medium />
-        <CreateTablePopover />
+        <CreateTableModal />
         <div class="hierarchy-items-container">
           {#each $backendUiStore.models as model}
             <ListItem

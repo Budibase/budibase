@@ -3,21 +3,18 @@
   import {
     TextButton,
     Button,
-    Heading,
     Body,
-    Spacer,
     DropdownMenu,
+    ModalContent,
   } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
   import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
   import actionTypes from "./actions"
   import { createEventDispatcher } from "svelte"
-  import { Modal } from "components/common/Modal"
 
   const dispatch = createEventDispatcher()
 
   export let event
-  export let visible
 
   let addActionButton
   let addActionDropdown
@@ -60,12 +57,7 @@
   }
 </script>
 
-<Modal
-  bind:visible
-  title="Actions"
-  wide
-  confirmText="Save"
-  onConfirm={saveEventData}>
+<ModalContent title="Actions" confirmText="Save" onConfirm={saveEventData}>
   <div slot="header">
     <div bind:this={addActionButton}>
       <TextButton text small blue on:click={addActionDropdown.show}>
@@ -94,9 +86,7 @@
       {#each actions as action, index}
         <div class="action-container">
           <div class="action-header" on:click={selectAction(action)}>
-            <Body extraSmall lh>
-              {index + 1}. {action[EVENT_TYPE_MEMBER_NAME]}
-            </Body>
+            <Body small lh>{index + 1}. {action[EVENT_TYPE_MEMBER_NAME]}</Body>
             <div class="row-expander" class:rotate={action !== selectedAction}>
               <ArrowDownIcon />
             </div>
@@ -121,7 +111,7 @@
   <div slot="footer">
     <a href="https://docs.budibase.com">Learn more about Actions</a>
   </div>
-</Modal>
+</ModalContent>
 
 <style>
   .action-header {
@@ -151,8 +141,7 @@
 
   .actions-container {
     flex: 1;
-    min-height: 0px;
-    padding-bottom: var(--spacing-s);
+    min-height: 0;
     padding-top: 0;
     border: var(--border-light);
     border-width: 0 0 1px 0;
@@ -162,10 +151,6 @@
   .action-container {
     border: var(--border-light);
     border-width: 1px 0 0 0;
-    padding-left: var(--spacing-xl);
-    padding-right: var(--spacing-xl);
-    padding-top: 0;
-    padding-bottom: 0;
   }
 
   .selected-action-container {
