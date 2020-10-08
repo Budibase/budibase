@@ -93,8 +93,4 @@
     margin-right: auto;
     width: 50%;
   }
-
-  .spinner-container {
-    margin-left: var(--spacing-xs);
-  }
 </style>
