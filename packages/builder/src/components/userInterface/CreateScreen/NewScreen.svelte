@@ -1,16 +1,29 @@
 <script>
-  import { store } from "builderStore"
-  import { Input, Button, Spacer, Select } from "@budibase/bbui"
+  import { store, backendUiStore } from "builderStore"
+  import { Input, Button, Spacer, Select, Modal } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { some } from "lodash/fp"
 
   const dispatch = createEventDispatcher()
   const CONTAINER = "@budibase/standard-components/container"
 
+  export const show = () => {
+    dialog.show()
+  }
+
+  const finished = () => {
+    dialog.hide()
+    template = undefined
+  }
+
   let screens
   let name = ""
   let routeError
   let baseComponent = CONTAINER
+  let dialog
+  let template
+
+  $: templates = getTemplates($store, $backendUiStore.models)
 
   $: route = !route && $store.screens.length === 0 ? "*" : route
 
@@ -70,38 +83,55 @@
   }
 </script>
 
-<Spacer extraLarge />
+<Modal bind:this={dialog} minWidth="500px">
 
-<div data-cy="new-screen-dialog">
-  <div class="bb-margin-xl">
-    <Input label="Name" bind:value={name} />
-  </div>
+  <h2>New Screen</h2>
+  <Spacer extraLarge />
 
   <div class="bb-margin-xl">
-    <Input
-      label="Url"
-      error={routeError}
-      bind:value={route}
-      on:change={routeChanged} />
-  </div>
-
-  <div class="bb-margin-xl">
-    <label>Screen Type</label>
-    <Select bind:value={baseComponent} secondary>
-      {#each baseComponents as component}
-        <option value={component}>{componentShortName(component)}</option>
-      {/each}
+    <label>Choose a Template</label>
+    <Select bind:value={template} secondary>
+      <option value="">Choose an Option</option>
+      <option value="none">No Template</option>
+      {#if templates}
+        {#each templates as template}
+          <option value={template}>{template.name}</option>
+        {/each}
+      {/if}
     </Select>
   </div>
+  <div data-cy="new-screen-dialog">
+    <div class="bb-margin-xl">
+      <Input label="Name" bind:value={name} />
+    </div>
 
-</div>
+    <div class="bb-margin-xl">
+      <Input
+        label="Url"
+        error={routeError}
+        bind:value={route}
+        on:change={routeChanged} />
+    </div>
 
-<Spacer extraLarge />
+    <div class="bb-margin-xl">
+      <label>Screen Type</label>
+      <Select bind:value={baseComponent} secondary>
+        {#each baseComponents as component}
+          <option value={component}>{componentShortName(component)}</option>
+        {/each}
+      </Select>
+    </div>
 
-<div data-cy="create-screen-footer" class="modal-footer">
-  <Button secondary medium on:click={cancel}>Cancel</Button>
-  <Button blue medium on:click={save}>Create Screen</Button>
-</div>
+  </div>
+
+  <Spacer extraLarge />
+
+  <div data-cy="create-screen-footer" class="modal-footer">
+    <Button secondary medium on:click={cancel}>Cancel</Button>
+    <Button blue medium on:click={save}>Create Screen</Button>
+  </div>
+
+</Modal>
 
 <style>
   h2 {
