@@ -1,14 +1,10 @@
 <script>
   // Import valueSetters and custom renderers
   import { number } from "./valueSetters"
-  import { booleanRenderer, attachmentRenderer } from "./customRenderer"
+  import renderers from "./customRenderer"
 
   // These maps need to be set up to handle whatever types that are used in the models.
   const setters = new Map([["number", number]])
-  const renderers = new Map([
-    ["boolean", booleanRenderer],
-    ["attachment", attachmentRenderer],
-  ])
 
   import fetchData from "../fetchData.js"
   import { isEmpty } from "lodash/fp"

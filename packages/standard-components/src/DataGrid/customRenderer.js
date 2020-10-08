@@ -2,8 +2,15 @@
 // https://www.ag-grid.com/javascript-grid-cell-rendering-components/
 
 import AttachmentCell from './AttachmentCell/Button.svelte'
+import { DatePicker } from "@budibase/bbui"
 
-export const booleanRenderer = (params) => {
+export default new Map([
+    ["boolean", booleanRenderer],
+    ["attachment", attachmentRenderer],
+    ["datetime", dateRenderer],
+])
+
+function booleanRenderer(params) {
     const toggle = (e) => {
         params.value = !params.value
         params.setValue(e.currentTarget.checked)
@@ -15,13 +22,25 @@ export const booleanRenderer = (params) => {
 
     return input
 }
-export const attachmentRenderer = (params) => {
-    let container = document.createElement("div")
+function attachmentRenderer(params) {
+    const container = document.createElement("div")
 
-    const attachment = new AttachmentCell({
+    const attachmentInstance = new AttachmentCell({
         target: container,
         props: {
             files: params.value || [],
+        }
+    });
+
+    return container
+}
+function dateRenderer(params) {
+    const container = document.createElement("div")
+
+    const datePickerInstance = new DatePicker({
+        target: container,
+        props: {
+            value: params.value,
         }
     });
 
