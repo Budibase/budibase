@@ -35,7 +35,7 @@
   }
 
   function getPrettyName(record) {
-    return record[linkedModel?.primaryDisplay || "_id"]
+    return record[(linkedModel && linkedModel.primaryDisplay) || "_id"]
   }
 </script>
 
