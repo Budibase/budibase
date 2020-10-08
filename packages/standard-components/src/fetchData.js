@@ -4,7 +4,28 @@ export default async function fetchData(datasource) {
   const { isModel, name } = datasource
 
   if (name) {
-    return isModel ? await fetchModelData() : await fetchViewData()
+    const records = isModel ? await fetchModelData() : await fetchViewData()
+
+    // Fetch model schema so we can check for linked records
+    if (records && records.length) {
+      const model = await fetchModel(records[0].modelId)
+      const keys = Object.keys(model.schema)
+      records.forEach(record => {
+        for (let key of keys) {
+          if (model.schema[key].type === "link") {
+            record[key] = Array.isArray(record[key]) ? record[key].length : 0
+          }
+        }
+      })
+    }
+
+    return records
+  }
+
+  async function fetchModel(id) {
+    const FETCH_MODEL_URL = `/api/models/${id}`
+    const response = await api.get(FETCH_MODEL_URL)
+    return await response.json()
   }
 
   async function fetchModelData() {

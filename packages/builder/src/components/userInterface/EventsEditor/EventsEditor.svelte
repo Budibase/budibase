@@ -1,29 +1,14 @@
 <script>
-  import { getContext } from "svelte"
-  import {
-    keys,
-    map,
-    some,
-    includes,
-    cloneDeep,
-    isEqual,
-    sortBy,
-    filter,
-    difference,
-  } from "lodash/fp"
-  import { pipe } from "components/common/core"
-  import Checkbox from "components/common/Checkbox.svelte"
+  import { keys, map, includes, filter } from "lodash/fp"
   import EventEditorModal from "./EventEditorModal.svelte"
-
-  import { PencilIcon } from "components/common/Icons"
-  import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
+  import { Modal } from "@budibase/bbui"
 
   export const EVENT_TYPE = "event"
-
   export let component
 
   let events = []
   let selectedEvent = null
+  let modal
 
   $: {
     events = Object.keys(component)
@@ -35,28 +20,9 @@
       }))
   }
 
-  // Handle create app modal
-  const { open, close } = getContext("simple-modal")
-
   const openModal = event => {
     selectedEvent = event
-    open(
-      EventEditorModal,
-      {
-        eventOptions: events,
-        event: selectedEvent,
-        onClose: () => {
-          close()
-          selectedEvent = null
-        },
-      },
-      {
-        closeButton: false,
-        closeOnEsc: false,
-        styleContent: { padding: 0 },
-        closeOnOuterClick: true,
-      }
-    )
+    modal.show()
   }
 </script>
 
@@ -80,6 +46,10 @@
     {/each}
   </form>
 </div>
+
+<Modal bind:this={modal} width="600px">
+  <EventEditorModal eventOptions={events} event={selectedEvent} />
+</Modal>
 
 <style>
   .root {

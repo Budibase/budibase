@@ -1,5 +1,4 @@
 <script>
-  import Modal from "svelte-simple-modal"
   import { Home as Link } from "@budibase/bbui"
   import {
     AppsIcon,
@@ -7,43 +6,41 @@
     DocumentationIcon,
     CommunityIcon,
     BugIcon,
-  } from "components/common/Icons/"
+  } from "components/common/Icons"
 </script>
 
-<Modal>
-  <div class="root">
-    <div class="ui-nav">
-      <div class="home-logo">
-        <img src="/_builder/assets/budibase-logo.svg" alt="Budibase icon" />
-      </div>
-
-      <div class="nav-section">
-        <Link icon={AppsIcon} title="Apps" href="/" active />
-        <Link
-          icon={HostingIcon}
-          title="Hosting"
-          href="https://portal.budi.live/" />
-        <Link
-          icon={DocumentationIcon}
-          title="Documentation"
-          href="https://docs.budibase.com/" />
-        <Link
-          icon={CommunityIcon}
-          title="Community"
-          href="https://forum.budibase.com/" />
-
-        <Link
-          icon={BugIcon}
-          title="Raise an issue"
-          href="https://github.com/Budibase/budibase" />
-      </div>
+<div class="root">
+  <div class="ui-nav">
+    <div class="home-logo">
+      <img src="/_builder/assets/budibase-logo.svg" alt="Budibase icon" />
     </div>
 
-    <div class="main">
-      <slot />
+    <div class="nav-section">
+      <Link icon={AppsIcon} title="Apps" href="/" active />
+      <Link
+        icon={HostingIcon}
+        title="Hosting"
+        href="https://portal.budi.live/" />
+      <Link
+        icon={DocumentationIcon}
+        title="Documentation"
+        href="https://docs.budibase.com/" />
+      <Link
+        icon={CommunityIcon}
+        title="Community"
+        href="https://forum.budibase.com/" />
+
+      <Link
+        icon={BugIcon}
+        title="Raise an issue"
+        href="https://github.com/Budibase/budibase" />
     </div>
   </div>
-</Modal>
+
+  <div class="main">
+    <slot />
+  </div>
+</div>
 
 <style>
   .root {

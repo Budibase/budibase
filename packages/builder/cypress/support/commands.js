@@ -59,16 +59,21 @@ Cypress.Commands.add("createApp", name => {
 
 Cypress.Commands.add("createTestTableWithData", () => {
   cy.createTable("dog")
-  cy.addColumn("dog", "name", "Plain Text")
+  cy.addColumn("dog", "name", "Text")
   cy.addColumn("dog", "age", "Number")
 })
 
 Cypress.Commands.add("createTable", tableName => {
   // Enter model name
   cy.contains("Create New Table").click()
-  cy.get("[placeholder='Table Name']").type(tableName)
-
-  cy.contains("Save").click()
+  cy.get(".modal").within(() => {
+    cy.get("input")
+      .first()
+      .type(tableName)
+    cy.get(".buttons")
+      .contains("Create")
+      .click()
+  })
   cy.contains(tableName).should("be.visible")
 })
 
@@ -77,25 +82,31 @@ Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
   cy.contains(tableName).click()
   cy.contains("Create New Column").click()
 
-  cy.get("[placeholder=Name]").type(columnName)
-  cy.get("select").select(type)
-
-  cy.contains("Save Column")
-
-  cy.contains("Save").click()
+  // Configure column
+  cy.get(".menu-container").within(() => {
+    cy.get("input")
+      .first()
+      .type(columnName)
+    cy.get("select").select(type)
+    cy.contains("Save").click()
+  })
 })
 
 Cypress.Commands.add("addRecord", values => {
   cy.contains("Create New Row").click()
 
-  for (let i = 0; i < values.length; i++) {
-    cy.get(".actions input")
-      .eq(i)
-      .type(values[i])
-  }
+  cy.get(".modal").within(() => {
+    for (let i = 0; i < values.length; i++) {
+      cy.get("input")
+        .eq(i)
+        .type(values[i])
+    }
 
-  // Save
-  cy.contains("Save").click()
+    // Save
+    cy.get(".buttons")
+      .contains("Create")
+      .click()
+  })
 })
 
 Cypress.Commands.add("createUser", (username, password, accessLevel) => {
@@ -114,7 +125,9 @@ Cypress.Commands.add("createUser", (username, password, accessLevel) => {
     .select(accessLevel)
 
   // Save
-  cy.get(".create-button > button").click()
+  cy.get(".inputs")
+    .contains("Create")
+    .click()
 })
 
 Cypress.Commands.add("addHeadlineComponent", text => {
@@ -138,12 +151,12 @@ Cypress.Commands.add("navigateToFrontend", () => {
 })
 
 Cypress.Commands.add("createScreen", (screenName, route) => {
-  cy.get(".newscreen").click()
-  cy.get("[data-cy=new-screen-dialog] input:first").type(screenName)
-  if (route) {
-    cy.get("[data-cy=new-screen-dialog] input:last").type(route)
-  }
-  cy.get("[data-cy=create-screen-footer]").within(() => {
+  cy.contains("Create New Screen").click()
+  cy.get(".modal").within(() => {
+    cy.get("input:first").type(screenName)
+    if (route) {
+      cy.get("input:last").type(route)
+    }
     cy.contains("Create Screen").click()
   })
   cy.get(".nav-items-container").within(() => {

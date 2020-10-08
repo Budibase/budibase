@@ -1,6 +1,6 @@
 <script>
   import { params, goto } from "@sveltech/routify"
-  import { Input, TextArea, Button } from "@budibase/bbui"
+  import { Input, TextArea, Button, Body } from "@budibase/bbui"
   import { del } from "builderStore/api"
 
   let value = ""
@@ -9,51 +9,50 @@
   async function deleteApp() {
     loading = true
     const id = $params.application
-    const res = await del(`/api/${id}`)
-    const json = await res.json()
-
+    await del(`/api/${id}`)
     loading = false
-    if (res.ok) {
-      $goto("/")
-      return json
-    } else {
-      throw new Error(json)
-    }
+    $goto("/")
   }
 </script>
 
 <div class="background">
-  <p>
-    Type DELETE into the textbox, then click the following button to delete your
-    web app:
-  </p>
+  <Body>
+    Type
+    <b>DELETE</b>
+    into the textbox, then click the following button to delete your entire web
+    app.
+  </Body>
   <Input
     on:change={e => (value = e.target.value)}
     on:input={e => (value = e.target.value)}
     thin
     disabled={loading}
     placeholder="" />
-
-  <Button
-    disabled={value !== 'DELETE' || loading}
-    red
-    wide
-    on:click={deleteApp}>
-    Delete Entire Web App
-  </Button>
+  <div class="buttons">
+    <Button
+      primary
+      disabled={value !== 'DELETE' || loading}
+      red
+      on:click={deleteApp}>
+      Delete Entire App
+    </Button>
+  </div>
 </div>
 
 <style>
   .background {
     display: grid;
-    grid-gap: 16px;
-    border-radius: 5px;
-    padding: 12px 0px;
+    grid-gap: var(--spacing-xl);
   }
-  p {
+  .background :global(p) {
+    line-height: 1.2;
     margin: 0;
   }
-  .background :global(button) {
-    max-width: 100%;
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
   }
 </style>
