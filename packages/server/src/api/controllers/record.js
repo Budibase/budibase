@@ -306,6 +306,16 @@ function coerceRecordValues(rec, model) {
 }
 
 const TYPE_TRANSFORM_MAP = {
+  link: {
+    "": [],
+    [null]: [],
+    [undefined]: undefined,
+  },
+  options: {
+    "": "",
+    [null]: "",
+    [undefined]: undefined,
+  },
   string: {
     "": "",
     [null]: "",
