@@ -8,17 +8,24 @@
   export let schema
   export let linkedRecords = []
 
+  let records = []
+
   $: label = capitalise(schema.name)
   $: linkedModelId = schema.modelId
   $: linkedModel = $backendUiStore.models.find(
     model => model._id === linkedModelId
   )
-  $: promise = fetchRecords(linkedModelId)
+  $: fetchRecords(linkedModelId)
 
   async function fetchRecords(linkedModelId) {
     const FETCH_RECORDS_URL = `/api/${linkedModelId}/records`
-    const response = await api.get(FETCH_RECORDS_URL)
-    return await response.json()
+    try {
+      const response = await api.get(FETCH_RECORDS_URL)
+      records = await response.json()
+    } catch (error) {
+      console.log(error)
+      records = []
+    }
   }
 
   function getPrettyName(record) {
@@ -34,15 +41,13 @@
     table.
   </Label>
 {:else}
-  {#await promise then records}
-    <Multiselect
-      secondary
-      bind:value={linkedRecords}
-      {label}
-      placeholder="Choose some options">
-      {#each records as record}
-        <option value={record._id}>{getPrettyName(record)}</option>
-      {/each}
-    </Multiselect>
-  {/await}
+  <Multiselect
+    secondary
+    bind:value={linkedRecords}
+    {label}
+    placeholder="Choose some options">
+    {#each records as record}
+      <option value={record._id}>{getPrettyName(record)}</option>
+    {/each}
+  </Multiselect>
 {/if}
