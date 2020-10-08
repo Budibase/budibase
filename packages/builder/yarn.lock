@@ -709,13 +709,14 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.40.1":
-  version "1.40.1"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.40.1.tgz#7ebfd52b4da822312d3395447a4f73caa41f8014"
-  integrity sha512-0t5Makyn5jOURKZIQPvd+8G4m6ps4GyfLUkAz5rKJSnAQSAgLiuZ+RihcEReDEJK8tnfW7h2echJTffJduQRRQ==
+"@budibase/bbui@^1.41.0":
+  version "1.41.0"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.41.0.tgz#cb239db3071a4a6c6f0ef48ddde55f5eab9808ce"
+  integrity sha512-pT5u6HDdXcylWgSE1TBt3jETg92GwgAXpUsBVqX+OUE/2lNbmThb8egAckpemHDvm91FAL0nApQYpV7c/qLzvw==
   dependencies:
     sirv-cli "^0.4.6"
     svelte-flatpickr "^2.4.0"
+    svelte-portal "^1.0.0"
 
 "@budibase/colorpicker@^1.0.1":
   version "1.0.1"
@@ -5843,6 +5844,11 @@ svelte-loading-spinners@^0.1.1:
 svelte-portal@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-0.1.0.tgz#cc2821cc84b05ed5814e0218dcdfcbebc53c1742"
+
+svelte-portal@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-1.0.0.tgz#36a47c5578b1a4d9b4dc60fa32a904640ec4cdd3"
+  integrity sha512-nHf+DS/jZ6jjnZSleBMSaZua9JlG5rZv9lOGKgJuaZStfevtjIlUJrkLc3vbV8QdBvPPVmvcjTlazAzfKu0v3Q==
 
 svelte@^3.24.1:
   version "3.25.1"

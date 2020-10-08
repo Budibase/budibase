@@ -1,17 +1,16 @@
 <script>
-  import { TextButton as Button, Icon } from "@budibase/bbui"
+  import { TextButton as Button, Icon, Modal } from "@budibase/bbui"
   import CreateEditRecordModal from "../modals/CreateEditRecordModal.svelte"
-  import { Modal } from "components/common/Modal"
 
-  let modalVisible
+  let modal
 </script>
 
 <div>
-  <Button text small on:click={() => (modalVisible = true)}>
+  <Button text small on:click={modal.show}>
     <Icon name="addrow" />
     Create New Row
   </Button>
 </div>
-{#if modalVisible}
-  <CreateEditRecordModal bind:visible={modalVisible} />
-{/if}
+<Modal bind:this={modal}>
+  <CreateEditRecordModal />
+</Modal>
