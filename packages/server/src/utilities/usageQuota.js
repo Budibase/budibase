@@ -4,12 +4,12 @@ const { apiKeyTable } = require("../db/dynamoClient")
 function buildUpdateParams(key, property, usage) {
   return {
     primary: key,
-    condition: "#quota.#prop + :usage < #limits.model AND #quotaReset < :now",
+    condition: "#quota.#prop < #limits.#prop AND #quotaReset > :now",
     expression: "ADD #quota.#prop :usage",
     names: {
       "#quota": "usageQuota",
       "#prop": property,
-      "#limits": "limits",
+      "#limits": "usageLimits",
       "#quotaReset": "quotaReset",
     },
     values: {
@@ -50,21 +50,22 @@ exports.update = async (apiKey, property, usage) => {
   try {
     await apiKeyTable.update(buildUpdateParams(apiKey, property, usage))
   } catch (err) {
-    if (err.code !== "ConditionalCheckFailedException") {
+    if (err.code === "ConditionalCheckFailedException") {
       // get the API key so we can check it
-      let apiKey = await apiKeyTable.get({ primary: apiKey })
+      const keyObj = await apiKeyTable.get({ primary: apiKey })
       // we have infact breached the reset period
-      if (apiKey && apiKey.quotaReset >= Date.now()) {
+      if (keyObj && keyObj.quotaReset <= Date.now()) {
         // update the quota reset period and reset the values for all properties
-        apiKey.quotaReset = Date.now() + QUOTA_RESET
-        for (let prop of Object.keys(apiKey.usageQuota)) {
+        keyObj.quotaReset = Date.now() + QUOTA_RESET
+        for (let prop of Object.keys(keyObj.usageQuota)) {
           if (prop === property) {
-            apiKey.usageQuota[prop] = usage > 0 ? usage : 0
+            keyObj.usageQuota[prop] = usage > 0 ? usage : 0
           } else {
-            apiKey.usageQuota[prop] = 0
+            keyObj.usageQuota[prop] = 0
           }
         }
-        await apiKeyTable.put({ item: apiKey })
+        await apiKeyTable.put({ item: keyObj })
+        return
       }
       throw "Resource limits have been reached"
     }

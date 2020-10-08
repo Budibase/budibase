@@ -21,9 +21,10 @@ function runWorker(job) {
 
 async function updateQuota(automation) {
   const appId = automation.appId
-  const apiKey = await getAPIKey(appId)
+  const apiObj = await getAPIKey(appId)
   // this will fail, causing automation to escape if limits reached
-  await update(apiKey, Properties.AUTOMATION, 1)
+  await update(apiObj.apiKey, Properties.AUTOMATION, 1)
+  return apiObj.apiKey
 }
 
 /**
@@ -33,8 +34,8 @@ module.exports.init = function() {
   actions.init().then(() => {
     triggers.automationQueue.process(async job => {
       try {
-        if (environment.CLOUD) {
-          await updateQuota(job.data.automation)
+        if (environment.CLOUD && job.data.automation) {
+          job.data.automation.apiKey = await updateQuota(job.data.automation)
         }
         if (environment.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
           await runWorker(job)
