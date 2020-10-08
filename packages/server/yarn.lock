@@ -172,10 +172,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/client@^0.1.24":
-  version "0.1.24"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.24.tgz#d2967c050af9f559791e0189137f80e621ea2d69"
-  integrity sha512-2Plu9PpF3TOPTDkAAIkPFEjZFolGkty0Sc0vbLk8lee4yqeonBj5paXT44O6kpxLFW47YjN5VCA4+EnwGl358w==
+"@budibase/client@^0.1.25":
+  version "0.1.25"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.25.tgz#f08c4a614f9018eb0f0faa6d20bb05f7a3215c70"
+  integrity sha512-vZ0cqJwLYcs7MHihFnJO3qOe7qxibnB4Va1+IYNfnPc9kcxy4KvfQxCx/G/DDxP9CXfEvsguy9ymzR3RUAvBHw==
   dependencies:
     deep-equal "^2.0.1"
     mustache "^4.0.1"
@@ -2042,9 +2042,10 @@ electron-updater@^4.3.1:
     lodash.isequal "^4.5.0"
     semver "^7.1.3"
 
-electron@8.2.5:
-  version "8.2.5"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-8.2.5.tgz#ae3cb23d5517b2189fd35298e487198d65d1a291"
+electron@10.1.3:
+  version "10.1.3"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-10.1.3.tgz#7e276e373bf30078bd4cb1184850a91268dc0e6c"
+  integrity sha512-CR8LrlG47MdAp317SQ3vGYa2o2cIMdMSMPYH46OVitFLk35dwE9fn3VqvhUIXhCHYcNWIAPzMhkVHpkoFdKWuw==
   dependencies:
     "@electron/get" "^1.0.1"
     "@types/node" "^12.0.12"
