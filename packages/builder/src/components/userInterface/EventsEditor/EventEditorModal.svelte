@@ -86,9 +86,7 @@
       {#each actions as action, index}
         <div class="action-container">
           <div class="action-header" on:click={selectAction(action)}>
-            <Body extraSmall lh>
-              {index + 1}. {action[EVENT_TYPE_MEMBER_NAME]}
-            </Body>
+            <Body small lh>{index + 1}. {action[EVENT_TYPE_MEMBER_NAME]}</Body>
             <div class="row-expander" class:rotate={action !== selectedAction}>
               <ArrowDownIcon />
             </div>
@@ -143,8 +141,7 @@
 
   .actions-container {
     flex: 1;
-    min-height: 0px;
-    padding-bottom: var(--spacing-s);
+    min-height: 0;
     padding-top: 0;
     border: var(--border-light);
     border-width: 0 0 1px 0;
@@ -154,10 +151,6 @@
   .action-container {
     border: var(--border-light);
     border-width: 1px 0 0 0;
-    padding-left: var(--spacing-xl);
-    padding-right: var(--spacing-xl);
-    padding-top: 0;
-    padding-bottom: 0;
   }
 
   .selected-action-container {
