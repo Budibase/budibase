@@ -1,5 +1,5 @@
 const fs = require("fs")
-// const sharp = require("sharp")
+const sharp = require("sharp")
 const fsPromises = fs.promises
 
 const FORMATS = {
@@ -7,14 +7,14 @@ const FORMATS = {
 }
 
 async function processImage(file) {
-  // const imgMeta = await sharp(file.path)
-  //   .resize(300)
-  //   .toFile(file.outputPath)
-  //
-  // return {
-  //   ...file,
-  //   ...imgMeta,
-  // }
+  const imgMeta = await sharp(file.path)
+    .resize(300)
+    .toFile(file.outputPath)
+
+  return {
+    ...file,
+    ...imgMeta,
+  }
 }
 
 async function process(file) {
