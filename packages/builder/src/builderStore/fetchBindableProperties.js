@@ -78,6 +78,11 @@ const contextToBindables = (models, walkResult) => context => {
     typeof context.model === "string" ? context.model : context.model.modelId
   const model = models.find(model => model._id === modelId)
 
+  // Avoid crashing whenever no data source has been selected
+  if (model == null) {
+    return []
+  }
+
   const newBindable = key => ({
     type: "context",
     instance: context.instance,
