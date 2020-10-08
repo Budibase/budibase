@@ -1,6 +1,6 @@
 const crypto = require("crypto")
 const { ensureDir, emptyDir, writeFile } = require("fs-extra")
-const { join } = require("path")
+const { join } = require("../sanitisedPath")
 
 module.exports.convertCssToFiles = async (publicPagePath, pkg) => {
   const cssDir = join(publicPagePath, "css")

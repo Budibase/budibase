@@ -1,57 +1,31 @@
 <script>
-  import { Modal, Button, Heading, Spacer } from "@budibase/bbui"
+  import { Modal, ModalContent } from "@budibase/bbui"
 
   export let title = ""
   export let body = ""
-  export let okText = "OK"
+  export let okText = "Confirm"
   export let cancelText = "Cancel"
-  export let onOk = () => {}
-  export let onCancel = () => {}
+  export let onOk = undefined
+  export let onCancel = undefined
+
+  let modal
 
   export const show = () => {
-    theModal.show()
+    modal.show()
   }
-
   export const hide = () => {
-    theModal.hide()
-  }
-
-  let theModal
-
-  const cancel = () => {
-    hide()
-    onCancel()
-  }
-
-  const ok = () => {
-    const result = onOk()
-    // allow caller to return false, to cancel the "ok"
-    if (result === false) return
-    hide()
+    modal.hide()
   }
 </script>
 
-<Modal id={title} bind:this={theModal}>
-  <h2>{title}</h2>
-  <Spacer extraLarge />
-  <slot class="rows">{body}</slot>
-  <Spacer extraLarge />
-  <div class="modal-footer">
-    <Button red wide on:click={ok}>{okText}</Button>
-    <Button secondary wide on:click={cancel}>{cancelText}</Button>
-  </div>
+<Modal bind:this={modal} on:hide={onCancel}>
+  <ModalContent onConfirm={onOk} {title} confirmText={okText} {cancelText} red>
+    <div class="body">{body}</div>
+  </ModalContent>
 </Modal>
 
 <style>
-  h2 {
-    font-size: var(--font-size-xl);
-    margin: 0;
-    font-family: var(--font-sans);
-    font-weight: 600;
-  }
-
-  .modal-footer {
-    display: grid;
-    grid-gap: var(--spacing-s);
+  .body {
+    font-size: var(--font-size-s);
   }
 </style>

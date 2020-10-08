@@ -2,6 +2,8 @@ const fs = require("fs")
 const CouchDB = require("../../db")
 const client = require("../../db/clientDb")
 const newid = require("../../db/newid")
+const { createLinkView } = require("../../db/linkedRecords")
+const { join } = require("../../utilities/sanitisedPath")
 const { downloadTemplate } = require("../../utilities/templates")
 
 exports.create = async function(ctx) {
@@ -21,8 +23,12 @@ exports.create = async function(ctx) {
       clientId,
       applicationId: appId,
     },
+    // view collation information, read before writing any complex views:
+    // https://docs.couchdb.org/en/master/ddocs/views/collation.html#collation-specification
     views: {},
   })
+  // add view for linked records
+  await createLinkView(instanceId)
 
   // Add the new instance under the app clientDB
   const clientDb = new CouchDB(client.name(clientId))
@@ -34,7 +40,9 @@ exports.create = async function(ctx) {
   // replicate the template data to the instance DB
   if (template) {
     const templatePath = await downloadTemplate(...template.key.split("/"))
-    const dbDumpReadStream = fs.createReadStream(`${templatePath}/db/dump.txt`)
+    const dbDumpReadStream = fs.createReadStream(
+      join(templatePath, "db", "dump.txt")
+    )
     const { ok } = await db.load(dbDumpReadStream)
     if (!ok) {
       ctx.throw(500, "Error loading database dump from template.")
