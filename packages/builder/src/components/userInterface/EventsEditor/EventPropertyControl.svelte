@@ -12,6 +12,6 @@
 
 <Button secondary small on:click={modal.show}>Define Actions</Button>
 
-<Modal bind:this={modal}>
+<Modal bind:this={modal} width="600px">
   <EventEditorModal event={value} eventType={name} on:change />
 </Modal>
