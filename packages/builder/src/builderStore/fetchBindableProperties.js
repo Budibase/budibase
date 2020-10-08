@@ -37,9 +37,9 @@ export default function({ componentInstanceId, screen, components, models }) {
       .filter(isInstanceInSharedContext(walkResult))
       .map(componentInstanceToBindable(walkResult)),
 
-    ...walkResult.target._contexts
+    ...(walkResult.target?._contexts
       .map(contextToBindables(models, walkResult))
-      .flat(),
+      .flat() ?? []),
   ]
 }
 
@@ -73,6 +73,15 @@ const componentInstanceToBindable = walkResult => i => {
 
 const contextToBindables = (models, walkResult) => context => {
   const contextParentPath = getParentPath(walkResult, context)
+  const isModel = context.model?.isModel || typeof context.model === "string"
+  const modelId =
+    typeof context.model === "string" ? context.model : context.model.modelId
+  const model = models.find(model => model._id === modelId)
+
+  // Avoid crashing whenever no data source has been selected
+  if (model == null) {
+    return []
+  }
 
   const newBindable = key => ({
     type: "context",
@@ -80,15 +89,12 @@ const contextToBindables = (models, walkResult) => context => {
     // how the binding expression persists, and is used in the app at runtime
     runtimeBinding: `${contextParentPath}data.${key}`,
     // how the binding exressions looks to the user of the builder
-    readableBinding: `${context.instance._instanceName}.${context.model.label}.${key}`,
+    readableBinding: `${context.instance._instanceName}.${model.name}.${key}`,
   })
 
   // see ModelViewSelect.svelte for the format of context.model
-  // ... this allows us to bind to Model scheams, or View schemas
-  const model = models.find(m => m._id === context.model.modelId)
-  const schema = context.model.isModel
-    ? model.schema
-    : model.views[context.model.name].schema
+  // ... this allows us to bind to Model schemas, or View schemas
+  const schema = isModel ? model.schema : model.views[context.model.name].schema
 
   return (
     Object.keys(schema)

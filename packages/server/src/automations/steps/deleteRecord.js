@@ -1,10 +1,10 @@
 const recordController = require("../../api/controllers/record")
 
 module.exports.definition = {
-  description: "Delete a record from your database",
+  description: "Delete a row from your database",
   icon: "ri-delete-bin-line",
-  name: "Delete Record",
-  tagline: "Delete a {{inputs.enriched.model.name}} record",
+  name: "Delete Row",
+  tagline: "Delete a {{inputs.enriched.model.name}} row",
   type: "ACTION",
   stepId: "DELETE_RECORD",
   inputs: {},
@@ -18,11 +18,11 @@ module.exports.definition = {
         },
         id: {
           type: "string",
-          title: "Record ID",
+          title: "Row ID",
         },
         revision: {
           type: "string",
-          title: "Record Revision",
+          title: "Row Revision",
         },
       },
       required: ["modelId", "id", "revision"],
@@ -32,7 +32,7 @@ module.exports.definition = {
         record: {
           type: "object",
           customType: "record",
-          description: "The deleted record",
+          description: "The deleted row",
         },
         response: {
           type: "object",
