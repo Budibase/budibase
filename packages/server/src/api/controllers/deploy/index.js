@@ -46,8 +46,12 @@ async function getCurrentInstanceQuota(instanceId) {
     })
   )
   const existingRecords = records.rows.length
+
+  const designDoc = await db.get("_design/database")
+
   return {
     records: existingRecords,
+    views: Object.keys(designDoc.views).length,
   }
 }
 
@@ -88,7 +92,7 @@ exports.deployApp = async function(ctx) {
     const deployedInstanceQuota = await getCurrentInstanceQuota(
       ctx.user.instanceId
     )
-    updateDeploymentQuota(deployedInstanceQuota)
+    await updateDeploymentQuota(deployedInstanceQuota)
 
     ctx.body = {
       status: "SUCCESS",
