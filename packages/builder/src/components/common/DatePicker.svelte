@@ -11,6 +11,4 @@
   }
 </script>
 
-<div class="bb-margin-m">
-  <DatePicker placeholder={label} on:change={onChange} {value} />
-</div>
+<DatePicker {label} on:change={onChange} {value} />

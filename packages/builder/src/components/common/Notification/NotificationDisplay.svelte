@@ -1,7 +1,7 @@
 <script>
   import { notificationStore } from "builderStore/store/notifications"
   import { onMount, onDestroy } from "svelte"
-  import { fade } from "svelte/transition"
+  import { fly } from "svelte/transition"
 
   export let themes = {
     danger: "#E26D69",
@@ -24,36 +24,42 @@
   }
 </script>
 
-<ul class="notifications">
+<div class="notifications">
   {#each $notificationStore.notifications as notification (notification.id)}
-    <li
+    <div
       class="toast"
       style="background: {themes[notification.type]};"
-      transition:fade>
+      transition:fly={{ y: -30 }}>
       <div class="content">{notification.message}</div>
       {#if notification.icon}
         <i class={notification.icon} />
       {/if}
-    </li>
+    </div>
   {/each}
-</ul>
+</div>
 
 <style>
   .notifications {
-    width: 40vw;
-    list-style: none;
     position: fixed;
-    top: 0;
+    top: 10px;
     left: 0;
     right: 0;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto;
     padding: 0;
     z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    pointer-events: none;
   }
 
   .toast {
+    flex: 0 0 auto;
     margin-bottom: 10px;
+    border-radius: var(--border-radius-s);
+    /* The toasts now support being auto sized, so this static width could be removed */
+    width: 40vw;
   }
 
   .content {
