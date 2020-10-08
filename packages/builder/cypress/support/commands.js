@@ -66,12 +66,14 @@ Cypress.Commands.add("createTestTableWithData", () => {
 Cypress.Commands.add("createTable", tableName => {
   // Enter model name
   cy.contains("Create New Table").click()
-  cy.get(".menu-container")
-    .get("input")
-    .first()
-    .type(tableName)
-
-  cy.contains("Save").click()
+  cy.get(".modal").within(() => {
+    cy.get("input")
+      .first()
+      .type(tableName)
+    cy.get(".buttons")
+      .contains("Create")
+      .click()
+  })
   cy.contains(tableName).should("be.visible")
 })
 
