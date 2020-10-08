@@ -51,6 +51,8 @@
         }
       }
 
+      record._model = model
+
       _bb.attachChildren(target, {
         context: record,
       })
