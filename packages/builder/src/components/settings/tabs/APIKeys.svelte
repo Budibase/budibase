@@ -1,8 +1,6 @@
 <script>
-  import { Input, Button } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { Input } from "@budibase/bbui"
   import api from "builderStore/api"
-  import posthog from "posthog-js"
   import analytics from "analytics"
 
   let keys = { budibase: "" }
@@ -34,23 +32,17 @@
 </script>
 
 <div class="container">
-  <div class="background">
-    <Input
-      on:save={e => updateKey(['budibase', e.detail])}
-      thin
-      edit
-      value={keys.budibase}
-      label="Budibase" />
-  </div>
+  <Input
+    on:save={e => updateKey(['budibase', e.detail])}
+    thin
+    edit
+    value={keys.budibase}
+    label="Budibase API Key" />
 </div>
 
 <style>
   .container {
     display: grid;
-    grid-gap: var(--space);
-  }
-  .background {
-    border-radius: 5px;
-    padding: 12px 0px;
+    grid-gap: var(--spacing-xl);
   }
 </style>
