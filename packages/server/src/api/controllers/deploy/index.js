@@ -5,13 +5,10 @@ const {
   verifyDeployment,
   updateDeploymentQuota,
 } = require("./aws")
-const { getRecordParams } = require("../../db/utils")
 
 function replicate(local, remote) {
   return new Promise((resolve, reject) => {
-    const replication = local.sync(remote, {
-      retry: true,
-    })
+    const replication = local.sync(remote)
 
     replication.on("complete", () => resolve())
     replication.on("error", err => reject(err))
@@ -40,11 +37,10 @@ async function replicateCouch({ instanceId, clientId, credentials }) {
 
 async function getCurrentInstanceQuota(instanceId) {
   const db = new PouchDB(instanceId)
-  const records = await db.allDocs(
-    getRecordParams("", null, {
-      include_docs: true,
-    })
-  )
+  const records = await db.allDocs({
+    startkey: "record:",
+    endkey: `record:\ufff0`,
+  })
   const existingRecords = records.rows.length
 
   const designDoc = await db.get("_design/database")
