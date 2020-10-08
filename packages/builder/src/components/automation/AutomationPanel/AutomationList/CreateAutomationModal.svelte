@@ -1,11 +1,8 @@
 <script>
   import { store, backendUiStore, automationStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import { Input } from "@budibase/bbui"
+  import { Input, ModalContent } from "@budibase/bbui"
   import analytics from "analytics"
-  import { Modal } from "components/common/Modal"
-
-  export let visible
 
   let name
 
@@ -29,8 +26,7 @@
   }
 </script>
 
-<Modal
-  bind:visible
+<ModalContent
   title="Create Automation"
   confirmText="Create"
   onConfirm={createAutomation}
@@ -44,7 +40,7 @@
       <span>Learn about automations</span>
     </a>
   </div>
-</Modal>
+</ModalContent>
 
 <style>
   a {
