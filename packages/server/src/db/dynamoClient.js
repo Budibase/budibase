@@ -1,6 +1,8 @@
 let _ = require("lodash")
 let environment = require("../environment")
 
+const AWS_REGION = environment.AWS_REGION ? environment.AWS_REGION : "eu-west-1"
+
 const TableInfo = {
   API_KEYS: {
     name: "beta-api-key-table",
@@ -49,6 +51,7 @@ class Table {
     condition,
     names,
     values,
+    exists,
     otherProps,
   }) {
     let params = {
@@ -65,6 +68,13 @@ class Table {
     }
     if (this._sort && sort) {
       params.Key[this._sort] = sort
+    }
+    if (exists) {
+      params.ExpressionAttributeNames["#PRIMARY"] = this._primary
+      if (params.ConditionExpression) {
+        params.ConditionExpression += " AND "
+      }
+      params.ConditionExpression += "attribute_exists(#PRIMARY)"
     }
     if (otherProps) {
       params = _.merge(params, otherProps)
@@ -90,15 +100,17 @@ class Table {
   }
 }
 
-exports.init = () => {
-  if (!environment.CLOUD) {
-    return
-  }
+exports.init = endpoint => {
   let AWS = require("aws-sdk")
+  AWS.config.update({
+    region: AWS_REGION,
+  })
   let docClientParams = {
     correctClockSkew: true,
   }
-  if (environment.DYNAMO_ENDPOINT) {
+  if (endpoint) {
+    docClientParams.endpoint = endpoint
+  } else if (environment.DYNAMO_ENDPOINT) {
     docClientParams.endpoint = environment.DYNAMO_ENDPOINT
   }
   docClient = new AWS.DynamoDB.DocumentClient(docClientParams)
@@ -106,3 +118,11 @@ exports.init = () => {
 
 exports.apiKeyTable = new Table(TableInfo.API_KEYS)
 exports.userTable = new Table(TableInfo.USERS)
+
+if (environment.CLOUD) {
+  exports.init(`https://dynamodb.${AWS_REGION}.amazonaws.com`)
+} else {
+  process.env.AWS_ACCESS_KEY_ID = "KEY_ID"
+  process.env.AWS_SECRET_ACCESS_KEY = "SECRET_KEY"
+  exports.init("http://localhost:8333")
+}

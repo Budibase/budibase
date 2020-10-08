@@ -62,6 +62,7 @@ class Orchestrator {
         const outputs = await stepFn({
           inputs: step.inputs,
           instanceId: this._instanceId,
+          apiKey: automation.apiKey,
         })
         if (step.stepId === FILTER_STEP_ID && !outputs.success) {
           break

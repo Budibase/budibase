@@ -8,7 +8,9 @@ module.exports = (ctx, appId, instanceId) => {
     instanceId,
     appId,
   }
-
+  if (process.env.BUDIBASE_API_KEY) {
+    builderUser.apiKey = process.env.BUDIBASE_API_KEY
+  }
   const token = jwt.sign(builderUser, ctx.config.jwtSecret, {
     expiresIn: "30 days",
   })
