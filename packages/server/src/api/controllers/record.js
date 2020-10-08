@@ -256,10 +256,8 @@ exports.fetchEnrichedRecord = async function(ctx) {
     }
     return
   }
-  // // need model to work out where links go in record
-  const modelAndRecord = await Promise.all([db.get(modelId), db.get(recordId)])
-  const model = modelAndRecord[0]
-  const record = modelAndRecord[1]
+  // need model to work out where links go in record
+  const [model, record] = await Promise.all([db.get(modelId), db.get(recordId)])
   // get the link docs
   const linkVals = await linkRecords.getLinkDocuments({
     instanceId,
