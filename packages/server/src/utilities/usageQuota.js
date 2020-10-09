@@ -1,10 +1,28 @@
 const environment = require("../environment")
 const { apiKeyTable } = require("../db/dynamoClient")
 
+const DEFAULT_USAGE = {
+  records: 0,
+  storage: 0,
+  views: 0,
+  automationRuns: 0,
+  users: 0,
+}
+
+const DEFAULT_PLAN = {
+  records: 1000,
+  // 1 GB
+  storage: 8589934592,
+  views: 10,
+  automationRuns: 100,
+  users: 10000,
+}
+
 function buildUpdateParams(key, property, usage) {
   return {
     primary: key,
-    condition: "#quota.#prop < #limits.#prop AND #quotaReset > :now",
+    condition:
+      "#quota.#prop < #limits.#prop AND #quotaReset > :now AND attribute_exists(#quota) AND attribute_exists(#limits)",
     expression: "ADD #quota.#prop :usage",
     names: {
       "#quota": "usageQuota",
@@ -19,8 +37,9 @@ function buildUpdateParams(key, property, usage) {
   }
 }
 
-// a normalised month in milliseconds
-const QUOTA_RESET = 2592000000
+function getNewQuotaReset() {
+  return Date.now() + 2592000000
+}
 
 exports.Properties = {
   RECORD: "records",
@@ -53,10 +72,18 @@ exports.update = async (apiKey, property, usage) => {
     if (err.code === "ConditionalCheckFailedException") {
       // get the API key so we can check it
       const keyObj = await apiKeyTable.get({ primary: apiKey })
+      // the usage quota or usage limits didn't exist
+      if (keyObj && (keyObj.usageQuota == null || keyObj.usageLimits == null)) {
+        keyObj.usageQuota = DEFAULT_USAGE
+        keyObj.usageLimits = DEFAULT_PLAN
+        keyObj.quotaReset = getNewQuotaReset()
+        await apiKeyTable.put({ item: keyObj })
+        return
+      }
       // we have infact breached the reset period
-      if (keyObj && keyObj.quotaReset <= Date.now()) {
+      else if (keyObj && keyObj.quotaReset <= Date.now()) {
         // update the quota reset period and reset the values for all properties
-        keyObj.quotaReset = Date.now() + QUOTA_RESET
+        keyObj.quotaReset = getNewQuotaReset()
         for (let prop of Object.keys(keyObj.usageQuota)) {
           if (prop === property) {
             keyObj.usageQuota[prop] = usage > 0 ? usage : 0
