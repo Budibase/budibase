@@ -1,6 +1,6 @@
 const { appPackageFolder } = require("../createAppPackage")
 const { readJSON, readdir, stat } = require("fs-extra")
-const { join } = require("../sanitisedPath")
+const { join } = require("../centralPath")
 const { keyBy } = require("lodash/fp")
 
 module.exports = async (config, appname, pagename) => {

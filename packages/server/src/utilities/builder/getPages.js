@@ -1,5 +1,5 @@
 const { readJSON, readdir } = require("fs-extra")
-const { join } = require("../sanitisedPath")
+const { join } = require("../centralPath")
 
 module.exports = async appPath => {
   const pages = {}
