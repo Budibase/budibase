@@ -1,7 +1,8 @@
 <script>
   import { Button, Icon, DropdownMenu, Spacer, Heading } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { backendUiStore } from "builderStore"
+  import { store, backendUiStore } from "builderStore"
+  import fetchBindableProperties from "../../builderStore/fetchBindableProperties"
 
   const dispatch = createEventDispatcher()
   let anchorRight, dropdownRight
@@ -13,21 +14,39 @@
     dropdownRight.hide()
   }
 
-  const models = $backendUiStore.models.map(m => ({
+  $: models = $backendUiStore.models.map(m => ({
     label: m.name,
     name: `all_${m._id}`,
     modelId: m._id,
-    isModel: true,
+    type: "model",
   }))
 
-  const views = $backendUiStore.models.reduce((acc, cur) => {
+  $: views = $backendUiStore.models.reduce((acc, cur) => {
     let viewsArr = Object.entries(cur.views).map(([key, value]) => ({
       label: key,
       name: key,
       ...value,
+      type: "view",
     }))
     return [...acc, ...viewsArr]
   }, [])
+
+  $: bindableProperties = fetchBindableProperties({
+    componentInstanceId: $store.currentComponentInfo._id,
+    components: $store.components,
+    screen: $store.currentPreviewItem,
+    models: $backendUiStore.models,
+  })
+
+  $: links = bindableProperties
+    .filter(x => x.fieldSchema.type === "link")
+    .map(property => ({
+      label: property.readableBinding,
+      fieldName: property.fieldSchema.name,
+      name: `all_${property.fieldSchema.modelId}`,
+      modelId: property.fieldSchema.modelId,
+      type: "link",
+    }))
 </script>
 
 <div class="dropdownbutton" bind:this={anchorRight}>
@@ -60,6 +79,19 @@
           class:selected={value === view}
           on:click={() => handleSelected(view)}>
           {view.label}
+        </li>
+      {/each}
+    </ul>
+    <hr />
+    <div class="title">
+      <Heading extraSmall>Relationships</Heading>
+    </div>
+    <ul>
+      {#each links as link}
+        <li
+          class:selected={value === link}
+          on:click={() => handleSelected(link)}>
+          {link.label}
         </li>
       {/each}
     </ul>

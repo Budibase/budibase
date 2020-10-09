@@ -10,7 +10,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      const data = await fetchData(datasource)
+      const data = await fetchData(datasource, _bb)
       _bb.attachChildren(target, {
         hydrate: false,
         context: data,

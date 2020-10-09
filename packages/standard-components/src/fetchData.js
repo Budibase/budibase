@@ -1,10 +1,17 @@
 import api from "./api"
 
-export default async function fetchData(datasource) {
-  const { isModel, name } = datasource
+export default async function fetchData(datasource, _bb) {
+  const { type, name } = datasource
 
   if (name) {
-    const records = isModel ? await fetchModelData() : await fetchViewData()
+    let records
+    if (type === "model") {
+      records = await fetchModelData()
+    } else if (type === "view") {
+      records = await fetchViewData()
+    } else if (type === "link") {
+      records = await fetchLinkedRecordsData()
+    }
 
     // Fetch model schema so we can check for linked records
     if (records && records.length) {
@@ -52,5 +59,19 @@ export default async function fetchData(datasource) {
 
     const response = await api.get(QUERY_VIEW_URL)
     return await response.json()
+  }
+
+  async function fetchLinkedRecordsData() {
+    if (
+      !_bb.store.state ||
+      !_bb.store.state.data ||
+      !_bb.store.state.data._id
+    ) {
+      return []
+    }
+    const QUERY_URL = `/api/${_bb.store.state.data.modelId}/${_bb.store.state.data._id}/enrich`
+    const response = await api.get(QUERY_URL)
+    const record = await response.json()
+    return record[datasource.fieldName]
   }
 }
