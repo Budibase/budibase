@@ -1,7 +1,7 @@
 const CouchDB = require("../../../db")
 const viewTemplate = require("./viewBuilder")
 const fs = require("fs")
-const { join } = require("../../../utilities/sanitisedPath")
+const { join } = require("../../../utilities/centralPath")
 const os = require("os")
 const exporters = require("./exporters")
 const { fetchView } = require("../record")
