@@ -116,9 +116,7 @@ exports.destroy = async function(ctx) {
       include_docs: true,
     })
   )
-  await db.bulkDocs(
-    rows.rows.map(row => ({ _id: row.id, _deleted: true }))
-  )
+  await db.bulkDocs(rows.rows.map(row => ({ _id: row.id, _deleted: true })))
 
   // update linked rows
   await linkRows.updateLinks({

@@ -67,9 +67,7 @@ exports.getRowParams = (tableId, rowId = null, otherProps = {}) => {
     throw "Cannot build params for rows without a table ID"
   }
   const endOfKey =
-    rowId == null
-      ? `${tableId}${SEPARATOR}`
-      : `${tableId}${SEPARATOR}${rowId}`
+    rowId == null ? `${tableId}${SEPARATOR}` : `${tableId}${SEPARATOR}${rowId}`
   return getDocParams(DocumentTypes.ROW, endOfKey, otherProps)
 }
 
