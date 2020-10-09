@@ -12,6 +12,15 @@ const renderers = new Map([
     ["options", optionsRenderer],
 ])
 
+
+export function getRenderer(type, options) {
+    if (renderers.get(type)) {
+        return renderers.get(type)(options)
+    } else {
+        return false
+    }
+}
+
 function booleanRenderer(options) {
     return params => {
         const toggle = (e) => {
@@ -47,6 +56,8 @@ function dateRenderer(options) {
             params.setValue(e.detail[0][0])
         }
 
+        // Options need to be passed in with minTime and maxTime! Needs bbui update.
+
         const datePickerInstance = new DatePicker({
             target: container,
             props: {
@@ -79,13 +90,5 @@ function optionsRenderer({ inclusion }) {
         selectInstance.$on('change', change)
 
         return container
-    }
-}
-
-export function getRenderer(type, options) {
-    if (renderers.get(type)) {
-        return renderers.get(type)(options)
-    } else {
-        return false
     }
 }
