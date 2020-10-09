@@ -66,7 +66,7 @@ function dateRenderer(options) {
             }
         });
 
-        // datePickerInstance.$on('change', toggle)
+        datePickerInstance.$on('change', toggle)
 
         return container
     }
