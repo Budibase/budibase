@@ -26,6 +26,10 @@
   async function fetchData() {
     const pathParts = window.location.pathname.split("/")
 
+    if (!model) {
+      return
+    }
+
     let record
     // if srcdoc, then we assume this is the builder preview
     if (pathParts.length === 0 || pathParts[0] === "srcdoc") {
