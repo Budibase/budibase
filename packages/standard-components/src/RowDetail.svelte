@@ -40,7 +40,7 @@
         throw new Error("Failed to fetch record.", response)
       }
     } else {
-      throw new Exception("Record ID was not supplied to RecordDetail")
+      throw new Exception("Record ID was not supplied to RowDetail")
     }
 
     if (record) {

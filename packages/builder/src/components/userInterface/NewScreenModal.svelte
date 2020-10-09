@@ -84,16 +84,6 @@
       route = "/" + event.target.value
     }
   }
-
-  const componentShortName = fullname => {
-    const parts = fullname.split("/")
-    const shortName = parts[parts.length - 1]
-    // make known ones a bit prettier
-    if (shortName === "container") return "Container"
-    if (shortName === "recorddetail") return "Record Detail"
-    if (shortName === "newrecord") return "New Record"
-    return shortName
-  }
 </script>
 
 <ModalContent title="New Screen" confirmText="Create Screen" onConfirm={save}>

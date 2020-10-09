@@ -1,10 +1,9 @@
 export default function(models) {
   return models.map(model => {
     const fields = Object.keys(model.schema)
-    const heading =
-      fields.length > 0 ? `{{ data.${fields[0]} }}` : "Edit Record"
+    const heading = fields.length > 0 ? `{{ data.${fields[0]} }}` : "Detail"
     return {
-      name: `Record Detail - ${model.name}`,
+      name: `Row Detail - ${model.name}`,
       create: () => createScreen(model, heading),
       id: RECORD_DETAIL_TEMPLATE,
     }
@@ -16,7 +15,7 @@ export const RECORD_DETAIL_TEMPLATE = "RECORD_DETAIL_TEMPLATE"
 const createScreen = (model, heading) => ({
   props: {
     _id: "",
-    _component: "@budibase/standard-components/recorddetail",
+    _component: "@budibase/standard-components/rowdetail",
     _styles: {
       normal: {},
       hover: {},
