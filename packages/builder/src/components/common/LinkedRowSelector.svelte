@@ -6,30 +6,30 @@
   import { capitalise } from "../../helpers"
 
   export let schema
-  export let linkedRecords = []
+  export let linkedRows = []
 
-  let records = []
+  let rows = []
 
   $: label = capitalise(schema.name)
   $: linkedTableId = schema.tableId
   $: linkedTable = $backendUiStore.tables.find(
     table => table._id === linkedTableId
   )
-  $: fetchRecords(linkedTableId)
+  $: fetchRows(linkedTableId)
 
-  async function fetchRecords(linkedTableId) {
-    const FETCH_RECORDS_URL = `/api/${linkedTableId}/records`
+  async function fetchRows(linkedTableId) {
+    const FETCH_ROWS_URL = `/api/${linkedTableId}/rows`
     try {
-      const response = await api.get(FETCH_RECORDS_URL)
-      records = await response.json()
+      const response = await api.get(FETCH_ROWS_URL)
+      rows = await response.json()
     } catch (error) {
       console.log(error)
-      records = []
+      rows = []
     }
   }
 
-  function getPrettyName(record) {
-    return record[linkedTable.primaryDisplay || "_id"]
+  function getPrettyName(row) {
+    return row[linkedTable.primaryDisplay || "_id"]
   }
 </script>
 
@@ -43,11 +43,11 @@
 {:else}
   <Multiselect
     secondary
-    bind:value={linkedRecords}
+    bind:value={linkedRows}
     {label}
     placeholder="Choose some options">
-    {#each records as record}
-      <option value={record._id}>{getPrettyName(record)}</option>
+    {#each rows as row}
+      <option value={row._id}>{getPrettyName(row)}</option>
     {/each}
   </Multiselect>
 {/if}

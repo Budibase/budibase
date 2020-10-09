@@ -11,8 +11,8 @@
   async function fetchData() {
     if (!table || !table.length) return
 
-    const FETCH_RECORDS_URL = `/api/views/all_${table}`
-    const response = await _bb.api.get(FETCH_RECORDS_URL)
+    const FETCH_ROWS_URL = `/api/views/all_${table}`
+    const response = await _bb.api.get(FETCH_ROWS_URL)
     if (response.status === 200) {
       const json = await response.json()
 
@@ -21,7 +21,7 @@
         return state
       })
     } else {
-      throw new Error("Failed to fetch records.", response)
+      throw new Error("Failed to fetch rows.", response)
     }
   }
 

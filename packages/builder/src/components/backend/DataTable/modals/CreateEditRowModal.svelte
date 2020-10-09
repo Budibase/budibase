@@ -1,46 +1,46 @@
 <script>
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import RecordFieldControl from "../RecordFieldControl.svelte"
+  import RowFieldControl from "../RowFieldControl.svelte"
   import * as api from "../api"
   import { ModalContent } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
 
-  export let record = {}
+  export let row = {}
 
   let errors = []
 
-  $: creating = record?._id == null
-  $: table = record.tableId
-    ? $backendUiStore.tables.find(table => table._id === record?.tableId)
+  $: creating = row?._id == null
+  $: table = row.tableId
+    ? $backendUiStore.tables.find(table => table._id === row?.tableId)
     : $backendUiStore.selectedTable
   $: tableSchema = Object.entries(table?.schema ?? {})
 
-  async function saveRecord() {
-    const recordResponse = await api.saveRecord(
-      { ...record, tableId: table._id },
+  async function saveRow() {
+    const rowResponse = await api.saveRow(
+      { ...row, tableId: table._id },
       table._id
     )
-    if (recordResponse.errors) {
-      errors = Object.keys(recordResponse.errors)
-        .map(k => ({ dataPath: k, message: recordResponse.errors[k] }))
+    if (rowResponse.errors) {
+      errors = Object.keys(rowResponse.errors)
+        .map(k => ({ dataPath: k, message: rowResponse.errors[k] }))
         .flat()
       // Prevent modal closing if there were errors
       return false
     }
-    notifier.success("Record saved successfully.")
-    backendUiStore.actions.records.save(recordResponse)
+    notifier.success("Row saved successfully.")
+    backendUiStore.actions.rows.save(rowResponse)
   }
 </script>
 
 <ModalContent
   title={creating ? 'Create Row' : 'Edit Row'}
   confirmText={creating ? 'Create Row' : 'Save Row'}
-  onConfirm={saveRecord}>
+  onConfirm={saveRow}>
   <ErrorsBox {errors} />
   {#each tableSchema as [key, meta]}
     <div>
-      <RecordFieldControl {meta} bind:value={record[key]} />
+      <RowFieldControl {meta} bind:value={row[key]} />
     </div>
   {/each}
 </ModalContent>

@@ -10,7 +10,7 @@
     Toggle,
   } from "@budibase/bbui"
   import Dropzone from "./attachments/Dropzone.svelte"
-  import LinkedRecordSelector from "./LinkedRecordSelector.svelte"
+  import LinkedRowSelector from "./LinkedRowSelector.svelte"
   import debounce from "lodash.debounce"
   import ErrorsBox from "./ErrorsBox.svelte"
   import { capitalise } from "./helpers"
@@ -34,12 +34,12 @@
     link: [],
   }
 
-  let record
+  let row
   let store = _bb.store
   let schema = {}
   let tableDef = {}
   let saved = false
-  let recordId
+  let rowId
   let isNew = true
   let errors = {}
 
@@ -53,7 +53,7 @@
     const response = await _bb.api.get(FETCH_TABLE_URL)
     tableDef = await response.json()
     schema = tableDef.schema
-    record = {
+    row = {
       tableId: table,
     }
   }
@@ -61,13 +61,13 @@
   const save = debounce(async () => {
     for (let field of fields) {
       // Assign defaults to empty fields to prevent validation issues
-      if (!(field in record)) {
-        record[field] = DEFAULTS_FOR_TYPE[schema[field].type]
+      if (!(field in row)) {
+        row[field] = DEFAULTS_FOR_TYPE[schema[field].type]
       }
     }
 
-    const SAVE_RECORD_URL = `/api/${table}/records`
-    const response = await _bb.api.post(SAVE_RECORD_URL, record)
+    const SAVE_ROW_URL = `/api/${table}/rows`
+    const response = await _bb.api.post(SAVE_ROW_URL, row)
 
     const json = await response.json()
 
@@ -79,9 +79,9 @@
 
       errors = {}
 
-      // wipe form, if new record, otherwise update
+      // wipe form, if new row, otherwise update
       // table to get new _rev
-      record = isNew ? { tableId: table } : json
+      row = isNew ? { tableId: table } : json
 
       // set saved, and unset after 1 second
       // i.e. make the success notifier appear, then disappear again after time
@@ -100,18 +100,18 @@
 
   onMount(async () => {
     const routeParams = _bb.routeParams()
-    recordId =
+    rowId =
       Object.keys(routeParams).length > 0 && (routeParams.id || routeParams[0])
-    isNew = !recordId || recordId === "new"
+    isNew = !rowId || rowId === "new"
 
     if (isNew) {
-      record = { tableId: table }
+      row = { tableId: table }
       return
     }
 
-    const GET_RECORD_URL = `/api/${table}/records/${recordId}`
-    const response = await _bb.api.get(GET_RECORD_URL)
-    record = await response.json()
+    const GET_ROW_URL = `/api/${table}/rows/${rowId}`
+    const response = await _bb.api.get(GET_ROW_URL)
+    row = await response.json()
   })
 </script>
 
@@ -129,29 +129,29 @@
           </Label>
         {/if}
         {#if schema[field].type === 'options'}
-          <Select secondary bind:value={record[field]}>
+          <Select secondary bind:value={row[field]}>
             <option value="">Choose an option</option>
             {#each schema[field].constraints.inclusion as opt}
               <option>{opt}</option>
             {/each}
           </Select>
         {:else if schema[field].type === 'datetime'}
-          <DatePicker bind:value={record[field]} />
+          <DatePicker bind:value={row[field]} />
         {:else if schema[field].type === 'boolean'}
           <Toggle
             text={wide ? null : capitalise(schema[field].name)}
-            bind:checked={record[field]} />
+            bind:checked={row[field]} />
         {:else if schema[field].type === 'number'}
-          <Input type="number" bind:value={record[field]} />
+          <Input type="number" bind:value={row[field]} />
         {:else if schema[field].type === 'string'}
-          <Input bind:value={record[field]} />
+          <Input bind:value={row[field]} />
         {:else if schema[field].type === 'attachment'}
-          <Dropzone bind:files={record[field]} />
+          <Dropzone bind:files={row[field]} />
         {:else if schema[field].type === 'link'}
-          <LinkedRecordSelector
+          <LinkedRowSelector
             secondary
             showLabel={false}
-            bind:linkedRecords={record[field]}
+            bind:linkedRows={row[field]}
             schema={schema[field]} />
         {/if}
       </div>

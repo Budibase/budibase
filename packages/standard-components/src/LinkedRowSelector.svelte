@@ -5,7 +5,7 @@
   import { capitalise } from "./helpers"
 
   export let schema = {}
-  export let linkedRecords = []
+  export let linkedRows = []
   export let showLabel = true
   export let secondary
 
@@ -13,7 +13,7 @@
 
   $: label = capitalise(schema.name)
   $: linkedTableId = schema.tableId
-  $: recordsPromise = fetchRecords(linkedTableId)
+  $: rowsPromise = fetchRows(linkedTableId)
   $: fetchTable(linkedTableId)
 
   async function fetchTable() {
@@ -25,17 +25,17 @@
     linkedTable = await response.json()
   }
 
-  async function fetchRecords(linkedTableId) {
+  async function fetchRows(linkedTableId) {
     if (linkedTableId == null) {
       return
     }
-    const FETCH_RECORDS_URL = `/api/${linkedTableId}/records`
-    const response = await api.get(FETCH_RECORDS_URL)
+    const FETCH_ROWS_URL = `/api/${linkedTableId}/rows`
+    const response = await api.get(FETCH_ROWS_URL)
     return await response.json()
   }
 
-  function getPrettyName(record) {
-    return record[(linkedTable && linkedTable.primaryDisplay) || "_id"]
+  function getPrettyName(row) {
+    return row[(linkedTable && linkedTable.primaryDisplay) || "_id"]
   }
 </script>
 
@@ -50,14 +50,14 @@
       table.
     </Label>
   {:else}
-    {#await recordsPromise then records}
+    {#await rowsPromise then rows}
       <Multiselect
         {secondary}
-        bind:value={linkedRecords}
+        bind:value={linkedRows}
         label={showLabel ? label : null}
         placeholder="Choose some options">
-        {#each records as record}
-          <option value={record._id}>{getPrettyName(record)}</option>
+        {#each rows as row}
+          <option value={row._id}>{getPrettyName(row)}</option>
         {/each}
       </Multiselect>
     {/await}

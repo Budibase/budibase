@@ -13,7 +13,7 @@
 
   function enrichInputs(inputs) {
     let enrichedInputs = { ...inputs, enriched: {} }
-    const tableId = inputs.tableId || inputs.record?.tableId
+    const tableId = inputs.tableId || inputs.row?.tableId
     if (tableId) {
       enrichedInputs.enriched.table = $backendUiStore.tables.find(
         table => table._id === tableId

@@ -49,7 +49,7 @@
 
   const shouldDisplayField = name => {
     if (name.startsWith("_")) return false
-    // always 'record'
+    // always 'row'
     if (name === "type") return false
     // tables are always tied to a single tableId, this is irrelevant
     if (name === "tableId") return false

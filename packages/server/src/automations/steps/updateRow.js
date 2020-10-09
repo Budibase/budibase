@@ -1,35 +1,35 @@
-const recordController = require("../../api/controllers/record")
+const rowController = require("../../api/controllers/row")
 const automationUtils = require("../automationUtils")
 
 module.exports.definition = {
   name: "Update Row",
-  tagline: "Update a {{inputs.enriched.table.name}} record",
+  tagline: "Update a {{inputs.enriched.table.name}} row",
   icon: "ri-refresh-fill",
   description: "Update a row in your database",
   type: "ACTION",
-  stepId: "UPDATE_RECORD",
+  stepId: "UPDATE_ROW",
   inputs: {},
   schema: {
     inputs: {
       properties: {
-        record: {
+        row: {
           type: "object",
-          customType: "record",
+          customType: "row",
           title: "Table",
         },
-        recordId: {
+        rowId: {
           type: "string",
           title: "Row ID",
         },
       },
-      required: ["record", "recordId"],
+      required: ["row", "rowId"],
     },
     outputs: {
       properties: {
-        record: {
+        row: {
           type: "object",
-          customType: "record",
-          description: "The updated record",
+          customType: "row",
+          description: "The updated row",
         },
         response: {
           type: "object",
@@ -41,11 +41,11 @@ module.exports.definition = {
         },
         id: {
           type: "string",
-          description: "The identifier of the updated record",
+          description: "The identifier of the updated row",
         },
         revision: {
           type: "string",
-          description: "The revision of the updated record",
+          description: "The revision of the updated row",
         },
       },
       required: ["success", "id", "revision"],
@@ -54,37 +54,37 @@ module.exports.definition = {
 }
 
 module.exports.run = async function({ inputs, instanceId }) {
-  if (inputs.recordId == null || inputs.record == null) {
+  if (inputs.rowId == null || inputs.row == null) {
     return
   }
 
-  inputs.record = await automationUtils.cleanUpRecordById(
+  inputs.row = await automationUtils.cleanUpRowById(
     instanceId,
-    inputs.recordId,
-    inputs.record
+    inputs.rowId,
+    inputs.row
   )
   // clear any falsy properties so that they aren't updated
-  for (let propKey of Object.keys(inputs.record)) {
-    if (!inputs.record[propKey] || inputs.record[propKey] === "") {
-      delete inputs.record[propKey]
+  for (let propKey of Object.keys(inputs.row)) {
+    if (!inputs.row[propKey] || inputs.row[propKey] === "") {
+      delete inputs.row[propKey]
     }
   }
 
-  // have to clean up the record, remove the table from it
+  // have to clean up the row, remove the table from it
   const ctx = {
     params: {
-      id: inputs.recordId,
+      id: inputs.rowId,
     },
     request: {
-      body: inputs.record,
+      body: inputs.row,
     },
     user: { instanceId },
   }
 
   try {
-    await recordController.patch(ctx)
+    await rowController.patch(ctx)
     return {
-      record: ctx.body,
+      row: ctx.body,
       response: ctx.message,
       id: ctx.body._id,
       revision: ctx.body._rev,

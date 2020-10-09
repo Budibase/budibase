@@ -92,7 +92,7 @@ Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
   })
 })
 
-Cypress.Commands.add("addRecord", values => {
+Cypress.Commands.add("addRow", values => {
   cy.contains("Create New Row").click()
 
   cy.get(".modal").within(() => {

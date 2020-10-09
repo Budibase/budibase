@@ -1,22 +1,22 @@
-export default ({ records }) =>
-  records.map(r => ({
+export default ({ rows }) =>
+  rows.map(r => ({
     name: `Save ${r.name} Button`,
     props: buttonProps(r),
   }))
 
-const buttonProps = record => ({
+const buttonProps = row => ({
   _component: "@budibase/standard-components/button",
   _children: [
     {
       _component: "@budibase/standard-components/text",
-      text: `Save ${record.name}`,
+      text: `Save ${row.name}`,
     },
   ],
   onClick: [
     {
-      "##eventHandlerType": "Save Record",
+      "##eventHandlerType": "Save Row",
       parameters: {
-        statePath: `${record.name}`,
+        statePath: `${row.name}`,
       },
     },
   ],

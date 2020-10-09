@@ -11,7 +11,7 @@ const {
   instanceRoutes,
   clientRoutes,
   applicationRoutes,
-  recordRoutes,
+  rowRoutes,
   tableRoutes,
   viewRoutes,
   staticRoutes,
@@ -77,8 +77,8 @@ router.use(viewRoutes.allowedMethods())
 router.use(tableRoutes.routes())
 router.use(tableRoutes.allowedMethods())
 
-router.use(recordRoutes.routes())
-router.use(recordRoutes.allowedMethods())
+router.use(rowRoutes.routes())
+router.use(rowRoutes.allowedMethods())
 
 router.use(userRoutes.routes())
 router.use(userRoutes.allowedMethods())

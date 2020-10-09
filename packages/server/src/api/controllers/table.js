@@ -1,11 +1,11 @@
 const CouchDB = require("../../db")
-const linkRecords = require("../../db/linkedRecords")
+const linkRows = require("../../db/linkedRows")
 const csvParser = require("../../utilities/csvParser")
 const {
-  getRecordParams,
+  getRowParams,
   getTableParams,
   generateTableID,
-  generateRecordID,
+  generateRowID,
 } = require("../../db/utils")
 
 exports.fetch = async function(ctx) {
@@ -37,20 +37,20 @@ exports.save = async function(ctx) {
   // if the table obj had an _id then it will have been retrieved
   const oldTable = ctx.preExisting
 
-  // rename record fields when table column is renamed
+  // rename row fields when table column is renamed
   const { _rename } = tableToSave
   if (_rename && tableToSave.schema[_rename.updated].type === "link") {
     throw "Cannot rename a linked field."
   } else if (_rename && tableToSave.primaryDisplay === _rename.old) {
     throw "Cannot rename the primary display field."
   } else if (_rename) {
-    const records = await db.allDocs(
-      getRecordParams(tableToSave._id, null, {
+    const rows = await db.allDocs(
+      getRowParams(tableToSave._id, null, {
         include_docs: true,
       })
     )
 
-    const docs = records.rows.map(({ doc }) => {
+    const docs = rows.rows.map(({ doc }) => {
       doc[_rename.updated] = doc[_rename.old]
       delete doc[_rename.old]
       return doc
@@ -72,12 +72,12 @@ exports.save = async function(ctx) {
   const result = await db.post(tableToSave)
   tableToSave._rev = result.rev
 
-  // update linked records
-  await linkRecords.updateLinks({
+  // update linked rows
+  await linkRows.updateLinks({
     instanceId,
     eventType: oldTable
-      ? linkRecords.EventType.TABLE_UPDATED
-      : linkRecords.EventType.TABLE_SAVE,
+      ? linkRows.EventType.TABLE_UPDATED
+      : linkRows.EventType.TABLE_SAVE,
     table: tableToSave,
     oldTable: oldTable,
   })
@@ -86,11 +86,11 @@ exports.save = async function(ctx) {
     ctx.eventEmitter.emitTable(`table:save`, instanceId, tableToSave)
 
   if (dataImport && dataImport.path) {
-    // Populate the table with records imported from CSV in a bulk update
+    // Populate the table with rows imported from CSV in a bulk update
     const data = await csvParser.transform(dataImport)
 
     for (let row of data) {
-      row._id = generateRecordID(tableToSave._id)
+      row._id = generateRowID(tableToSave._id)
       row.tableId = tableToSave._id
     }
 
@@ -110,20 +110,20 @@ exports.destroy = async function(ctx) {
 
   await db.remove(tableToDelete)
 
-  // Delete all records for that table
-  const records = await db.allDocs(
-    getRecordParams(ctx.params.tableId, null, {
+  // Delete all rows for that table
+  const rows = await db.allDocs(
+    getRowParams(ctx.params.tableId, null, {
       include_docs: true,
     })
   )
   await db.bulkDocs(
-    records.rows.map(record => ({ _id: record.id, _deleted: true }))
+    rows.rows.map(row => ({ _id: row.id, _deleted: true }))
   )
 
-  // update linked records
-  await linkRecords.updateLinks({
+  // update linked rows
+  await linkRows.updateLinks({
     instanceId,
-    eventType: linkRecords.EventType.TABLE_DELETE,
+    eventType: linkRows.EventType.TABLE_DELETE,
     table: tableToDelete,
   })
 

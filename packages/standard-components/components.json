@@ -1,8 +1,8 @@
 {
 	"_lib": "./dist/index.js",
 	"_templates": {
-		"saveRecordButton": {
-			"description": "Save record button",
+		"saveRowButton": {
+			"description": "Save row button",
 			"component": "button"
 		}
 	},
@@ -269,8 +269,8 @@
 			"destinationUrl": "string"
 		}
 	},
-	"recorddetail": {
-		"description": "Loads a record, using an ID in the url",
+	"rowdetail": {
+		"description": "Loads a row, using an ID in the url",
 		"context": "table",
 		"children": true,
 		"data": true,

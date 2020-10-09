@@ -50,11 +50,11 @@ describe("/tables", () => {
         });
       })
 
-    it("renames all the record fields for a table when a schema key is renamed", async () => {
+    it("renames all the row fields for a table when a schema key is renamed", async () => {
       const testTable = await createTable(request, app._id, instance._id);
 
-      const testRecord = await request
-        .post(`/api/${testTable._id}/records`)
+      const testRow = await request
+        .post(`/api/${testTable._id}/rows`)
         .send({
           name: "test"
         })
@@ -85,7 +85,7 @@ describe("/tables", () => {
         expect(updatedTable.body.name).toEqual("TestTable");            
 
         const res = await request
-          .get(`/api/${testTable._id}/records/${testRecord.body._id}`)
+          .get(`/api/${testTable._id}/rows/${testRow.body._id}`)
           .set(defaultHeaders(app._id, instance._id))
           .expect('Content-Type', /json/)
           .expect(200)

@@ -126,10 +126,10 @@ describe("/automations", () => {
 
   describe("create", () => {
     it("should setup the automation fully", () => {
-      let trigger = TRIGGER_DEFINITIONS["RECORD_SAVED"]
+      let trigger = TRIGGER_DEFINITIONS["ROW_SAVED"]
       trigger.id = "wadiawdo34"
-      let createAction = ACTION_DEFINITIONS["CREATE_RECORD"]
-      createAction.inputs.record = {
+      let createAction = ACTION_DEFINITIONS["CREATE_ROW"]
+      createAction.inputs.row = {
         name: "{{trigger.name}}",
         description: "{{trigger.description}}"
       }
@@ -169,7 +169,7 @@ describe("/automations", () => {
     it("trigger the automation successfully", async () => {
       let table = await createTable(request, app._id, instance._id)
       TEST_AUTOMATION.definition.trigger.inputs.tableId = table._id
-      TEST_AUTOMATION.definition.steps[0].inputs.record.tableId = table._id
+      TEST_AUTOMATION.definition.steps[0].inputs.row.tableId = table._id
       await createAutomation()
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
@@ -189,7 +189,7 @@ describe("/automations", () => {
           return
         }
       }
-      throw "Failed to find the records"
+      throw "Failed to find the rows"
     })
   })
 

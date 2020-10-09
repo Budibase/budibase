@@ -6,7 +6,7 @@ xcontext('Create Components', () => {
         // https://on.cypress.io/type
         cy.createApp('Model App', 'Model App Description')
         cy.createTable('dog', 'name', 'age')
-        cy.addRecord('bob', '15')
+        cy.addRow('bob', '15')
     })
 
     // https://on.cypress.io/interacting-with-elements

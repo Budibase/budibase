@@ -1,4 +1,4 @@
-const recordController = require("../../api/controllers/record")
+const rowController = require("../../api/controllers/row")
 const environment = require("../../environment")
 const usage = require("../../utilities/usageQuota")
 
@@ -8,7 +8,7 @@ module.exports.definition = {
   name: "Delete Row",
   tagline: "Delete a {{inputs.enriched.table.name}} row",
   type: "ACTION",
-  stepId: "DELETE_RECORD",
+  stepId: "DELETE_ROW",
   inputs: {},
   schema: {
     inputs: {
@@ -31,9 +31,9 @@ module.exports.definition = {
     },
     outputs: {
       properties: {
-        record: {
+        row: {
           type: "object",
-          customType: "record",
+          customType: "row",
           description: "The deleted row",
         },
         response: {
@@ -45,7 +45,7 @@ module.exports.definition = {
           description: "Whether the action was successful",
         },
       },
-      required: ["record", "success"],
+      required: ["row", "success"],
     },
   },
 }
@@ -58,7 +58,7 @@ module.exports.run = async function({ inputs, instanceId, apiKey }) {
   let ctx = {
     params: {
       tableId: inputs.tableId,
-      recordId: inputs.id,
+      rowId: inputs.id,
       revId: inputs.revision,
     },
     user: { instanceId },
@@ -66,12 +66,12 @@ module.exports.run = async function({ inputs, instanceId, apiKey }) {
 
   try {
     if (environment.CLOUD) {
-      await usage.update(apiKey, usage.Properties.RECORD, -1)
+      await usage.update(apiKey, usage.Properties.ROW, -1)
     }
-    await recordController.destroy(ctx)
+    await rowController.destroy(ctx)
     return {
       response: ctx.body,
-      record: ctx.record,
+      row: ctx.row,
       success: ctx.status === 200,
     }
   } catch (err) {

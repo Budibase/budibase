@@ -2,7 +2,7 @@ const environment = require("../environment")
 const { apiKeyTable } = require("../db/dynamoClient")
 
 const DEFAULT_USAGE = {
-  records: 0,
+  rows: 0,
   storage: 0,
   views: 0,
   automationRuns: 0,
@@ -10,7 +10,7 @@ const DEFAULT_USAGE = {
 }
 
 const DEFAULT_PLAN = {
-  records: 1000,
+  rows: 1000,
   // 1 GB
   storage: 8589934592,
   views: 10,
@@ -42,7 +42,7 @@ function getNewQuotaReset() {
 }
 
 exports.Properties = {
-  RECORD: "records",
+  ROW: "rows",
   UPLOAD: "storage",
   VIEW: "views",
   USER: "users",

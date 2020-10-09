@@ -7,13 +7,13 @@ context("Create a View", () => {
     cy.addColumn("data", "age", "Number")
     cy.addColumn("data", "rating", "Number")
 
-    // 6 Records
-    cy.addRecord(["Students", 25, 1])
-    cy.addRecord(["Students", 20, 3])
-    cy.addRecord(["Students", 18, 6])
-    cy.addRecord(["Students", 25, 2])
-    cy.addRecord(["Teachers", 49, 5])
-    cy.addRecord(["Teachers", 36, 3])
+    // 6 Rows
+    cy.addRow(["Students", 25, 1])
+    cy.addRow(["Students", 20, 3])
+    cy.addRow(["Students", 18, 6])
+    cy.addRow(["Students", 25, 2])
+    cy.addRow(["Teachers", 49, 5])
+    cy.addRow(["Teachers", 36, 3])
   })
 
   it("creates a view", () => {

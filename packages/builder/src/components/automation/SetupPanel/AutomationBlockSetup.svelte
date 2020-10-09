@@ -1,6 +1,6 @@
 <script>
   import TableSelector from "./ParamInputs/TableSelector.svelte"
-  import RecordSelector from "./ParamInputs/RecordSelector.svelte"
+  import RowSelector from "./ParamInputs/RowSelector.svelte"
   import { Input, TextArea, Select, Label } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import BindableInput from "../../userInterface/BindableInput.svelte"
@@ -62,8 +62,8 @@
         <Input type="password" thin bind:value={block.inputs[key]} />
       {:else if value.customType === 'table'}
         <TableSelector bind:value={block.inputs[key]} />
-      {:else if value.customType === 'record'}
-        <RecordSelector bind:value={block.inputs[key]} {bindings} />
+      {:else if value.customType === 'row'}
+        <RowSelector bind:value={block.inputs[key]} {bindings} />
       {:else if value.type === 'string' || value.type === 'number'}
         <BindableInput
           type="string"

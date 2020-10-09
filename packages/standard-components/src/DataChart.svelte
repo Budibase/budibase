@@ -26,8 +26,8 @@
   $: console.log("CHART CONFIGS", chartConfigs)
 
   async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/views/all_${table}`
-    const response = await _bb.api.get(FETCH_RECORDS_URL)
+    const FETCH_ROWS_URL = `/api/views/all_${table}`
+    const response = await _bb.api.get(FETCH_ROWS_URL)
     if (response.status === 200) {
       const json = await response.json()
       store.update(state => {
@@ -35,7 +35,7 @@
         return state
       })
     } else {
-      throw new Error("Failed to fetch records.", response)
+      throw new Error("Failed to fetch rows.", response)
     }
   }
 

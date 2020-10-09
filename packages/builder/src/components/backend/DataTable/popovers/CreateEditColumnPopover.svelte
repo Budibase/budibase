@@ -19,7 +19,7 @@
   import Checkbox from "components/common/Checkbox.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
-  import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"
+  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import * as api from "../api"
 
   let fieldDefinitions = cloneDeep(FIELDS)

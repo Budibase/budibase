@@ -145,7 +145,7 @@ The HTML and CSS for your apps runtime pages, as well as the budibase client lib
 
 #### Backend
 
-The backend schema, tables and records are stored using PouchDB when developing locally, and in [CouchDB](https://pouchdb.com/) when running in production.
+/he backend schema, tables and rows are stored using PouchDB when developing locally, and in [CouchDB](https://pouchdb.com/) when running in production.
 
 ### Publishing Budibase to NPM
 

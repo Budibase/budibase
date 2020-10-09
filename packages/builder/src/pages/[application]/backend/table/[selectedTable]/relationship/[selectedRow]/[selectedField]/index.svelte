@@ -5,5 +5,5 @@
 
 <RelationshipDataTable
   tableId={$params.selectedTable}
-  recordId={$params.selectedRecord}
+  rowId={$params.selectedRow}
   fieldName={decodeURI($params.selectedField)} />

@@ -5,7 +5,7 @@ const SEPARATOR = "_"
 
 const DocumentTypes = {
   TABLE: "ta",
-  RECORD: "re",
+  ROW: "re",
   USER: "us",
   AUTOMATION: "au",
   LINK: "li",
@@ -19,7 +19,7 @@ exports.SEPARATOR = SEPARATOR
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
  * is usually the case as most of our docs are top level e.g. tables, automations, users and so on.
- * More complex cases such as link docs and records which have multiple levels of IDs that their
+ * More complex cases such as link docs and rows which have multiple levels of IDs that their
  * ID consists of need their own functions to build the allDocs parameters.
  * @param {string} docType The type of document which input params are being built for, e.g. user,
  * link, app, table and so on.
@@ -55,31 +55,31 @@ exports.generateTableID = () => {
 }
 
 /**
- * Gets the DB allDocs/query params for retrieving a record.
- * @param {string} tableId The table in which the records have been stored.
- * @param {string|null} recordId The ID of the record which is being specifically queried for. This can be
- * left null to get all the records in the table.
+ * Gets the DB allDocs/query params for retrieving a row.
+ * @param {string} tableId The table in which the rows have been stored.
+ * @param {string|null} rowId The ID of the row which is being specifically queried for. This can be
+ * left null to get all the rows in the table.
  * @param {object} otherProps Any other properties to add to the request.
  * @returns {object} Parameters which can then be used with an allDocs request.
  */
-exports.getRecordParams = (tableId, recordId = null, otherProps = {}) => {
+exports.getRowParams = (tableId, rowId = null, otherProps = {}) => {
   if (tableId == null) {
-    throw "Cannot build params for records without a table ID"
+    throw "Cannot build params for rows without a table ID"
   }
   const endOfKey =
-    recordId == null
+    rowId == null
       ? `${tableId}${SEPARATOR}`
-      : `${tableId}${SEPARATOR}${recordId}`
-  return getDocParams(DocumentTypes.RECORD, endOfKey, otherProps)
+      : `${tableId}${SEPARATOR}${rowId}`
+  return getDocParams(DocumentTypes.ROW, endOfKey, otherProps)
 }
 
 /**
- * Gets a new record ID for the specified table.
- * @param {string} tableId The table which the record is being created for.
- * @returns {string} The new ID which a record doc can be stored under.
+ * Gets a new row ID for the specified table.
+ * @param {string} tableId The table which the row is being created for.
+ * @returns {string} The new ID which a row doc can be stored under.
  */
-exports.generateRecordID = tableId => {
-  return `${DocumentTypes.RECORD}${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
+exports.generateRowID = tableId => {
+  return `${DocumentTypes.ROW}${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
 }
 
 /**
@@ -118,12 +118,12 @@ exports.generateAutomationID = () => {
  * instead a view is built to make walking to tree easier.
  * @param {string} tableId1 The ID of the linker table.
  * @param {string} tableId2 The ID of the linked table.
- * @param {string} recordId1 The ID of the linker record.
- * @param {string} recordId2 The ID of the linked record.
+ * @param {string} rowId1 The ID of the linker row.
+ * @param {string} rowId2 The ID of the linked row.
  * @returns {string} The new link doc ID which the automation doc can be stored under.
  */
-exports.generateLinkID = (tableId1, tableId2, recordId1, recordId2) => {
-  return `${DocumentTypes.AUTOMATION}${SEPARATOR}${tableId1}${SEPARATOR}${tableId2}${SEPARATOR}${recordId1}${SEPARATOR}${recordId2}`
+exports.generateLinkID = (tableId1, tableId2, rowId1, rowId2) => {
+  return `${DocumentTypes.AUTOMATION}${SEPARATOR}${tableId1}${SEPARATOR}${tableId2}${SEPARATOR}${rowId1}${SEPARATOR}${rowId2}`
 }
 
 /**

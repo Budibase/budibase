@@ -6,22 +6,22 @@ export async function createUser(user) {
   return await response.json()
 }
 
-export async function saveRecord(record, tableId) {
-  const SAVE_RECORDS_URL = `/api/${tableId}/records`
-  const response = await api.post(SAVE_RECORDS_URL, record)
+export async function saveRow(row, tableId) {
+  const SAVE_ROWS_URL = `/api/${tableId}/rows`
+  const response = await api.post(SAVE_ROWS_URL, row)
 
   return await response.json()
 }
 
-export async function deleteRecord(record) {
-  const DELETE_RECORDS_URL = `/api/${record.tableId}/records/${record._id}/${record._rev}`
-  const response = await api.delete(DELETE_RECORDS_URL)
+export async function deleteRow(row) {
+  const DELETE_ROWS_URL = `/api/${row.tableId}/rows/${row._id}/${row._rev}`
+  const response = await api.delete(DELETE_ROWS_URL)
   return response
 }
 
 export async function fetchDataForView(view) {
-  const FETCH_RECORDS_URL = `/api/views/${view.name}`
+  const FETCH_ROWS_URL = `/api/views/${view.name}`
 
-  const response = await api.get(FETCH_RECORDS_URL)
+  const response = await api.get(FETCH_ROWS_URL)
   return await response.json()
 }
