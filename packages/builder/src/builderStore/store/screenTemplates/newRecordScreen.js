@@ -1,13 +1,21 @@
 export default function(models) {
-  return models.map(model => ({
-    name: `New Record - ${model.name}`,
-    create: () => createScreen(model),
-  }))
+  return models.map(model => {
+    const fields = Object.keys(model.schema)
+    const heading =
+      fields.length > 0 ? `{{ data.${fields[0]} }}` : "Create Record"
+    return {
+      name: `New Record - ${model.name}`,
+      create: () => createScreen(model, heading),
+      id: NEW_RECORD_TEMPLATE,
+    }
+  })
 }
 
-const createScreen = model => ({
+export const NEW_RECORD_TEMPLATE = "NEW_RECORD_TEMPLATE"
+
+const createScreen = (model, heading) => ({
   props: {
-    _id: "f684460e-1f79-42b4-8ffd-1f708bca93ed",
+    _id: "",
     _component: "@budibase/standard-components/newrecord",
     _styles: {
       normal: {},
@@ -18,7 +26,7 @@ const createScreen = model => ({
     model: model._id,
     _children: [
       {
-        _id: "7d1d6b43-b444-46a5-a75c-267fd6b5baf6",
+        _id: "",
         _component: "@budibase/standard-components/heading",
         _styles: {
           normal: {},
@@ -28,15 +36,101 @@ const createScreen = model => ({
         },
         _code: "",
         className: "",
-        text: `Create New ${model.name}`,
+        text: heading,
         type: "h1",
-        _instanceId: "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
-        _instanceName: `Heading 1`,
+        _instanceName: "Heading 1",
         _children: [],
       },
+      {
+        _id: "",
+        _component: "@budibase/standard-components/dataform",
+        _styles: {
+          normal: {},
+          hover: {},
+          active: {},
+          selected: {},
+        },
+        _code: "",
+        _instanceName: `${model.name} Form`,
+        _children: [],
+      },
+      {
+        _id: "",
+        _component: "@budibase/standard-components/container",
+        _styles: {
+          normal: {
+            display: "flex",
+            "flex-direction": "row",
+            "align-items": "center",
+            "justify-content": "flex-end",
+          },
+          hover: {},
+          active: {},
+          selected: {},
+        },
+        _code: "",
+        className: "",
+        onLoad: [],
+        type: "div",
+        _instanceName: "Buttons Container",
+        _children: [
+          {
+            _id: "",
+            _component: "@budibase/standard-components/button",
+            _styles: {
+              normal: {
+                "margin-right": "20px",
+              },
+              hover: {},
+              active: {},
+              selected: {},
+            },
+            _code: "",
+            text: "Back",
+            className: "",
+            disabled: false,
+            onClick: [
+              {
+                parameters: {
+                  url: `/${model.name.toLowerCase()}`,
+                },
+                "##eventHandlerType": "Navigate To",
+              },
+            ],
+            _instanceName: "Back Button",
+            _children: [],
+          },
+          {
+            _id: "",
+            _component: "@budibase/standard-components/button",
+            _styles: {
+              normal: {},
+              hover: {},
+              active: {},
+              selected: {},
+            },
+            _code: "",
+            text: "Save",
+            className: "",
+            disabled: false,
+            onClick: [
+              {
+                parameters: {
+                  contextPath: "data",
+                  modelId: model._id,
+                },
+                "##eventHandlerType": "Save Record",
+              },
+            ],
+            _instanceName: "Save Button",
+            _children: [],
+          },
+        ],
+      },
     ],
-    _instanceName: `New ${model.name}`,
+    _instanceName: `${model.name} - New`,
+    _code: "",
   },
-  route: `/${model.name}/new`,
-  name: "screen-id",
+  route: `/${model.name.toLowerCase()}/new`,
+  name: "",
 })

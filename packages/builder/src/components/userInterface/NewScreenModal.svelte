@@ -9,7 +9,7 @@
   let name = ""
   let routeError
   let baseComponent = CONTAINER
-  let templateIndex = 0
+  let templateIndex
   let draftScreen
 
   $: templates = getTemplates($store, $backendUiStore.models)
@@ -20,9 +20,15 @@
     .filter(componentDefinition => componentDefinition.baseComponent)
     .map(c => c._component)
 
-  const templateChanged = ev => {
-    const newTemplateIndex = ev.target.value
-    if (!newTemplateIndex) return
+  $: {
+    if (templates && templateIndex === undefined) {
+      templateIndex = 0
+      templateChanged(0)
+    }
+  }
+
+  const templateChanged = newTemplateIndex => {
+    if (newTemplateIndex === undefined) return
 
     draftScreen = templates[newTemplateIndex].create()
     if (draftScreen.props._instanceName) {
@@ -96,7 +102,7 @@
     label="Choose a Template"
     bind:value={templateIndex}
     secondary
-    on:change={templateChanged}>
+    on:change={ev => templateChanged(ev.target.value)}>
     {#if templates}
       {#each templates as template, index}
         <option value={index}>{template.name}</option>
@@ -111,11 +117,5 @@
     error={routeError}
     bind:value={route}
     on:change={routeChanged} />
-
-  <Select label="Screen Type" bind:value={baseComponent} secondary>
-    {#each baseComponents as component}
-      <option value={component}>{componentShortName(component)}</option>
-    {/each}
-  </Select>
 
 </ModalContent>

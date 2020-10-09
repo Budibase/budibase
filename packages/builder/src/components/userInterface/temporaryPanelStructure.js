@@ -1104,6 +1104,18 @@ export default {
           },
           children: [],
         },
+        {
+          name: "Record Detail",
+          _component: "@budibase/standard-components/newrecord",
+          description:
+            "Sets up a new record for creation, which can be used with {{ context }}, in children",
+          icon: "ri-profile-line",
+          properties: {
+            design: { ...all },
+            settings: [{ label: "Table", key: "model", control: ModelSelect }],
+          },
+          children: [],
+        },
         // {
         // name: "Map",
         // _component: "@budibase/standard-components/datamap",

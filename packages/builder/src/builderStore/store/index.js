@@ -124,17 +124,18 @@ const saveScreen = store => screen => {
 }
 
 const _saveScreen = async (store, s, screen) => {
-  const currentPageScreens = s.pages[s.currentPageName]._screens
+  const pageName = s.currentPageName || "main"
+  const currentPageScreens = s.pages[pageName]._screens
 
   await api
-    .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
+    .post(`/_builder/api/${s.appId}/pages/${pageName}/screen`, screen)
     .then(() => {
       if (currentPageScreens.includes(screen)) return
 
       const screens = [...currentPageScreens, screen]
 
       store.update(innerState => {
-        innerState.pages[s.currentPageName]._screens = screens
+        innerState.pages[pageName]._screens = screens
         innerState.screens = screens
         innerState.currentPreviewItem = screen
         innerState.allScreens = [...innerState.allScreens, screen]
@@ -153,16 +154,17 @@ const _saveScreen = async (store, s, screen) => {
   return s
 }
 
-const createScreen = store => screen => {
+const createScreen = store => async screen => {
+  let savePromise
   store.update(state => {
     state.currentPreviewItem = screen
     state.currentComponentInfo = screen.props
     state.currentFrontEndType = "screen"
-
-    _saveScreen(store, state, screen)
-
+    savePromise = _saveScreen(store, state, screen)
+    regenerateCssForCurrentScreen(state)
     return state
   })
+  await savePromise
 }
 
 const setCurrentScreen = store => screenName => {
