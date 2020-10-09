@@ -95,10 +95,7 @@ exports.deployApp = async function(ctx) {
       credentials: credentials.couchDbCreds,
     })
 
-    const deployedInstanceQuota = await getCurrentInstanceQuota(
-      ctx.user.instanceId
-    )
-    await updateDeploymentQuota(deployedInstanceQuota)
+    await updateDeploymentQuota(credentials.quota)
 
     ctx.body = {
       status: "SUCCESS",
