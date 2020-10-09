@@ -82,29 +82,30 @@ exports.updateLinks = async function({
  * then an array will be output, object input -> object output.
  */
 exports.attachLinkInfo = async (instanceId, rows) => {
-  // handle a single row as well as multiple
+  // handle a single record as well as multiple
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
     wasArray = false
   }
+  let tableIds = [...new Set(rows.map(el => el.tableId))]
   // start by getting all the link values for performance reasons
-  let responses = await Promise.all(
-    rows.map(row =>
-      getLinkDocuments({
-        instanceId,
-        tableId: row.tableId,
-        rowId: row._id,
-        includeDocs: IncludeDocs.EXCLUDE,
-      })
+  let responses = [].concat.apply(
+    [],
+    await Promise.all(
+      tableIds.map(tableId =>
+        getLinkDocuments({
+          instanceId,
+          tableId: tableId,
+          includeDocs: IncludeDocs.EXCLUDE,
+        })
+      )
     )
   )
-  // can just use an index to access responses, order maintained
-  let index = 0
   // now iterate through the rows and all field information
   for (let row of rows) {
     // get all links for row, ignore fieldName for now
-    const linkVals = responses[index++]
+    const linkVals = responses.filter(el => el.thisId === row._id)
     for (let linkVal of linkVals) {
       // work out which link pertains to this row
       if (!(row[linkVal.fieldName] instanceof Array)) {
