@@ -33,6 +33,10 @@ exports.updateDeploymentQuota = async function(quota) {
       apiKey: process.env.BUDIBASE_API_KEY,
       quota,
     }),
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
   })
 
   if (response.status !== 200) {
