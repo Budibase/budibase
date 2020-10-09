@@ -94,7 +94,7 @@ exports.update = async (apiKey, property, usage) => {
         await apiKeyTable.put({ item: keyObj })
         return
       }
-      throw "Resource limits have been reached"
     }
+    throw "Resource limits have been reached"
   }
 }
