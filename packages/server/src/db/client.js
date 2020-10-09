@@ -2,7 +2,6 @@ const PouchDB = require("pouchdb")
 const replicationStream = require("pouchdb-replication-stream")
 const allDbs = require("pouchdb-all-dbs")
 const { budibaseAppsDir } = require("../utilities/budibaseDir")
-const { sanitise } = require("../utilities/sanitisedPath")
 const env = require("../environment")
 
 const COUCH_DB_URL = env.COUCH_DB_URL || `leveldb://${budibaseAppsDir()}/.data/`
@@ -27,10 +26,4 @@ const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
 
 allDbs(Pouch)
 
-function PouchWrapper(instance) {
-  Pouch.apply(this, [sanitise(instance)])
-}
-
-PouchWrapper.prototype = Object.create(Pouch.prototype)
-
-module.exports = PouchWrapper
+module.exports = Pouch

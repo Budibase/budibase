@@ -5,7 +5,7 @@ const {
   verifyDeployment,
   updateDeploymentQuota,
 } = require("./aws")
-const { DocumentTypes } = require("../../../db/utils")
+const { DocumentTypes, SEPARATOR, UNICODE_MAX } = require("../../../db/utils")
 
 function replicate(local, remote) {
   return new Promise((resolve, reject) => {
@@ -38,20 +38,25 @@ async function replicateCouch({ instanceId, clientId, credentials }) {
 
 async function getCurrentInstanceQuota(instanceId) {
   const db = new PouchDB(instanceId)
+
   const records = await db.allDocs({
-    startkey: "re:",
-    endkey: `re:\ufff0`,
+    startkey: DocumentTypes.RECORD + SEPARATOR,
+    endkey: DocumentTypes.RECORD + SEPARATOR + UNICODE_MAX,
   })
+
   const users = await db.allDocs({
-    startkey: DocumentTypes.USER + ,
-    endkey: `us:\ufff0`,
+    startkey: DocumentTypes.USER + SEPARATOR,
+    endkey: DocumentTypes.USER + SEPARATOR + UNICODE_MAX,
   })
+
   const existingRecords = records.rows.length
+  const existingUsers = users.rows.length
 
   const designDoc = await db.get("_design/database")
 
   return {
     records: existingRecords,
+    users: existingUsers,
     views: Object.keys(designDoc.views).length,
   }
 }
