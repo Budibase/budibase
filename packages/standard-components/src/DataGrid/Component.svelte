@@ -16,12 +16,22 @@
 
   export let _bb
   export let datasource = {}
+  export let editable
 
   let dataLoaded = false
   let data
   let columnDefs
   let selectedRows = []
   let model
+  let options = {
+    defaultColDef: {
+      flex: 1,
+      minWidth: 150,
+      filter: true,
+    },
+    rowSelection: editable ? "multiple" : "single",
+    suppressRowClickSelection: !editable,
+  }
 
   onMount(async () => {
     if (datasource.modelId) {
@@ -39,11 +49,13 @@
             field: key,
             hide: shouldHideField(key),
             sortable: true,
-            editable: isEditable(schema[key].type),
-            cellRenderer: getRenderer(
-              schema[key].type, // type
-              schema[key].constraints // options
-            ),
+            editable: editable && isEditable(schema[key].type),
+            cellRenderer:
+              editable &&
+              getRenderer(
+                schema[key].type, // type
+                schema[key].constraints // options
+              ),
             autoHeight: true,
           }
         })
@@ -97,16 +109,19 @@
 
 <div class="container">
   {#if dataLoaded}
-    <div class="controls">
-      <CreateRowButton {_bb} {model} on:newRecord={handleNewRecord} />
-      {#if selectedRows.length > 0}
-        <DeleteButton text small on:click={deleteRecords}>
-          <Icon name="addrow" />
-          Delete {selectedRows.length} row(s)
-        </DeleteButton>
-      {/if}
-    </div>
+    {#if editable}
+      <div class="controls">
+        <CreateRowButton {_bb} {model} on:newRecord={handleNewRecord} />
+        {#if selectedRows.length > 0}
+          <DeleteButton text small on:click={deleteRecords}>
+            <Icon name="addrow" />
+            Delete {selectedRows.length} row(s)
+          </DeleteButton>
+        {/if}
+      </div>
+    {/if}
     <AgGrid
+      {options}
       {data}
       {columnDefs}
       on:update={handleUpdate}

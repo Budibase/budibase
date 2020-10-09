@@ -326,6 +326,12 @@ export default {
                 key: "datasource",
                 control: ModelViewSelect,
               },
+              {
+                label: "Editable",
+                key: "editable",
+                valueKey: "checked",
+                control: Checkbox,
+              },
             ],
           },
           children: [],
