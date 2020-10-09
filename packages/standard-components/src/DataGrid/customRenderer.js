@@ -62,10 +62,11 @@ function dateRenderer(options) {
             target: container,
             props: {
                 value: params.value,
+                thin: true
             }
         });
 
-        datePickerInstance.$on('change', toggle)
+        // datePickerInstance.$on('change', toggle)
 
         return container
     }

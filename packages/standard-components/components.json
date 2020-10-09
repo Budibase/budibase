@@ -225,7 +225,8 @@
 		"description": "a datagrid component with functionality to add, remove and edit rows.",
 		"data": true,
 		"props": {
-			"datasource": "models"
+			"datasource": "models",
+			"editable": "bool"
 		}
 	},
 	"dataform": {
