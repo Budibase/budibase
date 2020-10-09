@@ -272,7 +272,7 @@
 		}
 	},
 	"newrecord": {
-		"description": "Loads a record, using an ID in the url",
+		"description": "Prepares a new record for creation",
 		"context": "model",
 		"children": true,
 		"data": true,

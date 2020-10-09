@@ -20,7 +20,7 @@
 
   onMount(async () => {
     if (model) {
-      const modelObj = await fetchModel(modelId)
+      const modelObj = await fetchModel(model)
       record.modelId = model
       record._model = modelObj
       _bb.attachChildren(target, {

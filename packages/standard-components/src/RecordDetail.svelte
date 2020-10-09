@@ -20,6 +20,7 @@
     if (response.status === 200) {
       const allRecords = await response.json()
       if (allRecords.length > 0) return allRecords[0]
+      return { modelId: model }
     }
   }
 
