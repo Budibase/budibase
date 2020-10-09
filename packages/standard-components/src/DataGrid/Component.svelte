@@ -42,7 +42,7 @@
             editable: isEditable(schema[key].type),
             cellRenderer: getRenderer(
               schema[key].type, // type
-              schema[key].constraints.inclusion // options
+              schema[key].constraints // options
             ),
             autoHeight: true,
           }

@@ -61,7 +61,7 @@ function dateRenderer(options) {
 }
 
 
-function optionsRenderer(options) {
+function optionsRenderer({ inclusion }) {
     return params => {
         const container = document.createElement("div")
         const change = (e) => {
@@ -72,7 +72,7 @@ function optionsRenderer(options) {
             target: container,
             props: {
                 value: params.value,
-                options
+                options: inclusion
             }
         });
 
@@ -83,13 +83,9 @@ function optionsRenderer(options) {
 }
 
 export function getRenderer(type, options) {
-    // Complicated thing to set options for renderers
-    let customRenderer
-    if (type === "options" || type === 'datetime') {
-        customRenderer = renderers.get(type)(options)
+    if (renderers.get(type)) {
+        return renderers.get(type)(options)
     } else {
-        let rendererGenerator = renderers.get(type)
-        customRenderer = rendererGenerator ? rendererGenerator() : false
+        return false
     }
-    return customRenderer
 }
