@@ -1,5 +1,5 @@
 const { app, BrowserWindow, shell, dialog } = require("electron")
-const { join } = require("./utilities/sanitisedPath")
+const { join } = require("./utilities/centralPath")
 const isDev = require("electron-is-dev")
 const { autoUpdater } = require("electron-updater")
 const unhandled = require("electron-unhandled")
