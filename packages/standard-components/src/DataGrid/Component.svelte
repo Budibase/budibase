@@ -1,7 +1,7 @@
 <script>
   // Import valueSetters and custom renderers
   import { number } from "./valueSetters"
-  import renderers from "./customRenderer"
+  import { getRenderer } from "./customRenderer"
 
   // These maps need to be set up to handle whatever types that are used in the models.
   const setters = new Map([["number", number]])
@@ -28,7 +28,6 @@
       const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
       model = await jsonModel.json()
       const { schema } = model
-      console.log(schema)
       if (!isEmpty(datasource)) {
         data = await fetchData(datasource)
         columnDefs = Object.keys(schema).map((key, i) => {
@@ -40,17 +39,24 @@
             field: key,
             hide: shouldHideField(key),
             sortable: true,
-            editable:
-              schema[key].type !== "boolean" &&
-              schema[key].type !== "attachment",
-            cellRenderer: renderers.get(schema[key].type),
-            autoHeight: schema[key].type === "attachment",
+            editable: isEditable(schema[key].type),
+            cellRenderer: getRenderer(
+              schema[key].type, // type
+              schema[key].constraints.inclusion // options
+            ),
+            autoHeight: true,
           }
         })
       }
       dataLoaded = true
     }
   })
+
+  const isEditable = type =>
+    type !== "boolean" &&
+    type !== "options" &&
+    type !== "attachment" &&
+    type !== "datetime"
 
   const shouldHideField = name => {
     if (name.startsWith("_")) return true
