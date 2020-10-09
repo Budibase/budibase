@@ -52,7 +52,7 @@
   onOk={deleteRow}
   title="Confirm Delete" />
 <Modal bind:this={modal}>
-  <CreateEditRowModal row={row} />
+  <CreateEditRowModal {row} />
 </Modal>
 
 <style>

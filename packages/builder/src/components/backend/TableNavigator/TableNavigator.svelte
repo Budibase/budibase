@@ -36,7 +36,7 @@
               title={table.name}
               icon="ri-table-fill"
               on:click={() => selectTable(table)}>
-              <EditTablePopover table={table} />
+              <EditTablePopover {table} />
             </ListItem>
             {#each Object.keys(table.views || {}) as viewName}
               <ListItem

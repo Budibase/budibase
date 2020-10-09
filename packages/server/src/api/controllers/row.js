@@ -218,8 +218,7 @@ exports.destroy = async function(ctx) {
 
   // for automations include the row that was deleted
   ctx.row = row
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitRow(`row:delete`, instanceId, row)
+  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, instanceId, row)
 }
 
 exports.validate = async function(ctx) {

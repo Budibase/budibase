@@ -86,8 +86,8 @@
 <div class="root">
   {#if idFields.length === 0}
     <div class="cannot-use">
-      Update row can only be used within a component that provides data, such
-      as a List
+      Update row can only be used within a component that provides data, such as
+      a List
     </div>
   {:else}
     <Label size="m" color="dark">Row Id</Label>
