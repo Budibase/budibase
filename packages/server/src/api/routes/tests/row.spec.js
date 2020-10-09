@@ -7,12 +7,12 @@ const {
   defaultHeaders,
 } = require("./couchTestUtils");
 
-describe("/records", () => {
+describe("/rows", () => {
   let request
   let server
   let instance
   let table
-  let record
+  let row
   let app
 
   beforeAll(async () => {
@@ -28,7 +28,7 @@ describe("/records", () => {
   beforeEach(async () => {
     instance = await createInstance(request, app._id)
     table = await createTable(request, app._id, instance._id)
-    record = {
+    row = {
       name: "Test Contact",
       description: "original description",
       status: "new",
@@ -36,17 +36,17 @@ describe("/records", () => {
     }
   })
 
-  const createRecord = async r => 
+  const createRow = async r => 
     await request
-      .post(`/api/${r ? r.tableId : record.tableId}/records`)
-      .send(r || record)
+      .post(`/api/${r ? r.tableId : row.tableId}/rows`)
+      .send(r || row)
       .set(defaultHeaders(app._id, instance._id))
       .expect('Content-Type', /json/)
       .expect(200)
 
-  const loadRecord = async id => 
+  const loadRow = async id => 
     await request
-      .get(`/api/${table._id}/records/${id}`)
+      .get(`/api/${table._id}/rows/${id}`)
       .set(defaultHeaders(app._id, instance._id))
       .expect('Content-Type', /json/)
       .expect(200)
@@ -55,19 +55,19 @@ describe("/records", () => {
   describe("save, load, update, delete", () => {
 
 
-    it("returns a success message when the record is created", async () => {
-      const res = await createRecord()
+    it("returns a success message when the row is created", async () => {
+      const res = await createRow()
       expect(res.res.statusMessage).toEqual(`${table.name} created successfully`)           
       expect(res.body.name).toEqual("Test Contact")
       expect(res.body._rev).toBeDefined()
     })
 
-    it("updates a record successfully", async () => {
-      const rec = await createRecord()
+    it("updates a row successfully", async () => {
+      const rec = await createRow()
       const existing = rec.body
 
       const res = await request
-        .post(`/api/${table._id}/records`)
+        .post(`/api/${table._id}/rows`)
         .send({
           _id: existing._id,
           _rev: existing._rev,
@@ -82,78 +82,78 @@ describe("/records", () => {
       expect(res.body.name).toEqual("Updated Name")
     })
 
-    it("should load a record", async () => {
-      const rec = await createRecord()
+    it("should load a row", async () => {
+      const rec = await createRow()
       const existing = rec.body
 
       const res = await request
-        .get(`/api/${table._id}/records/${existing._id}`)
+        .get(`/api/${table._id}/rows/${existing._id}`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
 
       expect(res.body).toEqual({
-        ...record,
+        ...row,
         _id: existing._id,
         _rev: existing._rev,
-        type: "record",
+        type: "row",
       })
     })
 
-    it("should list all records for given tableId", async () => {
-      const newRecord = {
+    it("should list all rows for given tableId", async () => {
+      const newRow = {
         tableId: table._id,
         name: "Second Contact",
         status: "new"
       }
-      await createRecord()
-      await createRecord(newRecord)
+      await createRow()
+      await createRow(newRow)
 
       const res = await request
-        .get(`/api/${table._id}/records`)
+        .get(`/api/${table._id}/rows`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
 
       expect(res.body.length).toBe(2)
-      expect(res.body.find(r => r.name === newRecord.name)).toBeDefined()
-      expect(res.body.find(r => r.name === record.name)).toBeDefined()
+      expect(res.body.find(r => r.name === newRow.name)).toBeDefined()
+      expect(res.body.find(r => r.name === row.name)).toBeDefined()
     })
 
-    it("lists records when queried by their ID", async () => {
-      const newRecord = {
+    it("lists rows when queried by their ID", async () => {
+      const newRow = {
         tableId: table._id,
         name: "Second Contact",
         status: "new"
       }
-      const record = await createRecord()
-      const secondRecord = await createRecord(newRecord)
+      const row = await createRow()
+      const secondRow = await createRow(newRow)
 
-      const recordIds = [record.body._id, secondRecord.body._id]
+      const rowIds = [row.body._id, secondRow.body._id]
 
       const res = await request
-        .post(`/api/records/search`)
+        .post(`/api/rows/search`)
         .set(defaultHeaders(app._id, instance._id))
         .send({
-          keys: recordIds
+          keys: rowIds
         })
         .expect('Content-Type', /json/)
         .expect(200)
 
       expect(res.body.length).toBe(2)
-      expect(res.body.map(response => response._id)).toEqual(expect.arrayContaining(recordIds))
+      expect(res.body.map(response => response._id)).toEqual(expect.arrayContaining(rowIds))
     })
 
-    it("load should return 404 when record does not exist", async () => {
-      await createRecord()
+    it("load should return 404 when row does not exist", async () => {
+      await createRow()
       await request
-        .get(`/api/${table._id}/records/not-a-valid-id`)
+        .get(`/api/${table._id}/rows/not-a-valid-id`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(404)
     })
 
-    it("record values are coerced", async () => {
+    it("row values are coerced", async () => {
       const str = {type:"string", constraints: { type: "string", presence: false }}
       const attachment = {type:"attachment", constraints: { type: "array", presence: false }}
       const bool = {type:"boolean", constraints: { type: "boolean", presence: false }}
@@ -189,8 +189,8 @@ describe("/records", () => {
         },
       })
 
-      record = {
-        name: "Test Record",
+      row = {
+        name: "Test Row",
         stringUndefined: undefined,
         stringNull: null,
         stringString: "i am a string",
@@ -215,9 +215,9 @@ describe("/records", () => {
         attachmentEmpty : "",
       }
 
-      const id = (await createRecord(record)).body._id
+      const id = (await createRow(row)).body._id
 
-      const saved = (await loadRecord(id)).body
+      const saved = (await loadRow(id)).body
 
       expect(saved.stringUndefined).toBe(undefined)
       expect(saved.stringNull).toBe("")
@@ -230,8 +230,8 @@ describe("/records", () => {
       expect(saved.datetimeEmptyString).toBe(null)
       expect(saved.datetimeNull).toBe(null)
       expect(saved.datetimeUndefined).toBe(undefined)
-      expect(saved.datetimeString).toBe(new Date(record.datetimeString).toISOString())
-      expect(saved.datetimeDate).toBe(record.datetimeDate.toISOString())
+      expect(saved.datetimeString).toBe(new Date(row.datetimeString).toISOString())
+      expect(saved.datetimeDate).toBe(row.datetimeDate.toISOString())
       expect(saved.boolNull).toBe(null)
       expect(saved.boolEmpty).toBe(null)
       expect(saved.boolUndefined).toBe(undefined)
@@ -245,11 +245,11 @@ describe("/records", () => {
 
   describe("patch", () => {
     it("should update only the fields that are supplied", async () => {
-      const rec = await createRecord()
+      const rec = await createRow()
       const existing = rec.body
 
       const res = await request
-        .patch(`/api/${table._id}/records/${existing._id}`)
+        .patch(`/api/${table._id}/rows/${existing._id}`)
         .send({
           _id: existing._id,
           _rev: existing._rev,
@@ -264,18 +264,18 @@ describe("/records", () => {
       expect(res.body.name).toEqual("Updated Name")
       expect(res.body.description).toEqual(existing.description)
 
-      const savedRecord = await loadRecord(res.body._id)
+      const savedRow = await loadRow(res.body._id)
 
-      expect(savedRecord.body.description).toEqual(existing.description)
-      expect(savedRecord.body.name).toEqual("Updated Name")
+      expect(savedRow.body.description).toEqual(existing.description)
+      expect(savedRow.body.name).toEqual("Updated Name")
         
     })
   })
 
   describe("validate", () => {
-    it("should return no errors on valid record", async () => {
+    it("should return no errors on valid row", async () => {
       const result = await request
-        .post(`/api/${table._id}/records/validate`)
+        .post(`/api/${table._id}/rows/validate`)
         .send({ name: "ivan" })
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
@@ -285,9 +285,9 @@ describe("/records", () => {
       expect(Object.keys(result.body.errors)).toEqual([])
     })
 
-    it("should errors on invalid record", async () => {
+    it("should errors on invalid row", async () => {
       const result = await request
-        .post(`/api/${table._id}/records/validate`)
+        .post(`/api/${table._id}/rows/validate`)
         .send({ name: 1 })
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)

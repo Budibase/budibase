@@ -27,9 +27,9 @@ describe("/views", () => {
     .expect('Content-Type', /json/)
     .expect(200)
 
-  const createRecord = async record => request
-    .post(`/api/${table._id}/records`)
-    .send(record)
+  const createRow = async row => request
+    .post(`/api/${table._id}/rows`)
+    .send(row)
     .set(defaultHeaders(app._id, instance._id))
     .expect('Content-Type', /json/)
     .expect(200)
@@ -58,7 +58,7 @@ describe("/views", () => {
       expect(res.res.statusMessage).toEqual("View TestView saved successfully.");
     })
 
-    it("updates the table record with the new view metadata", async () => {
+    it("updates the table row with the new view metadata", async () => {
       const res = await createView()
       expect(res.res.statusMessage).toEqual("View TestView saved successfully.");
       const updatedTable = await getDocument(instance._id, table._id)
@@ -110,15 +110,15 @@ describe("/views", () => {
 
     it("returns data for the created view", async () => {
       await createView()
-      await createRecord({
+      await createRow({
         tableId: table._id,
         Price: 1000
       })
-      await createRecord({
+      await createRow({
         tableId: table._id,
         Price: 2000
       })
-      await createRecord({
+      await createRow({
         tableId: table._id,
         Price: 4000
       })
@@ -138,17 +138,17 @@ describe("/views", () => {
         groupBy: "Category",
         tableId: table._id
       })
-      await createRecord({
+      await createRow({
         tableId: table._id,
         Price: 1000,
         Category: "One"
       })
-      await createRecord({
+      await createRow({
         tableId: table._id,
         Price: 2000,
         Category: "One"
       })
-      await createRecord({
+      await createRow({
         tableId: table._id,
         Price: 4000,
         Category: "Two"

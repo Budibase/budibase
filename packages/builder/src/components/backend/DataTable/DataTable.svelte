@@ -17,12 +17,12 @@
     name: $backendUiStore.selectedView.name,
   }
 
-  // Fetch records for specified table
+  // Fetch rows for specified table
   $: {
     if ($backendUiStore.selectedView?.name?.startsWith("all_")) {
       loading = true
-      api.fetchDataForView($backendUiStore.selectedView).then(records => {
-        data = records || []
+      api.fetchDataForView($backendUiStore.selectedView).then(rows => {
+        data = rows || []
         loading = false
       })
     }

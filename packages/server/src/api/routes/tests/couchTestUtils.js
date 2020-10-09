@@ -72,7 +72,7 @@ exports.createTable = async (request, appId, instanceId, table) => {
 
 exports.getAllFromTable = async (request, appId, instanceId, tableId) => {
   const res = await request
-    .get(`/api/${tableId}/records`)
+    .get(`/api/${tableId}/rows`)
     .set(exports.defaultHeaders(appId, instanceId))
   return res.body
 }

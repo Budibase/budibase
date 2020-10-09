@@ -4,22 +4,22 @@ export default async function fetchData(datasource) {
   const { isTable, name } = datasource
 
   if (name) {
-    const records = isTable ? await fetchTableData() : await fetchViewData()
+    const rows = isTable ? await fetchTableData() : await fetchViewData()
 
-    // Fetch table schema so we can check for linked records
-    if (records && records.length) {
-      const table = await fetchTable(records[0].tableId)
+    // Fetch table schema so we can check for linked rows
+    if (rows && rows.length) {
+      const table = await fetchTable(rows[0].tableId)
       const keys = Object.keys(table.schema)
-      records.forEach(record => {
+      rows.forEach(row => {
         for (let key of keys) {
           if (table.schema[key].type === "link") {
-            record[key] = Array.isArray(record[key]) ? record[key].length : 0
+            row[key] = Array.isArray(row[key]) ? row[key].length : 0
           }
         }
       })
     }
 
-    return records
+    return rows
   }
 
   async function fetchTable(id) {

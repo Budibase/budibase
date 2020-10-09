@@ -16,7 +16,7 @@ context("Create a automation", () => {
     cy.contains("automate").click()
     cy.contains("Create New Automation").click()
     cy.get(".modal").within(() => {
-      cy.get("input").type("Add Record")
+      cy.get("input").type("Add Row")
       cy.get(".buttons")
         .contains("Create")
         .click()
@@ -24,7 +24,7 @@ context("Create a automation", () => {
 
     // Add trigger
     cy.get("[data-cy=add-automation-component]").click()
-    cy.get("[data-cy=RECORD_SAVED]").click()
+    cy.get("[data-cy=ROW_SAVED]").click()
     cy.get("[data-cy=automation-block-setup]").within(() => {
       cy.get("select")
         .first()
@@ -32,7 +32,7 @@ context("Create a automation", () => {
     })
 
     // Create action
-    cy.get("[data-cy=CREATE_RECORD]").click()
+    cy.get("[data-cy=CREATE_ROW]").click()
     cy.get("[data-cy=automation-block-setup]").within(() => {
       cy.get("select")
         .first()
@@ -53,9 +53,9 @@ context("Create a automation", () => {
     cy.get(".stop-button.highlighted").should("be.visible")
   })
 
-  it("should add record when a new record is added", () => {
+  it("should add row when a new row is added", () => {
     cy.contains("backend").click()
-    cy.addRecord(["Rover", 15])
+    cy.addRow(["Rover", 15])
     cy.reload()
     cy.contains("goodboy").should("have.text", "goodboy")
   })

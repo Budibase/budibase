@@ -5,36 +5,36 @@
   import { backendUiStore } from "builderStore"
 
   export let tableId
-  export let recordId
+  export let rowId
   export let fieldName
 
-  let record
+  let row
   let title
 
-  $: data = record?.[fieldName] ?? []
+  $: data = row?.[fieldName] ?? []
   $: linkedTableId = data?.length ? data[0].tableId : null
   $: linkedTable = $backendUiStore.tables.find(
     table => table._id === linkedTableId
   )
   $: schema = linkedTable?.schema
   $: table = $backendUiStore.tables.find(table => table._id === tableId)
-  $: fetchData(tableId, recordId)
+  $: fetchData(tableId, rowId)
   $: {
-    let recordLabel = record?.[table?.primaryDisplay]
-    if (recordLabel) {
-      title = `${recordLabel} - ${fieldName}`
+    let rowLabel = row?.[table?.primaryDisplay]
+    if (rowLabel) {
+      title = `${rowLabel} - ${fieldName}`
     } else {
       title = fieldName
     }
   }
 
-  async function fetchData(tableId, recordId) {
-    const QUERY_VIEW_URL = `/api/${tableId}/${recordId}/enrich`
+  async function fetchData(tableId, rowId) {
+    const QUERY_VIEW_URL = `/api/${tableId}/${rowId}/enrich`
     const response = await api.get(QUERY_VIEW_URL)
-    record = await response.json()
+    row = await response.json()
   }
 </script>
 
-{#if record && record._id === recordId}
+{#if row && row._id === rowId}
   <Table {title} {schema} {data} />
 {/if}

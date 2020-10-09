@@ -1,9 +1,9 @@
 const CouchDB = require("../../db")
 const validateJs = require("validate.js")
-const linkRecords = require("../../db/linkedRecords")
+const linkRows = require("../../db/linkedRows")
 const {
-  getRecordParams,
-  generateRecordID,
+  getRowParams,
+  generateRowID,
   DocumentTypes,
   SEPARATOR,
 } = require("../../db/utils")
@@ -24,18 +24,18 @@ validateJs.extend(validateJs.validators.datetime, {
 exports.patch = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-  let record = await db.get(ctx.params.id)
-  const table = await db.get(record.tableId)
+  let row = await db.get(ctx.params.id)
+  const table = await db.get(row.tableId)
   const patchfields = ctx.request.body
-  record = coerceRecordValues(record, table)
+  row = coerceRowValues(row, table)
 
   for (let key of Object.keys(patchfields)) {
     if (!table.schema[key]) continue
-    record[key] = patchfields[key]
+    row[key] = patchfields[key]
   }
 
   const validateResult = await validate({
-    record,
+    row,
     table,
   })
 
@@ -48,21 +48,21 @@ exports.patch = async function(ctx) {
     return
   }
 
-  // returned record is cleaned and prepared for writing to DB
-  record = await linkRecords.updateLinks({
+  // returned row is cleaned and prepared for writing to DB
+  row = await linkRows.updateLinks({
     instanceId,
-    eventType: linkRecords.EventType.RECORD_UPDATE,
-    record,
-    tableId: record.tableId,
+    eventType: linkRows.EventType.ROW_UPDATE,
+    row,
+    tableId: row.tableId,
     table,
   })
-  const response = await db.put(record)
-  record._rev = response.rev
-  record.type = "record"
+  const response = await db.put(row)
+  row._rev = response.rev
+  row.type = "row"
 
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitRecord(`record:update`, instanceId, record, table)
-  ctx.body = record
+    ctx.eventEmitter.emitRow(`row:update`, instanceId, row, table)
+  ctx.body = row
   ctx.status = 200
   ctx.message = `${table.name} updated successfully.`
 }
@@ -70,22 +70,22 @@ exports.patch = async function(ctx) {
 exports.save = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-  let record = ctx.request.body
-  record.tableId = ctx.params.tableId
+  let row = ctx.request.body
+  row.tableId = ctx.params.tableId
 
-  if (!record._rev && !record._id) {
-    record._id = generateRecordID(record.tableId)
+  if (!row._rev && !row._id) {
+    row._id = generateRowID(row.tableId)
   }
 
-  // if the record obj had an _id then it will have been retrieved
-  const existingRecord = ctx.preExisting
+  // if the row obj had an _id then it will have been retrieved
+  const existingRow = ctx.preExisting
 
-  const table = await db.get(record.tableId)
+  const table = await db.get(row.tableId)
 
-  record = coerceRecordValues(record, table)
+  row = coerceRowValues(row, table)
 
   const validateResult = await validate({
-    record,
+    row,
     table,
   })
 
@@ -98,32 +98,32 @@ exports.save = async function(ctx) {
     return
   }
 
-  // make sure link records are up to date
-  record = await linkRecords.updateLinks({
+  // make sure link rows are up to date
+  row = await linkRows.updateLinks({
     instanceId,
-    eventType: linkRecords.EventType.RECORD_SAVE,
-    record,
-    tableId: record.tableId,
+    eventType: linkRows.EventType.ROW_SAVE,
+    row,
+    tableId: row.tableId,
     table,
   })
 
-  if (existingRecord) {
-    const response = await db.put(record)
-    record._rev = response.rev
-    record.type = "record"
-    ctx.body = record
+  if (existingRow) {
+    const response = await db.put(row)
+    row._rev = response.rev
+    row.type = "row"
+    ctx.body = row
     ctx.status = 200
     ctx.message = `${table.name} updated successfully.`
     return
   }
 
-  record.type = "record"
-  const response = await db.post(record)
-  record._rev = response.rev
+  row.type = "row"
+  const response = await db.post(row)
+  row._rev = response.rev
 
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitRecord(`record:save`, instanceId, record, table)
-  ctx.body = record
+    ctx.eventEmitter.emitRow(`row:save`, instanceId, row, table)
+  ctx.body = row
   ctx.status = 200
   ctx.message = `${table.name} created successfully`
 }
@@ -137,7 +137,7 @@ exports.fetchView = async function(ctx) {
   // if this is a table view being looked for just transfer to that
   if (viewName.indexOf(TABLE_VIEW_BEGINS_WITH) === 0) {
     ctx.params.tableId = viewName.substring(4)
-    await exports.fetchTableRecords(ctx)
+    await exports.fetchTableRows(ctx)
     return
   }
 
@@ -157,19 +157,19 @@ exports.fetchView = async function(ctx) {
     response.rows = response.rows.map(row => row.doc)
   }
 
-  ctx.body = await linkRecords.attachLinkInfo(instanceId, response.rows)
+  ctx.body = await linkRows.attachLinkInfo(instanceId, response.rows)
 }
 
-exports.fetchTableRecords = async function(ctx) {
+exports.fetchTableRows = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const response = await db.allDocs(
-    getRecordParams(ctx.params.tableId, null, {
+    getRowParams(ctx.params.tableId, null, {
       include_docs: true,
     })
   )
   ctx.body = response.rows.map(row => row.doc)
-  ctx.body = await linkRecords.attachLinkInfo(
+  ctx.body = await linkRows.attachLinkInfo(
     instanceId,
     response.rows.map(row => row.doc)
   )
@@ -182,7 +182,7 @@ exports.search = async function(ctx) {
     include_docs: true,
     ...ctx.request.body,
   })
-  ctx.body = await linkRecords.attachLinkInfo(
+  ctx.body = await linkRows.attachLinkInfo(
     instanceId,
     response.rows.map(row => row.doc)
   )
@@ -191,48 +191,48 @@ exports.search = async function(ctx) {
 exports.find = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-  const record = await db.get(ctx.params.recordId)
-  if (record.tableId !== ctx.params.tableId) {
-    ctx.throw(400, "Supplied tableId does not match the records tableId")
+  const row = await db.get(ctx.params.rowId)
+  if (row.tableId !== ctx.params.tableId) {
+    ctx.throw(400, "Supplied tableId does not match the rows tableId")
     return
   }
-  ctx.body = await linkRecords.attachLinkInfo(instanceId, record)
+  ctx.body = await linkRows.attachLinkInfo(instanceId, row)
 }
 
 exports.destroy = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-  const record = await db.get(ctx.params.recordId)
-  if (record.tableId !== ctx.params.tableId) {
-    ctx.throw(400, "Supplied tableId doesn't match the record's tableId")
+  const row = await db.get(ctx.params.rowId)
+  if (row.tableId !== ctx.params.tableId) {
+    ctx.throw(400, "Supplied tableId doesn't match the row's tableId")
     return
   }
-  await linkRecords.updateLinks({
+  await linkRows.updateLinks({
     instanceId,
-    eventType: linkRecords.EventType.RECORD_DELETE,
-    record,
-    tableId: record.tableId,
+    eventType: linkRows.EventType.ROW_DELETE,
+    row,
+    tableId: row.tableId,
   })
-  ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
+  ctx.body = await db.remove(ctx.params.rowId, ctx.params.revId)
   ctx.status = 200
 
-  // for automations include the record that was deleted
-  ctx.record = record
+  // for automations include the row that was deleted
+  ctx.row = row
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitRecord(`record:delete`, instanceId, record)
+    ctx.eventEmitter.emitRow(`row:delete`, instanceId, row)
 }
 
 exports.validate = async function(ctx) {
   const errors = await validate({
     instanceId: ctx.user.instanceId,
     tableId: ctx.params.tableId,
-    record: ctx.request.body,
+    row: ctx.request.body,
   })
   ctx.status = 200
   ctx.body = errors
 }
 
-async function validate({ instanceId, tableId, record, table }) {
+async function validate({ instanceId, tableId, row, table }) {
   if (!table) {
     const db = new CouchDB(instanceId)
     table = await db.get(tableId)
@@ -240,7 +240,7 @@ async function validate({ instanceId, tableId, record, table }) {
   const errors = {}
   for (let fieldName of Object.keys(table.schema)) {
     const res = validateJs.single(
-      record[fieldName],
+      row[fieldName],
       table.schema[fieldName].constraints
     )
     if (res) errors[fieldName] = res
@@ -248,12 +248,12 @@ async function validate({ instanceId, tableId, record, table }) {
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-exports.fetchEnrichedRecord = async function(ctx) {
+exports.fetchEnrichedRow = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const tableId = ctx.params.tableId
-  const recordId = ctx.params.recordId
-  if (instanceId == null || tableId == null || recordId == null) {
+  const rowId = ctx.params.rowId
+  if (instanceId == null || tableId == null || rowId == null) {
     ctx.status = 400
     ctx.body = {
       status: 400,
@@ -262,51 +262,51 @@ exports.fetchEnrichedRecord = async function(ctx) {
     }
     return
   }
-  // need table to work out where links go in record
-  const [table, record] = await Promise.all([db.get(tableId), db.get(recordId)])
+  // need table to work out where links go in row
+  const [table, row] = await Promise.all([db.get(tableId), db.get(rowId)])
   // get the link docs
-  const linkVals = await linkRecords.getLinkDocuments({
+  const linkVals = await linkRows.getLinkDocuments({
     instanceId,
     tableId,
-    recordId,
+    rowId,
   })
-  // look up the actual records based on the ids
+  // look up the actual rows based on the ids
   const response = await db.allDocs({
     include_docs: true,
     keys: linkVals.map(linkVal => linkVal.id),
   })
-  // need to include the IDs in these records for any links they may have
-  let linkedRecords = await linkRecords.attachLinkInfo(
+  // need to include the IDs in these rows for any links they may have
+  let linkedRows = await linkRows.attachLinkInfo(
     instanceId,
     response.rows.map(row => row.doc)
   )
-  // insert the link records in the correct place throughout the main record
+  // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
     let field = table.schema[fieldName]
     if (field.type === "link") {
-      record[fieldName] = linkedRecords.filter(
-        linkRecord => linkRecord.tableId === field.tableId
+      row[fieldName] = linkedRows.filter(
+        linkRow => linkRow.tableId === field.tableId
       )
     }
   }
-  ctx.body = record
+  ctx.body = row
   ctx.status = 200
 }
 
-function coerceRecordValues(rec, table) {
-  const record = cloneDeep(rec)
-  for (let [key, value] of Object.entries(record)) {
+function coerceRowValues(rec, table) {
+  const row = cloneDeep(rec)
+  for (let [key, value] of Object.entries(row)) {
     const field = table.schema[key]
     if (!field) continue
 
     // eslint-disable-next-line no-prototype-builtins
     if (TYPE_TRANSFORM_MAP[field.type].hasOwnProperty(value)) {
-      record[key] = TYPE_TRANSFORM_MAP[field.type][value]
+      row[key] = TYPE_TRANSFORM_MAP[field.type][value]
     } else if (TYPE_TRANSFORM_MAP[field.type].parse) {
-      record[key] = TYPE_TRANSFORM_MAP[field.type].parse(value)
+      row[key] = TYPE_TRANSFORM_MAP[field.type].parse(value)
     }
   }
-  return record
+  return row
 }
 
 const TYPE_TRANSFORM_MAP = {

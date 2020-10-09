@@ -4,7 +4,7 @@ const fs = require("fs")
 const { join } = require("../../../utilities/centralPath")
 const os = require("os")
 const exporters = require("./exporters")
-const { fetchView } = require("../record")
+const { fetchView } = require("../row")
 
 const controller = {
   fetch: async ctx => {
@@ -85,7 +85,7 @@ const controller = {
     const view = ctx.request.body
     const format = ctx.query.format
 
-    // Fetch view records
+    // Fetch view rows
     ctx.params.viewName = view.name
     ctx.query.group = view.groupBy
     if (view.field) {

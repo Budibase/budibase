@@ -10,40 +10,40 @@ const { generateLinkID } = require("../utils")
  * @param {string} tableId2 The ID of the second table (the linked).
  * @param {string} fieldName1 The name of the field in the linker table.
  * @param {string} fieldName2 The name of the field in the linked table.
- * @param {string} recordId1 The ID of the record which is acting as the linker.
- * @param {string} recordId2 The ID of the record which is acting as the linked.
+ * @param {string} rowId1 The ID of the row which is acting as the linker.
+ * @param {string} rowId2 The ID of the row which is acting as the linked.
  * @constructor
  */
 function LinkDocument(
   tableId1,
   fieldName1,
-  recordId1,
+  rowId1,
   tableId2,
   fieldName2,
-  recordId2
+  rowId2
 ) {
   // build the ID out of unique references to this link document
-  this._id = generateLinkID(tableId1, tableId2, recordId1, recordId2)
+  this._id = generateLinkID(tableId1, tableId2, rowId1, rowId2)
   // required for referencing in view
   this.type = "link"
   this.doc1 = {
     tableId: tableId1,
     fieldName: fieldName1,
-    recordId: recordId1,
+    rowId: rowId1,
   }
   this.doc2 = {
     tableId: tableId2,
     fieldName: fieldName2,
-    recordId: recordId2,
+    rowId: rowId2,
   }
 }
 
 class LinkController {
-  constructor({ instanceId, tableId, record, table, oldTable }) {
+  constructor({ instanceId, tableId, row, table, oldTable }) {
     this._instanceId = instanceId
     this._db = new CouchDB(instanceId)
     this._tableId = tableId
-    this._record = record
+    this._row = row
     this._table = table
     this._oldTable = oldTable
   }
@@ -84,11 +84,11 @@ class LinkController {
   /**
    * Utility function for main getLinkDocuments function - refer to it for functionality.
    */
-  getRecordLinkDocs(recordId) {
+  getRowLinkDocs(rowId) {
     return getLinkDocuments({
       instanceId: this._instanceId,
       tableId: this._tableId,
-      recordId,
+      rowId,
       includeDocs: IncludeDocs.INCLUDE,
     })
   }
@@ -105,43 +105,43 @@ class LinkController {
   }
 
   // all operations here will assume that the table
-  // this operation is related to has linked records
+  // this operation is related to has linked rows
   /**
-   * When a record is saved this will carry out the necessary operations to make sure
+   * When a row is saved this will carry out the necessary operations to make sure
    * the link has been created/updated.
-   * @returns {Promise<object>} returns the record that has been cleaned and prepared to be written to the DB - links
+   * @returns {Promise<object>} returns the row that has been cleaned and prepared to be written to the DB - links
    * have also been created.
    */
-  async recordSaved() {
+  async rowSaved() {
     const table = await this.table()
-    const record = this._record
+    const row = this._row
     const operations = []
     // get link docs to compare against
-    const linkDocs = await this.getRecordLinkDocs(record._id)
+    const linkDocs = await this.getRowLinkDocs(row._id)
     for (let fieldName of Object.keys(table.schema)) {
-      // get the links this record wants to make
-      const recordField = record[fieldName]
+      // get the links this row wants to make
+      const rowField = row[fieldName]
       const field = table.schema[fieldName]
-      if (field.type === "link" && recordField != null) {
-        // check which links actual pertain to the update in this record
+      if (field.type === "link" && rowField != null) {
+        // check which links actual pertain to the update in this row
         const thisFieldLinkDocs = linkDocs.filter(
           linkDoc =>
             linkDoc.doc1.fieldName === fieldName ||
             linkDoc.doc2.fieldName === fieldName
         )
         const linkDocIds = thisFieldLinkDocs.map(linkDoc => {
-          return linkDoc.doc1.recordId === record._id
-            ? linkDoc.doc2.recordId
-            : linkDoc.doc1.recordId
+          return linkDoc.doc1.rowId === row._id
+            ? linkDoc.doc2.rowId
+            : linkDoc.doc1.rowId
         })
-        // iterate through the link IDs in the record field, see if any don't exist already
-        for (let linkId of recordField) {
+        // iterate through the link IDs in the row field, see if any don't exist already
+        for (let linkId of rowField) {
           if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
             operations.push(
               new LinkDocument(
                 table._id,
                 fieldName,
-                record._id,
+                row._id,
                 field.tableId,
                 field.fieldName,
                 linkId
@@ -154,7 +154,7 @@ class LinkController {
           .filter(doc => {
             let correctDoc =
               doc.doc1.fieldName === fieldName ? doc.doc2 : doc.doc1
-            return recordField.indexOf(correctDoc.recordId) === -1
+            return rowField.indexOf(correctDoc.rowId) === -1
           })
           .map(doc => {
             return { ...doc, _deleted: true }
@@ -162,23 +162,23 @@ class LinkController {
         // now add the docs to be deleted to the bulk operation
         operations.push(...toDeleteDocs)
         // replace this field with a simple entry to denote there are links
-        delete record[fieldName]
+        delete row[fieldName]
       }
     }
     await this._db.bulkDocs(operations)
-    return record
+    return row
   }
 
   /**
-   * When a record is deleted this will carry out the necessary operations to make sure
+   * When a row is deleted this will carry out the necessary operations to make sure
    * any links that existed have been removed.
    * @returns {Promise<object>} The operation has been completed and the link documents should now
-   * be accurate. This also returns the record that was deleted.
+   * be accurate. This also returns the row that was deleted.
    */
-  async recordDeleted() {
-    const record = this._record
+  async rowDeleted() {
+    const row = this._row
     // need to get the full link docs to be be able to delete it
-    const linkDocs = await this.getRecordLinkDocs(record._id)
+    const linkDocs = await this.getRowLinkDocs(row._id)
     if (linkDocs.length === 0) {
       return null
     }
@@ -189,11 +189,11 @@ class LinkController {
       }
     })
     await this._db.bulkDocs(toDelete)
-    return record
+    return row
   }
 
   /**
-   * Remove a field from a table as well as any linked records that pertained to it.
+   * Remove a field from a table as well as any linked rows that pertained to it.
    * @param {string} fieldName The field to be removed from the table.
    * @returns {Promise<void>} The table has now been updated.
    */

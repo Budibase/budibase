@@ -1,4 +1,4 @@
-const recordController = require("../../api/controllers/record")
+const rowController = require("../../api/controllers/row")
 const automationUtils = require("../automationUtils")
 const environment = require("../../environment")
 const usage = require("../../utilities/usageQuota")
@@ -9,12 +9,12 @@ module.exports.definition = {
   icon: "ri-save-3-fill",
   description: "Add a row to your database",
   type: "ACTION",
-  stepId: "CREATE_RECORD",
+  stepId: "CREATE_ROW",
   inputs: {},
   schema: {
     inputs: {
       properties: {
-        record: {
+        row: {
           type: "object",
           properties: {
             tableId: {
@@ -22,18 +22,18 @@ module.exports.definition = {
               customType: "table",
             },
           },
-          customType: "record",
+          customType: "row",
           title: "Table",
           required: ["tableId"],
         },
       },
-      required: ["record"],
+      required: ["row"],
     },
     outputs: {
       properties: {
-        record: {
+        row: {
           type: "object",
-          customType: "record",
+          customType: "row",
           description: "The new row",
         },
         response: {
@@ -60,32 +60,32 @@ module.exports.definition = {
 
 module.exports.run = async function({ inputs, instanceId, apiKey }) {
   // TODO: better logging of when actions are missed due to missing parameters
-  if (inputs.record == null || inputs.record.tableId == null) {
+  if (inputs.row == null || inputs.row.tableId == null) {
     return
   }
-  inputs.record = await automationUtils.cleanUpRecord(
+  inputs.row = await automationUtils.cleanUpRow(
     instanceId,
-    inputs.record.tableId,
-    inputs.record
+    inputs.row.tableId,
+    inputs.row
   )
-  // have to clean up the record, remove the table from it
+  // have to clean up the row, remove the table from it
   const ctx = {
     params: {
-      tableId: inputs.record.tableId,
+      tableId: inputs.row.tableId,
     },
     request: {
-      body: inputs.record,
+      body: inputs.row,
     },
     user: { instanceId },
   }
 
   try {
     if (environment.CLOUD) {
-      await usage.update(apiKey, usage.Properties.RECORD, 1)
+      await usage.update(apiKey, usage.Properties.ROW, 1)
     }
-    await recordController.save(ctx)
+    await rowController.save(ctx)
     return {
-      record: inputs.record,
+      row: inputs.row,
       response: ctx.body,
       id: ctx.body._id,
       revision: ctx.body._rev,

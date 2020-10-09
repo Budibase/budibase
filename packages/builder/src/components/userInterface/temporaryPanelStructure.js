@@ -299,7 +299,7 @@ export default {
         {
           name: "List",
           _component: "@budibase/standard-components/list",
-          description: "Renders all children once per record, of a given table",
+          description: "Renders all children once per row, of a given table",
           icon: "ri-file-list-line",
           properties: {
             design: { ...all },
@@ -1125,10 +1125,10 @@ export default {
         //  children: [],
         // },
         {
-          name: "Record Detail",
-          _component: "@budibase/standard-components/recorddetail",
+          name: "Row Detail",
+          _component: "@budibase/standard-components/rowdetail",
           description:
-            "Loads a record, using an id from the URL, which can be used with {{ context }}, in children",
+            "Loads a row, using an id from the URL, which can be used with {{ context }}, in children",
           icon: "ri-profile-line",
           properties: {
             design: { ...all },

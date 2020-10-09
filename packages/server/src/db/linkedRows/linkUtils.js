@@ -25,12 +25,12 @@ exports.createLinkView = async instanceId => {
       if (doc.type === "link") {
         let doc1 = doc.doc1
         let doc2 = doc.doc2
-        emit([doc1.tableId, doc1.recordId], {
-          id: doc2.recordId,
+        emit([doc1.tableId, doc1.rowId], {
+          id: doc2.rowId,
           fieldName: doc1.fieldName,
         })
-        emit([doc2.tableId, doc2.recordId], {
-          id: doc1.recordId,
+        emit([doc2.tableId, doc2.rowId], {
+          id: doc1.rowId,
           fieldName: doc2.fieldName,
         })
       }
@@ -45,11 +45,11 @@ exports.createLinkView = async instanceId => {
 
 /**
  * Gets the linking documents, not the linked documents themselves.
- * @param {string} instanceId The instance in which we are searching for linked records.
- * @param {string} tableId The table which we are searching for linked records against.
+ * @param {string} instanceId The instance in which we are searching for linked rows.
+ * @param {string} tableId The table which we are searching for linked rows against.
  * @param {string|null} fieldName The name of column/field which is being altered, only looking for
  * linking documents that are related to it. If this is not specified then the table level will be assumed.
- * @param {string|null} recordId The ID of the record which we want to find linking documents for -
+ * @param {string|null} rowId The ID of the row which we want to find linking documents for -
  * if this is not specified then it will assume table or field level depending on whether the
  * field name has been specified.
  * @param {boolean|null} includeDocs whether to include docs in the response call, this is considerably slower so only
@@ -60,13 +60,13 @@ exports.createLinkView = async instanceId => {
 exports.getLinkDocuments = async function({
   instanceId,
   tableId,
-  recordId,
+  rowId,
   includeDocs,
 }) {
   const db = new CouchDB(instanceId)
   let params
-  if (recordId != null) {
-    params = { key: [tableId, recordId] }
+  if (rowId != null) {
+    params = { key: [tableId, rowId] }
   }
   // only table is known
   else {

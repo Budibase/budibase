@@ -18,25 +18,25 @@
   })
 
   let idFields
-  let recordId
+  let rowId
   $: {
     idFields = bindableProperties.filter(
       bindable =>
         bindable.type === "context" && bindable.runtimeBinding.endsWith("._id")
     )
-    // ensure recordId is always defaulted - there is usually only one option
+    // ensure rowId is always defaulted - there is usually only one option
     if (idFields.length > 0 && !parameters._id) {
-      recordId = idFields[0].runtimeBinding
+      rowId = idFields[0].runtimeBinding
       parameters = parameters
-    } else if (!recordId && parameters._id) {
-      recordId = parameters._id
+    } else if (!rowId && parameters._id) {
+      rowId = parameters._id
         .replace("{{", "")
         .replace("}}", "")
         .trim()
     }
   }
 
-  $: parameters._id = `{{ ${recordId} }}`
+  $: parameters._id = `{{ ${rowId} }}`
 
   // just wraps binding in {{ ... }}
   const toBindingExpression = bindingPath => `{{ ${bindingPath} }}`
@@ -44,11 +44,11 @@
   // finds the selected idBinding, then reads the table/view
   // from the component instance that it belongs to.
   // then returns the field names for that schema
-  const schemaFromIdBinding = recordId => {
-    if (!recordId) return []
+  const schemaFromIdBinding = rowId => {
+    if (!rowId) return []
 
     const idBinding = bindableProperties.find(
-      prop => prop.runtimeBinding === recordId
+      prop => prop.runtimeBinding === rowId
     )
     if (!idBinding) return []
 
@@ -71,8 +71,8 @@
 
   let schemaFields
   $: {
-    if (parameters && recordId) {
-      schemaFields = schemaFromIdBinding(recordId)
+    if (parameters && rowId) {
+      schemaFields = schemaFromIdBinding(rowId)
     } else {
       schemaFields = []
     }
@@ -86,12 +86,12 @@
 <div class="root">
   {#if idFields.length === 0}
     <div class="cannot-use">
-      Update record can only be used within a component that provides data, such
+      Update row can only be used within a component that provides data, such
       as a List
     </div>
   {:else}
-    <Label size="m" color="dark">Record Id</Label>
-    <Select secondary bind:value={recordId}>
+    <Label size="m" color="dark">Row Id</Label>
+    <Select secondary bind:value={rowId}>
       <option value="" />
       {#each idFields as idField}
         <option value={idField.runtimeBinding}>
@@ -101,7 +101,7 @@
     </Select>
   {/if}
 
-  {#if recordId}
+  {#if rowId}
     <SaveFields
       parameterFields={parameters.fields}
       {schemaFields}

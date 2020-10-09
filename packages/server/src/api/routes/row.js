@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const recordController = require("../controllers/record")
+const rowController = require("../controllers/row")
 const authorized = require("../../middleware/authorized")
 const usage = require("../../middleware/usageQuota")
 const { READ_TABLE, WRITE_TABLE } = require("../../utilities/accessLevels")
@@ -8,42 +8,42 @@ const router = Router()
 
 router
   .get(
-    "/api/:tableId/:recordId/enrich",
+    "/api/:tableId/:rowId/enrich",
     authorized(READ_TABLE, ctx => ctx.params.tableId),
-    recordController.fetchEnrichedRecord
+    rowController.fetchEnrichedRow
   )
   .get(
-    "/api/:tableId/records",
+    "/api/:tableId/rows",
     authorized(READ_TABLE, ctx => ctx.params.tableId),
-    recordController.fetchTableRecords
+    rowController.fetchTableRows
   )
   .get(
-    "/api/:tableId/records/:recordId",
+    "/api/:tableId/rows/:rowId",
     authorized(READ_TABLE, ctx => ctx.params.tableId),
-    recordController.find
+    rowController.find
   )
-  .post("/api/records/search", recordController.search)
+  .post("/api/rows/search", rowController.search)
   .post(
-    "/api/:tableId/records",
+    "/api/:tableId/rows",
     authorized(WRITE_TABLE, ctx => ctx.params.tableId),
     usage,
-    recordController.save
+    rowController.save
   )
   .patch(
-    "/api/:tableId/records/:id",
+    "/api/:tableId/rows/:id",
     authorized(WRITE_TABLE, ctx => ctx.params.tableId),
-    recordController.patch
+    rowController.patch
   )
   .post(
-    "/api/:tableId/records/validate",
+    "/api/:tableId/rows/validate",
     authorized(WRITE_TABLE, ctx => ctx.params.tableId),
-    recordController.validate
+    rowController.validate
   )
   .delete(
-    "/api/:tableId/records/:recordId/:revId",
+    "/api/:tableId/rows/:rowId/:revId",
     authorized(WRITE_TABLE, ctx => ctx.params.tableId),
     usage,
-    recordController.destroy
+    rowController.destroy
   )
 
 module.exports = router

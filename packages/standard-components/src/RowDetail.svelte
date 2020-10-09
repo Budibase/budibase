@@ -14,46 +14,46 @@
     return await response.json()
   }
 
-  async function fetchFirstRecord() {
-    const FETCH_RECORDS_URL = `/api/views/all_${table}`
-    const response = await _bb.api.get(FETCH_RECORDS_URL)
+  async function fetchFirstRow() {
+    const FETCH_ROWS_URL = `/api/views/all_${table}`
+    const response = await _bb.api.get(FETCH_ROWS_URL)
     if (response.status === 200) {
-      const allRecords = await response.json()
-      if (allRecords.length > 0) return allRecords[0]
+      const allRows = await response.json()
+      if (allRows.length > 0) return allRows[0]
     }
   }
 
   async function fetchData() {
     const pathParts = window.location.pathname.split("/")
 
-    let record
+    let row
     // if srcdoc, then we assume this is the builder preview
     if (pathParts.length === 0 || pathParts[0] === "srcdoc") {
-      record = await fetchFirstRecord()
+      row = await fetchFirstRow()
     } else {
       const id = pathParts[pathParts.length - 1]
-      const GET_RECORD_URL = `/api/${table}/records/${id}`
-      const response = await _bb.api.get(GET_RECORD_URL)
+      const GET_ROW_URL = `/api/${table}/rows/${id}`
+      const response = await _bb.api.get(GET_ROW_URL)
       if (response.status === 200) {
-        record = await response.json()
+        row = await response.json()
       }
     }
 
-    if (record) {
-      // Fetch table schema so we can check for linked records
-      const table = await fetchTable(record.tableId)
+    if (row) {
+      // Fetch table schema so we can check for linked rows
+      const table = await fetchTable(row.tableId)
       for (let key of Object.keys(table.schema)) {
         if (table.schema[key].type === "link") {
-          record[key] = Array.isArray(record[key]) ? record[key].length : 0
+          row[key] = Array.isArray(row[key]) ? row[key].length : 0
         }
       }
 
       _bb.attachChildren(target, {
         hydrate: false,
-        context: record,
+        context: row,
       })
     } else {
-      throw new Error("Failed to fetch record.", response)
+      throw new Error("Failed to fetch row.", response)
     }
   }
 
