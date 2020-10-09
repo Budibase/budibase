@@ -6,7 +6,7 @@ export default {
 const createScreen = () => ({
   props: {
     _id: "",
-    _component: "@budibase/standard-components/recorddetail",
+    _component: "@budibase/standard-components/rowdetail",
     _styles: {
       normal: {},
       hover: {},

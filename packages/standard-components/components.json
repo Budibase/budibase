@@ -261,7 +261,7 @@
 			"destinationUrl": "string"
 		}
 	},
-	"recorddetail": {
+	"rowdetail": {
 		"description": "Loads a record, using an ID in the url",
 		"context": "model",
 		"children": true,
@@ -271,7 +271,7 @@
 			"model": "models"
 		}
 	},
-	"newrecord": {
+	"newrow": {
 		"description": "Prepares a new record for creation",
 		"context": "model",
 		"children": true,
