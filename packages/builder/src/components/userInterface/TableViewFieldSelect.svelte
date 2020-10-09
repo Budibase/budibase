@@ -7,18 +7,18 @@
   export let value = ""
   export let onChange = (val = {})
 
-  const models = $backendUiStore.models
+  const tables = $backendUiStore.tables
 
   let options = []
 
-  $: model = componentInstance.datasource
-    ? models.find(m => m._id === componentInstance.datasource.modelId)
+  $: table = componentInstance.datasource
+    ? tables.find(m => m._id === componentInstance.datasource.tableId)
     : null
 
-  $: if (model) {
-    options = componentInstance.datasource.isModel
-      ? Object.keys(model.schema)
-      : Object.keys(model.views[componentInstance.datasource.name].schema)
+  $: if (table) {
+    options = componentInstance.datasource.isTable
+      ? Object.keys(table.schema)
+      : Object.keys(table.views[componentInstance.datasource.name].schema)
   }
 </script>
 

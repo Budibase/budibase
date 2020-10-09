@@ -2,20 +2,20 @@
   import { onMount } from "svelte"
 
   export let _bb
-  export let model
+  export let table
 
   let headers = []
   let store = _bb.store
   let target
 
-  async function fetchModel(id) {
-    const FETCH_MODEL_URL = `/api/models/${id}`
-    const response = await _bb.api.get(FETCH_MODEL_URL)
+  async function fetchTable(id) {
+    const FETCH_TABLE_URL = `/api/tables/${id}`
+    const response = await _bb.api.get(FETCH_TABLE_URL)
     return await response.json()
   }
 
   async function fetchFirstRecord() {
-    const FETCH_RECORDS_URL = `/api/views/all_${model}`
+    const FETCH_RECORDS_URL = `/api/views/all_${table}`
     const response = await _bb.api.get(FETCH_RECORDS_URL)
     if (response.status === 200) {
       const allRecords = await response.json()
@@ -32,7 +32,7 @@
       record = await fetchFirstRecord()
     } else {
       const id = pathParts[pathParts.length - 1]
-      const GET_RECORD_URL = `/api/${model}/records/${id}`
+      const GET_RECORD_URL = `/api/${table}/records/${id}`
       const response = await _bb.api.get(GET_RECORD_URL)
       if (response.status === 200) {
         record = await response.json()
@@ -40,10 +40,10 @@
     }
 
     if (record) {
-      // Fetch model schema so we can check for linked records
-      const model = await fetchModel(record.modelId)
-      for (let key of Object.keys(model.schema)) {
-        if (model.schema[key].type === "link") {
+      // Fetch table schema so we can check for linked records
+      const table = await fetchTable(record.tableId)
+      for (let key of Object.keys(table.schema)) {
+        if (table.schema[key].type === "link") {
           record[key] = Array.isArray(record[key]) ? record[key].length : 0
         }
       }

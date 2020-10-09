@@ -6,16 +6,16 @@ module.exports.definition = {
   description: "Delete a row from your database",
   icon: "ri-delete-bin-line",
   name: "Delete Row",
-  tagline: "Delete a {{inputs.enriched.model.name}} row",
+  tagline: "Delete a {{inputs.enriched.table.name}} row",
   type: "ACTION",
   stepId: "DELETE_RECORD",
   inputs: {},
   schema: {
     inputs: {
       properties: {
-        modelId: {
+        tableId: {
           type: "string",
-          customType: "model",
+          customType: "table",
           title: "Table",
         },
         id: {
@@ -27,7 +27,7 @@ module.exports.definition = {
           title: "Row Revision",
         },
       },
-      required: ["modelId", "id", "revision"],
+      required: ["tableId", "id", "revision"],
     },
     outputs: {
       properties: {
@@ -57,7 +57,7 @@ module.exports.run = async function({ inputs, instanceId, apiKey }) {
   }
   let ctx = {
     params: {
-      modelId: inputs.modelId,
+      tableId: inputs.tableId,
       recordId: inputs.id,
       revId: inputs.revision,
     },

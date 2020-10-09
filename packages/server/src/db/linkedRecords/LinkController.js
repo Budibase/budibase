@@ -6,8 +6,8 @@ const { generateLinkID } = require("../utils")
  * Creates a new link document structure which can be put to the database. It is important to
  * note that while this talks about linker/linked the link is bi-directional and for all intent
  * and purposes it does not matter from which direction the link was initiated.
- * @param {string} modelId1 The ID of the first model (the linker).
- * @param {string} modelId2 The ID of the second model (the linked).
+ * @param {string} tableId1 The ID of the first table (the linker).
+ * @param {string} tableId2 The ID of the second table (the linked).
  * @param {string} fieldName1 The name of the field in the linker table.
  * @param {string} fieldName2 The name of the field in the linked table.
  * @param {string} recordId1 The ID of the record which is acting as the linker.
@@ -15,65 +15,65 @@ const { generateLinkID } = require("../utils")
  * @constructor
  */
 function LinkDocument(
-  modelId1,
+  tableId1,
   fieldName1,
   recordId1,
-  modelId2,
+  tableId2,
   fieldName2,
   recordId2
 ) {
   // build the ID out of unique references to this link document
-  this._id = generateLinkID(modelId1, modelId2, recordId1, recordId2)
+  this._id = generateLinkID(tableId1, tableId2, recordId1, recordId2)
   // required for referencing in view
   this.type = "link"
   this.doc1 = {
-    modelId: modelId1,
+    tableId: tableId1,
     fieldName: fieldName1,
     recordId: recordId1,
   }
   this.doc2 = {
-    modelId: modelId2,
+    tableId: tableId2,
     fieldName: fieldName2,
     recordId: recordId2,
   }
 }
 
 class LinkController {
-  constructor({ instanceId, modelId, record, model, oldModel }) {
+  constructor({ instanceId, tableId, record, table, oldTable }) {
     this._instanceId = instanceId
     this._db = new CouchDB(instanceId)
-    this._modelId = modelId
+    this._tableId = tableId
     this._record = record
-    this._model = model
-    this._oldModel = oldModel
+    this._table = table
+    this._oldTable = oldTable
   }
 
   /**
-   * Retrieves the model, if it was not already found in the eventData.
-   * @returns {Promise<object>} This will return a model based on the event data, either
-   * if it was in the event already, or it uses the specified modelId to get it.
+   * Retrieves the table, if it was not already found in the eventData.
+   * @returns {Promise<object>} This will return a table based on the event data, either
+   * if it was in the event already, or it uses the specified tableId to get it.
    */
-  async model() {
-    if (this._model == null) {
-      this._model =
-        this._model == null ? await this._db.get(this._modelId) : this._model
+  async table() {
+    if (this._table == null) {
+      this._table =
+        this._table == null ? await this._db.get(this._tableId) : this._table
     }
-    return this._model
+    return this._table
   }
 
   /**
-   * Checks if the model this was constructed with has any linking columns currently.
-   * If the model has not been retrieved this will retrieve it based on the eventData.
-   * @params {object|null} model If a model that is not known to the link controller is to be tested.
+   * Checks if the table this was constructed with has any linking columns currently.
+   * If the table has not been retrieved this will retrieve it based on the eventData.
+   * @params {object|null} table If a table that is not known to the link controller is to be tested.
    * @returns {Promise<boolean>} True if there are any linked fields, otherwise it will return
    * false.
    */
-  async doesModelHaveLinkedFields(model = null) {
-    if (model == null) {
-      model = await this.model()
+  async doesTableHaveLinkedFields(table = null) {
+    if (table == null) {
+      table = await this.table()
     }
-    for (let fieldName of Object.keys(model.schema)) {
-      const { type } = model.schema[fieldName]
+    for (let fieldName of Object.keys(table.schema)) {
+      const { type } = table.schema[fieldName]
       if (type === "link") {
         return true
       }
@@ -87,7 +87,7 @@ class LinkController {
   getRecordLinkDocs(recordId) {
     return getLinkDocuments({
       instanceId: this._instanceId,
-      modelId: this._modelId,
+      tableId: this._tableId,
       recordId,
       includeDocs: IncludeDocs.INCLUDE,
     })
@@ -96,15 +96,15 @@ class LinkController {
   /**
    * Utility function for main getLinkDocuments function - refer to it for functionality.
    */
-  getModelLinkDocs() {
+  getTableLinkDocs() {
     return getLinkDocuments({
       instanceId: this._instanceId,
-      modelId: this._modelId,
+      tableId: this._tableId,
       includeDocs: IncludeDocs.INCLUDE,
     })
   }
 
-  // all operations here will assume that the model
+  // all operations here will assume that the table
   // this operation is related to has linked records
   /**
    * When a record is saved this will carry out the necessary operations to make sure
@@ -113,15 +113,15 @@ class LinkController {
    * have also been created.
    */
   async recordSaved() {
-    const model = await this.model()
+    const table = await this.table()
     const record = this._record
     const operations = []
     // get link docs to compare against
     const linkDocs = await this.getRecordLinkDocs(record._id)
-    for (let fieldName of Object.keys(model.schema)) {
+    for (let fieldName of Object.keys(table.schema)) {
       // get the links this record wants to make
       const recordField = record[fieldName]
-      const field = model.schema[fieldName]
+      const field = table.schema[fieldName]
       if (field.type === "link" && recordField != null) {
         // check which links actual pertain to the update in this record
         const thisFieldLinkDocs = linkDocs.filter(
@@ -139,10 +139,10 @@ class LinkController {
           if (linkId && linkId !== "" && linkDocIds.indexOf(linkId) === -1) {
             operations.push(
               new LinkDocument(
-                model._id,
+                table._id,
                 fieldName,
                 record._id,
-                field.modelId,
+                field.tableId,
                 field.fieldName,
                 linkId
               )
@@ -193,17 +193,17 @@ class LinkController {
   }
 
   /**
-   * Remove a field from a model as well as any linked records that pertained to it.
-   * @param {string} fieldName The field to be removed from the model.
-   * @returns {Promise<void>} The model has now been updated.
+   * Remove a field from a table as well as any linked records that pertained to it.
+   * @param {string} fieldName The field to be removed from the table.
+   * @returns {Promise<void>} The table has now been updated.
    */
-  async removeFieldFromModel(fieldName) {
-    let oldModel = this._oldModel
-    let field = oldModel.schema[fieldName]
-    const linkDocs = await this.getModelLinkDocs()
+  async removeFieldFromTable(fieldName) {
+    let oldTable = this._oldTable
+    let field = oldTable.schema[fieldName]
+    const linkDocs = await this.getTableLinkDocs()
     let toDelete = linkDocs.filter(linkDoc => {
       let correctFieldName =
-        linkDoc.doc1.modelId === oldModel._id
+        linkDoc.doc1.tableId === oldTable._id
           ? linkDoc.doc1.fieldName
           : linkDoc.doc2.fieldName
       return correctFieldName === fieldName
@@ -216,83 +216,83 @@ class LinkController {
         }
       })
     )
-    // remove schema from other model
-    let linkedModel = await this._db.get(field.modelId)
-    delete linkedModel.schema[field.fieldName]
-    this._db.put(linkedModel)
+    // remove schema from other table
+    let linkedTable = await this._db.get(field.tableId)
+    delete linkedTable.schema[field.fieldName]
+    this._db.put(linkedTable)
   }
 
   /**
-   * When a model is saved this will carry out the necessary operations to make sure
-   * any linked models are notified and updated correctly.
+   * When a table is saved this will carry out the necessary operations to make sure
+   * any linked tables are notified and updated correctly.
    * @returns {Promise<object>} The operation has been completed and the link documents should now
-   * be accurate. Also returns the model that was operated on.
+   * be accurate. Also returns the table that was operated on.
    */
-  async modelSaved() {
-    const model = await this.model()
-    const schema = model.schema
+  async tableSaved() {
+    const table = await this.table()
+    const schema = table.schema
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       if (field.type === "link") {
-        // create the link field in the other model
-        const linkedModel = await this._db.get(field.modelId)
-        linkedModel.schema[field.fieldName] = {
+        // create the link field in the other table
+        const linkedTable = await this._db.get(field.tableId)
+        linkedTable.schema[field.fieldName] = {
           name: field.fieldName,
           type: "link",
           // these are the props of the table that initiated the link
-          modelId: model._id,
+          tableId: table._id,
           fieldName: fieldName,
         }
-        await this._db.put(linkedModel)
+        await this._db.put(linkedTable)
       }
     }
-    return model
+    return table
   }
 
   /**
-   * Update a model, this means if a field is removed need to handle removing from other table and removing
+   * Update a table, this means if a field is removed need to handle removing from other table and removing
    * any link docs that pertained to it.
-   * @returns {Promise<Object>} The model which has been saved, same response as with the modelSaved function.
+   * @returns {Promise<Object>} The table which has been saved, same response as with the tableSaved function.
    */
-  async modelUpdated() {
-    const oldModel = this._oldModel
+  async tableUpdated() {
+    const oldTable = this._oldTable
     // first start by checking if any link columns have been deleted
-    const newModel = await this.model()
-    for (let fieldName of Object.keys(oldModel.schema)) {
-      const field = oldModel.schema[fieldName]
-      // this field has been removed from the model schema
-      if (field.type === "link" && newModel.schema[fieldName] == null) {
-        await this.removeFieldFromModel(fieldName)
+    const newTable = await this.table()
+    for (let fieldName of Object.keys(oldTable.schema)) {
+      const field = oldTable.schema[fieldName]
+      // this field has been removed from the table schema
+      if (field.type === "link" && newTable.schema[fieldName] == null) {
+        await this.removeFieldFromTable(fieldName)
       }
     }
     // now handle as if its a new save
-    return this.modelSaved()
+    return this.tableSaved()
   }
 
   /**
-   * When a model is deleted this will carry out the necessary operations to make sure
-   * any linked models have the joining column correctly removed as well as removing any
+   * When a table is deleted this will carry out the necessary operations to make sure
+   * any linked tables have the joining column correctly removed as well as removing any
    * now stale linking documents.
    * @returns {Promise<object>} The operation has been completed and the link documents should now
-   * be accurate. Also returns the model that was operated on.
+   * be accurate. Also returns the table that was operated on.
    */
-  async modelDeleted() {
-    const model = await this.model()
-    const schema = model.schema
+  async tableDeleted() {
+    const table = await this.table()
+    const schema = table.schema
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       if (field.type === "link") {
-        const linkedModel = await this._db.get(field.modelId)
-        delete linkedModel.schema[model.name]
-        await this._db.put(linkedModel)
+        const linkedTable = await this._db.get(field.tableId)
+        delete linkedTable.schema[table.name]
+        await this._db.put(linkedTable)
       }
     }
     // need to get the full link docs to delete them
-    const linkDocs = await this.getModelLinkDocs()
+    const linkDocs = await this.getTableLinkDocs()
     if (linkDocs.length === 0) {
       return null
     }
-    // get link docs for this model and configure for deletion
+    // get link docs for this table and configure for deletion
     const toDelete = linkDocs.map(doc => {
       return {
         ...doc,
@@ -300,7 +300,7 @@ class LinkController {
       }
     })
     await this._db.bulkDocs(toDelete)
-    return model
+    return table
   }
 }
 

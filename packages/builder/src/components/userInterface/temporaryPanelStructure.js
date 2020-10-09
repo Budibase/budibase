@@ -1,9 +1,9 @@
 import Input from "./PropertyPanelControls/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
 import Checkbox from "../common/Checkbox.svelte"
-import ModelSelect from "components/userInterface/ModelSelect.svelte"
-import ModelViewSelect from "components/userInterface/ModelViewSelect.svelte"
-import ModelViewFieldSelect from "components/userInterface/ModelViewFieldSelect.svelte"
+import TableSelect from "components/userInterface/TableSelect.svelte"
+import TableViewSelect from "components/userInterface/TableViewSelect.svelte"
+import TableViewFieldSelect from "components/userInterface/TableViewFieldSelect.svelte"
 import Event from "components/userInterface/EventsEditor/EventPropertyControl.svelte"
 import ScreenSelect from "components/userInterface/ScreenSelect.svelte"
 import { IconSelect } from "components/userInterface/IconSelect"
@@ -307,7 +307,7 @@ export default {
               {
                 label: "Table",
                 key: "datasource",
-                control: ModelViewSelect,
+                control: TableViewSelect,
               },
             ],
           },
@@ -540,7 +540,7 @@ export default {
               {
                 label: "Table",
                 key: "datasource",
-                control: ModelViewSelect,
+                control: TableViewSelect,
               },
               {
                 label: "Stripe Color",
@@ -566,7 +566,7 @@ export default {
                 control: Colorpicker,
                 defaultValue: "#FFFFFF",
               },
-              { label: "Table", key: "model", control: ModelSelect },
+              { label: "Table", key: "table", control: TableSelect },
             ],
           },
           children: [],
@@ -586,8 +586,8 @@ export default {
                 settings: [
                   {
                     label: "Table",
-                    key: "model",
-                    control: ModelSelect,
+                    key: "table",
+                    control: TableSelect,
                   },
                   {
                     label: "Title",
@@ -611,8 +611,8 @@ export default {
                 settings: [
                   {
                     label: "Table",
-                    key: "model",
-                    control: ModelSelect,
+                    key: "table",
+                    control: TableSelect,
                   },
                   {
                     label: "Title",
@@ -644,19 +644,19 @@ export default {
                   {
                     label: "Table",
                     key: "datasource",
-                    control: ModelViewSelect,
+                    control: TableViewSelect,
                   },
                   {
                     label: "Name Field",
                     key: "nameKey",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Value Field",
                     key: "valueKey",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Animate Chart",
@@ -738,19 +738,19 @@ export default {
                   {
                     label: "Table",
                     key: "datasource",
-                    control: ModelViewSelect,
+                    control: TableViewSelect,
                   },
                   {
                     label: "Name Label",
                     key: "nameLabel",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Value Label",
                     key: "valueLabel",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Y Axis Label",
@@ -852,25 +852,25 @@ export default {
                   {
                     label: "Table",
                     key: "datasource",
-                    control: ModelViewSelect,
+                    control: TableViewSelect,
                   },
                   {
                     label: "Name Label",
                     key: "nameLabel",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Group Label",
                     key: "groupLabel",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Value Label",
                     key: "valueLabel",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Color",
@@ -955,25 +955,25 @@ export default {
                   {
                     label: "Table",
                     key: "datasource",
-                    control: ModelViewSelect,
+                    control: TableViewSelect,
                   },
                   {
                     label: "Value Label",
                     key: "valueLabel",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Topic Label",
                     key: "topicLabel",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Date Label",
                     key: "dateLabel",
                     dependsOn: "datasource",
-                    control: ModelViewFieldSelect,
+                    control: TableViewFieldSelect,
                   },
                   {
                     label: "Colors",
@@ -1120,7 +1120,7 @@ export default {
         //  icon: "ri-file-list-line",
         //  properties: {
         //   design: { ...all },
-        //   settings: [{ label: "Table", key: "model", control: ModelSelect }],
+        //   settings: [{ label: "Table", key: "table", control: TableSelect }],
         //  },
         //  children: [],
         // },
@@ -1132,7 +1132,7 @@ export default {
           icon: "ri-profile-line",
           properties: {
             design: { ...all },
-            settings: [{ label: "Table", key: "model", control: ModelSelect }],
+            settings: [{ label: "Table", key: "table", control: TableSelect }],
           },
           children: [],
         },

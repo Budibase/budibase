@@ -3,12 +3,12 @@ import { cloneDeep } from "lodash/fp"
 import api from "../api"
 
 const INITIAL_BACKEND_UI_STATE = {
-  models: [],
+  tables: [],
   views: [],
   users: [],
   selectedDatabase: {},
-  selectedModel: {},
-  draftModel: {},
+  selectedTable: {},
+  draftTable: {},
 }
 
 export const getBackendUiStore = () => {
@@ -18,11 +18,11 @@ export const getBackendUiStore = () => {
     reset: () => store.set({ ...INITIAL_BACKEND_UI_STATE }),
     database: {
       select: async db => {
-        const modelsResponse = await api.get(`/api/models`)
-        const models = await modelsResponse.json()
+        const tablesResponse = await api.get(`/api/tables`)
+        const tables = await tablesResponse.json()
         store.update(state => {
           state.selectedDatabase = db
-          state.models = models
+          state.tables = tables
           return state
         })
       },
@@ -44,50 +44,50 @@ export const getBackendUiStore = () => {
           return state
         }),
     },
-    models: {
+    tables: {
       fetch: async () => {
-        const modelsResponse = await api.get(`/api/models`)
-        const models = await modelsResponse.json()
+        const tablesResponse = await api.get(`/api/tables`)
+        const tables = await tablesResponse.json()
         store.update(state => {
-          state.models = models
+          state.tables = tables
           return state
         })
       },
-      select: model =>
+      select: table =>
         store.update(state => {
-          state.selectedModel = model
-          state.draftModel = cloneDeep(model)
-          state.selectedView = { name: `all_${model._id}` }
+          state.selectedTable = table
+          state.draftTable = cloneDeep(table)
+          state.selectedView = { name: `all_${table._id}` }
           return state
         }),
-      save: async model => {
-        const updatedModel = cloneDeep(model)
+      save: async table => {
+        const updatedTable = cloneDeep(table)
 
         // update any renamed schema keys to reflect their names
-        for (let key in updatedModel.schema) {
-          const field = updatedModel.schema[key]
+        for (let key in updatedTable.schema) {
+          const field = updatedTable.schema[key]
           // field has been renamed
           if (field.name && field.name !== key) {
-            updatedModel.schema[field.name] = field
-            updatedModel._rename = { old: key, updated: field.name }
-            delete updatedModel.schema[key]
+            updatedTable.schema[field.name] = field
+            updatedTable._rename = { old: key, updated: field.name }
+            delete updatedTable.schema[key]
           }
         }
 
-        const SAVE_MODEL_URL = `/api/models`
-        const response = await api.post(SAVE_MODEL_URL, updatedModel)
-        const savedModel = await response.json()
-        await store.actions.models.fetch()
-        store.actions.models.select(savedModel)
-        return savedModel
+        const SAVE_TABLE_URL = `/api/tables`
+        const response = await api.post(SAVE_TABLE_URL, updatedTable)
+        const savedTable = await response.json()
+        await store.actions.tables.fetch()
+        store.actions.tables.select(savedTable)
+        return savedTable
       },
-      delete: async model => {
-        await api.delete(`/api/models/${model._id}/${model._rev}`)
+      delete: async table => {
+        await api.delete(`/api/tables/${table._id}/${table._rev}`)
         store.update(state => {
-          state.models = state.models.filter(
-            existing => existing._id !== model._id
+          state.tables = state.tables.filter(
+            existing => existing._id !== table._id
           )
-          state.selectedModel = {}
+          state.selectedTable = {}
           return state
         })
       },
@@ -95,23 +95,23 @@ export const getBackendUiStore = () => {
         store.update(state => {
           // delete the original if renaming
           if (originalName) {
-            delete state.draftModel.schema[originalName]
-            state.draftModel._rename = {
+            delete state.draftTable.schema[originalName]
+            state.draftTable._rename = {
               old: originalName,
               updated: field.name,
             }
           }
 
-          state.draftModel.schema[field.name] = cloneDeep(field)
+          state.draftTable.schema[field.name] = cloneDeep(field)
 
-          store.actions.models.save(state.draftModel)
+          store.actions.tables.save(state.draftTable)
           return state
         })
       },
       deleteField: field => {
         store.update(state => {
-          delete state.draftModel.schema[field.name]
-          store.actions.models.save(state.draftModel)
+          delete state.draftTable.schema[field.name]
+          store.actions.tables.save(state.draftTable)
           return state
         })
       },
@@ -120,12 +120,12 @@ export const getBackendUiStore = () => {
       select: view =>
         store.update(state => {
           state.selectedView = view
-          state.selectedModel = {}
+          state.selectedTable = {}
           return state
         }),
       delete: async view => {
         await api.delete(`/api/views/${view}`)
-        await store.actions.models.fetch()
+        await store.actions.tables.fetch()
       },
       save: async view => {
         const response = await api.post(`/api/views`, view)
@@ -137,14 +137,14 @@ export const getBackendUiStore = () => {
         }
 
         store.update(state => {
-          const viewModel = state.models.find(
-            model => model._id === view.modelId
+          const viewTable = state.tables.find(
+            table => table._id === view.tableId
           )
 
-          if (view.originalName) delete viewModel.views[view.originalName]
-          viewModel.views[view.name] = viewMeta
+          if (view.originalName) delete viewTable.views[view.originalName]
+          viewTable.views[view.name] = viewMeta
 
-          state.models = state.models
+          state.tables = state.tables
           state.selectedView = viewMeta
           return state
         })

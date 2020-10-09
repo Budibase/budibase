@@ -17,13 +17,13 @@
   }
 
   async function saveTable() {
-    const model = await backendUiStore.actions.models.save({
+    const table = await backendUiStore.actions.tables.save({
       name,
       schema: dataImport.schema || {},
       dataImport,
     })
     notifier.success(`Table ${name} created successfully.`)
-    $goto(`./model/${model._id}`)
+    $goto(`./table/${table._id}`)
     analytics.captureEvent("Table Created", { name })
   }
 </script>

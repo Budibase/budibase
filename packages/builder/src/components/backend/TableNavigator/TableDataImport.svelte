@@ -21,28 +21,28 @@
     !schema || Object.keys(schema).every(column => schema[column].success)
   $: dataImport = {
     valid,
-    schema: buildModelSchema(schema),
+    schema: buildTableSchema(schema),
     path: files[0] && files[0].path,
   }
 
-  function buildModelSchema(schema) {
-    const modelSchema = {}
+  function buildTableSchema(schema) {
+    const tableSchema = {}
     for (let key in schema) {
       const type = schema[key].type
 
       if (type === "omit") continue
 
-      modelSchema[key] = {
+      tableSchema[key] = {
         name: key,
         type,
         constraints: FIELDS[type.toUpperCase()].constraints,
       }
     }
-    return modelSchema
+    return tableSchema
   }
 
   async function validateCSV() {
-    const response = await api.post("/api/models/csv/validate", {
+    const response = await api.post("/api/tables/csv/validate", {
       file: files[0],
       schema: schema || {},
     })

@@ -10,11 +10,11 @@
   let name
   let field
 
-  $: fields = Object.keys($backendUiStore.selectedModel.schema).filter(key => {
-    return $backendUiStore.selectedModel.schema[key].type === "number"
+  $: fields = Object.keys($backendUiStore.selectedTable.schema).filter(key => {
+    return $backendUiStore.selectedTable.schema[key].type === "number"
   })
-  $: views = $backendUiStore.models.flatMap(model =>
-    Object.keys(model.views || {})
+  $: views = $backendUiStore.tables.flatMap(table =>
+    Object.keys(table.views || {})
   )
 
   function saveView() {
@@ -24,7 +24,7 @@
     }
     backendUiStore.actions.views.save({
       name,
-      modelId: $backendUiStore.selectedModel._id,
+      tableId: $backendUiStore.selectedTable._id,
       field,
     })
     notifier.success(`View ${name} created`)

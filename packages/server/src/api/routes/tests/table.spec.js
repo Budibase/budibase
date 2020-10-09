@@ -1,6 +1,6 @@
 const { 
   createInstance, 
-  createModel, 
+  createTable, 
   supertest, 
   createClientDatabase, 
   createApplication,
@@ -9,7 +9,7 @@ const {
   getDocument
 } = require("./couchTestUtils")
 
-describe("/models", () => {
+describe("/tables", () => {
   let request
   let server
   let app
@@ -30,11 +30,11 @@ describe("/models", () => {
       instance = await createInstance(request, app._id);
     });
 
-    it("returns a success message when the model is successfully created", done => {
+    it("returns a success message when the table is successfully created", done => {
       request
-        .post(`/api/models`)
+        .post(`/api/tables`)
         .send({ 
-          name: "TestModel",
+          name: "TestTable",
           key: "name",
           schema: {
             name: { type: "string" }
@@ -44,17 +44,17 @@ describe("/models", () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
-            expect(res.res.statusMessage).toEqual("Model TestModel saved successfully.");            
-            expect(res.body.name).toEqual("TestModel");
+            expect(res.res.statusMessage).toEqual("Table TestTable saved successfully.");            
+            expect(res.body.name).toEqual("TestTable");
             done();
         });
       })
 
-    it("renames all the record fields for a model when a schema key is renamed", async () => {
-      const testModel = await createModel(request, app._id, instance._id);
+    it("renames all the record fields for a table when a schema key is renamed", async () => {
+      const testTable = await createTable(request, app._id, instance._id);
 
       const testRecord = await request
-        .post(`/api/${testModel._id}/records`)
+        .post(`/api/${testTable._id}/records`)
         .send({
           name: "test"
         })
@@ -62,12 +62,12 @@ describe("/models", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-      const updatedModel = await request
-        .post(`/api/models`)
+      const updatedTable = await request
+        .post(`/api/tables`)
         .send({ 
-          _id: testModel._id,
-          _rev: testModel._rev,
-          name: "TestModel",
+          _id: testTable._id,
+          _rev: testTable._rev,
+          name: "TestTable",
           key: "name",
           _rename: {
             old: "name",
@@ -81,11 +81,11 @@ describe("/models", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(updatedModel.res.statusMessage).toEqual("Model TestModel saved successfully.");            
-        expect(updatedModel.body.name).toEqual("TestModel");            
+        expect(updatedTable.res.statusMessage).toEqual("Table TestTable saved successfully.");            
+        expect(updatedTable.body.name).toEqual("TestTable");            
 
         const res = await request
-          .get(`/api/${testModel._id}/records/${testRecord.body._id}`)
+          .get(`/api/${testTable._id}/records/${testRecord.body._id}`)
           .set(defaultHeaders(app._id, instance._id))
           .expect('Content-Type', /json/)
           .expect(200)
@@ -98,11 +98,11 @@ describe("/models", () => {
         await builderEndpointShouldBlockNormalUsers({
           request,
           method: "POST",
-          url: `/api/models`,
+          url: `/api/tables`,
           instanceId: instance._id,
           appId: app._id,
           body: { 
-            name: "TestModel",
+            name: "TestTable",
             key: "name",
             schema: {
               name: { type: "string" }
@@ -113,27 +113,27 @@ describe("/models", () => {
     });
 
   describe("fetch", () => {
-    let testModel
+    let testTable
 
     beforeEach(async () => {
       instance = await createInstance(request, app._id)
-      testModel = await createModel(request, app._id, instance._id, testModel)
+      testTable = await createTable(request, app._id, instance._id, testTable)
     });
 
     afterEach(() => {
-      delete testModel._rev
+      delete testTable._rev
     });
 
-    it("returns all the models for that instance in the response body", done => {
+    it("returns all the tables for that instance in the response body", done => {
       request
-        .get(`/api/models`)
+        .get(`/api/tables`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
-            const fetchedModel = res.body[0];
-            expect(fetchedModel.name).toEqual(testModel.name);            
-            expect(fetchedModel.type).toEqual("model");            
+            const fetchedTable = res.body[0];
+            expect(fetchedTable.name).toEqual(testTable.name);            
+            expect(fetchedTable.type).toEqual("table");            
             done();
         });
     })
@@ -142,7 +142,7 @@ describe("/models", () => {
         await builderEndpointShouldBlockNormalUsers({
           request,
           method: "GET",
-          url: `/api/models`,
+          url: `/api/tables`,
           instanceId: instance._id,
           appId: app._id,
         })
@@ -150,33 +150,33 @@ describe("/models", () => {
     });
 
   describe("destroy", () => {
-    let testModel;
+    let testTable;
 
     beforeEach(async () => {
       instance = await createInstance(request, app._id)
-      testModel = await createModel(request, app._id, instance._id, testModel)
+      testTable = await createTable(request, app._id, instance._id, testTable)
     });
 
     afterEach(() => {
-      delete testModel._rev
+      delete testTable._rev
     });
 
-    it("returns a success response when a model is deleted.", async done => {
+    it("returns a success response when a table is deleted.", async done => {
       request
-        .delete(`/api/models/${testModel._id}/${testModel._rev}`)
+        .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
-            expect(res.res.statusMessage).toEqual(`Model ${testModel._id} deleted.`);            
+            expect(res.res.statusMessage).toEqual(`Table ${testTable._id} deleted.`);            
             done();
         });
       })
 
-    it("deletes linked references to the model after deletion", async done => {
-      const linkedModel = await createModel(request, app._id, instance._id, {
-        name: "LinkedModel",
-        type: "model",
+    it("deletes linked references to the table after deletion", async done => {
+      const linkedTable = await createTable(request, app._id, instance._id, {
+        name: "LinkedTable",
+        type: "table",
         key: "name",
         schema: {
           name: {
@@ -185,9 +185,9 @@ describe("/models", () => {
               type: "string",
             },
           },
-          TestModel: {
+          TestTable: {
             type: "link",
-            modelId: testModel._id,
+            tableId: testTable._id,
             constraints: {
               type: "array"
             }
@@ -196,14 +196,14 @@ describe("/models", () => {
       })
 
       request
-        .delete(`/api/models/${testModel._id}/${testModel._rev}`)
+        .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
-          expect(res.res.statusMessage).toEqual(`Model ${testModel._id} deleted.`);
-          const dependentModel = await getDocument(instance._id, linkedModel._id)
-          expect(dependentModel.schema.TestModel).not.toBeDefined();
+          expect(res.res.statusMessage).toEqual(`Table ${testTable._id} deleted.`);
+          const dependentTable = await getDocument(instance._id, linkedTable._id)
+          expect(dependentTable.schema.TestTable).not.toBeDefined();
           done();
         });
       })
@@ -212,7 +212,7 @@ describe("/models", () => {
       await builderEndpointShouldBlockNormalUsers({
         request,
         method: "DELETE",
-        url: `/api/models/${testModel._id}/${testModel._rev}`,
+        url: `/api/tables/${testTable._id}/${testTable._rev}`,
         instanceId: instance._id,
         appId: app._id,
       })

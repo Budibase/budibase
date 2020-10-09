@@ -2,8 +2,8 @@ const {
   createClientDatabase,
   createApplication,
   createInstance,
-  createModel,
-  getAllFromModel,
+  createTable,
+  getAllFromTable,
   defaultHeaders,
   supertest,
   insertDocument,
@@ -167,9 +167,9 @@ describe("/automations", () => {
 
   describe("trigger", () => {
     it("trigger the automation successfully", async () => {
-      let model = await createModel(request, app._id, instance._id)
-      TEST_AUTOMATION.definition.trigger.inputs.modelId = model._id
-      TEST_AUTOMATION.definition.steps[0].inputs.record.modelId = model._id
+      let table = await createTable(request, app._id, instance._id)
+      TEST_AUTOMATION.definition.trigger.inputs.tableId = table._id
+      TEST_AUTOMATION.definition.steps[0].inputs.record.tableId = table._id
       await createAutomation()
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
@@ -180,7 +180,7 @@ describe("/automations", () => {
         expect(res.body.message).toEqual(`Automation ${automation._id} has been triggered.`)
         expect(res.body.automation.name).toEqual(TEST_AUTOMATION.name)
         await delay(500)
-        let elements = await getAllFromModel(request, app._id, instance._id, model._id)
+        let elements = await getAllFromTable(request, app._id, instance._id, table._id)
         // don't test it unless there are values to test
         if (elements.length === 1) {
           expect(elements.length).toEqual(1)

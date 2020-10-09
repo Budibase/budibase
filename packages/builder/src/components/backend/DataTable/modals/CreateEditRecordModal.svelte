@@ -11,15 +11,15 @@
   let errors = []
 
   $: creating = record?._id == null
-  $: model = record.modelId
-    ? $backendUiStore.models.find(model => model._id === record?.modelId)
-    : $backendUiStore.selectedModel
-  $: modelSchema = Object.entries(model?.schema ?? {})
+  $: table = record.tableId
+    ? $backendUiStore.tables.find(table => table._id === record?.tableId)
+    : $backendUiStore.selectedTable
+  $: tableSchema = Object.entries(table?.schema ?? {})
 
   async function saveRecord() {
     const recordResponse = await api.saveRecord(
-      { ...record, modelId: model._id },
-      model._id
+      { ...record, tableId: table._id },
+      table._id
     )
     if (recordResponse.errors) {
       errors = Object.keys(recordResponse.errors)
@@ -38,7 +38,7 @@
   confirmText={creating ? 'Create Row' : 'Save Row'}
   onConfirm={saveRecord}>
   <ErrorsBox {errors} />
-  {#each modelSchema as [key, meta]}
+  {#each tableSchema as [key, meta]}
     <div>
       <RecordFieldControl {meta} bind:value={record[key]} />
     </div>

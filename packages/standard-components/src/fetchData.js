@@ -1,18 +1,18 @@
 import api from "./api"
 
 export default async function fetchData(datasource) {
-  const { isModel, name } = datasource
+  const { isTable, name } = datasource
 
   if (name) {
-    const records = isModel ? await fetchModelData() : await fetchViewData()
+    const records = isTable ? await fetchTableData() : await fetchViewData()
 
-    // Fetch model schema so we can check for linked records
+    // Fetch table schema so we can check for linked records
     if (records && records.length) {
-      const model = await fetchModel(records[0].modelId)
-      const keys = Object.keys(model.schema)
+      const table = await fetchTable(records[0].tableId)
+      const keys = Object.keys(table.schema)
       records.forEach(record => {
         for (let key of keys) {
-          if (model.schema[key].type === "link") {
+          if (table.schema[key].type === "link") {
             record[key] = Array.isArray(record[key]) ? record[key].length : 0
           }
         }
@@ -22,18 +22,18 @@ export default async function fetchData(datasource) {
     return records
   }
 
-  async function fetchModel(id) {
-    const FETCH_MODEL_URL = `/api/models/${id}`
-    const response = await api.get(FETCH_MODEL_URL)
+  async function fetchTable(id) {
+    const FETCH_TABLE_URL = `/api/tables/${id}`
+    const response = await api.get(FETCH_TABLE_URL)
     return await response.json()
   }
 
-  async function fetchModelData() {
+  async function fetchTableData() {
     if (!name.startsWith("all_")) {
-      throw new Error("Incorrect model convention - must begin with all_")
+      throw new Error("Incorrect table convention - must begin with all_")
     }
-    const modelsResponse = await api.get(`/api/views/${name}`)
-    return await modelsResponse.json()
+    const tablesResponse = await api.get(`/api/views/${name}`)
+    return await tablesResponse.json()
   }
 
   async function fetchViewData() {

@@ -4,6 +4,6 @@
 </script>
 
 <RelationshipDataTable
-  modelId={$params.selectedModel}
+  tableId={$params.selectedTable}
   recordId={$params.selectedRecord}
   fieldName={decodeURI($params.selectedField)} />

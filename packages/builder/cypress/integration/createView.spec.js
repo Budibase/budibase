@@ -109,7 +109,7 @@ context("Create a View", () => {
   })
 
   it("renames a view", () => {
-    cy.contains("[data-cy=model-nav-item]", "Test View")
+    cy.contains("[data-cy=table-nav-item]", "Test View")
       .find(".ri-more-line")
       .click()
     cy.contains("Edit").click()
@@ -121,8 +121,8 @@ context("Create a View", () => {
   })
 
   it("deletes a view", () => {
-    cy.contains("[data-cy=model-nav-item]", "Test View Updated").click()
-    cy.contains("[data-cy=model-nav-item]", "Test View Updated")
+    cy.contains("[data-cy=table-nav-item]", "Test View Updated").click()
+    cy.contains("[data-cy=table-nav-item]", "Test View Updated")
       .find(".ri-more-line")
       .click()
     cy.contains("Delete").click()

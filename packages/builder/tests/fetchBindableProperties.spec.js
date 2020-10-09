@@ -22,7 +22,7 @@ describe("fetch bindable properties", () => {
     expect(componentBinding).not.toBeDefined()
   })
 
-  it("should return model schema, when inside a context", () => {
+  it("should return table schema, when inside a context", () => {
     const result = fetchBindableProperties({
       componentInstanceId: "list-item-input-id",
       ...testData()
@@ -44,13 +44,13 @@ describe("fetch bindable properties", () => {
     expect(idbinding.readableBinding).toBe("list-name.Test Model._id")
   })
 
-  it("should return model schema, for grantparent context", () => {
+  it("should return table schema, for grantparent context", () => {
     const result = fetchBindableProperties({
       componentInstanceId: "child-list-item-input-id",
       ...testData()
     })
     const contextBindings = result.filter(r => r.type==="context")
-    // 2 fields + _id + _rev ... x 2 models
+    // 2 fields + _id + _rev ... x 2 tables
     expect(contextBindings.length).toBe(8)
     
     const namebinding_parent = contextBindings.find(b => b.runtimeBinding === "parent.data.name")
@@ -126,7 +126,7 @@ const testData = () => {
           _id: "list-id",
           _component: "@budibase/standard-components/list",
           _instanceName: "list-name",
-          model: { isModel: true, modelId: "test-model-id", label: "Test Model", name: "all_test-model-id" },
+          table: { isTable: true, tableId: "test-table-id", label: "Test Model", name: "all_test-table-id" },
           _children: [
             {
               _id: "list-item-heading-id",
@@ -144,7 +144,7 @@ const testData = () => {
               _id: "child-list-id",
               _component: "@budibase/standard-components/list",
               _instanceName: "child-list-name",
-              model: { isModel: true, modelId: "test-model-id", label: "Test Model", name: "all_test-model-id"},
+              table: { isTable: true, tableId: "test-table-id", label: "Test Model", name: "all_test-table-id"},
               _children: [
                 {
                   _id: "child-list-item-heading-id",
@@ -166,8 +166,8 @@ const testData = () => {
     }
   }
 
-  const models = [{
-    _id: "test-model-id",
+  const tables = [{
+    _id: "test-table-id",
     name: "Test Model",
       schema: {
         name: {
@@ -184,9 +184,9 @@ const testData = () => {
       props: {},
     },
     "@budibase/standard-components/list" : {
-      context: "model",
+      context: "table",
       props: {
-        model: "string"
+        table: "string"
       },
     },
     "@budibase/standard-components/input" : {
@@ -202,6 +202,6 @@ const testData = () => {
     },
   }
 
-  return { screen, models, components }
+  return { screen, tables, components }
 
 }

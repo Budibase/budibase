@@ -6,15 +6,15 @@ export async function createUser(user) {
   return await response.json()
 }
 
-export async function saveRecord(record, modelId) {
-  const SAVE_RECORDS_URL = `/api/${modelId}/records`
+export async function saveRecord(record, tableId) {
+  const SAVE_RECORDS_URL = `/api/${tableId}/records`
   const response = await api.post(SAVE_RECORDS_URL, record)
 
   return await response.json()
 }
 
 export async function deleteRecord(record) {
-  const DELETE_RECORDS_URL = `/api/${record.modelId}/records/${record._id}/${record._rev}`
+  const DELETE_RECORDS_URL = `/api/${record.tableId}/records/${record._id}/${record._rev}`
   const response = await api.delete(DELETE_RECORDS_URL)
   return response
 }

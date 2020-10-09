@@ -2,7 +2,7 @@ const {
   createApplication,
   createClientDatabase,
   createInstance, 
-  createModel,
+  createTable,
   supertest,
   defaultHeaders,
 } = require("./couchTestUtils");
@@ -11,7 +11,7 @@ describe("/records", () => {
   let request
   let server
   let instance
-  let model
+  let table
   let record
   let app
 
@@ -27,18 +27,18 @@ describe("/records", () => {
 
   beforeEach(async () => {
     instance = await createInstance(request, app._id)
-    model = await createModel(request, app._id, instance._id)
+    table = await createTable(request, app._id, instance._id)
     record = {
       name: "Test Contact",
       description: "original description",
       status: "new",
-      modelId: model._id
+      tableId: table._id
     }
   })
 
   const createRecord = async r => 
     await request
-      .post(`/api/${r ? r.modelId : record.modelId}/records`)
+      .post(`/api/${r ? r.tableId : record.tableId}/records`)
       .send(r || record)
       .set(defaultHeaders(app._id, instance._id))
       .expect('Content-Type', /json/)
@@ -46,7 +46,7 @@ describe("/records", () => {
 
   const loadRecord = async id => 
     await request
-      .get(`/api/${model._id}/records/${id}`)
+      .get(`/api/${table._id}/records/${id}`)
       .set(defaultHeaders(app._id, instance._id))
       .expect('Content-Type', /json/)
       .expect(200)
@@ -57,7 +57,7 @@ describe("/records", () => {
 
     it("returns a success message when the record is created", async () => {
       const res = await createRecord()
-      expect(res.res.statusMessage).toEqual(`${model.name} created successfully`)           
+      expect(res.res.statusMessage).toEqual(`${table.name} created successfully`)           
       expect(res.body.name).toEqual("Test Contact")
       expect(res.body._rev).toBeDefined()
     })
@@ -67,18 +67,18 @@ describe("/records", () => {
       const existing = rec.body
 
       const res = await request
-        .post(`/api/${model._id}/records`)
+        .post(`/api/${table._id}/records`)
         .send({
           _id: existing._id,
           _rev: existing._rev,
-          modelId: model._id,
+          tableId: table._id,
           name: "Updated Name",
         })
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
       
-      expect(res.res.statusMessage).toEqual(`${model.name} updated successfully.`)
+      expect(res.res.statusMessage).toEqual(`${table.name} updated successfully.`)
       expect(res.body.name).toEqual("Updated Name")
     })
 
@@ -87,7 +87,7 @@ describe("/records", () => {
       const existing = rec.body
 
       const res = await request
-        .get(`/api/${model._id}/records/${existing._id}`)
+        .get(`/api/${table._id}/records/${existing._id}`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
@@ -100,9 +100,9 @@ describe("/records", () => {
       })
     })
 
-    it("should list all records for given modelId", async () => {
+    it("should list all records for given tableId", async () => {
       const newRecord = {
-        modelId: model._id,
+        tableId: table._id,
         name: "Second Contact",
         status: "new"
       }
@@ -110,7 +110,7 @@ describe("/records", () => {
       await createRecord(newRecord)
 
       const res = await request
-        .get(`/api/${model._id}/records`)
+        .get(`/api/${table._id}/records`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
@@ -122,7 +122,7 @@ describe("/records", () => {
 
     it("lists records when queried by their ID", async () => {
       const newRecord = {
-        modelId: model._id,
+        tableId: table._id,
         name: "Second Contact",
         status: "new"
       }
@@ -147,7 +147,7 @@ describe("/records", () => {
     it("load should return 404 when record does not exist", async () => {
       await createRecord()
       await request
-        .get(`/api/${model._id}/records/not-a-valid-id`)
+        .get(`/api/${table._id}/records/not-a-valid-id`)
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(404)
@@ -160,9 +160,9 @@ describe("/records", () => {
       const number = {type:"number", constraints: { type: "number", presence: false }}
       const datetime = {type:"datetime", constraints: { type: "string", presence: false, datetime: {earliest:"", latest: ""}  }}
 
-      model = await createModel(request, app._id, instance._id, {
-        name: "TestModel2",
-        type: "model",
+      table = await createTable(request, app._id, instance._id, {
+        name: "TestTable2",
+        type: "table",
         key: "name",
         schema: {
           name: str,
@@ -209,7 +209,7 @@ describe("/records", () => {
         boolUndefined: undefined,
         boolString: "true",
         boolBool: true,
-        modelId: model._id,
+        tableId: table._id,
         attachmentNull : null,
         attachmentUndefined : undefined,
         attachmentEmpty : "",
@@ -249,18 +249,18 @@ describe("/records", () => {
       const existing = rec.body
 
       const res = await request
-        .patch(`/api/${model._id}/records/${existing._id}`)
+        .patch(`/api/${table._id}/records/${existing._id}`)
         .send({
           _id: existing._id,
           _rev: existing._rev,
-          modelId: model._id,
+          tableId: table._id,
           name: "Updated Name",
         })
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
         .expect(200)
       
-      expect(res.res.statusMessage).toEqual(`${model.name} updated successfully.`)
+      expect(res.res.statusMessage).toEqual(`${table.name} updated successfully.`)
       expect(res.body.name).toEqual("Updated Name")
       expect(res.body.description).toEqual(existing.description)
 
@@ -275,7 +275,7 @@ describe("/records", () => {
   describe("validate", () => {
     it("should return no errors on valid record", async () => {
       const result = await request
-        .post(`/api/${model._id}/records/validate`)
+        .post(`/api/${table._id}/records/validate`)
         .send({ name: "ivan" })
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)
@@ -287,7 +287,7 @@ describe("/records", () => {
 
     it("should errors on invalid record", async () => {
       const result = await request
-        .post(`/api/${model._id}/records/validate`)
+        .post(`/api/${table._id}/records/validate`)
         .send({ name: 1 })
         .set(defaultHeaders(app._id, instance._id))
         .expect('Content-Type', /json/)

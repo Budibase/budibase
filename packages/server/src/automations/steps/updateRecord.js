@@ -3,7 +3,7 @@ const automationUtils = require("../automationUtils")
 
 module.exports.definition = {
   name: "Update Row",
-  tagline: "Update a {{inputs.enriched.model.name}} record",
+  tagline: "Update a {{inputs.enriched.table.name}} record",
   icon: "ri-refresh-fill",
   description: "Update a row in your database",
   type: "ACTION",
@@ -70,7 +70,7 @@ module.exports.run = async function({ inputs, instanceId }) {
     }
   }
 
-  // have to clean up the record, remove the model from it
+  // have to clean up the record, remove the table from it
   const ctx = {
     params: {
       id: inputs.recordId,
