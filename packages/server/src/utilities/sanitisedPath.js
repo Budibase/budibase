@@ -1,11 +1,23 @@
 const path = require("path")
 
 const regex = new RegExp(/:(?![\\/])/g)
+// set a limit on path depth, just incase recursion is occurring
+const MAX_ARGS = 50
 
 function sanitiseArgs(args) {
   let sanitised = []
+  let count = 0
   for (let arg of args) {
+    // if a known string is found don't continue, can't operate on it
+    if (typeof arg !== "string") {
+      throw "Sanitisation of paths can only occur on strings"
+    }
+    // maximum number of path args have been iterated on
+    if (count > MAX_ARGS) {
+      break
+    }
     sanitised.push(arg.replace(regex, ""))
+    count++
   }
   return sanitised
 }
