@@ -22,7 +22,7 @@ function buildUpdateParams(key, property, usage) {
   return {
     primary: key,
     condition:
-      "#quota.#prop < #limits.#prop AND #quotaReset > :now AND attribute_exists(#quota) AND attribute_exists(#limits)",
+      "attribute_exists(#quota) AND attribute_exists(#limits) AND #quota.#prop < #limits.#prop AND #quotaReset > :now",
     expression: "ADD #quota.#prop :usage",
     names: {
       "#quota": "usageQuota",
@@ -98,6 +98,6 @@ exports.update = async (apiKey, property, usage) => {
         return
       }
     }
-    throw "Resource limits have been reached"
+    throw err
   }
 }
