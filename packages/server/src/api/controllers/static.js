@@ -1,5 +1,5 @@
 const send = require("koa-send")
-const { resolve, join } = require("../../utilities/sanitisedPath")
+const { resolve, join } = require("../../utilities/centralPath")
 const jwt = require("jsonwebtoken")
 const fetch = require("node-fetch")
 const fs = require("fs-extra")

@@ -1,5 +1,5 @@
 const { exists, readFile, writeFile, ensureDir } = require("fs-extra")
-const { join, resolve } = require("./sanitisedPath")
+const { join, resolve } = require("./centralPath")
 const Sqrl = require("squirrelly")
 const uuid = require("uuid")
 
