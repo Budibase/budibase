@@ -14,6 +14,8 @@ exports.DocumentTypes = DocumentTypes
 
 const UNICODE_MAX = "\ufff0"
 
+exports.UNICODE_MAX = UNICODE_MAX
+
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
  * is usually the case as most of our docs are top level e.g. models, automations, users and so on.

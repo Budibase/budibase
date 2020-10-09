@@ -4,6 +4,7 @@ const AWS = require("aws-sdk")
 const fetch = require("node-fetch")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const PouchDB = require("../../../db")
+const environment = require("../../../environment")
 
 async function invalidateCDN(cfDistribution, appId) {
   const cf = new AWS.CloudFront({})
@@ -24,7 +25,7 @@ async function invalidateCDN(cfDistribution, appId) {
 
 exports.updateDeploymentQuota = async function(quota) {
   const DEPLOYMENT_SUCCESS_URL =
-    process.env.DEPLOYMENT_CREDENTIALS_URL + "deploy/success"
+    environment.DEPLOYMENT_CREDENTIALS_URL + "deploy/success"
 
   const response = await fetch(DEPLOYMENT_SUCCESS_URL, {
     method: "POST",
