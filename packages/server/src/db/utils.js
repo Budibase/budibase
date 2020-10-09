@@ -5,7 +5,7 @@ const SEPARATOR = "_"
 
 const DocumentTypes = {
   TABLE: "ta",
-  ROW: "re",
+  ROW: "ro",
   USER: "us",
   AUTOMATION: "au",
   LINK: "li",
