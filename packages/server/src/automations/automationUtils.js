@@ -85,32 +85,32 @@ module.exports.cleanInputValues = (inputs, schema) => {
 
 /**
  * Given a record input like a save or update record we need to clean the inputs against a schema that is not part of
- * the automation but is instead part of the Table/Model. This function will get the model schema and use it to instead
+ * the automation but is instead part of the Table/Table. This function will get the table schema and use it to instead
  * perform the cleanInputValues function on the input record.
  *
- * @param {string} instanceId The instance which the Table/Model is contained under.
- * @param {string} modelId The ID of the Table/Model which the schema is to be retrieved for.
+ * @param {string} instanceId The instance which the Table/Table is contained under.
+ * @param {string} tableId The ID of the Table/Table which the schema is to be retrieved for.
  * @param {object} record The input record structure which requires clean-up after having been through mustache statements.
  * @returns {Promise<Object>} The cleaned up records object, will should now have all the required primitive types.
  */
-module.exports.cleanUpRecord = async (instanceId, modelId, record) => {
+module.exports.cleanUpRecord = async (instanceId, tableId, record) => {
   const db = new CouchDB(instanceId)
-  const model = await db.get(modelId)
+  const table = await db.get(tableId)
 
-  return module.exports.cleanInputValues(record, { properties: model.schema })
+  return module.exports.cleanInputValues(record, { properties: table.schema })
 }
 
 /**
- * A utility function for the cleanUpRecord, which can be used if only the record ID is known (not the model ID) to clean
+ * A utility function for the cleanUpRecord, which can be used if only the record ID is known (not the table ID) to clean
  * up a record after mustache statements have been replaced. This is specifically useful for the update record action.
  *
- * @param {string} instanceId The instance which the Table/Model is contained under.
- * @param {string} recordId The ID of the record from which the modelId will be extracted, to get the Table/Model schema.
+ * @param {string} instanceId The instance which the Table/Table is contained under.
+ * @param {string} recordId The ID of the record from which the tableId will be extracted, to get the Table/Table schema.
  * @param {object} record The input record structure which requires clean-up after having been through mustache statements.
  * @returns {Promise<Object>} The cleaned up records object, which will now have all the required primitive types.
  */
 module.exports.cleanUpRecordById = async (instanceId, recordId, record) => {
   const db = new CouchDB(instanceId)
   const foundRecord = await db.get(recordId)
-  return module.exports.cleanUpRecord(instanceId, foundRecord.modelId, record)
+  return module.exports.cleanUpRecord(instanceId, foundRecord.tableId, record)
 }

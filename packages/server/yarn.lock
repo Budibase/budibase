@@ -172,10 +172,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/client@^0.1.25":
-  version "0.1.25"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.1.25.tgz#f08c4a614f9018eb0f0faa6d20bb05f7a3215c70"
-  integrity sha512-vZ0cqJwLYcs7MHihFnJO3qOe7qxibnB4Va1+IYNfnPc9kcxy4KvfQxCx/G/DDxP9CXfEvsguy9ymzR3RUAvBHw==
+"@budibase/client@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.2.0.tgz#247218de40538b31aeac7367f0e323c28fc8ca40"
+  integrity sha512-FJibQ7OqYCQOpIw4GDBPZEfJI+MiVn9irevZ2UjQBGJjbZMxoQTRAD/FoAq2Yu3s9L4tA5mTMutuMNkjpTs85Q==
   dependencies:
     deep-equal "^2.0.1"
     mustache "^4.0.1"

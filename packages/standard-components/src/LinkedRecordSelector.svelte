@@ -9,44 +9,44 @@
   export let showLabel = true
   export let secondary
 
-  let linkedModel
+  let linkedTable
 
   $: label = capitalise(schema.name)
-  $: linkedModelId = schema.modelId
-  $: recordsPromise = fetchRecords(linkedModelId)
-  $: fetchModel(linkedModelId)
+  $: linkedTableId = schema.tableId
+  $: recordsPromise = fetchRecords(linkedTableId)
+  $: fetchTable(linkedTableId)
 
-  async function fetchModel() {
-    if (linkedModelId == null) {
+  async function fetchTable() {
+    if (linkedTableId == null) {
       return
     }
-    const FETCH_MODEL_URL = `/api/models/${linkedModelId}`
-    const response = await api.get(FETCH_MODEL_URL)
-    linkedModel = await response.json()
+    const FETCH_TABLE_URL = `/api/tables/${linkedTableId}`
+    const response = await api.get(FETCH_TABLE_URL)
+    linkedTable = await response.json()
   }
 
-  async function fetchRecords(linkedModelId) {
-    if (linkedModelId == null) {
+  async function fetchRecords(linkedTableId) {
+    if (linkedTableId == null) {
       return
     }
-    const FETCH_RECORDS_URL = `/api/${linkedModelId}/records`
+    const FETCH_RECORDS_URL = `/api/${linkedTableId}/records`
     const response = await api.get(FETCH_RECORDS_URL)
     return await response.json()
   }
 
   function getPrettyName(record) {
-    return record[(linkedModel && linkedModel.primaryDisplay) || "_id"]
+    return record[(linkedTable && linkedTable.primaryDisplay) || "_id"]
   }
 </script>
 
-{#if linkedModel != null}
-  {#if linkedModel.primaryDisplay == null}
+{#if linkedTable != null}
+  {#if linkedTable.primaryDisplay == null}
     {#if showLabel}
       <Label extraSmall grey>{label}</Label>
     {/if}
     <Label small black>
       Please choose a primary display column for the
-      <b>{linkedModel.name}</b>
+      <b>{linkedTable.name}</b>
       table.
     </Label>
   {:else}

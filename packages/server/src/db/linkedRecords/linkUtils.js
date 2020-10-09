@@ -25,11 +25,11 @@ exports.createLinkView = async instanceId => {
       if (doc.type === "link") {
         let doc1 = doc.doc1
         let doc2 = doc.doc2
-        emit([doc1.modelId, doc1.recordId], {
+        emit([doc1.tableId, doc1.recordId], {
           id: doc2.recordId,
           fieldName: doc1.fieldName,
         })
-        emit([doc2.modelId, doc2.recordId], {
+        emit([doc2.tableId, doc2.recordId], {
           id: doc1.recordId,
           fieldName: doc2.fieldName,
         })
@@ -46,11 +46,11 @@ exports.createLinkView = async instanceId => {
 /**
  * Gets the linking documents, not the linked documents themselves.
  * @param {string} instanceId The instance in which we are searching for linked records.
- * @param {string} modelId The model which we are searching for linked records against.
+ * @param {string} tableId The table which we are searching for linked records against.
  * @param {string|null} fieldName The name of column/field which is being altered, only looking for
  * linking documents that are related to it. If this is not specified then the table level will be assumed.
  * @param {string|null} recordId The ID of the record which we want to find linking documents for -
- * if this is not specified then it will assume model or field level depending on whether the
+ * if this is not specified then it will assume table or field level depending on whether the
  * field name has been specified.
  * @param {boolean|null} includeDocs whether to include docs in the response call, this is considerably slower so only
  * use this if actually interested in the docs themselves.
@@ -59,18 +59,18 @@ exports.createLinkView = async instanceId => {
  */
 exports.getLinkDocuments = async function({
   instanceId,
-  modelId,
+  tableId,
   recordId,
   includeDocs,
 }) {
   const db = new CouchDB(instanceId)
   let params
   if (recordId != null) {
-    params = { key: [modelId, recordId] }
+    params = { key: [tableId, recordId] }
   }
-  // only model is known
+  // only table is known
   else {
-    params = { startKey: [modelId], endKey: [modelId, {}] }
+    params = { startKey: [tableId], endKey: [tableId, {}] }
   }
   params.include_docs = !!includeDocs
   try {

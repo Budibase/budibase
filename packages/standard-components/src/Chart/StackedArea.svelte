@@ -9,7 +9,7 @@
   const _id = shortid.generate()
 
   export let _bb
-  export let model
+  export let table
 
   let store = _bb.store
 
@@ -58,7 +58,7 @@
 
   onMount(async () => {
     if (chart) {
-      if (model) {
+      if (table) {
         await fetchData()
       }
       chartContainer = select(`.${chartClass}`)
@@ -70,12 +70,12 @@
   })
 
   async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/views/all_${model}`
+    const FETCH_RECORDS_URL = `/api/views/all_${table}`
     const response = await _bb.api.get(FETCH_RECORDS_URL)
     if (response.status === 200) {
       const json = await response.json()
       store.update(state => {
-        state[model] = json
+        state[table] = json
         return state
       })
     } else {
@@ -170,7 +170,7 @@
     }
   }
 
-  $: _data = model ? $store[model] : data
+  $: _data = table ? $store[table] : data
 
   $: colorSchema = getColorSchema(color)
 </script>

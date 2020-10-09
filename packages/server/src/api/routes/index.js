@@ -4,7 +4,7 @@ const userRoutes = require("./user")
 const instanceRoutes = require("./instance")
 const clientRoutes = require("./client")
 const applicationRoutes = require("./application")
-const modelRoutes = require("./model")
+const tableRoutes = require("./table")
 const recordRoutes = require("./record")
 const viewRoutes = require("./view")
 const staticRoutes = require("./static")
@@ -25,7 +25,7 @@ module.exports = {
   clientRoutes,
   applicationRoutes,
   recordRoutes,
-  modelRoutes,
+  tableRoutes,
   viewRoutes,
   staticRoutes,
   componentRoutes,

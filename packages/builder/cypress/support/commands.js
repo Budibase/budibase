@@ -64,7 +64,7 @@ Cypress.Commands.add("createTestTableWithData", () => {
 })
 
 Cypress.Commands.add("createTable", tableName => {
-  // Enter model name
+  // Enter table name
   cy.contains("Create New Table").click()
   cy.get(".modal").within(() => {
     cy.get("input")

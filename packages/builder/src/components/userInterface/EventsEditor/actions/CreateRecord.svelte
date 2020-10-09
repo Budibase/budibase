@@ -10,23 +10,23 @@
     componentInstanceId: $store.currentComponentInfo._id,
     components: $store.components,
     screen: $store.currentPreviewItem,
-    models: $backendUiStore.models,
+    tables: $backendUiStore.tables,
   })
 
   // just wraps binding in {{ ... }}
   const toBindingExpression = bindingPath => `{{ ${bindingPath} }}`
 
-  const modelFields = modelId => {
-    const model = $backendUiStore.models.find(m => m._id === modelId)
+  const tableFields = tableId => {
+    const table = $backendUiStore.tables.find(m => m._id === tableId)
 
-    return Object.keys(model.schema).map(k => ({
+    return Object.keys(table.schema).map(k => ({
       name: k,
-      type: model.schema[k].type,
+      type: table.schema[k].type,
     }))
   }
 
   $: schemaFields =
-    parameters && parameters.modelId ? modelFields(parameters.modelId) : []
+    parameters && parameters.tableId ? tableFields(parameters.tableId) : []
 
   const onFieldsChanged = e => {
     parameters.fields = e.detail
@@ -35,14 +35,14 @@
 
 <div class="root">
   <Label size="m" color="dark">Table</Label>
-  <Select secondary bind:value={parameters.modelId}>
+  <Select secondary bind:value={parameters.tableId}>
     <option value="" />
-    {#each $backendUiStore.models as model}
-      <option value={model._id}>{model.name}</option>
+    {#each $backendUiStore.tables as table}
+      <option value={table._id}>{table.name}</option>
     {/each}
   </Select>
 
-  {#if parameters.modelId}
+  {#if parameters.tableId}
     <SaveFields
       parameterFields={parameters.fields}
       {schemaFields}

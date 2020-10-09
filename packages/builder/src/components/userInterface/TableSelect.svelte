@@ -7,7 +7,7 @@
 
 <Select thin secondary wide on:change {value}>
   <option value="" />
-  {#each $backendUiStore.models as model}
-    <option value={model._id}>{model.name}</option>
+  {#each $backendUiStore.tables as table}
+    <option value={table._id}>{table.name}</option>
   {/each}
 </Select>

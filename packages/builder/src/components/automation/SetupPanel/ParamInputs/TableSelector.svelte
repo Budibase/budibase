@@ -8,8 +8,8 @@
 <div class="block-field">
   <Select bind:value secondary thin>
     <option value="">Choose an option</option>
-    {#each $backendUiStore.models as model}
-      <option value={model._id}>{model.name}</option>
+    {#each $backendUiStore.tables as table}
+      <option value={table._id}>{table.name}</option>
     {/each}
   </Select>
 </div>

@@ -1,12 +1,12 @@
 <script>
-  import ModelDataTable from "components/backend/DataTable/ModelDataTable.svelte"
+  import TableDataTable from "components/backend/DataTable/DataTable.svelte"
   import { backendUiStore } from "builderStore"
 
-  $: selectedModel = $backendUiStore.selectedModel
+  $: selectedTable = $backendUiStore.selectedTable
 </script>
 
-{#if $backendUiStore.selectedDatabase._id && selectedModel.name}
-  <ModelDataTable />
+{#if $backendUiStore.selectedDatabase._id && selectedTable.name}
+  <TableDataTable />
 {:else}
   <i>Create your first table to start building</i>
 {/if}

@@ -2,22 +2,22 @@
   import { onMount } from "svelte"
 
   export let _bb
-  export let model
+  export let table
   export let layout = "list"
 
   let headers = []
   let store = _bb.store
 
   async function fetchData() {
-    if (!model || !model.length) return
+    if (!table || !table.length) return
 
-    const FETCH_RECORDS_URL = `/api/views/all_${model}`
+    const FETCH_RECORDS_URL = `/api/views/all_${table}`
     const response = await _bb.api.get(FETCH_RECORDS_URL)
     if (response.status === 200) {
       const json = await response.json()
 
       store.update(state => {
-        state[model] = json
+        state[table] = json
         return state
       })
     } else {
@@ -25,8 +25,8 @@
     }
   }
 
-  $: data = $store[model] || []
-  $: if (model) fetchData()
+  $: data = $store[table] || []
+  $: if (table) fetchData()
 
   onMount(async () => {
     await fetchData()

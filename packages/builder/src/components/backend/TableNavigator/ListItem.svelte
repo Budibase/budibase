@@ -7,7 +7,7 @@
 </script>
 
 <div
-  data-cy="model-nav-item"
+  data-cy="table-nav-item"
   class:indented
   class:selected
   on:click

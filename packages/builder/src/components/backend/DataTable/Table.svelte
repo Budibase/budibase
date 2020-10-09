@@ -39,14 +39,14 @@
           currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
         )
       : []
-  $: modelId = data?.length ? data[0].modelId : null
+  $: tableId = data?.length ? data[0].tableId : null
 
   function selectRelationship(record, fieldName) {
     if (!record?.[fieldName]?.length) {
       return
     }
     $goto(
-      `/${$params.application}/backend/model/${modelId}/relationship/${record._id}/${fieldName}`
+      `/${$params.application}/backend/table/${tableId}/relationship/${record._id}/${fieldName}`
     )
   }
 </script>

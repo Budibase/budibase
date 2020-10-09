@@ -6,7 +6,7 @@ import { cloneDeep, difference } from "lodash/fp"
  * @property {string}  componentInstanceId - an _id of a component that has been added to a screen, which you want to fetch bindable props for
  * @propperty {Object} screen - current screen - where componentInstanceId lives
  * @property {Object} components - dictionary of component definitions
- * @property {Array} models - array of all models
+ * @property {Array} tables - array of all tables
  */
 
 /**
@@ -23,13 +23,13 @@ import { cloneDeep, difference } from "lodash/fp"
  * @param {fetchBindablePropertiesParameter} param
  * @returns {Array.<BindableProperty>}
  */
-export default function({ componentInstanceId, screen, components, models }) {
+export default function({ componentInstanceId, screen, components, tables }) {
   const walkResult = walk({
     // cloning so we are free to mutate props (e.g. by adding _contexts)
     instance: cloneDeep(screen.props),
     targetId: componentInstanceId,
     components,
-    models,
+    tables,
   })
 
   return [
@@ -38,7 +38,7 @@ export default function({ componentInstanceId, screen, components, models }) {
       .map(componentInstanceToBindable(walkResult)),
 
     ...(walkResult.target?._contexts
-      .map(contextToBindables(models, walkResult))
+      .map(contextToBindables(tables, walkResult))
       .flat() ?? []),
   ]
 }
@@ -71,15 +71,15 @@ const componentInstanceToBindable = walkResult => i => {
   }
 }
 
-const contextToBindables = (models, walkResult) => context => {
+const contextToBindables = (tables, walkResult) => context => {
   const contextParentPath = getParentPath(walkResult, context)
-  const isModel = context.model?.isModel || typeof context.model === "string"
-  const modelId =
-    typeof context.model === "string" ? context.model : context.model.modelId
-  const model = models.find(model => model._id === modelId)
+  const isTable = context.table?.isTable || typeof context.table === "string"
+  const tableId =
+    typeof context.table === "string" ? context.table : context.table.tableId
+  const table = tables.find(table => table._id === tableId)
 
   // Avoid crashing whenever no data source has been selected
-  if (model == null) {
+  if (table == null) {
     return []
   }
 
@@ -89,12 +89,12 @@ const contextToBindables = (models, walkResult) => context => {
     // how the binding expression persists, and is used in the app at runtime
     runtimeBinding: `${contextParentPath}data.${key}`,
     // how the binding exressions looks to the user of the builder
-    readableBinding: `${context.instance._instanceName}.${model.name}.${key}`,
+    readableBinding: `${context.instance._instanceName}.${table.name}.${key}`,
   })
 
-  // see ModelViewSelect.svelte for the format of context.model
-  // ... this allows us to bind to Model schemas, or View schemas
-  const schema = isModel ? model.schema : model.views[context.model.name].schema
+  // see TableViewSelect.svelte for the format of context.table
+  // ... this allows us to bind to Table schemas, or View schemas
+  const schema = isTable ? table.schema : table.views[context.table.name].schema
 
   return (
     Object.keys(schema)
@@ -118,7 +118,7 @@ const getParentPath = (walkResult, context) => {
   )
 }
 
-const walk = ({ instance, targetId, components, models, result }) => {
+const walk = ({ instance, targetId, components, tables, result }) => {
   if (!result) {
     result = {
       target: null,
@@ -157,8 +157,8 @@ const walk = ({ instance, targetId, components, models, result }) => {
   if (contextualInstance) {
     // add to currentContexts (ancestory of context)
     // before walking children
-    const model = instance[component.context]
-    result.currentContexts.push({ instance, model })
+    const table = instance[component.context]
+    result.currentContexts.push({ instance, table })
   }
 
   const currentContexts = [...result.currentContexts]
@@ -167,7 +167,7 @@ const walk = ({ instance, targetId, components, models, result }) => {
     // these have been deep cloned above, so shouln't modify the
     // original component instances
     child._contexts = currentContexts
-    walk({ instance: child, targetId, components, models, result })
+    walk({ instance: child, targetId, components, tables, result })
   }
 
   if (contextualInstance) {

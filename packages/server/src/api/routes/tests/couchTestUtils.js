@@ -39,13 +39,13 @@ exports.defaultHeaders = (appId, instanceId) => {
   }
 }
 
-exports.createModel = async (request, appId, instanceId, model) => {
-  if (model != null && model._id) {
-    delete model._id
+exports.createTable = async (request, appId, instanceId, table) => {
+  if (table != null && table._id) {
+    delete table._id
   }
-  model = model || {
-    name: "TestModel",
-    type: "model",
+  table = table || {
+    name: "TestTable",
+    type: "table",
     key: "name",
     schema: {
       name: {
@@ -64,23 +64,23 @@ exports.createModel = async (request, appId, instanceId, model) => {
   }
 
   const res = await request
-    .post(`/api/models`)
+    .post(`/api/tables`)
     .set(exports.defaultHeaders(appId, instanceId))
-    .send(model)
+    .send(table)
   return res.body
 }
 
-exports.getAllFromModel = async (request, appId, instanceId, modelId) => {
+exports.getAllFromTable = async (request, appId, instanceId, tableId) => {
   const res = await request
-    .get(`/api/${modelId}/records`)
+    .get(`/api/${tableId}/records`)
     .set(exports.defaultHeaders(appId, instanceId))
   return res.body
 }
 
-exports.createView = async (request, appId, instanceId, modelId, view) => {
+exports.createView = async (request, appId, instanceId, tableId, view) => {
   view = view || {
     map: "function(doc) { emit(doc[doc.key], doc._id); } ",
-    modelId: modelId,
+    tableId: tableId,
   }
 
   const res = await request

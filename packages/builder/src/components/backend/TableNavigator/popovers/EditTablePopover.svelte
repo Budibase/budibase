@@ -1,48 +1,43 @@
 <script>
-  import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
-  export let view
+  export let table
 
   let anchor
   let dropdown
   let editing
-  let originalName = view.name
   let confirmDeleteDialog
+
+  $: fields = Object.keys(table.schema)
 
   function showEditor() {
     editing = true
   }
 
   function hideEditor() {
-    dropdown.hide()
+    dropdown?.hide()
     editing = false
   }
 
-  function showDelete() {
-    dropdown.hide()
+  function showModal() {
+    hideEditor()
     confirmDeleteDialog.show()
   }
 
-  async function save() {
-    await backendUiStore.actions.views.save({
-      originalName,
-      ...view,
-    })
-    notifier.success("View renamed successfully")
+  async function deleteTable() {
+    await backendUiStore.actions.tables.delete(table)
+    notifier.success("Table deleted")
     hideEditor()
   }
 
-  async function deleteView() {
-    const name = view.name
-    const id = view.modelId
-    await backendUiStore.actions.views.delete(name)
-    notifier.success("View deleted")
-    $goto(`./model/${id}`)
+  async function save() {
+    await backendUiStore.actions.tables.save(table)
+    notifier.success("Table renamed successfully")
+    hideEditor()
   }
 </script>
 
@@ -52,8 +47,18 @@
 <DropdownMenu align="left" {anchor} bind:this={dropdown}>
   {#if editing}
     <div class="actions">
-      <h5>Edit View</h5>
-      <Input label="View Name" thin bind:value={view.name} />
+      <h5>Edit Table</h5>
+      <Input label="Table Name" thin bind:value={table.name} />
+      <Select
+        label="Primary Display Column"
+        thin
+        secondary
+        bind:value={table.primaryDisplay}>
+        <option value="">Choose an option</option>
+        {#each fields as field}
+          <option value={field}>{field}</option>
+        {/each}
+      </Select>
       <footer>
         <Button secondary on:click={hideEditor}>Cancel</Button>
         <Button primary on:click={save}>Save</Button>
@@ -65,7 +70,7 @@
         <Icon name="edit" />
         Edit
       </li>
-      <li data-cy="delete-view" on:click={showDelete}>
+      <li data-cy="delete-table" on:click={showModal}>
         <Icon name="delete" />
         Delete
       </li>
@@ -74,9 +79,9 @@
 </DropdownMenu>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  body={`Are you sure you wish to delete the view '${view.name}'? Your data will be deleted and this action cannot be undone.`}
-  okText="Delete View"
-  onOk={deleteView}
+  body={`Are you sure you wish to delete the table '${table.name}'? Your data will be deleted and this action cannot be undone.`}
+  okText="Delete Table"
+  onOk={deleteTable}
   title="Confirm Delete" />
 
 <style>

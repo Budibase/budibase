@@ -11,9 +11,9 @@
   $: selectedView =
     $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
-  function selectModel(model) {
-    backendUiStore.actions.models.select(model)
-    $goto(`./model/${model._id}`)
+  function selectTable(table) {
+    backendUiStore.actions.tables.select(table)
+    $goto(`./table/${table._id}`)
   }
 
   function selectView(view) {
@@ -30,15 +30,15 @@
         <Spacer medium />
         <CreateTableModal />
         <div class="hierarchy-items-container">
-          {#each $backendUiStore.models as model}
+          {#each $backendUiStore.tables as table}
             <ListItem
-              selected={selectedView === `all_${model._id}`}
-              title={model.name}
+              selected={selectedView === `all_${table._id}`}
+              title={table.name}
               icon="ri-table-fill"
-              on:click={() => selectModel(model)}>
-              <EditTablePopover table={model} />
+              on:click={() => selectTable(table)}>
+              <EditTablePopover table={table} />
             </ListItem>
-            {#each Object.keys(model.views || {}) as viewName}
+            {#each Object.keys(table.views || {}) as viewName}
               <ListItem
                 indented
                 selected={selectedView === viewName}
@@ -46,10 +46,10 @@
                 icon="ri-eye-line"
                 on:click={() => (selectedView === viewName ? {} : selectView({
                         name: viewName,
-                        ...model.views[viewName],
+                        ...table.views[viewName],
                       }))}>
                 <EditViewPopover
-                  view={{ name: viewName, ...model.views[viewName] }} />
+                  view={{ name: viewName, ...table.views[viewName] }} />
               </ListItem>
             {/each}
           {/each}

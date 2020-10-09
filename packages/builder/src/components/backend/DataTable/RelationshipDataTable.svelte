@@ -4,7 +4,7 @@
   import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
 
-  export let modelId
+  export let tableId
   export let recordId
   export let fieldName
 
@@ -12,15 +12,15 @@
   let title
 
   $: data = record?.[fieldName] ?? []
-  $: linkedModelId = data?.length ? data[0].modelId : null
-  $: linkedModel = $backendUiStore.models.find(
-    model => model._id === linkedModelId
+  $: linkedTableId = data?.length ? data[0].tableId : null
+  $: linkedTable = $backendUiStore.tables.find(
+    table => table._id === linkedTableId
   )
-  $: schema = linkedModel?.schema
-  $: model = $backendUiStore.models.find(model => model._id === modelId)
-  $: fetchData(modelId, recordId)
+  $: schema = linkedTable?.schema
+  $: table = $backendUiStore.tables.find(table => table._id === tableId)
+  $: fetchData(tableId, recordId)
   $: {
-    let recordLabel = record?.[model?.primaryDisplay]
+    let recordLabel = record?.[table?.primaryDisplay]
     if (recordLabel) {
       title = `${recordLabel} - ${fieldName}`
     } else {
@@ -28,8 +28,8 @@
     }
   }
 
-  async function fetchData(modelId, recordId) {
-    const QUERY_VIEW_URL = `/api/${modelId}/${recordId}/enrich`
+  async function fetchData(tableId, recordId) {
+    const QUERY_VIEW_URL = `/api/${tableId}/${recordId}/enrich`
     const response = await api.get(QUERY_VIEW_URL)
     record = await response.json()
   }

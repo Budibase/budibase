@@ -10,14 +10,14 @@
   let data = []
   let loading = false
 
-  $: title = $backendUiStore.selectedModel.name
-  $: schema = $backendUiStore.selectedModel.schema
-  $: modelView = {
+  $: title = $backendUiStore.selectedTable.name
+  $: schema = $backendUiStore.selectedTable.schema
+  $: tableView = {
     schema,
     name: $backendUiStore.selectedView.name,
   }
 
-  // Fetch records for specified model
+  // Fetch records for specified table
   $: {
     if ($backendUiStore.selectedView?.name?.startsWith("all_")) {
       loading = true
@@ -34,6 +34,6 @@
   {#if Object.keys(schema).length > 0}
     <CreateRowButton />
     <CreateViewButton />
-    <ExportButton view={modelView} />
+    <ExportButton view={tableView} />
   {/if}
 </Table>

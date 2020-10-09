@@ -15,20 +15,20 @@ const BUILTIN_DEFINITIONS = {
     name: "Row Saved",
     event: "record:save",
     icon: "ri-save-line",
-    tagline: "Row is added to {{inputs.enriched.model.name}}",
+    tagline: "Row is added to {{inputs.enriched.table.name}}",
     description: "Fired when a row is saved to your database",
     stepId: "RECORD_SAVED",
     inputs: {},
     schema: {
       inputs: {
         properties: {
-          modelId: {
+          tableId: {
             type: "string",
-            customType: "model",
+            customType: "table",
             title: "Table",
           },
         },
-        required: ["modelId"],
+        required: ["tableId"],
       },
       outputs: {
         properties: {
@@ -55,20 +55,20 @@ const BUILTIN_DEFINITIONS = {
     name: "Row Deleted",
     event: "record:delete",
     icon: "ri-delete-bin-line",
-    tagline: "Row is deleted from {{inputs.enriched.model.name}}",
+    tagline: "Row is deleted from {{inputs.enriched.table.name}}",
     description: "Fired when a row is deleted from your database",
     stepId: "RECORD_DELETED",
     inputs: {},
     schema: {
       inputs: {
         properties: {
-          modelId: {
+          tableId: {
             type: "string",
-            customType: "model",
+            customType: "table",
             title: "Table",
           },
         },
-        required: ["modelId"],
+        required: ["tableId"],
       },
       outputs: {
         properties: {
@@ -108,7 +108,7 @@ async function queueRelevantRecordAutomations(event, eventType) {
     if (
       !automation.live ||
       !automationTrigger.inputs ||
-      automationTrigger.inputs.modelId !== event.record.modelId
+      automationTrigger.inputs.tableId !== event.record.tableId
     ) {
       continue
     }
@@ -117,14 +117,14 @@ async function queueRelevantRecordAutomations(event, eventType) {
 }
 
 emitter.on("record:save", async function(event) {
-  if (!event || !event.record || !event.record.modelId) {
+  if (!event || !event.record || !event.record.tableId) {
     return
   }
   await queueRelevantRecordAutomations(event, "record:save")
 })
 
 emitter.on("record:delete", async function(event) {
-  if (!event || !event.record || !event.record.modelId) {
+  if (!event || !event.record || !event.record.tableId) {
     return
   }
   await queueRelevantRecordAutomations(event, "record:delete")
@@ -132,16 +132,16 @@ emitter.on("record:delete", async function(event) {
 
 async function fillRecordOutput(automation, params) {
   let triggerSchema = automation.definition.trigger
-  let modelId = triggerSchema.inputs.modelId
+  let tableId = triggerSchema.inputs.tableId
   const db = new CouchDB(params.instanceId)
   try {
-    let model = await db.get(modelId)
+    let table = await db.get(tableId)
     let record = {}
-    for (let schemaKey of Object.keys(model.schema)) {
+    for (let schemaKey of Object.keys(table.schema)) {
       if (params[schemaKey] != null) {
         continue
       }
-      let propSchema = model.schema[schemaKey]
+      let propSchema = table.schema[schemaKey]
       switch (propSchema.constraints.type) {
         case "string":
           record[schemaKey] = FAKE_STRING
@@ -159,7 +159,7 @@ async function fillRecordOutput(automation, params) {
     }
     params.record = record
   } catch (err) {
-    throw "Failed to find model for trigger"
+    throw "Failed to find table for trigger"
   }
   return params
 }
@@ -169,7 +169,7 @@ module.exports.externalTrigger = async function(automation, params) {
   if (
     automation.definition != null &&
     automation.definition.trigger != null &&
-    automation.definition.trigger.inputs.modelId != null
+    automation.definition.trigger.inputs.tableId != null
   ) {
     params = await fillRecordOutput(automation, params)
   }

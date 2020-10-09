@@ -21242,7 +21242,7 @@ var app = (function (crypto$1) {
       "indexType",
       "reference index may only exist on a record node",
       index =>
-        isModel(index.parent()) || index.indexType !== indexTypes.reference
+        isTable(index.parent()) || index.indexType !== indexTypes.reference
     ),
     makerule(
       "indexType",
@@ -21321,9 +21321,9 @@ var app = (function (crypto$1) {
   const isNode = (appHierarchy, key) =>
     isSomething(getExactNodeForKey(appHierarchy)(key));
 
-  const isModel = node => isSomething(node) && node.type === "record";
-  const isSingleRecord = node => isModel(node) && node.isSingle;
-  const isCollectionRecord = node => isModel(node) && !node.isSingle;
+  const isTable = node => isSomething(node) && node.type === "record";
+  const isSingleRecord = node => isTable(node) && node.isSingle;
+  const isCollectionRecord = node => isTable(node) && !node.isSingle;
   const isRoot = node => isSomething(node) && node.isRoot();
 
   const getSafeFieldParser = (tryParse, defaultValueFunctions) => (
@@ -22056,7 +22056,7 @@ var app = (function (crypto$1) {
   const nodeKeyMaker = node => () =>
     switchCase(
       [
-        n => isModel(n) && !isSingleRecord(n),
+        n => isTable(n) && !isSingleRecord(n),
         n =>
           joinKey(
             node.parent().nodeKey(),

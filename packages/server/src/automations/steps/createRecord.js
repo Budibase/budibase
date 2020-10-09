@@ -5,7 +5,7 @@ const usage = require("../../utilities/usageQuota")
 
 module.exports.definition = {
   name: "Create Row",
-  tagline: "Create a {{inputs.enriched.model.name}} row",
+  tagline: "Create a {{inputs.enriched.table.name}} row",
   icon: "ri-save-3-fill",
   description: "Add a row to your database",
   type: "ACTION",
@@ -17,14 +17,14 @@ module.exports.definition = {
         record: {
           type: "object",
           properties: {
-            modelId: {
+            tableId: {
               type: "string",
-              customType: "model",
+              customType: "table",
             },
           },
           customType: "record",
           title: "Table",
-          required: ["modelId"],
+          required: ["tableId"],
         },
       },
       required: ["record"],
@@ -60,18 +60,18 @@ module.exports.definition = {
 
 module.exports.run = async function({ inputs, instanceId, apiKey }) {
   // TODO: better logging of when actions are missed due to missing parameters
-  if (inputs.record == null || inputs.record.modelId == null) {
+  if (inputs.record == null || inputs.record.tableId == null) {
     return
   }
   inputs.record = await automationUtils.cleanUpRecord(
     instanceId,
-    inputs.record.modelId,
+    inputs.record.tableId,
     inputs.record
   )
-  // have to clean up the record, remove the model from it
+  // have to clean up the record, remove the table from it
   const ctx = {
     params: {
-      modelId: inputs.record.modelId,
+      tableId: inputs.record.tableId,
     },
     request: {
       body: inputs.record,

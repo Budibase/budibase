@@ -6,12 +6,12 @@
   export let value
   export let bindings
 
-  $: model = $backendUiStore.models.find(model => model._id === value?.modelId)
-  $: schemaFields = Object.entries(model?.schema ?? {})
+  $: table = $backendUiStore.tables.find(table => table._id === value?.tableId)
+  $: schemaFields = Object.entries(table?.schema ?? {})
 
-  // Ensure any nullish modelId values get set to empty string so
+  // Ensure any nullish tableId values get set to empty string so
   // that the select works
-  $: if (value?.modelId == null) value = { modelId: "" }
+  $: if (value?.tableId == null) value = { tableId: "" }
 
   function schemaHasOptions(schema) {
     return !!schema.constraints?.inclusion?.length
@@ -19,10 +19,10 @@
 </script>
 
 <div class="block-field">
-  <Select bind:value={value.modelId} thin secondary>
+  <Select bind:value={value.tableId} thin secondary>
     <option value="">Choose an option</option>
-    {#each $backendUiStore.models as model}
-      <option value={model._id}>{model.name}</option>
+    {#each $backendUiStore.tables as table}
+      <option value={table._id}>{table.name}</option>
     {/each}
   </Select>
 </div>

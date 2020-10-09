@@ -13,14 +13,14 @@
     dropdownRight.hide()
   }
 
-  const models = $backendUiStore.models.map(m => ({
+  const tables = $backendUiStore.tables.map(m => ({
     label: m.name,
     name: `all_${m._id}`,
-    modelId: m._id,
-    isModel: true,
+    tableId: m._id,
+    isTable: true,
   }))
 
-  const views = $backendUiStore.models.reduce((acc, cur) => {
+  const views = $backendUiStore.tables.reduce((acc, cur) => {
     let viewsArr = Object.entries(cur.views).map(([key, value]) => ({
       label: key,
       name: key,
@@ -32,7 +32,7 @@
 
 <div class="dropdownbutton" bind:this={anchorRight}>
   <Button secondary wide on:click={dropdownRight.show}>
-    <span>{value.label ? value.label : 'Model / View'}</span>
+    <span>{value.label ? value.label : 'Table / View'}</span>
     <Icon name="arrowdown" />
   </Button>
 </div>
@@ -42,11 +42,11 @@
       <Heading extraSmall>Tables</Heading>
     </div>
     <ul>
-      {#each models as model}
+      {#each tables as table}
         <li
-          class:selected={value === model}
-          on:click={() => handleSelected(model)}>
-          {model.label}
+          class:selected={value === table}
+          on:click={() => handleSelected(table)}>
+          {table.label}
         </li>
       {/each}
     </ul>

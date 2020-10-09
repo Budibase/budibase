@@ -16,7 +16,7 @@
   import { capitalise } from "./helpers"
 
   export let _bb
-  export let model
+  export let table
   export let title
   export let buttonText
   export let wide = false
@@ -37,24 +37,24 @@
   let record
   let store = _bb.store
   let schema = {}
-  let modelDef = {}
+  let tableDef = {}
   let saved = false
   let recordId
   let isNew = true
   let errors = {}
 
   $: fields = schema ? Object.keys(schema) : []
-  $: if (model && model.length !== 0) {
-    fetchModel()
+  $: if (table && table.length !== 0) {
+    fetchTable()
   }
 
-  async function fetchModel() {
-    const FETCH_MODEL_URL = `/api/models/${model}`
-    const response = await _bb.api.get(FETCH_MODEL_URL)
-    modelDef = await response.json()
-    schema = modelDef.schema
+  async function fetchTable() {
+    const FETCH_TABLE_URL = `/api/tables/${table}`
+    const response = await _bb.api.get(FETCH_TABLE_URL)
+    tableDef = await response.json()
+    schema = tableDef.schema
     record = {
-      modelId: model,
+      tableId: table,
     }
   }
 
@@ -66,22 +66,22 @@
       }
     }
 
-    const SAVE_RECORD_URL = `/api/${model}/records`
+    const SAVE_RECORD_URL = `/api/${table}/records`
     const response = await _bb.api.post(SAVE_RECORD_URL, record)
 
     const json = await response.json()
 
     if (response.status === 200) {
       store.update(state => {
-        state[model] = state[model] ? [...state[model], json] : [json]
+        state[table] = state[table] ? [...state[table], json] : [json]
         return state
       })
 
       errors = {}
 
       // wipe form, if new record, otherwise update
-      // model to get new _rev
-      record = isNew ? { modelId: model } : json
+      // table to get new _rev
+      record = isNew ? { tableId: table } : json
 
       // set saved, and unset after 1 second
       // i.e. make the success notifier appear, then disappear again after time
@@ -105,11 +105,11 @@
     isNew = !recordId || recordId === "new"
 
     if (isNew) {
-      record = { modelId: model }
+      record = { tableId: table }
       return
     }
 
-    const GET_RECORD_URL = `/api/${model}/records/${recordId}`
+    const GET_RECORD_URL = `/api/${table}/records/${recordId}`
     const response = await _bb.api.get(GET_RECORD_URL)
     record = await response.json()
   })

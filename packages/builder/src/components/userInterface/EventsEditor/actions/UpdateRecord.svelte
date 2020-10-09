@@ -14,7 +14,7 @@
     componentInstanceId: $store.currentComponentInfo._id,
     components: $store.components,
     screen: $store.currentPreviewItem,
-    models: $backendUiStore.models,
+    tables: $backendUiStore.tables,
   })
 
   let idFields
@@ -56,16 +56,16 @@
 
     const component = $store.components[instance._component]
 
-    // component.context is the name of the prop that holds the modelId
-    const modelInfo = instance[component.context]
+    // component.context is the name of the prop that holds the tableId
+    const tableInfo = instance[component.context]
 
-    if (!modelInfo) return []
+    if (!tableInfo) return []
 
-    const model = $backendUiStore.models.find(m => m._id === modelInfo.modelId)
-    parameters.modelId = modelInfo.modelId
-    return Object.keys(model.schema).map(k => ({
+    const table = $backendUiStore.tables.find(m => m._id === tableInfo.tableId)
+    parameters.tableId = tableInfo.tableId
+    return Object.keys(table.schema).map(k => ({
       name: k,
-      type: model.schema[k].type,
+      type: table.schema[k].type,
     }))
   }
 

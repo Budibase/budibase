@@ -11,14 +11,14 @@
   let records = []
 
   $: label = capitalise(schema.name)
-  $: linkedModelId = schema.modelId
-  $: linkedModel = $backendUiStore.models.find(
-    model => model._id === linkedModelId
+  $: linkedTableId = schema.tableId
+  $: linkedTable = $backendUiStore.tables.find(
+    table => table._id === linkedTableId
   )
-  $: fetchRecords(linkedModelId)
+  $: fetchRecords(linkedTableId)
 
-  async function fetchRecords(linkedModelId) {
-    const FETCH_RECORDS_URL = `/api/${linkedModelId}/records`
+  async function fetchRecords(linkedTableId) {
+    const FETCH_RECORDS_URL = `/api/${linkedTableId}/records`
     try {
       const response = await api.get(FETCH_RECORDS_URL)
       records = await response.json()
@@ -29,15 +29,15 @@
   }
 
   function getPrettyName(record) {
-    return record[linkedModel.primaryDisplay || "_id"]
+    return record[linkedTable.primaryDisplay || "_id"]
   }
 </script>
 
-{#if linkedModel.primaryDisplay == null}
+{#if linkedTable.primaryDisplay == null}
   <Label extraSmall grey>{label}</Label>
   <Label small black>
     Please choose a primary display column for the
-    <b>{linkedModel.name}</b>
+    <b>{linkedTable.name}</b>
     table.
   </Label>
 {:else}

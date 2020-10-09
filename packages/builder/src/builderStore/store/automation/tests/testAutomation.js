@@ -29,13 +29,13 @@ export default {
       name: "Record Saved",
       event: "record:save",
       icon: "ri-save-line",
-      tagline: "Record is added to <b>{{model.name}}</b>",
+      tagline: "Record is added to <b>{{table.name}}</b>",
       description: "Fired when a record is saved to your database.",
-      params: { model: "model" },
+      params: { table: "table" },
       type: "TRIGGER",
       args: {
-        model: {
-          type: "model",
+        table: {
+          type: "table",
           views: {},
           name: "users",
           schema: {

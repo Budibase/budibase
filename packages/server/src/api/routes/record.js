@@ -2,46 +2,46 @@ const Router = require("@koa/router")
 const recordController = require("../controllers/record")
 const authorized = require("../../middleware/authorized")
 const usage = require("../../middleware/usageQuota")
-const { READ_MODEL, WRITE_MODEL } = require("../../utilities/accessLevels")
+const { READ_TABLE, WRITE_TABLE } = require("../../utilities/accessLevels")
 
 const router = Router()
 
 router
   .get(
-    "/api/:modelId/:recordId/enrich",
-    authorized(READ_MODEL, ctx => ctx.params.modelId),
+    "/api/:tableId/:recordId/enrich",
+    authorized(READ_TABLE, ctx => ctx.params.tableId),
     recordController.fetchEnrichedRecord
   )
   .get(
-    "/api/:modelId/records",
-    authorized(READ_MODEL, ctx => ctx.params.modelId),
-    recordController.fetchModelRecords
+    "/api/:tableId/records",
+    authorized(READ_TABLE, ctx => ctx.params.tableId),
+    recordController.fetchTableRecords
   )
   .get(
-    "/api/:modelId/records/:recordId",
-    authorized(READ_MODEL, ctx => ctx.params.modelId),
+    "/api/:tableId/records/:recordId",
+    authorized(READ_TABLE, ctx => ctx.params.tableId),
     recordController.find
   )
   .post("/api/records/search", recordController.search)
   .post(
-    "/api/:modelId/records",
-    authorized(WRITE_MODEL, ctx => ctx.params.modelId),
+    "/api/:tableId/records",
+    authorized(WRITE_TABLE, ctx => ctx.params.tableId),
     usage,
     recordController.save
   )
   .patch(
-    "/api/:modelId/records/:id",
-    authorized(WRITE_MODEL, ctx => ctx.params.modelId),
+    "/api/:tableId/records/:id",
+    authorized(WRITE_TABLE, ctx => ctx.params.tableId),
     recordController.patch
   )
   .post(
-    "/api/:modelId/records/validate",
-    authorized(WRITE_MODEL, ctx => ctx.params.modelId),
+    "/api/:tableId/records/validate",
+    authorized(WRITE_TABLE, ctx => ctx.params.tableId),
     recordController.validate
   )
   .delete(
-    "/api/:modelId/records/:recordId/:revId",
-    authorized(WRITE_MODEL, ctx => ctx.params.modelId),
+    "/api/:tableId/records/:recordId/:revId",
+    authorized(WRITE_TABLE, ctx => ctx.params.tableId),
     usage,
     recordController.destroy
   )

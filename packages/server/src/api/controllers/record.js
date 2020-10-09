@@ -9,7 +9,7 @@ const {
 } = require("../../db/utils")
 const { cloneDeep } = require("lodash")
 
-const MODEL_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.MODEL}${SEPARATOR}`
+const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function(value) {
@@ -25,18 +25,18 @@ exports.patch = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   let record = await db.get(ctx.params.id)
-  const model = await db.get(record.modelId)
+  const table = await db.get(record.tableId)
   const patchfields = ctx.request.body
-  record = coerceRecordValues(record, model)
+  record = coerceRecordValues(record, table)
 
   for (let key of Object.keys(patchfields)) {
-    if (!model.schema[key]) continue
+    if (!table.schema[key]) continue
     record[key] = patchfields[key]
   }
 
   const validateResult = await validate({
     record,
-    model,
+    table,
   })
 
   if (!validateResult.valid) {
@@ -53,40 +53,40 @@ exports.patch = async function(ctx) {
     instanceId,
     eventType: linkRecords.EventType.RECORD_UPDATE,
     record,
-    modelId: record.modelId,
-    model,
+    tableId: record.tableId,
+    table,
   })
   const response = await db.put(record)
   record._rev = response.rev
   record.type = "record"
 
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitRecord(`record:update`, instanceId, record, model)
+    ctx.eventEmitter.emitRecord(`record:update`, instanceId, record, table)
   ctx.body = record
   ctx.status = 200
-  ctx.message = `${model.name} updated successfully.`
+  ctx.message = `${table.name} updated successfully.`
 }
 
 exports.save = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   let record = ctx.request.body
-  record.modelId = ctx.params.modelId
+  record.tableId = ctx.params.tableId
 
   if (!record._rev && !record._id) {
-    record._id = generateRecordID(record.modelId)
+    record._id = generateRecordID(record.tableId)
   }
 
   // if the record obj had an _id then it will have been retrieved
   const existingRecord = ctx.preExisting
 
-  const model = await db.get(record.modelId)
+  const table = await db.get(record.tableId)
 
-  record = coerceRecordValues(record, model)
+  record = coerceRecordValues(record, table)
 
   const validateResult = await validate({
     record,
-    model,
+    table,
   })
 
   if (!validateResult.valid) {
@@ -103,8 +103,8 @@ exports.save = async function(ctx) {
     instanceId,
     eventType: linkRecords.EventType.RECORD_SAVE,
     record,
-    modelId: record.modelId,
-    model,
+    tableId: record.tableId,
+    table,
   })
 
   if (existingRecord) {
@@ -113,7 +113,7 @@ exports.save = async function(ctx) {
     record.type = "record"
     ctx.body = record
     ctx.status = 200
-    ctx.message = `${model.name} updated successfully.`
+    ctx.message = `${table.name} updated successfully.`
     return
   }
 
@@ -122,10 +122,10 @@ exports.save = async function(ctx) {
   record._rev = response.rev
 
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitRecord(`record:save`, instanceId, record, model)
+    ctx.eventEmitter.emitRecord(`record:save`, instanceId, record, table)
   ctx.body = record
   ctx.status = 200
-  ctx.message = `${model.name} created successfully`
+  ctx.message = `${table.name} created successfully`
 }
 
 exports.fetchView = async function(ctx) {
@@ -134,10 +134,10 @@ exports.fetchView = async function(ctx) {
   const { stats, group, field } = ctx.query
   const viewName = ctx.params.viewName
 
-  // if this is a model view being looked for just transfer to that
-  if (viewName.indexOf(MODEL_VIEW_BEGINS_WITH) === 0) {
-    ctx.params.modelId = viewName.substring(4)
-    await exports.fetchModelRecords(ctx)
+  // if this is a table view being looked for just transfer to that
+  if (viewName.indexOf(TABLE_VIEW_BEGINS_WITH) === 0) {
+    ctx.params.tableId = viewName.substring(4)
+    await exports.fetchTableRecords(ctx)
     return
   }
 
@@ -160,11 +160,11 @@ exports.fetchView = async function(ctx) {
   ctx.body = await linkRecords.attachLinkInfo(instanceId, response.rows)
 }
 
-exports.fetchModelRecords = async function(ctx) {
+exports.fetchTableRecords = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const response = await db.allDocs(
-    getRecordParams(ctx.params.modelId, null, {
+    getRecordParams(ctx.params.tableId, null, {
       include_docs: true,
     })
   )
@@ -192,8 +192,8 @@ exports.find = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const record = await db.get(ctx.params.recordId)
-  if (record.modelId !== ctx.params.modelId) {
-    ctx.throw(400, "Supplied modelId does not match the records modelId")
+  if (record.tableId !== ctx.params.tableId) {
+    ctx.throw(400, "Supplied tableId does not match the records tableId")
     return
   }
   ctx.body = await linkRecords.attachLinkInfo(instanceId, record)
@@ -203,15 +203,15 @@ exports.destroy = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const record = await db.get(ctx.params.recordId)
-  if (record.modelId !== ctx.params.modelId) {
-    ctx.throw(400, "Supplied modelId doesn't match the record's modelId")
+  if (record.tableId !== ctx.params.tableId) {
+    ctx.throw(400, "Supplied tableId doesn't match the record's tableId")
     return
   }
   await linkRecords.updateLinks({
     instanceId,
     eventType: linkRecords.EventType.RECORD_DELETE,
     record,
-    modelId: record.modelId,
+    tableId: record.tableId,
   })
   ctx.body = await db.remove(ctx.params.recordId, ctx.params.revId)
   ctx.status = 200
@@ -225,23 +225,23 @@ exports.destroy = async function(ctx) {
 exports.validate = async function(ctx) {
   const errors = await validate({
     instanceId: ctx.user.instanceId,
-    modelId: ctx.params.modelId,
+    tableId: ctx.params.tableId,
     record: ctx.request.body,
   })
   ctx.status = 200
   ctx.body = errors
 }
 
-async function validate({ instanceId, modelId, record, model }) {
-  if (!model) {
+async function validate({ instanceId, tableId, record, table }) {
+  if (!table) {
     const db = new CouchDB(instanceId)
-    model = await db.get(modelId)
+    table = await db.get(tableId)
   }
   const errors = {}
-  for (let fieldName of Object.keys(model.schema)) {
+  for (let fieldName of Object.keys(table.schema)) {
     const res = validateJs.single(
       record[fieldName],
-      model.schema[fieldName].constraints
+      table.schema[fieldName].constraints
     )
     if (res) errors[fieldName] = res
   }
@@ -251,9 +251,9 @@ async function validate({ instanceId, modelId, record, model }) {
 exports.fetchEnrichedRecord = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-  const modelId = ctx.params.modelId
+  const tableId = ctx.params.tableId
   const recordId = ctx.params.recordId
-  if (instanceId == null || modelId == null || recordId == null) {
+  if (instanceId == null || tableId == null || recordId == null) {
     ctx.status = 400
     ctx.body = {
       status: 400,
@@ -262,12 +262,12 @@ exports.fetchEnrichedRecord = async function(ctx) {
     }
     return
   }
-  // need model to work out where links go in record
-  const [model, record] = await Promise.all([db.get(modelId), db.get(recordId)])
+  // need table to work out where links go in record
+  const [table, record] = await Promise.all([db.get(tableId), db.get(recordId)])
   // get the link docs
   const linkVals = await linkRecords.getLinkDocuments({
     instanceId,
-    modelId,
+    tableId,
     recordId,
   })
   // look up the actual records based on the ids
@@ -281,11 +281,11 @@ exports.fetchEnrichedRecord = async function(ctx) {
     response.rows.map(row => row.doc)
   )
   // insert the link records in the correct place throughout the main record
-  for (let fieldName of Object.keys(model.schema)) {
-    let field = model.schema[fieldName]
+  for (let fieldName of Object.keys(table.schema)) {
+    let field = table.schema[fieldName]
     if (field.type === "link") {
       record[fieldName] = linkedRecords.filter(
-        linkRecord => linkRecord.modelId === field.modelId
+        linkRecord => linkRecord.tableId === field.tableId
       )
     }
   }
@@ -293,10 +293,10 @@ exports.fetchEnrichedRecord = async function(ctx) {
   ctx.status = 200
 }
 
-function coerceRecordValues(rec, model) {
+function coerceRecordValues(rec, table) {
   const record = cloneDeep(rec)
   for (let [key, value] of Object.entries(record)) {
-    const field = model.schema[key]
+    const field = table.schema[key]
     if (!field) continue
 
     // eslint-disable-next-line no-prototype-builtins

@@ -10,9 +10,9 @@ const EventType = {
   RECORD_SAVE: "record:save",
   RECORD_UPDATE: "record:update",
   RECORD_DELETE: "record:delete",
-  MODEL_SAVE: "model:save",
-  MODEL_UPDATED: "model:updated",
-  MODEL_DELETE: "model:delete",
+  TABLE_SAVE: "table:save",
+  TABLE_UPDATED: "table:updated",
+  TABLE_DELETE: "table:delete",
 }
 
 exports.EventType = EventType
@@ -22,37 +22,37 @@ exports.getLinkDocuments = getLinkDocuments
 exports.createLinkView = createLinkView
 
 /**
- * Update link documents for a record or model - this is to be called by the API controller when a change is occurring.
+ * Update link documents for a record or table - this is to be called by the API controller when a change is occurring.
  * @param {string} eventType states what type of change which is occurring, means this can be expanded upon in the
  * future quite easily (all updates go through one function).
  * @param {string} instanceId The ID of the instance in which the change is occurring.
- * @param {string} modelId The ID of the of the model which is being changed.
+ * @param {string} tableId The ID of the of the table which is being changed.
  * @param {object|null} record The record which is changing, e.g. created, updated or deleted.
- * @param {object|null} model If the model has already been retrieved this can be used to reduce database gets.
- * @param {object|null} oldModel If the model is being updated then the old model can be provided for differencing.
+ * @param {object|null} table If the table has already been retrieved this can be used to reduce database gets.
+ * @param {object|null} oldTable If the table is being updated then the old table can be provided for differencing.
  * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the record for
- * record operations and the model for model operations.
+ * record operations and the table for table operations.
  */
 exports.updateLinks = async function({
   eventType,
   instanceId,
   record,
-  modelId,
-  model,
-  oldModel,
+  tableId,
+  table,
+  oldTable,
 }) {
   if (instanceId == null) {
     throw "Cannot operate without an instance ID."
   }
-  // make sure model ID is set
-  if (modelId == null && model != null) {
-    arguments[0].modelId = model._id
+  // make sure table ID is set
+  if (tableId == null && table != null) {
+    arguments[0].tableId = table._id
   }
   let linkController = new LinkController(arguments[0])
   if (
-    !(await linkController.doesModelHaveLinkedFields()) &&
-    (oldModel == null ||
-      !(await linkController.doesModelHaveLinkedFields(oldModel)))
+    !(await linkController.doesTableHaveLinkedFields()) &&
+    (oldTable == null ||
+      !(await linkController.doesTableHaveLinkedFields(oldTable)))
   ) {
     return record
   }
@@ -62,12 +62,12 @@ exports.updateLinks = async function({
       return await linkController.recordSaved()
     case EventType.RECORD_DELETE:
       return await linkController.recordDeleted()
-    case EventType.MODEL_SAVE:
-      return await linkController.modelSaved()
-    case EventType.MODEL_UPDATED:
-      return await linkController.modelUpdated()
-    case EventType.MODEL_DELETE:
-      return await linkController.modelDeleted()
+    case EventType.TABLE_SAVE:
+      return await linkController.tableSaved()
+    case EventType.TABLE_UPDATED:
+      return await linkController.tableUpdated()
+    case EventType.TABLE_DELETE:
+      return await linkController.tableDeleted()
     default:
       throw "Type of event is not known, linked record handler requires update."
   }
@@ -93,7 +93,7 @@ exports.attachLinkInfo = async (instanceId, records) => {
     records.map(record =>
       getLinkDocuments({
         instanceId,
-        modelId: record.modelId,
+        tableId: record.tableId,
         recordId: record._id,
         includeDocs: IncludeDocs.EXCLUDE,
       })

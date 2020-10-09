@@ -32,10 +32,10 @@
   }
 
   function deleteColumn() {
-    if (field.name === $backendUiStore.selectedModel.primaryDisplay) {
+    if (field.name === $backendUiStore.selectedTable.primaryDisplay) {
       notifier.danger("You cannot delete the primary display column")
     } else {
-      backendUiStore.actions.models.deleteField(field)
+      backendUiStore.actions.tables.deleteField(field)
       notifier.success("Column deleted")
     }
     hideEditor()
