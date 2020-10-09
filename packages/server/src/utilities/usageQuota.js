@@ -69,13 +69,16 @@ exports.update = async (apiKey, property, usage) => {
   try {
     await apiKeyTable.update(buildUpdateParams(apiKey, property, usage))
   } catch (err) {
+    // conditional check means the condition failed, need to check why
     if (err.code === "ConditionalCheckFailedException") {
       // get the API key so we can check it
       const keyObj = await apiKeyTable.get({ primary: apiKey })
       // the usage quota or usage limits didn't exist
       if (keyObj && (keyObj.usageQuota == null || keyObj.usageLimits == null)) {
-        keyObj.usageQuota = DEFAULT_USAGE
-        keyObj.usageLimits = DEFAULT_PLAN
+        keyObj.usageQuota =
+          keyObj.usageQuota == null ? DEFAULT_USAGE : keyObj.usageQuota
+        keyObj.usageLimits =
+          keyObj.usageLimits == null ? DEFAULT_PLAN : keyObj.usageLimits
         keyObj.quotaReset = getNewQuotaReset()
         await apiKeyTable.put({ item: keyObj })
         return
