@@ -1,5 +1,5 @@
 const fs = require("fs")
-const { join } = require("../../../utilities/sanitisedPath")
+const { join } = require("../../../utilities/centralPath")
 const AWS = require("aws-sdk")
 const fetch = require("node-fetch")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")

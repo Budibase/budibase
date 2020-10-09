@@ -1,5 +1,5 @@
 const fs = require("fs-extra")
-const { join } = require("./sanitisedPath")
+const { join } = require("./centralPath")
 const os = require("os")
 const fetch = require("node-fetch")
 const stream = require("stream")
