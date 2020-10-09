@@ -8,7 +8,7 @@ const {
   unlink,
   rmdir,
 } = require("fs-extra")
-const { join, resolve } = require("../sanitisedPath")
+const { join, resolve } = require("../centralPath")
 const { dirname } = require("path")
 const env = require("../../environment")
 

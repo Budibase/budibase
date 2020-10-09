@@ -3,7 +3,7 @@ const CouchDB = require("../../db")
 const client = require("../../db/clientDb")
 const newid = require("../../db/newid")
 const { createLinkView } = require("../../db/linkedRecords")
-const { join } = require("../../utilities/sanitisedPath")
+const { join } = require("../../utilities/centralPath")
 const { downloadTemplate } = require("../../utilities/templates")
 
 exports.create = async function(ctx) {
