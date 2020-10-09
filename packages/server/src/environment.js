@@ -11,4 +11,7 @@ module.exports = {
   AUTOMATION_BUCKET: process.env.AUTOMATION_BUCKET,
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
+  CLOUD: process.env.CLOUD,
+  DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
+  AWS_REGION: process.env.AWS_REGION,
 }
