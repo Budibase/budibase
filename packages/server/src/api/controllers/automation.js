@@ -33,6 +33,7 @@ function cleanAutomationInputs(automation) {
 exports.create = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   let automation = ctx.request.body
+  automation.appId = ctx.user.appId
 
   automation._id = generateAutomationID()
 
@@ -54,6 +55,7 @@ exports.create = async function(ctx) {
 exports.update = async function(ctx) {
   const db = new CouchDB(ctx.user.instanceId)
   let automation = ctx.request.body
+  automation.appId = ctx.user.appId
 
   automation = cleanAutomationInputs(automation)
   const response = await db.put(automation)

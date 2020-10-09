@@ -1,4 +1,6 @@
 const recordController = require("../../api/controllers/record")
+const environment = require("../../environment")
+const usage = require("../../utilities/usageQuota")
 
 module.exports.definition = {
   description: "Delete a row from your database",
@@ -48,7 +50,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, instanceId }) {
+module.exports.run = async function({ inputs, instanceId, apiKey }) {
   // TODO: better logging of when actions are missed due to missing parameters
   if (inputs.id == null || inputs.revision == null) {
     return
@@ -63,6 +65,9 @@ module.exports.run = async function({ inputs, instanceId }) {
   }
 
   try {
+    if (environment.CLOUD) {
+      await usage.update(apiKey, usage.Properties.RECORD, -1)
+    }
     await recordController.destroy(ctx)
     return {
       response: ctx.body,

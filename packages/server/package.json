@@ -46,7 +46,7 @@
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",
-    "aws-sdk": "^2.706.0",
+    "aws-sdk": "^2.767.0",
     "bcryptjs": "^2.4.3",
     "chmodr": "^1.2.0",
     "csvtojson": "^2.0.10",
