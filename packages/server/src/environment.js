@@ -14,4 +14,5 @@ module.exports = {
   CLOUD: process.env.CLOUD,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
   AWS_REGION: process.env.AWS_REGION,
+  DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
 }
