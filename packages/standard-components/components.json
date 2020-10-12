@@ -226,7 +226,18 @@
 		"data": true,
 		"props": {
 			"datasource": "models",
-			"editable": "bool"
+			"editable": "bool",
+			"theme": {
+				"type": "options",
+				"default": "alpine",
+				"options": [
+					"alpine",
+					"alpine-dark",
+					"balham",
+					"balham-dark",
+					"material"
+				]
+			}
 		}
 	},
 	"dataform": {

@@ -332,6 +332,13 @@ export default {
                 valueKey: "checked",
                 control: Checkbox,
               },
+              {
+                label: "Theme",
+                key: "theme",
+                control: OptionSelect,
+                options: ["alpine", "alpine-dark", "balham", "balham-dark", "material"],
+                placeholder: "alpine",
+              },
             ],
           },
           children: [],

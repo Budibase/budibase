@@ -17,6 +17,7 @@
   export let _bb
   export let datasource = {}
   export let editable
+  export let theme = 'alpine'
 
   let dataLoaded = false
   let data
@@ -29,7 +30,7 @@
       minWidth: 150,
       filter: true,
     },
-    rowSelection: editable ? "multiple" : "single",
+    rowSelection: editable ? "multiple" : false,
     suppressRowClickSelection: !editable,
   }
 
@@ -50,12 +51,7 @@
             hide: shouldHideField(key),
             sortable: true,
             editable: editable && isEditable(schema[key].type),
-            cellRenderer:
-              editable &&
-              getRenderer(
-                schema[key].type, // type
-                schema[key].constraints // options
-              ),
+            cellRenderer: editable && getRenderer(schema[key]),
             autoHeight: true,
           }
         })
@@ -67,8 +63,8 @@
   const isEditable = type =>
     type !== "boolean" &&
     type !== "options" &&
-    type !== "attachment" &&
-    type !== "datetime"
+    // type !== "datetime" &&
+    type !== "attachment" 
 
   const shouldHideField = name => {
     if (name.startsWith("_")) return true
@@ -107,6 +103,12 @@
   }
 </script>
 
+<svelte:head>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+</svelte:head>
+
 <div class="container">
   {#if dataLoaded}
     {#if editable}
@@ -121,6 +123,7 @@
       </div>
     {/if}
     <AgGrid
+      {theme}
       {options}
       {data}
       {columnDefs}
@@ -131,7 +134,7 @@
 
 <style>
   .container {
-    --grid-height: 400px;
+    --grid-height: 800px;
   }
   .container :global(form) {
     display: grid;

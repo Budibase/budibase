@@ -3,19 +3,18 @@
 
 import AttachmentCell from './AttachmentCell/Button.svelte'
 import Select from './Select/Wrapper.svelte'
-import { DatePicker } from "@budibase/bbui"
+import DatePicker from "./DateTime/Wrapper.svelte"
 
 const renderers = new Map([
     ["boolean", booleanRenderer],
     ["attachment", attachmentRenderer],
-    ["datetime", dateRenderer],
     ["options", optionsRenderer],
 ])
 
 
-export function getRenderer(type, options) {
+export function getRenderer({ type, constraints }) {
     if (renderers.get(type)) {
-        return renderers.get(type)(options)
+        return renderers.get(type)(constraints)
     } else {
         return false
     }
@@ -50,7 +49,7 @@ function attachmentRenderer(options) {
     }
 }
 function dateRenderer(options) {
-    return params => {
+    return function (params) {
         const container = document.createElement("div")
         const toggle = (e) => {
             params.setValue(e.detail[0][0])
@@ -62,11 +61,8 @@ function dateRenderer(options) {
             target: container,
             props: {
                 value: params.value,
-                thin: true
             }
         });
-
-        datePickerInstance.$on('change', toggle)
 
         return container
     }
