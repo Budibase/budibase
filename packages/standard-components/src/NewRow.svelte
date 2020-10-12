@@ -26,6 +26,10 @@
       _bb.attachChildren(target, {
         context: record,
       })
+    } else {
+      _bb.attachChildren(target, {
+        context: {},
+      })
     }
   })
 </script>

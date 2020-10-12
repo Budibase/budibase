@@ -30,7 +30,7 @@
     let record
     // if srcdoc, then we assume this is the builder preview
     if (pathParts.length === 0 || pathParts[0] === "srcdoc") {
-      record = await fetchFirstRecord()
+      if (model) record = await fetchFirstRecord()
     } else if (_bb.routeParams().id) {
       const GET_RECORD_URL = `/api/${model}/records/${_bb.routeParams().id}`
       const response = await _bb.api.get(GET_RECORD_URL)
@@ -45,18 +45,20 @@
 
     if (record) {
       // Fetch model schema so we can check for linked records
-      const model = await fetchModel(record.modelId)
-      for (let key of Object.keys(model.schema)) {
-        if (model.schema[key].type === "link") {
+      const modelObj = await fetchModel(record.modelId)
+      for (let key of Object.keys(modelObj.schema)) {
+        if (modelObj.schema[key].type === "link") {
           record[key] = Array.isArray(record[key]) ? record[key].length : 0
         }
       }
 
-      record._model = model
+      record._model = modelObj
 
       _bb.attachChildren(target, {
         context: record,
       })
+    } else {
+      _bb.attachChildren(target)
     }
   }
 
