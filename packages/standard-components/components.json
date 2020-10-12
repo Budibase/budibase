@@ -243,20 +243,12 @@
 	"dataform": {
 		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
-		"props": {
-			"model": "models",
-			"title": "string",
-			"buttonText": "string"
-		}
+		"props": {}
 	},
 	"dataformwide": {
 		"description": "an HTML table that fetches data from a table or view and displays it.",
 		"data": true,
-		"props": {
-			"model": "models",
-			"title": "string",
-			"buttonText": "string"
-		}
+		"props": {}
 	},
 	"datalist": {
 		"description": "A configurable data list that attaches to your backend models.",
@@ -294,11 +286,22 @@
 			"destinationUrl": "string"
 		}
 	},
-	"recorddetail": {
+	"rowdetail": {
 		"description": "Loads a record, using an ID in the url",
 		"context": "model",
 		"children": true,
 		"data": true,
+		"baseComponent": true,
+		"props": {
+			"model": "models"
+		}
+	},
+	"newrow": {
+		"description": "Prepares a new record for creation",
+		"context": "model",
+		"children": true,
+		"data": true,
+		"baseComponent": true,
 		"props": {
 			"model": "models"
 		}
@@ -755,7 +758,7 @@
 				"default": "div"
 			}
 		},
-		"container": true,
+		"baseComponent": true,
 		"tags": [
 			"div",
 			"container",

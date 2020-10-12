@@ -1,26 +1,48 @@
 <script>
-  import { store } from "builderStore"
-  import { Input, Select, ModalContent } from "@budibase/bbui"
-  import { find, filter, some } from "lodash/fp"
+  import { store, backendUiStore } from "builderStore"
+  import { Input, Button, Spacer, Select, ModalContent } from "@budibase/bbui"
+  import getTemplates from "builderStore/store/screenTemplates"
+  import { some } from "lodash/fp"
 
-  let dialog
-  let layoutComponents
-  let layoutComponent
-  let screens
+  const CONTAINER = "@budibase/standard-components/container"
+
   let name = ""
   let routeError
+  let baseComponent = CONTAINER
+  let templateIndex
+  let draftScreen
 
-  $: layoutComponents = Object.values($store.components).filter(
-    componentDefinition => componentDefinition.container
-  )
-
-  $: layoutComponent = layoutComponent
-    ? layoutComponents.find(
-        component => component._component === layoutComponent._component
-      )
-    : layoutComponents[0]
+  $: templates = getTemplates($store, $backendUiStore.models)
 
   $: route = !route && $store.screens.length === 0 ? "*" : route
+
+  $: baseComponents = Object.values($store.components)
+    .filter(componentDefinition => componentDefinition.baseComponent)
+    .map(c => c._component)
+
+  $: {
+    if (templates && templateIndex === undefined) {
+      templateIndex = 0
+      templateChanged(0)
+    }
+  }
+
+  const templateChanged = newTemplateIndex => {
+    if (newTemplateIndex === undefined) return
+
+    draftScreen = templates[newTemplateIndex].create()
+    if (draftScreen.props._instanceName) {
+      name = draftScreen.props._instanceName
+    }
+
+    if (draftScreen.props._component) {
+      baseComponent = draftScreen.props._component
+    }
+
+    if (draftScreen.route) {
+      route = draftScreen.route
+    }
+  }
 
   const save = () => {
     if (!route) {
@@ -32,12 +54,23 @@
         routeError = ""
       }
     }
-    if (routeError) {
-      return false
-    }
-    store.createScreen(name, route, layoutComponent._component)
+
+    if (routeError) return false
+
+    draftScreen.props._instanceName = name
+    draftScreen.props._component = baseComponent
+    draftScreen.route = route
+
+    store.createScreen(draftScreen)
+
+    finished()
+  }
+
+  const finished = () => {
+    templateIndex = 0
     name = ""
     route = ""
+    baseComponent = CONTAINER
   }
 
   const routeNameExists = route => {
@@ -54,15 +87,25 @@
 </script>
 
 <ModalContent title="New Screen" confirmText="Create Screen" onConfirm={save}>
+
+  <Select
+    label="Choose a Template"
+    bind:value={templateIndex}
+    secondary
+    on:change={ev => templateChanged(ev.target.value)}>
+    {#if templates}
+      {#each templates as template, index}
+        <option value={index}>{template.name}</option>
+      {/each}
+    {/if}
+  </Select>
+
   <Input label="Name" bind:value={name} />
+
   <Input
     label="Url"
     error={routeError}
     bind:value={route}
     on:change={routeChanged} />
-  <Select label="Layout Component" bind:value={layoutComponent} secondary>
-    {#each layoutComponents as { _component, name }}
-      <option value={_component}>{name}</option>
-    {/each}
-  </Select>
+
 </ModalContent>
