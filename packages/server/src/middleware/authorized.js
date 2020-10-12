@@ -20,9 +20,11 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
     })
 
     if (apiKeyInfo) {
-      ctx.isAuthenticated = true
-      ctx.externalWebhook = true
-      ctx.apiKey = ctx.headers["x-api-key"]
+      ctx.auth = {
+        authenticated: true,
+        external: true,
+        apiKey: ctx.headers["x-api-key"],
+      }
       ctx.user = {
         instanceId: ctx.headers["x-instanceid"],
       }
@@ -32,7 +34,7 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
     ctx.throw(403, "API key invalid")
   }
 
-  if (!ctx.isAuthenticated) {
+  if (!ctx.auth.authenticated) {
     ctx.throw(403, "Session not authenticated")
   }
 
