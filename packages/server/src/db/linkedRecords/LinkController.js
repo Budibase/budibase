@@ -234,8 +234,16 @@ class LinkController {
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       if (field.type === "link") {
+        // handle this in a separate try catch, want
+        // the put to bubble up as an error, if can't update
+        // table for some reason
+        let linkedModel
+        try {
+          linkedModel = await this._db.get(field.modelId)
+        } catch (err) {
+          continue
+        }
         // create the link field in the other model
-        const linkedModel = await this._db.get(field.modelId)
         linkedModel.schema[field.fieldName] = {
           name: field.fieldName,
           type: "link",
