@@ -3,6 +3,7 @@
   import { Input, Button, Spacer, Select, ModalContent } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
   import { some } from "lodash/fp"
+  import analytics from "analytics"
 
   const CONTAINER = "@budibase/standard-components/container"
 
@@ -29,7 +30,7 @@
 
   const templateChanged = newTemplateIndex => {
     if (newTemplateIndex === undefined) return
-
+    const template = templates[newTemplateIndex]
     draftScreen = templates[newTemplateIndex].create()
     if (draftScreen.props._instanceName) {
       name = draftScreen.props._instanceName
@@ -62,6 +63,13 @@
     draftScreen.route = route
 
     store.createScreen(draftScreen)
+
+    if (templateIndex !== undefined) {
+      const template = templates[templateIndex]
+      analytics.captureEvent("Screen Created", {
+        template: template.id || template.name,
+      })
+    }
 
     finished()
   }

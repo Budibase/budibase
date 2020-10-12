@@ -57,19 +57,26 @@ exports.generateTableID = () => {
 
 /**
  * Gets the DB allDocs/query params for retrieving a row.
- * @param {string} tableId The table in which the rows have been stored.
+ * @param {string|null} tableId The table in which the rows have been stored.
  * @param {string|null} rowId The ID of the row which is being specifically queried for. This can be
  * left null to get all the rows in the table.
  * @param {object} otherProps Any other properties to add to the request.
  * @returns {object} Parameters which can then be used with an allDocs request.
  */
-exports.getRowParams = (tableId, rowId = null, otherProps = {}) => {
+exports.getRowParams = (
+  tableId = null,
+  rowId = null,
+  otherProps = {}
+) => {
   if (tableId == null) {
-    throw "Cannot build params for rows without a table ID"
+    return getDocParams(DocumentTypes.ROW, null, otherProps)
+  } else {
+    const endOfKey =
+      rowId == null
+        ? `${tableId}${SEPARATOR}`
+        : `${tableId}${SEPARATOR}${rowId}`
+    return getDocParams(DocumentTypes.ROW, endOfKey, otherProps)
   }
-  const endOfKey =
-    rowId == null ? `${tableId}${SEPARATOR}` : `${tableId}${SEPARATOR}${rowId}`
-  return getDocParams(DocumentTypes.ROW, endOfKey, otherProps)
 }
 
 /**

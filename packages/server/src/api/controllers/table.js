@@ -33,6 +33,7 @@ exports.save = async function(ctx) {
     views: {},
     ...rest,
   }
+  let renameDocs = []
 
   // if the table obj had an _id then it will have been retrieved
   const oldTable = ctx.preExisting
@@ -49,14 +50,11 @@ exports.save = async function(ctx) {
         include_docs: true,
       })
     )
-
-    const docs = rows.rows.map(({ doc }) => {
+    renameDocs = rows.rows.map(({ doc }) => {
       doc[_rename.updated] = doc[_rename.old]
       delete doc[_rename.old]
       return doc
     })
-
-    await db.bulkDocs(docs)
     delete tableToSave._rename
   }
 
@@ -69,9 +67,6 @@ exports.save = async function(ctx) {
     tableView.schema = tableToSave.schema
   }
 
-  const result = await db.post(tableToSave)
-  tableToSave._rev = result.rev
-
   // update linked rows
   await linkRows.updateLinks({
     instanceId,
@@ -81,6 +76,14 @@ exports.save = async function(ctx) {
     table: tableToSave,
     oldTable: oldTable,
   })
+
+  // don't perform any updates until relationships have been
+  // checked by the updateLinks function
+  if (renameDocs.length !== 0) {
+    await db.bulkDocs(renameDocs)
+  }
+  const result = await db.post(tableToSave)
+  tableToSave._rev = result.rev
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, instanceId, tableToSave)
@@ -105,10 +108,7 @@ exports.save = async function(ctx) {
 exports.destroy = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-
   const tableToDelete = await db.get(ctx.params.tableId)
-
-  await db.remove(tableToDelete)
 
   // Delete all rows for that table
   const rows = await db.allDocs(
@@ -116,7 +116,9 @@ exports.destroy = async function(ctx) {
       include_docs: true,
     })
   )
-  await db.bulkDocs(rows.rows.map(row => ({ _id: row.id, _deleted: true })))
+  await db.bulkDocs(
+    rows.rows.map(row => ({ ...row.doc, _deleted: true }))
+  )
 
   // update linked rows
   await linkRows.updateLinks({
@@ -124,6 +126,9 @@ exports.destroy = async function(ctx) {
     eventType: linkRows.EventType.TABLE_DELETE,
     table: tableToDelete,
   })
+
+  // don't remove the table itself until very end
+  await db.remove(tableToDelete)
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:delete`, instanceId, tableToDelete)

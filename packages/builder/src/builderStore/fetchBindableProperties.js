@@ -90,6 +90,8 @@ const contextToBindables = (tables, walkResult) => context => {
     runtimeBinding: `${contextParentPath}data.${key}`,
     // how the binding exressions looks to the user of the builder
     readableBinding: `${context.instance._instanceName}.${table.name}.${key}`,
+    // table / view info
+    table: context.table,
   })
 
   // see TableViewSelect.svelte for the format of context.table

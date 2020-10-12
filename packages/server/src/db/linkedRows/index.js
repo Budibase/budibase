@@ -42,6 +42,7 @@ exports.updateLinks = async function({
   table,
   oldTable,
 }) {
+  const baseReturnObj = row == null ? table : row
   if (instanceId == null) {
     throw "Cannot operate without an instance ID."
   }
@@ -50,12 +51,16 @@ exports.updateLinks = async function({
     arguments[0].tableId = table._id
   }
   let linkController = new LinkController(arguments[0])
-  if (
-    !(await linkController.doesTableHaveLinkedFields()) &&
-    (oldTable == null ||
-      !(await linkController.doesTableHaveLinkedFields(oldTable)))
-  ) {
-    return row
+  try {
+    if (
+      !(await linkController.doesTableHaveLinkedFields()) &&
+      (oldTable == null ||
+        !(await linkController.doesTableHaveLinkedFields(oldTable)))
+    ) {
+      return baseReturnObj
+    }
+  } catch (err) {
+    return baseReturnObj
   }
   switch (eventType) {
     case EventType.ROW_SAVE:
