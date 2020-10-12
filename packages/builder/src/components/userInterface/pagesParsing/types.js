@@ -10,7 +10,6 @@ export const TYPE_MAP = {
   },
   options: {
     default: [],
-    options: [],
   },
   event: {
     default: [],
