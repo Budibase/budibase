@@ -33,11 +33,6 @@
       models: $backendUiStore.models,
     })
 
-    const idBindingForModel = modelId => {
-      for (let bindableProp of bindableProperties) {
-      }
-    }
-
     const detailScreens = $store.screens.filter(screen =>
       screen.props._component.endsWith("/rowdetail")
     )
