@@ -3,7 +3,7 @@ export default function(models) {
     const fields = Object.keys(model.schema)
     const heading = fields.length > 0 ? `{{ data.${fields[0]} }}` : "Detail"
     return {
-      name: `Row Detail - ${model.name}`,
+      name: `${model.name} - Detail`,
       create: () => createScreen(model, heading),
       id: RECORD_DETAIL_TEMPLATE,
     }
@@ -127,7 +127,7 @@ const createScreen = (model, heading) => ({
         ],
       },
     ],
-    _instanceName: `${model.name} Detail`,
+    _instanceName: `${model.name} - Detail`,
     _code: "",
   },
   route: `/${model.name.toLowerCase()}/:id`,

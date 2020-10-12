@@ -1,5 +1,5 @@
 export default {
-  name: `New Record (Empty)`,
+  name: `New Row (Empty)`,
   create: () => createScreen(),
 }
 

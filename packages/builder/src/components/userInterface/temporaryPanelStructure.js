@@ -1093,7 +1093,7 @@ export default {
         //  children: [],
         // },
         {
-          name: "Record Detail",
+          name: "Row Detail",
           _component: "@budibase/standard-components/rowdetail",
           description:
             "Loads a record, using an id from the URL, which can be used with {{ context }}, in children",
@@ -1105,7 +1105,7 @@ export default {
           children: [],
         },
         {
-          name: "Record Detail",
+          name: "New Row",
           _component: "@budibase/standard-components/newrow",
           description:
             "Sets up a new record for creation, which can be used with {{ context }}, in children",

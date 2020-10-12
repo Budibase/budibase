@@ -10,10 +10,10 @@ import { uuid } from "builderStore/uuid"
 const allTemplates = models => [
   emptyContainerScreen,
   ...newRecordScreen(models),
-  emptyNewRecordScreen,
   ...recordDetailScreen(models),
-  emptyRecordDetailScreen,
   ...recordListScreen(models),
+  emptyNewRecordScreen,
+  emptyRecordDetailScreen,
 ]
 
 // allows us to apply common behaviour to all create() functions
