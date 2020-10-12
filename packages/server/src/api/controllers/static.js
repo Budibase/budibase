@@ -136,7 +136,7 @@ exports.performLocalFileProcessing = async function(ctx) {
 }
 
 exports.serveApp = async function(ctx) {
-  const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated"
+  const mainOrAuth = ctx.auth.authenticated ? "main" : "unauthenticated"
 
   // default to homedir
   const appPath = resolve(
@@ -154,7 +154,7 @@ exports.serveApp = async function(ctx) {
   // only set the appId cookie for /appId .. we COULD check for valid appIds
   // but would like to avoid that DB hit
   const looksLikeAppId = /^(app_)?[0-9a-f]{32}$/.test(appId)
-  if (looksLikeAppId && !ctx.isAuthenticated) {
+  if (looksLikeAppId && !ctx.auth.authenticated) {
     const anonUser = {
       userId: "ANON",
       accessLevelId: ANON_LEVEL_ID,
@@ -200,7 +200,7 @@ exports.serveAttachment = async function(ctx) {
 
 exports.serveAppAsset = async function(ctx) {
   // default to homedir
-  const mainOrAuth = ctx.isAuthenticated ? "main" : "unauthenticated"
+  const mainOrAuth = ctx.auth.authenticated ? "main" : "unauthenticated"
 
   const appPath = resolve(
     budibaseAppsDir(),
