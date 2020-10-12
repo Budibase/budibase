@@ -39,7 +39,6 @@
       const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
       model = await jsonModel.json()
       const { schema } = model
-      console.log(schema)
       if (!isEmpty(datasource)) {
         data = await fetchData(datasource)
         columnDefs = Object.keys(schema).map((key, i) => {
