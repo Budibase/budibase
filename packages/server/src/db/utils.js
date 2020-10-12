@@ -63,11 +63,7 @@ exports.generateTableID = () => {
  * @param {object} otherProps Any other properties to add to the request.
  * @returns {object} Parameters which can then be used with an allDocs request.
  */
-exports.getRowParams = (
-  tableId = null,
-  rowId = null,
-  otherProps = {}
-) => {
+exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
   if (tableId == null) {
     return getDocParams(DocumentTypes.ROW, null, otherProps)
   } else {
