@@ -27,10 +27,12 @@ exports.createLinkView = async instanceId => {
         let doc2 = doc.doc2
         emit([doc1.modelId, doc1.recordId], {
           id: doc2.recordId,
+          thisId: doc1.recordId,
           fieldName: doc1.fieldName,
         })
         emit([doc2.modelId, doc2.recordId], {
           id: doc1.recordId,
+          thisId: doc2.recordId,
           fieldName: doc2.fieldName,
         })
       }
