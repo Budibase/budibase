@@ -49,11 +49,12 @@
     }))
 </script>
 
-<div class="dropdownbutton" bind:this={anchorRight}>
-  <Button secondary wide on:click={dropdownRight.show}>
-    <span>{value.label ? value.label : 'Model / View'}</span>
-    <Icon name="arrowdown" />
-  </Button>
+<div
+  class="dropdownbutton"
+  bind:this={anchorRight}
+  on:click={dropdownRight.show}>
+  <span>{value.label ? value.label : 'Model / View'}</span>
+  <Icon name="arrowdown" />
 </div>
 <DropdownMenu bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
@@ -100,8 +101,33 @@
 
 <style>
   .dropdownbutton {
-    width: 100%;
+    background-color: var(--grey-2);
+    border: var(--border-transparent);
+    padding: var(--spacing-m);
+    border-radius: var(--border-radius-m);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+    flex: 1 1 auto;
   }
+  .dropdownbutton:hover {
+    cursor: pointer;
+    background-color: var(--grey-3);
+  }
+  .dropdownbutton span {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    flex: 1 1 auto;
+    text-align: left;
+    font-size: var(--font-size-xs);
+  }
+  .dropdownbutton :global(svg) {
+    margin: -4px 0;
+  }
+
   .dropdown {
     padding: var(--spacing-m) 0;
     z-index: 99999999;
