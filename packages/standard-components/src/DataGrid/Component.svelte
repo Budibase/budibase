@@ -39,6 +39,7 @@
       const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
       model = await jsonModel.json()
       const { schema } = model
+      console.log(schema)
       if (!isEmpty(datasource)) {
         data = await fetchData(datasource)
         columnDefs = Object.keys(schema).map((key, i) => {
@@ -50,8 +51,8 @@
             field: key,
             hide: shouldHideField(key),
             sortable: true,
-            editable: editable && isEditable(schema[key].type),
-            cellRenderer: editable && getRenderer(schema[key]),
+            editable: editable,
+            cellRenderer: getRenderer(schema[key], editable),
             autoHeight: true,
           }
         })
@@ -64,6 +65,7 @@
     type !== "boolean" &&
     type !== "options" &&
     // type !== "datetime" &&
+     type !== "link" &&
     type !== "attachment" 
 
   const shouldHideField = name => {
