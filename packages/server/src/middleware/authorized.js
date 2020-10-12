@@ -5,8 +5,33 @@ const {
   BUILDER_LEVEL_ID,
   BUILDER,
 } = require("../utilities/accessLevels")
+const environment = require("../environment")
+const { apiKeyTable } = require("../db/dynamoClient")
 
 module.exports = (permName, getItemId) => async (ctx, next) => {
+  if (
+    environment.CLOUD &&
+    ctx.headers["x-api-key"] &&
+    ctx.headers["x-instanceid"]
+  ) {
+    // api key header passed by external webhook
+    const apiKeyInfo = await apiKeyTable.get({
+      primary: ctx.headers["x-api-key"],
+    })
+
+    if (apiKeyInfo) {
+      ctx.isAuthenticated = true
+      ctx.externalWebhook = true
+      ctx.apiKey = ctx.headers["x-api-key"]
+      ctx.user = {
+        instanceId: ctx.headers["x-instanceid"],
+      }
+      return next()
+    }
+
+    ctx.throw(403, "API key invalid")
+  }
+
   if (!ctx.isAuthenticated) {
     ctx.throw(403, "Session not authenticated")
   }
