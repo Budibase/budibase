@@ -3,7 +3,7 @@ export default function(models) {
     const fields = Object.keys(model.schema)
     const heading = fields.length > 0 ? `{{ data.${fields[0]} }}` : "Add Row"
     return {
-      name: `New Row - ${model.name}`,
+      name: `${model.name} - New`,
       create: () => createScreen(model, heading),
       id: NEW_RECORD_TEMPLATE,
     }

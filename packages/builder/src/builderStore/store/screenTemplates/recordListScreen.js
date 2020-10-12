@@ -1,7 +1,7 @@
 export default function(models) {
   return models.map(model => {
     return {
-      name: `List - ${model.name}`,
+      name: `${model.name} - List`,
       create: () => createScreen(model),
       id: RECORD_LIST_TEMPLATE,
     }
@@ -108,7 +108,7 @@ const createScreen = model => ({
         _children: [],
       },
     ],
-    _instanceName: `${model.name} List`,
+    _instanceName: `${model.name} - List`,
     _code: "",
     className: "",
     onLoad: [],

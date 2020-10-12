@@ -1,5 +1,5 @@
 export default {
-  name: `Create from Scratch`,
+  name: `Create from scratch`,
   create: () => createScreen(),
 }
 
