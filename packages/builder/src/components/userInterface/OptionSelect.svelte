@@ -164,10 +164,10 @@
 
   .bb-select-container {
     outline: none;
-    width: 160px;
     height: 36px;
     cursor: pointer;
     font-size: 14px;
+    overflow: hidden;
   }
 
   .bb-select-anchor {
@@ -237,6 +237,7 @@
     padding: 5px 0px;
     cursor: pointer;
     padding-left: 10px;
+    font-size: var(--font-size-s);
   }
 
   li:hover {
