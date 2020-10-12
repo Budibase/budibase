@@ -1,5 +1,5 @@
 <script>
-  import { Button } from "@budibase/bbui"
+  import { Button, Spacer } from "@budibase/bbui"
   import { store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
@@ -51,6 +51,7 @@
       <Button secondary medium on:click={deployApp}>
         Deploy App
         {#if loading}
+          <Spacer extraSmall />
           <Spinner size="10" />
         {/if}
       </Button>

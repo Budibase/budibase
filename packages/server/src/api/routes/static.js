@@ -4,6 +4,7 @@ const { budibaseTempDir } = require("../../utilities/budibaseDir")
 const env = require("../../environment")
 const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("../../utilities/accessLevels")
+const usage = require("../../middleware/usageQuota")
 
 const router = Router()
 
@@ -28,7 +29,7 @@ router
     authorized(BUILDER),
     controller.performLocalFileProcessing
   )
-  .post("/api/attachments/upload", controller.uploadFile)
+  .post("/api/attachments/upload", usage, controller.uploadFile)
   .get("/componentlibrary", controller.serveComponentLibrary)
   .get("/assets/:file*", controller.serveAppAsset)
   .get("/attachments/:file*", controller.serveAttachment)

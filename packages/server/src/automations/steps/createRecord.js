@@ -1,5 +1,7 @@
 const recordController = require("../../api/controllers/record")
 const automationUtils = require("../automationUtils")
+const environment = require("../../environment")
+const usage = require("../../utilities/usageQuota")
 
 module.exports.definition = {
   name: "Create Row",
@@ -56,7 +58,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, instanceId }) {
+module.exports.run = async function({ inputs, instanceId, apiKey }) {
   // TODO: better logging of when actions are missed due to missing parameters
   if (inputs.record == null || inputs.record.modelId == null) {
     return
@@ -78,6 +80,9 @@ module.exports.run = async function({ inputs, instanceId }) {
   }
 
   try {
+    if (environment.CLOUD) {
+      await usage.update(apiKey, usage.Properties.RECORD, 1)
+    }
     await recordController.save(ctx)
     return {
       record: inputs.record,

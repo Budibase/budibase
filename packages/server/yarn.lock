@@ -925,9 +925,10 @@ atomic-sleep@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/atomic-sleep/-/atomic-sleep-1.0.0.tgz#eb85b77a601fc932cfe432c5acd364a9e2c9075b"
 
-aws-sdk@^2.706.0:
-  version "2.706.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.706.0.tgz#09f65e9a91ecac5a635daf934082abae30eca953"
+aws-sdk@^2.767.0:
+  version "2.767.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.767.0.tgz#9863c8bfd5990106b95f38e9345a547fee782470"
+  integrity sha512-soPZxjNpat0CtuIqm54GO/FDT4SZTlQG0icSptWYfMFYdkXe8b0tJqaPssNn9TzlgoWDCNTdaoepM6TN0rNHkQ==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
@@ -1060,6 +1061,7 @@ bluebird-lst@^1.0.9:
 bluebird@^3.5.1, bluebird@^3.5.5:
   version "3.7.2"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.2.tgz#9f229c15be272454ffa973ace0dbee79a1b0c36f"
+  integrity sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==
 
 boolean@^3.0.0, boolean@^3.0.1:
   version "3.0.1"
