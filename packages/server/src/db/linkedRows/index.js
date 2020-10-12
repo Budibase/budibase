@@ -82,7 +82,7 @@ exports.updateLinks = async function({
  * then an array will be output, object input -> object output.
  */
 exports.attachLinkInfo = async (instanceId, rows) => {
-  // handle a single record as well as multiple
+  // handle a single row as well as multiple
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
