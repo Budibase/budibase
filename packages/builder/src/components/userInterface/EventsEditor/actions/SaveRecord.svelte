@@ -12,6 +12,9 @@
   // this could be "data" or "data.parent", "data.parent.parent" etc
   export let parameters
 
+  let idFields
+  let schemaFields
+
   $: bindableProperties = fetchBindableProperties({
     componentInstanceId: $store.currentComponentInfo._id,
     components: $store.components,
@@ -19,9 +22,13 @@
     models: $backendUiStore.models,
   })
 
-  // we pick all the _id fields, to determine all the available
-  // record contexts
-  let idFields
+  $: {
+    if (parameters && parameters.contextPath) {
+      schemaFields = schemaFromContextPath(parameters.contextPath)
+    } else {
+      schemaFields = []
+    }
+  }
 
   const idBindingToContextPath = id => id.substring(0, id.length - 4)
   const contextPathToId = path => `${path}._id`
@@ -71,15 +78,6 @@
       name: k,
       type: model.schema[k].type,
     }))
-  }
-
-  let schemaFields
-  $: {
-    if (parameters && parameters.contextPath) {
-      schemaFields = schemaFromContextPath(parameters.contextPath)
-    } else {
-      schemaFields = []
-    }
   }
 
   const onFieldsChanged = e => {
