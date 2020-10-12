@@ -11,7 +11,7 @@
     <a href={file.url} target="_blank">
       <div class="file">
         {#if FILE_TYPES.IMAGE.includes(file.extension.toLowerCase())}
-          <img {width} {height} src={file.url} />
+          <img {width} {height} src={file.url} alt="preview of {file.name}" />
         {:else}
           <i class="far fa-file" />
         {/if}
@@ -57,7 +57,7 @@
   }
 
   span {
-    width: 75px;
+    width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
   }

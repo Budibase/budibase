@@ -2,6 +2,7 @@ import svelte from "rollup-plugin-svelte"
 import resolve from "rollup-plugin-node-resolve"
 import commonjs from "@rollup/plugin-commonjs"
 import postcss from "rollup-plugin-postcss"
+import { terser } from "rollup-plugin-terser"
 
 const lodash_fp_exports = ["isEmpty"]
 
@@ -16,6 +17,7 @@ export default {
     },
   ],
   plugins: [
+    terser(),
     postcss({
       plugins: [],
     }),
