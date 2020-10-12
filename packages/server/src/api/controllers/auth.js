@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken")
 const CouchDB = require("../../db")
 const ClientDb = require("../../db/clientDb")
 const bcrypt = require("../../utilities/bcrypt")
+const environment = require("../../environment")
+const { getAPIKey } = require("../../utilities/usageQuota")
 const { generateUserID } = require("../../db/utils")
 
 exports.authenticate = async ctx => {
@@ -50,6 +52,11 @@ exports.authenticate = async ctx => {
       accessLevelId: dbUser.accessLevelId,
       appId: ctx.user.appId,
       instanceId,
+    }
+    // if in cloud add the user api key
+    if (environment.CLOUD) {
+      const { apiKey } = await getAPIKey(ctx.user.appId)
+      payload.apiKey = apiKey
     }
 
     const token = jwt.sign(payload, ctx.config.jwtSecret, {

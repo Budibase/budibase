@@ -41,14 +41,6 @@
 
   const onStyleChanged = store.setComponentStyle
 
-  function onPropChanged(key, value) {
-    if ($store.currentView !== "component") {
-      store.setPageOrScreenProp(key, value)
-      return
-    }
-    store.setComponentProp(key, value)
-  }
-
   $: isComponentOrScreen =
     $store.currentView === "component" ||
     $store.currentFrontEndType === "screen"
@@ -103,7 +95,8 @@
         {componentDefinition}
         {panelDefinition}
         displayNameField={displayName}
-        onChange={onPropChanged}
+        onChange={store.setComponentProp}
+        onScreenPropChange={store.setPageOrScreenProp}
         screenOrPageInstance={$store.currentView !== 'component' && $store.currentPreviewItem} />
     {/if}
 
