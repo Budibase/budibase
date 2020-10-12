@@ -12,22 +12,22 @@
   export let files
 </script>
 
-<div bind:this={anchor}>
+<AttachmentList {files} />
+<!-- <div bind:this={anchor}>
   <Button text small on:click={dropdown.show}>
     <Icon name="edit" />
   </Button>
-  <AttachmentList {files} />
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <h5>Edit Attachment(s)</h5>
-  <!-- <Modal
+   <Modal
         {_bb}
         {model}
         onClosed={dropdown.hide}
-        on:newRecord={() => dispatch('newRecord')} /> -->
-</DropdownMenu>
+        on:newRecord={() => dispatch('newRecord')} />
+ </DropdownMenu> -->
 
-<style>
+<!-- <style>
   div {
     display: grid;
     grid-template-columns: auto auto;
@@ -38,4 +38,4 @@
     margin: 0;
     font-weight: 500;
   }
-</style>
+</style> -->

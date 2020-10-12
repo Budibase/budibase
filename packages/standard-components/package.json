@@ -26,7 +26,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "shortid": "^2.2.15",
     "sirv-cli": "^0.4.4",
-    "svelte": "^3.28.0"
+    "svelte": "^3.29.0"
   },
   "keywords": [
     "svelte"
@@ -37,15 +37,16 @@
   "dependencies": {
     "@beyonk/svelte-googlemaps": "^2.2.0",
     "@budibase/bbui": "^1.41.0",
-    "@budibase/svelte-ag-grid": "^0.0.11",
+    "@budibase/svelte-ag-grid": "^0.0.12",
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@svelteschool/svelte-forms": "^0.7.0",
     "britecharts": "^2.16.1",
     "d3-selection": "^1.4.2",
     "fast-sort": "^2.2.0",
+    "flatpickr": "^4.6.6",
     "fusioncharts": "^3.15.1-sr.1",
     "lodash.debounce": "^4.0.8",
-    "svelte-flatpickr": "^2.4.0",
+    "svelte-flatpickr": "^3.1.0",
     "svelte-fusioncharts": "^1.0.0"
   }
 }
