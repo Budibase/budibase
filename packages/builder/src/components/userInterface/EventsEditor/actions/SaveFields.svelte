@@ -73,7 +73,7 @@
 
 {#if fields}
   {#each fields as field}
-    <Label size="m" color="dark">Field</Label>
+    <Label size="m" color="dark">Column</Label>
     <Select secondary bind:value={field.name} on:blur={rebuildParameters}>
       <option value="" />
       {#each schemaFields as schemaField}
