@@ -124,7 +124,14 @@ exports.generateAutomationID = () => {
  * @returns {string} The new link doc ID which the automation doc can be stored under.
  */
 exports.generateLinkID = (modelId1, modelId2, recordId1, recordId2) => {
-  return `${DocumentTypes.AUTOMATION}${SEPARATOR}${modelId1}${SEPARATOR}${modelId2}${SEPARATOR}${recordId1}${SEPARATOR}${recordId2}`
+  return `${DocumentTypes.LINK}${SEPARATOR}${modelId1}${SEPARATOR}${modelId2}${SEPARATOR}${recordId1}${SEPARATOR}${recordId2}`
+}
+
+/**
+ * Gets parameters for retrieving link docs, this is a utility function for the getDocParams function.
+ */
+exports.getLinkParams = (otherProps = {}) => {
+  return getDocParams(DocumentTypes.LINK, null, otherProps)
 }
 
 /**
