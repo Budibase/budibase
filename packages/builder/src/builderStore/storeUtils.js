@@ -85,10 +85,10 @@ export const regenerateCssForCurrentScreen = state => {
   return state
 }
 
-export const generateNewIdsForComponent = (c, state) =>
+export const generateNewIdsForComponent = (c, state, changeName = true) =>
   walkProps(c, p => {
     p._id = uuid()
-    p._instanceName = getNewComponentName(p._component, state)
+    if (changeName) p._instanceName = getNewComponentName(p._component, state)
   })
 
 export const getComponentDefinition = (state, name) =>

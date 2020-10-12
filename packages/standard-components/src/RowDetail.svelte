@@ -20,6 +20,7 @@
     if (response.status === 200) {
       const allRows = await response.json()
       if (allRows.length > 0) return allRows[0]
+      return { tableId: table }
     }
   }
 
@@ -29,31 +30,35 @@
     let row
     // if srcdoc, then we assume this is the builder preview
     if (pathParts.length === 0 || pathParts[0] === "srcdoc") {
-      row = await fetchFirstRow()
-    } else {
-      const id = pathParts[pathParts.length - 1]
-      const GET_ROW_URL = `/api/${table}/rows/${id}`
+      if (table) row = await fetchFirstRow()
+    } else if (_bb.routeParams().id) {
+      const GET_ROW_URL = `/api/${table}/rows/${_bb.routeParams().id}`
       const response = await _bb.api.get(GET_ROW_URL)
       if (response.status === 200) {
         row = await response.json()
+      } else {
+        throw new Error("Failed to fetch row.", response)
       }
+    } else {
+      throw new Exception("Row ID was not supplied to RowDetail")
     }
 
     if (row) {
       // Fetch table schema so we can check for linked rows
-      const table = await fetchTable(row.tableId)
-      for (let key of Object.keys(table.schema)) {
-        if (table.schema[key].type === "link") {
+      const tableObj = await fetchTable(row.tableId)
+      for (let key of Object.keys(tableObj.schema)) {
+        if (tableObj.schema[key].type === "link") {
           row[key] = Array.isArray(row[key]) ? row[key].length : 0
         }
       }
 
+      row._table = tableObj
+
       _bb.attachChildren(target, {
-        hydrate: false,
         context: row,
       })
     } else {
-      throw new Error("Failed to fetch row.", response)
+      _bb.attachChildren(target)
     }
   }
 
