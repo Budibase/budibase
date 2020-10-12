@@ -583,23 +583,7 @@ export default {
               icon: "ri-file-edit-line",
               properties: {
                 design: { ...all },
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Title",
-                    key: "title",
-                    control: Input,
-                  },
-                  {
-                    label: "Button Text",
-                    key: "buttonText",
-                    control: Input,
-                  },
-                ],
+                settings: [],
               },
             },
             {
@@ -608,23 +592,7 @@ export default {
               icon: "ri-file-edit-line",
               properties: {
                 design: { ...all },
-                settings: [
-                  {
-                    label: "Table",
-                    key: "model",
-                    control: ModelSelect,
-                  },
-                  {
-                    label: "Title",
-                    key: "title",
-                    control: Input,
-                  },
-                  {
-                    label: "Button Text",
-                    key: "buttonText",
-                    control: Input,
-                  },
-                ],
+                settings: [],
               },
             },
           ],
@@ -1125,10 +1093,22 @@ export default {
         //  children: [],
         // },
         {
-          name: "Record Detail",
-          _component: "@budibase/standard-components/recorddetail",
+          name: "Row Detail",
+          _component: "@budibase/standard-components/rowdetail",
           description:
             "Loads a record, using an id from the URL, which can be used with {{ context }}, in children",
+          icon: "ri-profile-line",
+          properties: {
+            design: { ...all },
+            settings: [{ label: "Table", key: "model", control: ModelSelect }],
+          },
+          children: [],
+        },
+        {
+          name: "New Row",
+          _component: "@budibase/standard-components/newrow",
+          description:
+            "Sets up a new record for creation, which can be used with {{ context }}, in children",
           icon: "ri-profile-line",
           properties: {
             design: { ...all },

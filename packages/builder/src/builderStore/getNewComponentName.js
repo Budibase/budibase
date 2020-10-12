@@ -8,8 +8,9 @@ export default function(component, state) {
 
   const findMatches = props => {
     walkProps(props, c => {
-      if ((c._instanceName || "").startsWith(capitalised)) {
-        matchingComponents.push(c._instanceName)
+      const thisInstanceName = get_capitalised_name(c._instanceName)
+      if ((thisInstanceName || "").startsWith(capitalised)) {
+        matchingComponents.push(thisInstanceName)
       }
     })
   }
