@@ -356,7 +356,7 @@ export default {
               {
                 label: "destinationUrl",
                 key: "destinationUrl",
-                control: Input,
+                control: ScreenSelect,
                 placeholder: "/table/_id",
               },
             ],
@@ -405,7 +405,7 @@ export default {
                   {
                     label: "Link Url",
                     key: "linkUrl",
-                    control: Input,
+                    control: ScreenSelect,
                     placeholder: "Link URL",
                   },
                   {
@@ -480,7 +480,7 @@ export default {
                   {
                     label: "Link Url",
                     key: "linkUrl",
-                    control: Input,
+                    control: ScreenSelect,
                     placeholder: "Link URL",
                   },
                   {
