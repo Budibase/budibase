@@ -11,6 +11,7 @@
     "lerna": "3.14.1",
     "prettier": "^1.19.1",
     "prettier-plugin-svelte": "^0.7.0",
+    "rimraf": "^3.0.2",
     "rollup-plugin-replace": "^2.2.0",
     "svelte": "^3.28.0"
   },
@@ -20,6 +21,8 @@
     "initialise": "lerna run initialise",
     "publishdev": "lerna run publishdev",
     "publishnpm": "yarn build && lerna publish --force-publish",
+    "restore": "npm run clean && npm run bootstrap && npm run build",
+    "nuke": "rimraf ~/.budibase && npm run restore",
     "clean": "lerna clean",
     "dev": "node ./scripts/symlinkDev.js && lerna run --parallel dev:builder",
     "test": "lerna run test",
