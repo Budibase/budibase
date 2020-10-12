@@ -3,7 +3,7 @@
   import { number } from "./valueSetters"
   import { getRenderer } from "./customRenderer"
 
-  // These maps need to be set up to handle whatever types that are used in the models.
+  // These maps need to be set up to handle whatever types that are used in the tables.
   const setters = new Map([["number", number]])
 
   import fetchData from "../fetchData.js"
@@ -23,7 +23,7 @@
   let data
   let columnDefs
   let selectedRows = []
-  let model
+  let table
   let options = {
     defaultColDef: {
       flex: 1,
@@ -35,10 +35,10 @@
   }
 
   onMount(async () => {
-    if (datasource.modelId) {
-      const jsonModel = await _bb.api.get(`/api/models/${datasource.modelId}`)
-      model = await jsonModel.json()
-      const { schema } = model
+    if (datasource.tableId) {
+      const jsonTable = await _bb.api.get(`/api/tables/${datasource.tableId}`)
+      table = await jsonTable.json()
+      const { schema } = table
       if (!isEmpty(datasource)) {
         data = await fetchData(datasource)
         columnDefs = Object.keys(schema).map((key, i) => {
@@ -69,37 +69,37 @@
 
   const shouldHideField = name => {
     if (name.startsWith("_")) return true
-    // always 'record'
+    // always 'row'
     if (name === "type") return true
-    // tables are always tied to a single modelId, this is irrelevant
-    if (name === "modelId") return true
+    // tables are always tied to a single tableId, this is irrelevant
+    if (name === "tableId") return true
 
     return false
   }
 
-  const handleNewRecord = async () => {
+  const handleNewRow = async () => {
     data = await fetchData(datasource)
   }
 
   const handleUpdate = ({ detail }) => {
     data[detail.row] = detail.data
-    updateRecord(detail.data)
+    updateRow(detail.data)
   }
 
-  const updateRecord = async record => {
+  const updateRow = async row => {
     const response = await _bb.api.patch(
-      `/api/${record.modelId}/records/${record._id}`,
-      record
+      `/api/${row.tableId}/rows/${row._id}`,
+      row
     )
     const json = await response.json()
   }
 
-  const deleteRecords = async () => {
-    const response = await _bb.api.post(`/api/${datasource.name}/records`, {
-      records: selectedRows,
+  const deleteRows = async () => {
+    const response = await _bb.api.post(`/api/${datasource.name}/rows`, {
+      rows: selectedRows,
       type: "delete",
     })
-    data = data.filter(record => !selectedRows.includes(record))
+    data = data.filter(row => !selectedRows.includes(row))
     selectedRows = []
   }
 </script>
@@ -114,9 +114,9 @@
   {#if dataLoaded}
     {#if editable}
       <div class="controls">
-        <CreateRowButton {_bb} {model} on:newRecord={handleNewRecord} />
+        <CreateRowButton {_bb} {table} on:newRow={handleNewRow} />
         {#if selectedRows.length > 0}
-          <DeleteButton text small on:click={deleteRecords}>
+          <DeleteButton text small on:click={deleteRows}>
             <Icon name="addrow" />
             Delete {selectedRows.length} row(s)
           </DeleteButton>

@@ -9,7 +9,7 @@ const renderers = new Map([
   ["boolean", booleanRenderer],
   ["attachment", attachmentRenderer],
   ["options", optionsRenderer],
-  ["link", linkedRecordRenderer],
+  ["link", linkedRowRenderer],
 ])
 
 export function getRenderer({ type, constraints }, editable) {
@@ -103,7 +103,7 @@ function optionsRenderer({ inclusion }, editable) {
   }
 }
 /* eslint-disable no-unused-vars */
-function linkedRecordRenderer(constraints, editable) {
+function linkedRowRenderer(constraints, editable) {
   return params => {
     let container = document.createElement("div")
     container.style.display = "grid"
