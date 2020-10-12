@@ -55,7 +55,8 @@ exports.authenticate = async ctx => {
     }
     // if in cloud add the user api key
     if (environment.CLOUD) {
-      payload.apiKey = getAPIKey(ctx.user.appId)
+      const { apiKey } = await getAPIKey(ctx.user.appId)
+      payload.apiKey = apiKey
     }
 
     const token = jwt.sign(payload, ctx.config.jwtSecret, {

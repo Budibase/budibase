@@ -15,6 +15,7 @@ const DocumentTypes = {
 
 exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
+exports.UNICODE_MAX = UNICODE_MAX
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
