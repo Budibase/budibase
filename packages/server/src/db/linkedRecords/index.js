@@ -42,6 +42,7 @@ exports.updateLinks = async function({
   model,
   oldModel,
 }) {
+  const baseReturnObj = record == null ? model : record
   if (instanceId == null) {
     throw "Cannot operate without an instance ID."
   }
@@ -50,12 +51,16 @@ exports.updateLinks = async function({
     arguments[0].modelId = model._id
   }
   let linkController = new LinkController(arguments[0])
-  if (
-    !(await linkController.doesModelHaveLinkedFields()) &&
-    (oldModel == null ||
-      !(await linkController.doesModelHaveLinkedFields(oldModel)))
-  ) {
-    return record
+  try {
+    if (
+      !(await linkController.doesModelHaveLinkedFields()) &&
+      (oldModel == null ||
+        !(await linkController.doesModelHaveLinkedFields(oldModel)))
+    ) {
+      return baseReturnObj
+    }
+  } catch (err) {
+    return baseReturnObj
   }
   switch (eventType) {
     case EventType.RECORD_SAVE:

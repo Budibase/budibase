@@ -161,7 +161,7 @@ class LinkController {
           })
         // now add the docs to be deleted to the bulk operation
         operations.push(...toDeleteDocs)
-        // replace this field with a simple entry to denote there are links
+        // remove the field from this row, link doc will be added to record on way out
         delete record[fieldName]
       }
     }
@@ -234,8 +234,16 @@ class LinkController {
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       if (field.type === "link") {
+        // handle this in a separate try catch, want
+        // the put to bubble up as an error, if can't update
+        // table for some reason
+        let linkedModel
+        try {
+          linkedModel = await this._db.get(field.modelId)
+        } catch (err) {
+          continue
+        }
         // create the link field in the other model
-        const linkedModel = await this._db.get(field.modelId)
         linkedModel.schema[field.fieldName] = {
           name: field.fieldName,
           type: "link",
