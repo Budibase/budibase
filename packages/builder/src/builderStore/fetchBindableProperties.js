@@ -73,22 +73,12 @@ const componentInstanceToBindable = walkResult => i => {
 
 const contextToBindables = (models, walkResult) => context => {
   const contextParentPath = getParentPath(walkResult, context)
-
-  let model, schema
-  if (typeof context.model === "string" || context.model.type === "model") {
-    const modelId =
-      typeof context.model === "string" ? context.model : context.model.modelId
-    model = models.find(model => model._id === modelId)
-    schema = model?.schema
-  } else if (context.model.type === "view") {
-    const modelId = context.model.modelId
-    model = models.find(model => model._id === modelId)
-    schema = model?.views?.[context.model.name]?.schema
-  } else if (context.model.type === "link") {
-    const modelId = context.model.modelId
-    model = models.find(model => model._id === modelId)
-    schema = model?.schema
-  }
+  const modelId = context.model?.modelId ?? context.model
+  const model = models.find(model => model._id === modelId)
+  let schema =
+    context.model?.type === "view"
+      ? model?.views?.[context.model.name]?.schema
+      : model?.schema
 
   // Avoid crashing whenever no data source has been selected
   if (!schema) {
@@ -101,7 +91,6 @@ const contextToBindables = (models, walkResult) => context => {
     if (fieldSchema.type === "link") {
       runtimeBoundKey = `${key}_count`
     }
-
     return {
       type: "context",
       fieldSchema,
@@ -110,6 +99,8 @@ const contextToBindables = (models, walkResult) => context => {
       runtimeBinding: `${contextParentPath}data.${runtimeBoundKey}`,
       // how the binding expressions looks to the user of the builder
       readableBinding: `${context.instance._instanceName}.${model.name}.${key}`,
+      // model / view info
+      model: context.model,
     }
   }
 
