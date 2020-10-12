@@ -43,8 +43,8 @@
         data = await fetchData(datasource)
         columnDefs = Object.keys(schema).map((key, i) => {
           return {
-            headerCheckboxSelection: i === 0,
-            checkboxSelection: i === 0,
+            headerCheckboxSelection: i === 0 && editable,
+            checkboxSelection: i === 0 && editable,
             valueSetter: setters.get(schema[key].type),
             headerName: key.charAt(0).toUpperCase() + key.slice(1),
             field: key,
