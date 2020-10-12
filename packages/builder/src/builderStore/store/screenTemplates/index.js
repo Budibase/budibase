@@ -2,13 +2,13 @@ import newRecordScreen from "./newRecordScreen"
 import recordDetailScreen from "./recordDetailScreen"
 import recordListScreen from "./recordListScreen"
 import emptyNewRecordScreen from "./emptyNewRecordScreen"
-import emptyContainerScreen from "./emptyContainerScreen"
+import createFromScratchScreen from "./createFromScratchScreen"
 import emptyRecordDetailScreen from "./emptyRecordDetailScreen"
 import { generateNewIdsForComponent } from "../../storeUtils"
 import { uuid } from "builderStore/uuid"
 
 const allTemplates = models => [
-  emptyContainerScreen,
+  createFromScratchScreen,
   ...newRecordScreen(models),
   ...recordDetailScreen(models),
   ...recordListScreen(models),
