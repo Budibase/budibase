@@ -27,12 +27,12 @@ exports.createLinkView = async instanceId => {
         let doc2 = doc.doc2
         emit([doc1.tableId, doc1.rowId], {
           id: doc2.rowId,
-	  thisId: doc1.rowId,
+          thisId: doc1.rowId,
           fieldName: doc1.fieldName,
         })
         emit([doc2.tableId, doc2.rowId], {
           id: doc1.rowId,
-	  thisId: doc2.rowId,
+          thisId: doc2.rowId,
           fieldName: doc2.fieldName,
         })
       }
