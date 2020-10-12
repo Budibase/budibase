@@ -55,7 +55,7 @@ module.exports = async (ctx, next) => {
     return next()
   }
   try {
-    await usageQuota.update(ctx.apiKey, property, usage)
+    await usageQuota.update(ctx.auth.apiKey, property, usage)
     return next()
   } catch (err) {
     ctx.throw(403, err)
