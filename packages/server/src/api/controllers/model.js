@@ -33,6 +33,7 @@ exports.save = async function(ctx) {
     views: {},
     ...rest,
   }
+  let renameDocs = []
 
   // if the model obj had an _id then it will have been retrieved
   const oldModel = ctx.preExisting
@@ -49,14 +50,11 @@ exports.save = async function(ctx) {
         include_docs: true,
       })
     )
-
-    const docs = records.rows.map(({ doc }) => {
+    renameDocs = records.rows.map(({ doc }) => {
       doc[_rename.updated] = doc[_rename.old]
       delete doc[_rename.old]
       return doc
     })
-
-    await db.bulkDocs(docs)
     delete modelToSave._rename
   }
 
@@ -69,9 +67,6 @@ exports.save = async function(ctx) {
     modelView.schema = modelToSave.schema
   }
 
-  const result = await db.post(modelToSave)
-  modelToSave._rev = result.rev
-
   // update linked records
   await linkRecords.updateLinks({
     instanceId,
@@ -81,6 +76,14 @@ exports.save = async function(ctx) {
     model: modelToSave,
     oldModel: oldModel,
   })
+
+  // don't perform any updates until relationships have been
+  // checked by the updateLinks function
+  if (renameDocs.length !== 0) {
+    await db.bulkDocs(renameDocs)
+  }
+  const result = await db.post(modelToSave)
+  modelToSave._rev = result.rev
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitModel(`model:save`, instanceId, modelToSave)

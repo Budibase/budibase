@@ -161,7 +161,7 @@ class LinkController {
           })
         // now add the docs to be deleted to the bulk operation
         operations.push(...toDeleteDocs)
-        // replace this field with a simple entry to denote there are links
+        // remove the field from this row, link doc will be added to record on way out
         delete record[fieldName]
       }
     }
