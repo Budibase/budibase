@@ -100,7 +100,7 @@
             {#if schema[header].type === 'attachment'}
               <AttachmentList files={row[header]} />
             {:else if schema[header].type === 'link'}
-              <td>{row[header].length} related row(s)</td>
+              <td>{row[header] ? row[header].length : 0} related row(s)</td>
             {:else}
               <td>{row[header] == null ? '' : row[header]}</td>
             {/if}
