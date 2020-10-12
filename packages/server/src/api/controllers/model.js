@@ -105,10 +105,7 @@ exports.save = async function(ctx) {
 exports.destroy = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-
   const modelToDelete = await db.get(ctx.params.modelId)
-
-  await db.remove(modelToDelete)
 
   // Delete all records for that model
   const records = await db.allDocs(
@@ -117,7 +114,7 @@ exports.destroy = async function(ctx) {
     })
   )
   await db.bulkDocs(
-    records.rows.map(record => ({ _id: record.id, _deleted: true }))
+    records.rows.map(record => ({ ...record.doc, _deleted: true }))
   )
 
   // update linked records
@@ -126,6 +123,9 @@ exports.destroy = async function(ctx) {
     eventType: linkRecords.EventType.MODEL_DELETE,
     model: modelToDelete,
   })
+
+  // don't remove the table itself until very end
+  await db.remove(modelToDelete)
 
   ctx.eventEmitter &&
     ctx.eventEmitter.emitModel(`model:delete`, instanceId, modelToDelete)
