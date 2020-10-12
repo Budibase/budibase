@@ -52,14 +52,14 @@ const apiOpts = {
   delete: del,
 }
 
-const createRow = async params =>
+const saveRow = async (params, state) =>
   await post({
     url: `/api/${params.tableId}/rows`,
-    body: makeRowRequestBody(params),
+    body: makeRowRequestBody(params, state),
   })
 
-const updateRow = async params => {
-  const row = makeRowRequestBody(params)
+const updateRow = async (params, state) => {
+  const row = makeRowRequestBody(params, state)
   row._id = params._id
   await patch({
     url: `/api/${params.tableId}/rows/${params._id}`,
@@ -67,8 +67,14 @@ const updateRow = async params => {
   })
 }
 
-const makeRowRequestBody = parameters => {
-  const body = {}
+const makeRowRequestBody = (parameters, state) => {
+  // start with the row thats currently in context
+  const body = { ...(state.data || {}) }
+
+  // dont send the table
+  if (body._table) delete body._table
+
+  // then override with supplied parameters
   for (let fieldName in parameters.fields) {
     const field = parameters.fields[fieldName]
 
@@ -95,6 +101,6 @@ const makeRowRequestBody = parameters => {
 
 export default {
   authenticate: authenticate(apiOpts),
-  createRow,
+  saveRow,
   updateRow,
 }

@@ -583,23 +583,7 @@ export default {
               icon: "ri-file-edit-line",
               properties: {
                 design: { ...all },
-                settings: [
-                  {
-                    label: "Table",
-                    key: "table",
-                    control: TableSelect,
-                  },
-                  {
-                    label: "Title",
-                    key: "title",
-                    control: Input,
-                  },
-                  {
-                    label: "Button Text",
-                    key: "buttonText",
-                    control: Input,
-                  },
-                ],
+                settings: [],
               },
             },
             {
@@ -608,23 +592,7 @@ export default {
               icon: "ri-file-edit-line",
               properties: {
                 design: { ...all },
-                settings: [
-                  {
-                    label: "Table",
-                    key: "table",
-                    control: TableSelect,
-                  },
-                  {
-                    label: "Title",
-                    key: "title",
-                    control: Input,
-                  },
-                  {
-                    label: "Button Text",
-                    key: "buttonText",
-                    control: Input,
-                  },
-                ],
+                settings: [],
               },
             },
           ],
@@ -1129,6 +1097,18 @@ export default {
           _component: "@budibase/standard-components/rowdetail",
           description:
             "Loads a row, using an id from the URL, which can be used with {{ context }}, in children",
+          icon: "ri-profile-line",
+          properties: {
+            design: { ...all },
+            settings: [{ label: "Table", key: "table", control: TableSelect }],
+          },
+          children: [],
+        },
+        {
+          name: "New Row",
+          _component: "@budibase/standard-components/newrow",
+          description:
+            "Sets up a new row for creation, which can be used with {{ context }}, in children",
           icon: "ri-profile-line",
           properties: {
             design: { ...all },
