@@ -90,6 +90,8 @@ const contextToBindables = (models, walkResult) => context => {
     runtimeBinding: `${contextParentPath}data.${key}`,
     // how the binding exressions looks to the user of the builder
     readableBinding: `${context.instance._instanceName}.${model.name}.${key}`,
+    // model / view info
+    model: context.model,
   })
 
   // see ModelViewSelect.svelte for the format of context.model
