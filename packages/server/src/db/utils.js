@@ -57,21 +57,26 @@ exports.generateModelID = () => {
 
 /**
  * Gets the DB allDocs/query params for retrieving a record.
- * @param {string} modelId The model in which the records have been stored.
+ * @param {string|null} modelId The model in which the records have been stored.
  * @param {string|null} recordId The ID of the record which is being specifically queried for. This can be
  * left null to get all the records in the model.
  * @param {object} otherProps Any other properties to add to the request.
  * @returns {object} Parameters which can then be used with an allDocs request.
  */
-exports.getRecordParams = (modelId, recordId = null, otherProps = {}) => {
+exports.getRecordParams = (
+  modelId = null,
+  recordId = null,
+  otherProps = {}
+) => {
   if (modelId == null) {
-    throw "Cannot build params for records without a model ID"
+    return getDocParams(DocumentTypes.RECORD, null, otherProps)
+  } else {
+    const endOfKey =
+      recordId == null
+        ? `${modelId}${SEPARATOR}`
+        : `${modelId}${SEPARATOR}${recordId}`
+    return getDocParams(DocumentTypes.RECORD, endOfKey, otherProps)
   }
-  const endOfKey =
-    recordId == null
-      ? `${modelId}${SEPARATOR}`
-      : `${modelId}${SEPARATOR}${recordId}`
-  return getDocParams(DocumentTypes.RECORD, endOfKey, otherProps)
 }
 
 /**

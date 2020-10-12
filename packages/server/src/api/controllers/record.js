@@ -68,64 +68,11 @@ exports.patch = async function(ctx) {
 }
 
 exports.save = async function(ctx) {
-  const instanceId = ctx.user.instanceId
-  const db = new CouchDB(instanceId)
-  let record = ctx.request.body
-  record.modelId = ctx.params.modelId
-
-  if (!record._rev && !record._id) {
-    record._id = generateRecordID(record.modelId)
+  if (ctx.request.body.type === "delete") {
+    await bulkDelete(ctx)
+  } else {
+    await saveRecord(ctx)
   }
-
-  // if the record obj had an _id then it will have been retrieved
-  const existingRecord = ctx.preExisting
-
-  const model = await db.get(record.modelId)
-
-  record = coerceRecordValues(record, model)
-
-  const validateResult = await validate({
-    record,
-    model,
-  })
-
-  if (!validateResult.valid) {
-    ctx.status = 400
-    ctx.body = {
-      status: 400,
-      errors: validateResult.errors,
-    }
-    return
-  }
-
-  // make sure link records are up to date
-  record = await linkRecords.updateLinks({
-    instanceId,
-    eventType: linkRecords.EventType.RECORD_SAVE,
-    record,
-    modelId: record.modelId,
-    model,
-  })
-
-  if (existingRecord) {
-    const response = await db.put(record)
-    record._rev = response.rev
-    record.type = "record"
-    ctx.body = record
-    ctx.status = 200
-    ctx.message = `${model.name} updated successfully.`
-    return
-  }
-
-  record.type = "record"
-  const response = await db.post(record)
-  record._rev = response.rev
-
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitRecord(`record:save`, instanceId, record, model)
-  ctx.body = record
-  ctx.status = 200
-  ctx.message = `${model.name} created successfully`
 }
 
 exports.fetchView = async function(ctx) {
@@ -348,4 +295,88 @@ const TYPE_TRANSFORM_MAP = {
     true: true,
     false: false,
   },
+}
+
+async function bulkDelete(ctx) {
+  const instanceId = ctx.user.instanceId
+  const { records } = ctx.request.body
+  const db = new CouchDB(ctx.user.instanceId)
+
+  await db.bulkDocs(
+    records.map(
+      record => ({ ...record, _deleted: true }),
+      err => {
+        if (err) {
+          ctx.status = 500
+        } else {
+          records.forEach(record => {
+            ctx.eventEmitter &&
+              ctx.eventEmitter.emitRecord(`record:delete`, instanceId, record)
+          })
+          ctx.status = 200
+        }
+      }
+    )
+  )
+}
+
+async function saveRecord(ctx) {
+  const instanceId = ctx.user.instanceId
+  const db = new CouchDB(instanceId)
+  let record = ctx.request.body
+  record.modelId = ctx.params.modelId
+
+  if (!record._rev && !record._id) {
+    record._id = generateRecordID(record.modelId)
+  }
+
+  // if the record obj had an _id then it will have been retrieved
+  const existingRecord = ctx.preExisting
+
+  const model = await db.get(record.modelId)
+
+  record = coerceRecordValues(record, model)
+
+  const validateResult = await validate({
+    record,
+    model,
+  })
+
+  if (!validateResult.valid) {
+    ctx.status = 400
+    ctx.body = {
+      status: 400,
+      errors: validateResult.errors,
+    }
+    return
+  }
+
+  // make sure link records are up to date
+  record = await linkRecords.updateLinks({
+    instanceId,
+    eventType: linkRecords.EventType.RECORD_SAVE,
+    record,
+    modelId: record.modelId,
+    model,
+  })
+
+  if (existingRecord) {
+    const response = await db.put(record)
+    record._rev = response.rev
+    record.type = "record"
+    ctx.body = record
+    ctx.status = 200
+    ctx.message = `${model.name} updated successfully.`
+    return
+  }
+
+  record.type = "record"
+  const response = await db.post(record)
+  record._rev = response.rev
+
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRecord(`record:save`, instanceId, record, model)
+  ctx.body = record
+  ctx.status = 200
+  ctx.message = `${model.name} created successfully`
 }
