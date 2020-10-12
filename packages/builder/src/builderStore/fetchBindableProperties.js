@@ -85,7 +85,6 @@ const contextToBindables = (models, walkResult) => context => {
     model = models.find(model => model._id === modelId)
     schema = model?.views?.[context.model.name]?.schema
   } else if (context.model.type === "link") {
-    console.log(context.model)
     const modelId = context.model.modelId
     model = models.find(model => model._id === modelId)
     schema = model?.schema
