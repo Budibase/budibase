@@ -1,5 +1,6 @@
 const LinkController = require("./LinkController")
 const { IncludeDocs, getLinkDocuments, createLinkView } = require("./linkUtils")
+const _ = require("lodash")
 
 /**
  * This functionality makes sure that when records with links are created, updated or deleted they are processed
@@ -90,8 +91,7 @@ exports.attachLinkInfo = async (instanceId, records) => {
   }
   let modelIds = [...new Set(records.map(el => el.modelId))]
   // start by getting all the link values for performance reasons
-  let responses = [].concat.apply(
-    [],
+  let responses = _.flatten(
     await Promise.all(
       modelIds.map(modelId =>
         getLinkDocuments({
