@@ -95,15 +95,23 @@ const contextToBindables = (models, walkResult) => context => {
     return []
   }
 
-  const newBindable = ([key, fieldSchema]) => ({
-    type: "context",
-    fieldSchema,
-    instance: context.instance,
-    // how the binding expression persists, and is used in the app at runtime
-    runtimeBinding: `${contextParentPath}data.${key}`,
-    // how the binding exressions looks to the user of the builder
-    readableBinding: `${context.instance._instanceName}.${model.name}.${key}`,
-  })
+  const newBindable = ([key, fieldSchema]) => {
+    // Replace link bindings with a new property representing the count
+    let runtimeBoundKey = key
+    if (fieldSchema.type === "link") {
+      runtimeBoundKey = `${key}_count`
+    }
+
+    return {
+      type: "context",
+      fieldSchema,
+      instance: context.instance,
+      // how the binding expression persists, and is used in the app at runtime
+      runtimeBinding: `${contextParentPath}data.${runtimeBoundKey}`,
+      // how the binding expressions looks to the user of the builder
+      readableBinding: `${context.instance._instanceName}.${model.name}.${key}`,
+    }
+  }
 
   return (
     Object.entries(schema)
