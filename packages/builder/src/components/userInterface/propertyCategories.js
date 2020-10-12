@@ -361,19 +361,18 @@ export const typography = [
     label: "Font",
     key: "font-family",
     control: OptionSelect,
-    defaultValue: "initial",
+    defaultValue: "Arial",
     options: [
-      "initial",
       "Arial",
       "Arial Black",
       "Cursive",
       "Courier",
       "Comic Sans MS",
       "Helvetica",
+      "Helvetica Neue",
       "Impact",
       "Inter",
       "Lucida Sans Unicode",
-      "Open Sans",
       "Roboto",
       "Roboto Mono",
       "Times New Roman",
@@ -467,9 +466,9 @@ export const background = [
     label: "Gradient",
     key: "background-image",
     control: OptionSelect,
-    defaultValue: "None",
+    defaultValue: "",
     options: [
-      { label: "None", value: "None" },
+      { label: "Select option", value: "" },
       {
         label: "Warm Flame",
         value: "linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);",
@@ -518,9 +517,9 @@ export const background = [
   },
   {
     label: "Image",
-    key: "background-image",
+    key: "background",
     control: Input,
-    placeholder: "Src",
+    placeholder: "url",
   },
 ]
 
@@ -665,7 +664,7 @@ export const transitions = [
     control: OptionSelect,
     textAlign: "center",
     placeholder: "sec",
-    options: ["0.2ms", "0.4ms", "0.8ms", "1s", "2s", "4s"],
+    options: ["0.4s", "0.6s", "0.8s", "1s", "2s", "4s"],
   },
   {
     label: "Ease",
