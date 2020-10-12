@@ -68,7 +68,7 @@ exports.patch = async function(ctx) {
 }
 
 exports.save = async function(ctx) {
-  if (ctx.request.body.type === 'delete') {
+  if (ctx.request.body.type === "delete") {
     await bulkDelete(ctx)
   } else {
     await saveRecord(ctx)
@@ -298,20 +298,26 @@ const TYPE_TRANSFORM_MAP = {
 }
 
 async function bulkDelete(ctx) {
+  const instanceId = ctx.user.instanceId
   const { records } = ctx.request.body
   const db = new CouchDB(ctx.user.instanceId)
 
   await db.bulkDocs(
-    records.map(record => ({ ...record, _deleted: true }), (err, res) => {
-      if (err) {
-        ctx.status = 500
-      } else {
-        records.forEach(record => {
-          emitEvent(`record:delete`, ctx, record)
-        })
-        ctx.status = 200
+    records.map(
+      record => ({ ...record, _deleted: true }),
+      err => {
+        if (err) {
+          ctx.status = 500
+        } else {
+          records.forEach(record => {
+            ctx.eventEmitter &&
+              ctx.eventEmitter.emitRecord(`record:delete`, instanceId, record)
+          })
+          ctx.status = 200
+        }
       }
-    }))
+    )
+  )
 }
 
 async function saveRecord(ctx) {
