@@ -9,32 +9,40 @@ const renderers = new Map([
     ["boolean", booleanRenderer],
     ["attachment", attachmentRenderer],
     ["options", optionsRenderer],
+    ["link", linkedRecordRenderer],
 ])
 
 
-export function getRenderer({ type, constraints }) {
+export function getRenderer({ type, constraints }, editable) {
     if (renderers.get(type)) {
-        return renderers.get(type)(constraints)
+        return renderers.get(type)(constraints, editable)
     } else {
         return false
     }
 }
 
-function booleanRenderer(options) {
+function booleanRenderer(constraints, editable) {
     return params => {
         const toggle = (e) => {
             params.value = !params.value
             params.setValue(e.currentTarget.checked)
         }
         let input = document.createElement("input")
+        input.style.display = "grid";
+        input.style.placeItems = "center";
+        input.style.height = "100%";
         input.type = "checkbox"
         input.checked = params.value
-        input.addEventListener("click", toggle)
+        if (editable) {
+            input.addEventListener("click", toggle)
+        } else {
+            input.disabled = true
+        }
 
         return input
     }
 }
-function attachmentRenderer(options) {
+function attachmentRenderer(constraints, editable ) {
     return params => {
         const container = document.createElement("div")
 
@@ -48,7 +56,7 @@ function attachmentRenderer(options) {
         return container
     }
 }
-function dateRenderer(options) {
+function dateRenderer(constraints, editable) {
     return function (params) {
         const container = document.createElement("div")
         const toggle = (e) => {
@@ -69,9 +77,13 @@ function dateRenderer(options) {
 }
 
 
-function optionsRenderer({ inclusion }) {
+function optionsRenderer({ inclusion }, editable) {
     return params => {
+        if (!editable) return params.value
         const container = document.createElement("div")
+        container.style.display = "grid";
+        container.style.placeItems = "center";
+        container.style.height = "100%";
         const change = (e) => {
             params.setValue(e.detail)
         }
@@ -85,6 +97,19 @@ function optionsRenderer({ inclusion }) {
         });
 
         selectInstance.$on('change', change)
+
+        return container
+    }
+}
+function linkedRecordRenderer(constraints, editable) {
+    return params => {
+        console.log(params.value)
+        let container = document.createElement("div")
+        container.style.display = "grid";
+        container.style.placeItems = "center";
+        container.style.height = "100%";
+
+        container.innerText = params.value.length || 0
 
         return container
     }
