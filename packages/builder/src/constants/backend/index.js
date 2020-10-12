@@ -15,7 +15,7 @@ export const FIELDS = {
     type: "options",
     constraints: {
       type: "string",
-      presence: { allowEmpty: true },
+      presence: false,
       inclusion: [],
     },
   },
@@ -67,7 +67,7 @@ export const FIELDS = {
     type: "link",
     constraints: {
       type: "array",
-      presence: { allowEmpty: true },
+      presence: false,
     },
   },
 }
