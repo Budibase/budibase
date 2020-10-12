@@ -100,8 +100,8 @@
               <AttachmentList files={row[header]} />
             {:else if schema[header].type === 'link'}
               <td>{row[header]} related row(s)</td>
-            {:else if row[header]}
-              <td>{row[header]}</td>
+            {:else}
+              <td>{row[header] == null ? '' : row[header]}</td>
             {/if}
           {/if}
         {/each}
