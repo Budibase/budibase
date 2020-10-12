@@ -1,168 +1,61 @@
 <script>
-  import { onMount } from "svelte"
-  import { fade } from "svelte/transition"
-  import {
-    Label,
-    DatePicker,
-    Input,
-    Select,
-    Button,
-    Toggle,
-  } from "@budibase/bbui"
+  import { Label, DatePicker, Input, Select, Toggle } from "@budibase/bbui"
   import Dropzone from "./attachments/Dropzone.svelte"
   import LinkedRecordSelector from "./LinkedRecordSelector.svelte"
-  import debounce from "lodash.debounce"
   import ErrorsBox from "./ErrorsBox.svelte"
   import { capitalise } from "./helpers"
 
   export let _bb
   export let model
-  export let title
-  export let buttonText
   export let wide = false
 
-  const TYPE_MAP = {
-    string: "text",
-    boolean: "checkbox",
-    number: "number",
-  }
-
-  const DEFAULTS_FOR_TYPE = {
-    string: "",
-    boolean: false,
-    number: null,
-    link: [],
-  }
-
-  let record
   let store = _bb.store
   let schema = {}
-  let modelDef = {}
-  let saved = false
   let recordId
-  let isNew = true
   let errors = {}
 
+  $: schema = $store.data && $store.data._model.schema
   $: fields = schema ? Object.keys(schema) : []
-  $: if (model && model.length !== 0) {
-    fetchModel()
-  }
-
-  async function fetchModel() {
-    const FETCH_MODEL_URL = `/api/models/${model}`
-    const response = await _bb.api.get(FETCH_MODEL_URL)
-    modelDef = await response.json()
-    schema = modelDef.schema
-    record = {
-      modelId: model,
-    }
-  }
-
-  const save = debounce(async () => {
-    for (let field of fields) {
-      // Assign defaults to empty fields to prevent validation issues
-      if (!(field in record)) {
-        record[field] = DEFAULTS_FOR_TYPE[schema[field].type]
-      }
-    }
-
-    const SAVE_RECORD_URL = `/api/${model}/records`
-    const response = await _bb.api.post(SAVE_RECORD_URL, record)
-
-    const json = await response.json()
-
-    if (response.status === 200) {
-      store.update(state => {
-        state[model] = state[model] ? [...state[model], json] : [json]
-        return state
-      })
-
-      errors = {}
-
-      // wipe form, if new record, otherwise update
-      // model to get new _rev
-      record = isNew ? { modelId: model } : json
-
-      // set saved, and unset after 1 second
-      // i.e. make the success notifier appear, then disappear again after time
-      saved = true
-      setTimeout(() => {
-        saved = false
-      }, 3000)
-    }
-
-    if (response.status === 400) {
-      errors = Object.keys(json.errors)
-        .map(k => ({ dataPath: k, message: json.errors[k] }))
-        .flat()
-    }
-  })
-
-  onMount(async () => {
-    const routeParams = _bb.routeParams()
-    recordId =
-      Object.keys(routeParams).length > 0 && (routeParams.id || routeParams[0])
-    isNew = !recordId || recordId === "new"
-
-    if (isNew) {
-      record = { modelId: model }
-      return
-    }
-
-    const GET_RECORD_URL = `/api/${model}/records/${recordId}`
-    const response = await _bb.api.get(GET_RECORD_URL)
-    record = await response.json()
-  })
 </script>
 
-<form class="form" on:submit|preventDefault>
-  {#if title}
-    <h1>{title}</h1>
-  {/if}
-  <div class="form-content">
-    <ErrorsBox {errors} />
-    {#each fields as field}
-      <div class="form-field" class:wide>
-        {#if !(schema[field].type === 'boolean' && !wide)}
-          <Label extraSmall={!wide} grey={!wide}>
-            {capitalise(schema[field].name)}
-          </Label>
-        {/if}
-        {#if schema[field].type === 'options'}
-          <Select secondary bind:value={record[field]}>
-            <option value="">Choose an option</option>
-            {#each schema[field].constraints.inclusion as opt}
-              <option>{opt}</option>
-            {/each}
-          </Select>
-        {:else if schema[field].type === 'datetime'}
-          <DatePicker bind:value={record[field]} />
-        {:else if schema[field].type === 'boolean'}
-          <Toggle
-            text={wide ? null : capitalise(schema[field].name)}
-            bind:checked={record[field]} />
-        {:else if schema[field].type === 'number'}
-          <Input type="number" bind:value={record[field]} />
-        {:else if schema[field].type === 'string'}
-          <Input bind:value={record[field]} />
-        {:else if schema[field].type === 'attachment'}
-          <Dropzone bind:files={record[field]} />
-        {:else if schema[field].type === 'link'}
-          <LinkedRecordSelector
-            secondary
-            showLabel={false}
-            bind:linkedRecords={record[field]}
-            schema={schema[field]} />
-        {/if}
-      </div>
-    {/each}
-    <div class="buttons">
-      <Button primary on:click={save} green={saved}>
-        {#if saved}Success{:else}{buttonText || 'Submit Form'}{/if}
-      </Button>
+<div class="form-content">
+  <ErrorsBox errors={$store.saveRecordErrors || {}} />
+  {#each fields as field}
+    <div class="form-field" class:wide>
+      {#if !(schema[field].type === 'boolean' && !wide)}
+        <Label extraSmall={!wide} grey={!wide}>
+          {capitalise(schema[field].name)}
+        </Label>
+      {/if}
+      {#if schema[field].type === 'options'}
+        <Select secondary bind:value={$store.data[field]}>
+          <option value="">Choose an option</option>
+          {#each schema[field].constraints.inclusion as opt}
+            <option>{opt}</option>
+          {/each}
+        </Select>
+      {:else if schema[field].type === 'datetime'}
+        <DatePicker bind:value={$store.data[field]} />
+      {:else if schema[field].type === 'boolean'}
+        <Toggle
+          text={wide ? null : capitalise(schema[field].name)}
+          bind:checked={$store.data[field]} />
+      {:else if schema[field].type === 'number'}
+        <Input type="number" bind:value={$store.data[field]} />
+      {:else if schema[field].type === 'string'}
+        <Input bind:value={$store.data[field]} />
+      {:else if schema[field].type === 'attachment'}
+        <Dropzone bind:files={$store.data[field]} />
+      {:else if schema[field].type === 'link'}
+        <LinkedRecordSelector
+          secondary
+          showLabel={false}
+          bind:linkedRecords={$store.data[field]}
+          schema={schema[field]} />
+      {/if}
     </div>
-  </div>
-</form>
+  {/each}
+</div>
 
 <style>
   .form {
@@ -188,10 +81,5 @@
   }
   .form-field.wide :global(label) {
     margin-bottom: 0;
-  }
-
-  .buttons {
-    display: flex;
-    justify-content: flex-end;
   }
 </style>
