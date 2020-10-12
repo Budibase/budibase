@@ -52,7 +52,9 @@
       const modelObj = await fetchModel(record.modelId)
       for (let key of Object.keys(modelObj.schema)) {
         if (modelObj.schema[key].type === "link") {
-          record[key] = Array.isArray(record[key]) ? record[key].length : 0
+          record[`${key}_count`] = Array.isArray(record[key])
+            ? record[key].length
+            : 0
         }
       }
 
