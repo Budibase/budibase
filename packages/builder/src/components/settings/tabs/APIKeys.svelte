@@ -1,6 +1,7 @@
 <script>
-  import { Input } from "@budibase/bbui"
+  import { Input, Label } from "@budibase/bbui"
   import api from "builderStore/api"
+  import { backendUiStore } from "builderStore"
   import analytics from "analytics"
 
   let keys = { budibase: "" }
@@ -38,11 +39,20 @@
     edit
     value={keys.budibase}
     label="Budibase API Key" />
+  <div>
+    <Label extraSmall grey>Instance ID (Webhooks)</Label>
+    <span>{$backendUiStore.selectedDatabase._id}</span>
+  </div>
 </div>
 
 <style>
   .container {
     display: grid;
     grid-gap: var(--spacing-xl);
+  }
+
+  span {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
   }
 </style>
