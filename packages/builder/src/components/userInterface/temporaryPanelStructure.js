@@ -352,6 +352,12 @@ export default {
                 defaultValue: "500",
                 control: Input
               },
+              {
+                label: "Pagination",
+                key: "pagination",
+                valueKey: "checked",
+                control: Checkbox,
+              },
             ],
           },
           children: [],

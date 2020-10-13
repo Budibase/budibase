@@ -238,7 +238,8 @@
 					"material"
 				]
 			},
-			"height": "number"
+			"height": "number",
+			"pagination": "bool"
 		}
 	},
 	"dataform": {
