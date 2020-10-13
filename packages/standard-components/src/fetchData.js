@@ -20,9 +20,7 @@ export default async function fetchData(datasource, store) {
       rows.forEach(row => {
         for (let key of keys) {
           if (table.schema[key].type === "link") {
-            row[`${key}_count`] = Array.isArray(row[key])
-              ? row[key].length
-              : 0
+            row[`${key}_count`] = Array.isArray(row[key]) ? row[key].length : 0
           }
         }
       })
