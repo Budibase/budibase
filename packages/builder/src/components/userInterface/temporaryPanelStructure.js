@@ -346,6 +346,12 @@ export default {
                 ],
                 placeholder: "alpine",
               },
+              {
+                label: "Height",
+                key: "height",
+                defaultValue: "500",
+                control: Input
+              },
             ],
           },
           children: [],
