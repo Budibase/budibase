@@ -20,7 +20,7 @@
     <div class="spinner-container">
       <Spinner size="30" />
     </div>
-  {:then [object Object]}
+  {:then templates}
     <div class="templates">
       {#each templates as template}
         <div class="templates-card">
@@ -39,7 +39,7 @@
         </div>
       {/each}
     </div>
-  {:catch [object Object]}
+  {:catch err}
     <h1 style="color:red">{err}</h1>
   {/await}
 </div>
