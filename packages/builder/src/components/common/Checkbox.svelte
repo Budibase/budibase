@@ -34,7 +34,6 @@
     transition: 0.2s ease transform, 0.2s ease background-color,
       0.2s ease box-shadow;
     overflow: hidden;
-    z-index: 1;
     border-radius: 4px;
   }
 
