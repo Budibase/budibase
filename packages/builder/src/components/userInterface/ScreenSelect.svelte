@@ -9,6 +9,7 @@
   export let value = ""
 
   $: urls = getUrls()
+  $: console.log(urls)
 
   const handleBlur = () => dispatch("change", value)
 
@@ -61,9 +62,9 @@
           sort: detailScreen.props._component,
         })
       }
-
-      return urls
     }
+
+    return urls
   }
 </script>
 
