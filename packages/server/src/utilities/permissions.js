@@ -1,5 +1,5 @@
 const viewController = require("../api/controllers/view")
-const modelController = require("../api/controllers/model")
+const tableController = require("../api/controllers/table")
 const automationController = require("../api/controllers/automation")
 const accessLevels = require("./accessLevels")
 
@@ -10,13 +10,13 @@ const generateAdminPermissions = async instanceId => [
 ]
 
 const generatePowerUserPermissions = async instanceId => {
-  const fetchModelsCtx = {
+  const fetchTablesCtx = {
     user: {
       instanceId,
     },
   }
-  await modelController.fetch(fetchModelsCtx)
-  const models = fetchModelsCtx.body
+  await tableController.fetch(fetchTablesCtx)
+  const tables = fetchTablesCtx.body
 
   const fetchViewsCtx = {
     user: {
@@ -34,14 +34,14 @@ const generatePowerUserPermissions = async instanceId => {
   await automationController.fetch(fetchAutomationsCtx)
   const automations = fetchAutomationsCtx.body
 
-  const readModelPermissions = models.map(m => ({
+  const readTablePermissions = tables.map(m => ({
     itemId: m._id,
-    name: accessLevels.READ_MODEL,
+    name: accessLevels.READ_TABLE,
   }))
 
-  const writeModelPermissions = models.map(m => ({
+  const writeTablePermissions = tables.map(m => ({
     itemId: m._id,
-    name: accessLevels.WRITE_MODEL,
+    name: accessLevels.WRITE_TABLE,
   }))
 
   const viewPermissions = views.map(v => ({
@@ -55,8 +55,8 @@ const generatePowerUserPermissions = async instanceId => {
   }))
 
   return [
-    ...readModelPermissions,
-    ...writeModelPermissions,
+    ...readTablePermissions,
+    ...writeTablePermissions,
     ...viewPermissions,
     ...executeAutomationPermissions,
     { name: accessLevels.LIST_USERS },

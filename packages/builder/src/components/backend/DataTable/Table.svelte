@@ -10,7 +10,7 @@
   import ActionButton from "components/common/ActionButton.svelte"
   import AttachmentList from "./AttachmentList.svelte"
   import TablePagination from "./TablePagination.svelte"
-  import CreateEditRecordModal from "./modals/CreateEditRecordModal.svelte"
+  import CreateEditRowModal from "./modals/CreateEditRowModal.svelte"
   import RowPopover from "./buttons/CreateRowButton.svelte"
   import ColumnPopover from "./buttons/CreateColumnButton.svelte"
   import ViewPopover from "./buttons/CreateViewButton.svelte"
@@ -39,14 +39,14 @@
           currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
         )
       : []
-  $: modelId = data?.length ? data[0].modelId : null
+  $: tableId = data?.length ? data[0].tableId : null
 
-  function selectRelationship(record, fieldName) {
-    if (!record?.[fieldName]?.length) {
+  function selectRelationship(row, fieldName) {
+    if (!row?.[fieldName]?.length) {
       return
     }
     $goto(
-      `/${$params.application}/backend/model/${modelId}/relationship/${record._id}/${fieldName}`
+      `/${$params.application}/backend/table/${tableId}/relationship/${row._id}/${fieldName}`
     )
   }
 </script>

@@ -19,7 +19,7 @@
   import Checkbox from "components/common/Checkbox.svelte"
   import ActionButton from "components/common/ActionButton.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
-  import LinkedRecordSelector from "components/common/LinkedRecordSelector.svelte"
+  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import * as api from "../api"
 
   let fieldDefinitions = cloneDeep(FIELDS)
@@ -31,14 +31,14 @@
   }
 
   let originalName = field.name
-  $: modelOptions = $backendUiStore.models.filter(
-    model => model._id !== $backendUiStore.draftModel._id
+  $: tableOptions = $backendUiStore.tables.filter(
+    table => table._id !== $backendUiStore.draftTable._id
   )
   $: required = !!field?.constraints?.presence
 
   async function saveColumn() {
     backendUiStore.update(state => {
-      backendUiStore.actions.models.saveField({
+      backendUiStore.actions.tables.saveField({
         originalName,
         field,
       })
@@ -113,10 +113,10 @@
       label="Max Value"
       bind:value={field.constraints.numericality.lessThanOrEqualTo} />
   {:else if field.type === 'link'}
-    <Select label="Table" thin secondary bind:value={field.modelId}>
+    <Select label="Table" thin secondary bind:value={field.tableId}>
       <option value="">Choose an option</option>
-      {#each modelOptions as model}
-        <option value={model._id}>{model.name}</option>
+      {#each tableOptions as table}
+        <option value={table._id}>{table.name}</option>
       {/each}
     </Select>
     <Input

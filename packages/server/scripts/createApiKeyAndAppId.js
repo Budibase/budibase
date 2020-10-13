@@ -24,14 +24,14 @@ async function run() {
       quotaReset: Date.now() + 2592000000,
       usageQuota: {
         automationRuns: 0,
-        records: 0,
+        rows: 0,
         storage: 0,
         users: 0,
         views: 0,
       },
       usageLimits: {
         automationRuns: 10,
-        records: 10,
+        rows: 10,
         storage: 1000,
         users: 10,
         views: 10,
@@ -48,8 +48,8 @@ async function run() {
 
 run()
   .then(() => {
-    console.log("Records should have been created.")
+    console.log("Rows should have been created.")
   })
   .catch(err => {
-    console.error("Cannot create records - " + err)
+    console.error("Cannot create rows - " + err)
   })

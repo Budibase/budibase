@@ -80,7 +80,7 @@
         "request": "launch",
         "name": "Jest - Models",
         "program": "${workspaceFolder}/node_modules/.bin/jest",
-        "args": ["model.spec", "--runInBand"],
+        "args": ["table.spec", "--runInBand"],
         "console": "integratedTerminal",
         "internalConsoleOptions": "neverOpen",
         "disableOptimisticBPs": true,

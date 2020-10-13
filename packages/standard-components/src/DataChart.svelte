@@ -8,7 +8,7 @@
   fcRoot(FusionCharts, Charts, FusionTheme)
 
   export let _bb
-  export let model
+  export let table
   export let type = "column2d"
 
   let store = _bb.store
@@ -19,23 +19,23 @@
     height: "400",
     dataFormat: "json",
     dataSource: {
-      data: $store[model] || [],
+      data: $store[table] || [],
     },
   }
 
   $: console.log("CHART CONFIGS", chartConfigs)
 
   async function fetchData() {
-    const FETCH_RECORDS_URL = `/api/views/all_${model}`
-    const response = await _bb.api.get(FETCH_RECORDS_URL)
+    const FETCH_ROWS_URL = `/api/views/all_${table}`
+    const response = await _bb.api.get(FETCH_ROWS_URL)
     if (response.status === 200) {
       const json = await response.json()
       store.update(state => {
-        state[model] = json
+        state[table] = json
         return state
       })
     } else {
-      throw new Error("Failed to fetch records.", response)
+      throw new Error("Failed to fetch rows.", response)
     }
   }
 

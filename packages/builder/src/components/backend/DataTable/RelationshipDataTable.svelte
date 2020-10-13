@@ -4,37 +4,37 @@
   import { onMount } from "svelte"
   import { backendUiStore } from "builderStore"
 
-  export let modelId
-  export let recordId
+  export let tableId
+  export let rowId
   export let fieldName
 
-  let record
+  let row
   let title
 
-  $: data = record?.[fieldName] ?? []
-  $: linkedModelId = data?.length ? data[0].modelId : null
-  $: linkedModel = $backendUiStore.models.find(
-    model => model._id === linkedModelId
+  $: data = row?.[fieldName] ?? []
+  $: linkedTableId = data?.length ? data[0].tableId : null
+  $: linkedTable = $backendUiStore.tables.find(
+    table => table._id === linkedTableId
   )
-  $: schema = linkedModel?.schema
-  $: model = $backendUiStore.models.find(model => model._id === modelId)
-  $: fetchData(modelId, recordId)
+  $: schema = linkedTable?.schema
+  $: table = $backendUiStore.tables.find(table => table._id === tableId)
+  $: fetchData(tableId, rowId)
   $: {
-    let recordLabel = record?.[model?.primaryDisplay]
-    if (recordLabel) {
-      title = `${recordLabel} - ${fieldName}`
+    let rowLabel = row?.[table?.primaryDisplay]
+    if (rowLabel) {
+      title = `${rowLabel} - ${fieldName}`
     } else {
       title = fieldName
     }
   }
 
-  async function fetchData(modelId, recordId) {
-    const QUERY_VIEW_URL = `/api/${modelId}/${recordId}/enrich`
+  async function fetchData(tableId, rowId) {
+    const QUERY_VIEW_URL = `/api/${tableId}/${rowId}/enrich`
     const response = await api.get(QUERY_VIEW_URL)
-    record = await response.json()
+    row = await response.json()
   }
 </script>
 
-{#if record && record._id === recordId}
+{#if row && row._id === rowId}
   <Table {title} {schema} {data} />
 {/if}
