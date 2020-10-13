@@ -18,7 +18,7 @@
   export let datasource = {}
   export let editable
   export let theme = "alpine"
-  export let height
+  export let height = 500
   export let pagination
 
   let dataLoaded = false
@@ -115,7 +115,7 @@
     href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 </svelte:head>
 
-<div class="container" style="--grid-height: {height}px">
+<div style="--grid-height: {height}px">
   {#if dataLoaded}
     {#if editable}
       <div class="controls">
@@ -139,9 +139,6 @@
 </div>
 
 <style>
-  .container {
-    --grid-height: 800px;
-  }
   .container :global(form) {
     display: grid;
     grid-template-columns: repeat(2);
