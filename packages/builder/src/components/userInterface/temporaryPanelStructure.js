@@ -305,7 +305,7 @@ export default {
             design: { ...all },
             settings: [
               {
-                label: "Table",
+                label: "Data",
                 key: "datasource",
                 control: TableViewSelect,
               },
@@ -587,7 +587,7 @@ export default {
             design: { ...all },
             settings: [
               {
-                label: "Table",
+                label: "Data",
                 key: "datasource",
                 control: TableViewSelect,
               },
@@ -659,7 +659,7 @@ export default {
               properties: {
                 settings: [
                   {
-                    label: "Table",
+                    label: "Data",
                     key: "datasource",
                     control: TableViewSelect,
                   },
@@ -753,7 +753,7 @@ export default {
               properties: {
                 settings: [
                   {
-                    label: "Table",
+                    label: "Data",
                     key: "datasource",
                     control: TableViewSelect,
                   },
@@ -867,7 +867,7 @@ export default {
               properties: {
                 settings: [
                   {
-                    label: "Table",
+                    label: "Data",
                     key: "datasource",
                     control: TableViewSelect,
                   },
@@ -970,7 +970,7 @@ export default {
               properties: {
                 settings: [
                   {
-                    label: "Table",
+                    label: "Data",
                     key: "datasource",
                     control: TableViewSelect,
                   },
