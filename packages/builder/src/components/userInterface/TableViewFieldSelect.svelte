@@ -15,10 +15,12 @@
     ? tables.find(m => m._id === componentInstance.datasource.tableId)
     : null
 
+  $: type = componentInstance.datasource.type
   $: if (table) {
-    options = componentInstance.datasource.isTable
-      ? Object.keys(table.schema)
-      : Object.keys(table.views[componentInstance.datasource.name].schema)
+    options =
+      type === "table" || type === "link"
+        ? Object.keys(table.schema)
+        : Object.keys(table.views[componentInstance.datasource.name].schema)
   }
 </script>
 
