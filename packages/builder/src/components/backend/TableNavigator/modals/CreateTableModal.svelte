@@ -30,7 +30,7 @@
 
   function checkValid(evt) {
     const tableName = evt.target.value
-    if ($backendUiStore.models.some(model => model.name === tableName)) {
+    if ($backendUiStore.models?.some(model => model.name === tableName)) {
       error = `Table with name ${tableName} already exists. Please choose another name.`
       return
     }
