@@ -238,7 +238,10 @@
 					"material"
 				]
 			},
-			"height": "number",
+			"height": {
+				"type": "number",
+				"default": "500"
+			},
 			"pagination": "bool"
 		}
 	},
