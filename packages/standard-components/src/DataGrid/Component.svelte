@@ -21,6 +21,11 @@
   export let height = 500
   export let pagination
 
+  // These can never change at runtime so don't need to be reactive
+  let canEdit = editable && datasource && datasource.type !== "view"
+  let canAddDelete = editable && datasource && datasource.type === "model"
+
+  let store = _bb.store
   let dataLoaded = false
   let data
   let columnDefs
@@ -32,35 +37,50 @@
       minWidth: 150,
       filter: true,
     },
-    rowSelection: editable ? "multiple" : false,
-    suppressRowClickSelection: !editable,
+    rowSelection: canEdit ? "multiple" : false,
+    suppressRowClickSelection: !canEdit,
     paginationAutoPageSize: true,
     pagination,
   }
-  let store = _bb.store
 
   onMount(async () => {
-    if (datasource.tableId) {
-      const jsonTable = await _bb.api.get(`/api/tables/${datasource.tableId}`)
-      table = await jsonTable.json()
-      const { schema } = table
-      if (!isEmpty(datasource)) {
-        data = await fetchData(datasource, $store)
-        columnDefs = Object.keys(schema).map((key, i) => {
-          return {
-            headerCheckboxSelection: i === 0 && editable,
-            checkboxSelection: i === 0 && editable,
-            valueSetter: setters.get(schema[key].type),
-            headerName: key.charAt(0).toUpperCase() + key.slice(1),
-            field: key,
-            hide: shouldHideField(key),
-            sortable: true,
-            editable: editable,
-            cellRenderer: getRenderer(schema[key], editable),
-            autoHeight: true,
-          }
+    if (datasource != null) {
+      data = await fetchData(datasource, $store)
+      let schemaKeys = []
+      let schema = {}
+
+      // Get schema for datasource
+      if (datasource.type === "view") {
+        // For views, use the first object as the schema and pretend it's all strings
+        if (data && data.length) {
+          schemaKeys = Object.keys(data[0])
+        }
+        schema = {}
+        schemaKeys.forEach(key => {
+          schema[key] = "string"
         })
+      } else {
+        // Fetch the real schema for the table or relationship
+        const jsonTable = await _bb.api.get(`/api/tables/${datasource.tableId}`)
+        table = await jsonTable.json()
+        schema = table.schema
+        schemaKeys = Object.keys(schema)
       }
+
+      columnDefs = schemaKeys.map((key, i) => {
+        return {
+          headerCheckboxSelection: i === 0 && canEdit,
+          checkboxSelection: i === 0 && canEdit,
+          valueSetter: setters.get(schema[key].type),
+          headerName: key.charAt(0).toUpperCase() + key.slice(1),
+          field: key,
+          hide: shouldHideField(key),
+          sortable: true,
+          editable: canEdit,
+          cellRenderer: getRenderer(schema[key], canEdit),
+          autoHeight: true,
+        }
+      })
       dataLoaded = true
     }
   })
@@ -117,7 +137,7 @@
 
 <div style="--grid-height: {height}px">
   {#if dataLoaded}
-    {#if editable}
+    {#if canAddDelete}
       <div class="controls">
         <CreateRowButton {_bb} {table} on:newRow={handleNewRow} />
         {#if selectedRows.length > 0}
