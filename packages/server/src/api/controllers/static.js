@@ -1,6 +1,5 @@
 const send = require("koa-send")
 const { resolve, join } = require("../../utilities/centralPath")
-const jwt = require("jsonwebtoken")
 const fetch = require("node-fetch")
 const fs = require("fs-extra")
 const uuid = require("uuid")
@@ -13,8 +12,8 @@ const {
 } = require("../../utilities/budibaseDir")
 const CouchDB = require("../../db")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
-const { ANON_LEVEL_ID } = require("../../utilities/accessLevels")
 const fileProcessor = require("../../utilities/fileProcessor")
+const { AuthTypes } = require("../../constants")
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(__dirname, "../../../builder")
@@ -136,7 +135,8 @@ exports.performLocalFileProcessing = async function(ctx) {
 }
 
 exports.serveApp = async function(ctx) {
-  const mainOrAuth = ctx.auth.authenticated ? "main" : "unauthenticated"
+  const mainOrAuth =
+    ctx.auth.authenticated === AuthTypes.APP ? "main" : "unauthenticated"
 
   // default to homedir
   const appPath = resolve(
@@ -146,26 +146,7 @@ exports.serveApp = async function(ctx) {
     mainOrAuth
   )
 
-  let appId = ctx.params.appId
-  if (process.env.CLOUD) {
-    appId = ctx.subdomains[1]
-  }
-
-  // only set the appId cookie for /appId .. we COULD check for valid appIds
-  // but would like to avoid that DB hit
-  const looksLikeAppId = /^(app_)?[0-9a-f]{32}$/.test(appId)
-  if (looksLikeAppId && !ctx.auth.authenticated) {
-    const anonUser = {
-      userId: "ANON",
-      accessLevelId: ANON_LEVEL_ID,
-      appId,
-    }
-    const anonToken = jwt.sign(anonUser, ctx.config.jwtSecret)
-    ctx.cookies.set("budibase:token", anonToken, {
-      path: "/",
-      httpOnly: false,
-    })
-  }
+  const appId = ctx.user.appId
 
   if (process.env.CLOUD) {
     const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file ||
@@ -200,7 +181,8 @@ exports.serveAttachment = async function(ctx) {
 
 exports.serveAppAsset = async function(ctx) {
   // default to homedir
-  const mainOrAuth = ctx.auth.authenticated ? "main" : "unauthenticated"
+  const mainOrAuth =
+    ctx.auth.authenticated === AuthTypes.APP ? "main" : "unauthenticated"
 
   const appPath = resolve(
     budibaseAppsDir(),

@@ -21,7 +21,6 @@ module.exports.PRETTY_ACCESS_LEVELS = {
   [module.exports.ADMIN_LEVEL_ID]: "Admin",
   [module.exports.POWERUSER_LEVEL_ID]: "Power user",
   [module.exports.BUILDER_LEVEL_ID]: "Builder",
-  [module.exports.ANON_LEVEL_ID]: "Anonymous",
 }
 module.exports.adminPermissions = [
   {
