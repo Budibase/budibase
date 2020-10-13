@@ -44,7 +44,10 @@
 
   function checkValid(evt) {
     const tableName = evt.target.value
-    if (originalName !== tableName && $backendUiStore.models?.some(model => model.name === tableName)) {
+    if (
+      originalName !== tableName &&
+      $backendUiStore.models?.some(model => model.name === tableName)
+    ) {
       error = `Table with name ${tableName} already exists. Please choose another name.`
       return
     }
@@ -59,11 +62,12 @@
   {#if editing}
     <div class="actions">
       <h5>Edit Table</h5>
-      <Input 
-        label="Table Name" thin bind:value={table.name} 
+      <Input
+        label="Table Name"
+        thin
+        bind:value={table.name}
         on:input={checkValid}
-        {error}
-      />
+        {error} />
       <Select
         label="Primary Display Column"
         thin
