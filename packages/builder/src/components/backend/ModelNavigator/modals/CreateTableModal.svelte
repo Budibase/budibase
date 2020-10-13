@@ -20,10 +20,21 @@
   let modal
   let name
   let dataImport
+  let error = ""
 
   function resetState() {
     name = ""
     dataImport = undefined
+    error = ""
+  }
+
+  function checkValid(evt) {
+    const tableName = evt.target.value
+    if ($backendUiStore.models.some(model => model.name === tableName)) {
+      error = `Table with name ${tableName} already exists. Please choose another name.`
+      return
+    }
+    error = ""
   }
 
   async function saveTable() {
@@ -61,12 +72,14 @@
     title="Create Table"
     confirmText="Create"
     onConfirm={saveTable}
-    disabled={!name || (dataImport && !dataImport.valid)}>
+    disabled={error || !name || (dataImport && !dataImport.valid)}>
     <Input
       data-cy="table-name-input"
       thin
       label="Table Name"
-      bind:value={name} />
+      on:input={checkValid}
+      bind:value={name}
+      {error} />
     <div>
       <Label grey extraSmall>Create Table from CSV (Optional)</Label>
       <TableDataImport bind:dataImport />
