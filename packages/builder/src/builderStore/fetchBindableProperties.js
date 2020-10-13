@@ -73,36 +73,42 @@ const componentInstanceToBindable = walkResult => i => {
 
 const contextToBindables = (models, walkResult) => context => {
   const contextParentPath = getParentPath(walkResult, context)
-  const isModel = context.model?.isModel || typeof context.model === "string"
-  const modelId =
-    typeof context.model === "string" ? context.model : context.model.modelId
+  const modelId = context.model?.modelId ?? context.model
   const model = models.find(model => model._id === modelId)
+  let schema =
+    context.model?.type === "view"
+      ? model?.views?.[context.model.name]?.schema
+      : model?.schema
 
   // Avoid crashing whenever no data source has been selected
-  if (model == null) {
+  if (!schema) {
     return []
   }
 
-  const newBindable = key => ({
-    type: "context",
-    instance: context.instance,
-    // how the binding expression persists, and is used in the app at runtime
-    runtimeBinding: `${contextParentPath}data.${key}`,
-    // how the binding exressions looks to the user of the builder
-    readableBinding: `${context.instance._instanceName}.${model.name}.${key}`,
-    // model / view info
-    model: context.model,
-  })
-
-  // see ModelViewSelect.svelte for the format of context.model
-  // ... this allows us to bind to Model schemas, or View schemas
-  const schema = isModel ? model.schema : model.views[context.model.name].schema
+  const newBindable = ([key, fieldSchema]) => {
+    // Replace link bindings with a new property representing the count
+    let runtimeBoundKey = key
+    if (fieldSchema.type === "link") {
+      runtimeBoundKey = `${key}_count`
+    }
+    return {
+      type: "context",
+      fieldSchema,
+      instance: context.instance,
+      // how the binding expression persists, and is used in the app at runtime
+      runtimeBinding: `${contextParentPath}data.${runtimeBoundKey}`,
+      // how the binding expressions looks to the user of the builder
+      readableBinding: `${context.instance._instanceName}.${model.name}.${key}`,
+      // model / view info
+      model: context.model,
+    }
+  }
 
   return (
-    Object.keys(schema)
+    Object.entries(schema)
       .map(newBindable)
       // add _id and _rev fields - not part of schema, but always valid
-      .concat([newBindable("_id"), newBindable("_rev")])
+      .concat([newBindable(["_id", "string"]), newBindable(["_rev", "string"])])
   )
 }
 

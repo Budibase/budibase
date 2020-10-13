@@ -12,7 +12,6 @@
 
   const dispatch = createEventDispatcher()
   export let bindableProperties
-  console.log("Bindable Props: ", bindableProperties)
   export let value = ""
   export let close
 
