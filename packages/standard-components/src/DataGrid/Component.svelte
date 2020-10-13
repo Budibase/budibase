@@ -18,6 +18,8 @@
   export let datasource = {}
   export let editable
   export let theme = "alpine"
+  export let height
+  export let pagination
 
   let dataLoaded = false
   let data
@@ -32,6 +34,8 @@
     },
     rowSelection: editable ? "multiple" : false,
     suppressRowClickSelection: !editable,
+    paginationAutoPageSize: true,
+    pagination,
   }
   let store = _bb.store
 
@@ -111,7 +115,7 @@
     href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 </svelte:head>
 
-<div class="container">
+<div class="container" style="--grid-height: {height}px">
   {#if dataLoaded}
     {#if editable}
       <div class="controls">
