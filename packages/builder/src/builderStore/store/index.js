@@ -292,6 +292,11 @@ const addChildComponent = store => (componentToAdd, presetProps = {}) => {
       ? state.currentComponentInfo
       : getParent(state.currentPreviewItem.props, state.currentComponentInfo)
 
+    // Don't continue if there's no parent
+    if (!targetParent) {
+      return state
+    }
+
     targetParent._children = targetParent._children.concat(newComponent.props)
 
     state.currentFrontEndType === "page"
