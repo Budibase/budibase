@@ -11,8 +11,8 @@ const {
   instanceRoutes,
   clientRoutes,
   applicationRoutes,
-  recordRoutes,
-  modelRoutes,
+  rowRoutes,
+  tableRoutes,
   viewRoutes,
   staticRoutes,
   componentRoutes,
@@ -74,11 +74,11 @@ router.use(authRoutes.allowedMethods())
 router.use(viewRoutes.routes())
 router.use(viewRoutes.allowedMethods())
 
-router.use(modelRoutes.routes())
-router.use(modelRoutes.allowedMethods())
+router.use(tableRoutes.routes())
+router.use(tableRoutes.allowedMethods())
 
-router.use(recordRoutes.routes())
-router.use(recordRoutes.allowedMethods())
+router.use(rowRoutes.routes())
+router.use(rowRoutes.allowedMethods())
 
 router.use(userRoutes.routes())
 router.use(userRoutes.allowedMethods())
