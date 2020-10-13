@@ -116,6 +116,12 @@ exports.delete = async function(ctx) {
   const db = new CouchDB(ClientDb.name(getClientId(ctx)))
   const app = await db.get(ctx.params.applicationId)
   const result = await db.remove(app)
+  for (let instance of app.instances) {
+    const instanceDb = new CouchDB(instance._id)
+    await instanceDb.destroy()
+  }
+
+  // remove top level directory
   await fs.rmdir(join(budibaseAppsDir(), ctx.params.applicationId), {
     recursive: true,
   })
