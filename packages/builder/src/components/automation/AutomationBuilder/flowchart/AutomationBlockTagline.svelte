@@ -13,10 +13,10 @@
 
   function enrichInputs(inputs) {
     let enrichedInputs = { ...inputs, enriched: {} }
-    const modelId = inputs.modelId || inputs.record?.modelId
-    if (modelId) {
-      enrichedInputs.enriched.model = $backendUiStore.models.find(
-        model => model._id === modelId
+    const tableId = inputs.tableId || inputs.row?.tableId
+    if (tableId) {
+      enrichedInputs.enriched.table = $backendUiStore.tables.find(
+        table => table._id === tableId
       )
     }
     return enrichedInputs

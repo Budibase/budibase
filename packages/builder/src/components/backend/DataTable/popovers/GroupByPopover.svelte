@@ -6,10 +6,10 @@
   export let view = {}
   export let onClosed
 
-  $: viewModel = $backendUiStore.models.find(
-    ({ _id }) => _id === $backendUiStore.selectedView.modelId
+  $: viewTable = $backendUiStore.tables.find(
+    ({ _id }) => _id === $backendUiStore.selectedView.tableId
   )
-  $: fields = viewModel && Object.keys(viewModel.schema)
+  $: fields = viewTable && Object.keys(viewTable.schema)
 
   function saveView() {
     backendUiStore.actions.views.save(view)

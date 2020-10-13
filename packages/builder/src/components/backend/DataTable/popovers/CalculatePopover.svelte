@@ -14,13 +14,13 @@
   export let view = {}
   export let onClosed
 
-  $: viewModel = $backendUiStore.models.find(
-    ({ _id }) => _id === $backendUiStore.selectedView.modelId
+  $: viewTable = $backendUiStore.tables.find(
+    ({ _id }) => _id === $backendUiStore.selectedView.tableId
   )
   $: fields =
-    viewModel &&
-    Object.keys(viewModel.schema).filter(
-      field => viewModel.schema[field].type === "number"
+    viewTable &&
+    Object.keys(viewTable.schema).filter(
+      field => viewTable.schema[field].type === "number"
     )
 
   function saveView() {

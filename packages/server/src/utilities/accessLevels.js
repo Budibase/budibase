@@ -1,6 +1,6 @@
 // Permissions
-module.exports.READ_MODEL = "read-model"
-module.exports.WRITE_MODEL = "write-model"
+module.exports.READ_TABLE = "read-table"
+module.exports.WRITE_TABLE = "write-table"
 module.exports.READ_VIEW = "read-view"
 module.exports.EXECUTE_AUTOMATION = "execute-automation"
 module.exports.USER_MANAGEMENT = "user-management"
