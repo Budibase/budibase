@@ -15,10 +15,12 @@
     ? models.find(m => m._id === componentInstance.datasource.modelId)
     : null
 
+  $: type = componentInstance.datasource.type
   $: if (model) {
-    options = componentInstance.datasource.isModel
-      ? Object.keys(model.schema)
-      : Object.keys(model.views[componentInstance.datasource.name].schema)
+    options =
+      type === "model" || type === "link"
+        ? Object.keys(model.schema)
+        : Object.keys(model.views[componentInstance.datasource.name].schema)
   }
 </script>
 

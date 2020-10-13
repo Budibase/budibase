@@ -17,8 +17,8 @@
   export let _bb
   export let datasource = {}
   export let editable
-  export let theme = 'alpine'
-  export let height;
+  export let theme = "alpine"
+  export let height
   export let pagination
 
   let dataLoaded = false
@@ -35,8 +35,9 @@
     rowSelection: editable ? "multiple" : false,
     suppressRowClickSelection: !editable,
     paginationAutoPageSize: true,
-    pagination
+    pagination,
   }
+  let store = _bb.store
 
   onMount(async () => {
     if (datasource.modelId) {
@@ -44,7 +45,7 @@
       model = await jsonModel.json()
       const { schema } = model
       if (!isEmpty(datasource)) {
-        data = await fetchData(datasource)
+        data = await fetchData(datasource, $store)
         columnDefs = Object.keys(schema).map((key, i) => {
           return {
             headerCheckboxSelection: i === 0 && editable,
@@ -68,8 +69,8 @@
     type !== "boolean" &&
     type !== "options" &&
     // type !== "datetime" &&
-     type !== "link" &&
-    type !== "attachment" 
+    type !== "link" &&
+    type !== "attachment"
 
   const shouldHideField = name => {
     if (name.startsWith("_")) return true
