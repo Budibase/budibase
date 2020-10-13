@@ -7,6 +7,8 @@ const {
   BUILDER_LEVEL_ID,
   ANON_LEVEL_ID,
 } = require("../utilities/accessLevels")
+const environment = require("../environment")
+const { AuthTypes } = require("../constants")
 
 module.exports = async (ctx, next) => {
   if (ctx.path === "/_builder") {
@@ -17,46 +19,34 @@ module.exports = async (ctx, next) => {
   const appToken = ctx.cookies.get("budibase:token")
   const builderToken = ctx.cookies.get("builder:token")
 
-  if (builderToken) {
-    try {
-      const jwtPayload = jwt.verify(builderToken, ctx.config.jwtSecret)
-      ctx.auth = {
-        apiKey: jwtPayload.apiKey,
-        authenticated: jwtPayload.accessLevelId === BUILDER_LEVEL_ID,
-      }
-      ctx.user = {
-        ...jwtPayload,
-        accessLevel: await getAccessLevel(
-          jwtPayload.instanceId,
-          jwtPayload.accessLevelId
-        ),
-      }
-    } catch (_) {
-      // empty: do nothing
-    }
-
-    await next()
-    return
+  let token
+  // if running locally in the builder itself
+  if (!environment.CLOUD && !appToken) {
+    token = builderToken
+    ctx.auth.authenticated = AuthTypes.BUILDER
+  } else {
+    token = appToken
+    ctx.auth.authenticated = AuthTypes.APP
   }
 
-  if (!appToken) {
+  if (!token) {
     ctx.auth.authenticated = false
+    ctx.user = {
+      appId: process.env.CLOUD ? ctx.subdomains[1] : ctx.params.appId,
+    }
     await next()
     return
   }
 
   try {
-    const jwtPayload = jwt.verify(appToken, ctx.config.jwtSecret)
+    const jwtPayload = jwt.verify(token, ctx.config.jwtSecret)
+    ctx.auth.apiKey = jwtPayload.apiKey
     ctx.user = {
       ...jwtPayload,
       accessLevel: await getAccessLevel(
         jwtPayload.instanceId,
         jwtPayload.accessLevelId
       ),
-    }
-    ctx.auth = {
-      authenticated: ctx.user.accessLevelId !== ANON_LEVEL_ID,
-      apiKey: jwtPayload.apiKey,
     }
   } catch (err) {
     ctx.throw(err.status || STATUS_CODES.FORBIDDEN, err.text)

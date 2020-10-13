@@ -68,7 +68,10 @@
       <span
         class:active={false}
         class="topnavitemright"
-        on:click={() => window.open(`/${application}`)}>
+        on:click={() => {
+          document.cookie = 'budibase:token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+          window.open(`/${application}`)
+        }}>
         <PreviewIcon />
       </span>
     </div>
@@ -77,7 +80,7 @@
   {#await promise}
     <!-- This should probably be some kind of loading state? -->
     <div />
-  {:then result}
+  {:then results}
     <slot />
   {:catch error}
     <p>Something went wrong: {error.message}</p>
