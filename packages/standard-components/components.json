@@ -237,7 +237,8 @@
 					"balham-dark",
 					"material"
 				]
-			}
+			},
+			"height": "number"
 		}
 	},
 	"dataform": {
