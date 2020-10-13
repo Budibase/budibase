@@ -52,9 +52,7 @@
       const tableObj = await fetchTable(row.tableId)
       for (let key of Object.keys(tableObj.schema)) {
         if (tableObj.schema[key].type === "link") {
-          row[`${key}_count`] = Array.isArray(row[key])
-            ? row[key].length
-            : 0
+          row[`${key}_count`] = Array.isArray(row[key]) ? row[key].length : 0
         }
       }
 
