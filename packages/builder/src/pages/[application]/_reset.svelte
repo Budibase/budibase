@@ -77,9 +77,9 @@
   {#await promise}
     <!-- This should probably be some kind of loading state? -->
     <div />
-  {:then [object Object]}
+  {:then _}
     <slot />
-  {:catch [object Object]}
+  {:catch error}
     <p>Something went wrong: {error.message}</p>
   {/await}
 </div>

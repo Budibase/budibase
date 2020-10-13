@@ -35,7 +35,7 @@
 
 {#await _appPromise}
   loading
-{:then [object Object]}
+{:then _bb}
   <div id="current_component" bind:this={currentComponent} />
 {/await}
 
