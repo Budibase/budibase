@@ -4568,8 +4568,8 @@ export default [
     label: "receipt",
   },
   {
-    value: "fas fa-record-vinyl",
-    label: "record-vinyl",
+    value: "fas fa-row-vinyl",
+    label: "row-vinyl",
   },
   {
     value: "fas fa-recycle",

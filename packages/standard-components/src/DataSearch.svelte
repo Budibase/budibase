@@ -1,6 +1,6 @@
 <script>
   export let _bb
-  export let model
+  export let table
 
   let searchValue = ""
 

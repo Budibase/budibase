@@ -2,66 +2,64 @@
   import { onMount } from "svelte"
 
   export let _bb
-  export let model
+  export let table
 
   let headers = []
   let store = _bb.store
   let target
 
-  async function fetchModel(id) {
-    const FETCH_MODEL_URL = `/api/models/${id}`
-    const response = await _bb.api.get(FETCH_MODEL_URL)
+  async function fetchTable(id) {
+    const FETCH_TABLE_URL = `/api/tables/${id}`
+    const response = await _bb.api.get(FETCH_TABLE_URL)
     return await response.json()
   }
 
-  async function fetchFirstRecord() {
-    const FETCH_RECORDS_URL = `/api/views/all_${model}`
-    const response = await _bb.api.get(FETCH_RECORDS_URL)
+  async function fetchFirstRow() {
+    const FETCH_ROWS_URL = `/api/views/all_${table}`
+    const response = await _bb.api.get(FETCH_ROWS_URL)
     if (response.status === 200) {
-      const allRecords = await response.json()
-      if (allRecords.length > 0) return allRecords[0]
-      return { modelId: model }
+      const allRows = await response.json()
+      if (allRows.length > 0) return allRows[0]
+      return { tableId: table }
     }
   }
 
   async function fetchData() {
     const pathParts = window.location.pathname.split("/")
 
-    if (!model) {
+    if (!table) {
       return
     }
 
-    let record
+    let row
     // if srcdoc, then we assume this is the builder preview
     if (pathParts.length === 0 || pathParts[0] === "srcdoc") {
-      if (model) record = await fetchFirstRecord()
+      if (table) row = await fetchFirstRow()
     } else if (_bb.routeParams().id) {
-      const GET_RECORD_URL = `/api/${model}/records/${_bb.routeParams().id}`
-      const response = await _bb.api.get(GET_RECORD_URL)
+      const GET_ROW_URL = `/api/${table}/rows/${_bb.routeParams().id}`
+      const response = await _bb.api.get(GET_ROW_URL)
       if (response.status === 200) {
-        record = await response.json()
+        row = await response.json()
       } else {
-        throw new Error("Failed to fetch record.", response)
+        throw new Error("Failed to fetch row.", response)
       }
     } else {
-      throw new Exception("Record ID was not supplied to RowDetail")
+      throw new Exception("Row ID was not supplied to RowDetail")
     }
 
-    if (record) {
-      // Fetch model schema so we can check for linked records
-      const modelObj = await fetchModel(record.modelId)
-      for (let key of Object.keys(modelObj.schema)) {
-        if (modelObj.schema[key].type === "link") {
-          record[`${key}_count`] = Array.isArray(record[key])
-            ? record[key].length
-            : 0
+    if (row) {
+      // Fetch table schema so we can check for linked rows
+      const tableObj = await fetchTable(row.tableId)
+      for (let key of Object.keys(tableObj.schema)) {
+        if (tableObj.schema[key].type === "link") {
+          row[`${key}_count`] = Array.isArray(row[key]) ? row[key].length : 0
         }
       }
 
-      record._model = modelObj
+      row._table = tableObj
 
       _bb.attachChildren(target, {
-        context: record,
+        context: row,
       })
     } else {
       _bb.attachChildren(target)

@@ -19392,8 +19392,8 @@ var app = (function (crypto$1) {
   const common = () => commonPlus([]);
 
   const _events = {
-    recordApi: {
-      save: commonPlus(["onInvalid", "onRecordUpdated", "onRecordCreated"]),
+    rowApi: {
+      save: commonPlus(["onInvalid", "onRowUpdated", "onRowCreated"]),
       delete: common(),
       getContext: common(),
       getNew: common(),
@@ -19409,7 +19409,7 @@ var app = (function (crypto$1) {
       aggregates: common(),
     },
     collectionApi: {
-      getAllowedRecordTypes: common(),
+      getAllowedRowTypes: common(),
       initialise: common(),
       delete: common(),
     },
@@ -21240,9 +21240,9 @@ var app = (function (crypto$1) {
     ),
     makerule(
       "indexType",
-      "reference index may only exist on a record node",
+      "reference index may only exist on a row node",
       index =>
-        isModel(index.parent()) || index.indexType !== indexTypes.reference
+        isTable(index.parent()) || index.indexType !== indexTypes.reference
     ),
     makerule(
       "indexType",
@@ -21298,7 +21298,7 @@ var app = (function (crypto$1) {
       getFlattenedHierarchy,
       fp_1(
         n =>
-          isCollectionRecord(n) &&
+          isCollectionRow(n) &&
           new RegExp(`${n.collectionPathRegx()}$`).test(collectionKey)
       ),
     ]);
@@ -21309,7 +21309,7 @@ var app = (function (crypto$1) {
       fp_1(
         n =>
           n.nodeKey() === nodeKey ||
-          (isCollectionRecord(n) && n.collectionNodeKey() === nodeKey)
+          (isCollectionRow(n) && n.collectionNodeKey() === nodeKey)
       ),
     ]);
 
@@ -21321,20 +21321,20 @@ var app = (function (crypto$1) {
   const isNode = (appHierarchy, key) =>
     isSomething(getExactNodeForKey(appHierarchy)(key));
 
-  const isModel = node => isSomething(node) && node.type === "record";
-  const isSingleRecord = node => isModel(node) && node.isSingle;
-  const isCollectionRecord = node => isModel(node) && !node.isSingle;
+  const isTable = node => isSomething(node) && node.type === "row";
+  const isSingleRow = node => isTable(node) && node.isSingle;
+  const isCollectionRow = node => isTable(node) && !node.isSingle;
   const isRoot = node => isSomething(node) && node.isRoot();
 
   const getSafeFieldParser = (tryParse, defaultValueFunctions) => (
     field,
-    record
+    row
   ) => {
-    if (fp_25(field.name)(record)) {
+    if (fp_25(field.name)(row)) {
       return getSafeValueParser(
         tryParse,
         defaultValueFunctions
-      )(record[field.name])
+      )(row[field.name])
     }
     return defaultValueFunctions[field.getUndefinedValue]()
   };
@@ -21372,10 +21372,10 @@ var app = (function (crypto$1) {
 
   const validateTypeConstraints = validationRules => async (
     field,
-    record,
+    row,
     context
   ) => {
-    const fieldValue = record[field.name];
+    const fieldValue = row[field.name];
     const validateRule = async r =>
       !(await r.isValid(fieldValue, field.typeOptions, context))
         ? r.getMessage(fieldValue, field.typeOptions)
@@ -21880,10 +21880,10 @@ var app = (function (crypto$1) {
   );
 
   const permissionTypes = {
-    CREATE_RECORD: "create record",
-    UPDATE_RECORD: "update record",
-    READ_RECORD: "read record",
-    DELETE_RECORD: "delete record",
+    CREATE_ROW: "create row",
+    UPDATE_ROW: "update row",
+    READ_ROW: "read row",
+    DELETE_ROW: "delete row",
     READ_INDEX: "read index",
     MANAGE_INDEX: "manage index",
     MANAGE_COLLECTION: "manage collection",
@@ -21953,13 +21953,13 @@ var app = (function (crypto$1) {
     get: () => ({ type }),
   });
 
-  const createRecord = nodePermission(permissionTypes.CREATE_RECORD);
+  const createRow = nodePermission(permissionTypes.CREATE_ROW);
 
-  const updateRecord = nodePermission(permissionTypes.UPDATE_RECORD);
+  const updateRow = nodePermission(permissionTypes.UPDATE_ROW);
 
-  const deleteRecord = nodePermission(permissionTypes.DELETE_RECORD);
+  const deleteRow = nodePermission(permissionTypes.DELETE_ROW);
 
-  const readRecord = nodePermission(permissionTypes.READ_RECORD);
+  const readRow = nodePermission(permissionTypes.READ_ROW);
 
   const writeTemplates = staticPermission(permissionTypes.WRITE_TEMPLATES);
 
@@ -21994,10 +21994,10 @@ var app = (function (crypto$1) {
   const alwaysAuthorized = () => true;
 
   const permission = {
-    createRecord,
-    updateRecord,
-    deleteRecord,
-    readRecord,
+    createRow,
+    updateRow,
+    deleteRow,
+    readRow,
     writeTemplates,
     createUser,
     setPassword,
@@ -22013,41 +22013,41 @@ var app = (function (crypto$1) {
     setUserAccessLevels,
   };
 
-  const getNew = app => (collectionKey, recordTypeName) => {
-    const recordNode = getRecordNode(app, collectionKey);
+  const getNew = app => (collectionKey, rowTypeName) => {
+    const rowNode = getRowNode(app, collectionKey);
     collectionKey = safeKey(collectionKey);
     return apiWrapperSync(
       app,
-      events.recordApi.getNew,
-      permission.createRecord.isAuthorized(recordNode.nodeKey()),
-      { collectionKey, recordTypeName },
+      events.rowApi.getNew,
+      permission.createRow.isAuthorized(rowNode.nodeKey()),
+      { collectionKey, rowTypeName },
       _getNew,
-      recordNode,
+      rowNode,
       collectionKey
     )
   };
 
-  const _getNew = (recordNode, collectionKey) =>
-    constructRecord(recordNode, getNewFieldValue, collectionKey);
+  const _getNew = (rowNode, collectionKey) =>
+    constructRow(rowNode, getNewFieldValue, collectionKey);
 
-  const getRecordNode = (app, collectionKey) => {
+  const getRowNode = (app, collectionKey) => {
     collectionKey = safeKey(collectionKey);
     return getNodeForCollectionPath(app.hierarchy)(collectionKey)
   };
 
-  const getNewChild = app => (recordKey, collectionName, recordTypeName) =>
-    getNew(app)(joinKey(recordKey, collectionName), recordTypeName);
+  const getNewChild = app => (rowKey, collectionName, rowTypeName) =>
+    getNew(app)(joinKey(rowKey, collectionName), rowTypeName);
 
-  const constructRecord = (recordNode, getFieldValue, collectionKey) => {
-    const record = $(recordNode.fields, [fp_35("name"), fp_26(getFieldValue)]);
+  const constructRow = (rowNode, getFieldValue, collectionKey) => {
+    const row = $(rowNode.fields, [fp_35("name"), fp_26(getFieldValue)]);
 
-    record.id = `${recordNode.nodeId}-${shortid_1()}`;
-    record.key = isSingleRecord(recordNode)
-      ? joinKey(collectionKey, recordNode.name)
-      : joinKey(collectionKey, record.id);
-    record.isNew = true;
-    record.type = recordNode.name;
-    return record
+    row.id = `${rowNode.nodeId}-${shortid_1()}`;
+    row.key = isSingleRow(rowNode)
+      ? joinKey(collectionKey, rowNode.name)
+      : joinKey(collectionKey, row.id);
+    row.isNew = true;
+    row.type = rowNode.name;
+    return row
   };
 
   const pathRegxMaker = node => () =>
@@ -22056,7 +22056,7 @@ var app = (function (crypto$1) {
   const nodeKeyMaker = node => () =>
     switchCase(
       [
-        n => isModel(n) && !isSingleRecord(n),
+        n => isTable(n) && !isSingleRow(n),
         n =>
           joinKey(
             node.parent().nodeKey(),
@@ -22076,7 +22076,7 @@ var app = (function (crypto$1) {
     node.parent = fp_21(parent);
     node.isRoot = () =>
       isNothing(parent) && node.name === "root" && node.type === "root";
-    if (isCollectionRecord(node)) {
+    if (isCollectionRow(node)) {
       node.collectionNodeKey = () =>
         joinKey(parent.nodeKey(), node.collectionName);
       node.collectionPathRegx = () =>
@@ -22116,7 +22116,7 @@ var app = (function (crypto$1) {
     const app = createCoreApp(backendDefinition, user);
 
     return {
-      recordApi: {
+      rowApi: {
         getNew: getNew(app),
         getNewChild: getNewChild(app),
       },
@@ -22232,40 +22232,40 @@ var app = (function (crypto$1) {
 
   const ERROR = "##error_message";
 
-  const loadRecord = api => async ({ recordKey, statePath }) => {
-    if (!recordKey) {
-      api.error("Load Record: record key not set");
+  const loadRow = api => async ({ rowKey, statePath }) => {
+    if (!rowKey) {
+      api.error("Load Row: row key not set");
       return
     }
 
     if (!statePath) {
-      api.error("Load Record: state path not set");
+      api.error("Load Row: state path not set");
       return
     }
 
-    const record = await api.get({
-      url: `/api/record/${trimSlash(recordKey)}`,
+    const row = await api.get({
+      url: `/api/row/${trimSlash(rowKey)}`,
     });
 
-    if (api.isSuccess(record)) api.setState(statePath, record);
+    if (api.isSuccess(row)) api.setState(statePath, row);
   };
 
-  const listRecords = api => async ({ indexKey, statePath }) => {
+  const listRows = api => async ({ indexKey, statePath }) => {
     if (!indexKey) {
-      api.error("Load Record: record key not set");
+      api.error("Load Row: row key not set");
       return
     }
 
     if (!statePath) {
-      api.error("Load Record: state path not set");
+      api.error("Load Row: state path not set");
       return
     }
 
-    const records = await api.get({
-      url: `/api/listRecords/${trimSlash(indexKey)}`,
+    const rows = await api.get({
+      url: `/api/listRows/${trimSlash(indexKey)}`,
     });
 
-    if (api.isSuccess(records)) api.setState(statePath, records);
+    if (api.isSuccess(rows)) api.setState(statePath, rows);
   };
 
   const USER_STATE_PATH = "_bbuser";
@@ -22291,32 +22291,32 @@ var app = (function (crypto$1) {
     localStorage.setItem("budibase:user", JSON.stringify(user));
   };
 
-  const saveRecord = api => async ({ statePath }) => {
+  const saveRow = api => async ({ statePath }) => {
     if (!statePath) {
-      api.error("Load Record: state path not set");
+      api.error("Load Row: state path not set");
       return
     }
 
-    const recordtoSave = api.getState(statePath);
+    const rowtoSave = api.getState(statePath);
 
-    if (!recordtoSave) {
-      api.error(`there is no record in state: ${statePath}`);
+    if (!rowtoSave) {
+      api.error(`there is no row in state: ${statePath}`);
       return
     }
 
-    if (!recordtoSave.key) {
+    if (!rowtoSave.key) {
       api.error(
-        `item in state does not appear to be a record - it has no key (${statePath})`
+        `item in state does not appear to be a row - it has no key (${statePath})`
       );
       return
     }
 
-    const savedRecord = await api.post({
-      url: `/api/record/${trimSlash(recordtoSave.key)}`,
-      body: recordtoSave,
+    const savedRow = await api.post({
+      url: `/api/row/${trimSlash(rowtoSave.key)}`,
+      body: rowtoSave,
     });
 
-    if (api.isSuccess(savedRecord)) api.setState(statePath, savedRecord);
+    if (api.isSuccess(savedRow)) api.setState(statePath, savedRow);
   };
 
   const createApi = ({ rootPath, setState, getState }) => {
@@ -22383,23 +22383,23 @@ var app = (function (crypto$1) {
     };
 
     return {
-      loadRecord: loadRecord(apiOpts),
-      listRecords: listRecords(apiOpts),
+      loadRow: loadRow(apiOpts),
+      listRows: listRows(apiOpts),
       authenticate: authenticate(apiOpts),
-      saveRecord: saveRecord(apiOpts),
+      saveRow: saveRow(apiOpts),
     }
   };
 
-  const getNewChildRecordToState = (coreApi, setState) => ({
-    recordKey,
+  const getNewChildRowToState = (coreApi, setState) => ({
+    rowKey,
     collectionName,
-    childRecordType,
+    childRowType,
     statePath,
   }) => {
     const error = errorHandler(setState);
     try {
-      if (!recordKey) {
-        error("getNewChild > recordKey not set");
+      if (!rowKey) {
+        error("getNewChild > rowKey not set");
         return
       }
 
@@ -22408,8 +22408,8 @@ var app = (function (crypto$1) {
         return
       }
 
-      if (!childRecordType) {
-        error("getNewChild > childRecordType not set");
+      if (!childRowType) {
+        error("getNewChild > childRowType not set");
         return
       }
 
@@ -22418,10 +22418,10 @@ var app = (function (crypto$1) {
         return
       }
 
-      const rec = coreApi.recordApi.getNewChild(
-        recordKey,
+      const rec = coreApi.rowApi.getNewChild(
+        rowKey,
         collectionName,
-        childRecordType
+        childRowType
       );
       setState(statePath, rec);
     } catch (e) {
@@ -22429,9 +22429,9 @@ var app = (function (crypto$1) {
     }
   };
 
-  const getNewRecordToState = (coreApi, setState) => ({
+  const getNewRowToState = (coreApi, setState) => ({
     collectionKey,
-    childRecordType,
+    childRowType,
     statePath,
   }) => {
     const error = errorHandler(setState);
@@ -22441,8 +22441,8 @@ var app = (function (crypto$1) {
         return
       }
 
-      if (!childRecordType) {
-        error("getNewChild > childRecordType not set");
+      if (!childRowType) {
+        error("getNewChild > childRowType not set");
         return
       }
 
@@ -22451,7 +22451,7 @@ var app = (function (crypto$1) {
         return
       }
 
-      const rec = coreApi.recordApi.getNew(collectionKey, childRecordType);
+      const rec = coreApi.rowApi.getNew(collectionKey, childRowType);
       setState(statePath, rec);
     } catch (e) {
       error(e.message);
@@ -22485,18 +22485,18 @@ var app = (function (crypto$1) {
 
     return {
       "Set State": handler(["path", "value"], setStateHandler),
-      "Load Record": handler(["recordKey", "statePath"], api.loadRecord),
-      "List Records": handler(["indexKey", "statePath"], api.listRecords),
-      "Save Record": handler(["statePath"], api.saveRecord),
+      "Load Row": handler(["rowKey", "statePath"], api.loadRow),
+      "List Rows": handler(["indexKey", "statePath"], api.listRows),
+      "Save Row": handler(["statePath"], api.saveRow),
 
-      "Get New Child Record": handler(
-        ["recordKey", "collectionName", "childRecordType", "statePath"],
-        getNewChildRecordToState(coreApi, setStateWithStore)
+      "Get New Child Row": handler(
+        ["rowKey", "collectionName", "childRowType", "statePath"],
+        getNewChildRowToState(coreApi, setStateWithStore)
       ),
 
-      "Get New Record": handler(
-        ["collectionKey", "childRecordType", "statePath"],
-        getNewRecordToState(coreApi, setStateWithStore)
+      "Get New Row": handler(
+        ["collectionKey", "childRowType", "statePath"],
+        getNewRowToState(coreApi, setStateWithStore)
       ),
 
       Authenticate: handler(["username", "password"], api.authenticate),

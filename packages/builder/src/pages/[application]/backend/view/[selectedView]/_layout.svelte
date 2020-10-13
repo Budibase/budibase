@@ -5,9 +5,9 @@
   if ($params.selectedView) {
     let view
     const viewName = decodeURI($params.selectedView)
-    for (let model of $backendUiStore.models) {
-      if (model.views && model.views[viewName]) {
-        view = model.views[viewName]
+    for (let table of $backendUiStore.tables) {
+      if (table.views && table.views[viewName]) {
+        view = table.views[viewName]
       }
     }
     if (view) {
