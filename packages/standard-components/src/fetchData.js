@@ -1,10 +1,17 @@
 import api from "./api"
 
-export default async function fetchData(datasource) {
-  const { isTable, name } = datasource
+export default async function fetchData(datasource, store) {
+  const { type, name } = datasource
 
   if (name) {
-    const rows = isTable ? await fetchTableData() : await fetchViewData()
+    let rows = []
+    if (type === "table") {
+      rows = await fetchTableData()
+    } else if (type === "view") {
+      rows = await fetchViewData()
+    } else if (type === "link") {
+      rows = await fetchLinkedRowsData()
+    }
 
     // Fetch table schema so we can check for linked rows
     if (rows && rows.length) {
@@ -13,7 +20,9 @@ export default async function fetchData(datasource) {
       rows.forEach(row => {
         for (let key of keys) {
           if (table.schema[key].type === "link") {
-            row[key] = Array.isArray(row[key]) ? row[key].length : 0
+            row[`${key}_count`] = Array.isArray(row[key])
+              ? row[key].length
+              : 0
           }
         }
       })
@@ -52,5 +61,15 @@ export default async function fetchData(datasource) {
 
     const response = await api.get(QUERY_VIEW_URL)
     return await response.json()
+  }
+
+  async function fetchLinkedRowsData() {
+    if (!store || !store.data || !store.data._id) {
+      return []
+    }
+    const QUERY_URL = `/api/${store.data.tableId}/${store.data._id}/enrich`
+    const response = await api.get(QUERY_URL)
+    const row = await response.json()
+    return row[datasource.fieldName]
   }
 }

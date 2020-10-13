@@ -86,7 +86,7 @@ const createScreen = table => ({
       },
       {
         _id: "",
-        _component: "@budibase/standard-components/datatable",
+        _component: "@budibase/standard-components/datagrid",
         _styles: {
           normal: {},
           hover: {},
@@ -100,10 +100,6 @@ const createScreen = table => ({
           tableId: table._id,
           isTable: true,
         },
-        stripeColor: "",
-        borderColor: "",
-        backgroundColor: "",
-        color: "",
         _instanceName: `${table.name} Table`,
         _children: [],
       },

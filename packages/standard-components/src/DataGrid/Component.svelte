@@ -18,6 +18,8 @@
   export let datasource = {}
   export let editable
   export let theme = "alpine"
+  export let height
+  export let pagination
 
   let dataLoaded = false
   let data
@@ -32,7 +34,10 @@
     },
     rowSelection: editable ? "multiple" : false,
     suppressRowClickSelection: !editable,
+    paginationAutoPageSize: true,
+    pagination,
   }
+  let store = _bb.store
 
   onMount(async () => {
     if (datasource.tableId) {
@@ -40,7 +45,7 @@
       table = await jsonTable.json()
       const { schema } = table
       if (!isEmpty(datasource)) {
-        data = await fetchData(datasource)
+        data = await fetchData(datasource, $store)
         columnDefs = Object.keys(schema).map((key, i) => {
           return {
             headerCheckboxSelection: i === 0 && editable,
@@ -110,7 +115,7 @@
     href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 </svelte:head>
 
-<div class="container">
+<div class="container" style="--grid-height: {height}px">
   {#if dataLoaded}
     {#if editable}
       <div class="controls">

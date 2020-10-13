@@ -27,6 +27,10 @@
   async function fetchData() {
     const pathParts = window.location.pathname.split("/")
 
+    if (!table) {
+      return
+    }
+
     let row
     // if srcdoc, then we assume this is the builder preview
     if (pathParts.length === 0 || pathParts[0] === "srcdoc") {
@@ -48,7 +52,9 @@
       const tableObj = await fetchTable(row.tableId)
       for (let key of Object.keys(tableObj.schema)) {
         if (tableObj.schema[key].type === "link") {
-          row[key] = Array.isArray(row[key]) ? row[key].length : 0
+          row[`${key}_count`] = Array.isArray(row[key])
+            ? row[key].length
+            : 0
         }
       }
 

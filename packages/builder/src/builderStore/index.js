@@ -9,7 +9,7 @@ export const automationStore = getAutomationStore()
 
 export const initialise = async () => {
   try {
-    analytics.activate()
+    await analytics.activate()
     analytics.captureEvent("Builder Started")
   } catch (err) {
     console.log(err)

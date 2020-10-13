@@ -225,7 +225,7 @@
 		"description": "a datagrid component with functionality to add, remove and edit rows.",
 		"data": true,
 		"props": {
-			"datasource": "models",
+			"datasource": "tables",
 			"editable": "bool",
 			"theme": {
 				"type": "options",
@@ -237,7 +237,9 @@
 					"balham-dark",
 					"material"
 				]
-			}
+			},
+			"height": "number",
+			"pagination": "bool"
 		}
 	},
 	"dataform": {
@@ -287,23 +289,18 @@
 		}
 	},
 	"rowdetail": {
-<<<<<<< HEAD
 		"description": "Loads a row, using an ID in the url",
 		"context": "table",
-=======
-		"description": "Loads a record, using an ID in the url",
-		"context": "model",
->>>>>>> 3af1d8dc7f13091cc4673d53046919bad9ea28f7
 		"children": true,
 		"data": true,
 		"baseComponent": true,
 		"props": {
-			"model": "models"
+			"table": "tables"
 		}
 	},
 	"newrow": {
-		"description": "Prepares a new record for creation",
-		"context": "model",
+		"description": "Prepares a new row for creation",
+		"context": "table",
 		"children": true,
 		"data": true,
 		"baseComponent": true,
