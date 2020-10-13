@@ -1,9 +1,11 @@
 <script>
-  import { backendUiStore } from "builderStore"
+  import { backendUiStore, store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import screenTemplates from "builderStore/store/screenTemplates"
+  import api from "builderStore/api"
 
   export let table
 
@@ -11,6 +13,8 @@
   let dropdown
   let editing
   let confirmDeleteDialog
+  let templateScreens
+  let willBeDeleted
 
   $: fields = Object.keys(table.schema)
 
@@ -24,12 +28,31 @@
   }
 
   function showModal() {
+    const screens = $store.allScreens
+    templateScreens = screens.filter(screen => screen.props.table === table._id)
+    willBeDeleted = ["All table data"].concat(templateScreens.map(screen => `Screen ${screen.props._instanceName}`))
     hideEditor()
     confirmDeleteDialog.show()
   }
 
+  function deleteTemplateScreens() {
+    store.update(state => {
+      for (let screen of templateScreens) {
+        const mainPageName = state.pages.main.name
+        state.screens = state.screens.filter(c => c.name !== screen.name)
+        // Remove screen from current page as well
+        state.pages[state.currentPageName]._screens = state.pages[mainPageName]._screens.filter(
+          scr => scr.name !== screen.name
+        )
+        api.delete(`/_builder/api/pages/${mainPageName}/screens/${screen.name}`)
+      }
+      return state
+    })
+  }
+
   async function deleteTable() {
     await backendUiStore.actions.tables.delete(table)
+    deleteTemplateScreens()
     notifier.success("Table deleted")
     hideEditor()
   }
@@ -79,10 +102,20 @@
 </DropdownMenu>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  body={`Are you sure you wish to delete the table '${table.name}'? Your data will be deleted and this action cannot be undone.`}
+  body={`Are you sure you wish to delete the table '${table.name}'?`}
   okText="Delete Table"
   onOk={deleteTable}
-  title="Confirm Delete" />
+  title="Confirm Delete">
+  The following will also be deleted:
+  <b>
+  <div class="delete-items">
+    {#each willBeDeleted as item}
+      <div>{item}</div>
+    {/each}
+  </div>
+  </b>
+  This action cannot be undone.
+</ConfirmDialog>
 
 <style>
   div.icon {
@@ -94,6 +127,16 @@
 
   div.icon i {
     font-size: 16px;
+  }
+
+  div.delete-items {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+  }
+
+  div.delete-items div {
+    margin-top: 4px;
   }
 
   .actions {
