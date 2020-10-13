@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "@sveltech/routify"
   import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import api from "builderStore/api"
@@ -16,19 +17,27 @@
   }
 
   const deleteScreen = () => {
-    store.update(s => {
-      const screens = s.screens.filter(c => c.name !== screen.name)
-      s.screens = screens
-      if (s.currentPreviewItem.name === screen.name) {
-        s.currentPreviewItem = s.pages[s.currentPageName]
-        s.currentFrontEndType = "page"
+    store.update(state => {
+      // Remove screen from screens
+      const screens = state.screens.filter(c => c.name !== screen.name)
+      state.screens = screens
+
+      // Remove screen from current page as well
+      const pageScreens = state.pages[state.currentPageName]._screens.filter(
+        scr => scr.name !== screen.name
+      )
+      state.pages[state.currentPageName]._screens = pageScreens
+
+      if (state.currentPreviewItem.name === screen.name) {
+        store.setCurrentPage($store.currentPageName)
+        $goto(`./:page/page-layout`)
       }
 
       api.delete(
-        `/_builder/api/pages/${s.currentPageName}/screens/${screen.name}`
+        `/_builder/api/pages/${state.currentPageName}/screens/${screen.name}`
       )
 
-      return s
+      return state
     })
   }
 </script>

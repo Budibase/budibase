@@ -1,6 +1,5 @@
 <script>
-  import { onMount } from "svelte"
-  import { Select, Label, Multiselect } from "@budibase/bbui"
+  import { Label, Multiselect } from "@budibase/bbui"
   import api from "./api"
   import { capitalise } from "./helpers"
 
@@ -10,10 +9,11 @@
   export let secondary
 
   let linkedModel
+  let allRecords = []
 
   $: label = capitalise(schema.name)
   $: linkedModelId = schema.modelId
-  $: recordsPromise = fetchRecords(linkedModelId)
+  $: fetchRecords(linkedModelId)
   $: fetchModel(linkedModelId)
 
   async function fetchModel() {
@@ -31,7 +31,7 @@
     }
     const FETCH_RECORDS_URL = `/api/${linkedModelId}/records`
     const response = await api.get(FETCH_RECORDS_URL)
-    return await response.json()
+    allRecords = await response.json()
   }
 
   function getPrettyName(record) {
@@ -50,16 +50,14 @@
       table.
     </Label>
   {:else}
-    {#await recordsPromise then records}
-      <Multiselect
-        {secondary}
-        bind:value={linkedRecords}
-        label={showLabel ? label : null}
-        placeholder="Choose some options">
-        {#each records as record}
-          <option value={record._id}>{getPrettyName(record)}</option>
-        {/each}
-      </Multiselect>
-    {/await}
+    <Multiselect
+      {secondary}
+      bind:value={linkedRecords}
+      label={showLabel ? label : null}
+      placeholder="Choose some options">
+      {#each allRecords as record}
+        <option value={record._id}>{getPrettyName(record)}</option>
+      {/each}
+    </Multiselect>
   {/if}
 {/if}
