@@ -54,34 +54,6 @@
             "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
             "_instanceName": "Home Link",
             "_children": []
-          },
-          {
-            "_id": "d3325634-0945-4387-8bb3-d9d9be186c1c",
-            "_component": "@budibase/standard-components/link",
-            "_styles": {
-              "normal": {
-                "font-family": "Inter",
-                "font-weight": "400",
-                "color": "#000000",
-                "text-decoration-line": "none",
-                "font-size": "16px"
-              },
-              "hover": {},
-              "active": {},
-              "selected": {}
-            },
-            "_code": "",
-            "url": "/screen1",
-            "openInNewTab": false,
-            "text": "Screen 1",
-            "color": "",
-            "hoverColor": "",
-            "underline": false,
-            "fontSize": "",
-            "fontFamily": "initial",
-            "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
-            "_instanceName": "Screen 1 Link",
-            "_children": []
           }
         ]
       },
