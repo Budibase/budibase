@@ -24,7 +24,6 @@
   }
 
   function getPagesAroundCurrent(current, max) {
-    console.log(current)
     const start = Math.max(current - 2, 1)
     const end = Math.min(current + 2, max - 2)
     let pages = []
