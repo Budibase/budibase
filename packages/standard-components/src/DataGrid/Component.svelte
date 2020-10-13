@@ -19,6 +19,7 @@
   export let editable
   export let theme = 'alpine'
   export let height;
+  export let pagination
 
   let dataLoaded = false
   let data
@@ -33,6 +34,8 @@
     },
     rowSelection: editable ? "multiple" : false,
     suppressRowClickSelection: !editable,
+    paginationAutoPageSize: true,
+    pagination
   }
 
   onMount(async () => {
