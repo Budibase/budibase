@@ -73,6 +73,12 @@ exports.save = async function(ctx) {
   let row = ctx.request.body
   row.tableId = ctx.params.tableId
 
+  if (ctx.request.body.type === "delete") {
+    await bulkDelete(ctx)
+    ctx.body = ctx.request.body.rows
+    return
+  }
+
   if (!row._rev && !row._id) {
     row._id = generateRowID(row.tableId)
   }
@@ -101,7 +107,7 @@ exports.save = async function(ctx) {
   // make sure link rows are up to date
   row = await linkRows.updateLinks({
     instanceId,
-    eventType: linkRows.EventType.ROW_SAVE,
+    eventType: linkRows.EventType.RECORD_SAVE,
     row,
     tableId: row.tableId,
     table,
@@ -347,4 +353,26 @@ const TYPE_TRANSFORM_MAP = {
     true: true,
     false: false,
   },
+}
+
+async function bulkDelete(ctx) {
+  const instanceId = ctx.user.instanceId
+  const { rows } = ctx.request.body
+  const db = new CouchDB(instanceId)
+
+  const linkUpdates = rows.map(row =>
+    linkRows.updateLinks({
+      instanceId,
+      eventType: linkRows.EventType.ROW_DELETE,
+      row,
+      tableId: row.tableId,
+    })
+  )
+
+  await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
+  await Promise.all(linkUpdates)
+
+  rows.forEach(row => {
+    ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, instanceId, row)
+  })
 }
