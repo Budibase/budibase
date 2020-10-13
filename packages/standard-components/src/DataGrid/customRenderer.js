@@ -110,7 +110,7 @@ function linkedRecordRenderer(constraints, editable) {
     container.style.placeItems = "center"
     container.style.height = "100%"
 
-    container.innerText = params.value.length || 0
+    container.innerText = params.value ? params.value.length : 0
 
     return container
   }
