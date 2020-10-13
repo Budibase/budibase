@@ -350,7 +350,7 @@ export default {
                 label: "Height",
                 key: "height",
                 defaultValue: "500",
-                control: Input
+                control: Input,
               },
               {
                 label: "Pagination",
