@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@sveltech/routify"
-  $goto("../model")
+  $goto("../table")
 </script>
 
 <!-- routify:options index=false -->

@@ -3,7 +3,7 @@
 exports[`viewBuilder Calculate creates a view with the calculation statistics schema 1`] = `
 Object {
   "map": "function (doc) {
-      if (doc.modelId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" ) {
+      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" ) {
         emit(doc[\\"_id\\"], doc[\\"myField\\"]);
       }
     }",
@@ -12,7 +12,6 @@ Object {
     "field": "myField",
     "filters": Array [],
     "groupBy": undefined,
-    "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
     "schema": Object {
       "avg": Object {
         "type": "number",
@@ -36,6 +35,7 @@ Object {
         "type": "number",
       },
     },
+    "tableId": "14f1c4e94d6a47b682ce89d35d4c78b0",
   },
   "reduce": "_stats",
 }
@@ -44,7 +44,7 @@ Object {
 exports[`viewBuilder Filter creates a view with multiple filters and conjunctions 1`] = `
 Object {
   "map": "function (doc) {
-      if (doc.modelId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && doc[\\"Name\\"] === \\"Test\\" || doc[\\"Yes\\"] > \\"Value\\") {
+      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && doc[\\"Name\\"] === \\"Test\\" || doc[\\"Yes\\"] > \\"Value\\") {
         emit(doc._id);
       }
     }",
@@ -65,8 +65,8 @@ Object {
       },
     ],
     "groupBy": undefined,
-    "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
     "schema": null,
+    "tableId": "14f1c4e94d6a47b682ce89d35d4c78b0",
   },
 }
 `;
@@ -74,7 +74,7 @@ Object {
 exports[`viewBuilder Group By creates a view emitting the group by field 1`] = `
 Object {
   "map": "function (doc) {
-      if (doc.modelId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" ) {
+      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" ) {
         emit(doc[\\"age\\"], doc[\\"score\\"]);
       }
     }",
@@ -83,8 +83,8 @@ Object {
     "field": "score",
     "filters": Array [],
     "groupBy": "age",
-    "modelId": "14f1c4e94d6a47b682ce89d35d4c78b0",
     "schema": null,
+    "tableId": "14f1c4e94d6a47b682ce89d35d4c78b0",
   },
   "reduce": "_stats",
 }

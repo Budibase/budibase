@@ -4,7 +4,7 @@ const fs = require("fs")
 const { join } = require("../../../utilities/centralPath")
 const os = require("os")
 const exporters = require("./exporters")
-const { fetchView } = require("../record")
+const { fetchView } = require("../row")
 
 const controller = {
   fetch: async ctx => {
@@ -45,21 +45,21 @@ const controller = {
 
     await db.put(designDoc)
 
-    // add views to model document
-    const model = await db.get(ctx.request.body.modelId)
-    if (!model.views) model.views = {}
+    // add views to table document
+    const table = await db.get(ctx.request.body.tableId)
+    if (!table.views) table.views = {}
     if (!view.meta.schema) {
-      view.meta.schema = model.schema
+      view.meta.schema = table.schema
     }
-    model.views[viewToSave.name] = view.meta
+    table.views[viewToSave.name] = view.meta
 
     if (originalName) {
-      delete model.views[originalName]
+      delete table.views[originalName]
     }
 
-    await db.put(model)
+    await db.put(table)
 
-    ctx.body = model.views[viewToSave.name]
+    ctx.body = table.views[viewToSave.name]
     ctx.message = `View ${viewToSave.name} saved successfully.`
   },
   destroy: async ctx => {
@@ -74,9 +74,9 @@ const controller = {
 
     await db.put(designDoc)
 
-    const model = await db.get(view.meta.modelId)
-    delete model.views[viewName]
-    await db.put(model)
+    const table = await db.get(view.meta.tableId)
+    delete table.views[viewName]
+    await db.put(table)
 
     ctx.body = view
     ctx.message = `View ${ctx.params.viewName} saved successfully.`
@@ -85,7 +85,7 @@ const controller = {
     const view = ctx.request.body
     const format = ctx.query.format
 
-    // Fetch view records
+    // Fetch view rows
     ctx.params.viewName = view.name
     ctx.query.group = view.groupBy
     if (view.field) {

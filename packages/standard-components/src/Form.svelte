@@ -1,25 +1,25 @@
 <script>
   import { Label, DatePicker, Input, Select, Toggle } from "@budibase/bbui"
   import Dropzone from "./attachments/Dropzone.svelte"
-  import LinkedRecordSelector from "./LinkedRecordSelector.svelte"
+  import LinkedRowSelector from "./LinkedRowSelector.svelte"
   import ErrorsBox from "./ErrorsBox.svelte"
   import { capitalise } from "./helpers"
 
   export let _bb
-  export let model
+  export let table
   export let wide = false
 
   let store = _bb.store
   let schema = {}
-  let recordId
+  let rowId
   let errors = {}
 
-  $: schema = $store.data && $store.data._model.schema
+  $: schema = $store.data && $store.data._table.schema
   $: fields = schema ? Object.keys(schema) : []
 </script>
 
 <div class="form-content">
-  <ErrorsBox errors={$store.saveRecordErrors || {}} />
+  <ErrorsBox errors={$store.saveRowErrors || {}} />
   {#each fields as field}
     <div class="form-field" class:wide>
       {#if !(schema[field].type === 'boolean' && !wide)}
@@ -47,10 +47,10 @@
       {:else if schema[field].type === 'attachment'}
         <Dropzone bind:files={$store.data[field]} />
       {:else if schema[field].type === 'link'}
-        <LinkedRecordSelector
+        <LinkedRowSelector
           secondary
           showLabel={false}
-          bind:linkedRecords={$store.data[field]}
+          bind:linkedRows={$store.data[field]}
           schema={schema[field]} />
       {/if}
     </div>

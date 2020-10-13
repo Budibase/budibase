@@ -1,7 +1,7 @@
 <script>
   import { backendUiStore } from "builderStore"
   import { DropdownMenu, Icon, Modal } from "@budibase/bbui"
-  import CreateEditRecordModal from "../modals/CreateEditRecordModal.svelte"
+  import CreateEditRowModal from "../modals/CreateEditRowModal.svelte"
   import * as api from "../api"
   import { notifier } from "builderStore/store/notifications"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -24,9 +24,9 @@
   }
 
   async function deleteRow() {
-    await api.deleteRecord(row)
-    notifier.success("Record deleted")
-    backendUiStore.actions.records.delete(row)
+    await api.deleteRow(row)
+    notifier.success("Row deleted")
+    backendUiStore.actions.rows.delete(row)
   }
 </script>
 
@@ -52,7 +52,7 @@
   onOk={deleteRow}
   title="Confirm Delete" />
 <Modal bind:this={modal}>
-  <CreateEditRecordModal record={row} />
+  <CreateEditRowModal {row} />
 </Modal>
 
 <style>
