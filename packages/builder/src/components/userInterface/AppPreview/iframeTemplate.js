@@ -11,38 +11,22 @@ export default `<html>
       *, *:before, *:after {
         box-sizing: border-box;
       }
-      .lay-__screenslot__text {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 20px 0;
-          border: dashed 2px #ccc;
-          font-family: sans-serif;
-          font-size: 1.2rem;
-          color: #999;
-          text-transform: uppercase;
-          font-weight: bold;
-        }
-
-        .container-screenslot-placeholder {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-          text-align: center;
-          border-style: dashed !important;
-          border-width: 1px;
-          color: #000000;
-          background: #fafafa;
-          height: 94%;
-        }
-
-        .container-screenslot-placeholder span {
-          display: block;
-          margin-bottom: 10px;
-        }
+      .container-screenslot-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        text-align: center;
+        border-style: dashed !important;
+        border-width: 1px;
+        color: #000000;
+        background: #fafafa;
+        flex: 1 1 auto;
+      }
+      .container-screenslot-placeholder span {
+        display: block;
+        margin-bottom: 10px;
+      }
     </style>
     <script src='/assets/budibase-client.js'></script>
     <script>
