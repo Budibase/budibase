@@ -3,7 +3,7 @@ const ClientDb = require("../../db/clientDb")
 const { getPackageForBuilder, buildPage } = require("../../utilities/builder")
 const env = require("../../environment")
 const instanceController = require("./instance")
-const { copy, exists, readFile, writeFile } = require("fs-extra")
+const { copy, existsSync, readFile, writeFile } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const sqrl = require("squirrelly")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
@@ -143,7 +143,7 @@ const createEmptyAppPackage = async (ctx, app) => {
   const appsFolder = budibaseAppsDir()
   const newAppFolder = resolve(appsFolder, app._id)
 
-  if (await exists(newAppFolder)) {
+  if (existsSync(newAppFolder)) {
     ctx.throw(400, "App folder already exists for this application")
   }
 
