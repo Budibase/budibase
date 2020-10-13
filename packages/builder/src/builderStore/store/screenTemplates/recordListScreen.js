@@ -98,7 +98,7 @@ const createScreen = model => ({
           label: "Deals",
           name: `all_${model._id}`,
           modelId: model._id,
-          isModel: true,
+          type: "model",
         },
         _instanceName: `${model.name} Table`,
         _children: [],
