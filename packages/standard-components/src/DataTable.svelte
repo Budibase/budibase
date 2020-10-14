@@ -12,7 +12,7 @@
   export let color
   export let stripeColor
   export let borderColor
-  export let datasource = {}
+  export let datasource
   export let _bb
 
   let data = []
