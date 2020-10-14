@@ -10,7 +10,9 @@
   <Spacer medium />
   <div class="card-footer">
     <TextButton text medium blue href="/_builder/{_id}">
-      Open {name} →
+      Open
+      {name}
+      →
     </TextButton>
   </div>
 </div>

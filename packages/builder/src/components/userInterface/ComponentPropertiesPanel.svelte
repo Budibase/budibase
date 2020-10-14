@@ -76,7 +76,6 @@
 </script>
 
 <div class="root">
-
   <CategoryTab
     onClick={category => (selectedCategory = category)}
     {categories}
@@ -99,9 +98,7 @@
         onScreenPropChange={store.setPageOrScreenProp}
         screenOrPageInstance={$store.currentView !== 'component' && $store.currentPreviewItem} />
     {/if}
-
   </div>
-
 </div>
 
 <style>

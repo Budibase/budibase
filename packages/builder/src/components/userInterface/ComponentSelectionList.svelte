@@ -45,7 +45,6 @@
 </script>
 
 <div class="root">
-
   <CategoryTab
     onClick={category => (selectedCategory = category)}
     {selectedCategory}

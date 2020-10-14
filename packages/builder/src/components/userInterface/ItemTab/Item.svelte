@@ -3,9 +3,7 @@
 </script>
 
 <div data-cy={item.name} class="item-item" on:click>
-  <div class="item-icon">
-    <i class={item.icon} />
-  </div>
+  <div class="item-icon"><i class={item.icon} /></div>
   <div class="item-text">
     <div class="item-name">{item.name}</div>
   </div>

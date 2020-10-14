@@ -7,9 +7,7 @@
 
 {#if $backendUiStore.selectedDatabase._id && selectedView}
   <ViewDataTable view={selectedView} />
-{:else}
-  <i>Create your first table to start building</i>
-{/if}
+{:else}<i>Create your first table to start building</i>{/if}
 
 <style>
   i {

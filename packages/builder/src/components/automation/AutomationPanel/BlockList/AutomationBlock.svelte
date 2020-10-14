@@ -23,9 +23,7 @@
   class="automation-block hoverable"
   on:click={addBlockToAutomation}
   data-cy={stepId}>
-  <div>
-    <i class={blockDefinition.icon} />
-  </div>
+  <div><i class={blockDefinition.icon} /></div>
   <div class="automation-text">
     <h4>{blockDefinition.name}</h4>
     <p>{blockDefinition.description}</p>
