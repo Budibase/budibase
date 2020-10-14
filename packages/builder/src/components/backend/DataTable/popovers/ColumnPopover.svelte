@@ -43,7 +43,11 @@
 
   function sort(direction, column) {
     backendUiStore.update(state => {
-      state.sort = { direction, column }
+      if (direction !== "none") {
+        state.sort = {direction, column}
+      } else {
+        state.sort = undefined
+      }
       return state
     })
     hideEditor()
@@ -70,6 +74,12 @@
         <Icon name="delete" />
         Delete
       </li>
+      {#if sortDirection === 'desc' || sortDirection === 'asc'}
+        <li on:click={() => sort('none', field.name)}>
+          <Icon name="close" />
+          Remove sort
+        </li>
+      {/if}
       {#if sortDirection === 'desc' || sortColumn !== field.name}
         <li on:click={() => sort('asc', field.name)}>
           <Icon name="sortascending" />
