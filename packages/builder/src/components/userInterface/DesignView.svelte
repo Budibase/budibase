@@ -28,7 +28,6 @@
 </script>
 
 <div class="design-view-container">
-
   <div class="design-view-state-categories">
     <FlatButtonGroup value={selectedCategory} {buttonProps} {onChange} />
   </div>

@@ -109,7 +109,6 @@
       {schemaFields}
       on:fieldschanged={onFieldsChanged} />
   {/if}
-
 </div>
 
 <style>

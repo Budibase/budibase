@@ -89,7 +89,6 @@
 </script>
 
 <ModalContent title="New Screen" confirmText="Create Screen" onConfirm={save}>
-
   <Select
     label="Choose a Template"
     bind:value={templateIndex}
@@ -109,5 +108,4 @@
     error={routeError}
     bind:value={route}
     on:change={routeChanged} />
-
 </ModalContent>

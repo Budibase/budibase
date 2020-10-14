@@ -129,7 +129,6 @@
 <ul>
   {#each components as component, index (component._id)}
     <li on:click|stopPropagation={() => selectComponent(component)}>
-
       {#if $dragDropStore && $dragDropStore.targetComponent === component && $dragDropStore.dropPosition === 'above'}
         <div
           on:drop={drop}

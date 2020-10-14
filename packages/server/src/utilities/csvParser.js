@@ -25,7 +25,7 @@ function parse(path, parsers) {
         }
       }
     })
-    result.subscribe((row, lineNumber) => {
+    result.subscribe(row => {
       // For each CSV row parse all the columns that need parsed
       for (let key in parsers) {
         if (!schema[key] || schema[key].success) {
