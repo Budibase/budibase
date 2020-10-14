@@ -45,7 +45,7 @@
       <Label extraSmall grey>{label}</Label>
     {/if}
     <Label small black>
-      Please choose a primary display column for the
+      Please choose a display column for the
       <b>{linkedTable.name}</b>
       table.
     </Label>

@@ -33,7 +33,7 @@
 
   function deleteColumn() {
     if (field.name === $backendUiStore.selectedTable.primaryDisplay) {
-      notifier.danger("You cannot delete the primary display column")
+      notifier.danger("You cannot delete the display column")
     } else {
       backendUiStore.actions.tables.deleteField(field)
       notifier.success("Column deleted")
@@ -44,7 +44,7 @@
   function sort(direction, column) {
     backendUiStore.update(state => {
       if (direction !== "none") {
-        state.sort = {direction, column}
+        state.sort = { direction, column }
       } else {
         state.sort = undefined
       }

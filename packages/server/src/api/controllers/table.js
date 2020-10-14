@@ -52,7 +52,7 @@ exports.save = async function(ctx) {
   if (_rename && tableToSave.schema[_rename.updated].type === "link") {
     throw "Cannot rename a linked field."
   } else if (_rename && tableToSave.primaryDisplay === _rename.old) {
-    throw "Cannot rename the primary display field."
+    throw "Cannot rename the display column."
   } else if (_rename) {
     const rows = await db.allDocs(
       getRowParams(tableToSave._id, null, {

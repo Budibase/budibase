@@ -103,7 +103,7 @@ export const getBackendUiStore = () => {
             }
           }
 
-          // Optionally set primary display
+          // Optionally set display column
           if (primaryDisplay) {
             state.draftTable.primaryDisplay = field.name
           }
