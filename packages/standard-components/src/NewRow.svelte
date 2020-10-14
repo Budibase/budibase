@@ -19,7 +19,7 @@
   }
 
   onMount(async () => {
-    if (table) {
+    if (table && typeof table === "string") {
       const tableObj = await fetchTable(table)
       row.tableId = table
       row._table = tableObj
