@@ -6,16 +6,16 @@ export default async function fetchData(datasource, store) {
   if (name) {
     let rows = []
     if (type === "table") {
-      rows = await fetchTableData()
+      rows = fetchTableData()
     } else if (type === "view") {
-      rows = await fetchViewData()
+      rows = fetchViewData()
     } else if (type === "link") {
-      rows = await fetchLinkedRowsData()
+      rows = fetchLinkedRowsData()
     }
 
     // Fetch table schema so we can check for linked rows
     if (rows && rows.length) {
-      const table = await fetchTable(rows[0].tableId)
+      const table = await fetchTable()
       const keys = Object.keys(table.schema)
       rows.forEach(row => {
         for (let key of keys) {
@@ -27,10 +27,12 @@ export default async function fetchData(datasource, store) {
     }
 
     return rows
+  } else {
+    return []
   }
 
-  async function fetchTable(id) {
-    const FETCH_TABLE_URL = `/api/tables/${id}`
+  async function fetchTable() {
+    const FETCH_TABLE_URL = `/api/tables/${datasource.tableId}`
     const response = await api.get(FETCH_TABLE_URL)
     return await response.json()
   }
