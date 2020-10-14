@@ -38,8 +38,14 @@ exports.save = async function(ctx) {
   // if the table obj had an _id then it will have been retrieved
   const oldTable = ctx.preExisting
 
+  // Don't rename if the name is the same
+  let { _rename } = tableToSave
+  if (_rename && _rename.old === _rename.updated) {
+    _rename = null
+    delete tableToSave._rename
+  }
+
   // rename row fields when table column is renamed
-  const { _rename } = tableToSave
   if (_rename && tableToSave.schema[_rename.updated].type === "link") {
     throw "Cannot rename a linked field."
   } else if (_rename && tableToSave.primaryDisplay === _rename.old) {
