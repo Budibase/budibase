@@ -36,7 +36,10 @@ exports.save = async function(ctx) {
   let renameDocs = []
 
   // if the table obj had an _id then it will have been retrieved
-  const oldTable = ctx.preExisting
+  let oldTable
+  if (ctx.request.body && ctx.request.body._id) {
+    oldTable = await db.get(ctx.request.body._id)
+  }
 
   // rename row fields when table column is renamed
   const { _rename } = tableToSave
