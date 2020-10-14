@@ -35,24 +35,10 @@
     confirmDeleteDialog.show()
   }
 
-  function deleteTemplateScreens() {
-    store.update(state => {
-      for (let screen of templateScreens) {
-        const mainPageName = state.pages.main.name
-        state.screens = state.screens.filter(c => c.name !== screen.name)
-        // Remove screen from current page as well
-        state.pages[state.currentPageName]._screens = state.pages[mainPageName]._screens.filter(
-          scr => scr.name !== screen.name
-        )
-        api.delete(`/_builder/api/pages/${mainPageName}/screens/${screen.name}`)
-      }
-      return state
-    })
-  }
 
   async function deleteTable() {
     await backendUiStore.actions.tables.delete(table)
-    deleteTemplateScreens()
+    store.deleteScreens(templateScreens)
     notifier.success("Table deleted")
     hideEditor()
   }
@@ -102,11 +88,10 @@
 </DropdownMenu>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  body={`Are you sure you wish to delete the table '${table.name}'?`}
   okText="Delete Table"
   onOk={deleteTable}
   title="Confirm Delete">
-  The following will also be deleted:
+  Are you sure you wish to delete the table <i>{table.name}?</i> The following will also be deleted:
   <b>
   <div class="delete-items">
     {#each willBeDeleted as item}
@@ -137,6 +122,7 @@
 
   div.delete-items div {
     margin-top: 4px;
+    font-weight: 500
   }
 
   .actions {
