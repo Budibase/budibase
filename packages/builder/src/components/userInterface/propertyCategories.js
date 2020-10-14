@@ -262,6 +262,16 @@ export const padding = [
 
 export const size = [
   {
+    label: "Flex",
+    key: "flex",
+    control: OptionSelect,
+    defaultValue: "0 1 auto",
+    options: [
+      { label: "Shrink", value: "0 1 auto" },
+      { label: "Grow", value: "1 1 auto" },
+    ],
+  },
+  {
     label: "Width",
     key: "width",
     control: Input,

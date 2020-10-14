@@ -61,9 +61,9 @@
           sort: detailScreen.props._component,
         })
       }
-
-      return urls
     }
+
+    return urls
   }
 </script>
 

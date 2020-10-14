@@ -1,9 +1,9 @@
 {
-	"title": "{{ name }}",
-	"favicon": "./_shared/favicon.png",
-	"stylesheets": [],
-	"componentLibraries": ["@budibase/standard-components"],
-	"props": {
+  "title": "{{ name }}",
+  "favicon": "./_shared/favicon.png",
+  "stylesheets": [],
+  "componentLibraries": ["@budibase/standard-components"],
+  "props": {
     "_id": "private-master-root",
     "_component": "@budibase/standard-components/container",
     "_children": [
@@ -62,10 +62,11 @@
         "_component": "##builtin/screenslot",
         "_styles": {
           "normal": {
-            "padding": "0px",
-            "align-items": "flex-start",
-            "height": "100vh",
-            "background-image": "None"
+            "flex": "1 1 auto",
+            "display": "flex",
+            "flex-direction": "column",
+            "justify-content": "flex-start",
+            "align-items": "stretch"
           },
           "hover": {},
           "active": {},
@@ -84,10 +85,9 @@
         "flex-direction": "column",
         "align-items": "stretch",
         "justify-content": "flex-start",
-        "height": "",
-        "max-width": "",
         "margin-right": "auto",
-        "margin-left": "auto"
+        "margin-left": "auto",
+        "min-height": "100%"
       },
       "selected": {}
     },
@@ -95,6 +95,6 @@
     "className": "",
     "onLoad": []
   },
-	"_css": "",
-	"uiFunctions": ""
+  "_css": "",
+  "uiFunctions": ""
 }
