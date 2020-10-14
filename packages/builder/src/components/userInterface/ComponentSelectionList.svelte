@@ -1,32 +1,12 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { splitName } from "./pagesParsing/splitRootComponentName.js"
+  import { store } from "builderStore"
   import components from "./temporaryPanelStructure.js"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CategoryTab from "./CategoryTab.svelte"
-  import {
-    find,
-    sortBy,
-    groupBy,
-    values,
-    filter,
-    map,
-    uniqBy,
-    flatten,
-  } from "lodash/fp"
-
-  import { pipe } from "components/common/core"
 
   import Tab from "./ItemTab/Tab.svelte"
-  import { store } from "builderStore"
 
   export let toggleTab
-
-  let selectTemplateDialog
-  let selectedTemplateInstance
-  let templateInstances = []
-
-  let selectedComponent = null
 
   const categories = components.categories
   let selectedCategory = categories[0]

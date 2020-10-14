@@ -34,6 +34,9 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
     ctx.throw(403, "API key invalid")
   }
 
+  // don't expose builder endpoints in the cloud
+  if (environment.CLOUD && permName === BUILDER) return
+
   if (!ctx.auth.authenticated) {
     ctx.throw(403, "Session not authenticated")
   }

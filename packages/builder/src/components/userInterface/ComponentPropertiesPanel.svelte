@@ -1,21 +1,10 @@
 <script>
-  import { setContext, onMount } from "svelte"
-
   import { store } from "builderStore"
-  import {
-    LayoutIcon,
-    PaintIcon,
-    TerminalIcon,
-    CircleIndicator,
-    EventsIcon,
-  } from "components/common/Icons/"
   import panelStructure from "./temporaryPanelStructure.js"
   import CategoryTab from "./CategoryTab.svelte"
   import DesignView from "./DesignView.svelte"
   import SettingsView from "./SettingsView.svelte"
 
-  let current_view = "design"
-  let codeEditor
   let flattenedPanel = flattenComponents(panelStructure.categories)
   let categories = [
     { value: "settings", name: "Settings" },
@@ -23,7 +12,6 @@
   ]
   let selectedCategory = categories[0]
 
-  $: components = $store.components
   $: componentInstance =
     $store.currentView !== "component"
       ? { ...$store.currentPreviewItem, ...$store.currentComponentInfo }

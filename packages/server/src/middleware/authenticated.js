@@ -31,8 +31,12 @@ module.exports = async (ctx, next) => {
 
   if (!token) {
     ctx.auth.authenticated = false
+
+    const appId = process.env.CLOUD ? ctx.subdomains[1] : ctx.params.appId
+
     ctx.user = {
-      appId: process.env.CLOUD ? ctx.subdomains[1] : ctx.params.appId,
+      // if appId can't be determined from path param or subdomain
+      appId: appId || ctx.referer.split("/").pop(),
     }
     await next()
     return
