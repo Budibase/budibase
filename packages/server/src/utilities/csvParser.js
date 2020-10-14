@@ -7,6 +7,7 @@ const VALIDATORS = {
 }
 
 const PARSERS = {
+  number: attribute => Number(attribute),
   datetime: attribute => new Date(attribute).toISOString(),
 }
 
@@ -24,7 +25,7 @@ function parse(path, parsers) {
         }
       }
     })
-    result.fromFile(path).subscribe(row => {
+    result.subscribe(row => {
       // For each CSV row parse all the columns that need parsed
       for (let key in parsers) {
         if (!schema[key] || schema[key].success) {

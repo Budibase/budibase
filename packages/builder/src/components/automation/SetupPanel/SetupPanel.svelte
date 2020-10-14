@@ -62,10 +62,7 @@
     {#if $automationStore.selectedBlock}
       <AutomationBlockSetup bind:block={$automationStore.selectedBlock} />
     {:else if $automationStore.selectedAutomation}
-      <div class="block-label">
-        Automation
-        <b>{automation.name}</b>
-      </div>
+      <div class="block-label">Automation <b>{automation.name}</b></div>
       <Button secondary wide on:click={testAutomation}>Test Automation</Button>
     {/if}
   </div>

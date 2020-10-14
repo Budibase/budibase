@@ -135,7 +135,9 @@
         {#if selectedRows.length > 0}
           <DeleteButton text small on:click={deleteRows}>
             <Icon name="addrow" />
-            Delete {selectedRows.length} row(s)
+            Delete
+            {selectedRows.length}
+            row(s)
           </DeleteButton>
         {/if}
       </div>

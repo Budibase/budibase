@@ -31,9 +31,7 @@
       style="background: {themes[notification.type]};"
       transition:fly={{ y: -30 }}>
       <div class="content">{notification.message}</div>
-      {#if notification.icon}
-        <i class={notification.icon} />
-      {/if}
+      {#if notification.icon}<i class={notification.icon} />{/if}
     </div>
   {/each}
 </div>
