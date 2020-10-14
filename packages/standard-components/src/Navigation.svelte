@@ -16,6 +16,11 @@
       }
     }
   }
+
+  const logOut = () => {
+    localStorage.removeItem("budibase:token")
+    location.reload()
+  }
 </script>
 
 <div class="nav">
@@ -24,12 +29,10 @@
       {#if logoUrl}
         <img class="logo" alt="logo" src={logoUrl} height="48" />
       {/if}
-      {#if title}
-        <span>{title}</span>
-      {/if}
+      {#if title}<span>{title}</span>{/if}
     </a>
     <div class="nav__controls">
-      <div>Log out</div>
+      <div on:click={logOut}>Log out</div>
     </div>
   </div>
   <div class="nav__menu" bind:this={itemContainer} />
