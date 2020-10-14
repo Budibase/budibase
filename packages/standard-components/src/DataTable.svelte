@@ -40,15 +40,18 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
+      console.log(datasource)
       data = await fetchData(datasource, $store)
-      if (data && data.length) {
-        if (datasource.type === "view") {
-          schema = data[0]
-          headers = Object.keys(schema).filter(shouldDisplayField)
-        } else {
-          schema = await fetchTable(datasource.tableId)
-          headers = Object.keys(schema)
-        }
+
+      // Get schema for datasource
+      // Views with "Calculate" applied provide their own schema.
+      // For everything else, use the tableId property to pull to table schema
+      if (datasource.schema) {
+        schema = datasource.schema
+        headers = Object.keys(schema).filter(shouldDisplayField)
+      } else {
+        schema = await fetchTable(datasource.tableId)
+        headers = Object.keys(schema).filter(shouldDisplayField)
       }
     }
   })
