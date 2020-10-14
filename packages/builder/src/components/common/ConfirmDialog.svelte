@@ -20,7 +20,10 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent onConfirm={onOk} {title} confirmText={okText} {cancelText} red>
-    <div class="body">{body}<slot/></div>
+    <div class="body">
+      {body}
+      <slot />
+    </div>
   </ModalContent>
 </Modal>
 
