@@ -46,28 +46,20 @@
   onMount(async () => {
     if (datasource != null) {
       data = await fetchData(datasource, $store)
-      let schemaKeys = []
       let schema = {}
 
       // Get schema for datasource
-      if (datasource.type === "view") {
-        // For views, use the first object as the schema and pretend it's all strings
-        if (data && data.length) {
-          schemaKeys = Object.keys(data[0])
-        }
-        schema = {}
-        schemaKeys.forEach(key => {
-          schema[key] = "string"
-        })
+      // Views with "Calculate" applied provide their own schema.
+      // For everything else, use the tableId property to pull to table schema
+      if (datasource.schema) {
+        schema = datasource.schema
       } else {
-        // Fetch the real schema for the table or relationship
         const jsonTable = await _bb.api.get(`/api/tables/${datasource.tableId}`)
         table = await jsonTable.json()
         schema = table.schema
-        schemaKeys = Object.keys(schema)
       }
 
-      columnDefs = schemaKeys.map((key, i) => {
+      columnDefs = Object.keys(schema).map((key, i) => {
         return {
           headerCheckboxSelection: i === 0 && canEdit,
           checkboxSelection: i === 0 && canEdit,
