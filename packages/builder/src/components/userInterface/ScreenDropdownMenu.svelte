@@ -17,26 +17,13 @@
   }
 
   const deleteScreen = () => {
+    store.deleteScreens(screen, $store.currentPageName)
+    // update the page if required
     store.update(state => {
-      // Remove screen from screens
-      const screens = state.screens.filter(c => c.name !== screen.name)
-      state.screens = screens
-
-      // Remove screen from current page as well
-      const pageScreens = state.pages[state.currentPageName]._screens.filter(
-        scr => scr.name !== screen.name
-      )
-      state.pages[state.currentPageName]._screens = pageScreens
-
       if (state.currentPreviewItem.name === screen.name) {
         store.setCurrentPage($store.currentPageName)
         $goto(`./:page/page-layout`)
       }
-
-      api.delete(
-        `/_builder/api/pages/${state.currentPageName}/screens/${screen.name}`
-      )
-
       return state
     })
   }
