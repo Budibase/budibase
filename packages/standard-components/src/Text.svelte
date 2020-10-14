@@ -33,6 +33,4 @@
   <sub class={className}>{text}</sub>
 {:else if isTag('sup')}
   <sup class={className}>{text}</sup>
-{:else}
-  <span>{text}</span>
-{/if}
+{:else}<span>{text}</span>{/if}

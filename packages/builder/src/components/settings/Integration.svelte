@@ -5,9 +5,7 @@
 
 <div class="container">
   <div class="content">
-    <div class="img">
-      <img src="https://picsum.photos/60/60" alt="zoom" />
-    </div>
+    <div class="img"><img src="https://picsum.photos/60/60" alt="zoom" /></div>
     <div class="body">
       <div class="title">Zoom</div>
       <div class="description">

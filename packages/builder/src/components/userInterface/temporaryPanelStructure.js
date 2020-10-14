@@ -1165,14 +1165,6 @@ export default {
           },
           children: [],
         },
-        // {
-        // name: "Map",
-        // _component: "@budibase/standard-components/datamap",
-        // description: "Shiny map",
-        // icon: "ri-map-pin-line",
-        // properties: { design: { ...all } },
-        // children: [],
-        // },
       ],
     },
     {
@@ -1208,6 +1200,7 @@ export default {
             "A component that automatically generates a login screen for your app.",
           icon: "ri-login-box-line",
           children: [],
+          showOnPages: ["unauthenticated"],
           properties: {
             design: { ...all },
             settings: [
