@@ -40,7 +40,7 @@ module.exports = async (ctx, next) => {
 
     ctx.user = {
       // if appId can't be determined from path param or subdomain
-      appId: appId,
+      appId,
     }
     await next()
     return

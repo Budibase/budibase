@@ -1,5 +1,6 @@
 const TOKEN_MAP = {
   EQUALS: "===",
+  NOT_EQUALS: "!==",
   LT: "<",
   LTE: "<=",
   MT: ">",
