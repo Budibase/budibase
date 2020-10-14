@@ -94,7 +94,8 @@ export const getBackendUiStore = () => {
       saveField: ({ originalName, field }) => {
         store.update(state => {
           // delete the original if renaming
-          if (originalName) {
+          // need to handle if the column had no name, empty string
+          if (originalName || originalName === "") {
             delete state.draftTable.schema[originalName]
             state.draftTable._rename = {
               old: originalName,
