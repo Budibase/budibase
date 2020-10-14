@@ -1,4 +1,4 @@
-const { exists, readFile, writeFile, ensureDir } = require("fs-extra")
+const { existsSync, readFile, writeFile, ensureDir } = require("fs-extra")
 const { join, resolve } = require("./centralPath")
 const Sqrl = require("squirrelly")
 const uuid = require("uuid")
@@ -28,7 +28,7 @@ const setCouchDbUrl = async opts => {
 
 const createDevEnvFile = async opts => {
   const destConfigFile = join(opts.dir, "./.env")
-  let createConfig = !(await exists(destConfigFile)) || opts.quiet
+  let createConfig = !existsSync(destConfigFile) || opts.quiet
   if (createConfig) {
     const template = await readFile(
       resolve(__dirname, "..", "..", ".env.template"),
