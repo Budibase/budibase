@@ -122,15 +122,16 @@
   }
 
   .incorrect-details-panel {
-    margin-top: 30px;
+    margin-top: 26px;
     padding: 10px;
     border-style: solid;
     border-width: 1px;
     border-color: maroon;
-    border-radius: 1px;
+    border-radius: 4px;
     text-align: center;
     color: maroon;
     background-color: mistyrose;
+    align-self: stretch;
   }
 
   .form-root {
