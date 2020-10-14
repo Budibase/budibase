@@ -30,11 +30,12 @@
   function showModal() {
     const screens = $store.allScreens
     templateScreens = screens.filter(screen => screen.props.table === table._id)
-    willBeDeleted = ["All table data"].concat(templateScreens.map(screen => `Screen ${screen.props._instanceName}`))
+    willBeDeleted = ["All table data"].concat(
+      templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
+    )
     hideEditor()
     confirmDeleteDialog.show()
   }
-
 
   async function deleteTable() {
     await backendUiStore.actions.tables.delete(table)
@@ -91,13 +92,15 @@
   okText="Delete Table"
   onOk={deleteTable}
   title="Confirm Delete">
-  Are you sure you wish to delete the table <i>{table.name}?</i> The following will also be deleted:
+  Are you sure you wish to delete the table
+  <i>{table.name}?</i>
+  The following will also be deleted:
   <b>
-  <div class="delete-items">
-    {#each willBeDeleted as item}
-      <div>{item}</div>
-    {/each}
-  </div>
+    <div class="delete-items">
+      {#each willBeDeleted as item}
+        <div>{item}</div>
+      {/each}
+    </div>
   </b>
   This action cannot be undone.
 </ConfirmDialog>
@@ -122,7 +125,7 @@
 
   div.delete-items div {
     margin-top: 4px;
-    font-weight: 500
+    font-weight: 500;
   }
 
   .actions {
