@@ -27,15 +27,4 @@
         on:newRow={() => dispatch('newRow')} />
  </DropdownMenu> -->
 
-<!-- <style>
-  div {
-    display: grid;
-    grid-template-columns: auto auto;
-    place-items: start center;
-  }
-  h5 {
-    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
-    margin: 0;
-    font-weight: 500;
-  }
-</style> -->
+<!--<style ✂prettier:content✂="CiAgZGl2IHsKICAgIGRpc3BsYXk6IGdyaWQ7CiAgICBncmlkLXRlbXBsYXRlLWNvbHVtbnM6IGF1dG8gYXV0bzsKICAgIHBsYWNlLWl0ZW1zOiBzdGFydCBjZW50ZXI7CiAgfQogIGg1IHsKICAgIHBhZGRpbmc6IHZhcigtLXNwYWNpbmcteGwpIDAgMCB2YXIoLS1zcGFjaW5nLXhsKTsKICAgIG1hcmdpbjogMDsKICAgIGZvbnQtd2VpZ2h0OiA1MDA7CiAgfQo=" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂=""></style>-->

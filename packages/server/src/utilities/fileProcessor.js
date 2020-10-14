@@ -10,7 +10,6 @@ async function processImage(file) {
   const imgMeta = await sharp(file.path)
     .resize(300)
     .toFile(file.outputPath)
-
   return {
     ...file,
     ...imgMeta,
