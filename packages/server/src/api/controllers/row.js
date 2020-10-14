@@ -12,16 +12,16 @@ const { cloneDeep } = require("lodash")
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
 validateJs.extend(validateJs.validators.datetime, {
-  parse: function(value) {
+  parse: function (value) {
     return new Date(value).getTime()
   },
   // Input is a unix timestamp
-  format: function(value) {
+  format: function (value) {
     return new Date(value).toISOString()
   },
 })
 
-exports.patch = async function(ctx) {
+exports.patch = async function (ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   let row = await db.get(ctx.params.id)
@@ -67,7 +67,7 @@ exports.patch = async function(ctx) {
   ctx.message = `${table.name} updated successfully.`
 }
 
-exports.save = async function(ctx) {
+exports.save = async function (ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   let row = ctx.request.body
@@ -107,7 +107,7 @@ exports.save = async function(ctx) {
   // make sure link rows are up to date
   row = await linkRows.updateLinks({
     instanceId,
-    eventType: linkRows.EventType.RECORD_SAVE,
+    eventType: linkRows.EventType.ROW_SAVE,
     row,
     tableId: row.tableId,
     table,
@@ -134,7 +134,7 @@ exports.save = async function(ctx) {
   ctx.message = `${table.name} created successfully`
 }
 
-exports.fetchView = async function(ctx) {
+exports.fetchView = async function (ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const { stats, group, field } = ctx.query
@@ -166,7 +166,7 @@ exports.fetchView = async function(ctx) {
   ctx.body = await linkRows.attachLinkInfo(instanceId, response.rows)
 }
 
-exports.fetchTableRows = async function(ctx) {
+exports.fetchTableRows = async function (ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const response = await db.allDocs(
@@ -181,7 +181,7 @@ exports.fetchTableRows = async function(ctx) {
   )
 }
 
-exports.search = async function(ctx) {
+exports.search = async function (ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const response = await db.allDocs({
@@ -194,7 +194,7 @@ exports.search = async function(ctx) {
   )
 }
 
-exports.find = async function(ctx) {
+exports.find = async function (ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const row = await db.get(ctx.params.rowId)
@@ -205,7 +205,7 @@ exports.find = async function(ctx) {
   ctx.body = await linkRows.attachLinkInfo(instanceId, row)
 }
 
-exports.destroy = async function(ctx) {
+exports.destroy = async function (ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const row = await db.get(ctx.params.rowId)
@@ -227,7 +227,7 @@ exports.destroy = async function(ctx) {
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, instanceId, row)
 }
 
-exports.validate = async function(ctx) {
+exports.validate = async function (ctx) {
   const errors = await validate({
     instanceId: ctx.user.instanceId,
     tableId: ctx.params.tableId,
@@ -253,7 +253,7 @@ async function validate({ instanceId, tableId, row, table }) {
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-exports.fetchEnrichedRow = async function(ctx) {
+exports.fetchEnrichedRow = async function (ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
   const tableId = ctx.params.tableId

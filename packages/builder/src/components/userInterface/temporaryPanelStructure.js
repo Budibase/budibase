@@ -1165,14 +1165,6 @@ export default {
           },
           children: [],
         },
-        // {
-        // name: "Map",
-        // _component: "@budibase/standard-components/datamap",
-        // description: "Shiny map",
-        // icon: "ri-map-pin-line",
-        // properties: { design: { ...all } },
-        // children: [],
-        // },
       ],
     },
     {
@@ -1206,39 +1198,39 @@ export default {
             ],
           },
         },
-        {
-          name: "Login",
-          _component: "@budibase/standard-components/login",
-          description:
-            "A component that automatically generates a login screen for your app.",
-          icon: "ri-login-box-line",
-          children: [],
-          properties: {
-            design: { ...all },
-            settings: [
-              {
-                label: "Name",
-                key: "name",
-                control: Input,
-              },
-              {
-                label: "Logo",
-                key: "logo",
-                control: Input,
-              },
-              {
-                label: "Title",
-                key: "title",
-                control: Input,
-              },
-              {
-                label: "Button Text",
-                key: "buttonText",
-                control: Input,
-              },
-            ],
-          },
-        },
+        // {
+        //   name: "Login",
+        //   _component: "@budibase/standard-components/login",
+        //   description:
+        //     "A component that automatically generates a login screen for your app.",
+        //   icon: "ri-login-box-line",
+        //   children: [],
+        //   properties: {
+        //     design: { ...all },
+        //     settings: [
+        //       {
+        //         label: "Name",
+        //         key: "name",
+        //         control: Input,
+        //       },
+        //       {
+        //         label: "Logo",
+        //         key: "logo",
+        //         control: Input,
+        //       },
+        //       {
+        //         label: "Title",
+        //         key: "title",
+        //         control: Input,
+        //       },
+        //       {
+        //         label: "Button Text",
+        //         key: "buttonText",
+        //         control: Input,
+        //       },
+        //     ],
+        //   },
+        // },
       ],
     },
   ],
