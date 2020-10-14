@@ -53,6 +53,7 @@ export const getStore = () => {
 
   store.saveScreen = saveScreen(store)
   store.setCurrentScreen = setCurrentScreen(store)
+  store.deleteScreens = deleteScreens(store)
   store.setCurrentPage = setCurrentPage(store)
   store.createScreen = createScreen(store)
   store.addStylesheet = addStylesheet(store)
@@ -182,6 +183,26 @@ const setCurrentScreen = store => screenName => {
     s.currentComponentInfo = safeProps
     setCurrentPageFunctions(s)
     return s
+  })
+}
+
+const deleteScreens = store => (screens, pageName = null) => {
+  if (!(screens instanceof Array)) {
+    screens = [screens]
+  }
+  store.update(state => {
+    if (pageName == null) {
+      pageName = state.pages.main.name
+    }
+    for (let screen of screens) {
+      state.screens = state.screens.filter(c => c.name !== screen.name)
+      // Remove screen from current page as well
+      state.pages[pageName]._screens = state.pages[pageName]._screens.filter(
+        scr => scr.name !== screen.name
+      )
+      api.delete(`/_builder/api/pages/${pageName}/screens/${screen.name}`)
+    }
+    return state
   })
 }
 
