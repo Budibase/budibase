@@ -49,9 +49,7 @@
       <button class:selected={currentPage === 0} on:click={() => selectPage(0)}>
         1
       </button>
-      {#if currentPage > 3}
-        <button disabled>...</button>
-      {/if}
+      {#if currentPage > 3}<button disabled>...</button>{/if}
       {#each pagesAroundCurrent as idx}
         <button
           class:selected={idx === currentPage}
@@ -59,9 +57,7 @@
           {idx + 1}
         </button>
       {/each}
-      {#if currentPage < numPages - 4}
-        <button disabled>...</button>
-      {/if}
+      {#if currentPage < numPages - 4}<button disabled>...</button>{/if}
       <button
         class:selected={currentPage === numPages - 1}
         on:click={() => selectPage(numPages - 1)}>
@@ -77,8 +73,13 @@
 
   <p>
     {#if numPages > 1}
-      Showing {ITEMS_PER_PAGE * currentPage + 1} - {ITEMS_PER_PAGE * currentPage + pageItemCount}
-      of {data.length} rows
+      Showing
+      {ITEMS_PER_PAGE * currentPage + 1}
+      -
+      {ITEMS_PER_PAGE * currentPage + pageItemCount}
+      of
+      {data.length}
+      rows
     {:else if numPages === 1}Showing all {data.length} row(s){/if}
   </p>
 </div>

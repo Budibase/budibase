@@ -7,6 +7,7 @@ const {
 } = require("../utilities/accessLevels")
 const environment = require("../environment")
 const { apiKeyTable } = require("../db/dynamoClient")
+const { AuthTypes } = require("../constants")
 
 module.exports = (permName, getItemId) => async (ctx, next) => {
   if (
@@ -21,8 +22,7 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
 
     if (apiKeyInfo) {
       ctx.auth = {
-        authenticated: true,
-        external: true,
+        authenticated: AuthTypes.EXTERNAL,
         apiKey: ctx.headers["x-api-key"],
       }
       ctx.user = {
@@ -34,12 +34,19 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
     ctx.throw(403, "API key invalid")
   }
 
+  // don't expose builder endpoints in the cloud
+  if (environment.CLOUD && permName === BUILDER) return
+
   if (!ctx.auth.authenticated) {
     ctx.throw(403, "Session not authenticated")
   }
 
   if (!ctx.user) {
     ctx.throw(403, "User not found")
+  }
+
+  if (ctx.user.accessLevel._id === ADMIN_LEVEL_ID) {
+    return next()
   }
 
   if (ctx.user.accessLevel._id === BUILDER_LEVEL_ID) {
@@ -52,10 +59,6 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
   }
 
   const permissionId = ({ name, itemId }) => name + (itemId ? `-${itemId}` : "")
-
-  if (ctx.user.accessLevel._id === ADMIN_LEVEL_ID) {
-    return next()
-  }
 
   const thisPermissionId = permissionId({
     name: permName,

@@ -1,8 +1,10 @@
 <script>
   import { createEventDispatcher } from "svelte"
+  import { store } from "builderStore"
+  import Item from "./Item.svelte"
+
   const dispatch = createEventDispatcher()
 
-  import Item from "./Item.svelte"
   export let list
 
   let category = list
@@ -21,10 +23,12 @@
 </script>
 
 {#if !list.isCategory}
-  <button class="back-button" on:click={() => (list = category)}>Back</button>
+  <button class="back-button" on:click={goBack}>Back</button>
 {/if}
 {#each list.children as item}
-  <Item {item} on:click={() => handleClick(item)} />
+  {#if !item.showOnPages || item.showOnPages.includes($store.currentPageName)}
+    <Item {item} on:click={() => handleClick(item)} />
+  {/if}
 {/each}
 
 <style>

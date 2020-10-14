@@ -12,15 +12,12 @@
 </script>
 
 <div class="root">
-
   <div class="switcher">
-
     {#each tabs as tab}
       <button class:selected={selected === tab} on:click={() => selectTab(tab)}>
         {tab}
       </button>
     {/each}
-
   </div>
 
   <div class="panel">
@@ -34,7 +31,6 @@
       <slot name="3" />
     {/if}
   </div>
-
 </div>
 
 <style>

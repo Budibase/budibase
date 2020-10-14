@@ -65,16 +65,18 @@
 <div class="actions">
   <Input label="Name" thin bind:value={field.name} />
 
-  <Select
-    secondary
-    thin
-    label="Type"
-    on:change={handleFieldConstraints}
-    bind:value={field.type}>
-    {#each Object.values(fieldDefinitions) as field}
-      <option value={field.type}>{field.name}</option>
-    {/each}
-  </Select>
+  {#if !originalName}
+    <Select
+      secondary
+      thin
+      label="Type"
+      on:change={handleFieldConstraints}
+      bind:value={field.type}>
+      {#each Object.values(fieldDefinitions) as field}
+        <option value={field.type}>{field.name}</option>
+      {/each}
+    </Select>
+  {/if}
 
   {#if field.type !== 'link'}
     <Toggle
