@@ -46,7 +46,6 @@ export default async function fetchData(datasource, store) {
   }
 
   async function fetchViewData() {
-    console.log("fetching view")
     const { field, groupBy } = datasource
     const params = new URLSearchParams()
 

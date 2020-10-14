@@ -40,7 +40,6 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      console.log(datasource)
       data = await fetchData(datasource, $store)
 
       // Get schema for datasource
