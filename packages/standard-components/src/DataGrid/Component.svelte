@@ -23,7 +23,7 @@
 
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
-  let canAddDelete = editable && datasource && datasource.type === "model"
+  let canAddDelete = editable && datasource && datasource.type === "table"
 
   let store = _bb.store
   let dataLoaded = false
