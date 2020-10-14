@@ -14,7 +14,7 @@
   let rowId
   let errors = {}
 
-  $: schema = $store.data && $store.data._table.schema
+  $: schema = $store.data && $store.data._table && $store.data._table.schema
   $: fields = schema ? Object.keys(schema) : []
 </script>
 
