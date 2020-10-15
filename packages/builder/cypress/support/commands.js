@@ -87,6 +87,8 @@ Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
     cy.get("input")
       .first()
       .type(columnName)
+    // Unset table display column
+    cy.contains("display column").click()
     cy.get("select").select(type)
     cy.contains("Save").click()
   })
