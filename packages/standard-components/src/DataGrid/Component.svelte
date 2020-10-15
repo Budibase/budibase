@@ -148,6 +148,7 @@
 
 <style>
   .controls {
+    min-height: 15px;
     margin-bottom: var(--spacing-s);
     display: grid;
     grid-gap: var(--spacing-s);
