@@ -14,7 +14,7 @@ const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR
 const CALCULATION_TYPES = {
   SUM: "sum",
   COUNT: "count",
-  STATS: "stats"
+  STATS: "stats",
 }
 
 validateJs.extend(validateJs.validators.datetime, {

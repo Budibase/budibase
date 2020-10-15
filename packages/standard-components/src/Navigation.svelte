@@ -30,9 +30,7 @@
       {#if logoUrl}
         <img class="logo" alt="logo" src={logoUrl} height="48" />
       {/if}
-      {#if title}
-        <span>{title}</span>
-      {/if}
+      {#if title}<span>{title}</span>{/if}
     </a>
     <div class="nav__controls">
       <div on:click={logOut}>Log out</div>

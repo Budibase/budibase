@@ -126,9 +126,7 @@
             on:click={() => switchLetter(letter)}>
             {letter}
           </span>
-          {#if idx !== alphabet.length - 1}
-            <span>-</span>
-          {/if}
+          {#if idx !== alphabet.length - 1}<span>-</span>{/if}
         {/each}
       </div>
       <div class="search-input">
