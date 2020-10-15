@@ -1,18 +1,18 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { DropdownMenu, TextButton as Button, Icon } from "@budibase/bbui"
+  // import { createEventDispatcher } from "svelte"
+  // import { DropdownMenu, TextButton as Button, Icon } from "@budibase/bbui"
   import AttachmentList from "../../attachments/AttachmentList.svelte"
   //   import Modal from "./Modal.svelte"
 
-  const dispatch = createEventDispatcher()
+  // const dispatch = createEventDispatcher()
 
-  let anchor
+  // let anchor
   let dropdown
 
   export let files
 </script>
 
-<AttachmentList {files} />
+<AttachmentList {files} on:delete />
 <!-- <div bind:this={anchor}>
   <Button text small on:click={dropdown.show}>
     <Icon name="edit" />
