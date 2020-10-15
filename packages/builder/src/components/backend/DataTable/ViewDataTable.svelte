@@ -23,7 +23,6 @@
     const params = new URLSearchParams()
     if (calculation) {
       params.set("field", field)
-      // todo, maybe won't work
       params.set("calculation", calculation)
     }
     if (groupBy) {
@@ -38,6 +37,8 @@
 <Table title={decodeURI(name)} schema={view.schema} {data}>
   <FilterButton {view} />
   <CalculateButton {view} />
-  <GroupByButton {view} />
+  {#if view.calculation}
+    <GroupByButton {view} />
+  {/if}
   <ExportButton {view} />
 </Table>

@@ -24,7 +24,7 @@
     <div class="spinner-container">
       <Spinner size="30" />
     </div>
-  {:then [object Object]}
+  {:then apps}
     <div class="inner">
       <div>
         <div>
@@ -36,7 +36,7 @@
         </div>
       </div>
     </div>
-  {:catch [object Object]}
+  {:catch err}
     <h1 style="color:red">{err}</h1>
   {/await}
 </div>

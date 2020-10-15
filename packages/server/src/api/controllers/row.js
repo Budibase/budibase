@@ -11,6 +11,12 @@ const { cloneDeep } = require("lodash")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
+const CALCULATION_TYPES = {
+  SUM: "sum",
+  COUNT: "count",
+  STATS: "stats"
+}
+
 validateJs.extend(validateJs.validators.datetime, {
   parse: function(value) {
     return new Date(value).getTime()
@@ -152,13 +158,12 @@ exports.fetchView = async function(ctx) {
     group,
   })
 
-  // TODO: create constants for calculation types
   if (!calculation) {
     response.rows = response.rows.map(row => row.doc)
     ctx.body = await linkRows.attachLinkInfo(instanceId, response.rows)
   }
 
-  if (calculation === "stats") {
+  if (calculation === CALCULATION_TYPES.STATS) {
     response.rows = response.rows.map(row => ({
       group: row.key,
       field,
@@ -168,13 +173,15 @@ exports.fetchView = async function(ctx) {
     ctx.body = response.rows
   }
 
-  if (calculation === "count" || calculation === "sum") {
-    ctx.body = field
-      ? response.rows.map(row => ({
-          field,
-          value: row.value,
-        }))
-      : [{ field: "All Rows", value: response.total_rows }]
+  if (
+    calculation === CALCULATION_TYPES.COUNT ||
+    calculation === CALCULATION_TYPES.SUM
+  ) {
+    ctx.body = response.rows.map(row => ({
+      group: row.key,
+      field,
+      value: row.value,
+    }))
   }
 }
 
