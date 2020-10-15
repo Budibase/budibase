@@ -23,7 +23,9 @@
 
 {#if $backendUiStore.tables.length === 0}
   <i>Create your first table to start building</i>
-{:else}<i>Select a table to edit</i>{/if}
+{:else}
+  <i>Select a table to edit</i>
+{/if}
 
 <style>
   i {

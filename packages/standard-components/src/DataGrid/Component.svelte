@@ -19,7 +19,7 @@
   export let editable
   export let theme = "alpine"
   export let height = 500
-  export let pagination
+  export let pagination = true
 
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
@@ -135,9 +135,7 @@
         {#if selectedRows.length > 0}
           <DeleteButton text small on:click={deleteRows}>
             <Icon name="addrow" />
-            Delete
-            {selectedRows.length}
-            row(s)
+            Delete {selectedRows.length} row(s)
           </DeleteButton>
         {/if}
       </div>

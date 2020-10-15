@@ -74,7 +74,7 @@
     <Label extraSmall grey>Current Users</Label>
     {#await fetchUsersPromise}
       Loading...
-    {:then users}
+    {:then [object Object]}
       <ul>
         {#each users as user}
           <li>
@@ -84,7 +84,7 @@
           <li>No Users found</li>
         {/each}
       </ul>
-    {:catch error}
+    {:catch [object Object]}
       Something went wrong when trying to fetch users. Please refresh (CMD + R /
       CTRL + R) the page and try again.
     {/await}

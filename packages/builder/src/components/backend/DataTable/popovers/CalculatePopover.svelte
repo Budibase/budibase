@@ -9,6 +9,14 @@
       name: "Statistics",
       key: "stats",
     },
+    {
+      name: "Count",
+      key: "count",
+    },
+    {
+      name: "Sum",
+      key: "sum",
+    },
   ]
 
   export let view = {}
@@ -22,6 +30,7 @@
     Object.keys(viewTable.schema).filter(
       field => viewTable.schema[field].type === "number"
     )
+  $: valid = view.calculation === "count" || view.field
 
   function saveView() {
     if (!view.calculation) view.calculation = "stats"
@@ -35,17 +44,20 @@
 <div class="actions">
   <h5>Calculate</h5>
   <div class="input-group-row">
-    <!-- <p>The</p>
+    <p>The</p>
     <Select secondary thin bind:value={view.calculation}>
-      <option value="">Choose an option</option>
+      <option value={''}>Choose an option</option>
       {#each CALCULATIONS as calculation}
         <option value={calculation.key}>{calculation.name}</option>
       {/each}
     </Select>
-    <p>of</p> -->
-    <p>The statistics of</p>
+    <p>of</p>
     <Select secondary thin bind:value={view.field}>
-      <option value="">Choose an option</option>
+      <option value={''}>
+        {#if view.calculation === 'count'}
+          All Rows
+        {:else}You must choose an option{/if}
+      </option>
       {#each fields as field}
         <option value={field}>{field}</option>
       {/each}
@@ -53,7 +65,7 @@
   </div>
   <div class="footer">
     <Button secondary on:click={onClosed}>Cancel</Button>
-    <Button primary on:click={saveView}>Save</Button>
+    <Button primary on:click={saveView} disabled={!valid}>Save</Button>
   </div>
 </div>
 

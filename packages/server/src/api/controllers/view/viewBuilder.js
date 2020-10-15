@@ -23,6 +23,14 @@ const FIELD_PROPERTY = {
 }
 
 const SCHEMA_MAP = {
+  sum: {
+    field: "string",
+    value: "number",
+  },
+  count: {
+    field: "string",
+    value: "number",
+  },
   stats: {
     sum: {
       type: "number",
@@ -82,7 +90,7 @@ function parseFilterExpression(filters) {
  */
 function parseEmitExpression(field, groupBy) {
   if (field) return `emit(doc["${groupBy || "_id"}"], doc["${field}"]);`
-  return `emit(doc._id);`
+  return `emit(doc._id, 1);`
 }
 
 /**
@@ -102,7 +110,7 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
 
   const emitExpression = parseEmitExpression(field, groupBy)
 
-  const reduction = field ? { reduce: "_stats" } : {}
+  const reduction = field ? { reduce: `_${calculation}` } : {}
 
   let schema = null
 
