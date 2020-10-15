@@ -36,7 +36,7 @@
 {#if linkedTable.primaryDisplay == null}
   <Label extraSmall grey>{label}</Label>
   <Label small black>
-    Please choose a primary display column for the
+    Please choose a display column for the
     <b>{linkedTable.name}</b>
     table.
   </Label>

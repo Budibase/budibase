@@ -27,6 +27,8 @@ context("Create a Table", () => {
     cy.get(".actions input")
       .first()
       .type("updated")
+    // Unset table display column
+    cy.contains("display column").click()
     cy.contains("Save Column").click()
     cy.contains("nameupdated").should("have.text", "nameupdated")
   })

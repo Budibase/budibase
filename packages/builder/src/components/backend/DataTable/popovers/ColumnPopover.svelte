@@ -33,7 +33,7 @@
 
   function deleteColumn() {
     if (field.name === $backendUiStore.selectedTable.primaryDisplay) {
-      notifier.danger("You cannot delete the primary display column")
+      notifier.danger("You cannot delete the display column")
     } else {
       backendUiStore.actions.tables.deleteField(field)
       notifier.success("Column deleted")
@@ -43,7 +43,11 @@
 
   function sort(direction, column) {
     backendUiStore.update(state => {
-      state.sort = { direction, column }
+      if (direction !== "none") {
+        state.sort = { direction, column }
+      } else {
+        state.sort = undefined
+      }
       return state
     })
     hideEditor()
@@ -70,6 +74,12 @@
         <Icon name="delete" />
         Delete
       </li>
+      {#if sortDirection === 'desc' || sortDirection === 'asc'}
+        <li on:click={() => sort('none', field.name)}>
+          <Icon name="close" />
+          Remove sort
+        </li>
+      {/if}
       {#if sortDirection === 'desc' || sortColumn !== field.name}
         <li on:click={() => sort('asc', field.name)}>
           <Icon name="sortascending" />

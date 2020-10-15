@@ -1,59 +1,97 @@
 {
+  "componentLibraries": [
+    "@budibase/standard-components"
+  ],
   "title": "{{ name }}",
   "favicon": "./_shared/favicon.png",
   "stylesheets": [],
-  "componentLibraries": ["@budibase/standard-components"],
   "props": {
     "_id": "private-master-root",
     "_component": "@budibase/standard-components/container",
     "_children": [
       {
-        "_id": "49e0e519-9e5e-4127-885a-ee6a0a49e2c1",
-        "_component": "@budibase/standard-components/Navigation",
+        "_id": "c74f07266980c4b6eafc33e2a6caa783d",
+        "_component": "@budibase/standard-components/container",
         "_styles": {
-          "normal": {},
+          "normal": {
+            "display": "flex",
+            "flex-direction": "row",
+            "justify-content": "flex-start",
+            "align-items": "flex-start",
+            "background": "#fff",
+            "width": "100%"
+          },
           "hover": {},
           "active": {},
           "selected": {}
         },
         "_code": "",
-        "logoUrl": "http://acmelogos.com/images/logo-8.svg",
-        "title": "",
-        "backgroundColor": "",
-        "color": "",
-        "borderWidth": "",
-        "borderColor": "",
-        "borderStyle": "",
-        "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
-        "_instanceName": "Navigation",
+        "className": "",
+        "onLoad": [],
+        "type": "div",
+        "_instanceId": "inst_app_80b_f158d4057d2c4bedb0042d42fda8abaf",
+        "_instanceName": "Header",
         "_children": [
           {
-            "_id": "48b35328-4c91-4343-a6a3-1a1fd77b3386",
-            "_component": "@budibase/standard-components/link",
+            "_id": "49e0e519-9e5e-4127-885a-ee6a0a49e2c1",
+            "_component": "@budibase/standard-components/Navigation",
             "_styles": {
               "normal": {
-                "font-family": "Inter",
+                "max-width": "1400px",
+                "margin-left": "auto",
+                "margin-right": "auto",
+                "padding": "20px",
+                "color": "#757575",
                 "font-weight": "400",
-                "color": "#000000",
-                "text-decoration-line": "none",
-                "font-size": "16px"
+                "font-size": "16px",
+                "flex": "1 1 auto"
               },
               "hover": {},
               "active": {},
               "selected": {}
             },
             "_code": "",
-            "url": "/",
-            "openInNewTab": false,
-            "text": "Home",
+            "logoUrl": "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg",
+            "title": "",
+            "backgroundColor": "",
             "color": "",
-            "hoverColor": "",
-            "underline": false,
-            "fontSize": "",
-            "fontFamily": "initial",
+            "borderWidth": "",
+            "borderColor": "",
+            "borderStyle": "",
             "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
-            "_instanceName": "Home Link",
-            "_children": []
+            "_instanceName": "Navigation",
+            "_children": [
+              {
+                "_id": "48b35328-4c91-4343-a6a3-1a1fd77b3386",
+                "_component": "@budibase/standard-components/link",
+                "_styles": {
+                  "normal": {
+                    "font-family": "Inter",
+                    "font-weight": "400",
+                    "color": "#000000",
+                    "text-decoration-line": "none",
+                    "font-size": "16px"
+                  },
+                  "hover": {
+                    "color": "#4285f4"
+                  },
+                  "active": {},
+                  "selected": {}
+                },
+                "_code": "",
+                "url": "/",
+                "openInNewTab": false,
+                "text": "Home",
+                "color": "",
+                "hoverColor": "",
+                "underline": false,
+                "fontSize": "",
+                "fontFamily": "initial",
+                "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
+                "_instanceName": "Home Link",
+                "_children": []
+              }
+            ]
           }
         ]
       },
@@ -66,7 +104,12 @@
             "display": "flex",
             "flex-direction": "column",
             "justify-content": "flex-start",
-            "align-items": "stretch"
+            "align-items": "stretch",
+            "max-width": "100%",
+            "margin-left": "20px",
+            "margin-right": "20px",
+            "width": "1400px",
+            "padding": "20px"
           },
           "hover": {},
           "active": {},
@@ -83,11 +126,12 @@
       "normal": {
         "display": "flex",
         "flex-direction": "column",
-        "align-items": "stretch",
+        "align-items": "center",
         "justify-content": "flex-start",
         "margin-right": "auto",
         "margin-left": "auto",
-        "min-height": "100%"
+        "min-height": "100%",
+        "background-image": "linear-gradient(135deg, rgba(252,215,212,1) 20%, rgba(207,218,255,1) 100%);"
       },
       "selected": {}
     },
@@ -95,6 +139,5 @@
     "className": "",
     "onLoad": []
   },
-  "_css": "",
   "uiFunctions": ""
 }
