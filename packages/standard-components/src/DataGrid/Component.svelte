@@ -20,6 +20,7 @@
   export let theme = "alpine"
   export let height = 500
   export let pagination
+  export let detailUrl = 'https://someurl.com/'
 
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
@@ -91,7 +92,7 @@
     // always 'row'
     if (name === "type") return true
     // tables are always tied to a single tableId, this is irrelevant
-    if (name === "tableId") return true
+    // if (name === "tableId") return true
 
     return false
   }
