@@ -70,7 +70,7 @@
           field: key,
           hide: shouldHideField(key),
           sortable: true,
-          editable: canEdit,
+          editable: canEdit && schema[key].type !== "link",
           cellRenderer: getRenderer(schema[key], canEdit),
           autoHeight: true,
         }
