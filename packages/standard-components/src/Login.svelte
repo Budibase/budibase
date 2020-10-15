@@ -1,7 +1,7 @@
 <script>
   import Button from "./Button.svelte"
 
-  export let buttonText = "Login"
+  export let buttonText = "Log In"
   export let logo = ""
   export let title = ""
   export let buttonClass = ""
@@ -46,7 +46,7 @@
     {/if}
 
     {#if title}
-      <h1 class="header-content">{title}</h1>
+      <h2 class="header-content">{title}</h2>
     {/if}
 
     <div class="form-root">
@@ -69,7 +69,7 @@
 
     <div class="login-button-container">
       <button disabled={loading} on:click={login} class={_buttonClass}>
-        {buttonText || 'Login'}
+        {buttonText || 'Log In'}
       </button>
     </div>
 
@@ -100,7 +100,9 @@
   }
 
   .logo-container > img {
+    height: 80px;
     max-width: 200px;
+    margin-bottom: 20px;
   }
 
   .login-button-container {
@@ -112,24 +114,24 @@
     font-family: Inter;
     font-weight: 700;
     color: #1f1f1f;
-    font-size: 48px;
-    line-height: 72px;
-    margin-bottom: 30px;
+    font-size: 32px;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     font-feature-settings: "case" "rlig" "calt" 0;
+    margin: 0 0 20px 0;
   }
 
   .incorrect-details-panel {
-    margin-top: 30px;
+    margin-top: 26px;
     padding: 10px;
     border-style: solid;
     border-width: 1px;
     border-color: maroon;
-    border-radius: 1px;
+    border-radius: 4px;
     text-align: center;
     color: maroon;
     background-color: mistyrose;
+    align-self: stretch;
   }
 
   .form-root {

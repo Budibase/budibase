@@ -78,16 +78,6 @@
         bind:value={table.name}
         on:input={checkValid}
         {error} />
-      <Select
-        label="Primary Display Column"
-        thin
-        secondary
-        bind:value={table.primaryDisplay}>
-        <option value="">Choose an option</option>
-        {#each fields as field}
-          <option value={field}>{field}</option>
-        {/each}
-      </Select>
       <footer>
         <Button secondary on:click={hideEditor}>Cancel</Button>
         <Button primary disabled={error} on:click={save}>Save</Button>
