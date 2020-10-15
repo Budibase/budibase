@@ -12,7 +12,7 @@
 
   import AgGrid from "@budibase/svelte-ag-grid"
   import CreateRowButton from "./CreateRow/Button.svelte"
-  import { TextButton as DeleteButton, Icon } from "@budibase/bbui"
+  import { TextButton as DeleteButton, Icon, Modal, ModalContent } from "@budibase/bbui"
 
   export let _bb
   export let datasource = {}
@@ -24,6 +24,8 @@
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
   let canAddDelete = editable && datasource && datasource.type === "table"
+
+  let modal;
 
   let store = _bb.store
   let dataLoaded = false
@@ -133,7 +135,7 @@
       <div class="controls">
         <CreateRowButton {_bb} {table} on:newRow={handleNewRow} />
         {#if selectedRows.length > 0}
-          <DeleteButton text small on:click={deleteRows}>
+          <DeleteButton text small on:click={modal.show()}>
             <Icon name="addrow" />
             Delete {selectedRows.length} row(s)
           </DeleteButton>
@@ -148,13 +150,14 @@
       on:update={handleUpdate}
       on:select={({ detail }) => (selectedRows = detail)} />
   {/if}
+  <Modal bind:this={modal}>
+    <ModalContent title="Confirm Row Deletion" confirmText="Delete" onConfirm={deleteRows} >
+      <span>Are you sure you want to delete {selectedRows.length} row(s)?</span>
+    </ModalContent>
+  </Modal>
 </div>
 
 <style>
-  .container :global(form) {
-    display: grid;
-    grid-template-columns: repeat(2);
-  }
   .controls {
     margin-bottom: var(--spacing-s);
     display: grid;
