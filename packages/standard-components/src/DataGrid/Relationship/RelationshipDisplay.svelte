@@ -6,6 +6,10 @@
   export let columnName
   export let row
 
+  $: count =
+    row && columnName && Array.isArray(row[columnName])
+      ? row[columnName].length
+      : 0
   let linkedRows = []
   let displayColumn
 
@@ -33,9 +37,11 @@
 <div class="container">
   {#if linkedRows && linkedRows.length && displayColumn}
     {#each linkedRows as linkedRow}
-      <div class="linked-row">{linkedRow[displayColumn]}</div>
+      {#if linkedRow[displayColumn] != null && linkedRow[displayColumn] !== ''}
+        <div class="linked-row">{linkedRow[displayColumn]}</div>
+      {/if}
     {/each}
-  {/if}
+  {:else}{count} related row(s){/if}
 </div>
 
 <style>
