@@ -84,7 +84,7 @@
           <li>No Users found</li>
         {/each}
       </ul>
-    {:catch error}
+    {:catch err}
       Something went wrong when trying to fetch users. Please refresh (CMD + R /
       CTRL + R) the page and try again.
     {/await}

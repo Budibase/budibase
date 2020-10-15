@@ -13,6 +13,7 @@
   import { onMount } from "svelte"
 
   export let label = ""
+  export let bindable = true
   export let componentInstance = {}
   export let control = null
   export let key = ""
@@ -93,7 +94,7 @@
       {...props}
       name={key} />
   </div>
-  {#if control === Input && !key.startsWith('_')}
+  {#if bindable && control === Input && !key.startsWith('_')}
     <button data-cy={`${key}-binding-button`} on:click={dropdown.show}>
       <Icon name="edit" />
     </button>
