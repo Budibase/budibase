@@ -109,7 +109,7 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
 
   const emitExpression = parseEmitExpression(field, groupBy)
 
-  const reduction = field ? { reduce: `_${calculation}` } : {}
+  const reduction = field && calculation ? { reduce: `_${calculation}` } : {}
 
   let schema = null
 
