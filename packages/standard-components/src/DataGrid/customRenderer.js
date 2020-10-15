@@ -104,7 +104,7 @@ function optionsRenderer({ inclusion }, editable) {
   }
 }
 /* eslint-disable no-unused-vars */
-function linkedRowRenderer(constraints, editable, schema) {
+function linkedRowRenderer(constraints, editable) {
   return params => {
     let container = document.createElement("div")
     container.style.display = "grid"
