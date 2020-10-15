@@ -52,6 +52,8 @@
       .map(template => template.create())
 
     for (let screen of screens) {
+      // record the table that created this screen so we can link it later
+      screen.autoTableId = table._id
       try {
         await store.createScreen(screen)
       } catch (_) {
