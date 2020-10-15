@@ -8,7 +8,7 @@ async function fetchTable(id) {
   return await response.json()
 }
 
-export default async function getTable(tableId) {
+export async function getTable(tableId) {
   if (!tableId) {
     return null
   }
