@@ -28,12 +28,11 @@
           <Spacer small />
           <Body medium grey>{template.category}</Body>
           <Body lh small black>{template.description}</Body>
-          <div>
-            <img src={template.image} width="100%" />
-          </div>
+          <div><img src={template.image} width="100%" /></div>
           <div class="card-footer">
             <Button secondary on:click={() => onSelect(template)}>
-              Create {template.name}
+              Create
+              {template.name}
             </Button>
           </div>
         </div>
