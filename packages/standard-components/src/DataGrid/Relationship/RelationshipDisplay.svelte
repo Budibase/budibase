@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import api from "../../api"
-  import getTable from "./tableCache"
+  import { getTable } from "./tableCache"
 
   export let columnName
   export let row
