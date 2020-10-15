@@ -12,7 +12,7 @@ const renderers = new Map([
   ["attachment", attachmentRenderer],
   ["options", optionsRenderer],
   ["link", linkedRowRenderer],
-  ["tableId", viewDetailsRenderer]
+  ["_id", viewDetailsRenderer]
 ])
 
 export function getRenderer(schema, editable) {
@@ -135,7 +135,6 @@ function linkedRowRenderer(options, editable) {
 /* eslint-disable no-unused-vars */
 function viewDetailsRenderer(options) {
   return params => {
-    console.log('Params: ', params)
     let container = document.createElement("div")
     container.style.display = "grid"
     container.style.placeItems = "center"
@@ -144,7 +143,7 @@ function viewDetailsRenderer(options) {
     new ViewDetails({
       target: container,
       props: {
-        url: options.url + params.value
+        url: `${options}${params.data._id}`
       },
     })
 

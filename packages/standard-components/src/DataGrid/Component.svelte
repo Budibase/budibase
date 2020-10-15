@@ -20,7 +20,7 @@
   export let theme = "alpine"
   export let height = 500
   export let pagination
-  export let detailUrl = 'https://someurl.com/'
+  export let detailUrl
 
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
@@ -60,6 +60,10 @@
         const jsonTable = await _bb.api.get(`/api/tables/${datasource.tableId}`)
         table = await jsonTable.json()
         schema = table.schema
+        // schema._id = {
+        //   type: '_id',
+        //   options: detailUrl
+        // }
       }
 
       columnDefs = Object.keys(schema).map((key, i) => {
@@ -76,6 +80,18 @@
           autoHeight: true,
         }
       })
+      columnDefs = [...columnDefs, {
+          headerName: 'Details',
+          field: '_id',
+          width: 50,
+          flex: 0,
+          editable: false,
+          cellRenderer: getRenderer({
+            type: '_id',
+            options: detailUrl || 'someTableName'
+          }),
+          autoHeight: true,
+      }]
       dataLoaded = true
     }
   })
@@ -92,7 +108,7 @@
     // always 'row'
     if (name === "type") return true
     // tables are always tied to a single tableId, this is irrelevant
-    // if (name === "tableId") return true
+    if (name === "tableId") return true
 
     return false
   }

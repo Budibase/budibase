@@ -328,6 +328,12 @@ export default {
                 control: TableViewSelect,
               },
               {
+                label: "Detail URL",
+                key: "detailUrl",
+                placeholder: "tableName/",
+                control: Input,
+              },
+              {
                 label: "Editable",
                 key: "editable",
                 valueKey: "checked",
