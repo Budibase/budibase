@@ -161,8 +161,8 @@ const createScreen = store => async screen => {
     state.currentPreviewItem = screen
     state.currentComponentInfo = screen.props
     state.currentFrontEndType = "screen"
-    savePromise = _saveScreen(store, state, screen)
     regenerateCssForCurrentScreen(state)
+    savePromise = _saveScreen(store, state, screen)
     return state
   })
   await savePromise
