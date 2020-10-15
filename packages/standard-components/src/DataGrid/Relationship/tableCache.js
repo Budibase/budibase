@@ -13,7 +13,6 @@ export default async function getTable(tableId) {
     return null
   }
   if (!cache[tableId]) {
-    console.log("cache miss for " + tableId)
     cache[tableId] = fetchTable(tableId)
     cache[tableId] = await cache[tableId]
   }

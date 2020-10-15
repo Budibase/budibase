@@ -47,12 +47,17 @@
     gap: var(--spacing-xs);
     width: 100%;
   }
+
+  /* This styling is opinionated to ensure these always look consistent */
   .linked-row {
     color: white;
-    background-color: var(--ink);
-    border-radius: var(--border-radius-l);
+    background-color: #616161;
+    border-radius: var(--border-radius-xs);
     padding: var(--spacing-xs) var(--spacing-s) calc(var(--spacing-xs) + 1px)
       var(--spacing-s);
     line-height: 1;
+    font-size: 0.8em;
+    font-family: var(--font-sans);
+    font-weight: 500;
   }
 </style>
