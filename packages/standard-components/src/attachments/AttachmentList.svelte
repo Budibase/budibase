@@ -31,7 +31,7 @@
         {:else}<i class="far fa-file" />{/if}
       </a>
       <span>{file.name}</span>
-      <div class="button-placement"><button  primary on:click={() => openModal(file)}>×</button></div>
+      <div class="button-placement"><button  primary on:click|stopPropagation={() => openModal(file)}>×</button></div>
     </div>
   {/each}
 </div>
