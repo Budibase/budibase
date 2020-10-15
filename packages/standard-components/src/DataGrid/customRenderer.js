@@ -54,12 +54,12 @@ function attachmentRenderer(constraints, editable) {
       },
     })
 
-    const deleteFile = (event) => {
-      const newFilesArray = params.value.filter((file) => file !== event.detail)
+    const deleteFile = event => {
+      const newFilesArray = params.value.filter(file => file !== event.detail)
       params.setValue(newFilesArray)
     }
 
-    attachmentInstance.$on('delete', deleteFile)
+    attachmentInstance.$on("delete", deleteFile)
 
     return container
   }
