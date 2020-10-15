@@ -1,28 +1,11 @@
 <script>
-  import { cssVars, createClasses } from "./cssVars"
-
-  export let className = ""
   export let onLoad
-  export let backgroundColor
-  export let color
-  export let borderWidth
-  export let borderColor
-  export let borderStyle
   export let logoUrl
-  export let title
   export let _bb
+  export let title
 
   let itemContainer
   let hasLoaded
-  let currentChildren
-
-  $: cssVariables = {
-    backgroundColor,
-    color,
-    borderWidth,
-    borderColor,
-    borderStyle,
-  }
 
   $: {
     if (itemContainer) {
@@ -33,46 +16,69 @@
       }
     }
   }
+
+  const logOut = () => {
+    document.cookie =
+      "budibase:token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;"
+    location.reload()
+  }
 </script>
 
-<nav use:cssVars={cssVariables}>
-  {#if logoUrl}
+<div class="nav">
+  <div class="nav__top">
     <a href="/">
-      <img class="logo" alt="logo" src={logoUrl} height="48" />
-      <span>{title}</span>
+      {#if logoUrl}
+        <img class="logo" alt="logo" src={logoUrl} height="48" />
+      {/if}
+      {#if title}<span>{title}</span>{/if}
     </a>
-  {:else}
-    <div />
-  {/if}
-  <div class="menu-items" bind:this={itemContainer} />
-</nav>
+    <div class="nav__controls">
+      <div on:click={logOut}>Log out</div>
+    </div>
+  </div>
+  <div class="nav__menu" bind:this={itemContainer} />
+</div>
 
 <style>
-  nav {
-    color: var(--color);
-    background-color: var(--backgroundColor);
-    align-items: center;
+  .nav {
     display: flex;
-    font-weight: bold;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+
+  .nav__top {
+    display: flex;
+    flex-direction: row;
     justify-content: space-between;
-    padding: 20px 0px;
-  }
-
-  nav > a {
-    display: flex;
     align-items: center;
-    font-size: 1.5em;
-    color: var(--color);
-    text-decoration: none;
   }
-
-  nav a img {
+  .nav__top img {
     margin-right: 16px;
   }
-  .menu-items {
+
+  .nav__controls {
     display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
   }
-  .menu-items > :global(*) {
-    margin: 0 10px;
+  .nav__controls > div:hover {
+    cursor: pointer;
+    color: #4285f4;
+  }
+
+  .nav__menu {
+    display: flex;
+    margin-top: 40px;
+    gap: 16px;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .nav__menu > a {
+    font-size: 1.5em;
+    text-decoration: none;
   }
 </style>

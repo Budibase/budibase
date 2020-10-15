@@ -523,6 +523,31 @@ export const background = [
         label: "Plum Plate",
         value: "linear-gradient(135deg, #667eea 0%, #764ba2 100%);",
       },
+      {
+        label: "Peach Kiss",
+        value:
+          "radial-gradient(circle farthest-corner at 50% 100%,rgba(255,173,138,.50), rgba(255,248,247,1) 100%);",
+      },
+      {
+        label: "Flamingo Sunrise",
+        value:
+          "-webkit-radial-gradient(center top, rgb(255, 250, 245), rgb(255, 242, 242))",
+      },
+      {
+        label: "Budi Mist",
+        value:
+          "radial-gradient(circle, rgba(252,215,212,1) 0%, rgba(255,227,214,1) 50%, rgba(207,218,255,1) 100%);",
+      },
+      {
+        label: "Ballet Slipper",
+        value:
+          "linear-gradient(135deg, rgba(252,215,212,1) 20%, rgba(207,218,255,1) 100%);",
+      },
+      {
+        label: "Black Noir",
+        value:
+          "linear-gradient(312deg, rgba(60,60,60,1) 0%, rgba(42,42,42,1) 100%);",
+      },
     ],
   },
   {
