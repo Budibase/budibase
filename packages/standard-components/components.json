@@ -242,7 +242,10 @@
 				"type": "number",
 				"default": "500"
 			},
-			"pagination": "bool"
+			"pagination": {
+				"type": "bool",
+				"default": true
+			},
 		}
 	},
 	"dataform": {
