@@ -27,15 +27,3 @@
         on:newRow={() => dispatch('newRow')} />
  </DropdownMenu> -->
 
-<!--<style>
-  div {
-    display: grid;
-    grid-template-columns: auto auto;
-    place-items: start center;
-  }
-  h5 {
-    padding: var(--spacing-xl) 0 0 var(--spacing-xl);
-    margin: 0;
-    font-weight: 500;
-  }
-</style>-->

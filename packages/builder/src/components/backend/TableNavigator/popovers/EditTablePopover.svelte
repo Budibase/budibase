@@ -30,8 +30,8 @@
   }
 
   function showModal() {
-    const screens = $store.allScreens
-    templateScreens = screens.filter(screen => screen.props.table === table._id)
+    const screens = $store.screens
+    templateScreens = screens.filter(screen => screen.autoTableId === table._id)
     willBeDeleted = ["All table data"].concat(
       templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
     )

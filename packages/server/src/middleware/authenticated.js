@@ -53,6 +53,7 @@ module.exports = async (ctx, next) => {
     ctx.auth.apiKey = jwtPayload.apiKey
     ctx.user = {
       ...jwtPayload,
+      instanceId: jwtPayload.instanceId,
       accessLevel: await getAccessLevel(
         jwtPayload.instanceId,
         jwtPayload.accessLevelId
