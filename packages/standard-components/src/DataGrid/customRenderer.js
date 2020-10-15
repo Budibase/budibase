@@ -12,7 +12,7 @@ const renderers = new Map([
   ["attachment", attachmentRenderer],
   ["options", optionsRenderer],
   ["link", linkedRowRenderer],
-  ["_id", viewDetailsRenderer]
+  ["_id", viewDetailsRenderer],
 ])
 
 export function getRenderer(schema, editable) {
@@ -143,7 +143,7 @@ function viewDetailsRenderer(options) {
     new ViewDetails({
       target: container,
       props: {
-        url: `/${options}/${params.data._id}`
+        url: `/${options}/${params.data._id}`,
       },
     })
 
