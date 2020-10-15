@@ -7,7 +7,9 @@
 
 {#if $backendUiStore.selectedDatabase._id && selectedTable.name}
   <TableDataTable />
-{:else}<i>Create your first table to start building</i>{/if}
+{:else}
+  <i>Create your first table to start building</i>
+{/if}
 
 <style>
   i {

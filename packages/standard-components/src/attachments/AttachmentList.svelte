@@ -12,7 +12,9 @@
       <div class="file">
         {#if FILE_TYPES.IMAGE.includes(file.extension.toLowerCase())}
           <img {width} {height} src={file.url} alt="preview of {file.name}" />
-        {:else}<i class="far fa-file" />{/if}
+        {:else}
+          <i class="far fa-file" />
+        {/if}
       </div>
       <span>{file.name}</span>
     </a>

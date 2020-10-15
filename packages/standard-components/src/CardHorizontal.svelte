@@ -26,7 +26,9 @@
 </script>
 
 <div use:cssVars={cssVariables} class="container">
-  {#if showImage}<img class="image" src={imageUrl} alt="" />{/if}
+  {#if showImage}
+    <img class="image" src={imageUrl} alt="" />
+  {/if}
   <div class="content">
     <main>
       <h2 class="heading">{heading}</h2>

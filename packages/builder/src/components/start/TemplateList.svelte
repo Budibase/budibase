@@ -20,7 +20,7 @@
     <div class="spinner-container">
       <Spinner size="30" />
     </div>
-  {:then templates}
+  {:then [object Object]}
     <div class="templates">
       {#each templates as template}
         <div class="templates-card">
@@ -28,17 +28,18 @@
           <Spacer small />
           <Body medium grey>{template.category}</Body>
           <Body lh small black>{template.description}</Body>
-          <div><img src={template.image} width="100%" /></div>
+          <div>
+            <img src={template.image} width="100%" />
+          </div>
           <div class="card-footer">
             <Button secondary on:click={() => onSelect(template)}>
-              Create
-              {template.name}
+              Create {template.name}
             </Button>
           </div>
         </div>
       {/each}
     </div>
-  {:catch err}
+  {:catch [object Object]}
     <h1 style="color:red">{err}</h1>
   {/await}
 </div>

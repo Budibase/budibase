@@ -18,7 +18,9 @@
 </script>
 
 <div class="handler-option">
-  {#if parameter.name === 'automation'}<span>{parameter.name}</span>{/if}
+  {#if parameter.name === 'automation'}
+    <span>{parameter.name}</span>
+  {/if}
   {#if parameter.name === 'automation'}
     <Select on:change bind:value={parameter.value}>
       <option value="" />
