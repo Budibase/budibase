@@ -60,10 +60,6 @@
         const jsonTable = await _bb.api.get(`/api/tables/${datasource.tableId}`)
         table = await jsonTable.json()
         schema = table.schema
-        // schema._id = {
-        //   type: '_id',
-        //   options: detailUrl
-        // }
       }
 
       columnDefs = Object.keys(schema).map((key, i) => {
@@ -83,12 +79,12 @@
       columnDefs = [...columnDefs, {
           headerName: 'Details',
           field: '_id',
-          width: 50,
+          width: 25,
           flex: 0,
           editable: false,
           cellRenderer: getRenderer({
             type: '_id',
-            options: detailUrl || 'someTableName'
+            options: detailUrl
           }),
           autoHeight: true,
       }]

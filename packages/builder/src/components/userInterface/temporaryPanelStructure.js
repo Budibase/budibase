@@ -328,9 +328,9 @@ export default {
                 control: TableViewSelect,
               },
               {
-                label: "Detail URL",
+                label: "Table URL",
                 key: "detailUrl",
-                placeholder: "tableName/",
+                placeholder: "tableName",
                 control: Input,
               },
               {
