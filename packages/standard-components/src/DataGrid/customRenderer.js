@@ -143,7 +143,7 @@ function viewDetailsRenderer(options) {
     new ViewDetails({
       target: container,
       props: {
-        url: `${options}${params.data._id}`
+        url: `/${options}/${params.data._id}`
       },
     })
 
