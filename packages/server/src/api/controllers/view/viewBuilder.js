@@ -89,8 +89,7 @@ function parseFilterExpression(filters) {
  * @param {String?} groupBy - field to group calculation results on, if any
  */
 function parseEmitExpression(field, groupBy) {
-  if (field) return `emit(doc["${groupBy || "_id"}"], doc["${field}"]);`
-  return `emit(doc._id, 1);`
+  return `emit(doc["${groupBy || "_id"}"], doc["${field}"]);`
 }
 
 /**
