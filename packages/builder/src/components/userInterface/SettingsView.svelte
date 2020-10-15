@@ -96,7 +96,6 @@
       onChange={onScreenPropChange}
       props={{ ...excludeProps(def, ['control', 'label']) }} />
   {/each}
-  <hr />
 {/if}
 
 {#if displayNameField}

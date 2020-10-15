@@ -20,7 +20,7 @@ export default `<html>
         border-style: dashed !important;
         border-width: 1px;
         color: #000000;
-        background: #fafafa;
+        background-color: rgba(0, 0, 0, 0.05);
         flex: 1 1 auto;
       }
       .container-screenslot-placeholder span {
