@@ -132,7 +132,6 @@
     font-size: 24px;
     font-weight: 600;
     text-rendering: optimizeLegibility;
-    text-transform: capitalize;
     margin-top: 0;
     display: flex;
     flex-direction: row;
