@@ -82,6 +82,7 @@
           width: 25,
           flex: 0,
           editable: false,
+          sortable: false,
           cellRenderer: getRenderer({
             type: '_id',
             options: detailUrl
