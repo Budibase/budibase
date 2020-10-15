@@ -34,7 +34,6 @@
     )
 
   function saveView() {
-    if (!view.calculation) view.calculation = "stats"
     backendUiStore.actions.views.save(view)
     notifier.success(`View ${view.name} saved.`)
     onClosed()
