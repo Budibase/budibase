@@ -81,19 +81,22 @@
           autoHeight: true,
         }
       })
-      columnDefs = [...columnDefs, {
-          headerName: 'Details',
-          field: '_id',
+      columnDefs = [
+        ...columnDefs,
+        {
+          headerName: "Details",
+          field: "_id",
           width: 25,
           flex: 0,
           editable: false,
           sortable: false,
           cellRenderer: getRenderer({
-            type: '_id',
-            options: detailUrl
+            type: "_id",
+            options: detailUrl,
           }),
           autoHeight: true,
-      }]
+        },
+      ]
       dataLoaded = true
     }
   })
