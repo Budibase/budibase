@@ -1,3 +1,6 @@
+import sanitizeUrl from "./sanitizeUrl"
+import { newRowUrl } from "./newRowScreen"
+
 export default function(tables) {
   return tables.map(table => {
     return {
@@ -9,6 +12,7 @@ export default function(tables) {
 }
 
 export const ROW_LIST_TEMPLATE = "ROW_LIST_TEMPLATE"
+export const rowListUrl = table => sanitizeUrl(`/${table.name}`)
 
 const createScreen = table => ({
   props: {
@@ -120,7 +124,7 @@ const createScreen = table => ({
                 onClick: [
                   {
                     parameters: {
-                      url: `/${table.name.toLowerCase()}/new`,
+                      url: newRowUrl(table),
                     },
                     "##eventHandlerType": "Navigate To",
                   },
@@ -163,6 +167,6 @@ const createScreen = table => ({
     className: "",
     onLoad: [],
   },
-  route: `/${table.name.toLowerCase()}`,
+  route: rowListUrl(table),
   name: "",
 })
