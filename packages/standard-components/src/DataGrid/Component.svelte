@@ -11,7 +11,12 @@
   import { onMount } from "svelte"
 
   import AgGrid from "@budibase/svelte-ag-grid"
-  import { TextButton as DeleteButton, Icon, Modal, ModalContent } from "@budibase/bbui"
+  import {
+    TextButton as DeleteButton,
+    Icon,
+    Modal,
+    ModalContent,
+  } from "@budibase/bbui"
 
   export let _bb
   export let datasource = {}
