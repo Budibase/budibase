@@ -331,7 +331,7 @@ export default {
                 label: "Table URL",
                 key: "detailUrl",
                 placeholder: "tableName",
-                control: Input,
+                control: ScreenSelect,
               },
               {
                 label: "Editable",
