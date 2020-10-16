@@ -71,7 +71,7 @@
           headerCheckboxSelection: i === 0 && canEdit,
           checkboxSelection: i === 0 && canEdit,
           valueSetter: setters.get(schema[key].type),
-          headerName: key.charAt(0).toUpperCase() + key.slice(1),
+          headerName: key,
           field: key,
           hide: shouldHideField(key),
           sortable: true,
