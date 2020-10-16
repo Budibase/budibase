@@ -4,6 +4,7 @@ import { parseAppIdFromCookie } from "./getAppId"
 
 export const screenRouter = ({ screens, onScreenSelected, window }) => {
   function sanitize(url) {
+    if (!url) return url
     return url
       .split("/")
       .map(part => {
@@ -15,24 +16,29 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
       .toLowerCase()
   }
 
+  const isRunningLocally = () => {
+    const hostname = (window.location && window.location.hostname) || ""
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.startsWith("192.168")
+    )
+  }
+
   const makeRootedPath = url => {
-    const hostname = window.location && window.location.hostname
-    if (hostname) {
-      if (
-        hostname === "localhost" ||
-        hostname === "127.0.0.1" ||
-        hostname.startsWith("192.168")
-      ) {
-        const appId = parseAppIdFromCookie(window.document.cookie)
-        if (url) {
-          const sanitizedUrl = sanitize(url)
-          if (sanitizedUrl.startsWith(appId)) return sanitizedUrl
-          return `/${appId}${
-            sanitizedUrl.startsWith("/") ? "" : "/"
-          }${sanitizedUrl}`
+    if (isRunningLocally()) {
+      const appId = parseAppIdFromCookie(window.document.cookie)
+      if (url) {
+        url = sanitize(url)
+        if (!url.startsWith("/")) {
+          url = `/${url}`
         }
-        return appId
+        if (url.startsWith(`/${appId}`)) {
+          return url
+        }
+        return `/${appId}${url}`
       }
+      return `/${appId}`
     }
     return sanitize(url)
   }

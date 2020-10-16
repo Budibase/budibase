@@ -6,6 +6,7 @@ import TableViewSelect from "components/userInterface/TableViewSelect.svelte"
 import TableViewFieldSelect from "components/userInterface/TableViewFieldSelect.svelte"
 import Event from "components/userInterface/EventsEditor/EventPropertyControl.svelte"
 import ScreenSelect from "components/userInterface/ScreenSelect.svelte"
+import DetailScreenSelect from "components/userInterface/DetailScreenSelect.svelte"
 import { IconSelect } from "components/userInterface/IconSelect"
 import Colorpicker from "@budibase/colorpicker"
 
@@ -289,10 +290,9 @@ export default {
                 control: TableViewSelect,
               },
               {
-                label: "Table URL",
+                label: "Detail URL",
                 key: "detailUrl",
-                placeholder: "tableName",
-                control: ScreenSelect,
+                control: DetailScreenSelect,
               },
               {
                 label: "Editable",

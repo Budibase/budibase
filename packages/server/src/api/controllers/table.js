@@ -41,6 +41,18 @@ exports.save = async function(ctx) {
     oldTable = await db.get(ctx.request.body._id)
   }
 
+  // make sure that types don't change of a column, have to remove
+  // the column if you want to change the type
+  if (oldTable && oldTable.schema) {
+    for (let propKey of Object.keys(tableToSave.schema)) {
+      let column = tableToSave.schema[propKey]
+      let oldColumn = oldTable.schema[propKey]
+      if (oldColumn && oldColumn.type !== column.type) {
+        ctx.throw(400, "Cannot change the type of a column")
+      }
+    }
+  }
+
   // Don't rename if the name is the same
   let { _rename } = tableToSave
   if (_rename && _rename.old === _rename.updated) {
@@ -50,9 +62,9 @@ exports.save = async function(ctx) {
 
   // rename row fields when table column is renamed
   if (_rename && tableToSave.schema[_rename.updated].type === "link") {
-    throw "Cannot rename a linked field."
+    ctx.throw(400, "Cannot rename a linked column.")
   } else if (_rename && tableToSave.primaryDisplay === _rename.old) {
-    throw "Cannot rename the display column."
+    ctx.throw(400, "Cannot rename the display column.")
   } else if (_rename) {
     const rows = await db.allDocs(
       getRowParams(tableToSave._id, null, {
