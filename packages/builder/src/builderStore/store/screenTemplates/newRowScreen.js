@@ -1,3 +1,6 @@
+import urlSanitize from "./urlSanitize"
+import { rowListUrl } from "./rowListScreen"
+
 export default function(tables) {
   return tables.map(table => {
     const fields = Object.keys(table.schema)
@@ -11,6 +14,7 @@ export default function(tables) {
 }
 
 export const NEW_ROW_TEMPLATE = "NEW_ROW_TEMPLATE"
+export const newRowUrl = table => urlSanitize(`/${table.name}/new`)
 
 const createScreen = (table, heading) => ({
   props: {
@@ -91,7 +95,7 @@ const createScreen = (table, heading) => ({
             onClick: [
               {
                 parameters: {
-                  url: `/${table.name.toLowerCase()}`,
+                  url: rowListUrl(table),
                 },
                 "##eventHandlerType": "Navigate To",
               },
@@ -120,6 +124,12 @@ const createScreen = (table, heading) => ({
                 },
                 "##eventHandlerType": "Save Row",
               },
+              {
+                parameters: {
+                  url: rowListUrl(table),
+                },
+                "##eventHandlerType": "Navigate To",
+              },
             ],
             _instanceName: "Save Button",
             _children: [],
@@ -130,6 +140,6 @@ const createScreen = (table, heading) => ({
     _instanceName: `${table.name} - New`,
     _code: "",
   },
-  route: `/${table.name.toLowerCase()}/new`,
+  route: newRowUrl(table),
   name: "",
 })
