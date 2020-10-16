@@ -45,7 +45,7 @@ exports[`viewBuilder Filter creates a view with multiple filters and conjunction
 Object {
   "map": "function (doc) {
       if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && doc[\\"Name\\"] === \\"Test\\" || doc[\\"Yes\\"] > \\"Value\\") {
-        emit(doc._id);
+        emit(doc[\\"_id\\"], doc[\\"undefined\\"]);
       }
     }",
   "meta": Object {
@@ -86,6 +86,5 @@ Object {
     "schema": null,
     "tableId": "14f1c4e94d6a47b682ce89d35d4c78b0",
   },
-  "reduce": "_stats",
 }
 `;

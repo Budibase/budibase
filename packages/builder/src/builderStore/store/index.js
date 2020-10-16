@@ -24,6 +24,7 @@ import {
   saveCurrentPreviewItem as _saveCurrentPreviewItem,
   saveScreenApi as _saveScreenApi,
   regenerateCssForCurrentScreen,
+  regenerateCssForScreen,
   generateNewIdsForComponent,
   getComponentDefinition,
 } from "../storeUtils"
@@ -98,6 +99,29 @@ const setPackage = (store, initial) => async pkg => {
     },
   }
 
+  // if the app has just been created
+  // we need to build the CSS and save
+  if (pkg.justCreated) {
+    const generateInitialPageCss = async name => {
+      const page = pkg.pages[name]
+      regenerateCssForScreen(page)
+      for (let screen of page._screens) {
+        regenerateCssForScreen(screen)
+      }
+
+      await api.post(`/_builder/api/${pkg.application._id}/pages/${name}`, {
+        page: {
+          componentLibraries: pkg.application.componentLibraries,
+          ...page,
+        },
+        screens: page._screens,
+      })
+    }
+    generateInitialPageCss("main")
+    generateInitialPageCss("unauthenticated")
+    pkg.justCreated = false
+  }
+
   initial.libraries = pkg.application.componentLibraries
   initial.components = await fetchComponentLibDefinitions(pkg.application._id)
   initial.name = pkg.application.name
@@ -156,8 +180,8 @@ const createScreen = store => async screen => {
     state.currentPreviewItem = screen
     state.currentComponentInfo = screen.props
     state.currentFrontEndType = "screen"
-    savePromise = _saveScreen(store, state, screen)
     regenerateCssForCurrentScreen(state)
+    savePromise = _saveScreen(store, state, screen)
     return state
   })
   await savePromise
