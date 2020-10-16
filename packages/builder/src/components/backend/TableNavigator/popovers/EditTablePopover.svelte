@@ -42,6 +42,7 @@
   async function deleteTable() {
     await backendUiStore.actions.tables.delete(table)
     store.deleteScreens(templateScreens)
+    await backendUiStore.actions.tables.fetch()
     notifier.success("Table deleted")
     hideEditor()
   }

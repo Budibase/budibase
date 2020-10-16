@@ -97,6 +97,6 @@
     ],
     "_instanceName": "Home"
   },
-  "route": "/*",
+  "route": "/",
   "name": "d834fea2-1b3e-4320-ab34-f9009f5ecc59"
 }

@@ -65,9 +65,7 @@
           placeholder="Password"
           class={_inputClass} />
       </div>
-    </div>
 
-    <div class="login-button-container">
       <button disabled={loading} on:click={login} class={_buttonClass}>
         {buttonText || 'Log In'}
       </button>
@@ -91,23 +89,22 @@
   .content {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
   }
 
   .logo-container {
     margin-bottom: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
   }
 
   .logo-container > img {
-    height: 80px;
+    max-height: 80px;
     max-width: 200px;
     margin-bottom: 20px;
-  }
-
-  .login-button-container {
-    margin-top: 6px;
-    max-width: 100%;
   }
 
   .header-content {
@@ -137,12 +134,13 @@
   .form-root {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     width: 300px;
+    margin: auto;
+    gap: 8px;
   }
 
   .control {
-    padding: 6px 0px;
     width: 100%;
   }
 
@@ -185,5 +183,10 @@
     background-color: white;
     border-color: #393c44;
     color: #393c44;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 10px;
   }
 </style>

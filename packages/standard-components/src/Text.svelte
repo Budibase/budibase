@@ -1,11 +1,7 @@
 <script>
-  import { buildStyle } from "./buildStyle"
-
   export let text = ""
   export let className = ""
-
   export let type = ""
-
   export let _bb
 
   const isTag = tag => type === tag
@@ -34,3 +30,9 @@
 {:else if isTag('sup')}
   <sup class={className}>{text}</sup>
 {:else}<span>{text}</span>{/if}
+
+<style>
+  span {
+    display: inline-block;
+  }
+</style>
