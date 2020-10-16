@@ -24,7 +24,8 @@
   export let editable
   export let theme = "alpine"
   export let height = 500
-  export let pagination = true
+  export let pagination
+  export let detailUrl
 
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
@@ -80,6 +81,19 @@
           autoHeight: true,
         }
       })
+      columnDefs = [...columnDefs, {
+          headerName: 'Details',
+          field: '_id',
+          width: 25,
+          flex: 0,
+          editable: false,
+          sortable: false,
+          cellRenderer: getRenderer({
+            type: '_id',
+            options: detailUrl
+          }),
+          autoHeight: true,
+      }]
       dataLoaded = true
     }
   })

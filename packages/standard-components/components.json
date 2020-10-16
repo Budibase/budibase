@@ -245,7 +245,8 @@
 			"pagination": {
 				"type": "bool",
 				"default": true
-			}
+			},
+			"detailUrl": "string"
 		}
 	},
 	"dataform": {
