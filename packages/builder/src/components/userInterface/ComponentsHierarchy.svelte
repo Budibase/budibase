@@ -11,6 +11,9 @@
 
   export let screens = []
 
+  $: sortedScreens = screens.sort(
+    (s1, s2) => s1.props._instanceName > s2.props._instanceName
+  )
   /* 
   Using a store here seems odd.... 
   have a look in the <ComponentsHierarchyChildren /> code file to find out why. 
@@ -24,12 +27,15 @@
   const joinPath = join("/")
 
   const normalizedName = name =>
-    pipe(name, [
-      trimCharsStart("./"),
-      trimCharsStart("~/"),
-      trimCharsStart("../"),
-      trimChars(" "),
-    ])
+    pipe(
+      name,
+      [
+        trimCharsStart("./"),
+        trimCharsStart("~/"),
+        trimCharsStart("../"),
+        trimChars(" "),
+      ]
+    )
 
   const changeScreen = screen => {
     store.setCurrentScreen(screen.props._instanceName)
@@ -38,7 +44,7 @@
 </script>
 
 <div class="root">
-  {#each screens as screen}
+  {#each sortedScreens as screen}
     <div
       class="budibase__nav-item screen-header-row"
       class:selected={$store.currentComponentInfo._id === screen.props._id}
