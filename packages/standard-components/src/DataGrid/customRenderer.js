@@ -6,6 +6,7 @@ import ViewDetails from "./ViewDetails/Cell.svelte"
 import Select from "./Select/Wrapper.svelte"
 import DatePicker from "./DateTime/Wrapper.svelte"
 import RelationshipDisplay from "./Relationship/RelationshipDisplay.svelte"
+import { detailUrl } from "./Component.svelte"
 
 const renderers = new Map([
   ["boolean", booleanRenderer],
@@ -80,8 +81,7 @@ function dateRenderer(options, constraints, editable) {
     }
 
     // Options need to be passed in with minTime and maxTime! Needs bbui update.
-
-    const datePickerInstance = new DatePicker({
+    new DatePicker({
       target: container,
       props: {
         value: params.value,
@@ -144,11 +144,14 @@ function viewDetailsRenderer(options, constraints, editable) {
     container.style.alignItems = "center"
     container.style.height = "100%"
 
+    let url = "/"
+    if (options.detailUrl) {
+      url = options.detailUrl.replace(":id", params.data._id)
+    }
+
     new ViewDetails({
       target: container,
-      props: {
-        url: `${options}/${params.data._id}`,
-      },
+      props: { url },
     })
 
     return container
