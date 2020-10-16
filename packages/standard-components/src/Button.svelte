@@ -18,7 +18,7 @@
   bind:this={theButton}
   class="default"
   disabled={disabled || false}
-  on:click={clickHandler}>
+  on:click|once={clickHandler}>
   {#if !_bb.props._children || _bb.props._children.length === 0}{text}{/if}
 </button>
 

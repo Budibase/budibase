@@ -133,62 +133,23 @@ export default {
           ],
         },
         {
-          name: "Input",
-          description: "These components handle user input.",
+          _component: "@budibase/standard-components/input",
+          name: "Textfield",
+          description:
+            "A textfield component that allows the user to input text.",
           icon: "ri-edit-box-line",
-          commonProps: {},
-          children: [
-            {
-              _component: "@budibase/standard-components/input",
-              name: "Textfield",
-              description:
-                "A textfield component that allows the user to input text.",
-              icon: "ri-edit-box-line",
-              properties: {
-                design: { ...all },
-                settings: [
-                  { label: "Label", key: "label", control: Input },
-                  {
-                    label: "Type",
-                    key: "type",
-                    control: OptionSelect,
-                    options: ["text", "password"],
-                  },
-                ],
+          properties: {
+            design: { ...all },
+            settings: [
+              { label: "Label", key: "label", control: Input },
+              {
+                label: "Type",
+                key: "type",
+                control: OptionSelect,
+                options: ["text", "password"],
               },
-            },
-            {
-              _component: "@budibase/standard-components/checkbox",
-              name: "Checkbox",
-              description: "A selectable checkbox component",
-              icon: "ri-checkbox-line",
-              properties: {
-                design: { ...all },
-                settings: [{ label: "Label", key: "label", control: Input }],
-              },
-            },
-            {
-              _component: "@budibase/standard-components/radiobutton",
-              name: "Radiobutton",
-              description: "A selectable radiobutton component",
-              icon: "ri-radio-button-line",
-              properties: {
-                design: { ...all },
-                settings: [{ label: "Label", key: "label", control: Input }],
-              },
-            },
-            {
-              _component: "@budibase/standard-components/select",
-              name: "Select",
-              description:
-                "A select component for choosing from different options",
-              icon: "ri-file-list-line",
-              properties: {
-                design: { ...all },
-                settings: [],
-              },
-            },
-          ],
+            ],
+          },
         },
         {
           _component: "@budibase/standard-components/button",
@@ -583,48 +544,6 @@ export default {
               },
             },
           ],
-        },
-        {
-          name: "Table",
-          _component: "@budibase/standard-components/datatable",
-          description: "A component that generates a table from your data.",
-          icon: "ri-archive-drawer-line",
-          properties: {
-            design: { ...all },
-            settings: [
-              {
-                label: "Data",
-                key: "datasource",
-                control: TableViewSelect,
-              },
-              {
-                label: "Stripe Color",
-                key: "stripeColor",
-                control: Colorpicker,
-                defaultValue: "#FFFFFF",
-              },
-              {
-                label: "Border Color",
-                key: "borderColor",
-                control: Colorpicker,
-                defaultValue: "#FFFFFF",
-              },
-              {
-                label: "TH Color",
-                key: "backgroundColor",
-                control: Colorpicker,
-                defaultValue: "#FFFFFF",
-              },
-              {
-                label: "TH Font Color",
-                key: "color",
-                control: Colorpicker,
-                defaultValue: "#FFFFFF",
-              },
-              { label: "Table", key: "table", control: TableSelect },
-            ],
-          },
-          children: [],
         },
         {
           name: "Form",
