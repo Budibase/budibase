@@ -154,6 +154,7 @@
       const pkg = await applicationPkg.json()
       if (applicationPkg.ok) {
         backendUiStore.actions.reset()
+        pkg.justCreated = true
         await store.setPackage(pkg)
         automationStore.actions.fetch()
       } else {
