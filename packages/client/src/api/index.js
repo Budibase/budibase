@@ -37,7 +37,7 @@ const del = apiCall("DELETE")
 const ERROR_MEMBER = "##error"
 const error = message => {
   const err = { [ERROR_MEMBER]: message }
-  appStore.update(s => s["##error_message"], message)
+  // appStore.update(s => s["##error_message"], message)
   return err
 }
 
