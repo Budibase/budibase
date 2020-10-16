@@ -1,5 +1,6 @@
 const TOKEN_MAP = {
   EQUALS: "===",
+  NOT_EQUALS: "!==",
   LT: "<",
   LTE: "<=",
   MT: ">",
@@ -22,6 +23,14 @@ const FIELD_PROPERTY = {
 }
 
 const SCHEMA_MAP = {
+  sum: {
+    field: "string",
+    value: "number",
+  },
+  count: {
+    field: "string",
+    value: "number",
+  },
   stats: {
     sum: {
       type: "number",
@@ -80,8 +89,7 @@ function parseFilterExpression(filters) {
  * @param {String?} groupBy - field to group calculation results on, if any
  */
 function parseEmitExpression(field, groupBy) {
-  if (field) return `emit(doc["${groupBy || "_id"}"], doc["${field}"]);`
-  return `emit(doc._id);`
+  return `emit(doc["${groupBy || "_id"}"], doc["${field}"]);`
 }
 
 /**
@@ -101,7 +109,7 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
 
   const emitExpression = parseEmitExpression(field, groupBy)
 
-  const reduction = field ? { reduce: "_stats" } : {}
+  const reduction = field && calculation ? { reduce: `_${calculation}` } : {}
 
   let schema = null
 

@@ -31,7 +31,9 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
   function route(url) {
     const _url = makeRootedPath(url.state || url)
     current = routes.findIndex(
-      p => p !== "*" && new RegExp("^" + p + "$").test(_url)
+      p =>
+        p !== "*" &&
+        new RegExp("^" + p.toLowerCase() + "$").test(_url.toLowerCase())
     )
 
     const params = {}

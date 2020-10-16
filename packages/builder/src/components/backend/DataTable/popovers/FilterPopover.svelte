@@ -10,6 +10,10 @@
       key: "EQUALS",
     },
     {
+      name: "Not Equals",
+      key: "NOT_EQUALS",
+    },
+    {
       name: "Less Than",
       key: "LT",
     },
