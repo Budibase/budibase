@@ -1,6 +1,7 @@
 const CouchDB = require("../index")
 const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 const { generateLinkID } = require("../utils")
+const Sentry = require("@sentry/node")
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -289,10 +290,14 @@ class LinkController {
     const schema = table.schema
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
-      if (field.type === "link") {
-        const linkedTable = await this._db.get(field.tableId)
-        delete linkedTable.schema[table.name]
-        await this._db.put(linkedTable)
+      try {
+        if (field.type === "link") {
+          const linkedTable = await this._db.get(field.tableId)
+          delete linkedTable.schema[field.fieldName]
+          await this._db.put(linkedTable)
+        }
+      } catch (err) {
+        Sentry.captureException(err)
       }
     }
     // need to get the full link docs to delete them
