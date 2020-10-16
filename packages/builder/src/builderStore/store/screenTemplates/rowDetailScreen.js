@@ -204,7 +204,7 @@ const createScreen = (table, heading) => ({
                   },
                   hover: {
                     background: "transparent",
-                    color: "#000000",
+                    color: "#4285f4",
                   },
                   active: {},
                   selected: {},
@@ -246,7 +246,7 @@ const createScreen = (table, heading) => ({
                     "font-size": "14px",
                   },
                   hover: {
-                    background: "#9e9e9e",
+                    background: "#4285f4",
                   },
                   active: {},
                   selected: {},

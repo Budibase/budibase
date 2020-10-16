@@ -197,7 +197,7 @@ const createScreen = table => ({
                     "margin-left": "16px",
                   },
                   hover: {
-                    background: "#9e9e9e",
+                    background: "#4285f4",
                   },
                   active: {},
                   selected: {},
