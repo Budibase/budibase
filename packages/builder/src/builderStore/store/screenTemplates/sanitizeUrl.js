@@ -4,7 +4,7 @@ export default function(url) {
     .map(part => {
       // if parameter, then use as is
       if (part.startsWith(":")) return part
-      return encodeURIComponent(part.replace(" ", "-"))
+      return encodeURIComponent(part.replace(/ /g, "-"))
     })
     .join("/")
     .toLowerCase()
