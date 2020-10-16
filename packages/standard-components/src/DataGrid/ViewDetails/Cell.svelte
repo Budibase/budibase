@@ -1,14 +1,11 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { Icon, Button } from "@budibase/bbui"
-  const dispatch = createEventDispatcher()
-
+  import { Button } from "@budibase/bbui"
   export let url
   let link
 </script>
 
 <a href={url} bind:this={link} />
-<Button small secondary on:click={() => link.click()}>View</Button>
+<Button small translucent on:click={() => link.click()}>View</Button>
 
 <style>
   a {

@@ -94,7 +94,7 @@
             sortable: false,
             cellRenderer: getRenderer({
               type: "_id",
-              options: detailUrl,
+              options: { detailUrl },
             }),
             autoHeight: true,
             pinned: "left",
@@ -179,14 +179,8 @@
 </div>
 
 <style>
-  .container :global(.ag-pinned-left-header) {
-    border-right-color: #dde2eb !important;
-  }
   .container :global(.ag-pinned-left-header .ag-header-cell-label) {
     justify-content: center;
-  }
-  .container :global(.ag-cell-last-left-pinned) {
-    border-right-color: #dde2eb !important;
   }
 
   .controls {
