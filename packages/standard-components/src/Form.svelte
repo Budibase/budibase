@@ -23,9 +23,7 @@
   {#each fields as field}
     <div class="form-field" class:wide>
       {#if !(schema[field].type === 'boolean' && !wide)}
-        <Label extraSmall={!wide} grey={!wide}>
-          {capitalise(schema[field].name)}
-        </Label>
+        <Label extraSmall={!wide} grey>{capitalise(schema[field].name)}</Label>
       {/if}
       {#if schema[field].type === 'options'}
         <Select secondary bind:value={$store.data[field]}>
@@ -65,7 +63,6 @@
   }
 
   .form-content {
-    margin-bottom: var(--spacing-xl);
     display: grid;
     gap: var(--spacing-xl);
     width: 100%;
@@ -76,7 +73,7 @@
   }
   .form-field.wide {
     align-items: center;
-    grid-template-columns: 30% 1fr;
+    grid-template-columns: 20% 1fr;
     gap: var(--spacing-xl);
   }
   .form-field.wide :global(label) {
