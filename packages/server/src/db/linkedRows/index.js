@@ -1,5 +1,10 @@
 const LinkController = require("./LinkController")
-const { IncludeDocs, getLinkDocuments, createLinkView } = require("./linkUtils")
+const {
+  IncludeDocs,
+  getLinkDocuments,
+  createLinkView,
+  getUniqueByProp,
+} = require("./linkUtils")
 const _ = require("lodash")
 
 /**
@@ -110,7 +115,12 @@ exports.attachLinkInfo = async (instanceId, rows) => {
   // now iterate through the rows and all field information
   for (let row of rows) {
     // get all links for row, ignore fieldName for now
-    const linkVals = responses.filter(el => el.thisId === row._id)
+    // have to get unique as the previous table query can
+    // return duplicates, could be querying for both tables in a relation
+    const linkVals = getUniqueByProp(
+      responses.filter(el => el.thisId === row._id),
+      "id"
+    )
     for (let linkVal of linkVals) {
       // work out which link pertains to this row
       if (!(row[linkVal.fieldName] instanceof Array)) {
