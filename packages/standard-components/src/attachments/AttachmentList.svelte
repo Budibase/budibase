@@ -32,9 +32,9 @@
       </a>
       <span>{file.name}</span>
       <div class="button-placement">
-        <button
-          primary
-          on:click|stopPropagation={() => openModal(file)}>×</button>
+        <button primary on:click|stopPropagation={() => openModal(file)}>
+          ×
+        </button>
       </div>
     </div>
   {/each}

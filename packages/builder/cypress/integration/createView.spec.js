@@ -55,6 +55,11 @@ context("Create a View", () => {
     cy.get(".menu-container")
       .find("select")
       .eq(0)
+      .select("Statistics")
+    cy.wait(50)
+    cy.get(".menu-container")
+      .find("select")
+      .eq(1)
       .select("age")
     cy.contains("Save").click()
     cy.get("thead th div").should($headers => {

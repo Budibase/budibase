@@ -88,6 +88,7 @@
 {#if screenOrPageInstance}
   {#each screenOrPageDefinition as def}
     <PropertyControl
+      bindable={false}
       control={def.control}
       label={def.label}
       key={def.key}
