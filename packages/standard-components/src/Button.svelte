@@ -25,12 +25,10 @@
 <style>
   .default {
     align-items: center;
-    font-size: 16px;
-    padding: 0px 16px;
+    padding: var(--spacing-s) var(--spacing-l);
     box-sizing: border-box;
     border-radius: 4px;
     outline: none;
-    height: 40px;
     cursor: pointer;
     transition: all 0.2s ease 0s;
     overflow: hidden;

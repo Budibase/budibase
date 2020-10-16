@@ -19,7 +19,8 @@
             "justify-content": "flex-start",
             "align-items": "flex-start",
             "background": "#fff",
-            "width": "100%"
+            "width": "100%",
+            "box-shadow": "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
           },
           "hover": {},
           "active": {},
@@ -67,7 +68,7 @@
                 "_styles": {
                   "normal": {
                     "font-family": "Inter",
-                    "font-weight": "400",
+                    "font-weight": "500",
                     "color": "#000000",
                     "text-decoration-line": "none",
                     "font-size": "16px"
