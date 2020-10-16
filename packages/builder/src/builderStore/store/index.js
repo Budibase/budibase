@@ -1,4 +1,4 @@
-import { values, cloneDeep } from "lodash/fp"
+import { cloneDeep } from "lodash/fp"
 import getNewComponentName from "../getNewComponentName"
 import { backendUiStore } from "builderStore"
 import { writable, get } from "svelte/store"
