@@ -1,5 +1,10 @@
 const LinkController = require("./LinkController")
-const { IncludeDocs, getLinkDocuments, createLinkView, getUniqueByProp } = require("./linkUtils")
+const {
+  IncludeDocs,
+  getLinkDocuments,
+  createLinkView,
+  getUniqueByProp,
+} = require("./linkUtils")
 const _ = require("lodash")
 
 /**
