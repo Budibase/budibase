@@ -1,5 +1,5 @@
 import { authenticate } from "./authenticate"
-import appStore from "../state/store"
+// import appStore from "../state/store"
 
 const apiCall = method => async ({ url, body }) => {
   const response = await fetch(url, {
