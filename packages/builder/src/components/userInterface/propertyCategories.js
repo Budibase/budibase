@@ -135,6 +135,8 @@ export const margin = [
       { label: "20px", value: "20px" },
       { label: "32px", value: "32px" },
       { label: "64px", value: "64px" },
+      { label: "128px", value: "128px" },
+      { label: "256px", value: "256px" },
       { label: "Auto", value: "auto" },
       { label: "100%", value: "100%" },
     ],
