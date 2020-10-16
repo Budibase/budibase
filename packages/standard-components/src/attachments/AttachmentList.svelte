@@ -1,6 +1,6 @@
 <script>
-  import { Modal, ModalContent, Icon } from '@budibase/bbui'
-  import { createEventDispatcher } from "svelte";
+  import { Modal, ModalContent, Icon } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
   import { FILE_TYPES } from "./fileTypes"
@@ -9,16 +9,16 @@
   export let height = "70"
   export let width = "70"
 
-  let modal;
-  let currentFile;
+  let modal
+  let currentFile
 
-  const openModal = (file) => {
+  const openModal = file => {
     currentFile = file
     modal.show()
   }
 
   const handleConfirm = () => {
-    dispatch('delete', currentFile)
+    dispatch("delete", currentFile)
   }
 </script>
 
@@ -31,12 +31,19 @@
         {:else}<i class="far fa-file" />{/if}
       </a>
       <span>{file.name}</span>
-      <div class="button-placement"><button  primary on:click|stopPropagation={() => openModal(file)}>×</button></div>
+      <div class="button-placement">
+        <button primary on:click|stopPropagation={() => openModal(file)}>
+          ×
+        </button>
+      </div>
     </div>
   {/each}
 </div>
 <Modal bind:this={modal}>
-  <ModalContent title="Confirm File Deletion" confirmText="Delete" onConfirm={handleConfirm} >
+  <ModalContent
+    title="Confirm File Deletion"
+    confirmText="Delete"
+    onConfirm={handleConfirm}>
     <span>Are you sure you want to delete this attachment?</span>
   </ModalContent>
 </Modal>
@@ -67,7 +74,7 @@
     position: relative;
   }
 
-	button {
+  button {
     display: block;
     box-sizing: border-box;
     position: absolute;
@@ -85,18 +92,18 @@
     border-radius: var(--border-radius-xl);
     background: black;
     transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1),
-                background 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+      background 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
     -webkit-appearance: none;
     outline: none;
-	}
-    button:hover {
-        background-color: var(--grey-8);
-        cursor: pointer;
-    }
-    button:active {
-        background-color: var(--grey-9);
-        cursor: pointer;
-    }
+  }
+  button:hover {
+    background-color: var(--grey-8);
+    cursor: pointer;
+  }
+  button:active {
+    background-color: var(--grey-9);
+    cursor: pointer;
+  }
 
   .file {
     position: relative;
