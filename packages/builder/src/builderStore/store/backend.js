@@ -1,4 +1,4 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import api from "../api"
 
@@ -62,16 +62,30 @@ export const getBackendUiStore = () => {
         }),
       save: async table => {
         const updatedTable = cloneDeep(table)
+        const oldTable = get(store).tables.filter(t => t._id === table._id)[0]
 
+        const fieldNames = []
         // update any renamed schema keys to reflect their names
-        for (let key in updatedTable.schema) {
+        for (let key of Object.keys(updatedTable.schema)) {
+          // if field name has been seen before remove it
+          if (fieldNames.indexOf(key.toLowerCase()) !== -1) {
+            delete updatedTable.schema[key]
+            continue
+          }
           const field = updatedTable.schema[key]
+          const oldField = oldTable?.schema[key]
+          // if the type has changed then revert back to the old field
+          if (oldField != null && oldField.type !== field.type) {
+            updatedTable.schema[key] = oldField
+          }
           // field has been renamed
           if (field.name && field.name !== key) {
             updatedTable.schema[field.name] = field
             updatedTable._rename = { old: key, updated: field.name }
             delete updatedTable.schema[key]
           }
+          // finally record this field has been used
+          fieldNames.push(key.toLowerCase())
         }
 
         const SAVE_TABLE_URL = `/api/tables`
