@@ -6,7 +6,6 @@ import ViewDetails from "./ViewDetails/Cell.svelte"
 import Select from "./Select/Wrapper.svelte"
 import DatePicker from "./DateTime/Wrapper.svelte"
 import RelationshipDisplay from "./Relationship/RelationshipDisplay.svelte"
-import { detailUrl } from "./Component.svelte"
 
 const renderers = new Map([
   ["boolean", booleanRenderer],
