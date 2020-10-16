@@ -13,7 +13,7 @@ export const NEW_ROW_TEMPLATE = "NEW_ROW_TEMPLATE"
 const createScreen = table => ({
   props: {
     _id: "c683c4ca8ffc849c6bdd3b7d637fbbf3c",
-    _component: "@budibase/standard-components/rowdetail",
+    _component: "@budibase/standard-components/newrow",
     _styles: {
       normal: {},
       hover: {},
