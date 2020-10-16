@@ -6,6 +6,7 @@ const {
   updateDeploymentQuota,
 } = require("./aws")
 const { DocumentTypes, SEPARATOR, UNICODE_MAX } = require("../../../db/utils")
+const newid = require("../../../db/newid")
 
 function replicate(local, remote) {
   return new Promise((resolve, reject) => {
@@ -61,47 +62,164 @@ async function getCurrentInstanceQuota(instanceId) {
   }
 }
 
-exports.deployApp = async function(ctx) {
-  try {
-    const clientAppLookupDB = new PouchDB("client_app_lookup")
-    const { clientId } = await clientAppLookupDB.get(ctx.user.appId)
+async function storeLocalDeploymentHistory(deployment) {
+  const db = new PouchDB(deployment.instanceId)
 
-    const instanceQuota = await getCurrentInstanceQuota(ctx.user.instanceId)
+  let deploymentDoc
+  try {
+    deploymentDoc = await db.get("_local/deployments")
+  } catch (err) {
+    deploymentDoc = { _id: "_local/deployments", history: {} }
+  }
+
+  const deploymentId = deployment._id || newid()
+
+  // first time deployment
+  if (!deploymentDoc.history[deploymentId])
+    deploymentDoc.history[deploymentId] = {}
+
+  deploymentDoc.history[deploymentId] = {
+    ...deploymentDoc.history[deploymentId],
+    ...deployment,
+    updatedAt: Date.now(),
+  }
+
+  await db.put(deploymentDoc)
+  return {
+    _id: deploymentId,
+    ...deploymentDoc.history[deploymentId],
+  }
+}
+
+async function deployApp({ instanceId, appId, clientId, deploymentId }) {
+  try {
+    const instanceQuota = await getCurrentInstanceQuota(instanceId)
     const credentials = await verifyDeployment({
-      instanceId: ctx.user.instanceId,
-      appId: ctx.user.appId,
+      instanceId,
+      appId,
       quota: instanceQuota,
     })
 
-    ctx.log.info(`Uploading assets for appID ${ctx.user.appId} assets to s3..`)
+    console.log(`Uploading assets for appID ${appId} assets to s3..`)
 
-    if (credentials.errors) {
-      ctx.throw(500, credentials.errors)
-      return
-    }
+    if (credentials.errors) throw new Error(credentials.errors)
 
-    await uploadAppAssets({
-      clientId,
-      appId: ctx.user.appId,
-      instanceId: ctx.user.instanceId,
-      ...credentials,
-    })
+    await uploadAppAssets({ clientId, appId, instanceId, ...credentials })
 
     // replicate the DB to the couchDB cluster in prod
-    ctx.log.info("Replicating local PouchDB to remote..")
+    console.log("Replicating local PouchDB to remote..")
     await replicateCouch({
-      instanceId: ctx.user.instanceId,
+      instanceId,
       clientId,
       credentials: credentials.couchDbCreds,
     })
 
     await updateDeploymentQuota(credentials.quota)
 
-    ctx.body = {
+    await storeLocalDeploymentHistory({
+      _id: deploymentId,
+      instanceId,
+      quota: credentials.quota,
       status: "SUCCESS",
-      completed: Date.now(),
-    }
+    })
   } catch (err) {
-    ctx.throw(err.status || 500, `Deployment Failed: ${err.message}`)
+    await storeLocalDeploymentHistory({
+      _id: deploymentId,
+      instanceId,
+      status: "FAILURE",
+      err: err.message,
+    })
+    throw new Error(`Deployment Failed: ${err.message}`)
   }
+}
+
+exports.fetchDeployments = async function(ctx) {
+  try {
+    const db = new PouchDB(ctx.user.instanceId)
+    const deploymentDoc = await db.get("_local/deployments")
+    ctx.body = Object.values(deploymentDoc.history)
+  } catch (err) {
+    ctx.body = []
+  }
+}
+
+exports.deploymentProgress = async function(ctx) {
+  try {
+    const db = new PouchDB(ctx.user.instanceId)
+    const deploymentDoc = await db.get("_local/deployments")
+    ctx.body = deploymentDoc[ctx.params.deploymentId]
+  } catch (err) {
+    ctx.throw(
+      500,
+      `Error fetching data for deployment ${ctx.params.deploymentId}`
+    )
+  }
+}
+
+exports.deployApp = async function(ctx) {
+  const clientAppLookupDB = new PouchDB("client_app_lookup")
+  const { clientId } = await clientAppLookupDB.get(ctx.user.appId)
+
+  const deployment = await storeLocalDeploymentHistory({
+    instanceId: ctx.user.instanceId,
+    appId: ctx.user.appId,
+    status: "PENDING",
+  })
+
+  deployApp({
+    ...ctx.user,
+    clientId,
+    deploymentId: deployment._id,
+  })
+
+  ctx.body = deployment
+
+  //   const instanceQuota = await getCurrentInstanceQuota(ctx.user.instanceId)
+  //   const credentials = await verifyDeployment({
+  //     instanceId: ctx.user.instanceId,
+  //     appId: ctx.user.appId,
+  //     quota: instanceQuota,
+  //   })
+
+  //   ctx.log.info(`Uploading assets for appID ${ctx.user.appId} assets to s3..`)
+
+  //   if (credentials.errors) {
+  //     ctx.throw(500, credentials.errors)
+  //     return
+  //   }
+
+  //   await uploadAppAssets({
+  //     clientId,
+  //     appId: ctx.user.appId,
+  //     instanceId: ctx.user.instanceId,
+  //     ...credentials,
+  //   })
+
+  //   // replicate the DB to the couchDB cluster in prod
+  //   ctx.log.info("Replicating local PouchDB to remote..")
+  //   await replicateCouch({
+  //     instanceId: ctx.user.instanceId,
+  //     clientId,
+  //     credentials: credentials.couchDbCreds,
+  //   })
+
+  //   await updateDeploymentQuota(credentials.quota)
+
+  //   const deployment = await storeLocalDeploymentHistory({
+  //     quota: credentials.quota,
+  //     status: "SUCCESS",
+  //   })
+
+  //   ctx.body = {
+  //     status: "SUCCESS",
+  //     completed: Date.now(),
+  //   }
+  // } catch (err) {
+  //   ctx.throw(err.status || 500, `Deployment Failed: ${err.message}`)
+  //   await storeLocalDeploymentHistory({
+  //     appId: ctx.user.appId,
+  //     instanceId: ctx.user.instanceId,
+  //     status: "FAILURE",
+  //   })
+  // }
 }
