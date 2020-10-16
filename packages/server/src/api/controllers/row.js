@@ -11,6 +11,12 @@ const { cloneDeep } = require("lodash")
 
 const TABLE_VIEW_BEGINS_WITH = `all${SEPARATOR}${DocumentTypes.TABLE}${SEPARATOR}`
 
+const CALCULATION_TYPES = {
+  SUM: "sum",
+  COUNT: "count",
+  STATS: "stats",
+}
+
 validateJs.extend(validateJs.validators.datetime, {
   parse: function(value) {
     return new Date(value).getTime()
@@ -137,7 +143,7 @@ exports.save = async function(ctx) {
 exports.fetchView = async function(ctx) {
   const instanceId = ctx.user.instanceId
   const db = new CouchDB(instanceId)
-  const { stats, group, field } = ctx.query
+  const { calculation, group, field } = ctx.query
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
@@ -148,22 +154,35 @@ exports.fetchView = async function(ctx) {
   }
 
   const response = await db.query(`database/${viewName}`, {
-    include_docs: !stats,
+    include_docs: !calculation,
     group,
   })
 
-  if (stats) {
+  if (!calculation) {
+    response.rows = response.rows.map(row => row.doc)
+    ctx.body = await linkRows.attachLinkInfo(instanceId, response.rows)
+  }
+
+  if (calculation === CALCULATION_TYPES.STATS) {
     response.rows = response.rows.map(row => ({
       group: row.key,
       field,
       ...row.value,
       avg: row.value.sum / row.value.count,
     }))
-  } else {
-    response.rows = response.rows.map(row => row.doc)
+    ctx.body = response.rows
   }
 
-  ctx.body = await linkRows.attachLinkInfo(instanceId, response.rows)
+  if (
+    calculation === CALCULATION_TYPES.COUNT ||
+    calculation === CALCULATION_TYPES.SUM
+  ) {
+    ctx.body = response.rows.map(row => ({
+      group: row.key,
+      field,
+      value: row.value,
+    }))
+  }
 }
 
 exports.fetchTableRows = async function(ctx) {
