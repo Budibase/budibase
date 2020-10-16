@@ -110,9 +110,6 @@
     align-items: center;
     gap: var(--spacing-xs);
   }
-  .container span {
-    text-transform: capitalize;
-  }
 
   h5 {
     padding: var(--spacing-xl) 0 0 var(--spacing-xl);
