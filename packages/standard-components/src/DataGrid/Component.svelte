@@ -81,19 +81,29 @@
           autoHeight: true,
         }
       })
-      columnDefs = [...columnDefs, {
-          headerName: 'Details',
-          field: '_id',
-          width: 25,
-          flex: 0,
-          editable: false,
-          sortable: false,
-          cellRenderer: getRenderer({
-            type: '_id',
-            options: detailUrl
-          }),
-          autoHeight: true,
-      }]
+
+      if (detailUrl) {
+        columnDefs = [
+          ...columnDefs,
+          {
+            headerName: "Detail",
+            field: "_id",
+            minWidth: 100,
+            width: 100,
+            flex: 0,
+            editable: false,
+            sortable: false,
+            cellRenderer: getRenderer({
+              type: "_id",
+              options: detailUrl,
+            }),
+            autoHeight: true,
+            pinned: "left",
+            filter: false,
+          },
+        ]
+      }
+
       dataLoaded = true
     }
   })
@@ -148,7 +158,7 @@
     href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 </svelte:head>
 
-<div style="--grid-height: {height}px">
+<div class="container" style="--grid-height: {height}px">
   {#if dataLoaded}
     {#if canAddDelete}
       <div class="controls">
@@ -182,6 +192,16 @@
 </div>
 
 <style>
+  .container :global(.ag-pinned-left-header) {
+    border-right-color: #dde2eb !important;
+  }
+  .container :global(.ag-pinned-left-header .ag-header-cell-label) {
+    justify-content: center;
+  }
+  .container :global(.ag-cell-last-left-pinned) {
+    border-right-color: #dde2eb !important;
+  }
+
   .controls {
     margin-bottom: var(--spacing-s);
     display: grid;
