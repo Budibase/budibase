@@ -1,12 +1,17 @@
 <script>
-    import { Icon } from '@budibase/bbui'
-    export let url
+  import { createEventDispatcher } from "svelte"
+  import { Icon, Button } from "@budibase/bbui"
+  const dispatch = createEventDispatcher()
+
+  export let url
+  let link
 </script>
 
-<a href={url}><Icon name="view" /></a>
+<a href={url} bind:this={link} />
+<Button small secondary on:click={() => link.click()}>View</Button>
 
 <style>
-    a {
-        color: var(--grey-6)
-    }
+  a {
+    display: none;
+  }
 </style>
