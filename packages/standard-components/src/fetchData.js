@@ -46,13 +46,18 @@ export default async function fetchData(datasource, store) {
   }
 
   async function fetchViewData() {
-    const { field, groupBy } = datasource
+    const { field, groupBy, calculation } = datasource
     const params = new URLSearchParams()
 
-    if (field) {
+    if (calculation) {
       params.set("field", field)
-      params.set("stats", true)
+      params.set("calculation", calculation)
     }
+
+    if (groupBy) {
+      params.set("group", groupBy)
+    }
+
     if (groupBy) params.set("group", groupBy)
 
     let QUERY_VIEW_URL = field
