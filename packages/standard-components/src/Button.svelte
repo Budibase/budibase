@@ -18,19 +18,17 @@
   bind:this={theButton}
   class="default"
   disabled={disabled || false}
-  on:click={clickHandler}>
+  on:click|once={clickHandler}>
   {#if !_bb.props._children || _bb.props._children.length === 0}{text}{/if}
 </button>
 
 <style>
   .default {
     align-items: center;
-    font-size: 16px;
-    padding: 0px 16px;
+    padding: var(--spacing-s) var(--spacing-l);
     box-sizing: border-box;
     border-radius: 4px;
     outline: none;
-    height: 40px;
     cursor: pointer;
     transition: all 0.2s ease 0s;
     overflow: hidden;

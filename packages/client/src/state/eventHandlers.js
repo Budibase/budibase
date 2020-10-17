@@ -8,6 +8,7 @@ export const eventHandlers = routeTo => {
     "Navigate To": param => routeTo(param && param.url),
     "Update Row": api.updateRow,
     "Save Row": api.saveRow,
+    "Delete Row": api.deleteRow,
     "Trigger Workflow": api.triggerWorkflow,
   }
 
