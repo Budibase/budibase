@@ -11,7 +11,6 @@
   import { onMount } from "svelte"
 
   import AgGrid from "@budibase/svelte-ag-grid"
-  import CreateRowButton from "./CreateRow/Button.svelte"
   import {
     TextButton as DeleteButton,
     Icon,
@@ -24,7 +23,8 @@
   export let editable
   export let theme = "alpine"
   export let height = 500
-  export let pagination = true
+  export let pagination
+  export let detailUrl
 
   // These can never change at runtime so don't need to be reactive
   let canEdit = editable && datasource && datasource.type !== "view"
@@ -71,7 +71,7 @@
           headerCheckboxSelection: i === 0 && canEdit,
           checkboxSelection: i === 0 && canEdit,
           valueSetter: setters.get(schema[key].type),
-          headerName: key.charAt(0).toUpperCase() + key.slice(1),
+          headerName: key,
           field: key,
           hide: shouldHideField(key),
           sortable: true,
@@ -80,16 +80,32 @@
           autoHeight: true,
         }
       })
+
+      if (detailUrl) {
+        columnDefs = [
+          ...columnDefs,
+          {
+            headerName: "Detail",
+            field: "_id",
+            minWidth: 100,
+            width: 100,
+            flex: 0,
+            editable: false,
+            sortable: false,
+            cellRenderer: getRenderer({
+              type: "_id",
+              options: { detailUrl },
+            }),
+            autoHeight: true,
+            pinned: "left",
+            filter: false,
+          },
+        ]
+      }
+
       dataLoaded = true
     }
   })
-
-  const isEditable = type =>
-    type !== "boolean" &&
-    type !== "options" &&
-    // type !== "datetime" &&
-    type !== "link" &&
-    type !== "attachment"
 
   const shouldHideField = name => {
     if (name.startsWith("_")) return true
@@ -99,10 +115,6 @@
     if (name === "tableId") return true
 
     return false
-  }
-
-  const handleNewRow = async () => {
-    data = await fetchData(datasource)
   }
 
   const handleUpdate = ({ detail }) => {
@@ -134,11 +146,10 @@
     href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 </svelte:head>
 
-<div style="--grid-height: {height}px">
+<div class="container" style="--grid-height: {height}px">
   {#if dataLoaded}
     {#if canAddDelete}
       <div class="controls">
-        <CreateRowButton {_bb} {table} on:newRow={handleNewRow} />
         {#if selectedRows.length > 0}
           <DeleteButton text small on:click={modal.show()}>
             <Icon name="addrow" />
@@ -168,7 +179,12 @@
 </div>
 
 <style>
+  .container :global(.ag-pinned-left-header .ag-header-cell-label) {
+    justify-content: center;
+  }
+
   .controls {
+    min-height: 15px;
     margin-bottom: var(--spacing-s);
     display: grid;
     grid-gap: var(--spacing-s);

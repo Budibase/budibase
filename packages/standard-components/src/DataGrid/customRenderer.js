@@ -2,6 +2,7 @@
 // https://www.ag-grid.com/javascript-grid-cell-rendering-components/
 
 import AttachmentCell from "./AttachmentCell/Button.svelte"
+import ViewDetails from "./ViewDetails/Cell.svelte"
 import Select from "./Select/Wrapper.svelte"
 import DatePicker from "./DateTime/Wrapper.svelte"
 import RelationshipDisplay from "./Relationship/RelationshipDisplay.svelte"
@@ -11,18 +12,23 @@ const renderers = new Map([
   ["attachment", attachmentRenderer],
   ["options", optionsRenderer],
   ["link", linkedRowRenderer],
+  ["_id", viewDetailsRenderer],
 ])
 
-export function getRenderer({ type, constraints }, editable) {
-  if (renderers.get(type)) {
-    return renderers.get(type)(constraints, editable)
+export function getRenderer(schema, editable) {
+  if (renderers.get(schema.type)) {
+    return renderers.get(schema.type)(
+      schema.options,
+      schema.constraints,
+      editable
+    )
   } else {
     return false
   }
 }
 
 /* eslint-disable no-unused-vars */
-function booleanRenderer(constraints, editable) {
+function booleanRenderer(options, constraints, editable) {
   return params => {
     const toggle = e => {
       params.value = !params.value
@@ -44,7 +50,7 @@ function booleanRenderer(constraints, editable) {
   }
 }
 /* eslint-disable no-unused-vars */
-function attachmentRenderer(constraints, editable) {
+function attachmentRenderer(options, constraints, editable) {
   return params => {
     const container = document.createElement("div")
 
@@ -66,7 +72,7 @@ function attachmentRenderer(constraints, editable) {
   }
 }
 /* eslint-disable no-unused-vars */
-function dateRenderer(constraints, editable) {
+function dateRenderer(options, constraints, editable) {
   return function(params) {
     const container = document.createElement("div")
     const toggle = e => {
@@ -74,8 +80,7 @@ function dateRenderer(constraints, editable) {
     }
 
     // Options need to be passed in with minTime and maxTime! Needs bbui update.
-
-    const datePickerInstance = new DatePicker({
+    new DatePicker({
       target: container,
       props: {
         value: params.value,
@@ -86,7 +91,7 @@ function dateRenderer(constraints, editable) {
   }
 }
 
-function optionsRenderer({ inclusion }, editable) {
+function optionsRenderer(options, constraints, editable) {
   return params => {
     if (!editable) return params.value
     const container = document.createElement("div")
@@ -101,7 +106,7 @@ function optionsRenderer({ inclusion }, editable) {
       target: container,
       props: {
         value: params.value,
-        options: inclusion,
+        options: constraints.inclusion,
       },
     })
 
@@ -111,7 +116,7 @@ function optionsRenderer({ inclusion }, editable) {
   }
 }
 /* eslint-disable no-unused-vars */
-function linkedRowRenderer(constraints, editable) {
+function linkedRowRenderer(options, constraints, editable) {
   return params => {
     let container = document.createElement("div")
     container.style.display = "grid"
@@ -124,6 +129,28 @@ function linkedRowRenderer(constraints, editable) {
         row: params.data,
         columnName: params.column.colId,
       },
+    })
+
+    return container
+  }
+}
+
+/* eslint-disable no-unused-vars */
+function viewDetailsRenderer(options, constraints, editable) {
+  return params => {
+    let container = document.createElement("div")
+    container.style.display = "grid"
+    container.style.alignItems = "center"
+    container.style.height = "100%"
+
+    let url = "/"
+    if (options.detailUrl) {
+      url = options.detailUrl.replace(":id", params.data._id)
+    }
+
+    new ViewDetails({
+      target: container,
+      props: { url },
     })
 
     return container
