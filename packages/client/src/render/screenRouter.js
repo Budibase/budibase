@@ -44,7 +44,7 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
   }
 
   const routes = screens.map(s => makeRootedPath(s.route))
-  let fallback = routes.findIndex(([p]) => p === "*")
+  let fallback = routes.findIndex(([p]) => p === makeRootedPath("*"))
   if (fallback < 0) fallback = 0
 
   let current
@@ -53,7 +53,7 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
     const _url = makeRootedPath(url.state || url)
     current = routes.findIndex(
       p =>
-        p !== "*" &&
+        p !== makeRootedPath("*") &&
         new RegExp("^" + p.toLowerCase() + "$").test(_url.toLowerCase())
     )
 
@@ -61,6 +61,8 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
 
     if (current === -1) {
       routes.forEach((p, i) => {
+        // ignore home - which matched everything
+        if (p === makeRootedPath("*")) return
         const pm = regexparam(p)
         const matches = pm.pattern.exec(_url)
 
