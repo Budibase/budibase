@@ -1,5 +1,6 @@
 <script>
   import api from "builderStore/api"
+  import { backendUiStore } from "builderStore"
   import Table from "./Table.svelte"
   import CalculateButton from "./buttons/CalculateButton.svelte"
   import GroupByButton from "./buttons/GroupByButton.svelte"
@@ -22,6 +23,15 @@
   }
 
   async function fetchViewData(name, field, groupBy, calculation) {
+    const tables = $backendUiStore.tables
+    const allTableViews = tables.map(table => table.views)
+    const thisView = allTableViews.filter(
+      views => views != null && views[name] != null
+    )[0]
+    // don't fetch view data if the view no longer exists
+    if (!thisView) {
+      return
+    }
     const params = new URLSearchParams()
     if (calculation) {
       params.set("field", field)
