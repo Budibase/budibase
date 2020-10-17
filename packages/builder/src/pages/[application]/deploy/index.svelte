@@ -5,6 +5,7 @@
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
+  import DeploymentHistory from "components/deploy/DeploymentHistory.svelte"
   import analytics from "analytics"
 
   let deployed = false
@@ -43,8 +44,8 @@
 
   async function fetchDeployments() {
     try {
-      const response = api.get(`/api/deployments`)
-      deployments = await response.json
+      const response = await api.get(`/api/deployments`)
+      deployments = await response.json()
     } catch (err) {
       console.error(err)
       notifier.danger("Error fetching deployment history. Please try again.")
@@ -74,11 +75,7 @@
   <img
     src="/_builder/assets/deploy-rocket.jpg"
     alt="Rocket flying through sky" />
-  <section class="deployment-history">
-    {#each deployments as deployment}
-      <div>{JSON.stringify(deployment)}</div>
-    {/each}
-  </section>
+  <DeploymentHistory {deployments} />
 </section>
 
 <style>
@@ -111,14 +108,5 @@
     margin-left: auto;
     margin-right: auto;
     width: 50%;
-  }
-
-  .deployment-history {
-    height: 100%;
-    width: 400px;
-    position: absolute;
-    right: 0;
-    background: var(--white);
-    overflow-y: scroll;
   }
 </style>
