@@ -51,6 +51,7 @@ router
       process.env.NODE_ENV !== "cypress"
     await next()
   })
+  .use("/health", ctx => (ctx.status = 200))
   .use(authenticated)
 
 // error handling middleware
