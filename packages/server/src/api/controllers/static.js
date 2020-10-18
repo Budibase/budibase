@@ -198,7 +198,7 @@ exports.serveComponentLibrary = async function(ctx) {
   // default to homedir
   let componentLibraryPath = resolve(
     budibaseAppsDir(),
-    ctx.user.appId,
+    ctx.query.appId,
     "node_modules",
     decodeURI(ctx.query.library),
     "package",
@@ -215,7 +215,7 @@ exports.serveComponentLibrary = async function(ctx) {
 
   // TODO: component libs should be versioned based on app version
   if (process.env.CLOUD) {
-    const appId = ctx.user.appId
+    const appId = ctx.query.appId
     const S3_URL = encodeURI(
       `https://${appId}.app.budi.live/assets/componentlibrary/${ctx.query.library}/dist/index.js`
     )
