@@ -137,7 +137,7 @@ exports.fetchDeployments = async function(ctx) {
   try {
     const db = new PouchDB(ctx.user.instanceId)
     const deploymentDoc = await db.get("_local/deployments")
-    ctx.body = Object.values(deploymentDoc.history)
+    ctx.body = Object.values(deploymentDoc.history).reverse()
   } catch (err) {
     ctx.body = []
   }

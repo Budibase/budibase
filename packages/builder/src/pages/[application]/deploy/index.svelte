@@ -8,9 +8,9 @@
   import DeploymentHistory from "components/deploy/DeploymentHistory.svelte"
   import analytics from "analytics"
 
-  let deployed = false
   let loading = false
   let deployments = []
+  let poll
 
   $: appId = $store.appId
 
@@ -26,8 +26,7 @@
         throw new Error()
       }
 
-      notifier.success(`Your Deployment is Complete.`)
-      deployed = true
+      notifier.info(`Deployment started. Please wait.`)
       loading = false
       analytics.captureEvent("Deployed App", {
         appId,
@@ -41,42 +40,24 @@
       loading = false
     }
   }
-
-  async function fetchDeployments() {
-    try {
-      const response = await api.get(`/api/deployments`)
-      deployments = await response.json()
-    } catch (err) {
-      console.error(err)
-      notifier.danger("Error fetching deployment history. Please try again.")
-    }
-  }
-
-  onMount(fetchDeployments)
 </script>
 
 <section>
   <div>
     <h4>It's time to shine!</h4>
-    {#if deployed}
-      <a target="_blank" href={`https://${appId}.app.budi.live/${appId}`}>
-        View App
-      </a>
-    {:else}
-      <Button secondary medium on:click={deployApp}>
-        Deploy App
-        {#if loading}
-          <Spacer extraSmall />
-          <Spinner size="10" />
-        {/if}
-      </Button>
-    {/if}
+    <Button secondary medium on:click={deployApp}>
+      Deploy App
+      {#if loading}
+        <Spacer extraSmall />
+        <Spinner size="10" />
+      {/if}
+    </Button>
   </div>
   <img
     src="/_builder/assets/deploy-rocket.jpg"
     alt="Rocket flying through sky" />
-  <DeploymentHistory {deployments} />
 </section>
+<DeploymentHistory {appId} />
 
 <style>
   img {
