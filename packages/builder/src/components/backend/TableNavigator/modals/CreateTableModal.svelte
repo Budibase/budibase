@@ -38,21 +38,21 @@
   }
 
   async function saveTable() {
+    // Create table
     const table = await backendUiStore.actions.tables.save({
       name,
       schema: dataImport.schema || {},
       dataImport,
     })
     notifier.success(`Table ${name} created successfully.`)
-    $goto(`./table/${table._id}`)
     analytics.captureEvent("Table Created", { name })
 
+    // Create auto screens
     const screens = screenTemplates($store, [table])
       .filter(template => defaultScreens.includes(template.id))
       .map(template => template.create())
-
     for (let screen of screens) {
-      // record the table that created this screen so we can link it later
+      // Record the table that created this screen so we can link it later
       screen.autoTableId = table._id
       try {
         await store.createScreen(screen)
@@ -65,6 +65,15 @@
         // we should remove this after this has been released
       }
     }
+
+    // Create autolink to newly created list page
+    const listPage = screens.find(screen =>
+      screen.props._instanceName.endsWith("List")
+    )
+    await store.createLink(listPage.route, table.name)
+
+    // Navigate to new table
+    $goto(`./table/${table._id}`)
   }
 </script>
 
