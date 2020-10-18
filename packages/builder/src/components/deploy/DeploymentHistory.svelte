@@ -1,5 +1,9 @@
 <script>
+  import { onMount, onDestroy } from "svelte"
+  import { slide } from "svelte/transition"
   import { Heading, Body } from "@budibase/bbui"
+  import api from "builderStore/api"
+  import { notifier } from "builderStore/store/notifications"
 
   const DATE_OPTIONS = {
     fullDate: {
@@ -14,53 +18,88 @@
       hour12: true,
     },
   }
+  const POLL_INTERVAL = 1000
 
-  export let deployments
   export let appId
+
+  let poll
+  let deployments = []
+  let deploymentUrl = `https://${appId}.app.budi.live/${appId}`
 
   const formatDate = (date, format) =>
     Intl.DateTimeFormat("en-GB", DATE_OPTIONS[format]).format(date)
+
+  async function fetchDeployments() {
+    try {
+      const response = await api.get(`/api/deployments`)
+      deployments = await response.json()
+    } catch (err) {
+      console.error(err)
+      clearInterval(poll)
+      notifier.danger("Error fetching deployment history. Please try again.")
+    }
+  }
+
+  onMount(() => {
+    poll = setInterval(fetchDeployments, POLL_INTERVAL)
+  })
+
+  onDestroy(() => clearInterval(poll))
 </script>
 
-<section class="deployment-history">
-  <Heading black small style="margin-left: 20px;">Deployment History</Heading>
-  {#if deployments.length > 0}
-    <Body small grey>
+{#if deployments.length > 0}
+  <section class="deployment-history" in:slide>
+    <header>
+      <h4>Deployment History</h4>
       <a target="_blank" href={`https://${appId}.app.budi.live/${appId}`}>
         View Your Deployed App →
       </a>
-    </Body>
-  {/if}
-  {#each deployments as deployment}
-    <article class="deployment">
-      <div class="deployment-info">
-        <span class="deploy-date">
-          {formatDate(deployment.updatedAt, 'fullDate')}
-        </span>
-        <span class="deploy-time">
-          {formatDate(deployment.updatedAt, 'timeOnly')}
-        </span>
-      </div>
-      <div class={`deployment-status ${deployment.status}`}>
-        {deployment.status}
-      </div>
-    </article>
-  {/each}
-</section>
+    </header>
+    <div class="deployment-list">
+      {#each deployments as deployment}
+        <article class="deployment">
+          <div class="deployment-info">
+            <span class="deploy-date">
+              {formatDate(deployment.updatedAt, 'fullDate')}
+            </span>
+            <span class="deploy-time">
+              {formatDate(deployment.updatedAt, 'timeOnly')}
+            </span>
+          </div>
+          <div class={`deployment-status ${deployment.status}`}>
+            {deployment.status}
+          </div>
+        </article>
+      {/each}
+    </div>
+  </section>
+{/if}
 
 <style>
-  section > .deployment:nth-child(odd) {
+  .deployment:nth-child(odd) {
     background: var(--grey-1);
+  }
+
+  .deployment-list {
+    height: 40vh;
+    overflow-y: scroll;
+  }
+
+  h4 {
+    margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-s);
+  }
+
+  header {
+    margin-left: var(--spacing-l);
+    margin-bottom: var(--spacing-xl);
   }
 
   .deployment-history {
     position: absolute;
-    right: 0;
-    top: 0;
-    height: 100vh;
-    width: 400px;
+    bottom: 0;
+    width: 100%;
     background: var(--white);
-    overflow-y: scroll;
   }
 
   .deployment {
@@ -103,6 +142,7 @@
   a {
     color: var(--blue);
     font-weight: 500;
+    font-size: var(--font-size-s);
   }
 
   .SUCCESS {
