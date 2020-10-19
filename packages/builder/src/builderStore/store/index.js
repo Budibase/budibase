@@ -27,7 +27,9 @@ import {
   regenerateCssForScreen,
   generateNewIdsForComponent,
   getComponentDefinition,
+  findChildComponentType,
 } from "../storeUtils"
+
 export const getStore = () => {
   const initial = {
     apps: [],
@@ -56,6 +58,7 @@ export const getStore = () => {
   store.setCurrentScreen = setCurrentScreen(store)
   store.deleteScreens = deleteScreens(store)
   store.setCurrentPage = setCurrentPage(store)
+  store.createLink = createLink(store)
   store.createScreen = createScreen(store)
   store.addStylesheet = addStylesheet(store)
   store.removeStylesheet = removeStylesheet(store)
@@ -185,6 +188,58 @@ const createScreen = store => async screen => {
     state.currentFrontEndType = "screen"
     regenerateCssForCurrentScreen(state)
     savePromise = _saveScreen(store, state, screen)
+    return state
+  })
+  await savePromise
+}
+
+const createLink = store => async (url, title) => {
+  let savePromise
+  store.update(state => {
+    // Try to extract a nav component from the master screen
+    const nav = findChildComponentType(
+      state.pages.main,
+      "@budibase/standard-components/Navigation"
+    )
+    if (nav) {
+      let newLink
+
+      // Clone an existing link if one exists
+      if (nav._children && nav._children.length) {
+        // Clone existing link style
+        newLink = cloneDeep(nav._children[0])
+
+        // Manipulate IDs to ensure uniqueness
+        generateNewIdsForComponent(newLink, state, false)
+
+        // Set our new props
+        newLink._instanceName = `${title} Link`
+        newLink.url = url
+        newLink.text = title
+      } else {
+        // Otherwise create vanilla new link
+        const component = getComponentDefinition(
+          state,
+          "@budibase/standard-components/link"
+        )
+        const instanceId = get(backendUiStore).selectedDatabase._id
+        newLink = createProps(component, {
+          url,
+          text: title,
+          _instanceName: `${title} Link`,
+          _instanceId: instanceId,
+        }).props
+      }
+
+      // Save page and regenerate all CSS because otherwise weird things happen
+      nav._children = [...nav._children, newLink]
+      setCurrentPage("main")
+      regenerateCssForScreen(state.pages.main)
+      for (let screen of state.pages.main._screens) {
+        regenerateCssForScreen(screen)
+      }
+      savePromise = _savePage(state)
+    }
     return state
   })
   await savePromise

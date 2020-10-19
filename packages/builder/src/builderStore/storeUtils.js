@@ -38,7 +38,7 @@ export const saveCurrentPreviewItem = s =>
 export const savePage = async s => {
   const pageName = s.currentPageName || "main"
   const page = s.pages[pageName]
-  await api.post(`/_builder/api/${s.appId}/pages/${s.currentPageName}`, {
+  await api.post(`/_builder/api/${s.appId}/pages/${pageName}`, {
     page: { componentLibraries: s.pages.componentLibraries, ...page },
     uiFunctions: s.currentPageFunctions,
     screens: page._screens,
@@ -84,7 +84,9 @@ export const regenerateCssForScreen = screen => {
 }
 
 export const regenerateCssForCurrentScreen = state => {
-  regenerateCssForScreen(state.currentPreviewItem)
+  if (state.currentPreviewItem) {
+    regenerateCssForScreen(state.currentPreviewItem)
+  }
   return state
 }
 
@@ -96,3 +98,33 @@ export const generateNewIdsForComponent = (c, state, changeName = true) =>
 
 export const getComponentDefinition = (state, name) =>
   name.startsWith("##") ? getBuiltin(name) : state.components[name]
+
+export const findChildComponentType = (node, typeToFind) => {
+  // Stop recursion if invalid props
+  if (!node || !typeToFind) {
+    return null
+  }
+
+  // Stop recursion if this element matches
+  if (node._component === typeToFind) {
+    return node
+  }
+
+  // Otherwise check if any children match
+  // Stop recursion if no valid children to process
+  const children = node._children || (node.props && node.props._children)
+  if (!children || !children.length) {
+    return null
+  }
+
+  // Recurse and check each child component
+  for (let child of children) {
+    const childResult = findChildComponentType(child, typeToFind)
+    if (childResult) {
+      return childResult
+    }
+  }
+
+  // If we reach here then no children were valid
+  return null
+}
