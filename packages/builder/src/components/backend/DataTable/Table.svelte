@@ -178,6 +178,7 @@
   td {
     max-width: 200px;
     text-overflow: ellipsis;
+    overflow: hidden;
     border: 1px solid var(--grey-4);
     white-space: nowrap;
     box-sizing: border-box;
