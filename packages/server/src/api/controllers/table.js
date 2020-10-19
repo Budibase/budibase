@@ -109,7 +109,7 @@ exports.save = async function(ctx) {
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, instanceId, tableToSave)
 
-  if (dataImport && dataImport.path) {
+  if (dataImport && dataImport.csvString) {
     // Populate the table with rows imported from CSV in a bulk update
     const data = await csvParser.transform(dataImport)
 
@@ -156,10 +156,7 @@ exports.destroy = async function(ctx) {
 }
 
 exports.validateCSVSchema = async function(ctx) {
-  const { file, schema = {} } = ctx.request.body
-  const result = await csvParser.parse(file.path, schema)
-  ctx.body = {
-    schema: result,
-    path: file.path,
-  }
+  const { csvString, schema = {} } = ctx.request.body
+  const result = await csvParser.parse(csvString, schema)
+  ctx.body = { schema: result }
 }
