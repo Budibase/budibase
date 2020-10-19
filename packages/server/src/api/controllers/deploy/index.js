@@ -30,11 +30,6 @@ async function replicateCouch({ instanceId, clientId, session }) {
           return CouchDB.fetch(url, opts)
         },
       }
-      // {
-      //   auth: {
-      //     ...credentials,
-      //   },
-      // }
     )
 
     return replicate(localDb, remoteDb)
