@@ -1,5 +1,6 @@
 const fs = require("fs")
 const { join } = require("../../../utilities/centralPath")
+let { wait } = require("../../../utilities")
 const AWS = require("aws-sdk")
 const fetch = require("node-fetch")
 const uuid = require("uuid")
@@ -7,10 +8,15 @@ const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const PouchDB = require("../../../db")
 const environment = require("../../../environment")
 
+const MAX_INVALIDATE_WAIT_MS = 120000
+const INVALIDATE_WAIT_PERIODS_MS = 5000
+
+// export so main deploy functions can use too
+exports.MAX_INVALIDATE_WAIT_MS = MAX_INVALIDATE_WAIT_MS
+
 async function invalidateCDN(cfDistribution, appId) {
   const cf = new AWS.CloudFront({})
-
-  return cf
+  const resp = await cf
     .createInvalidation({
       DistributionId: cfDistribution,
       InvalidationBatch: {
@@ -22,6 +28,28 @@ async function invalidateCDN(cfDistribution, appId) {
       },
     })
     .promise()
+  let totalWaitTimeMs = 0
+  let complete = false
+  do {
+    try {
+      const state = await cf
+        .getInvalidation({
+          DistributionId: cfDistribution,
+          Id: resp.Invalidation.Id,
+        })
+        .promise()
+      if (state.Invalidation.Status === "Completed") {
+        complete = true
+      }
+    } catch (err) {
+      console.log()
+    }
+    await wait(INVALIDATE_WAIT_PERIODS_MS)
+    totalWaitTimeMs += INVALIDATE_WAIT_PERIODS_MS
+  } while (totalWaitTimeMs <= MAX_INVALIDATE_WAIT_MS && !complete)
+  if (!complete) {
+    throw "Unable to invalidate old app version"
+  }
 }
 
 exports.updateDeploymentQuota = async function(quota) {
