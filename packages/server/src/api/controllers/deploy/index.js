@@ -24,7 +24,7 @@ function replicate(local, remote) {
   })
 }
 
-async function replicateCouch({ instanceId, clientId, credentials }) {
+async function replicateCouch({ instanceId, clientId, session }) {
   const databases = [`client_${clientId}`, "client_app_lookup", instanceId]
 
   const replications = databases.map(localDbName => {
@@ -32,8 +32,9 @@ async function replicateCouch({ instanceId, clientId, credentials }) {
     const remoteDb = new CouchDB(
       `${process.env.DEPLOYMENT_DB_URL}/${localDbName}`,
       {
-        auth: {
-          ...credentials,
+        fetch: function(url, opts) {
+          opts.headers.set("Cookie", `${session};`)
+          return CouchDB.fetch(url, opts)
         },
       }
     )
@@ -118,7 +119,7 @@ async function deployApp({ instanceId, appId, clientId, deploymentId }) {
     await replicateCouch({
       instanceId,
       clientId,
-      credentials: credentials.couchDbCreds,
+      session: credentials.couchDbSession,
     })
 
     await updateDeploymentQuota(credentials.quota)
