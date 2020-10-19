@@ -18,17 +18,6 @@ exports.create = async function(ctx) {
 
   const db = new CouchDB(instanceId)
   await db.put({
-    _id: "_security",
-    admins: {
-      names: [],
-      roles: [],
-    },
-    members: {
-      names: [],
-      roles: [],
-    },
-  })
-  await db.put({
     _id: "_design/database",
     metadata: {
       clientId,
