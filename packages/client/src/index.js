@@ -21,7 +21,7 @@ export const loadBudibase = async opts => {
   for (let library of libraries) {
     // fetch the JavaScript for the component libraries from the server
     componentLibraryModules[library] = await import(
-      `/componentlibrary?library=${encodeURI(library)}`
+      `/componentlibrary?library=${encodeURI(library)}&appId=${appId}`
     )
   }
 

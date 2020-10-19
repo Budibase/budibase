@@ -1,7 +1,14 @@
 <script>
   import { goto } from "@sveltech/routify"
   import { store, backendUiStore } from "builderStore"
-  import { Input, Button, Spacer, Select, ModalContent } from "@budibase/bbui"
+  import {
+    Input,
+    Button,
+    Spacer,
+    Select,
+    ModalContent,
+    Toggle,
+  } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
   import { some } from "lodash/fp"
   import analytics from "analytics"
@@ -13,6 +20,7 @@
   let baseComponent = CONTAINER
   let templateIndex
   let draftScreen
+  let createLink = true
 
   $: templates = getTemplates($store, $backendUiStore.tables)
 
@@ -46,7 +54,7 @@
     }
   }
 
-  const save = () => {
+  const save = async () => {
     if (!route) {
       routeError = "Url is required"
     } else {
@@ -63,7 +71,10 @@
     draftScreen.props._component = baseComponent
     draftScreen.route = route
 
-    store.createScreen(draftScreen)
+    await store.createScreen(draftScreen)
+    if (createLink) {
+      await store.createLink(route, name)
+    }
 
     if (templateIndex !== undefined) {
       const template = templates[templateIndex]
@@ -108,4 +119,6 @@
     error={routeError}
     bind:value={route}
     on:change={routeChanged} />
+
+  <Toggle text="Create link in navigation bar" bind:checked={createLink} />
 </ModalContent>
