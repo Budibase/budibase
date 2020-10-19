@@ -74,6 +74,13 @@
         }}>
         <PreviewIcon />
       </span>
+      <span class="topnavitemright">
+        <a
+          target="_blank"
+          href="https://github.com/Budibase/budibase/discussions">
+          <i class="ri-question-fill help" />
+        </a>
+      </span>
     </div>
   </div>
 
@@ -185,5 +192,10 @@
   }
   span:first-letter {
     text-transform: capitalize;
+  }
+
+  .help {
+    font-size: 24px;
+    color: var(--grey-7);
   }
 </style>
