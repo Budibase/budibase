@@ -75,6 +75,13 @@
         <PreviewIcon />
       </span>
     </div>
+    <div class="help-button">
+      <a
+        target="_blank"
+        href="https://github.com/Budibase/budibase/discussions">
+        <i class="ri-question-line" />
+      </a>
+    </div>
   </div>
 
   {#await promise}
@@ -99,6 +106,23 @@
   a {
     text-transform: none;
     color: var(--grey-5);
+  }
+
+  .help-button {
+    position: absolute;
+    bottom: var(--spacing-m);
+    right: var(--spacing-m);
+    font-size: 40px;
+    cursor: pointer;
+  }
+
+  .help-button i {
+    color: var(--grey-7);
+    transition: 0.5s all;
+  }
+
+  .help-button i:hover {
+    color: var(--blue);
   }
 
   .top-nav {
