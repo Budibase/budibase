@@ -1,6 +1,7 @@
-const csvParser = require("../csvParser");
+const fs = require("fs")
+const csvParser = require("../csvParser")
 
-const CSV_PATH = __dirname + "/test.csv";
+const CSV_PATH = __dirname + "/test.csv"
 
 const SCHEMAS = {
   VALID: {
@@ -27,16 +28,16 @@ const SCHEMAS = {
   BROKEN: {
     Address: {
       type: "datetime",
-    }
+    },
   },
-};
+}
 
 describe("CSV Parser", () => {
+  const csvString = fs.readFileSync(CSV_PATH, "utf8")
+
   describe("parsing", () => {
     it("returns status and types for a valid CSV transformation", async () => {
-      expect(
-        await csvParser.parse(CSV_PATH, SCHEMAS.VALID)
-      ).toEqual({
+      expect(await csvParser.parse(csvString, SCHEMAS.VALID)).toEqual({
         Address: {
           success: true,
           type: "string",
@@ -49,13 +50,11 @@ describe("CSV Parser", () => {
           success: true,
           type: "string",
         },
-      });
-    });
+      })
+    })
 
     it("returns status and types for an invalid CSV transformation", async () => {
-      expect(
-        await csvParser.parse(CSV_PATH, SCHEMAS.INVALID)
-      ).toEqual({
+      expect(await csvParser.parse(csvString, SCHEMAS.INVALID)).toEqual({
         Address: {
           success: false,
           type: "number",
@@ -68,41 +67,43 @@ describe("CSV Parser", () => {
           success: true,
           type: "string",
         },
-      });
-    });
-  });
+      })
+    })
+  })
 
   describe("transformation", () => {
     it("transforms a CSV file into JSON", async () => {
       expect(
         await csvParser.transform({
           schema: SCHEMAS.VALID,
-          path: CSV_PATH,
+          csvString,
         })
-      ).toMatchSnapshot();
-    });
+      ).toMatchSnapshot()
+    })
 
     it("transforms a CSV file into JSON ignoring certain fields", async () => {
       expect(
         await csvParser.transform({
           schema: SCHEMAS.IGNORE,
-          path: CSV_PATH,
+          csvString,
         })
       ).toEqual([
         {
-          Name: "Bert"
+          Name: "Bert",
         },
         {
-          Name: "Ernie"
+          Name: "Ernie",
         },
         {
-          Name: "Big Bird"
-        }
-      ]);
-    });
+          Name: "Big Bird",
+        },
+      ])
+    })
 
     it("throws an error on invalid schema", async () => {
-      await expect(csvParser.transform({ schema: SCHEMAS.BROKEN, path: CSV_PATH })).rejects.toThrow()
-    });
-  });
-});
+      await expect(
+        csvParser.transform({ schema: SCHEMAS.BROKEN, csvString })
+      ).rejects.toThrow()
+    })
+  })
+})
