@@ -1,5 +1,6 @@
 <script>
   import { store, automationStore, backendUiStore } from "builderStore"
+  import { Button } from "@budibase/bbui"
   import SettingsLink from "components/settings/Link.svelte"
   import { get } from "builderStore/api"
   import { isActive, goto, layout } from "@sveltech/routify"
@@ -82,6 +83,13 @@
         </a>
       </span>
     </div>
+  </div>
+  <div class="beta">
+    <Button
+      secondary
+      href="https://www.budibase.com/blog/budibase-public-beta/">
+      Budibase is in Beta
+    </Button>
   </div>
 
   {#await promise}
@@ -197,5 +205,11 @@
   .help {
     font-size: 24px;
     color: var(--grey-7);
+  }
+
+  .beta {
+    position: absolute;
+    bottom: var(--spacing-m);
+    left: var(--spacing-m);
   }
 </style>
