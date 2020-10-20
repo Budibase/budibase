@@ -85,7 +85,11 @@
     </div>
   </div>
   <div class="beta">
-    <Button secondary href="https://budibase.com">Budibase is in Beta</Button>
+    <Button
+      secondary
+      href="https://www.budibase.com/blog/budibase-public-beta/">
+      Budibase is in Beta
+    </Button>
   </div>
 
   {#await promise}
