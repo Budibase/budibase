@@ -5,7 +5,7 @@
 </script>
 
 <div class="spinner-container">
-<Circle {size} color="#000000" unit="px" />
+  <Circle {size} color="#000000" unit="px" />
 </div>
 
 <style>

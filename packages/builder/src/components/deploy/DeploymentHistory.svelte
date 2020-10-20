@@ -68,7 +68,7 @@
             </span>
           </div>
           <div class="deployment-right">
-            {#if deployment.status.toLowerCase() === "pending"}
+            {#if deployment.status.toLowerCase() === 'pending'}
               <Spinner size="10" />
             {/if}
             <div class={`deployment-status ${deployment.status}`}>
