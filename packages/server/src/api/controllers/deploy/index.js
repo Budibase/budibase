@@ -47,7 +47,7 @@ async function checkAllDeployments(deployments, user) {
       } catch (err) {
         // system may have restarted, need to re-verify
         if (
-          err != null &&
+          err !== undefined &&
           err.code === "InvalidClientTokenId" &&
           deployment.quota
         ) {
@@ -59,6 +59,8 @@ async function checkAllDeployments(deployments, user) {
             deployment.cfDistribution,
             deployment.invalidationId
           )
+        } else {
+          throw err
         }
       }
       if (complete) {
