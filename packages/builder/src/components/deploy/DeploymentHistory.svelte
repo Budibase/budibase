@@ -19,7 +19,7 @@
       hour12: true,
     },
   }
-  const POLL_INTERVAL = 1000
+  const POLL_INTERVAL = 5000
 
   export let appId
 
@@ -68,7 +68,7 @@
             </span>
           </div>
           <div class="deployment-right">
-            {#if deployment.status.toLowerCase() === "pending"}
+            {#if deployment.status.toLowerCase() === 'pending'}
               <Spinner size="10" />
             {/if}
             <div class={`deployment-status ${deployment.status}`}>
