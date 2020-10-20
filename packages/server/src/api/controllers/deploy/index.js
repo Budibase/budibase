@@ -4,15 +4,65 @@ const {
   uploadAppAssets,
   verifyDeployment,
   updateDeploymentQuota,
-  MAX_INVALIDATE_WAIT_MS,
+  isInvalidationComplete,
 } = require("./aws")
 const { DocumentTypes, SEPARATOR, UNICODE_MAX } = require("../../../db/utils")
 const newid = require("../../../db/newid")
+
+// the max time we can wait for an invalidation to complete before considering it failed
+const MAX_PENDING_TIME_MS = 30 * 60000
 
 const DeploymentStatus = {
   SUCCESS: "SUCCESS",
   PENDING: "PENDING",
   FAILURE: "FAILURE",
+}
+
+// checks that deployments are in a good state, any pending will be updated
+async function checkAllDeployments(deployments, user) {
+  let updated = false
+  function update(deployment, status) {
+    deployment.status = status
+    delete deployment.invalidationId
+    delete deployment.cfDistribution
+    updated = true
+  }
+
+  for (let deployment of Object.values(deployments.history)) {
+    // check that no deployments have crashed etc and are now stuck
+    if (
+      deployment.status === DeploymentStatus.PENDING &&
+      Date.now() - deployment.updatedAt > MAX_PENDING_TIME_MS
+    ) {
+      update(deployment, DeploymentStatus.FAILURE)
+    }
+    // if pending but not past failure point need to update them
+    else if (deployment.status === DeploymentStatus.PENDING) {
+      let complete = false
+      try {
+        complete = await isInvalidationComplete(
+          deployment.cfDistribution,
+          deployment.invalidationId
+        )
+      } catch (err) {
+        // system may have restarted, need to re-verify
+        if (err != null && err.code === "InvalidClientTokenId") {
+          await verifyDeployment({
+            ...user,
+            quota: deployment.quota,
+          })
+          complete = await isInvalidationComplete(
+            deployment.cfDistribution,
+            deployment.invalidationId
+          )
+        }
+      }
+      if (complete) {
+        update(deployment, DeploymentStatus.SUCCESS)
+      }
+    }
+  }
+  return { updated, deployments }
 }
 
 function replicate(local, remote) {
@@ -102,7 +152,7 @@ async function storeLocalDeploymentHistory(deployment) {
 async function deployApp({ instanceId, appId, clientId, deploymentId }) {
   try {
     const instanceQuota = await getCurrentInstanceQuota(instanceId)
-    const credentials = await verifyDeployment({
+    const verification = await verifyDeployment({
       instanceId,
       appId,
       quota: instanceQuota,
@@ -110,31 +160,36 @@ async function deployApp({ instanceId, appId, clientId, deploymentId }) {
 
     console.log(`Uploading assets for appID ${appId} assets to s3..`)
 
-    if (credentials.errors) throw new Error(credentials.errors)
-
-    await uploadAppAssets({ clientId, appId, instanceId, ...credentials })
+    const invalidationId = await uploadAppAssets({
+      clientId,
+      appId,
+      instanceId,
+      ...verification,
+    })
 
     // replicate the DB to the couchDB cluster in prod
     console.log("Replicating local PouchDB to remote..")
     await replicateCouch({
       instanceId,
       clientId,
-      session: credentials.couchDbSession,
+      session: verification.couchDbSession,
     })
 
-    await updateDeploymentQuota(credentials.quota)
+    await updateDeploymentQuota(verification.quota)
 
     await storeLocalDeploymentHistory({
       _id: deploymentId,
       instanceId,
-      quota: credentials.quota,
-      status: "SUCCESS",
+      invalidationId,
+      cfDistribution: verification.cfDistribution,
+      quota: verification.quota,
+      status: DeploymentStatus.PENDING,
     })
   } catch (err) {
     await storeLocalDeploymentHistory({
       _id: deploymentId,
       instanceId,
-      status: "FAILURE",
+      status: DeploymentStatus.FAILURE,
       err: err.message,
     })
     throw new Error(`Deployment Failed: ${err.message}`)
@@ -145,21 +200,14 @@ exports.fetchDeployments = async function(ctx) {
   try {
     const db = new PouchDB(ctx.user.instanceId)
     const deploymentDoc = await db.get("_local/deployments")
-    // check that no deployments have crashed etc and are now stuck
-    let changed = false
-    for (let deployment of Object.values(deploymentDoc.history)) {
-      if (
-        deployment.status === DeploymentStatus.PENDING &&
-        Date.now() - deployment.updatedAt > MAX_INVALIDATE_WAIT_MS
-      ) {
-        deployment.status = DeploymentStatus.FAILURE
-        changed = true
-      }
+    const { updated, deployments } = await checkAllDeployments(
+      deploymentDoc,
+      ctx.user
+    )
+    if (updated) {
+      await db.put(deployments)
     }
-    if (changed) {
-      await db.put(deploymentDoc)
-    }
-    ctx.body = Object.values(deploymentDoc.history).reverse()
+    ctx.body = Object.values(deployments.history).reverse()
   } catch (err) {
     ctx.body = []
   }
@@ -185,10 +233,10 @@ exports.deployApp = async function(ctx) {
   const deployment = await storeLocalDeploymentHistory({
     instanceId: ctx.user.instanceId,
     appId: ctx.user.appId,
-    status: "PENDING",
+    status: DeploymentStatus.PENDING,
   })
 
-  deployApp({
+  await deployApp({
     ...ctx.user,
     clientId,
     deploymentId: deployment._id,
