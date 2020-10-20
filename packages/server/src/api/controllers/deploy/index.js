@@ -46,7 +46,11 @@ async function checkAllDeployments(deployments, user) {
         )
       } catch (err) {
         // system may have restarted, need to re-verify
-        if (err != null && err.code === "InvalidClientTokenId") {
+        if (
+          err != null &&
+          err.code === "InvalidClientTokenId" &&
+          deployment.quota
+        ) {
           await verifyDeployment({
             ...user,
             quota: deployment.quota,
