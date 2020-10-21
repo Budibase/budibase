@@ -18,18 +18,24 @@ async function run() {
     profile = BASE_PROFILE
   }
   // basic manifest file describing the latest
-  fs.writeFileSync(MANIFEST, JSON.stringify({
-    version: packageJson.version,
-    dir: S3_COMP_DIR,
-  }))
+  fs.writeFileSync(
+    MANIFEST,
+    JSON.stringify({
+      version: packageJson.version,
+      dir: S3_COMP_DIR,
+    })
+  )
   execSync(`aws s3 sync ${TO_SYNC} ${buildS3Path()} --profile ${profile}`)
-  execSync(`aws s3 cp ${MANIFEST} ${BUCKET_LOCATION}/${MANIFEST} --profile ${profile}`)
+  execSync(
+    `aws s3 cp ${MANIFEST} ${BUCKET_LOCATION}/${MANIFEST} --profile ${profile}`
+  )
   fs.unlinkSync(MANIFEST)
 }
 
-run().then(() => {
-  console.log(`Deployment complete, version ${packageJson.version}`)
-}).catch((err) => {
-  console.error(err)
-})
-
+run()
+  .then(() => {
+    console.log(`Deployment complete, version ${packageJson.version}`)
+  })
+  .catch(err => {
+    console.error(err)
+  })
