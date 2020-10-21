@@ -4,19 +4,17 @@
   import PageLayout from "components/userInterface/PageLayout.svelte"
   import PagesList from "components/userInterface/PagesList.svelte"
   import NewScreenModal from "components/userInterface/NewScreenModal.svelte"
-  import { Button, Spacer, Modal } from "@budibase/bbui"
+  import { Button, Spacer, Modal, Heading } from "@budibase/bbui"
 
   let modal
 </script>
 
+<Heading small>Screens</Heading>
 <PagesList />
 
-<Spacer medium />
 <Button primary wide on:click={modal.show}>Create New Screen</Button>
-<Spacer medium />
-<PageLayout layout={$store.pages[$store.currentPageName]} />
-
 <div class="nav-items-container">
+  <PageLayout layout={$store.pages[$store.currentPageName]} />
   <ComponentsHierarchy screens={$store.screens} />
 </div>
 
