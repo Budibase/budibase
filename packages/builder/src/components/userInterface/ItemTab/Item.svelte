@@ -14,12 +14,12 @@
     display: flex;
     flex-direction: column;
     cursor: pointer;
-    padding: 12px 16px 16px 16px;
-    height: 80px;
     justify-content: center;
     align-items: center;
     background-color: var(--grey-1);
     border-radius: 5px;
+    width: 120px;
+    height: 80px;
   }
 
   .item-item:hover {
