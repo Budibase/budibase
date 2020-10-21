@@ -165,15 +165,14 @@ exports.serveApp = async function(ctx) {
 
 exports.serveAttachment = async function(ctx) {
   const appId = ctx.user.appId
-
   const attachmentsPath = resolve(budibaseAppsDir(), appId, "attachments")
 
   // Serve from CloudFront
   if (process.env.CLOUD) {
     const S3_URL = `https://cdn.app.budi.live/assets/${appId}/attachments/${ctx.file}`
-
     const response = await fetch(S3_URL)
     const body = await response.text()
+    ctx.set("Content-Type", response.headers.get("Content-Type"))
     ctx.body = body
     return
   }
