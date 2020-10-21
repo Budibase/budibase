@@ -26,8 +26,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "shortid": "^2.2.15",
     "sirv-cli": "^0.4.4",
-    "svelte": "^3.29.0",
-    "aws-sdk": "^2.775.0"
+    "svelte": "^3.29.0"
   },
   "keywords": [
     "svelte"
