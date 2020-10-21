@@ -73,6 +73,7 @@
     "pouchdb": "^7.2.1",
     "pouchdb-all-dbs": "^1.0.2",
     "pouchdb-replication-stream": "^1.2.9",
+    "sanitize-s3-objectkey": "^0.0.1",
     "sharp": "^0.26.0",
     "squirrelly": "^7.5.0",
     "tar-fs": "^2.1.0",
