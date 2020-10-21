@@ -11,8 +11,8 @@ const PARSERS = {
   datetime: attribute => new Date(attribute).toISOString(),
 }
 
-function parse(path, parsers) {
-  const result = csv().fromFile(path)
+function parse(csvString, parsers) {
+  const result = csv().fromString(csvString)
 
   const schema = {}
 
@@ -52,7 +52,7 @@ function parse(path, parsers) {
   })
 }
 
-async function transform({ schema, path }) {
+async function transform({ schema, csvString }) {
   const colParser = {}
 
   for (let key in schema) {
@@ -60,7 +60,7 @@ async function transform({ schema, path }) {
   }
 
   try {
-    const json = await csv({ colParser }).fromFile(path)
+    const json = await csv({ colParser }).fromString(csvString)
     return json
   } catch (err) {
     console.error(`Error transforming CSV to JSON for data import`, err)
