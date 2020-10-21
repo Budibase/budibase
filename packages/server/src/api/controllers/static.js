@@ -5,7 +5,6 @@ const fs = require("fs-extra")
 const uuid = require("uuid")
 const AWS = require("aws-sdk")
 const { prepareUploadForS3 } = require("./deploy/aws")
-
 const {
   budibaseAppsDir,
   budibaseTempDir,
@@ -14,6 +13,9 @@ const CouchDB = require("../../db")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const fileProcessor = require("../../utilities/fileProcessor")
 const { AuthTypes } = require("../../constants")
+
+// this was the version before we started versioning the component library
+const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
   let builderPath = resolve(__dirname, "../../../builder")
@@ -213,11 +215,16 @@ exports.serveComponentLibrary = async function(ctx) {
     )
   }
 
-  // TODO: component libs should be versioned based on app version
   if (process.env.CLOUD) {
+    let componentLib = "componentlibrary"
+    if (ctx.user.version) {
+      componentLib += `-${ctx.user.version}`
+    } else {
+      componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
+    }
     const appId = ctx.query.appId
     const S3_URL = encodeURI(
-      `https://${appId}.app.budi.live/assets/componentlibrary/${ctx.query.library}/dist/index.js`
+      `https://${appId}.app.budi.live/assets/${componentLib}/${ctx.query.library}/dist/index.js`
     )
     const response = await fetch(S3_URL)
     const body = await response.text()

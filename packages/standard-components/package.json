@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rollup -c",
     "prepublishOnly": "npm run build",
-    "postpublish": "scripts/deploy.sh",
+    "postpublish": "node scripts/deploy.js",
     "testbuild": "rollup -w -c rollup.testconfig.js",
     "dev": "run-p start:dev testbuild",
     "start:dev": "sirv public --single --dev",
@@ -26,7 +26,8 @@
     "rollup-plugin-terser": "^7.0.2",
     "shortid": "^2.2.15",
     "sirv-cli": "^0.4.4",
-    "svelte": "^3.29.0"
+    "svelte": "^3.29.0",
+    "aws-sdk": "^2.775.0"
   },
   "keywords": [
     "svelte"
