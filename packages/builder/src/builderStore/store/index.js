@@ -233,7 +233,7 @@ const createLink = store => async (url, title) => {
 
       // Save page and regenerate all CSS because otherwise weird things happen
       nav._children = [...nav._children, newLink]
-      setCurrentPage("main")
+      state.currentPageName = "main"
       regenerateCssForScreen(state.pages.main)
       for (let screen of state.pages.main._screens) {
         regenerateCssForScreen(screen)
