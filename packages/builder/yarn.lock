@@ -718,10 +718,10 @@
     svelte-flatpickr "^2.4.0"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^0.2.4":
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.2.4.tgz#da958faa50c59f6a9c41c692b7a19d6a6ea98bc1"
-  integrity sha512-MsFbWcsh3t1lyLgTb4UMccjshy6jd3A77lqs1CpXjHr+2LmXwvIriLgruycAvFrtqZzYG+dGe0rWwX0auwaaZw==
+"@budibase/client@^0.2.5":
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.2.5.tgz#d4f451384e88277dad16069c1d4742d5010ac1c3"
+  integrity sha512-EFfy3g44fiHnzm/kqHskeXsbVXWHQbtKe4fPP0q+wwDkp1eP2ri9oJ3kMJg3A1SZPHFGmgeRvSMoLSux+7QhCw==
   dependencies:
     deep-equal "^2.0.1"
     mustache "^4.0.1"
@@ -730,6 +730,13 @@
 "@budibase/colorpicker@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@budibase/colorpicker/-/colorpicker-1.0.1.tgz#940c180e7ebba0cb0756c4c8ef13f5dfab58e810"
+
+"@budibase/svelte-ag-grid@^0.0.13":
+  version "0.0.13"
+  resolved "https://registry.yarnpkg.com/@budibase/svelte-ag-grid/-/svelte-ag-grid-0.0.13.tgz#cbb49e2c8770dd9de51bf222423d0dede3f39207"
+  integrity sha512-pLIUsbQ57gFQThu7/MwuPXPTI1AnDrEzw2IHeHvli4VKq7DYcXbkAFs6h8pDPvbFOC6LaiVjRCnsEpEQI1x7og==
+  dependencies:
+    ag-grid-community "^24.0.0"
 
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
@@ -1305,6 +1312,11 @@ acorn@^6.0.1:
 acorn@^7.1.1:
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.2.0.tgz#17ea7e40d7c8640ff54a694c889c26f31704effe"
+
+ag-grid-community@^24.0.0:
+  version "24.1.0"
+  resolved "https://registry.yarnpkg.com/ag-grid-community/-/ag-grid-community-24.1.0.tgz#1e3cab51211822e08d56f03a491b7c0deaa398e6"
+  integrity sha512-pWnWphuDcejZ8ahf6C734EpCx3XQ6dHEZWMWTlCdHNT0mZBLJ4YKCGACX+ttAEtSX2MGM3G13JncvuratUlYag==
 
 ajv@^6.5.5:
   version "6.12.2"

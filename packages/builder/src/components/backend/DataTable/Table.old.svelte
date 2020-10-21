@@ -8,6 +8,8 @@
   import api from "builderStore/api"
   import { Button, Icon } from "@budibase/bbui"
   import ActionButton from "components/common/ActionButton.svelte"
+  import AttachmentList from "./AttachmentList.svelte"
+  import TablePagination from "./TablePagination.svelte"
   import CreateEditRowModal from "./modals/CreateEditRowModal.svelte"
   import RowPopover from "./buttons/CreateRowButton.svelte"
   import ColumnPopover from "./buttons/CreateColumnButton.svelte"
@@ -17,13 +19,7 @@
   import CalculationPopover from "./buttons/CalculateButton.svelte"
   import Spinner from "components/common/Spinner.svelte"
 
-  // New
-  import AgGrid from "@budibase/svelte-ag-grid"
-  import { getRenderer, editRowRenderer } from "./cells/cellRenderers";
-  import TableHeader from "./TableHeader"
-
-  // const ITEMS_PER_PAGE = 10
-  
+  const ITEMS_PER_PAGE = 10
 
   export let schema = []
   export let data = []
@@ -31,61 +27,18 @@
   export let allowEditing = false
   export let loading = false
 
-  // New stuff
-  export let theme = "alpine"
+  let currentPage = 0
 
-  let columnDefs = []
-
-  let options = {
-    defaultColDef: {
-      flex: 1,
-      minWidth: 150,
-      filter: true,
-    },
-    rowSelection: "multiple",
-    suppressRowClickSelection: false,
-    paginationAutoPageSize: true,
-  }
-
-  // let currentPage = 0
-  // $: columns = schema ? Object.keys(schema) : []
-  // $: sort = $backendUiStore.sort
-  // $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
-  // $: paginatedData =
-  //   sorted && sorted.length
-  //     ? sorted.slice(
-  //         currentPage * ITEMS_PER_PAGE,
-  //         currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-  //       )
-  //     : []
-  // TODO: refactor
-  $: {
-    let result = []
-    if (allowEditing) {
-      result.push({
-        headerName: "Edit",
-        sortable: false,
-        resizable: false,
-        suppressMovable: true,
-        width: 10,
-        cellRenderer: editRowRenderer
-      })
-    }
-    columnDefs = [...result, ...Object.keys(schema).map(key => ({
-      // headerCheckboxSelection: i === 0 && canEdit,
-      // checkboxSelection: i === 0 && canEdit,
-      // valueSetter: setters.get(schema[key].type),
-      headerComponent: TableHeader,
-      headerName: key,
-      field: key,
-      // hide: shouldHideField(key),
-      sortable: true,
-      // editable: canEdit && schema[key].type !== "link",
-      cellRenderer: getRenderer(schema[key], true),
-      autoHeight: true,
-      resizable: true,
-    }))]
-  }
+  $: columns = schema ? Object.keys(schema) : []
+  $: sort = $backendUiStore.sort
+  $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
+  $: paginatedData =
+    sorted && sorted.length
+      ? sorted.slice(
+          currentPage * ITEMS_PER_PAGE,
+          currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+        )
+      : []
   $: tableId = data?.length ? data[0].tableId : null
 
   function selectRelationship(row, fieldName) {
@@ -93,23 +46,8 @@
       return
     }
     $goto(
-      `/${$params.application}/data/table/${tableId}/relationship/${row._id}/${fieldName}`
+      `/${$params.application}/backend/table/${tableId}/relationship/${row._id}/${fieldName}`
     )
-  }
-
-  // New stuff
-  const deleteRows = async () => {
-    const response = await api.post(`/api/${tableId}/rows`, {
-      rows: selectedRows,
-      type: "delete",
-    })
-    data = data.filter(row => !selectedRows.includes(row))
-    selectedRows = []
-  }
-
-  const handleUpdate = ({ detail }) => {
-    data[detail.row] = detail.data
-    updateRow(detail.data)
   }
 </script>
 
@@ -127,14 +65,7 @@
       <slot />
     </div>
   </div>
-  <AgGrid 
-    {theme}
-    {options}
-    {data}
-    {columnDefs}
-    on:update={handleUpdate}
-    on:select={({ detail }) => (console.log(detail))} />
-  <!-- <table class="bb-table">
+  <table class="bb-table">
     <thead>
       <tr>
         {#if allowEditing}
@@ -188,12 +119,12 @@
         </tr>
       {/each}
     </tbody>
-  </table> -->
-  <!-- <TablePagination
+  </table>
+  <TablePagination
     {data}
     bind:currentPage
     pageItemCount={paginatedData.length}
-    {ITEMS_PER_PAGE} /> -->
+    {ITEMS_PER_PAGE} />
 </section>
 
 <style>
@@ -211,6 +142,64 @@
     margin-right: var(--spacing-xs);
   }
 
+  table {
+    border: 1px solid var(--grey-4);
+    background: #fff;
+    border-collapse: collapse;
+    margin-top: 0;
+  }
+
+  thead {
+    background: var(--grey-3);
+    border: 1px solid var(--grey-4);
+  }
+
+  thead th {
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 14px;
+    text-rendering: optimizeLegibility;
+    transition: 0.5s all;
+    vertical-align: middle;
+    height: 48px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  thead th:hover {
+    color: var(--blue);
+    cursor: pointer;
+  }
+
+  .header {
+    text-transform: capitalize;
+  }
+
+  td {
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    border: 1px solid var(--grey-4);
+    white-space: nowrap;
+    box-sizing: border-box;
+    padding: var(--spacing-l) var(--spacing-m);
+    font-size: var(--font-size-xs);
+  }
+
+  td.no-border {
+    border: none;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--grey-4);
+    transition: 0.3s background-color;
+    color: var(--ink);
+  }
+
+  tbody tr:hover {
+    background: var(--grey-1);
+  }
+
   .table-controls {
     width: 100%;
   }
@@ -222,5 +211,23 @@
   :global(.popovers > div) {
     margin-right: var(--spacing-m);
     margin-bottom: var(--spacing-xl);
+  }
+
+  .edit-header {
+    width: 60px;
+  }
+
+  .edit-header:hover {
+    cursor: default;
+    color: var(--ink);
+  }
+
+  .link {
+    text-decoration: underline;
+  }
+
+  .link:hover {
+    color: var(--grey-6);
+    cursor: pointer;
   }
 </style>
