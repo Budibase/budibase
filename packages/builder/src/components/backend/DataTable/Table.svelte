@@ -76,6 +76,9 @@
       // checkboxSelection: i === 0 && canEdit,
       // valueSetter: setters.get(schema[key].type),
       headerComponent: TableHeader,
+      headerComponentParams: {
+        field: schema[key]
+      },
       headerName: key,
       field: key,
       // hide: shouldHideField(key),
