@@ -74,7 +74,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-m);
-    padding: var(--spacing-xl);
+    padding: var(--spacing-l) var(--spacing-xl);
     overflow-y: auto;
     border-right: 1px solid var(--grey-2);
   }
