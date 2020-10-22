@@ -12,6 +12,7 @@ const { join, resolve } = require("../../utilities/centralPath")
 const { promisify } = require("util")
 const chmodr = require("chmodr")
 const { generateAppID, getAppParams } = require("../../db/utils")
+const packageJson = require("../../../package.json")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
@@ -38,7 +39,12 @@ exports.fetchAppPackage = async function(ctx) {
   const devInstance = application.instances.find(
     i => i.name === `dev-${clientId}`
   )
-  setBuilderToken(ctx, ctx.params.applicationId, devInstance._id)
+  setBuilderToken(
+    ctx,
+    ctx.params.applicationId,
+    devInstance._id,
+    application.version
+  )
 }
 
 exports.create = async function(ctx) {
@@ -64,6 +70,7 @@ exports.create = async function(ctx) {
     type: "app",
     instances: [],
     userInstanceMap: {},
+    version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
     name: ctx.request.body.name,
     template: ctx.request.body.template,
