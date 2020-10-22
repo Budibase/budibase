@@ -78,7 +78,7 @@
   }
 
   //Incase the component has a different value key name
-  const handlevalueKey = value =>
+  const handlevalueKey = (value) =>
     props.valueKey ? { [props.valueKey]: safeValue() } : { value: safeValue() }
 </script>
 
@@ -89,8 +89,8 @@
       this={control}
       {componentInstance}
       {...handlevalueKey(value)}
-      on:change={val => handleChange(key, val)}
-      onChange={val => handleChange(key, val)}
+      on:change={(val) => handleChange(key, val)}
+      onChange={(val) => handleChange(key, val)}
       {...props}
       name={key} />
   </div>
@@ -109,7 +109,7 @@
     <BindingDropdown
       {...handlevalueKey(value)}
       close={dropdown.hide}
-      on:update={e => (temporaryBindableValue = e.detail)}
+      on:update={(e) => (temporaryBindableValue = e.detail)}
       {bindableProperties} />
   </DropdownMenu>
 {/if}
@@ -119,16 +119,14 @@
     position: relative;
     display: flex;
     flex-flow: row;
-    margin: 8px 0;
     align-items: center;
   }
-
   .label {
     display: flex;
     align-items: center;
     font-size: 12px;
     font-weight: 400;
-    flex: 0 0 100px;
+    flex: 0 0 80px;
     text-align: left;
     color: var(--ink);
     margin-right: auto;

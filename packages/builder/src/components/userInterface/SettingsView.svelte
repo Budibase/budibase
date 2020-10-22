@@ -18,7 +18,7 @@
   let pageScreenProps = ["title", "favicon", "description", "route"]
   let duplicateName = false
 
-  const propExistsOnComponentDef = prop =>
+  const propExistsOnComponentDef = (prop) =>
     pageScreenProps.includes(prop) || prop in componentDefinition.props
 
   function handleChange(key, data) {
@@ -47,10 +47,10 @@
   $: isPage = screenOrPageInstance && screenOrPageInstance.favicon
   $: screenOrPageDefinition = isPage ? pageDefinition : screenDefinition
 
-  const isDuplicateName = name => {
+  const isDuplicateName = (name) => {
     let duplicate = false
 
-    const lookForDuplicate = rootPops => {
+    const lookForDuplicate = (rootPops) => {
       walkProps(rootPops, (inst, cancel) => {
         if (inst._instanceName === name && inst._id !== componentInstance._id) {
           duplicate = true
@@ -85,50 +85,60 @@
   }
 </script>
 
-{#if screenOrPageInstance}
-  {#each screenOrPageDefinition as def}
-    <PropertyControl
-      bindable={false}
-      control={def.control}
-      label={def.label}
-      key={def.key}
-      value={screenOrPageInstance[def.key]}
-      onChange={onScreenPropChange}
-      props={{ ...excludeProps(def, ['control', 'label']) }} />
-  {/each}
-{/if}
-
-{#if displayNameField}
-  <PropertyControl
-    control={Input}
-    label="Name"
-    key="_instanceName"
-    value={componentInstance._instanceName}
-    onChange={onInstanceNameChange} />
-  {#if duplicateName}
-    <span class="duplicate-name">Name must be unique</span>
-  {/if}
-{/if}
-
-{#if panelDefinition && panelDefinition.length > 0}
-  {#each panelDefinition as definition}
-    {#if canRenderControl(definition.key, definition.dependsOn)}
+<div class="settings-view-container">
+  {#if screenOrPageInstance}
+    {#each screenOrPageDefinition as def}
       <PropertyControl
-        control={definition.control}
-        label={definition.label}
-        key={definition.key}
-        value={componentInstance[definition.key] || componentInstance[definition.key]?.defaultValue}
-        {componentInstance}
-        {onChange}
-        props={{ ...excludeProps(definition, ['control', 'label']) }} />
+        bindable={false}
+        control={def.control}
+        label={def.label}
+        key={def.key}
+        value={screenOrPageInstance[def.key]}
+        onChange={onScreenPropChange}
+        props={{ ...excludeProps(def, ['control', 'label']) }} />
+    {/each}
+  {/if}
+
+  {#if displayNameField}
+    <PropertyControl
+      control={Input}
+      label="Name"
+      key="_instanceName"
+      value={componentInstance._instanceName}
+      onChange={onInstanceNameChange} />
+    {#if duplicateName}
+      <span class="duplicate-name">Name must be unique</span>
     {/if}
-  {/each}
-{:else}
-  <div>This component does not have any settings.</div>
-{/if}
+  {/if}
+
+  {#if panelDefinition && panelDefinition.length > 0}
+    {#each panelDefinition as definition}
+      {#if canRenderControl(definition.key, definition.dependsOn)}
+        <PropertyControl
+          control={definition.control}
+          label={definition.label}
+          key={definition.key}
+          value={componentInstance[definition.key] || componentInstance[definition.key]?.defaultValue}
+          {componentInstance}
+          {onChange}
+          props={{ ...excludeProps(definition, ['control', 'label']) }} />
+      {/if}
+    {/each}
+  {:else}
+    <div class="empty">This component does not have any settings.</div>
+  {/if}
+</div>
 
 <style>
-  div {
+  .settings-view-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    gap: var(--spacing-s);
+  }
+
+  .empty {
     font-size: var(--font-size-s);
     margin-top: var(--spacing-m);
     color: var(--grey-6);

@@ -12,7 +12,7 @@
   let propGroup = null
   let currentGroup
 
-  const getProperties = name => panelDefinition[name]
+  const getProperties = (name) => panelDefinition[name]
 
   function onChange(category) {
     selectedCategory = category
@@ -61,10 +61,10 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
+    gap: var(--spacing-m);
   }
 
   .design-view-state-categories {
-    flex: 0 0 50px;
   }
 
   .positioned-wrapper {
