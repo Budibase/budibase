@@ -32,19 +32,18 @@
     settingsView.show()
   }
 
-  const lastPartOfName = c => (c ? last(c.split("/")) : "")
+  const lastPartOfName = (c) => (c ? last(c.split("/")) : "")
 </script>
 
 <!-- routify:options index=1 -->
 <div class="root">
-
   <div class="ui-nav">
     <FrontendNavigatePane />
   </div>
 
   <div class="preview-pane">
     {#if $store.currentPageName && $store.currentPageName.length > 0}
-      <ComponentSelectionList/>
+      <ComponentSelectionList />
       <div class="preview-content">
         <CurrentItemPreview />
       </div>
@@ -56,7 +55,6 @@
       <ComponentPropertiesPanel />
     </div>
   {/if}
-
 </div>
 
 <slot />
@@ -64,8 +62,8 @@
 <style>
   .root {
     display: grid;
-    grid-template-columns: 300px 1fr 300px;
-    background: var(--grey-1);
+    grid-template-columns: 260px 1fr 260px;
+    background: var(--grey-2);
     align-items: stretch;
     height: calc(100vh - 60px);
   }
@@ -101,6 +99,13 @@
     grid-column: 3;
     background-color: var(--white);
     border-left: 1px solid var(--grey-2);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-l);
+    padding: var(--spacing-xl);
   }
 
   .nav-group-header > div:nth-child(1) {
