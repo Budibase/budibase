@@ -81,9 +81,14 @@
         <RowSelector bind:value={block.inputs[key]} {bindings} />
       {:else if value.customType === 'webhookUrl'}
         <div class="copy-area">
-          <Input disabled="true" thin value={fullWebhookURL(block.inputs[key])} />
-          <span class="copy-btn" on:click={() => copyToClipboard(fullWebhookURL(block.inputs[key]))}>
-            <i class="ri-clipboard-line copy-icon"></i>
+          <Input
+            disabled="true"
+            thin
+            value={fullWebhookURL(block.inputs[key])} />
+          <span
+            class="copy-btn"
+            on:click={() => copyToClipboard(fullWebhookURL(block.inputs[key]))}>
+            <i class="ri-clipboard-line copy-icon" />
           </span>
         </div>
       {:else if value.type === 'string' || value.type === 'number'}
