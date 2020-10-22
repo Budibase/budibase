@@ -59,7 +59,7 @@
   }
 
   .active {
-    background: var(--grey-3);
+    background: var(--grey-2);
     color: var(--ink);
   }
 </style>
