@@ -21,7 +21,7 @@
   if (!$store.currentPageName)
     store.setCurrentPage($params.page ? $params.page : "main")
 
-  const changePage = id => {
+  const changePage = (id) => {
     store.setCurrentPage(id)
     $goto(`./${id}/page-layout`)
   }
@@ -43,20 +43,19 @@
 
   button {
     cursor: pointer;
-    padding: 0px 16px;
-    height: 36px;
+    padding: 0 var(--spacing-m);
+    height: 32px;
     text-align: center;
     background: #ffffff;
     color: var(--grey-7);
     border-radius: 5px;
-    font-family: inter;
-    font-size: 14px;
-    font-weight: 400;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
     transition: all 0.3s;
     text-rendering: optimizeLegibility;
     border: none !important;
-    transition: 0.2s;
     outline: none;
+    font-family: var(--font-sans);
   }
 
   .active {
