@@ -9,15 +9,22 @@
   import Tab from "./ItemTab/Tab.svelte"
 
   const categories = components.categories
-  let selectedIndex
+  let selectedCategory
   let width
-  $: selectedCategory = selectedIndex == null ? null : categories[selectedIndex]
 
   const close = () => {
-    selectedIndex = null
+    selectedCategory = null
   }
 
-  const onComponentChosen = component => {
+  const onCategoryChosen = (category) => {
+    if (category.isCategory) {
+      selectedCategory = selectedCategory === category ? null : category
+    } else {
+      onComponentChosen(category)
+    }
+  }
+
+  const onComponentChosen = (component) => {
     store.addChildComponent(component._component, component.presetProps)
 
     // Get ID path
@@ -33,14 +40,15 @@
   <div
     class="container"
     bind:clientWidth={width}
-    class:border={selectedCategory == null}>
+    class:open={selectedCategory != null}>
     {#each categories as category, idx}
       <div
         class="category"
-        on:click={() => (selectedIndex = idx)}
+        on:click={() => onCategoryChosen(category)}
         class:active={selectedCategory === category}>
-        {category.name}
-        <i class="ri-arrow-down-s-line" />
+        {#if category.icon}<i class={category.icon} />{/if}
+        <span>{category.name}</span>
+        {#if category.isCategory}<i class="ri-arrow-down-s-line arrow" />{/if}
       </div>
     {/each}
   </div>
@@ -49,7 +57,7 @@
     <div class="dropdown" transition:fly={{ y: -120 }}>
       <Tab
         list={selectedCategory}
-        on:selectItem={e => onComponentChosen(e.detail)} />
+        on:selectItem={(e) => onComponentChosen(e.detail)} />
     </div>
   {/if}
 </div>
@@ -61,33 +69,40 @@
   }
 
   .container {
-    padding: var(--spacing-xl) 40px;
+    padding: var(--spacing-l) 40px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     background-color: white;
     z-index: 1;
+    width: calc(100% - 80px);
+    overflow: hidden;
   }
-  .container.border {
-    border-bottom: 1px solid var(--grey-2);
+  .container.open {
   }
 
   .category {
-    color: var(--ink);
+    color: var(--grey-7);
     cursor: pointer;
-    margin-right: var(--spacing-xl);
+    margin-right: var(--spacing-l);
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xs);
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-xs);
+  }
+  .category span {
     font-weight: 500;
+    user-select: none;
   }
   .category.active,
   .category:hover {
-    color: var(--blue);
+    color: var(--ink);
+  }
+  .category i:not(:last-child) {
+    font-size: 16px;
   }
 
   .overlay {
@@ -107,7 +122,6 @@
     width: calc(100% - 80px);
     background-color: white;
     padding: var(--spacing-xl) 40px;
-    border-bottom: 1px solid var(--grey-2);
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.05);
   }
 </style>
