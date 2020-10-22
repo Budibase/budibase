@@ -9,7 +9,7 @@
 
   let category = list
 
-  const handleClick = item => {
+  const handleClick = (item) => {
     if (item.children && item.children.length > 0) {
       list = item
     } else {
@@ -53,10 +53,12 @@
 
   .list {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacing-m);
+    align-items: stretch;
+    gap: var(--spacing-s);
     flex-wrap: wrap;
+    padding: var(--spacing-l);
+    min-width: 120px;
   }
 </style>
