@@ -30,10 +30,10 @@
   // e.g. if one of your screens is selected on front end, then
   // you browse to backend, when you click frontend, you will be
   // brought back to the same screen
-  const topItemNavigate = path => () => {
-    const activeTopNav = $layout.children.find(c => $isActive(c.path))
+  const topItemNavigate = (path) => () => {
+    const activeTopNav = $layout.children.find((c) => $isActive(c.path))
     if (!activeTopNav) return
-    store.update(state => {
+    store.update((state) => {
       if (!state.previousTopNavPath) state.previousTopNavPath = {}
       state.previousTopNavPath[
         activeTopNav.path
@@ -66,22 +66,26 @@
     </div>
     <div class="toprightnav">
       <SettingsLink />
-      <span
-        class:active={false}
-        class="topnavitemright"
+      <div class="topnavitemright">
+        <a target="_blank" href="https://docs.budibase.com">
+          <i class="ri-question-line" />
+        </a>
+      </div>
+      <div class="topnavitemright">
+        <a
+          target="_blank"
+          href="https://github.com/Budibase/budibase/discussions">
+          <i class="ri-discuss-line" />
+        </a>
+      </div>
+      <Button
+        secondary
         on:click={() => {
           document.cookie = 'budibase:token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
           window.open(`/${application}`)
         }}>
-        <PreviewIcon />
-      </span>
-      <span class="topnavitemright">
-        <a
-          target="_blank"
-          href="https://github.com/Budibase/budibase/discussions">
-          <i class="ri-question-fill help" />
-        </a>
-      </span>
+        Preview
+      </Button>
     </div>
   </div>
   <div class="beta">
@@ -120,7 +124,7 @@
     flex: 0 0 auto;
     height: 60px;
     background: #fff;
-    padding: 0px 20px 0 20px;
+    padding: 0 20px;
     display: flex;
     box-sizing: border-box;
     justify-content: space-between;
@@ -166,20 +170,19 @@
     font-weight: 500;
   }
 
-  .topnavitemright {
+  .topnavitemright a {
     cursor: pointer;
     color: var(--grey-7);
-    margin: 0 20px 0 0;
-    font-weight: 500;
-    font-size: 1rem;
-    height: 100%;
+    margin: 0 12px 0 0;
     display: flex;
-    flex: 1;
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
-    box-sizing: border-box;
+    height: 24px;
+    width: 24px;
   }
 
-  .topnavitemright:hover {
+  .topnavitemright a:hover {
     color: var(--ink);
     font-weight: 500;
   }
@@ -205,9 +208,12 @@
     text-transform: capitalize;
   }
 
-  .help {
-    font-size: 24px;
+  i {
+    font-size: 18px;
     color: var(--grey-7);
+  }
+  i:hover {
+    color: var(--ink);
   }
 
   .beta {
