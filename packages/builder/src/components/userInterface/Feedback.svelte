@@ -24,6 +24,7 @@
         )
       } else if (ev.data.type === "submitted") {
         analytics.captureEvent("Feedback Submitted", ev.data.data)
+        popover.hide()
       }
     },
     false
@@ -64,6 +65,11 @@
     flex: 1;
     align-items: center;
     box-sizing: border-box;
+  }
+
+  .container:hover {
+    color: var(--ink);
+    font-weight: 500;
   }
 
   iframe {
