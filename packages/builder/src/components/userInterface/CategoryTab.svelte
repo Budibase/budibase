@@ -1,7 +1,7 @@
 <script>
   export let categories = []
   export let selectedCategory = {}
-  export let onClick = category => {}
+  export let onClick = (category) => {}
 </script>
 
 <div class="tabs">
@@ -19,8 +19,8 @@
   .tabs {
     display: flex;
     list-style: none;
-    font-size: 18px;
-    font-weight: 600;
+    font-size: var(--font-size-m);
+    font-weight: 500;
   }
 
   li {

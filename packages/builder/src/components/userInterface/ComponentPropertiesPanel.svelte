@@ -107,7 +107,7 @@
   }
 
   .instance-name {
-    font-size: 14px;
+    font-size: var(--font-size-xs);
     font-weight: 500;
     color: var(--grey-7);
   }
