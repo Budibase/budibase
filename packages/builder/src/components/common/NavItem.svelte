@@ -26,7 +26,7 @@
   <div class="content">
     {#if withArrow}
       <div class:opened class="icon arrow">
-        <i class="ri-arrow-right-s-fill" />
+        <i class="ri-arrow-right-s-line" />
       </div>
     {/if}
     {#if icon}
@@ -81,6 +81,7 @@
   }
   .icon.arrow {
     margin: 0 -2px 0 -6px;
+    font-size: 12px;
   }
   .icon.arrow.opened {
     transform: rotate(90deg);

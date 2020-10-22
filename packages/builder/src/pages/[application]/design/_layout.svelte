@@ -73,7 +73,7 @@
     background-color: var(--white);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
     padding: var(--spacing-l) var(--spacing-xl);
     overflow-y: auto;
     border-right: 1px solid var(--grey-2);
@@ -86,13 +86,13 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
+    padding: var(--spacing-l) 40px var(--spacing-xl) 40px;
   }
   .preview-content {
     background: #fff;
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
     flex: 1 1 auto;
-    margin: var(--spacing-xl) 40px;
   }
 
   .components-pane {

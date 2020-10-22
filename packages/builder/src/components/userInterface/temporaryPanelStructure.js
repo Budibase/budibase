@@ -631,7 +631,7 @@ export default {
           },
         },
         {
-          name: "Groupedbar",
+          name: "Grouped Bar",
           _component: "@budibase/standard-components/groupedbar",
           description: "Groupedbar chart",
           icon: "ri-bar-chart-grouped-fill",

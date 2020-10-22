@@ -12,20 +12,16 @@
 <style>
   .item-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     cursor: pointer;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    background-color: var(--grey-1);
     border-radius: 5px;
-    width: 120px;
-    height: 80px;
     color: var(--grey-7);
   }
 
   .item-item:hover {
-    background: var(--grey-2);
-    transition: all 0.3s;
+    color: var(--ink);
   }
 
   .item-icon {
@@ -36,16 +32,16 @@
   .item-text {
     display: flex;
     flex-direction: column;
-    margin-top: 5px;
   }
 
   .item-name {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     font-weight: 500;
     text-align: center;
   }
 
   i {
-    font-size: 24px;
+    font-size: 16px;
+    margin-right: 8px;
   }
 </style>
