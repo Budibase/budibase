@@ -44,7 +44,7 @@
       text={screen.props._instanceName}
       withArrow={screen.props._children.length}
       selected={$store.currentComponentInfo._id === screen.props._id}
-      opened={$store.currentPreviewItem.name !== screen.props._id}
+      opened={$store.currentPreviewItem.name === screen.props._id}
       on:click={() => changeScreen(screen)}>
       <ScreenDropdownMenu {screen} />
     </NavItem>
