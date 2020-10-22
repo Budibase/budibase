@@ -105,7 +105,7 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-l);
-    padding: var(--spacing-xl);
+    padding: var(--spacing-l) var(--spacing-xl);
   }
 
   .nav-group-header > div:nth-child(1) {
