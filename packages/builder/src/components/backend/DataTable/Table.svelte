@@ -46,7 +46,7 @@
       return
     }
     $goto(
-      `/${$params.application}/backend/table/${tableId}/relationship/${row._id}/${fieldName}`
+      `/${$params.application}/data/table/${tableId}/relationship/${row._id}/${fieldName}`
     )
   }
 </script>
