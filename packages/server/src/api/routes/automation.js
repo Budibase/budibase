@@ -2,7 +2,7 @@ const Router = require("@koa/router")
 const controller = require("../controllers/automation")
 const authorized = require("../../middleware/authorized")
 const joiValidator = require("../../middleware/joi-validator")
-const { BUILDER } = require("../../utilities/accessLevels")
+const { BUILDER, EXECUTE_AUTOMATION } = require("../../utilities/accessLevels")
 const Joi = require("joi")
 
 const router = Router()
@@ -33,7 +33,7 @@ function generateValidator(existing = false) {
     type: Joi.string().valid("automation").required(),
     definition: Joi.object({
       steps: Joi.array().required().items(generateStepSchema(["ACTION", "LOGIC"])),
-      trigger: generateStepSchema(["TRIGGER"]),
+      trigger: generateStepSchema(["TRIGGER"]).allow(null),
     }).required().unknown(true),
   }).unknown(true))
 }
@@ -73,7 +73,11 @@ router
     generateValidator(false),
     controller.create
   )
-  .post("/api/automations/:id/trigger", controller.trigger)
+  .post(
+    "/api/automations/:id/trigger",
+    authorized(EXECUTE_AUTOMATION),
+    controller.trigger
+  )
   .delete("/api/automations/:id/:rev", authorized(BUILDER), controller.destroy)
 
 module.exports = router
