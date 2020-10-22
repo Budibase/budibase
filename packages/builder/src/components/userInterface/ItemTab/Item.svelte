@@ -20,6 +20,7 @@
     border-radius: 5px;
     width: 120px;
     height: 80px;
+    color: var(--grey-7);
   }
 
   .item-item:hover {
@@ -35,16 +36,16 @@
   .item-text {
     display: flex;
     flex-direction: column;
+    margin-top: 5px;
   }
 
   .item-name {
-    font-size: 14px;
-    font-weight: 400;
+    font-size: 12px;
+    font-weight: 500;
     text-align: center;
   }
 
   i {
     font-size: 24px;
-    color: var(--grey-7);
   }
 </style>
