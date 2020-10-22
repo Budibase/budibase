@@ -147,15 +147,15 @@
       thin
       bind:value={field.fieldName} />
   {/if}
-  <footer>
+  <!-- <footer>
     <Button secondary on:click={onClosed}>Cancel</Button>
     <Button primary on:click={saveColumn}>Save Column</Button>
-  </footer>
+  </footer> -->
 </div>
 
 <style>
   .actions {
-    padding: var(--spacing-xl);
+    /* padding: var(--spacing-xl); */
     display: grid;
     grid-gap: var(--spacing-xl);
     min-width: 400px;

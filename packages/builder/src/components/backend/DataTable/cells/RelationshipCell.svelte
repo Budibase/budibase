@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte"
+  import { goto, params } from "@sveltech/routify"
   import api from "builderStore/api"
   import { getTable } from "./tableCache"
 
@@ -31,6 +32,16 @@
     const response = await api.get(QUERY_URL)
     const enrichedRow = await response.json()
     return enrichedRow[columnName]
+  }
+
+  // TODO: wire up
+  function drillIntoRelationship(row, fieldName) {
+    if (!row?.[fieldName]?.length) {
+      return
+    }
+    $goto(
+      `/${$params.application}/data/table/${tableId}/relationship/${row._id}/${fieldName}`
+    )
   }
 </script>
 

@@ -42,12 +42,15 @@ export default class TableHeaderWrapper {
   init(params) {
     console.log("init", params)
     this.agParams = params
-    const container = document.createElement("div")
-    new TableHeader({
-      target: container,
+    this.container = document.createElement("div")
+    this.container.style.height = "100%"
+    this.container.style.width = "100%"
+
+    this.headerComponent = new TableHeader({
+      target: this.container,
       props: params,
     })
-    this.eGui = container
+    this.eGui = this.container
   }
 
   // can get called more than once, you should return the HTML element
@@ -57,6 +60,11 @@ export default class TableHeaderWrapper {
 
   // gets called when a new Column Definition has been set for this header
   refresh(params) {
+    this.agParams = params
+    this.headerComponent = new TableHeader({
+      target: this.container,
+      props: params,
+    })
     console.log("Refreshing", params)
   }
 

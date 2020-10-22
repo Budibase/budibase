@@ -22,9 +22,6 @@
   import { getRenderer, editRowRenderer } from "./cells/cellRenderers";
   import TableHeader from "./TableHeader"
 
-  // const ITEMS_PER_PAGE = 10
-  
-
   export let schema = []
   export let data = []
   export let title
@@ -43,21 +40,16 @@
       filter: true,
     },
     rowSelection: "multiple",
+    rowMultiSelectWithClick: true,
     suppressRowClickSelection: false,
     paginationAutoPageSize: true,
+    pagination: true,
+    enableRangeSelection: true,
+    popupParent: document.body,
   }
 
-  // let currentPage = 0
-  // $: columns = schema ? Object.keys(schema) : []
-  // $: sort = $backendUiStore.sort
-  // $: sorted = sort ? fsort(data)[sort.direction](sort.column) : data
-  // $: paginatedData =
-  //   sorted && sorted.length
-  //     ? sorted.slice(
-  //         currentPage * ITEMS_PER_PAGE,
-  //         currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-  //       )
-  //     : []
+  $: console.log(options)
+
   // TODO: refactor
   $: {
     let result = []
@@ -67,6 +59,8 @@
         sortable: false,
         resizable: false,
         suppressMovable: true,
+        suppressMenu: true,
+        minWidth: 0,
         width: 10,
         cellRenderer: editRowRenderer
       })
@@ -91,29 +85,29 @@
   }
   $: tableId = data?.length ? data[0].tableId : null
 
-  function selectRelationship(row, fieldName) {
-    if (!row?.[fieldName]?.length) {
-      return
-    }
-    $goto(
-      `/${$params.application}/data/table/${tableId}/relationship/${row._id}/${fieldName}`
-    )
-  }
+  // function selectRelationship(row, fieldName) {
+  //   if (!row?.[fieldName]?.length) {
+  //     return
+  //   }
+  //   $goto(
+  //     `/${$params.application}/data/table/${tableId}/relationship/${row._id}/${fieldName}`
+  //   )
+  // }
 
   // New stuff
-  const deleteRows = async () => {
-    const response = await api.post(`/api/${tableId}/rows`, {
-      rows: selectedRows,
-      type: "delete",
-    })
-    data = data.filter(row => !selectedRows.includes(row))
-    selectedRows = []
-  }
+  // const deleteRows = async () => {
+  //   const response = await api.post(`/api/${tableId}/rows`, {
+  //     rows: selectedRows,
+  //     type: "delete",
+  //   })
+  //   data = data.filter(row => !selectedRows.includes(row))
+  //   selectedRows = []
+  // }
 
-  const handleUpdate = ({ detail }) => {
-    data[detail.row] = detail.data
-    updateRow(detail.data)
-  }
+  // const handleUpdate = ({ detail }) => {
+  //   data[detail.row] = detail.data
+  //   updateRow(detail.data)
+  // }
 </script>
 
 <section>
@@ -135,68 +129,7 @@
     {options}
     {data}
     {columnDefs}
-    on:update={handleUpdate}
-    on:select={({ detail }) => (console.log(detail))} />
-  <!-- <table class="bb-table">
-    <thead>
-      <tr>
-        {#if allowEditing}
-          <th class="edit-header">
-            <div>Edit</div>
-          </th>
-        {/if}
-        {#each columns as header}
-          <th>
-            {#if allowEditing}
-              <ColumnHeaderPopover field={schema[header]} />
-            {:else}
-              <div class="header">{header}</div>
-            {/if}
-          </th>
-        {/each}
-      </tr>
-    </thead>
-    <tbody>
-      {#if paginatedData.length === 0}
-        {#if allowEditing}
-          <td class="no-border">No data.</td>
-        {/if}
-        {#each columns as header, idx}
-          <td class="no-border">
-            {#if idx === 0 && !allowEditing}No data.{/if}
-          </td>
-        {/each}
-      {/if}
-      {#each paginatedData as row}
-        <tr>
-          {#if allowEditing}
-            <td>
-              <EditRowPopover {row} />
-            </td>
-          {/if}
-          {#each columns as header}
-            <td>
-              {#if schema[header].type === 'link'}
-                <div
-                  class:link={row[header] && row[header].length}
-                  on:click={() => selectRelationship(row, header)}>
-                  {row[header] ? row[header].length : 0}
-                  related row(s)
-                </div>
-              {:else if schema[header].type === 'attachment'}
-                <AttachmentList files={row[header] || []} />
-              {:else}{getOr('', header, row)}{/if}
-            </td>
-          {/each}
-        </tr>
-      {/each}
-    </tbody>
-  </table> -->
-  <!-- <TablePagination
-    {data}
-    bind:currentPage
-    pageItemCount={paginatedData.length}
-    {ITEMS_PER_PAGE} /> -->
+  />
 </section>
 
 <style>
