@@ -6,13 +6,14 @@
   export let options = []
   export let value = ""
   export let styleBindingProperty
-  export let onChange = value => {}
+  export let onChange = (value) => {}
 
   let open = null
   let rotate = ""
   let select
   let selectMenu
   let icon
+  let width = 0
 
   let selectAnchor = null
   let dimensions = { top: 0, bottom: 0, left: 0 }
@@ -22,7 +23,7 @@
   let scrollTop = 0
   let containerEl = null
 
-  const handleStyleBind = value =>
+  const handleStyleBind = (value) =>
     !!styleBindingProperty ? { style: `${styleBindingProperty}: ${value}` } : {}
 
   onMount(() => {
@@ -91,12 +92,13 @@
     "transform-origin": `center ${positionSide}`,
     [positionSide]: `${dimensions[positionSide]}px`,
     left: `${dimensions.left.toFixed(0)}px`,
+    width: `${width}px`,
   })
 
-  $: isOptionsObject = options.every(o => typeof o === "object")
+  $: isOptionsObject = options.every((o) => typeof o === "object")
 
   $: selectedOption = isOptionsObject
-    ? options.find(o => o.value === value)
+    ? options.find((o) => o.value === value)
     : {}
 
   $: if (open && selectMenu) {
@@ -108,6 +110,7 @@
 </script>
 
 <div
+  bind:clientWidth={width}
   tabindex="0"
   bind:this={select}
   class="bb-select-container"
@@ -164,19 +167,17 @@
 
   .bb-select-container {
     outline: none;
-    height: 36px;
     cursor: pointer;
-    font-size: 14px;
     overflow: hidden;
+    flex: 1 1 auto;
   }
 
   .bb-select-anchor {
     cursor: pointer;
     display: flex;
-    padding: 0px 12px;
-    height: 36px;
+    padding: var(--spacing-m);
     background-color: var(--grey-2);
-    border-radius: 5px;
+    border-radius: var(--border-radius-m);
     align-items: center;
     white-space: nowrap;
   }
@@ -184,8 +185,11 @@
   .bb-select-anchor > span {
     color: var(--ink);
     font-weight: 400;
-    width: 140px;
     overflow-x: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--font-size-xs);
+    flex: 1 1 auto;
   }
 
   .bb-select-anchor > i {
@@ -208,7 +212,6 @@
     box-sizing: border-box;
     flex-direction: column;
     opacity: 0;
-    width: 160px;
     z-index: 2;
     color: var(--ink);
     font-weight: 400;
@@ -237,7 +240,7 @@
     padding: 5px 0px;
     cursor: pointer;
     padding-left: 10px;
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-xs);
   }
 
   li:hover {
