@@ -63,6 +63,12 @@
     height: 100%;
     gap: var(--spacing-m);
   }
+  .design-view-container :global(.property-group-name .name) {
+    font-size: var(--font-size-xs);
+  }
+  .design-view-container :global(.property-group-container) {
+    padding: 4px 0;
+  }
 
   .design-view-state-categories {
   }
