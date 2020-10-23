@@ -30,5 +30,10 @@
     overflow-y: auto;
     background: var(--white);
     padding: var(--spacing-l) var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-l);
   }
 </style>
