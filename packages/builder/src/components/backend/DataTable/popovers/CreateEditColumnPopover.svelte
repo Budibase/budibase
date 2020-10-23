@@ -20,6 +20,7 @@
   import ActionButton from "components/common/ActionButton.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import * as api from "../api"
 
   let fieldDefinitions = cloneDeep(FIELDS)
@@ -37,6 +38,8 @@
   let primaryDisplay =
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
+  let confirmDeleteDialog
+
   $: tableOptions = $backendUiStore.tables.filter(
     table => table._id !== $backendUiStore.draftTable._id
   )
@@ -53,6 +56,17 @@
     })
     onClosed()
   }
+
+  function deleteColumn() {
+    if (field.name === $backendUiStore.selectedTable.primaryDisplay) {
+      notifier.danger("You cannot delete the display column")
+    } else {
+      backendUiStore.actions.tables.deleteField(field)
+      notifier.success("Column deleted")
+    }
+    onClosed()
+  }
+
 
   function handleFieldConstraints(event) {
     const { type, constraints } = fieldDefinitions[
@@ -74,6 +88,11 @@
     if (isPrimary) {
       field.constraints.presence = { allowEmpty: false }
     }
+  }
+
+  function confirmDelete() {
+    onClosed()
+    confirmDeleteDialog.show()
   }
 </script>
 
@@ -147,11 +166,20 @@
       thin
       bind:value={field.fieldName} />
   {/if}
-  <!-- <footer>
-    <Button secondary on:click={onClosed}>Cancel</Button>
+  <footer>
+    {#if originalName}
+      <Button secondary on:click={onClosed}>Cancel</Button>
+    {/if}
+    <Button red on:click={confirmDelete}>Delete Column</Button>
     <Button primary on:click={saveColumn}>Save Column</Button>
-  </footer> -->
+  </footer>
 </div>
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  body={`Are you sure you wish to delete this column? Your data will be deleted and this action cannot be undone.`}
+  okText="Delete Column"
+  onOk={deleteColumn}
+  title="Confirm Delete" />
 
 <style>
   .actions {

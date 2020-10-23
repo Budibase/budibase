@@ -40,19 +40,6 @@
     modal.show()
   }
 
-  async function saveColumn() {
-    backendUiStore.update(state => {
-      backendUiStore.actions.tables.saveField({
-        originalName,
-        field,
-        primaryDisplay,
-      })
-      return state
-    })
-    notifier.success(`Column ${field.name} saved successfully.`)
-    modal.hide()
-  }
-
   onMount(() => {
     column.addEventListener("sortChanged", () => {
       sortDirection = column.getSort()
@@ -64,15 +51,15 @@
   <div>
     <span>{field.name}</span>
     {#if enableSorting && sortDirection}
-      <i class={SORT_ICON_MAP[sortDirection]} />
+      <i class={`${SORT_ICON_MAP[sortDirection]} sort-icon`} />
     {/if}
   </div>
   <Modal bind:this={modal}>
     <ModalContent
-      title={`Edit Column: ${field.name}`}
-      confirmText={'Save Column'}
-      onConfirm={saveColumn}>
-      <CreateEditColumnPopover {field} />
+      showCancelButton={false}
+      showConfirmButton={false}
+      title={`Edit Column: ${field.name}`}>
+      <CreateEditColumnPopover onClosed={modal.hide} {field} />
     </ModalContent>
   </Modal>
   <div>
@@ -88,10 +75,31 @@
 <style>
   header {
     font-family: Inter;
+    font-weight: 600;
     display: flex;
     justify-content: space-between;
     height: 100%;
     width: 100%;
     align-items: center;
+    color: var(--ink);
+  }
+
+  .sort-icon {
+    position: relative;
+    top: 2px;
+  }
+
+  i {
+    transition: 0.2s all;
+    font-size: var(--font-size-m);
+    font-weight: 500;
+  }
+
+  i:hover {
+    color: var(--blue);
+  }
+
+  i:active {
+    color: var(--blue);
   }
 </style>
