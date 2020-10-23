@@ -1,6 +1,7 @@
 <script>
   import analytics from "analytics"
   import { createEventDispatcher } from "svelte"
+  import { store } from "builderStore"
 
   const dispatch = createEventDispatcher()
   const feedbackUrl = "https://feedback.budibase.com"
@@ -21,7 +22,8 @@
           `height:${ev.data.height}px; width:${ev.data.width}px`
         )
       } else if (ev.data.type === "submitted") {
-        analytics.captureEvent("Feedback Submitted", ev.data.data)
+        analytics.submitFeedback(ev.data.data)
+        $store.highlightFeedbackIcon = false
         dispatch("finished")
       }
     },
