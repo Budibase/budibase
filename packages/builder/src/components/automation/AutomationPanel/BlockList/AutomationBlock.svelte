@@ -1,10 +1,14 @@
 <script>
   import { backendUiStore, automationStore } from "builderStore"
+  import CreateWebookModal from "./CreateWebhookModal.svelte"
   import analytics from "analytics"
+  import { Modal } from "@budibase/bbui"
 
   export let blockDefinition
   export let stepId
   export let blockType
+
+  let modal
 
   $: blockDefinitions = $automationStore.blockDefinitions
   $: instanceId = $backendUiStore.selectedDatabase._id
@@ -18,10 +22,7 @@
       type: blockType,
     })
     if (stepId === blockDefinitions.TRIGGER["WEBHOOK"].stepId) {
-      automationStore.actions.save({
-        instanceId,
-        automation,
-      })
+      modal.show()
     }
     analytics.captureEvent("Added Automation Block", {
       name: blockDefinition.name,
@@ -39,6 +40,9 @@
     <p>{blockDefinition.description}</p>
   </div>
 </div>
+<Modal bind:this={modal} width="30%">
+  <CreateWebookModal />
+</Modal>
 
 <style>
   .automation-block {

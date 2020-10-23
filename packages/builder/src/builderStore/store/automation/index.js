@@ -11,11 +11,17 @@ const automationActions = store => ({
     ])
     const jsonResponses = await Promise.all(responses.map(x => x.json()))
     store.update(state => {
+      let selected = state.selectedAutomation?.automation
       state.automations = jsonResponses[0]
       state.blockDefinitions = {
         TRIGGER: jsonResponses[1].trigger,
         ACTION: jsonResponses[1].action,
         LOGIC: jsonResponses[1].logic,
+      }
+      // if previously selected find the new obj and select it
+      if (selected) {
+        selected = jsonResponses[0].filter(automation => automation._id === selected._id)
+        state.selectedAutomation = new Automation(selected[0])
       }
       return state
     })

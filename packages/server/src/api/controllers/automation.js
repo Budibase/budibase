@@ -41,6 +41,8 @@ function cleanAutomationInputs(automation) {
  * written to DB (this does not write to DB as it would be wasteful to repeat).
  */
 async function checkForWebhooks({ user, oldAuto, newAuto }) {
+  const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
+  const newTrigger = newAuto ? newAuto.definition.trigger : null
   function isWebhookTrigger(auto) {
     return (
       auto &&
@@ -52,21 +54,19 @@ async function checkForWebhooks({ user, oldAuto, newAuto }) {
   if (
     isWebhookTrigger(oldAuto) &&
     !isWebhookTrigger(newAuto) &&
-    oldAuto.definition.trigger.webhook
+    oldTrigger.webhookId
   ) {
+    let db = new CouchDB(user.instanceId)
+    // need to get the webhook to get the rev
+    const webhook = await db.get(oldTrigger.webhookId)
     const ctx = {
       user,
-      params: {
-        id: oldAuto.definition.trigger.webhook.id,
-        rev: oldAuto.definition.trigger.webhook.rev,
-      },
+      params: { id: webhook._id, rev: webhook._rev },
     }
-    // reset the inputs to remove the URLs
-    if (newAuto && newAuto.definition.trigger) {
-      const trigger = newAuto.definition.trigger
-      delete trigger.webhook
-      delete trigger.inputs.schemaUrl
-      delete trigger.inputs.triggerUrl
+    // might be updating - reset the inputs to remove the URLs
+    if (newTrigger) {
+      delete newTrigger.webhookId
+      newTrigger.inputs = {}
     }
     await webhooks.destroy(ctx)
   }
@@ -83,10 +83,9 @@ async function checkForWebhooks({ user, oldAuto, newAuto }) {
       },
     }
     await webhooks.save(ctx)
-    const id = ctx.body.webhook._id,
-      rev = ctx.body.webhook._rev
-    newAuto.definition.trigger.webhook = { id, rev }
-    newAuto.definition.trigger.inputs = {
+    const id = ctx.body.webhook._id
+    newTrigger.webhookId = id
+    newTrigger.inputs = {
       schemaUrl: `api/webhooks/schema/${user.instanceId}/${id}`,
       triggerUrl: `api/webhooks/trigger/${user.instanceId}/${id}`,
     }
