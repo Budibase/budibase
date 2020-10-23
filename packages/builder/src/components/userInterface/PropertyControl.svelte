@@ -147,7 +147,7 @@
     height: 90%;
     width: 2rem;
     background: var(--grey-2);
-    right: 10px;
+    right: 4px;
     --spacing-s: 0;
     border-left: 0.5px solid var(--grey-3);
     outline-color: var(--blue);

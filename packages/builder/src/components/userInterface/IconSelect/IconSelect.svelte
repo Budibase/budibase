@@ -50,7 +50,7 @@
 
   function findIconByTerm(term) {
     const r = new RegExp(`\^${term}`, "i")
-    return icons.filter(i => r.test(i.label))
+    return icons.filter((i) => r.test(i.label))
   }
 
   async function switchLetter(letter) {
@@ -65,7 +65,7 @@
 
   async function findIconOnPage() {
     loading = true
-    const iconIdx = filteredIcons.findIndex(i => i.value === value)
+    const iconIdx = filteredIcons.findIndex((i) => i.value === value)
     if (iconIdx !== -1) {
       currentPage = Math.ceil(iconIdx / maxIconsPerPage)
     }
@@ -110,7 +110,7 @@
 </script>
 
 <div bind:this={buttonAnchor}>
-  <Button secondary on:click={dropdown.show}>{displayValue}</Button>
+  <Button secondary small on:click={dropdown.show}>{displayValue}</Button>
 </div>
 <DropdownMenu
   bind:this={dropdown}

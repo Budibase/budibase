@@ -175,7 +175,7 @@
   .bb-select-anchor {
     cursor: pointer;
     display: flex;
-    padding: var(--spacing-m);
+    padding: var(--spacing-s) var(--spacing-m);
     background-color: var(--grey-2);
     border-radius: var(--border-radius-m);
     align-items: center;

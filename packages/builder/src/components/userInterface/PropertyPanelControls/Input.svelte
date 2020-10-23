@@ -8,4 +8,4 @@
   export let name, value, placeholder, type
 </script>
 
-<Input {name} {value} {placeholder} {type} thin on:change />
+<Input {name} {value} {placeholder} {type} extraThin on:change />
