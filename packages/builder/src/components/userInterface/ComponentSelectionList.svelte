@@ -62,13 +62,14 @@
     justify-content: flex-start;
     align-items: center;
     z-index: 1;
-    height: 24px;
+    min-height: 24px;
+    flex-wrap: wrap;
+    gap: var(--spacing-l);
   }
 
   .category {
     color: var(--grey-7);
     cursor: pointer;
-    margin-right: var(--spacing-l);
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
