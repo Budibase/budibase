@@ -48,7 +48,7 @@
         {/each}
       {:else}
         <div class="no-design">
-          This component does not have any design properties.
+          This component doesn't have any design properties.
         </div>
       {/if}
     </div>
@@ -61,13 +61,7 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
-    gap: var(--spacing-m);
-  }
-  .design-view-container :global(.property-group-name .name) {
-    font-size: var(--font-size-xs);
-  }
-  .design-view-container :global(.property-group-container) {
-    padding: 4px 0;
+    gap: var(--spacing-l);
   }
 
   .design-view-state-categories {
@@ -85,10 +79,15 @@
     min-height: 0;
     margin: 0 -20px;
     padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-m);
   }
 
   .no-design {
-    font-size: var(--font-size-s);
-    color: var(--grey-6);
+    font-size: var(--font-size-xs);
+    color: var(--grey-5);
   }
 </style>

@@ -15,11 +15,11 @@
     return [
       ...$store.screens
         .filter(
-          screen =>
+          (screen) =>
             screen.props._component.endsWith("/rowdetail") ||
             screen.route.endsWith(":id")
         )
-        .map(screen => ({
+        .map((screen) => ({
           name: screen.props._instanceName,
           url: screen.route,
           sort: screen.props._component,
@@ -29,7 +29,13 @@
 </script>
 
 <div>
-  <DataList editable secondary thin on:blur={handleBlur} on:change bind:value>
+  <DataList
+    editable
+    secondary
+    extraThin
+    on:blur={handleBlur}
+    on:change
+    bind:value>
     <option value="" />
     {#each urls as url}
       <option value={url.url}>{url.name}</option>

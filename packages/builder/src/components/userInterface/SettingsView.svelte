@@ -125,7 +125,9 @@
       {/if}
     {/each}
   {:else}
-    <div class="empty">This component does not have any settings.</div>
+    <div class="empty">
+      This component doesn't have any additional settings.
+    </div>
   {/if}
 </div>
 
@@ -139,9 +141,9 @@
   }
 
   .empty {
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-xs);
     margin-top: var(--spacing-m);
-    color: var(--grey-6);
+    color: var(--grey-5);
   }
 
   .duplicate-name {

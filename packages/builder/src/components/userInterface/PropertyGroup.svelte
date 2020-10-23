@@ -13,7 +13,7 @@
   $: style = componentInstance["_styles"][styleCategory] || {}
 </script>
 
-<DetailSummary {name} on:open show={open}>
+<DetailSummary {name} on:open show={open} thin>
   <div>
     {#each properties as props}
       <PropertyControl
@@ -34,6 +34,5 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-s);
-    margin-top: var(--spacing-m);
   }
 </style>

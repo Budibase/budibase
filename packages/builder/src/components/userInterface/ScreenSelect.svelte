@@ -18,8 +18,8 @@
   const getUrls = () => {
     const urls = [
       ...$store.screens
-        .filter(screen => !screen.props._component.endsWith("/rowdetail"))
-        .map(screen => ({
+        .filter((screen) => !screen.props._component.endsWith("/rowdetail"))
+        .map((screen) => ({
           name: screen.props._instanceName,
           url: screen.route,
           sort: screen.props._component,
@@ -33,12 +33,12 @@
       tables: $backendUiStore.tables,
     })
 
-    const detailScreens = $store.screens.filter(screen =>
+    const detailScreens = $store.screens.filter((screen) =>
       screen.props._component.endsWith("/rowdetail")
     )
 
     for (let detailScreen of detailScreens) {
-      const idBinding = bindableProperties.find(p => {
+      const idBinding = bindableProperties.find((p) => {
         if (
           p.type === "context" &&
           p.runtimeBinding.endsWith("._id") &&
@@ -68,7 +68,13 @@
 </script>
 
 <div>
-  <DataList editable secondary thin on:blur={handleBlur} on:change bind:value>
+  <DataList
+    editable
+    secondary
+    extraThin
+    on:blur={handleBlur}
+    on:change
+    bind:value>
     <option value="" />
     {#each urls as url}
       <option value={url.url}>{url.name}</option>

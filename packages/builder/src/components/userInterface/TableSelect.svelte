@@ -6,7 +6,7 @@
 </script>
 
 <div>
-  <Select thin secondary wide on:change {value}>
+  <Select extraThin secondary wide on:change {value}>
     <option value="">Choose a table</option>
     {#each $backendUiStore.tables as table}
       <option value={table._id}>{table.name}</option>
