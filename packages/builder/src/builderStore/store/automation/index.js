@@ -20,7 +20,9 @@ const automationActions = store => ({
       }
       // if previously selected find the new obj and select it
       if (selected) {
-        selected = jsonResponses[0].filter(automation => automation._id === selected._id)
+        selected = jsonResponses[0].filter(
+          automation => automation._id === selected._id
+        )
         state.selectedAutomation = new Automation(selected[0])
       }
       return state
