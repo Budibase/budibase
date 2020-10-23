@@ -63,7 +63,7 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.44.1",
+    "@budibase/bbui": "^1.46.0",
     "@budibase/client": "^0.2.6",
     "@budibase/colorpicker": "^1.0.1",
     "@fortawesome/fontawesome-free": "^5.14.0",
