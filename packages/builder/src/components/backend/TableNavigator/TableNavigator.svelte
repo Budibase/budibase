@@ -33,49 +33,40 @@
   }
 </script>
 
-<div class="items-root">
-  {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
-    <div class="title">
-      <h1>Tables</h1>
-      <i on:click={modal.show} class="ri-add-circle-fill" />
-    </div>
-    <div class="hierarchy-items-container">
-      {#each $backendUiStore.tables as table}
+{#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
+  <div class="title">
+    <h1>Tables</h1>
+    <i on:click={modal.show} class="ri-add-circle-fill" />
+  </div>
+  <div class="hierarchy-items-container">
+    {#each $backendUiStore.tables as table, idx}
+      <NavItem
+        border={idx > 0}
+        icon="ri-table-line"
+        text={table.name}
+        selected={selectedView === `all_${table._id}`}
+        on:click={() => selectTable(table)}>
+        <EditTablePopover {table} />
+      </NavItem>
+      {#each Object.keys(table.views || {}) as viewName}
         <NavItem
-          icon="ri-table-line"
-          text={table.name}
-          selected={selectedView === `all_${table._id}`}
-          on:click={() => selectTable(table)}>
-          <EditTablePopover {table} />
+          indentLevel={1}
+          icon="ri-eye-line"
+          text={viewName}
+          selected={selectedView === viewName}
+          on:click={() => onClickView(table, viewName)}>
+          <EditViewPopover
+            view={{ name: viewName, ...table.views[viewName] }} />
         </NavItem>
-        {#each Object.keys(table.views || {}) as viewName}
-          <NavItem
-            indentLevel={1}
-            icon="ri-eye-line"
-            text={viewName}
-            selected={selectedView === viewName}
-            on:click={() => onClickView(table, viewName)}>
-            <EditViewPopover
-              view={{ name: viewName, ...table.views[viewName] }} />
-          </NavItem>
-        {/each}
       {/each}
-    </div>
-  {/if}
-</div>
+    {/each}
+  </div>
+{/if}
 <Modal bind:this={modal}>
   <CreateTableModal />
 </Modal>
 
 <style>
-  .items-root {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: var(--spacing-l);
-  }
-
   .title {
     display: flex;
     flex-direction: row;
