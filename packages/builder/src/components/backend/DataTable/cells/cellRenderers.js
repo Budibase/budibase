@@ -80,33 +80,6 @@ function attachmentRenderer(options, constraints, editable) {
     return container
   }
 }
-/* eslint-disable no-unused-vars */
-// function dateRenderer(options, constraints, editable) {
-//   return function(params) {
-//     const container = document.createElement("div")
-//     const toggle = e => {
-//       params.setValue(e.detail[0][0])
-//     }
-
-//     // Options need to be passed in with minTime and maxTime! Needs bbui update.
-//     new DatePicker({
-//       target: container,
-//       props: {
-//         value: params.value,
-//       },
-//     })
-
-//     return container
-//   }
-// }
-
-function optionsRenderer(options, constraints, editable) {
-  return params => {
-    const container = document.createElement("div")
-    // TODO: show a pill
-    return container
-  }
-}
 
 /* eslint-disable no-unused-vars */
 function linkedRowRenderer(options, constraints, editable) {

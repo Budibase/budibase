@@ -1,27 +1,17 @@
 <script>
-  import { onMount } from "svelte"
   import {
     Input,
-    TextArea,
     Button,
     Select,
     Toggle,
-    Label,
   } from "@budibase/bbui"
-  import { cloneDeep, merge } from "lodash/fp"
-  import { store, backendUiStore } from "builderStore"
+  import { cloneDeep } from "lodash/fp"
+  import { backendUiStore } from "builderStore"
   import { FIELDS } from "constants/backend"
   import { notifier } from "builderStore/store/notifications"
-  import ButtonGroup from "components/common/ButtonGroup.svelte"
-  import NumberBox from "components/common/NumberBox.svelte"
   import ValuesList from "components/common/ValuesList.svelte"
-  import ErrorsBox from "components/common/ErrorsBox.svelte"
-  import Checkbox from "components/common/Checkbox.svelte"
-  import ActionButton from "components/common/ActionButton.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
-  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import * as api from "../api"
 
   let fieldDefinitions = cloneDeep(FIELDS)
 
@@ -63,10 +53,9 @@
     } else {
       backendUiStore.actions.tables.deleteField(field)
       notifier.success("Column deleted")
+      hideDeleteDialog()
     }
-    onClosed()
   }
-
 
   function handleFieldConstraints(event) {
     const { type, constraints } = fieldDefinitions[
@@ -91,8 +80,12 @@
   }
 
   function confirmDelete() {
-    onClosed()
     confirmDeleteDialog.show()
+    onClosed()
+  }
+
+  function hideDeleteDialog() {
+    confirmDeleteDialog.hide()
   }
 </script>
 
@@ -168,9 +161,9 @@
   {/if}
   <footer>
     {#if originalName}
-      <Button secondary on:click={onClosed}>Cancel</Button>
+      <Button red on:click={confirmDelete}>Delete Column</Button>
     {/if}
-    <Button red on:click={confirmDelete}>Delete Column</Button>
+    <Button secondary on:click={onClosed}>Cancel</Button>
     <Button primary on:click={saveColumn}>Save Column</Button>
   </footer>
 </div>
@@ -179,11 +172,11 @@
   body={`Are you sure you wish to delete this column? Your data will be deleted and this action cannot be undone.`}
   okText="Delete Column"
   onOk={deleteColumn}
+  onCancel={hideDeleteDialog}
   title="Confirm Delete" />
 
 <style>
   .actions {
-    /* padding: var(--spacing-xl); */
     display: grid;
     grid-gap: var(--spacing-xl);
     min-width: 400px;
