@@ -20,9 +20,9 @@
 </div>
 <Modal bind:this={modal}>
   <ModalContent
-    title={'Create Column'}
-    confirmText={'Save Column'}
-    onConfirm={console.log}>
-    <CreateEditColumnPopover />
+    showCancelButton={false}
+    showConfirmButton={false}
+    title={'Create Column'}>
+    <CreateEditColumnPopover onClosed={modal.hide} />
   </ModalContent>
 </Modal>
