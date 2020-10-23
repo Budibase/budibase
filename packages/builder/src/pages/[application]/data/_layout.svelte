@@ -18,18 +18,17 @@
   .root {
     height: calc(100vh - 60px);
     display: grid;
-    grid-template-columns: 300px minmax(0, 1fr);
-    background: var(--grey-1);
-    line-height: 1;
+    grid-template-columns: 260px minmax(0, 1fr);
+    background: var(--grey-2);
   }
   .content {
     flex: 1 1 auto;
-    padding: var(--spacing-xl) 40px;
+    padding: var(--spacing-l) 40px;
     overflow-y: auto;
   }
   .nav {
     overflow-y: auto;
     background: var(--white);
-    padding: var(--spacing-xl);
+    padding: var(--spacing-l) var(--spacing-xl);
   }
 </style>

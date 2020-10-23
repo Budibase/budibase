@@ -5,9 +5,10 @@
   import CreateTableModal from "./modals/CreateTableModal.svelte"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
-  import { Heading } from "@budibase/bbui"
-  import { Spacer } from "@budibase/bbui"
+  import { Modal } from "@budibase/bbui"
+  import NavItem from "components/common/NavItem.svelte"
 
+  let modal
   $: selectedView =
     $backendUiStore.selectedView && $backendUiStore.selectedView.name
 
@@ -20,67 +21,77 @@
     backendUiStore.actions.views.select(view)
     $goto(`./view/${view.name}`)
   }
+
+  function onClickView(table, viewName) {
+    if (selectedView === viewName) {
+      return
+    }
+    selectView({
+      name: viewName,
+      ...table.views[viewName],
+    })
+  }
 </script>
 
 <div class="items-root">
   {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
-    <div class="hierarchy">
-      <div class="components-list-container">
-        <Heading small>Tables</Heading>
-        <Spacer medium />
-        <CreateTableModal />
-        <div class="hierarchy-items-container">
-          {#each $backendUiStore.tables as table}
-            <ListItem
-              selected={selectedView === `all_${table._id}`}
-              title={table.name}
-              icon="ri-table-fill"
-              on:click={() => selectTable(table)}>
-              <EditTablePopover {table} />
-            </ListItem>
-            {#each Object.keys(table.views || {}) as viewName}
-              <ListItem
-                indented
-                selected={selectedView === viewName}
-                title={viewName}
-                icon="ri-eye-line"
-                on:click={() => (selectedView === viewName ? {} : selectView({
-                        name: viewName,
-                        ...table.views[viewName],
-                      }))}>
-                <EditViewPopover
-                  view={{ name: viewName, ...table.views[viewName] }} />
-              </ListItem>
-            {/each}
-          {/each}
-        </div>
-      </div>
+    <div class="title">
+      <h1>Tables</h1>
+      <i on:click={modal.show} class="ri-add-circle-fill" />
+    </div>
+    <div class="hierarchy-items-container">
+      {#each $backendUiStore.tables as table}
+        <NavItem
+          icon="ri-table-line"
+          text={table.name}
+          selected={selectedView === `all_${table._id}`}
+          on:click={() => selectTable(table)}>
+          <EditTablePopover {table} />
+        </NavItem>
+        {#each Object.keys(table.views || {}) as viewName}
+          <NavItem
+            indentLevel={1}
+            icon="ri-eye-line"
+            text={viewName}
+            selected={selectedView === viewName}
+            on:click={() => onClickView(table, viewName)}>
+            <EditViewPopover
+              view={{ name: viewName, ...table.views[viewName] }} />
+          </NavItem>
+        {/each}
+      {/each}
     </div>
   {/if}
 </div>
+<Modal bind:this={modal}>
+  <CreateTableModal />
+</Modal>
 
 <style>
-  h5 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-top: 0;
-    margin-bottom: var(--spacing-xl);
-  }
-
   .items-root {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    gap: var(--spacing-l);
   }
 
-  .hierarchy {
+  .title {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
-
-  .hierarchy-items-container {
-    margin-top: var(--spacing-xl);
-    flex: 1 1 auto;
+  .title h1 {
+    font-size: var(--font-size-m);
+    font-weight: 500;
+    margin: 0;
+  }
+  .title i {
+    font-size: 20px;
+  }
+  .title i:hover {
+    cursor: pointer;
+    color: var(--blue);
   }
 </style>

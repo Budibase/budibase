@@ -51,19 +51,17 @@
   }
 </script>
 
-<section>
-  <div class="table-controls">
-    <h2 class="title">
-      <span>{title}</span>
-      {#if loading}
-        <div transition:fade>
-          <Spinner size="10" />
-        </div>
-      {/if}
-    </h2>
-    <div class="popovers">
-      <slot />
-    </div>
+<div class="table-container">
+  <div class="title">
+    <h1>{title}</h1>
+    {#if loading}
+      <div transition:fade>
+        <Spinner size="10" />
+      </div>
+    {/if}
+  </div>
+  <div class="popovers">
+    <slot />
   </div>
   <table class="bb-table">
     <thead>
@@ -125,20 +123,44 @@
     bind:currentPage
     pageItemCount={paginatedData.length}
     {ITEMS_PER_PAGE} />
-</section>
+</div>
 
 <style>
+  .table-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-l);
+  }
+
   .title {
-    font-size: 24px;
-    font-weight: 600;
-    text-rendering: optimizeLegibility;
-    margin-top: 0;
+    height: 24px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
   }
-  .title > span {
+  .title h1 {
+    font-size: var(--font-size-m);
+    font-weight: 500;
+    margin: 0;
+  }
+  .title > div {
+    margin-left: var(--spacing-xs);
+  }
+
+  .popovers {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .popovers :global(button) {
+    font-weight: 500;
+  }
+  .popovers :global(button svg) {
     margin-right: var(--spacing-xs);
   }
 
@@ -198,19 +220,6 @@
 
   tbody tr:hover {
     background: var(--grey-1);
-  }
-
-  .table-controls {
-    width: 100%;
-  }
-
-  .popovers {
-    display: flex;
-  }
-
-  :global(.popovers > div) {
-    margin-right: var(--spacing-m);
-    margin-bottom: var(--spacing-xl);
   }
 
   .edit-header {
