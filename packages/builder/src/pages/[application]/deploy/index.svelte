@@ -33,7 +33,10 @@
       analytics.captureEvent("Deployed App", {
         appId,
       })
-      feedbackModal.show()
+
+      if (analytics.requestFeedbackOnDeploy()) {
+        feedbackModal.show()
+      }
     } catch (err) {
       analytics.captureEvent("Deploy App Failed", {
         appId,
@@ -61,7 +64,7 @@
     alt="Rocket flying through sky" />
 </section>
 <Modal bind:this={feedbackModal}>
-  <FeedbackIframe on:finished={feedbackModal.hide} />
+  <FeedbackIframe on:finished={() => feedbackModal.hide()} />
 </Modal>
 <DeploymentHistory {appId} />
 
