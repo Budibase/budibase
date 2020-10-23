@@ -66,7 +66,7 @@
       {:else if value.customType === 'row'}
         <RowSelector bind:value={block.inputs[key]} {bindings} />
       {:else if value.customType === 'webhookUrl'}
-        <WebhookDisplay value={block.inputs[key]}/>
+        <WebhookDisplay value={block.inputs[key]} />
       {:else if value.type === 'string' || value.type === 'number'}
         <BindableInput
           type="string"

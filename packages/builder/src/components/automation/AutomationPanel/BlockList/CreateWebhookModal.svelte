@@ -52,18 +52,17 @@
   confirmText="Finished"
   cancelText="Skip"
   disabled={!valid}>
-  <p class="webhook-exp">To configure a webhook we need to create a schema for your webhook to validate against.
-    Use the URL shown below and send a <b>POST</b> request to it with a JSON body in the format that
-    your webhook should use!</p>
-  <WebhookDisplay value={schemaURL}/>
+  <p class="webhook-exp">
+    To configure a webhook we need to create a schema for your webhook to
+    validate against. Use the URL shown below and send a
+    <b>POST</b>
+    request to it with a JSON body in the format that your webhook should use!
+  </p>
+  <WebhookDisplay value={schemaURL} />
   <h5>Schema</h5>
-  <code>
-    {schema}
-  </code>
+  <code> {schema} </code>
   <div slot="footer">
-    <a
-      target="_blank"
-      href="https://docs.budibase.com/automate/steps/triggers">
+    <a target="_blank" href="https://docs.budibase.com/automate/steps/triggers">
       <i class="ri-information-line" />
       <span>Learn about webhooks</span>
     </a>

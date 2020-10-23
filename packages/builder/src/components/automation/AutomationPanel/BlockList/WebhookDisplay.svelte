@@ -20,14 +20,9 @@
 </script>
 
 <div class="copy-area">
-  <Input
-    disabled="true"
-    thin
-    value={fullWebhookURL(value)}/>
-  <span
-    class="copy-btn"
-    on:click={() => copyToClipboard()}>
-      <i class="ri-clipboard-line copy-icon" />
+  <Input disabled="true" thin value={fullWebhookURL(value)} />
+  <span class="copy-btn" on:click={() => copyToClipboard()}>
+    <i class="ri-clipboard-line copy-icon" />
   </span>
 </div>
 
