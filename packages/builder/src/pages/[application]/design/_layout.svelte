@@ -76,7 +76,6 @@
     gap: var(--spacing-l);
     padding: var(--spacing-l) var(--spacing-xl);
     overflow-y: auto;
-    border-right: 1px solid var(--grey-2);
   }
 
   .preview-pane {
@@ -98,7 +97,6 @@
   .components-pane {
     grid-column: 3;
     background-color: var(--white);
-    border-left: 1px solid var(--grey-2);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
