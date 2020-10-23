@@ -12,7 +12,6 @@
   $: anchor = selectedIndex === -1 ? null : anchors[selectedIndex]
 
   const close = () => {
-    selectedIndex = null
     popover.hide()
   }
 
@@ -38,14 +37,19 @@
     <div
       bind:this={anchors[idx]}
       class="category"
-      on:click={() => onCategoryChosen(category, idx)}>
+      on:click={() => onCategoryChosen(category, idx)}
+      class:active={idx === selectedIndex}>
       {#if category.icon}<i class={category.icon} />{/if}
       <span>{category.name}</span>
       {#if category.isCategory}<i class="ri-arrow-down-s-line arrow" />{/if}
     </div>
   {/each}
 </div>
-<DropdownMenu bind:this={popover} {anchor} align="left">
+<DropdownMenu
+  on:close={() => (selectedIndex = null)}
+  bind:this={popover}
+  {anchor}
+  align="left">
   <Tab
     list={categories[selectedIndex]}
     on:selectItem={(e) => onComponentChosen(e.detail)} />
@@ -76,6 +80,7 @@
     font-weight: 500;
     user-select: none;
   }
+  .category.active,
   .category:hover {
     color: var(--ink);
   }
