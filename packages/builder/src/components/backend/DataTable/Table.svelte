@@ -8,7 +8,7 @@
   import Spinner from "components/common/Spinner.svelte"
 
   // New
-  import AgGrid from "@budibase/svelte-ag-grid"
+  import AgGrid from "./AgGrid.svelte"
   import { getRenderer, editRowRenderer } from "./cells/cellRenderers";
   import TableHeader from "./TableHeader"
 
