@@ -1,9 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { store, backendUiStore } from "builderStore"
-  import { notifier } from "builderStore/store/notifications"
-  import { Modal, ModalContent, Icon } from "@budibase/bbui"
-  import ColumnHeaderPopover from "../popovers/ColumnPopover.svelte"
+  import { Modal, ModalContent } from "@budibase/bbui"
   import CreateEditColumnPopover from "../popovers/CreateEditColumnPopover.svelte"
 
   const SORT_ICON_MAP = {
@@ -12,21 +9,17 @@
   }
 
   export let field
+  export let displayName
   export let column
-  export let gridApi
-  export let enableMenu = true
   export let enableSorting = true
   export let showColumnMenu
   export let progressSort
+  export let gridApi
+  export let enableMenu = true
 
   let menuButton
   let sortDirection = ""
   let modal
-
-  let originalName = field.name
-  let primaryDisplay =
-    $backendUiStore.selectedTable.primaryDisplay == null ||
-    $backendUiStore.selectedTable.primaryDisplay === field.name
 
   function toggleMenu() {
     showColumnMenu(menuButton)
@@ -49,7 +42,7 @@
 
 <header on:click={onSort}>
   <div>
-    <span>{field.name}</span>
+    <span>{displayName}</span>
     {#if enableSorting && sortDirection}
       <i class={`${SORT_ICON_MAP[sortDirection]} sort-icon`} />
     {/if}

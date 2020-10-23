@@ -1,14 +1,7 @@
 <script>
-  import { goto, params } from "@sveltech/routify"
-  import { onMount } from "svelte"
   import { fade } from "svelte/transition"
-  import { store, backendUiStore } from "builderStore"
-  import api from "builderStore/api"
-  import { Button, Icon } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
-
-  // New
-  import AgGrid from "./AgGrid.svelte"
+  import AgGrid from "@budibase/svelte-ag-grid"
   import { getRenderer, editRowRenderer } from "./cells/cellRenderers";
   import TableHeader from "./TableHeader"
 
@@ -25,10 +18,9 @@
   let options = {
     defaultColDef: {
       flex: 1,
-      minWidth: 150,
       filter: true,
     },
-    rowSelection: "multiple",
+    rowSelection: true,
     rowMultiSelectWithClick: true,
     suppressRowClickSelection: false,
     paginationAutoPageSize: true,
@@ -37,24 +29,23 @@
     popupParent: document.body,
   }
 
-  $: console.log(options)
-
   // TODO: refactor
   $: {
     let result = []
     if (allowEditing) {
       result.push({
+        pinned: "left",
         headerName: "Edit",
         sortable: false,
         resizable: false,
         suppressMovable: true,
         suppressMenu: true,
-        minWidth: 0,
-        width: 10,
+        minWidth: 75,
+        width: 75,
         cellRenderer: editRowRenderer
       })
     }
-    columnDefs = [...result, ...Object.keys(schema).map(key => ({
+    columnDefs = [...result, ...Object.keys(schema || {}).map(key => ({
       // headerCheckboxSelection: i === 0 && canEdit,
       // checkboxSelection: i === 0 && canEdit,
       // valueSetter: setters.get(schema[key].type),
@@ -70,9 +61,9 @@
       cellRenderer: getRenderer(schema[key], true),
       autoHeight: true,
       resizable: true,
+      minWidth: 200,
     }))]
   }
-  $: tableId = data?.length ? data[0].tableId : null
 
   // function selectRelationship(row, fieldName) {
   //   if (!row?.[fieldName]?.length) {
