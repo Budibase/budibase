@@ -1,5 +1,6 @@
 <script>
   import { fade } from "svelte/transition"
+  import { goto, params } from "@sveltech/routify"
   import Spinner from "components/common/Spinner.svelte"
   import AgGrid from "@budibase/svelte-ag-grid"
   import { getRenderer, editRowRenderer } from "./cells/cellRenderers";
@@ -46,33 +47,31 @@
       })
     }
     columnDefs = [...result, ...Object.keys(schema || {}).map(key => ({
-      // headerCheckboxSelection: i === 0 && canEdit,
-      // checkboxSelection: i === 0 && canEdit,
-      // valueSetter: setters.get(schema[key].type),
       headerComponent: TableHeader,
       headerComponentParams: {
         field: schema[key]
       },
       headerName: key,
       field: key,
-      // hide: shouldHideField(key),
       sortable: true,
-      // editable: canEdit && schema[key].type !== "link",
       cellRenderer: getRenderer(schema[key], true),
+      cellRendererParams: {
+        selectRelationship
+      },
       autoHeight: true,
       resizable: true,
       minWidth: 200,
     }))]
   }
 
-  // function selectRelationship(row, fieldName) {
-  //   if (!row?.[fieldName]?.length) {
-  //     return
-  //   }
-  //   $goto(
-  //     `/${$params.application}/data/table/${tableId}/relationship/${row._id}/${fieldName}`
-  //   )
-  // }
+  function selectRelationship(row, fieldName) {
+    if (!row?.[fieldName]?.length) {
+      return
+    }
+    $goto(
+      `/${$params.application}/data/table/${row.tableId}/relationship/${row._id}/${fieldName}`
+    )
+  }
 </script>
 
 <section>
