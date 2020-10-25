@@ -5,7 +5,7 @@
         "source.fixAll": true
     },
     "[svelte]": {
-        "editor.defaultFormatter": "JamesBirtles.svelte-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "editor.defaultFormatter": "esbenp.prettier-vscode"
 }
