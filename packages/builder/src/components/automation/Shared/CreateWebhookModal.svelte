@@ -48,13 +48,19 @@
   cancelText="Skip">
   <p>
     Webhooks are for receiving data. To make them easier please use the URL
-    shown below and send a <code>POST</code> request to it from your other application.
-    If you're unable to do this now then you can skip this step, however we
-    will not be able to configure bindings for your later actions!
+    shown below and send a
+    <code>POST</code>
+    request to it from your other application. If you're unable to do this now
+    then you can skip this step, however we will not be able to configure
+    bindings for your later actions!
   </p>
   <WebhookDisplay value={schemaURL} />
   {#if finished}
-    <p class="finished-text">Request received! We found {propCount} bindable value{propCount > 1 ? "s" : ""}.</p>
+    <p class="finished-text">
+      Request received! We found
+      {propCount}
+      bindable value{propCount > 1 ? 's' : ''}.
+    </p>
   {/if}
   <div slot="footer">
     <a target="_blank" href="https://docs.budibase.com/automate/steps/triggers">

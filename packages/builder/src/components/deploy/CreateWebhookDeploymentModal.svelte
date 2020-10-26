@@ -13,18 +13,18 @@
     webhookUrls = automations.map(automation => {
       const trigger = automation.definition.trigger
       if (trigger?.stepId === "WEBHOOK" && trigger.inputs) {
-        return {type: "Automation", name: automation.name, url: trigger.inputs.triggerUrl}
+        return {
+          type: "Automation",
+          name: automation.name,
+          url: trigger.inputs.triggerUrl,
+        }
       }
     })
   })
 </script>
 
-<ModalContent
-  title="Webhook Endpoints"
-  confirmText="Done">
-  <p>
-    See below the list of deployed webhook URLs.
-  </p>
+<ModalContent title="Webhook Endpoints" confirmText="Done">
+  <p>See below the list of deployed webhook URLs.</p>
   {#each webhookUrls as webhookUrl}
     <div>
       <h5>{webhookUrl.type} - {webhookUrl.name}</h5>
