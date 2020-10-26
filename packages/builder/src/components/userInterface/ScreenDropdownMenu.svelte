@@ -2,9 +2,8 @@
   import { goto } from "@sveltech/routify"
   import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import api from "builderStore/api"
-  import Portal from "svelte-portal"
   import { DropdownMenu } from "@budibase/bbui"
+  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let screen
 
@@ -12,14 +11,10 @@
   let dropdown
   let anchor
 
-  const hideDropdown = () => {
-    dropdown.hide()
-  }
-
   const deleteScreen = () => {
     store.deleteScreens(screen, $store.currentPageName)
     // update the page if required
-    store.update(state => {
+    store.update((state) => {
       if (state.currentPreviewItem.name === screen.name) {
         store.setCurrentPage($store.currentPageName)
         $goto(`./:page/page-layout`)
@@ -29,23 +24,19 @@
   }
 </script>
 
-<div
-  bind:this={anchor}
-  class="root boundary"
-  on:click|stopPropagation={() => {}}>
+<div bind:this={anchor} on:click|stopPropagation={() => {}}>
   <div class="icon" on:click={() => dropdown.show()}>
     <i class="ri-more-line" />
   </div>
   <DropdownMenu bind:this={dropdown} {anchor} align="left">
-    <ul on:click={hideDropdown}>
-      <li on:click={() => confirmDeleteDialog.show()}>
-        <i class="ri-delete-bin-2-line" />
-        Delete
-      </li>
-    </ul>
+    <DropdownContainer>
+      <DropdownItem
+        icon="ri-delete-bin-line"
+        title="Delete"
+        on:click={() => confirmDeleteDialog.show()} />
+    </DropdownContainer>
   </DropdownMenu>
 </div>
-
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Delete"
@@ -54,54 +45,6 @@
   onOk={deleteScreen} />
 
 <style>
-  .root {
-    overflow: hidden;
-    z-index: 9;
-  }
-
-  .root button {
-    border-style: none;
-    border-radius: 2px;
-    padding: 0;
-    background: transparent;
-    cursor: pointer;
-    color: var(--ink);
-    outline: none;
-  }
-
-  ul {
-    z-index: 100000;
-    overflow: visible;
-    margin: var(--spacing-s) 0;
-    border-radius: var(--border-radius-s);
-    padding: 0;
-  }
-
-  li {
-    display: flex;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
-    color: var(--ink);
-    padding: var(--spacing-s) var(--spacing-m);
-    margin: auto 0;
-    align-items: center;
-    cursor: pointer;
-  }
-  li:not(.disabled):hover {
-    background-color: var(--grey-2);
-  }
-  li:active {
-    color: var(--blue);
-  }
-  li i {
-    margin-right: 8px;
-    font-size: var(--font-size-s);
-  }
-  li.disabled {
-    color: var(--grey-4);
-    cursor: default;
-  }
-
   .icon i {
     font-size: 16px;
   }

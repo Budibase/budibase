@@ -3,7 +3,7 @@
   import { store } from "builderStore"
   import components from "./temporaryPanelStructure.js"
   import { DropdownMenu } from "@budibase/bbui"
-  import Tab from "./ItemTab/Tab.svelte"
+  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   const categories = components.categories
   let selectedIndex
@@ -50,9 +50,16 @@
   bind:this={popover}
   {anchor}
   align="left">
-  <Tab
-    list={categories[selectedIndex]}
-    on:selectItem={(e) => onComponentChosen(e.detail)} />
+  <DropdownContainer>
+    {#each categories[selectedIndex].children as item}
+      {#if !item.showOnPages || item.showOnPages.includes($store.currentPageName)}
+        <DropdownItem
+          icon={item.icon}
+          title={item.name}
+          on:click={() => onComponentChosen(item)} />
+      {/if}
+    {/each}
+  </DropdownContainer>
 </DropdownMenu>
 
 <style>
