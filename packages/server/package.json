@@ -1,6 +1,6 @@
 {
   "name": "@budibase/server",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Budibase Web Server",
   "main": "src/electron.js",
   "repository": {
@@ -42,7 +42,7 @@
   "author": "Michael Shanks",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/client": "^0.2.5",
+    "@budibase/client": "^0.2.6",
     "@koa/router": "^8.0.0",
     "@sendgrid/mail": "^7.1.1",
     "@sentry/node": "^5.19.2",
@@ -57,6 +57,7 @@
     "electron-updater": "^4.3.1",
     "fix-path": "^3.0.0",
     "fs-extra": "^8.1.0",
+    "jimp": "^0.16.1",
     "joi": "^17.2.1",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.7.0",
@@ -74,7 +75,6 @@
     "pouchdb-all-dbs": "^1.0.2",
     "pouchdb-replication-stream": "^1.2.9",
     "sanitize-s3-objectkey": "^0.0.1",
-    "sharp": "^0.26.0",
     "squirrelly": "^7.5.0",
     "tar-fs": "^2.1.0",
     "uuid": "^3.3.2",
