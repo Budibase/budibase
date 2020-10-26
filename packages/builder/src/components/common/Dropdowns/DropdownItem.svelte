@@ -4,11 +4,11 @@
   export let subtitle
 </script>
 
-<div class="dropdown-item" on:click>
+<div class="dropdown-item" on:click class:big={subtitle != null}>
   {#if icon}<i class={icon} />{/if}
   <div class="content">
     <div class="title">{title}</div>
-    {#if subtitle}
+    {#if subtitle != null}
       <div class="subtitle">{subtitle}</div>
     {/if}
   </div>
@@ -21,6 +21,9 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-m);
+    padding: var(--spacing-xs) var(--spacing-l);
+  }
+  .dropdown-item.big {
     padding: var(--spacing-s) var(--spacing-l);
   }
   .dropdown-item:hover {
