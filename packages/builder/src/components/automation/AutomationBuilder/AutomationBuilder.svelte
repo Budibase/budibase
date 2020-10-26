@@ -1,6 +1,6 @@
 <script>
   import { automationStore, backendUiStore } from "builderStore"
-  import Flowchart from "./flowchart/FlowChart.svelte"
+  import Flowchart from "./FlowChart/FlowChart.svelte"
   import BlockList from "./BlockList.svelte"
 
   $: automation = $automationStore.selectedAutomation?.automation
