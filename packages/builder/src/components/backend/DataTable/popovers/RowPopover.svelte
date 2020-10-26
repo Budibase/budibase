@@ -30,9 +30,7 @@
   }
 </script>
 
-<div on:click={showModal}>
-  <i class="ri-more-line" />
-</div>
+<div on:click={showModal}><i class="ri-more-line" /></div>
 <!-- <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <ul>
     <li data-cy="edit-row" on:click={showModal}>

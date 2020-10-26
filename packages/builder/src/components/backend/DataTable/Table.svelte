@@ -3,10 +3,15 @@
   import { goto, params } from "@sveltech/routify"
   import Spinner from "components/common/Spinner.svelte"
   import AgGrid from "@budibase/svelte-ag-grid"
-  import { getRenderer, editRowRenderer } from "./cells/cellRenderers";
+  import {
+    getRenderer,
+    editRowRenderer,
+  } from "./cells/cellRenderers"
+  import TableLoadingOverlay from "./TableLoadingOverlay"
   import TableHeader from "./TableHeader"
+  import "@budibase/svelte-ag-grid/dist/index.css"
 
-  export let schema = []
+  export let schema = {} 
   export let data = []
   export let title
   export let allowEditing = false
@@ -28,9 +33,12 @@
     pagination: true,
     enableRangeSelection: true,
     popupParent: document.body,
+    components: {
+      customLoadingOverlay: TableLoadingOverlay,
+    },
+    loadingOverlayComponent: "customLoadingOverlay",
   }
 
-  // TODO: refactor
   $: {
     let result = []
     if (allowEditing) {
@@ -43,25 +51,31 @@
         suppressMenu: true,
         minWidth: 75,
         width: 75,
-        cellRenderer: editRowRenderer
+        cellRenderer: editRowRenderer,
       })
     }
-    columnDefs = [...result, ...Object.keys(schema || {}).map(key => ({
-      headerComponent: TableHeader,
-      headerComponentParams: {
-        field: schema[key]
-      },
-      headerName: key,
-      field: key,
-      sortable: true,
-      cellRenderer: getRenderer(schema[key], true),
-      cellRendererParams: {
-        selectRelationship
-      },
-      autoHeight: true,
-      resizable: true,
-      minWidth: 200,
-    }))]
+
+    for (let key in schema) {
+      result.push({
+        headerComponent: TableHeader,
+        headerComponentParams: {
+          field: schema[key],
+          editable: allowEditing,
+        },
+        headerName: key,
+        field: key,
+        sortable: true,
+        cellRenderer: getRenderer(schema[key], true),
+        cellRendererParams: {
+          selectRelationship,
+        },
+        autoHeight: true,
+        resizable: true,
+        minWidth: 200,
+      })
+    }
+
+    columnDefs = result
   }
 
   function selectRelationship(row, fieldName) {
@@ -76,24 +90,12 @@
 
 <section>
   <div class="table-controls">
-    <h2 class="title">
-      <span>{title}</span>
-      {#if loading}
-        <div transition:fade>
-          <Spinner size="10" />
-        </div>
-      {/if}
-    </h2>
+    <h2 class="title"><span>{title}</span></h2>
     <div class="popovers">
       <slot />
     </div>
   </div>
-  <AgGrid 
-    {theme}
-    {options}
-    {data}
-    {columnDefs}
-  />
+  <AgGrid {theme} {options} {data} {columnDefs} {loading} />
 </section>
 
 <style>
@@ -125,6 +127,15 @@
     margin-bottom: var(--spacing-xl);
   }
 
+  :global(.ag-menu) {
+    border: var(--border-dark) !important;
+  }
+
+  :global(.ag-popup-child) {
+    border-radius: var(--border-radius-m) !important;
+    box-shadow: none !important;
+  }
+
   :global(.ag-header-cell-text) {
     font-family: Inter;
     font-weight: 600;
@@ -132,13 +143,13 @@
   }
 
   :global(.ag-filter) {
-    padding: var(--spacing-l);
+    padding: var(--spacing-s);
     outline: none;
     box-sizing: border-box;
     color: var(--ink);
-    border: var(--border-dark);
     border-radius: var(--border-radius-m);
     background: #fff;
+    font-family: var(--font-sans) !important;
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
   }
 
@@ -146,28 +157,43 @@
     border: none;
   }
 
+  :global(.ag-simple-filter-body-wrapper > *) {
+    margin-bottom: var(--spacing-m) !important;
+  }
+
+  :global(.ag-select) {
+    height: inherit !important;
+  }
+
   :global(.ag-menu input) {
     color: var(--ink) !important;
     font-size: var(--font-size-s);
-    border-radius: var(--border-radius-s);
+    border-radius: var(--border-radius-s) !important;
     border: none;
     background-color: var(--grey-2) !important;
     padding: var(--spacing-m);
     margin: 0;
     outline: none;
     font-family: var(--font-sans);
-    border: var(--border-transparent);
+    border: var(--border-transparent) !important;
+    transition: 0.2s all;
+  }
+  :global(.ag-menu input:focus) {
+    border: var(--border-blue) !important;
   }
 
   :global(.ag-picker-field-display) {
     color: var(--ink) !important;
-    font-size: var(--font-size-s);
-    border-radius: var(--border-radius-s);
-    border: none;
+    font-size: var(--font-size-s) !important;
+    border-radius: var(--border-radius-s) !important;
     background-color: var(--grey-2) !important;
-    padding: var(--spacing-m);
     font-family: var(--font-sans);
-    border: var(--border-transparent);
-    transition: all 0.2s ease-in-out;
+    border: var(--border-transparent) !important;
+  }
+
+  :global(.ag-picker-field-wrapper) {
+    background: var(--grey-2) !important;
+    border: var(--border-transparent) !important;
+    padding: var(--spacing-xs);
   }
 </style>

@@ -9,9 +9,7 @@
       : 0
 </script>
 
-<div
-  class:link={count}
-  on:click={() => selectRelationship(row, columnName)}>
+<div class:link={count} on:click={() => selectRelationship(row, columnName)}>
   {count}
   related row(s)
 </div>

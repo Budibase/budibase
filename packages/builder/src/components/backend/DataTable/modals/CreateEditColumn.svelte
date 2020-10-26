@@ -1,10 +1,5 @@
 <script>
-  import {
-    Input,
-    Button,
-    Select,
-    Toggle,
-  } from "@budibase/bbui"
+  import { Input, Button, Select, Toggle } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
   import { FIELDS } from "constants/backend"
@@ -160,10 +155,10 @@
       bind:value={field.fieldName} />
   {/if}
   <footer>
+    <Button secondary on:click={onClosed}>Cancel</Button>
     {#if originalName}
       <Button red on:click={confirmDelete}>Delete Column</Button>
     {/if}
-    <Button secondary on:click={onClosed}>Cancel</Button>
     <Button primary on:click={saveColumn}>Save Column</Button>
   </footer>
 </div>
