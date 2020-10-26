@@ -26,17 +26,19 @@
   }
 </script>
 
-<div bind:this={anchor} class="icon" on:click={dropdown.show}>
-  <i class="ri-more-line" />
+<div on:click|stopPropagation>
+  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
+    <i class="ri-more-line" />
+  </div>
+  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
+    <DropdownContainer>
+      <DropdownItem
+        icon="ri-delete-bin-line"
+        title="Delete"
+        on:click={showModal} />
+    </DropdownContainer>
+  </DropdownMenu>
 </div>
-<DropdownMenu align="left" {anchor} bind:this={dropdown}>
-  <DropdownContainer>
-    <DropdownItem
-      icon="ri-delete-bin-line"
-      title="Delete"
-      on:click={showModal} />
-  </DropdownContainer>
-</DropdownMenu>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Automation"
