@@ -3,15 +3,12 @@
   import { goto, params } from "@sveltech/routify"
   import Spinner from "components/common/Spinner.svelte"
   import AgGrid from "@budibase/svelte-ag-grid"
-  import {
-    getRenderer,
-    editRowRenderer,
-  } from "./cells/cellRenderers"
+  import { getRenderer, editRowRenderer } from "./cells/cellRenderers"
   import TableLoadingOverlay from "./TableLoadingOverlay"
   import TableHeader from "./TableHeader"
   import "@budibase/svelte-ag-grid/dist/index.css"
 
-  export let schema = {} 
+  export let schema = {}
   export let data = []
   export let title
   export let allowEditing = false
