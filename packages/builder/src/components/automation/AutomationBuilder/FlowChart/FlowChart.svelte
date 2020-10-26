@@ -3,7 +3,6 @@
   import Arrow from "./Arrow.svelte"
   import { flip } from "svelte/animate"
   import { fade, fly } from "svelte/transition"
-  import { automationStore } from "builderStore"
 
   export let automation
   export let onSelect

@@ -2,7 +2,7 @@
   import { sortBy } from "lodash/fp"
   import { automationStore } from "builderStore"
   import { DropdownMenu } from "@budibase/bbui"
-  import { DropdownContainer, DropdownItem } from "../../common/Dropdowns"
+  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
   import analytics from "analytics"
 
   $: hasTrigger = $automationStore.selectedAutomation.hasTrigger()
