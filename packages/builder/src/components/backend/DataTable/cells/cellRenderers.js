@@ -1,7 +1,6 @@
 import AttachmentList from "./AttachmentCell.svelte"
-import EditRowPopover from "../popovers/RowPopover.svelte"
+import EditRowPopover from "../modals/EditRow.svelte"
 import RelationshipDisplay from "./RelationshipCell.svelte"
-import LoadingOverlay from "./LoadingOverlay.svelte"
 
 const renderers = {
   attachment: attachmentRenderer,
