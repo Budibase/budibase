@@ -6,12 +6,14 @@
   import FeedbackIframe from "./FeedbackIframe.svelte"
   import analytics from "analytics"
 
+  const FIVE_MINUTES = 300000
+
   let iconContainer
   let popover
 
   setInterval(() => {
     $store.highlightFeedbackIcon = analytics.highlightFeedbackIcon()
-  }, 300000 /*check every 5 minutes*/)
+  }, FIVE_MINUTES)
 </script>
 
 <span
