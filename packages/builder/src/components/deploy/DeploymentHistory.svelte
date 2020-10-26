@@ -2,9 +2,10 @@
   import { onMount, onDestroy } from "svelte"
   import Spinner from "components/common/Spinner.svelte"
   import { slide } from "svelte/transition"
-  import { Heading, Body } from "@budibase/bbui"
+  import { Heading, Body, Button, Modal } from "@budibase/bbui"
   import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
+  import CreateWebhookDeploymentModal from "./CreateWebhookDeploymentModal.svelte"
 
   const DATE_OPTIONS = {
     fullDate: {
@@ -23,6 +24,7 @@
 
   export let appId
 
+  let modal
   let poll
   let deployments = []
   let deploymentUrl = `https://${appId}.app.budi.live/${appId}`
@@ -52,9 +54,14 @@
   <section class="deployment-history" in:slide>
     <header>
       <h4>Deployment History</h4>
-      <a target="_blank" href={`https://${appId}.app.budi.live/${appId}`}>
-        View Your Deployed App →
-      </a>
+      <div class="deploy-div">
+        <a target="_blank" href={`https://${appId}.app.budi.live/${appId}`}>
+          View Your Deployed App →
+        </a>
+        <Button primary on:click={() => modal.show()}>
+          View webhooks
+        </Button>
+      </div>
     </header>
     <div class="deployment-list">
       {#each deployments as deployment}
@@ -80,6 +87,9 @@
     </div>
   </section>
 {/if}
+<Modal bind:this={modal} width="30%">
+  <CreateWebhookDeploymentModal />
+</Modal>
 
 <style>
   .deployment:nth-child(odd) {
@@ -99,6 +109,13 @@
   header {
     margin-left: var(--spacing-l);
     margin-bottom: var(--spacing-xl);
+    margin-right: var(--spacing-l);
+  }
+
+  .deploy-div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .deployment-history {

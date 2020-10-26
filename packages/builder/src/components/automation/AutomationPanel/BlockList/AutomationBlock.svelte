@@ -10,7 +10,6 @@
 
   let modal
 
-  $: blockDefinitions = $automationStore.blockDefinitions
   $: instanceId = $backendUiStore.selectedDatabase._id
   $: automation = $automationStore.selectedAutomation?.automation
 
@@ -21,7 +20,7 @@
       stepId,
       type: blockType,
     })
-    if (stepId === blockDefinitions.TRIGGER["WEBHOOK"].stepId) {
+    if (stepId === "WEBHOOK") {
       modal.show()
     }
     analytics.captureEvent("Added Automation Block", {
