@@ -14,8 +14,6 @@
   export let enableSorting = true
   export let showColumnMenu
   export let progressSort
-  export let gridApi
-  export let enableMenu = true
 
   let menuButton
   let sortDirection = ""

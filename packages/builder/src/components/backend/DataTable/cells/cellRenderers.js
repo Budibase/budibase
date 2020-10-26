@@ -1,7 +1,6 @@
 import AttachmentList from "./AttachmentCell.svelte"
 import EditRowPopover from "../popovers/RowPopover.svelte"
 import RelationshipDisplay from "./RelationshipCell.svelte"
-// import BooleanCell from "./BooleanCell.svelte"
 
 const renderers = {
   attachment: attachmentRenderer,
@@ -41,13 +40,6 @@ function attachmentRenderer(options, constraints, editable) {
         files: params.value || [],
       },
     })
-
-    // const deleteFile = event => {
-    //   const newFilesArray = params.value.filter(file => file !== event.detail)
-    //   params.setValue(newFilesArray)
-    // }
-
-    // attachmentInstance.$on("delete", deleteFile)
 
     return container
   }
