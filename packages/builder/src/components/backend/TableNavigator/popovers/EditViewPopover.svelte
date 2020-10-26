@@ -2,9 +2,9 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
-  import { FIELDS } from "constants/backend"
+  import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let view
 
@@ -46,32 +46,31 @@
   }
 </script>
 
-<div bind:this={anchor} class="icon" on:click={dropdown.show}>
-  <i class="ri-more-line" />
+<div on:click|stopPropagation>
+  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
+    <i class="ri-more-line" />
+  </div>
+  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
+    {#if editing}
+      <div class="actions">
+        <h5>Edit View</h5>
+        <Input label="View Name" thin bind:value={view.name} />
+        <footer>
+          <Button secondary on:click={hideEditor}>Cancel</Button>
+          <Button primary on:click={save}>Save</Button>
+        </footer>
+      </div>
+    {:else}
+      <DropdownContainer>
+        <DropdownItem icon="ri-edit-line" title="Edit" on:click={showEditor} />
+        <DropdownItem
+          icon="ri-delete-bin-line"
+          title="Delete"
+          on:click={showDelete} />
+      </DropdownContainer>
+    {/if}
+  </DropdownMenu>
 </div>
-<DropdownMenu align="left" {anchor} bind:this={dropdown}>
-  {#if editing}
-    <div class="actions">
-      <h5>Edit View</h5>
-      <Input label="View Name" thin bind:value={view.name} />
-      <footer>
-        <Button secondary on:click={hideEditor}>Cancel</Button>
-        <Button primary on:click={save}>Save</Button>
-      </footer>
-    </div>
-  {:else}
-    <ul>
-      <li on:click={showEditor}>
-        <Icon name="edit" />
-        Edit
-      </li>
-      <li data-cy="delete-view" on:click={showDelete}>
-        <Icon name="delete" />
-        Delete
-      </li>
-    </ul>
-  {/if}
-</DropdownMenu>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   body={`Are you sure you wish to delete the view '${view.name}'? Your data will be deleted and this action cannot be undone.`}
@@ -107,30 +106,5 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-m);
-  }
-
-  ul {
-    list-style: none;
-    margin: 0;
-    padding: var(--spacing-s) 0;
-  }
-
-  li {
-    display: flex;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
-    color: var(--ink);
-    padding: var(--spacing-s) var(--spacing-m);
-    margin: auto 0px;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  li:hover {
-    background-color: var(--grey-2);
-  }
-
-  li:active {
-    color: var(--blue);
   }
 </style>
