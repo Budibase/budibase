@@ -1,4 +1,4 @@
-<div class="dropdown-container">
+<div class="dropdown-container" on:click>
   <slot />
 </div>
 
