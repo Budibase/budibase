@@ -2,23 +2,27 @@
   import { backendUiStore, automationStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
-  import { Button, Input, Label } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { Button } from "@budibase/bbui"
 
   let selectedTab = "SETUP"
   let confirmDeleteDialog
 
   $: instanceId = $backendUiStore.selectedDatabase._id
   $: automation = $automationStore.selectedAutomation?.automation
-  $: allowDeleteBlock =
-    $automationStore.selectedBlock?.type !== "TRIGGER" ||
-    !automation?.definition?.steps?.length
   $: name = automation?.name ?? ""
+  $: automationLive = automation?.live
 
-  function deleteAutomationBlock() {
-    automationStore.actions.deleteAutomationBlock(
-      $automationStore.selectedBlock
-    )
+  function setAutomationLive(live) {
+    if (automation.live === live) {
+      return
+    }
+    automation.live = live
+    automationStore.actions.save({ instanceId, automation })
+    if (live) {
+      notifier.info(`Automation ${automation.name} enabled.`)
+    } else {
+      notifier.danger(`Automation ${automation.name} disabled.`)
+    }
   }
 
   async function testAutomation() {
@@ -39,110 +43,74 @@
     })
     notifier.success(`Automation ${automation.name} saved.`)
   }
-
-  async function deleteAutomation() {
-    await automationStore.actions.delete({
-      instanceId,
-      automation,
-    })
-    notifier.success("Automation deleted.")
-  }
 </script>
 
-<section>
-  <header>
-    <span
-      class="hoverable"
-      class:selected={selectedTab === 'SETUP'}
-      on:click={() => (selectedTab = 'SETUP')}>
-      Setup
-    </span>
-  </header>
-  <div class="content">
-    {#if $automationStore.selectedBlock}
-      <AutomationBlockSetup bind:block={$automationStore.selectedBlock} />
-    {:else if $automationStore.selectedAutomation}
-      <div class="block-label">Automation <b>{automation.name}</b></div>
-      <Button secondary wide on:click={testAutomation}>Test Automation</Button>
-    {/if}
-  </div>
-  <div class="buttons">
-    {#if $automationStore.selectedBlock}
-      <Button
-        green
-        wide
-        data-cy="save-automation-setup"
-        on:click={saveAutomation}>
-        Save Automation
-      </Button>
-      <Button
-        disabled={!allowDeleteBlock}
-        red
-        wide
-        on:click={deleteAutomationBlock}>
-        Delete Step
-      </Button>
-    {:else if $automationStore.selectedAutomation}
-      <Button
-        green
-        wide
-        data-cy="save-automation-setup"
-        on:click={saveAutomation}>
-        Save Automation
-      </Button>
-      <Button red wide on:click={() => confirmDeleteDialog.show()}>
-        Delete Automation
-      </Button>
-    {/if}
-  </div>
-</section>
-<ConfirmDialog
-  bind:this={confirmDeleteDialog}
-  title="Confirm Delete"
-  body={`Are you sure you wish to delete the automation '${name}'?`}
-  okText="Delete Automation"
-  onOk={deleteAutomation} />
+<div class="title">
+  <h1>Setup</h1>
+  <i
+    class:highlighted={automationLive}
+    class:hoverable={automationLive}
+    on:click={() => setAutomationLive(false)}
+    class="ri-stop-circle-fill" />
+  <i
+    class:highlighted={!automationLive}
+    class:hoverable={!automationLive}
+    data-cy="activate-automation"
+    on:click={() => setAutomationLive(true)}
+    class="ri-play-circle-fill" />
+</div>
+
+{#if $automationStore.selectedBlock}
+  <AutomationBlockSetup bind:block={$automationStore.selectedBlock} />
+{:else if $automationStore.selectedAutomation}
+  <div class="block-label">{automation.name}</div>
+  <Button secondary wide on:click={testAutomation}>Test Automation</Button>
+{/if}
+<Button
+  secondary
+  wide
+  data-cy="save-automation-setup"
+  on:click={saveAutomation}>
+  Save Automation
+</Button>
 
 <style>
-  section {
+  .title {
     display: flex;
-    flex-direction: column;
-    height: 100%;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-
-  header {
-    font-size: 18px;
-    font-weight: 600;
-    font-family: inter, sans-serif;
-    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-xl);
-    color: var(--ink);
+    gap: var(--spacing-xs);
   }
-  header > span {
+  .title h1 {
+    font-size: var(--font-size-m);
+    font-weight: 500;
+    margin: 0;
+    flex: 1 1 auto;
+  }
+  .title i {
+    font-size: 20px;
     color: var(--grey-5);
-    margin-right: var(--spacing-xl);
-    cursor: pointer;
   }
-  .selected {
+  .title i.highlighted {
     color: var(--ink);
+  }
+  .title i.hoverable:hover {
+    cursor: pointer;
+    color: var(--blue);
   }
 
   .block-label {
+    font-size: var(--font-size-xs);
     font-weight: 500;
-    font-size: 14px;
     color: var(--grey-7);
-    margin-bottom: var(--spacing-xl);
   }
 
-  .content {
-    flex: 1 0 auto;
-  }
-
-  .buttons {
-    display: grid;
-    gap: var(--spacing-m);
+  .footer {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
   }
 </style>
