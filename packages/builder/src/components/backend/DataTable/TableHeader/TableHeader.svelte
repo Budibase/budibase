@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { Modal, ModalContent } from "@budibase/bbui"
-  import CreateEditColumnPopover from "../popovers/CreateEditColumnPopover.svelte"
+  import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 
   const SORT_ICON_MAP = {
     asc: "ri-arrow-down-fill",
@@ -14,6 +14,7 @@
   export let enableSorting = true
   export let showColumnMenu
   export let progressSort
+  export let editable
 
   let menuButton
   let sortDirection = ""
@@ -50,13 +51,15 @@
       showCancelButton={false}
       showConfirmButton={false}
       title={`Edit Column: ${field.name}`}>
-      <CreateEditColumnPopover onClosed={modal.hide} {field} />
+      <CreateEditColumn onClosed={modal.hide} {field} />
     </ModalContent>
   </Modal>
   <div>
-    <span on:click|stopPropagation={showModal}>
-      <i class="ri-pencil-line" />
-    </span>
+    {#if editable}
+      <span on:click|stopPropagation={showModal}>
+        <i class="ri-pencil-line" />
+      </span>
+    {/if}
     <span on:click|stopPropagation={toggleMenu} bind:this={menuButton}>
       <i class="ri-filter-line" />
     </span>

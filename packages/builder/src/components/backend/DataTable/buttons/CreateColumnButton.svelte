@@ -6,7 +6,7 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
-  import CreateEditColumnPopover from "../popovers/CreateEditColumnPopover.svelte"
+  import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 
   let modal
   let fieldName
@@ -23,6 +23,6 @@
     showCancelButton={false}
     showConfirmButton={false}
     title={'Create Column'}>
-    <CreateEditColumnPopover onClosed={modal.hide} />
+    <CreateEditColumn onClosed={modal.hide} />
   </ModalContent>
 </Modal>

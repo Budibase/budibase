@@ -1,6 +1,7 @@
 import AttachmentList from "./AttachmentCell.svelte"
 import EditRowPopover from "../popovers/RowPopover.svelte"
 import RelationshipDisplay from "./RelationshipCell.svelte"
+import LoadingOverlay from "./LoadingOverlay.svelte"
 
 const renderers = {
   attachment: attachmentRenderer,
@@ -27,7 +28,6 @@ export function editRowRenderer(params) {
 
   return container
 }
-
 
 /* eslint-disable no-unused-vars */
 function attachmentRenderer(options, constraints, editable) {
@@ -57,7 +57,7 @@ function linkedRowRenderer() {
       props: {
         row: params.data,
         columnName: params.column.colId,
-        selectRelationship: params.selectRelationship
+        selectRelationship: params.selectRelationship,
       },
     })
 
