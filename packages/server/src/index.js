@@ -1,18 +1,18 @@
-const { resolve, join } = require("./utilities/centralPath")
-const { homedir } = require("os")
-const { app } = require("electron")
+const { budibaseTempDir } = require("./utilities/budibaseDir")
+const { isDev } = require("./utilities")
+
 const fixPath = require("fix-path")
+const fs = require("fs")
 
 async function runServer() {
-  const homeDir = app ? app.getPath("home") : homedir()
-
-  const budibaseDir = join(homeDir, ".budibase")
-  process.env.BUDIBASE_DIR = budibaseDir
+  if (isDev() && !fs.existsSync(budibaseTempDir())) {
+    console.error(
+      "Please run a build before attempting to run server indepdently to fill 'tmp' directory."
+    )
+    process.exit(-1)
+  }
 
   fixPath()
-
-  require("dotenv").config({ path: resolve(budibaseDir, ".env") })
-
   require("./app")
 }
 
