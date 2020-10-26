@@ -108,8 +108,13 @@ const BUILTIN_DEFINITIONS = {
         required: ["schemaUrl", "triggerUrl"],
       },
       outputs: {
-        properties: {},
-        required: [],
+        properties: {
+          body: {
+            type: "object",
+            description: "Body of the request which hit the webhook",
+          },
+        },
+        required: ["body"],
       },
     },
     type: "TRIGGER",

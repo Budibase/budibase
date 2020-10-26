@@ -1,6 +1,6 @@
 <script>
   import { backendUiStore, automationStore } from "builderStore"
-  import CreateWebookModal from "./CreateWebhookModal.svelte"
+  import CreateWebookModal from "../../Shared/CreateWebhookModal.svelte"
   import analytics from "analytics"
   import { Modal } from "@budibase/bbui"
 
