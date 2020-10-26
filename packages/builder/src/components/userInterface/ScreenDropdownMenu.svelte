@@ -24,7 +24,7 @@
   }
 </script>
 
-<div bind:this={anchor} on:click|stopPropagation={() => {}}>
+<div bind:this={anchor} on:click|stopPropagation>
   <div class="icon" on:click={() => dropdown.show()}>
     <i class="ri-more-line" />
   </div>

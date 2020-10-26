@@ -98,7 +98,7 @@
   }
 </script>
 
-<div bind:this={anchor} on:click|stopPropagation={() => {}}>
+<div bind:this={anchor} on:click|stopPropagation>
   <div class="icon" on:click={dropdown.show}><i class="ri-more-line" /></div>
   <DropdownMenu bind:this={dropdown} width="170px" {anchor} align="left">
     <DropdownContainer on:click={hideDropdown}>
