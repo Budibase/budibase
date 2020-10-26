@@ -19,19 +19,23 @@
   }
 </script>
 
-<div class="copy-area">
+<div>
   <Input disabled="true" thin value={fullWebhookURL(value)} />
-  <span class="copy-btn" on:click={() => copyToClipboard()}>
+  <span on:click={() => copyToClipboard()}>
     <i class="ri-clipboard-line copy-icon" />
   </span>
 </div>
 
 <style>
-  .copy-area {
+  div {
     position: relative;
   }
 
-  .copy-btn {
+  div :global(input:disabled) {
+    color: var(--grey-7);
+  }
+
+  span {
     position: absolute;
     border: none;
     border-radius: 50%;
@@ -46,7 +50,7 @@
     align-items: center;
   }
 
-  .copy-btn:hover {
+  span:hover {
     background-color: var(--grey-3);
   }
 </style>

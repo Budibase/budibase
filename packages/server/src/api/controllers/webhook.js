@@ -87,7 +87,13 @@ exports.trigger = async ctx => {
   validate(ctx.request.body, webhook.bodySchema)
   const target = await db.get(webhook.action.target)
   if (webhook.action.type === exports.WebhookType.AUTOMATION) {
-    await triggers.externalTrigger(target, ctx.request.body)
+    // trigger with both the pure request and then expand it
+    // incase the user has produced a schema to bind to
+    await triggers.externalTrigger(target, {
+      body: ctx.request.body,
+      ...ctx.request.body,
+      instanceId: ctx.params.instance,
+    })
   }
   ctx.status = 200
   ctx.body = "Webhook trigger fired successfully"

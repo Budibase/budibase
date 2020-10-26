@@ -3,11 +3,13 @@
   import RowSelector from "./ParamInputs/RowSelector.svelte"
   import { Button, Input, TextArea, Select, Label } from "@budibase/bbui"
   import { automationStore } from "builderStore"
-  import WebhookDisplay from "../AutomationPanel/BlockList/WebhookDisplay.svelte"
+  import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import BindableInput from "../../userInterface/BindableInput.svelte"
 
   export let block
+  export let webhookModal
   $: inputs = Object.entries(block.schema?.inputs?.properties || {})
+  $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block,
     $automationStore.selectedAutomation?.automation?.definition
@@ -76,6 +78,11 @@
       {/if}
     </div>
   {/each}
+  {#if stepId === "WEBHOOK"}
+    <Button wide secondary on:click={() => webhookModal.show()}>
+      Setup webhook
+    </Button>
+  {/if}
 </div>
 
 <style>

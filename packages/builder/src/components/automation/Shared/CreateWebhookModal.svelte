@@ -10,9 +10,9 @@
   const DEFAULT_SCHEMA_OUTPUT = "Any input allowed"
   let name
   let interval
-  let valid = false
+  let finished = false
   let schemaURL
-  let schema = DEFAULT_SCHEMA_OUTPUT
+  let propCount = 0
 
   $: instanceId = $backendUiStore.selectedDatabase._id
   $: appId = $store.appId
@@ -27,16 +27,10 @@
     interval = setInterval(async () => {
       await automationStore.actions.fetch()
       const outputs = automation?.definition?.trigger.schema.outputs?.properties
-      if (Object.keys(outputs).length !== 0) {
-        schema = cloneDeep(outputs)
-        // clear out the "description" properties
-        for (let key of Object.keys(schema)) {
-          delete schema[key].description
-        }
-        schema = JSON.stringify(schema, null, 2)
-        //schema = schema.replace(/(?:\r\n|\r|\n)/g, "<br />")
-        //console.log(schema)
-        valid = true
+      // always one prop for the "body"
+      if (Object.keys(outputs).length > 1) {
+        propCount = Object.keys(outputs).length - 1
+        finished = true
       }
     }, POLL_RATE_MS)
     schemaURL = automation?.definition?.trigger?.inputs.schemaUrl
@@ -50,17 +44,18 @@
 <ModalContent
   title="Webhook Setup"
   confirmText="Finished"
-  cancelText="Skip"
-  disabled={!valid}>
-  <p class="webhook-exp">
-    To configure a webhook we need to create a schema for your webhook to
-    validate against. Use the URL shown below and send a
-    <b>POST</b>
-    request to it with a JSON body in the format that your webhook should use!
+  showConfirmButton={finished}
+  cancelText="Skip">
+  <p>
+    Webhooks are for receiving data. To make them easier please use the URL
+    shown below and send a <code>POST</code> request to it from your other application.
+    If you're unable to do this now then you can skip this step, however we
+    will not be able to configure bindings for your later actions!
   </p>
   <WebhookDisplay value={schemaURL} />
-  <h5>Schema</h5>
-  <code> {schema} </code>
+  {#if finished}
+    <p class="finished-text">Request received! We found {propCount} bindable value{propCount > 1 ? "s" : ""}.</p>
+  {/if}
   <div slot="footer">
     <a target="_blank" href="https://docs.budibase.com/automate/steps/triggers">
       <i class="ri-information-line" />
@@ -91,16 +86,19 @@
     padding-top: 0;
     text-align: justify;
   }
+  .finished-text {
+    font-weight: 500;
+    text-align: center;
+    color: var(--blue);
+  }
   h5 {
     margin: 0;
   }
   code {
-    padding: 8px;
+    padding: 1px 4px 1px 4px;
     font-size: 14px;
-    color: var(--grey-5);
+    color: var(--grey-7);
     background-color: var(--grey-4);
-    border-radius: 6px;
-    display: block;
-    white-space: pre-wrap;
+    border-radius: 2px;
   }
 </style>
