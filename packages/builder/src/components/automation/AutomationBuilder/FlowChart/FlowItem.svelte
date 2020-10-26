@@ -9,7 +9,12 @@
   $: selected = $automationStore.selectedBlock?.id === block.id
   $: steps =
     $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
-  $: blockIdx = steps.findIndex(step => step.id === block.id)
+  $: blockIdx = steps.findIndex((step) => step.id === block.id)
+  $: allowDeleteTrigger = !steps.length
+
+  function deleteStep() {
+    automationStore.actions.deleteAutomationBlock(block)
+  }
 </script>
 
 <div
@@ -30,6 +35,9 @@
     <div class="label">
       {#if block.type === 'TRIGGER'}Trigger{:else}Step {blockIdx + 1}{/if}
     </div>
+    {#if block.type !== 'TRIGGER' || allowDeleteTrigger}
+      <i on:click|stopPropagation={deleteStep} class="delete ri-close-line" />
+    {/if}
   </header>
   <hr />
   <p>
@@ -61,6 +69,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+    gap: var(--spacing-xs);
   }
   header span {
     flex: 1 1 auto;
@@ -74,7 +83,13 @@
   }
   header i {
     font-size: 20px;
-    margin-right: 5px;
+  }
+  header i.delete {
+    opacity: 0.5;
+  }
+  header i.delete:hover {
+    cursor: pointer;
+    opacity: 1;
   }
 
   .ACTION {

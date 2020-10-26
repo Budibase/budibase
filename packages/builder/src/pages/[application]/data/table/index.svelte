@@ -27,7 +27,7 @@
 
 <style>
   i {
-    font-size: var(--font-size-xl);
-    color: var(--grey-4);
+    font-size: var(--font-size-m);
+    color: var(--grey-5);
   }
 </style>
