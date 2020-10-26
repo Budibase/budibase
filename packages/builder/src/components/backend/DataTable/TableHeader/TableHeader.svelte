@@ -39,7 +39,7 @@
   })
 </script>
 
-<header on:click={onSort}>
+<header on:click={onSort} data-cy="table-header">
   <div>
     <span>{displayName}</span>
     {#if enableSorting && sortDirection}

@@ -54,7 +54,7 @@ context("Create a automation", () => {
   })
 
   it("should add row when a new row is added", () => {
-    cy.contains("backend").click()
+    cy.contains("data").click()
     cy.addRow(["Rover", 15])
     cy.reload()
     cy.contains("goodboy").should("have.text", "goodboy")

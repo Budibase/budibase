@@ -23,9 +23,9 @@ context("Create a View", () => {
       cy.contains("Save View").click()
     })
     cy.get(".title").contains("Test View")
-    cy.get("thead th div").should($headers => {
+    cy.get("[data-cy=table-header]").should($headers => {
       expect($headers).to.have.length(3)
-      const headers = $headers.map((i, header) => Cypress.$(header).text())
+      const headers = $headers.map((i, header) => Cypress.$(header).textContent)
       expect(headers.get()).to.deep.eq(["group", "age", "rating"])
     })
   })
@@ -62,7 +62,7 @@ context("Create a View", () => {
       .eq(1)
       .select("age")
     cy.contains("Save").click()
-    cy.get("thead th div").should($headers => {
+    cy.get("[data-cy=table-header]").should($headers => {
       expect($headers).to.have.length(7)
       const headers = $headers.map((i, header) => Cypress.$(header).text())
       expect(headers.get()).to.deep.eq([
