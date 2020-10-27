@@ -2,10 +2,10 @@
   import { backendUiStore, automationStore } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import AutomationBlockSetup from "./AutomationBlockSetup.svelte"
-  import { Button } from "@budibase/bbui"
+  import { Button, Modal } from "@budibase/bbui"
+  import CreateWebookModal from "../Shared/CreateWebhookModal.svelte"
 
-  let selectedTab = "SETUP"
-  let confirmDeleteDialog
+  let webhookModal
 
   $: instanceId = $backendUiStore.selectedDatabase._id
   $: automation = $automationStore.selectedAutomation?.automation
@@ -59,9 +59,10 @@
     on:click={() => setAutomationLive(true)}
     class="ri-play-circle-fill" />
 </div>
-
 {#if $automationStore.selectedBlock}
-  <AutomationBlockSetup bind:block={$automationStore.selectedBlock} />
+  <AutomationBlockSetup
+    bind:block={$automationStore.selectedBlock}
+    {webhookModal} />
 {:else if $automationStore.selectedAutomation}
   <div class="block-label">{automation.name}</div>
   <Button secondary wide on:click={testAutomation}>Test Automation</Button>
@@ -73,6 +74,9 @@
   on:click={saveAutomation}>
   Save Automation
 </Button>
+<Modal bind:this={webhookModal} width="30%">
+  <CreateWebookModal />
+</Modal>
 
 <style>
   .title {

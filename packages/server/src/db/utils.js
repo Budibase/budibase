@@ -11,6 +11,7 @@ const DocumentTypes = {
   LINK: "li",
   APP: "app",
   ACCESS_LEVEL: "ac",
+  WEBHOOK: "wh",
 }
 
 exports.DocumentTypes = DocumentTypes
@@ -163,4 +164,19 @@ exports.generateAccessLevelID = () => {
  */
 exports.getAccessLevelParams = (accessLevelId = null, otherProps = {}) => {
   return getDocParams(DocumentTypes.ACCESS_LEVEL, accessLevelId, otherProps)
+}
+
+/**
+ * Generates a new webhook ID.
+ * @returns {string} The new webhook ID which the webhook doc can be stored under.
+ */
+exports.generateWebhookID = () => {
+  return `${DocumentTypes.WEBHOOK}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving a webhook, this is a utility function for the getDocParams function.
+ */
+exports.getWebhookParams = (webhookId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.WEBHOOK, webhookId, otherProps)
 }

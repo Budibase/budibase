@@ -9,7 +9,13 @@ const environment = require("../environment")
 const { apiKeyTable } = require("../db/dynamoClient")
 const { AuthTypes } = require("../constants")
 
+const LOCAL_PASS = new RegExp(["webhooks/trigger", "webhooks/schema"].join("|"))
+
 module.exports = (permName, getItemId) => async (ctx, next) => {
+  // webhooks can pass locally
+  if (!environment.CLOUD && LOCAL_PASS.test(ctx.request.url)) {
+    return next()
+  }
   if (
     environment.CLOUD &&
     ctx.headers["x-api-key"] &&

@@ -1,12 +1,15 @@
 <script>
   import TableSelector from "./TableSelector.svelte"
   import RowSelector from "./RowSelector.svelte"
-  import { Input, TextArea, Select, Label } from "@budibase/bbui"
+  import { Button, Input, Select, Label } from "@budibase/bbui"
   import { automationStore } from "builderStore"
-  import BindableInput from "../../userInterface/BindableInput.svelte"
+  import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
+  import BindableInput from "components/userInterface/BindableInput.svelte"
 
   export let block
+  export let webhookModal
   $: inputs = Object.entries(block.schema?.inputs?.properties || {})
+  $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block,
     $automationStore.selectedAutomation?.automation?.definition
@@ -63,6 +66,8 @@
       <TableSelector bind:value={block.inputs[key]} />
     {:else if value.customType === 'row'}
       <RowSelector bind:value={block.inputs[key]} {bindings} />
+    {:else if value.customType === 'webhookUrl'}
+      <WebhookDisplay value={block.inputs[key]} />
     {:else if value.type === 'string' || value.type === 'number'}
       <BindableInput
         type="string"
@@ -72,6 +77,11 @@
     {/if}
   </div>
 {/each}
+{#if stepId === 'WEBHOOK'}
+  <Button wide secondary on:click={() => webhookModal.show()}>
+    Set Up Webhook
+  </Button>
+{/if}
 
 <style>
   .block-field {
