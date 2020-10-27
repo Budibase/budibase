@@ -6,7 +6,7 @@
 
   let isOpen = false
 
-  const capitalize = (s) => {
+  const capitalize = s => {
     if (typeof s !== "string") return ""
     return s.charAt(0).toUpperCase() + s.slice(1)
   }
@@ -17,7 +17,7 @@
   {#if parameter.name === 'automation'}
     <Select on:change bind:value={parameter.value}>
       <option value="" />
-      {#each $automationStore.automations.filter((wf) => wf.live) as automation}
+      {#each $automationStore.automations.filter(wf => wf.live) as automation}
         <option value={automation._id}>{automation.name}</option>
       {/each}
     </Select>

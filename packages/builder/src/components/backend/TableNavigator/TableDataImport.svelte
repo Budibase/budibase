@@ -69,16 +69,15 @@
     const fileArray = Array.from(evt.target.files)
     if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
       notifier.danger(
-        `Files cannot exceed ${
-          FILE_SIZE_LIMIT / BYTES_IN_MB
-        }MB. Please try again with smaller files.`
+        `Files cannot exceed ${FILE_SIZE_LIMIT /
+          BYTES_IN_MB}MB. Please try again with smaller files.`
       )
       return
     }
 
     // Read CSV as plain text to upload alongside schema
     let reader = new FileReader()
-    reader.addEventListener("load", function (e) {
+    reader.addEventListener("load", function(e) {
       csvString = e.target.result
       files = fileArray
       validateCSV()

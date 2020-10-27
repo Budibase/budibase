@@ -6,7 +6,7 @@
   export let options = []
   export let value = ""
   export let styleBindingProperty
-  export let onChange = (value) => {}
+  export let onChange = value => {}
 
   let open = null
   let rotate = ""
@@ -23,7 +23,7 @@
   let scrollTop = 0
   let containerEl = null
 
-  const handleStyleBind = (value) =>
+  const handleStyleBind = value =>
     !!styleBindingProperty ? { style: `${styleBindingProperty}: ${value}` } : {}
 
   onMount(() => {
@@ -95,10 +95,10 @@
     width: `${width}px`,
   })
 
-  $: isOptionsObject = options.every((o) => typeof o === "object")
+  $: isOptionsObject = options.every(o => typeof o === "object")
 
   $: selectedOption = isOptionsObject
-    ? options.find((o) => o.value === value)
+    ? options.find(o => o.value === value)
     : {}
 
   $: if (open && selectMenu) {

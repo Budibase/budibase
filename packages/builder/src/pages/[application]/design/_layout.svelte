@@ -27,7 +27,7 @@
     settingsView.show()
   }
 
-  const lastPartOfName = (c) => (c ? last(c.split("/")) : "")
+  const lastPartOfName = c => (c ? last(c.split("/")) : "")
 </script>
 
 <!-- routify:options index=1 -->

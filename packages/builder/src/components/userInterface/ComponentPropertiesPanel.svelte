@@ -20,7 +20,7 @@
   $: componentPropDefinition =
     flattenedPanel.find(
       //use for getting controls for each component property
-      (c) => c._component === componentInstance._component
+      c => c._component === componentInstance._component
     ) || {}
 
   $: panelDefinition =
@@ -48,8 +48,8 @@
 
   function flattenComponents(props) {
     const components = []
-    props.forEach((comp) =>
-      walkProps(comp, (c) => {
+    props.forEach(comp =>
+      walkProps(comp, c => {
         if ("_component" in c) {
           components.push(c)
         }
@@ -64,7 +64,7 @@
 </script>
 
 <CategoryTab
-  onClick={(category) => (selectedCategory = category)}
+  onClick={category => (selectedCategory = category)}
   {categories}
   {selectedCategory} />
 

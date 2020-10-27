@@ -23,7 +23,7 @@
 
   function checkValid(evt) {
     const tableName = evt.target.value
-    if ($backendUiStore.models?.some((model) => model.name === tableName)) {
+    if ($backendUiStore.models?.some(model => model.name === tableName)) {
       error = `Table with name ${tableName} already exists. Please choose another name.`
       return
     }
@@ -49,8 +49,8 @@
 
     // Create auto screens
     const screens = screenTemplates($store, [table])
-      .filter((template) => defaultScreens.includes(template.id))
-      .map((template) => template.create())
+      .filter(template => defaultScreens.includes(template.id))
+      .map(template => template.create())
     for (let screen of screens) {
       // Record the table that created this screen so we can link it later
       screen.autoTableId = table._id
@@ -67,7 +67,7 @@
     }
 
     // Create autolink to newly created list page
-    const listPage = screens.find((screen) =>
+    const listPage = screens.find(screen =>
       screen.props._instanceName.endsWith("List")
     )
     await store.createLink(listPage.route, table.name)

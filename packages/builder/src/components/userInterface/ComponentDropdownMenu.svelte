@@ -18,27 +18,27 @@
     !component || !getComponentDefinition($store, component._component).children
   $: noPaste = !$store.componentToPaste
 
-  const lastPartOfName = (c) => (c ? last(c._component.split("/")) : "")
+  const lastPartOfName = c => (c ? last(c._component.split("/")) : "")
 
   const hideDropdown = () => {
     dropdown.hide()
   }
 
-  const selectComponent = (component) => {
+  const selectComponent = component => {
     store.selectComponent(component)
     const path = store.getPathToComponent(component)
     $goto(`./:page/:screen/${path}`)
   }
 
   const moveUpComponent = () => {
-    store.update((s) => {
+    store.update(s => {
       const parent = getParent(s.currentPreviewItem.props, component)
 
       if (parent) {
         const currentIndex = parent._children.indexOf(component)
         if (currentIndex === 0) return s
 
-        const newChildren = parent._children.filter((c) => c !== component)
+        const newChildren = parent._children.filter(c => c !== component)
         newChildren.splice(currentIndex - 1, 0, component)
         parent._children = newChildren
       }
@@ -50,14 +50,14 @@
   }
 
   const moveDownComponent = () => {
-    store.update((s) => {
+    store.update(s => {
       const parent = getParent(s.currentPreviewItem.props, component)
 
       if (parent) {
         const currentIndex = parent._children.indexOf(component)
         if (currentIndex === parent._children.length - 1) return s
 
-        const newChildren = parent._children.filter((c) => c !== component)
+        const newChildren = parent._children.filter(c => c !== component)
         newChildren.splice(currentIndex + 1, 0, component)
         parent._children = newChildren
       }
@@ -74,11 +74,11 @@
   }
 
   const deleteComponent = () => {
-    store.update((state) => {
+    store.update(state => {
       const parent = getParent(state.currentPreviewItem.props, component)
 
       if (parent) {
-        parent._children = parent._children.filter((c) => c !== component)
+        parent._children = parent._children.filter(c => c !== component)
         selectComponent(parent)
       }
 
@@ -92,7 +92,7 @@
     store.storeComponentForCopy(component, cut)
   }
 
-  const pasteComponent = (mode) => {
+  const pasteComponent = mode => {
     // lives in store - also used by drag drop
     store.pasteComponent(component, mode)
   }

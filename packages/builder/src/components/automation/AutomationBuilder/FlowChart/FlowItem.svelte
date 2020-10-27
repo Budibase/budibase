@@ -9,7 +9,7 @@
   $: selected = $automationStore.selectedBlock?.id === block.id
   $: steps =
     $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
-  $: blockIdx = steps.findIndex((step) => step.id === block.id)
+  $: blockIdx = steps.findIndex(step => step.id === block.id)
   $: allowDeleteTrigger = !steps.length
 
   function deleteStep() {
