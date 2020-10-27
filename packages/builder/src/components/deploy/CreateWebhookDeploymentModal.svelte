@@ -31,6 +31,9 @@
       <WebhookDisplay value={webhookUrl.url} production={true} />
     </div>
   {/each}
+  {#if webhookUrls.length === 0}
+    <h5>No webhooks found.</h5>
+  {/if}
   <div slot="footer">
     <a target="_blank" href="https://docs.budibase.com/automate/steps/triggers">
       <i class="ri-information-line" />
