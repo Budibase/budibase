@@ -83,6 +83,42 @@ const BUILTIN_DEFINITIONS = {
     },
     type: "TRIGGER",
   },
+  WEBHOOK: {
+    name: "Webhook",
+    event: "web:trigger",
+    icon: "ri-global-line",
+    tagline: "Webhook endpoint is hit",
+    description: "Trigger an automation when a HTTP POST webhook is hit",
+    stepId: "WEBHOOK",
+    inputs: {},
+    schema: {
+      inputs: {
+        properties: {
+          schemaUrl: {
+            type: "string",
+            customType: "webhookUrl",
+            title: "Schema URL",
+          },
+          triggerUrl: {
+            type: "string",
+            customType: "webhookUrl",
+            title: "Trigger URL",
+          },
+        },
+        required: ["schemaUrl", "triggerUrl"],
+      },
+      outputs: {
+        properties: {
+          body: {
+            type: "object",
+            description: "Body of the request which hit the webhook",
+          },
+        },
+        required: ["body"],
+      },
+    },
+    type: "TRIGGER",
+  },
 }
 
 async function queueRelevantRowAutomations(event, eventType) {

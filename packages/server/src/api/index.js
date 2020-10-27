@@ -22,6 +22,7 @@ const {
   apiKeysRoutes,
   templatesRoutes,
   analyticsRoutes,
+  webhookRoutes,
 } = require("./routes")
 
 const router = new Router()
@@ -87,6 +88,9 @@ router.use(instanceRoutes.allowedMethods())
 
 router.use(automationRoutes.routes())
 router.use(automationRoutes.allowedMethods())
+
+router.use(webhookRoutes.routes())
+router.use(webhookRoutes.allowedMethods())
 
 router.use(deployRoutes.routes())
 router.use(deployRoutes.allowedMethods())
