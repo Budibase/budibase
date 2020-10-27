@@ -2,7 +2,7 @@
   import { store, backendUiStore } from "builderStore"
   import { map, join } from "lodash/fp"
   import iframeTemplate from "./iframeTemplate"
-  import { pipe } from "components/common/core"
+  import { pipe } from "../../../helpers"
 
   let iframe
   let styles = ""
@@ -16,7 +16,7 @@
     return props
   }
 
-  const getComponentTypeName = component => {
+  const getComponentTypeName = (component) => {
     let [componentName] = component._component.match(/[a-z]*$/)
     return componentName || "element"
   }
@@ -144,7 +144,7 @@
   }
 
   $: stylesheetLinks = pipe($store.pages.stylesheets, [
-    map(s => `<link rel="stylesheet" href="${s}"/>`),
+    map((s) => `<link rel="stylesheet" href="${s}"/>`),
     join("\n"),
   ])
 

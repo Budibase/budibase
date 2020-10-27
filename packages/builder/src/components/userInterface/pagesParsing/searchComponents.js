@@ -1,21 +1,21 @@
 import { isUndefined, filter, some, includes } from "lodash/fp"
-import { pipe } from "components/common/core"
+import { pipe } from "../../../helpers"
 
-const normalString = s => (s || "").trim().toLowerCase()
+const normalString = (s) => (s || "").trim().toLowerCase()
 
-export const isRootComponent = c =>
+export const isRootComponent = (c) =>
   isComponent(c) && isUndefined(c.props._component)
 
-export const isComponent = c => {
-  const hasProp = n => !isUndefined(c[n])
+export const isComponent = (c) => {
+  const hasProp = (n) => !isUndefined(c[n])
   return hasProp("name") && hasProp("props")
 }
 
 export const searchAllComponents = (components, phrase) => {
   const hasPhrase = (...vals) =>
-    pipe(vals, [some(v => includes(normalString(phrase))(normalString(v)))])
+    pipe(vals, [some((v) => includes(normalString(phrase))(normalString(v)))])
 
-  const componentMatches = c => {
+  const componentMatches = (c) => {
     if (hasPhrase(c._instanceName, ...(c.tags || []))) return true
 
     if (isRootComponent(c)) return false
@@ -29,7 +29,7 @@ export const searchAllComponents = (components, phrase) => {
 }
 
 export const getExactComponent = (components, name, isScreen = false) => {
-  return components.find(c =>
+  return components.find((c) =>
     isScreen ? c.props._instanceName === name : c._instanceName === name
   )
 }

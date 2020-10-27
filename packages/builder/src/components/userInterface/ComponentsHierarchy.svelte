@@ -2,7 +2,7 @@
   import { goto } from "@sveltech/routify"
   import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
   import { trimCharsStart, trimChars } from "lodash/fp"
-  import { pipe } from "components/common/core"
+  import { pipe } from "../../helpers"
   import { store } from "builderStore"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
   import { writable } from "svelte/store"
