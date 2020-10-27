@@ -1,5 +1,6 @@
 import AttachmentList from "./AttachmentCell.svelte"
-import EditRowPopover from "../modals/EditRow.svelte"
+import EditRow from "../modals/EditRow.svelte"
+import DeleteRow from "../modals/DeleteRow.svelte"
 import RelationshipDisplay from "./RelationshipCell.svelte"
 
 const renderers = {
@@ -15,10 +16,23 @@ export function getRenderer(schema, editable) {
   }
 }
 
+export function deleteRowRenderer(params) {
+  const container = document.createElement("div")
+
+  new DeleteRow({
+    target: container,
+    props: {
+      row: params.data,
+    },
+  })
+
+  return container
+}
+
 export function editRowRenderer(params) {
   const container = document.createElement("div")
 
-  new EditRowPopover({
+  new EditRow({
     target: container,
     props: {
       row: params.data,

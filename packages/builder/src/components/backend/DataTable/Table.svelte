@@ -1,29 +1,39 @@
 <script>
   import { fade } from "svelte/transition"
+  import { Button } from "@budibase/bbui"
   import { goto, params } from "@sveltech/routify"
-  import Spinner from "components/common/Spinner.svelte"
   import AgGrid from "@budibase/svelte-ag-grid"
-  import { getRenderer, editRowRenderer } from "./cells/cellRenderers"
+
+  import api from "builderStore/api"
+  import { notifier } from "builderStore/store/notifications"
+  import Spinner from "components/common/Spinner.svelte"
+  import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
+  import {
+    getRenderer,
+    editRowRenderer,
+    deleteRowRenderer,
+  } from "./cells/cellRenderers"
   import TableLoadingOverlay from "./TableLoadingOverlay"
   import TableHeader from "./TableHeader"
   import "@budibase/svelte-ag-grid/dist/index.css"
 
   export let schema = {}
   export let data = []
+  export let tableId
   export let title
   export let allowEditing = false
   export let loading = false
-
   export let theme = "alpine"
 
   let columnDefs = []
+  let selectedRows = []
 
   let options = {
     defaultColDef: {
       flex: 1,
       filter: true,
     },
-    rowSelection: true,
+    rowSelection: allowEditing ? "multiple" : false,
     rowMultiSelectWithClick: true,
     suppressRowClickSelection: false,
     paginationAutoPageSize: true,
@@ -39,21 +49,34 @@
   $: {
     let result = []
     if (allowEditing) {
-      result.push({
-        pinned: "left",
-        headerName: "Edit",
-        sortable: false,
-        resizable: false,
-        suppressMovable: true,
-        suppressMenu: true,
-        minWidth: 75,
-        width: 75,
-        cellRenderer: editRowRenderer,
-      })
+      result = [
+        {
+          pinned: "left",
+          headerName: "Edit",
+          sortable: false,
+          resizable: false,
+          suppressMovable: true,
+          suppressMenu: true,
+          minWidth: 100,
+          width: 100,
+          cellRenderer: editRowRenderer,
+        },
+        {
+          headerName: "",
+          checkboxSelection: true,
+          sortable: false,
+          resizable: false,
+          suppressMovable: true,
+          suppressMenu: true,
+          minWidth: 50,
+          width: 50,
+        },
+      ]
     }
 
     for (let key in schema) {
       result.push({
+        headerCheckboxSelection: false,
         headerComponent: TableHeader,
         headerComponentParams: {
           field: schema[key],
@@ -83,6 +106,16 @@
       `/${$params.application}/data/table/${row.tableId}/relationship/${row._id}/${fieldName}`
     )
   }
+
+  const deleteRows = async () => {
+    const response = await api.post(`/api/${tableId}/rows`, {
+      rows: selectedRows,
+      type: "delete",
+    })
+    data = data.filter(row => !selectedRows.includes(row))
+    notifier.success(`Successfully deleted ${selectedRows.length} rows`)
+    selectedRows = []
+  }
 </script>
 
 <section>
@@ -90,9 +123,19 @@
     <h2 class="title"><span>{title}</span></h2>
     <div class="popovers">
       <slot />
+      {#if selectedRows.length > 0}
+        <DeleteRowsButton {selectedRows} {deleteRows} />
+      {/if}
     </div>
   </div>
-  <AgGrid {theme} {options} {data} {columnDefs} {loading} />
+  <AgGrid
+    {theme}
+    {options}
+    {data}
+    {columnDefs}
+    {loading}
+    on:select={({ detail }) => (selectedRows = detail)} />
+  />
 </section>
 
 <style>
@@ -164,7 +207,7 @@
 
   :global(.ag-menu input) {
     color: var(--ink) !important;
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-xs);
     border-radius: var(--border-radius-s) !important;
     border: none;
     background-color: var(--grey-2) !important;
@@ -181,7 +224,7 @@
 
   :global(.ag-picker-field-display) {
     color: var(--ink) !important;
-    font-size: var(--font-size-s) !important;
+    font-size: var(--font-size-xs) !important;
     border-radius: var(--border-radius-s) !important;
     background-color: var(--grey-2) !important;
     font-family: var(--font-sans);
@@ -191,6 +234,7 @@
   :global(.ag-picker-field-wrapper) {
     background: var(--grey-2) !important;
     border: var(--border-transparent) !important;
-    padding: var(--spacing-xs);
+    padding-top: var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
   }
 </style>

@@ -24,6 +24,7 @@
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
   let confirmDeleteDialog
+  let deletion
 
   $: tableOptions = $backendUiStore.tables.filter(
     table => table._id !== $backendUiStore.draftTable._id
@@ -47,8 +48,8 @@
       notifier.danger("You cannot delete the display column")
     } else {
       backendUiStore.actions.tables.deleteField(field)
-      notifier.success("Column deleted")
-      hideDeleteDialog()
+      notifier.success(`Column ${field.name} deleted.`)
+      onClosed()
     }
   }
 
@@ -76,15 +77,16 @@
 
   function confirmDelete() {
     confirmDeleteDialog.show()
-    onClosed()
+    deletion = true
   }
 
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
+    deletion = false
   }
 </script>
 
-<div class="actions">
+<div class="actions" class:hidden={deletion}>
   <Input label="Name" thin bind:value={field.name} />
 
   <Select
@@ -181,5 +183,9 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-m);
+  }
+
+  .hidden {
+    display: none;
   }
 </style>

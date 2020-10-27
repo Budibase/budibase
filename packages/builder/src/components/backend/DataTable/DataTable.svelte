@@ -12,6 +12,7 @@
 
   $: title = $backendUiStore.selectedTable.name
   $: schema = $backendUiStore.selectedTable.schema
+  $: tableId = $backendUiStore.selectedTable._id
   $: tableView = {
     schema,
     name: $backendUiStore.selectedView.name,
