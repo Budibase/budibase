@@ -1,3 +1,17 @@
+const { resolve, join } = require("./utilities/centralPath")
+const { homedir } = require("os")
+const { app } = require("electron")
+
+let LOADED = false
+
+if (!LOADED) {
+  const homeDir = app ? app.getPath("home") : homedir()
+  const budibaseDir = join(homeDir, ".budibase")
+  process.env.BUDIBASE_DIR = budibaseDir
+  require("dotenv").config({ path: resolve(budibaseDir, ".env") })
+  LOADED = true
+}
+
 module.exports = {
   CLIENT_ID: process.env.CLIENT_ID,
   NODE_ENV: process.env.NODE_ENV,
@@ -15,4 +29,5 @@ module.exports = {
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
   AWS_REGION: process.env.AWS_REGION,
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
+  BUDIBASE_API_KEY: process.env.BUDIBASE_API_KEY,
 }
