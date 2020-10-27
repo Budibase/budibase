@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rollup -c",
     "prepublishOnly": "npm run build",
-    "postpublish": "scripts/deploy.sh",
+    "postpublish": "node scripts/deploy.js",
     "testbuild": "rollup -w -c rollup.testconfig.js",
     "dev": "run-p start:dev testbuild",
     "start:dev": "sirv public --single --dev",

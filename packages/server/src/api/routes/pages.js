@@ -1,5 +1,7 @@
 const Router = require("@koa/router")
 const StatusCodes = require("../../utilities/statusCodes")
+const joiValidator = require("../../middleware/joi-validator")
+const Joi = require("joi")
 const {
   listScreens,
   saveScreen,
@@ -11,6 +13,33 @@ const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("../../utilities/accessLevels")
 
 const router = Router()
+
+function generateSaveValidation() {
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    _css: Joi.string().allow(""),
+    name: Joi.string().required(),
+    route: Joi.string().required(),
+    props: Joi.object({
+      _id: Joi.string().required(),
+      _component: Joi.string().required(),
+      _children: Joi.array().required(),
+      _instanceName: Joi.string().required(),
+      _styles: Joi.object().required(),
+      type: Joi.string().optional(),
+      table: Joi.string().optional(),
+    }).required().unknown(true),
+  }).unknown(true))
+}
+
+function generatePatchValidation() {
+  return joiValidator.body(
+    Joi.object({
+      oldname: Joi.string().required(),
+      newname: Joi.string().required(),
+    }).unknown(true)
+  )
+}
 
 router.post(
   "/_builder/api/:appId/pages/:pageName",
@@ -42,6 +71,7 @@ router.get(
 router.post(
   "/_builder/api/:appId/pages/:pagename/screen",
   authorized(BUILDER),
+  generateSaveValidation(),
   async ctx => {
     ctx.body = await saveScreen(
       ctx.config,
@@ -56,6 +86,7 @@ router.post(
 router.patch(
   "/_builder/api/:appname/pages/:pagename/screen",
   authorized(BUILDER),
+  generatePatchValidation(),
   async ctx => {
     await renameScreen(
       ctx.config,
