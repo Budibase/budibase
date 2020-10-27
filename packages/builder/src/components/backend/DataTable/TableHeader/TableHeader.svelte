@@ -42,9 +42,7 @@
 <header on:click={onSort} data-cy="table-header">
   <div>
     <span>{displayName}</span>
-    {#if enableSorting && sortDirection}
-      <i class={`${SORT_ICON_MAP[sortDirection]} sort-icon`} />
-    {/if}
+    <i class={`${SORT_ICON_MAP[sortDirection]} sort-icon`} />
   </div>
   <Modal bind:this={modal}>
     <ModalContent
