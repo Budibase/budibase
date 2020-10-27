@@ -1,5 +1,5 @@
 <script>
-  import { Input, Button, Select, Toggle } from "@budibase/bbui"
+  import { Input, Button, TextButton, Select, Toggle } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
   import { backendUiStore } from "builderStore"
   import { FIELDS } from "constants/backend"
@@ -156,11 +156,11 @@
       thin
       bind:value={field.fieldName} />
   {/if}
-  <footer>
-    <Button secondary on:click={onClosed}>Cancel</Button>
+  <footer class="create-column-options">
     {#if originalName}
-      <Button red on:click={confirmDelete}>Delete Column</Button>
+      <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
     {/if}
+    <Button secondary on:click={onClosed}>Cancel</Button>
     <Button primary on:click={saveColumn}>Save Column</Button>
   </footer>
 </div>
@@ -183,6 +183,10 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-m);
+  }
+
+  :global(.create-column-options button:first-child) {
+    margin-right: auto;
   }
 
   .hidden {

@@ -16,7 +16,9 @@
 <div>
   <TextButton small text on:click={modal.show}>
     <Icon name="delete" />
-    Delete {selectedRows.length} row(s)
+    Delete
+    {selectedRows.length}
+    row(s)
   </TextButton>
 </div>
 <Modal bind:this={modal}>
@@ -25,6 +27,8 @@
     confirmText="Delete"
     onConfirm={confirmDeletion}
     title="Confirm Row Deletion">
-    Are you sure you want to delete {selectedRows.length} row{selectedRows.length > 1 ? 's' : ''}?
+    Are you sure you want to delete
+    {selectedRows.length}
+    row{selectedRows.length > 1 ? 's' : ''}?
   </ModalContent>
 </Modal>

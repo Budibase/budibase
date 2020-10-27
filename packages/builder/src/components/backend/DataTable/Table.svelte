@@ -44,7 +44,7 @@
       customLoadingOverlay: TableLoadingOverlay,
     },
     loadingOverlayComponent: "customLoadingOverlay",
-    animateRows: true
+    animateRows: true,
   }
 
   $: {
@@ -62,22 +62,13 @@
           width: 100,
           cellRenderer: editRowRenderer,
         },
-        {
-          headerName: "",
-          checkboxSelection: true,
-          sortable: false,
-          resizable: false,
-          suppressMovable: true,
-          suppressMenu: true,
-          minWidth: 50,
-          width: 50,
-        },
       ]
     }
 
-    for (let key in schema) {
+    Object.keys(schema || {}).forEach((key, idx) => {
       result.push({
         headerCheckboxSelection: false,
+        checkboxSelection: idx === 0 && allowEditing,
         headerComponent: TableHeader,
         headerComponentParams: {
           field: schema[key],
@@ -94,7 +85,7 @@
         resizable: true,
         minWidth: 200,
       })
-    }
+    })
 
     columnDefs = result
   }

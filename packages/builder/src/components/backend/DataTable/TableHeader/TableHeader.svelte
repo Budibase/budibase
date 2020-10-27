@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
   import { Modal, ModalContent } from "@budibase/bbui"
   import CreateEditColumn from "../modals/CreateEditColumn.svelte"
 
@@ -20,8 +20,7 @@
   let sortDirection = ""
   let modal
   let hovered
-
-  $: console.log($$restProps)
+  let filterActive
 
   function toggleMenu() {
     showColumnMenu(menuButton)
@@ -35,10 +34,22 @@
     modal.show()
   }
 
+  function setSort(column) {
+    sortDirection = column.getSort()
+  }
+
+  function setFilterActive(e) {
+    filterActive = e.column.filterActive
+  }
+
   onMount(() => {
-    column.addEventListener("sortChanged", () => {
-      sortDirection = column.getSort()
-    })
+    column.addEventListener("sortChanged", setSort)
+    column.addEventListener("filterActiveChanged", setFilterActive)
+  })
+
+  onDestroy(() => {
+    column.removeEventListener("sortChanged", setSort)
+    column.removeEventListener("filterActiveChanged", setFilterActive)
   })
 </script>
 
@@ -59,14 +70,14 @@
       <CreateEditColumn onClosed={modal.hide} {field} />
     </ModalContent>
   </Modal>
-  <section class:show={hovered}>
-    {#if editable}
+  <section class:show={hovered || filterActive}>
+    {#if editable && hovered}
       <span on:click|stopPropagation={showModal}>
         <i class="ri-pencil-line" />
       </span>
     {/if}
     <span on:click|stopPropagation={toggleMenu} bind:this={menuButton}>
-      <i class="ri-filter-line" />
+      <i class="ri-filter-line" class:active={filterActive} />
     </span>
   </section>
 </header>
@@ -85,7 +96,7 @@
 
   section {
     opacity: 0;
-    transition: 0.2s all;
+    transition: 0.3s all;
   }
 
   section.show {
