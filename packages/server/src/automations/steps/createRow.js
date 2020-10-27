@@ -6,7 +6,7 @@ const usage = require("../../utilities/usageQuota")
 module.exports.definition = {
   name: "Create Row",
   tagline: "Create a {{inputs.enriched.table.name}} row",
-  icon: "ri-save-3-fill",
+  icon: "ri-save-3-line",
   description: "Add a row to your database",
   type: "ACTION",
   stepId: "CREATE_ROW",
