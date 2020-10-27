@@ -5,7 +5,12 @@
   export let disabled
 </script>
 
-<div class="dropdown-item" class:disabled on:click class:big={subtitle != null}>
+<div
+  class="dropdown-item"
+  class:disabled
+  on:click
+  class:big={subtitle != null}
+  {...$$restProps}>
   {#if icon}<i class={icon} />{/if}
   <div class="content">
     <div class="title">{title}</div>

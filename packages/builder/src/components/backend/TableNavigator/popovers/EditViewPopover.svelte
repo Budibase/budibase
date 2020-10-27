@@ -62,10 +62,15 @@
       </div>
     {:else}
       <DropdownContainer>
-        <DropdownItem icon="ri-edit-line" title="Edit" on:click={showEditor} />
+        <DropdownItem
+          icon="ri-edit-line"
+          data-cy="edit-view"
+          title="Edit"
+          on:click={showEditor} />
         <DropdownItem
           icon="ri-delete-bin-line"
           title="Delete"
+          data-cy="delete-view"
           on:click={showDelete} />
       </DropdownContainer>
     {/if}

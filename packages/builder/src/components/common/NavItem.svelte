@@ -11,7 +11,7 @@
 </script>
 
 <div
-  class="container"
+  class="nav-item"
   class:border
   class:selected
   style={`padding-left: ${indentLevel * 18}px`}
@@ -42,22 +42,22 @@
 </div>
 
 <style>
-  .container {
+  .nav-item {
     border-radius: var(--border-radius-m);
     cursor: pointer;
     color: var(--grey-7);
   }
-  .container.border {
+  .nav-item.border {
     border-top: 1px solid var(--grey-1);
   }
-  .container.selected {
+  .nav-item.selected {
     background-color: var(--grey-2);
     color: var(--ink);
   }
-  .container:hover {
+  .nav-item:hover {
     background-color: var(--grey-1);
   }
-  .container:hover .actions {
+  .nav-item:hover .actions {
     display: flex;
   }
 

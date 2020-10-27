@@ -22,7 +22,7 @@ context("Create a View", () => {
       cy.get("input").type("Test View")
       cy.contains("Save View").click()
     })
-    cy.get(".title").contains("Test View")
+    cy.get(".table-title h1").contains("Test View")
     cy.get("thead th div").should($headers => {
       expect($headers).to.have.length(3)
       const headers = $headers.map((i, header) => Cypress.$(header).text())
@@ -33,14 +33,8 @@ context("Create a View", () => {
   it("filters the view by age over 10", () => {
     cy.contains("Filter").click()
     cy.contains("Add Filter").click()
-    cy.get(".menu-container")
-      .find("select")
-      .first()
-      .select("age")
-    cy.get(".menu-container")
-      .find("select")
-      .eq(1)
-      .select("More Than")
+    cy.get(".menu-container").find("select").first().select("age")
+    cy.get(".menu-container").find("select").eq(1).select("More Than")
     cy.get("input").type(18)
     cy.contains("Save").click()
     cy.get("tbody tr").should($values => {
@@ -52,15 +46,9 @@ context("Create a View", () => {
     cy.contains("Calculate").click()
     // we may reinstate this - have commented this dropdown for now as there is only one option
     //cy.get(".menu-container").find("select").first().select("Statistics")
-    cy.get(".menu-container")
-      .find("select")
-      .eq(0)
-      .select("Statistics")
+    cy.get(".menu-container").find("select").eq(0).select("Statistics")
     cy.wait(50)
-    cy.get(".menu-container")
-      .find("select")
-      .eq(1)
-      .select("age")
+    cy.get(".menu-container").find("select").eq(1).select("age")
     cy.contains("Save").click()
     cy.get("thead th div").should($headers => {
       expect($headers).to.have.length(7)
@@ -114,10 +102,11 @@ context("Create a View", () => {
   })
 
   it("renames a view", () => {
-    cy.contains("[data-cy=table-nav-item]", "Test View")
-      .find(".ri-more-line")
+    cy.contains(".nav-item", "Test View")
+      .find(".actions")
+      .invoke("show")
       .click()
-    cy.contains("Edit").click()
+    cy.get("[data-cy=edit-view]").click()
     cy.get(".menu-container").within(() => {
       cy.get("input").type(" Updated")
       cy.contains("Save").click()
@@ -126,11 +115,11 @@ context("Create a View", () => {
   })
 
   it("deletes a view", () => {
-    cy.contains("[data-cy=table-nav-item]", "Test View Updated").click()
-    cy.contains("[data-cy=table-nav-item]", "Test View Updated")
-      .find(".ri-more-line")
+    cy.contains(".nav-item", "Test View Updated")
+      .find(".actions")
+      .invoke("show")
       .click()
-    cy.contains("Delete").click()
+    cy.get("[data-cy=delete-view]").click()
     cy.contains("Delete View").click()
     cy.contains("TestView Updated").should("not.be.visible")
   })

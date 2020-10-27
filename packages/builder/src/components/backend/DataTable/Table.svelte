@@ -43,7 +43,7 @@
 </script>
 
 <div class="table-container">
-  <div class="title">
+  <div class="table-title">
     <h1>{title}</h1>
     {#if loading}
       <div transition:fade>
@@ -125,19 +125,19 @@
     gap: var(--spacing-l);
   }
 
-  .title {
+  .table-title {
     height: 24px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
   }
-  .title h1 {
+  .table-title h1 {
     font-size: var(--font-size-m);
     font-weight: 500;
     margin: 0;
   }
-  .title > div {
+  .table-title > div {
     margin-left: var(--spacing-xs);
   }
 

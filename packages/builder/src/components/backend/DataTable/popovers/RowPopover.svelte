@@ -36,11 +36,16 @@
 </div>
 <DropdownMenu bind:this={dropdown} {anchor} align="left">
   <DropdownContainer>
-    <DropdownItem icon="ri-edit-line" title="Edit" on:click={showModal} />
+    <DropdownItem
+      icon="ri-edit-line"
+      title="Edit"
+      on:click={showModal}
+      data-cy="edit-row" />
     <DropdownItem
       icon="ri-delete-bin-line"
       title="Delete"
-      on:click={showDelete} />
+      on:click={showDelete}
+      data-cy="delete-row" />
   </DropdownContainer>
 </DropdownMenu>
 <ConfirmDialog

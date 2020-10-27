@@ -1,10 +1,9 @@
 <script>
-  import { Heading, Body, Button, Select, Label } from "@budibase/bbui"
+  import { Select, Label } from "@budibase/bbui"
   import { notifier } from "builderStore/store/notifications"
   import { FIELDS } from "constants/backend"
   import api from "builderStore/api"
 
-  const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 1
 
@@ -70,15 +69,16 @@
     const fileArray = Array.from(evt.target.files)
     if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
       notifier.danger(
-        `Files cannot exceed ${FILE_SIZE_LIMIT /
-          BYTES_IN_MB}MB. Please try again with smaller files.`
+        `Files cannot exceed ${
+          FILE_SIZE_LIMIT / BYTES_IN_MB
+        }MB. Please try again with smaller files.`
       )
       return
     }
 
     // Read CSV as plain text to upload alongside schema
     let reader = new FileReader()
-    reader.addEventListener("load", function(e) {
+    reader.addEventListener("load", function (e) {
       csvString = e.target.result
       files = fileArray
       validateCSV()
