@@ -3,6 +3,7 @@ const authenticated = require("../middleware/authenticated")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { budibaseAppsDir } = require("../utilities/budibaseDir")
+const { isDev } = require("../utilities")
 const {
   authRoutes,
   pageRoutes,
@@ -45,10 +46,7 @@ router
       jwtSecret: env.JWT_SECRET,
       useAppRootPath: true,
     }
-    ctx.isDev =
-      process.env.NODE_ENV !== "production" &&
-      process.env.NODE_ENV !== "jest" &&
-      process.env.NODE_ENV !== "cypress"
+    ctx.isDev = isDev()
     await next()
   })
   .use("/health", ctx => (ctx.status = 200))
