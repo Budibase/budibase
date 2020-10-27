@@ -19,6 +19,9 @@
   let menuButton
   let sortDirection = ""
   let modal
+  let hovered
+
+  $: console.log($$restProps)
 
   function toggleMenu() {
     showColumnMenu(menuButton)
@@ -39,9 +42,13 @@
   })
 </script>
 
-<header on:click={onSort} data-cy="table-header">
+<header
+  on:click={onSort}
+  data-cy="table-header"
+  on:mouseover={() => (hovered = true)}
+  on:mouseleave={() => (hovered = false)}>
   <div>
-    <span>{displayName}</span>
+    <span class="column-header-name">{displayName}</span>
     <i class={`${SORT_ICON_MAP[sortDirection]} sort-icon`} />
   </div>
   <Modal bind:this={modal}>
@@ -52,7 +59,7 @@
       <CreateEditColumn onClosed={modal.hide} {field} />
     </ModalContent>
   </Modal>
-  <div>
+  <section class:show={hovered}>
     {#if editable}
       <span on:click|stopPropagation={showModal}>
         <i class="ri-pencil-line" />
@@ -61,7 +68,7 @@
     <span on:click|stopPropagation={toggleMenu} bind:this={menuButton}>
       <i class="ri-filter-line" />
     </span>
-  </div>
+  </section>
 </header>
 
 <style>
@@ -74,6 +81,15 @@
     width: 100%;
     align-items: center;
     color: var(--ink);
+  }
+
+  section {
+    opacity: 0;
+    transition: 0.2s all;
+  }
+
+  section.show {
+    opacity: 1;
   }
 
   .sort-icon {
@@ -91,7 +107,8 @@
     color: var(--blue);
   }
 
-  i:active {
+  i.active,
+  i:hover {
     color: var(--blue);
   }
 </style>

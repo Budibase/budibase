@@ -44,6 +44,7 @@
       customLoadingOverlay: TableLoadingOverlay,
     },
     loadingOverlayComponent: "customLoadingOverlay",
+    animateRows: true
   }
 
   $: {
@@ -135,7 +136,6 @@
     {columnDefs}
     {loading}
     on:select={({ detail }) => (selectedRows = detail)} />
-  />
 </section>
 
 <style>
