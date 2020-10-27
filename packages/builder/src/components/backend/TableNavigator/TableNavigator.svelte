@@ -36,7 +36,7 @@
 {#if $backendUiStore.selectedDatabase && $backendUiStore.selectedDatabase._id}
   <div class="title">
     <h1>Tables</h1>
-    <i on:click={modal.show} class="ri-add-circle-fill" />
+    <i data-cy="new-table" on:click={modal.show} class="ri-add-circle-fill" />
   </div>
   <div class="hierarchy-items-container">
     {#each $backendUiStore.tables as table, idx}
