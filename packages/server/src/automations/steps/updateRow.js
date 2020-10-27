@@ -4,7 +4,7 @@ const automationUtils = require("../automationUtils")
 module.exports.definition = {
   name: "Update Row",
   tagline: "Update a {{inputs.enriched.table.name}} row",
-  icon: "ri-refresh-fill",
+  icon: "ri-refresh-line",
   description: "Update a row in your database",
   type: "ACTION",
   stepId: "UPDATE_ROW",
