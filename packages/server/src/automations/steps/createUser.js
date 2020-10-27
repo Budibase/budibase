@@ -6,7 +6,7 @@ const usage = require("../../utilities/usageQuota")
 module.exports.definition = {
   description: "Create a new user",
   tagline: "Create user {{inputs.username}}",
-  icon: "ri-user-add-fill",
+  icon: "ri-user-add-line",
   name: "Create User",
   type: "ACTION",
   stepId: "CREATE_USER",
