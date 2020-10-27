@@ -18,10 +18,20 @@
   export let align
   export let popover = null
 
+  let getCaretPosition
+
   $: categories = Object.entries(groupBy("category", bindings))
 
   function onClickBinding(binding) {
-    value += `{{ ${binding.path} }}`
+    const position = getCaretPosition()
+    const toAdd = `{{ ${binding.path} }}`
+    if (position.start) {
+      value = value.substring(0, position.start)
+              + toAdd
+              + value.substring(position.end, value.length);
+    } else {
+      value += toAdd
+    }
   }
 </script>
 
@@ -54,6 +64,7 @@
       </Body>
       <TextArea
         thin
+        bind:getCaretPosition
         bind:value
         placeholder="Add options from the left, type text, or do both" />
       <div class="controls">

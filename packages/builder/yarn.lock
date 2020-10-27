@@ -709,19 +709,19 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@budibase/bbui@^1.44.1":
-  version "1.44.1"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.44.1.tgz#1bfca2d3a40a14eb0ba136e24afb7139694b4970"
-  integrity sha512-joFH++mzFJZkMR3ZSv8Q8cE/qNn8o8aZGbHeO57Smiai3h2tjeTyVLuJ+yt3P1XQ8SE13epAp38kvsPosUpbkQ==
+"@budibase/bbui@^1.47.0":
+  version "1.47.0"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.47.0.tgz#f7c1f1efff12b2a62eb52536fcc9a037f9b25982"
+  integrity sha512-mWOglrEjKSOe7At2gA8HDv5MUvPzFrpGgiikAeMEulvE7sq/SCreXtAps/Jx+RKq/tUMEZkDoA3S5nuQhsNM/A==
   dependencies:
     sirv-cli "^0.4.6"
     svelte-flatpickr "^2.4.0"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^0.2.4":
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.2.4.tgz#da958faa50c59f6a9c41c692b7a19d6a6ea98bc1"
-  integrity sha512-MsFbWcsh3t1lyLgTb4UMccjshy6jd3A77lqs1CpXjHr+2LmXwvIriLgruycAvFrtqZzYG+dGe0rWwX0auwaaZw==
+"@budibase/client@^0.2.6":
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.2.6.tgz#de1b4872c7956d386a3b08969eda509bd39d1a64"
+  integrity sha512-sSoGN0k2Tcc5GewBjFMN+G3h21O9JvakYI33kBKgEVGrdEQLBbry7vRKb+lALeW2Bz65gafZL2joZzL8vnH0lw==
   dependencies:
     deep-equal "^2.0.1"
     mustache "^4.0.1"
