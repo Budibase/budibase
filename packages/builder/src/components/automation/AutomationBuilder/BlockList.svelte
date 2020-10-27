@@ -1,9 +1,10 @@
 <script>
   import { sortBy } from "lodash/fp"
   import { automationStore } from "builderStore"
-  import { DropdownMenu } from "@budibase/bbui"
+  import { DropdownMenu, Modal } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
   import analytics from "analytics"
+  import CreateWebhookModal from "../Shared/CreateWebhookModal.svelte"
 
   $: hasTrigger = $automationStore.selectedAutomation.hasTrigger()
   $: tabs = [
@@ -27,10 +28,10 @@
     },
   ]
 
-  let buttonProps = []
   let selectedIndex
   let anchors = []
   let popover
+  let webhookModal
   $: selectedTab = selectedIndex == null ? null : tabs[selectedIndex].value
   $: anchor = selectedIndex === -1 ? null : anchors[selectedIndex]
   $: blocks = sortBy(entry => entry[1].name)(
@@ -59,6 +60,9 @@
       name: blockDefinition.name,
     })
     closePopover()
+    if (stepId === "WEBHOOK") {
+      webhookModal.show()
+    }
   }
 </script>
 
@@ -91,6 +95,9 @@
     {/each}
   </DropdownContainer>
 </DropdownMenu>
+<Modal bind:this={webhookModal} width="30%">
+  <CreateWebhookModal />
+</Modal>
 
 <style>
   .tab-container {
