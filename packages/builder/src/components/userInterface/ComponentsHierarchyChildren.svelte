@@ -2,7 +2,7 @@
   import { goto } from "@sveltech/routify"
   import { store } from "builderStore"
   import { last } from "lodash/fp"
-  import { pipe } from "components/common/core"
+  import { pipe } from "../../helpers"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { getComponentDefinition } from "builderStore/storeUtils"

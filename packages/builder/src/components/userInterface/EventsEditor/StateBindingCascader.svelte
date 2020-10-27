@@ -1,17 +1,12 @@
 <script>
   import { Input, DataList, Select } from "@budibase/bbui"
-  import { find, map, keys, reduce, keyBy } from "lodash/fp"
-  import { pipe } from "components/common/core"
-  import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
   import { store, automationStore } from "builderStore"
-  import { ArrowDownIcon } from "components/common/Icons/"
-  import { createEventDispatcher } from "svelte"
 
   export let parameter
 
   let isOpen = false
 
-  const capitalize = s => {
+  const capitalize = (s) => {
     if (typeof s !== "string") return ""
     return s.charAt(0).toUpperCase() + s.slice(1)
   }
@@ -22,7 +17,7 @@
   {#if parameter.name === 'automation'}
     <Select on:change bind:value={parameter.value}>
       <option value="" />
-      {#each $automationStore.automations.filter(wf => wf.live) as automation}
+      {#each $automationStore.automations.filter((wf) => wf.live) as automation}
         <option value={automation._id}>{automation.name}</option>
       {/each}
     </Select>

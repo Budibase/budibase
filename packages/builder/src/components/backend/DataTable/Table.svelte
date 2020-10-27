@@ -1,22 +1,13 @@
 <script>
   import { goto, params } from "@sveltech/routify"
-  import { onMount } from "svelte"
   import { fade } from "svelte/transition"
   import fsort from "fast-sort"
   import getOr from "lodash/fp/getOr"
-  import { store, backendUiStore } from "builderStore"
-  import api from "builderStore/api"
-  import { Button, Icon } from "@budibase/bbui"
-  import ActionButton from "components/common/ActionButton.svelte"
+  import { backendUiStore } from "builderStore"
   import AttachmentList from "./AttachmentList.svelte"
   import TablePagination from "./TablePagination.svelte"
-  import CreateEditRowModal from "./modals/CreateEditRowModal.svelte"
-  import RowPopover from "./buttons/CreateRowButton.svelte"
-  import ColumnPopover from "./buttons/CreateColumnButton.svelte"
-  import ViewPopover from "./buttons/CreateViewButton.svelte"
   import ColumnHeaderPopover from "./popovers/ColumnPopover.svelte"
   import EditRowPopover from "./popovers/RowPopover.svelte"
-  import CalculationPopover from "./buttons/CalculateButton.svelte"
   import Spinner from "components/common/Spinner.svelte"
 
   const ITEMS_PER_PAGE = 10

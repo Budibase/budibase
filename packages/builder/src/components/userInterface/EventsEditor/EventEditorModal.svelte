@@ -1,14 +1,7 @@
 <script>
-  import { store } from "builderStore"
-  import {
-    TextButton,
-    Button,
-    Body,
-    DropdownMenu,
-    ModalContent,
-  } from "@budibase/bbui"
+  import { TextButton, Body, DropdownMenu, ModalContent } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
-  import { EVENT_TYPE_MEMBER_NAME } from "../../common/eventHandlers"
+  import { EVENT_TYPE_MEMBER_NAME } from "../../../../../client/src/state/eventHandlers"
   import actionTypes from "./actions"
   import { createEventDispatcher } from "svelte"
 
@@ -25,19 +18,19 @@
   $: actions = event || []
   $: selectedActionComponent =
     selectedAction &&
-    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_MEMBER_NAME])
+    actionTypes.find((t) => t.name === selectedAction[EVENT_TYPE_MEMBER_NAME])
       .component
 
   const updateEventHandler = (updatedHandler, index) => {
     actions[index] = updatedHandler
   }
 
-  const deleteAction = index => {
+  const deleteAction = (index) => {
     actions.splice(index, 1)
     actions = actions
   }
 
-  const addAction = actionType => () => {
+  const addAction = (actionType) => () => {
     const newAction = {
       parameters: {},
       [EVENT_TYPE_MEMBER_NAME]: actionType.name,
@@ -48,7 +41,7 @@
     addActionDropdown.hide()
   }
 
-  const selectAction = action => () => {
+  const selectAction = (action) => () => {
     selectedAction = action
   }
 

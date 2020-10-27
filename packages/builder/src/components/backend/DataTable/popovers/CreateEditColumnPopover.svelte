@@ -1,26 +1,10 @@
 <script>
-  import { onMount } from "svelte"
-  import {
-    Input,
-    TextArea,
-    Button,
-    Select,
-    Toggle,
-    Label,
-  } from "@budibase/bbui"
-  import { cloneDeep, merge } from "lodash/fp"
-  import { store, backendUiStore } from "builderStore"
+  import { Input, Button, Select, Toggle } from "@budibase/bbui"
+  import { cloneDeep } from "lodash/fp"
+  import { backendUiStore } from "builderStore"
   import { FIELDS } from "constants/backend"
-  import { notifier } from "builderStore/store/notifications"
-  import ButtonGroup from "components/common/ButtonGroup.svelte"
-  import NumberBox from "components/common/NumberBox.svelte"
   import ValuesList from "components/common/ValuesList.svelte"
-  import ErrorsBox from "components/common/ErrorsBox.svelte"
-  import Checkbox from "components/common/Checkbox.svelte"
-  import ActionButton from "components/common/ActionButton.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
-  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
-  import * as api from "../api"
 
   let fieldDefinitions = cloneDeep(FIELDS)
 
@@ -38,12 +22,12 @@
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
   $: tableOptions = $backendUiStore.tables.filter(
-    table => table._id !== $backendUiStore.draftTable._id
+    (table) => table._id !== $backendUiStore.draftTable._id
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
 
   async function saveColumn() {
-    backendUiStore.update(state => {
+    backendUiStore.update((state) => {
       backendUiStore.actions.tables.saveField({
         originalName,
         field,

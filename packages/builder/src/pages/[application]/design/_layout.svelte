@@ -1,15 +1,10 @@
 <script>
   import { store, backendUiStore } from "builderStore"
-  import { goto } from "@sveltech/routify"
   import { onMount } from "svelte"
-  import ComponentsHierarchyChildren from "components/userInterface/ComponentsHierarchyChildren.svelte"
   import CurrentItemPreview from "components/userInterface/AppPreview"
   import ComponentPropertiesPanel from "components/userInterface/ComponentPropertiesPanel.svelte"
   import ComponentSelectionList from "components/userInterface/ComponentSelectionList.svelte"
-  import Switcher from "components/common/Switcher.svelte"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { last } from "lodash/fp"
-  import { AddIcon } from "components/common/Icons"
   import FrontendNavigatePane from "components/userInterface/FrontendNavigatePane.svelte"
 
   $: instances = $store.appInstances
