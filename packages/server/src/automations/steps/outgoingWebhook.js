@@ -1,4 +1,4 @@
-const axios = require("axios")
+const fetch = require("node-fetch")
 
 const RequestType = {
   POST: "POST",
@@ -71,20 +71,19 @@ module.exports.run = async function({ inputs }) {
   }
   const request = {
     method: requestMethod,
-    url,
   }
   if (
     requestBody &&
     requestBody.length !== 0 &&
     BODY_REQUESTS.indexOf(requestMethod) !== -1
   ) {
-    request.data = JSON.parse(requestBody)
+    request.body = JSON.parse(requestBody)
   }
 
   try {
-    const response = await axios(request)
+    const response = await fetch(url, request)
     return {
-      response: response.data,
+      response: await response.json(),
       success: response.status === 200,
     }
   } catch (err) {
