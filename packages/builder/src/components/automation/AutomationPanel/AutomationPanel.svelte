@@ -11,7 +11,10 @@
 
 <div class="title">
   <h1>Automations</h1>
-  <i on:click={modal.show} class="ri-add-circle-fill" />
+  <i
+    on:click={modal.show}
+    data-cy="new-automation"
+    class="ri-add-circle-fill" />
 </div>
 <AutomationList />
 <Modal bind:this={modal}>

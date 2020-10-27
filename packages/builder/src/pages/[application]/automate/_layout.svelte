@@ -13,7 +13,7 @@
     <slot />
   </div>
   {#if $automationStore.selectedAutomation}
-    <div class="nav">
+    <div class="nav setup">
       <SetupPanel />
     </div>
   {/if}

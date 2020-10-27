@@ -8,7 +8,7 @@ context("Create a Table", () => {
     cy.createTable("dog")
 
     // Check if Table exists
-    cy.get(".title span").should("have.text", "dog")
+    cy.get(".table-title h1").should("have.text", "dog")
   })
 
   it("adds a new column to the table", () => {
@@ -24,9 +24,7 @@ context("Create a Table", () => {
   it("updates a column on the table", () => {
     cy.contains("name").click()
     cy.get("[data-cy='edit-column-header']").click()
-    cy.get(".actions input")
-      .first()
-      .type("updated")
+    cy.get(".actions input").first().type("updated")
     // Unset table display column
     cy.contains("display column").click()
     cy.contains("Save Column").click()
@@ -56,9 +54,7 @@ context("Create a Table", () => {
   })
 
   it("deletes a table", () => {
-    cy.contains("div", "dog")
-      .get(".ri-more-line")
-      .click()
+    cy.contains(".nav-item", "dog").get(".actions").invoke("show").click()
     cy.get("[data-cy=delete-table]").click()
     cy.contains("Delete Table").click()
     cy.contains("dog").should("not.exist")

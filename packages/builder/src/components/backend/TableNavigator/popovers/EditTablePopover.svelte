@@ -29,11 +29,9 @@
 
   function showModal() {
     const screens = $store.screens
-    templateScreens = screens.filter(
-      (screen) => screen.autoTableId === table._id
-    )
+    templateScreens = screens.filter(screen => screen.autoTableId === table._id)
     willBeDeleted = ["All table data"].concat(
-      templateScreens.map((screen) => `Screen ${screen.props._instanceName}`)
+      templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
     )
     hideEditor()
     confirmDeleteDialog.show()
@@ -57,7 +55,7 @@
     const tableName = evt.target.value
     if (
       originalName !== tableName &&
-      $backendUiStore.models?.some((model) => model.name === tableName)
+      $backendUiStore.models?.some(model => model.name === tableName)
     ) {
       error = `Table with name ${tableName} already exists. Please choose another name.`
       return
@@ -87,11 +85,16 @@
       </div>
     {:else}
       <DropdownContainer>
-        <DropdownItem icon="ri-edit-line" title="Edit" on:click={showEditor} />
+        <DropdownItem
+          icon="ri-edit-line"
+          data-cy="edit-table"
+          title="Edit"
+          on:click={showEditor} />
         <DropdownItem
           icon="ri-delete-bin-line"
           title="Delete"
-          on:click={showModal} />
+          on:click={showModal}
+          data-cy="delete-table" />
       </DropdownContainer>
     {/if}
   </DropdownMenu>

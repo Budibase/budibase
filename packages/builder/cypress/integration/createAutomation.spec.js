@@ -14,35 +14,26 @@ context("Create a automation", () => {
     cy.createTestTableWithData()
 
     cy.contains("automate").click()
-    cy.contains("Create New Automation").click()
+    cy.get("[data-cy=new-automation]").click()
     cy.get(".modal").within(() => {
       cy.get("input").type("Add Row")
-      cy.get(".buttons")
-        .contains("Create")
-        .click()
+      cy.get(".buttons").contains("Create").click()
     })
 
     // Add trigger
-    cy.get("[data-cy=add-automation-component]").click()
-    cy.get("[data-cy=ROW_SAVED]").click()
-    cy.get("[data-cy=automation-block-setup]").within(() => {
-      cy.get("select")
-        .first()
-        .select("dog")
+    cy.contains("Trigger").click()
+    cy.contains("Row Saved").click()
+    cy.get(".setup").within(() => {
+      cy.get("select").first().select("dog")
     })
 
     // Create action
-    cy.get("[data-cy=CREATE_ROW]").click()
-    cy.get("[data-cy=automation-block-setup]").within(() => {
-      cy.get("select")
-        .first()
-        .select("dog")
-      cy.get("input")
-        .first()
-        .type("goodboy")
-      cy.get("input")
-        .eq(1)
-        .type("11")
+    cy.contains("Action").click()
+    cy.contains("Create Row").click()
+    cy.get(".setup").within(() => {
+      cy.get("select").first().select("dog")
+      cy.get("input").first().type("goodboy")
+      cy.get("input").eq(1).type("11")
     })
 
     // Save
@@ -50,11 +41,11 @@ context("Create a automation", () => {
 
     // Activate Automation
     cy.get("[data-cy=activate-automation]").click()
-    cy.get(".stop-button.highlighted").should("be.visible")
+    cy.get(".ri-stop-circle-fill.highlighted").should("be.visible")
   })
 
   it("should add row when a new row is added", () => {
-    cy.contains("backend").click()
+    cy.contains("data").click()
     cy.addRow(["Rover", 15])
     cy.reload()
     cy.contains("goodboy").should("have.text", "goodboy")

@@ -11,7 +11,7 @@
 
 <div class="title">
   <h1>Screens</h1>
-  <i on:click={modal.show} class="ri-add-circle-fill" />
+  <i on:click={modal.show} data-cy="new-screen" class="ri-add-circle-fill" />
 </div>
 <PagesList />
 <div class="nav-items-container">
