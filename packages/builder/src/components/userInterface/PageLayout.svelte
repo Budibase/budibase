@@ -13,7 +13,7 @@
 
   const dragDropStore = writable({})
 
-  const lastPartOfName = (c) =>
+  const lastPartOfName = c =>
     c && last(c.name ? c.name.split("/") : c._component.split("/"))
 
   $: _layout = {

@@ -18,7 +18,7 @@
   let pageScreenProps = ["title", "favicon", "description", "route"]
   let duplicateName = false
 
-  const propExistsOnComponentDef = (prop) =>
+  const propExistsOnComponentDef = prop =>
     pageScreenProps.includes(prop) || prop in componentDefinition.props
 
   function handleChange(key, data) {
@@ -47,10 +47,10 @@
   $: isPage = screenOrPageInstance && screenOrPageInstance.favicon
   $: screenOrPageDefinition = isPage ? pageDefinition : screenDefinition
 
-  const isDuplicateName = (name) => {
+  const isDuplicateName = name => {
     let duplicate = false
 
-    const lookForDuplicate = (rootPops) => {
+    const lookForDuplicate = rootPops => {
       walkProps(rootPops, (inst, cancel) => {
         if (inst._instanceName === name && inst._id !== componentInstance._id) {
           duplicate = true

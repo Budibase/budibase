@@ -14,7 +14,7 @@
     dropdownRight.hide()
   }
 
-  $: tables = $backendUiStore.tables.map((m) => ({
+  $: tables = $backendUiStore.tables.map(m => ({
     label: m.name,
     name: `all_${m._id}`,
     tableId: m._id,
@@ -39,8 +39,8 @@
   })
 
   $: links = bindableProperties
-    .filter((x) => x.fieldSchema.type === "link")
-    .map((property) => ({
+    .filter(x => x.fieldSchema.type === "link")
+    .map(property => ({
       label: property.readableBinding,
       fieldName: property.fieldSchema.name,
       name: `all_${property.fieldSchema.tableId}`,

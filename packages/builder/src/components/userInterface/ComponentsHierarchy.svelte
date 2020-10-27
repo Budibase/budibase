@@ -23,7 +23,7 @@
   let confirmDeleteDialog
   let componentToDelete = ""
 
-  const normalizedName = (name) =>
+  const normalizedName = name =>
     pipe(name, [
       trimCharsStart("./"),
       trimCharsStart("~/"),
@@ -31,7 +31,7 @@
       trimChars(" "),
     ])
 
-  const changeScreen = (screen) => {
+  const changeScreen = screen => {
     store.setCurrentScreen(screen.props._instanceName)
     $goto(`./:page/${screen.props._instanceName}`)
   }

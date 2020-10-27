@@ -33,7 +33,7 @@
   let popover
   $: selectedTab = selectedIndex == null ? null : tabs[selectedIndex].value
   $: anchor = selectedIndex === -1 ? null : anchors[selectedIndex]
-  $: blocks = sortBy((entry) => entry[1].name)(
+  $: blocks = sortBy(entry => entry[1].name)(
     Object.entries($automationStore.blockDefinitions[selectedTab] ?? {})
   )
 

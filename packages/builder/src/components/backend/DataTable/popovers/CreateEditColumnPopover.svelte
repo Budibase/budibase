@@ -22,12 +22,12 @@
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
   $: tableOptions = $backendUiStore.tables.filter(
-    (table) => table._id !== $backendUiStore.draftTable._id
+    table => table._id !== $backendUiStore.draftTable._id
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
 
   async function saveColumn() {
-    backendUiStore.update((state) => {
+    backendUiStore.update(state => {
       backendUiStore.actions.tables.saveField({
         originalName,
         field,

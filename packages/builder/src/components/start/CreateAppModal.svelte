@@ -22,7 +22,7 @@
   let isApiKeyValid
   let lastApiKey
   let fetchApiKeyPromise
-  const validateApiKey = async (apiKey) => {
+  const validateApiKey = async apiKey => {
     if (!apiKey) return false
 
     // make sure we only fetch once, unless API Key is changed
@@ -121,7 +121,9 @@
       const fullSchema = Object.assign({}, ...validationSchemas)
 
       // Check full form schema
-      const formIsValid = await object().shape(fullSchema).isValid(values)
+      const formIsValid = await object()
+        .shape(fullSchema)
+        .isValid(values)
       fullFormIsValid = formIsValid
     }
   }

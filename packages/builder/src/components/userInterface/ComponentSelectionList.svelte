@@ -24,7 +24,7 @@
     }
   }
 
-  const onComponentChosen = (component) => {
+  const onComponentChosen = component => {
     store.addChildComponent(component._component, component.presetProps)
     const path = store.getPathToComponent($store.currentComponentInfo)
     $goto(`./:page/:screen/${path}`)

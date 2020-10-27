@@ -8,9 +8,8 @@
 
   function handleFileTooLarge(fileSizeLimit) {
     alert(
-      `Files cannot exceed ${
-        fileSizeLimit / BYTES_IN_MB
-      }MB. Please try again with smaller files.`
+      `Files cannot exceed ${fileSizeLimit /
+        BYTES_IN_MB}MB. Please try again with smaller files.`
     )
   }
 

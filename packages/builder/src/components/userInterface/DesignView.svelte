@@ -12,7 +12,7 @@
   let propGroup = null
   let currentGroup
 
-  const getProperties = (name) => panelDefinition[name]
+  const getProperties = name => panelDefinition[name]
 
   function onChange(category) {
     selectedCategory = category

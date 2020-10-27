@@ -22,7 +22,7 @@
     if (automation.trigger) {
       allSteps = [automation.trigger, ...allSteps]
     }
-    const blockIdx = allSteps.findIndex((step) => step.id === block.id)
+    const blockIdx = allSteps.findIndex(step => step.id === block.id)
 
     // Extract all outputs from all previous steps as available bindings
     let bindings = []

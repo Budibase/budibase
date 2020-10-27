@@ -6,9 +6,7 @@
   export let value
   export let bindings
 
-  $: table = $backendUiStore.tables.find(
-    (table) => table._id === value?.tableId
-  )
+  $: table = $backendUiStore.tables.find(table => table._id === value?.tableId)
   $: schemaFields = Object.entries(table?.schema ?? {})
 
   // Ensure any nullish tableId values get set to empty string so

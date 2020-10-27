@@ -18,19 +18,19 @@
   $: actions = event || []
   $: selectedActionComponent =
     selectedAction &&
-    actionTypes.find((t) => t.name === selectedAction[EVENT_TYPE_MEMBER_NAME])
+    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_MEMBER_NAME])
       .component
 
   const updateEventHandler = (updatedHandler, index) => {
     actions[index] = updatedHandler
   }
 
-  const deleteAction = (index) => {
+  const deleteAction = index => {
     actions.splice(index, 1)
     actions = actions
   }
 
-  const addAction = (actionType) => () => {
+  const addAction = actionType => () => {
     const newAction = {
       parameters: {},
       [EVENT_TYPE_MEMBER_NAME]: actionType.name,
@@ -41,7 +41,7 @@
     addActionDropdown.hide()
   }
 
-  const selectAction = (action) => () => {
+  const selectAction = action => () => {
     selectedAction = action
   }
 

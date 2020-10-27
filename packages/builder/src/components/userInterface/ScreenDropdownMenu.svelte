@@ -14,7 +14,7 @@
   const deleteScreen = () => {
     store.deleteScreens(screen, $store.currentPageName)
     // update the page if required
-    store.update((state) => {
+    store.update(state => {
       if (state.currentPreviewItem.name === screen.name) {
         store.setCurrentPage($store.currentPageName)
         $goto(`./:page/page-layout`)

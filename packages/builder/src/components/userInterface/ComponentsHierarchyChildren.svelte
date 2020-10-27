@@ -33,12 +33,12 @@
   let dropUnderComponent
   let componentToDrop
 
-  const capitalise = (s) => s.substring(0, 1).toUpperCase() + s.substring(1)
-  const get_name = (s) => (!s ? "" : last(s.split("/")))
-  const get_capitalised_name = (name) => pipe(name, [get_name, capitalise])
-  const isScreenslot = (name) => name === "##builtin/screenslot"
+  const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
+  const get_name = s => (!s ? "" : last(s.split("/")))
+  const get_capitalised_name = name => pipe(name, [get_name, capitalise])
+  const isScreenslot = name => name === "##builtin/screenslot"
 
-  const selectComponent = (component) => {
+  const selectComponent = component => {
     // Set current component
     store.selectComponent(component)
 
@@ -49,21 +49,21 @@
     $goto(`./:page/:screen/${path}`)
   }
 
-  const dragstart = (component) => (e) => {
+  const dragstart = component => e => {
     e.dataTransfer.dropEffect = "move"
-    dragDropStore.update((s) => {
+    dragDropStore.update(s => {
       s.componentToDrop = component
       return s
     })
   }
 
-  const dragover = (component, index) => (e) => {
+  const dragover = (component, index) => e => {
     const canHaveChildrenButIsEmpty =
       getComponentDefinition($store, component._component).children &&
       component._children.length === 0
 
     e.dataTransfer.dropEffect = "copy"
-    dragDropStore.update((s) => {
+    dragDropStore.update(s => {
       const isBottomHalf = e.offsetY > e.currentTarget.offsetHeight / 2
       s.targetComponent = component
       // only allow dropping inside when container type
@@ -102,7 +102,7 @@
         $dragDropStore.dropPosition
       )
     }
-    dragDropStore.update((s) => {
+    dragDropStore.update(s => {
       s.dropPosition = ""
       s.targetComponent = null
       s.componentToDrop = null
@@ -111,7 +111,7 @@
   }
 
   const dragend = () => {
-    dragDropStore.update((s) => {
+    dragDropStore.update(s => {
       s.dropPosition = ""
       s.targetComponent = null
       s.componentToDrop = null

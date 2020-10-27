@@ -15,11 +15,11 @@
     return [
       ...$store.screens
         .filter(
-          (screen) =>
+          screen =>
             screen.props._component.endsWith("/rowdetail") ||
             screen.route.endsWith(":id")
         )
-        .map((screen) => ({
+        .map(screen => ({
           name: screen.props._instanceName,
           url: screen.route,
           sort: screen.props._component,

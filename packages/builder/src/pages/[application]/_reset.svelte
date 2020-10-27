@@ -30,10 +30,10 @@
   // e.g. if one of your screens is selected on front end, then
   // you browse to backend, when you click frontend, you will be
   // brought back to the same screen
-  const topItemNavigate = (path) => () => {
-    const activeTopNav = $layout.children.find((c) => $isActive(c.path))
+  const topItemNavigate = path => () => {
+    const activeTopNav = $layout.children.find(c => $isActive(c.path))
     if (!activeTopNav) return
-    store.update((state) => {
+    store.update(state => {
       if (!state.previousTopNavPath) state.previousTopNavPath = {}
       state.previousTopNavPath[
         activeTopNav.path

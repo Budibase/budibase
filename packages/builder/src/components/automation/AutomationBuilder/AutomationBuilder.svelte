@@ -9,7 +9,7 @@
   $: automationCount = $automationStore.automations?.length ?? 0
 
   function onSelect(block) {
-    automationStore.update((state) => {
+    automationStore.update(state => {
       state.selectedBlock = block
       return state
     })
