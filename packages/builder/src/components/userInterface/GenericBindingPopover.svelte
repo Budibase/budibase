@@ -26,9 +26,10 @@
     const position = getCaretPosition()
     const toAdd = `{{ ${binding.path} }}`
     if (position.start) {
-      value = value.substring(0, position.start)
-              + toAdd
-              + value.substring(position.end, value.length);
+      value =
+        value.substring(0, position.start) +
+        toAdd +
+        value.substring(position.end, value.length)
     } else {
       value += toAdd
     }
