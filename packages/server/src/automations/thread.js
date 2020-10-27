@@ -1,7 +1,11 @@
-const mustache = require("mustache")
+const handlebars = require("handlebars")
 const actions = require("./actions")
 const logic = require("./logic")
 const automationUtils = require("./automationUtils")
+
+handlebars.registerHelper("object", value => {
+  return new handlebars.SafeString(JSON.stringify(value))
+})
 
 const FILTER_STEP_ID = logic.BUILTIN_DEFINITIONS.FILTER.stepId
 
@@ -10,7 +14,8 @@ function recurseMustache(inputs, context) {
     let val = inputs[key]
     if (typeof val === "string") {
       val = automationUtils.cleanMustache(inputs[key])
-      inputs[key] = mustache.render(val, context)
+      const template = handlebars.compile(val)
+      inputs[key] = template(context)
     }
     // this covers objects and arrays
     else if (typeof val === "object") {
