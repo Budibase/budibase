@@ -3,14 +3,14 @@ import api from "../../api"
 import Automation from "./Automation"
 import { cloneDeep } from "lodash/fp"
 
-const automationActions = (store) => ({
+const automationActions = store => ({
   fetch: async () => {
     const responses = await Promise.all([
       api.get(`/api/automations`),
       api.get(`/api/automations/definitions/list`),
     ])
-    const jsonResponses = await Promise.all(responses.map((x) => x.json()))
-    store.update((state) => {
+    const jsonResponses = await Promise.all(responses.map(x => x.json()))
+    store.update(state => {
       state.automations = jsonResponses[0]
       state.blockDefinitions = {
         TRIGGER: jsonResponses[1].trigger,
@@ -31,7 +31,7 @@ const automationActions = (store) => ({
     const CREATE_AUTOMATION_URL = `/api/automations`
     const response = await api.post(CREATE_AUTOMATION_URL, automation)
     const json = await response.json()
-    store.update((state) => {
+    store.update(state => {
       state.automations = [...state.automations, json.automation]
       store.actions.select(json.automation)
       return state
@@ -41,9 +41,9 @@ const automationActions = (store) => ({
     const UPDATE_AUTOMATION_URL = `/api/automations`
     const response = await api.put(UPDATE_AUTOMATION_URL, automation)
     const json = await response.json()
-    store.update((state) => {
+    store.update(state => {
       const existingIdx = state.automations.findIndex(
-        (existing) => existing._id === automation._id
+        existing => existing._id === automation._id
       )
       state.automations.splice(existingIdx, 1, json.automation)
       state.automations = state.automations
@@ -56,9 +56,9 @@ const automationActions = (store) => ({
     const DELETE_AUTOMATION_URL = `/api/automations/${_id}/${_rev}`
     await api.delete(DELETE_AUTOMATION_URL)
 
-    store.update((state) => {
+    store.update(state => {
       const existingIdx = state.automations.findIndex(
-        (existing) => existing._id === _id
+        existing => existing._id === _id
       )
       state.automations.splice(existingIdx, 1)
       state.automations = state.automations
@@ -72,24 +72,24 @@ const automationActions = (store) => ({
     const TRIGGER_AUTOMATION_URL = `/api/automations/${_id}/trigger`
     return await api.post(TRIGGER_AUTOMATION_URL)
   },
-  select: (automation) => {
-    store.update((state) => {
+  select: automation => {
+    store.update(state => {
       state.selectedAutomation = new Automation(cloneDeep(automation))
       state.selectedBlock = null
       return state
     })
   },
-  addBlockToAutomation: (block) => {
-    store.update((state) => {
+  addBlockToAutomation: block => {
+    store.update(state => {
       const newBlock = state.selectedAutomation.addBlock(cloneDeep(block))
       state.selectedBlock = newBlock
       return state
     })
   },
-  deleteAutomationBlock: (block) => {
-    store.update((state) => {
+  deleteAutomationBlock: block => {
+    store.update(state => {
       const idx = state.selectedAutomation.automation.definition.steps.findIndex(
-        (x) => x.id === block.id
+        x => x.id === block.id
       )
       state.selectedAutomation.deleteBlock(block.id)
 
