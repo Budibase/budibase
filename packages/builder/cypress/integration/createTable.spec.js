@@ -34,17 +34,16 @@ context("Create a Table", () => {
   })
 
   it("edits a row", () => {
-    cy.get(".ri-more-line").click()
-    cy.get("[data-cy=edit-row]").click()
+    cy.get("button").contains("Edit").click()
     cy.get(".modal input").type("Updated")
     cy.contains("Save").click()
     cy.contains("RoverUpdated").should("have.text", "RoverUpdated")
   })
 
-  xit("deletes a row", () => {
-    cy.get(".ri-more-line").click()
-    cy.get("[data-cy=delete-row]").click()
-    cy.contains("Delete Row").click()
+  it("deletes a row", () => {
+    cy.get(".ag-checkbox-input").check({ force: true })
+    cy.contains("Delete 1 row(s)").click()
+    cy.get(".modal").contains("Delete").click()
     cy.contains("RoverUpdated").should("not.exist")
   })
 
@@ -52,6 +51,8 @@ context("Create a Table", () => {
     cy.contains("name").click()
     cy.get(".ri-pencil-line").click()
     cy.contains("Delete Column").click()
+    cy.wait(50)
+    cy.get(".buttons").contains("Delete Column").click()
     cy.contains("nameupdated").should("not.exist")
   })
 
