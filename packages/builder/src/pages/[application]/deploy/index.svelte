@@ -1,16 +1,18 @@
 <script>
   import { onMount } from "svelte"
-  import { Button, Spacer } from "@budibase/bbui"
+  import { Button, Spacer, Modal } from "@budibase/bbui"
   import { store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import api from "builderStore/api"
   import Spinner from "components/common/Spinner.svelte"
   import DeploymentHistory from "components/deploy/DeploymentHistory.svelte"
   import analytics from "analytics"
+  import FeedbackIframe from "components/userInterface/Feedback/FeedbackIframe.svelte"
 
   let loading = false
   let deployments = []
   let poll
+  let feedbackModal
 
   $: appId = $store.appId
 
@@ -31,6 +33,10 @@
       analytics.captureEvent("Deployed App", {
         appId,
       })
+
+      if (analytics.requestFeedbackOnDeploy()) {
+        feedbackModal.show()
+      }
     } catch (err) {
       analytics.captureEvent("Deploy App Failed", {
         appId,
@@ -57,6 +63,9 @@
     src="/_builder/assets/deploy-rocket.jpg"
     alt="Rocket flying through sky" />
 </section>
+<Modal bind:this={feedbackModal}>
+  <FeedbackIframe on:finished={() => feedbackModal.hide()} />
+</Modal>
 <DeploymentHistory {appId} />
 
 <style>
