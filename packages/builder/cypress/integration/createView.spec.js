@@ -22,10 +22,12 @@ context("Create a View", () => {
       cy.get("input").type("Test View")
       cy.contains("Save View").click()
     })
-    cy.get(".title").contains("Test View")
+    cy.get(".table-title h1").contains("Test View")
     cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(3)
-      const headers = Array.from($headers).map(header => header.textContent.trim())
+      const headers = Array.from($headers).map(header =>
+        header.textContent.trim()
+      )
       expect(headers).to.deep.eq(["group", "age", "rating"])
     })
   })
@@ -33,14 +35,8 @@ context("Create a View", () => {
   it("filters the view by age over 10", () => {
     cy.contains("Filter").click()
     cy.contains("Add Filter").click()
-    cy.get(".menu-container")
-      .find("select")
-      .first()
-      .select("age")
-    cy.get(".menu-container")
-      .find("select")
-      .eq(1)
-      .select("More Than")
+    cy.get(".menu-container").find("select").first().select("age")
+    cy.get(".menu-container").find("select").eq(1).select("More Than")
     cy.get(".menu-container").find("input").type(18)
     cy.contains("Save").click()
     cy.get("[role=rowgroup] .ag-row").get($values => {
@@ -53,20 +49,16 @@ context("Create a View", () => {
     cy.viewport("macbook-15")
 
     cy.contains("Calculate").click()
-    cy.get(".menu-container")
-      .find("select")
-      .eq(0)
-      .select("Statistics")
+    cy.get(".menu-container").find("select").eq(0).select("Statistics")
     cy.wait(50)
-    cy.get(".menu-container")
-      .find("select")
-      .eq(1)
-      .select("age")
+    cy.get(".menu-container").find("select").eq(1).select("age")
     cy.contains("Save").click()
     cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(7)
-      const headers = Array.from($headers).map(header => header.textContent.trim())
+      const headers = Array.from($headers).map(header =>
+        header.textContent.trim()
+      )
       expect(headers).to.deep.eq([
         "field",
         "sum",
@@ -78,16 +70,10 @@ context("Create a View", () => {
       ])
     })
     cy.get(".ag-cell").then($values => {
-      const values = Array.from($values).map(header => header.textContent.trim())
-      expect(values).to.deep.eq([
-        "age",
-        "155",
-        "20",
-        "49",
-        "5",
-        "5347",
-        "31",
-      ])
+      const values = Array.from($values).map(header =>
+        header.textContent.trim()
+      )
+      expect(values).to.deep.eq(["age", "155", "20", "49", "5", "5347", "31"])
     })
   })
 
@@ -102,8 +88,7 @@ context("Create a View", () => {
     cy.contains("Students").should("be.visible")
     cy.contains("Teachers").should("be.visible")
 
-    cy
-      .get(".ag-row[row-index=0]")
+    cy.get(".ag-row[row-index=0]")
       .find(".ag-cell")
       .then($values => {
         const values = Array.from($values).map(value => value.textContent)
@@ -120,10 +105,11 @@ context("Create a View", () => {
   })
 
   it("renames a view", () => {
-    cy.contains("[data-cy=table-nav-item]", "Test View")
-      .find(".ri-more-line")
+    cy.contains(".nav-item", "Test View")
+      .find(".actions")
+      .invoke("show")
       .click()
-    cy.contains("Edit").click()
+    cy.get("[data-cy=edit-view]").click()
     cy.get(".menu-container").within(() => {
       cy.get("input").type(" Updated")
       cy.contains("Save").click()
@@ -132,11 +118,11 @@ context("Create a View", () => {
   })
 
   it("deletes a view", () => {
-    cy.contains("[data-cy=table-nav-item]", "Test View Updated").click()
-    cy.contains("[data-cy=table-nav-item]", "Test View Updated")
-      .find(".ri-more-line")
+    cy.contains(".nav-item", "Test View Updated")
+      .find(".actions")
+      .invoke("show")
       .click()
-    cy.contains("Delete").click()
+    cy.get("[data-cy=delete-view]").click()
     cy.contains("Delete View").click()
     cy.contains("TestView Updated").should("not.be.visible")
   })

@@ -119,16 +119,14 @@
     position: relative;
     display: flex;
     flex-flow: row;
-    margin: 8px 0;
     align-items: center;
   }
-
   .label {
     display: flex;
     align-items: center;
     font-size: 12px;
     font-weight: 400;
-    flex: 0 0 100px;
+    flex: 0 0 80px;
     text-align: left;
     color: var(--ink);
     margin-right: auto;
@@ -149,7 +147,7 @@
     height: 90%;
     width: 2rem;
     background: var(--grey-2);
-    right: 10px;
+    right: 4px;
     --spacing-s: 0;
     border-left: 0.5px solid var(--grey-3);
     outline-color: var(--blue);

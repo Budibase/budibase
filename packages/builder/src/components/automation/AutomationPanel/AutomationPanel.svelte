@@ -1,50 +1,44 @@
 <script>
-  import { automationStore } from "builderStore"
-  import AutomationList from "./AutomationList/AutomationList.svelte"
-  import BlockList from "./BlockList/BlockList.svelte"
-  import { Heading } from "@budibase/bbui"
-  import { Spacer } from "@budibase/bbui"
+  import AutomationList from "./AutomationList.svelte"
+  import CreateAutomationModal from "./CreateAutomationModal.svelte"
+  import { Modal } from "@budibase/bbui"
+  import { automationStore, backendUiStore } from "builderStore"
+  import { notifier } from "builderStore/store/notifications"
 
   let selectedTab = "AUTOMATIONS"
+  let modal
 </script>
 
-<Heading black small>
-  <span
-    data-cy="automation-list"
-    class="hoverable automation-header"
-    class:selected={selectedTab === 'AUTOMATIONS'}
-    on:click={() => (selectedTab = 'AUTOMATIONS')}>
-    Automations
-  </span>
-  {#if $automationStore.selectedAutomation}
-    <span
-      data-cy="add-automation-component"
-      class="hoverable"
-      class:selected={selectedTab === 'ADD'}
-      on:click={() => (selectedTab = 'ADD')}>
-      Steps
-    </span>
-  {/if}
-</Heading>
-<Spacer medium />
-{#if selectedTab === 'AUTOMATIONS'}
-  <AutomationList />
-{:else if selectedTab === 'ADD'}
-  <BlockList />
-{/if}
+<div class="title">
+  <h1>Automations</h1>
+  <i
+    on:click={modal.show}
+    data-cy="new-automation"
+    class="ri-add-circle-fill" />
+</div>
+<AutomationList />
+<Modal bind:this={modal}>
+  <CreateAutomationModal />
+</Modal>
 
 <style>
-  header {
-    font-size: 18px;
-    font-weight: 600;
-    background: none;
+  .title {
     display: flex;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-xl);
   }
-
-  .automation-header {
-    margin-right: var(--spacing-xl);
+  .title h1 {
+    font-size: var(--font-size-m);
+    font-weight: 500;
+    margin: 0;
+  }
+  .title i {
+    font-size: 20px;
+  }
+  .title i:hover {
+    cursor: pointer;
+    color: var(--blue);
   }
 
   span:not(.selected) {

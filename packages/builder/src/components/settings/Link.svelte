@@ -1,32 +1,36 @@
 <script>
   import SettingsModal from "./SettingsModal.svelte"
-  import { SettingsIcon } from "components/common/Icons/"
   import { Modal } from "@budibase/bbui"
 
   let modal
 </script>
 
-<span class="topnavitemright settings" on:click={modal.show}>
-  <SettingsIcon />
-</span>
+<div class="topnavitemright settings" on:click={modal.show}>
+  <i class="ri-settings-3-line" />
+</div>
 <Modal bind:this={modal} width="600px">
   <SettingsModal />
 </Modal>
 
 <style>
-  span:first-letter {
-    text-transform: capitalize;
+  i {
+    font-size: 18px;
+    color: var(--grey-7);
   }
   .topnavitemright {
     cursor: pointer;
     color: var(--grey-7);
-    margin: 0 20px 0 0;
+    margin: 0 12px 0 0;
     font-weight: 500;
     font-size: 1rem;
-    height: 100%;
     display: flex;
-    flex: 1;
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
-    box-sizing: border-box;
+    height: 24px;
+    width: 24px;
+  }
+  .topnavitemright:hover i {
+    color: var(--ink);
   }
 </style>

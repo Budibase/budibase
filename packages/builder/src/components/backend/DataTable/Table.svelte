@@ -1,6 +1,5 @@
 <script>
   import { fade } from "svelte/transition"
-  import { Button } from "@budibase/bbui"
   import { goto, params } from "@sveltech/routify"
   import AgGrid from "@budibase/svelte-ag-grid"
 
@@ -8,11 +7,7 @@
   import { notifier } from "builderStore/store/notifications"
   import Spinner from "components/common/Spinner.svelte"
   import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
-  import {
-    getRenderer,
-    editRowRenderer,
-    deleteRowRenderer,
-  } from "./cells/cellRenderers"
+  import { getRenderer, editRowRenderer } from "./cells/cellRenderers"
   import TableLoadingOverlay from "./TableLoadingOverlay"
   import TableHeader from "./TableHeader"
   import "@budibase/svelte-ag-grid/dist/index.css"
@@ -58,8 +53,8 @@
           resizable: false,
           suppressMovable: true,
           suppressMenu: true,
-          minWidth: 100,
-          width: 100,
+          minWidth: 84,
+          width: 84,
           cellRenderer: editRowRenderer,
         },
       ]
@@ -100,7 +95,7 @@
   }
 
   const deleteRows = async () => {
-    const response = await api.post(`/api/${tableId}/rows`, {
+    await api.post(`/api/${tableId}/rows`, {
       rows: selectedRows,
       type: "delete",
     })
@@ -110,16 +105,23 @@
   }
 </script>
 
-<section>
-  <div class="table-controls">
-    <h2 class="title"><span>{title}</span></h2>
-    <div class="popovers">
-      <slot />
-      {#if selectedRows.length > 0}
-        <DeleteRowsButton {selectedRows} {deleteRows} />
-      {/if}
-    </div>
+<div>
+  <div class="table-title">
+    <h1>{title}</h1>
+    {#if loading}
+      <div transition:fade>
+        <Spinner size="10" />
+      </div>
+    {/if}
   </div>
+  <div class="popovers">
+    <slot />
+    {#if selectedRows.length > 0}
+      <DeleteRowsButton {selectedRows} {deleteRows} />
+    {/if}
+  </div>
+</div>
+<div class="grid-wrapper">
   <AgGrid
     {theme}
     {options}
@@ -127,35 +129,57 @@
     {columnDefs}
     {loading}
     on:select={({ detail }) => (selectedRows = detail)} />
-</section>
+</div>
 
 <style>
-  .title {
-    font-size: 24px;
-    font-weight: 600;
-    text-rendering: optimizeLegibility;
-    margin-top: 0;
+  .table-title {
+    height: 24px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
   }
-
-  .title > span {
-    margin-right: var(--spacing-xs);
+  .table-title h1 {
+    font-size: var(--font-size-m);
+    font-weight: 500;
+    margin: 0;
   }
-
-  .table-controls {
-    width: 100%;
+  .table-title > div {
+    margin-left: var(--spacing-xs);
   }
 
   .popovers {
     display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .popovers :global(button) {
+    font-weight: 500;
+    margin-top: var(--spacing-l);
+  }
+  .popovers :global(button svg) {
+    margin-right: var(--spacing-xs);
   }
 
-  :global(.popovers > div) {
-    margin-right: var(--spacing-m);
-    margin-bottom: var(--spacing-xl);
+  .grid-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  .grid-wrapper :global(> *) {
+    height: auto;
+    flex: 1 1 auto;
+  }
+
+  :global(.ag-theme-alpine) {
+    --ag-border-color: var(--grey-4);
+    --ag-header-background-color: var(--grey-1);
+    --ag-odd-row-background-color: var(--grey-1);
+    --ag-row-border-color: var(--grey-3);
   }
 
   :global(.ag-menu) {
@@ -168,9 +192,13 @@
   }
 
   :global(.ag-header-cell-text) {
-    font-family: Inter;
+    font-family: var(--font-sans);
     font-weight: 600;
     color: var(--ink);
+  }
+
+  tbody tr:hover {
+    background: var(--grey-1);
   }
 
   :global(.ag-filter) {

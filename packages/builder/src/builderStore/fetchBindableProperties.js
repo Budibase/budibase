@@ -106,11 +106,15 @@ const contextToBindables = (tables, walkResult) => context => {
     }
   }
 
+  const stringType = { type: "string" }
   return (
     Object.entries(schema)
       .map(newBindable)
       // add _id and _rev fields - not part of schema, but always valid
-      .concat([newBindable(["_id", "string"]), newBindable(["_rev", "string"])])
+      .concat([
+        newBindable(["_id", stringType]),
+        newBindable(["_rev", stringType]),
+      ])
   )
 }
 

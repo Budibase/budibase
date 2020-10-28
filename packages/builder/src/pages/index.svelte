@@ -1,11 +1,7 @@
 <script>
-  import { store } from "builderStore"
   import api from "builderStore/api"
   import AppList from "components/start/AppList.svelte"
-  import { onMount } from "svelte"
-  import ActionButton from "components/common/ActionButton.svelte"
   import { get } from "builderStore/api"
-  import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import { Button, Heading, Modal } from "@budibase/bbui"
   import TemplateList from "components/start/TemplateList.svelte"

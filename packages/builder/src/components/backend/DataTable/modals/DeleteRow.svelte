@@ -1,14 +1,11 @@
 <script>
   import { backendUiStore } from "builderStore"
-  import { DropdownMenu, Icon, Modal } from "@budibase/bbui"
   import * as api from "../api"
   import { notifier } from "builderStore/store/notifications"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let row
 
-  let anchor
-  let dropdown
   let confirmDeleteDialog
 
   function showDelete() {
@@ -28,7 +25,7 @@
   body={`Are you sure you wish to delete this row? Your data will be deleted and this action cannot be undone.`}
   okText="Delete Row"
   onOk={deleteRow}
-  title="Confirm Delete" />
+  title="Confirm Deletion" />
 
 <style>
   .ri-delete-bin-line:hover {
