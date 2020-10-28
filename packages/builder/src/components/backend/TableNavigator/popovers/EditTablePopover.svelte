@@ -103,7 +103,7 @@
   bind:this={confirmDeleteDialog}
   okText="Delete Table"
   onOk={deleteTable}
-  title="Confirm Delete">
+  title="Confirm Deletion">
   Are you sure you wish to delete the table
   <i>{table.name}?</i>
   The following will also be deleted:

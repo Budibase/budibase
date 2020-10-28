@@ -39,7 +39,7 @@
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  title="Confirm Delete"
+  title="Confirm Deletion"
   body={`Are you sure you wish to delete the screen '${screen.props._instanceName}' ?`}
   okText="Delete Screen"
   onOk={deleteScreen} />

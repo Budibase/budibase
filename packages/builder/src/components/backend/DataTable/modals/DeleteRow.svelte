@@ -25,7 +25,7 @@
   body={`Are you sure you wish to delete this row? Your data will be deleted and this action cannot be undone.`}
   okText="Delete Row"
   onOk={deleteRow}
-  title="Confirm Delete" />
+  title="Confirm Deletion" />
 
 <style>
   .ri-delete-bin-line:hover {

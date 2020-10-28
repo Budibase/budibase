@@ -147,7 +147,7 @@
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  title="Confirm Delete"
+  title="Confirm Deletion"
   body={`Are you sure you wish to delete this '${lastPartOfName(component)}' component?`}
   okText="Delete Component"
   onOk={deleteComponent} />

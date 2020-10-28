@@ -43,7 +43,7 @@
   bind:this={confirmDeleteDialog}
   okText="Delete Automation"
   onOk={deleteAutomation}
-  title="Confirm Delete">
+  title="Confirm Deletion">
   Are you sure you wish to delete the automation
   <i>{automation.name}?</i>
   This action cannot be undone.
