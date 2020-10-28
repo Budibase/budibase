@@ -23,10 +23,12 @@ context("Create a View", () => {
       cy.contains("Save View").click()
     })
     cy.get(".table-title h1").contains("Test View")
-    cy.get("thead th div").should($headers => {
+    cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(3)
-      const headers = $headers.map((i, header) => Cypress.$(header).text())
-      expect(headers.get()).to.deep.eq(["group", "age", "rating"])
+      const headers = Array.from($headers).map(header =>
+        header.textContent.trim()
+      )
+      expect(headers).to.deep.eq(["group", "age", "rating"])
     })
   })
 
@@ -35,25 +37,29 @@ context("Create a View", () => {
     cy.contains("Add Filter").click()
     cy.get(".menu-container").find("select").first().select("age")
     cy.get(".menu-container").find("select").eq(1).select("More Than")
-    cy.get("input").type(18)
+    cy.get(".menu-container").find("input").type(18)
     cy.contains("Save").click()
-    cy.get("tbody tr").should($values => {
+    cy.get("[role=rowgroup] .ag-row").get($values => {
       expect($values).to.have.length(5)
     })
   })
 
   it("creates a stats calculation view based on age", () => {
+    // Required due to responsive bug with ag grid in cypress
+    cy.viewport("macbook-15")
+
     cy.contains("Calculate").click()
-    // we may reinstate this - have commented this dropdown for now as there is only one option
-    //cy.get(".menu-container").find("select").first().select("Statistics")
     cy.get(".menu-container").find("select").eq(0).select("Statistics")
     cy.wait(50)
     cy.get(".menu-container").find("select").eq(1).select("age")
     cy.contains("Save").click()
-    cy.get("thead th div").should($headers => {
+    cy.get(".ag-center-cols-viewport").scrollTo("100%")
+    cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(7)
-      const headers = $headers.map((i, header) => Cypress.$(header).text())
-      expect(headers.get()).to.deep.eq([
+      const headers = Array.from($headers).map(header =>
+        header.textContent.trim()
+      )
+      expect(headers).to.deep.eq([
         "field",
         "sum",
         "min",
@@ -63,33 +69,30 @@ context("Create a View", () => {
         "avg",
       ])
     })
-    cy.get("tbody td").should($values => {
-      const values = $values.map((i, value) => Cypress.$(value).text())
-      expect(values.get()).to.deep.eq([
-        "age",
-        "155",
-        "20",
-        "49",
-        "5",
-        "5347",
-        "31",
-      ])
+    cy.get(".ag-cell").then($values => {
+      const values = Array.from($values).map(header =>
+        header.textContent.trim()
+      )
+      expect(values).to.deep.eq(["age", "155", "20", "49", "5", "5347", "31"])
     })
   })
 
   it("groups the view by group", () => {
+    // Required due to responsive bug with ag grid in cypress
+    cy.viewport("macbook-15")
+
     cy.contains("Group By").click()
     cy.get("select").select("group")
     cy.contains("Save").click()
+    cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.contains("Students").should("be.visible")
     cy.contains("Teachers").should("be.visible")
 
-    cy.get("tbody tr")
-      .first()
-      .find("td")
-      .should($values => {
-        const values = $values.map((i, value) => Cypress.$(value).text())
-        expect(values.get()).to.deep.eq([
+    cy.get(".ag-row[row-index=0]")
+      .find(".ag-cell")
+      .then($values => {
+        const values = Array.from($values).map(value => value.textContent)
+        expect(values).to.deep.eq([
           "Students",
           "70",
           "20",

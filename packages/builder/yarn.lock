@@ -722,6 +722,13 @@
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@budibase/colorpicker/-/colorpicker-1.0.1.tgz#940c180e7ebba0cb0756c4c8ef13f5dfab58e810"
 
+"@budibase/svelte-ag-grid@^0.0.16":
+  version "0.0.16"
+  resolved "https://registry.yarnpkg.com/@budibase/svelte-ag-grid/-/svelte-ag-grid-0.0.16.tgz#1b91dc1e27dad034b827dc7b258fa16d3d3bf68f"
+  integrity sha512-Yxnfe03Mo7VhuB4wJSGNoc8jaorH9lertptPt2halef9Z93kkYwdwpldnWVzQT07YdX6soPaVLhupxKrI5Hvtw==
+  dependencies:
+    ag-grid-community "^24.0.0"
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"
@@ -1296,6 +1303,11 @@ acorn@^6.0.1:
 acorn@^7.1.1:
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.2.0.tgz#17ea7e40d7c8640ff54a694c889c26f31704effe"
+
+ag-grid-community@^24.0.0:
+  version "24.1.0"
+  resolved "https://registry.yarnpkg.com/ag-grid-community/-/ag-grid-community-24.1.0.tgz#1e3cab51211822e08d56f03a491b7c0deaa398e6"
+  integrity sha512-pWnWphuDcejZ8ahf6C734EpCx3XQ6dHEZWMWTlCdHNT0mZBLJ4YKCGACX+ttAEtSX2MGM3G13JncvuratUlYag==
 
 ajv@^6.5.5:
   version "6.12.2"
@@ -5095,6 +5107,11 @@ regjsparser@^0.6.4:
   resolved "https://registry.yarnpkg.com/regjsparser/-/regjsparser-0.6.4.tgz#a769f8684308401a66e9b529d2436ff4d0666272"
   dependencies:
     jsesc "~0.5.0"
+
+remixicon@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/remixicon/-/remixicon-2.5.0.tgz#b5e245894a1550aa23793f95daceadbf96ad1a41"
+  integrity sha512-q54ra2QutYDZpuSnFjmeagmEiN9IMo56/zz5dDNitzKD23oFRw77cWo4TsrAdmdkPiEn8mxlrTqxnkujDbEGww==
 
 remove-trailing-separator@^1.0.1:
   version "1.1.0"
