@@ -1,5 +1,5 @@
 import { isUndefined, filter, some, includes } from "lodash/fp"
-import { pipe } from "components/common/core"
+import { pipe } from "../../../helpers"
 
 const normalString = s => (s || "").trim().toLowerCase()
 

@@ -2,8 +2,7 @@
   import { goto } from "@sveltech/routify"
   import { backendUiStore, store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import { Button, Input, Label, ModalContent, Modal } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
+  import { Input, Label, ModalContent } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
@@ -21,12 +20,6 @@
   let name
   let dataImport
   let error = ""
-
-  function resetState() {
-    name = ""
-    dataImport = undefined
-    error = ""
-  }
 
   function checkValid(evt) {
     const tableName = evt.target.value
@@ -84,23 +77,20 @@
   }
 </script>
 
-<Button primary wide on:click={modal.show}>Create New Table</Button>
-<Modal bind:this={modal} on:hide={resetState}>
-  <ModalContent
-    title="Create Table"
-    confirmText="Create"
-    onConfirm={saveTable}
-    disabled={error || !name || (dataImport && !dataImport.valid)}>
-    <Input
-      data-cy="table-name-input"
-      thin
-      label="Table Name"
-      on:input={checkValid}
-      bind:value={name}
-      {error} />
-    <div>
-      <Label grey extraSmall>Create Table from CSV (Optional)</Label>
-      <TableDataImport bind:dataImport />
-    </div>
-  </ModalContent>
-</Modal>
+<ModalContent
+  title="Create Table"
+  confirmText="Create"
+  onConfirm={saveTable}
+  disabled={error || !name || (dataImport && !dataImport.valid)}>
+  <Input
+    data-cy="table-name-input"
+    thin
+    label="Table Name"
+    on:input={checkValid}
+    bind:value={name}
+    {error} />
+  <div>
+    <Label grey extraSmall>Create Table from CSV (Optional)</Label>
+    <TableDataImport bind:dataImport />
+  </div>
+</ModalContent>

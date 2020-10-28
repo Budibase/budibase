@@ -3,7 +3,6 @@
   import Arrow from "./Arrow.svelte"
   import { flip } from "svelte/animate"
   import { fade, fly } from "svelte/transition"
-  import { automationStore } from "builderStore"
 
   export let automation
   export let onSelect
@@ -18,16 +17,9 @@
       blocks = blocks.concat(automation.definition.steps || [])
     }
   }
-  $: automationCount = $automationStore.automations?.length ?? 0
 </script>
 
-{#if automationCount === 0}
-  <i>Create your first automation to get started</i>
-{:else if automation == null}
-  <i>Select an automation to edit</i>
-{:else if !blocks.length}
-  <i>Add some steps to your automation to get started</i>
-{/if}
+{#if !blocks.length}<i>Add a trigger to your automation to get started</i>{/if}
 <section class="canvas">
   {#each blocks as block, idx (block.id)}
     <div
@@ -44,19 +36,18 @@
 </section>
 
 <style>
-  i {
-    font-size: var(--font-size-xl);
-    color: var(--grey-4);
-    padding: var(--spacing-xl) 40px;
-    align-self: flex-start;
-  }
-
   section {
-    position: absolute;
-    padding: 40px;
+    margin: 0 -40px calc(-1 * var(--spacing-l)) -40px;
+    padding: var(--spacing-l) 40px 0 40px;
     display: flex;
     align-items: center;
     flex-direction: column;
+    overflow-y: auto;
+    flex: 1 1 auto;
+  }
+  /* Fix for firefox not respecting bottom padding in scrolling containers */
+  section > *:last-child {
+    padding-bottom: 40px;
   }
 
   .block {
@@ -64,5 +55,10 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
+  }
+
+  i {
+    font-size: var(--font-size-m);
+    color: var(--grey-5);
   }
 </style>

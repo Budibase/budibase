@@ -2,14 +2,9 @@
   import { goto } from "@sveltech/routify"
   import { store } from "builderStore"
   import { last } from "lodash/fp"
-  import { pipe } from "components/common/core"
+  import { pipe } from "../../helpers"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
-  import {
-    XCircleIcon,
-    ChevronUpIcon,
-    ChevronDownIcon,
-    CopyIcon,
-  } from "../common/Icons"
+  import NavItem from "components/common/NavItem.svelte"
   import { getComponentDefinition } from "builderStore/storeUtils"
 
   export let components = []
@@ -40,7 +35,6 @@
 
   const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
   const get_name = s => (!s ? "" : last(s.split("/")))
-
   const get_capitalised_name = name => pipe(name, [get_name, capitalise])
   const isScreenslot = name => name === "##builtin/screenslot"
 
@@ -134,29 +128,22 @@
           on:drop={drop}
           ondragover="return false"
           ondragenter="return false"
-          class="budibase__nav-item item drop-item"
-          style="margin-left: {level * 20 + 40}px" />
+          class="drop-item"
+          style="margin-left: {(level + 1) * 18}px" />
       {/if}
 
-      <div
-        class="budibase__nav-item item"
-        class:selected={currentComponent === component}
-        style="padding-left: {level * 20 + 40}px"
-        draggable={true}
+      <NavItem
+        draggable
         on:dragend={dragend}
         on:dragstart={dragstart(component)}
         on:dragover={dragover(component, index)}
         on:drop={drop}
-        ondragover="return false"
-        ondragenter="return false">
-        <div class="nav-item">
-          <i class="icon ri-arrow-right-circle-line" />
-          {isScreenslot(component._component) ? 'Screenslot' : component._instanceName}
-        </div>
-        <div class="actions">
-          <ComponentDropdownMenu {component} />
-        </div>
-      </div>
+        text={isScreenslot(component._component) ? 'Screenslot' : component._instanceName}
+        withArrow
+        indentLevel={level + 1}
+        selected={currentComponent === component}>
+        <ComponentDropdownMenu {component} />
+      </NavItem>
 
       {#if component._children}
         <svelte:self
@@ -172,8 +159,8 @@
           on:drop={drop}
           ondragover="return false"
           ondragenter="return false"
-          class="budibase__nav-item item drop-item"
-          style="margin-left: {(level + ($dragDropStore.dropPosition === 'inside' ? 2 : 0)) * 20 + 40}px" />
+          class="drop-item"
+          style="margin-left: {(level + ($dragDropStore.dropPosition === 'inside' ? 3 : 1)) * 18}px" />
       {/if}
     </li>
   {/each}
@@ -186,47 +173,9 @@
     margin: 0;
   }
 
-  .item {
-    display: grid;
-    grid-template-columns: 1fr auto auto auto;
-    padding: 0 var(--spacing-m);
-    margin: 0;
-    border-radius: var(--border-radius-m);
-    height: 36px;
-    align-items: center;
-  }
-
   .drop-item {
+    border-radius: var(--border-radius-m);
+    height: 32px;
     background: var(--blue-light);
-    height: 36px;
-  }
-
-  .actions {
-    display: none;
-    color: var(--ink);
-    border-style: none;
-    background: rgba(0, 0, 0, 0);
-    cursor: pointer;
-    position: relative;
-  }
-
-  .item:hover {
-    background: var(--grey-1);
-    cursor: pointer;
-  }
-  .item:hover .actions {
-    display: block;
-  }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    font-size: 14px;
-    color: var(--ink);
-  }
-
-  .icon {
-    color: var(--grey-7);
-    margin-right: 8px;
   }
 </style>

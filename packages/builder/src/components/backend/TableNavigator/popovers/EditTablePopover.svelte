@@ -1,11 +1,9 @@
 <script>
   import { backendUiStore, store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
-  import { DropdownMenu, Button, Icon, Input, Select } from "@budibase/bbui"
-  import { FIELDS } from "constants/backend"
+  import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import screenTemplates from "builderStore/store/screenTemplates"
-  import api from "builderStore/api"
+  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let table
 
@@ -66,42 +64,46 @@
   }
 </script>
 
-<div bind:this={anchor} class="icon" on:click={dropdown.show}>
-  <i class="ri-more-line" />
+<div on:click|stopPropagation>
+  <div bind:this={anchor} class="icon" on:click={dropdown.show}>
+    <i class="ri-more-line" />
+  </div>
+  <DropdownMenu align="left" {anchor} bind:this={dropdown}>
+    {#if editing}
+      <div class="actions">
+        <h5>Edit Table</h5>
+        <Input
+          label="Table Name"
+          thin
+          bind:value={table.name}
+          on:input={checkValid}
+          {error} />
+        <footer>
+          <Button secondary on:click={hideEditor}>Cancel</Button>
+          <Button primary disabled={error} on:click={save}>Save</Button>
+        </footer>
+      </div>
+    {:else}
+      <DropdownContainer>
+        <DropdownItem
+          icon="ri-edit-line"
+          data-cy="edit-table"
+          title="Edit"
+          on:click={showEditor} />
+        <DropdownItem
+          icon="ri-delete-bin-line"
+          title="Delete"
+          on:click={showModal}
+          data-cy="delete-table" />
+      </DropdownContainer>
+    {/if}
+  </DropdownMenu>
 </div>
-<DropdownMenu align="left" {anchor} bind:this={dropdown}>
-  {#if editing}
-    <div class="actions">
-      <h5>Edit Table</h5>
-      <Input
-        label="Table Name"
-        thin
-        bind:value={table.name}
-        on:input={checkValid}
-        {error} />
-      <footer>
-        <Button secondary on:click={hideEditor}>Cancel</Button>
-        <Button primary disabled={error} on:click={save}>Save</Button>
-      </footer>
-    </div>
-  {:else}
-    <ul>
-      <li on:click={showEditor}>
-        <Icon name="edit" />
-        Edit
-      </li>
-      <li data-cy="delete-table" on:click={showModal}>
-        <Icon name="delete" />
-        Delete
-      </li>
-    </ul>
-  {/if}
-</DropdownMenu>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Table"
   onOk={deleteTable}
-  title="Confirm Delete">
+  title="Confirm Deletion">
   Are you sure you wish to delete the table
   <i>{table.name}?</i>
   The following will also be deleted:
@@ -154,30 +156,5 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-m);
-  }
-
-  ul {
-    list-style: none;
-    margin: 0;
-    padding: var(--spacing-s) 0;
-  }
-
-  li {
-    display: flex;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
-    color: var(--ink);
-    padding: var(--spacing-s) var(--spacing-m);
-    margin: auto 0px;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  li:hover {
-    background-color: var(--grey-2);
-  }
-
-  li:active {
-    color: var(--blue);
   }
 </style>
