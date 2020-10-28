@@ -42,8 +42,8 @@ describe("/views", () => {
     instanceId = app.instances[0]._id
   })
 
-  afterAll(done => {
-    server.close(done)
+  afterAll(() => {
+    server.close()
   })
 
   describe("create", () => {

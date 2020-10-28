@@ -14,8 +14,8 @@ describe("/instances", () => {
     TEST_APP_ID = (await createApplication(request))._id
   });
 
-  afterAll(done => {
-    server.close(done)
+  afterAll(() => {
+    server.close()
   })
 
   describe("create", () => {

@@ -53,8 +53,8 @@ describe("/automations", () => {
     if (automation) await destroyDocument(automation.id)
   })
 
-  afterAll(done => {
-    server.close(done)
+  afterAll(() => {
+    server.close()
   })
 
   const createAutomation = async () => {

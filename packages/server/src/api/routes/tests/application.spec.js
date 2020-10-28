@@ -18,8 +18,8 @@ describe("/applications", () => {
     await clearApplications(request)
   })
 
-  afterAll(done => {
-    server.close(done)
+  afterAll(() => {
+    server.close()
   })
 
   describe("create", () => {

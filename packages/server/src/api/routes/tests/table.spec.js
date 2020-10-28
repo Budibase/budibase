@@ -17,8 +17,8 @@ describe("/tables", () => {
     ({ request, server } = await supertest())
   });
 
-  afterAll(done => {
-    server.close(done)
+  afterAll(() => {
+    server.close()
   })
 
   beforeEach(async () => {

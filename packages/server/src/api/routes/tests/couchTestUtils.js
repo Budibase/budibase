@@ -15,12 +15,12 @@ const TEST_CLIENT_ID = "test-client-id"
 exports.TEST_CLIENT_ID = TEST_CLIENT_ID
 exports.supertest = async () => {
   let request
-  let app
+  let server
   env.PORT = 4002
-  app = require("../../../app")
+  server = require("../../../app")
 
-  request = supertest(app)
-  return { request, app }
+  request = supertest(server)
+  return { request, server }
 }
 
 exports.defaultHeaders = instanceId => {

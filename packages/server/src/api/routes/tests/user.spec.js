@@ -26,6 +26,11 @@ describe("/users", () => {
     instanceId = app.instances[0]._id
   });
 
+  afterAll(() => {
+    server.close()
+    server.destroy()
+  })
+
   describe("fetch", () => {
     it("returns a list of users from an instance db", async () => {
       await createUser(request, instanceId, "brenda", "brendas_password")

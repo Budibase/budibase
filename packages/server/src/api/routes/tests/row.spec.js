@@ -18,8 +18,8 @@ describe("/rows", () => {
 
   });
 
-  afterAll(done => {
-    server.close(done)
+  afterAll(() => {
+    server.close()
   })
 
   beforeEach(async () => {
