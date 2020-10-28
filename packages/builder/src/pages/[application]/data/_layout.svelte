@@ -1,6 +1,4 @@
 <script>
-  import { store, backendUiStore } from "builderStore"
-  import * as api from "components/backend/DataTable/api"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
 </script>
 
@@ -25,6 +23,11 @@
     flex: 1 1 auto;
     padding: var(--spacing-l) 40px;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-l);
   }
   .nav {
     overflow-y: auto;
