@@ -1,5 +1,4 @@
 <script>
-  import { FeedbackIcon } from "components/common/Icons/"
   import { Popover } from "@budibase/bbui"
   import { store } from "builderStore"
 
@@ -16,41 +15,37 @@
   }, FIVE_MINUTES)
 </script>
 
-<span
-  class="container"
-  bind:this={iconContainer}
-  on:click={popover.show}
-  class:highlight={$store.highlightFeedbackIcon}>
-  <FeedbackIcon />
-</span>
+<div class="container" bind:this={iconContainer} on:click={popover.show}>
+  <i class="ri-feedback-line" class:highlight={$store.highlightFeedbackIcon} />
+</div>
 <Popover bind:this={popover} anchor={iconContainer} align="right">
   <FeedbackIframe on:finished={popover.hide} />
 </Popover>
 
 <style>
+  i {
+    font-size: 18px;
+    color: var(--grey-7);
+  }
+  i.highlight {
+    color: var(--blue);
+    filter: drop-shadow(0 0 20px var(--blue));
+  }
+
   .container {
     cursor: pointer;
     color: var(--grey-7);
-    margin: 0 20px 0 0;
+    margin: 0 12px 0 0;
     font-weight: 500;
     font-size: 1rem;
-    height: 100%;
     display: flex;
-    flex: 1;
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
-    box-sizing: border-box;
+    height: 24px;
+    width: 24px;
   }
-
-  .container:hover {
+  .container:hover i {
     color: var(--ink);
-    font-weight: 500;
-  }
-
-  .highlight {
-    color: var(--blue);
-  }
-
-  .highlight > :global(svg) {
-    filter: drop-shadow(0 0 20px var(--blue));
   }
 </style>

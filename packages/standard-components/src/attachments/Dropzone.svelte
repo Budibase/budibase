@@ -2,7 +2,7 @@
   import { Heading, Body, Button, Dropzone } from "@budibase/bbui"
   import { FILE_TYPES } from "./fileTypes"
 
-  const BYTES_IN_KB = 1000
+  const BYTES_IN_MB = 1000000
 
   export let files = []
 

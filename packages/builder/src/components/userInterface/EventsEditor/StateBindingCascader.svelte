@@ -1,11 +1,6 @@
 <script>
   import { Input, DataList, Select } from "@budibase/bbui"
-  import { find, map, keys, reduce, keyBy } from "lodash/fp"
-  import { pipe } from "components/common/core"
-  import { EVENT_TYPE_MEMBER_NAME } from "components/common/eventHandlers"
   import { store, automationStore } from "builderStore"
-  import { ArrowDownIcon } from "components/common/Icons/"
-  import { createEventDispatcher } from "svelte"
 
   export let parameter
 

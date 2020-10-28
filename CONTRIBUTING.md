@@ -12,8 +12,6 @@ Budibase is a monorepo managed by [lerna](https://github.com/lerna/lerna). Lerna
 
 - **packages/client** - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.
 
-- **packages/cli** - The budibase CLI. This is the main module that gets downloaded from NPM and is responsible for creating and managing apps, as well as running the budibase server. 
-
 - **packages/server** - The budibase server. This [Koa](https://koajs.com/) app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
 
@@ -95,14 +93,9 @@ then `cd ` into your local copy.
 
 ### 4. Initialising Budibase and Creating a Budibase App
 
-`yarn initialise` will initialise your budibase installation. A Budibase apps folder will have been created in `~/.budibase`. You can also just start up the budibase electron app and it should initialise budibase for you.
+Starting up the budibase electron app should initialise budibase for you. A Budibase apps folder will have been created in `~/.budibase`.
 
-This is a blank apps folder, so you will need to create yourself an app.
-
-```
-cd packages/server
-yarn run budi new your-app-name
-```
+This is a blank apps folder, so you will need to create yourself an app, you can do this by clicking "Create New App" from the budibase builder.
 
 This will create a new budibase application in the `~/.budibase/<your-app-uuid>` directory, and NPM install the component libraries for that application. Let's start building your app with the budibase builder!
 
@@ -115,16 +108,6 @@ To run the budibase server and builder in dev mode (i.e. with live reloading):
 3. Access the builder on http://localhost:4001/_builder/
 
 This will enable watch mode for both the builder app, server, client library and any component libraries.
-
-### Running Commands from /server Directory
-
-Notice that when inside `packages/server`, you can use any Budibase CLI command via yarn:
-
-e.g. `yarn budi new mikes_app` == `budi new mikes_app`
-
-This will use the CLI directly from `packages/cli`, rather than your globally installed `budi`
-
-
 
 ## Data Storage
 
