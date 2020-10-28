@@ -36,6 +36,6 @@ module.exports = {
   DEPLOYMENT_DB_URL: process.env.DEPLOYMENT_DB_URL,
   _set(key, value) {
     process.env[key] = value
-    exports[key] = value
+    module.exports[key] = value
   },
 }
