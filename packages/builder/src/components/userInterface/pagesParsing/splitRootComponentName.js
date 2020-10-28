@@ -1,5 +1,5 @@
 import { split, last } from "lodash/fp"
-import { pipe } from "components/common/core"
+import { pipe } from "../../../helpers"
 
 export const splitName = fullname => {
   const componentName = pipe(fullname, [split("/"), last])

@@ -6,7 +6,7 @@
 </script>
 
 <div class="block-field">
-  <Select bind:value secondary thin>
+  <Select bind:value secondary extraThin>
     <option value="">Choose an option</option>
     {#each $backendUiStore.tables as table}
       <option value={table._id}>{table.name}</option>

@@ -371,7 +371,7 @@ const addChildComponent = store => (componentToAdd, presetProps = {}) => {
     const component = getComponentDefinition(state, componentToAdd)
 
     const instanceId = get(backendUiStore).selectedDatabase._id
-    const instanceName = getNewComponentName(componentToAdd, state)
+    const instanceName = getNewComponentName(component, state)
 
     const newComponent = createProps(
       component,

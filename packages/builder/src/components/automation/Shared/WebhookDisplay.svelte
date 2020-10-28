@@ -1,7 +1,7 @@
 <script>
   import { notifier } from "builderStore/store/notifications"
   import { Input } from "@budibase/bbui"
-  import { store } from "../../../builderStore"
+  import { store } from "builderStore"
 
   export let value
   export let production = false
