@@ -13,5 +13,6 @@
   i {
     font-size: var(--font-size-m);
     color: var(--grey-5);
+    margin-top: 2px;
   }
 </style>
