@@ -6,6 +6,10 @@ let analyticsEnabled
 const posthogConfigured = process.env.POSTHOG_TOKEN && process.env.POSTHOG_URL
 const sentryConfigured = process.env.SENTRY_DSN
 
+const FEEDBACK_SUBMITTED_KEY = "budibase:feedback_submitted"
+const APP_FIRST_STARTED_KEY = "budibase:first_run"
+const feedbackHours = 12
+
 async function activate() {
   if (analyticsEnabled === undefined) {
     // only the server knows the true NODE_ENV
@@ -62,10 +66,50 @@ function captureEvent(eventName, props = {}) {
   posthog.capture(eventName, props)
 }
 
+if (!localStorage.getItem(APP_FIRST_STARTED_KEY)) {
+  localStorage.setItem(APP_FIRST_STARTED_KEY, Date.now())
+}
+
+const isFeedbackTimeElapsed = sinceDateStr => {
+  const sinceDate = parseFloat(sinceDateStr)
+  const feedbackMilliseconds = feedbackHours * 60 * 60 * 1000
+  return Date.now() > sinceDate + feedbackMilliseconds
+}
+function submitFeedback(values) {
+  if (!analyticsEnabled || !process.env.POSTHOG_TOKEN) return
+  localStorage.setItem(FEEDBACK_SUBMITTED_KEY, Date.now())
+
+  const prefixedValues = Object.entries(values).reduce((obj, [key, value]) => {
+    obj[`feedback_${key}`] = value
+    return obj
+  }, {})
+
+  posthog.capture("Feedback Submitted", prefixedValues)
+}
+
+function requestFeedbackOnDeploy() {
+  if (!analyticsEnabled || !process.env.POSTHOG_TOKEN) return false
+  const lastSubmittedStr = localStorage.getItem(FEEDBACK_SUBMITTED_KEY)
+  if (!lastSubmittedStr) return true
+  return isFeedbackTimeElapsed(lastSubmittedStr)
+}
+
+function highlightFeedbackIcon() {
+  if (!analyticsEnabled || !process.env.POSTHOG_TOKEN) return false
+  const lastSubmittedStr = localStorage.getItem(FEEDBACK_SUBMITTED_KEY)
+  if (lastSubmittedStr) return isFeedbackTimeElapsed(lastSubmittedStr)
+  const firstRunStr = localStorage.getItem(APP_FIRST_STARTED_KEY)
+  if (!firstRunStr) return false
+  return isFeedbackTimeElapsed(firstRunStr)
+}
+
 export default {
   activate,
   identify,
   identifyByApiKey,
   captureException,
   captureEvent,
+  requestFeedbackOnDeploy,
+  submitFeedback,
+  highlightFeedbackIcon,
 }
