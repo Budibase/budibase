@@ -27,7 +27,6 @@ describe("/accesslevels", () => {
 
   afterAll(done => {
     server.close(done)
-    process.exit(0)
   })
 
   beforeEach(async () => {

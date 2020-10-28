@@ -7,7 +7,6 @@ module.exports = (ctx, instanceId, version) => {
     userId: "BUILDER",
     accessLevelId: BUILDER_LEVEL_ID,
     instanceId,
-    appId,
     version,
   }
   if (env.BUDIBASE_API_KEY) {
