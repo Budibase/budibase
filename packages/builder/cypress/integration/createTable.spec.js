@@ -22,8 +22,10 @@ context("Create a Table", () => {
   })
 
   it("updates a column on the table", () => {
-    cy.contains("name").click()
-    cy.get(".ri-pencil-line").click()
+    cy.contains("header", "name")
+      .trigger("mouseover")
+      .find(".ri-pencil-line")
+      .click({ force: true })
     cy.get(".actions input")
       .first()
       .type("updated")
@@ -48,11 +50,13 @@ context("Create a Table", () => {
   })
 
   it("deletes a column", () => {
-    cy.contains("name").click()
-    cy.get(".ri-pencil-line").click()
-    cy.contains("Delete Column").click()
+    cy
+    .contains("header", "name")
+    .trigger("mouseover")
+    .find(".ri-pencil-line").click({ force: true })
+    cy.contains("Delete").click()
     cy.wait(50)
-    cy.get(".buttons").contains("Delete Column").click()
+    cy.get(".buttons").contains("Delete").click()
     cy.contains("nameupdated").should("not.exist")
   })
 

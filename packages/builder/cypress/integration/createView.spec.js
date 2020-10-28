@@ -63,6 +63,7 @@ context("Create a View", () => {
       .eq(1)
       .select("age")
     cy.contains("Save").click()
+    cy.get(".ag-center-cols-viewport").scrollTo("100%")
     cy.get("[data-cy=table-header]").then($headers => {
       expect($headers).to.have.length(7)
       const headers = Array.from($headers).map(header => header.textContent.trim())
