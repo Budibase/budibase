@@ -1,26 +1,12 @@
 <script>
-  import { onMount } from "svelte"
-  import {
-    Input,
-    TextArea,
-    Button,
-    Select,
-    Toggle,
-    Label,
-  } from "@budibase/bbui"
-  import { cloneDeep, merge } from "lodash/fp"
-  import { store, backendUiStore } from "builderStore"
+  import { Input, Button, TextButton, Select, Toggle } from "@budibase/bbui"
+  import { cloneDeep } from "lodash/fp"
+  import { backendUiStore } from "builderStore"
   import { FIELDS } from "constants/backend"
   import { notifier } from "builderStore/store/notifications"
-  import ButtonGroup from "components/common/ButtonGroup.svelte"
-  import NumberBox from "components/common/NumberBox.svelte"
   import ValuesList from "components/common/ValuesList.svelte"
-  import ErrorsBox from "components/common/ErrorsBox.svelte"
-  import Checkbox from "components/common/Checkbox.svelte"
-  import ActionButton from "components/common/ActionButton.svelte"
   import DatePicker from "components/common/DatePicker.svelte"
-  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
-  import * as api from "../api"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   let fieldDefinitions = cloneDeep(FIELDS)
 
@@ -37,6 +23,9 @@
   let primaryDisplay =
     $backendUiStore.selectedTable.primaryDisplay == null ||
     $backendUiStore.selectedTable.primaryDisplay === field.name
+  let confirmDeleteDialog
+  let deletion
+
   $: tableOptions = $backendUiStore.tables.filter(
     table => table._id !== $backendUiStore.draftTable._id
   )
@@ -52,6 +41,16 @@
       return state
     })
     onClosed()
+  }
+
+  function deleteColumn() {
+    if (field.name === $backendUiStore.selectedTable.primaryDisplay) {
+      notifier.danger("You cannot delete the display column")
+    } else {
+      backendUiStore.actions.tables.deleteField(field)
+      notifier.success(`Column ${field.name} deleted.`)
+      onClosed()
+    }
   }
 
   function handleFieldConstraints(event) {
@@ -75,9 +74,19 @@
       field.constraints.presence = { allowEmpty: false }
     }
   }
+
+  function confirmDelete() {
+    confirmDeleteDialog.show()
+    deletion = true
+  }
+
+  function hideDeleteDialog() {
+    confirmDeleteDialog.hide()
+    deletion = false
+  }
 </script>
 
-<div class="actions">
+<div class="actions" class:hidden={deletion}>
   <Input label="Name" thin bind:value={field.name} />
 
   <Select
@@ -147,15 +156,24 @@
       thin
       bind:value={field.fieldName} />
   {/if}
-  <footer>
+  <footer class="create-column-options">
+    {#if originalName}
+      <TextButton text on:click={confirmDelete}>Delete Column</TextButton>
+    {/if}
     <Button secondary on:click={onClosed}>Cancel</Button>
     <Button primary on:click={saveColumn}>Save Column</Button>
   </footer>
 </div>
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  body={`Are you sure you wish to delete this column? Your data will be deleted and this action cannot be undone.`}
+  okText="Delete Column"
+  onOk={deleteColumn}
+  onCancel={hideDeleteDialog}
+  title="Confirm Delete" />
 
 <style>
   .actions {
-    padding: var(--spacing-xl);
     display: grid;
     grid-gap: var(--spacing-xl);
     min-width: 400px;
@@ -165,5 +183,13 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-m);
+  }
+
+  :global(.create-column-options button:first-child) {
+    margin-right: auto;
+  }
+
+  .hidden {
+    display: none;
   }
 </style>
