@@ -7,7 +7,7 @@ const {
   BUILDER_LEVEL_ID,
   ANON_LEVEL_ID,
 } = require("../utilities/accessLevels")
-const environment = require("../environment")
+const env = require("../environment")
 const { AuthTypes } = require("../constants")
 
 module.exports = async (ctx, next) => {
@@ -21,7 +21,7 @@ module.exports = async (ctx, next) => {
 
   let token
   // if running locally in the builder itself
-  if (!environment.CLOUD && !appToken) {
+  if (!env.CLOUD && !appToken) {
     token = builderToken
     ctx.auth.authenticated = AuthTypes.BUILDER
   } else {
@@ -32,7 +32,7 @@ module.exports = async (ctx, next) => {
   if (!token) {
     ctx.auth.authenticated = false
 
-    let appId = process.env.CLOUD ? ctx.subdomains[1] : ctx.params.appId
+    let appId = env.CLOUD ? ctx.subdomains[1] : ctx.params.appId
 
     // if appId can't be determined from path param or subdomain
     if (!appId && ctx.request.headers.referer) {

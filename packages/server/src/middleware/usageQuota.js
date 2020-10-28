@@ -1,6 +1,6 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
-const environment = require("../environment")
+const env = require("../environment")
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -51,7 +51,7 @@ module.exports = async (ctx, next) => {
         : [ctx.request.files.file]
     usage = files.map(file => file.size).reduce((total, size) => total + size)
   }
-  if (!environment.CLOUD) {
+  if (!env.CLOUD) {
     return next()
   }
   try {

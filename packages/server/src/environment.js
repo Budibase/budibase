@@ -21,6 +21,7 @@ module.exports = {
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
+  LOG_LEVEL: process.env.LOG_LEVEL,
   AUTOMATION_DIRECTORY: process.env.AUTOMATION_DIRECTORY,
   AUTOMATION_BUCKET: process.env.AUTOMATION_BUCKET,
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
@@ -30,4 +31,11 @@ module.exports = {
   AWS_REGION: process.env.AWS_REGION,
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
   BUDIBASE_API_KEY: process.env.BUDIBASE_API_KEY,
+  USERID_API_KEY: process.env.USERID_API_KEY,
+  ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
+  DEPLOYMENT_DB_URL: process.env.DEPLOYMENT_DB_URL,
+  _set(key, value) {
+    process.env[key] = value
+    exports[key] = value
+  },
 }
