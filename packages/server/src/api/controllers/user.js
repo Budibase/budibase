@@ -1,5 +1,4 @@
 const CouchDB = require("../../db")
-const clientDb = require("../../db/clientDb")
 const bcrypt = require("../../utilities/bcrypt")
 const { generateUserID, getUserParams } = require("../../db/utils")
 const {
@@ -18,15 +17,14 @@ exports.fetch = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
-  const database = new CouchDB(ctx.user.instanceId)
-  const appId = (await database.get("_design/database")).metadata.applicationId
+  const db = new CouchDB(ctx.user.instanceId)
   const { username, password, name, accessLevelId } = ctx.request.body
 
   if (!username || !password) {
     ctx.throw(400, "Username and Password Required.")
   }
 
-  const accessLevel = await checkAccessLevel(database, accessLevelId)
+  const accessLevel = await checkAccessLevel(db, accessLevelId)
 
   if (!accessLevel) ctx.throw(400, "Invalid Access Level")
 
@@ -39,15 +37,9 @@ exports.create = async function(ctx) {
     accessLevelId,
   }
 
-  const response = await database.post(user)
+  const response = await db.post(user)
 
-  const masterDb = new CouchDB("client_app_lookup")
-  const { clientId } = await masterDb.get(appId)
-
-  // the clientDB needs to store a map of users against the app
-  const db = new CouchDB(clientDb.name(clientId))
-  const app = await db.get(appId)
-
+  const app = await db.get(ctx.user.instanceId)
   app.userInstanceMap = {
     ...app.userInstanceMap,
     [username]: ctx.user.instanceId,

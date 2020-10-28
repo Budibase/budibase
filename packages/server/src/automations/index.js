@@ -1,6 +1,6 @@
 const triggers = require("./triggers")
 const actions = require("./actions")
-const environment = require("../environment")
+const env = require("../environment")
 const workerFarm = require("worker-farm")
 const singleThread = require("./thread")
 const { getAPIKey, update, Properties } = require("../utilities/usageQuota")
@@ -34,10 +34,10 @@ module.exports.init = function() {
   actions.init().then(() => {
     triggers.automationQueue.process(async job => {
       try {
-        if (environment.CLOUD && job.data.automation) {
+        if (env.CLOUD && job.data.automation) {
           job.data.automation.apiKey = await updateQuota(job.data.automation)
         }
-        if (environment.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
+        if (env.BUDIBASE_ENVIRONMENT === "PRODUCTION") {
           await runWorker(job)
         } else {
           await singleThread(job)

@@ -1,5 +1,4 @@
 const CouchDB = require("../../db")
-const ClientDb = require("../../db/clientDb")
 const { getPackageForBuilder, buildPage } = require("../../utilities/builder")
 const env = require("../../environment")
 const instanceController = require("./instance")
@@ -11,89 +10,59 @@ const fs = require("fs-extra")
 const { join, resolve } = require("../../utilities/centralPath")
 const { promisify } = require("util")
 const chmodr = require("chmodr")
-const { generateAppID, getAppParams } = require("../../db/utils")
 const packageJson = require("../../../package.json")
+const { DocumentTypes, SEPARATOR } = require("../../db/utils")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
+const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ClientDb.name(getClientId(ctx)))
-  const body = await db.allDocs(
-    getAppParams(null, {
-      include_docs: true,
-    })
-  )
-  ctx.body = body.rows.map(row => row.doc)
+  let allDbs = await CouchDB.allDbs()
+  const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
+  const apps = []
+  for (let dbName of appDbNames) {
+    const db = new CouchDB(dbName)
+    apps.push(db.get(dbName))
+  }
+  if (apps.length === 0) {
+    ctx.body = []
+  } else {
+    ctx.body = await Promise.all(apps)
+  }
 }
 
 exports.fetchAppPackage = async function(ctx) {
-  const clientId = await lookupClientId(ctx.params.applicationId)
-  const db = new CouchDB(ClientDb.name(clientId))
-  const application = await db.get(ctx.params.applicationId)
+  const db = new CouchDB(ctx.params.instanceId)
+  const application = await db.get(ctx.params.instanceId)
   ctx.body = await getPackageForBuilder(ctx.config, application)
-  /* 
-  instance is hardcoded now - this can only change when we move
-  pages and screens into the database 
-  */
-  const devInstance = application.instances.find(
-    i => i.name === `dev-${clientId}`
-  )
-  setBuilderToken(
-    ctx,
-    ctx.params.applicationId,
-    devInstance._id,
-    application.version
-  )
+  setBuilderToken(ctx, ctx.params.instanceId, application.version)
 }
 
 exports.create = async function(ctx) {
-  const clientId =
-    (ctx.request.body && ctx.request.body.clientId) || env.CLIENT_ID
-
-  if (!clientId) {
-    ctx.throw(400, "ClientId not suplied")
+  const createInstCtx = {
+    request: {
+      body: {
+        template: ctx.request.body.template,
+      },
+    },
   }
-  const appId = generateAppID()
-  // insert an appId -> clientId lookup
-  const masterDb = new CouchDB("client_app_lookup")
-
-  await masterDb.put({
-    _id: appId,
-    clientId,
-  })
-
-  const db = new CouchDB(ClientDb.name(clientId))
-
+  await instanceController.create(createInstCtx)
+  const instanceId = createInstCtx.body._id
   const newApplication = {
-    _id: appId,
+    _id: instanceId,
     type: "app",
-    instances: [],
     userInstanceMap: {},
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
     name: ctx.request.body.name,
     template: ctx.request.body.template,
+    instances: [createInstCtx.body],
   }
+  const instanceDb = new CouchDB(instanceId)
+  await instanceDb.put(newApplication)
 
-  const { rev } = await db.put(newApplication)
-  newApplication._rev = rev
-  const createInstCtx = {
-    user: {
-      appId: newApplication._id,
-    },
-    request: {
-      body: {
-        name: `dev-${clientId}`,
-        template: ctx.request.body.template,
-      },
-    },
-  }
-
-  await instanceController.create(createInstCtx)
-  newApplication.instances.push(createInstCtx.body)
-
-  if (process.env.NODE_ENV !== "jest") {
+  if (env.NODE_ENV !== "jest") {
     const newAppFolder = await createEmptyAppPackage(ctx, newApplication)
     await downloadExtractComponentLibraries(newAppFolder)
   }
@@ -104,9 +73,8 @@ exports.create = async function(ctx) {
 }
 
 exports.update = async function(ctx) {
-  const clientId = await lookupClientId(ctx.params.applicationId)
-  const db = new CouchDB(ClientDb.name(clientId))
-  const application = await db.get(ctx.params.applicationId)
+  const db = new CouchDB(ctx.params.instanceId)
+  const application = await db.get(ctx.params.instanceId)
 
   const data = ctx.request.body
   const newData = { ...application, ...data }
@@ -120,16 +88,12 @@ exports.update = async function(ctx) {
 }
 
 exports.delete = async function(ctx) {
-  const db = new CouchDB(ClientDb.name(getClientId(ctx)))
-  const app = await db.get(ctx.params.applicationId)
-  const result = await db.remove(app)
-  for (let instance of app.instances) {
-    const instanceDb = new CouchDB(instance._id)
-    await instanceDb.destroy()
-  }
+  const db = new CouchDB(ctx.params.instanceId)
+  const app = await db.get(ctx.params.instanceId)
+  const result = await db.destroy()
 
   // remove top level directory
-  await fs.rmdir(join(budibaseAppsDir(), ctx.params.applicationId), {
+  await fs.rmdir(join(budibaseAppsDir(), ctx.params.instanceId), {
     recursive: true,
   })
 
@@ -220,24 +184,6 @@ const loadScreens = async (appFolder, page) => {
     screens.push(await fs.readJSON(join(screensFolder, file)))
   }
   return screens
-}
-
-const lookupClientId = async appId => {
-  const masterDb = new CouchDB("client_app_lookup")
-  const { clientId } = await masterDb.get(appId)
-  return clientId
-}
-
-const getClientId = ctx => {
-  const clientId =
-    (ctx.request.body && ctx.request.body.clientId) ||
-    (ctx.query && ctx.query.clientId) ||
-    env.CLIENT_ID
-
-  if (!clientId) {
-    ctx.throw(400, "ClientId not supplied")
-  }
-  return clientId
 }
 
 const updateJsonFile = async (filePath, app) => {

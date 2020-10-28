@@ -1,8 +1,8 @@
 const { BUILDER_LEVEL_ID } = require("../accessLevels")
-const environment = require("../../environment")
+const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 
-module.exports = (ctx, appId, instanceId, version) => {
+module.exports = (ctx, instanceId, version) => {
   const builderUser = {
     userId: "BUILDER",
     accessLevelId: BUILDER_LEVEL_ID,
@@ -10,8 +10,8 @@ module.exports = (ctx, appId, instanceId, version) => {
     appId,
     version,
   }
-  if (environment.BUDIBASE_API_KEY) {
-    builderUser.apiKey = environment.BUDIBASE_API_KEY
+  if (env.BUDIBASE_API_KEY) {
+    builderUser.apiKey = env.BUDIBASE_API_KEY
   }
   const token = jwt.sign(builderUser, ctx.config.jwtSecret, {
     expiresIn: "30 days",

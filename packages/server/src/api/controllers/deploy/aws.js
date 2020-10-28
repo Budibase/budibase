@@ -6,7 +6,7 @@ const uuid = require("uuid")
 const sanitize = require("sanitize-s3-objectkey")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const PouchDB = require("../../../db")
-const environment = require("../../../environment")
+const env = require("../../../environment")
 
 async function invalidateCDN(cfDistribution, appId) {
   const cf = new AWS.CloudFront({})
@@ -44,12 +44,12 @@ exports.isInvalidationComplete = async function(
 
 exports.updateDeploymentQuota = async function(quota) {
   const DEPLOYMENT_SUCCESS_URL =
-    environment.DEPLOYMENT_CREDENTIALS_URL + "deploy/success"
+    env.DEPLOYMENT_CREDENTIALS_URL + "deploy/success"
 
   const response = await fetch(DEPLOYMENT_SUCCESS_URL, {
     method: "POST",
     body: JSON.stringify({
-      apiKey: process.env.BUDIBASE_API_KEY,
+      apiKey: env.BUDIBASE_API_KEY,
       quota,
     }),
     headers: {
@@ -75,10 +75,10 @@ exports.updateDeploymentQuota = async function(quota) {
  * @param {quota} quota - current quota being changed with this application
  */
 exports.verifyDeployment = async function({ instanceId, appId, quota }) {
-  const response = await fetch(process.env.DEPLOYMENT_CREDENTIALS_URL, {
+  const response = await fetch(env.DEPLOYMENT_CREDENTIALS_URL, {
     method: "POST",
     body: JSON.stringify({
-      apiKey: process.env.BUDIBASE_API_KEY,
+      apiKey: env.BUDIBASE_API_KEY,
       instanceId,
       appId,
       quota,
@@ -87,7 +87,7 @@ exports.verifyDeployment = async function({ instanceId, appId, quota }) {
 
   if (response.status !== 200) {
     throw new Error(
-      `Error fetching temporary credentials for api key: ${process.env.BUDIBASE_API_KEY}`
+      `Error fetching temporary credentials for api key: ${env.BUDIBASE_API_KEY}`
     )
   }
 

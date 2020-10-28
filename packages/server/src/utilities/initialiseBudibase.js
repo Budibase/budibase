@@ -7,13 +7,7 @@ module.exports = async opts => {
   await ensureDir(opts.dir)
   await setCouchDbUrl(opts)
 
-  // need an env file to create the client database
-  await createDevEnvFile(opts)
-  await createClientDatabase(opts)
-
-  // need to recreate the env file, as we only now have a client id
-  // quiet flag will force overwrite of config
-  opts.quiet = true
+  // need an env file
   await createDevEnvFile(opts)
 }
 
@@ -40,16 +34,4 @@ const createDevEnvFile = async opts => {
     const config = Sqrl.Render(template, opts)
     await writeFile(destConfigFile, config, { flag: "w+" })
   }
-}
-
-const createClientDatabase = async opts => {
-  // cannot be a top level require as it
-  // will cause environment module to be loaded prematurely
-  const clientDb = require("../db/clientDb")
-
-  if (!opts.clientId || opts.clientId === "new") {
-    opts.clientId = uuid.v4()
-  }
-
-  await clientDb.create(opts.clientId)
 }

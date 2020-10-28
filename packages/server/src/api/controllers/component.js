@@ -1,5 +1,4 @@
 const CouchDB = require("../../db")
-const ClientDb = require("../../db/clientDb")
 const { resolve, join } = require("../../utilities/centralPath")
 const {
   budibaseTempDir,
@@ -7,49 +6,42 @@ const {
 } = require("../../utilities/budibaseDir")
 
 exports.fetchAppComponentDefinitions = async function(ctx) {
-  const masterDb = new CouchDB("client_app_lookup")
-  const { clientId } = await masterDb.get(ctx.params.appId)
-  const db = new CouchDB(ClientDb.name(clientId))
-  const app = await db.get(ctx.params.appId)
+  const db = new CouchDB(ctx.params.instanceId)
+  const app = await db.get(ctx.params.instanceId)
 
-  const componentDefinitions = app.componentLibraries.reduce(
-    (acc, componentLibrary) => {
-      let appDirectory = resolve(
-        budibaseAppsDir(),
-        ctx.params.appId,
-        "node_modules"
-      )
+  ctx.body = app.componentLibraries.reduce((acc, componentLibrary) => {
+    let appDirectory = resolve(
+      budibaseAppsDir(),
+      ctx.params.instanceId,
+      "node_modules"
+    )
 
-      if (ctx.isDev) {
-        appDirectory = budibaseTempDir()
+    if (ctx.isDev) {
+      appDirectory = budibaseTempDir()
+    }
+
+    const componentJson = require(join(
+      appDirectory,
+      componentLibrary,
+      ctx.isDev ? "" : "package",
+      "components.json"
+    ))
+
+    const result = {}
+
+    // map over the components.json and add the library identifier as a key
+    // button -> @budibase/standard-components/button
+    for (let key of Object.keys(componentJson)) {
+      const fullComponentName = `${componentLibrary}/${key}`
+      result[fullComponentName] = {
+        _component: fullComponentName,
+        ...componentJson[key],
       }
+    }
 
-      const componentJson = require(join(
-        appDirectory,
-        componentLibrary,
-        ctx.isDev ? "" : "package",
-        "components.json"
-      ))
-
-      const result = {}
-
-      // map over the components.json and add the library identifier as a key
-      // button -> @budibase/standard-components/button
-      for (key in componentJson) {
-        const fullComponentName = `${componentLibrary}/${key}`
-        result[fullComponentName] = {
-          _component: fullComponentName,
-          ...componentJson[key],
-        }
-      }
-
-      return {
-        ...acc,
-        ...result,
-      }
-    },
-    {}
-  )
-
-  ctx.body = componentDefinitions
+    return {
+      ...acc,
+      ...result,
+    }
+  }, {})
 }
