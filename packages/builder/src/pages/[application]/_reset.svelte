@@ -67,7 +67,6 @@
     </div>
     <div class="toprightnav">
       <FeedbackNavLink />
-      <SettingsLink />
       <div class="topnavitemright">
         <a target="_blank" href="https://docs.budibase.com">
           <i class="ri-question-line" />
@@ -80,6 +79,7 @@
           <i class="ri-discuss-line" />
         </a>
       </div>
+      <SettingsLink />
       <Button
         secondary
         on:click={() => {
