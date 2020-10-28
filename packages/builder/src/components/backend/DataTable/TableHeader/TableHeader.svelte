@@ -34,7 +34,7 @@
     modal.show()
   }
 
-  function setSort(column) {
+  function setSort() {
     sortDirection = column.getSort()
   }
 
