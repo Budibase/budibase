@@ -12,8 +12,8 @@
       {#if FILE_TYPES.IMAGE.includes(file.extension.toLowerCase())}
         <img {width} {height} src={file.url} />
       {:else}
-        <i class="ri-file-line" />
         <span class="extension">.{file.extension}</span>
+        <i class="ri-file-line" />
         <span>{file.name}</span>
       {/if}
     </div>
@@ -33,12 +33,12 @@
   }
 
   i {
-    font-size: 36px;
-    margin-bottom: var(--spacing-m);
+    font-size: 24px;
+    position: relative;
+    top: 5px;
   }
 
   .file {
-    position: relative;
     height: 75px;
     width: 75px;
     border: 2px dashed var(--grey-7);
@@ -46,18 +46,23 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
     justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .extension {
     position: absolute;
-    top: var(--spacing-s);
-    left: var(--spacing-s);
+    top: -5px;
+    font-size: var(--font-size-xs);
     font-weight: 500;
   }
 
   span {
+    font-size: var(--font-size-xs);
     width: 75px;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
