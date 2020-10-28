@@ -55,7 +55,6 @@ describe("/automations", () => {
 
   afterAll(done => {
     server.close(done)
-    process.exit(0)
   })
 
   const createAutomation = async () => {

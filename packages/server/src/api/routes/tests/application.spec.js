@@ -20,7 +20,6 @@ describe("/applications", () => {
 
   afterAll(done => {
     server.close(done)
-    process.exit(0)
   })
 
   describe("create", () => {
