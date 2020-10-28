@@ -34,7 +34,8 @@ context("Create a Table", () => {
   })
 
   it("edits a row", () => {
-    cy.get("button").contains("Edit").click()
+    cy.contains("button", "Edit").click({ force: true })
+    cy.wait(1000)
     cy.get(".modal input").type("Updated")
     cy.contains("Save").click()
     cy.contains("RoverUpdated").should("have.text", "RoverUpdated")
