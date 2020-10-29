@@ -66,8 +66,7 @@ exports.patch = async function(ctx) {
   row._rev = response.rev
   row.type = "row"
 
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
+  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
   ctx.body = row
   ctx.status = 200
   ctx.message = `${table.name} updated successfully.`
@@ -133,8 +132,7 @@ exports.save = async function(ctx) {
   const response = await db.post(row)
   row._rev = response.rev
 
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
+  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
   ctx.body = row
   ctx.status = 200
   ctx.message = `${table.name} created successfully`
