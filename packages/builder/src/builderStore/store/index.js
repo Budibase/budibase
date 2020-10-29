@@ -11,9 +11,7 @@ import {
   getBuiltin,
 } from "components/userInterface/pagesParsing/createProps"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
-import { buildCodeForScreens } from "../buildCodeForScreens"
 import { generate_screen_css } from "../generate_css"
-import { insertCodeMetadata } from "../insertCodeMetadata"
 import analytics from "analytics"
 import { uuid } from "../uuid"
 import {
@@ -60,15 +58,12 @@ export const getStore = () => {
   store.setCurrentPage = setCurrentPage(store)
   store.createLink = createLink(store)
   store.createScreen = createScreen(store)
-  store.addStylesheet = addStylesheet(store)
-  store.removeStylesheet = removeStylesheet(store)
   store.savePage = savePage(store)
   store.addChildComponent = addChildComponent(store)
   store.selectComponent = selectComponent(store)
   store.setComponentProp = setComponentProp(store)
   store.setPageOrScreenProp = setPageOrScreenProp(store)
   store.setComponentStyle = setComponentStyle(store)
-  store.setComponentCode = setComponentCode(store)
   store.setScreenType = setScreenType(store)
   store.getPathToComponent = getPathToComponent(store)
   store.addTemplatedComponent = addTemplatedComponent(store)
@@ -258,7 +253,6 @@ const setCurrentScreen = store => screenName => {
     )
     screen.props = safeProps
     s.currentComponentInfo = safeProps
-    setCurrentPageFunctions(s)
     return s
   })
 }
@@ -295,24 +289,6 @@ const savePage = store => async page => {
   })
 }
 
-const addStylesheet = store => stylesheet => {
-  store.update(s => {
-    s.pages.stylesheets.push(stylesheet)
-    _savePage(s)
-    return s
-  })
-}
-
-const removeStylesheet = store => stylesheet => {
-  store.update(state => {
-    state.pages.stylesheets = state.pages.stylesheets.filter(
-      s => s !== stylesheet
-    )
-    _savePage(state)
-    return state
-  })
-}
-
 const setCurrentPage = store => pageName => {
   store.update(state => {
     const current_screens = state.pages[pageName]._screens
@@ -338,7 +314,6 @@ const setCurrentPage = store => pageName => {
       screen._css = generate_screen_css([screen.props])
     }
 
-    setCurrentPageFunctions(state)
     return state
   })
 }
@@ -424,7 +399,6 @@ const addTemplatedComponent = store => props => {
     )
     regenerateCssForCurrentScreen(state)
 
-    setCurrentPageFunctions(state)
     _saveCurrentPreviewItem(state)
 
     return state
@@ -474,25 +448,6 @@ const setComponentStyle = store => (type, name, value) => {
     return state
   })
 }
-
-const setComponentCode = store => code => {
-  store.update(state => {
-    state.currentComponentInfo._code = code
-
-    setCurrentPageFunctions(state)
-    // save without messing with the store
-    _saveScreenApi(state.currentPreviewItem, state)
-
-    return state
-  })
-}
-
-const setCurrentPageFunctions = s => {
-  s.currentPageFunctions = buildPageCode(s.screens, s.pages[s.currentPageName])
-  insertCodeMetadata(s.currentPreviewItem.props)
-}
-
-const buildPageCode = (screens, page) => buildCodeForScreens([page, ...screens])
 
 const setScreenType = store => type => {
   store.update(state => {
