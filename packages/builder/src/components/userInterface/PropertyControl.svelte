@@ -151,5 +151,6 @@
     --spacing-s: 0;
     border-left: 0.5px solid var(--grey-3);
     outline-color: var(--blue);
+    color: var(--ink);
   }
 </style>

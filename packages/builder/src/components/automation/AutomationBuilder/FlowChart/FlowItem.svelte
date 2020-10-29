@@ -54,7 +54,7 @@
     box-shadow: 0 4px 30px 0 rgba(57, 60, 68, 0.08);
     background-color: var(--ink);
     font-size: 16px;
-    color: var(--white);
+    color: var(--background);
   }
   .block.selected,
   .block:hover {
@@ -93,13 +93,13 @@
   }
 
   .ACTION {
-    background-color: var(--white);
+    background-color: var(--background);
     color: var(--ink);
   }
 
   .TRIGGER {
     background-color: var(--ink);
-    color: var(--white);
+    color: var(--background);
   }
   .TRIGGER header .label {
     background-color: var(--grey-9);

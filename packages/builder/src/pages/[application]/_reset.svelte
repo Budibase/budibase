@@ -5,7 +5,6 @@
   import FeedbackNavLink from "components/userInterface/Feedback/FeedbackNavLink.svelte"
   import { get } from "builderStore/api"
   import { isActive, goto, layout } from "@sveltech/routify"
-  import { PreviewIcon } from "components/common/Icons/"
 
   // Get Package and set store
   export let application
@@ -125,7 +124,7 @@
   .top-nav {
     flex: 0 0 auto;
     height: 60px;
-    background: #fff;
+    background: var(--background);
     padding: 0 20px;
     display: flex;
     box-sizing: border-box;

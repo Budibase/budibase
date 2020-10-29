@@ -32,9 +32,7 @@
     position: relative;
     width: 20px;
     height: 20px;
-    /* background-color: #5e17e9; */
     background-color: var(--grey-2);
-    /* transform: translateY(-50%); */
     cursor: pointer;
     transition: 0.2s ease transform, 0.2s ease background-color,
       0.2s ease box-shadow;
@@ -51,7 +49,7 @@
     width: 12px;
     height: 12px;
     margin: 0 auto;
-    background-color: #fff;
+    background-color: var(--background);
     transform: translateY(-50%);
     transition: 0.2s ease width, 0.2s ease height;
     border-radius: 2px;
@@ -100,9 +98,7 @@
   }
 
   .checked {
-    /* background-color: #5e17e9; */
     background-color: var(--grey-2);
-    /* box-shadow: 0 7px 10px #5e17e9; */
   }
 
   .checked:before {
