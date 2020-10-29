@@ -107,7 +107,7 @@
   }
 
   .LOGIC {
-    background-color: var(--blue-light);
+    background-color: var(--background);
     color: var(--ink);
   }
 
