@@ -6,8 +6,8 @@ const { getAPIKey } = require("../../utilities/usageQuota")
 const { generateUserID } = require("../../db/utils")
 
 exports.authenticate = async ctx => {
-  const instanceId = ctx.user.instanceId
-  if (!instanceId) ctx.throw(400, "No instanceId")
+  const appId = ctx.user.appId
+  if (!appId) ctx.throw(400, "No appId")
 
   const { username, password } = ctx.request.body
 
@@ -15,8 +15,8 @@ exports.authenticate = async ctx => {
   if (!password) ctx.throw(400, "Password Required.")
 
   // Check the user exists in the instance DB by username
-  const db = new CouchDB(instanceId)
-  const app = await db.get(instanceId)
+  const db = new CouchDB(appId)
+  const app = await db.get(appId)
 
   let dbUser
   try {
@@ -32,9 +32,8 @@ exports.authenticate = async ctx => {
     const payload = {
       userId: dbUser._id,
       accessLevelId: dbUser.accessLevelId,
-      appId: ctx.user.appId,
       version: app.version,
-      instanceId,
+      appId,
     }
     // if in cloud add the user api key
     if (env.CLOUD) {

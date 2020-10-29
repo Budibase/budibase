@@ -58,11 +58,11 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, instanceId, apiKey }) {
+module.exports.run = async function({ inputs, appId, apiKey }) {
   const { username, password, accessLevelId } = inputs
   const ctx = {
     user: {
-      instanceId: instanceId,
+      appId: appId,
     },
     request: {
       body: { username, password, accessLevelId },

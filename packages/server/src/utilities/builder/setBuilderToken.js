@@ -2,11 +2,11 @@ const { BUILDER_LEVEL_ID } = require("../accessLevels")
 const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 
-module.exports = (ctx, instanceId, version) => {
+module.exports = (ctx, appId, version) => {
   const builderUser = {
     userId: "BUILDER",
     accessLevelId: BUILDER_LEVEL_ID,
-    instanceId,
+    appId,
     version,
   }
   if (env.BUDIBASE_API_KEY) {

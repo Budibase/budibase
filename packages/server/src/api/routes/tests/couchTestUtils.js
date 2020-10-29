@@ -23,11 +23,11 @@ exports.supertest = async () => {
   return { request, server }
 }
 
-exports.defaultHeaders = instanceId => {
+exports.defaultHeaders = appId => {
   const builderUser = {
     userId: "BUILDER",
     accessLevelId: BUILDER_LEVEL_ID,
-    instanceId,
+    appId,
   }
 
   const builderToken = jwt.sign(builderUser, env.JWT_SECRET)
@@ -38,7 +38,7 @@ exports.defaultHeaders = instanceId => {
   }
 }
 
-exports.createTable = async (request, instanceId, table) => {
+exports.createTable = async (request, appId, table) => {
   if (table != null && table._id) {
     delete table._id
   }
@@ -64,19 +64,19 @@ exports.createTable = async (request, instanceId, table) => {
 
   const res = await request
     .post(`/api/tables`)
-    .set(exports.defaultHeaders(instanceId))
+    .set(exports.defaultHeaders(appId))
     .send(table)
   return res.body
 }
 
-exports.getAllFromTable = async (request, instanceId, tableId) => {
+exports.getAllFromTable = async (request, appId, tableId) => {
   const res = await request
     .get(`/api/${tableId}/rows`)
-    .set(exports.defaultHeaders(instanceId))
+    .set(exports.defaultHeaders(appId))
   return res.body
 }
 
-exports.createView = async (request, instanceId, tableId, view) => {
+exports.createView = async (request, appId, tableId, view) => {
   view = view || {
     map: "function(doc) { emit(doc[doc.key], doc._id); } ",
     tableId: tableId,
@@ -84,7 +84,7 @@ exports.createView = async (request, instanceId, tableId, view) => {
 
   const res = await request
     .post(`/api/views`)
-    .set(exports.defaultHeaders(instanceId))
+    .set(exports.defaultHeaders(appId))
     .send(view)
   return res.body
 }
@@ -111,13 +111,13 @@ exports.clearApplications = async request => {
 
 exports.createUser = async (
   request,
-  instanceId,
+  appId,
   username = "babs",
   password = "babs_password"
 ) => {
   const res = await request
     .post(`/api/users`)
-    .set(exports.defaultHeaders(instanceId))
+    .set(exports.defaultHeaders(appId))
     .send({
       name: "Bill",
       username,
@@ -129,29 +129,29 @@ exports.createUser = async (
 
 const createUserWithOnePermission = async (
   request,
-  instanceId,
+  appId,
   permName,
   itemId
 ) => {
-  let permissions = await generateAdminPermissions(instanceId)
+  let permissions = await generateAdminPermissions(appId)
   permissions = permissions.filter(
     p => p.name === permName && p.itemId === itemId
   )
 
   return await createUserWithPermissions(
     request,
-    instanceId,
+    appId,
     permissions,
     "onePermOnlyUser"
   )
 }
 
-const createUserWithAdminPermissions = async (request, instanceId) => {
-  let permissions = await generateAdminPermissions(instanceId)
+const createUserWithAdminPermissions = async (request, appId) => {
+  let permissions = await generateAdminPermissions(appId)
 
   return await createUserWithPermissions(
     request,
-    instanceId,
+    appId,
     permissions,
     "adminUser"
   )
@@ -159,18 +159,18 @@ const createUserWithAdminPermissions = async (request, instanceId) => {
 
 const createUserWithAllPermissionExceptOne = async (
   request,
-  instanceId,
+  appId,
   permName,
   itemId
 ) => {
-  let permissions = await generateAdminPermissions(instanceId)
+  let permissions = await generateAdminPermissions(appId)
   permissions = permissions.filter(
     p => !(p.name === permName && p.itemId === itemId)
   )
 
   return await createUserWithPermissions(
     request,
-    instanceId,
+    appId,
     permissions,
     "allPermsExceptOneUser"
   )
@@ -178,19 +178,19 @@ const createUserWithAllPermissionExceptOne = async (
 
 const createUserWithPermissions = async (
   request,
-  instanceId,
+  appId,
   permissions,
   username
 ) => {
   const accessRes = await request
     .post(`/api/accesslevels`)
     .send({ name: "TestLevel", permissions })
-    .set(exports.defaultHeaders(instanceId))
+    .set(exports.defaultHeaders(appId))
 
   const password = `password_${username}`
   await request
     .post(`/api/users`)
-    .set(exports.defaultHeaders(instanceId))
+    .set(exports.defaultHeaders(appId))
     .send({
       name: username,
       username,
@@ -201,7 +201,7 @@ const createUserWithPermissions = async (
   const anonUser = {
     userId: "ANON",
     accessLevelId: ANON_LEVEL_ID,
-    instanceId: instanceId,
+    appId: appId,
     version: packageJson.version,
   }
 
@@ -224,13 +224,13 @@ exports.testPermissionsForEndpoint = async ({
   method,
   url,
   body,
-  instanceId,
+  appId,
   permissionName,
   itemId,
 }) => {
   const headers = await createUserWithOnePermission(
     request,
-    instanceId,
+    appId,
     permissionName,
     itemId
   )
@@ -241,7 +241,7 @@ exports.testPermissionsForEndpoint = async ({
 
   const noPermsHeaders = await createUserWithAllPermissionExceptOne(
     request,
-    instanceId,
+    appId,
     permissionName,
     itemId
   )
@@ -256,9 +256,9 @@ exports.builderEndpointShouldBlockNormalUsers = async ({
   method,
   url,
   body,
-  instanceId,
+  appId,
 }) => {
-  const headers = await createUserWithAdminPermissions(request, instanceId)
+  const headers = await createUserWithAdminPermissions(request, appId)
 
   await createRequest(request, method, url, body)
     .set(headers)

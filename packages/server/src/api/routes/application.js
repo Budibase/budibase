@@ -8,12 +8,12 @@ const router = Router()
 router
   .get("/api/applications", authorized(BUILDER), controller.fetch)
   .get(
-    "/api/:instanceId/appPackage",
+    "/api/:appId/appPackage",
     authorized(BUILDER),
     controller.fetchAppPackage
   )
-  .put("/api/:instanceId", authorized(BUILDER), controller.update)
+  .put("/api/:appId", authorized(BUILDER), controller.update)
   .post("/api/applications", authorized(BUILDER), controller.create)
-  .delete("/api/:instanceId", authorized(BUILDER), controller.delete)
+  .delete("/api/:appId", authorized(BUILDER), controller.delete)
 
 module.exports = router
