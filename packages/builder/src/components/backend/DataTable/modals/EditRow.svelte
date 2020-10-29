@@ -12,7 +12,7 @@
   }
 </script>
 
-<Button data-cy="edit-row" translucent small on:click={showModal}>Edit</Button>
+<Button data-cy="edit-row" secondary small on:click={showModal}>Edit</Button>
 <Modal bind:this={modal}>
   <CreateEditRowModal {row} />
 </Modal>

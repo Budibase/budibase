@@ -174,12 +174,18 @@
     height: auto;
     flex: 1 1 auto;
   }
-
-  :global(.ag-theme-alpine) {
-    --ag-border-color: var(--grey-4);
+  :global(.grid-wrapper) {
+    --ag-modal-overlay-background-color: rgba(0, 0, 0, 0.05);
+    --ag-border-color: var(--grey-3);
     --ag-header-background-color: var(--grey-1);
     --ag-odd-row-background-color: var(--grey-1);
     --ag-row-border-color: var(--grey-3);
+    --ag-background-color: var(--background);
+    --ag-foreground-color: var(--ink);
+  }
+  :global(.ag-overlay-loading-center) {
+    box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.05) !important;
+    border-color: var(--grey-2);
   }
 
   :global(.ag-menu) {
@@ -207,7 +213,6 @@
     box-sizing: border-box;
     color: var(--ink);
     border-radius: var(--border-radius-m);
-    background: #fff;
     font-family: var(--font-sans) !important;
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
   }

@@ -19,7 +19,7 @@
 
 <style>
   .apps-card {
-    background-color: var(--white);
+    background-color: var(--background);
     padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl)
       var(--spacing-xl);
     max-width: 300px;
