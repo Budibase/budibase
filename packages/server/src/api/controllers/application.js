@@ -49,11 +49,7 @@ async function createInstance(template) {
 exports.fetch = async function(ctx) {
   let allDbs = await CouchDB.allDbs()
   const appDbNames = allDbs.filter(dbName => dbName.startsWith(APP_PREFIX))
-  const apps = []
-  for (let dbName of appDbNames) {
-    const db = new CouchDB(dbName)
-    apps.push(db.get(dbName))
-  }
+  const apps = appDbNames.map(db => new CouchDB(db).get(db))
   if (apps.length === 0) {
     ctx.body = []
   } else {
