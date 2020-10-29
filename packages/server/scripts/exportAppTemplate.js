@@ -16,11 +16,6 @@ yargs
         type: "string",
       },
       appId: {
-        description: "The appId to dump the database for",
-        alias: "inst",
-        type: "string",
-      },
-      appId: {
         description: "The appId of the application you want to export",
         alias: "app",
         type: "string",
