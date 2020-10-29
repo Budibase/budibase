@@ -36,7 +36,7 @@
         "className": "",
         "text": "Welcome to your Budibase App 👋",
         "type": "h2",
-        "_instanceId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
+        "_appId": "inst_cf8ace4_69efc0d72e6f443db2d4c902c14d9394",
         "_instanceName": "Heading",
         "_children": []
       },
@@ -62,7 +62,7 @@
         "className": "",
         "onLoad": [],
         "type": "div",
-        "_instanceId": "inst_app_2cc_ca3383f896034e9295345c05f7dfca0c",
+        "_appId": "inst_app_2cc_ca3383f896034e9295345c05f7dfca0c",
         "_instanceName": "Video Container",
         "_children": [
           {
@@ -88,7 +88,7 @@
             },
             "_code": "",
             "embed": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/dQw4w9WgXcQ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>",
-            "_instanceId": "inst_app_2cc_ca3383f896034e9295345c05f7dfca0c",
+            "_appId": "inst_app_2cc_ca3383f896034e9295345c05f7dfca0c",
             "_instanceName": "Rick Astley Video",
             "_children": []
           }

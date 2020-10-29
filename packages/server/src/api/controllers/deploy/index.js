@@ -8,6 +8,7 @@ const {
 } = require("./aws")
 const { DocumentTypes, SEPARATOR, UNICODE_MAX } = require("../../../db/utils")
 const newid = require("../../../db/newid")
+const env = require("../../../environment")
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -80,29 +81,20 @@ function replicate(local, remote) {
   })
 }
 
-async function replicateCouch({ instanceId, clientId, session }) {
-  const databases = [`client_${clientId}`, "client_app_lookup", instanceId]
-
-  const replications = databases.map(localDbName => {
-    const localDb = new PouchDB(localDbName)
-    const remoteDb = new CouchDB(
-      `${process.env.DEPLOYMENT_DB_URL}/${localDbName}`,
-      {
-        fetch: function(url, opts) {
-          opts.headers.set("Cookie", `${session};`)
-          return CouchDB.fetch(url, opts)
-        },
-      }
-    )
-
-    return replicate(localDb, remoteDb)
+async function replicateCouch({ appId, session }) {
+  const localDb = new PouchDB(appId)
+  const remoteDb = new CouchDB(`${env.DEPLOYMENT_DB_URL}/${appId}`, {
+    fetch: function(url, opts) {
+      opts.headers.set("Cookie", `${session};`)
+      return CouchDB.fetch(url, opts)
+    },
   })
 
-  await Promise.all(replications)
+  return replicate(localDb, remoteDb)
 }
 
-async function getCurrentInstanceQuota(instanceId) {
-  const db = new PouchDB(instanceId)
+async function getCurrentInstanceQuota(appId) {
+  const db = new PouchDB(appId)
 
   const rows = await db.allDocs({
     startkey: DocumentTypes.ROW + SEPARATOR,
@@ -127,7 +119,7 @@ async function getCurrentInstanceQuota(instanceId) {
 }
 
 async function storeLocalDeploymentHistory(deployment) {
-  const db = new PouchDB(deployment.instanceId)
+  const db = new PouchDB(deployment.appId)
 
   let deploymentDoc
   try {
@@ -155,11 +147,10 @@ async function storeLocalDeploymentHistory(deployment) {
   }
 }
 
-async function deployApp({ instanceId, appId, clientId, deploymentId }) {
+async function deployApp({ appId, deploymentId }) {
   try {
-    const instanceQuota = await getCurrentInstanceQuota(instanceId)
+    const instanceQuota = await getCurrentInstanceQuota(appId)
     const verification = await verifyDeployment({
-      instanceId,
       appId,
       quota: instanceQuota,
     })
@@ -167,17 +158,14 @@ async function deployApp({ instanceId, appId, clientId, deploymentId }) {
     console.log(`Uploading assets for appID ${appId} assets to s3..`)
 
     const invalidationId = await uploadAppAssets({
-      clientId,
       appId,
-      instanceId,
       ...verification,
     })
 
     // replicate the DB to the couchDB cluster in prod
     console.log("Replicating local PouchDB to remote..")
     await replicateCouch({
-      instanceId,
-      clientId,
+      appId,
       session: verification.couchDbSession,
     })
 
@@ -185,7 +173,7 @@ async function deployApp({ instanceId, appId, clientId, deploymentId }) {
 
     await storeLocalDeploymentHistory({
       _id: deploymentId,
-      instanceId,
+      appId,
       invalidationId,
       cfDistribution: verification.cfDistribution,
       quota: verification.quota,
@@ -194,7 +182,7 @@ async function deployApp({ instanceId, appId, clientId, deploymentId }) {
   } catch (err) {
     await storeLocalDeploymentHistory({
       _id: deploymentId,
-      instanceId,
+      appId,
       status: DeploymentStatus.FAILURE,
       err: err.message,
     })
@@ -204,7 +192,7 @@ async function deployApp({ instanceId, appId, clientId, deploymentId }) {
 
 exports.fetchDeployments = async function(ctx) {
   try {
-    const db = new PouchDB(ctx.user.instanceId)
+    const db = new PouchDB(ctx.user.appId)
     const deploymentDoc = await db.get("_local/deployments")
     const { updated, deployments } = await checkAllDeployments(
       deploymentDoc,
@@ -221,7 +209,7 @@ exports.fetchDeployments = async function(ctx) {
 
 exports.deploymentProgress = async function(ctx) {
   try {
-    const db = new PouchDB(ctx.user.instanceId)
+    const db = new PouchDB(ctx.user.appId)
     const deploymentDoc = await db.get("_local/deployments")
     ctx.body = deploymentDoc[ctx.params.deploymentId]
   } catch (err) {
@@ -233,18 +221,13 @@ exports.deploymentProgress = async function(ctx) {
 }
 
 exports.deployApp = async function(ctx) {
-  const clientAppLookupDB = new PouchDB("client_app_lookup")
-  const { clientId } = await clientAppLookupDB.get(ctx.user.appId)
-
   const deployment = await storeLocalDeploymentHistory({
-    instanceId: ctx.user.instanceId,
     appId: ctx.user.appId,
     status: DeploymentStatus.PENDING,
   })
 
   await deployApp({
     ...ctx.user,
-    clientId,
     deploymentId: deployment._id,
   })
 

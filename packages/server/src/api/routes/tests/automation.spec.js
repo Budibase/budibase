@@ -1,7 +1,5 @@
-const { 
-  createClientDatabase,
+const {
   createApplication,
-  createInstance,
   createTable,
   getAllFromTable,
   defaultHeaders,
@@ -41,27 +39,26 @@ describe("/automations", () => {
   let request
   let server
   let app
-  let instance
+  let appId
   let automation
   let automationId
 
   beforeAll(async () => {
     ({ request, server } = await supertest())
-    await createClientDatabase(request)
-    app = await createApplication(request)
   })
 
   beforeEach(async () => {
+    app = await createApplication(request)
+    appId = app.instance._id
     if (automation) await destroyDocument(automation.id)
-    instance = await createInstance(request, app._id)
   })
 
-  afterAll(async () => {
+  afterAll(() => {
     server.close()
   })
 
   const createAutomation = async () => {
-    automation = await insertDocument(instance._id, {
+    automation = await insertDocument(appId, {
       type: "automation",
       ...TEST_AUTOMATION
     })
@@ -72,7 +69,7 @@ describe("/automations", () => {
     return await request
       .post(`/api/automations/${automationId}/trigger`)
       .send({ name: "Test", description: "TEST" })
-      .set(defaultHeaders(app._id, instance._id))
+      .set(defaultHeaders(appId))
       .expect('Content-Type', /json/)
       .expect(200)
   }
@@ -81,7 +78,7 @@ describe("/automations", () => {
     it("returns a list of definitions for actions", async () => {
       const res = await request
         .get(`/api/automations/action/list`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -92,7 +89,7 @@ describe("/automations", () => {
     it("returns a list of definitions for triggers", async () => {
       const res = await request
         .get(`/api/automations/trigger/list`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -103,7 +100,7 @@ describe("/automations", () => {
     it("returns a list of definitions for actions", async () => {
       const res = await request
         .get(`/api/automations/logic/list`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -114,7 +111,7 @@ describe("/automations", () => {
     it("returns all of the definitions in one", async () => {
       const res = await request
         .get(`/api/automations/definitions/list`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -142,7 +139,7 @@ describe("/automations", () => {
     it("returns a success message when the automation is successfully created", async () => {
       const res = await request
         .post(`/api/automations`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .send(TEST_AUTOMATION)
         .expect('Content-Type', /json/)
         .expect(200)
@@ -158,8 +155,7 @@ describe("/automations", () => {
         request,
         method: "POST",
         url: `/api/automations`,
-        instanceId: instance._id,
-        appId: app._id,
+        appId: appId,
         body: TEST_AUTOMATION
       })
     })
@@ -167,7 +163,7 @@ describe("/automations", () => {
 
   describe("trigger", () => {
     it("trigger the automation successfully", async () => {
-      let table = await createTable(request, app._id, instance._id)
+      let table = await createTable(request, appId)
       TEST_AUTOMATION.definition.trigger.inputs.tableId = table._id
       TEST_AUTOMATION.definition.steps[0].inputs.row.tableId = table._id
       await createAutomation()
@@ -180,7 +176,7 @@ describe("/automations", () => {
         expect(res.body.message).toEqual(`Automation ${automation._id} has been triggered.`)
         expect(res.body.automation.name).toEqual(TEST_AUTOMATION.name)
         await delay(500)
-        let elements = await getAllFromTable(request, app._id, instance._id, table._id)
+        let elements = await getAllFromTable(request, appId, table._id)
         // don't test it unless there are values to test
         if (elements.length === 1) {
           expect(elements.length).toEqual(1)
@@ -203,7 +199,7 @@ describe("/automations", () => {
 
       const res = await request
         .put(`/api/automations`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .send(automation)
         .expect('Content-Type', /json/)
         .expect(200)
@@ -218,7 +214,7 @@ describe("/automations", () => {
       await createAutomation()
       const res = await request
         .get(`/api/automations`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -230,8 +226,7 @@ describe("/automations", () => {
         request,
         method: "GET",
         url: `/api/automations`,
-        instanceId: instance._id,
-        appId: app._id,
+        appId: appId,
       })
     })
   })
@@ -241,7 +236,7 @@ describe("/automations", () => {
       await createAutomation()
       const res = await request
         .delete(`/api/automations/${automation.id}/${automation.rev}`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -254,8 +249,7 @@ describe("/automations", () => {
         request,
         method: "DELETE",
         url: `/api/automations/${automation.id}/${automation._rev}`,
-        instanceId: instance._id,
-        appId: app._id,
+        appId: appId,
       })
     })
   })

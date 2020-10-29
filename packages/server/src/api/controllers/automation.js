@@ -56,7 +56,7 @@ async function checkForWebhooks({ user, oldAuto, newAuto }) {
     !isWebhookTrigger(newAuto) &&
     oldTrigger.webhookId
   ) {
-    let db = new CouchDB(user.instanceId)
+    let db = new CouchDB(user.appId)
     // need to get the webhook to get the rev
     const webhook = await db.get(oldTrigger.webhookId)
     const ctx = {
@@ -86,15 +86,15 @@ async function checkForWebhooks({ user, oldAuto, newAuto }) {
     const id = ctx.body.webhook._id
     newTrigger.webhookId = id
     newTrigger.inputs = {
-      schemaUrl: `api/webhooks/schema/${user.instanceId}/${id}`,
-      triggerUrl: `api/webhooks/trigger/${user.instanceId}/${id}`,
+      schemaUrl: `api/webhooks/schema/${user.appId}/${id}`,
+      triggerUrl: `api/webhooks/trigger/${user.appId}/${id}`,
     }
   }
   return newAuto
 }
 
 exports.create = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   let automation = ctx.request.body
   automation.appId = ctx.user.appId
 
@@ -117,7 +117,7 @@ exports.create = async function(ctx) {
 }
 
 exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   let automation = ctx.request.body
   automation.appId = ctx.user.appId
   const oldAutomation = await db.get(automation._id)
@@ -142,7 +142,7 @@ exports.update = async function(ctx) {
 }
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   const response = await db.allDocs(
     getAutomationParams(null, {
       include_docs: true,
@@ -152,12 +152,12 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   ctx.body = await db.get(ctx.params.id)
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   const oldAutomation = await db.get(ctx.params.id)
   await checkForWebhooks({ user: ctx.user, oldAuto: oldAutomation })
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
@@ -190,11 +190,11 @@ module.exports.getDefinitionList = async function(ctx) {
  *********************/
 
 exports.trigger = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   let automation = await db.get(ctx.params.id)
   await triggers.externalTrigger(automation, {
     ...ctx.request.body,
-    instanceId: ctx.user.instanceId,
+    appId: ctx.user.appId,
   })
   ctx.status = 200
   ctx.body = {
