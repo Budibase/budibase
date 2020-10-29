@@ -1,7 +1,5 @@
-const { 
-  createClientDatabase,
+const {
   createApplication,
-  createInstance,
   supertest,
   defaultHeaders,
   createUser,
@@ -17,30 +15,29 @@ describe("/users", () => {
   let request
   let server
   let app
-  let instance
+  let appId
 
   beforeAll(async () => {
     ({ request, server } = await supertest(server))
-    await createClientDatabase(request)
-    app = await createApplication(request)
   });
 
   beforeEach(async () => {
-    instance = await createInstance(request, app._id)
+    app = await createApplication(request)
+    appId = app.instance._id
   });
 
-  afterAll(async () => {
-    server.close();
+  afterAll(() => {
+    server.close()
+    server.destroy()
   })
 
-  describe("fetch", () => {    
-
+  describe("fetch", () => {
     it("returns a list of users from an instance db", async () => {
-      await createUser(request, app._id, instance._id, "brenda", "brendas_password")
-      await createUser(request, app._id, instance._id, "pam", "pam_password")
+      await createUser(request, appId, "brenda", "brendas_password")
+      await createUser(request, appId, "pam", "pam_password")
       const res = await request
         .get(`/api/users`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
       
@@ -50,13 +47,12 @@ describe("/users", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      await createUser(request, app._id, instance._id, "brenda", "brendas_password")
+      await createUser(request, appId, "brenda", "brendas_password")
       await testPermissionsForEndpoint({
         request,
         method: "GET",
         url: `/api/users`,
-        instanceId: instance._id,
-        appId: app._id,
+        appId: appId,
         permissionName: LIST_USERS,
       })
     })
@@ -68,7 +64,7 @@ describe("/users", () => {
     it("returns a success message when a user is successfully created", async () => {
       const res = await request
         .post(`/api/users`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .send({ name: "Bill", username: "bill", password: "bills_password", accessLevelId: POWERUSER_LEVEL_ID })
         .expect(200)
         .expect('Content-Type', /json/)
@@ -83,8 +79,7 @@ describe("/users", () => {
         method: "POST",
         body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: POWERUSER_LEVEL_ID },
         url: `/api/users`,
-        instanceId: instance._id,
-        appId: app._id,
+        appId: appId,
         permissionName: USER_MANAGEMENT,
       })
     })

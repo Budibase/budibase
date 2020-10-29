@@ -1,6 +1,6 @@
 const rowController = require("../../api/controllers/row")
 const automationUtils = require("../automationUtils")
-const environment = require("../../environment")
+const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
 
 module.exports.definition = {
@@ -58,13 +58,13 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, instanceId, apiKey }) {
+module.exports.run = async function({ inputs, appId, apiKey }) {
   // TODO: better logging of when actions are missed due to missing parameters
   if (inputs.row == null || inputs.row.tableId == null) {
     return
   }
   inputs.row = await automationUtils.cleanUpRow(
-    instanceId,
+    appId,
     inputs.row.tableId,
     inputs.row
   )
@@ -76,11 +76,11 @@ module.exports.run = async function({ inputs, instanceId, apiKey }) {
     request: {
       body: inputs.row,
     },
-    user: { instanceId },
+    user: { appId },
   }
 
   try {
-    if (environment.CLOUD) {
+    if (env.CLOUD) {
       await usage.update(apiKey, usage.Properties.ROW, 1)
     }
     await rowController.save(ctx)

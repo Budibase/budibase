@@ -1,5 +1,6 @@
 // THIS will create API Keys and App Ids input in a local Dynamo instance if it is running
 const dynamoClient = require("../src/db/dynamoClient")
+const env = require("../src/environment")
 
 if (process.argv[2] == null || process.argv[3] == null) {
   console.error(
@@ -11,8 +12,8 @@ if (process.argv[2] == null || process.argv[3] == null) {
 const FAKE_STRING = "fakestring"
 
 // set fake credentials for local dynamo to actually work
-process.env.AWS_ACCESS_KEY_ID = "KEY_ID"
-process.env.AWS_SECRET_ACCESS_KEY = "SECRET_KEY"
+env._set("AWS_ACCESS_KEY_ID", "KEY_ID")
+env._set("AWS_SECRET_ACCESS_KEY", "SECRET_KEY")
 dynamoClient.init("http://localhost:8333")
 
 async function run() {

@@ -1,7 +1,7 @@
 let _ = require("lodash")
-let environment = require("../environment")
+let env = require("../environment")
 
-const AWS_REGION = environment.AWS_REGION ? environment.AWS_REGION : "eu-west-1"
+const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
 const TableInfo = {
   API_KEYS: {
@@ -110,8 +110,8 @@ exports.init = endpoint => {
   }
   if (endpoint) {
     docClientParams.endpoint = endpoint
-  } else if (environment.DYNAMO_ENDPOINT) {
-    docClientParams.endpoint = environment.DYNAMO_ENDPOINT
+  } else if (env.DYNAMO_ENDPOINT) {
+    docClientParams.endpoint = env.DYNAMO_ENDPOINT
   }
   docClient = new AWS.DynamoDB.DocumentClient(docClientParams)
 }
@@ -119,10 +119,10 @@ exports.init = endpoint => {
 exports.apiKeyTable = new Table(TableInfo.API_KEYS)
 exports.userTable = new Table(TableInfo.USERS)
 
-if (environment.CLOUD) {
+if (env.CLOUD) {
   exports.init(`https://dynamodb.${AWS_REGION}.amazonaws.com`)
 } else {
-  process.env.AWS_ACCESS_KEY_ID = "KEY_ID"
-  process.env.AWS_SECRET_ACCESS_KEY = "SECRET_KEY"
+  env._set("AWS_ACCESS_KEY_ID", "KEY_ID")
+  env._set("AWS_SECRET_ACCESS_KEY", "SECRET_KEY")
   exports.init("http://localhost:8333")
 }

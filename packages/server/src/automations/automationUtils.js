@@ -88,13 +88,13 @@ module.exports.cleanInputValues = (inputs, schema) => {
  * the automation but is instead part of the Table/Table. This function will get the table schema and use it to instead
  * perform the cleanInputValues function on the input row.
  *
- * @param {string} instanceId The instance which the Table/Table is contained under.
+ * @param {string} appId The instance which the Table/Table is contained under.
  * @param {string} tableId The ID of the Table/Table which the schema is to be retrieved for.
  * @param {object} row The input row structure which requires clean-up after having been through mustache statements.
  * @returns {Promise<Object>} The cleaned up rows object, will should now have all the required primitive types.
  */
-module.exports.cleanUpRow = async (instanceId, tableId, row) => {
-  const db = new CouchDB(instanceId)
+module.exports.cleanUpRow = async (appId, tableId, row) => {
+  const db = new CouchDB(appId)
   const table = await db.get(tableId)
 
   return module.exports.cleanInputValues(row, { properties: table.schema })
@@ -104,13 +104,13 @@ module.exports.cleanUpRow = async (instanceId, tableId, row) => {
  * A utility function for the cleanUpRow, which can be used if only the row ID is known (not the table ID) to clean
  * up a row after mustache statements have been replaced. This is specifically useful for the update row action.
  *
- * @param {string} instanceId The instance which the Table/Table is contained under.
+ * @param {string} appId The instance which the Table/Table is contained under.
  * @param {string} rowId The ID of the row from which the tableId will be extracted, to get the Table/Table schema.
  * @param {object} row The input row structure which requires clean-up after having been through mustache statements.
  * @returns {Promise<Object>} The cleaned up rows object, which will now have all the required primitive types.
  */
-module.exports.cleanUpRowById = async (instanceId, rowId, row) => {
-  const db = new CouchDB(instanceId)
+module.exports.cleanUpRowById = async (appId, rowId, row) => {
+  const db = new CouchDB(appId)
   const foundRow = await db.get(rowId)
-  return module.exports.cleanUpRow(instanceId, foundRow.tableId, row)
+  return module.exports.cleanUpRow(appId, foundRow.tableId, row)
 }

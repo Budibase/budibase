@@ -11,7 +11,7 @@ const {
 } = require("../../db/utils")
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   const body = await db.allDocs(
     getAccessLevelParams(null, {
       include_docs: true,
@@ -23,12 +23,12 @@ exports.fetch = async function(ctx) {
     {
       _id: ADMIN_LEVEL_ID,
       name: "Admin",
-      permissions: await generateAdminPermissions(ctx.user.instanceId),
+      permissions: await generateAdminPermissions(ctx.user.appId),
     },
     {
       _id: POWERUSER_LEVEL_ID,
       name: "Power User",
-      permissions: await generatePowerUserPermissions(ctx.user.instanceId),
+      permissions: await generatePowerUserPermissions(ctx.user.appId),
     },
   ]
 
@@ -36,12 +36,12 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   ctx.body = await db.get(ctx.params.levelId)
 }
 
 exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   const level = await db.get(ctx.params.levelId)
   level.name = ctx.body.name
   level.permissions = ctx.request.body.permissions
@@ -52,7 +52,7 @@ exports.update = async function(ctx) {
 }
 
 exports.patch = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   const level = await db.get(ctx.params.levelId)
   const { removedPermissions, addedPermissions, _rev } = ctx.request.body
 
@@ -88,7 +88,7 @@ exports.patch = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
 
   const level = {
     name: ctx.request.body.name,
@@ -105,7 +105,7 @@ exports.create = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   await db.remove(ctx.params.levelId, ctx.params.rev)
   ctx.message = `Access Level ${ctx.params.id} deleted successfully`
   ctx.status = 200

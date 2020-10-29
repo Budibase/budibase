@@ -40,9 +40,9 @@ function LinkDocument(
 }
 
 class LinkController {
-  constructor({ instanceId, tableId, row, table, oldTable }) {
-    this._instanceId = instanceId
-    this._db = new CouchDB(instanceId)
+  constructor({ appId, tableId, row, table, oldTable }) {
+    this._appId = appId
+    this._db = new CouchDB(appId)
     this._tableId = tableId
     this._row = row
     this._table = table
@@ -87,7 +87,7 @@ class LinkController {
    */
   getRowLinkDocs(rowId) {
     return getLinkDocuments({
-      instanceId: this._instanceId,
+      appId: this._appId,
       tableId: this._tableId,
       rowId,
       includeDocs: IncludeDocs.INCLUDE,
@@ -99,7 +99,7 @@ class LinkController {
    */
   getTableLinkDocs() {
     return getLinkDocuments({
-      instanceId: this._instanceId,
+      appId: this._appId,
       tableId: this._tableId,
       includeDocs: IncludeDocs.INCLUDE,
     })

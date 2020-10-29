@@ -9,7 +9,7 @@ const {
 } = require("../../db/utils")
 
 exports.fetch = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   const body = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
@@ -19,13 +19,13 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   ctx.body = await db.get(ctx.params.id)
 }
 
 exports.save = async function(ctx) {
-  const instanceId = ctx.user.instanceId
-  const db = new CouchDB(instanceId)
+  const appId = ctx.user.appId
+  const db = new CouchDB(appId)
   const { dataImport, ...rest } = ctx.request.body
   const tableToSave = {
     type: "table",
@@ -90,7 +90,7 @@ exports.save = async function(ctx) {
 
   // update linked rows
   await linkRows.updateLinks({
-    instanceId,
+    appId,
     eventType: oldTable
       ? linkRows.EventType.TABLE_UPDATED
       : linkRows.EventType.TABLE_SAVE,
@@ -107,7 +107,7 @@ exports.save = async function(ctx) {
   tableToSave._rev = result.rev
 
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitTable(`table:save`, instanceId, tableToSave)
+    ctx.eventEmitter.emitTable(`table:save`, appId, tableToSave)
 
   if (dataImport && dataImport.csvString) {
     // Populate the table with rows imported from CSV in a bulk update
@@ -127,8 +127,8 @@ exports.save = async function(ctx) {
 }
 
 exports.destroy = async function(ctx) {
-  const instanceId = ctx.user.instanceId
-  const db = new CouchDB(instanceId)
+  const appId = ctx.user.appId
+  const db = new CouchDB(appId)
   const tableToDelete = await db.get(ctx.params.tableId)
 
   // Delete all rows for that table
@@ -141,7 +141,7 @@ exports.destroy = async function(ctx) {
 
   // update linked rows
   await linkRows.updateLinks({
-    instanceId,
+    appId,
     eventType: linkRows.EventType.TABLE_DELETE,
     table: tableToDelete,
   })
@@ -150,7 +150,7 @@ exports.destroy = async function(ctx) {
   await db.remove(tableToDelete)
 
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitTable(`table:delete`, instanceId, tableToDelete)
+    ctx.eventEmitter.emitTable(`table:delete`, appId, tableToDelete)
   ctx.status = 200
   ctx.message = `Table ${ctx.params.tableId} deleted.`
 }

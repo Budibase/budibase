@@ -137,10 +137,10 @@ const setPackage = (store, initial) => async pkg => {
     ...Object.values(unauth_screens),
   ]
   initial.builtins = [getBuiltin("##builtin/screenslot")]
-  initial.appInstances = pkg.application.instances
+  initial.appInstance = pkg.application.instance
   initial.appId = pkg.application._id
   store.set(initial)
-  await backendUiStore.actions.database.select(initial.appInstances[0])
+  await backendUiStore.actions.database.select(initial.appInstance)
   return initial
 }
 
