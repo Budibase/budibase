@@ -23,7 +23,7 @@ describe("/tables", () => {
 
   beforeEach(async () => {
     app = await createApplication(request)
-    instanceId = app.instances[0]._id
+    instanceId = app.instance._id
   });
 
   describe("create", () => {

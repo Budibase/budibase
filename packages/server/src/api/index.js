@@ -9,7 +9,6 @@ const {
   pageRoutes,
   userRoutes,
   deployRoutes,
-  instanceRoutes,
   applicationRoutes,
   rowRoutes,
   tableRoutes,
@@ -81,9 +80,6 @@ router.use(rowRoutes.allowedMethods())
 
 router.use(userRoutes.routes())
 router.use(userRoutes.allowedMethods())
-
-router.use(instanceRoutes.routes())
-router.use(instanceRoutes.allowedMethods())
 
 router.use(automationRoutes.routes())
 router.use(automationRoutes.allowedMethods())

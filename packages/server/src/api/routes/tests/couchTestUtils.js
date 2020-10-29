@@ -109,16 +109,6 @@ exports.clearApplications = async request => {
   }
 }
 
-exports.createInstance = async request => {
-  const res = await request
-    .post(`/api/instances`)
-    .send({
-      name: "test-instance2",
-    })
-    .set(exports.defaultHeaders())
-  return res.body
-}
-
 exports.createUser = async (
   request,
   instanceId,
