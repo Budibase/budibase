@@ -1,7 +1,6 @@
 const CouchDB = require("../../db")
 const { getPackageForBuilder, buildPage } = require("../../utilities/builder")
 const env = require("../../environment")
-const instanceController = require("./instance")
 const { copy, existsSync, readFile, writeFile } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const sqrl = require("squirrelly")
@@ -11,11 +10,41 @@ const { join, resolve } = require("../../utilities/centralPath")
 const { promisify } = require("util")
 const chmodr = require("chmodr")
 const packageJson = require("../../../package.json")
-const { DocumentTypes, SEPARATOR } = require("../../db/utils")
+const { createLinkView } = require("../../db/linkedRows")
+const { downloadTemplate } = require("../../utilities/templates")
+const { generateAppID, DocumentTypes, SEPARATOR } = require("../../db/utils")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
+
+async function createInstance(template) {
+  const instanceId = generateAppID()
+
+  const db = new CouchDB(instanceId)
+  await db.put({
+    _id: "_design/database",
+    // view collation information, read before writing any complex views:
+    // https://docs.couchdb.org/en/master/ddocs/views/collation.html#collation-specification
+    views: {},
+  })
+  // add view for linked rows
+  await createLinkView(instanceId)
+
+  // replicate the template data to the instance DB
+  if (template) {
+    const templatePath = await downloadTemplate(...template.key.split("/"))
+    const dbDumpReadStream = fs.createReadStream(
+      join(templatePath, "db", "dump.txt")
+    )
+    const { ok } = await db.load(dbDumpReadStream)
+    if (!ok) {
+      throw "Error loading database dump from template."
+    }
+  }
+
+  return { _id: instanceId }
+}
 
 exports.fetch = async function(ctx) {
   let allDbs = await CouchDB.allDbs()
@@ -40,15 +69,8 @@ exports.fetchAppPackage = async function(ctx) {
 }
 
 exports.create = async function(ctx) {
-  const createInstCtx = {
-    request: {
-      body: {
-        template: ctx.request.body.template,
-      },
-    },
-  }
-  await instanceController.create(createInstCtx)
-  const instanceId = createInstCtx.body._id
+  const instance = await createInstance(ctx.request.body.template)
+  const instanceId = instance._id
   const newApplication = {
     _id: instanceId,
     type: "app",
@@ -57,7 +79,7 @@ exports.create = async function(ctx) {
     componentLibraries: ["@budibase/standard-components"],
     name: ctx.request.body.name,
     template: ctx.request.body.template,
-    instances: [createInstCtx.body],
+    instance: instance,
   }
   const instanceDb = new CouchDB(instanceId)
   await instanceDb.put(newApplication)

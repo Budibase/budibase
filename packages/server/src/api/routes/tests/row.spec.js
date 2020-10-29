@@ -24,7 +24,7 @@ describe("/rows", () => {
 
   beforeEach(async () => {
     app = await createApplication(request)
-    instanceId = app.instances[0]._id
+    instanceId = app.instance._id
     table = await createTable(request, instanceId)
     row = {
       name: "Test Contact",

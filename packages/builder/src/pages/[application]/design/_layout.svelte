@@ -7,15 +7,15 @@
   import { last } from "lodash/fp"
   import FrontendNavigatePane from "components/userInterface/FrontendNavigatePane.svelte"
 
-  $: instances = $store.appInstances
+  $: instance = $store.appInstance
 
   async function selectDatabase(database) {
     backendUiStore.actions.database.select(database)
   }
 
   onMount(async () => {
-    if ($store.appInstances.length > 0 && !$backendUiStore.database) {
-      await selectDatabase($store.appInstances[0])
+    if ($store.appInstance && !$backendUiStore.database) {
+      await selectDatabase($store.appInstance)
     }
   })
 

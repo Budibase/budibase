@@ -31,7 +31,7 @@ describe("/accesslevels", () => {
 
   beforeEach(async () => {
     let app = await createApplication(request)
-    instanceId = app.instances[0]._id
+    instanceId = app.instance._id
     table = await createTable(request, instanceId)
     view = await createView(request, instanceId, table._id)
   })
