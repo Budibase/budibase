@@ -27,7 +27,7 @@ function getProperty(url) {
 }
 
 module.exports = async (ctx, next) => {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   let usage = METHOD_MAP[ctx.req.method]
   const property = getProperty(ctx.req.url)
   if (usage == null || property == null) {

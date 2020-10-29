@@ -19,9 +19,9 @@ const {
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 async function createInstance(template) {
-  const instanceId = generateAppID()
+  const appId = generateAppID()
 
-  const db = new CouchDB(instanceId)
+  const db = new CouchDB(appId)
   await db.put({
     _id: "_design/database",
     // view collation information, read before writing any complex views:
@@ -29,7 +29,7 @@ async function createInstance(template) {
     views: {},
   })
   // add view for linked rows
-  await createLinkView(instanceId)
+  await createLinkView(appId)
 
   // replicate the template data to the instance DB
   if (template) {
@@ -43,7 +43,7 @@ async function createInstance(template) {
     }
   }
 
-  return { _id: instanceId }
+  return { _id: appId }
 }
 
 exports.fetch = async function(ctx) {
@@ -62,17 +62,17 @@ exports.fetch = async function(ctx) {
 }
 
 exports.fetchAppPackage = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
-  const application = await db.get(ctx.params.instanceId)
+  const db = new CouchDB(ctx.params.appId)
+  const application = await db.get(ctx.params.appId)
   ctx.body = await getPackageForBuilder(ctx.config, application)
-  setBuilderToken(ctx, ctx.params.instanceId, application.version)
+  setBuilderToken(ctx, ctx.params.appId, application.version)
 }
 
 exports.create = async function(ctx) {
   const instance = await createInstance(ctx.request.body.template)
-  const instanceId = instance._id
+  const appId = instance._id
   const newApplication = {
-    _id: instanceId,
+    _id: appId,
     type: "app",
     userInstanceMap: {},
     version: packageJson.version,
@@ -81,7 +81,7 @@ exports.create = async function(ctx) {
     template: ctx.request.body.template,
     instance: instance,
   }
-  const instanceDb = new CouchDB(instanceId)
+  const instanceDb = new CouchDB(appId)
   await instanceDb.put(newApplication)
 
   if (env.NODE_ENV !== "jest") {
@@ -95,8 +95,8 @@ exports.create = async function(ctx) {
 }
 
 exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
-  const application = await db.get(ctx.params.instanceId)
+  const db = new CouchDB(ctx.params.appId)
+  const application = await db.get(ctx.params.appId)
 
   const data = ctx.request.body
   const newData = { ...application, ...data }
@@ -110,12 +110,12 @@ exports.update = async function(ctx) {
 }
 
 exports.delete = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
-  const app = await db.get(ctx.params.instanceId)
+  const db = new CouchDB(ctx.params.appId)
+  const app = await db.get(ctx.params.appId)
   const result = await db.destroy()
 
   // remove top level directory
-  await fs.rmdir(join(budibaseAppsDir(), ctx.params.instanceId), {
+  await fs.rmdir(join(budibaseAppsDir(), ctx.params.appId), {
     recursive: true,
   })
 

@@ -53,9 +53,9 @@ module.exports = async (ctx, next) => {
     ctx.auth.apiKey = jwtPayload.apiKey
     ctx.user = {
       ...jwtPayload,
-      instanceId: jwtPayload.instanceId,
+      appId: jwtPayload.appId,
       accessLevel: await getAccessLevel(
-        jwtPayload.instanceId,
+        jwtPayload.appId,
         jwtPayload.accessLevelId
       ),
     }
@@ -70,10 +70,10 @@ module.exports = async (ctx, next) => {
  * Return the full access level object either from constants
  * or the database based on the access level ID passed.
  *
- * @param {*} instanceId - instanceId of the user
+ * @param {*} appId - appId of the user
  * @param {*} accessLevelId - the id of the users access level
  */
-const getAccessLevel = async (instanceId, accessLevelId) => {
+const getAccessLevel = async (appId, accessLevelId) => {
   if (
     accessLevelId === POWERUSER_LEVEL_ID ||
     accessLevelId === ADMIN_LEVEL_ID ||
@@ -92,7 +92,7 @@ const getAccessLevel = async (instanceId, accessLevelId) => {
       levelId: accessLevelId,
     },
     user: {
-      instanceId,
+      appId,
     },
   }
   await accessLevelController.find(findAccessContext)

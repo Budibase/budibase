@@ -15,7 +15,7 @@ describe("/users", () => {
   let request
   let server
   let app
-  let instanceId
+  let appId
 
   beforeAll(async () => {
     ({ request, server } = await supertest(server))
@@ -23,7 +23,7 @@ describe("/users", () => {
 
   beforeEach(async () => {
     app = await createApplication(request)
-    instanceId = app.instance._id
+    appId = app.instance._id
   });
 
   afterAll(() => {
@@ -33,11 +33,11 @@ describe("/users", () => {
 
   describe("fetch", () => {
     it("returns a list of users from an instance db", async () => {
-      await createUser(request, instanceId, "brenda", "brendas_password")
-      await createUser(request, instanceId, "pam", "pam_password")
+      await createUser(request, appId, "brenda", "brendas_password")
+      await createUser(request, appId, "pam", "pam_password")
       const res = await request
         .get(`/api/users`)
-        .set(defaultHeaders(instanceId))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
       
@@ -47,12 +47,12 @@ describe("/users", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      await createUser(request, instanceId, "brenda", "brendas_password")
+      await createUser(request, appId, "brenda", "brendas_password")
       await testPermissionsForEndpoint({
         request,
         method: "GET",
         url: `/api/users`,
-        instanceId: instanceId,
+        appId: appId,
         permissionName: LIST_USERS,
       })
     })
@@ -64,7 +64,7 @@ describe("/users", () => {
     it("returns a success message when a user is successfully created", async () => {
       const res = await request
         .post(`/api/users`)
-        .set(defaultHeaders(instanceId))
+        .set(defaultHeaders(appId))
         .send({ name: "Bill", username: "bill", password: "bills_password", accessLevelId: POWERUSER_LEVEL_ID })
         .expect(200)
         .expect('Content-Type', /json/)
@@ -79,7 +79,7 @@ describe("/users", () => {
         method: "POST",
         body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: POWERUSER_LEVEL_ID },
         url: `/api/users`,
-        instanceId: instanceId,
+        appId: appId,
         permissionName: USER_MANAGEMENT,
       })
     })

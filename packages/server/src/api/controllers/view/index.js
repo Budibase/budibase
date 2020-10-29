@@ -8,7 +8,7 @@ const { fetchView } = require("../row")
 
 const controller = {
   fetch: async ctx => {
-    const db = new CouchDB(ctx.user.instanceId)
+    const db = new CouchDB(ctx.user.appId)
     const designDoc = await db.get("_design/database")
     const response = []
 
@@ -26,7 +26,7 @@ const controller = {
     ctx.body = response
   },
   save: async ctx => {
-    const db = new CouchDB(ctx.user.instanceId)
+    const db = new CouchDB(ctx.user.appId)
     const { originalName, ...viewToSave } = ctx.request.body
 
     const designDoc = await db.get("_design/database")
@@ -63,7 +63,7 @@ const controller = {
     ctx.message = `View ${viewToSave.name} saved successfully.`
   },
   destroy: async ctx => {
-    const db = new CouchDB(ctx.user.instanceId)
+    const db = new CouchDB(ctx.user.appId)
     const designDoc = await db.get("_design/database")
 
     const viewName = decodeURI(ctx.params.viewName)

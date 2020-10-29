@@ -50,7 +50,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function({ inputs, instanceId, apiKey }) {
+module.exports.run = async function({ inputs, appId, apiKey }) {
   // TODO: better logging of when actions are missed due to missing parameters
   if (inputs.id == null || inputs.revision == null) {
     return
@@ -61,7 +61,7 @@ module.exports.run = async function({ inputs, instanceId, apiKey }) {
       rowId: inputs.id,
       revId: inputs.revision,
     },
-    user: { instanceId },
+    user: { appId },
   }
 
   try {

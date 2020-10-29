@@ -65,11 +65,11 @@ exports.uploadFile = async function(ctx) {
   ctx.body = await processLocalFileUploads({
     files,
     outputPath: attachmentsPath,
-    instanceId: ctx.user.instanceId,
+    appId: ctx.user.appId,
   })
 }
 
-async function processLocalFileUploads({ files, outputPath, instanceId }) {
+async function processLocalFileUploads({ files, outputPath, appId }) {
   // create attachments dir if it doesnt exist
   !fs.existsSync(outputPath) && fs.mkdirSync(outputPath, { recursive: true })
 
@@ -98,7 +98,7 @@ async function processLocalFileUploads({ files, outputPath, instanceId }) {
   // local document used to track which files need to be uploaded
   // db.get throws an error if the document doesn't exist
   // need to use a promise to default
-  const db = new CouchDB(instanceId)
+  const db = new CouchDB(appId)
   await db
     .get("_local/fileuploads")
     .then(data => {
@@ -130,7 +130,7 @@ exports.performLocalFileProcessing = async function(ctx) {
     ctx.body = await processLocalFileUploads({
       files,
       outputPath: processedFileOutputPath,
-      instanceId: ctx.user.instanceId,
+      appId: ctx.user.appId,
     })
   } catch (err) {
     ctx.throw(500, err)
@@ -188,7 +188,7 @@ exports.serveAppAsset = async function(ctx) {
 
   const appPath = resolve(
     budibaseAppsDir(),
-    ctx.user.instanceId,
+    ctx.user.appId,
     "public",
     mainOrAuth
   )

@@ -36,12 +36,12 @@ describe("/applications", () => {
 
     it("should apply authorization to endpoint", async () => {
       const otherApplication = await createApplication(request)
-      const instanceId = otherApplication.instance._id
+      const appId = otherApplication.instance._id
       await builderEndpointShouldBlockNormalUsers({
         request,
         method: "POST",
         url: `/api/applications`,
-        instanceId: instanceId,
+        appId: appId,
         body: { name: "My App" }
       })
     })
@@ -64,12 +64,12 @@ describe("/applications", () => {
 
     it("should apply authorization to endpoint", async () => {
       const otherApplication = await createApplication(request)
-      const instanceId = otherApplication.instance._id
+      const appId = otherApplication.instance._id
       await builderEndpointShouldBlockNormalUsers({
         request,
         method: "GET",
         url: `/api/applications`,
-        instanceId: instanceId,
+        appId: appId,
       })
     })
   })

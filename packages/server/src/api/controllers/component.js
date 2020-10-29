@@ -6,13 +6,13 @@ const {
 } = require("../../utilities/budibaseDir")
 
 exports.fetchAppComponentDefinitions = async function(ctx) {
-  const db = new CouchDB(ctx.params.instanceId)
-  const app = await db.get(ctx.params.instanceId)
+  const db = new CouchDB(ctx.params.appId)
+  const app = await db.get(ctx.params.appId)
 
   ctx.body = app.componentLibraries.reduce((acc, componentLibrary) => {
     let appDirectory = resolve(
       budibaseAppsDir(),
-      ctx.params.instanceId,
+      ctx.params.appId,
       "node_modules"
     )
 

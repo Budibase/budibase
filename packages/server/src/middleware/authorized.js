@@ -28,7 +28,7 @@ module.exports = (permName, getItemId) => async (ctx, next) => {
         apiKey: ctx.headers["x-api-key"],
       }
       ctx.user = {
-        instanceId: ctx.headers["x-instanceid"],
+        appId: ctx.headers["x-instanceid"],
       }
       return next()
     }

@@ -122,10 +122,10 @@ const BUILTIN_DEFINITIONS = {
 }
 
 async function queueRelevantRowAutomations(event, eventType) {
-  if (event.instanceId == null) {
-    throw `No instanceId specified for ${eventType} - check event emitters.`
+  if (event.appId == null) {
+    throw `No appId specified for ${eventType} - check event emitters.`
   }
-  const db = new CouchDB(event.instanceId)
+  const db = new CouchDB(event.appId)
   let automations = await db.allDocs(
     getAutomationParams(null, { include_docs: true })
   )
@@ -169,7 +169,7 @@ emitter.on("row:delete", async function(event) {
 async function fillRowOutput(automation, params) {
   let triggerSchema = automation.definition.trigger
   let tableId = triggerSchema.inputs.tableId
-  const db = new CouchDB(params.instanceId)
+  const db = new CouchDB(params.appId)
   try {
     let table = await db.get(tableId)
     let row = {}
