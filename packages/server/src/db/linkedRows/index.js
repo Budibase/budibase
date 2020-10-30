@@ -31,7 +31,7 @@ exports.createLinkView = createLinkView
  * Update link documents for a row or table - this is to be called by the API controller when a change is occurring.
  * @param {string} eventType states what type of change which is occurring, means this can be expanded upon in the
  * future quite easily (all updates go through one function).
- * @param {string} instanceId The ID of the instance in which the change is occurring.
+ * @param {string} appId The ID of the instance in which the change is occurring.
  * @param {string} tableId The ID of the of the table which is being changed.
  * @param {object|null} row The row which is changing, e.g. created, updated or deleted.
  * @param {object|null} table If the table has already been retrieved this can be used to reduce database gets.
@@ -41,14 +41,14 @@ exports.createLinkView = createLinkView
  */
 exports.updateLinks = async function({
   eventType,
-  instanceId,
+  appId,
   row,
   tableId,
   table,
   oldTable,
 }) {
   const baseReturnObj = row == null ? table : row
-  if (instanceId == null) {
+  if (appId == null) {
     throw "Cannot operate without an instance ID."
   }
   // make sure table ID is set
@@ -86,13 +86,13 @@ exports.updateLinks = async function({
 
 /**
  * Update a row with information about the links that pertain to it.
- * @param {string} instanceId The instance in which this row has been created.
+ * @param {string} appId The instance in which this row has been created.
  * @param {object} rows The row(s) themselves which is to be updated with info (if applicable). This can be
  * a single row object or an array of rows - both will be handled.
  * @returns {Promise<object>} The updated row (this may be the same if no links were found). If an array was input
  * then an array will be output, object input -> object output.
  */
-exports.attachLinkInfo = async (instanceId, rows) => {
+exports.attachLinkInfo = async (appId, rows) => {
   // handle a single row as well as multiple
   let wasArray = true
   if (!(rows instanceof Array)) {
@@ -105,7 +105,7 @@ exports.attachLinkInfo = async (instanceId, rows) => {
     await Promise.all(
       tableIds.map(tableId =>
         getLinkDocuments({
-          instanceId,
+          appId,
           tableId: tableId,
           includeDocs: IncludeDocs.EXCLUDE,
         })

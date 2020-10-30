@@ -4,7 +4,7 @@ const updateRow = require("./steps/updateRow")
 const deleteRow = require("./steps/deleteRow")
 const createUser = require("./steps/createUser")
 const outgoingWebhook = require("./steps/outgoingWebhook")
-const environment = require("../environment")
+const env = require("../environment")
 const download = require("download")
 const fetch = require("node-fetch")
 const { join } = require("../utilities/centralPath")
@@ -33,8 +33,8 @@ const BUILTIN_DEFINITIONS = {
   OUTGOING_WEBHOOK: outgoingWebhook.definition,
 }
 
-let AUTOMATION_BUCKET = environment.AUTOMATION_BUCKET
-let AUTOMATION_DIRECTORY = environment.AUTOMATION_DIRECTORY
+let AUTOMATION_BUCKET = env.AUTOMATION_BUCKET
+let AUTOMATION_DIRECTORY = env.AUTOMATION_DIRECTORY
 let MANIFEST = null
 
 function buildBundleName(pkgName, version) {

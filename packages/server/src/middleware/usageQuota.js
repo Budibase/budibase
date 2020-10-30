@@ -1,6 +1,6 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
-const environment = require("../environment")
+const env = require("../environment")
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -27,7 +27,7 @@ function getProperty(url) {
 }
 
 module.exports = async (ctx, next) => {
-  const db = new CouchDB(ctx.user.instanceId)
+  const db = new CouchDB(ctx.user.appId)
   let usage = METHOD_MAP[ctx.req.method]
   const property = getProperty(ctx.req.url)
   if (usage == null || property == null) {
@@ -51,7 +51,7 @@ module.exports = async (ctx, next) => {
         : [ctx.request.files.file]
     usage = files.map(file => file.size).reduce((total, size) => total + size)
   }
-  if (!environment.CLOUD) {
+  if (!env.CLOUD) {
     return next()
   }
   try {

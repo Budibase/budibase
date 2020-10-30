@@ -1,10 +1,9 @@
 <script>
-  import { Heading, Body, Button, Select, Label } from "@budibase/bbui"
+  import { Select, Label } from "@budibase/bbui"
   import { notifier } from "builderStore/store/notifications"
   import { FIELDS } from "constants/backend"
   import api from "builderStore/api"
 
-  const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 1
 

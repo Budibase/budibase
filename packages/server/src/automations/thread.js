@@ -32,9 +32,9 @@ function recurseMustache(inputs, context) {
  */
 class Orchestrator {
   constructor(automation, triggerOutput) {
-    this._instanceId = triggerOutput.instanceId
+    this._appId = triggerOutput.appId
     // remove from context
-    delete triggerOutput.instanceId
+    delete triggerOutput.appId
     // step zero is never used as the mustache is zero indexed for customer facing
     this._context = { steps: [{}], trigger: triggerOutput }
     this._automation = automation
@@ -62,11 +62,11 @@ class Orchestrator {
         step.inputs,
         step.schema.inputs
       )
-      // instanceId is always passed
+      // appId is always passed
       try {
         const outputs = await stepFn({
           inputs: step.inputs,
-          instanceId: this._instanceId,
+          appId: this._appId,
           apiKey: automation.apiKey,
         })
         if (step.stepId === FILTER_STEP_ID && !outputs.success) {

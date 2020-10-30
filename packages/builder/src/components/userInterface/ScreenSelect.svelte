@@ -68,7 +68,13 @@
 </script>
 
 <div>
-  <DataList editable secondary thin on:blur={handleBlur} on:change bind:value>
+  <DataList
+    editable
+    secondary
+    extraThin
+    on:blur={handleBlur}
+    on:change
+    bind:value>
     <option value="" />
     {#each urls as url}
       <option value={url.url}>{url.name}</option>

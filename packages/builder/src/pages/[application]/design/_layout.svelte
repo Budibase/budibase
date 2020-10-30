@@ -1,26 +1,21 @@
 <script>
   import { store, backendUiStore } from "builderStore"
-  import { goto } from "@sveltech/routify"
   import { onMount } from "svelte"
-  import ComponentsHierarchyChildren from "components/userInterface/ComponentsHierarchyChildren.svelte"
   import CurrentItemPreview from "components/userInterface/AppPreview"
   import ComponentPropertiesPanel from "components/userInterface/ComponentPropertiesPanel.svelte"
   import ComponentSelectionList from "components/userInterface/ComponentSelectionList.svelte"
-  import Switcher from "components/common/Switcher.svelte"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { last } from "lodash/fp"
-  import { AddIcon } from "components/common/Icons"
   import FrontendNavigatePane from "components/userInterface/FrontendNavigatePane.svelte"
 
-  $: instances = $store.appInstances
+  $: instance = $store.appInstance
 
   async function selectDatabase(database) {
     backendUiStore.actions.database.select(database)
   }
 
   onMount(async () => {
-    if ($store.appInstances.length > 0 && !$backendUiStore.database) {
-      await selectDatabase($store.appInstances[0])
+    if ($store.appInstance && !$backendUiStore.database) {
+      await selectDatabase($store.appInstance)
     }
   })
 
@@ -32,30 +27,21 @@
     settingsView.show()
   }
 
-  let leftNavSwitcher
-
   const lastPartOfName = c => (c ? last(c.split("/")) : "")
 </script>
 
 <!-- routify:options index=1 -->
 <div class="root">
-
   <div class="ui-nav">
-
-    <Switcher bind:this={leftNavSwitcher} tabs={['Navigate', 'Add']}>
-      <div slot="0">
-        <FrontendNavigatePane />
-      </div>
-      <div slot="1">
-        <ComponentSelectionList toggleTab={leftNavSwitcher.selectTab} />
-      </div>
-    </Switcher>
-
+    <FrontendNavigatePane />
   </div>
 
   <div class="preview-pane">
     {#if $store.currentPageName && $store.currentPageName.length > 0}
-      <CurrentItemPreview />
+      <ComponentSelectionList />
+      <div class="preview-content">
+        <CurrentItemPreview />
+      </div>
     {/if}
   </div>
 
@@ -64,7 +50,6 @@
       <ComponentPropertiesPanel />
     </div>
   {/if}
-
 </div>
 
 <slot />
@@ -72,35 +57,48 @@
 <style>
   .root {
     display: grid;
-    grid-template-columns: 300px 1fr 300px;
-    width: 100%;
-    background: var(--grey-1);
-    flex: 1;
-    min-height: 0;
+    grid-template-columns: 260px 1fr 260px;
+    background: var(--grey-2);
     align-items: stretch;
+    height: calc(100vh - 60px);
   }
 
   .ui-nav {
     grid-column: 1;
     background-color: var(--white);
-    height: calc(100vh - 69px);
-    padding: 0;
     display: flex;
     flex-direction: column;
+    gap: var(--spacing-l);
+    padding: var(--spacing-l) var(--spacing-xl);
+    overflow-y: auto;
   }
 
   .preview-pane {
     grid-column: 2;
-    margin: 40px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-l);
+    padding: var(--spacing-l) 40px var(--spacing-xl) 40px;
+  }
+  .preview-content {
     background: #fff;
-    border-radius: 5px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+    flex: 1 1 auto;
   }
 
   .components-pane {
     grid-column: 3;
     background-color: var(--white);
-    min-height: 0px;
-    height: calc(100vh - 69px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-l);
+    padding: var(--spacing-l) var(--spacing-xl);
   }
 
   .nav-group-header > div:nth-child(1) {

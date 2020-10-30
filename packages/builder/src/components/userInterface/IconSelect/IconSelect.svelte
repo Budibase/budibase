@@ -110,7 +110,7 @@
 </script>
 
 <div bind:this={buttonAnchor}>
-  <Button secondary on:click={dropdown.show}>{displayValue}</Button>
+  <Button secondary small on:click={dropdown.show}>{displayValue}</Button>
 </div>
 <DropdownMenu
   bind:this={dropdown}

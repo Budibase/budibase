@@ -1,8 +1,6 @@
 const { 
-  createInstance, 
-  createTable, 
-  supertest, 
-  createClientDatabase, 
+  createTable,
+  supertest,
   createApplication,
   defaultHeaders,
   builderEndpointShouldBlockNormalUsers,
@@ -13,23 +11,22 @@ describe("/tables", () => {
   let request
   let server
   let app
-  let instance
+  let appId
 
   beforeAll(async () => {
     ({ request, server } = await supertest())
-    await createClientDatabase(request)
-    app = await createApplication(request)
   });
 
-  afterAll(async () => {
-    server.close();
+  afterAll(() => {
+    server.close()
   })
 
-  describe("create", () => {
-    beforeEach(async () => {
-      instance = await createInstance(request, app._id);
-    });
+  beforeEach(async () => {
+    app = await createApplication(request)
+    appId = app.instance._id
+  });
 
+  describe("create", () => {
     it("returns a success message when the table is successfully created", done => {
       request
         .post(`/api/tables`)
@@ -40,7 +37,7 @@ describe("/tables", () => {
             name: { type: "string" }
           }
         })
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (err, res) => {
@@ -51,14 +48,14 @@ describe("/tables", () => {
       })
 
     it("renames all the row fields for a table when a schema key is renamed", async () => {
-      const testTable = await createTable(request, app._id, instance._id);
+      const testTable = await createTable(request, appId);
 
       const testRow = await request
         .post(`/api/${testTable._id}/rows`)
         .send({
           name: "test"
         })
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -77,7 +74,7 @@ describe("/tables", () => {
             updatedName: { type: "string" }
           }
         })
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
 
@@ -86,7 +83,7 @@ describe("/tables", () => {
 
         const res = await request
           .get(`/api/${testTable._id}/rows/${testRow.body._id}`)
-          .set(defaultHeaders(app._id, instance._id))
+          .set(defaultHeaders(appId))
           .expect('Content-Type', /json/)
           .expect(200)
 
@@ -99,8 +96,7 @@ describe("/tables", () => {
           request,
           method: "POST",
           url: `/api/tables`,
-          instanceId: instance._id,
-          appId: app._id,
+          appId: appId,
           body: { 
             name: "TestTable",
             key: "name",
@@ -116,8 +112,7 @@ describe("/tables", () => {
     let testTable
 
     beforeEach(async () => {
-      instance = await createInstance(request, app._id)
-      testTable = await createTable(request, app._id, instance._id, testTable)
+      testTable = await createTable(request, appId, testTable)
     });
 
     afterEach(() => {
@@ -127,7 +122,7 @@ describe("/tables", () => {
     it("returns all the tables for that instance in the response body", done => {
       request
         .get(`/api/tables`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
@@ -143,8 +138,7 @@ describe("/tables", () => {
           request,
           method: "GET",
           url: `/api/tables`,
-          instanceId: instance._id,
-          appId: app._id,
+          appId: appId,
         })
       })
     });
@@ -153,8 +147,7 @@ describe("/tables", () => {
     let testTable;
 
     beforeEach(async () => {
-      instance = await createInstance(request, app._id)
-      testTable = await createTable(request, app._id, instance._id, testTable)
+      testTable = await createTable(request, appId, testTable)
     });
 
     afterEach(() => {
@@ -164,7 +157,7 @@ describe("/tables", () => {
     it("returns a success response when a table is deleted.", async done => {
       request
         .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
@@ -174,7 +167,7 @@ describe("/tables", () => {
       })
 
     it("deletes linked references to the table after deletion", async done => {
-      const linkedTable = await createTable(request, app._id, instance._id, {
+      const linkedTable = await createTable(request, appId, {
         name: "LinkedTable",
         type: "table",
         key: "name",
@@ -197,12 +190,12 @@ describe("/tables", () => {
 
       request
         .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
         .end(async (_, res) => {
           expect(res.res.statusMessage).toEqual(`Table ${testTable._id} deleted.`);
-          const dependentTable = await getDocument(instance._id, linkedTable._id)
+          const dependentTable = await getDocument(appId, linkedTable._id)
           expect(dependentTable.schema.TestTable).not.toBeDefined();
           done();
         });
@@ -213,8 +206,7 @@ describe("/tables", () => {
         request,
         method: "DELETE",
         url: `/api/tables/${testTable._id}/${testTable._rev}`,
-        instanceId: instance._id,
-        appId: app._id,
+        appId: appId,
       })
     })
 

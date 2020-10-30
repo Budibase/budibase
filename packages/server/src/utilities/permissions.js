@@ -4,15 +4,15 @@ const automationController = require("../api/controllers/automation")
 const accessLevels = require("./accessLevels")
 
 // this has been broken out to reduce risk of circular dependency from utilities, no enums defined here
-const generateAdminPermissions = async instanceId => [
+const generateAdminPermissions = async appId => [
   ...accessLevels.adminPermissions,
-  ...(await generatePowerUserPermissions(instanceId)),
+  ...(await generatePowerUserPermissions(appId)),
 ]
 
-const generatePowerUserPermissions = async instanceId => {
+const generatePowerUserPermissions = async appId => {
   const fetchTablesCtx = {
     user: {
-      instanceId,
+      appId,
     },
   }
   await tableController.fetch(fetchTablesCtx)
@@ -20,7 +20,7 @@ const generatePowerUserPermissions = async instanceId => {
 
   const fetchViewsCtx = {
     user: {
-      instanceId,
+      appId,
     },
   }
   await viewController.fetch(fetchViewsCtx)
@@ -28,7 +28,7 @@ const generatePowerUserPermissions = async instanceId => {
 
   const fetchAutomationsCtx = {
     user: {
-      instanceId,
+      appId,
     },
   }
   await automationController.fetch(fetchAutomationsCtx)

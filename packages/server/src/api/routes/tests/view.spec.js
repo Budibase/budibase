@@ -1,7 +1,5 @@
-const { 
-  createClientDatabase,
+const {
   createApplication,
-  createInstance, 
   createTable,
   supertest,
   defaultHeaders,
@@ -12,7 +10,7 @@ describe("/views", () => {
   let request
   let server
   let app
-  let instance
+  let appId
   let table
 
   const createView = async (config = {
@@ -24,34 +22,33 @@ describe("/views", () => {
     await request
     .post(`/api/views`)
     .send(config)
-    .set(defaultHeaders(app._id, instance._id))
+    .set(defaultHeaders(appId))
     .expect('Content-Type', /json/)
     .expect(200)
 
   const createRow = async row => request
     .post(`/api/${table._id}/rows`)
     .send(row)
-    .set(defaultHeaders(app._id, instance._id))
+    .set(defaultHeaders(appId))
     .expect('Content-Type', /json/)
     .expect(200)
 
   beforeAll(async () => {
     ({ request, server } = await supertest())
-    await createClientDatabase(request)
-    app = await createApplication(request)
   })
 
   beforeEach(async () => {
-    instance = await createInstance(request, app._id)
+    app = await createApplication(request)
+    appId = app.instance._id
   })
 
-  afterAll(async () => {
+  afterAll(() => {
     server.close()
   })
 
   describe("create", () => {
     beforeEach(async () => {
-      table = await createTable(request, app._id, instance._id);
+      table = await createTable(request, appId);
     })
 
     it("returns a success message when the view is successfully created", async () => {
@@ -62,7 +59,7 @@ describe("/views", () => {
     it("updates the table row with the new view metadata", async () => {
       const res = await createView()
       expect(res.res.statusMessage).toEqual("View TestView saved successfully.");
-      const updatedTable = await getDocument(instance._id, table._id)
+      const updatedTable = await getDocument(appId, table._id)
       expect(updatedTable.views).toEqual({
         TestView: {
           field: "Price",
@@ -99,14 +96,14 @@ describe("/views", () => {
 
   describe("fetch", () => {
     beforeEach(async () => {
-      table = await createTable(request, app._id, instance._id);
+      table = await createTable(request, appId);
     });
 
     it("returns only custom views", async () => {
       await createView()
       const res = await request
         .get(`/api/views`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
       expect(res.body.length).toBe(1)
@@ -116,7 +113,7 @@ describe("/views", () => {
 
   describe("query", () => {
     beforeEach(async () => {
-      table = await createTable(request, app._id, instance._id);
+      table = await createTable(request, appId);
     });
 
     it("returns data for the created view", async () => {
@@ -135,7 +132,7 @@ describe("/views", () => {
       })
       const res = await request
         .get(`/api/views/TestView?calculation=stats`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
       expect(res.body.length).toBe(1)
@@ -167,7 +164,7 @@ describe("/views", () => {
       })
       const res = await request
         .get(`/api/views/TestView?calculation=stats&group=Category`)
-        .set(defaultHeaders(app._id, instance._id))
+        .set(defaultHeaders(appId))
         .expect('Content-Type', /json/)
         .expect(200)
       
