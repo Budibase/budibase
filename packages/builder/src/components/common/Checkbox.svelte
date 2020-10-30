@@ -73,7 +73,7 @@
   .tick_mark:after {
     content: "";
     position: absolute;
-    background-color: #000;
+    background-color: var(--ink);
     border-radius: 2px;
     opacity: 0;
     transition: 0.2s ease transform, 0.2s ease opacity;
