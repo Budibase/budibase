@@ -47,5 +47,11 @@
     background-color: var(--grey-2);
     border-top-right-radius: var(--border-radius-m);
     border-bottom-right-radius: var(--border-radius-m);
+    color: var(--grey-7);
+    font-size: 16px;
+  }
+  .icon:hover {
+    color: var(--ink);
+    cursor: pointer;
   }
 </style>
