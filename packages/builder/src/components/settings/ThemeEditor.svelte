@@ -1,6 +1,6 @@
 <script>
   import { themeStore } from "builderStore"
-  import { Label, DropdownMenu, Toggle, Button } from "@budibase/bbui"
+  import { Label, DropdownMenu, Toggle, Button, Slider } from "@budibase/bbui"
 
   let anchor
   let popover
@@ -23,26 +23,24 @@
         </div>
       {/if}
       {#if $themeStore.darkMode && showAdvanced}
-        <div>
-          <Label extraSmall grey>Hue</Label>
-          <input type="range" bind:value={$themeStore.hue} min="0" max="360" />
-        </div>
-        <div>
-          <Label extraSmall grey>Saturation</Label>
-          <input
-            type="range"
-            bind:value={$themeStore.saturation}
-            min="0"
-            max="100" />
-        </div>
-        <div>
-          <Label extraSmall grey>Lightness</Label>
-          <input
-            type="range"
-            bind:value={$themeStore.lightness}
-            min="0"
-            max="32" />
-        </div>
+        <Slider
+          label="Hue"
+          bind:value={$themeStore.hue}
+          min="0"
+          max="360"
+          showValue />
+        <Slider
+          label="Saturation"
+          bind:value={$themeStore.saturation}
+          min="0"
+          max="100"
+          showValue />
+        <Slider
+          label="Lightness"
+          bind:value={$themeStore.lightness}
+          min="0"
+          max="32"
+          showValue />
         <div class="button">
           <Button text on:click={themeStore.reset}>Reset</Button>
         </div>
@@ -93,49 +91,5 @@
 
   .button {
     align-self: flex-start;
-  }
-
-  input[type="range"] {
-    width: 100%;
-    margin: 0;
-    background-color: transparent;
-    -webkit-appearance: none;
-  }
-  input[type="range"]:focus {
-    outline: none;
-  }
-  input[type="range"]::-webkit-slider-runnable-track {
-    background: var(--grey-4);
-    border-radius: 9px;
-    width: 100%;
-    height: 18px;
-    cursor: pointer;
-    padding: 0 2px;
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    width: 14px;
-    height: 14px;
-    background: white;
-    border-radius: 100%;
-    cursor: pointer;
-    -webkit-appearance: none;
-    border: none;
-    margin-top: 2px;
-  }
-  input[type="range"]::-moz-range-track {
-    background: var(--grey-4);
-    border-radius: 9px;
-    width: 100%;
-    height: 18px;
-    cursor: pointer;
-    padding: 0 2px;
-  }
-  input[type="range"]::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
-    background: white;
-    border-radius: 100%;
-    cursor: pointer;
-    border: none;
   }
 </style>
