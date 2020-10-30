@@ -1,23 +1,24 @@
-:root {
+html {
     /* Light theme */
     --background: #FFFFFF;
     --ink: #393C44;
-
+}
+html.dark {
     /* Dark theme */
-    --hue: 208;
-    --saturation: 9%;
-    --base-brightness: 16%;
-    --ink: hsl(var(--hue), var(--saturation), 90%);
-    --background: hsl(var(--hue), var(--saturation), var(--base-brightness));
-    --grey-1: hsl(var(--hue), var(--saturation), calc(var(--base-brightness) + 2%));
-    --grey-2: hsl(var(--hue), calc(var(--saturation) + 1%), calc(var(--base-brightness) + 4%));
-    --grey-3: hsl(var(--hue), var(--saturation),calc(var(--base-brightness) + 7%));
-    --grey-4: hsl(var(--hue), var(--saturation), calc(var(--base-brightness) + 10%));
-    --grey-5: hsl(var(--hue), var(--saturation), calc(var(--base-brightness) + 25%));
-    --grey-6: hsl(var(--hue), var(--saturation), calc(var(--base-brightness) + 30%));
-    --grey-7: hsl(var(--hue), var(--saturation), calc(var(--base-brightness) + 55%));
-    --grey-8: hsl(var(--hue), var(--saturation), calc(var(--base-brightness) + 60%));
-    --grey-9: hsl(var(--hue), var(--saturation), calc(var(--base-brightness) + 70%));
+    --theme-hue: 208;
+    --theme-saturation: 9%;
+    --theme-brightness: 16%;
+    --ink: hsl(var(--theme-hue), var(--theme-saturation), 90%);
+    --background: hsl(var(--theme-hue), var(--theme-saturation), var(--theme-brightness));
+    --grey-1: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-brightness) + 2%));
+    --grey-2: hsl(var(--theme-hue), calc(var(--theme-saturation) + 1%), calc(var(--theme-brightness) + 4%));
+    --grey-3: hsl(var(--theme-hue), var(--theme-saturation),calc(var(--theme-brightness) + 7%));
+    --grey-4: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-brightness) + 10%));
+    --grey-5: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-brightness) + 25%));
+    --grey-6: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-brightness) + 30%));
+    --grey-7: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-brightness) + 55%));
+    --grey-8: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-brightness) + 60%));
+    --grey-9: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-brightness) + 70%));
 }
 
 html, body {
