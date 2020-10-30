@@ -3,10 +3,10 @@
   import { store } from "builderStore"
   import { getComponentDefinition } from "builderStore/storeUtils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { last, cloneDeep } from "lodash/fp"
+  import { last } from "lodash/fp"
   import { getParent, saveCurrentPreviewItem } from "builderStore/storeUtils"
-  import { uuid } from "builderStore/uuid"
   import { DropdownMenu } from "@budibase/bbui"
+  import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
   export let component
 
@@ -98,110 +98,65 @@
   }
 </script>
 
-<div bind:this={anchor} on:click|stopPropagation={() => {}}>
+<div bind:this={anchor} on:click|stopPropagation>
   <div class="icon" on:click={dropdown.show}><i class="ri-more-line" /></div>
+  <DropdownMenu bind:this={dropdown} width="170px" {anchor} align="left">
+    <DropdownContainer on:click={hideDropdown}>
+      <DropdownItem
+        icon="ri-delete-bin-line"
+        title="Delete"
+        on:click={() => confirmDeleteDialog.show()} />
+      <DropdownItem
+        icon="ri-arrow-up-line"
+        title="Move up"
+        on:click={moveUpComponent} />
+      <DropdownItem
+        icon="ri-arrow-down-line"
+        title="Move down"
+        on:click={moveDownComponent} />
+      <DropdownItem
+        icon="ri-repeat-one-line"
+        title="Duplicate"
+        on:click={copyComponent} />
+      <DropdownItem
+        icon="ri-scissors-cut-line"
+        title="Cut"
+        on:click={() => storeComponentForCopy(true)} />
+      <DropdownItem
+        icon="ri-file-copy-line"
+        title="Copy"
+        on:click={() => storeComponentForCopy(false)} />
+      <hr class="hr-style" />
+      <DropdownItem
+        icon="ri-insert-row-top"
+        title="Paste above"
+        disabled={noPaste}
+        on:click={() => pasteComponent('above')} />
+      <DropdownItem
+        icon="ri-insert-row-bottom"
+        title="Paste below"
+        disabled={noPaste}
+        on:click={() => pasteComponent('below')} />
+      <DropdownItem
+        icon="ri-insert-column-right"
+        title="Paste inside"
+        disabled={noPaste || noChildrenAllowed}
+        on:click={() => pasteComponent('inside')} />
+    </DropdownContainer>
+  </DropdownMenu>
 </div>
-<DropdownMenu
-  bind:this={dropdown}
-  on:click={hideDropdown}
-  width="170px"
-  {anchor}
-  align="left">
-  <ul>
-    <li class="item" on:click={() => confirmDeleteDialog.show()}>
-      <i class="ri-delete-bin-2-line" />
-      Delete
-    </li>
-    <li class="item" on:click={moveUpComponent}>
-      <i class="ri-arrow-up-line" />
-      Move up
-    </li>
-    <li class="item" on:click={moveDownComponent}>
-      <i class="ri-arrow-down-line" />
-      Move down
-    </li>
-    <li class="item" on:click={copyComponent}>
-      <i class="ri-repeat-one-line" />
-      Duplicate
-    </li>
-    <li class="item" on:click={() => storeComponentForCopy(true)}>
-      <i class="ri-scissors-cut-line" />
-      Cut
-    </li>
-    <li class="item" on:click={() => storeComponentForCopy(false)}>
-      <i class="ri-file-copy-line" />
-      Copy
-    </li>
-    <hr class="hr-style" />
-    <li
-      class="item"
-      class:disabled={noPaste}
-      on:click={() => pasteComponent('above')}>
-      <i class="ri-insert-row-top" />
-      Paste above
-    </li>
-    <li
-      class="item"
-      class:disabled={noPaste}
-      on:click={() => pasteComponent('below')}>
-      <i class="ri-insert-row-bottom" />
-      Paste below
-    </li>
-    <li
-      class="item"
-      class:disabled={noPaste || noChildrenAllowed}
-      on:click={() => pasteComponent('inside')}>
-      <i class="ri-insert-column-right" />
-      Paste inside
-    </li>
-  </ul>
-</DropdownMenu>
-
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  title="Confirm Delete"
+  title="Confirm Deletion"
   body={`Are you sure you wish to delete this '${lastPartOfName(component)}' component?`}
   okText="Delete Component"
   onOk={deleteComponent} />
 
 <style>
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: var(--spacing-s) 0;
-  }
-
-  li {
-    display: flex;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
-    color: var(--ink);
-    padding: var(--spacing-s) var(--spacing-m);
-    margin: auto 0;
-    align-items: center;
-    cursor: pointer;
-  }
-  li:not(.disabled):hover {
-    background-color: var(--grey-2);
-  }
-  li:active {
-    color: var(--blue);
-  }
-  li i {
-    margin-right: 8px;
-    font-size: var(--font-size-s);
-  }
-  li.disabled {
-    color: var(--grey-4);
-    cursor: default;
-  }
-
-  .icon i {
-    font-size: 16px;
-  }
-
-  .hr-style {
+  hr {
     margin: 8px 0;
-    color: var(--grey-4);
+    background-color: var(--grey-4);
+    height: 1px;
+    border: none;
   }
 </style>

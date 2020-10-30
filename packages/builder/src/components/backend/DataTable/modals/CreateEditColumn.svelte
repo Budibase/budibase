@@ -170,7 +170,7 @@
   okText="Delete Column"
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
-  title="Confirm Delete" />
+  title="Confirm Deletion" />
 
 <style>
   .actions {

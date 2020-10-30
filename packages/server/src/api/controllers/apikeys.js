@@ -2,21 +2,23 @@ const fs = require("fs")
 const { join } = require("../../utilities/centralPath")
 const readline = require("readline")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
+const env = require("../../environment")
 const ENV_FILE_PATH = "/.env"
 
 exports.fetch = async function(ctx) {
   ctx.status = 200
   ctx.body = {
-    budibase: process.env.BUDIBASE_API_KEY,
-    userId: process.env.USERID_API_KEY,
+    budibase: env.BUDIBASE_API_KEY,
+    userId: env.USERID_API_KEY,
   }
 }
 
 exports.update = async function(ctx) {
   const key = `${ctx.params.key.toUpperCase()}_API_KEY`
   const value = ctx.request.body.value
-  // Set process.env
-  process.env[key] = value
+
+  // set environment variables
+  env._set(key, value)
 
   // Write to file
   await updateValues([key, value])
