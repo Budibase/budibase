@@ -70,7 +70,6 @@ exports.create = async function(ctx) {
   const newApplication = {
     _id: appId,
     type: "app",
-    userInstanceMap: {},
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
     name: ctx.request.body.name,
