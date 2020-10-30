@@ -1,28 +1,10 @@
 <script>
+  import { themeStore } from "builderStore"
   import { Label, DropdownMenu, Toggle, Button } from "@budibase/bbui"
 
   let anchor
   let popover
-  let dark = false
-  let hue = 208
-  let saturation = 9
-  let lightness = 16
   let showAdvanced = false
-
-  function setCSSVariable(prop, value) {
-    document.documentElement.style.setProperty(prop, value)
-  }
-
-  function reset() {
-    hue = 208
-    saturation = 9
-    lightness = 16
-  }
-
-  $: document.documentElement.classList[dark ? "add" : "remove"]("dark")
-  $: setCSSVariable("--theme-hue", Math.round(hue))
-  $: setCSSVariable("--theme-saturation", `${Math.round(saturation)}%`)
-  $: setCSSVariable("--theme-brightness", `${Math.round(lightness)}%`)
 </script>
 
 <div class="topnavitemright" on:click={popover.show} bind:this={anchor}>
@@ -33,28 +15,36 @@
     <div class="content">
       <div>
         <Label extraSmall grey>Theme</Label>
-        <Toggle thin text="Dark theme" bind:checked={dark} />
+        <Toggle thin text="Dark theme" bind:checked={$themeStore.darkMode} />
       </div>
-      {#if dark && !showAdvanced}
+      {#if $themeStore.darkMode && !showAdvanced}
         <div class="button">
           <Button text on:click={() => (showAdvanced = true)}>Customise</Button>
         </div>
       {/if}
-      {#if dark && showAdvanced}
+      {#if $themeStore.darkMode && showAdvanced}
         <div>
           <Label extraSmall grey>Hue</Label>
-          <input type="range" bind:value={hue} min="0" max="360" />
+          <input type="range" bind:value={$themeStore.hue} min="0" max="360" />
         </div>
         <div>
           <Label extraSmall grey>Saturation</Label>
-          <input type="range" bind:value={saturation} min="0" max="100" />
+          <input
+            type="range"
+            bind:value={$themeStore.saturation}
+            min="0"
+            max="100" />
         </div>
         <div>
           <Label extraSmall grey>Lightness</Label>
-          <input type="range" bind:value={lightness} min="0" max="32" />
+          <input
+            type="range"
+            bind:value={$themeStore.lightness}
+            min="0"
+            max="32" />
         </div>
         <div class="button">
-          <Button text on:click={reset}>Reset</Button>
+          <Button text on:click={themeStore.reset}>Reset</Button>
         </div>
       {/if}
     </div>
@@ -103,5 +93,49 @@
 
   .button {
     align-self: flex-start;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    margin: 0;
+    background-color: transparent;
+    -webkit-appearance: none;
+  }
+  input[type="range"]:focus {
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    background: var(--grey-4);
+    border-radius: 9px;
+    width: 100%;
+    height: 18px;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    background: white;
+    border-radius: 100%;
+    cursor: pointer;
+    -webkit-appearance: none;
+    border: none;
+    margin-top: 2px;
+  }
+  input[type="range"]::-moz-range-track {
+    background: var(--grey-4);
+    border-radius: 9px;
+    width: 100%;
+    height: 18px;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: white;
+    border-radius: 100%;
+    cursor: pointer;
+    border: none;
   }
 </style>
