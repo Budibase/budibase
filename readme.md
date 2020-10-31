@@ -1,5 +1,5 @@
 # Budibase
-[Budibase](https://www.budibase.com) is am open source no-code platform for building and deploying custom software.
+[Budibase](https://www.budibase.com) is am open source no-code platform for building and deploying custom software, without coding.
 
 <p align="center">
   <img src="https://i.imgur.com/tMCahK8.png">
