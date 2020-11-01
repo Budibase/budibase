@@ -1,5 +1,5 @@
 # Budibase
-[Budibase](https://www.budibase.com) is am open source no-code platform for building and deploying custom software, without coding.
+[Budibase](https://www.budibase.com) is an open source no-code platform for building and deploying custom software, without coding.
 
 <p align="center">
   <img src="https://i.imgur.com/tMCahK8.png">
@@ -14,7 +14,7 @@
 
 We are currently in Public Beta. Until our official launch, we cannot ensure backwards compatibility for your budibase applications between versions. Issues may arise when trying to edit apps created with old versions of the budibase builder.
 
-Watch "releases" of this repo to get notified of major updates, amd give the star button a click whilst you're there. 
+Watch "releases" of this repo to get notified of major updates, and give the star button a click whilst you're there. 
 
 <p align="center">
   <img src="https://i.imgur.com/cJpgqm8.png">
