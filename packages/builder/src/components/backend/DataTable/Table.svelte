@@ -47,14 +47,16 @@
     if (allowEditing) {
       result = [
         {
-          pinned: "left",
+          checkboxSelection: true,
+          lockPosition: true,
           headerName: "Edit",
+          pinned: "left",
           sortable: false,
           resizable: false,
           suppressMovable: true,
           suppressMenu: true,
-          minWidth: 84,
-          width: 84,
+          minWidth: 114,
+          width: 114,
           cellRenderer: editRowRenderer,
         },
       ]
@@ -63,7 +65,6 @@
     Object.keys(schema || {}).forEach((key, idx) => {
       result.push({
         headerCheckboxSelection: false,
-        checkboxSelection: idx === 0 && allowEditing,
         headerComponent: TableHeader,
         headerComponentParams: {
           field: schema[key],
