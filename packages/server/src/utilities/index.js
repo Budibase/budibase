@@ -10,3 +10,7 @@ exports.isDev = () => {
     env.NODE_ENV !== "cypress"
   )
 }
+
+exports.getAppId = ctx => {
+
+}

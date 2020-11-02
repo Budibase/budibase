@@ -61,7 +61,7 @@ exports.fetchAppPackage = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
   ctx.body = await getPackageForBuilder(ctx.config, application)
-  setBuilderToken(ctx, ctx.params.appId, application.version)
+  await setBuilderToken(ctx, ctx.params.appId, application.version)
 }
 
 exports.create = async function(ctx) {
