@@ -1,5 +1,5 @@
 const CouchDB = require("../../db")
-const { getPackageForBuilder, buildPage } = require("../../utilities/builder")
+const { buildPage } = require("../../utilities/builder")
 const env = require("../../environment")
 const { copy, existsSync, readFile, writeFile } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
@@ -12,10 +12,17 @@ const chmodr = require("chmodr")
 const packageJson = require("../../../package.json")
 const { createLinkView } = require("../../db/linkedRows")
 const { downloadTemplate } = require("../../utilities/templates")
-const { generateAppID, DocumentTypes, SEPARATOR } = require("../../db/utils")
+const {
+  generateAppID,
+  DocumentTypes,
+  SEPARATOR,
+  getPageParams,
+  generatePageID,
+} = require("../../db/utils")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
+
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 async function createInstance(template) {
@@ -60,7 +67,19 @@ exports.fetch = async function(ctx) {
 exports.fetchAppPackage = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
-  ctx.body = await getPackageForBuilder(ctx.config, application)
+  // ctx.body = await getPackageForBuilder(application)
+
+  const pages = await db.allDocs(
+    getPageParams(null, {
+      include_docs: true,
+    })
+  )
+
+  ctx.body = {
+    application,
+    pages,
+  }
+
   setBuilderToken(ctx, ctx.params.appId, application.version)
 }
 
@@ -132,6 +151,8 @@ const createEmptyAppPackage = async (ctx, app) => {
   const appsFolder = budibaseAppsDir()
   const newAppFolder = resolve(appsFolder, app._id)
 
+  const db = new CouchDB(app._id)
+
   if (existsSync(newAppFolder)) {
     ctx.throw(400, "App folder already exists for this application")
   }
@@ -164,6 +185,8 @@ const createEmptyAppPackage = async (ctx, app) => {
       app.template.key,
       "pages"
     )
+    // TODO: write the template page JSON to couch
+    // iterate over the pages and write them to the db
     await copy(templatePageDefinitions, join(appsFolder, app._id, "pages"))
   }
 
@@ -172,7 +195,10 @@ const createEmptyAppPackage = async (ctx, app) => {
     app
   )
 
-  await buildPage(ctx.config, app._id, "main", {
+  mainJson._id = generatePageID()
+  await db.put(mainJson)
+
+  await buildPage(app._id, "main", {
     page: mainJson,
     screens: await loadScreens(newAppFolder, "main"),
   })
@@ -182,7 +208,11 @@ const createEmptyAppPackage = async (ctx, app) => {
     app
   )
 
-  await buildPage(ctx.config, app._id, "unauthenticated", {
+  // Write to couch
+  unauthenticatedJson._id = generatePageID()
+  await db.put(unauthenticatedJson)
+
+  await buildPage(app._id, "unauthenticated", {
     page: unauthenticatedJson,
     screens: await loadScreens(newAppFolder, "unauthenticated"),
   })

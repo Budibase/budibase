@@ -8,44 +8,43 @@ const {
   unlink,
   rmdir,
 } = require("fs-extra")
-const { join, resolve } = require("../centralPath")
+const { join } = require("../centralPath")
 const { dirname } = require("path")
 
 const buildPage = require("./buildPage")
-const getPages = require("./getPages")
+// const getPages = require("./getPages")
 const listScreens = require("./listScreens")
-const deleteCodeMeta = require("./deleteCodeMeta")
+const { budibaseAppsDir } = require("../budibaseDir")
+// const { budibaseAppsDir } = require("../budibaseDir")
 
 module.exports.buildPage = buildPage
 module.exports.listScreens = listScreens
 
-const getAppDefinition = async appPath =>
-  await readJSON(`${appPath}/appDefinition.json`)
+// const getAppDefinition = async appPath =>
+//   await readJSON(`${appPath}/appDefinition.json`)
 
-module.exports.getPackageForBuilder = async (config, application) => {
-  const appPath = resolve(config.latestPackagesFolder, application._id)
+// module.exports.getPackageForBuilder = async application => {
+//   const appPath = resolve(budibaseAppsDir(), application._id)
 
-  const pages = await getPages(appPath)
+//   const pages = await getPages(appPath)
 
-  return {
-    pages,
-    application,
-  }
-}
+//   return {
+//     pages,
+//     application,
+//   }
+// }
 
 const screenPath = (appPath, pageName, name) =>
   join(appPath, "pages", pageName, "screens", name + ".json")
 
-module.exports.saveScreen = async (config, appname, pagename, screen) => {
-  const appPath = appPackageFolder(config, appname)
+module.exports.saveScreen = async (appId, pagename, screen) => {
+  const appPath = join(budibaseAppsDir(), appId)
   const compPath = screenPath(appPath, pagename, screen.props._id)
 
   await ensureDir(dirname(compPath))
   if (screen._css) {
     delete screen._css
   }
-
-  deleteCodeMeta(screen.props)
 
   await writeJSON(compPath, screen, {
     encoding: "utf8",
@@ -57,12 +56,12 @@ module.exports.saveScreen = async (config, appname, pagename, screen) => {
 
 module.exports.renameScreen = async (
   config,
-  appname,
+  appId,
   pagename,
   oldName,
   newName
 ) => {
-  const appPath = appPackageFolder(config, appname)
+  const appPath = join(budibaseAppsDir(), appId)
 
   const oldComponentPath = screenPath(appPath, pagename, oldName)
 
@@ -73,7 +72,7 @@ module.exports.renameScreen = async (
 }
 
 module.exports.deleteScreen = async (config, appId, pagename, name) => {
-  const appPath = appPackageFolder(config, appId)
+  const appPath = join(budibaseAppsDir(), appId)
   const componentFile = screenPath(appPath, pagename, name)
   await unlink(componentFile)
 
@@ -83,16 +82,16 @@ module.exports.deleteScreen = async (config, appId, pagename, name) => {
   }
 }
 
-module.exports.savePage = async (config, appname, pagename, page) => {
-  const appPath = appPackageFolder(config, appname)
-  const pageDir = join(appPath, "pages", pagename)
+// module.exports.savePage = async (appId, pagename, page) => {
+//   const appPath = join(budibaseAppsDir(), appId)
+//   const pageDir = join(appPath, "pages", pagename)
 
-  await ensureDir(pageDir)
-  await writeJSON(join(pageDir, "page.json"), page, {
-    encoding: "utf8",
-    flag: "w",
-    space: 2,
-  })
-  const appDefinition = await getAppDefinition(appPath)
-  await buildPage(config, appname, appDefinition, pagename, page)
-}
+//   await ensureDir(pageDir)
+//   await writeJSON(join(pageDir, "page.json"), page, {
+//     encoding: "utf8",
+//     flag: "w",
+//     space: 2,
+//   })
+//   const appDefinition = await getAppDefinition(appPath)
+//   await buildPage(appId, appDefinition, pagename, page)
+// }

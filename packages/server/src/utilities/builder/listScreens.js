@@ -1,10 +1,10 @@
-const { appPackageFolder } = require("../createAppPackage")
 const { readJSON, readdir, stat } = require("fs-extra")
 const { join } = require("../centralPath")
 const { keyBy } = require("lodash/fp")
+const { budibaseAppsDir } = require("../budibaseDir")
 
-module.exports = async (config, appname, pagename) => {
-  const appPath = appPackageFolder(config, appname)
+module.exports = async (appId, pagename) => {
+  const appPath = join(budibaseAppsDir(), appId)
   return keyBy("name")(await fetchscreens(appPath, pagename))
 }
 
