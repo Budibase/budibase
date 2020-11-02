@@ -29,7 +29,7 @@
 
   .nav {
     overflow-y: auto;
-    background: var(--white);
+    background: var(--background);
     padding: var(--spacing-l) var(--spacing-xl);
     display: flex;
     flex-direction: column;

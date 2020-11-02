@@ -49,7 +49,7 @@
     border-radius: 50%;
     height: 24px;
     width: 24px;
-    background: white;
+    background: var(--background);
     right: var(--spacing-s);
     bottom: 9px;
     display: flex;

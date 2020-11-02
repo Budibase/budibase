@@ -58,7 +58,7 @@
 
   .ui-nav {
     grid-column: 1;
-    background-color: var(--white);
+    background-color: var(--background);
     padding: 20px;
     display: flex;
     flex-direction: column;
