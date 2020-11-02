@@ -5,7 +5,7 @@
   let blurred = { api: false }
 </script>
 
-<h2>Setup your API Key</h2>
+<h2>Set up your API Key</h2>
 <div class="container">
   <Input
     on:input={() => (blurred.api = true)}
@@ -21,5 +21,13 @@
   .container {
     display: grid;
     grid-gap: 40px;
+  }
+  a {
+    color: var(--grey-7);
+    font-weight: 500;
+    font-size: var(--font-size-s);
+  }
+  a:hover {
+    color: var(--ink);
   }
 </style>
