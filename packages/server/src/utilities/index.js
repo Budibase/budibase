@@ -37,6 +37,6 @@ exports.getAppId = ctx => {
  * @returns {string} The name of the token trying to find
  */
 exports.getCookieName = (appId = null) => {
-  let mid = env.CLOUD ? "cloud" : "local"
-  return `budibase:${mid}:${appId ? appId : "builder"}`
+  let environment = env.CLOUD ? "cloud" : "local"
+  return `budibase:${appId ? appId : "builder"}:${environment}`
 }

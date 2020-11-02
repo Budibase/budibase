@@ -34,7 +34,7 @@ exports.defaultHeaders = appId => {
 
   return {
     Accept: "application/json",
-    Cookie: [`builder:token=${builderToken}`],
+    Cookie: [`budibase:builder=${builderToken}:local`],
   }
 }
 
@@ -209,7 +209,7 @@ const createUserWithPermissions = async (
 
   const loginResult = await request
     .post(`/api/authenticate`)
-    .set({ Cookie: `budibase:${appId}=${anonToken}` })
+    .set({ Cookie: `budibase:${appId}:local=${anonToken}` })
     .send({ username, password })
 
   // returning necessary request headers
