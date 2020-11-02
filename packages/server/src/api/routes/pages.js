@@ -45,12 +45,7 @@ router.post(
   "/_builder/api/:appId/pages/:pageName",
   authorized(BUILDER),
   async ctx => {
-    await buildPage(
-      ctx.config,
-      ctx.params.appId,
-      ctx.params.pageName,
-      ctx.request.body
-    )
+    await buildPage(ctx.params.appId, ctx.params.pageName, ctx.request.body)
     ctx.response.status = StatusCodes.OK
   }
 )
@@ -59,11 +54,7 @@ router.get(
   "/_builder/api/:appId/pages/:pagename/screens",
   authorized(BUILDER),
   async ctx => {
-    ctx.body = await listScreens(
-      ctx.config,
-      ctx.params.appId,
-      ctx.params.pagename
-    )
+    ctx.body = await listScreens(ctx.params.appId, ctx.params.pagename)
     ctx.response.status = StatusCodes.OK
   }
 )

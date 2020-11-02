@@ -13,6 +13,8 @@ const DocumentTypes = {
   ACCESS_LEVEL: "ac",
   WEBHOOK: "wh",
   INSTANCE: "inst",
+  PAGE: "page",
+  SCREEN: "screen",
 }
 
 exports.DocumentTypes = DocumentTypes
@@ -173,6 +175,29 @@ exports.getAccessLevelParams = (accessLevelId = null, otherProps = {}) => {
  */
 exports.generateWebhookID = () => {
   return `${DocumentTypes.WEBHOOK}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Generates a new screen ID.
+ * @returns {string} The new screen ID which the screen doc can be stored under.
+ */
+exports.generateScreenID = () => {
+  return `${DocumentTypes.SCREEN}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Generates a new page ID.
+ * @returns {string} The new page ID which the page doc can be stored under.
+ */
+exports.generatePageID = () => {
+  return `${DocumentTypes.PAGE}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving pages, this is a utility function for the getDocParams function.
+ */
+exports.getPageParams = (pageId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.PAGE, pageId, otherProps)
 }
 
 /**
