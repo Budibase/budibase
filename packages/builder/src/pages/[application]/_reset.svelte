@@ -2,10 +2,10 @@
   import { store, automationStore, backendUiStore } from "builderStore"
   import { Button } from "@budibase/bbui"
   import SettingsLink from "components/settings/Link.svelte"
+  import ThemeEditor from "components/settings/ThemeEditor.svelte"
   import FeedbackNavLink from "components/userInterface/Feedback/FeedbackNavLink.svelte"
   import { get } from "builderStore/api"
   import { isActive, goto, layout } from "@sveltech/routify"
-  import { PreviewIcon } from "components/common/Icons/"
 
   // Get Package and set store
   export let application
@@ -66,6 +66,7 @@
       {/each}
     </div>
     <div class="toprightnav">
+      <ThemeEditor />
       <FeedbackNavLink />
       <div class="topnavitemright">
         <a target="_blank" href="https://docs.budibase.com">
@@ -125,7 +126,7 @@
   .top-nav {
     flex: 0 0 auto;
     height: 60px;
-    background: #fff;
+    background: var(--background);
     padding: 0 20px;
     display: flex;
     box-sizing: border-box;

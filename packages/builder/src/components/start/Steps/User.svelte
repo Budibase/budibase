@@ -5,7 +5,7 @@
   let blurred = { username: false, password: false }
 </script>
 
-<h2>Create new user</h2>
+<h2>Create your first User</h2>
 <div class="container">
   <Input
     on:input={() => (blurred.username = true)}
