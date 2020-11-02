@@ -49,7 +49,7 @@
 <style>
   .selected {
     color: var(--blue);
-    background: #f9f9f9;
+    background: var(--grey-1);
     opacity: 1;
   }
 

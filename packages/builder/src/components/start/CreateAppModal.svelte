@@ -268,7 +268,7 @@
     border-top-left-radius: 0.5rem;
     grid-gap: 30px;
     align-content: center;
-    background: #f5f5f5;
+    background: var(--grey-1);
   }
   .heading {
     display: flex;
@@ -294,7 +294,7 @@
     justify-content: end;
   }
   .spinner-container {
-    background: white;
+    background: var(--background);
     position: absolute;
     border-radius: 5px;
     left: 0;
