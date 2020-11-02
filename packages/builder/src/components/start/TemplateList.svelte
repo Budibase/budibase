@@ -52,7 +52,7 @@
   }
 
   .templates-card {
-    background-color: var(--white);
+    background-color: var(--background);
     padding: var(--spacing-xl);
     border-radius: var(--border-radius-m);
     border: var(--border-dark);

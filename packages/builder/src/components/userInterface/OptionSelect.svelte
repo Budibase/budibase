@@ -244,6 +244,6 @@
   }
 
   li:hover {
-    background-color: #e6e6e6;
+    background-color: var(--grey-3);
   }
 </style>
