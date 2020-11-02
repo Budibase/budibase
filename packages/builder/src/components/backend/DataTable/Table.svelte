@@ -175,7 +175,7 @@
     flex: 1 1 auto;
   }
   :global(.grid-wrapper) {
-    --ag-modal-overlay-background-color: rgba(0, 0, 0, 0.05);
+    --ag-modal-overlay-background-color: transparent;
     --ag-border-color: var(--grey-3);
     --ag-header-background-color: var(--grey-1);
     --ag-odd-row-background-color: var(--grey-1);
