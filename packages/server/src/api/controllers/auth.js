@@ -48,7 +48,7 @@ exports.authenticate = async ctx => {
     const expires = new Date()
     expires.setDate(expires.getDate() + 1)
 
-    ctx.cookies.set("budibase:token", token, {
+    ctx.cookies.set(`budibase:token`, token, {
       expires,
       path: "/",
       httpOnly: false,
