@@ -6,7 +6,7 @@
   let blurred = { appName: false }
 </script>
 
-<h2>Create your web app</h2>
+<h2>Create your Web App</h2>
 <div class="container">
   {#if template}
     <div class="template">
