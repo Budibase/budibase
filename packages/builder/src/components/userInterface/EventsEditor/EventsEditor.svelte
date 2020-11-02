@@ -67,7 +67,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: white;
+    background: var(--background);
     color: var(--ink);
     font-size: 14px;
     font-weight: 500;
@@ -98,7 +98,7 @@
   .handler-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    border: 2px solid #f9f9f9;
+    border: 2px solid var(--grey-1);
     height: 80px;
     width: 100%;
   }

@@ -86,7 +86,7 @@
   .controls {
     margin-top: var(--spacing-m);
     display: grid;
-    align-items: baseline;
+    align-items: center;
     grid-gap: var(--spacing-l);
     grid-template-columns: 1fr auto auto;
   }
