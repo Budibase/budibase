@@ -65,7 +65,7 @@
 
   .ui-nav {
     grid-column: 1;
-    background-color: var(--white);
+    background-color: var(--background);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
@@ -84,14 +84,14 @@
     padding: var(--spacing-l) 40px var(--spacing-xl) 40px;
   }
   .preview-content {
-    background: #fff;
+    background: var(--background);
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
     flex: 1 1 auto;
   }
 
   .components-pane {
     grid-column: 3;
-    background-color: var(--white);
+    background-color: var(--background);
     overflow-y: auto;
     display: flex;
     flex-direction: column;

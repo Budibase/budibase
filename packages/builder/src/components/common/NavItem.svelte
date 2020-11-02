@@ -43,7 +43,6 @@
 
 <style>
   .nav-item {
-    border-radius: var(--border-radius-m);
     cursor: pointer;
     color: var(--grey-7);
   }
@@ -59,6 +58,10 @@
   }
   .nav-item:hover .actions {
     display: flex;
+  }
+  .nav-item:hover,
+  .nav-item.selected {
+    border-radius: var(--border-radius-m);
   }
 
   .content {

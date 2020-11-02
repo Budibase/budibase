@@ -27,7 +27,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    background: white;
+    background: var(--background);
     color: var(--grey-7);
     border-radius: var(--border-radius-m);
     font-size: var(--font-size-xs);

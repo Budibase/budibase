@@ -103,7 +103,7 @@
   .banner-content {
     position: absolute;
     font-size: 24px;
-    color: var(--white);
+    color: white;
     font-weight: 500;
   }
 </style>

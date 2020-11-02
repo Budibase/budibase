@@ -75,7 +75,7 @@
   }
 
   h4 {
-    color: var(--white);
+    color: white;
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 30px;

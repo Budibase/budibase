@@ -46,7 +46,7 @@
     padding: 0 var(--spacing-m);
     height: 32px;
     text-align: center;
-    background: #ffffff;
+    background: var(--background);
     color: var(--grey-7);
     border-radius: 5px;
     font-size: var(--font-size-xs);
