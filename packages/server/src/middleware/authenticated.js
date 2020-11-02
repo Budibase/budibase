@@ -9,6 +9,7 @@ const {
 } = require("../utilities/accessLevels")
 const env = require("../environment")
 const { AuthTypes } = require("../constants")
+const { getAppId, getCookieName } = require("../utilities")
 
 module.exports = async (ctx, next) => {
   if (ctx.path === "/_builder") {
@@ -16,8 +17,10 @@ module.exports = async (ctx, next) => {
     return
   }
 
-  const appToken = ctx.cookies.get("budibase:token")
-  const builderToken = ctx.cookies.get("builder:token")
+  const appId = getAppId(ctx)
+
+  const appToken = ctx.cookies.get(getCookieName(appId))
+  const builderToken = ctx.cookies.get(getCookieName())
 
   let token
   // if running locally in the builder itself
@@ -31,16 +34,6 @@ module.exports = async (ctx, next) => {
 
   if (!token) {
     ctx.auth.authenticated = false
-
-    let appId = env.CLOUD ? ctx.subdomains[1] : ctx.params.appId
-
-    // if appId can't be determined from path param or subdomain
-    if (!appId && ctx.request.headers.referer) {
-      const url = new URL(ctx.request.headers.referer)
-      // remove leading and trailing slashes from appId
-      appId = url.pathname.replace(/\//g, "")
-    }
-
     ctx.user = {
       appId,
     }

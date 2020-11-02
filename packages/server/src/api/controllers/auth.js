@@ -4,6 +4,7 @@ const bcrypt = require("../../utilities/bcrypt")
 const env = require("../../environment")
 const { getAPIKey } = require("../../utilities/usageQuota")
 const { generateUserID } = require("../../db/utils")
+const { getCookieName } = require("../../utilities")
 
 exports.authenticate = async ctx => {
   const appId = ctx.user.appId
@@ -48,16 +49,18 @@ exports.authenticate = async ctx => {
     const expires = new Date()
     expires.setDate(expires.getDate() + 1)
 
-    ctx.cookies.set(`budibase:token`, token, {
+    ctx.cookies.set(getCookieName(appId), token, {
       expires,
       path: "/",
       httpOnly: false,
       overwrite: true,
     })
 
+    delete dbUser.password
     ctx.body = {
       token,
       ...dbUser,
+      appId,
     }
   } else {
     ctx.throw(401, "Invalid credentials.")

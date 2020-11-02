@@ -2,6 +2,9 @@ const { BUILDER_LEVEL_ID } = require("../accessLevels")
 const env = require("../../environment")
 const CouchDB = require("../../db")
 const jwt = require("jsonwebtoken")
+const { DocumentTypes, SEPARATOR } = require("../../db/utils")
+const { getCookieName } = require("../index")
+const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 module.exports = async (ctx, appId, version) => {
   const builderUser = {
@@ -20,15 +23,18 @@ module.exports = async (ctx, appId, version) => {
   const expiry = new Date()
   expiry.setDate(expiry.getDate() + 30)
   // set the builder token
-  ctx.cookies.set("builder:token", token, {
+  ctx.cookies.set(getCookieName(), token, {
     expires: expiry,
     httpOnly: false,
     overwrite: true,
   })
   // need to clear all app tokens or else unable to use the app in the builder
   let allDbNames = await CouchDB.allDbs()
-  allDbNames.map(dbName => {})
-  ctx.cookies.set(`budibase:${appId}`, "", {
-    overwrite: true,
+  allDbNames.map(dbName => {
+    if (dbName.startsWith(APP_PREFIX)) {
+      ctx.cookies.set(getCookieName(dbName), "", {
+        overwrite: true,
+      })
+    }
   })
 }
