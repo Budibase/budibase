@@ -13,6 +13,9 @@ export class ApexOptionsBuilder {
       toolbar: {
         show: false,
       },
+      zoom: {
+        enabled: false,
+      },
     },
   }
 
@@ -105,7 +108,15 @@ export class ApexOptionsBuilder {
     return this.setOption(["legend", "show"], legend)
   }
 
+  legendPosition(position) {
+    return this.setOption(["legend", "position"], position)
+  }
+
   stacked(stacked) {
     return this.setOption(["chart", "stacked"], stacked)
+  }
+
+  labels(labels) {
+    return this.setOption(["labels"], labels)
   }
 }
