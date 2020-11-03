@@ -1,12 +1,12 @@
 <script>
-  import { onMount, beforeUpdate, afterUpdate } from "svelte"
+  import { onMount } from "svelte"
   import Portal from "svelte-portal"
   import { buildStyle } from "../../helpers.js"
 
   export let options = []
   export let value = ""
   export let styleBindingProperty
-  export let onChange = value => {}
+  export let onChange = () => {}
 
   let open = null
   let rotate = ""
