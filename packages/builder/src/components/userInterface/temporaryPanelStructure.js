@@ -1,5 +1,6 @@
 import Input from "./PropertyPanelControls/Input.svelte"
 import OptionSelect from "./OptionSelect.svelte"
+import MultiTableViewFieldSelect from "./MultiTableViewFieldSelect.svelte"
 import Checkbox from "../common/Checkbox.svelte"
 import TableSelect from "components/userInterface/TableSelect.svelte"
 import TableViewSelect from "components/userInterface/TableViewSelect.svelte"
@@ -524,21 +525,26 @@ export default {
           properties: {
             settings: [
               {
+                label: "Title",
+                key: "title",
+                control: Input,
+              },
+              {
                 label: "Data",
                 key: "datasource",
                 control: TableViewSelect,
               },
               {
                 label: "Label Col.",
-                key: "nameLabel",
+                key: "labelColumn",
                 dependsOn: "datasource",
                 control: TableViewFieldSelect,
               },
               {
-                label: "Value Col.",
-                key: "valueLabel",
+                label: "Data Cols.",
+                key: "valueColumns",
                 dependsOn: "datasource",
-                control: TableViewFieldSelect,
+                control: MultiTableViewFieldSelect,
               },
               {
                 label: "Y Axis Label",
@@ -550,12 +556,12 @@ export default {
                 key: "xAxisLabel",
                 control: Input,
               },
-              {
-                label: "Color",
-                key: "color",
-                control: Colorpicker,
-                defaultValue: "#4285f4",
-              },
+              // {
+              //   label: "Color",
+              //   key: "color",
+              //   control: Colorpicker,
+              //   defaultValue: "#4285f4",
+              // },
               {
                 label: "Width",
                 key: "width",
@@ -586,6 +592,13 @@ export default {
                 control: Checkbox,
                 valueKey: "checked",
                 defaultValue: true,
+              },
+              {
+                label: "Legend",
+                key: "legend",
+                control: Checkbox,
+                valueKey: "checked",
+                defaultValue: false,
               },
             ],
           },
@@ -693,172 +706,100 @@ export default {
         //     ],
         //   },
         // },
-        // {
-        //   name: "Line",
-        //   _component: "@budibase/standard-components/line",
-        //   description: "Line chart",
-        //   icon: "ri-line-chart-line",
-        //   properties: {
-        //     settings: [
-        //       {
-        //         label: "Data",
-        //         key: "datasource",
-        //         control: TableViewSelect,
-        //       },
-        //       {
-        //         label: "Value Label",
-        //         key: "valueLabel",
-        //         dependsOn: "datasource",
-        //         control: TableViewFieldSelect,
-        //       },
-        //       {
-        //         label: "Topic Label",
-        //         key: "topicLabel",
-        //         dependsOn: "datasource",
-        //         control: TableViewFieldSelect,
-        //       },
-        //       {
-        //         label: "Date Label",
-        //         key: "dateLabel",
-        //         dependsOn: "datasource",
-        //         control: TableViewFieldSelect,
-        //       },
-        //       {
-        //         label: "Colors",
-        //         key: "color",
-        //         control: OptionSelect,
-        //         options: [
-        //           "britecharts",
-        //           "blueGreen",
-        //           "green",
-        //           "grey",
-        //           "orange",
-        //           "pink",
-        //           "purple",
-        //           "red",
-        //           "teal",
-        //           "yellow",
-        //         ],
-        //       },
-        //       {
-        //         label: "Gradients",
-        //         key: "lineGradient",
-        //         control: OptionSelect,
-        //         options: [
-        //           { value: "", label: "None" },
-        //           { value: "bluePurple", label: "Blue Purple" },
-        //           { value: "greenBlue", label: "Green Blue" },
-        //           { value: "orangePink", label: "Orange Pink" },
-        //         ],
-        //       },
-        //       {
-        //         label: "Line Curve",
-        //         key: "lineCurve",
-        //         control: OptionSelect,
-        //         options: [
-        //           "linear",
-        //           "basis",
-        //           "natural",
-        //           "monotoneX",
-        //           "monotoneY",
-        //           "step",
-        //           "stepAfter",
-        //           "stepBefore",
-        //           "cardinal",
-        //           "catmullRom",
-        //         ],
-        //       },
-        //       {
-        //         label: "X Axis Value Type",
-        //         key: "xAxisValueType",
-        //         control: OptionSelect,
-        //         options: ["date", "number"],
-        //       },
-        //       {
-        //         label: "Grid",
-        //         key: "grid",
-        //         control: OptionSelect,
-        //         options: ["vertical", "horizontal", "full"],
-        //       },
-        //       {
-        //         label: "X Axis Label",
-        //         key: "xAxisLabel",
-        //         control: Input,
-        //       },
-        //       {
-        //         label: "Y Axis Label",
-        //         key: "yAxisLabel",
-        //         control: Input,
-        //       },
-        //       {
-        //         label: "Show All Datapoints",
-        //         key: "shouldShowAllDataPoints",
-        //         valueKey: "checked",
-        //         control: Checkbox,
-        //       },
-        //       {
-        //         label: "Width",
-        //         key: "width",
-        //         control: Input,
-        //       },
-        //       {
-        //         label: "Height",
-        //         key: "height",
-        //         control: Input,
-        //       },
-        //       {
-        //         label: "Is Animated",
-        //         key: "isAnimated",
-        //         control: Checkbox,
-        //         valueKey: "checked",
-        //       },
-        //       {
-        //         label: "Locale",
-        //         key: "locale",
-        //         control: OptionSelect,
-        //         options: ["en-GB", "en-US"],
-        //       },
-        //       {
-        //         label: "X Axis Value Type",
-        //         key: "xAxisValueType",
-        //         control: OptionSelect,
-        //         options: ["date", "numeric"],
-        //       },
-        //       {
-        //         label: "X Axis Format",
-        //         key: "xAxisFormat",
-        //         control: OptionSelect,
-        //         options: [
-        //           "day-month",
-        //           "minute-hour",
-        //           "hour-daymonth",
-        //           "month-year",
-        //           "custom",
-        //         ],
-        //       },
-        //       {
-        //         label: "X Axis Custom Format",
-        //         key: "xAxisCustomFormat",
-        //         control: Input,
-        //       },
-        //       {
-        //         label: "Tooltip Title",
-        //         key: "tooltipTitle",
-        //         control: Input,
-        //       },
-        //       {
-        //         label: "X Ticks",
-        //         key: "xTicks",
-        //         control: Input,
-        //       },
-        //       {
-        //         label: "Y Ticks",
-        //         key: "yTicks",
-        //         control: Input,
-        //       },
-        //     ],
-        //   },
-        // },
+        {
+          name: "Line",
+          _component: "@budibase/standard-components/line",
+          description: "Line chart",
+          icon: "ri-line-chart-line",
+          properties: {
+            settings: [
+              {
+                label: "Title",
+                key: "title",
+                control: Input,
+              },
+              {
+                label: "Data",
+                key: "datasource",
+                control: TableViewSelect,
+              },
+              {
+                label: "Label Col.",
+                key: "labelColumn",
+                dependsOn: "datasource",
+                control: TableViewFieldSelect,
+              },
+              {
+                label: "Data Cols.",
+                key: "valueColumns",
+                dependsOn: "datasource",
+                control: MultiTableViewFieldSelect,
+              },
+              {
+                label: "Y Axis Label",
+                key: "yAxisLabel",
+                control: Input,
+              },
+              {
+                label: "X Axis Label",
+                key: "xAxisLabel",
+                control: Input,
+              },
+              // {
+              //   label: "Color",
+              //   key: "color",
+              //   control: Colorpicker,
+              //   defaultValue: "#4285f4",
+              // },
+              {
+                label: "Width",
+                key: "width",
+                control: Input,
+              },
+              {
+                label: "Height",
+                key: "height",
+                control: Input,
+                defaultValue: "400",
+              },
+              {
+                label: "Curve",
+                key: "curve",
+                control: OptionSelect,
+                options: ["Smooth", "Straight", "Stepline"],
+                defaultValue: "Smooth",
+              },
+              {
+                label: "Data Labels",
+                key: "dataLabels",
+                control: Checkbox,
+                valueKey: "checked",
+                defaultValue: false,
+              },
+              {
+                label: "Animate",
+                key: "animate",
+                control: Checkbox,
+                valueKey: "checked",
+                defaultValue: true,
+              },
+              {
+                label: "Fill",
+                key: "fill",
+                control: Checkbox,
+                valueKey: "checked",
+                defaultValue: true,
+              },
+              {
+                label: "Legend",
+                key: "legend",
+                control: Checkbox,
+                valueKey: "checked",
+                defaultValue: false,
+              },
+            ],
+          },
+        },
       ],
     },
     {

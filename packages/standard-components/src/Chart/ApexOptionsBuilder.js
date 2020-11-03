@@ -1,6 +1,19 @@
 export class ApexOptionsBuilder {
   options = {
     series: [],
+    legend: {
+      show: false,
+      position: "top",
+      horizontalAlign: "right",
+      showForSingleSeries: true,
+      showForNullSeries: true,
+      showForZeroSeries: true,
+    },
+    chart: {
+      toolbar: {
+        show: false,
+      },
+    },
   }
 
   setOption(path, value) {
@@ -27,8 +40,12 @@ export class ApexOptionsBuilder {
     return this.setOption(["chart", "type"], type)
   }
 
+  title(title) {
+    return this.setOption(["title", "text"], title)
+  }
+
   color(color) {
-    return this.setOption(["colors"], color)
+    return this.setOption(["colors"], [color])
   }
 
   width(width) {
@@ -65,5 +82,26 @@ export class ApexOptionsBuilder {
 
   animate(animate) {
     return this.setOption(["chart", "animations", "enabled"], animate)
+  }
+
+  curve(curve) {
+    return this.setOption(["stroke", "curve"], curve)
+  }
+
+  gradient(gradient) {
+    const fill = {
+      type: "gradient",
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.7,
+        opacityTo: 0.9,
+        stops: [0, 90, 100],
+      },
+    }
+    return this.setOption(["fill"], gradient ? fill : undefined)
+  }
+
+  legend(legend) {
+    return this.setOption(["legend", "show"], legend)
   }
 }
