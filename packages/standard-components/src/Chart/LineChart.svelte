@@ -64,8 +64,6 @@
     // Build chart options
     return builder.getOptions()
   }
-
-  $: console.log(options)
 </script>
 
 <div use:chart={options} />
