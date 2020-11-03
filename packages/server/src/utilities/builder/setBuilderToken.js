@@ -10,7 +10,6 @@ module.exports = async (ctx, appId, version) => {
   const builderUser = {
     userId: "BUILDER",
     accessLevelId: BUILDER_LEVEL_ID,
-    appId,
     version,
   }
   if (env.BUDIBASE_API_KEY) {
