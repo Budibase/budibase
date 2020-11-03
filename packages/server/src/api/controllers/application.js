@@ -18,12 +18,14 @@ const {
   SEPARATOR,
   getPageParams,
   generatePageID,
+  generateScreenID,
 } = require("../../db/utils")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
-const PAGES = require("../../constants/pages")
+const { MAIN, UNAUTHENTICATED, PageTypes } = require("../../constants/pages")
 const { HOME_SCREEN } = require("../../constants/screens")
+const { cloneDeep } = require("lodash/fp")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -69,17 +71,24 @@ exports.fetch = async function(ctx) {
 exports.fetchAppPackage = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
-  // ctx.body = await getPackageForBuilder(application)
 
-  const pages = await db.allDocs(
+  let pages = await db.allDocs(
     getPageParams(null, {
       include_docs: true,
     })
   )
+  pages = pages.rows.map(row => row.doc)
 
+  const mainPage = pages.filter(page => page.name === PageTypes.MAIN)[0]
+  const unauthPage = pages.filter(
+    page => page.name === PageTypes.UNAUTHENTICATED
+  )[0]
   ctx.body = {
     application,
-    pages,
+    pages: {
+      main: mainPage,
+      unauthenticated: unauthPage,
+    },
   }
 
   setBuilderToken(ctx, ctx.params.appId, application.version)
@@ -165,15 +174,6 @@ const createEmptyAppPackage = async (ctx, app) => {
   //   0o777
   // )
 
-  // TODO: write the main and unauthenticated JSON to couch
-  // const writes = []
-  // for (let pageName in PAGES) {
-  //   PAGES[pageName]._id = generatePageID()
-  //   writes.push({
-
-  //   })
-  // }
-
   await copy(templateFolder, newAppFolder)
 
   // this line allows full permission on copied files
@@ -201,49 +201,58 @@ const createEmptyAppPackage = async (ctx, app) => {
     await copy(templatePageDefinitions, join(appsFolder, app._id, "pages"))
   }
 
-  const mainJson = await updateJsonFile(
-    join(appsFolder, app._id, "pages", "main", "page.json"),
-    app
-  )
+  // const mainJson = await updateJsonFile(
+  //   join(appsFolder, app._id, "pages", "main", "page.json"),
+  //   app
+  // )
+  //
+  // mainJson._id = generatePageID()
+  // await db.put(mainJson)
 
-  mainJson._id = generatePageID()
-  await db.put(mainJson)
-
-  await buildPage(app._id, "main", {
-    page: mainJson,
-    screens: await loadScreens(newAppFolder, "main"),
-  })
-
-  const unauthenticatedJson = await updateJsonFile(
-    join(appsFolder, app._id, "pages", "unauthenticated", "page.json"),
-    app
-  )
+  // const unauthenticatedJson = await updateJsonFile(
+  //   join(appsFolder, app._id, "pages", "unauthenticated", "page.json"),
+  //   app
+  // )
 
   // Write to couch
-  unauthenticatedJson._id = generatePageID()
-  await db.put(unauthenticatedJson)
+  // unauthenticatedJson._id = generatePageID()
+  // await db.put(unauthenticatedJson)
 
+  const mainPage = cloneDeep(MAIN)
+  mainPage._id = generatePageID()
+  mainPage.title = app.name
+  const unauthPage = cloneDeep(UNAUTHENTICATED)
+  unauthPage._id = generatePageID()
+  unauthPage.title = app.name
+  const homeScreen = cloneDeep(HOME_SCREEN)
+  homeScreen._id = generateScreenID(mainPage._id)
+  await db.bulkDocs([mainPage, unauthPage, homeScreen])
+
+  await buildPage(app._id, "main", {
+    page: mainPage,
+    screens: [homeScreen],
+  })
   await buildPage(app._id, "unauthenticated", {
-    page: unauthenticatedJson,
-    screens: await loadScreens(newAppFolder, "unauthenticated"),
+    page: unauthPage,
+    screens: [],
   })
 
   return newAppFolder
 }
 
-const loadScreens = async (appFolder, page) => {
-  const screensFolder = join(appFolder, "pages", page, "screens")
-
-  const screenFiles = (await fs.readdir(screensFolder)).filter(s =>
-    s.endsWith(".json")
-  )
-
-  let screens = []
-  for (let file of screenFiles) {
-    screens.push(await fs.readJSON(join(screensFolder, file)))
-  }
-  return screens
-}
+// const loadScreens = async (appFolder, page) => {
+//   const screensFolder = join(appFolder, "pages", page, "screens")
+//
+//   const screenFiles = (await fs.readdir(screensFolder)).filter(s =>
+//     s.endsWith(".json")
+//   )
+//
+//   let screens = []
+//   for (let file of screenFiles) {
+//     screens.push(await fs.readJSON(join(screensFolder, file)))
+//   }
+//   return screens
+// }
 
 const updateJsonFile = async (filePath, app) => {
   const json = await readFile(filePath, "utf8")

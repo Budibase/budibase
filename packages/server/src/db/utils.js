@@ -178,14 +178,6 @@ exports.generateWebhookID = () => {
 }
 
 /**
- * Generates a new screen ID.
- * @returns {string} The new screen ID which the screen doc can be stored under.
- */
-exports.generateScreenID = () => {
-  return `${DocumentTypes.SCREEN}${SEPARATOR}${newid()}`
-}
-
-/**
  * Generates a new page ID.
  * @returns {string} The new page ID which the page doc can be stored under.
  */
@@ -198,6 +190,14 @@ exports.generatePageID = () => {
  */
 exports.getPageParams = (pageId = null, otherProps = {}) => {
   return getDocParams(DocumentTypes.PAGE, pageId, otherProps)
+}
+
+/**
+ * Generates a new screen ID.
+ * @returns {string} The new screen ID which the screen doc can be stored under.
+ */
+exports.generateScreenID = pageId => {
+  return `${DocumentTypes.SCREEN}${SEPARATOR}${pageId}${SEPARATOR}${newid()}`
 }
 
 /**
