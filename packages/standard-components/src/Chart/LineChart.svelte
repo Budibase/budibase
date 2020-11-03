@@ -1,9 +1,9 @@
 <script>
   import { onMount } from "svelte"
-  import { chart } from "svelte-apexcharts"
   import fetchData from "../fetchData"
   import { isEmpty, sortBy } from "lodash/fp"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
+  import ApexChart from "./ApexChart.svelte"
 
   // Common props
   export let title
@@ -74,4 +74,4 @@
   }
 </script>
 
-<div use:chart={options} />
+<ApexChart {options} />

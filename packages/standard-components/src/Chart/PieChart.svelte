@@ -4,6 +4,7 @@
   import fetchData from "../fetchData"
   import { isEmpty, sortBy } from "lodash/fp"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
+  import ApexChart from "./ApexChart.svelte"
 
   export let title
   export let datasource
@@ -56,4 +57,4 @@
   }
 </script>
 
-<div use:chart={options} />
+<ApexChart {options} />
