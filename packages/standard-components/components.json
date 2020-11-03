@@ -396,155 +396,6 @@
 			}
 		}
 	},
-	"datamap": {
-		"description": "shiny chart",
-		"data": true,
-		"props": {
-			"table": "tables"
-		}
-	},
-	"donut": {
-		"description": "Donut Chart",
-		"data": true,
-		"props": {
-			"datasource": "string",
-			"data": "string",
-			"color": "string",
-			"height": "number",
-			"width": "number",
-			"hasFixedHighlightedSlice": "bool",
-			"hasLastHoverSliceHighlighted": "bool",
-			"hasHoverAnimation": "bool",
-			"numberFormat": "string",
-			"nameKey": "string",
-			"valueKey": "string",
-			"isAnimated": "bool",
-			"externalRadius": "number",
-			"internalRadius": "number",
-			"radiusHoverOffset": "number",
-			"percentageFormat": "string",
-			"useLegend": "bool",
-			"legendWidth": "number",
-			"legendHeight": "number"
-		}
-	},
-	"sparkline": {
-		"description": "Sparkline Chart",
-		"data": true,
-		"props": {
-			"table": "string",
-			"areaGradient": "string",
-			"height": "number",
-			"width": "number",
-			"dateLabel": "string",
-			"duration": "string",
-			"isAnimated": "bool",
-			"lineGradient": "string",
-			"titleText": "string",
-			"valueLabel": "string"
-		}
-	},
-	"stackedbar": {
-		"description": "Stacked Bar Chart",
-		"data": true,
-		"props": {
-			"datasource": "tables",
-			"color": "string",
-			"height": "number",
-			"width": "number",
-			"margin": "string",
-			"aspectRatio": "string",
-			"betweenBarsPadding": "number",
-			"grid": "string",
-			"hasPercentage": "bool",
-			"hasReversedStacks": "bool",
-			"isAnimated": "bool",
-			"isHorizontal": "bool",
-			"locale": "string",
-			"nameLabel": "string",
-			"percentageAxisToMaxRatio": "number",
-			"stackLabel": "string",
-			"valueLabel": "string",
-			"valueLabelFormat": "string",
-			"xTicks": "number",
-			"yTicks": "number",
-			"yAxisLabel": "string",
-			"yAxisLabelOffset": "number",
-			"useLegend": "bool"
-		}
-	},
-	"stackarea": {
-		"description": "Step Chart",
-		"data": true,
-		"props": {
-			"table": "string",
-			"color": "string",
-			"height": "number",
-			"width": "number",
-			"margin": "string",
-			"xAxisLabel": "string",
-			"xAxisLabelOffset": "string",
-			"yAxisLabel": "string",
-			"yAxisLabelOffset": "string",
-			"areaCurve": "number",
-			"areaOpacity": "number",
-			"aspectRatio": "number",
-			"dateLabel": "string",
-			"grid": "string",
-			"isAnimated": "bool",
-			"keyLabel": "string",
-			"locale": "string",
-			"tooltipThreshold": "number",
-			"topicsOrder": "string",
-			"valueLabel": "string",
-			"xAxisCustomFormat": "string",
-			"xAxisFormat": "string",
-			"xAxisScale": "string",
-			"xAxisValueType": "string",
-			"yTicks": "number",
-			"xTicks": "number",
-			"yAxisBaseline": "string",
-			"useLegend": "bool"
-		}
-	},
-	"step": {
-		"description": "Step Chart",
-		"data": true,
-		"props": {
-			"table": "string",
-			"height": "number",
-			"width": "number",
-			"margin": "string",
-			"xAxisLabel": "string",
-			"xAxisLabelOffset": "string",
-			"yAxisLabel": "string",
-			"yAxisLabelOffset": "string",
-			"yTicks": "string"
-		}
-	},
-	"scatterplot": {
-		"description": "Scatterplot Chart",
-		"data": true,
-		"props": {
-			"table": "string",
-			"color": "string",
-			"height": "number",
-			"width": "number",
-			"aspectRatio": "string",
-			"circleOpacity": "string",
-			"grid": "string",
-			"hasCrossHairs": "bool",
-			"isAnimated": "bool",
-			"maxCircleArea": "number",
-			"xAxisLabel": "string",
-			"xAxisLabelOffset": "string",
-			"xTicks": "string",
-			"yAxisFormat": "string",
-			"yAxisLabel": "string",
-			"yAxisLabelOffset": "string",
-			"yTicks": "string"
-		}
-	},
 	"bar": {
 		"description": "Bar Chart",
 		"data": true,
@@ -614,74 +465,63 @@
 				"type": "bool",
 				"default": true
 			},
+			"legend": "bool"
+		}
+	},
+	"pie": {
+		"description": "Pie Chart",
+		"data": true,
+		"props": {
+			"title": "string",
+			"datasource": "tables",
+			"labelColumn": "string",
+			"valueColumn": "string",
+			"color": {
+				"type": "string",
+				"default": "#4285f4"
+			},
+			"height": {
+				"type": "number",
+				"default": "200"
+			},
+			"width": "number",
+			"dataLabels": "bool",
+			"animate": {
+				"type": "bool",
+				"default": true
+			},
 			"legend": {
 				"type": "bool",
-				"default": false
+				"default": true
 			}
 		}
 	},
-	"brush": {
-		"description": "brush chart",
+	"donut": {
+		"description": "Donut Chart",
 		"data": true,
 		"props": {
-			"table": "string",
-			"gradient": "string",
-			"height": "number",
-			"width": "number",
-			"margin": "string",
-			"dateRange": "string",
-			"locale": "string",
-			"roundingTimeInterval": "string",
-			"xAxisFormat": "string",
-			"xTicks": "number",
-			"xAxisCustomFormat": "string"
-		}
-	},
-	"heatmap": {
-		"description": "Heatmap chart",
-		"data": true,
-		"props": {
-			"table": "string",
-			"color": "string",
-			"height": "number",
-			"width": "number",
-			"useLegend": "bool",
-			"yAxisLabel": "string",
-			"boxSize": "number"
-		}
-	},
-	"groupedbar": {
-		"description": "Groupedbar chart",
-		"data": true,
-		"props": {
+			"title": "string",
 			"datasource": "tables",
-			"nameLabel": "string",
-			"valueLabel": "string",
-			"color": "string",
-			"height": "string",
-			"width": "string",
-			"margin": "string",
-			"grid": "string",
-			"groupLabel": "string",
-			"isAnimated": "bool",
-			"isHorizontal": "bool",
-			"yTicks": "string",
-			"useLegend": "bool",
-			"tooltipTitle": "string"
-		}
-	},
-	"bullet": {
-		"description": "Bullet chart",
-		"data": true,
-		"props": {
-			"table": "string",
-			"color": "string",
-			"customSubtitle": "string",
-			"customTitle": "string",
-			"numberFormat": "string",
-			"paddingBetweenAxisAndChart": "number",
-			"height": "number",
-			"width": "number"
+			"labelColumn": "string",
+			"valueColumn": "string",
+			"color": {
+				"type": "string",
+				"default": "#4285f4"
+			},
+			"height": {
+				"type": "number",
+				"default": "200"
+			},
+			"width": "number",
+			"dataLabels": "bool",
+			"animate": {
+				"type": "bool",
+				"default": true
+			},
+			"legend": {
+				"type": "bool",
+				"default": true
+			}
 		}
 	},
 	"datepicker": {
