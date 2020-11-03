@@ -591,7 +591,7 @@ export default {
                 key: "dataLabels",
                 control: Checkbox,
                 valueKey: "checked",
-                defaultValue: true,
+                defaultValue: false,
               },
               {
                 label: "Animate",

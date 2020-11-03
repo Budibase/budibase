@@ -563,10 +563,7 @@
 			},
 			"width": "number",
 			"horizontal": "bool",
-			"dataLabels": {
-				"type": "bool",
-				"default": true
-			},
+			"dataLabels": "bool",
 			"animate": {
 				"type": "bool",
 				"default": true
