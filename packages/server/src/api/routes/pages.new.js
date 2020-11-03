@@ -26,7 +26,7 @@ function generateSaveValidation() {
 }
 
 router.post(
-  "/api/pages/:pageName",
+  "/api/pages/:pageId",
   authorized(BUILDER),
   generateSaveValidation(),
   controller.save

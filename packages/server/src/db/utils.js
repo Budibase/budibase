@@ -201,6 +201,13 @@ exports.getPageParams = (pageId = null, otherProps = {}) => {
 }
 
 /**
+ * Gets parameters for retrieving screens for a particular page, this is a utility function for the getDocParams function.
+ */
+exports.getScreenParams = (pageId = null, otherProps = {}) => {
+  return getDocParams(DocumentType.SCREEN, pageId, otherProps)
+}
+
+/**
  * Gets parameters for retrieving a webhook, this is a utility function for the getDocParams function.
  */
 exports.getWebhookParams = (webhookId = null, otherProps = {}) => {
