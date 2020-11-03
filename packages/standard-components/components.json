@@ -549,9 +549,10 @@
 		"description": "Bar Chart",
 		"data": true,
 		"props": {
+			"title": "string",
 			"datasource": "tables",
-			"nameLabel": "string",
-			"valueLabel": "string",
+			"labelColumn": "string",
+			"valueColumns": "string",
 			"color": {
 				"type": "string",
 				"default": "#4285f4"
@@ -571,52 +572,57 @@
 				"default": true
 			},
 			"xAxisLabel": "string",
-			"yAxisLabel": "string"
+			"yAxisLabel": "string",
+			"legend": {
+				"type": "bool",
+				"default": false
+			}
 		}
 	},
 	"line": {
 		"description": "Line Chart",
 		"data": true,
 		"props": {
+			"title": "string",
 			"datasource": "tables",
+			"labelColumn": "string",
+			"valueColumns": "string",
+			"color": {
+				"type": "string",
+				"default": "#4285f4"
+			},
+			"height": {
+				"type": "number",
+				"default": "400"
+			},
 			"width": "number",
-			"height": "number",
-			"axisTimeCombinations": "string",
-			"color": "string",
-			"grid": {
-				"type": "string",
-				"default": "horizontal"
+			"dataLabels": {
+				"type": "bool",
+				"default": false
 			},
-			"aspectRatio": "number",
-			"dateLabel": "string",
-			"isAnimated": {
+			"animate": {
 				"type": "bool",
 				"default": true
 			},
-			"lineCurve": "string",
-			"locale": "string",
-			"numberFormat": "string",
-			"shouldShowAllDataPoints": {
-				"type": "bool",
-				"default": true
-			},
-			"topicLabel": "string",
-			"valueLabel": "string",
-			"xAxisValueType": {
-				"type": "string",
-				"default": "date"
-			},
-			"xAxisScale": "string",
-			"xAxisFormat": {
-				"type": "string",
-				"default": "custom"
-			},
-			"xAxisCustomFormat": "string",
 			"xAxisLabel": "string",
 			"yAxisLabel": "string",
-			"tooltipTitle": "string",
-			"xTicks": "number",
-			"yTicks": "number"
+			"curve": {
+				"type": "options",
+				"options": [
+					"Smooth",
+					"Straight",
+					"Stepline"
+				],
+				"default": "Smooth"
+			},
+			"fill": {
+				"type": "bool",
+				"default": true
+			},
+			"legend": {
+				"type": "bool",
+				"default": false
+			}
 		}
 	},
 	"brush": {
