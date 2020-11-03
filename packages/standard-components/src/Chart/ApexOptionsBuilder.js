@@ -1,4 +1,9 @@
 export class ApexOptionsBuilder {
+  formatters = {
+    ["Default"]: val => Math.round(val * 100) / 100,
+    ["Thousands"]: val => `${Math.round(val / 1000)}K`,
+    ["Millions"]: val => `${Math.round(val / 1000000)}M`,
+  }
   options = {
     series: [],
     legend: {
@@ -15,6 +20,11 @@ export class ApexOptionsBuilder {
       },
       zoom: {
         enabled: false,
+      },
+    },
+    yaxis: {
+      labels: {
+        formatter: this.formatters.Default,
       },
     },
   }
@@ -118,5 +128,12 @@ export class ApexOptionsBuilder {
 
   labels(labels) {
     return this.setOption(["labels"], labels)
+  }
+
+  yUnits(units) {
+    return this.setOption(
+      ["yaxis", "labels", "formatter"],
+      this.formatters[units || "Default"]
+    )
   }
 }
