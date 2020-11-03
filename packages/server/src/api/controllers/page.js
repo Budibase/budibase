@@ -11,7 +11,7 @@ exports.save = async function(ctx) {
   await buildPage(
     ctx.config,
     ctx.user.appId,
-    ctx.params.pageName,
+    ctx.params.pageId,
     ctx.request.body
   )
 
@@ -29,5 +29,6 @@ exports.save = async function(ctx) {
   // }
   appPackage.page._id = appPackage.page._id || generatePageID()
   await db.put(appPackage.page)
-  ctx.response.status = 200
+  ctx.message = "Page saved successfully."
+  ctx.status = 200
 }

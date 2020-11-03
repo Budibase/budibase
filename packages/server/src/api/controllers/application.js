@@ -22,6 +22,8 @@ const {
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
+const PAGES = require("../../constants/pages")
+const { HOME_SCREEN } = require("../../constants/screens")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -157,11 +159,20 @@ const createEmptyAppPackage = async (ctx, app) => {
     ctx.throw(400, "App folder already exists for this application")
   }
 
-  await fs.ensureDir(join(newAppFolder, "pages", "main", "screens"), 0o777)
-  await fs.ensureDir(
-    join(newAppFolder, "pages", "unauthenticated", "screens"),
-    0o777
-  )
+  // await fs.ensureDir(join(newAppFolder, "pages", "main", "screens"), 0o777)
+  // await fs.ensureDir(
+  //   join(newAppFolder, "pages", "unauthenticated", "screens"),
+  //   0o777
+  // )
+
+  // TODO: write the main and unauthenticated JSON to couch
+  // const writes = []
+  // for (let pageName in PAGES) {
+  //   PAGES[pageName]._id = generatePageID()
+  //   writes.push({
+
+  //   })
+  // }
 
   await copy(templateFolder, newAppFolder)
 
