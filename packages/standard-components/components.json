@@ -573,10 +573,8 @@
 			},
 			"xAxisLabel": "string",
 			"yAxisLabel": "string",
-			"legend": {
-				"type": "bool",
-				"default": false
-			}
+			"legend": "bool",
+			"stacked": "bool"
 		}
 	},
 	"line": {

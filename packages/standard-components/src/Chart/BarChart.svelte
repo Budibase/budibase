@@ -18,6 +18,7 @@
   export let dataLabels
   export let animate
   export let legend
+  export let stacked
 
   let data
   $: options = getChartOptions(data)
@@ -43,6 +44,7 @@
       .dataLabels(dataLabels)
       .animate(animate)
       .legend(legend)
+      .stacked(stacked)
 
     // Add data if valid datasource
     if (rows && rows.length) {

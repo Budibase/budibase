@@ -574,6 +574,13 @@ export default {
                 defaultValue: "400",
               },
               {
+                label: "Stacked",
+                key: "stacked",
+                control: Checkbox,
+                valueKey: "checked",
+                defaultValue: false,
+              },
+              {
                 label: "Horizontal",
                 key: "horizontal",
                 control: Checkbox,

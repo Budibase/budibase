@@ -104,4 +104,8 @@ export class ApexOptionsBuilder {
   legend(legend) {
     return this.setOption(["legend", "show"], legend)
   }
+
+  stacked(stacked) {
+    return this.setOption(["chart", "stacked"], stacked)
+  }
 }
