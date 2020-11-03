@@ -80,10 +80,7 @@ const makeRowRequestBody = (parameters, state) => {
   if (body._table) delete body._table
 
   // then override with supplied parameters
-  for (let fieldName in parameters.fields) {
-    if (!parameters.fields.hasOwnProperty(fieldName)) {
-      continue
-    }
+  for (let fieldName of Object.keys(parameters.fields)) {
     const field = parameters.fields[fieldName]
 
     // ensure fields sent are of the correct type
