@@ -5,6 +5,7 @@
   import { isEmpty, sortBy } from "lodash/fp"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
 
+  // Common props
   export let title
   export let datasource
   export let labelColumn
@@ -17,8 +18,13 @@
   export let animate
   export let dataLabels
   export let curve
-  export let fill
   export let legend
+  export let yAxisUnits
+
+  // Area specific props
+  export let area
+  export let stacked
+  export let gradient
 
   let data = []
   $: options = getChartOptions(data)
@@ -35,7 +41,7 @@
     // Initialise default chart
     let builder = new ApexOptionsBuilder()
       .title(title)
-      .type(fill ? "area" : "line")
+      .type(area ? "area" : "line")
       // .color(color)
       .width(width)
       .height(height)
@@ -44,8 +50,10 @@
       .dataLabels(dataLabels)
       .animate(animate)
       .curve(curve.toLowerCase())
-      .gradient(fill)
+      .gradient(gradient)
+      .stacked(stacked)
       .legend(legend)
+      .yUnits(yAxisUnits)
 
     // Add data if valid datasource
     if (rows && rows.length) {

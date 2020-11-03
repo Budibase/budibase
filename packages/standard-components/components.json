@@ -465,7 +465,66 @@
 				"type": "bool",
 				"default": true
 			},
-			"legend": "bool"
+			"legend": "bool",
+			"yAxisUnits": {
+				"type": "options",
+				"default": "Default",
+				"options": [
+					"Default", "Thousands", "Millions"
+				]
+			}
+		}
+	},
+	"area": {
+		"description": "Area Chart",
+		"data": true,
+		"props": {
+			"title": "string",
+			"datasource": "tables",
+			"labelColumn": "string",
+			"valueColumns": "string",
+			"color": {
+				"type": "string",
+				"default": "#4285f4"
+			},
+			"height": {
+				"type": "number",
+				"default": "400"
+			},
+			"width": "number",
+			"dataLabels": {
+				"type": "bool",
+				"default": false
+			},
+			"animate": {
+				"type": "bool",
+				"default": true
+			},
+			"xAxisLabel": "string",
+			"yAxisLabel": "string",
+			"curve": {
+				"type": "options",
+				"options": [
+					"Smooth",
+					"Straight",
+					"Stepline"
+				],
+				"default": "Smooth"
+			},
+			"fill": {
+				"type": "bool",
+				"default": true
+			},
+			"legend": "bool",
+			"stacked": "bool",
+			"gradient": "bool",
+			"yAxisUnits": {
+				"type": "options",
+				"default": "Default",
+				"options": [
+					"Default", "Thousands", "Millions"
+				]
+			}
 		}
 	},
 	"pie": {
