@@ -9,7 +9,7 @@ const {
 } = require("../utilities/accessLevels")
 const env = require("../environment")
 const { AuthTypes } = require("../constants")
-const { getAppId, getCookieName } = require("../utilities")
+const { getAppId, getCookieName, setCookie } = require("../utilities")
 
 module.exports = async (ctx, next) => {
   if (ctx.path === "/_builder") {
@@ -17,7 +17,14 @@ module.exports = async (ctx, next) => {
     return
   }
 
-  const appId = getAppId(ctx)
+  // do everything we can to make sure the appId is held correctly
+  // we hold it in state as a
+  let appId = getAppId(ctx)
+  if (appId) {
+    setCookie(ctx, "currentapp", appId)
+  } else {
+    appId = ctx.cookies.get(getCookieName("currentapp"))
+  }
 
   const appToken = ctx.cookies.get(getCookieName(appId))
   const builderToken = ctx.cookies.get(getCookieName())
@@ -43,14 +50,12 @@ module.exports = async (ctx, next) => {
 
   try {
     const jwtPayload = jwt.verify(token, ctx.config.jwtSecret)
+    ctx.appId = appId
     ctx.auth.apiKey = jwtPayload.apiKey
     ctx.user = {
       ...jwtPayload,
-      appId: jwtPayload.appId,
-      accessLevel: await getAccessLevel(
-        jwtPayload.appId,
-        jwtPayload.accessLevelId
-      ),
+      appId: appId,
+      accessLevel: await getAccessLevel(appId, jwtPayload.accessLevelId),
     }
   } catch (err) {
     ctx.throw(err.status || STATUS_CODES.FORBIDDEN, err.text)

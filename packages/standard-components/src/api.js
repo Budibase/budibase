@@ -5,6 +5,10 @@ const apiCall = method => async (
     "Content-Type": "application/json",
   }
 ) => {
+  const appId = location.pathname.split("/")[1]
+  if (appId) {
+    headers["x-budibase-app-id"] = appId
+  }
   const response = await fetch(url, {
     method: method,
     body: body && JSON.stringify(body),

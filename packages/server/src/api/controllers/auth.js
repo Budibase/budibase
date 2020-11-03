@@ -4,10 +4,10 @@ const bcrypt = require("../../utilities/bcrypt")
 const env = require("../../environment")
 const { getAPIKey } = require("../../utilities/usageQuota")
 const { generateUserID } = require("../../db/utils")
-const { getCookieName } = require("../../utilities")
+const { setCookie } = require("../../utilities")
 
 exports.authenticate = async ctx => {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   if (!appId) ctx.throw(400, "No appId")
 
   const { username, password } = ctx.request.body
@@ -46,15 +46,7 @@ exports.authenticate = async ctx => {
       expiresIn: "1 day",
     })
 
-    const expires = new Date()
-    expires.setDate(expires.getDate() + 1)
-
-    ctx.cookies.set(getCookieName(appId), token, {
-      expires,
-      path: "/",
-      httpOnly: false,
-      overwrite: true,
-    })
+    setCookie(ctx, appId, token)
 
     delete dbUser.password
     ctx.body = {
