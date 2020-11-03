@@ -1,15 +1,17 @@
 import jsdom, { JSDOM } from "jsdom"
 import { loadBudibase } from "../src/index"
 
+export const APP_ID = "TEST_APP_ID"
+
 export const load = async (page, screens, url, host = "test.com") => {
   screens = screens || []
   url = url || "/"
 
   const fullUrl = `http://${host}${url}`
   const cookieJar = new jsdom.CookieJar()
-  const cookie = `${btoa("{}")}.${btoa('{"appId":"TEST_APP_ID"}')}.signature`
+  const cookie = `${btoa("{}")}.${btoa(`{"appId":"${APP_ID}"}`)}.signature`
   cookieJar.setCookie(
-    `budibase:TEST_APP_ID:local=${cookie};domain=${host};path=/`,
+    `budibase:${APP_ID}:local=${cookie};domain=${host};path=/`,
     fullUrl,
     {
       looseMode: false,

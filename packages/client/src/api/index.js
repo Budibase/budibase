@@ -1,5 +1,5 @@
-import {authenticate} from "./authenticate"
-import {getAppIdFromPath} from "../render/getAppId";
+import { authenticate } from "./authenticate"
+import { getAppIdFromPath } from "../render/getAppId"
 
 const apiCall = method => async ({ url, body }) => {
   const response = await fetch(url, {
@@ -38,7 +38,7 @@ const del = apiCall("DELETE")
 const ERROR_MEMBER = "##error"
 const error = message => {
   // appStore.update(s => s["##error_message"], message)
-  return {[ERROR_MEMBER]: message}
+  return { [ERROR_MEMBER]: message }
 }
 
 const isSuccess = obj => !obj || !obj[ERROR_MEMBER]
