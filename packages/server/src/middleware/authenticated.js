@@ -20,10 +20,11 @@ module.exports = async (ctx, next) => {
   // do everything we can to make sure the appId is held correctly
   // we hold it in state as a
   let appId = getAppId(ctx)
-  if (appId) {
+  const cookieAppId = ctx.cookies.get(getCookieName("currentapp"))
+  if (appId && cookieAppId !== appId) {
     setCookie(ctx, "currentapp", appId)
-  } else {
-    appId = ctx.cookies.get(getCookieName("currentapp"))
+  } else if (cookieAppId) {
+    appId = cookieAppId
   }
 
   const appToken = ctx.cookies.get(getCookieName(appId))

@@ -1,3 +1,4 @@
 export const getAppIdFromPath = () => {
-  return location.pathname.split("/")[1]
+  let appId = location.pathname.split("/")[1]
+  return appId.startsWith("app_") ? appId : undefined
 }
