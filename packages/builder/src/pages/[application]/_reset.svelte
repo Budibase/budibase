@@ -84,8 +84,6 @@
       <Button
         secondary
         on:click={() => {
-          // reset cookies for this app
-          document.cookie = `budibase:${application}:local=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`
           window.open(`/${application}`)
         }}>
         Preview
