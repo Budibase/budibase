@@ -11,6 +11,10 @@
   $: sanitiseOptions(options)
 
   function getValidOptions(selectedOptions, allOptions) {
+    // Fix the hardcoded default string value
+    if (!Array.isArray(selectedOptions)) {
+      selectedOptions = []
+    }
     return selectedOptions.filter(val => allOptions.indexOf(val) !== -1)
   }
 
