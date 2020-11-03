@@ -33,8 +33,7 @@ exports.authenticate = async ctx => {
     const payload = {
       userId: dbUser._id,
       accessLevelId: dbUser.accessLevelId,
-      version: app.version,
-      appId,
+      version: app.version
     }
     // if in cloud add the user api key
     if (env.CLOUD) {
