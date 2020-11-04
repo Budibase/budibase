@@ -142,7 +142,7 @@ const saveScreen = store => async screen => {
 
   let savePromise
   await api
-      .post(`/api/${currentPage._id}/screens`, screen)
+      .post(`/api/screens/${currentPage._id}`, screen)
       .then(() => {
         if (currentPageScreens.includes(screen)) return
 
@@ -262,7 +262,7 @@ const deleteScreens = store => (screens, pageName = null) => {
       state.pages[pageName]._screens = state.pages[pageName]._screens.filter(
         scr => scr.name !== screen.name
       )
-      api.delete(`/_builder/api/pages/${pageName}/screens/${screen.name}`)
+      api.delete(`/api/screens/${screen._id}/${screen._rev}`)
     }
     return state
   })

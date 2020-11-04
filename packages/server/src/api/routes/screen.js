@@ -27,13 +27,17 @@ function generateSaveValidation() {
 
 router
   .get("/api/screens", authorized(BUILDER), controller.fetch)
-  .get("/api/:pageId/screens", authorized(BUILDER), controller.find)
+  .get("/api/screens/:pageId", authorized(BUILDER), controller.find)
   .post(
-    "/api/:pageId/screens",
+    "/api/screens/:pageId",
     authorized(BUILDER),
     generateSaveValidation(),
     controller.save
   )
-  .delete("/api/:screenId/:revId", authorized(BUILDER), controller.destroy)
+  .delete(
+    "/api/screens/:screenId/:revId",
+    authorized(BUILDER),
+    controller.destroy
+  )
 
 module.exports = router
