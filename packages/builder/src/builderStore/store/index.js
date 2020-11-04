@@ -77,23 +77,18 @@ export const getStore = () => {
 export default getStore
 
 const setPackage = (store, initial) => async pkg => {
-  const [main_screens, unauth_screens] = await Promise.all([
-    api
-      .get(`/_builder/api/${pkg.application._id}/pages/main/screens`)
-      .then(r => r.json()),
-    api
-      .get(`/_builder/api/${pkg.application._id}/pages/unauthenticated/screens`)
-      .then(r => r.json()),
-  ])
+  const screens = await api.get("/api/screens").then(r => r.json())
 
+  const mainScreens = screens.filter(screen => screen._id.includes(pkg.pages.main._id)),
+    unauthScreens = screens.filter(screen => screen._id.includes(pkg.pages.unauthenticated._id))
   pkg.pages = {
     main: {
       ...pkg.pages.main,
-      _screens: Object.values(main_screens),
+      _screens: mainScreens,
     },
     unauthenticated: {
       ...pkg.pages.unauthenticated,
-      _screens: Object.values(unauth_screens),
+      _screens: unauthScreens,
     },
   }
 
@@ -107,7 +102,7 @@ const setPackage = (store, initial) => async pkg => {
         regenerateCssForScreen(screen)
       }
 
-      await api.post(`/_builder/api/${pkg.application._id}/pages/${name}`, {
+      await api.post(`/api/pages/${page._id}`, {
         page: {
           componentLibraries: pkg.application.componentLibraries,
           ...page,
@@ -115,8 +110,8 @@ const setPackage = (store, initial) => async pkg => {
         screens: page._screens,
       })
     }
-    generateInitialPageCss("main")
-    generateInitialPageCss("unauthenticated")
+    await generateInitialPageCss("main")
+    await generateInitialPageCss("unauthenticated")
     pkg.justCreated = false
   }
 
@@ -128,8 +123,8 @@ const setPackage = (store, initial) => async pkg => {
   initial.pages = pkg.pages
   initial.hasAppPackage = true
   initial.screens = [
-    ...Object.values(main_screens),
-    ...Object.values(unauth_screens),
+    ...Object.values(mainScreens),
+    ...Object.values(unauthScreens),
   ]
   initial.builtins = [getBuiltin("##builtin/screenslot")]
   initial.appInstance = pkg.application.instance
@@ -139,40 +134,36 @@ const setPackage = (store, initial) => async pkg => {
   return initial
 }
 
-const saveScreen = store => screen => {
-  store.update(state => {
-    return _saveScreen(store, state, screen)
-  })
-}
+const saveScreen = store => async screen => {
+  const storeContents = get(store)
+  const pageName = storeContents.currentPageName || "main"
+  const currentPage = storeContents.pages[pageName]
+  const currentPageScreens = currentPage._screens
 
-const _saveScreen = async (store, s, screen) => {
-  const pageName = s.currentPageName || "main"
-  const currentPageScreens = s.pages[pageName]._screens
-
+  let savePromise
   await api
-    .post(`/_builder/api/${s.appId}/pages/${pageName}/screen`, screen)
-    .then(() => {
-      if (currentPageScreens.includes(screen)) return
+      .post(`/api/${currentPage._id}/screens`, screen)
+      .then(() => {
+        if (currentPageScreens.includes(screen)) return
 
-      const screens = [...currentPageScreens, screen]
+        const screens = [...currentPageScreens, screen]
 
-      store.update(innerState => {
-        innerState.pages[pageName]._screens = screens
-        innerState.screens = screens
-        innerState.currentPreviewItem = screen
-        const safeProps = makePropsSafe(
-          innerState.components[screen.props._component],
-          screen.props
-        )
-        innerState.currentComponentInfo = safeProps
-        screen.props = safeProps
-
-        _savePage(innerState)
-        return innerState
+        // TODO: should carry out all server updates to screen in a single call
+        store.update(state => {
+          state.pages[pageName]._screens = screens
+          state.screens = screens
+          state.currentPreviewItem = screen
+          const safeProps = makePropsSafe(
+              state.components[screen.props._component],
+              screen.props
+          )
+          state.currentComponentInfo = safeProps
+          screen.props = safeProps
+          savePromise = _savePage(state)
+          return state
+        })
       })
-    })
-
-  return s
+  await savePromise
 }
 
 const createScreen = store => async screen => {
@@ -182,7 +173,7 @@ const createScreen = store => async screen => {
     state.currentComponentInfo = screen.props
     state.currentFrontEndType = "screen"
     regenerateCssForCurrentScreen(state)
-    savePromise = _saveScreen(store, state, screen)
+    savePromise = saveScreen(store)(screen)
     return state
   })
   await savePromise
