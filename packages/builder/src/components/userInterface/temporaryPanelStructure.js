@@ -602,13 +602,6 @@ export default {
                 defaultValue: true,
               },
               {
-                label: "Fill",
-                key: "fill",
-                control: Checkbox,
-                valueKey: "checked",
-                defaultValue: true,
-              },
-              {
                 label: "Legend",
                 key: "legend",
                 control: Checkbox,
@@ -703,13 +696,6 @@ export default {
                 defaultValue: true,
               },
               {
-                label: "Fill",
-                key: "fill",
-                control: Checkbox,
-                valueKey: "checked",
-                defaultValue: true,
-              },
-              {
                 label: "Legend",
                 key: "legend",
                 control: Checkbox,
@@ -721,7 +707,7 @@ export default {
                 key: "stacked",
                 control: Checkbox,
                 valueKey: "checked",
-                defaultValue: false,
+                defaultValue: true,
               },
               {
                 label: "Gradient",
