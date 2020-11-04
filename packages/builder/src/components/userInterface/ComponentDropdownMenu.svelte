@@ -25,8 +25,8 @@
   }
 
   const selectComponent = component => {
-    store.selectComponent(component)
-    const path = store.getPathToComponent(component)
+    store.actions.components.select(component)
+    const path = store.actions.components.findRoute(component)
     $goto(`./:page/:screen/${path}`)
   }
 
@@ -89,17 +89,19 @@
 
   const storeComponentForCopy = (cut = false) => {
     // lives in store - also used by drag drop
-    store.storeComponentForCopy(component, cut)
+    store.actions.components.copy(component, cut)
   }
 
   const pasteComponent = mode => {
     // lives in store - also used by drag drop
-    store.pasteComponent(component, mode)
+    store.actions.components.paste(component, mode)
   }
 </script>
 
 <div bind:this={anchor} on:click|stopPropagation>
-  <div class="icon" on:click={dropdown.show}><i class="ri-more-line" /></div>
+  <div class="icon" on:click={dropdown.show}>
+    <i class="ri-more-line" />
+  </div>
   <DropdownMenu bind:this={dropdown} width="170px" {anchor} align="left">
     <DropdownContainer on:click={hideDropdown}>
       <DropdownItem

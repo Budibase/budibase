@@ -1,4 +1,4 @@
 <script>
   import { params } from "@sveltech/routify"
-  store.setCurrentPage($params.page)
+  store.actions.pages.select($params.page)
 </script>
