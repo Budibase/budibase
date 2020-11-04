@@ -26,6 +26,7 @@
   // Fetch data on mount
   onMount(async () => {
     if (!datasource || !labelColumn || !valueColumns || !valueColumns.length) {
+      options = false
       return
     }
 
@@ -39,6 +40,7 @@
       .slice(0, 20)
       .sort((a, b) => (a[labelColumn] > b[labelColumn] ? 1 : -1))
     if (!schema || !data.length) {
+      options = false
       return
     }
 
