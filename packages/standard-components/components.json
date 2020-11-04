@@ -413,7 +413,6 @@
 				"default": "400"
 			},
 			"width": "number",
-			"horizontal": "bool",
 			"dataLabels": "bool",
 			"animate": {
 				"type": "bool",
@@ -422,7 +421,14 @@
 			"xAxisLabel": "string",
 			"yAxisLabel": "string",
 			"legend": "bool",
-			"stacked": "bool"
+			"stacked": "bool",
+			"yAxisUnits": {
+				"type": "options",
+				"default": "Default",
+				"options": [
+					"Default", "Thousands", "Millions"
+				]
+			}
 		}
 	},
 	"line": {
