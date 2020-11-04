@@ -1,7 +1,6 @@
 <script>
   import { onMount } from "svelte"
   import fetchData, { fetchSchema } from "../fetchData"
-  import { sortBy } from "lodash/fp"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
 
@@ -27,21 +26,15 @@
       return
     }
 
-    const result = (await fetchData(datasource, $store)).slice(0, 20)
-    const data = sortBy(row => row[labelColumn])(result)
+    // Fetch, filter and sort data
     const schema = await fetchSchema(datasource.tableId)
-    if (!schema || !data || !data.length) {
+    const result = await fetchData(datasource, $store)
+    const data = result
+      .filter(row => row[labelColumn] != null && row[valueColumn] != null)
+      .slice(0, 20)
+      .sort((a, b) => (a[labelColumn] > b[labelColumn] ? 1 : -1))
+    if (!schema || !data.length) {
       return
-    }
-
-    // Check columns are valid
-    if (datasource.type !== "view") {
-      if (schema[labelColumn] == null) {
-        return
-      }
-      if (schema[valueColumn] == null) {
-        return
-      }
     }
 
     // Initialise default chart
@@ -57,10 +50,8 @@
 
     // Add data if valid datasource
     const series = data.map(row => parseFloat(row[valueColumn]))
-    builder = builder.series(series)
-    if (data[0][labelColumn] != null) {
-      builder = builder.labels(data.map(row => row[labelColumn]))
-    }
+    const labels = data.map(row => row[labelColumn])
+    builder = builder.series(series).labels(labels)
 
     // Build chart options
     options = builder.getOptions()
