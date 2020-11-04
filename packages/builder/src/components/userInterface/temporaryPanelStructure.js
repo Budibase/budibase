@@ -829,6 +829,91 @@ export default {
             ],
           },
         },
+        {
+          name: "Candlestick Chart",
+          _component: "@budibase/standard-components/candlestick",
+          description: "Candlestick chart",
+          icon: "ri-bar-chart-line",
+          properties: {
+            settings: [
+              {
+                label: "Title",
+                key: "title",
+                control: Input,
+              },
+              {
+                label: "Data",
+                key: "datasource",
+                control: TableViewSelect,
+              },
+              {
+                label: "Date Col.",
+                key: "dateColumn",
+                dependsOn: "datasource",
+                control: TableViewFieldSelect,
+              },
+              {
+                label: "Open Col.",
+                key: "openColumn",
+                dependsOn: "datasource",
+                control: TableViewFieldSelect,
+              },
+              {
+                label: "Close Col.",
+                key: "closeColumn",
+                dependsOn: "datasource",
+                control: TableViewFieldSelect,
+              },
+              {
+                label: "High Col.",
+                key: "highColumn",
+                dependsOn: "datasource",
+                control: TableViewFieldSelect,
+              },
+              {
+                label: "Low Col.",
+                key: "lowColumn",
+                dependsOn: "datasource",
+                control: TableViewFieldSelect,
+              },
+              {
+                label: "Format",
+                key: "yAxisUnits",
+                control: OptionSelect,
+                options: ["Default", "Thousands", "Millions"],
+                defaultValue: "Default",
+              },
+              {
+                label: "Y Axis Label",
+                key: "yAxisLabel",
+                control: Input,
+              },
+              {
+                label: "X Axis Label",
+                key: "xAxisLabel",
+                control: Input,
+              },
+              {
+                label: "Width",
+                key: "width",
+                control: Input,
+              },
+              {
+                label: "Height",
+                key: "height",
+                control: Input,
+                defaultValue: "400",
+              },
+              {
+                label: "Animate",
+                key: "animate",
+                control: Checkbox,
+                valueKey: "checked",
+                defaultValue: true,
+              },
+            ],
+          },
+        },
       ],
     },
     {
