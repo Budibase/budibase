@@ -404,10 +404,6 @@
 			"datasource": "tables",
 			"labelColumn": "string",
 			"valueColumns": "string",
-			"color": {
-				"type": "string",
-				"default": "#4285f4"
-			},
 			"height": {
 				"type": "number",
 				"default": "400"
@@ -439,10 +435,6 @@
 			"datasource": "tables",
 			"labelColumn": "string",
 			"valueColumns": "string",
-			"color": {
-				"type": "string",
-				"default": "#4285f4"
-			},
 			"height": {
 				"type": "number",
 				"default": "400"
@@ -485,10 +477,6 @@
 			"datasource": "tables",
 			"labelColumn": "string",
 			"valueColumns": "string",
-			"color": {
-				"type": "string",
-				"default": "#4285f4"
-			},
 			"height": {
 				"type": "number",
 				"default": "400"
@@ -536,10 +524,6 @@
 			"datasource": "tables",
 			"labelColumn": "string",
 			"valueColumn": "string",
-			"color": {
-				"type": "string",
-				"default": "#4285f4"
-			},
 			"height": {
 				"type": "number",
 				"default": "200"
@@ -564,10 +548,6 @@
 			"datasource": "tables",
 			"labelColumn": "string",
 			"valueColumn": "string",
-			"color": {
-				"type": "string",
-				"default": "#4285f4"
-			},
 			"height": {
 				"type": "number",
 				"default": "200"
