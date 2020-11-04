@@ -14,7 +14,7 @@ export default async function fetchData(datasource, store) {
     }
 
     // Fetch table schema so we can check for linked rows
-    if (rows && rows.length) {
+    if (rows && rows.length && datasource.tableId) {
       const schema = await fetchSchema(datasource.tableId)
       const keys = Object.keys(schema)
       rows.forEach(row => {

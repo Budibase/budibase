@@ -3,6 +3,7 @@
   import fetchData, { fetchSchema } from "../fetchData"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
+  import { isEmpty } from "lodash/fp"
 
   export let _bb
   export let title
@@ -22,7 +23,7 @@
 
   // Fetch data on mount
   onMount(async () => {
-    if (!datasource || !labelColumn || !valueColumn) {
+    if (isEmpty(datasource) || !labelColumn || !valueColumn) {
       options = false
       return
     }
