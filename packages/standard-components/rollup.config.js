@@ -5,7 +5,7 @@ import postcss from "rollup-plugin-postcss"
 import { terser } from "rollup-plugin-terser"
 
 const production = !process.env.ROLLUP_WATCH
-const lodash_fp_exports = ["isEmpty", "sortBy"]
+const lodash_fp_exports = ["isEmpty"]
 
 export default {
   input: "src/index.js",
