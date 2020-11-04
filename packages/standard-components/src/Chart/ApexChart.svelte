@@ -6,7 +6,7 @@
 
 {#if options}
   <div use:chart={options} />
-{:else}
+{:else if options === false}
   <div>Invalid chart options</div>
 {/if}
 

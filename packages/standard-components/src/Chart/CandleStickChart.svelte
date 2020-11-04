@@ -26,6 +26,7 @@
   onMount(async () => {
     const allCols = [dateColumn, openColumn, highColumn, lowColumn, closeColumn]
     if (!datasource || allCols.find(x => x == null)) {
+      options = false
       return
     }
 
@@ -39,6 +40,7 @@
       .slice(0, 100)
       .sort((a, b) => (a[dateColumn] > b[dateColumn] ? 1 : -1))
     if (!schema || !data.length) {
+      options = false
       return
     }
 
