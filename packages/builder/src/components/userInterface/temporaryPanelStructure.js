@@ -453,6 +453,13 @@ export default {
                 control: MultiTableViewFieldSelect,
               },
               {
+                label: "Format",
+                key: "yAxisUnits",
+                control: OptionSelect,
+                options: ["Default", "Thousands", "Millions"],
+                defaultValue: "Default",
+              },
+              {
                 label: "Y Axis Label",
                 key: "yAxisLabel",
                 control: Input,
@@ -485,12 +492,6 @@ export default {
                 control: Checkbox,
                 valueKey: "checked",
                 defaultValue: false,
-              },
-              {
-                label: "Horizontal",
-                key: "horizontal",
-                control: Checkbox,
-                valueKey: "checked",
               },
               {
                 label: "Data Labels",

@@ -1,3 +1,5 @@
+import { labelColumn, valueColumns } from "./BarChart.svelte"
+
 export class ApexOptionsBuilder {
   formatters = {
     ["Default"]: val => Math.round(val * 100) / 100,
@@ -135,5 +137,9 @@ export class ApexOptionsBuilder {
       ["yaxis", "labels", "formatter"],
       this.formatters[units || "Default"]
     )
+  }
+
+  xType(type) {
+    return this.setOption(["xaxis", "type"], type)
   }
 }
