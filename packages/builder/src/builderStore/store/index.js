@@ -20,7 +20,7 @@ import {
   walkProps,
   savePage as _savePage,
   saveCurrentPreviewItem as _saveCurrentPreviewItem,
-  saveScreenApi as _saveScreenApi,
+  // saveScreenApi as _saveScreenApi,
   regenerateCssForCurrentScreen,
   regenerateCssForScreen,
   generateNewIdsForComponent,
@@ -58,7 +58,7 @@ export const getStore = () => {
   store.setCurrentPage = setCurrentPage(store)
   store.createLink = createLink(store)
   store.createScreen = createScreen(store)
-  store.savePage = savePage(store)
+  // store.savePage = savePage(store)
   store.addChildComponent = addChildComponent(store)
   store.selectComponent = selectComponent(store)
   store.setComponentProp = setComponentProp(store)
@@ -66,9 +66,6 @@ export const getStore = () => {
   store.setComponentStyle = setComponentStyle(store)
   store.setScreenType = setScreenType(store)
   store.getPathToComponent = getPathToComponent(store)
-  store.addTemplatedComponent = addTemplatedComponent(store)
-  store.setMetadataProp = setMetadataProp(store)
-  store.editPageOrScreen = editPageOrScreen(store)
   store.pasteComponent = pasteComponent(store)
   store.storeComponentForCopy = storeComponentForCopy(store)
   return store
@@ -79,8 +76,12 @@ export default getStore
 const setPackage = (store, initial) => async pkg => {
   const screens = await api.get("/api/screens").then(r => r.json())
 
-  const mainScreens = screens.filter(screen => screen._id.includes(pkg.pages.main._id)),
-    unauthScreens = screens.filter(screen => screen._id.includes(pkg.pages.unauthenticated._id))
+  const mainScreens = screens.filter(screen =>
+      screen._id.includes(pkg.pages.main._id)
+    ),
+    unauthScreens = screens.filter(screen =>
+      screen._id.includes(pkg.pages.unauthenticated._id)
+    )
   pkg.pages = {
     main: {
       ...pkg.pages.main,
@@ -141,28 +142,30 @@ const saveScreen = store => async screen => {
   const currentPageScreens = currentPage._screens
 
   let savePromise
-  await api
-      .post(`/api/screens/${currentPage._id}`, screen)
-      .then(() => {
-        if (currentPageScreens.includes(screen)) return
+  const response = await api.post(`/api/screens/${currentPage._id}`, screen)
+  const json = await response.json()
 
-        const screens = [...currentPageScreens, screen]
+  if (currentPageScreens.includes(screen)) return
 
-        // TODO: should carry out all server updates to screen in a single call
-        store.update(state => {
-          state.pages[pageName]._screens = screens
-          state.screens = screens
-          state.currentPreviewItem = screen
-          const safeProps = makePropsSafe(
-              state.components[screen.props._component],
-              screen.props
-          )
-          state.currentComponentInfo = safeProps
-          screen.props = safeProps
-          savePromise = _savePage(state)
-          return state
-        })
-      })
+  screen._rev = json.rev
+  screen._id = json.id
+
+  const screens = [...currentPageScreens, screen]
+
+  // TODO: should carry out all server updates to screen in a single call
+  store.update(state => {
+    state.pages[pageName]._screens = screens
+    state.screens = screens
+    state.currentPreviewItem = screen
+    const safeProps = makePropsSafe(
+      state.components[screen.props._component],
+      screen.props
+    )
+    state.currentComponentInfo = safeProps
+    screen.props = safeProps
+    savePromise = _savePage(state)
+    return state
+  })
   await savePromise
 }
 
@@ -268,17 +271,17 @@ const deleteScreens = store => (screens, pageName = null) => {
   })
 }
 
-const savePage = store => async page => {
-  store.update(state => {
-    if (state.currentFrontEndType !== "page" || !state.currentPageName) {
-      return state
-    }
+// const savePage = store => async page => {
+//   store.update(state => {
+//     if (state.currentFrontEndType !== "page" || !state.currentPageName) {
+//       return state
+//     }
 
-    state.pages[state.currentPageName] = page
-    _savePage(state)
-    return state
-  })
-}
+//     state.pages[state.currentPageName] = page
+//     _savePage(state)
+//     return state
+//   })
+// }
 
 const setCurrentPage = store => pageName => {
   store.update(state => {
@@ -365,33 +368,13 @@ const addChildComponent = store => (componentToAdd, presetProps = {}) => {
 
     state.currentFrontEndType === "page"
       ? _savePage(state)
-      : _saveScreenApi(state.currentPreviewItem, state)
+      : saveScreen(state.currentPreviewItem)
 
     state.currentView = "component"
     state.currentComponentInfo = newComponent.props
     analytics.captureEvent("Added Component", {
       name: newComponent.props._component,
     })
-    return state
-  })
-}
-
-/**
- * @param  {string} props - props to add, as child of current component
- */
-
-const addTemplatedComponent = store => props => {
-  store.update(state => {
-    walkProps(props, p => {
-      p._id = uuid()
-    })
-    state.currentComponentInfo._children = state.currentComponentInfo._children.concat(
-      props
-    )
-    regenerateCssForCurrentScreen(state)
-
-    _saveCurrentPreviewItem(state)
-
     return state
   })
 }
@@ -440,6 +423,7 @@ const setComponentStyle = store => (type, name, value) => {
   })
 }
 
+// Select page or screen
 const setScreenType = store => type => {
   store.update(state => {
     state.currentFrontEndType = type
@@ -452,17 +436,6 @@ const setScreenType = store => type => {
     state.currentComponentInfo = pageOrScreen ? pageOrScreen.props : null
     state.currentPreviewItem = pageOrScreen
     state.currentView = "detail"
-    return state
-  })
-}
-
-const editPageOrScreen = store => (key, value, setOnComponent = false) => {
-  store.update(state => {
-    setOnComponent
-      ? (state.currentPreviewItem.props[key] = value)
-      : (state.currentPreviewItem[key] = value)
-    _saveCurrentPreviewItem(state)
-
     return state
   })
 }
@@ -496,13 +469,6 @@ const getPathToComponent = store => component => {
   const path = IdList.join("/")
 
   return path
-}
-
-const setMetadataProp = store => (name, prop) => {
-  store.update(s => {
-    s.currentPreviewItem[name] = prop
-    return s
-  })
 }
 
 const storeComponentForCopy = store => (component, cut = false) => {

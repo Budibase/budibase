@@ -146,7 +146,6 @@ const MAIN = {
     className: "",
     onLoad: [],
   },
-  uiFunctions: "",
 }
 
 const UNAUTHENTICATED = {
@@ -217,7 +216,6 @@ const UNAUTHENTICATED = {
     className: "",
     onLoad: [],
   },
-  uiFunctions: "",
 }
 
 module.exports = { MAIN, UNAUTHENTICATED, PageTypes }
