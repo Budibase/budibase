@@ -27,7 +27,7 @@
     componentPropDefinition.properties &&
     componentPropDefinition.properties[selectedCategory.value]
 
-  const onStyleChanged = store.setComponentStyle
+  const onStyleChanged = store.actions.components.updateStyle
 
   $: isComponentOrScreen =
     $store.currentView === "component" ||
@@ -81,7 +81,7 @@
       {componentDefinition}
       {panelDefinition}
       displayNameField={displayName}
-      onChange={store.setComponentProp}
+      onChange={store.actions.components.updateProp}
       onScreenPropChange={store.setPageOrScreenProp}
       screenOrPageInstance={$store.currentView !== 'component' && $store.currentPreviewItem} />
   {/if}

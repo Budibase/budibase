@@ -82,33 +82,31 @@ export const getFrontendStore = () => {
             screens: page._screens,
           })
         }
-        pkg.justCreated = false
-
-        const components = await fetchComponentLibDefinitions(
-          pkg.application._id
-        )
-
-        store.update(state => ({
-          ...state,
-          libraries: pkg.application.componentLibraries,
-          components,
-          name: pkg.application.name,
-          description: pkg.application.description,
-          appId: pkg.application._id,
-          pages: pkg.pages,
-          hasAppPackage: true,
-          screens: [
-            ...Object.values(mainScreens),
-            ...Object.values(unauthScreens),
-          ],
-          builtins: [getBuiltin("##builtin/screenslot")],
-          appInstance: pkg.application.instance,
-        }))
-
-        await backendUiStore.actions.database.select(pkg.application.instance)
       }
+
+      pkg.justCreated = false
+
+      const components = await fetchComponentLibDefinitions(pkg.application._id)
+
+      store.update(state => ({
+        ...state,
+        libraries: pkg.application.componentLibraries,
+        components,
+        name: pkg.application.name,
+        description: pkg.application.description,
+        appId: pkg.application._id,
+        pages: pkg.pages,
+        hasAppPackage: true,
+        screens: [
+          ...Object.values(mainScreens),
+          ...Object.values(unauthScreens),
+        ],
+        builtins: [getBuiltin("##builtin/screenslot")],
+        appInstance: pkg.application.instance,
+      }))
+
+      await backendUiStore.actions.database.select(pkg.application.instance)
     },
-    // store.setScreenType
     selectPageOrScreen: type => {
       store.update(state => {
         state.currentFrontEndType = type
@@ -241,243 +239,250 @@ export const getFrontendStore = () => {
           ? store.actions.pages.save()
           : store.actions.screens.save(state.currentPreviewItem)
       },
-      pages: {
-        select: pageName => {
-          store.update(state => {
-            const current_screens = state.pages[pageName]._screens
+    },
+    pages: {
+      select: pageName => {
+        store.update(state => {
+          const current_screens = state.pages[pageName]._screens
 
-            const currentPage = state.pages[pageName]
+          const currentPage = state.pages[pageName]
 
-            state.currentFrontEndType = "page"
-            state.currentView = "detail"
-            state.currentPageName = pageName
-            state.screens = Array.isArray(current_screens)
-              ? current_screens
-              : Object.values(current_screens)
-            const safeProps = makePropsSafe(
-              state.components[currentPage.props._component],
-              currentPage.props
-            )
-            state.currentComponentInfo = safeProps
-            currentPage.props = safeProps
-            state.currentPreviewItem = state.pages[pageName]
-            store.actions.screens.regenerateCssForCurrentScreen()
+          state.currentFrontEndType = "page"
+          state.currentView = "detail"
+          state.currentPageName = pageName
+          state.screens = Array.isArray(current_screens)
+            ? current_screens
+            : Object.values(current_screens)
 
-            for (let screen of state.screens) {
-              screen._css = generate_screen_css([screen.props])
-            }
+          // This is the root of many problems.
+          // Uncaught (in promise) TypeError: Cannot read property '_component' of undefined
+          // it appears that the currentPage sometimes has _props instead of props
+          // why
+          const safeProps = makePropsSafe(
+            state.components[currentPage.props._component],
+            currentPage.props
+          )
+          state.currentComponentInfo = safeProps
+          currentPage.props = safeProps
+          state.currentPreviewItem = state.pages[pageName]
+          store.actions.screens.regenerateCssForCurrentScreen()
 
-            return state
-          })
-        },
-        save: async page => {
-          const storeContents = get(store)
-          const pageName = storeContents.currentPageName || "main"
-          const pageToSave = page || storeContents.pages[pageName]
-
-          // TODO: revisit. This sends down a very weird payload
-          const response = await api
-            .post(`/api/pages/${pageToSave._id}`, {
-              page: {
-                componentLibraries: storeContents.pages.componentLibraries,
-                ...pageToSave,
-              },
-              screens: pageToSave._screens,
-            })
-            .then(response => response.json())
-
-          store.update(state => {
-            state.pages[pageName]._rev = response.rev
-            return state
-          })
-        },
-      },
-      components: {
-        select: component => {
-          store.update(state => {
-            const componentDef = component._component.startsWith("##")
-              ? component
-              : state.components[component._component]
-            state.currentComponentInfo = makePropsSafe(componentDef, component)
-            state.currentView = "component"
-            return state
-          })
-        },
-        // addChildComponent
-        create: (componentToAdd, presetProps) => {
-          store.update(state => {
-            function findSlot(component_array) {
-              for (let i = 0; i < component_array.length; i += 1) {
-                if (component_array[i]._component === "##builtin/screenslot") {
-                  return true
-                }
-
-                if (component_array[i]._children) findSlot(component_array[i])
-              }
-
-              return false
-            }
-
-            if (
-              componentToAdd.startsWith("##") &&
-              findSlot(state.pages[state.currentPageName].props._children)
-            ) {
-              return state
-            }
-
-            const component = getComponentDefinition(state, componentToAdd)
-
-            const instanceId = get(backendUiStore).selectedDatabase._id
-            const instanceName = getNewComponentName(component, state)
-
-            const newComponent = createProps(
-              component,
-              {
-                ...presetProps,
-                _instanceId: instanceId,
-                _instanceName: instanceName,
-              },
-              state
-            )
-
-            const currentComponent =
-              state.components[state.currentComponentInfo._component]
-
-            const targetParent = currentComponent.children
-              ? state.currentComponentInfo
-              : getParent(
-                  state.currentPreviewItem.props,
-                  state.currentComponentInfo
-                )
-
-            // Don't continue if there's no parent
-            if (!targetParent) {
-              return state
-            }
-
-            targetParent._children = targetParent._children.concat(
-              newComponent.props
-            )
-
-            store.actions.preview.saveSelected()
-
-            state.currentView = "component"
-            state.currentComponentInfo = newComponent.props
-            analytics.captureEvent("Added Component", {
-              name: newComponent.props._component,
-            })
-            return state
-          })
-        },
-        copy: (component, cut = false) => {
-          store.update(state => {
-            const copiedComponent = cloneDeep(component)
-            state.componentToPaste = copiedComponent
-            state.componentToPaste.isCut = cut
-            if (cut) {
-              const parent = getParent(
-                state.currentPreviewItem.props,
-                component._id
-              )
-              parent._children = parent._children.filter(
-                c => c._id !== component._id
-              )
-              store.actions.components.select(parent)
-            }
-
-            return state
-          })
-        },
-        paste: (targetComponent, mode) => {
-          store.update(state => {
-            if (!state.componentToPaste) return state
-
-            const componentToPaste = cloneDeep(state.componentToPaste)
-            // retain the same ids as things may be referencing this component
-            if (componentToPaste.isCut) {
-              // in case we paste a second time
-              state.componentToPaste.isCut = false
-            } else {
-              generateNewIdsForComponent(componentToPaste, state)
-            }
-            delete componentToPaste.isCut
-
-            if (mode === "inside") {
-              targetComponent._children.push(componentToPaste)
-              return state
-            }
-
-            const parent = getParent(
-              state.currentPreviewItem.props,
-              targetComponent
-            )
-
-            const targetIndex = parent._children.indexOf(targetComponent)
-            const index = mode === "above" ? targetIndex : targetIndex + 1
-            parent._children.splice(index, 0, cloneDeep(componentToPaste))
-
-            store.actions.screens.regenerateCssForCurrentScreen()
-            store.actions.preview.saveSelected()
-            store.actions.components.select(componentToPaste)
-
-            return state
-          })
-        },
-        updateStyle: (type, name, value) => {
-          store.update(state => {
-            if (!state.currentComponentInfo._styles) {
-              state.currentComponentInfo._styles = {}
-            }
-            state.currentComponentInfo._styles[type][name] = value
-
-            store.actions.screens.regenerateCssForCurrentScreen()
-
-            // save without messing with the store
-            store.actions.preview.saveSelected()
-            return state
-          })
-        },
-        updateProp: (name, value) => {
-          store.update(state => {
-            let current_component = state.currentComponentInfo
-            current_component[name] = value
-
-            state.currentComponentInfo = current_component
-            store.actions.preview.saveSelected()
-            return state
-          })
-        },
-        findRoute: component => {
-          // Gets all the components to needed to construct a path.
-          const tempStore = get(store)
-          let pathComponents = []
-          let parent = component
-          let root = false
-          while (!root) {
-            parent = getParent(tempStore.currentPreviewItem.props, parent)
-            if (!parent) {
-              root = true
-            } else {
-              pathComponents.push(parent)
-            }
+          for (let screen of state.screens) {
+            screen._css = generate_screen_css([screen.props])
           }
 
-          // Remove root entry since it's the screen or page layout.
-          // Reverse array since we need the correct order of the IDs
-          const reversedComponents = pathComponents.reverse().slice(1)
+          return state
+        })
+      },
+      save: async page => {
+        const storeContents = get(store)
+        const pageName = storeContents.currentPageName || "main"
+        const pageToSave = page || storeContents.pages[pageName]
 
-          // Add component
-          const allComponents = [...reversedComponents, component]
+        // TODO: revisit. This sends down a very weird payload
+        const response = await api
+          .post(`/api/pages/${pageToSave._id}`, {
+            page: {
+              componentLibraries: storeContents.pages.componentLibraries,
+              ...pageToSave,
+            },
+            screens: pageToSave._screens,
+          })
+          .then(response => response.json())
 
-          // Map IDs
-          const IdList = allComponents.map(c => c._id)
+        store.update(state => {
+          state.pages[pageName]._rev = response.rev
+          return state
+        })
+      },
+    },
+    components: {
+      select: component => {
+        store.update(state => {
+          const componentDef = component._component.startsWith("##")
+            ? component
+            : state.components[component._component]
+          state.currentComponentInfo = makePropsSafe(componentDef, component)
+          state.currentView = "component"
+          return state
+        })
+      },
+      // addChildComponent
+      create: (componentToAdd, presetProps) => {
+        store.update(state => {
+          function findSlot(component_array) {
+            for (let i = 0; i < component_array.length; i += 1) {
+              if (component_array[i]._component === "##builtin/screenslot") {
+                return true
+              }
 
-          // Construct ID Path:
-          const path = IdList.join("/")
+              if (component_array[i]._children) findSlot(component_array[i])
+            }
 
-          return path
-        },
+            return false
+          }
+
+          if (
+            componentToAdd.startsWith("##") &&
+            findSlot(state.pages[state.currentPageName].props._children)
+          ) {
+            return state
+          }
+
+          const component = getComponentDefinition(state, componentToAdd)
+
+          const instanceId = get(backendUiStore).selectedDatabase._id
+          const instanceName = getNewComponentName(component, state)
+
+          const newComponent = createProps(
+            component,
+            {
+              ...presetProps,
+              _instanceId: instanceId,
+              _instanceName: instanceName,
+            },
+            state
+          )
+
+          const currentComponent =
+            state.components[state.currentComponentInfo._component]
+
+          const targetParent = currentComponent.children
+            ? state.currentComponentInfo
+            : getParent(
+                state.currentPreviewItem.props,
+                state.currentComponentInfo
+              )
+
+          // Don't continue if there's no parent
+          if (!targetParent) {
+            return state
+          }
+
+          targetParent._children = targetParent._children.concat(
+            newComponent.props
+          )
+
+          store.actions.preview.saveSelected()
+
+          state.currentView = "component"
+          state.currentComponentInfo = newComponent.props
+          analytics.captureEvent("Added Component", {
+            name: newComponent.props._component,
+          })
+          return state
+        })
+      },
+      copy: (component, cut = false) => {
+        store.update(state => {
+          const copiedComponent = cloneDeep(component)
+          state.componentToPaste = copiedComponent
+          state.componentToPaste.isCut = cut
+          if (cut) {
+            const parent = getParent(
+              state.currentPreviewItem.props,
+              component._id
+            )
+            parent._children = parent._children.filter(
+              c => c._id !== component._id
+            )
+            store.actions.components.select(parent)
+          }
+
+          return state
+        })
+      },
+      paste: (targetComponent, mode) => {
+        store.update(state => {
+          if (!state.componentToPaste) return state
+
+          const componentToPaste = cloneDeep(state.componentToPaste)
+          // retain the same ids as things may be referencing this component
+          if (componentToPaste.isCut) {
+            // in case we paste a second time
+            state.componentToPaste.isCut = false
+          } else {
+            generateNewIdsForComponent(componentToPaste, state)
+          }
+          delete componentToPaste.isCut
+
+          if (mode === "inside") {
+            targetComponent._children.push(componentToPaste)
+            return state
+          }
+
+          const parent = getParent(
+            state.currentPreviewItem.props,
+            targetComponent
+          )
+
+          const targetIndex = parent._children.indexOf(targetComponent)
+          const index = mode === "above" ? targetIndex : targetIndex + 1
+          parent._children.splice(index, 0, cloneDeep(componentToPaste))
+
+          store.actions.screens.regenerateCssForCurrentScreen()
+          store.actions.preview.saveSelected()
+          store.actions.components.select(componentToPaste)
+
+          return state
+        })
+      },
+      updateStyle: (type, name, value) => {
+        store.update(state => {
+          if (!state.currentComponentInfo._styles) {
+            state.currentComponentInfo._styles = {}
+          }
+          state.currentComponentInfo._styles[type][name] = value
+
+          store.actions.screens.regenerateCssForCurrentScreen()
+
+          // save without messing with the store
+          store.actions.preview.saveSelected()
+          return state
+        })
+      },
+      updateProp: (name, value) => {
+        store.update(state => {
+          let current_component = state.currentComponentInfo
+          current_component[name] = value
+
+          state.currentComponentInfo = current_component
+          store.actions.preview.saveSelected()
+          return state
+        })
+      },
+      findRoute: component => {
+        // Gets all the components to needed to construct a path.
+        const tempStore = get(store)
+        let pathComponents = []
+        let parent = component
+        let root = false
+        while (!root) {
+          parent = getParent(tempStore.currentPreviewItem.props, parent)
+          if (!parent) {
+            root = true
+          } else {
+            pathComponents.push(parent)
+          }
+        }
+
+        // Remove root entry since it's the screen or page layout.
+        // Reverse array since we need the correct order of the IDs
+        const reversedComponents = pathComponents.reverse().slice(1)
+
+        // Add component
+        const allComponents = [...reversedComponents, component]
+
+        // Map IDs
+        const IdList = allComponents.map(c => c._id)
+
+        // Construct ID Path:
+        const path = IdList.join("/")
+
+        return path
       },
     },
   }
+
+  return store
 }

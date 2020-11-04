@@ -154,7 +154,7 @@
       if (applicationPkg.ok) {
         backendUiStore.actions.reset()
         pkg.justCreated = true
-        await store.setPackage(pkg)
+        await store.actions.initialise(pkg)
         automationStore.actions.fetch()
       } else {
         throw new Error(pkg)

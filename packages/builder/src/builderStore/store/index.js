@@ -53,21 +53,21 @@ export const getStore = () => {
   store.setPackage = setPackage(store, initial)
 
   store.saveScreen = saveScreen(store)
-  store.setCurrentScreen = setCurrentScreen(store)
-  store.deleteScreens = deleteScreens(store)
-  store.setCurrentPage = setCurrentPage(store)
+  store.actions.screens.select = setCurrentScreen(store)
+  store.store.actions.screens.delete = store.actions.screens.delete(store)
+  store.actions.pages.select = setCurrentPage(store)
   store.createLink = createLink(store)
   store.createScreen = createScreen(store)
   // store.savePage = savePage(store)
   store.addChildComponent = addChildComponent(store)
-  store.selectComponent = selectComponent(store)
+  store.actions.components.select = selectComponent(store)
   store.setComponentProp = setComponentProp(store)
   store.setPageOrScreenProp = setPageOrScreenProp(store)
-  store.setComponentStyle = setComponentStyle(store)
-  store.setScreenType = setScreenType(store)
-  store.getPathToComponent = getPathToComponent(store)
-  store.pasteComponent = pasteComponent(store)
-  store.storeComponentForCopy = storeComponentForCopy(store)
+  store.actions.components.updateStyle = setComponentStyle(store)
+  store.actions.selectPageOrScreen = setScreenType(store)
+  store.actions.components.findRoute = getPathToComponent(store)
+  store.actions.components.paste = pasteComponent(store)
+  store.actions.components.copy = storeComponentForCopy(store)
   return store
 }
 
@@ -251,7 +251,7 @@ const setCurrentScreen = store => screenName => {
   })
 }
 
-const deleteScreens = store => (screens, pageName = null) => {
+const store.actions.screens.delete = store => (screens, pageName = null) => {
   if (!(screens instanceof Array)) {
     screens = [screens]
   }

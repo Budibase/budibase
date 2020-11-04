@@ -59,6 +59,11 @@ export const createProps = (componentDefinition, derivedFromProps) => {
 }
 
 export const makePropsSafe = (componentDefinition, props) => {
+  if (!componentDefinition) {
+    console.error(
+      "No component definition passed to makePropsSafe. Please check the component definition is being passed correctly."
+    )
+  }
   const safeProps = createProps(componentDefinition, props).props
   for (let propName in safeProps) {
     props[propName] = safeProps[propName]

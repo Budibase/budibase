@@ -6,7 +6,6 @@ const {
   listScreens,
   saveScreen,
   buildPage,
-  renameScreen,
   deleteScreen,
 } = require("../../utilities/builder")
 const authorized = require("../../middleware/authorized")

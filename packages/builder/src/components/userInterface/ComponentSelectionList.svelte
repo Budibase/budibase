@@ -25,8 +25,8 @@
   }
 
   const onComponentChosen = component => {
-    store.addChildComponent(component._component, component.presetProps)
-    const path = store.getPathToComponent($store.currentComponentInfo)
+    store.actions.components.create(component._component, component.presetProps)
+    const path = store.actions.components.findRoute($store.currentComponentInfo)
     $goto(`./:page/:screen/${path}`)
     close()
   }
@@ -39,9 +39,13 @@
       class="category"
       on:click={() => onCategoryChosen(category, idx)}
       class:active={idx === selectedIndex}>
-      {#if category.icon}<i class={category.icon} />{/if}
+      {#if category.icon}
+        <i class={category.icon} />
+      {/if}
       <span>{category.name}</span>
-      {#if category.isCategory}<i class="ri-arrow-down-s-line arrow" />{/if}
+      {#if category.isCategory}
+        <i class="ri-arrow-down-s-line arrow" />
+      {/if}
     </div>
   {/each}
 </div>
