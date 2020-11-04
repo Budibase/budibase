@@ -1,6 +1,6 @@
 import { createApp } from "./createApp"
 import { builtins, builtinLibName } from "./render/builtinComponents"
-import { parseAppIdFromCookie } from "./render/getAppId"
+import { getAppIdFromPath } from "./render/getAppId"
 
 /**
  * create a web application from static budibase definition files.
@@ -9,7 +9,7 @@ import { parseAppIdFromCookie } from "./render/getAppId"
 export const loadBudibase = async opts => {
   const _window = (opts && opts.window) || window
   // const _localStorage = (opts && opts.localStorage) || localStorage
-  const appId = parseAppIdFromCookie(_window.document.cookie)
+  const appId = getAppIdFromPath()
   const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
 
   const user = {}

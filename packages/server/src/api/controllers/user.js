@@ -39,13 +39,6 @@ exports.create = async function(ctx) {
 
   const response = await db.post(user)
 
-  const app = await db.get(ctx.user.appId)
-  app.userInstanceMap = {
-    ...app.userInstanceMap,
-    [username]: ctx.user.appId,
-  }
-  await db.put(app)
-
   ctx.status = 200
   ctx.message = "User created successfully."
   ctx.userId = response._id
