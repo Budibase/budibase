@@ -469,12 +469,6 @@ export default {
                 key: "xAxisLabel",
                 control: Input,
               },
-              // {
-              //   label: "Color",
-              //   key: "color",
-              //   control: Colorpicker,
-              //   defaultValue: "#4285f4",
-              // },
               {
                 label: "Width",
                 key: "width",
@@ -563,12 +557,6 @@ export default {
                 key: "xAxisLabel",
                 control: Input,
               },
-              // {
-              //   label: "Color",
-              //   key: "color",
-              //   control: Colorpicker,
-              //   defaultValue: "#4285f4",
-              // },
               {
                 label: "Width",
                 key: "width",
@@ -657,12 +645,6 @@ export default {
                 key: "xAxisLabel",
                 control: Input,
               },
-              // {
-              //   label: "Color",
-              //   key: "color",
-              //   control: Colorpicker,
-              //   defaultValue: "#4285f4",
-              // },
               {
                 label: "Width",
                 key: "width",
@@ -748,12 +730,6 @@ export default {
                 dependsOn: "datasource",
                 control: TableViewFieldSelect,
               },
-              // {
-              //   label: "Color",
-              //   key: "color",
-              //   control: Colorpicker,
-              //   defaultValue: "#4285f4",
-              // },
               {
                 label: "Width",
                 key: "width",
@@ -818,12 +794,6 @@ export default {
                 dependsOn: "datasource",
                 control: TableViewFieldSelect,
               },
-              // {
-              //   label: "Color",
-              //   key: "color",
-              //   control: Colorpicker,
-              //   defaultValue: "#4285f4",
-              // },
               {
                 label: "Width",
                 key: "width",
