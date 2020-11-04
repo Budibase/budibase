@@ -204,7 +204,7 @@ exports.generateScreenID = pageId => {
  * Gets parameters for retrieving screens for a particular page, this is a utility function for the getDocParams function.
  */
 exports.getScreenParams = (pageId = null, otherProps = {}) => {
-  return getDocParams(DocumentType.SCREEN, pageId, otherProps)
+  return getDocParams(DocumentTypes.SCREEN, pageId, otherProps)
 }
 
 /**

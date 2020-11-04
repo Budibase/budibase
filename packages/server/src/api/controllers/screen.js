@@ -10,30 +10,24 @@ exports.fetch = async ctx => {
   const db = new CouchDB(ctx.user.appId)
 
   const screens = await db.allDocs(
-    getScreenParams(ctx.params.pageId, null, {
+    getScreenParams(null, {
+      include_docs: true,
+    })
+  )
+
+  ctx.body = screens.rows.map(element => element.doc)
+}
+
+exports.find = async ctx => {
+  const db = new CouchDB(ctx.user.appId)
+
+  const screens = await db.allDocs(
+    getScreenParams(ctx.params.pageId, {
       include_docs: true,
     })
   )
 
   ctx.body = screens.response.rows
-}
-
-exports.create = async ctx => {
-  const db = new CouchDB(ctx.user.appId)
-  const screen = {
-    // name: ctx.request.body.name,
-    // _rev: ctx.request.body._rev,
-    // permissions: ctx.request.body.permissions || [],
-    // _id: generateAccessLevelID(),
-    // type: "accesslevel",
-  }
-
-  const response = await db.put(screen)
-  ctx.body = {
-    ...screen,
-    ...response,
-  }
-  ctx.message = `Screen '${screen.name}' created successfully.`
 }
 
 exports.save = async ctx => {
@@ -42,9 +36,9 @@ exports.save = async ctx => {
   const screen = ctx.request.body
 
   if (!screen._id) {
-    screen._id = generateScreenID()
+    screen._id = generateScreenID(ctx.params.pageId)
   }
-
+  delete screen._css
   const response = await db.put(screen)
 
   ctx.message = `Screen ${screen.name} saved.`

@@ -140,6 +140,7 @@ exports.delete = async function(ctx) {
   const result = await db.destroy()
 
   // remove top level directory
+  // TODO: look into why this isn't a callback
   await fs.rmdir(join(budibaseAppsDir(), ctx.params.appId), {
     recursive: true,
   })

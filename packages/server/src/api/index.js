@@ -7,6 +7,7 @@ const { isDev } = require("../utilities")
 const {
   authRoutes,
   pageRoutes,
+  screenRoutes,
   userRoutes,
   deployRoutes,
   applicationRoutes,
@@ -96,6 +97,9 @@ router.use(templatesRoutes.allowedMethods())
 
 router.use(pageRoutes.routes())
 router.use(pageRoutes.allowedMethods())
+
+router.use(screenRoutes.routes())
+router.use(screenRoutes.allowedMethods())
 
 router.use(applicationRoutes.routes())
 router.use(applicationRoutes.allowedMethods())

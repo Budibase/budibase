@@ -3,6 +3,7 @@ import {
   getBuiltin,
 } from "components/userInterface/pagesParsing/createProps"
 import api from "./api"
+import { store } from "builderStore"
 import { generate_screen_css } from "./generate_css"
 import { uuid } from "./uuid"
 import getNewComponentName from "./getNewComponentName"
@@ -35,14 +36,20 @@ export const saveCurrentPreviewItem = s =>
     ? savePage(s)
     : saveScreenApi(s.currentPreviewItem, s)
 
-export const savePage = async s => {
-  const pageName = s.currentPageName || "main"
-  const page = s.pages[pageName]
-  await api.post(`/api/pages/${pageName}`, {
-    page: { componentLibraries: s.pages.componentLibraries, ...page },
-    uiFunctions: s.currentPageFunctions,
+export const savePage = async state => {
+  const pageName = state.currentPageName || "main"
+  const page = state.pages[pageName]
+
+  const response = await api.post(`/api/pages/${page._id}`, {
+    page: { componentLibraries: state.pages.componentLibraries, ...page },
+    uiFunctions: state.currentPageFunctions,
     screens: page._screens,
+  }).then(response => response.json())
+  store.update(innerState => {
+    innerState.pages[pageName]._rev = response.rev
+    return innerState
   })
+  return state
 }
 
 export const saveScreenApi = (screen, s) => {
