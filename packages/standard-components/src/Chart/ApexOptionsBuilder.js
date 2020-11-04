@@ -1,5 +1,3 @@
-import { labelColumn, valueColumns } from "./BarChart.svelte"
-
 export class ApexOptionsBuilder {
   formatters = {
     ["Default"]: val => Math.round(val * 100) / 100,
