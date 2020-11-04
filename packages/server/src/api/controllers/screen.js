@@ -1,8 +1,3 @@
-/**
- * This controller is not currently fully implemented. Screens are
- * currently managed as part of the pages API, please look in api/routes/page.js
- * for routes and controllers.
- */
 const CouchDB = require("../../db")
 const { getScreenParams, generateScreenID } = require("../../db/utils")
 
@@ -49,4 +44,5 @@ exports.destroy = async ctx => {
   const db = new CouchDB(ctx.user.appId)
   await db.remove(ctx.params.screenId, ctx.params.revId)
   ctx.message = "Screen deleted successfully"
+  ctx.status = 200
 }

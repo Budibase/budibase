@@ -223,7 +223,9 @@ const createEmptyAppPackage = async (ctx, app) => {
   mainPage.title = app.name
   const unauthPage = cloneDeep(UNAUTHENTICATED)
   unauthPage._id = generatePageID()
+  // TODO: fix - handlebars etc
   unauthPage.title = app.name
+  unauthPage.props._children[0]._children.title = `Log in to ${app.name}`
   const homeScreen = cloneDeep(HOME_SCREEN)
   homeScreen._id = generateScreenID(mainPage._id)
   await db.bulkDocs([mainPage, unauthPage, homeScreen])

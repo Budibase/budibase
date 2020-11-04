@@ -1,5 +1,5 @@
 const authRoutes = require("./auth")
-const pageRoutes = require("./pages.new")
+const pageRoutes = require("./pages")
 const screenRoutes = require("./screen")
 const userRoutes = require("./user")
 const applicationRoutes = require("./application")

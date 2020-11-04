@@ -75,10 +75,7 @@ const buildFrontendAppDefinition = async (appId, pageName, pkg) => {
 
   const filename = join(appPublicPath, "clientFrontendDefinition.js")
 
-  // TODO: weird - why
-  if (pkg.page._css) {
-    delete pkg.page._css
-  }
+  delete pkg.page._css
 
   for (let screen of pkg.screens) {
     if (screen._css) {
