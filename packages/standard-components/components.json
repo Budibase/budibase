@@ -467,10 +467,6 @@
 				],
 				"default": "Smooth"
 			},
-			"fill": {
-				"type": "bool",
-				"default": true
-			},
 			"legend": "bool",
 			"yAxisUnits": {
 				"type": "options",
@@ -517,12 +513,11 @@
 				],
 				"default": "Smooth"
 			},
-			"fill": {
+			"legend": "bool",
+			"stacked": {
 				"type": "bool",
 				"default": true
 			},
-			"legend": "bool",
-			"stacked": "bool",
 			"gradient": "bool",
 			"yAxisUnits": {
 				"type": "options",
@@ -595,30 +590,6 @@
 		"bindable": "value",
 		"props": {
 			"placeholder": "string"
-		}
-	},
-	"datachart": {
-		"description": "shiny chart",
-		"data": true,
-		"props": {
-			"table": "tables",
-			"type": {
-				"type": "options",
-				"default": "column2d",
-				"options": [
-					"column3d",
-					"line",
-					"area2d",
-					"bar2d",
-					"bar3d",
-					"pie2d",
-					"pie3d",
-					"doughnut2d",
-					"doughnut3d",
-					"pareto2d",
-					"pareto3d"
-				]
-			}
 		}
 	},
 	"link": {
