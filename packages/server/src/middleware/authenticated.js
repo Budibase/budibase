@@ -9,6 +9,7 @@ const {
 } = require("../utilities/accessLevels")
 const env = require("../environment")
 const { AuthTypes } = require("../constants")
+const { getAppId, getCookieName, setCookie } = require("../utilities")
 
 module.exports = async (ctx, next) => {
   if (ctx.path === "/_builder") {
@@ -16,8 +17,18 @@ module.exports = async (ctx, next) => {
     return
   }
 
-  const appToken = ctx.cookies.get("budibase:token")
-  const builderToken = ctx.cookies.get("builder:token")
+  // do everything we can to make sure the appId is held correctly
+  // we hold it in state as a
+  let appId = getAppId(ctx)
+  const cookieAppId = ctx.cookies.get(getCookieName("currentapp"))
+  if (appId && cookieAppId !== appId) {
+    setCookie(ctx, "currentapp", appId)
+  } else if (cookieAppId) {
+    appId = cookieAppId
+  }
+
+  const appToken = ctx.cookies.get(getCookieName(appId))
+  const builderToken = ctx.cookies.get(getCookieName())
 
   let token
   // if running locally in the builder itself
@@ -31,16 +42,6 @@ module.exports = async (ctx, next) => {
 
   if (!token) {
     ctx.auth.authenticated = false
-
-    let appId = env.CLOUD ? ctx.subdomains[1] : ctx.params.appId
-
-    // if appId can't be determined from path param or subdomain
-    if (!appId && ctx.request.headers.referer) {
-      const url = new URL(ctx.request.headers.referer)
-      // remove leading and trailing slashes from appId
-      appId = url.pathname.replace(/\//g, "")
-    }
-
     ctx.user = {
       appId,
     }
@@ -50,14 +51,12 @@ module.exports = async (ctx, next) => {
 
   try {
     const jwtPayload = jwt.verify(token, ctx.config.jwtSecret)
+    ctx.appId = appId
     ctx.auth.apiKey = jwtPayload.apiKey
     ctx.user = {
       ...jwtPayload,
-      appId: jwtPayload.appId,
-      accessLevel: await getAccessLevel(
-        jwtPayload.appId,
-        jwtPayload.accessLevelId
-      ),
+      appId: appId,
+      accessLevel: await getAccessLevel(appId, jwtPayload.accessLevelId),
     }
   } catch (err) {
     ctx.throw(err.status || STATUS_CODES.FORBIDDEN, err.text)

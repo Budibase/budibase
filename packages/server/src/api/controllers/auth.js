@@ -4,9 +4,10 @@ const bcrypt = require("../../utilities/bcrypt")
 const env = require("../../environment")
 const { getAPIKey } = require("../../utilities/usageQuota")
 const { generateUserID } = require("../../db/utils")
+const { setCookie } = require("../../utilities")
 
 exports.authenticate = async ctx => {
-  const appId = ctx.user.appId
+  const appId = ctx.appId
   if (!appId) ctx.throw(400, "No appId")
 
   const { username, password } = ctx.request.body
@@ -33,7 +34,6 @@ exports.authenticate = async ctx => {
       userId: dbUser._id,
       accessLevelId: dbUser.accessLevelId,
       version: app.version,
-      appId,
     }
     // if in cloud add the user api key
     if (env.CLOUD) {
@@ -45,19 +45,13 @@ exports.authenticate = async ctx => {
       expiresIn: "1 day",
     })
 
-    const expires = new Date()
-    expires.setDate(expires.getDate() + 1)
+    setCookie(ctx, appId, token)
 
-    ctx.cookies.set("budibase:token", token, {
-      expires,
-      path: "/",
-      httpOnly: false,
-      overwrite: true,
-    })
-
+    delete dbUser.password
     ctx.body = {
       token,
       ...dbUser,
+      appId,
     }
   } else {
     ctx.throw(401, "Invalid credentials.")
