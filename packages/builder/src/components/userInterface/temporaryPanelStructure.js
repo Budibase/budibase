@@ -833,7 +833,7 @@ export default {
           name: "Candlestick Chart",
           _component: "@budibase/standard-components/candlestick",
           description: "Candlestick chart",
-          icon: "ri-bar-chart-line",
+          icon: "ri-stock-line",
           properties: {
             settings: [
               {

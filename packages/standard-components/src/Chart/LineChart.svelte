@@ -3,6 +3,7 @@
   import fetchData, { fetchSchema } from "../fetchData"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
+  import { isEmpty } from "lodash/fp"
 
   // Common props
   export let _bb
@@ -31,7 +32,8 @@
 
   // Fetch data on mount
   onMount(async () => {
-    if (!datasource || !labelColumn || !valueColumns || !valueColumns.length) {
+    const allCols = [labelColumn, ...(valueColumns || [])]
+    if (isEmpty(datasource) || allCols.find(x => x == null)) {
       options = false
       return
     }
@@ -40,9 +42,9 @@
     const schema = await fetchSchema(datasource.tableId)
     const result = await fetchData(datasource, $store)
     const reducer = row => (valid, column) => valid && row[column] != null
-    const hasAllValues = row => valueColumns.reduce(reducer(row), true)
+    const hasAllColumns = row => allCols.reduce(reducer(row), true)
     const data = result
-      .filter(row => row[labelColumn] != null && hasAllValues(row))
+      .filter(row => hasAllColumns(row))
       .slice(0, 100)
       .sort((a, b) => (a[labelColumn] > b[labelColumn] ? 1 : -1))
     if (!schema || !data.length) {

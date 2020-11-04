@@ -3,6 +3,7 @@
   import fetchData, { fetchSchema } from "../fetchData"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
+  import { isEmpty } from "lodash/fp"
 
   export let _bb
   export let title
@@ -25,7 +26,7 @@
   // Fetch data on mount
   onMount(async () => {
     const allCols = [dateColumn, openColumn, highColumn, lowColumn, closeColumn]
-    if (!datasource || allCols.find(x => x == null)) {
+    if (isEmpty(datasource) || allCols.find(x => x == null)) {
       options = false
       return
     }
