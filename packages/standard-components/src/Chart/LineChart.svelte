@@ -6,6 +6,7 @@
   import ApexChart from "./ApexChart.svelte"
 
   // Common props
+  export let _bb
   export let title
   export let datasource
   export let labelColumn
@@ -26,6 +27,7 @@
   export let stacked
   export let gradient
 
+  const store = _bb.store
   let options
 
   // Fetch data on mount
@@ -34,7 +36,7 @@
       return
     }
 
-    const result = (await fetchData(datasource)).slice(0, 100)
+    const result = (await fetchData(datasource, $store)).slice(0, 100)
     const data = sortBy(row => row[labelColumn])(result)
     const schema = await fetchSchema(datasource.tableId)
     if (!schema || !data || !data.length) {

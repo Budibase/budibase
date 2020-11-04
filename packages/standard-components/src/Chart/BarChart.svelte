@@ -5,6 +5,7 @@
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
 
+  export let _bb
   export let title
   export let datasource
   export let labelColumn
@@ -20,6 +21,7 @@
   export let stacked
   export let yAxisUnits
 
+  const store = _bb.store
   let options
 
   // Fetch data on mount
@@ -28,7 +30,7 @@
       return
     }
 
-    const result = (await fetchData(datasource)).slice(0, 20)
+    const result = (await fetchData(datasource, $store)).slice(0, 20)
     const data = sortBy(row => row[labelColumn])(result)
     const schema = await fetchSchema(datasource.tableId)
     if (!schema || !data || !data.length) {
@@ -86,8 +88,6 @@
     // Build chart options
     options = builder.getOptions()
   })
-
-  $: console.log(options)
 </script>
 
 <ApexChart {options} />
