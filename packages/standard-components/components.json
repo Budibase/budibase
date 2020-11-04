@@ -405,10 +405,10 @@
 			"labelColumn": "string",
 			"valueColumns": "string",
 			"height": {
-				"type": "number",
+				"type": "string",
 				"default": "400"
 			},
-			"width": "number",
+			"width": "string",
 			"dataLabels": "bool",
 			"animate": {
 				"type": "bool",
@@ -436,10 +436,10 @@
 			"labelColumn": "string",
 			"valueColumns": "string",
 			"height": {
-				"type": "number",
+				"type": "string",
 				"default": "400"
 			},
-			"width": "number",
+			"width": "string",
 			"dataLabels": {
 				"type": "bool",
 				"default": false
@@ -478,10 +478,10 @@
 			"labelColumn": "string",
 			"valueColumns": "string",
 			"height": {
-				"type": "number",
+				"type": "string",
 				"default": "400"
 			},
-			"width": "number",
+			"width": "string",
 			"dataLabels": {
 				"type": "bool",
 				"default": false
@@ -525,10 +525,10 @@
 			"labelColumn": "string",
 			"valueColumn": "string",
 			"height": {
-				"type": "number",
+				"type": "string",
 				"default": "200"
 			},
-			"width": "number",
+			"width": "string",
 			"dataLabels": "bool",
 			"animate": {
 				"type": "bool",
@@ -549,10 +549,10 @@
 			"labelColumn": "string",
 			"valueColumn": "string",
 			"height": {
-				"type": "number",
+				"type": "string",
 				"default": "200"
 			},
-			"width": "number",
+			"width": "string",
 			"dataLabels": "bool",
 			"animate": {
 				"type": "bool",
@@ -561,6 +561,37 @@
 			"legend": {
 				"type": "bool",
 				"default": true
+			}
+		}
+	},
+	"candlestick": {
+		"description": "Candlestick Chart",
+		"data": true,
+		"props": {
+			"title": "string",
+			"datasource": "tables",
+			"dateColumn": "string",
+			"openColumn": "string",
+			"closeColumn": "string",
+			"highColumn": "string",
+			"lowColumn": "string",
+			"height": {
+				"type": "string",
+				"default": "400"
+			},
+			"width": "string",
+			"animate": {
+				"type": "bool",
+				"default": true
+			},
+			"xAxisLabel": "string",
+			"yAxisLabel": "string",
+			"yAxisUnits": {
+				"type": "options",
+				"default": "Default",
+				"options": [
+					"Default", "Thousands", "Millions"
+				]
 			}
 		}
 	},

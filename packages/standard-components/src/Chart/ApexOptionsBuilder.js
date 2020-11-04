@@ -142,4 +142,8 @@ export class ApexOptionsBuilder {
   xType(type) {
     return this.setOption(["xaxis", "type"], type)
   }
+
+  yTooltip(yTooltip) {
+    return this.setOption(["yaxis", "tooltip", "enabled"], yTooltip)
+  }
 }
