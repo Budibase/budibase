@@ -1,6 +1,6 @@
 <script>
   import { Input, DataList, Select } from "@budibase/bbui"
-  import { store, automationStore } from "builderStore"
+  import { automationStore, allScreens } from "builderStore"
 
   export let parameter
 
@@ -24,7 +24,7 @@
   {:else if parameter.name === 'url'}
     <DataList on:change bind:value={parameter.value}>
       <option value="" />
-      {#each $store.screens as screen}
+      {#each $allScreens as screen}
         <option value={screen.route}>{screen.props._instanceName}</option>
       {/each}
     </DataList>

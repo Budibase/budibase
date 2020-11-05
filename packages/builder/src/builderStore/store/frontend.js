@@ -1,4 +1,4 @@
-import { writable, get, derived } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import {
   createProps,
@@ -6,7 +6,7 @@ import {
   getBuiltin,
 } from "components/userInterface/pagesParsing/createProps"
 import { getExactComponent } from "components/userInterface/pagesParsing/searchComponents"
-import { backendUiStore } from "builderStore"
+import { backendUiStore, allScreens } from "builderStore"
 import { generate_screen_css } from "../generate_css"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
@@ -40,16 +40,6 @@ const INITIAL_FRONTEND_STATE = {
 
 export const getFrontendStore = () => {
   const store = writable({ ...INITIAL_FRONTEND_STATE })
-
-  store.allScreens = derived(store.pages, $pages => {
-    let screens = []
-    if ($pages) {
-      for (let page of Object.values($pages)) {
-        screens = screens.concat(page._screens)
-      }
-    }
-    return screens
-  })
 
   store.actions = {
     // TODO: REFACTOR
@@ -110,10 +100,7 @@ export const getFrontendStore = () => {
         appId: pkg.application._id,
         pages: pkg.pages,
         hasAppPackage: true,
-        screens: [
-          ...Object.values(mainScreens),
-          ...Object.values(unauthScreens),
-        ],
+        currentScreens: [],
         builtins: [getBuiltin("##builtin/screenslot")],
         appInstance: pkg.application.instance,
       }))
@@ -138,7 +125,7 @@ export const getFrontendStore = () => {
     screens: {
       select: screenName => {
         store.update(state => {
-          const screen = getExactComponent(state.allScreens, screenName, true)
+          const screen = getExactComponent(get(allScreens), screenName, true)
           state.currentPreviewItem = screen
           state.currentFrontEndType = "screen"
           state.currentView = "detail"
@@ -195,7 +182,6 @@ export const getFrontendStore = () => {
         // TODO: should carry out all server updates to screen in a single call
         store.update(state => {
           state.pages[pageName]._screens = currentPageScreens
-          state.screens = currentPageScreens
           state.currentPreviewItem = screen
           const safeProps = makePropsSafe(
             state.components[screen.props._component],
@@ -227,9 +213,6 @@ export const getFrontendStore = () => {
           for (let screenToDelete of Array.isArray(screenToDelete)
             ? screenToDelete
             : [screenToDelete]) {
-            state.screens = state.screens.filter(
-              screen => screen.name !== screenToDelete.name
-            )
             // Remove screen from current page as well
             // TODO: Should be done server side
             state.pages[pageName]._screens = state.pages[
@@ -256,16 +239,12 @@ export const getFrontendStore = () => {
     pages: {
       select: pageName => {
         store.update(state => {
-          const current_screens = state.pages[pageName]._screens
-
           const currentPage = state.pages[pageName]
 
+          state.currentScreens = currentPage._screens
           state.currentFrontEndType = "page"
           state.currentView = "detail"
           state.currentPageName = pageName
-          state.screens = Array.isArray(current_screens)
-            ? current_screens
-            : Object.values(current_screens)
 
           // This is the root of many problems.
           // Uncaught (in promise) TypeError: Cannot read property '_component' of undefined
@@ -280,7 +259,7 @@ export const getFrontendStore = () => {
           state.currentPreviewItem = state.pages[pageName]
           store.actions.screens.regenerateCssForCurrentScreen()
 
-          for (let screen of state.screens) {
+          for (let screen of get(allScreens)) {
             screen._css = generate_screen_css([screen.props])
           }
 

@@ -4,7 +4,7 @@
   import Input from "./PropertyPanelControls/Input.svelte"
   import { goto } from "@sveltech/routify"
   import { excludeProps } from "./propertyCategories.js"
-  import { store } from "builderStore"
+  import { store, allScreens } from "builderStore"
   import { walkProps } from "builderStore/storeUtils"
 
   export let panelDefinition = []
@@ -67,7 +67,7 @@
       lookForDuplicate($store.currentPreviewItem.props)
     } else {
       // viewing master page - need to dedupe against all screens
-      for (let screen of $store.screens) {
+      for (let screen of $allScreens) {
         lookForDuplicate(screen.props)
       }
     }

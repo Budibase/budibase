@@ -1,5 +1,5 @@
 <script>
-  import { backendUiStore, store } from "builderStore"
+  import { backendUiStore, store, allScreens } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { DropdownMenu, Button, Input } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -28,7 +28,7 @@
   }
 
   function showModal() {
-    const screens = $store.screens
+    const screens = $allScreens
     templateScreens = screens.filter(screen => screen.autoTableId === table._id)
     willBeDeleted = ["All table data"].concat(
       templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
