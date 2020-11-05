@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import {
   createProps,
@@ -15,9 +15,8 @@ import getNewComponentName from "../getNewComponentName"
 import analytics from "analytics"
 import {
   getParent,
-  // saveScreenApi as _saveScreenApi,
   generateNewIdsForComponent,
-  getComponentDefinition, findChildComponentType, regenerateCssForScreen, savePage as _savePage,
+  getComponentDefinition, findChildComponentType,
 } from "../storeUtils"
 
 const INITIAL_FRONTEND_STATE = {
@@ -41,6 +40,16 @@ const INITIAL_FRONTEND_STATE = {
 
 export const getFrontendStore = () => {
   const store = writable({ ...INITIAL_FRONTEND_STATE })
+
+  store.allScreens = derived(store.pages, $pages => {
+    let screens = []
+    if ($pages) {
+      for (let page of Object.values($pages)) {
+        screens = screens.concat(page._screens)
+      }
+    }
+    return screens
+  })
 
   store.actions = {
     // TODO: REFACTOR
@@ -129,7 +138,7 @@ export const getFrontendStore = () => {
     screens: {
       select: screenName => {
         store.update(state => {
-          const screen = getExactComponent(state.screens, screenName, true)
+          const screen = getExactComponent(state.allScreens, screenName, true)
           state.currentPreviewItem = screen
           state.currentFrontEndType = "screen"
           state.currentView = "detail"
