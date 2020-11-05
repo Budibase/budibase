@@ -5,7 +5,7 @@ const Joi = require("joi")
 const {
   listScreens,
   saveScreen,
-  buildPage,
+  compileStaticAssetsForPage,
   deleteScreen,
 } = require("../../utilities/builder")
 const authorized = require("../../middleware/authorized")
@@ -44,7 +44,11 @@ router.post(
   "/_builder/api/:appId/pages/:pageName",
   authorized(BUILDER),
   async ctx => {
-    await buildPage(ctx.params.appId, ctx.params.pageName, ctx.request.body)
+    await compileStaticAssetsForPage(
+      ctx.params.appId,
+      ctx.params.pageName,
+      ctx.request.body
+    )
     ctx.response.status = StatusCodes.OK
   }
 )

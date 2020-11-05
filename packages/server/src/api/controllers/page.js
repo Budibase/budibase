@@ -1,14 +1,17 @@
 const CouchDB = require("../../db/client")
 const { generatePageID } = require("../../db/utils")
-const { buildPage } = require("../../utilities/builder")
+const { compileStaticAssetsForPage } = require("../../utilities/builder")
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
 
   const appPackage = ctx.request.body
 
-  // TODO: rename to something more descriptive
-  await buildPage(ctx.user.appId, ctx.params.pageId, ctx.request.body)
+  await compileStaticAssetsForPage(
+    ctx.user.appId,
+    ctx.params.pageId,
+    ctx.request.body
+  )
 
   // remove special doc props which couch will complain about
   delete appPackage.page._css

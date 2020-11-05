@@ -11,13 +11,13 @@
 // const { join } = require("../centralPath")
 // const { dirname } = require("path")
 
-const buildPage = require("./buildPage")
+const compileStaticAssetsForPage = require("./compileStaticAssetsForPage")
 // const getPages = require("./getPages")
 // const listScreens = require("./listScreens")
 // const { budibaseAppsDir } = require("../budibaseDir")
 // const { budibaseAppsDir } = require("../budibaseDir")
 
-module.exports.buildPage = buildPage
+module.exports.compileStaticAssetsForPage = compileStaticAssetsForPage
 // module.exports.listScreens = listScreens
 
 // const getAppDefinition = async appPath =>
@@ -76,5 +76,5 @@ module.exports.buildPage = buildPage
 //     space: 2,
 //   })
 //   const appDefinition = await getAppDefinition(appPath)
-//   await buildPage(appId, appDefinition, pagename, page)
+//   await compileStaticAssetsForPage(appId, appDefinition, pagename, page)
 // }
