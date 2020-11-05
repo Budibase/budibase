@@ -1,14 +1,11 @@
 const CouchDB = require("../../db")
 const { compileStaticAssetsForPage } = require("../../utilities/builder")
 const env = require("../../environment")
-const { copy, existsSync, readFile, writeFile } = require("fs-extra")
+const { copy, existsSync } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
-const sqrl = require("squirrelly")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const fs = require("fs-extra")
 const { join, resolve } = require("../../utilities/centralPath")
-const { promisify } = require("util")
-const chmodr = require("chmodr")
 const packageJson = require("../../../package.json")
 const { createLinkView } = require("../../db/linkedRows")
 const { downloadTemplate } = require("../../utilities/templates")
@@ -153,14 +150,6 @@ exports.delete = async function(ctx) {
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
-  const templateFolder = resolve(
-    __dirname,
-    "..",
-    "..",
-    "utilities",
-    "appDirectoryTemplate"
-  )
-
   const appsFolder = budibaseAppsDir()
   const newAppFolder = resolve(appsFolder, app._id)
 
@@ -170,24 +159,7 @@ const createEmptyAppPackage = async (ctx, app) => {
     ctx.throw(400, "App folder already exists for this application")
   }
 
-  // await fs.ensureDir(join(newAppFolder, "pages", "main", "screens"), 0o777)
-  // await fs.ensureDir(
-  //   join(newAppFolder, "pages", "unauthenticated", "screens"),
-  //   0o777
-  // )
-
-  await copy(templateFolder, newAppFolder)
-
-  // this line allows full permission on copied files
-  // we have an unknown problem without this, whereby the
-  // files get weird permissions and cant be written to :(
-  const chmodrPromise = promisify(chmodr)
-  await chmodrPromise(newAppFolder, 0o777)
-
-  await updateJsonFile(join(appsFolder, app._id, "package.json"), {
-    name: npmFriendlyAppName(app.name),
-  })
-
+  fs.mkdirpSync(newAppFolder)
   // if this app is being created from a template,
   // copy the frontend page definition files from
   // the template directory.
@@ -203,23 +175,6 @@ const createEmptyAppPackage = async (ctx, app) => {
     await copy(templatePageDefinitions, join(appsFolder, app._id, "pages"))
   }
 
-  // const mainJson = await updateJsonFile(
-  //   join(appsFolder, app._id, "pages", "main", "page.json"),
-  //   app
-  // )
-  //
-  // mainJson._id = generatePageID()
-  // await db.put(mainJson)
-
-  // const unauthenticatedJson = await updateJsonFile(
-  //   join(appsFolder, app._id, "pages", "unauthenticated", "page.json"),
-  //   app
-  // )
-
-  // Write to couch
-  // unauthenticatedJson._id = generatePageID()
-  // await db.put(unauthenticatedJson)
-
   const mainPage = cloneDeep(MAIN)
   mainPage._id = generatePageID()
   mainPage.title = app.name
@@ -227,7 +182,7 @@ const createEmptyAppPackage = async (ctx, app) => {
   unauthPage._id = generatePageID()
   // TODO: fix - handlebars etc
   unauthPage.title = app.name
-  unauthPage.props._children[0]._children.title = `Log in to ${app.name}`
+  unauthPage.props._children[0].title = `Log in to ${app.name}`
   const homeScreen = cloneDeep(HOME_SCREEN)
   homeScreen._id = generateScreenID(mainPage._id)
   await db.bulkDocs([mainPage, unauthPage, homeScreen])
@@ -243,31 +198,3 @@ const createEmptyAppPackage = async (ctx, app) => {
 
   return newAppFolder
 }
-
-// const loadScreens = async (appFolder, page) => {
-//   const screensFolder = join(appFolder, "pages", page, "screens")
-//
-//   const screenFiles = (await fs.readdir(screensFolder)).filter(s =>
-//     s.endsWith(".json")
-//   )
-//
-//   let screens = []
-//   for (let file of screenFiles) {
-//     screens.push(await fs.readJSON(join(screensFolder, file)))
-//   }
-//   return screens
-// }
-
-const updateJsonFile = async (filePath, app) => {
-  const json = await readFile(filePath, "utf8")
-  const newJson = sqrl.Render(json, app)
-  await writeFile(filePath, newJson, "utf8")
-  return JSON.parse(newJson)
-}
-
-const npmFriendlyAppName = name =>
-  name
-    .replace(/_/g, "")
-    .replace(/./g, "")
-    .replace(/ /g, "")
-    .toLowerCase()
