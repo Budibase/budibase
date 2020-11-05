@@ -144,4 +144,11 @@ export class ApexOptionsBuilder {
   yTooltip(yTooltip) {
     return this.setOption(["yaxis", "tooltip", "enabled"], yTooltip)
   }
+
+  palette(palette) {
+    return this.setOption(
+      ["theme", "palette"],
+      palette.toLowerCase().replace(/[\W]/g, "")
+    )
+  }
 }

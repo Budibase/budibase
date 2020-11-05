@@ -424,6 +424,22 @@
 				"options": [
 					"Default", "Thousands", "Millions"
 				]
+			},
+			"palette": {
+				"type": "options",
+				"default": "Palette 1",
+				"options": [
+					"Palette 1",
+					"Palette 2",
+					"Palette 3",
+					"Palette 4",
+					"Palette 5",
+					"Palette 6",
+					"Palette 7",
+					"Palette 8",
+					"Palette 9",
+					"Palette 10"
+				]
 			}
 		}
 	},
@@ -465,6 +481,22 @@
 				"default": "Default",
 				"options": [
 					"Default", "Thousands", "Millions"
+				]
+			},
+			"palette": {
+				"type": "options",
+				"default": "Palette 1",
+				"options": [
+					"Palette 1",
+					"Palette 2",
+					"Palette 3",
+					"Palette 4",
+					"Palette 5",
+					"Palette 6",
+					"Palette 7",
+					"Palette 8",
+					"Palette 9",
+					"Palette 10"
 				]
 			}
 		}
@@ -513,6 +545,22 @@
 				"options": [
 					"Default", "Thousands", "Millions"
 				]
+			},
+			"palette": {
+				"type": "options",
+				"default": "Palette 1",
+				"options": [
+					"Palette 1",
+					"Palette 2",
+					"Palette 3",
+					"Palette 4",
+					"Palette 5",
+					"Palette 6",
+					"Palette 7",
+					"Palette 8",
+					"Palette 9",
+					"Palette 10"
+				]
 			}
 		}
 	},
@@ -537,6 +585,22 @@
 			"legend": {
 				"type": "bool",
 				"default": true
+			},
+			"palette": {
+				"type": "options",
+				"default": "Palette 1",
+				"options": [
+					"Palette 1",
+					"Palette 2",
+					"Palette 3",
+					"Palette 4",
+					"Palette 5",
+					"Palette 6",
+					"Palette 7",
+					"Palette 8",
+					"Palette 9",
+					"Palette 10"
+				]
 			}
 		}
 	},
@@ -561,6 +625,22 @@
 			"legend": {
 				"type": "bool",
 				"default": true
+			},
+			"palette": {
+				"type": "options",
+				"default": "Palette 1",
+				"options": [
+					"Palette 1",
+					"Palette 2",
+					"Palette 3",
+					"Palette 4",
+					"Palette 5",
+					"Palette 6",
+					"Palette 7",
+					"Palette 8",
+					"Palette 9",
+					"Palette 10"
+				]
 			}
 		}
 	},
