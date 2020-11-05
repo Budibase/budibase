@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { params, leftover, goto } from "@sveltech/routify"
-  import { store } from "builderStore"
+  import { store, allScreens } from "builderStore"
 
   // Get any leftover params not caught by Routifys params store.
   const componentIds = $leftover.split("/").filter(id => id !== "")
@@ -10,7 +10,7 @@
   if ($params.screen !== "page-layout") {
     const currentScreenName = decodeURI($params.screen)
     const validScreen =
-      $store.screens.findIndex(
+      $allScreens.findIndex(
         screen => screen.props._instanceName === currentScreenName
       ) !== -1
 
