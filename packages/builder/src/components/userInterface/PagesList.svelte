@@ -18,7 +18,6 @@
     },
   ]
 
-  console.log(store)
   if (!$store.currentPageName)
     store.actions.pages.select($params.page ? $params.page : "main")
 

@@ -42,6 +42,13 @@ exports.isInvalidationComplete = async function(
   return resp.Invalidation.Status === "Completed"
 }
 
+/**
+ * Finalises the deployment, updating the quota for the user API key
+ * The verification process returns the levels to update to.
+ * Calls the "deployment-success" lambda.
+ * @param {object} quota The usage quota levels returned from the verifyDeploy
+ * @returns {Promise<object>} The usage has been updated against the user API key.
+ */
 exports.updateDeploymentQuota = async function(quota) {
   const DEPLOYMENT_SUCCESS_URL =
     env.DEPLOYMENT_CREDENTIALS_URL + "deploy/success"
@@ -67,7 +74,8 @@ exports.updateDeploymentQuota = async function(quota) {
 
 /**
  * Verifies the users API key and
- * Verifies that the deployment fits within the quota of the user,
+ * Verifies that the deployment fits within the quota of the user
+ * Links to the "check-api-key" lambda.
  * @param {String} appId - appId being deployed
  * @param {String} appId - appId being deployed
  * @param {quota} quota - current quota being changed with this application

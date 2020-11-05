@@ -58,6 +58,18 @@
     return components
   }
 
+  function setPageOrScreenProp(name, value) {
+    store.update(state => {
+      if (name === "_instanceName" && state.currentFrontEndType === "screen") {
+        state.currentPreviewItem.props[name] = value
+      } else {
+        state.currentPreviewItem[name] = value
+      }
+      store.actions.preview.saveSelected()
+      return state
+    })
+  }
+
   function getProps(obj, keys) {
     return keys.map((key, i) => [key, obj[key], obj.props._id + i])
   }
@@ -82,7 +94,7 @@
       {panelDefinition}
       displayNameField={displayName}
       onChange={store.actions.components.updateProp}
-      onScreenPropChange={store.setPageOrScreenProp}
+      onScreenPropChange={setPageOrScreenProp}
       screenOrPageInstance={$store.currentView !== 'component' && $store.currentPreviewItem} />
   {/if}
 </div>
