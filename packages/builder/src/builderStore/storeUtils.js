@@ -8,15 +8,6 @@ import { generate_screen_css } from "./generate_css"
 import { uuid } from "./uuid"
 import getNewComponentName from "./getNewComponentName"
 
-export const selectComponent = (state, component) => {
-  const componentDef = component._component.startsWith("##")
-    ? component
-    : state.components[component._component]
-  state.currentComponentInfo = makePropsSafe(componentDef, component)
-  state.currentView = "component"
-  return state
-}
-
 export const getParent = (rootProps, child) => {
   let parent
   walkProps(rootProps, (p, breakWalk) => {
@@ -31,42 +22,6 @@ export const getParent = (rootProps, child) => {
   return parent
 }
 
-// export const saveCurrentPreviewItem = s =>
-//   s.currentFrontEndType === "page"
-//     ? savePage(s)
-//     : store.actions.screens.save(s.currentPreviewItem)
-
-export const savePage = async state => {
-  const pageName = state.currentPageName || "main"
-  const page = state.pages[pageName]
-
-  const response = await api
-    .post(`/api/pages/${page._id}`, {
-      page: { componentLibraries: state.pages.componentLibraries, ...page },
-      screens: page._screens,
-    })
-    .then(response => response.json())
-  store.update(innerState => {
-    innerState.pages[pageName]._rev = response.rev
-    return innerState
-  })
-  return state
-}
-
-// export const saveScreenApi = async (screen, state) => {
-//   const currentPage = state.pages[state.currentPageName]
-//   const response = await api.post(`/api/screens/${currentPage._id}`, screen)
-//   const json = await response.json()
-
-//   store.update(innerState => {
-//     // TODO: need to update pages in here
-//     // innerState.pages[pageName]._rev = response.rev
-//     return innerState
-//   })
-
-//   await savePage(state)
-// }
-
 export const walkProps = (props, action, cancelToken = null) => {
   cancelToken = cancelToken || { cancelled: false }
   action(props, () => {
@@ -79,17 +34,6 @@ export const walkProps = (props, action, cancelToken = null) => {
       walkProps(child, action, cancelToken)
     }
   }
-}
-
-export const regenerateCssForScreen = screen => {
-  screen._css = generate_screen_css([screen.props])
-}
-
-export const regenerateCssForCurrentScreen = state => {
-  if (state.currentPreviewItem) {
-    regenerateCssForScreen(state.currentPreviewItem)
-  }
-  return state
 }
 
 export const generateNewIdsForComponent = (component, state, changeName = true) =>
