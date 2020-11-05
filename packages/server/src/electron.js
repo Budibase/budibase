@@ -6,6 +6,7 @@ const unhandled = require("electron-unhandled")
 const { existsSync } = require("fs-extra")
 const initialiseBudibase = require("./utilities/initialiseBudibase")
 const { budibaseAppsDir } = require("./utilities/budibaseDir")
+const { openNewGitHubIssue, debugInfo } = require("electron-util")
 
 const budibaseDir = budibaseAppsDir()
 const envFile = join(budibaseDir, ".env")
@@ -18,11 +19,18 @@ async function startApp() {
   delete require.cache[require.resolve("./environment")]
   require("dotenv").config({ path: envFile })
 
-  if (isDev) {
-    unhandled({
-      showDialog: true,
-    })
-  }
+  unhandled({
+    showDialog: true,
+    reportButton: error => {
+      openNewGitHubIssue({
+        user: "Budibase",
+        repo: "budibase",
+        body: `### Error that occurred when using the budibase builder:\n\`\`\`\n${
+          error.stack
+        }\n\`\`\`\n### Operating System Information:\n---\n\n${debugInfo()}`,
+      })
+    },
+  })
 
   const APP_URL = "http://localhost:4001/_builder"
   const APP_TITLE = "Budibase Builder"
@@ -59,7 +67,10 @@ async function startApp() {
   app.on("window-all-closed", () => {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
-    if (process.platform !== "darwin") app.quit()
+    if (process.platform !== "darwin") {
+      app.server.close()
+      app.quit()
+    }
   })
 
   app.on("activate", () => {

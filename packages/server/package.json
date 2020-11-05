@@ -54,6 +54,7 @@
     "electron-is-dev": "^1.2.0",
     "electron-unhandled": "^3.0.2",
     "electron-updater": "^4.3.1",
+    "electron-util": "^0.14.2",
     "fix-path": "^3.0.0",
     "fs-extra": "^8.1.0",
     "handlebars": "^4.7.6",
