@@ -59,8 +59,9 @@
       .xType("datetime")
 
     // Add data
+    const parseDate = d => (isNaN(d) ? Date.parse(d).valueOf() : parseInt(d))
     const chartData = data.map(row => ({
-      x: row[dateColumn],
+      x: parseDate(row[dateColumn]),
       y: [row[openColumn], row[highColumn], row[lowColumn], row[closeColumn]],
     }))
     builder = builder.series([{ data: chartData }])
