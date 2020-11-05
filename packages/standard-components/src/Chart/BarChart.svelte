@@ -27,6 +27,7 @@
   export let legend
   export let stacked
   export let yAxisUnits
+  export let palette
 
   const store = _bb.store
   let options
@@ -66,6 +67,7 @@
       .legend(legend)
       .stacked(stacked)
       .yUnits(yAxisUnits)
+      .palette(palette)
 
     // Add data
     let useDates = false

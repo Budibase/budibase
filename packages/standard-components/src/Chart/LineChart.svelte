@@ -21,6 +21,7 @@
   export let curve
   export let legend
   export let yAxisUnits
+  export let palette
 
   // Area specific props
   export let area
@@ -67,6 +68,7 @@
       .stacked(stacked)
       .legend(legend)
       .yUnits(yAxisUnits)
+      .palette(palette)
 
     // Add data
     let useDates = false

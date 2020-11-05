@@ -17,6 +17,7 @@
   export let animate
   export let legend
   export let donut
+  export let palette
 
   const store = _bb.store
   let options
@@ -50,6 +51,7 @@
       .animate(animate)
       .legend(legend)
       .legendPosition("right")
+      .palette(palette)
 
     // Add data if valid datasource
     const series = data.map(row => parseFloat(row[valueColumn]))
