@@ -1,5 +1,5 @@
 const CouchDB = require("../../db")
-const { buildPage } = require("../../utilities/builder")
+const { compileStaticAssetsForPage } = require("../../utilities/builder")
 const env = require("../../environment")
 const { copy, existsSync, readFile, writeFile } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
@@ -230,13 +230,13 @@ const createEmptyAppPackage = async (ctx, app) => {
   unauthPage.props._children[0]._children.title = `Log in to ${app.name}`
   const homeScreen = cloneDeep(HOME_SCREEN)
   homeScreen._id = generateScreenID(mainPage._id)
-  const response = await db.bulkDocs([mainPage, unauthPage, homeScreen])
+  await db.bulkDocs([mainPage, unauthPage, homeScreen])
 
-  await buildPage(app._id, "main", {
+  await compileStaticAssetsForPage(app._id, "main", {
     page: mainPage,
     screens: [homeScreen],
   })
-  await buildPage(app._id, "unauthenticated", {
+  await compileStaticAssetsForPage(app._id, "unauthenticated", {
     page: unauthPage,
     screens: [],
   })
