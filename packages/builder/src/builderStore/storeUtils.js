@@ -31,10 +31,10 @@ export const getParent = (rootProps, child) => {
   return parent
 }
 
-export const saveCurrentPreviewItem = s =>
-  s.currentFrontEndType === "page"
-    ? savePage(s)
-    : store.saveScreen(s.currentPreviewItem)
+// export const saveCurrentPreviewItem = s =>
+//   s.currentFrontEndType === "page"
+//     ? savePage(s)
+//     : store.actions.screens.save(s.currentPreviewItem)
 
 export const savePage = async state => {
   const pageName = state.currentPageName || "main"
@@ -92,10 +92,10 @@ export const regenerateCssForCurrentScreen = state => {
   return state
 }
 
-export const generateNewIdsForComponent = (c, state, changeName = true) =>
-  walkProps(c, p => {
-    p._id = uuid()
-    if (changeName) p._instanceName = getNewComponentName(p._component, state)
+export const generateNewIdsForComponent = (component, state, changeName = true) =>
+  walkProps(component, prop => {
+    prop._id = uuid()
+    if (changeName) prop._instanceName = getNewComponentName(prop, state)
   })
 
 export const getComponentDefinition = (state, name) =>

@@ -391,7 +391,7 @@ const setComponentProp = store => (name, value) => {
     current_component[name] = value
 
     state.currentComponentInfo = current_component
-    _saveCurrentPreviewItem(state)
+    //_saveCurrentPreviewItem(state)
     return state
   })
 }
@@ -403,7 +403,7 @@ const setPageOrScreenProp = store => (name, value) => {
     } else {
       state.currentPreviewItem[name] = value
     }
-    _saveCurrentPreviewItem(state)
+    //_saveCurrentPreviewItem(state)
     return state
   })
 }
@@ -418,7 +418,7 @@ const setComponentStyle = store => (type, name, value) => {
     regenerateCssForCurrentScreen(state)
 
     // save without messing with the store
-    _saveCurrentPreviewItem(state)
+    //_saveCurrentPreviewItem(state)
     return state
   })
 }
@@ -511,7 +511,7 @@ const pasteComponent = store => (targetComponent, mode) => {
     const index = mode === "above" ? targetIndex : targetIndex + 1
     parent._children.splice(index, 0, cloneDeep(componentToPaste))
     regenerateCssForCurrentScreen(s)
-    _saveCurrentPreviewItem(s)
+    //_saveCurrentPreviewItem(s)
     selectComponent(s, componentToPaste)
 
     return s

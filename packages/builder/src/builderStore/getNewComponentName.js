@@ -33,7 +33,7 @@ export default function(component, state) {
   let index = 1
   let name
   while (!name) {
-    const tryName = `${capitalised} ${index}`
+    const tryName = `${capitalised || "Copy"} ${index}`
     if (!matchingComponents.includes(tryName)) name = tryName
     index++
   }

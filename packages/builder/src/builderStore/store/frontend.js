@@ -17,7 +17,7 @@ import {
   getParent,
   // saveScreenApi as _saveScreenApi,
   generateNewIdsForComponent,
-  getComponentDefinition,
+  getComponentDefinition, findChildComponentType, regenerateCssForScreen, savePage as _savePage,
 } from "../storeUtils"
 
 const INITIAL_FRONTEND_STATE = {
@@ -171,18 +171,18 @@ export const getFrontendStore = () => {
           screen
         )
         const json = await response.json()
-
-        if (currentPageScreens.includes(screen)) return
-
         screen._rev = json.rev
         screen._id = json.id
-
-        const screens = [...currentPageScreens, screen]
+        const foundScreen = currentPageScreens.findIndex(el => el._id === screen._id)
+        if (currentPageScreens !== -1) {
+          currentPageScreens.splice(foundScreen, 1)
+        }
+        currentPageScreens.push(screen)
 
         // TODO: should carry out all server updates to screen in a single call
         store.update(state => {
-          state.pages[pageName]._screens = screens
-          state.screens = screens
+          state.pages[pageName]._screens = currentPageScreens
+          state.screens = currentPageScreens
           state.currentPreviewItem = screen
           const safeProps = makePropsSafe(
             state.components[screen.props._component],
@@ -480,6 +480,59 @@ export const getFrontendStore = () => {
         const path = IdList.join("/")
 
         return path
+      },
+      links: {
+        save: async (url, title) => {
+          let savePromise
+          store.update(state => {
+            // Try to extract a nav component from the master screen
+            const nav = findChildComponentType(
+              state.pages.main,
+              "@budibase/standard-components/Navigation"
+            )
+            if (nav) {
+              let newLink
+
+              // Clone an existing link if one exists
+              if (nav._children && nav._children.length) {
+                // Clone existing link style
+                newLink = cloneDeep(nav._children[0])
+
+                // Manipulate IDs to ensure uniqueness
+                generateNewIdsForComponent(newLink, state, false)
+
+                // Set our new props
+                newLink._instanceName = `${title} Link`
+                newLink.url = url
+                newLink.text = title
+              } else {
+                // Otherwise create vanilla new link
+                const component = getComponentDefinition(
+                  state,
+                  "@budibase/standard-components/link"
+                )
+                const instanceId = get(backendUiStore).selectedDatabase._id
+                newLink = createProps(component, {
+                  url,
+                  text: title,
+                  _instanceName: `${title} Link`,
+                  _instanceId: instanceId,
+                }).props
+              }
+
+              // Save page and regenerate all CSS because otherwise weird things happen
+              nav._children = [...nav._children, newLink]
+              state.currentPageName = "main"
+              store.actions.screens.regenerateCss(state.pages.main)
+              for (let screen of state.pages.main._screens) {
+                store.actions.screens.regenerateCss(screen)
+              }
+              savePromise = store.actions.pages.save()
+            }
+            return state
+          })
+          await savePromise
+        },
       },
     },
   }
