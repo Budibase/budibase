@@ -97,6 +97,7 @@ exports.fetchAppPackage = async function(ctx) {
 exports.create = async function(ctx) {
   const instance = await createInstance(ctx.request.body.template)
   const appId = instance._id
+  const version = packageJson.version
   const newApplication = {
     _id: appId,
     type: "app",
@@ -114,6 +115,7 @@ exports.create = async function(ctx) {
     await downloadExtractComponentLibraries(newAppFolder)
   }
 
+  await setBuilderToken(ctx, appId, version)
   ctx.status = 200
   ctx.body = newApplication
   ctx.message = `Application ${ctx.request.body.name} created successfully`
@@ -228,7 +230,7 @@ const createEmptyAppPackage = async (ctx, app) => {
   unauthPage.props._children[0]._children.title = `Log in to ${app.name}`
   const homeScreen = cloneDeep(HOME_SCREEN)
   homeScreen._id = generateScreenID(mainPage._id)
-  await db.bulkDocs([mainPage, unauthPage, homeScreen])
+  const response = await db.bulkDocs([mainPage, unauthPage, homeScreen])
 
   await buildPage(app._id, "main", {
     page: mainPage,
