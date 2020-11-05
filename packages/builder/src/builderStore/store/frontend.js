@@ -45,6 +45,10 @@ export const getFrontendStore = () => {
   store.actions = {
     // TODO: REFACTOR
     initialise: async pkg => {
+      store.update(state => {
+        state.appId = pkg.application._id
+        return state
+      })
       const screens = await api.get("/api/screens").then(r => r.json())
 
       const mainScreens = screens.filter(screen =>
