@@ -1,12 +1,12 @@
 import { authenticate } from "./authenticate"
-import { getAppIdFromPath } from "../render/getAppId"
+import { getAppId } from "../render/getAppId"
 
 const apiCall = method => async ({ url, body }) => {
   const response = await fetch(url, {
     method: method,
     headers: {
       "Content-Type": "application/json",
-      "x-budibase-app-id": getAppIdFromPath(),
+      "x-budibase-app-id": getAppId(window.document.cookie),
     },
     body: body && JSON.stringify(body),
     credentials: "same-origin",
