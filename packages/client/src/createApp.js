@@ -2,7 +2,7 @@ import { attachChildren } from "./render/attachChildren"
 import { createTreeNode } from "./render/prepareRenderComponent"
 import { screenRouter } from "./render/screenRouter"
 import { createStateManager } from "./state/stateManager"
-import { getAppIdFromPath } from "./render/getAppId"
+import { getAppId } from "./render/getAppId"
 
 export const createApp = ({
   componentLibraries,
@@ -38,7 +38,7 @@ export const createApp = ({
       window,
     })
     const fallbackPath = window.location.pathname.replace(
-      getAppIdFromPath(),
+      getAppId(window.document.cookie),
       ""
     )
     routeTo(currentUrl || fallbackPath)
