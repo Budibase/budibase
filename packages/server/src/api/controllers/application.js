@@ -76,10 +76,8 @@ exports.fetchAppPackage = async function(ctx) {
   )
   pages = pages.rows.map(row => row.doc)
 
-  const mainPage = pages.filter(page => page.name === PageTypes.MAIN)[0]
-  const unauthPage = pages.filter(
-    page => page.name === PageTypes.UNAUTHENTICATED
-  )[0]
+  const mainPage = pages.find(page => page.name === PageTypes.MAIN)
+  const unauthPage = pages.find(page => page.name === PageTypes.UNAUTHENTICATED)
   ctx.body = {
     application,
     pages: {
@@ -139,7 +137,6 @@ exports.delete = async function(ctx) {
   const result = await db.destroy()
 
   // remove top level directory
-  // TODO: look into why this isn't a callback
   await fs.rmdir(join(budibaseAppsDir(), ctx.params.appId), {
     recursive: true,
   })
@@ -160,14 +157,16 @@ const createEmptyAppPackage = async (ctx, app) => {
   }
 
   fs.mkdirpSync(newAppFolder)
+
   const mainPage = cloneDeep(MAIN)
   mainPage._id = generatePageID()
   mainPage.title = app.name
+
   const unauthPage = cloneDeep(UNAUTHENTICATED)
   unauthPage._id = generatePageID()
-  // TODO: fix - handlebars etc
   unauthPage.title = app.name
   unauthPage.props._children[0].title = `Log in to ${app.name}`
+
   const homeScreen = cloneDeep(HOME_SCREEN)
   homeScreen._id = generateScreenID(mainPage._id)
   await db.bulkDocs([mainPage, unauthPage, homeScreen])
