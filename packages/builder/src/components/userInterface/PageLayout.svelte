@@ -22,7 +22,7 @@
   }
 
   const setCurrentScreenToLayout = () => {
-    store.setScreenType("page")
+    store.actions.selectPageOrScreen("page")
     $goto("./:page/page-layout")
   }
 </script>

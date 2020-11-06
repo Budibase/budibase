@@ -1,5 +1,7 @@
 import { walkProps } from "./storeUtils"
 import { get_capitalised_name } from "../helpers"
+import { get } from "svelte/store"
+import { allScreens } from "builderStore"
 
 export default function(component, state) {
   const capitalised = get_capitalised_name(
@@ -25,7 +27,7 @@ export default function(component, state) {
     findMatches(state.currentPreviewItem.props)
   } else {
     // viewing master page - need to find against all screens
-    for (let screen of state.screens) {
+    for (let screen of get(allScreens)) {
       findMatches(screen.props)
     }
   }
@@ -33,7 +35,7 @@ export default function(component, state) {
   let index = 1
   let name
   while (!name) {
-    const tryName = `${capitalised} ${index}`
+    const tryName = `${capitalised || "Copy"} ${index}`
     if (!matchingComponents.includes(tryName)) name = tryName
     index++
   }

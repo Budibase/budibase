@@ -32,7 +32,7 @@
     ])
 
   const changeScreen = screen => {
-    store.setCurrentScreen(screen.props._instanceName)
+    store.actions.screens.select(screen.props._instanceName)
     $goto(`./:page/${screen.props._instanceName}`)
   }
 </script>

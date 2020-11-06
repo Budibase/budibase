@@ -4,7 +4,7 @@
   import { getComponentDefinition } from "builderStore/storeUtils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { last } from "lodash/fp"
-  import { getParent, saveCurrentPreviewItem } from "builderStore/storeUtils"
+  import { getParent } from "builderStore/storeUtils"
   import { DropdownMenu } from "@budibase/bbui"
   import { DropdownContainer, DropdownItem } from "components/common/Dropdowns"
 
@@ -25,50 +25,50 @@
   }
 
   const selectComponent = component => {
-    store.selectComponent(component)
-    const path = store.getPathToComponent(component)
+    store.actions.components.select(component)
+    const path = store.actions.components.findRoute(component)
     $goto(`./:page/:screen/${path}`)
   }
 
   const moveUpComponent = () => {
-    store.update(s => {
-      const parent = getParent(s.currentPreviewItem.props, component)
+    store.update(state => {
+      const parent = getParent(state.currentPreviewItem.props, component)
 
       if (parent) {
         const currentIndex = parent._children.indexOf(component)
-        if (currentIndex === 0) return s
+        if (currentIndex === 0) return state
 
         const newChildren = parent._children.filter(c => c !== component)
         newChildren.splice(currentIndex - 1, 0, component)
         parent._children = newChildren
       }
-      s.currentComponentInfo = component
-      saveCurrentPreviewItem(s)
+      state.currentComponentInfo = component
+      store.actions.preview.saveSelected()
 
-      return s
+      return state
     })
   }
 
   const moveDownComponent = () => {
-    store.update(s => {
-      const parent = getParent(s.currentPreviewItem.props, component)
+    store.update(state => {
+      const parent = getParent(state.currentPreviewItem.props, component)
 
       if (parent) {
         const currentIndex = parent._children.indexOf(component)
-        if (currentIndex === parent._children.length - 1) return s
+        if (currentIndex === parent._children.length - 1) return state
 
         const newChildren = parent._children.filter(c => c !== component)
         newChildren.splice(currentIndex + 1, 0, component)
         parent._children = newChildren
       }
-      s.currentComponentInfo = component
-      saveCurrentPreviewItem(s)
+      state.currentComponentInfo = component
+      store.actions.preview.saveSelected()
 
-      return s
+      return state
     })
   }
 
-  const copyComponent = () => {
+  const duplicateComponent = () => {
     storeComponentForCopy(false)
     pasteComponent("below")
   }
@@ -82,19 +82,19 @@
         selectComponent(parent)
       }
 
-      saveCurrentPreviewItem(state)
+      store.actions.preview.saveSelected()
       return state
     })
   }
 
   const storeComponentForCopy = (cut = false) => {
     // lives in store - also used by drag drop
-    store.storeComponentForCopy(component, cut)
+    store.actions.components.copy(component, cut)
   }
 
   const pasteComponent = mode => {
     // lives in store - also used by drag drop
-    store.pasteComponent(component, mode)
+    store.actions.components.paste(component, mode)
   }
 </script>
 
@@ -117,7 +117,7 @@
       <DropdownItem
         icon="ri-repeat-one-line"
         title="Duplicate"
-        on:click={copyComponent} />
+        on:click={duplicateComponent} />
       <DropdownItem
         icon="ri-scissors-cut-line"
         title="Cut"

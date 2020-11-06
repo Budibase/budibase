@@ -40,10 +40,10 @@
 
   const selectComponent = component => {
     // Set current component
-    store.selectComponent(component)
+    store.actions.components.select(component)
 
     // Get ID path
-    const path = store.getPathToComponent(component)
+    const path = store.actions.components.findRoute(component)
 
     // Go to correct URL
     $goto(`./:page/:screen/${path}`)
@@ -96,8 +96,8 @@
 
   const drop = () => {
     if ($dragDropStore.targetComponent !== $dragDropStore.componentToDrop) {
-      store.storeComponentForCopy($dragDropStore.componentToDrop, true)
-      store.pasteComponent(
+      store.actions.components.copy($dragDropStore.componentToDrop, true)
+      store.actions.components.paste(
         $dragDropStore.targetComponent,
         $dragDropStore.dropPosition
       )

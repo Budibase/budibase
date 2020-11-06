@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import { store, backendUiStore } from "builderStore"
+  import { store, backendUiStore, allScreens } from "builderStore"
   import {
     Input,
     Button,
@@ -24,7 +24,7 @@
 
   $: templates = getTemplates($store, $backendUiStore.tables)
 
-  $: route = !route && $store.screens.length === 0 ? "*" : route
+  $: route = !route && $allScreens.length === 0 ? "*" : route
 
   $: baseComponents = Object.values($store.components)
     .filter(componentDefinition => componentDefinition.baseComponent)
@@ -71,9 +71,9 @@
     draftScreen.props._component = baseComponent
     draftScreen.route = route
 
-    await store.createScreen(draftScreen)
+    await store.actions.screens.create(draftScreen)
     if (createLink) {
-      await store.createLink(route, name)
+      await store.actions.components.links.save(route, name)
     }
 
     if (templateIndex !== undefined) {
@@ -87,7 +87,7 @@
   }
 
   const routeNameExists = route => {
-    return $store.screens.some(
+    return $allScreens.some(
       screen => screen.route.toLowerCase() === route.toLowerCase()
     )
   }

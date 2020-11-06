@@ -8,12 +8,35 @@ const zlib = require("zlib")
 const { promisify } = require("util")
 const streamPipeline = promisify(stream.pipeline)
 const { budibaseAppsDir } = require("./budibaseDir")
+const env = require("../environment")
 const CouchDB = require("../db")
+const { DocumentTypes } = require("../db/utils")
 
 const DEFAULT_TEMPLATES_BUCKET =
   "prod-budi-templates.s3-eu-west-1.amazonaws.com"
 
+exports.getLocalTemplates = function() {
+  const templatesDir = join(os.homedir(), ".budibase", "templates", "app")
+  const templateObj = { app: {} }
+  fs.ensureDirSync(templatesDir)
+  const templateNames = fs.readdirSync(templatesDir)
+  for (let name of templateNames) {
+    templateObj.app[name] = {
+      name,
+      category: "local",
+      description: "local template",
+      type: "app",
+      key: `app/${name}`,
+    }
+  }
+  return templateObj
+}
+
 exports.downloadTemplate = async function(type, name) {
+  const dirName = join(budibaseAppsDir(), "templates", type, name)
+  if (env.LOCAL_TEMPLATES) {
+    return dirName
+  }
   const templateUrl = `https://${DEFAULT_TEMPLATES_BUCKET}/templates/${type}/${name}.tar.gz`
   const response = await fetch(templateUrl)
 
@@ -30,26 +53,27 @@ exports.downloadTemplate = async function(type, name) {
     tar.extract(join(budibaseAppsDir(), "templates", type))
   )
 
-  return join(budibaseAppsDir(), "templates", type, name)
+  return dirName
 }
 
 exports.exportTemplateFromApp = async function({ templateName, appId }) {
   // Copy frontend files
-  const appToExport = join(os.homedir(), ".budibase", appId, "pages")
-  const templatesDir = join(os.homedir(), ".budibase", "templates")
-  fs.ensureDirSync(templatesDir)
-
-  const templateOutputPath = join(templatesDir, templateName)
-  fs.copySync(appToExport, join(templateOutputPath, "pages"))
-
-  fs.ensureDirSync(join(templateOutputPath, "db"))
-  const writeStream = fs.createWriteStream(
-    join(templateOutputPath, "db", "dump.txt")
+  const templatesDir = join(
+    os.homedir(),
+    ".budibase",
+    "templates",
+    "app",
+    templateName,
+    "db"
   )
-
+  fs.ensureDirSync(templatesDir)
+  const writeStream = fs.createWriteStream(join(templatesDir, "dump.txt"))
   // perform couch dump
   const instanceDb = new CouchDB(appId)
-
-  await instanceDb.dump(writeStream)
-  return templateOutputPath
+  await instanceDb.dump(writeStream, {
+    filter: doc => {
+      return !doc._id.startsWith(DocumentTypes.USER)
+    },
+  })
+  return templatesDir
 }
