@@ -23,6 +23,12 @@ yargs
     },
     async args => {
       console.log("Exporting app..")
+      if (args.name == null || args.appId == null) {
+        console.error(
+          "Unable to export without a name and app ID being specified, check help for more info."
+        )
+        return
+      }
       const exportPath = await exportTemplateFromApp({
         templateName: args.name,
         appId: args.appId,

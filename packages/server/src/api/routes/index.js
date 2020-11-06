@@ -1,5 +1,6 @@
 const authRoutes = require("./auth")
 const pageRoutes = require("./pages")
+const screenRoutes = require("./screen")
 const userRoutes = require("./user")
 const applicationRoutes = require("./application")
 const tableRoutes = require("./table")
@@ -19,6 +20,7 @@ module.exports = {
   deployRoutes,
   authRoutes,
   pageRoutes,
+  screenRoutes,
   userRoutes,
   applicationRoutes,
   rowRoutes,

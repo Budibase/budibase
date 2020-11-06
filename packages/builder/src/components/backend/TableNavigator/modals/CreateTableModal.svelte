@@ -55,7 +55,7 @@
       // Record the table that created this screen so we can link it later
       screen.autoTableId = table._id
       try {
-        await store.createScreen(screen)
+        await store.actions.screens.create(screen)
       } catch (_) {
         // TODO: this is temporary
         // a cypress test is failing, because I added the
@@ -70,7 +70,7 @@
     const listPage = screens.find(screen =>
       screen.props._instanceName.endsWith("List")
     )
-    await store.createLink(listPage.route, table.name)
+    await store.actions.components.links.save(listPage.route, table.name)
 
     // Navigate to new table
     $goto(`./table/${table._id}`)

@@ -1,21 +1,29 @@
 const CouchDB = require("../../db")
-const { getPackageForBuilder, buildPage } = require("../../utilities/builder")
+const compileStaticAssetsForPage = require("../../utilities/builder/compileStaticAssetsForPage")
 const env = require("../../environment")
-const { copy, existsSync, readFile, writeFile } = require("fs-extra")
+const { existsSync } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
-const sqrl = require("squirrelly")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const fs = require("fs-extra")
 const { join, resolve } = require("../../utilities/centralPath")
-const { promisify } = require("util")
-const chmodr = require("chmodr")
 const packageJson = require("../../../package.json")
 const { createLinkView } = require("../../db/linkedRows")
 const { downloadTemplate } = require("../../utilities/templates")
-const { generateAppID, DocumentTypes, SEPARATOR } = require("../../db/utils")
+const {
+  generateAppID,
+  DocumentTypes,
+  SEPARATOR,
+  getPageParams,
+  generatePageID,
+  generateScreenID,
+} = require("../../db/utils")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
+const { MAIN, UNAUTHENTICATED, PageTypes } = require("../../constants/pages")
+const { HOME_SCREEN } = require("../../constants/screens")
+const { cloneDeep } = require("lodash/fp")
+
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
 async function createInstance(template) {
@@ -60,13 +68,31 @@ exports.fetch = async function(ctx) {
 exports.fetchAppPackage = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
-  ctx.body = await getPackageForBuilder(ctx.config, application)
+
+  let pages = await db.allDocs(
+    getPageParams(null, {
+      include_docs: true,
+    })
+  )
+  pages = pages.rows.map(row => row.doc)
+
+  const mainPage = pages.find(page => page.name === PageTypes.MAIN)
+  const unauthPage = pages.find(page => page.name === PageTypes.UNAUTHENTICATED)
+  ctx.body = {
+    application,
+    pages: {
+      main: mainPage,
+      unauthenticated: unauthPage,
+    },
+  }
+
   await setBuilderToken(ctx, ctx.params.appId, application.version)
 }
 
 exports.create = async function(ctx) {
   const instance = await createInstance(ctx.request.body.template)
   const appId = instance._id
+  const version = packageJson.version
   const newApplication = {
     _id: appId,
     type: "app",
@@ -84,6 +110,7 @@ exports.create = async function(ctx) {
     await downloadExtractComponentLibraries(newAppFolder)
   }
 
+  await setBuilderToken(ctx, appId, version)
   ctx.status = 200
   ctx.body = newApplication
   ctx.message = `Application ${ctx.request.body.name} created successfully`
@@ -120,99 +147,38 @@ exports.delete = async function(ctx) {
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
-  const templateFolder = resolve(
-    __dirname,
-    "..",
-    "..",
-    "utilities",
-    "appDirectoryTemplate"
-  )
-
   const appsFolder = budibaseAppsDir()
   const newAppFolder = resolve(appsFolder, app._id)
+
+  const db = new CouchDB(app._id)
 
   if (existsSync(newAppFolder)) {
     ctx.throw(400, "App folder already exists for this application")
   }
 
-  await fs.ensureDir(join(newAppFolder, "pages", "main", "screens"), 0o777)
-  await fs.ensureDir(
-    join(newAppFolder, "pages", "unauthenticated", "screens"),
-    0o777
-  )
+  fs.mkdirpSync(newAppFolder)
 
-  await copy(templateFolder, newAppFolder)
+  const mainPage = cloneDeep(MAIN)
+  mainPage._id = generatePageID()
+  mainPage.title = app.name
 
-  // this line allows full permission on copied files
-  // we have an unknown problem without this, whereby the
-  // files get weird permissions and cant be written to :(
-  const chmodrPromise = promisify(chmodr)
-  await chmodrPromise(newAppFolder, 0o777)
+  const unauthPage = cloneDeep(UNAUTHENTICATED)
+  unauthPage._id = generatePageID()
+  unauthPage.title = app.name
+  unauthPage.props._children[0].title = `Log in to ${app.name}`
 
-  await updateJsonFile(join(appsFolder, app._id, "package.json"), {
-    name: npmFriendlyAppName(app.name),
+  const homeScreen = cloneDeep(HOME_SCREEN)
+  homeScreen._id = generateScreenID(mainPage._id)
+  await db.bulkDocs([mainPage, unauthPage, homeScreen])
+
+  await compileStaticAssetsForPage(app._id, "main", {
+    page: mainPage,
+    screens: [homeScreen],
   })
-
-  // if this app is being created from a template,
-  // copy the frontend page definition files from
-  // the template directory.
-  if (app.template) {
-    const templatePageDefinitions = join(
-      appsFolder,
-      "templates",
-      app.template.key,
-      "pages"
-    )
-    await copy(templatePageDefinitions, join(appsFolder, app._id, "pages"))
-  }
-
-  const mainJson = await updateJsonFile(
-    join(appsFolder, app._id, "pages", "main", "page.json"),
-    app
-  )
-
-  await buildPage(ctx.config, app._id, "main", {
-    page: mainJson,
-    screens: await loadScreens(newAppFolder, "main"),
-  })
-
-  const unauthenticatedJson = await updateJsonFile(
-    join(appsFolder, app._id, "pages", "unauthenticated", "page.json"),
-    app
-  )
-
-  await buildPage(ctx.config, app._id, "unauthenticated", {
-    page: unauthenticatedJson,
-    screens: await loadScreens(newAppFolder, "unauthenticated"),
+  await compileStaticAssetsForPage(app._id, "unauthenticated", {
+    page: unauthPage,
+    screens: [],
   })
 
   return newAppFolder
 }
-
-const loadScreens = async (appFolder, page) => {
-  const screensFolder = join(appFolder, "pages", page, "screens")
-
-  const screenFiles = (await fs.readdir(screensFolder)).filter(s =>
-    s.endsWith(".json")
-  )
-
-  let screens = []
-  for (let file of screenFiles) {
-    screens.push(await fs.readJSON(join(screensFolder, file)))
-  }
-  return screens
-}
-
-const updateJsonFile = async (filePath, app) => {
-  const json = await readFile(filePath, "utf8")
-  const newJson = sqrl.Render(json, app)
-  await writeFile(filePath, newJson, "utf8")
-  return JSON.parse(newJson)
-}
-
-const npmFriendlyAppName = name =>
-  name
-    .replace(/_/g, "")
-    .replace(/./g, "")
-    .replace(/ /g, "")
-    .toLowerCase()

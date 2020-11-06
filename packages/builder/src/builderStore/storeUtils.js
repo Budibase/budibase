@@ -1,20 +1,6 @@
-import {
-  makePropsSafe,
-  getBuiltin,
-} from "components/userInterface/pagesParsing/createProps"
-import api from "./api"
-import { generate_screen_css } from "./generate_css"
+import { getBuiltin } from "components/userInterface/pagesParsing/createProps"
 import { uuid } from "./uuid"
 import getNewComponentName from "./getNewComponentName"
-
-export const selectComponent = (state, component) => {
-  const componentDef = component._component.startsWith("##")
-    ? component
-    : state.components[component._component]
-  state.currentComponentInfo = makePropsSafe(componentDef, component)
-  state.currentView = "component"
-  return state
-}
 
 export const getParent = (rootProps, child) => {
   let parent
@@ -28,41 +14,6 @@ export const getParent = (rootProps, child) => {
     }
   })
   return parent
-}
-
-export const saveCurrentPreviewItem = s =>
-  s.currentFrontEndType === "page"
-    ? savePage(s)
-    : saveScreenApi(s.currentPreviewItem, s)
-
-export const savePage = async s => {
-  const pageName = s.currentPageName || "main"
-  const page = s.pages[pageName]
-  await api.post(`/_builder/api/${s.appId}/pages/${pageName}`, {
-    page: { componentLibraries: s.pages.componentLibraries, ...page },
-    uiFunctions: s.currentPageFunctions,
-    screens: page._screens,
-  })
-}
-
-export const saveScreenApi = (screen, s) => {
-  api
-    .post(`/_builder/api/${s.appId}/pages/${s.currentPageName}/screen`, screen)
-    .then(() => savePage(s))
-}
-
-export const renameCurrentScreen = (newname, state) => {
-  const oldname = state.currentPreviewItem.props._instanceName
-  state.currentPreviewItem.props._instanceName = newname
-
-  api.patch(
-    `/_builder/api/${state.appId}/pages/${state.currentPageName}/screen`,
-    {
-      oldname,
-      newname,
-    }
-  )
-  return state
 }
 
 export const walkProps = (props, action, cancelToken = null) => {
@@ -79,21 +30,14 @@ export const walkProps = (props, action, cancelToken = null) => {
   }
 }
 
-export const regenerateCssForScreen = screen => {
-  screen._css = generate_screen_css([screen.props])
-}
-
-export const regenerateCssForCurrentScreen = state => {
-  if (state.currentPreviewItem) {
-    regenerateCssForScreen(state.currentPreviewItem)
-  }
-  return state
-}
-
-export const generateNewIdsForComponent = (c, state, changeName = true) =>
-  walkProps(c, p => {
-    p._id = uuid()
-    if (changeName) p._instanceName = getNewComponentName(p._component, state)
+export const generateNewIdsForComponent = (
+  component,
+  state,
+  changeName = true
+) =>
+  walkProps(component, prop => {
+    prop._id = uuid()
+    if (changeName) prop._instanceName = getNewComponentName(prop, state)
   })
 
 export const getComponentDefinition = (state, name) =>

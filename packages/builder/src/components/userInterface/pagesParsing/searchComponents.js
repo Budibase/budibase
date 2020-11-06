@@ -29,8 +29,8 @@ export const searchAllComponents = (components, phrase) => {
 }
 
 export const getExactComponent = (components, name, isScreen = false) => {
-  return components.find(c =>
-    isScreen ? c.props._instanceName === name : c._instanceName === name
+  return components.find(comp =>
+    isScreen ? comp.props._instanceName === name : comp._instanceName === name
   )
 }
 

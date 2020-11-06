@@ -1,7 +1,7 @@
 <script>
   import { DataList } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { store, backendUiStore } from "builderStore"
+  import { store, allScreens, backendUiStore } from "builderStore"
   import fetchBindableProperties from "builderStore/fetchBindableProperties"
 
   const dispatch = createEventDispatcher()
@@ -17,7 +17,7 @@
   // and substitute the :id param for the actual {{ ._id }} binding
   const getUrls = () => {
     const urls = [
-      ...$store.screens
+      ...$allScreens
         .filter(screen => !screen.props._component.endsWith("/rowdetail"))
         .map(screen => ({
           name: screen.props._instanceName,
@@ -33,7 +33,7 @@
       tables: $backendUiStore.tables,
     })
 
-    const detailScreens = $store.screens.filter(screen =>
+    const detailScreens = $allScreens.filter(screen =>
       screen.props._component.endsWith("/rowdetail")
     )
 

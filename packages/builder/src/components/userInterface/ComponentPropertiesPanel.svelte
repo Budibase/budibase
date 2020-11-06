@@ -27,7 +27,7 @@
     componentPropDefinition.properties &&
     componentPropDefinition.properties[selectedCategory.value]
 
-  const onStyleChanged = store.setComponentStyle
+  const onStyleChanged = store.actions.components.updateStyle
 
   $: isComponentOrScreen =
     $store.currentView === "component" ||
@@ -58,6 +58,18 @@
     return components
   }
 
+  function setPageOrScreenProp(name, value) {
+    store.update(state => {
+      if (name === "_instanceName" && state.currentFrontEndType === "screen") {
+        state.currentPreviewItem.props[name] = value
+      } else {
+        state.currentPreviewItem[name] = value
+      }
+      store.actions.preview.saveSelected()
+      return state
+    })
+  }
+
   function getProps(obj, keys) {
     return keys.map((key, i) => [key, obj[key], obj.props._id + i])
   }
@@ -81,8 +93,8 @@
       {componentDefinition}
       {panelDefinition}
       displayNameField={displayName}
-      onChange={store.setComponentProp}
-      onScreenPropChange={store.setPageOrScreenProp}
+      onChange={store.actions.components.updateProp}
+      onScreenPropChange={setPageOrScreenProp}
       screenOrPageInstance={$store.currentView !== 'component' && $store.currentPreviewItem} />
   {/if}
 </div>

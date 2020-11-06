@@ -2,25 +2,34 @@ const fetch = require("node-fetch")
 const {
   downloadTemplate,
   exportTemplateFromApp,
+  getLocalTemplates,
 } = require("../../utilities/templates")
+const env = require("../../environment")
 
+// development flag, can be used to test against templates exported locally
 const DEFAULT_TEMPLATES_BUCKET =
   "prod-budi-templates.s3-eu-west-1.amazonaws.com"
 
 exports.fetch = async function(ctx) {
   const { type = "app" } = ctx.query
 
-  const response = await fetch(
-    `https://${DEFAULT_TEMPLATES_BUCKET}/manifest.json`
-  )
-  const json = await response.json()
-  ctx.body = Object.values(json.templates[type])
+  if (env.LOCAL_TEMPLATES) {
+    ctx.body = Object.values(getLocalTemplates()[type])
+  } else {
+    const response = await fetch(
+      `https://${DEFAULT_TEMPLATES_BUCKET}/manifest.json`
+    )
+    const json = await response.json()
+    ctx.body = Object.values(json.templates[type])
+  }
 }
 
 exports.downloadTemplate = async function(ctx) {
   const { type, name } = ctx.params
 
-  await downloadTemplate(type, name)
+  if (!env.LOCAL_TEMPLATES) {
+    await downloadTemplate(type, name)
+  }
 
   ctx.body = {
     message: `template ${type}:${name} downloaded successfully.`,

@@ -128,7 +128,7 @@
     }
   }
 
-  async function signUp() {
+  async function createNewApp() {
     submitting = true
     try {
       // Add API key if there is none.
@@ -154,7 +154,7 @@
       if (applicationPkg.ok) {
         backendUiStore.actions.reset()
         pkg.justCreated = true
-        await store.setPackage(pkg)
+        await store.actions.initialise(pkg)
         automationStore.actions.fetch()
       } else {
         throw new Error(pkg)
@@ -193,10 +193,6 @@
   $: checkValidity($createAppStore.values, $createAppStore.currentStep)
 
   let onChange = () => {}
-
-  async function _onOkay() {
-    await createNewApp()
-  }
 </script>
 
 <div class="container">
@@ -239,7 +235,7 @@
         <Button
           medium
           blue
-          on:click={signUp}
+          on:click={createNewApp}
           disabled={!fullFormIsValid || submitting}>
           {submitting ? 'Loading...' : 'Submit'}
         </Button>

@@ -18,7 +18,7 @@
 
     if (res.ok) {
       backendUiStore.actions.reset()
-      await store.setPackage(pkg)
+      await store.actions.initialise(pkg)
       await automationStore.actions.fetch()
       return pkg
     } else {
