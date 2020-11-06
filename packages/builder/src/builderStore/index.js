@@ -26,7 +26,9 @@ export const currentScreens = derived(store, $store => {
   if (currentScreens == null) {
     return []
   }
-  return Array.isArray(currentScreens) ? currentScreens : Object.values(currentScreens)
+  return Array.isArray(currentScreens)
+    ? currentScreens
+    : Object.values(currentScreens)
 })
 
 export const initialise = async () => {
