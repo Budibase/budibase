@@ -23,7 +23,9 @@ async function startApp() {
     showDialog: true,
     reportButton: error => {
       openNewGitHubIssue({
+        title: error.message,
         user: "Budibase",
+        labels: ["error-report"],
         repo: "budibase",
         body: `### Error that occurred when using the budibase builder:\n\`\`\`\n${
           error.stack
