@@ -36,7 +36,11 @@ export const walkProps = (props, action, cancelToken = null) => {
   }
 }
 
-export const generateNewIdsForComponent = (component, state, changeName = true) =>
+export const generateNewIdsForComponent = (
+  component,
+  state,
+  changeName = true
+) =>
   walkProps(component, prop => {
     prop._id = uuid()
     if (changeName) prop._instanceName = getNewComponentName(prop, state)

@@ -1,15 +1,24 @@
 import { get, writable } from "svelte/store"
-import {cloneDeep} from "lodash/fp"
-import { createProps, getBuiltin, makePropsSafe } from "components/userInterface/pagesParsing/createProps"
+import { cloneDeep } from "lodash/fp"
+import {
+  createProps,
+  getBuiltin,
+  makePropsSafe,
+} from "components/userInterface/pagesParsing/createProps"
 import { getExactComponent } from "components/userInterface/pagesParsing/searchComponents"
-import {allScreens, backendUiStore } from "builderStore"
+import { allScreens, backendUiStore } from "builderStore"
 import { generate_screen_css } from "../generate_css"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
 import { DEFAULT_PAGES_OBJECT } from "../../constants"
 import getNewComponentName from "../getNewComponentName"
 import analytics from "analytics"
-import { findChildComponentType, generateNewIdsForComponent, getComponentDefinition, getParent } from "../storeUtils"
+import {
+  findChildComponentType,
+  generateNewIdsForComponent,
+  getComponentDefinition,
+  getParent,
+} from "../storeUtils"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -165,7 +174,9 @@ export const getFrontendStore = () => {
         const json = await response.json()
         screen._rev = json.rev
         screen._id = json.id
-        const foundScreen = currentPageScreens.findIndex(el => el._id === screen._id)
+        const foundScreen = currentPageScreens.findIndex(
+          el => el._id === screen._id
+        )
         if (currentPageScreens !== -1) {
           currentPageScreens.splice(foundScreen, 1)
         }
@@ -318,14 +329,11 @@ export const getFrontendStore = () => {
           const instanceId = get(backendUiStore).selectedDatabase._id
           const instanceName = getNewComponentName(component, state)
 
-          const newComponent = createProps(
-            component,
-            {
-              ...presetProps,
-              _instanceId: instanceId,
-              _instanceName: instanceName,
-            }
-          )
+          const newComponent = createProps(component, {
+            ...presetProps,
+            _instanceId: instanceId,
+            _instanceName: instanceName,
+          })
 
           const currentComponent =
             state.components[state.currentComponentInfo._component]
