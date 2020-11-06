@@ -1,10 +1,4 @@
-import {
-  makePropsSafe,
-  getBuiltin,
-} from "components/userInterface/pagesParsing/createProps"
-import api from "./api"
-import { store } from "builderStore"
-import { generate_screen_css } from "./generate_css"
+import { getBuiltin } from "components/userInterface/pagesParsing/createProps"
 import { uuid } from "./uuid"
 import getNewComponentName from "./getNewComponentName"
 

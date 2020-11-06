@@ -17,11 +17,7 @@ module.exports = async (appId, pageName, pkg) => {
   await buildFrontendAppDefinition(appId, pageName, pkg, appPath)
 
   await copyClientLib(appPath, pageName)
-
-  // await savePageJson(appPath, pageName, pkg)
 }
-
-// const rootPath = (config, appId) => (config.useAppRootPath ? `/${appId}` : "")
 
 const copyClientLib = async (appPath, pageName) => {
   const sourcepath = require.resolve("@budibase/client")
@@ -96,23 +92,3 @@ const buildFrontendAppDefinition = async (appId, pageName, pkg) => {
     `
   )
 }
-
-// const savePageJson = async (appPath, pageName, pkg) => {
-//   const pageFile = join(appPath, "pages", pageName, "page.json")
-
-//   if (pkg.page._css) {
-//     delete pkg.page._css
-//   }
-
-//   if (pkg.page.name) {
-//     delete pkg.page.name
-//   }
-
-//   if (pkg.page._screens) {
-//     delete pkg.page._screens
-//   }
-
-//   await writeJSON(pageFile, pkg.page, {
-//     spaces: 2,
-//   })
-// }

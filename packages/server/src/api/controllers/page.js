@@ -1,6 +1,6 @@
 const CouchDB = require("../../db/client")
 const { generatePageID } = require("../../db/utils")
-const { compileStaticAssetsForPage } = require("../../utilities/builder")
+const compileStaticAssetsForPage = require("../../utilities/builder/compileStaticAssetsForPage")
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)

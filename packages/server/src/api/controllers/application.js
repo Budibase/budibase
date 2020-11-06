@@ -1,5 +1,5 @@
 const CouchDB = require("../../db")
-const { compileStaticAssetsForPage } = require("../../utilities/builder")
+const compileStaticAssetsForPage = require("../../utilities/builder/compileStaticAssetsForPage")
 const env = require("../../environment")
 const { existsSync } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
