@@ -62,7 +62,7 @@
     </div>
   </div>
 
-  <!-- <TemplateList onSelect={selectTemplate} /> -->
+  <TemplateList onSelect={selectTemplate} />
 
   <AppList />
 </div>

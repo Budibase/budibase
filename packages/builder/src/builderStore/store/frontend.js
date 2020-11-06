@@ -1,23 +1,15 @@
-import { writable, get } from "svelte/store"
-import { cloneDeep } from "lodash/fp"
-import {
-  createProps,
-  makePropsSafe,
-  getBuiltin,
-} from "components/userInterface/pagesParsing/createProps"
+import { get, writable } from "svelte/store"
+import {cloneDeep} from "lodash/fp"
+import { createProps, getBuiltin, makePropsSafe } from "components/userInterface/pagesParsing/createProps"
 import { getExactComponent } from "components/userInterface/pagesParsing/searchComponents"
-import { backendUiStore, allScreens } from "builderStore"
+import {allScreens, backendUiStore } from "builderStore"
 import { generate_screen_css } from "../generate_css"
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
 import { DEFAULT_PAGES_OBJECT } from "../../constants"
 import getNewComponentName from "../getNewComponentName"
 import analytics from "analytics"
-import {
-  getParent,
-  generateNewIdsForComponent,
-  getComponentDefinition, findChildComponentType,
-} from "../storeUtils"
+import { findChildComponentType, generateNewIdsForComponent, getComponentDefinition, getParent } from "../storeUtils"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -332,8 +324,7 @@ export const getFrontendStore = () => {
               ...presetProps,
               _instanceId: instanceId,
               _instanceName: instanceName,
-            },
-            state
+            }
           )
 
           const currentComponent =
@@ -367,8 +358,7 @@ export const getFrontendStore = () => {
       },
       copy: (component, cut = false) => {
         store.update(state => {
-          const copiedComponent = cloneDeep(component)
-          state.componentToPaste = copiedComponent
+          state.componentToPaste = cloneDeep(component)
           state.componentToPaste.isCut = cut
           if (cut) {
             const parent = getParent(
@@ -469,9 +459,7 @@ export const getFrontendStore = () => {
         const IdList = allComponents.map(c => c._id)
 
         // Construct ID Path:
-        const path = IdList.join("/")
-
-        return path
+        return IdList.join("/")
       },
       links: {
         save: async (url, title) => {

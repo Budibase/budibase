@@ -8,11 +8,7 @@ exports.save = async function(ctx) {
   const appPackage = ctx.request.body
 
   const page = await db.get(ctx.params.pageId)
-  await compileStaticAssetsForPage(
-    ctx.user.appId,
-    page.name,
-    ctx.request.body
-  )
+  await compileStaticAssetsForPage(ctx.user.appId, page.name, ctx.request.body)
 
   // remove special doc props which couch will complain about
   delete appPackage.page._css

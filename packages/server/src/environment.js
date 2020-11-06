@@ -34,6 +34,7 @@ module.exports = {
   USERID_API_KEY: process.env.USERID_API_KEY,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   DEPLOYMENT_DB_URL: process.env.DEPLOYMENT_DB_URL,
+  LOCAL_TEMPLATES: process.env.LOCAL_TEMPLATES,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
