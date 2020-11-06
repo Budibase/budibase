@@ -37,15 +37,22 @@ exports.create = async function(ctx) {
     accessLevelId,
   }
 
-  const response = await db.post(user)
-
-  ctx.status = 200
-  ctx.message = "User created successfully."
-  ctx.userId = response._id
-  ctx.body = {
-    _rev: response.rev,
-    username,
-    name,
+  try {
+    const response = await db.post(user)
+    ctx.status = 200
+    ctx.message = "User created successfully."
+    ctx.userId = response._id
+    ctx.body = {
+      _rev: response.rev,
+      username,
+      name,
+    }
+  } catch (err) {
+    if (err.status === 409) {
+      ctx.throw(400, "User exists already")
+    } else {
+      ctx.throw(err.status, err)
+    }
   }
 }
 

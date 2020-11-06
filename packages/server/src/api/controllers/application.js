@@ -1,7 +1,7 @@
 const CouchDB = require("../../db")
 const { compileStaticAssetsForPage } = require("../../utilities/builder")
 const env = require("../../environment")
-const { copy, existsSync } = require("fs-extra")
+const { existsSync } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
 const setBuilderToken = require("../../utilities/builder/setBuilderToken")
 const fs = require("fs-extra")
@@ -160,21 +160,6 @@ const createEmptyAppPackage = async (ctx, app) => {
   }
 
   fs.mkdirpSync(newAppFolder)
-  // if this app is being created from a template,
-  // copy the frontend page definition files from
-  // the template directory.
-  if (app.template) {
-    const templatePageDefinitions = join(
-      appsFolder,
-      "templates",
-      app.template.key,
-      "pages"
-    )
-    // TODO: write the template page JSON to couch
-    // iterate over the pages and write them to the db
-    await copy(templatePageDefinitions, join(appsFolder, app._id, "pages"))
-  }
-
   const mainPage = cloneDeep(MAIN)
   mainPage._id = generatePageID()
   mainPage.title = app.name
