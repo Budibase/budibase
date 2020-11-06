@@ -197,10 +197,11 @@ exports.serveAppAsset = async function(ctx) {
 }
 
 exports.serveComponentLibrary = async function(ctx) {
+  const appId = ctx.query.appId || ctx.appId
   // default to homedir
   let componentLibraryPath = resolve(
     budibaseAppsDir(),
-    ctx.query.appId,
+    appId,
     "node_modules",
     decodeURI(ctx.query.library),
     "package",
@@ -222,7 +223,6 @@ exports.serveComponentLibrary = async function(ctx) {
     } else {
       componentLib += `-${COMP_LIB_BASE_APP_VERSION}`
     }
-    const appId = ctx.query.appId
     const S3_URL = encodeURI(
       `https://${appId}.app.budi.live/assets/${componentLib}/${ctx.query.library}/dist/index.js`
     )
