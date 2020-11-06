@@ -1,7 +1,7 @@
 import { load, makePage, makeScreen, walkComponentTree } from "./testAppDef"
 import { isScreenSlot } from "../src/render/builtinComponents"
 jest.mock("../src/render/getAppId", () => ({
-  getAppIdFromPath: () => "TEST_APP_ID"
+  getAppId: () => "TEST_APP_ID"
 }))
 
 describe("screenRouting", () => {
