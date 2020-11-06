@@ -128,7 +128,7 @@
     }
   }
 
-  async function signUp() {
+  async function createNewApp() {
     submitting = true
     try {
       // Add API key if there is none.
@@ -193,10 +193,6 @@
   $: checkValidity($createAppStore.values, $createAppStore.currentStep)
 
   let onChange = () => {}
-
-  async function _onOkay() {
-    await createNewApp()
-  }
 </script>
 
 <div class="container">
@@ -239,7 +235,7 @@
         <Button
           medium
           blue
-          on:click={signUp}
+          on:click={createNewApp}
           disabled={!fullFormIsValid || submitting}>
           {submitting ? 'Loading...' : 'Submit'}
         </Button>
