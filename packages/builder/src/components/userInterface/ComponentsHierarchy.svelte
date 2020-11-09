@@ -10,8 +10,8 @@
 
   export let screens = []
 
-  $: sortedScreens = screens.sort(
-    (s1, s2) => s1.props._instanceName > s2.props._instanceName
+  $: sortedScreens = screens.sort((s1, s2) =>
+    s1.props._instanceName > s2.props._instanceName ? 1 : -1
   )
   /* 
   Using a store here seems odd.... 
