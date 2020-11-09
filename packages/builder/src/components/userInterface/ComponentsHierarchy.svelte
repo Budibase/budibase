@@ -10,10 +10,12 @@
 
   export let screens = []
 
-  $: sortedScreens = screens.sort((s1, s2) =>
-    s1.props._instanceName > s2.props._instanceName ? 1 : -1
-  )
-  /* 
+  $: sortedScreens = screens.sort((s1, s2) => {
+    const name1 = s1.props._instanceName?.toLowerCase() ?? ""
+    const name2 = s2.props._instanceName?.toLowerCase() ?? ""
+    return name1 > name2 ? 1 : -1
+  })
+  /*
   Using a store here seems odd.... 
   have a look in the <ComponentsHierarchyChildren /> code file to find out why. 
   I have commented the dragDropStore parameter
