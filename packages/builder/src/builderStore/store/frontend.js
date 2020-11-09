@@ -177,7 +177,7 @@ export const getFrontendStore = () => {
         const foundScreen = currentPageScreens.findIndex(
           el => el._id === screen._id
         )
-        if (currentPageScreens !== -1) {
+        if (foundScreen !== -1) {
           currentPageScreens.splice(foundScreen, 1)
         }
         currentPageScreens.push(screen)
