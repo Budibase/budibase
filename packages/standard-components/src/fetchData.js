@@ -14,12 +14,12 @@ export default async function fetchData(datasource, store) {
     }
 
     // Fetch table schema so we can check for linked rows
-    if (rows && rows.length) {
-      const table = await fetchTable()
-      const keys = Object.keys(table.schema)
+    if (rows && rows.length && datasource.tableId) {
+      const schema = await fetchSchema(datasource.tableId)
+      const keys = Object.keys(schema)
       rows.forEach(row => {
         for (let key of keys) {
-          const type = table.schema[key].type
+          const type = schema[key].type
           if (type === "link") {
             row[`${key}_count`] = Array.isArray(row[key]) ? row[key].length : 0
           } else if (type === "attachment") {
@@ -36,12 +36,6 @@ export default async function fetchData(datasource, store) {
     return rows
   } else {
     return []
-  }
-
-  async function fetchTable() {
-    const FETCH_TABLE_URL = `/api/tables/${datasource.tableId}`
-    const response = await api.get(FETCH_TABLE_URL)
-    return await response.json()
   }
 
   async function fetchTableData() {
@@ -84,4 +78,10 @@ export default async function fetchData(datasource, store) {
     const row = await response.json()
     return row[datasource.fieldName]
   }
+}
+
+export async function fetchSchema(id) {
+  const FETCH_TABLE_URL = `/api/tables/${id}`
+  const response = await api.get(FETCH_TABLE_URL)
+  return (await response.json()).schema
 }

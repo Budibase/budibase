@@ -129,7 +129,7 @@
           ondragover="return false"
           ondragenter="return false"
           class="drop-item"
-          style="margin-left: {(level + 1) * 18}px" />
+          style="margin-left: {(level + 1) * 16}px" />
       {/if}
 
       <NavItem
@@ -160,7 +160,7 @@
           ondragover="return false"
           ondragenter="return false"
           class="drop-item"
-          style="margin-left: {(level + ($dragDropStore.dropPosition === 'inside' ? 3 : 1)) * 18}px" />
+          style="margin-left: {(level + ($dragDropStore.dropPosition === 'inside' ? 3 : 1)) * 16}px" />
       {/if}
     </li>
   {/each}
@@ -176,6 +176,6 @@
   .drop-item {
     border-radius: var(--border-radius-m);
     height: 32px;
-    background: var(--blue-light);
+    background: var(--grey-3);
   }
 </style>

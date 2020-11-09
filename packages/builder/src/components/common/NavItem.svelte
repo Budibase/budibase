@@ -14,7 +14,7 @@
   class="nav-item"
   class:border
   class:selected
-  style={`padding-left: ${indentLevel * 18}px`}
+  style={`padding-left: ${indentLevel * 14}px`}
   {draggable}
   on:dragend
   on:dragstart
@@ -65,7 +65,7 @@
   }
 
   .content {
-    padding: 0 var(--spacing-m);
+    padding: 0 var(--spacing-s);
     height: 32px;
     display: flex;
     flex-direction: row;
@@ -97,6 +97,9 @@
     flex: 1 1 auto;
     font-weight: 500;
     font-size: var(--font-size-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .actions {
