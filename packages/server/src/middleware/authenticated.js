@@ -42,6 +42,7 @@ module.exports = async (ctx, next) => {
 
   if (!token) {
     ctx.auth.authenticated = false
+    ctx.appId = appId
     ctx.user = {
       appId,
     }

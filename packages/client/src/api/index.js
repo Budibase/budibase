@@ -1,8 +1,8 @@
 import { authenticate } from "./authenticate"
 import { getAppId } from "../render/getAppId"
 
-const apiCall = method => async ({ url, body }) => {
-  const response = await fetch(url, {
+export async function baseApiCall(method, url, body) {
+  return await fetch(url, {
     method: method,
     headers: {
       "Content-Type": "application/json",
@@ -11,6 +11,10 @@ const apiCall = method => async ({ url, body }) => {
     body: body && JSON.stringify(body),
     credentials: "same-origin",
   })
+}
+
+const apiCall = method => async ({ url, body }) => {
+  const response = await baseApiCall(method, url, body)
 
   switch (response.status) {
     case 200:
