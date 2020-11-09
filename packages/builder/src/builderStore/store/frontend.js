@@ -101,7 +101,6 @@ export const getFrontendStore = () => {
         appId: pkg.application._id,
         pages: pkg.pages,
         hasAppPackage: true,
-        currentScreens: [],
         builtins: [getBuiltin("##builtin/screenslot")],
         appInstance: pkg.application.instance,
       }))
@@ -132,8 +131,6 @@ export const getFrontendStore = () => {
           state.currentView = "detail"
 
           store.actions.screens.regenerateCssForCurrentScreen()
-          // this.regenerateCssForCurrentScreen()
-          // regenerateCssForCurrentScreen(s)
           const safeProps = makePropsSafe(
             state.components[screen.props._component],
             screen.props
@@ -166,6 +163,8 @@ export const getFrontendStore = () => {
         const currentPage = storeContents.pages[pageName]
         const currentPageScreens = currentPage._screens
 
+        const creatingNewScreen = screen._id === undefined
+
         let savePromise
         const response = await api.post(
           `/api/screens/${currentPage._id}`,
@@ -185,17 +184,21 @@ export const getFrontendStore = () => {
         // TODO: should carry out all server updates to screen in a single call
         store.update(state => {
           state.pages[pageName]._screens = currentPageScreens
-          state.currentPreviewItem = screen
-          const safeProps = makePropsSafe(
-            state.components[screen.props._component],
-            screen.props
-          )
-          state.currentComponentInfo = safeProps
-          screen.props = safeProps
-          savePromise = store.actions.pages.save()
+
+          if (creatingNewScreen) {
+            state.currentPreviewItem = screen
+            const safeProps = makePropsSafe(
+              state.components[screen.props._component],
+              screen.props
+            )
+            state.currentComponentInfo = safeProps
+            screen.props = safeProps
+            savePromise = store.actions.pages.save()
+          }
+
           return state
         })
-        await savePromise
+        if (savePromise) await savePromise
       },
       regenerateCss: screen => {
         screen._css = generate_screen_css([screen.props])
@@ -244,7 +247,6 @@ export const getFrontendStore = () => {
         store.update(state => {
           const currentPage = state.pages[pageName]
 
-          state.currentScreens = currentPage._screens
           state.currentFrontEndType = "page"
           state.currentView = "detail"
           state.currentPageName = pageName
