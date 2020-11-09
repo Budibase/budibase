@@ -3,6 +3,12 @@ const { DocumentTypes, SEPARATOR } = require("../db/utils")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
+function confirmAppId(possibleAppId) {
+  return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
+    ? possibleAppId
+    : undefined
+}
+
 exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 exports.isDev = () => {
@@ -20,19 +26,19 @@ exports.isDev = () => {
  * @returns {string|undefined} If an appId was found it will be returned.
  */
 exports.getAppId = ctx => {
-  let appId = ctx.headers["x-budibase-app-id"]
+  let appId = confirmAppId(ctx.headers["x-budibase-app-id"])
   if (!appId) {
-    appId = env.CLOUD ? ctx.subdomains[1] : ctx.params.appId
+    appId = confirmAppId(env.CLOUD ? ctx.subdomains[1] : ctx.params.appId)
   }
   // look in body if can't find it in subdomain
   if (!appId && ctx.request.body && ctx.request.body.appId) {
-    appId = ctx.request.body.appId
+    appId = confirmAppId(ctx.request.body.appId)
   }
   let appPath =
     ctx.request.headers.referrer ||
     ctx.path.split("/").filter(subPath => subPath.startsWith(APP_PREFIX))
   if (!appId && appPath.length !== 0) {
-    appId = appPath[0]
+    appId = confirmAppId(appPath[0])
   }
   return appId
 }
