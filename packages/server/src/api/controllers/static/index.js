@@ -1,3 +1,5 @@
+require("svelte/register")
+
 const send = require("koa-send")
 const { resolve, join } = require("../../utilities/centralPath")
 const fetch = require("node-fetch")
@@ -135,6 +137,41 @@ exports.performLocalFileProcessing = async function(ctx) {
   } catch (err) {
     ctx.throw(500, err)
   }
+}
+
+exports.serveAppNew = async function(ctx) {
+  const App = require("./templates/BudibaseApp.svelte").default
+
+  const { html } = App.render({
+    name: "Budibase",
+    authenticated:
+      ctx.auth.authenticated === AuthTypes.APP ? "main" : "unauthenticated",
+    production: env.CLOUD,
+  })
+
+  // // default to homedir
+  // const appPath = resolve(
+  //   budibaseAppsDir(),
+  //   ctx.params.appId,
+  //   "public",
+  //   mainOrAuth
+  // )
+
+  ctx.body = html
+
+  // const appId = ctx.user.appId
+
+  // if (env.CLOUD) {
+  //   const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file ||
+  //     "index.production.html"}`
+
+  //   const response = await fetch(S3_URL)
+  //   const body = await response.text()
+  //   ctx.body = body
+  //   return
+  // }
+
+  // await send(ctx, ctx.file || "index.html", { root: ctx.devPath || appPath })
 }
 
 exports.serveApp = async function(ctx) {
