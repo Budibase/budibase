@@ -234,12 +234,12 @@ export const getFrontendStore = () => {
       },
     },
     preview: {
-      // _saveCurrentPreviewItem
-      saveSelected: () => {
+      saveSelected: async () => {
         const state = get(store)
-        state.currentFrontEndType === "page"
-          ? store.actions.pages.save()
-          : store.actions.screens.save(state.currentPreviewItem)
+        if (state.currentFrontEndType !== "page") {
+          await store.actions.screens.save(state.currentPreviewItem)
+        }
+        await store.actions.pages.save()
       },
     },
     pages: {
