@@ -55,16 +55,7 @@
     for (let screen of screens) {
       // Record the table that created this screen so we can link it later
       screen.autoTableId = table._id
-      try {
-        await store.actions.screens.create(screen)
-      } catch (_) {
-        // TODO: this is temporary
-        // a cypress test is failing, because I added the
-        // NewRow component. So - this throws an exception
-        // because the currently released standard-components (on NPM)
-        // does not have NewRow
-        // we should remove this after this has been released
-      }
+      await store.actions.screens.create(screen)
     }
 
     // Create autolink to newly created list page
