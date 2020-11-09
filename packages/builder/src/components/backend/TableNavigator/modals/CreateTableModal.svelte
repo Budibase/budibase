@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@sveltech/routify"
+  import { goto, params } from "@sveltech/routify"
   import { backendUiStore, store } from "builderStore"
   import { notifier } from "builderStore/store/notifications"
   import { Input, Label, ModalContent } from "@budibase/bbui"
@@ -51,6 +51,7 @@
     const screens = screenTemplates($store, [table])
       .filter(template => defaultScreens.includes(template.id))
       .map(template => template.create())
+    store.actions.pages.select("main")
     for (let screen of screens) {
       // Record the table that created this screen so we can link it later
       screen.autoTableId = table._id
