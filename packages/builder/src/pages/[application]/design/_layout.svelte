@@ -69,7 +69,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
-    padding: var(--spacing-l) var(--spacing-xl);
+    padding: var(--spacing-l) var(--spacing-xl) 60px var(--spacing-xl);
     overflow-y: auto;
   }
 

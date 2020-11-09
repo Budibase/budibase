@@ -80,27 +80,30 @@ const makeRowRequestBody = (parameters, state) => {
   if (body._table) delete body._table
 
   // then override with supplied parameters
-  for (let fieldName of Object.keys(parameters.fields)) {
-    const field = parameters.fields[fieldName]
+  if (parameters.fields) {
+    for (let fieldName of Object.keys(parameters.fields)) {
+      const field = parameters.fields[fieldName]
 
-    // ensure fields sent are of the correct type
-    if (field.type === "boolean") {
-      if (field.value === "true") body[fieldName] = true
-      if (field.value === "false") body[fieldName] = false
-    } else if (field.type === "number") {
-      const val = parseFloat(field.value)
-      if (!isNaN(val)) {
-        body[fieldName] = val
+      // ensure fields sent are of the correct type
+      if (field.type === "boolean") {
+        if (field.value === "true") body[fieldName] = true
+        if (field.value === "false") body[fieldName] = false
+      } else if (field.type === "number") {
+        const val = parseFloat(field.value)
+        if (!isNaN(val)) {
+          body[fieldName] = val
+        }
+      } else if (field.type === "datetime") {
+        const date = new Date(field.value)
+        if (!isNaN(date.getTime())) {
+          body[fieldName] = date.toISOString()
+        }
+      } else {
+        body[fieldName] = field.value
       }
-    } else if (field.type === "datetime") {
-      const date = new Date(field.value)
-      if (!isNaN(date.getTime())) {
-        body[fieldName] = date.toISOString()
-      }
-    } else {
-      body[fieldName] = field.value
     }
   }
+
   return body
 }
 
