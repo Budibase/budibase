@@ -32,11 +32,11 @@
   icon="ri-layout-3-line"
   text="Master Screen"
   withArrow
-  selected={$store.currentComponentInfo._id === _layout.component.props._id}
-  opened={$store.currentPreviewItem.name === _layout.title}
+  selected={$store.currentComponentInfo?._id === _layout.component.props._id}
+  opened={$store.currentPreviewItem?.name === _layout.title}
   on:click={setCurrentScreenToLayout} />
 
-{#if $store.currentPreviewItem.name === _layout.title && _layout.component.props._children}
+{#if $store.currentPreviewItem?.name === _layout.title && _layout.component.props._children}
   <ComponentsHierarchyChildren
     thisComponent={_layout.component.props}
     components={_layout.component.props._children}
