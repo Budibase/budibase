@@ -216,9 +216,9 @@ export const getFrontendStore = () => {
           if (pageName == null) {
             pageName = state.pages.main.name
           }
-          for (let screenToDelete of Array.isArray(screenToDelete)
-            ? screenToDelete
-            : [screenToDelete]) {
+          for (let screenToDelete of Array.isArray(screensToDelete)
+            ? screensToDelete
+            : [screensToDelete]) {
             // Remove screen from current page as well
             // TODO: Should be done server side
             state.pages[pageName]._screens = state.pages[
