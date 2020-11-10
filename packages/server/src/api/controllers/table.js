@@ -11,9 +11,12 @@ const {
 async function checkForColumnUpdates(db, oldTable, updatedTable) {
   let updatedRows
   const rename = updatedTable._rename
-  const deletedColumns = Object.keys(oldTable.schema).filter(
-    colName => updatedTable.schema[colName] == null
-  )
+  let deletedColumns = []
+  if (oldTable && oldTable.schema && updatedTable.schema) {
+    deletedColumns = Object.keys(oldTable.schema).filter(
+      colName => updatedTable.schema[colName] == null
+    )
+  }
   // check for renaming of columns or deleted columns
   if (rename || deletedColumns.length !== 0) {
     const rows = await db.allDocs(
