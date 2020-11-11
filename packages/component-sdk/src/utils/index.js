@@ -1,0 +1,1 @@
+export { getAppId } from "./getAppId"

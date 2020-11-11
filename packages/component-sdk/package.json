@@ -1,0 +1,10 @@
+{
+  "name": "component-sdk",
+  "version": "1.0.0",
+  "description": "SDK for developing Budibase components",
+  "main": "src/index.js",
+  "repository": "https://github.com/Budibase/budibase",
+  "author": "Andrew Kingston",
+  "license": "AGPLv3",
+  "private": false
+}
