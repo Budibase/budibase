@@ -53,7 +53,7 @@ jobs:
           mac_certs: ${{ secrets.mac_certs }}
           mac_certs_password: ${{ secrets.mac_certs_password }}
           windows_certs: ${{ secrets.windows_certs }}
-          mac_certs_password: ${{ secrets.windows_certs_password }}
+          windows_certs_password: ${{ secrets.windows_certs_password }}
 
           # release the app after building
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
