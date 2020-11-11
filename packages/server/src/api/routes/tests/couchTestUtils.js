@@ -5,7 +5,7 @@ const {
   ANON_LEVEL_ID,
   BUILDER_LEVEL_ID,
   generateAdminPermissions,
-} = require("../../../utilities/accessLevels")
+} = require("../../../utilities/security/accessLevels")
 const packageJson = require("../../../../package")
 const jwt = require("jsonwebtoken")
 const env = require("../../../environment")

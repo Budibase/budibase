@@ -1,4 +1,4 @@
-const { BUILDER_LEVEL_ID } = require("../accessLevels")
+const { BUILDER_LEVEL_ID } = require("../security/accessLevels")
 const env = require("../../environment")
 const CouchDB = require("../../db")
 const jwt = require("jsonwebtoken")
