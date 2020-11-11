@@ -9,7 +9,7 @@ const {
   POWERUSER_LEVEL_ID, 
   LIST_USERS, 
   USER_MANAGEMENT 
-} = require("../../../utilities/accessLevels")
+} = require("../../../utilities/security/accessLevels")
 
 describe("/users", () => {
   let request

@@ -1,7 +1,7 @@
 const viewController = require("../api/controllers/view")
 const tableController = require("../api/controllers/table")
 const automationController = require("../api/controllers/automation")
-const accessLevels = require("./accessLevels")
+const accessLevels = require("./security/accessLevels")
 
 // this has been broken out to reduce risk of circular dependency from utilities, no enums defined here
 const generateAdminPermissions = async appId => [

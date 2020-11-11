@@ -1,4 +1,4 @@
-const accessLevels = require("../../utilities/accessLevels")
+const accessLevels = require("../../utilities/security/accessLevels")
 const userController = require("../../api/controllers/user")
 const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
@@ -28,7 +28,7 @@ module.exports.definition = {
         accessLevelId: {
           type: "string",
           title: "Access Level",
-          enum: accessLevels.ACCESS_LEVELS,
+          enum: accessLevels.BUILTIN_LEVELS,
           pretty: Object.values(accessLevels.PRETTY_ACCESS_LEVELS),
         },
       },
