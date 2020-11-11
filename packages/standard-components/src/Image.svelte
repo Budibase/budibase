@@ -1,5 +1,5 @@
 <script>
-  import { buildStyle } from "./buildStyle"
+  import { buildStyle } from "./helpers"
 
   export let className = ""
   export let url = ""

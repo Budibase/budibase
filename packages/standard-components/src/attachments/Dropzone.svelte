@@ -1,6 +1,5 @@
 <script>
-  import { Heading, Body, Button, Dropzone } from "@budibase/bbui"
-  import { FILE_TYPES } from "./fileTypes"
+  import { Dropzone } from "@budibase/bbui"
 
   const BYTES_IN_MB = 1000000
 
@@ -15,7 +14,7 @@
 
   async function processFiles(fileList) {
     let data = new FormData()
-    for (var i = 0; i < fileList.length; i++) {
+    for (let i = 0; i < fileList.length; i++) {
       data.append("file", fileList[i])
     }
 
@@ -27,8 +26,7 @@
       },
     })
 
-    const processedFiles = await response.json()
-    return processedFiles
+    return await response.json()
   }
 </script>
 
