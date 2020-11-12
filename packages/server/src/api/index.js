@@ -66,6 +66,8 @@ router.use(async (ctx, next) => {
   }
 })
 
+router.get("/health", ctx => (ctx.status = 200))
+
 router.use(authRoutes.routes())
 router.use(authRoutes.allowedMethods())
 
