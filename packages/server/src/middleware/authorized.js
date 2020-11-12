@@ -1,5 +1,8 @@
 const { BUILTIN_LEVELS } = require("../utilities/security/accessLevels")
-const { PermissionTypes } = require("../utilities/security/permissions")
+const {
+  PermissionTypes,
+  doesHavePermission,
+} = require("../utilities/security/permissions")
 const env = require("../environment")
 const { apiKeyTable } = require("../db/dynamoClient")
 const { AuthTypes } = require("../constants")
@@ -44,18 +47,21 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     ctx.throw(403, "User not found")
   }
 
-  if (ADMIN_PERMS.indexOf(ctx.user.accessLevel._id) !== -1) {
+  const accessLevel = ctx.user.accessLevel
+  const permissions = ctx.user.permissions
+  if (ADMIN_PERMS.indexOf(accessLevel._id) !== -1) {
     return next()
   }
 
+  // TODO: need to handle routing security
+
   if (permType === PermissionTypes.BUILDER) {
     ctx.throw(403, "Not Authorized")
-    return
   }
 
-  // TODO: Replace the old permissions system here, check whether
-  // user has permission to use endpoint they are trying to access
-  return next()
+  if (!doesHavePermission(permType, permLevel, permissions)) {
+    ctx.throw(403, "User does not have permission")
+  }
 
-  //ctx.throw(403, "Not Authorized")
+  return next()
 }
