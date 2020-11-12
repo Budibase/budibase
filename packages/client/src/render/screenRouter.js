@@ -1,6 +1,6 @@
 import regexparam from "regexparam"
 import appStore from "../state/store"
-import { getAppId } from "./getAppId"
+import { getAppId } from "../../../component-sdk/src/utils"
 
 export const screenRouter = ({ screens, onScreenSelected, window }) => {
   function sanitize(url) {

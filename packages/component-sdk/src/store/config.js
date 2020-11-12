@@ -12,8 +12,6 @@ export const createConfigStore = () => {
 
   /**
    * Sets the SDK configuration.
-   *
-   * @param config
    */
   const initialise = config => {
     store.update(state => {
@@ -33,8 +31,6 @@ export const createConfigStore = () => {
 
   /**
    * Store handler for errors which triggers the user defined error handler.
-   *
-   * @param error
    */
   const handleError = error => {
     const handler = get(store).onError

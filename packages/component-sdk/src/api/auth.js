@@ -2,10 +2,6 @@ import api from "./api"
 
 /**
  * Performs a log in request.
- *
- * @param username
- * @param password
- * @returns {Promise<{error: *}|any|{error: *}>}
  */
 export const logIn = async ({ username, password }) => {
   if (!username) {

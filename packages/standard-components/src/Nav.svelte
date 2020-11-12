@@ -1,5 +1,5 @@
 <script>
-  import cssVars from "./cssVars"
+  import { cssVars } from "./helpers"
 
   export let navBarBackground = ""
   export let navBarBorder = ""

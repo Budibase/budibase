@@ -1,6 +1,4 @@
 <script>
-  import Button from "./Button.svelte"
-
   export let buttonText = "Log In"
   export let logo = ""
   export let title = ""
