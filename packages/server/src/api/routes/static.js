@@ -33,6 +33,6 @@ router
   .get("/componentlibrary", controller.serveComponentLibrary)
   .get("/assets/:file*", controller.serveAppAsset)
   .get("/attachments/:file*", controller.serveAttachment)
-  .get("/:appId/:path*", controller.serveAppNew)
+  .get("/:appId/:path*", controller.serveApp)
 
 module.exports = router

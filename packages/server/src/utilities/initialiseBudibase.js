@@ -31,8 +31,8 @@ const createDevEnvFile = async opts => {
       }
     )
     opts.cookieKey1 = opts.cookieKey1 || uuid.v4()
-    const hbTemplate = handlebars.compile(template)
-    const config = hbTemplate.render(opts)
+    const envTemplate = handlebars.compile(template)
+    const config = envTemplate(opts)
     await writeFile(destConfigFile, config, { flag: "w+" })
   }
 }

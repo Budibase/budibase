@@ -141,15 +141,12 @@ exports.performLocalFileProcessing = async function(ctx) {
   }
 }
 
-exports.serveAppNew = async function(ctx) {
+exports.serveApp = async function(ctx) {
   const App = require("./templates/BudibaseApp.svelte").default
-  // Need to get app information here
 
   const db = new CouchDB(ctx.params.appId)
 
   const appInfo = await db.get(ctx.params.appId)
-
-  console.log("INFO", appInfo)
 
   const { head, html, css } = App.render({
     title: appInfo.name,
@@ -168,33 +165,6 @@ exports.serveAppNew = async function(ctx) {
     body: html,
     style: css.code,
   })
-}
-
-exports.serveApp = async function(ctx) {
-  const mainOrAuth =
-    ctx.auth.authenticated === AuthTypes.APP ? "main" : "unauthenticated"
-
-  // default to homedir
-  const appPath = resolve(
-    budibaseAppsDir(),
-    ctx.params.appId,
-    "public",
-    mainOrAuth
-  )
-
-  const appId = ctx.user.appId
-
-  if (env.CLOUD) {
-    const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file ||
-      "index.production.html"}`
-
-    const response = await fetch(S3_URL)
-    const body = await response.text()
-    ctx.body = body
-    return
-  }
-
-  await send(ctx, ctx.file || "index.html", { root: ctx.devPath || appPath })
 }
 
 exports.serveAttachment = async function(ctx) {
