@@ -1,15 +1,14 @@
-import api from "../api"
 import renderTemplateString from "./renderTemplateString"
+import { updateRow, saveRow, deleteRow } from "../../../component-sdk"
 
 export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType"
 
 export const eventHandlers = routeTo => {
   const handlers = {
     "Navigate To": param => routeTo(param && param.url),
-    "Update Row": api.updateRow,
-    "Save Row": api.saveRow,
-    "Delete Row": api.deleteRow,
-    "Trigger Workflow": api.triggerWorkflow,
+    "Update Row": updateRow,
+    "Save Row": saveRow,
+    "Delete Row": deleteRow,
   }
 
   // when an event is called, this is what gets run
