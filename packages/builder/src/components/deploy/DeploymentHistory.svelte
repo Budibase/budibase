@@ -7,6 +7,12 @@
   import { notifier } from "builderStore/store/notifications"
   import CreateWebhookDeploymentModal from "./CreateWebhookDeploymentModal.svelte"
 
+  const DeploymentStatus = {
+    SUCCESS: "SUCCESS",
+    PENDING: "PENDING",
+    FAILURE: "FAILURE",
+  }
+
   const DATE_OPTIONS = {
     fullDate: {
       weekday: "long",
@@ -56,7 +62,7 @@
     <header>
       <h4>Deployment History</h4>
       <div class="deploy-div">
-        {#if deployments.some(deployment => deployment.status === 'SUCCESS')}
+        {#if deployments.some(deployment => deployment.status === DeploymentStatus.SUCCESS)}
           <a target="_blank" href={`https://${appId}.app.budi.live/${appId}`}>
             View Your Deployed App →
           </a>
@@ -82,6 +88,9 @@
             <div class={`deployment-status ${deployment.status}`}>
               {deployment.status}
             </div>
+            {#if deployment.status === DeploymentStatus.FAILURE}
+              <span>{deployment.err}</span>
+            {/if}
           </div>
         </article>
       {/each}
