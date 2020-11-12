@@ -1,7 +1,9 @@
 <script>
   import { onMount } from "svelte"
-  import api from "../../api"
-  import { getTable } from "./tableCache"
+  import {
+    fetchTableDefinition,
+    fetchRelationshipData,
+  } from "../../../../component-sdk"
 
   export let columnName
   export let row
@@ -16,7 +18,7 @@
   onMount(async () => {
     linkedRows = await fetchLinkedRowsData(row, columnName)
     if (linkedRows && linkedRows.length) {
-      const table = await getTable(linkedRows[0].tableId)
+      const table = await fetchTableDefinition(linkedRows[0].tableId)
       if (table && table.primaryDisplay) {
         displayColumn = table.primaryDisplay
       }
@@ -27,10 +29,11 @@
     if (!row || !row._id) {
       return []
     }
-    const QUERY_URL = `/api/${row.tableId}/${row._id}/enrich`
-    const response = await api.get(QUERY_URL)
-    const enrichedRow = await response.json()
-    return enrichedRow[columnName]
+    return await fetchRelationshipData({
+      tableId: row.tableId,
+      rowId: row._id,
+      fieldName: columnName,
+    })
   }
 </script>
 

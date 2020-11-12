@@ -1,9 +1,16 @@
 import api from "./api"
+import { enrichRows } from "./rows"
 
 /**
  * Fetches all rows in a view.
  */
-export const fetchViewData = async ({ name, field, groupBy, calculation }) => {
+export const fetchViewData = async ({
+  name,
+  field,
+  groupBy,
+  calculation,
+  tableId,
+}) => {
   const params = new URLSearchParams()
 
   if (calculation) {
@@ -18,5 +25,6 @@ export const fetchViewData = async ({ name, field, groupBy, calculation }) => {
     ? `/api/views/${name}?${params}`
     : `/api/views/${name}`
 
-  return await api.get({ url: QUERY_VIEW_URL })
+  const rows = await api.get({ url: QUERY_VIEW_URL })
+  return await enrichRows(rows, tableId)
 }

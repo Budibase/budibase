@@ -1,5 +1,6 @@
 <script>
   import { Dropzone } from "@budibase/bbui"
+  import { uploadAttachment } from "../../../component-sdk"
 
   const BYTES_IN_MB = 1000000
 
@@ -17,16 +18,7 @@
     for (let i = 0; i < fileList.length; i++) {
       data.append("file", fileList[i])
     }
-
-    const response = await fetch("/api/attachments/upload", {
-      method: "POST",
-      body: data,
-      headers: {
-        Accept: "application/json",
-      },
-    })
-
-    return await response.json()
+    return await uploadAttachment(data)
   }
 </script>
 

@@ -1,5 +1,10 @@
 <script>
   import { onMount } from "svelte"
+  import {
+    fetchTableDefinition,
+    fetchTableData,
+    fetchRow,
+  } from "../../component-sdk"
 
   export let _bb
   export let table
@@ -8,63 +13,31 @@
   let store = _bb.store
   let target
 
-  async function fetchTable(id) {
-    const FETCH_TABLE_URL = `/api/tables/${id}`
-    const response = await _bb.api.get(FETCH_TABLE_URL)
-    return await response.json()
-  }
-
   async function fetchFirstRow() {
-    const FETCH_ROWS_URL = `/api/views/all_${table}`
-    const response = await _bb.api.get(FETCH_ROWS_URL)
-    if (response.status === 200) {
-      const allRows = await response.json()
-      if (allRows.length > 0) return allRows[0]
-      return { tableId: table }
-    }
+    const rows = await fetchTableData(table)
+    return Array.isArray(rows) && rows.length ? rows[0] : { tableId: table }
   }
 
   async function fetchData() {
-    const pathParts = window.location.pathname.split("/")
-
     if (!table) {
       return
     }
 
+    const pathParts = window.location.pathname.split("/")
+    const routeParamId = _bb.routeParams().id
     let row
+
     // if srcdoc, then we assume this is the builder preview
-    if (pathParts.length === 0 || pathParts[0] === "srcdoc") {
-      if (table) row = await fetchFirstRow()
-    } else if (_bb.routeParams().id) {
-      const GET_ROW_URL = `/api/${table}/rows/${_bb.routeParams().id}`
-      const response = await _bb.api.get(GET_ROW_URL)
-      if (response.status === 200) {
-        row = await response.json()
-      } else {
-        throw new Error("Failed to fetch row.", response)
-      }
+    if ((pathParts.length === 0 || pathParts[0] === "srcdoc") && table) {
+      row = await fetchFirstRow()
+    } else if (routeParamId) {
+      row = await fetchRow({ tableId: table, rowId: routeParamId })
     } else {
-      throw new Exception("Row ID was not supplied to RowDetail")
+      throw new Error("Row ID was not supplied to RowDetail")
     }
 
     if (row) {
-      // Fetch table schema so we can check for linked rows
-      const tableObj = await fetchTable(row.tableId)
-      for (let key of Object.keys(tableObj.schema)) {
-        const type = tableObj.schema[key].type
-        if (type === "link") {
-          row[`${key}_count`] = Array.isArray(row[key]) ? row[key].length : 0
-        } else if (type === "attachment") {
-          let url = null
-          if (Array.isArray(row[key]) && row[key][0] != null) {
-            url = row[key][0].url
-          }
-          row[`${key}_first`] = url
-        }
-      }
-
-      row._table = tableObj
-
+      row._table = await fetchTableDefinition(row.tableId)
       _bb.attachChildren(target, {
         context: row,
       })

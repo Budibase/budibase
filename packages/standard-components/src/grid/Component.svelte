@@ -6,7 +6,7 @@
   // These maps need to be set up to handle whatever types that are used in the tables.
   const setters = new Map([["number", number]])
 
-  import fetchData from "../fetchData.js"
+  import * as SDK from "../../../component-sdk"
   import { isEmpty } from "lodash/fp"
   import { onMount } from "svelte"
 
@@ -52,8 +52,8 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      data = await fetchData(datasource, $store)
-      let schema = {}
+      data = await SDK.fetchDatasource(datasource, $store)
+      let schema
 
       // Get schema for datasource
       // Views with "Calculate" applied provide their own schema.
@@ -61,9 +61,7 @@
       if (datasource.schema) {
         schema = datasource.schema
       } else {
-        const jsonTable = await _bb.api.get(`/api/tables/${datasource.tableId}`)
-        table = await jsonTable.json()
-        schema = table.schema
+        schema = (await SDK.fetchTableDefinition(datasource.tableId)).schema
       }
 
       columnDefs = Object.keys(schema).map((key, i) => {
@@ -123,18 +121,12 @@
   }
 
   const updateRow = async row => {
-    const response = await _bb.api.patch(
-      `/api/${row.tableId}/rows/${row._id}`,
-      row
-    )
-    const json = await response.json()
+    const schema = (await SDK.fetchTableDefinition(row.tableId)).schema
+    await SDK.updateRow(schema, { data: row })
   }
 
   const deleteRows = async () => {
-    const response = await _bb.api.post(`/api/${datasource.name}/rows`, {
-      rows: selectedRows,
-      type: "delete",
-    })
+    await SDK.deleteRows({ rows: selectedRows, tableId: datasource.name })
     data = data.filter(row => !selectedRows.includes(row))
     selectedRows = []
   }
