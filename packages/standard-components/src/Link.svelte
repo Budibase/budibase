@@ -1,6 +1,4 @@
 <script>
-  import { cssVars, createClasses } from "./cssVars"
-
   export let url = ""
   export let text = ""
   export let openInNewTab = false

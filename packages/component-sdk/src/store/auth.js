@@ -10,10 +10,6 @@ export const createAuthStore = () => {
 
   /**
    * Logs a user in.
-   *
-   * @param username
-   * @param password
-   * @returns {Promise<void>}
    */
   const logIn = async ({ username, password }) => {
     const user = await api.logIn({ username, password })

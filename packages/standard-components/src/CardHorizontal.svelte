@@ -1,5 +1,5 @@
 <script>
-  import { cssVars, createClasses } from "./cssVars"
+  import { cssVars } from "./helpers"
 
   export const className = ""
   export let imageUrl = ""

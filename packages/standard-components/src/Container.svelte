@@ -1,6 +1,4 @@
 <script>
-  import { cssVars, createClasses } from "./cssVars"
-
   export let className = ""
   export let onLoad
   export let type = "div"

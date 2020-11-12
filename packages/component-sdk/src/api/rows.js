@@ -2,10 +2,6 @@ import api from "./api"
 
 /**
  * Creates a row in a table.
- *
- * @param params
- * @param state
- * @returns {Promise<any|{error: *}>}
  */
 export const saveRow = async (params, state) => {
   return await api.post({
@@ -16,10 +12,6 @@ export const saveRow = async (params, state) => {
 
 /**
  * Updates a row in a table.
- *
- * @param params
- * @param state
- * @returns {Promise<any|{error: *}>}
  */
 export const updateRow = async (params, state) => {
   const row = makeRowRequestBody(params, state)
@@ -32,11 +24,6 @@ export const updateRow = async (params, state) => {
 
 /**
  * Deletes a row from a table.
- *
- * @param tableId
- * @param rowId
- * @param revId
- * @returns {Promise<any|{error: *}>}
  */
 export const deleteRow = async ({ tableId, rowId, revId }) => {
   return await api.del({
@@ -44,6 +31,9 @@ export const deleteRow = async ({ tableId, rowId, revId }) => {
   })
 }
 
+/**
+ * Sanitises and parses column types when saving and updating rows.
+ */
 const makeRowRequestBody = (parameters, state) => {
   // start with the row thats currently in context
   const body = { ...(state.data || {}) }
