@@ -216,13 +216,10 @@ exports.testPermissionsForEndpoint = async ({
   url,
   body,
   appId,
-  permissionName,
+  permName1,
+  permName2,
 }) => {
-  const headers = await createUserWithOnePermission(
-    request,
-    appId,
-    permissionName
-  )
+  const headers = await createUserWithOnePermission(request, appId, permName1)
 
   await createRequest(request, method, url, body)
     .set(headers)
@@ -231,7 +228,7 @@ exports.testPermissionsForEndpoint = async ({
   const noPermsHeaders = await createUserWithAllPermissionExceptOne(
     request,
     appId,
-    permissionName
+    permName2
   )
 
   await createRequest(request, method, url, body)

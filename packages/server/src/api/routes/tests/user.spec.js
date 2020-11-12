@@ -54,7 +54,8 @@ describe("/users", () => {
         method: "GET",
         url: `/api/users`,
         appId: appId,
-        permissionName: BUILTIN_PERMISSION_NAMES.WRITE,
+        permName1: BUILTIN_PERMISSION_NAMES.POWER,
+        permName2: BUILTIN_PERMISSION_NAMES.WRITE,
       })
     })
 
@@ -81,7 +82,8 @@ describe("/users", () => {
         body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: BUILTIN_LEVELS.power._id },
         url: `/api/users`,
         appId: appId,
-        permissionName: BUILTIN_PERMISSION_NAMES.WRITE,
+        permName1: BUILTIN_PERMISSION_NAMES.ADMIN,
+        permName2: BUILTIN_PERMISSION_NAMES.POWER,
       })
     })
 
