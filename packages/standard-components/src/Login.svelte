@@ -1,10 +1,11 @@
 <script>
+  import { authStore } from "../../component-sdk/src/store"
+
   export let buttonText = "Log In"
   export let logo = ""
   export let title = ""
   export let buttonClass = ""
   export let inputClass = ""
-
   export let _bb
 
   let username = ""
@@ -21,19 +22,14 @@
 
   const login = async () => {
     loading = true
-    const response = await _bb.api.post("/api/authenticate", {
-      username,
-      password,
-    })
-    if (response.status === 200) {
-      const json = await response.json()
-      localStorage.setItem("budibase:token", json.token)
-      // TODO: possibly do something with the user information in the response?
+
+    const success = await authStore.actions.logIn({ username, password })
+    if (success) {
       location.reload()
     } else {
-      loading = false
       error = true
     }
+    loading = false
   }
 </script>
 

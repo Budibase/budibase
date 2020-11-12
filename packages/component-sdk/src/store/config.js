@@ -26,7 +26,7 @@ export const createConfigStore = () => {
    * Rests the SDK configuration
    */
   const reset = () => {
-    store.update(() => initialState)
+    store.set(initialState)
   }
 
   /**

@@ -1,4 +1,5 @@
 import api from "./api"
+import { enrichRows } from "./rows"
 
 /**
  * Fetches a table definition.
@@ -11,6 +12,7 @@ export const fetchTableDefinition = async tableId => {
 /**
  * Fetches all rows from a table.
  */
-export const fetchTableData = async name => {
-  return await api.get({ url: `/api/views/${name}` })
+export const fetchTableData = async tableId => {
+  const rows = await api.get({ url: `/api/${tableId}/rows` })
+  return await enrichRows(rows, tableId)
 }

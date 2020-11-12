@@ -11,7 +11,7 @@ let cache = {}
  * Makes a fully formatted URL based on the SDK configuration.
  */
 const makeFullURL = path => {
-  const { proto, domain, port } = get(configStore).config
+  const { proto, domain, port } = get(configStore)
   let url = `/${path}`.replace("//", "/")
   return domain ? `${proto}://${domain}:${port}${url}` : url
 }
@@ -28,15 +28,17 @@ const handleError = error => {
  * Performs an API call to the server.
  * App ID header is always correctly set.
  */
-const makeApiCall = async ({ method, url, body }) => {
+const makeApiCall = async ({ method, url, body, json = true }) => {
   try {
+    const requestBody = json ? JSON.stringify(body) : body
     const response = await fetch(url, {
       method,
       headers: {
+        Accept: "application/json",
         "Content-Type": "application/json",
         "x-budibase-app-id": getAppId(window.document.cookie),
       },
-      body: body && JSON.stringify(body),
+      body: requestBody,
       credentials: "same-origin",
     })
     switch (response.status) {
@@ -79,10 +81,11 @@ const makeCachedApiCall = async params => {
 /**
  * Constructs an API call function for a particular HTTP method.
  */
-const requestApiCall = method => async ({ url, body, cache = false }) => {
+const requestApiCall = method => async params => {
+  const { url, cache = false } = params
   const fullURL = makeFullURL(url)
-  const params = { method, url: fullURL, body }
-  return await (cache ? makeCachedApiCall : makeApiCall)(params)
+  const enrichedParams = { ...params, method, url: fullURL }
+  return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
 }
 
 export default {

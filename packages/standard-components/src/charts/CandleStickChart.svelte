@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import fetchData, { fetchSchema } from "../fetchData"
+  import { fetchDatasource, fetchTableDefinition } from "../../../component-sdk"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
   import { isEmpty } from "lodash/fp"
@@ -32,8 +32,8 @@
     }
 
     // Fetch, filter and sort data
-    const schema = await fetchSchema(datasource.tableId)
-    const result = await fetchData(datasource, $store)
+    const schema = (await fetchTableDefinition(datasource.tableId)).schema
+    const result = await fetchDatasource(datasource)
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
     const data = result
