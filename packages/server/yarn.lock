@@ -200,10 +200,10 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@budibase/client@^0.3.4":
-  version "0.3.4"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.3.4.tgz#aca2d13170dae870d069a56f53519d9fbb4bdc00"
-  integrity sha512-zs9Jnr1CzvgZY4NrliatqDUm0gVhlcQkpdsMblO+3zRcwBzRXAeFyzwMtGpcbiQm29zHjPBOivmQQUMxgi3lUg==
+"@budibase/client@^0.3.6":
+  version "0.3.7"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.3.7.tgz#8ed2d40d91ba3788a69ee5db5078f757adb4187f"
+  integrity sha512-EgpHfw/WOUYeCG4cILDbaN2WFBDSPS698Z+So7FP5l+4E1fvmqtpXVKJYsviwYEx8AKKYyU3nuDi0l6xzb5Flg==
   dependencies:
     deep-equal "^2.0.1"
     mustache "^4.0.1"
@@ -7145,11 +7145,6 @@ sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
-
-squirrelly@^7.5.0:
-  version "7.9.2"
-  resolved "https://registry.yarnpkg.com/squirrelly/-/squirrelly-7.9.2.tgz#f8b0a08201b73653351afe9f7f24878237d2751a"
-  integrity sha512-QsLQ43p7/p5LfhqMsUM1PP0DU/YuirA/pZ1RQKU8/qZjWHD8uTblpfPoCVkD9VLrS1jCJ+2gqECv3amlPgrLCA==
 
 sshpk@^1.7.0:
   version "1.16.1"
