@@ -12,7 +12,6 @@ const {
   budibaseAppsDir,
   budibaseTempDir,
 } = require("../../../utilities/budibaseDir")
-const { getPageParams } = require("../../../db/utils")
 const CouchDB = require("../../../db")
 const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
 const fileProcessor = require("../../../utilities/fileProcessor")
