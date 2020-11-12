@@ -38,6 +38,6 @@ function replicateLocal() {
   })
 }
 
-//replicateLocal()
+replicateLocal()
 
 module.exports = Pouch

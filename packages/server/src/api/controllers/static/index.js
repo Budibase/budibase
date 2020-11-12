@@ -1,27 +1,29 @@
 require("svelte/register")
 
 const send = require("koa-send")
-const { resolve, join } = require("../../utilities/centralPath")
+const { resolve, join } = require("../../../utilities/centralPath")
 const fetch = require("node-fetch")
 const fs = require("fs-extra")
 const uuid = require("uuid")
 const AWS = require("aws-sdk")
-const { prepareUploadForS3 } = require("./deploy/aws")
+const { prepareUploadForS3 } = require("../deploy/aws")
+const handlebars = require("handlebars")
 const {
   budibaseAppsDir,
   budibaseTempDir,
-} = require("../../utilities/budibaseDir")
-const CouchDB = require("../../db")
-const setBuilderToken = require("../../utilities/builder/setBuilderToken")
-const fileProcessor = require("../../utilities/fileProcessor")
-const { AuthTypes } = require("../../constants")
-const env = require("../../environment")
+} = require("../../../utilities/budibaseDir")
+const { getPageParams } = require("../../../db/utils")
+const CouchDB = require("../../../db")
+const setBuilderToken = require("../../../utilities/builder/setBuilderToken")
+const fileProcessor = require("../../../utilities/fileProcessor")
+const { AuthTypes } = require("../../../constants")
+const env = require("../../../environment")
 
 // this was the version before we started versioning the component library
 const COMP_LIB_BASE_APP_VERSION = "0.2.5"
 
 exports.serveBuilder = async function(ctx) {
-  let builderPath = resolve(__dirname, "../../../builder")
+  let builderPath = resolve(__dirname, "../../../../builder")
   if (ctx.file === "index.html") {
     await setBuilderToken(ctx)
   }
@@ -141,37 +143,31 @@ exports.performLocalFileProcessing = async function(ctx) {
 
 exports.serveAppNew = async function(ctx) {
   const App = require("./templates/BudibaseApp.svelte").default
+  // Need to get app information here
 
-  const { html } = App.render({
-    name: "Budibase",
-    authenticated:
+  const db = new CouchDB(ctx.params.appId)
+
+  const appInfo = await db.get(ctx.params.appId)
+
+  console.log("INFO", appInfo)
+
+  const { head, html, css } = App.render({
+    title: appInfo.name,
+    pageName:
       ctx.auth.authenticated === AuthTypes.APP ? "main" : "unauthenticated",
     production: env.CLOUD,
+    appId: ctx.params.appId,
   })
 
-  // // default to homedir
-  // const appPath = resolve(
-  //   budibaseAppsDir(),
-  //   ctx.params.appId,
-  //   "public",
-  //   mainOrAuth
-  // )
+  const template = handlebars.compile(
+    fs.readFileSync(`${__dirname}/templates/app.hbs`, "utf8")
+  )
 
-  ctx.body = html
-
-  // const appId = ctx.user.appId
-
-  // if (env.CLOUD) {
-  //   const S3_URL = `https://${appId}.app.budi.live/assets/${appId}/${mainOrAuth}/${ctx.file ||
-  //     "index.production.html"}`
-
-  //   const response = await fetch(S3_URL)
-  //   const body = await response.text()
-  //   ctx.body = body
-  //   return
-  // }
-
-  // await send(ctx, ctx.file || "index.html", { root: ctx.devPath || appPath })
+  ctx.body = template({
+    head,
+    body: html,
+    style: css.code,
+  })
 }
 
 exports.serveApp = async function(ctx) {

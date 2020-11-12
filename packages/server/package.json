@@ -77,7 +77,6 @@
     "pouchdb-all-dbs": "^1.0.2",
     "pouchdb-replication-stream": "^1.2.9",
     "sanitize-s3-objectkey": "^0.0.1",
-    "squirrelly": "^7.5.0",
     "svelte": "^3.29.4",
     "tar-fs": "^2.1.0",
     "to-json-schema": "^0.2.5",

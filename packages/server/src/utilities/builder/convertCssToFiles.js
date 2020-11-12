@@ -1,11 +1,15 @@
-const crypto = require("crypto")
-const { ensureDir, emptyDir, writeFile } = require("fs-extra")
+const { writeFile } = require("fs-extra")
 const { join } = require("../centralPath")
 
-module.exports.convertCssToFiles = async (publicPagePath, pkg) => {
-  const cssDir = join(publicPagePath, "css")
-  await ensureDir(cssDir)
-  await emptyDir(cssDir)
+/**
+ * Reads the _css property of all pages and screens in the budibase application, and creates a singlular CSS
+ * bundle for the app at <appId>/public/bundle.css.
+ * @param {*} publicPagePath - path to the public assets directory of the budibase application
+ * @param {*} pkg - app package information
+ * @param {*} pageName - the pagename of the page we are compiling CSS for.
+ */
+module.exports.convertCssToBundle = async (publicPagePath, pkg) => {
+  let cssString = ""
 
   for (let screen of pkg.screens || []) {
     if (!screen._css) continue
@@ -13,31 +17,10 @@ module.exports.convertCssToFiles = async (publicPagePath, pkg) => {
       delete screen._css
       continue
     }
-    screen._css = await createCssFile(cssDir, screen._css)
+    cssString += screen._css
   }
 
-  if (pkg.page._css) {
-    pkg.page._css = await createCssFile(cssDir, pkg.page._css)
-  }
-}
+  if (pkg.page._css) cssString += pkg.page._css
 
-module.exports.getHashedCssPaths = (cssDir, _css) => {
-  const fileName =
-    crypto
-      .createHash("md5")
-      .update(_css)
-      .digest("hex") + ".css"
-
-  const filePath = join(cssDir, fileName)
-  const url = `/css/${fileName}`
-
-  return { filePath, url }
-}
-
-const createCssFile = async (cssDir, _css) => {
-  const { filePath, url } = module.exports.getHashedCssPaths(cssDir, _css)
-
-  await writeFile(filePath, _css)
-
-  return url
+  writeFile(join(publicPagePath, "bundle.css"), cssString)
 }
