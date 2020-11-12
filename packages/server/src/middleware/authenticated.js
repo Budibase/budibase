@@ -1,9 +1,7 @@
 const jwt = require("jsonwebtoken")
 const STATUS_CODES = require("../utilities/statusCodes")
 const accessLevelController = require("../api/controllers/accesslevel")
-const {
-  BUILTIN_LEVEL_IDS,
-} = require("../utilities/security/accessLevels")
+const { BUILTIN_LEVEL_IDS } = require("../utilities/security/accessLevels")
 const env = require("../environment")
 const { AuthTypes } = require("../constants")
 const { getAppId, getCookieName, setCookie } = require("../utilities")

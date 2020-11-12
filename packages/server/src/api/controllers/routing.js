@@ -1,3 +1,1 @@
-exports.fetch = async ctx => {
-
-}
+exports.fetch = async ctx => {}

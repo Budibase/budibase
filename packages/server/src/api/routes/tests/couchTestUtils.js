@@ -1,8 +1,6 @@
 const CouchDB = require("../../../db")
 const supertest = require("supertest")
-const {
-  BUILTIN_LEVELS,
-} = require("../../../utilities/security/accessLevels")
+const { BUILTIN_LEVELS } = require("../../../utilities/security/accessLevels")
 const {
   BUILTIN_PERMISSION_NAMES,
 } = require("../../../utilities/security/permissions")
