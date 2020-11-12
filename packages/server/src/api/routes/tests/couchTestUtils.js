@@ -1,11 +1,11 @@
 const CouchDB = require("../../../db")
 const supertest = require("supertest")
 const {
-  POWERUSER_LEVEL_ID,
-  ANON_LEVEL_ID,
-  BUILDER_LEVEL_ID,
-  generateAdminPermissions,
+  BUILTIN_LEVELS,
 } = require("../../../utilities/security/accessLevels")
+const {
+  BUILTIN_PERMISSION_NAMES,
+} = require("../../../utilities/security/permissions")
 const packageJson = require("../../../../package")
 const jwt = require("jsonwebtoken")
 const env = require("../../../environment")
@@ -26,7 +26,7 @@ exports.supertest = async () => {
 exports.defaultHeaders = appId => {
   const builderUser = {
     userId: "BUILDER",
-    accessLevelId: BUILDER_LEVEL_ID,
+    accessLevelId: BUILTIN_LEVELS.builder._id,
   }
 
   const builderToken = jwt.sign(builderUser, env.JWT_SECRET)
@@ -126,21 +126,13 @@ exports.createUser = async (
       name: "Bill",
       username,
       password,
-      accessLevelId: POWERUSER_LEVEL_ID,
+      accessLevelId: BUILTIN_LEVELS.power._id,
     })
   return res.body
 }
 
-const createUserWithOnePermission = async (
-  request,
-  appId,
-  permName,
-  itemId
-) => {
-  let permissions = await generateAdminPermissions(appId)
-  permissions = permissions.filter(
-    p => p.name === permName && p.itemId === itemId
-  )
+const createUserWithOnePermission = async (request, appId, permName) => {
+  let permissions = [permName]
 
   return await createUserWithPermissions(
     request,
@@ -151,7 +143,7 @@ const createUserWithOnePermission = async (
 }
 
 const createUserWithAdminPermissions = async (request, appId) => {
-  let permissions = await generateAdminPermissions(appId)
+  let permissions = [BUILTIN_PERMISSION_NAMES.ADMIN]
 
   return await createUserWithPermissions(
     request,
@@ -164,13 +156,9 @@ const createUserWithAdminPermissions = async (request, appId) => {
 const createUserWithAllPermissionExceptOne = async (
   request,
   appId,
-  permName,
-  itemId
+  permName
 ) => {
-  let permissions = await generateAdminPermissions(appId)
-  permissions = permissions.filter(
-    p => !(p.name === permName && p.itemId === itemId)
-  )
+  let permissions = [permName]
 
   return await createUserWithPermissions(
     request,
@@ -186,11 +174,6 @@ const createUserWithPermissions = async (
   permissions,
   username
 ) => {
-  const accessRes = await request
-    .post(`/api/accesslevels`)
-    .send({ name: "TestLevel", permissions })
-    .set(exports.defaultHeaders(appId))
-
   const password = `password_${username}`
   await request
     .post(`/api/users`)
@@ -199,12 +182,13 @@ const createUserWithPermissions = async (
       name: username,
       username,
       password,
-      accessLevelId: accessRes.body._id,
+      accessLevelId: BUILTIN_LEVELS.power._id,
+      permissions,
     })
 
   const anonUser = {
     userId: "ANON",
-    accessLevelId: ANON_LEVEL_ID,
+    accessLevelId: BUILTIN_LEVELS.anon._id,
     appId: appId,
     version: packageJson.version,
   }
@@ -233,13 +217,11 @@ exports.testPermissionsForEndpoint = async ({
   body,
   appId,
   permissionName,
-  itemId,
 }) => {
   const headers = await createUserWithOnePermission(
     request,
     appId,
-    permissionName,
-    itemId
+    permissionName
   )
 
   await createRequest(request, method, url, body)
@@ -249,8 +231,7 @@ exports.testPermissionsForEndpoint = async ({
   const noPermsHeaders = await createUserWithAllPermissionExceptOne(
     request,
     appId,
-    permissionName,
-    itemId
+    permissionName
   )
 
   await createRequest(request, method, url, body)

@@ -1,14 +1,5 @@
 const { flatten } = require("lodash")
 
-exports.READ_TABLE = "read-table"
-exports.WRITE_TABLE = "write-table"
-exports.READ_VIEW = "read-view"
-exports.EXECUTE_AUTOMATION = "execute-automation"
-exports.EXECUTE_WEBHOOK = "execute-webhook"
-exports.USER_MANAGEMENT = "user-management"
-exports.BUILDER = "builder"
-exports.LIST_USERS = "list-users"
-
 const PermissionLevels = {
   READ: "read",
   WRITE: "write",
@@ -54,10 +45,11 @@ function getAllowedLevels(userPermLevel) {
   }
 }
 
-// TODO: need to expand on this
 exports.BUILTIN_PERMISSION_NAMES = {
   READ_ONLY: "read_only",
   WRITE: "write",
+  ADMIN: "admin",
+  POWER: "power",
 }
 
 exports.BUILTIN_PERMISSIONS = {
@@ -73,6 +65,26 @@ exports.BUILTIN_PERMISSIONS = {
     permissions: [
       new Permission(PermissionTypes.TABLE, PermissionLevels.WRITE),
       new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
+    ],
+  },
+  POWER: {
+    name: exports.BUILTIN_PERMISSION_NAMES.POWER,
+    permissions: [
+      new Permission(PermissionTypes.TABLE, PermissionLevels.WRITE),
+      new Permission(PermissionTypes.USER, PermissionLevels.READ),
+      new Permission(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
+      new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
+      new Permission(PermissionTypes.WEBHOOK, PermissionLevels.READ),
+    ],
+  },
+  ADMIN: {
+    name: exports.BUILTIN_PERMISSION_NAMES.ADMIN,
+    permissions: [
+      new Permission(PermissionTypes.TABLE, PermissionLevels.ADMIN),
+      new Permission(PermissionTypes.USER, PermissionLevels.ADMIN),
+      new Permission(PermissionTypes.AUTOMATION, PermissionLevels.ADMIN),
+      new Permission(PermissionTypes.VIEW, PermissionLevels.ADMIN),
+      new Permission(PermissionTypes.WEBHOOK, PermissionLevels.READ),
     ],
   },
 }

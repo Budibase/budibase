@@ -11,7 +11,7 @@ module.exports.definition = {
   type: "ACTION",
   stepId: "CREATE_USER",
   inputs: {
-    accessLevelId: accessLevels.POWERUSER_LEVEL_ID,
+    accessLevelId: accessLevels.BUILTIN_LEVELS.power._id,
   },
   schema: {
     inputs: {
@@ -29,7 +29,7 @@ module.exports.definition = {
           type: "string",
           title: "Access Level",
           enum: accessLevels.BUILTIN_LEVELS,
-          pretty: Object.values(accessLevels.PRETTY_ACCESS_LEVELS),
+          pretty: accessLevels.BUILTIN_LEVEL_NAMES,
         },
       },
       required: ["username", "password", "accessLevelId"],

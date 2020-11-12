@@ -34,6 +34,7 @@ exports.authenticate = async ctx => {
       userId: dbUser._id,
       accessLevelId: dbUser.accessLevelId,
       version: app.version,
+      permissions: dbUser.permissions || [],
     }
     // if in cloud add the user api key
     if (env.CLOUD) {
