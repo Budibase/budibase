@@ -1,6 +1,5 @@
 const { ensureDir, constants, copyFile, writeFile } = require("fs-extra")
 const { join } = require("../centralPath")
-const { convertCssToBundle } = require("./convertCssToFiles")
 const { budibaseAppsDir } = require("../budibaseDir")
 
 /**
@@ -19,7 +18,7 @@ module.exports = async (appId, pageName, pkg) => {
 
   await ensureDir(pagePath)
 
-  await convertCssToBundle(pagePath, pkg)
+  await buildPageCssBundle(pagePath, pkg)
 
   await buildFrontendAppDefinition(pagePath, pkg)
 
@@ -33,7 +32,7 @@ module.exports = async (appId, pageName, pkg) => {
  * @param {Object} pkg - app package information
  * @param {"main" | "unauthenticated"} pageName - the pagename of the page we are compiling CSS for.
  */
-module.exports.convertCssToBundle = async (publicPagePath, pkg) => {
+const buildPageCssBundle = async (publicPagePath, pkg) => {
   let cssString = ""
 
   for (let screen of pkg.screens || []) {
