@@ -1,6 +1,6 @@
 import { createApp } from "./createApp"
 import { builtins, builtinLibName } from "./render/builtinComponents"
-import { getAppId } from "./render/getAppId"
+import { getAppId } from "../../component-sdk/src/utils"
 
 /**
  * create a web application from static budibase definition files.

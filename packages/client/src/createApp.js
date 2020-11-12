@@ -2,7 +2,7 @@ import { attachChildren } from "./render/attachChildren"
 import { createTreeNode } from "./render/prepareRenderComponent"
 import { screenRouter } from "./render/screenRouter"
 import { createStateManager } from "./state/stateManager"
-import { getAppId } from "./render/getAppId"
+import { getAppId } from "../../component-sdk/src/utils"
 
 export const createApp = ({
   componentLibraries,
