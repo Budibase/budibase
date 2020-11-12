@@ -1,7 +1,7 @@
 const Router = require("@koa/router")
 const authorized = require("../../middleware/authorized")
-const { BUILDER } = require("../../utilities/accessLevels")
 const controller = require("../controllers/analytics")
+const { BUILDER } = require("../../utilities/security/permissions")
 
 const router = Router()
 
