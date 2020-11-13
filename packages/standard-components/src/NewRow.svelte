@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { fetchTableDefinition } from "../../component-sdk"
+  import { fetchTableDefinition } from "@budibase/component-sdk"
 
   export let _bb
   export let table

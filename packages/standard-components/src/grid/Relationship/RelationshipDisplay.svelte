@@ -3,7 +3,7 @@
   import {
     fetchTableDefinition,
     fetchRelationshipData,
-  } from "../../../../component-sdk"
+  } from "@budibase/component-sdk"
 
   export let columnName
   export let row

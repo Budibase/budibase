@@ -33,7 +33,7 @@ function tryGetFromSubdomain() {
   return confirmAppId(appId)
 }
 
-export const getAppId = cookies => {
+export const getAppId = (cookies = window.document.cookie) => {
   const functions = [tryGetFromSubdomain, tryGetFromPath, tryGetFromCookie]
   // try getting the app Id in order
   let appId

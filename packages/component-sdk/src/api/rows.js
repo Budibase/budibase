@@ -8,7 +8,7 @@ export const fetchRow = async ({ tableId, rowId }) => {
   const row = await api.get({
     url: `/api/${tableId}/rows/${rowId}`,
   })
-  return await enrichRows([row], tableId)
+  return (await enrichRows([row], tableId))[0]
 }
 
 /**

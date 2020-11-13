@@ -1,6 +1,6 @@
 <script>
   import { Dropzone } from "@budibase/bbui"
-  import { uploadAttachment } from "../../../component-sdk"
+  import { uploadAttachment } from "@budibase/component-sdk"
 
   const BYTES_IN_MB = 1000000
 

@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { fetchDatasource } from "../../component-sdk"
+  import { fetchDatasource } from "@budibase/component-sdk"
   import { isEmpty } from "lodash/fp"
 
   export let _bb

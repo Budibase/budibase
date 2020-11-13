@@ -1,4 +1,4 @@
-import { createApp } from "@budibase/client/src/createApp"
+import { createApp } from "@budibase/client/src/old/createApp"
 import components from "./testComponents"
 import packageJson from "../../package.json"
 import { rootComponent } from "./rootComponent"

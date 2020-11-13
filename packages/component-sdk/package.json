@@ -1,10 +1,26 @@
 {
-  "name": "component-sdk",
+  "name": "@budibase/component-sdk",
   "version": "1.0.0",
   "description": "SDK for developing Budibase components",
-  "main": "src/index.js",
   "repository": "https://github.com/Budibase/budibase",
-  "author": "Andrew Kingston",
+  "author": "Budibase",
   "license": "AGPLv3",
-  "private": false
+  "private": false,
+  "main": "dist/budibase-client.js",
+  "module": "dist/budibase-client.esm.mjs",
+  "scripts": {
+    "build": "rollup -c",
+    "dev:builder": "rollup -cw"
+  },
+  "devDependencies": {
+    "rollup": "^2.11.2",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-svelte": "^6.1.1"
+  },
+  "dependencies": {
+    "svelte-spa-router": "^3.0.5"
+  }
 }

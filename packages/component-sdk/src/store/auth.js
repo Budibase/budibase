@@ -25,7 +25,7 @@ export const createAuthStore = () => {
     store.set(initialState)
 
     // Expire any cookies
-    const appId = getAppId(window.document.cookie)
+    const appId = getAppId()
     if (appId) {
       for (let environment of ["local", "cloud"]) {
         window.document.cookie = `budibase:${appId}:${environment}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`

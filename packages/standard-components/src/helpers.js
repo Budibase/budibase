@@ -9,22 +9,6 @@ export const capitalise = string => {
 }
 
 /**
- * Builds a style string from a style object.
- *
- * @param styles
- * @returns {string}
- */
-export const buildStyle = styles => {
-  let str = ""
-  Object.entries(styles).forEach(([style, value]) => {
-    if (style && value) {
-      str += `${style}: ${value}; `
-    }
-  })
-  return str
-}
-
-/**
  * Svelte action to set CSS variables on a DOM node.
  *
  * @param node
