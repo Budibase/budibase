@@ -188,6 +188,17 @@ export default {
             ],
           },
         },
+        // {
+        //   _component: "@budibase/standard-components/richtext",
+        //   name: "Rich Text",
+        //   description:
+        //     "A component that allows the user to enter long form text.",
+        //   icon: "ri-edit-box-line",
+        //   properties: {
+        //     design: { ...all },
+        //     settings: [],
+        //   },
+        // },
         {
           _component: "@budibase/standard-components/datepicker",
           name: "Date Picker",
