@@ -12,17 +12,20 @@ function generateSaveValidation() {
   return joiValidator.body(Joi.object({
     _css: Joi.string().allow(""),
     name: Joi.string().required(),
-    route: Joi.string().required(),
+    routing: Joi.array().items(Joi.object({
+      route: Joi.string().required(),
+      accessLevelId: Joi.string().required(),
+    })).required(),
     props: Joi.object({
-            _id: Joi.string().required(),
-            _component: Joi.string().required(),
-            _children: Joi.array().required(),
-            _instanceName: Joi.string().required(),
-            _styles: Joi.object().required(),
-            type: Joi.string().optional(),
-            table: Joi.string().optional(),
-        }).required().unknown(true),
-    }).unknown(true))
+      _id: Joi.string().required(),
+      _component: Joi.string().required(),
+      _children: Joi.array().required(),
+      _instanceName: Joi.string().required(),
+      _styles: Joi.object().required(),
+      type: Joi.string().optional(),
+      table: Joi.string().optional(),
+    }).required().unknown(true),
+  }).unknown(true))
 }
 
 router

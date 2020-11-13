@@ -1,4 +1,4 @@
-const { BUILTIN_LEVELS } = require("../utilities/security/accessLevels")
+const { BUILTIN_LEVEL_IDS } = require("../utilities/security/accessLevels")
 const {
   PermissionTypes,
   doesHavePermission,
@@ -7,7 +7,7 @@ const env = require("../environment")
 const { apiKeyTable } = require("../db/dynamoClient")
 const { AuthTypes } = require("../constants")
 
-const ADMIN_PERMS = [BUILTIN_LEVELS.admin._id, BUILTIN_LEVELS.builder._id]
+const ADMIN_ACCESS = [BUILTIN_LEVEL_IDS.ADMIN, BUILTIN_LEVEL_IDS.BUILDER]
 
 const LOCAL_PASS = new RegExp(["webhooks/trigger", "webhooks/schema"].join("|"))
 
@@ -49,7 +49,7 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
 
   const accessLevel = ctx.user.accessLevel
   const permissions = ctx.user.permissions
-  if (ADMIN_PERMS.indexOf(accessLevel._id) !== -1) {
+  if (ADMIN_ACCESS.indexOf(accessLevel._id) !== -1) {
     return next()
   }
 

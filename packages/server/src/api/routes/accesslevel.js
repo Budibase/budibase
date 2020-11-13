@@ -6,8 +6,7 @@ const { BUILDER } = require("../../utilities/security/permissions")
 const router = Router()
 
 router
-  .post("/api/accesslevels", authorized(BUILDER), controller.create)
-  .put("/api/accesslevels", authorized(BUILDER), controller.update)
+  .post("/api/accesslevels", authorized(BUILDER), controller.save)
   .get("/api/accesslevels", authorized(BUILDER), controller.fetch)
   .get("/api/accesslevels/:levelId", authorized(BUILDER), controller.find)
   .delete(
@@ -15,6 +14,5 @@ router
     authorized(BUILDER),
     controller.destroy
   )
-  .patch("/api/accesslevels/:levelId", authorized(BUILDER), controller.patch)
 
 module.exports = router

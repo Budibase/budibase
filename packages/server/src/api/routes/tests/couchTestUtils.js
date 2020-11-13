@@ -1,6 +1,8 @@
 const CouchDB = require("../../../db")
 const supertest = require("supertest")
-const { BUILTIN_LEVELS } = require("../../../utilities/security/accessLevels")
+const {
+  BUILTIN_LEVEL_IDS,
+} = require("../../../utilities/security/accessLevels")
 const {
   BUILTIN_PERMISSION_NAMES,
 } = require("../../../utilities/security/permissions")
@@ -24,7 +26,7 @@ exports.supertest = async () => {
 exports.defaultHeaders = appId => {
   const builderUser = {
     userId: "BUILDER",
-    accessLevelId: BUILTIN_LEVELS.builder._id,
+    accessLevelId: BUILTIN_LEVEL_IDS.BUILDER,
   }
 
   const builderToken = jwt.sign(builderUser, env.JWT_SECRET)
@@ -124,7 +126,7 @@ exports.createUser = async (
       name: "Bill",
       username,
       password,
-      accessLevelId: BUILTIN_LEVELS.power._id,
+      accessLevelId: BUILTIN_LEVEL_IDS.POWER,
     })
   return res.body
 }
@@ -180,13 +182,13 @@ const createUserWithPermissions = async (
       name: username,
       username,
       password,
-      accessLevelId: BUILTIN_LEVELS.power._id,
+      accessLevelId: BUILTIN_LEVEL_IDS.POWER,
       permissions,
     })
 
   const anonUser = {
     userId: "ANON",
-    accessLevelId: BUILTIN_LEVELS.anon._id,
+    accessLevelId: BUILTIN_LEVEL_IDS.ANON,
     appId: appId,
     version: packageJson.version,
   }

@@ -17,3 +17,5 @@ exports.getRoutingInfo = async appId => {
     }
   }
 }
+
+exports.createRoutingView = createRoutingView
