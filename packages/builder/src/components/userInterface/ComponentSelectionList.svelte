@@ -68,7 +68,6 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    z-index: 1;
     min-height: 24px;
     flex-wrap: wrap;
     gap: var(--spacing-l);
