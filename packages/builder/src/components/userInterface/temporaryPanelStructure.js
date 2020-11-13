@@ -196,15 +196,7 @@ export default {
         //   icon: "ri-edit-box-line",
         //   properties: {
         //     design: { ...all },
-        //     settings: [
-        //       { label: "Label", key: "label", control: Input },
-        //       {
-        //         label: "Type",
-        //         key: "type",
-        //         control: OptionSelect,
-        //         options: ["text", "password"],
-        //       },
-        //     ],
+        //     settings: [],
         //   },
         // },
         {
