@@ -1,4 +1,4 @@
-const { BUILTIN_LEVELS } = require("../security/accessLevels")
+const { BUILTIN_LEVEL_IDS } = require("../security/accessLevels")
 const { BUILTIN_PERMISSION_NAMES } = require("../security/permissions")
 const env = require("../../environment")
 const CouchDB = require("../../db")
@@ -10,7 +10,7 @@ const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 module.exports = async (ctx, appId, version) => {
   const builderUser = {
     userId: "BUILDER",
-    accessLevelId: BUILTIN_LEVELS.builder._id,
+    accessLevelId: BUILTIN_LEVEL_IDS.BUILDER,
     permissions: [BUILTIN_PERMISSION_NAMES.ADMIN],
     version,
   }

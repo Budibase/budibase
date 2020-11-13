@@ -10,7 +10,7 @@
   <DataList secondary bind:value={parameters.url}>
     <option value="" />
     {#each $allScreens as screen}
-      <option value={screen.route}>{screen.props._instanceName}</option>
+      <option value={screen.routing.route}>{screen.props._instanceName}</option>
     {/each}
   </DataList>
 </div>

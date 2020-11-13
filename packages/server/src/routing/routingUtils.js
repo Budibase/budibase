@@ -9,6 +9,7 @@ exports.createRoutingView = async appId => {
     map: function(doc) {
       if (doc._id.startsWith(SCREEN_PREFIX)) {
         emit(doc._id, {
+          id: doc._id,
           routing: doc.routing,
         })
       }

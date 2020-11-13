@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken")
 const STATUS_CODES = require("../utilities/statusCodes")
 const accessLevelController = require("../api/controllers/accesslevel")
-const { BUILTIN_LEVEL_IDS } = require("../utilities/security/accessLevels")
+const { BUILTIN_LEVEL_ID_ARRAY } = require("../utilities/security/accessLevels")
 const env = require("../environment")
 const { AuthTypes } = require("../constants")
 const { getAppId, getCookieName, setCookie } = require("../utilities")
@@ -69,7 +69,7 @@ module.exports = async (ctx, next) => {
  * @param {*} accessLevelId - the id of the users access level
  */
 const getAccessLevel = async (appId, accessLevelId) => {
-  if (BUILTIN_LEVEL_IDS.indexOf(accessLevelId) !== -1) {
+  if (BUILTIN_LEVEL_ID_ARRAY.indexOf(accessLevelId) !== -1) {
     return {
       _id: accessLevelId,
       name: accessLevelId,

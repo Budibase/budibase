@@ -9,7 +9,7 @@ const {
   BUILTIN_PERMISSION_NAMES,
 } = require("../../../utilities/security/permissions")
 const {
-  BUILTIN_LEVELS
+  BUILTIN_LEVEL_IDS,
 } = require("../../../utilities/security/accessLevels")
 
 describe("/users", () => {
@@ -67,7 +67,7 @@ describe("/users", () => {
       const res = await request
         .post(`/api/users`)
         .set(defaultHeaders(appId))
-        .send({ name: "Bill", username: "bill", password: "bills_password", accessLevelId: BUILTIN_LEVELS.power._id })
+        .send({ name: "Bill", username: "bill", password: "bills_password", accessLevelId: BUILTIN_LEVEL_IDS.POWER })
         .expect(200)
         .expect('Content-Type', /json/)
 
@@ -79,7 +79,7 @@ describe("/users", () => {
       await testPermissionsForEndpoint({
         request,
         method: "POST",
-        body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: BUILTIN_LEVELS.power._id },
+        body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: BUILTIN_LEVEL_IDS.POWER },
         url: `/api/users`,
         appId: appId,
         permName1: BUILTIN_PERMISSION_NAMES.ADMIN,
