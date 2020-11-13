@@ -178,8 +178,6 @@
 		"name": "Rich Text",
 		"description": "A component that allows the user to enter long form text.",
 		"props": {
-			"label": "string",
-			"type": "string",
 			"value": "string"
 		}
 	},
