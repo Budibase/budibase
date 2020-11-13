@@ -1,6 +1,9 @@
 <script>
   import { onMount } from "svelte"
-  import { fetchDatasource, fetchTableDefinition } from "../../../component-sdk"
+  import {
+    fetchDatasource,
+    fetchTableDefinition,
+  } from "@budibase/component-sdk"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
   import { isEmpty } from "lodash/fp"

@@ -4,7 +4,7 @@
     fetchTableDefinition,
     fetchTableData,
     fetchRow,
-  } from "../../component-sdk"
+  } from "@budibase/component-sdk"
 
   export let _bb
   export let table

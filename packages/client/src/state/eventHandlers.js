@@ -1,5 +1,5 @@
 import renderTemplateString from "./renderTemplateString"
-import { updateRow, saveRow, deleteRow } from "../../../component-sdk"
+import { updateRow, saveRow, deleteRow } from "@budibase/component-sdk"
 
 export const EVENT_TYPE_MEMBER_NAME = "##eventHandlerType"
 

@@ -6,7 +6,7 @@
   // These maps need to be set up to handle whatever types that are used in the tables.
   const setters = new Map([["number", number]])
 
-  import * as SDK from "../../../component-sdk"
+  import * as SDK from "@budibase/component-sdk"
   import { isEmpty } from "lodash/fp"
   import { onMount } from "svelte"
 

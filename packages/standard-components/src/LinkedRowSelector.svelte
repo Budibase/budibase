@@ -1,6 +1,6 @@
 <script>
   import { Label, Multiselect } from "@budibase/bbui"
-  import { fetchTableDefinition, fetchTableData } from "../../component-sdk"
+  import { fetchTableDefinition, fetchTableData } from "@budibase/component-sdk"
   import { capitalise } from "./helpers"
 
   export let schema = {}

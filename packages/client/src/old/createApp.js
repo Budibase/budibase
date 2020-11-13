@@ -1,8 +1,8 @@
-import { attachChildren } from "./render/attachChildren"
-import { createTreeNode } from "./render/prepareRenderComponent"
-import { screenRouter } from "./render/screenRouter"
-import { createStateManager } from "./state/stateManager"
-import { getAppId } from "../../component-sdk/src/utils"
+import { attachChildren } from "../render/attachChildren"
+import { createTreeNode } from "../render/prepareRenderComponent"
+import { screenRouter } from "../render/screenRouter"
+import { createStateManager } from "../state/stateManager"
+import { getAppId } from "@budibase/component-sdk"
 
 export const createApp = ({
   componentLibraries,
@@ -37,10 +37,7 @@ export const createApp = ({
       onScreenSelected,
       window,
     })
-    const fallbackPath = window.location.pathname.replace(
-      getAppId(window.document.cookie),
-      ""
-    )
+    const fallbackPath = window.location.pathname.replace(getAppId(), "")
     routeTo(currentUrl || fallbackPath)
   }
 

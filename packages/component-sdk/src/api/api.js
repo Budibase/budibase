@@ -36,7 +36,7 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        "x-budibase-app-id": getAppId(window.document.cookie),
+        "x-budibase-app-id": getAppId(),
       },
       body: requestBody,
       credentials: "same-origin",

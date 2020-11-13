@@ -1,59 +1,11 @@
-import { createApp } from "./createApp"
-import { builtins, builtinLibName } from "./render/builtinComponents"
-import { getAppId } from "../../component-sdk/src/utils"
+import ClientApp from "./components/ClientApp.svelte"
 
-/**
- * create a web application from static budibase definition files.
- * @param  {object} opts - configuration options for budibase client libary
- */
-export const loadBudibase = async opts => {
-  const _window = (opts && opts.window) || window
-  // const _localStorage = (opts && opts.localStorage) || localStorage
-  const appId = getAppId(window.document.cookie)
-  const frontendDefinition = _window["##BUDIBASE_FRONTEND_DEFINITION##"]
-
-  const user = {}
-
-  const componentLibraryModules = (opts && opts.componentLibraries) || {}
-
-  const libraries = frontendDefinition.libraries || []
-
-  for (let library of libraries) {
-    // fetch the JavaScript for the component libraries from the server
-    componentLibraryModules[library] = await import(
-      `/componentlibrary?library=${encodeURI(library)}&appId=${appId}`
-    )
-  }
-
-  componentLibraryModules[builtinLibName] = builtins(_window)
-
-  const {
-    initialisePage,
-    screenStore,
-    pageStore,
-    routeTo,
-    rootNode,
-  } = createApp({
-    componentLibraries: componentLibraryModules,
-    frontendDefinition,
-    user,
-    window: _window,
+// Initialise client app
+const loadBudibase = () => {
+  new ClientApp({
+    target: window.document.body,
   })
-
-  const route = _window.location
-    ? _window.location.pathname.replace(`${appId}/`, "").replace(appId, "")
-    : ""
-
-  initialisePage(frontendDefinition.page, _window.document.body, route)
-
-  return {
-    screenStore,
-    pageStore,
-    routeTo,
-    rootNode,
-  }
 }
 
-if (window) {
-  window.loadBudibase = loadBudibase
-}
+// Attach to window so the HTML template can call this when it loads
+window.loadBudibase = loadBudibase

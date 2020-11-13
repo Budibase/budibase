@@ -1,5 +1,5 @@
 <script>
-  import { authStore } from "../../component-sdk/src/store"
+  import { authStore } from "@budibase/component-sdk"
 
   export let buttonText = "Log In"
   export let logo = ""

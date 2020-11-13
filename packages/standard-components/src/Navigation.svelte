@@ -1,23 +1,8 @@
 <script>
-  import { authStore } from "../../component-sdk"
+  import { authStore, link } from "@budibase/component-sdk"
 
-  export let onLoad
   export let logoUrl
-  export let _bb
   export let title
-
-  let itemContainer
-  let hasLoaded
-
-  $: {
-    if (itemContainer) {
-      _bb.attachChildren(itemContainer)
-      if (!hasLoaded) {
-        _bb.call("onLoad")
-        hasLoaded = true
-      }
-    }
-  }
 
   const logOut = () => {
     authStore.actions.logOut()
@@ -27,7 +12,7 @@
 
 <div class="nav">
   <div class="nav__top">
-    <a href="/">
+    <a href="/" use:link>
       {#if logoUrl}
         <img class="logo" alt="logo" src={logoUrl} height="48" />
       {/if}
@@ -37,7 +22,9 @@
       <div on:click={logOut}>Log out</div>
     </div>
   </div>
-  <div class="nav__menu" bind:this={itemContainer} />
+  <div class="nav__menu">
+    <slot />
+  </div>
 </div>
 
 <style>

@@ -1,48 +1,58 @@
 <script>
   export let className = ""
-  export let onLoad
   export let type = "div"
-  export let _bb
 
-  let containerElement
-  let hasLoaded
-  let currentChildren
-
-  $: {
-    if (containerElement) {
-      _bb.attachChildren(containerElement)
-      if (!hasLoaded) {
-        _bb.call("onLoad")
-        hasLoaded = true
-      }
-    }
-  }
+  $: console.log(type)
 </script>
 
 {#if type === 'div'}
-  <div bind:this={containerElement} />
+  <div>
+    <slot />
+  </div>
 {:else if type === 'header'}
-  <header bind:this={containerElement} />
+  <header>
+    <slot />
+  </header>
 {:else if type === 'main'}
-  <main bind:this={containerElement} />
+  <main>
+    <slot />
+  </main>
 {:else if type === 'footer'}
-  <footer bind:this={containerElement} />
+  <footer>
+    <slot />
+  </footer>
 {:else if type === 'aside'}
-  <aside bind:this={containerElement} />
+  <aside>
+    <slot />
+  </aside>
 {:else if type === 'summary'}
-  <summary bind:this={containerElement} />
+  <summary>
+    <slot />
+  </summary>
 {:else if type === 'details'}
-  <details bind:this={containerElement} />
+  <details>
+    <slot />
+  </details>
 {:else if type === 'article'}
-  <article bind:this={containerElement} />
+  <article>
+    <slot />
+  </article>
 {:else if type === 'nav'}
-  <nav bind:this={containerElement} />
+  <nav>
+    <slot />
+  </nav>
 {:else if type === 'mark'}
-  <mark bind:this={containerElement} />
+  <mark><slot /></mark>
 {:else if type === 'figure'}
-  <figure bind:this={containerElement} />
+  <figure>
+    <slot />
+  </figure>
 {:else if type === 'figcaption'}
-  <figcaption bind:this={containerElement} />
+  <figcaption>
+    <slot />
+  </figcaption>
 {:else if type === 'paragraph'}
-  <p bind:this={containerElement} />
+  <p>
+    <slot />
+  </p>
 {/if}
