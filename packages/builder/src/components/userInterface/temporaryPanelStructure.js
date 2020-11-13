@@ -189,6 +189,25 @@ export default {
           },
         },
         {
+          _component: "@budibase/standard-components/richtext",
+          name: "Rich Text",
+          description:
+            "A component that allows the user to enter long form text.",
+          icon: "ri-edit-box-line",
+          properties: {
+            design: { ...all },
+            settings: [
+              { label: "Label", key: "label", control: Input },
+              {
+                label: "Type",
+                key: "type",
+                control: OptionSelect,
+                options: ["text", "password"],
+              },
+            ],
+          },
+        },
+        {
           _component: "@budibase/standard-components/datepicker",
           name: "Date Picker",
           description: "A basic date picker component",
