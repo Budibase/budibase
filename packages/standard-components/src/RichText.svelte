@@ -1,5 +1,5 @@
 <script>
-  import { RichText } from '@budibase/bbui'
+  import { RichText } from "@budibase/bbui"
 
   export let _bb
 
@@ -16,29 +16,19 @@
   // Need to determine what options we want to expose.
 
   let options = {
-    "modules": {
-      "toolbar": [
+    modules: {
+      toolbar: [
         [
           {
-            "header": [
-              1,
-              2,
-              3,
-              false
-            ]
-          }
+            header: [1, 2, 3, false],
+          },
         ],
-        [
-          "bold",
-          "italic",
-          "underline",
-          "strike"
-        ]
-      ]
+        ["bold", "italic", "underline", "strike"],
+      ],
     },
-    "placeholder": "Type something...",
-    "theme": "snow"
+    placeholder: "Type something...",
+    theme: "snow",
   }
 </script>
-  
-  <RichText bind:content {options} />
+
+<RichText bind:content {options} />
