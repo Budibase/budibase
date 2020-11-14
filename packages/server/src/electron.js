@@ -49,6 +49,7 @@ async function startApp() {
     win = new BrowserWindow({
       width: 1920,
       height: 1080,
+      icon: join(__dirname, "..", "build", "icons", "512x512.png")
     })
     win.setTitle(APP_TITLE)
     win.loadURL(APP_URL)
