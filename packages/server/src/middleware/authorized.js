@@ -53,8 +53,6 @@ module.exports = (permType, permLevel = null) => async (ctx, next) => {
     return next()
   }
 
-  // TODO: need to handle routing security
-
   if (permType === PermissionTypes.BUILDER) {
     ctx.throw(403, "Not Authorized")
   }

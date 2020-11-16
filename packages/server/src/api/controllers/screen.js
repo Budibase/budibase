@@ -1,20 +1,28 @@
 const CouchDB = require("../../db")
 const { getScreenParams, generateScreenID } = require("../../db/utils")
+const { AccessController } = require("../../utilities/security/accessLevels")
 
 exports.fetch = async ctx => {
-  const db = new CouchDB(ctx.user.appId)
+  const appId = ctx.user.appId
+  const db = new CouchDB(appId)
 
-  const screens = await db.allDocs(
-    getScreenParams(null, {
-      include_docs: true,
-    })
+  const screens = (
+    await db.allDocs(
+      getScreenParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(element => element.doc)
+
+  ctx.body = await new AccessController(appId).checkScreensAccess(
+    screens,
+    ctx.user.accessLevel._id
   )
-
-  ctx.body = screens.rows.map(element => element.doc)
 }
 
 exports.find = async ctx => {
-  const db = new CouchDB(ctx.user.appId)
+  const appId = ctx.user.appId
+  const db = new CouchDB(appId)
 
   const screens = await db.allDocs(
     getScreenParams(ctx.params.pageId, {
@@ -22,7 +30,10 @@ exports.find = async ctx => {
     })
   )
 
-  ctx.body = screens.response.rows
+  ctx.body = await new AccessController(appId).checkScreensAccess(
+    screens,
+    ctx.user.accessLevel._id
+  )
 }
 
 exports.save = async ctx => {
