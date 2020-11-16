@@ -1,4 +1,4 @@
-import sanitizeUrl from "./sanitizeUrl"
+import sanitizeUrl from "./utils/sanitizeUrl"
 import { rowListUrl } from "./rowListScreen"
 
 export default function(tables) {
@@ -299,6 +299,9 @@ const createScreen = (table, heading) => ({
     _instanceName: `${table.name} - Detail`,
     _code: "",
   },
-  route: rowDetailUrl(table),
+  routing: {
+    route: rowDetailUrl(table),
+    accessLevelId: "",
+  },
   name: "",
 })
