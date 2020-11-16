@@ -4,26 +4,7 @@ const compress = require("koa-compress")
 const zlib = require("zlib")
 const { budibaseAppsDir } = require("../utilities/budibaseDir")
 const { isDev } = require("../utilities")
-const {
-  authRoutes,
-  pageRoutes,
-  screenRoutes,
-  userRoutes,
-  deployRoutes,
-  applicationRoutes,
-  rowRoutes,
-  tableRoutes,
-  viewRoutes,
-  staticRoutes,
-  componentRoutes,
-  automationRoutes,
-  accesslevelRoutes,
-  apiKeysRoutes,
-  templatesRoutes,
-  analyticsRoutes,
-  webhookRoutes,
-  routingRoutes,
-} = require("./routes")
+const {mainRoutes, authRoutes, staticRoutes} = require("./routes")
 
 const router = new Router()
 const env = require("../environment")
@@ -73,57 +54,14 @@ router.use(authRoutes.routes())
 router.use(authRoutes.allowedMethods())
 
 // authenticated routes
-router.use(viewRoutes.routes())
-router.use(viewRoutes.allowedMethods())
+for (let route of mainRoutes) {
+  router.use(route.routes())
+  router.use(route.allowedMethods())
+}
 
-router.use(tableRoutes.routes())
-router.use(tableRoutes.allowedMethods())
-
-router.use(rowRoutes.routes())
-router.use(rowRoutes.allowedMethods())
-
-router.use(userRoutes.routes())
-router.use(userRoutes.allowedMethods())
-
-router.use(automationRoutes.routes())
-router.use(automationRoutes.allowedMethods())
-
-router.use(webhookRoutes.routes())
-router.use(webhookRoutes.allowedMethods())
-
-router.use(deployRoutes.routes())
-router.use(deployRoutes.allowedMethods())
-
-router.use(templatesRoutes.routes())
-router.use(templatesRoutes.allowedMethods())
-// end auth routes
-
-router.use(pageRoutes.routes())
-router.use(pageRoutes.allowedMethods())
-
-router.use(screenRoutes.routes())
-router.use(screenRoutes.allowedMethods())
-
-router.use(applicationRoutes.routes())
-router.use(applicationRoutes.allowedMethods())
-
-router.use(componentRoutes.routes())
-router.use(componentRoutes.allowedMethods())
-
-router.use(accesslevelRoutes.routes())
-router.use(accesslevelRoutes.allowedMethods())
-
-router.use(apiKeysRoutes.routes())
-router.use(apiKeysRoutes.allowedMethods())
-
-router.use(analyticsRoutes.routes())
-router.use(analyticsRoutes.allowedMethods())
-
+// WARNING - static routes will catch everything else after them this must be last
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
-
-router.use(routingRoutes.routes())
-router.use(routingRoutes.allowedMethods())
 
 router.redirect("/", "/_builder")
 

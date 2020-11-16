@@ -8,7 +8,7 @@ const fs = require("fs-extra")
 const { join, resolve } = require("../../utilities/centralPath")
 const packageJson = require("../../../package.json")
 const { createLinkView } = require("../../db/linkedRows")
-const { createRoutingView } = require("../../routing")
+const { createRoutingView } = require("../../utilities/routing")
 const { downloadTemplate } = require("../../utilities/templates")
 const {
   generateAppID,

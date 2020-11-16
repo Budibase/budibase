@@ -12,10 +12,10 @@ function generateSaveValidation() {
   return joiValidator.body(Joi.object({
     _css: Joi.string().allow(""),
     name: Joi.string().required(),
-    routing: Joi.array().items(Joi.object({
+    routing: Joi.object({
       route: Joi.string().required(),
-      accessLevelId: Joi.string().required(),
-    })).required(),
+      accessLevelId: Joi.string().required().allow(""),
+    }).required().unknown(true),
     props: Joi.object({
       _id: Joi.string().required(),
       _component: Joi.string().required(),
