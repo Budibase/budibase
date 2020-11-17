@@ -2,7 +2,11 @@ const Router = require("@koa/router")
 const controller = require("../controllers/webhook")
 const authorized = require("../../middleware/authorized")
 const joiValidator = require("../../middleware/joi-validator")
-const { BUILDER, EXECUTE_WEBHOOK } = require("../../utilities/accessLevels")
+const {
+  BUILDER,
+  PermissionTypes,
+  PermissionLevels,
+} = require("../../utilities/security/permissions")
 const Joi = require("joi")
 
 const router = Router()
@@ -38,7 +42,7 @@ router
   )
   .post(
     "/api/webhooks/trigger/:instance/:id",
-    authorized(EXECUTE_WEBHOOK),
+    authorized(PermissionTypes.WEBHOOK, PermissionLevels.EXECUTE),
     controller.trigger
   )
 

@@ -21,7 +21,7 @@
         .filter(screen => !screen.props._component.endsWith("/rowdetail"))
         .map(screen => ({
           name: screen.props._instanceName,
-          url: screen.route,
+          url: screen.routing.route,
           sort: screen.props._component,
         })),
     ]
@@ -54,7 +54,7 @@
       if (idBinding) {
         urls.push({
           name: detailScreen.props._instanceName,
-          url: detailScreen.route.replace(
+          url: detailScreen.routing.route.replace(
             ":id",
             `{{ ${idBinding.runtimeBinding} }}`
           ),

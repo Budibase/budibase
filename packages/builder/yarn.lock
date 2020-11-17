@@ -719,10 +719,10 @@
     svelte-flatpickr "^2.4.0"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^0.3.7":
-  version "0.3.7"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.3.7.tgz#8ed2d40d91ba3788a69ee5db5078f757adb4187f"
-  integrity sha512-EgpHfw/WOUYeCG4cILDbaN2WFBDSPS698Z+So7FP5l+4E1fvmqtpXVKJYsviwYEx8AKKYyU3nuDi0l6xzb5Flg==
+"@budibase/client@^0.3.8":
+  version "0.3.8"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.3.8.tgz#75df7e97e8f0d9b58c00e2bb0d3b4a55f8d04735"
+  integrity sha512-tnFdmCdXKS+uZGoipr69Wa0oVoFHmyoV0ydihI6q0gKQH0KutypVHAaul2qPB8t5a/mTZopC//2WdmCeX1GKVg==
   dependencies:
     deep-equal "^2.0.1"
     mustache "^4.0.1"
@@ -6411,6 +6411,11 @@ util.promisify@^1.0.0:
 uuid@^3.3.2:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
+
+uuid@^8.3.1:
+  version "8.3.1"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.1.tgz#2ba2e6ca000da60fce5a196954ab241131e05a31"
+  integrity sha512-FOmRr+FmWEIG8uhZv6C2bTgEVXsHk08kE7mPlrBbEe+c3r9pjceVPgupIfNIhc4yx55H69OXANrUaSuu9eInKg==
 
 validate-npm-package-license@^3.0.1:
   version "3.0.4"

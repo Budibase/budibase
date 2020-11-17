@@ -15,10 +15,10 @@ const deployRoutes = require("./deploy")
 const apiKeysRoutes = require("./apikeys")
 const templatesRoutes = require("./templates")
 const analyticsRoutes = require("./analytics")
+const routingRoutes = require("./routing")
 
-module.exports = {
+exports.mainRoutes = [
   deployRoutes,
-  authRoutes,
   pageRoutes,
   screenRoutes,
   userRoutes,
@@ -26,7 +26,6 @@ module.exports = {
   rowRoutes,
   tableRoutes,
   viewRoutes,
-  staticRoutes,
   componentRoutes,
   automationRoutes,
   accesslevelRoutes,
@@ -34,4 +33,8 @@ module.exports = {
   templatesRoutes,
   analyticsRoutes,
   webhookRoutes,
-}
+  routingRoutes,
+]
+
+exports.authRoutes = authRoutes
+exports.staticRoutes = staticRoutes

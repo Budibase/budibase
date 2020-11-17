@@ -8,6 +8,7 @@ const fs = require("fs-extra")
 const { join, resolve } = require("../../utilities/centralPath")
 const packageJson = require("../../../package.json")
 const { createLinkView } = require("../../db/linkedRows")
+const { createRoutingView } = require("../../utilities/routing")
 const { downloadTemplate } = require("../../utilities/templates")
 const {
   generateAppID,
@@ -38,6 +39,7 @@ async function createInstance(template) {
   })
   // add view for linked rows
   await createLinkView(appId)
+  await createRoutingView(appId)
 
   // replicate the template data to the instance DB
   if (template) {
