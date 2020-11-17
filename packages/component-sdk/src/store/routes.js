@@ -1,9 +1,12 @@
 import { writable } from "svelte/store"
 import { push } from "svelte-spa-router"
 
-const initialState = []
-
 export const createRouteStore = () => {
+  const initialState = {
+    routes: [],
+    routeParams: {},
+    activeRoute: null,
+  }
   const store = writable(initialState)
 
   const fetchRoutes = () => {
@@ -12,10 +15,35 @@ export const createRouteStore = () => {
       path: screen.route,
       screenId: screen._id,
     }))
-    store.set(routes)
+    store.update(state => {
+      state.routes = routes
+      return state
+    })
+  }
+  const setRouteParams = routeParams => {
+    console.log("new route params: ")
+    console.log(routeParams)
+    store.update(state => {
+      state.routeParams = routeParams
+      return state
+    })
+  }
+  const setActiveRoute = route => {
+    store.update(state => {
+      state.activeRoute = route
+      return state
+    })
   }
   const navigate = push
-  store.actions = { fetchRoutes, navigate }
 
-  return store
+  return {
+    subscribe: store.subscribe,
+    actions: { fetchRoutes, navigate, setRouteParams, setActiveRoute },
+  }
 }
+
+if (!window.bbSDKRouteStore) {
+  window.bbSDKRouteStore = createRouteStore()
+}
+
+export const routeStore = window.bbSDKRouteStore

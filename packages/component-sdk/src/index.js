@@ -1,5 +1,5 @@
 export * from "./api"
 export * from "./store"
-export * as ContextTypes from "./context"
-export { getAppId } from "./utils"
-export { link } from "svelte-spa-router"
+export * from "./context"
+export * from "./utils"
+export { link as linkable } from "svelte-spa-router"

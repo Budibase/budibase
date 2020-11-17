@@ -1,8 +1,9 @@
 <script>
-  import { authStore, link } from "@budibase/component-sdk"
+  import { authStore, linkable, styleable } from "@budibase/component-sdk"
 
   export let logoUrl
   export let title
+  export let styles
 
   const logOut = () => {
     authStore.actions.logOut()
@@ -10,9 +11,9 @@
   }
 </script>
 
-<div class="nav">
+<div class="nav" use:styleable={styles}>
   <div class="nav__top">
-    <a href="/" use:link>
+    <a href="/" use:linkable>
       {#if logoUrl}
         <img class="logo" alt="logo" src={logoUrl} height="48" />
       {/if}

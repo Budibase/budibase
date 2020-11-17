@@ -1,25 +1,33 @@
-import { writable, derived, get } from "svelte/store"
-
-const initialState = []
+import { writable, derived } from "svelte/store"
+import { routeStore } from "./routes"
 
 export const createScreenStore = () => {
-  const store = writable(initialState)
-  const routeLookupMap = derived(store, $screens => {
-    let map = {}
-    $screens.forEach(screen => {
-      map[screen.route] = screen
-    })
-    return map
+  console.log("CREATE SCREEN STORE")
+
+  const screens = writable([])
+  const store = derived([screens, routeStore], ([$screens, $routeStore]) => {
+    const activeScreen = $screens.find(
+      screen => screen.route === $routeStore.activeRoute
+    )
+    return {
+      screens: $screens,
+      activeScreen,
+    }
   })
 
   const fetchScreens = () => {
     const frontendDefinition = window["##BUDIBASE_FRONTEND_DEFINITION##"]
-    store.set(frontendDefinition.screens)
+    screens.set(frontendDefinition.screens)
   }
-  const getScreenByRoute = path => {
-    return get(routeLookupMap)[path]
-  }
-  store.actions = { fetchScreens, getScreenByRoute }
 
-  return store
+  return {
+    subscribe: store.subscribe,
+    actions: { fetchScreens },
+  }
 }
+
+if (!window.bbSDKScreenStore) {
+  window.bbSDKScreenStore = createScreenStore()
+}
+
+export const screenStore = window.bbSDKScreenStore

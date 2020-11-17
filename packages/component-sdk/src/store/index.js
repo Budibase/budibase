@@ -1,9 +1,4 @@
-import { createConfigStore } from "./config"
-import { createAuthStore } from "./auth"
-import { createRouteStore } from "./routes"
-import { createScreenStore } from "./screens"
-
-export const configStore = createConfigStore()
-export const authStore = createAuthStore()
-export const routeStore = createRouteStore()
-export const screenStore = createScreenStore()
+export { configStore } from "./config"
+export { authStore } from "./auth"
+export { routeStore } from "./routes"
+export { screenStore } from "./screens"

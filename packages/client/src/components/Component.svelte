@@ -1,31 +1,35 @@
 <script>
   import { componentStore } from "../store"
-  import { buildStyle, getValidProps } from "../utils"
+  import { getValidProps } from "../utils"
 
-  export let props
-  export let children
-  export let component
-  export let styles
+  export let definition = {}
 
-  $: componentConstructor = componentStore.actions.getComponent(component)
-  $: console.log("Rendering: " + component)
+  $: componentProps = getValidProps(definition)
+  $: children = definition._children
+  $: componentName = extractComponentName(definition._component)
+  $: constructor = componentStore.actions.getComponent(componentName)
+  $: id = `${componentName}-${definition._id}`
+  $: styles = { ...definition._styles, id }
+
+  // Extracts the actual component name from the library name
+  function extractComponentName(name) {
+    console.log(name)
+    if (name == null) {
+      console.log(definition)
+    }
+    const split = name.split("/")
+    return split[split.length - 1]
+  }
+
+  $: console.log("Rendering: " + componentName)
 </script>
 
-{#if componentConstructor}
-  <div
-    style={buildStyle(styles)}
-    data-bb-component={component}
-    data-bb-name={component._instanceName}>
-    <svelte:component this={componentConstructor} {...props}>
-      {#if children && children.length}
-        {#each children as child}
-          <svelte:self
-            props={getValidProps(child)}
-            component={child._component}
-            children={child._children}
-            styles={child._styles.normal} />
-        {/each}
-      {/if}
-    </svelte:component>
-  </div>
+{#if constructor}
+  <svelte:component this={constructor} {...componentProps} {styles}>
+    {#if children && children.length}
+      {#each children as child}
+        <svelte:self definition={child} />
+      {/each}
+    {/if}
+  </svelte:component>
 {/if}

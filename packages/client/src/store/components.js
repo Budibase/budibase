@@ -2,10 +2,8 @@ import { writable, get } from "svelte/store"
 import { getAppId } from "@budibase/component-sdk"
 import Router from "../components/Router.svelte"
 
-const initialState = {}
-
-export const createComponentStore = () => {
-  const store = writable(initialState)
+const createComponentStore = () => {
+  const store = writable({})
 
   /**
    * Loads the component library from the server
@@ -25,14 +23,13 @@ export const createComponentStore = () => {
     if (!componentName) {
       return null
     }
-    const split = componentName.split("/")
-    const strippedName = split[split.length - 1]
 
     // Edge case for screen slot
-    if (strippedName === "screenslot") {
+    if (componentName === "screenslot") {
       return Router
     }
-    return get(store)[strippedName]
+
+    return get(store)[componentName]
   }
 
   // Attach actions to the store
@@ -40,3 +37,5 @@ export const createComponentStore = () => {
 
   return store
 }
+
+export const componentStore = createComponentStore()

@@ -1,17 +1,22 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, setContext } from "svelte"
   import {
     fetchTableDefinition,
     fetchTableData,
     fetchRow,
+    screenStore,
+    routeStore,
+    createDataProviderContext,
+    ContextTypes,
   } from "@budibase/component-sdk"
 
-  export let _bb
   export let table
 
   let headers = []
-  let store = _bb.store
-  let target
+
+  // Expose data provider context for this row
+  const dataProviderContext = createDataProviderContext()
+  setContext(ContextTypes.DataProvider, dataProviderContext)
 
   async function fetchFirstRow() {
     const rows = await fetchTableData(table)
@@ -24,8 +29,10 @@
     }
 
     const pathParts = window.location.pathname.split("/")
-    const routeParamId = _bb.routeParams().id
+    const routeParamId = $routeStore.routeParams.id
+    console.log(routeParamId)
     let row
+    let tableDefinition
 
     // if srcdoc, then we assume this is the builder preview
     if ((pathParts.length === 0 || pathParts[0] === "srcdoc") && table) {
@@ -37,18 +44,14 @@
     }
 
     if (row) {
-      row._table = await fetchTableDefinition(row.tableId)
-      _bb.attachChildren(target, {
-        context: row,
-      })
-    } else {
-      _bb.attachChildren(target)
+      tableDefinition = await fetchTableDefinition(row.tableId)
     }
+
+    dataProviderContext.actions.setRows([row])
+    dataProviderContext.actions.setTable(tableDefinition)
   }
 
-  onMount(async () => {
-    await fetchData()
-  })
+  onMount(fetchData)
 </script>
 
-<section bind:this={target} />
+<slot />

@@ -1,21 +1,28 @@
 <script>
-  import { onMount } from "svelte"
-  import { fetchDatasource } from "@budibase/component-sdk"
+  import { onMount, setContext } from "svelte"
+  import {
+    fetchDatasource,
+    createDataProviderContext,
+    fetchTableDefinition,
+    ContextTypes,
+  } from "@budibase/component-sdk"
   import { isEmpty } from "lodash/fp"
 
-  export let _bb
   export let datasource = []
 
   let target
-  let store = _bb.store
+
+  const dataProviderContext = createDataProviderContext()
+  setContext(ContextTypes.DataProvider, dataProviderContext)
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      const data = await fetchDatasource(datasource)
-      _bb.attachChildren(target, {
-        hydrate: false,
-        context: data,
-      })
+      const rows = await fetchDatasource(datasource)
+      dataProviderContext.actions.setRows(rows)
+      if (datasource.tableId) {
+        const tableDefinition = await fetchTableDefinition(datasource.tableId)
+        dataProviderContext.actions.setTable(tableDefinition)
+      }
     }
   })
 </script>

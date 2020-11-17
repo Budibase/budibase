@@ -1,11 +1,9 @@
-import { localStorageStore } from "../../../builder/src/builderStore/store/localStorage"
 import * as api from "../api"
 import { getAppId } from "../utils"
-
-const initialState = ""
+import { writable } from "svelte/store"
 
 export const createAuthStore = () => {
-  const store = localStorageStore("budibase:token", initialState)
+  const store = writable("")
 
   /**
    * Logs a user in.
@@ -22,7 +20,7 @@ export const createAuthStore = () => {
    * Logs a user out.
    */
   const logOut = () => {
-    store.set(initialState)
+    store.set("")
 
     // Expire any cookies
     const appId = getAppId()
@@ -33,10 +31,14 @@ export const createAuthStore = () => {
     }
   }
 
-  store.actions = {
-    logIn,
-    logOut,
+  return {
+    subscribe: store.subscribe,
+    actions: { logIn, logOut },
   }
-
-  return store
 }
+
+if (!window.bbSDKAuthStore) {
+  window.bbSDKAuthStore = createAuthStore()
+}
+
+export const authStore = window.bbSDKAuthStore

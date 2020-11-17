@@ -18,7 +18,6 @@
     ModalContent,
   } from "@budibase/bbui"
 
-  export let _bb
   export let datasource = {}
   export let editable
   export let theme = "alpine"
@@ -32,7 +31,6 @@
 
   let modal
 
-  let store = _bb.store
   let dataLoaded = false
   let data
   let columnDefs
@@ -52,7 +50,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      data = await SDK.fetchDatasource(datasource, $store)
+      data = await SDK.fetchDatasource(datasource)
       let schema
 
       // Get schema for datasource
