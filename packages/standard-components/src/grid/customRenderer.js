@@ -147,6 +147,9 @@ function viewDetailsRenderer(options, constraints, editable) {
     if (options.detailUrl) {
       url = options.detailUrl.replace(":id", params.data._id)
     }
+    if (!url.startsWith("/")) {
+      url = `/${url}`
+    }
 
     new ViewDetails({
       target: container,

@@ -1,3 +1,1 @@
-import { createComponentStore } from "./components"
-
-export const componentStore = createComponentStore()
+export { componentStore } from "./components"

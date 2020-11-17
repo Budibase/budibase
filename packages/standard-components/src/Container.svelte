@@ -1,58 +1,61 @@
 <script>
+  import { styleable } from "@budibase/component-sdk"
+
   export let className = ""
   export let type = "div"
-
-  $: console.log(type)
+  export let styles
 </script>
 
 {#if type === 'div'}
-  <div>
+  <div use:styleable={styles}>
     <slot />
   </div>
 {:else if type === 'header'}
-  <header>
+  <header use:styleable={styles}>
     <slot />
   </header>
 {:else if type === 'main'}
-  <main>
+  <main use:styleable={styles}>
     <slot />
   </main>
 {:else if type === 'footer'}
-  <footer>
+  <footer use:styleable={styles}>
     <slot />
   </footer>
 {:else if type === 'aside'}
-  <aside>
+  <aside use:styleable={styles}>
     <slot />
   </aside>
 {:else if type === 'summary'}
-  <summary>
+  <summary use:styleable={styles}>
     <slot />
   </summary>
 {:else if type === 'details'}
-  <details>
+  <details use:styleable={styles}>
     <slot />
   </details>
 {:else if type === 'article'}
-  <article>
+  <article use:styleable={styles}>
     <slot />
   </article>
 {:else if type === 'nav'}
-  <nav>
+  <nav use:styleable={styles}>
     <slot />
   </nav>
 {:else if type === 'mark'}
-  <mark><slot /></mark>
+  <mark use:styleable={styles}>
+    <slot />
+  </mark>
 {:else if type === 'figure'}
-  <figure>
+  <figure use:styleable={styles}>
     <slot />
   </figure>
 {:else if type === 'figcaption'}
-  <figcaption>
+  <figcaption use:styleable={styles}>
     <slot />
   </figcaption>
 {:else if type === 'paragraph'}
-  <p>
+  <p use:styleable={styles}>
     <slot />
   </p>
 {/if}

@@ -1,9 +1,10 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, setContext } from "svelte"
   import Router from "svelte-spa-router"
-  import { routeStore, screenStore } from "@budibase/component-sdk"
+  import { routeStore, screenStore, styleable } from "@budibase/component-sdk"
   import Screen from "./Screen.svelte"
 
+  export let styles
   let routes
 
   onMount(() => {
@@ -14,17 +15,23 @@
     await routeStore.actions.fetchRoutes()
     await screenStore.actions.fetchScreens()
     routes = {}
-    $routeStore.forEach(route => {
+    $routeStore.routes.forEach(route => {
       routes[route.path] = Screen
     })
+
+    // Add catch-all route so that we serve the Screen component always
+    routes["*"] = Screen
   }
 
-  function test(a, b) {
-    console.log(a)
-    console.log(b)
+  function onRouteLoading({ detail }) {
+    routeStore.actions.setActiveRoute(detail.route)
   }
+
+  setContext("test", 123)
 </script>
 
 {#if routes}
-  <Router {routes} on:routeEvent={test} />
+  <div use:styleable={styles}>
+    <Router on:routeLoading={onRouteLoading} {routes} />
+  </div>
 {/if}

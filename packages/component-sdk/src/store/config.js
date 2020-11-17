@@ -37,11 +37,14 @@ export const createConfigStore = () => {
     handler && handler(error)
   }
 
-  store.actions = {
-    initialise,
-    reset,
-    handleError,
+  return {
+    subscribe: store.subscribe,
+    actions: { initialise, reset, handleError },
   }
-
-  return store
 }
+
+if (!window.bbSDKConfigStore) {
+  window.bbSDKConfigStore = createConfigStore()
+}
+
+export const configStore = window.bbSDKConfigStore

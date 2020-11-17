@@ -1,5 +1,23 @@
 <script>
+  import { styleable } from "@budibase/component-sdk"
+
   export let embed
+  export let styles
 </script>
 
-{@html embed}
+<div use:styleable={styles}>
+  {@html embed}
+</div>
+
+<style>
+  div {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+  }
+  div :global(> *) {
+    flex: 1 1 auto;
+  }
+</style>

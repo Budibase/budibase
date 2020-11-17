@@ -1,6 +1,6 @@
 <script>
   import { onMount, createEventDispatcher } from "svelte"
-  import { fade } from "svelte/transition"
+  import { fetchRow, saveRow, routeStore } from "@budibase/component-sdk"
   import { Button, Label, DatePicker } from "@budibase/bbui"
   import Dropzone from "../../attachments/Dropzone.svelte"
   import debounce from "lodash.debounce"
@@ -13,12 +13,10 @@
     link: [],
   }
 
-  export let _bb
   export let table
   export let onClosed
 
   let row = { tableId: table._id }
-  let store = _bb.store
   let schema = table.schema
   let saved = false
   let rowId
@@ -39,36 +37,31 @@
       }
     }
 
-    const SAVE_ROW_URL = `/api/${table._id}/rows`
-    const response = await _bb.api.post(SAVE_ROW_URL, row)
+    const response = await saveRow(row)
 
-    const json = await response.json()
-
-    if (response.status === 200) {
-      store.update(state => {
-        state[table._id] = state[table._id]
-          ? [...state[table._id], json]
-          : [json]
-        return state
-      })
+    if (!response.error) {
+      // store.update(state => {
+      //   state[table._id] = state[table._id]
+      //     ? [...state[table._id], json]
+      //     : [json]
+      //   return state
+      // })
 
       errors = {}
 
       // wipe form, if new row, otherwise update
       // table to get new _rev
-      row = isNew ? { tableId: table._id } : json
+      row = isNew ? { tableId: table._id } : response
 
       onClosed()
       dispatch("newRow")
-    }
-
-    if (response.status === 400) {
-      errors = json.errors
+    } else {
+      errors = [response.error]
     }
   })
 
   onMount(async () => {
-    const routeParams = _bb.routeParams()
+    const routeParams = $routeStore.routeParams
     rowId =
       Object.keys(routeParams).length > 0 && (routeParams.id || routeParams[0])
     isNew = !rowId || rowId === "new"
@@ -78,10 +71,7 @@
       return
     }
 
-    const GET_ROW_URL = `/api/${table._id}/rows/${rowId}`
-    const response = await _bb.api.get(GET_ROW_URL)
-    const json = await response.json()
-    row = json
+    row = await fetchRow({ tableId: table._id, rowId })
   })
 </script>
 

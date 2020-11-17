@@ -1,12 +1,12 @@
 <script>
-  import { authStore } from "@budibase/component-sdk"
+  import { authStore, styleable } from "@budibase/component-sdk"
 
   export let buttonText = "Log In"
   export let logo = ""
   export let title = ""
   export let buttonClass = ""
   export let inputClass = ""
-  export let _bb
+  export let styles
 
   let username = ""
   let password = ""
@@ -33,7 +33,7 @@
   }
 </script>
 
-<div class="root">
+<div class="root" use:styleable={styles}>
   <div class="content">
     {#if logo}
       <div class="logo-container"><img src={logo} alt="logo" /></div>

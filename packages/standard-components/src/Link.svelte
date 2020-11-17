@@ -1,5 +1,5 @@
 <script>
-  import { link } from "@budibase/component-sdk"
+  import { linkable } from "@budibase/component-sdk"
 
   export let url = ""
   export let text = ""
@@ -8,7 +8,7 @@
   $: target = openInNewTab ? "_blank" : "_self"
 </script>
 
-<a href={url} use:link {target}>
+<a href={url} use:linkable {target}>
   {text}
   <slot />
 </a>
