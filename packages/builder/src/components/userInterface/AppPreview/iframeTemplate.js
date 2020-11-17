@@ -11,7 +11,7 @@ export default `<html>
       *, *:before, *:after {
         box-sizing: border-box;
       }
-      .container-screenslot-placeholder {
+      [data-bb-id="container-screenslot-placeholder"] {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -23,7 +23,7 @@ export default `<html>
         background-color: rgba(0, 0, 0, 0.05);
         flex: 1 1 auto;
       }
-      .container-screenslot-placeholder span {
+      [data-bb-id="container-screenslot-placeholder"] span {
         display: block;
         margin-bottom: 10px;
       }
