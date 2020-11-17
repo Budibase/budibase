@@ -82,7 +82,7 @@ const createScreen = table => {
       theme: "alpine",
       height: "540",
       pagination: true,
-      detailUrl: `${table.name.toLowerCase()}/:id`
+      detailUrl: `${table.name.toLowerCase()}/:id`,
     })
     .instanceName("Grid")
 
@@ -107,7 +107,8 @@ const createScreen = table => {
     .addChild(generateTitleContainer(table))
     .addChild(datagrid)
 
-  return new Screen().component("@budibase/standard-components/container")
+  return new Screen()
+    .component("@budibase/standard-components/container")
     .mainType("div")
     .route(rowListUrl(table))
     .instanceName(`${table.name} - List`)

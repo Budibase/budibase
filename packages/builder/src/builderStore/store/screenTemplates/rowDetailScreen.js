@@ -2,7 +2,12 @@ import sanitizeUrl from "./utils/sanitizeUrl"
 import { rowListUrl } from "./rowListScreen"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
-import { makeMainContainer, makeBreadcrumbContainer, makeTitleContainer, makeSaveButton } from "./utils/commonComponents"
+import {
+  makeMainContainer,
+  makeBreadcrumbContainer,
+  makeTitleContainer,
+  makeSaveButton,
+} from "./utils/commonComponents"
 
 export default function(tables) {
   return tables.map(table => {
@@ -22,16 +27,15 @@ export const rowDetailUrl = table => sanitizeUrl(`/${table.name}/:id`)
 
 function generateTitleContainer(table, title) {
   // have to override style for this, its missing margin
-  const saveButton = makeSaveButton(table)
-    .normalStyle({
-      background: "#000000",
-      "border-width": "0",
-      "border-style": "None",
-      color: "#fff",
-      "font-family": "Inter",
-      "font-weight": "500",
-      "font-size": "14px",
-    })
+  const saveButton = makeSaveButton(table).normalStyle({
+    background: "#000000",
+    "border-width": "0",
+    "border-style": "None",
+    color: "#fff",
+    "font-family": "Inter",
+    "font-weight": "500",
+    "font-size": "14px",
+  })
 
   const deleteButton = new Component("@budibase/standard-components/button")
     .normalStyle({
@@ -78,8 +82,9 @@ function generateTitleContainer(table, title) {
 }
 
 const createScreen = (table, heading) => {
-  const dataform = new Component("@budibase/standard-components/dataformwide")
-    .instanceName("Form")
+  const dataform = new Component(
+    "@budibase/standard-components/dataformwide"
+  ).instanceName("Form")
 
   const container = makeMainContainer()
     .addChild(makeBreadcrumbContainer(table.name, heading || "Edit"))
