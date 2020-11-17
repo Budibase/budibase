@@ -1,7 +1,11 @@
 const Router = require("@koa/router")
 const tableController = require("../controllers/table")
 const authorized = require("../../middleware/authorized")
-const { BUILDER, READ_TABLE } = require("../../utilities/accessLevels")
+const {
+  BUILDER,
+  PermissionLevels,
+  PermissionTypes,
+} = require("../../utilities/security/permissions")
 
 const router = Router()
 
@@ -9,7 +13,7 @@ router
   .get("/api/tables", authorized(BUILDER), tableController.fetch)
   .get(
     "/api/tables/:id",
-    authorized(READ_TABLE, ctx => ctx.params.id),
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     tableController.find
   )
   .post("/api/tables", authorized(BUILDER), tableController.save)

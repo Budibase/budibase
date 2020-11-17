@@ -17,9 +17,19 @@ const DocumentTypes = {
   SCREEN: "screen",
 }
 
+const ViewNames = {
+  LINK: "by_link",
+  ROUTING: "screen_routes",
+}
+
+exports.ViewNames = ViewNames
 exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
+
+exports.getQueryIndex = viewName => {
+  return `database/${viewName}`
+}
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
