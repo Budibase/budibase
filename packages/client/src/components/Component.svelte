@@ -13,10 +13,6 @@
 
   // Extracts the actual component name from the library name
   function extractComponentName(name) {
-    console.log(name)
-    if (name == null) {
-      console.log(definition)
-    }
     const split = name.split("/")
     return split[split.length - 1]
   }
