@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken")
 const STATUS_CODES = require("../utilities/statusCodes")
-const accessLevelController = require("../api/controllers/accesslevel")
-const { BUILTIN_LEVEL_ID_ARRAY } = require("../utilities/security/accessLevels")
+const { getAccessLevel } = require("../utilities/security/accessLevels")
 const env = require("../environment")
 const { AuthTypes } = require("../constants")
 const { getAppId, getCookieName, setCookie } = require("../utilities")
@@ -59,32 +58,4 @@ module.exports = async (ctx, next) => {
   }
 
   await next()
-}
-
-/**
- * Return the full access level object either from constants
- * or the database based on the access level ID passed.
- *
- * @param {*} appId - appId of the user
- * @param {*} accessLevelId - the id of the users access level
- */
-const getAccessLevel = async (appId, accessLevelId) => {
-  if (BUILTIN_LEVEL_ID_ARRAY.indexOf(accessLevelId) !== -1) {
-    return {
-      _id: accessLevelId,
-      name: accessLevelId,
-      permissions: [],
-    }
-  }
-
-  const findAccessContext = {
-    params: {
-      levelId: accessLevelId,
-    },
-    user: {
-      appId,
-    },
-  }
-  await accessLevelController.find(findAccessContext)
-  return findAccessContext.body
 }

@@ -2,6 +2,7 @@ const CouchDB = require("../../db")
 const {
   BUILTIN_LEVELS,
   AccessLevel,
+  getAccessLevel,
 } = require("../../utilities/security/accessLevels")
 const {
   generateAccessLevelID,
@@ -22,8 +23,7 @@ exports.fetch = async function(ctx) {
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-  ctx.body = await db.get(ctx.params.levelId)
+  ctx.body = await getAccessLevel(ctx.user.appId, ctx.params.levelId)
 }
 
 exports.save = async function(ctx) {
