@@ -2,45 +2,10 @@ const fs = require("fs")
 const { join } = require("../../../utilities/centralPath")
 const AWS = require("aws-sdk")
 const fetch = require("node-fetch")
-const uuid = require("uuid")
 const sanitize = require("sanitize-s3-objectkey")
 const { budibaseAppsDir } = require("../../../utilities/budibaseDir")
 const PouchDB = require("../../../db")
 const env = require("../../../environment")
-
-async function invalidateCDN(cfDistribution, appId) {
-  const cf = new AWS.CloudFront({})
-  const resp = await cf
-    .createInvalidation({
-      DistributionId: cfDistribution,
-      InvalidationBatch: {
-        CallerReference: `${appId}-${uuid.v4()}`,
-        Paths: {
-          Quantity: 1,
-          Items: [`/assets/${appId}/*`],
-        },
-      },
-    })
-    .promise()
-  return resp.Invalidation.Id
-}
-
-exports.isInvalidationComplete = async function(
-  distributionId,
-  invalidationId
-) {
-  if (distributionId == null || invalidationId == null) {
-    return false
-  }
-  const cf = new AWS.CloudFront({})
-  const resp = await cf
-    .getInvalidation({
-      DistributionId: distributionId,
-      Id: invalidationId,
-    })
-    .promise()
-  return resp.Invalidation.Status === "Completed"
-}
 
 /**
  * Finalises the deployment, updating the quota for the user API key
@@ -90,15 +55,15 @@ exports.verifyDeployment = async function({ appId, quota }) {
     }),
   })
 
+  const json = await response.json()
+  if (json.errors) {
+    throw new Error(json.errors)
+  }
+
   if (response.status !== 200) {
     throw new Error(
       `Error fetching temporary credentials for api key: ${env.BUDIBASE_API_KEY}`
     )
-  }
-
-  const json = await response.json()
-  if (json.errors) {
-    throw new Error(json.errors)
   }
 
   // set credentials here, means any time we're verified we're ready to go
@@ -162,12 +127,7 @@ async function prepareUploadForS3({ s3Key, metadata, s3, file }) {
 
 exports.prepareUploadForS3 = prepareUploadForS3
 
-exports.uploadAppAssets = async function({
-  appId,
-  bucket,
-  cfDistribution,
-  accountId,
-}) {
+exports.uploadAppAssets = async function({ appId, bucket, accountId }) {
   const s3 = new AWS.S3({
     params: {
       Bucket: bucket,
@@ -224,8 +184,7 @@ exports.uploadAppAssets = async function({
   db.put(fileUploads)
 
   try {
-    await Promise.all(uploads)
-    return await invalidateCDN(cfDistribution, appId)
+    return await Promise.all(uploads)
   } catch (err) {
     console.error("Error uploading budibase app assets to s3", err)
     throw err
