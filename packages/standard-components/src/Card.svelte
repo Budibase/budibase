@@ -14,6 +14,7 @@
   export let linkHoverColor
   export let imageHeight
   export let cardWidth
+  export let styles
 
   $: cssVariables = {
     color,

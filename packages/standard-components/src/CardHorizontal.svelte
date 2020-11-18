@@ -16,6 +16,7 @@
   export let cardWidth
   export let imageWidth
   export let imageHeight
+  export let styles
 
   $: cssVariables = {
     color,
