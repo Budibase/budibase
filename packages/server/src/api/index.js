@@ -4,7 +4,7 @@ const compress = require("koa-compress")
 const zlib = require("zlib")
 const { budibaseAppsDir } = require("../utilities/budibaseDir")
 const { isDev } = require("../utilities")
-const {mainRoutes, authRoutes, staticRoutes} = require("./routes")
+const { mainRoutes, authRoutes, staticRoutes } = require("./routes")
 
 const router = new Router()
 const env = require("../environment")

@@ -18,7 +18,7 @@ function AccessLevel(id, name, inherits = null) {
 
 exports.BUILTIN_LEVELS = {
   ADMIN: new AccessLevel(BUILTIN_IDS.ADMIN, "Admin", BUILTIN_IDS.POWER),
-  POWER: new AccessLevel(BUILTIN_IDS.POWER, "Admin", BUILTIN_IDS.BASIC),
+  POWER: new AccessLevel(BUILTIN_IDS.POWER, "Power", BUILTIN_IDS.BASIC),
   BASIC: new AccessLevel(BUILTIN_IDS.BASIC, "Basic", BUILTIN_IDS.ANON),
   ANON: new AccessLevel(BUILTIN_IDS.ANON, "Anonymous"),
   BUILDER: new AccessLevel(BUILTIN_IDS.BUILDER, "Builder"),

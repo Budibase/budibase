@@ -4,8 +4,7 @@ export class BaseStructure {
   constructor(isScreen) {
     this._isScreen = isScreen
     this._children = []
-    this._json = {
-    }
+    this._json = {}
   }
 
   addChild(child) {
