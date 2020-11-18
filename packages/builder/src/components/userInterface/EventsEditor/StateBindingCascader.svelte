@@ -25,7 +25,9 @@
     <DataList on:change bind:value={parameter.value}>
       <option value="" />
       {#each $allScreens as screen}
-        <option value={screen.routing.route}>{screen.props._instanceName}</option>
+        <option value={screen.routing.route}>
+          {screen.props._instanceName}
+        </option>
       {/each}
     </DataList>
   {:else}
