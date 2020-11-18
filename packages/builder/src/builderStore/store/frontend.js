@@ -124,9 +124,9 @@ export const getFrontendStore = () => {
       })
     },
     screens: {
-      select: screenName => {
+      select: screenId => {
         store.update(state => {
-          const screen = getExactComponent(get(allScreens), screenName, true)
+          const screen = get(allScreens).find(screen => screen._id === screenId)
           state.currentPreviewItem = screen
           state.currentFrontEndType = "screen"
           state.currentView = "detail"
@@ -378,7 +378,7 @@ export const getFrontendStore = () => {
               component._id
             )
             parent._children = parent._children.filter(
-              c => c._id !== component._id
+              child => child._id !== component._id
             )
             store.actions.components.select(parent)
           }
