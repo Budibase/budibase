@@ -7,7 +7,7 @@ const router = Router()
 
 // gets the full structure, not just the correct screen ID for your access level
 router
-  .get("/api/routing", authorized(BUILDER), controller.fetch)
   .get("/api/routing/client", controller.clientFetch)
+  .get("/api/routing", authorized(BUILDER), controller.fetch)
 
 module.exports = router
