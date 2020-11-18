@@ -1,24 +1,24 @@
 import { writable } from "svelte/store"
+import { fetchTableDefinition } from "../api"
 
-export const createDataProviderContext = () => {
+export const createDataProviderStore = () => {
   const store = writable({
-    rows: [],
+    row: {},
     table: null,
   })
-  const setRows = rows => {
+  const setRow = async row => {
+    let table
+    if (row && row.tableId) {
+      table = await fetchTableDefinition(row.tableId)
+    }
     store.update(state => {
-      state.rows = rows
-      return state
-    })
-  }
-  const setTable = table => {
-    store.update(state => {
+      state.row = row
       state.table = table
       return state
     })
   }
   return {
     subscribe: store.subscribe,
-    actions: { setRows, setTable },
+    actions: { setRow },
   }
 }

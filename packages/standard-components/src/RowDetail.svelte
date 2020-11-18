@@ -6,17 +6,15 @@
     fetchRow,
     screenStore,
     routeStore,
-    createDataProviderContext,
-    ContextTypes,
+    DataProvider,
   } from "@budibase/component-sdk"
 
   export let table
 
   let headers = []
+  let row
 
-  // Expose data provider context for this row
-  const dataProviderContext = createDataProviderContext()
-  setContext(ContextTypes.DataProvider, dataProviderContext)
+  setContext("foo", "bar")
 
   async function fetchFirstRow() {
     const rows = await fetchTableData(table)
@@ -30,9 +28,6 @@
 
     const pathParts = window.location.pathname.split("/")
     const routeParamId = $routeStore.routeParams.id
-    console.log(routeParamId)
-    let row
-    let tableDefinition
 
     // if srcdoc, then we assume this is the builder preview
     if ((pathParts.length === 0 || pathParts[0] === "srcdoc") && table) {
@@ -42,16 +37,13 @@
     } else {
       throw new Error("Row ID was not supplied to RowDetail")
     }
-
-    if (row) {
-      tableDefinition = await fetchTableDefinition(row.tableId)
-    }
-
-    dataProviderContext.actions.setRows([row])
-    dataProviderContext.actions.setTable(tableDefinition)
   }
 
   onMount(fetchData)
 </script>
 
-<slot />
+{#if row}
+  <DataProvider {row}>
+    <slot />
+  </DataProvider>
+{/if}

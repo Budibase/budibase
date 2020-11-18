@@ -1,30 +1,28 @@
 <script>
-  import { onMount, setContext } from "svelte"
+  import { onMount } from "svelte"
   import {
     fetchDatasource,
-    createDataProviderContext,
-    fetchTableDefinition,
-    ContextTypes,
+    styleable,
+    DataProvider,
   } from "@budibase/component-sdk"
   import { isEmpty } from "lodash/fp"
 
   export let datasource = []
+  export let styles
 
-  let target
-
-  const dataProviderContext = createDataProviderContext()
-  setContext(ContextTypes.DataProvider, dataProviderContext)
+  let rows = []
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      const rows = await fetchDatasource(datasource)
-      dataProviderContext.actions.setRows(rows)
-      if (datasource.tableId) {
-        const tableDefinition = await fetchTableDefinition(datasource.tableId)
-        dataProviderContext.actions.setTable(tableDefinition)
-      }
+      rows = await fetchDatasource(datasource)
     }
   })
 </script>
 
-<section bind:this={target} />
+<div use:styleable={styles}>
+  {#each rows as row}
+    <DataProvider {row}>
+      <slot />
+    </DataProvider>
+  {/each}
+</div>
