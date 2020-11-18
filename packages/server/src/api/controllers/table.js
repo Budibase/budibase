@@ -8,6 +8,36 @@ const {
   generateRowID,
 } = require("../../db/utils")
 
+async function checkForColumnUpdates(db, oldTable, updatedTable) {
+  let updatedRows
+  const rename = updatedTable._rename
+  let deletedColumns = []
+  if (oldTable && oldTable.schema && updatedTable.schema) {
+    deletedColumns = Object.keys(oldTable.schema).filter(
+      colName => updatedTable.schema[colName] == null
+    )
+  }
+  // check for renaming of columns or deleted columns
+  if (rename || deletedColumns.length !== 0) {
+    const rows = await db.allDocs(
+      getRowParams(updatedTable._id, null, {
+        include_docs: true,
+      })
+    )
+    updatedRows = rows.rows.map(({ doc }) => {
+      if (rename) {
+        doc[rename.updated] = doc[rename.old]
+        delete doc[rename.old]
+      } else if (deletedColumns.length !== 0) {
+        deletedColumns.forEach(colName => delete doc[colName])
+      }
+      return doc
+    })
+    delete updatedTable._rename
+  }
+  return updatedRows
+}
+
 exports.fetch = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
   const body = await db.allDocs(
@@ -33,7 +63,6 @@ exports.save = async function(ctx) {
     views: {},
     ...rest,
   }
-  let renameDocs = []
 
   // if the table obj had an _id then it will have been retrieved
   let oldTable
@@ -65,19 +94,9 @@ exports.save = async function(ctx) {
     ctx.throw(400, "Cannot rename a linked column.")
   } else if (_rename && tableToSave.primaryDisplay === _rename.old) {
     ctx.throw(400, "Cannot rename the display column.")
-  } else if (_rename) {
-    const rows = await db.allDocs(
-      getRowParams(tableToSave._id, null, {
-        include_docs: true,
-      })
-    )
-    renameDocs = rows.rows.map(({ doc }) => {
-      doc[_rename.updated] = doc[_rename.old]
-      delete doc[_rename.old]
-      return doc
-    })
-    delete tableToSave._rename
   }
+
+  let updatedRows = await checkForColumnUpdates(db, oldTable, tableToSave)
 
   // update schema of non-statistics views when new columns are added
   for (let view in tableToSave.views) {
@@ -100,8 +119,8 @@ exports.save = async function(ctx) {
 
   // don't perform any updates until relationships have been
   // checked by the updateLinks function
-  if (renameDocs.length !== 0) {
-    await db.bulkDocs(renameDocs)
+  if (updatedRows && updatedRows.length !== 0) {
+    await db.bulkDocs(updatedRows)
   }
   const result = await db.post(tableToSave)
   tableToSave._rev = result.rev
