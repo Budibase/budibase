@@ -1,19 +1,15 @@
 <script>
-  import { styleable } from "@budibase/component-sdk"
+  import { getContext } from "svelte"
+
+  const { styleable } = getContext("app")
 
   export let className = "default"
   export let disabled = false
   export let text
   export let styles
-
-  let theButton
 </script>
 
-<button
-  bind:this={theButton}
-  class="default"
-  disabled={disabled || false}
-  use:styleable={styles}>
+<button class="default" disabled={disabled || false} use:styleable={styles}>
   {text}
 </button>
 

@@ -1,7 +1,9 @@
+import { getContext } from "svelte"
 import { writable } from "svelte/store"
-import { fetchTableDefinition } from "../api"
 
 export const createDataProviderStore = () => {
+  const { API } = getContext("app")
+
   const store = writable({
     row: {},
     table: null,
@@ -9,7 +11,7 @@ export const createDataProviderStore = () => {
   const setRow = async row => {
     let table
     if (row && row.tableId) {
-      table = await fetchTableDefinition(row.tableId)
+      table = await API.fetchTableDefinition(row.tableId)
     }
     store.update(state => {
       state.row = row

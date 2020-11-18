@@ -1,12 +1,11 @@
 <script>
   import { onMount } from "svelte"
-  import {
-    fetchTableDefinition,
-    fetchRelationshipData,
-  } from "@budibase/component-sdk"
 
   export let columnName
   export let row
+  export let SDK
+
+  const { API } = SDK
 
   $: count =
     row && columnName && Array.isArray(row[columnName])
@@ -16,9 +15,13 @@
   let displayColumn
 
   onMount(async () => {
-    linkedRows = await fetchLinkedRowsData(row, columnName)
+    linkedRows = await API.fetchRelationshipData({
+      tableId: row.tableId,
+      rowId: row._id,
+      fieldName: columnName,
+    })
     if (linkedRows && linkedRows.length) {
-      const table = await fetchTableDefinition(linkedRows[0].tableId)
+      const table = await API.fetchTableDefinition(linkedRows[0].tableId)
       if (table && table.primaryDisplay) {
         displayColumn = table.primaryDisplay
       }
@@ -29,7 +32,7 @@
     if (!row || !row._id) {
       return []
     }
-    return await fetchRelationshipData({
+    return await API.fetchRelationshipData({
       tableId: row.tableId,
       rowId: row._id,
       fieldName: columnName,

@@ -1,8 +1,11 @@
 <script>
-  import { linkable } from "@budibase/component-sdk"
   import { Button } from "@budibase/bbui"
 
   export let url
+  export let SDK
+
+  const { linkable } = SDK
+
   let link
 </script>
 

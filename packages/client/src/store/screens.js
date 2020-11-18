@@ -1,9 +1,7 @@
 import { writable, derived } from "svelte/store"
 import { routeStore } from "./routes"
 
-export const createScreenStore = () => {
-  console.log("CREATE SCREEN STORE")
-
+const createScreenStore = () => {
   const screens = writable([])
   const store = derived([screens, routeStore], ([$screens, $routeStore]) => {
     const activeScreen = $screens.find(
@@ -26,8 +24,4 @@ export const createScreenStore = () => {
   }
 }
 
-if (!window.bbSDKScreenStore) {
-  window.bbSDKScreenStore = createScreenStore()
-}
-
-export const screenStore = window.bbSDKScreenStore
+export const screenStore = createScreenStore()

@@ -1,11 +1,9 @@
 <script>
-  import { onMount } from "svelte"
-  import {
-    fetchDatasource,
-    styleable,
-    DataProvider,
-  } from "@budibase/component-sdk"
+  import { getContext, onMount } from "svelte"
   import { isEmpty } from "lodash/fp"
+  import DataProvider from "./DataProvider.svelte"
+
+  const { API, styleable } = getContext("app")
 
   export let datasource = []
   export let styles
@@ -14,7 +12,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      rows = await fetchDatasource(datasource)
+      rows = await API.fetchDatasource(datasource)
     }
   })
 </script>

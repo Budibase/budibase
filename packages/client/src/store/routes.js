@@ -1,7 +1,7 @@
 import { writable } from "svelte/store"
 import { push } from "svelte-spa-router"
 
-export const createRouteStore = () => {
+const createRouteStore = () => {
   const initialState = {
     routes: [],
     routeParams: {},
@@ -42,8 +42,4 @@ export const createRouteStore = () => {
   }
 }
 
-if (!window.bbSDKRouteStore) {
-  window.bbSDKRouteStore = createRouteStore()
-}
-
-export const routeStore = window.bbSDKRouteStore
+export const routeStore = createRouteStore()

@@ -2,14 +2,8 @@
   // Import valueSetters and custom renderers
   import { number } from "./valueSetters"
   import { getRenderer } from "./customRenderer"
-
-  // These maps need to be set up to handle whatever types that are used in the tables.
-  const setters = new Map([["number", number]])
-
-  import * as SDK from "@budibase/component-sdk"
   import { isEmpty } from "lodash/fp"
-  import { onMount } from "svelte"
-
+  import { getContext, onMount } from "svelte"
   import AgGrid from "@budibase/svelte-ag-grid"
   import {
     TextButton as DeleteButton,
@@ -17,6 +11,11 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
+
+  // These maps need to be set up to handle whatever types that are used in the tables.
+  const setters = new Map([["number", number]])
+  const SDK = getContext("app")
+  const { API } = SDK
 
   export let datasource = {}
   export let editable
@@ -50,7 +49,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      data = await SDK.fetchDatasource(datasource)
+      data = await API.fetchDatasource(datasource)
       let schema
 
       // Get schema for datasource
@@ -59,7 +58,7 @@
       if (datasource.schema) {
         schema = datasource.schema
       } else {
-        schema = (await SDK.fetchTableDefinition(datasource.tableId)).schema
+        schema = (await API.fetchTableDefinition(datasource.tableId)).schema
       }
 
       columnDefs = Object.keys(schema).map((key, i) => {
@@ -72,7 +71,7 @@
           hide: shouldHideField(key),
           sortable: true,
           editable: canEdit && schema[key].type !== "link",
-          cellRenderer: getRenderer(schema[key], canEdit),
+          cellRenderer: getRenderer(schema[key], canEdit, SDK),
           autoHeight: true,
         }
       })
@@ -88,10 +87,14 @@
             flex: 0,
             editable: false,
             sortable: false,
-            cellRenderer: getRenderer({
-              type: "_id",
-              options: { detailUrl },
-            }),
+            cellRenderer: getRenderer(
+              {
+                type: "_id",
+                options: { detailUrl },
+              },
+              false,
+              SDK
+            ),
             autoHeight: true,
             pinned: "left",
             filter: false,
@@ -119,12 +122,12 @@
   }
 
   const updateRow = async row => {
-    const schema = (await SDK.fetchTableDefinition(row.tableId)).schema
-    await SDK.updateRow(schema, { data: row })
+    const schema = (await API.fetchTableDefinition(row.tableId)).schema
+    await API.updateRow(schema, { data: row })
   }
 
   const deleteRows = async () => {
-    await SDK.deleteRows({ rows: selectedRows, tableId: datasource.name })
+    await API.deleteRows({ rows: selectedRows, tableId: datasource.name })
     data = data.filter(row => !selectedRows.includes(row))
     selectedRows = []
   }

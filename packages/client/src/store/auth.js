@@ -2,7 +2,7 @@ import * as api from "../api"
 import { getAppId } from "../utils"
 import { writable } from "svelte/store"
 
-export const createAuthStore = () => {
+const createAuthStore = () => {
   const store = writable("")
 
   /**
@@ -37,8 +37,4 @@ export const createAuthStore = () => {
   }
 }
 
-if (!window.bbSDKAuthStore) {
-  window.bbSDKAuthStore = createAuthStore()
-}
-
-export const authStore = window.bbSDKAuthStore
+export const authStore = createAuthStore()

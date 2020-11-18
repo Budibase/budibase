@@ -1,6 +1,6 @@
 import setBindableComponentProp from "./setBindableComponentProp"
 import { attachChildren } from "../render/attachChildren"
-import store from "../state/store"
+import store from "./store"
 
 export const bbFactory = ({
   componentLibraries,

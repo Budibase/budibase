@@ -1,5 +1,7 @@
 <script>
-  import { authStore, styleable } from "@budibase/component-sdk"
+  import { getContext } from "svelte"
+
+  const { authStore, styleable } = getContext("app")
 
   export let buttonText = "Log In"
   export let logo = ""
@@ -22,7 +24,6 @@
 
   const login = async () => {
     loading = true
-
     const success = await authStore.actions.logIn({ username, password })
     if (success) {
       location.reload()

@@ -1,13 +1,11 @@
 <script>
   import { setContext, onMount } from "svelte"
-  import { ContextTypes, createDataProviderStore } from "../context"
+  import { createDataProviderStore } from "./stores/dataProvider"
 
   export let row
 
-  setContext("foo", "bar2")
-
   const dataProviderStore = createDataProviderStore()
-  setContext(ContextTypes.DataProvider, dataProviderStore)
+  setContext("data", dataProviderStore)
 
   onMount(async () => {
     await dataProviderStore.actions.setRow(row)

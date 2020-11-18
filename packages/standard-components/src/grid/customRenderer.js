@@ -5,7 +5,7 @@ import AttachmentCell from "./AttachmentCell/Button.svelte"
 import ViewDetails from "./ViewDetails/Cell.svelte"
 import Select from "./Select/Wrapper.svelte"
 import DatePicker from "./DateTime/Wrapper.svelte"
-import RelationshipDisplay from "./Relationship/RelationshipDisplay.svelte"
+import RelationshipCount from "./Relationship/RelationshipCount.svelte"
 
 const renderers = new Map([
   ["boolean", booleanRenderer],
@@ -15,12 +15,13 @@ const renderers = new Map([
   ["_id", viewDetailsRenderer],
 ])
 
-export function getRenderer(schema, editable) {
+export function getRenderer(schema, editable, SDK) {
   if (renderers.get(schema.type)) {
     return renderers.get(schema.type)(
       schema.options,
       schema.constraints,
-      editable
+      editable,
+      SDK
     )
   } else {
     return false
@@ -28,7 +29,7 @@ export function getRenderer(schema, editable) {
 }
 
 /* eslint-disable no-unused-vars */
-function booleanRenderer(options, constraints, editable) {
+function booleanRenderer(options, constraints, editable, SDK) {
   return params => {
     const toggle = e => {
       params.value = !params.value
@@ -50,7 +51,7 @@ function booleanRenderer(options, constraints, editable) {
   }
 }
 /* eslint-disable no-unused-vars */
-function attachmentRenderer(options, constraints, editable) {
+function attachmentRenderer(options, constraints, editable, SDK) {
   return params => {
     const container = document.createElement("div")
 
@@ -58,6 +59,7 @@ function attachmentRenderer(options, constraints, editable) {
       target: container,
       props: {
         files: params.value || [],
+        SDK,
       },
     })
 
@@ -72,7 +74,7 @@ function attachmentRenderer(options, constraints, editable) {
   }
 }
 /* eslint-disable no-unused-vars */
-function dateRenderer(options, constraints, editable) {
+function dateRenderer(options, constraints, editable, SDK) {
   return function(params) {
     const container = document.createElement("div")
     const toggle = e => {
@@ -84,6 +86,7 @@ function dateRenderer(options, constraints, editable) {
       target: container,
       props: {
         value: params.value,
+        SDK,
       },
     })
 
@@ -91,7 +94,7 @@ function dateRenderer(options, constraints, editable) {
   }
 }
 
-function optionsRenderer(options, constraints, editable) {
+function optionsRenderer(options, constraints, editable, SDK) {
   return params => {
     if (!editable) return params.value
     const container = document.createElement("div")
@@ -107,6 +110,7 @@ function optionsRenderer(options, constraints, editable) {
       props: {
         value: params.value,
         options: constraints.inclusion,
+        SDK,
       },
     })
 
@@ -116,18 +120,19 @@ function optionsRenderer(options, constraints, editable) {
   }
 }
 /* eslint-disable no-unused-vars */
-function linkedRowRenderer(options, constraints, editable) {
+function linkedRowRenderer(options, constraints, editable, SDK) {
   return params => {
     let container = document.createElement("div")
     container.style.display = "grid"
     container.style.placeItems = "center"
     container.style.height = "100%"
 
-    new RelationshipDisplay({
+    new RelationshipCount({
       target: container,
       props: {
         row: params.data,
         columnName: params.column.colId,
+        SDK,
       },
     })
 
@@ -136,7 +141,7 @@ function linkedRowRenderer(options, constraints, editable) {
 }
 
 /* eslint-disable no-unused-vars */
-function viewDetailsRenderer(options, constraints, editable) {
+function viewDetailsRenderer(options, constraints, editable, SDK) {
   return params => {
     let container = document.createElement("div")
     container.style.display = "grid"
@@ -153,7 +158,10 @@ function viewDetailsRenderer(options, constraints, editable) {
 
     new ViewDetails({
       target: container,
-      props: { url },
+      props: {
+        url,
+        SDK,
+      },
     })
 
     return container

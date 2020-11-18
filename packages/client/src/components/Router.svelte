@@ -1,8 +1,9 @@
 <script>
-  import { onMount, setContext } from "svelte"
+  import { onMount } from "svelte"
   import Router from "svelte-spa-router"
-  import { routeStore, screenStore, styleable } from "@budibase/component-sdk"
+  import { routeStore, screenStore } from "../store"
   import Screen from "./Screen.svelte"
+  import { styleable } from "../utils"
 
   export let styles
   let routes
@@ -26,8 +27,6 @@
   function onRouteLoading({ detail }) {
     routeStore.actions.setActiveRoute(detail.route)
   }
-
-  setContext("test", 123)
 </script>
 
 {#if routes}
