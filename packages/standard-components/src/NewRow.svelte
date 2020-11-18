@@ -1,5 +1,5 @@
 <script>
-  import { DataProvider } from "@budibase/component-sdk"
+  import DataProvider from "./DataProvider.svelte"
 
   export let table
 </script>

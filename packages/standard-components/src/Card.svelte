@@ -1,5 +1,8 @@
 <script>
+  import { getContext } from "svelte"
   import { cssVars } from "./helpers"
+
+  const { styleable } = getContext("app")
 
   export const className = ""
   export let imageUrl = ""
@@ -22,7 +25,7 @@
   $: showImage = !!imageUrl
 </script>
 
-<div use:cssVars={cssVariables} class="container">
+<div use:cssVars={cssVariables} class="container" use:styleable={styles}>
   {#if showImage}<img class="image" src={imageUrl} alt="" />{/if}
   <div class="content">
     <h2 class="heading">{heading}</h2>

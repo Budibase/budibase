@@ -1,14 +1,11 @@
 <script>
-  import { onMount } from "svelte"
-  import {
-    fetchDatasource,
-    fetchTableDefinition,
-  } from "@budibase/component-sdk"
+  import { getContext, onMount } from "svelte"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
   import { isEmpty } from "lodash/fp"
 
-  export let _bb
+  const { API } = getContext("app")
+
   export let title
   export let datasource
   export let labelColumn
@@ -24,21 +21,21 @@
   export let stacked
   export let yAxisUnits
   export let palette
+  export let styles
 
-  const store = _bb.store
   let options
 
   // Fetch data on mount
   onMount(async () => {
-    const allCols = [labelColumn, ...(valueColumns || [])]
+    const allCols = [labelColumn, ...(valueColumns || [null])]
     if (isEmpty(datasource) || allCols.find(x => x == null)) {
       options = false
       return
     }
 
     // Fetch, filter and sort data
-    const schema = (await fetchTableDefinition(datasource.tableId)).schema
-    const result = await fetchDatasource(datasource)
+    const schema = (await API.fetchTableDefinition(datasource.tableId)).schema
+    const result = await API.fetchDatasource(datasource)
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
     const data = result
@@ -92,4 +89,4 @@
   })
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {styles} />

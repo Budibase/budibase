@@ -4,9 +4,10 @@ import { routeStore } from "./routes"
 const createScreenStore = () => {
   const screens = writable([])
   const store = derived([screens, routeStore], ([$screens, $routeStore]) => {
-    const activeScreen = $screens.find(
-      screen => screen.route === $routeStore.activeRoute
-    )
+    const activeScreen =
+      $screens.length === 1
+        ? $screens[0]
+        : $screens.find(screen => screen.route === $routeStore.activeRoute)
     return {
       screens: $screens,
       activeScreen,

@@ -1,7 +1,8 @@
 <script>
   import { Dropzone } from "@budibase/bbui"
-  import { uploadAttachment } from "@budibase/component-sdk"
+  import { getContext } from "svelte"
 
+  const { API } = getContext("app")
   const BYTES_IN_MB = 1000000
 
   export let files = []
@@ -18,7 +19,7 @@
     for (let i = 0; i < fileList.length; i++) {
       data.append("file", fileList[i])
     }
-    return await uploadAttachment(data)
+    return await API.uploadAttachment(data)
   }
 </script>
 

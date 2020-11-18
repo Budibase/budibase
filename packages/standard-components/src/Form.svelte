@@ -8,12 +8,11 @@
   const { styleable, screenStore } = getContext("app")
   const dataProviderStore = getContext("data")
 
-  export let table
   export let wide = false
   export let styles
 
-  $: row = $dataProviderStore.row
-  $: schema = $dataProviderStore.table && $dataProviderStore.table.schema
+  $: row = $dataProviderStore?.row
+  $: schema = $dataProviderStore?.table && $dataProviderStore.table.schema
   $: fields = schema ? Object.keys(schema) : []
 </script>
 
