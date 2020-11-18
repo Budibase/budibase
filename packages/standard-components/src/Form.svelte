@@ -15,8 +15,12 @@
   let rowId
   let errors = {}
 
+  console.log("RENDER FORM")
+  console.log(getContext("foo"))
+
   const dataProviderStore = getContext(ContextTypes.DataProvider)
-  $: row = $dataProviderStore.rows[0]
+
+  $: row = $dataProviderStore.row
   $: schema = $dataProviderStore.table && $dataProviderStore.table.schema
   $: fields = schema ? Object.keys(schema) : []
 </script>
