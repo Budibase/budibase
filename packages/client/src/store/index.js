@@ -1,1 +1,3 @@
-export { componentStore } from "./components"
+export { authStore } from "./auth"
+export { routeStore } from "./routes"
+export { screenStore } from "./screens"

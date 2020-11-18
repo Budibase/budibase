@@ -1,5 +1,7 @@
 <script>
-  import { authStore, linkable, styleable } from "@budibase/component-sdk"
+  import { getContext } from "svelte"
+
+  const { authStore, linkable, styleable } = getContext("app")
 
   export let logoUrl
   export let title

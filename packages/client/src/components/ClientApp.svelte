@@ -1,20 +1,14 @@
 <script>
-  import { onMount } from "svelte"
-  import { componentStore } from "../store"
+  import { setContext } from "svelte"
   import Component from "./Component.svelte"
+  import SDK from "../sdk"
 
-  let frontendDefinition
-  let loaded = false
+  // Provide SDK for components
+  setContext("app", SDK)
+
+  const frontendDefinition = window["##BUDIBASE_FRONTEND_DEFINITION##"]
   $: pageDefinition = frontendDefinition?.page?.props
-
-  onMount(async () => {
-    frontendDefinition = window["##BUDIBASE_FRONTEND_DEFINITION##"]
-    await componentStore.actions.loadComponentLibrary()
-    loaded = true
-    console.log(frontendDefinition)
-  })
+  $: console.log(frontendDefinition)
 </script>
 
-{#if loaded}
-  <Component definition={pageDefinition} />
-{/if}
+<Component definition={pageDefinition} />

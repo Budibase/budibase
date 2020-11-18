@@ -3,22 +3,14 @@
   import { Label, DatePicker, Input, Select, Toggle } from "@budibase/bbui"
   import Dropzone from "./attachments/Dropzone.svelte"
   import LinkedRowSelector from "./LinkedRowSelector.svelte"
-  import ErrorsBox from "./ErrorsBox.svelte"
   import { capitalise } from "./helpers"
-  import { styleable, ContextTypes, screenStore } from "@budibase/component-sdk"
+
+  const { styleable, screenStore } = getContext("app")
+  const dataProviderStore = getContext("data")
 
   export let table
   export let wide = false
   export let styles
-
-  let schema = {}
-  let rowId
-  let errors = {}
-
-  console.log("RENDER FORM")
-  console.log(getContext("foo"))
-
-  const dataProviderStore = getContext(ContextTypes.DataProvider)
 
   $: row = $dataProviderStore.row
   $: schema = $dataProviderStore.table && $dataProviderStore.table.schema

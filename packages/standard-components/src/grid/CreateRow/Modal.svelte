@@ -1,10 +1,11 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte"
-  import { fetchRow, saveRow, routeStore } from "@budibase/component-sdk"
+  import { getContext, onMount, createEventDispatcher } from "svelte"
   import { Button, Label, DatePicker } from "@budibase/bbui"
   import Dropzone from "../../attachments/Dropzone.svelte"
   import debounce from "lodash.debounce"
+
   const dispatch = createEventDispatcher()
+  const { fetchRow, saveRow, routeStore } = getContext("app")
 
   const DEFAULTS_FOR_TYPE = {
     string: "",

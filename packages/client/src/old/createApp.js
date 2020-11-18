@@ -1,7 +1,7 @@
-import { attachChildren } from "../render/attachChildren"
-import { createTreeNode } from "../render/prepareRenderComponent"
-import { screenRouter } from "../render/screenRouter"
-import { createStateManager } from "../state/stateManager"
+import { attachChildren } from "./render/attachChildren"
+import { createTreeNode } from "./render/prepareRenderComponent"
+import { screenRouter } from "./render/screenRouter"
+import { createStateManager } from "./state/stateManager"
 import { getAppId } from "@budibase/component-sdk"
 
 export const createApp = ({

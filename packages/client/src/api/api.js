@@ -1,6 +1,4 @@
-import { get } from "svelte/store"
 import { getAppId } from "../utils"
-import { configStore } from "../store"
 
 /**
  * API cache for cached request responses.
@@ -11,16 +9,13 @@ let cache = {}
  * Makes a fully formatted URL based on the SDK configuration.
  */
 const makeFullURL = path => {
-  const { proto, domain, port } = get(configStore)
-  let url = `/${path}`.replace("//", "/")
-  return domain ? `${proto}://${domain}:${port}${url}` : url
+  return `/${path}`.replace("//", "/")
 }
 
 /**
  * Handler for API errors.
  */
 const handleError = error => {
-  configStore.actions.handleError(error)
   return { error }
 }
 

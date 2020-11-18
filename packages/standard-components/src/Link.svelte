@@ -1,5 +1,7 @@
 <script>
-  import { linkable, styleable } from "@budibase/component-sdk"
+  import { getContext } from "svelte"
+
+  const { linkable, styleable } = getContext("app")
 
   export let url = ""
   export let text = ""

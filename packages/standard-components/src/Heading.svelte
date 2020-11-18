@@ -1,5 +1,7 @@
 <script>
-  import { styleable } from "@budibase/component-sdk"
+  import { getContext } from "svelte"
+
+  const { styleable } = getContext("app")
 
   export let className = ""
   export let type

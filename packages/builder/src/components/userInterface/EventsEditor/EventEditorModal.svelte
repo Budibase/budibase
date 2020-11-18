@@ -1,7 +1,7 @@
 <script>
   import { TextButton, Body, DropdownMenu, ModalContent } from "@budibase/bbui"
   import { AddIcon, ArrowDownIcon } from "components/common/Icons/"
-  import { EVENT_TYPE_MEMBER_NAME } from "../../../../../client/src/state/eventHandlers"
+  import { EVENT_TYPE_MEMBER_NAME } from "../../../../../client/src/old/state/eventHandlers"
   import actionTypes from "./actions"
   import { createEventDispatcher } from "svelte"
 
