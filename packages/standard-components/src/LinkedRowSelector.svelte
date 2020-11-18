@@ -1,7 +1,9 @@
 <script>
   import { Label, Multiselect } from "@budibase/bbui"
-  import { fetchTableDefinition, fetchTableData } from "@budibase/component-sdk"
   import { capitalise } from "./helpers"
+  import { getContext } from "svelte"
+
+  const { API } = getContext("app")
 
   export let schema = {}
   export let linkedRows = []
@@ -18,13 +20,13 @@
 
   async function fetchTable(id) {
     if (id != null) {
-      linkedTable = await fetchTableDefinition(id)
+      linkedTable = await API.fetchTableDefinition(id)
     }
   }
 
   async function fetchRows(id) {
     if (id != null) {
-      allRows = await fetchTableData(id)
+      allRows = await API.fetchTableData(id)
     }
   }
 

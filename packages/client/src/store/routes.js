@@ -21,8 +21,6 @@ const createRouteStore = () => {
     })
   }
   const setRouteParams = routeParams => {
-    console.log("new route params: ")
-    console.log(routeParams)
     store.update(state => {
       state.routeParams = routeParams
       return state

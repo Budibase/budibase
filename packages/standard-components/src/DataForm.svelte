@@ -1,10 +1,7 @@
 <script>
   import Form from "./Form.svelte"
 
-  export let _bb
-  export let table
-  export let title
-  export let buttonText
+  export let styles
 </script>
 
-<Form {_bb} {table} {title} {buttonText} wide={false} />
+<Form {styles} wide={false} />

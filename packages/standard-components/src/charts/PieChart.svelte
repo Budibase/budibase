@@ -1,14 +1,11 @@
 <script>
-  import { onMount } from "svelte"
-  import {
-    fetchDatasource,
-    fetchTableDefinition,
-  } from "@budibase/component-sdk"
+  import { getContext, onMount } from "svelte"
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
   import { isEmpty } from "lodash/fp"
 
-  export let _bb
+  const { API } = getContext("app")
+
   export let title
   export let datasource
   export let labelColumn
@@ -21,8 +18,8 @@
   export let legend
   export let donut
   export let palette
+  export let styles
 
-  const store = _bb.store
   let options
 
   // Fetch data on mount
@@ -33,8 +30,8 @@
     }
 
     // Fetch, filter and sort data
-    const schema = (await fetchTableDefinition(datasource.tableId)).schema
-    const result = await fetchDatasource(datasource)
+    const schema = (await API.fetchTableDefinition(datasource.tableId)).schema
+    const result = await API.fetchDatasource(datasource)
     const data = result
       .filter(row => row[labelColumn] != null && row[valueColumn] != null)
       .slice(0, 20)
@@ -66,4 +63,4 @@
   })
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {styles} />
