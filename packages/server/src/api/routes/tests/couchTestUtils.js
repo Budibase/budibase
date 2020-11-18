@@ -188,7 +188,7 @@ const createUserWithPermissions = async (
 
   const anonUser = {
     userId: "ANON",
-    accessLevelId: BUILTIN_LEVEL_IDS.ANON,
+    accessLevelId: BUILTIN_LEVEL_IDS.PUBLIC,
     appId: appId,
     version: packageJson.version,
   }
