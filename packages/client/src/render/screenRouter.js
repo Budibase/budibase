@@ -43,7 +43,7 @@ export const screenRouter = ({ screens, onScreenSelected, window }) => {
     return sanitize(url)
   }
 
-  const routes = screens.map(screen => makeRootedPath(screen.routing.route))
+  const routes = screens.map(screen => makeRootedPath(screen?.routing.route))
   let fallback = routes.findIndex(([p]) => p === makeRootedPath("*"))
   if (fallback < 0) fallback = 0
 
