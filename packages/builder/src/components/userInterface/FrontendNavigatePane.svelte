@@ -12,15 +12,8 @@
 
   let routes = {}
 
-  async function fetchRoutes() {
-    const response = await api.get("/api/routing")
-    const json = await response.json()
-
-    routes = json.routes
-  }
-
   onMount(() => {
-    fetchRoutes()
+    store.actions.routing.fetch()
   })
 </script>
 
@@ -31,7 +24,7 @@
 <PagesList />
 <div class="nav-items-container">
   <PageLayout layout={$store.pages[$store.currentPageName]} />
-  <ComponentNavigationTree {routes} />
+  <ComponentNavigationTree />
 </div>
 <Modal bind:this={modal}>
   <NewScreenModal />
