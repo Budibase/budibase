@@ -1,11 +1,11 @@
-import api from "./api"
+import API from "./api"
 import { fetchTableDefinition } from "./tables"
 
 /**
  * Fetches data about a certain row in a table.
  */
 export const fetchRow = async ({ tableId, rowId }) => {
-  const row = await api.get({
+  const row = await API.get({
     url: `/api/${tableId}/rows/${rowId}`,
   })
   return (await enrichRows([row], tableId))[0]
@@ -15,7 +15,7 @@ export const fetchRow = async ({ tableId, rowId }) => {
  * Creates a row in a table.
  */
 export const saveRow = async row => {
-  return await api.post({
+  return await API.post({
     url: `/api/${row.tableId}/rows`,
     body: row,
   })
@@ -25,7 +25,7 @@ export const saveRow = async row => {
  * Updates a row in a table.
  */
 export const updateRow = async row => {
-  return await api.patch({
+  return await API.patch({
     url: `/api/${row.tableId}/rows/${row._id}`,
     body: row,
   })
@@ -35,7 +35,7 @@ export const updateRow = async row => {
  * Deletes a row from a table.
  */
 export const deleteRow = async ({ tableId, rowId, revId }) => {
-  return await api.del({
+  return await API.del({
     url: `/api/${tableId}/rows/${rowId}/${revId}`,
   })
 }
@@ -44,7 +44,7 @@ export const deleteRow = async ({ tableId, rowId, revId }) => {
  * Deletes many rows from a table.
  */
 export const deleteRows = async ({ tableId, rows }) => {
-  return await api.post({
+  return await API.post({
     url: `/api/${tableId}/rows`,
     body: {
       rows,

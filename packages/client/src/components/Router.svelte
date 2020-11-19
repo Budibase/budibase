@@ -6,27 +6,26 @@
   import { styleable } from "../utils"
 
   export let styles
-  let routes
+  $: routerConfig = getRouterConfig($routeStore.routes)
 
-  onMount(async () => {
-    await routeStore.actions.fetchRoutes()
-    await screenStore.actions.fetchScreens()
-    routes = {}
-    $routeStore.routes.forEach(route => {
-      routes[route.path] = Screen
+  const getRouterConfig = routes => {
+    let config = {}
+    routes.forEach(route => {
+      config[route.path] = Screen
     })
 
     // Add catch-all route so that we serve the Screen component always
-    routes["*"] = Screen
-  })
+    config["*"] = Screen
+    return config
+  }
 
-  function onRouteLoading({ detail }) {
+  const onRouteLoading = ({ detail }) => {
     routeStore.actions.setActiveRoute(detail.route)
   }
 </script>
 
-{#if routes}
+{#if routerConfig}
   <div use:styleable={styles}>
-    <Router on:routeLoading={onRouteLoading} {routes} />
+    <Router on:routeLoading={onRouteLoading} routes={routerConfig} />
   </div>
 {/if}

@@ -14,12 +14,10 @@
 <style>
   div {
     position: relative;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: stretch;
   }
   div :global(> *) {
-    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    position: absolute;
   }
 </style>

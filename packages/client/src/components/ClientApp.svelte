@@ -1,14 +1,22 @@
 <script>
-  import { setContext } from "svelte"
+  import { setContext, onMount } from "svelte"
   import Component from "./Component.svelte"
   import SDK from "../sdk"
+  import { routeStore, screenStore } from "../store"
 
   // Provide SDK for components
   setContext("app", SDK)
 
-  const frontendDefinition = window["##BUDIBASE_FRONTEND_DEFINITION##"]
-  $: pageDefinition = frontendDefinition?.page?.props
-  $: console.log(frontendDefinition)
+  let loaded = false
+
+  // Load app config
+  onMount(async () => {
+    await routeStore.actions.fetchRoutes()
+    await screenStore.actions.fetchScreens()
+    loaded = true
+  })
 </script>
 
-<Component definition={pageDefinition} />
+{#if loaded}
+  <Component definition={$screenStore.page.props} />
+{/if}

@@ -9,7 +9,6 @@
 
   const logOut = () => {
     authStore.actions.logOut()
-    location.reload()
   }
 </script>
 

@@ -1,4 +1,4 @@
-import api from "./api"
+import API from "./api"
 import { enrichRows } from "./rows"
 
 /**
@@ -25,6 +25,6 @@ export const fetchViewData = async ({
     ? `/api/views/${name}?${params}`
     : `/api/views/${name}`
 
-  const rows = await api.get({ url: QUERY_VIEW_URL })
+  const rows = await API.get({ url: QUERY_VIEW_URL })
   return await enrichRows(rows, tableId)
 }

@@ -1,16 +1,16 @@
-import api from "./api"
+import API from "./api"
 
 /**
  * Performs a log in request.
  */
 export const logIn = async ({ username, password }) => {
   if (!username) {
-    return api.error("Please enter your username")
+    return API.error("Please enter your username")
   }
   if (!password) {
-    return api.error("Please enter your password")
+    return API.error("Please enter your password")
   }
-  return await api.post({
+  return await API.post({
     url: "/api/authenticate",
     body: { username, password },
   })
