@@ -2,7 +2,11 @@ const Router = require("@koa/router")
 const viewController = require("../controllers/view")
 const rowController = require("../controllers/row")
 const authorized = require("../../middleware/authorized")
-const { BUILDER, READ_VIEW } = require("../../utilities/accessLevels")
+const {
+  BUILDER,
+  PermissionTypes,
+  PermissionLevels,
+} = require("../../utilities/security/permissions")
 const usage = require("../../middleware/usageQuota")
 
 const router = Router()
@@ -10,7 +14,7 @@ const router = Router()
 router
   .get(
     "/api/views/:viewName",
-    authorized(READ_VIEW, ctx => ctx.params.viewName),
+    authorized(PermissionTypes.VIEW, PermissionLevels.READ),
     rowController.fetchView
   )
   .get("/api/views", authorized(BUILDER), viewController.fetch)

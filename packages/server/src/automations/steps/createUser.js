@@ -1,4 +1,4 @@
-const accessLevels = require("../../utilities/accessLevels")
+const accessLevels = require("../../utilities/security/accessLevels")
 const userController = require("../../api/controllers/user")
 const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
@@ -11,7 +11,7 @@ module.exports.definition = {
   type: "ACTION",
   stepId: "CREATE_USER",
   inputs: {
-    accessLevelId: accessLevels.POWERUSER_LEVEL_ID,
+    accessLevelId: accessLevels.BUILTIN_LEVEL_IDS.POWER,
   },
   schema: {
     inputs: {
@@ -28,8 +28,8 @@ module.exports.definition = {
         accessLevelId: {
           type: "string",
           title: "Access Level",
-          enum: accessLevels.ACCESS_LEVELS,
-          pretty: Object.values(accessLevels.PRETTY_ACCESS_LEVELS),
+          enum: accessLevels.BUILTIN_LEVEL_IDS,
+          pretty: accessLevels.BUILTIN_LEVEL_NAME_ARRAY,
         },
       },
       required: ["username", "password", "accessLevelId"],

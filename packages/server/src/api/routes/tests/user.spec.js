@@ -5,11 +5,12 @@ const {
   createUser,
   testPermissionsForEndpoint,
 } = require("./couchTestUtils")
-const { 
-  POWERUSER_LEVEL_ID, 
-  LIST_USERS, 
-  USER_MANAGEMENT 
-} = require("../../../utilities/accessLevels")
+const {
+  BUILTIN_PERMISSION_NAMES,
+} = require("../../../utilities/security/permissions")
+const {
+  BUILTIN_LEVEL_IDS,
+} = require("../../../utilities/security/accessLevels")
 
 describe("/users", () => {
   let request
@@ -53,7 +54,8 @@ describe("/users", () => {
         method: "GET",
         url: `/api/users`,
         appId: appId,
-        permissionName: LIST_USERS,
+        permName1: BUILTIN_PERMISSION_NAMES.POWER,
+        permName2: BUILTIN_PERMISSION_NAMES.WRITE,
       })
     })
 
@@ -65,7 +67,7 @@ describe("/users", () => {
       const res = await request
         .post(`/api/users`)
         .set(defaultHeaders(appId))
-        .send({ name: "Bill", username: "bill", password: "bills_password", accessLevelId: POWERUSER_LEVEL_ID })
+        .send({ name: "Bill", username: "bill", password: "bills_password", accessLevelId: BUILTIN_LEVEL_IDS.POWER })
         .expect(200)
         .expect('Content-Type', /json/)
 
@@ -77,10 +79,11 @@ describe("/users", () => {
       await testPermissionsForEndpoint({
         request,
         method: "POST",
-        body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: POWERUSER_LEVEL_ID },
+        body: { name: "brandNewUser", username: "brandNewUser", password: "yeeooo", accessLevelId: BUILTIN_LEVEL_IDS.POWER },
         url: `/api/users`,
         appId: appId,
-        permissionName: USER_MANAGEMENT,
+        permName1: BUILTIN_PERMISSION_NAMES.ADMIN,
+        permName2: BUILTIN_PERMISSION_NAMES.POWER,
       })
     })
 

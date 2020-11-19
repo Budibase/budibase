@@ -17,11 +17,11 @@
         .filter(
           screen =>
             screen.props._component.endsWith("/rowdetail") ||
-            screen.route.endsWith(":id")
+            screen.routing.route.endsWith(":id")
         )
         .map(screen => ({
           name: screen.props._instanceName,
-          url: screen.route,
+          url: screen.routing.route,
           sort: screen.props._component,
         })),
     ]

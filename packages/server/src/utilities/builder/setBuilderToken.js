@@ -1,4 +1,5 @@
-const { BUILDER_LEVEL_ID } = require("../accessLevels")
+const { BUILTIN_LEVEL_IDS } = require("../security/accessLevels")
+const { BUILTIN_PERMISSION_NAMES } = require("../security/permissions")
 const env = require("../../environment")
 const CouchDB = require("../../db")
 const jwt = require("jsonwebtoken")
@@ -9,7 +10,8 @@ const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 module.exports = async (ctx, appId, version) => {
   const builderUser = {
     userId: "BUILDER",
-    accessLevelId: BUILDER_LEVEL_ID,
+    accessLevelId: BUILTIN_LEVEL_IDS.BUILDER,
+    permissions: [BUILTIN_PERMISSION_NAMES.ADMIN],
     version,
   }
   if (env.BUDIBASE_API_KEY) {

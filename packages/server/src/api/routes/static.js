@@ -3,7 +3,7 @@ const controller = require("../controllers/static")
 const { budibaseTempDir } = require("../../utilities/budibaseDir")
 const env = require("../../environment")
 const authorized = require("../../middleware/authorized")
-const { BUILDER } = require("../../utilities/accessLevels")
+const { BUILDER } = require("../../utilities/security/permissions")
 const usage = require("../../middleware/usageQuota")
 
 const router = Router()
