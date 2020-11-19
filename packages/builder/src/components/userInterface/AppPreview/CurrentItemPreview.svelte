@@ -42,7 +42,9 @@
     .normalStyle(textStyle)
     .instanceName("Text")
     .type("none")
-    .text("The screens that you create will be displayed inside this box. This box is just a placeholder, to show you the position of screens.")
+    .text(
+      "The screens that you create will be displayed inside this box. This box is just a placeholder, to show you the position of screens."
+    )
   const container = new Component("@budibase/standard-components/container")
     .normalStyle({
       display: "flex",
