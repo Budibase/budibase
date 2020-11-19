@@ -7,6 +7,7 @@ export async function baseApiCall(method, url, body) {
     headers: {
       "Content-Type": "application/json",
       "x-budibase-app-id": getAppId(window.document.cookie),
+      "x-budibase-type": "client",
     },
     body: body && JSON.stringify(body),
     credentials: "same-origin",
