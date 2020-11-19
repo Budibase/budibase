@@ -70,3 +70,7 @@ exports.setCookie = (ctx, name, value) => {
     overwrite: true,
   })
 }
+
+exports.isClient = ctx => {
+  return ctx.headers["x-budibase-type"] === "client"
+}
