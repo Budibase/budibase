@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import * as ComponentLibrary from "@budibase/standard-components"
   import Router from "./Router.svelte"
-  import renderMustacheString from "../utils/renderMustacheString"
+  import enrichDataBinding from "../utils/enrichDataBinding"
 
   const dataProviderStore = getContext("data")
 
@@ -25,18 +25,12 @@
   // Extracts valid props to pass to the real svelte component
   const extractValidProps = (component, row) => {
     let props = {}
+    const enrich = value => enrichDataBinding(value, { data: row })
     Object.entries(component)
       .filter(([name]) => !name.startsWith("_"))
       .forEach(([key, value]) => {
-        props[key] = value
+        props[key] = row === undefined ? value : enrich(value)
       })
-
-    // Enrich props if we're in a data provider context
-    if (row !== undefined) {
-      Object.entries(props).forEach(([key, value]) => {
-        props[key] = renderMustacheString(value, { data: row })
-      })
-    }
     return props
   }
 
