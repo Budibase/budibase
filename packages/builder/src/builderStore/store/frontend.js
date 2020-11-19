@@ -49,7 +49,6 @@ export const getFrontendStore = () => {
         return state
       })
       const screens = await api.get("/api/screens").then(r => r.json())
-      const routing = await api.get("/api/routing").then(r => r.json())
 
       const mainScreens = screens.filter(screen =>
           screen._id.includes(pkg.pages.main._id)
