@@ -46,7 +46,7 @@ export default function() {
 
           // hovered in center of target
           if (mousePosition > 0.4 && mousePosition < 0.8) {
-            state.dropPosition = DropPosition.BELOW
+            state.dropPosition = DropPosition.INSIDE
           }
           return
         }

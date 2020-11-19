@@ -100,7 +100,7 @@
 
   const drop = () => {
     if ($dragDropStore.targetComponent !== $dragDropStore.componentToDrop) {
-      store.actions.components.cut($dragDropStore.componentToDrop)
+      store.actions.components.copy($dragDropStore.componentToDrop)
       store.actions.components.paste(
         $dragDropStore.targetComponent,
         $dragDropStore.dropPosition

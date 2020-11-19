@@ -1,12 +1,14 @@
 <script>
   import { writable } from "svelte/store"
   import { goto } from "@sveltech/routify"
+  import { store } from "builderStore"
   import instantiateStore from "./dragDropStore"
+
   import ComponentsTree from "./ComponentTree.svelte"
   import NavItem from "components/common/NavItem.svelte"
-  import { store } from "builderStore"
+  import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
 
-  const dragDropStore = instantiateStore() 
+  const dragDropStore = instantiateStore()
 
   export let route
   export let indent
@@ -27,16 +29,17 @@
   text={route.fullpath}
   withArrow={route.subpaths}
   on:click={() => console.log(route)} />
+
 {#each Object.keys(route.screens) as screen}
   <NavItem
     icon="ri-artboard-2-line"
     indentLevel={indent || 1}
-    selected={$store.currentComponentInfo._id === route.screens[screen]}
+    selected={$store.currentPreviewItem._id === route.screens[screen]}
     opened={$store.currentPreviewItem._id === route.screens[screen]}
     text={screen || 'DEFAULT'}
     withArrow={route.subpaths}
     on:click={() => changeScreen(route.screens[screen])}>
-    <!-- <ScreenDropdownMenu screen={route.screens[screen]} /> -->
+    <ScreenDropdownMenu screen={route.screens[screen]} />
   </NavItem>
   {#if selectedScreen?._id === route.screens[screen]}
     <ComponentsTree
