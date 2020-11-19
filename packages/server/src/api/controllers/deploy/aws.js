@@ -55,15 +55,15 @@ exports.verifyDeployment = async function({ appId, quota }) {
     }),
   })
 
+  const json = await response.json()
+  if (json.errors) {
+    throw new Error(json.errors)
+  }
+
   if (response.status !== 200) {
     throw new Error(
       `Error fetching temporary credentials for api key: ${env.BUDIBASE_API_KEY}`
     )
-  }
-
-  const json = await response.json()
-  if (json.errors) {
-    throw new Error(json.errors)
   }
 
   // set credentials here, means any time we're verified we're ready to go

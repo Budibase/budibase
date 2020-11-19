@@ -2,10 +2,16 @@
   import { onMount, onDestroy } from "svelte"
   import Spinner from "components/common/Spinner.svelte"
   import { slide } from "svelte/transition"
-  import { Heading, Body, Button, Modal } from "@budibase/bbui"
+  import { Heading, Body, Button, Modal, ModalContent } from "@budibase/bbui"
   import api from "builderStore/api"
   import { notifier } from "builderStore/store/notifications"
   import CreateWebhookDeploymentModal from "./CreateWebhookDeploymentModal.svelte"
+
+  const DeploymentStatus = {
+    SUCCESS: "SUCCESS",
+    PENDING: "PENDING",
+    FAILURE: "FAILURE",
+  }
 
   const DATE_OPTIONS = {
     fullDate: {
@@ -25,6 +31,8 @@
   export let appId
 
   let modal
+  let errorReasonModal
+  let errorReason
   let poll
   let deployments = []
   let deploymentUrl = `https://${appId}.app.budi.live/${appId}`
@@ -32,15 +40,45 @@
   const formatDate = (date, format) =>
     Intl.DateTimeFormat("en-GB", DATE_OPTIONS[format]).format(date)
 
+  // Required to check any updated deployment statuses between polls
+  function checkIncomingDeploymentStatus(current, incoming) {
+    for (let incomingDeployment of incoming) {
+      if (incomingDeployment.status === DeploymentStatus.FAILURE) {
+        const currentDeployment = current.find(
+          deployment => deployment._id === incomingDeployment._id
+        )
+
+        // We have just been notified of an ongoing deployments failure
+        if (
+          !currentDeployment ||
+          currentDeployment.status === DeploymentStatus.PENDING
+        ) {
+          showErrorReasonModal(incomingDeployment.err)
+        }
+      }
+    }
+  }
+
   async function fetchDeployments() {
     try {
       const response = await api.get(`/api/deployments`)
-      deployments = await response.json()
+      const json = await response.json()
+
+      if (deployments.length > 0) {
+        checkIncomingDeploymentStatus(deployments, json)
+      }
+
+      deployments = json
     } catch (err) {
       console.error(err)
       clearInterval(poll)
       notifier.danger("Error fetching deployment history. Please try again.")
     }
+  }
+
+  function showErrorReasonModal(err) {
+    errorReason = err
+    errorReasonModal.show()
   }
 
   onMount(() => {
@@ -56,7 +94,7 @@
     <header>
       <h4>Deployment History</h4>
       <div class="deploy-div">
-        {#if deployments.some(deployment => deployment.status === 'SUCCESS')}
+        {#if deployments.some(deployment => deployment.status === DeploymentStatus.SUCCESS)}
           <a target="_blank" href={`https://${appId}.app.budi.live/${appId}`}>
             View Your Deployed App →
           </a>
@@ -80,7 +118,14 @@
               <Spinner size="10" />
             {/if}
             <div class={`deployment-status ${deployment.status}`}>
-              {deployment.status}
+              <span>
+                {deployment.status}
+                {#if deployment.status === DeploymentStatus.FAILURE}
+                  <i
+                    class="ri-information-line"
+                    on:click={() => showErrorReasonModal(deployment.err)} />
+                {/if}
+              </span>
             </div>
           </div>
         </article>
@@ -90,6 +135,14 @@
 {/if}
 <Modal bind:this={modal} width="30%">
   <CreateWebhookDeploymentModal />
+</Modal>
+<Modal bind:this={errorReasonModal} width="30%">
+  <ModalContent
+    title="Deployment Error"
+    confirmText="OK"
+    showCancelButton={false}>
+    {errorReason}
+  </ModalContent>
 </Modal>
 
 <style>
@@ -189,5 +242,11 @@
   .FAILURE {
     color: var(--red);
     background: var(--red-light);
+    cursor: pointer;
+  }
+
+  i {
+    position: relative;
+    top: 2px;
   }
 </style>
