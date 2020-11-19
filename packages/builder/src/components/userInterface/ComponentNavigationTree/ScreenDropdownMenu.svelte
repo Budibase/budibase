@@ -15,9 +15,10 @@
   const deleteScreen = () => {
     const screenToDelete = $allScreens.find(scr => scr._id === screen)
     store.actions.screens.delete(screenToDelete)
+    store.actions.routing.fetch()
     // update the page if required
     store.update(state => {
-      if (state.currentPreviewItem._id === screen._id) {
+      if (state.currentPreviewItem._id === screen) {
         store.actions.pages.select($store.currentPageName)
         notifier.success(`Screen ${screenToDelete.name} deleted successfully.`)
         $goto(`./:page/page-layout`)

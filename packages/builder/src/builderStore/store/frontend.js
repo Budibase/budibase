@@ -36,6 +36,7 @@ const INITIAL_FRONTEND_STATE = {
   hasAppPackage: false,
   libraries: null,
   appId: "",
+  routes: {},
 }
 
 export const getFrontendStore = () => {
@@ -119,6 +120,17 @@ export const getFrontendStore = () => {
         state.currentView = "detail"
         return state
       })
+    },
+    routing: {
+      fetch: async () => {
+        const response = await api.get("/api/routing")
+        const json = await response.json()
+
+        store.update(state => {
+          state.routes = json.routes
+          return state
+        })
+      },
     },
     screens: {
       select: screenId => {
