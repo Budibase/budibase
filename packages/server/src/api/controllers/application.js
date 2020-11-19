@@ -8,15 +8,18 @@ const fs = require("fs-extra")
 const { join, resolve } = require("../../utilities/centralPath")
 const packageJson = require("../../../package.json")
 const { createLinkView } = require("../../db/linkedRows")
+const { createRoutingView } = require("../../utilities/routing")
 const { downloadTemplate } = require("../../utilities/templates")
 const {
   generateAppID,
   DocumentTypes,
   SEPARATOR,
   getPageParams,
+  getScreenParams,
   generatePageID,
   generateScreenID,
 } = require("../../db/utils")
+const { BUILTIN_LEVEL_IDS } = require("../../utilities/security/accessLevels")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
@@ -25,6 +28,20 @@ const { HOME_SCREEN } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
+
+// utility function, need to do away with this
+async function getMainAndUnauthPage(db) {
+  let pages = await db.allDocs(
+    getPageParams(null, {
+      include_docs: true,
+    })
+  )
+  pages = pages.rows.map(row => row.doc)
+
+  const mainPage = pages.find(page => page.name === PageTypes.MAIN)
+  const unauthPage = pages.find(page => page.name === PageTypes.UNAUTHENTICATED)
+  return { mainPage, unauthPage }
+}
 
 async function createInstance(template) {
   const appId = generateAppID()
@@ -38,6 +55,7 @@ async function createInstance(template) {
   })
   // add view for linked rows
   await createLinkView(appId)
+  await createRoutingView(appId)
 
   // replicate the template data to the instance DB
   if (template) {
@@ -65,19 +83,36 @@ exports.fetch = async function(ctx) {
   }
 }
 
+exports.fetchAppDefinition = async function(ctx) {
+  const db = new CouchDB(ctx.params.appId)
+  // TODO: need to get rid of pages here, they shouldn't be needed anymore
+  const { mainPage, unauthPage } = await getMainAndUnauthPage(db)
+  const userAccessLevelId =
+    !ctx.user.accessLevel || !ctx.user.accessLevel._id
+      ? BUILTIN_LEVEL_IDS.PUBLIC
+      : ctx.user.accessLevel._id
+  const correctPage =
+    userAccessLevelId === BUILTIN_LEVEL_IDS.PUBLIC ? unauthPage : mainPage
+  const screens = (
+    await db.allDocs(
+      getScreenParams(correctPage._id, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc)
+  // TODO: need to handle access control here, limit screens to user access level
+  ctx.body = {
+    page: correctPage,
+    screens: screens,
+    libraries: ["@budibase/standard-components"],
+  }
+}
+
 exports.fetchAppPackage = async function(ctx) {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(ctx.params.appId)
 
-  let pages = await db.allDocs(
-    getPageParams(null, {
-      include_docs: true,
-    })
-  )
-  pages = pages.rows.map(row => row.doc)
-
-  const mainPage = pages.find(page => page.name === PageTypes.MAIN)
-  const unauthPage = pages.find(page => page.name === PageTypes.UNAUTHENTICATED)
+  const { mainPage, unauthPage } = await getMainAndUnauthPage(db)
   ctx.body = {
     application,
     pages: {

@@ -1,10 +1,9 @@
 const CouchDB = require("../../db")
 const {
-  generateAdminPermissions,
-  generatePowerUserPermissions,
-  POWERUSER_LEVEL_ID,
-  ADMIN_LEVEL_ID,
-} = require("../../utilities/accessLevels")
+  BUILTIN_LEVELS,
+  AccessLevel,
+  getAccessLevel,
+} = require("../../utilities/security/accessLevels")
 const {
   generateAccessLevelID,
   getAccessLevelParams,
@@ -19,85 +18,26 @@ exports.fetch = async function(ctx) {
   )
   const customAccessLevels = body.rows.map(row => row.doc)
 
-  const staticAccessLevels = [
-    {
-      _id: ADMIN_LEVEL_ID,
-      name: "Admin",
-      permissions: await generateAdminPermissions(ctx.user.appId),
-    },
-    {
-      _id: POWERUSER_LEVEL_ID,
-      name: "Power User",
-      permissions: await generatePowerUserPermissions(ctx.user.appId),
-    },
-  ]
-
+  const staticAccessLevels = [BUILTIN_LEVELS.ADMIN, BUILTIN_LEVELS.POWER]
   ctx.body = [...staticAccessLevels, ...customAccessLevels]
 }
 
 exports.find = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-  ctx.body = await db.get(ctx.params.levelId)
+  ctx.body = await getAccessLevel(ctx.user.appId, ctx.params.levelId)
 }
 
-exports.update = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-  const level = await db.get(ctx.params.levelId)
-  level.name = ctx.body.name
-  level.permissions = ctx.request.body.permissions
-  const result = await db.put(level)
-  level._rev = result.rev
-  ctx.body = level
-  ctx.message = `Level ${level.name} updated successfully.`
-}
-
-exports.patch = async function(ctx) {
-  const db = new CouchDB(ctx.user.appId)
-  const level = await db.get(ctx.params.levelId)
-  const { removedPermissions, addedPermissions, _rev } = ctx.request.body
-
-  if (!_rev) throw new Error("Must supply a _rev to update an access level")
-
-  level._rev = _rev
-
-  if (removedPermissions) {
-    level.permissions = level.permissions.filter(
-      p =>
-        !removedPermissions.some(
-          rem => rem.name === p.name && rem.itemId === p.itemId
-        )
-    )
-  }
-
-  if (addedPermissions) {
-    level.permissions = [
-      ...level.permissions.filter(
-        p =>
-          !addedPermissions.some(
-            add => add.name === p.name && add.itemId === p.itemId
-          )
-      ),
-      ...addedPermissions,
-    ]
-  }
-
-  const result = await db.put(level)
-  level._rev = result.rev
-  ctx.body = level
-  ctx.message = `Access Level ${level.name} updated successfully.`
-}
-
-exports.create = async function(ctx) {
+exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
 
-  const level = {
-    name: ctx.request.body.name,
-    _rev: ctx.request.body._rev,
-    permissions: ctx.request.body.permissions || [],
-    _id: generateAccessLevelID(),
-    type: "accesslevel",
+  let id = ctx.request.body._id || generateAccessLevelID()
+  const level = new AccessLevel(
+    id,
+    ctx.request.body.name,
+    ctx.request.body.inherits
+  )
+  if (ctx.request.body._rev) {
+    level._rev = ctx.request.body._rev
   }
-
   const result = await db.put(level)
   level._rev = result.rev
   ctx.body = level
