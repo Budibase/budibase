@@ -4,6 +4,7 @@
   import DataProvider from "./DataProvider.svelte"
 
   const { API, styleable } = getContext("app")
+  const dataContext = getContext("data")
 
   export let datasource = []
   export let styles
@@ -12,7 +13,7 @@
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      rows = await API.fetchDatasource(datasource)
+      rows = await API.fetchDatasource(datasource, $dataContext)
     }
   })
 </script>

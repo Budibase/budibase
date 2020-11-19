@@ -8,11 +8,7 @@
   export let styles
   let routes
 
-  onMount(() => {
-    initialiseRouter()
-  })
-
-  const initialiseRouter = async () => {
+  onMount(async () => {
     await routeStore.actions.fetchRoutes()
     await screenStore.actions.fetchScreens()
     routes = {}
@@ -22,7 +18,7 @@
 
     // Add catch-all route so that we serve the Screen component always
     routes["*"] = Screen
-  }
+  })
 
   function onRouteLoading({ detail }) {
     routeStore.actions.setActiveRoute(detail.route)
