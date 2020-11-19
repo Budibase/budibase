@@ -1,4 +1,4 @@
-import api from "./api"
+import API from "./api"
 import { enrichRows } from "./rows"
 
 /**
@@ -8,7 +8,7 @@ export const fetchRelationshipData = async ({ tableId, rowId, fieldName }) => {
   if (!tableId || !rowId || !fieldName) {
     return []
   }
-  const response = await api.get({ url: `/api/${tableId}/${rowId}/enrich` })
+  const response = await API.get({ url: `/api/${tableId}/${rowId}/enrich` })
   const rows = response[fieldName] || []
   return await enrichRows(rows, tableId)
 }

@@ -12,18 +12,15 @@ const createRouteStore = () => {
 
   const fetchRoutes = async () => {
     const routeConfig = await API.fetchRoutes()
-    let routes = {}
-    Object.values(routeConfig.routes).forEach(pathConfig => {
-      Object.entries(config).forEach(([subPath, subPathConfig]) => {})
+    let routes = []
+    Object.values(routeConfig.routes).forEach(route => {
+      Object.entries(route.subpaths).forEach(([path, config]) => {
+        routes.push({
+          path,
+          screenId: config.screenId,
+        })
+      })
     })
-
-    console.log(routes2)
-
-    const frontendDefinition = window["##BUDIBASE_FRONTEND_DEFINITION##"]
-    const routes = frontendDefinition.screens.map(screen => ({
-      path: screen.route,
-      screenId: screen._id,
-    }))
     store.update(state => {
       state.routes = routes
       return state

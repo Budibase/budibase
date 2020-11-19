@@ -1,10 +1,10 @@
-import api from "./api"
+import API from "./api"
 
 /**
  * Uploads an attachment to the server.
  */
 export const uploadAttachment = async data => {
-  return await api.post({
+  return await API.post({
     url: "/api/attachments/upload",
     body: data,
     json: false,

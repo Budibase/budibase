@@ -24,12 +24,7 @@
 
   const login = async () => {
     loading = true
-    const success = await authStore.actions.logIn({ username, password })
-    if (success) {
-      location.reload()
-    } else {
-      error = true
-    }
+    await authStore.actions.logIn({ username, password })
     loading = false
   }
 </script>

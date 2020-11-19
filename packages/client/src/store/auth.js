@@ -1,6 +1,7 @@
 import * as API from "../api"
 import { getAppId } from "../utils"
 import { writable } from "svelte/store"
+import { loc } from "svelte-spa-router"
 
 const createAuthStore = () => {
   const store = writable("")
@@ -12,8 +13,8 @@ const createAuthStore = () => {
     const user = await API.logIn({ username, password })
     if (!user.error) {
       store.set(user.token)
+      location.reload()
     }
-    return !user.error
   }
 
   /**
@@ -21,14 +22,13 @@ const createAuthStore = () => {
    */
   const logOut = () => {
     store.set("")
-
-    // Expire any cookies
     const appId = getAppId()
     if (appId) {
       for (let environment of ["local", "cloud"]) {
         window.document.cookie = `budibase:${appId}:${environment}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`
       }
     }
+    location.reload()
   }
 
   return {
