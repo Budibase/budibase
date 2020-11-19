@@ -26,13 +26,17 @@ const handleError = error => {
 const makeApiCall = async ({ method, url, body, json = true }) => {
   try {
     const requestBody = json ? JSON.stringify(body) : body
+    let headers = {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "x-budibase-app-id": getAppId(),
+    }
+    if (!window["##BUDIBASE_IN_BUILDER##"]) {
+      headers["x-budibase-type"] = "client"
+    }
     const response = await fetch(url, {
       method,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "x-budibase-app-id": getAppId(),
-      },
+      headers,
       body: requestBody,
       credentials: "same-origin",
     })
