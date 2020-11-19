@@ -62,11 +62,10 @@ exports.fetch = async ctx => {
 
 exports.clientFetch = async ctx => {
   const routing = await getRoutingStructure(ctx.appId)
-  const accessLevelId = ctx.user.accessLevel._id
+  let accessLevelId = ctx.user.accessLevel._id
   // builder is a special case, always return the full routing structure
   if (accessLevelId === BUILTIN_LEVEL_IDS.BUILDER) {
-    ctx.body = routing
-    return
+    accessLevelId = BUILTIN_LEVEL_IDS.ADMIN
   }
   const accessLevelIds = await getUserAccessLevelHierarchy(
     ctx.appId,
