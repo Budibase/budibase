@@ -24,6 +24,11 @@ export class Screen extends BaseStructure {
     }
   }
 
+  normalStyle(styling) {
+    this._json.props._styles.normal = styling
+    return this
+  }
+
   component(name) {
     this._json.props._component = name
     return this
