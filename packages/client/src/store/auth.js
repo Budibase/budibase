@@ -1,4 +1,4 @@
-import * as api from "../api"
+import * as API from "../api"
 import { getAppId } from "../utils"
 import { writable } from "svelte/store"
 
@@ -9,7 +9,7 @@ const createAuthStore = () => {
    * Logs a user in.
    */
   const logIn = async ({ username, password }) => {
-    const user = await api.logIn({ username, password })
+    const user = await API.logIn({ username, password })
     if (!user.error) {
       store.set(user.token)
     }

@@ -23,17 +23,19 @@ exports.mainRoutes = [
   screenRoutes,
   userRoutes,
   applicationRoutes,
-  rowRoutes,
-  tableRoutes,
+  automationRoutes,
   viewRoutes,
   componentRoutes,
-  automationRoutes,
   accesslevelRoutes,
   apiKeysRoutes,
   templatesRoutes,
   analyticsRoutes,
   webhookRoutes,
   routingRoutes,
+  // these need to be handled last as they still use /api/:tableId
+  // this could be breaking as koa may recognise other routes as this
+  tableRoutes,
+  rowRoutes,
 ]
 
 exports.authRoutes = authRoutes
