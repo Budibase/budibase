@@ -9,7 +9,7 @@
   async function deleteApp() {
     loading = true
     const id = $params.application
-    await del(`/api/${id}`)
+    await del(`/api/applications/${id}`)
     loading = false
     $goto("/")
   }
