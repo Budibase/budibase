@@ -8,6 +8,6 @@
 
 <div class="root">
   {#each Object.keys(routes) as path}
-    <PathTree route={routes[path]} />
+    <PathTree {path} route={routes[path]} />
   {/each}
 </div>
