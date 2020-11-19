@@ -215,6 +215,7 @@ export const getFrontendStore = () => {
             currentPage._screens = currentPage._screens.filter(
               scr => scr._id !== screenToDelete._id
             )
+
             deletePromise = api.delete(
               `/api/screens/${screenToDelete._id}/${screenToDelete._rev}`
             )

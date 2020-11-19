@@ -2,7 +2,7 @@
   import { onMount } from "svelte"
   import { store, currentScreens } from "builderStore"
   import api from "builderStore/api"
-  import ComponentsHierarchy from "components/userInterface/ComponentNavigationTree/index.svelte"
+  import ComponentNavigationTree from "components/userInterface/ComponentNavigationTree/index.svelte"
   import PageLayout from "components/userInterface/PageLayout.svelte"
   import PagesList from "components/userInterface/PagesList.svelte"
   import NewScreenModal from "components/userInterface/NewScreenModal.svelte"
@@ -13,11 +13,8 @@
   let routes = {}
 
   async function fetchRoutes() {
-    // fetch the routing stuff here
     const response = await api.get("/api/routing")
     const json = await response.json()
-
-    console.log(json)
 
     routes = json.routes
   }
@@ -34,7 +31,7 @@
 <PagesList />
 <div class="nav-items-container">
   <PageLayout layout={$store.pages[$store.currentPageName]} />
-  <ComponentsHierarchy {routes} />
+  <ComponentNavigationTree {routes} />
 </div>
 <Modal bind:this={modal}>
   <NewScreenModal />
