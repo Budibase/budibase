@@ -24,7 +24,7 @@
 </script>
 
 <NavItem
-  icon="ri-route-line"
+  icon="ri-folder-line"
   text={path}
   opened={true}
   withArrow={route.subpaths} />
@@ -36,7 +36,7 @@
       indentLevel={indent || 1}
       selected={$store.currentPreviewItem._id === screenId}
       opened={$store.currentPreviewItem._id === screenId}
-      text={url}
+      text={url === "/" ? "Home" : url}
       withArrow={route.subpaths}
       on:click={() => changeScreen(screenId)}>
       <ScreenDropdownMenu screen={screenId} />
