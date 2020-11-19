@@ -27,22 +27,21 @@
   icon="ri-route-line"
   text={path}
   opened={true}
-  withArrow={route.subpaths}
-  on:click={() => console.log(route)} />
+  withArrow={route.subpaths} />
 
-{#each Object.keys(route.subpaths) as subpath}
-  {#each Object.keys(route.subpaths[subpath].screens) as screen}
+{#each Object.entries(route.subpaths) as [url, subpath]}
+  {#each Object.values(subpath.screens) as screenId}
     <NavItem
       icon="ri-artboard-2-line"
       indentLevel={indent || 1}
-      selected={$store.currentPreviewItem._id === route.subpaths[subpath].screens[screen]}
-      opened={$store.currentPreviewItem._id === route.subpaths[subpath].screens[screen]}
-      text={subpath}
+      selected={$store.currentPreviewItem._id === screenId}
+      opened={$store.currentPreviewItem._id === screenId}
+      text={url}
       withArrow={route.subpaths}
-      on:click={() => changeScreen(route.subpaths[subpath].screens[screen])}>
-      <ScreenDropdownMenu screen={route.subpaths[subpath].screens[screen]} />
+      on:click={() => changeScreen(screenId)}>
+      <ScreenDropdownMenu screen={screenId} />
     </NavItem>
-    {#if selectedScreen?._id === route.subpaths[subpath].screens[screen]}
+    {#if selectedScreen?._id === screenId}
       <ComponentsTree
         components={selectedScreen.props._children}
         currentComponent={$store.currentComponentInfo}
