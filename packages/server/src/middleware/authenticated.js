@@ -4,7 +4,6 @@ const {
   getAccessLevel,
   BUILTIN_LEVELS,
 } = require("../utilities/security/accessLevels")
-const env = require("../environment")
 const { AuthTypes } = require("../constants")
 const { getAppId, getCookieName, setCookie, isClient } = require("../utilities")
 
