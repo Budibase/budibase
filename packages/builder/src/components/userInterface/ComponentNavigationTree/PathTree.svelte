@@ -11,10 +11,9 @@
   const dragDropStore = instantiateStore()
 
   export let route
+  export let path
   export let indent
 
-  $: console.log(route)
-  $: console.log("preview", $store.currentPreviewItem)
   $: selectedScreen = $store.currentPreviewItem
 
   const changeScreen = screenId => {
@@ -26,28 +25,28 @@
 
 <NavItem
   icon="ri-route-line"
-  text={route.fullpath}
+  text={path}
+  opened={true}
   withArrow={route.subpaths}
   on:click={() => console.log(route)} />
 
-{#each Object.keys(route.screens) as screen}
-  <NavItem
-    icon="ri-artboard-2-line"
-    indentLevel={indent || 1}
-    selected={$store.currentPreviewItem._id === route.screens[screen]}
-    opened={$store.currentPreviewItem._id === route.screens[screen]}
-    text={screen || 'DEFAULT'}
-    withArrow={route.subpaths}
-    on:click={() => changeScreen(route.screens[screen])}>
-    <ScreenDropdownMenu screen={route.screens[screen]} />
-  </NavItem>
-  {#if selectedScreen?._id === route.screens[screen]}
-    <ComponentsTree
-      components={selectedScreen.props._children}
-      currentComponent={$store.currentComponentInfo}
-      {dragDropStore} />
-  {/if}
-{/each}
 {#each Object.keys(route.subpaths) as subpath}
-  <svelte:self route={route.subpaths[subpath]} indent={2} />
+  {#each Object.keys(route.subpaths[subpath].screens) as screen}
+    <NavItem
+      icon="ri-artboard-2-line"
+      indentLevel={indent || 1}
+      selected={$store.currentPreviewItem._id === route.subpaths[subpath].screens[screen]}
+      opened={$store.currentPreviewItem._id === route.subpaths[subpath].screens[screen]}
+      text={subpath}
+      withArrow={route.subpaths}
+      on:click={() => changeScreen(route.subpaths[subpath].screens[screen])}>
+      <ScreenDropdownMenu screen={route.subpaths[subpath].screens[screen]} />
+    </NavItem>
+    {#if selectedScreen?._id === route.subpaths[subpath].screens[screen]}
+      <ComponentsTree
+        components={selectedScreen.props._children}
+        currentComponent={$store.currentComponentInfo}
+        {dragDropStore} />
+    {/if}
+  {/each}
 {/each}
