@@ -21,7 +21,7 @@ exports.BUILTIN_LEVELS = {
   ADMIN: new AccessLevel(BUILTIN_IDS.ADMIN, "Admin", BUILTIN_IDS.POWER),
   POWER: new AccessLevel(BUILTIN_IDS.POWER, "Power", BUILTIN_IDS.BASIC),
   BASIC: new AccessLevel(BUILTIN_IDS.BASIC, "Basic", BUILTIN_IDS.PUBLIC),
-  ANON: new AccessLevel(BUILTIN_IDS.PUBLIC, "Public"),
+  PUBLIC: new AccessLevel(BUILTIN_IDS.PUBLIC, "Public"),
   BUILDER: new AccessLevel(BUILTIN_IDS.BUILDER, "Builder"),
 }
 
