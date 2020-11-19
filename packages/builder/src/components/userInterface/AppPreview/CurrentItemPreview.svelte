@@ -3,6 +3,8 @@
   import { map, join } from "lodash/fp"
   import iframeTemplate from "./iframeTemplate"
   import { pipe } from "../../../helpers"
+  import { Screen } from "../../../builderStore/store/screenTemplates/utils/Screen"
+  import { Component } from "../../../builderStore/store/screenTemplates/utils/Component"
 
   let iframe
   let styles = ""
@@ -21,114 +23,52 @@
     return componentName || "element"
   }
 
-  const screenPlaceholder = {
-    name: "Screen Placeholder",
-    route: "*",
-    props: {
-      _id: "screenslot-placeholder",
-      _component: "@budibase/standard-components/container",
-      _styles: {
-        normal: {
-          flex: "1 1 auto",
-        },
-        hover: {},
-        active: {},
-        selected: {},
-      },
-      _code: "",
-      className: "",
-      onLoad: [],
-      type: "div",
-      _children: [
-        {
-          _id: "51a1b494-0fa4-49c3-90cc-c2a6c7a3f888",
-          _component: "@budibase/standard-components/container",
-          _styles: {
-            normal: {
-              display: "flex",
-              "flex-direction": "column",
-              "align-items": "center",
-              flex: "1 1 auto",
-            },
-            hover: {},
-            active: {},
-            selected: {},
-          },
-          _code: "",
-          className: "",
-          onLoad: [],
-          type: "div",
-          _instanceId: "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
-          _instanceName: "Container",
-          _children: [
-            {
-              _id: "90a52cd0-f215-46c1-b29b-e28f9e7edf72",
-              _component: "@budibase/standard-components/heading",
-              _styles: {
-                normal: {
-                  width: "500px",
-                  padding: "8px",
-                },
-                hover: {},
-                active: {},
-                selected: {},
-              },
-              _code: "",
-              className: "",
-              text: "Screen Slot",
-              type: "h1",
-              _instanceId: "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
-              _instanceName: "Heading",
-              _children: [],
-            },
-            {
-              _id: "71a3da65-72c6-4c43-8c6a-49871c07b77d",
-              _component: "@budibase/standard-components/text",
-              _styles: {
-                normal: {
-                  "max-width": "",
-                  "text-align": "left",
-                  width: "500px",
-                  padding: "8px",
-                },
-                hover: {},
-                active: {},
-                selected: {},
-              },
-              _code: "",
-              text:
-                "The screens that you create will be displayed inside this box.",
-              type: "none",
-              _instanceId: "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
-              _instanceName: "Text",
-            },
-            {
-              _id: "8af80374-460d-497b-a5d8-7dd2ec4a7bbc",
-              _component: "@budibase/standard-components/text",
-              _styles: {
-                normal: {
-                  "max-width": "",
-                  "text-align": "left",
-                  width: "500px",
-                  padding: "8px",
-                },
-                hover: {},
-                active: {},
-                selected: {},
-              },
-              _code: "",
-              text:
-                "This box is just a placeholder, to show you the position of screens.",
-              type: "none",
-              _instanceId: "inst_40d9036_4c81114e2bf145ab8721978c66e09a10",
-              _instanceName: "Text",
-            },
-          ],
-        },
-      ],
-      _instanceName: "Content Placeholder",
-    },
+  const headingStyle = {
+    width: "500px",
+    padding: "8px",
   }
+  const textStyle = {
+    ...headingStyle,
+    "max-width": "",
+    "text-align": "left",
+  }
+
+  const heading = new Component("@budibase/standard-components/heading")
+    .normalStyle(headingStyle)
+    .type("h1")
+    .text("Screen Slot")
+    .instanceName("Heading")
+  const textScreenDisplay = new Component("@budibase/standard-components/text")
+    .normalStyle(textStyle)
+    .instanceName("Text")
+    .type("none")
+    .text(
+      "The screens that you create will be displayed inside this box. This box is just a placeholder, to show you the position of screens."
+    )
+  const container = new Component("@budibase/standard-components/container")
+    .normalStyle({
+      display: "flex",
+      "flex-direction": "column",
+      "align-items": "center",
+      flex: "1 1 auto",
+    })
+    .type("div")
+    .instanceName("Container")
+    .addChild(heading)
+    .addChild(textScreenDisplay)
+  const screenPlaceholder = new Screen()
+    .name("Screen Placeholder")
+    .route("*")
+    .component("@budibase/standard-components/container")
+    .mainType("div")
+    .instanceName("Content Placeholder")
+    .normalStyle({
+      flex: "1 1 auto",
+    })
+    .addChild(container)
+    .json()
+  // TODO: this ID is attached to how the screen slot is rendered, confusing, would be better a type etc
+  screenPlaceholder.props._id = "screenslot-placeholder"
 
   $: hasComponent = !!$store.currentPreviewItem
 
