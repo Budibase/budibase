@@ -55,7 +55,7 @@ export default `<html>
 
         window["##BUDIBASE_FRONTEND_DEFINITION##"] = data.frontendDefinition;
         if (window.loadBudibase) {
-          loadBudibase({ window, localStorage })
+          loadBudibase()
         }
       }
       let styles

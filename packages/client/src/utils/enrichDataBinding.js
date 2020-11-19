@@ -28,5 +28,6 @@ export default (input, context) => {
   if (!looksLikeMustache.test(input)) {
     return input
   }
+  console.log(input)
   return mustache.render(input, context)
 }
