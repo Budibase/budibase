@@ -109,7 +109,7 @@ exports.clearApplications = async request => {
     .set(exports.defaultHeaders())
   for (let app of res.body) {
     const appId = app._id
-    await request.delete(`/api/${appId}`).set(exports.defaultHeaders(appId))
+    await request.delete(`/api/applications/${appId}`).set(exports.defaultHeaders(appId))
   }
 }
 

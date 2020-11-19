@@ -149,7 +149,7 @@
       })
 
       // Select Correct Application/DB in prep for creating user
-      const applicationPkg = await get(`/api/${appJson._id}/appPackage`)
+      const applicationPkg = await get(`/api/applications/${appJson._id}/appPackage`)
       const pkg = await applicationPkg.json()
       if (applicationPkg.ok) {
         backendUiStore.actions.reset()
