@@ -53,7 +53,7 @@ export default `<html>
         document.head.appendChild(styles)
         styles.appendChild(document.createTextNode(data.styles))
 
-        window["##BUDIBASE_FRONTEND_DEFINITION##"] = data.frontendDefinition;
+        window["##BUDIBASE_IN_BUILDER##"] = true;
         if (window.loadBudibase) {
           loadBudibase()
         }
