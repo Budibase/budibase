@@ -1,10 +1,15 @@
 <script>
+  import { getContext } from "svelte"
   import * as ComponentLibrary from "@budibase/standard-components"
   import Router from "./Router.svelte"
+  import renderMustacheString from "../utils/renderMustacheString"
+
+  const dataProviderStore = getContext("data")
 
   export let definition = {}
 
-  $: componentProps = extractValidProps(definition)
+  $: contextRow = dataProviderStore ? $dataProviderStore.row : undefined
+  $: componentProps = extractValidProps(definition, contextRow)
   $: children = definition._children
   $: componentName = extractComponentName(definition._component)
   $: constructor = getComponentConstructor(componentName)
@@ -18,13 +23,20 @@
   }
 
   // Extracts valid props to pass to the real svelte component
-  const extractValidProps = component => {
+  const extractValidProps = (component, row) => {
     let props = {}
     Object.entries(component)
       .filter(([name]) => !name.startsWith("_"))
       .forEach(([key, value]) => {
         props[key] = value
       })
+
+    // Enrich props if we're in a data provider context
+    if (row !== undefined) {
+      Object.entries(props).forEach(([key, value]) => {
+        props[key] = renderMustacheString(value, { data: row })
+      })
+    }
     return props
   }
 

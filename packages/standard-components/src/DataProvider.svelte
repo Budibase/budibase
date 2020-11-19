@@ -2,14 +2,18 @@
   import { setContext, onMount } from "svelte"
   import { createDataProviderStore } from "./stores/dataProvider"
 
-  export let row
-
   const dataProviderStore = createDataProviderStore()
   setContext("data", dataProviderStore)
 
+  export let row
+  let loaded = false
+
   onMount(async () => {
     await dataProviderStore.actions.setRow(row)
+    loaded = true
   })
 </script>
 
-<slot />
+{#if loaded}
+  <slot />
+{/if}
