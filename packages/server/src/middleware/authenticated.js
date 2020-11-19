@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken")
 const STATUS_CODES = require("../utilities/statusCodes")
-const { getAccessLevel } = require("../utilities/security/accessLevels")
+const { getAccessLevel, BUILTIN_LEVELS } = require("../utilities/security/accessLevels")
 const env = require("../environment")
 const { AuthTypes } = require("../constants")
-const { getAppId, getCookieName, setCookie } = require("../utilities")
+const { getAppId, getCookieName, setCookie, isClient } = require("../utilities")
 
 module.exports = async (ctx, next) => {
   if (ctx.path === "/_builder") {
@@ -21,17 +21,13 @@ module.exports = async (ctx, next) => {
     appId = cookieAppId
   }
 
-  const appToken = ctx.cookies.get(getCookieName(appId))
-  const builderToken = ctx.cookies.get(getCookieName())
-
   let token
-  // if running locally in the builder itself
-  if (!env.CLOUD && !appToken) {
-    token = builderToken
-    ctx.auth.authenticated = AuthTypes.BUILDER
-  } else {
-    token = appToken
+  if (isClient(ctx)) {
     ctx.auth.authenticated = AuthTypes.APP
+    token = ctx.cookies.get(getCookieName(appId))
+  } else {
+    ctx.auth.authenticated = AuthTypes.BUILDER
+    token = ctx.cookies.get(getCookieName())
   }
 
   if (!token) {
@@ -39,6 +35,7 @@ module.exports = async (ctx, next) => {
     ctx.appId = appId
     ctx.user = {
       appId,
+      accessLevel: BUILTIN_LEVELS.PUBLIC,
     }
     await next()
     return
