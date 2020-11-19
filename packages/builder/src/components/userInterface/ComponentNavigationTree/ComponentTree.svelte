@@ -1,11 +1,10 @@
 <script>
   import { goto } from "@sveltech/routify"
   import { store } from "builderStore"
-  import { last } from "lodash/fp"
+  import { getComponentDefinition } from "builderStore/storeUtils"
   import { DropEffect, DropPosition } from "./dragDropStore"
   import ComponentDropdownMenu from "../ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
-  import { getComponentDefinition } from "builderStore/storeUtils"
 
   export let components = []
   export let currentComponent
@@ -56,7 +55,7 @@
 <ul>
   {#each components as component, index (component._id)}
     <li on:click|stopPropagation={() => selectComponent(component)}>
-      {#if $dragDropStore && $dragDropStore.targetComponent === component && $dragDropStore.dropPosition === DropPosition.ABOVE}
+      {#if $dragDropStore?.targetComponent === component && $dragDropStore.dropPosition === DropPosition.ABOVE}
         <div
           on:drop={dragDropStore.actions.drop}
           ondragover="return false"
@@ -87,7 +86,7 @@
           level={level + 1} />
       {/if}
 
-      {#if $dragDropStore && $dragDropStore.targetComponent === component && ($dragDropStore.dropPosition === DropPosition.INSIDE || $dragDropStore.dropPosition === DropPosition.BELOW)}
+      {#if $dragDropStore?.targetComponent === component && ($dragDropStore.dropPosition === DropPosition.INSIDE || $dragDropStore.dropPosition === DropPosition.BELOW)}
         <div
           on:drop={dragDropStore.actions.drop}
           ondragover="return false"
