@@ -6,7 +6,7 @@ import { enrichRows } from "./rows"
 /**
  * Fetches all rows for a particular Budibase data source.
  */
-export const fetchDatasource = async (datasource, context) => {
+export const fetchDatasource = async (datasource, dataContext) => {
   if (!datasource || !datasource.type) {
     return []
   }
@@ -20,9 +20,9 @@ export const fetchDatasource = async (datasource, context) => {
     rows = await fetchViewData(datasource)
   } else if (type === "link") {
     rows = await fetchRelationshipData({
-      tableId: context?.row?.tableId,
+      rowId: dataContext?.data?._id,
+      tableId: dataContext?.data?.tableId,
       fieldName,
-      rowId: context?.row?._id,
     })
   }
 

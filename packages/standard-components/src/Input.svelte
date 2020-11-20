@@ -1,12 +1,12 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let value = ""
   export let className = ""
   export let type = "text"
-  export let styles
 
   const onchange = ev => {
     value = ev.target.value

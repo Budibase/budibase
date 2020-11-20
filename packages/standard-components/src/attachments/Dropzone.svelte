@@ -2,7 +2,7 @@
   import { Dropzone } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { API } = getContext("app")
+  const { API } = getContext("sdk")
   const BYTES_IN_MB = 1000000
 
   export let files = []

@@ -1,12 +1,12 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let text = ""
   export let className = ""
   export let type = ""
-  export let styles
 
   const isTag = tag => type === tag
 </script>

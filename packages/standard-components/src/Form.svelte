@@ -5,15 +5,26 @@
   import LinkedRowSelector from "./LinkedRowSelector.svelte"
   import { capitalise } from "./helpers"
 
-  const { styleable, screenStore } = getContext("app")
-  const dataProviderStore = getContext("data")
+  const { styleable, screenStore, API } = getContext("sdk")
+  const dataContextStore = getContext("data")
+  const styles = getContext("style")
 
   export let wide = false
-  export let styles
 
-  $: row = $dataProviderStore?.row
-  $: schema = $dataProviderStore?.table && $dataProviderStore.table.schema
-  $: fields = schema ? Object.keys(schema) : []
+  let row
+  let schema
+  let fields = []
+
+  $: getContextDetails($dataContextStore)
+
+  const getContextDetails = async dataContext => {
+    row = dataContext?.data
+    if (row) {
+      const tableDefinition = await API.fetchTableDefinition(row.tableId)
+      schema = tableDefinition.schema
+      fields = Object.keys(schema)
+    }
+  }
 </script>
 
 <div class="form-content" use:styleable={styles}>

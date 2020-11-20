@@ -1,9 +1,9 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
 
-  export let styles
   export let imageUrl = ""
   export let heading = ""
   export let text1 = ""

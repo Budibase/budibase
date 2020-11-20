@@ -5,7 +5,7 @@
   import debounce from "lodash.debounce"
 
   const dispatch = createEventDispatcher()
-  const { fetchRow, saveRow, routeStore } = getContext("app")
+  const { fetchRow, saveRow, routeStore } = getContext("sdk")
 
   const DEFAULTS_FOR_TYPE = {
     string: "",

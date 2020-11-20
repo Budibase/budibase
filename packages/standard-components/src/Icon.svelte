@@ -2,12 +2,12 @@
   import "@fortawesome/fontawesome-free/js/all.js"
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let icon = ""
   export let size = "fa-lg"
   export let color = "#000"
-  export let styles
 </script>
 
 <i

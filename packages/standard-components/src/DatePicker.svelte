@@ -2,11 +2,11 @@
   import { DatePicker } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let placeholder
   export let value
-  export let styles
 
   function handleChange(event) {
     const [fullDate] = event.detail

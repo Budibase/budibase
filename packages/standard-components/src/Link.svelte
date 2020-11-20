@@ -1,12 +1,12 @@
 <script>
   import { getContext } from "svelte"
 
-  const { linkable, styleable } = getContext("app")
+  const { linkable, styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let url = ""
   export let text = ""
   export let openInNewTab = false
-  export let styles
 
   $: target = openInNewTab ? "_blank" : "_self"
 </script>

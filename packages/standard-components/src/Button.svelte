@@ -1,12 +1,12 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let className = "default"
   export let disabled = false
   export let text
-  export let styles
 </script>
 
 <button class="default" disabled={disabled || false} use:styleable={styles}>

@@ -1,19 +1,18 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { isEmpty } from "lodash/fp"
-  import DataProvider from "./DataProvider.svelte"
 
-  const { API, styleable } = getContext("app")
-  const dataContext = getContext("data")
+  const { API, styleable, DataProvider } = getContext("sdk")
+  const dataContextStore = getContext("data")
+  const styles = getContext("style")
 
   export let datasource = []
-  export let styles
 
   let rows = []
 
   onMount(async () => {
     if (!isEmpty(datasource)) {
-      rows = await API.fetchDatasource(datasource, $dataContext)
+      rows = await API.fetchDatasource(datasource, $dataContextStore)
     }
   })
 </script>

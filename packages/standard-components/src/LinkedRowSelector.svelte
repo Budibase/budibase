@@ -3,7 +3,7 @@
   import { capitalise } from "./helpers"
   import { getContext } from "svelte"
 
-  const { API } = getContext("app")
+  const { API } = getContext("sdk")
 
   export let schema = {}
   export let linkedRows = []

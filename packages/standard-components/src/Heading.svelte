@@ -1,12 +1,12 @@
 <script>
   import { getContext } from "svelte"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let className = ""
   export let type
   export let text = ""
-  export let styles
 </script>
 
 {#if type === 'h1'}

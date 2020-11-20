@@ -2,10 +2,10 @@
   import { getContext } from "svelte"
   import { chart } from "svelte-apexcharts"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let options
-  export let styles
 </script>
 
 {#if options}
