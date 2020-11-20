@@ -1,5 +1,6 @@
 const CouchDB = require("../index")
 const Sentry = require("@sentry/node")
+const { ViewNames, getQueryIndex } = require("../utils")
 
 /**
  * Only needed so that boolean parameters are being used for includeDocs
@@ -40,7 +41,7 @@ exports.createLinkView = async appId => {
   }
   designDoc.views = {
     ...designDoc.views,
-    by_link: view,
+    [ViewNames.LINK]: view,
   }
   await db.put(designDoc)
 }
@@ -76,7 +77,7 @@ exports.getLinkDocuments = async function({
   }
   params.include_docs = !!includeDocs
   try {
-    const response = await db.query("database/by_link", params)
+    const response = await db.query(getQueryIndex(ViewNames.LINK), params)
     if (includeDocs) {
       return response.rows.map(row => row.doc)
     } else {

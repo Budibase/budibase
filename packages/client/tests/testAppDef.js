@@ -51,7 +51,10 @@ const addWindowGlobals = (window, page, screens) => {
 }
 
 export const makePage = props => ({ props })
-export const makeScreen = (route, props) => ({ props, route })
+export const makeScreen = (route, props) => ({
+  props,
+  routing: { route, accessLevelId: "" },
+})
 
 export const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 

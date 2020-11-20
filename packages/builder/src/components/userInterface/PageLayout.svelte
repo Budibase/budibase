@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@sveltech/routify"
-  import ComponentsHierarchyChildren from "./ComponentsHierarchyChildren.svelte"
+  import ComponentTree from "./ComponentNavigationTree/ComponentTree.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { last } from "lodash/fp"
   import { store } from "builderStore"
@@ -37,8 +37,7 @@
   on:click={setCurrentScreenToLayout} />
 
 {#if $store.currentPreviewItem?.name === _layout.title && _layout.component.props._children}
-  <ComponentsHierarchyChildren
-    thisComponent={_layout.component.props}
+  <ComponentTree
     components={_layout.component.props._children}
     currentComponent={$store.currentComponentInfo}
     {dragDropStore} />

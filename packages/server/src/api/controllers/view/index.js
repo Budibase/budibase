@@ -5,6 +5,7 @@ const { join } = require("../../../utilities/centralPath")
 const os = require("os")
 const exporters = require("./exporters")
 const { fetchView } = require("../row")
+const { ViewNames } = require("../../../db/utils")
 
 const controller = {
   fetch: async ctx => {
@@ -13,8 +14,8 @@ const controller = {
     const response = []
 
     for (let name of Object.keys(designDoc.views)) {
-      // Only return custom views
-      if (name === "by_link") {
+      // Only return custom views, not built ins
+      if (Object.values(ViewNames).indexOf(name) !== -1) {
         continue
       }
       response.push({

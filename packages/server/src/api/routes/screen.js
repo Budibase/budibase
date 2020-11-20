@@ -1,7 +1,7 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/screen")
 const authorized = require("../../middleware/authorized")
-const { BUILDER } = require("../../utilities/accessLevels")
+const { BUILDER } = require("../../utilities/security/permissions")
 const joiValidator = require("../../middleware/joi-validator")
 const Joi = require("joi")
 
@@ -12,17 +12,20 @@ function generateSaveValidation() {
   return joiValidator.body(Joi.object({
     _css: Joi.string().allow(""),
     name: Joi.string().required(),
-    route: Joi.string().required(),
+    routing: Joi.object({
+      route: Joi.string().required(),
+      accessLevelId: Joi.string().required().allow(""),
+    }).required().unknown(true),
     props: Joi.object({
-            _id: Joi.string().required(),
-            _component: Joi.string().required(),
-            _children: Joi.array().required(),
-            _instanceName: Joi.string().required(),
-            _styles: Joi.object().required(),
-            type: Joi.string().optional(),
-            table: Joi.string().optional(),
-        }).required().unknown(true),
-    }).unknown(true))
+      _id: Joi.string().required(),
+      _component: Joi.string().required(),
+      _children: Joi.array().required(),
+      _instanceName: Joi.string().required(),
+      _styles: Joi.object().required(),
+      type: Joi.string().optional(),
+      table: Joi.string().optional(),
+    }).required().unknown(true),
+  }).unknown(true))
 }
 
 router

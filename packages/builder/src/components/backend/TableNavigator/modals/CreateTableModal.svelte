@@ -59,10 +59,13 @@
     }
 
     // Create autolink to newly created list page
-    const listPage = screens.find(screen =>
+    const listScreen = screens.find(screen =>
       screen.props._instanceName.endsWith("List")
     )
-    await store.actions.components.links.save(listPage.route, table.name)
+    await store.actions.components.links.save(
+      listScreen.routing.route,
+      table.name
+    )
 
     // Navigate to new table
     $goto(`./table/${table._id}`)

@@ -13,7 +13,7 @@
   let promise = getPackage()
 
   async function getPackage() {
-    const res = await get(`/api/${application}/appPackage`)
+    const res = await get(`/api/applications/${application}/appPackage`)
     const pkg = await res.json()
 
     if (res.ok) {

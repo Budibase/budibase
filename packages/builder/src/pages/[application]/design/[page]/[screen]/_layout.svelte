@@ -10,9 +10,7 @@
   if ($params.screen !== "page-layout") {
     const currentScreenName = decodeURI($params.screen)
     const validScreen =
-      $allScreens.findIndex(
-        screen => screen.props._instanceName === currentScreenName
-      ) !== -1
+      $allScreens.findIndex(screen => screen._id === currentScreenName) !== -1
 
     if (!validScreen) {
       // Go to main layout if URL set to invalid screen
@@ -27,8 +25,8 @@
         // Get the correct screen children.
         const screenChildren = $store.pages[$params.page]._screens.find(
           screen =>
-            screen.props._instanceName === $params.screen ||
-            screen.props._instanceName === decodeURIComponent($params.screen)
+            screen._id === $params.screen ||
+            screen._id === decodeURIComponent($params.screen)
         ).props._children
         findComponent(componentIds, screenChildren)
       }
