@@ -180,14 +180,6 @@ exports.getAccessLevelParams = (accessLevelId = null, otherProps = {}) => {
 }
 
 /**
- * Generates a new webhook ID.
- * @returns {string} The new webhook ID which the webhook doc can be stored under.
- */
-exports.generateWebhookID = () => {
-  return `${DocumentTypes.WEBHOOK}${SEPARATOR}${newid()}`
-}
-
-/**
  * Generates a new page ID.
  * @returns {string} The new page ID which the page doc can be stored under.
  */
@@ -206,15 +198,23 @@ exports.getPageParams = (pageId = null, otherProps = {}) => {
  * Generates a new screen ID.
  * @returns {string} The new screen ID which the screen doc can be stored under.
  */
-exports.generateScreenID = pageId => {
-  return `${DocumentTypes.SCREEN}${SEPARATOR}${pageId}${SEPARATOR}${newid()}`
+exports.generateScreenID = () => {
+  return `${DocumentTypes.SCREEN}${SEPARATOR}${newid()}`
 }
 
 /**
- * Gets parameters for retrieving screens for a particular page, this is a utility function for the getDocParams function.
+ * Gets parameters for retrieving screens, this is a utility function for the getDocParams function.
  */
-exports.getScreenParams = (pageId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.SCREEN, pageId, otherProps)
+exports.getScreenParams = (screenId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.SCREEN, screenId, otherProps)
+}
+
+/**
+ * Generates a new webhook ID.
+ * @returns {string} The new webhook ID which the webhook doc can be stored under.
+ */
+exports.generateWebhookID = () => {
+  return `${DocumentTypes.WEBHOOK}${SEPARATOR}${newid()}`
 }
 
 /**
