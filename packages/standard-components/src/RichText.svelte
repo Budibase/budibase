@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { RichText } from "@budibase/bbui"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
 
   export let value = ""
 

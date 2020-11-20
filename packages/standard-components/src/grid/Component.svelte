@@ -14,8 +14,9 @@
 
   // These maps need to be set up to handle whatever types that are used in the tables.
   const setters = new Map([["number", number]])
-  const SDK = getContext("app")
+  const SDK = getContext("sdk")
   const dataContext = getContext("data")
+  const styles = getContext("style")
   const { API, styleable } = SDK
 
   export let datasource = {}
@@ -24,7 +25,6 @@
   export let height = 500
   export let pagination
   export let detailUrl
-  export let styles
 
   // Add setting height as css var to allow grid to use correct height
   styles.normal["--grid-height"] = `${height}px`

@@ -1,11 +1,11 @@
 <script>
   import { getContext } from "svelte"
 
-  const { authStore, linkable, styleable } = getContext("app")
+  const { authStore, linkable, styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let logoUrl
   export let title
-  export let styles
 
   const logOut = () => {
     authStore.actions.logOut()

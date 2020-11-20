@@ -19,7 +19,7 @@ const looksLikeMustache = /{{.*}}/
 /**
  * Enriches a given input with a row from the database.
  */
-export default (input, context) => {
+export const enrichDataBinding = (input, context) => {
   // Only accept string inputs
   if (!input || typeof input !== "string") {
     return input
@@ -28,6 +28,8 @@ export default (input, context) => {
   if (!looksLikeMustache.test(input)) {
     return input
   }
+  console.log("====================================")
   console.log(input)
+  console.log(context)
   return mustache.render(input, context)
 }

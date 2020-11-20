@@ -1,7 +1,6 @@
 import * as API from "../api"
 import { getAppId } from "../utils"
 import { writable } from "svelte/store"
-import { loc } from "svelte-spa-router"
 
 const createAuthStore = () => {
   const store = writable("")

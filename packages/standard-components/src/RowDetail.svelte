@@ -1,8 +1,7 @@
 <script>
   import { onMount, getContext } from "svelte"
-  import DataProvider from "./DataProvider.svelte"
 
-  const { API, screenStore, routeStore } = getContext("app")
+  const { API, screenStore, routeStore, DataProvider } = getContext("sdk")
 
   export let table
 

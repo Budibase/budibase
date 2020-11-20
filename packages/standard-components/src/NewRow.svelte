@@ -1,5 +1,7 @@
 <script>
-  import DataProvider from "./DataProvider.svelte"
+  import { getContext } from "svelte"
+
+  const { DataProvider } = getContext("sdk")
 
   export let table
 </script>

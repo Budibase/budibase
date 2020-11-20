@@ -1,11 +1,12 @@
 <script>
-  import { onMount } from "svelte"
+  import { getContext } from "svelte"
   import Router from "svelte-spa-router"
   import { routeStore, screenStore } from "../store"
   import Screen from "./Screen.svelte"
-  import { styleable } from "../utils"
 
-  export let styles
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
+
   $: routerConfig = getRouterConfig($routeStore.routes)
 
   const getRouterConfig = routes => {

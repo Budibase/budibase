@@ -2,7 +2,8 @@
   import { getContext } from "svelte"
   import { cssVars } from "./helpers"
 
-  const { styleable } = getContext("app")
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export const className = ""
   export let imageUrl = ""
@@ -16,7 +17,6 @@
   export let cardWidth
   export let imageWidth
   export let imageHeight
-  export let styles
 
   $: cssVariables = {
     color,

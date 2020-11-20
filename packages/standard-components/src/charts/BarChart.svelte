@@ -4,7 +4,7 @@
   import ApexChart from "./ApexChart.svelte"
   import { isEmpty } from "lodash/fp"
 
-  const { API } = getContext("app")
+  const { API } = getContext("sdk")
   const dataContext = getContext("data")
 
   export let title
@@ -22,7 +22,6 @@
   export let stacked
   export let yAxisUnits
   export let palette
-  export let styles
 
   let options
 

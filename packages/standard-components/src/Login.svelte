@@ -1,14 +1,14 @@
 <script>
   import { getContext } from "svelte"
 
-  const { authStore, styleable } = getContext("app")
+  const { authStore, styleable } = getContext("sdk")
+  const styles = getContext("style")
 
   export let buttonText = "Log In"
   export let logo = ""
   export let title = ""
   export let buttonClass = ""
   export let inputClass = ""
-  export let styles
 
   let username = ""
   let password = ""

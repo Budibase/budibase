@@ -1,20 +1,9 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, setContext } from "svelte"
   import * as ComponentLibrary from "@budibase/standard-components"
   import Router from "./Router.svelte"
-  import enrichDataBinding from "../utils/enrichDataBinding"
-
-  const dataProviderStore = getContext("data")
 
   export let definition = {}
-
-  $: contextRow = dataProviderStore ? $dataProviderStore.row : undefined
-  $: componentProps = extractValidProps(definition, contextRow)
-  $: children = definition._children
-  $: componentName = extractComponentName(definition._component)
-  $: constructor = getComponentConstructor(componentName)
-  $: id = `${componentName}-${definition._id}`
-  $: styles = { ...definition._styles, id }
 
   // Extracts the actual component name from the library name
   const extractComponentName = name => {
@@ -23,13 +12,12 @@
   }
 
   // Extracts valid props to pass to the real svelte component
-  const extractValidProps = (component, row) => {
+  const extractValidProps = component => {
     let props = {}
-    const enrich = value => enrichDataBinding(value, { data: row })
     Object.entries(component)
       .filter(([name]) => !name.startsWith("_"))
       .forEach(([key, value]) => {
-        props[key] = row === undefined ? value : enrich(value)
+        props[key] = value
       })
     return props
   }
@@ -39,11 +27,22 @@
     return name === "screenslot" ? Router : ComponentLibrary[componentName]
   }
 
+  // Extract component definition info
+  const componentName = extractComponentName(definition._component)
+  const constructor = getComponentConstructor(componentName)
+  const id = `${componentName}-${definition._id}`
+  const componentProps = extractValidProps(definition)
+  const dataContext = getContext("data")
+  const enrichedProps = dataContext.actions.enrichDataBindings(componentProps)
+  const children = definition._children
+
+  // Set style context to be consumed by component
+  setContext("style", { ...definition._styles, id })
   $: console.log("Rendering: " + componentName)
 </script>
 
 {#if constructor}
-  <svelte:component this={constructor} {...componentProps} {styles}>
+  <svelte:component this={constructor} {...enrichedProps}>
     {#if children && children.length}
       {#each children as child}
         <svelte:self definition={child} />
