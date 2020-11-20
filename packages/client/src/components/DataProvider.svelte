@@ -6,6 +6,7 @@
 
   // Get current contexts
   const dataContext = getContext("data")
+  const { id } = getContext("style")
 
   // Clone current context to this context
   const newDataContext = createDataContextStore($dataContext)
@@ -14,7 +15,7 @@
   // Add additional layer to context
   let loaded = false
   onMount(() => {
-    newDataContext.actions.addContext(row)
+    newDataContext.actions.addContext(row, id)
     loaded = true
   })
 </script>
