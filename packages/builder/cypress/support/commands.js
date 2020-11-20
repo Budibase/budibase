@@ -166,6 +166,6 @@ Cypress.Commands.add("createScreen", (screenName, route) => {
     cy.contains("Create Screen").click()
   })
   cy.get(".nav-items-container").within(() => {
-    cy.contains(screenName).should("exist")
+    cy.contains(route).should("exist")
   })
 })
