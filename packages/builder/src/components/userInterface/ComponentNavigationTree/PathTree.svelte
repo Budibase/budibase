@@ -36,7 +36,7 @@
       indentLevel={indent || 1}
       selected={$store.currentPreviewItem._id === screenId}
       opened={$store.currentPreviewItem._id === screenId}
-      text={url === "/" ? "Home" : url}
+      text={url === '/' ? 'Home' : url}
       withArrow={route.subpaths}
       on:click={() => changeScreen(screenId)}>
       <ScreenDropdownMenu screen={screenId} />
