@@ -30,9 +30,8 @@ function generateSaveValidation() {
 
 router
   .get("/api/screens", authorized(BUILDER), controller.fetch)
-  .get("/api/screens/:pageId", authorized(BUILDER), controller.find)
   .post(
-    "/api/screens/:pageId",
+    "/api/screens",
     authorized(BUILDER),
     generateSaveValidation(),
     controller.save
