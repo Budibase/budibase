@@ -55,7 +55,7 @@
     "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^4.0.4",
-    "svelte": "3.23.x",
+    "svelte": "^3.29.7",
     "svelte-jester": "^1.0.6"
   },
   "gitHead": "e4e053cb6ff9a0ddc7115b44ccaa24b8ec41fb9a"

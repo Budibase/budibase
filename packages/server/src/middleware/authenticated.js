@@ -1,15 +1,11 @@
 const jwt = require("jsonwebtoken")
 const STATUS_CODES = require("../utilities/statusCodes")
-const accessLevelController = require("../api/controllers/accesslevel")
 const {
-  ADMIN_LEVEL_ID,
-  POWERUSER_LEVEL_ID,
-  BUILDER_LEVEL_ID,
-  ANON_LEVEL_ID,
-} = require("../utilities/accessLevels")
-const env = require("../environment")
+  getAccessLevel,
+  BUILTIN_LEVELS,
+} = require("../utilities/security/accessLevels")
 const { AuthTypes } = require("../constants")
-const { getAppId, getCookieName, setCookie } = require("../utilities")
+const { getAppId, getCookieName, setCookie, isClient } = require("../utilities")
 
 module.exports = async (ctx, next) => {
   if (ctx.path === "/_builder") {
@@ -27,17 +23,11 @@ module.exports = async (ctx, next) => {
     appId = cookieAppId
   }
 
-  const appToken = ctx.cookies.get(getCookieName(appId))
-  const builderToken = ctx.cookies.get(getCookieName())
-
-  let token
-  // if running locally in the builder itself
-  if (!env.CLOUD && !appToken) {
-    token = builderToken
-    ctx.auth.authenticated = AuthTypes.BUILDER
-  } else {
-    token = appToken
-    ctx.auth.authenticated = AuthTypes.APP
+  let token = ctx.cookies.get(getCookieName(appId))
+  let authType = AuthTypes.APP
+  if (!token && !isClient(ctx)) {
+    authType = AuthTypes.BUILDER
+    token = ctx.cookies.get(getCookieName())
   }
 
   if (!token) {
@@ -45,12 +35,14 @@ module.exports = async (ctx, next) => {
     ctx.appId = appId
     ctx.user = {
       appId,
+      accessLevel: BUILTIN_LEVELS.PUBLIC,
     }
     await next()
     return
   }
 
   try {
+    ctx.auth.authenticated = authType
     const jwtPayload = jwt.verify(token, ctx.config.jwtSecret)
     ctx.appId = appId
     ctx.auth.apiKey = jwtPayload.apiKey
@@ -64,37 +56,4 @@ module.exports = async (ctx, next) => {
   }
 
   await next()
-}
-
-/**
- * Return the full access level object either from constants
- * or the database based on the access level ID passed.
- *
- * @param {*} appId - appId of the user
- * @param {*} accessLevelId - the id of the users access level
- */
-const getAccessLevel = async (appId, accessLevelId) => {
-  if (
-    accessLevelId === POWERUSER_LEVEL_ID ||
-    accessLevelId === ADMIN_LEVEL_ID ||
-    accessLevelId === BUILDER_LEVEL_ID ||
-    accessLevelId === ANON_LEVEL_ID
-  ) {
-    return {
-      _id: accessLevelId,
-      name: accessLevelId,
-      permissions: [],
-    }
-  }
-
-  const findAccessContext = {
-    params: {
-      levelId: accessLevelId,
-    },
-    user: {
-      appId,
-    },
-  }
-  await accessLevelController.find(findAccessContext)
-  return findAccessContext.body
 }
