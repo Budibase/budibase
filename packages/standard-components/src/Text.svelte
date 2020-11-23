@@ -1,35 +1,39 @@
 <script>
+  import { getContext } from "svelte"
+
+  const { styleable } = getContext("sdk")
+  const styles = getContext("style")
+
   export let text = ""
   export let className = ""
   export let type = ""
-  export let _bb
 
   const isTag = tag => type === tag
 </script>
 
 {#if isTag('none')}
-  <span>{text}</span>
+  <span use:styleable={styles}>{text}</span>
 {:else if isTag('bold')}
-  <b class={className}>{text}</b>
+  <b class={className} use:styleable={styles}>{text}</b>
 {:else if isTag('strong')}
-  <strong class={className}>{text}</strong>
+  <strong class={className} use:styleable={styles}>{text}</strong>
 {:else if isTag('italic')}
-  <i class={className}>{text}</i>
+  <i class={className} use:styleable={styles}>{text}</i>
 {:else if isTag('emphasis')}
-  <em class={className}>{text}</em>
+  <em class={className} use:styleable={styles}>{text}</em>
 {:else if isTag('mark')}
-  <mark class={className}>{text}</mark>
+  <mark class={className} use:styleable={styles}>{text}</mark>
 {:else if isTag('small')}
-  <small class={className}>{text}</small>
+  <small class={className} use:styleable={styles}>{text}</small>
 {:else if isTag('del')}
-  <del class={className}>{text}</del>
+  <del class={className} use:styleable={styles}>{text}</del>
 {:else if isTag('ins')}
-  <ins class={className}>{text}</ins>
+  <ins class={className} use:styleable={styles}>{text}</ins>
 {:else if isTag('sub')}
-  <sub class={className}>{text}</sub>
+  <sub class={className} use:styleable={styles}>{text}</sub>
 {:else if isTag('sup')}
-  <sup class={className}>{text}</sup>
-{:else}<span>{text}</span>{/if}
+  <sup class={className} use:styleable={styles}>{text}</sup>
+{:else}<span use:styleable={styles}>{text}</span>{/if}
 
 <style>
   span {
