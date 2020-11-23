@@ -63,4 +63,4 @@
   })
 </script>
 
-<ApexChart {options} {styles} />
+<ApexChart {options} />
