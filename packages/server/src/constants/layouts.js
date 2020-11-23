@@ -1,4 +1,4 @@
-const PageTypes = {
+const LayoutTypes = {
   MAIN: "main",
   UNAUTHENTICATED: "unauthenticated",
 }
@@ -8,7 +8,7 @@ const MAIN = {
   title: "{{ name }}",
   favicon: "./_shared/favicon.png",
   stylesheets: [],
-  name: PageTypes.MAIN,
+  name: LayoutTypes.MAIN,
   props: {
     _id: "private-master-root",
     _component: "@budibase/standard-components/container",
@@ -153,7 +153,7 @@ const UNAUTHENTICATED = {
   title: "{{ name }}",
   favicon: "./_shared/favicon.png",
   stylesheets: [],
-  name: PageTypes.UNAUTHENTICATED,
+  name: LayoutTypes.UNAUTHENTICATED,
   props: {
     _id: "public-master-root",
     _component: "@budibase/standard-components/container",
@@ -218,4 +218,4 @@ const UNAUTHENTICATED = {
   },
 }
 
-module.exports = { MAIN, UNAUTHENTICATED, PageTypes }
+module.exports = { MAIN, UNAUTHENTICATED, LayoutTypes }

@@ -13,7 +13,7 @@ const DocumentTypes = {
   ACCESS_LEVEL: "ac",
   WEBHOOK: "wh",
   INSTANCE: "inst",
-  PAGE: "page",
+  LAYOUT: "layout",
   SCREEN: "screen",
 }
 
@@ -180,18 +180,18 @@ exports.getAccessLevelParams = (accessLevelId = null, otherProps = {}) => {
 }
 
 /**
- * Generates a new page ID.
- * @returns {string} The new page ID which the page doc can be stored under.
+ * Generates a new layout ID.
+ * @returns {string} The new layout ID which the layout doc can be stored under.
  */
-exports.generatePageID = () => {
-  return `${DocumentTypes.PAGE}${SEPARATOR}${newid()}`
+exports.generateLayoutID = () => {
+  return `${DocumentTypes.LAYOUT}${SEPARATOR}${newid()}`
 }
 
 /**
- * Gets parameters for retrieving pages, this is a utility function for the getDocParams function.
+ * Gets parameters for retrieving layout, this is a utility function for the getDocParams function.
  */
-exports.getPageParams = (pageId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.PAGE, pageId, otherProps)
+exports.getLayoutParams = (layoutId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.LAYOUT, layoutId, otherProps)
 }
 
 /**

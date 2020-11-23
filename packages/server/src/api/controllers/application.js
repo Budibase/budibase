@@ -1,5 +1,5 @@
 const CouchDB = require("../../db")
-const compileStaticAssetsForPage = require("../../utilities/builder/compileStaticAssetsForPage")
+const compileStaticAssets = require("../../utilities/builder/compileStaticAssets")
 const env = require("../../environment")
 const { existsSync } = require("fs-extra")
 const { budibaseAppsDir } = require("../../utilities/budibaseDir")
@@ -14,16 +14,16 @@ const {
   generateAppID,
   DocumentTypes,
   SEPARATOR,
-  getPageParams,
+  getLayoutParams,
   getScreenParams,
-  generatePageID,
+  generateLayoutID,
   generateScreenID,
 } = require("../../db/utils")
 const { BUILTIN_LEVEL_IDS } = require("../../utilities/security/accessLevels")
 const {
   downloadExtractComponentLibraries,
 } = require("../../utilities/createAppPackage")
-const { MAIN, UNAUTHENTICATED, PageTypes } = require("../../constants/pages")
+const { MAIN, UNAUTHENTICATED, LayoutTypes } = require("../../constants/layouts")
 const { HOME_SCREEN } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 
@@ -32,14 +32,14 @@ const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 // utility function, need to do away with this
 async function getMainAndUnauthPage(db) {
   let pages = await db.allDocs(
-    getPageParams(null, {
+    getLayoutParams(null, {
       include_docs: true,
     })
   )
   pages = pages.rows.map(row => row.doc)
 
-  const mainPage = pages.find(page => page.name === PageTypes.MAIN)
-  const unauthPage = pages.find(page => page.name === PageTypes.UNAUTHENTICATED)
+  const mainPage = pages.find(page => page.name === LayoutTypes.MAIN)
+  const unauthPage = pages.find(page => page.name === LayoutTypes.UNAUTHENTICATED)
   return { mainPage, unauthPage }
 }
 
@@ -194,11 +194,11 @@ const createEmptyAppPackage = async (ctx, app) => {
   fs.mkdirpSync(newAppFolder)
 
   const mainPage = cloneDeep(MAIN)
-  mainPage._id = generatePageID()
+  mainPage._id = generateLayoutID()
   mainPage.title = app.name
 
   const unauthPage = cloneDeep(UNAUTHENTICATED)
-  unauthPage._id = generatePageID()
+  unauthPage._id = generateLayoutID()
   unauthPage.title = app.name
   unauthPage.props._children[0].title = `Log in to ${app.name}`
 
@@ -206,14 +206,6 @@ const createEmptyAppPackage = async (ctx, app) => {
   homeScreen._id = generateScreenID(mainPage._id)
   await db.bulkDocs([mainPage, unauthPage, homeScreen])
 
-  await compileStaticAssetsForPage(app._id, "main", {
-    page: mainPage,
-    screens: [homeScreen],
-  })
-  await compileStaticAssetsForPage(app._id, "unauthenticated", {
-    page: unauthPage,
-    screens: [],
-  })
-
+  await compileStaticAssets(app._id)
   return newAppFolder
 }

@@ -136,25 +136,21 @@ exports.uploadAppAssets = async function({ appId, bucket, accountId }) {
 
   const appAssetsPath = join(budibaseAppsDir(), appId, "public")
 
-  const appPages = fs.readdirSync(appAssetsPath)
-
   let uploads = []
 
-  for (let page of appPages) {
-    // Upload HTML, CSS and JS for each page of the web app
-    walkDir(join(appAssetsPath, page), function(filePath) {
-      const appAssetUpload = prepareUploadForS3({
-        file: {
-          path: filePath,
-          name: [...filePath.split("/")].pop(),
-        },
-        s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
-        s3,
-        metadata: { accountId },
-      })
-      uploads.push(appAssetUpload)
+  // Upload HTML, CSS and JS of the web app
+  walkDir(appAssetsPath, function(filePath) {
+    const appAssetUpload = prepareUploadForS3({
+      file: {
+        path: filePath,
+        name: [...filePath.split("/")].pop(),
+      },
+      s3Key: filePath.replace(appAssetsPath, `assets/${appId}`),
+      s3,
+      metadata: { accountId },
     })
-  }
+    uploads.push(appAssetUpload)
+  })
 
   // Upload file attachments
   const db = new PouchDB(appId)

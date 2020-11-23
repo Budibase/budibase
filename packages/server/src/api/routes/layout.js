@@ -1,10 +1,10 @@
 const Router = require("@koa/router")
 const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("../../utilities/security/permissions")
-const controller = require("../controllers/page")
+const controller = require("../controllers/layout")
 
 const router = Router()
 
-router.post("/api/pages/:pageId", authorized(BUILDER), controller.save)
+router.post("/api/layouts/:layoutId", authorized(BUILDER), controller.save)
 
 module.exports = router
