@@ -24,11 +24,20 @@ const createScreenStore = () => {
   })
 
   const fetchScreens = async () => {
-    const appDefinition = await API.fetchAppDefinition(getAppId())
-    config.set({
-      screens: appDefinition.screens,
-      page: appDefinition.page,
-    })
+    let screens
+    let page
+    const inBuilder = !!window["##BUDIBASE_IN_BUILDER##"]
+    if (inBuilder) {
+      // Load screen and page from the window object if in the builder
+      screens = [window["##BUDIBASE_PREVIEW_SCREEN##"]]
+      page = window["##BUDIBASE_PREVIEW_PAGE##"]
+    } else {
+      // Otherwise load from API
+      const appDefinition = await API.fetchAppDefinition(getAppId())
+      screens = appDefinition.screens
+      page = appDefinition.page
+    }
+    config.set({ screens, page })
   }
 
   return {

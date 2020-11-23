@@ -28,8 +28,5 @@ export const enrichDataBinding = (input, context) => {
   if (!looksLikeMustache.test(input)) {
     return input
   }
-  console.log("====================================")
-  console.log(input)
-  console.log(context)
   return mustache.render(input, context)
 }
