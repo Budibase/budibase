@@ -31,7 +31,7 @@
 
 <Table {title} {schema} {data} allowEditing={true} {loading}>
   <CreateColumnButton />
-  {#if Object.keys(schema).length > 0}
+  {#if schema && Object.keys(schema).length > 0}
     <CreateRowButton />
     <CreateViewButton />
     <ExportButton view={tableView} />
