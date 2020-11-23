@@ -199,19 +199,19 @@ const createEmptyAppPackage = async (ctx, app) => {
 
   fs.mkdirpSync(newAppFolder)
 
-  const bulkDocs = []
+  let screensAndLayouts = []
   for (let layout of BASE_LAYOUTS) {
     const cloned = cloneDeep(layout)
     cloned._id = generateLayoutID()
     cloned.title = app.name
-    bulkDocs.push(recurseMustache(cloned, app))
+    screensAndLayouts.push(recurseMustache(cloned, app))
   }
 
   const homeScreen = cloneDeep(HOME_SCREEN)
   homeScreen._id = generateScreenID()
-  bulkDocs.push(homeScreen)
-  await db.bulkDocs(bulkDocs)
+  screensAndLayouts.push(homeScreen)
 
-  await compileStaticAssets(app._id)
+  screensAndLayouts = await compileStaticAssets(app._id, screensAndLayouts)
+  await db.bulkDocs(screensAndLayouts)
   return newAppFolder
 }
