@@ -1,9 +1,14 @@
 import ClientApp from "./components/ClientApp.svelte"
 
-// Initialise client app
+let app
+
 const loadBudibase = () => {
-  window.document.body.innerHTML = ""
-  new ClientApp({
+  // Destroy old app if one exists
+  if (app) {
+    app.$destroy()
+  }
+  // Create new app
+  app = new ClientApp({
     target: window.document.body,
   })
 }
