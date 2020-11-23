@@ -1,9 +1,27 @@
-# Budibase
-[Budibase](https://www.budibase.com) is an open source no-code platform for building and deploying custom software, without coding.
+<p align="center">
+  <a href="https://www.budibase.com">
+    <img alt="Budibase" src="https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg" width="60" />
+  </a>
+</p>
+<h1 align="center">
+  Budibase
+</h1>
+
+<h3 align="center">
+  Powering the developers of tomorrow
+</h3>
+
+<h3 align="center">
+ 🤖 🎨 🚀
+</h3>
+
 
 <p align="center">
   <img src="https://i.imgur.com/tMCahK8.png">
 </p>
+
+# Budibase
+[Budibase](https://www.budibase.com) is an open-source low-code platform which helps developers and IT professionals design, build, and ship custom software 50x faster.
 
 # Status
 - [x] Alpha: We are demoing Budibase to users and receiving feedback
