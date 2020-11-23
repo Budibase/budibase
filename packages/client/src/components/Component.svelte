@@ -37,7 +37,6 @@
 
   // Set contexts to be consumed by component
   setContext("style", { ...definition._styles, id: definition._id })
-  $: console.log("Rendering: " + componentName)
 </script>
 
 {#if constructor}
