@@ -1,38 +1,39 @@
-import svelte from "rollup-plugin-svelte"
-import resolve from "rollup-plugin-node-resolve"
 import commonjs from "@rollup/plugin-commonjs"
+import resolve from "@rollup/plugin-node-resolve"
+// import replace from "@rollup/plugin-replace"
+import svelte from "rollup-plugin-svelte"
 import postcss from "rollup-plugin-postcss"
 import { terser } from "rollup-plugin-terser"
 
 const production = !process.env.ROLLUP_WATCH
-const lodash_fp_exports = ["isEmpty"]
+const externals = ["svelte", "svelte/internal"]
 
 export default {
+  external: externals,
   input: "src/index.js",
   output: [
     {
       file: "dist/index.js",
       format: "esm",
       name: "budibaseStandardComponents",
-      sourcemap: true,
+      sourcemap: false,
     },
   ],
   plugins: [
-    // Only run terser in production environments
     production && terser(),
-    postcss({
-      plugins: [],
-    }),
+    postcss(),
     svelte({
-      hydratable: true,
+      dev: !production,
     }),
     resolve({
       browser: true,
+      skip: externals,
     }),
-    commonjs({
-      namedExports: {
-        "lodash/fp": lodash_fp_exports,
-      },
-    }),
+    commonjs(),
+    // Fix for https://github.com/sveltejs/svelte/issues/3165
+    // replace({
+    //   "outros.c.push":
+    //     "if (outros === undefined) { block.o(local); return }\noutros.c.push",
+    // }),
   ],
 }
