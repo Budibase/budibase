@@ -80,7 +80,9 @@ exports.fetch = async function(ctx) {
     ctx.body = []
   } else {
     const response = await Promise.allSettled(apps)
-    ctx.body = response.filter(result => result.status === "fulfilled")
+    ctx.body = response
+      .filter(result => result.status === "fulfilled")
+      .map(({ value }) => value)
   }
 }
 
