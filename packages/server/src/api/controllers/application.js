@@ -79,7 +79,8 @@ exports.fetch = async function(ctx) {
   if (apps.length === 0) {
     ctx.body = []
   } else {
-    ctx.body = await Promise.all(apps)
+    const response = await Promise.allSettled(apps)
+    ctx.body = response.filter(result => result.status === "fulfilled")
   }
 }
 
