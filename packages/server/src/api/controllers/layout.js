@@ -4,12 +4,10 @@ const compileStaticAssets = require("../../utilities/builder/compileStaticAssets
 
 exports.save = async function(ctx) {
   const db = new CouchDB(ctx.user.appId)
-  const appPackage = ctx.request.body
+  let layout = ctx.request.body
 
-  // remove special doc props which couch will complain about
-  delete appPackage.layout._css
-  appPackage.layout._id = appPackage.layout._id || generateLayoutID()
-  ctx.body = await db.put(appPackage.layout)
-  await compileStaticAssets(ctx.user.appId)
+  layout._id = layout._id || generateLayoutID()
+  layout = await compileStaticAssets(ctx.user.appId, layout)
+  ctx.body = await db.put(layout)
   ctx.status = 200
 }
