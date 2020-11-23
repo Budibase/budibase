@@ -142,15 +142,11 @@ exports.performLocalFileProcessing = async function(ctx) {
 
 exports.serveApp = async function(ctx) {
   const App = require("./templates/BudibaseApp.svelte").default
-
   const db = new CouchDB(ctx.params.appId)
-
   const appInfo = await db.get(ctx.params.appId)
 
   const { head, html, css } = App.render({
     title: appInfo.name,
-    pageName:
-      ctx.auth.authenticated === AuthTypes.APP ? "main" : "unauthenticated",
     production: env.CLOUD,
     appId: ctx.params.appId,
   })
