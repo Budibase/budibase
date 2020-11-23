@@ -30,15 +30,13 @@
   // Extract component definition info
   const componentName = extractComponentName(definition._component)
   const constructor = getComponentConstructor(componentName)
-  const id = `${componentName}-${definition._id}`
   const componentProps = extractValidProps(definition)
   const dataContext = getContext("data")
   const enrichedProps = dataContext.actions.enrichDataBindings(componentProps)
   const children = definition._children
 
-  // Set style context to be consumed by component
-  setContext("style", { ...definition._styles, id })
-  $: console.log("Rendering: " + componentName)
+  // Set contexts to be consumed by component
+  setContext("style", { ...definition._styles, id: definition._id })
 </script>
 
 {#if constructor}
